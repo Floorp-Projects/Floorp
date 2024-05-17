@@ -134,7 +134,6 @@
 #include "nsError.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFocusManager.h"
-#include "nsFrameManager.h"
 #include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
 #include "nsGlobalWindowOuter.h"
@@ -748,7 +747,6 @@ bool PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell) {
 PresShell::PresShell(Document* aDocument)
     : mDocument(aDocument),
       mViewManager(nullptr),
-      mFrameManager(nullptr),
       mAutoWeakFrames(nullptr),
 #ifdef ACCESSIBILITY
       mDocAccessible(nullptr),
@@ -863,9 +861,7 @@ PresShell::~PresShell() {
   MOZ_ASSERT(!mAllocatedPointers || mAllocatedPointers->IsEmpty(),
              "Some pres arena objects were not freed");
 
-  mFrameManager = nullptr;
   mFrameConstructor = nullptr;
-
   mCurrentEventContent = nullptr;
 }
 
@@ -892,8 +888,6 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
 
   // Create our frame constructor.
   mFrameConstructor = MakeUnique<nsCSSFrameConstructor>(mDocument, this);
-
-  mFrameManager = mFrameConstructor.get();
 
   // The document viewer owns both view manager and pres shell.
   mViewManager->SetPresShell(this);
@@ -1338,7 +1332,7 @@ void PresShell::Destroy() {
   }
 
   // Revoke any pending events.  We need to do this and cancel pending reflows
-  // before we destroy the frame manager, since apparently frame destruction
+  // before we destroy the frame constructor, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).
   // XXXmats is this still needed now that plugins are gone?
   StopObservingRefreshDriver();
@@ -1352,7 +1346,7 @@ void PresShell::Destroy() {
   CancelAllPendingReflows();
   CancelPostedReflowCallbacks();
 
-  // Destroy the frame manager. This will destroy the frame hierarchy
+  // Destroy the frame constructor. This will destroy the frame hierarchy
   mFrameConstructor->WillDestroyFrameTree();
 
   NS_WARNING_ASSERTION(!mAutoWeakFrames && mWeakFrames.IsEmpty(),
@@ -1768,7 +1762,7 @@ nsresult PresShell::Initialize() {
   }
 #endif
 
-  // Get the root frame from the frame manager
+  // Get the root frame from the frame constructor.
   // XXXbz it would be nice to move this somewhere else... like frame manager
   // Init(), say.  But we need to make sure our views are all set up by the
   // time we do this!

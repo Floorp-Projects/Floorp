@@ -34,6 +34,7 @@
 #include "mozilla/FilterInstance.h"
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/SVGClipPathFrame.h"
 #include "mozilla/SVGContainerFrame.h"

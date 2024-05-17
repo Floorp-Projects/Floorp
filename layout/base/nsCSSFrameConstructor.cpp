@@ -2631,6 +2631,10 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   return newFrame;
 }
 
+RestyleManager* nsCSSFrameConstructor::RestyleManager() const {
+  return mPresShell->GetPresContext()->RestyleManager();
+}
+
 nsIFrame* nsCSSFrameConstructor::ConstructRootFrame() {
   AUTO_PROFILER_LABEL_HOT("nsCSSFrameConstructor::ConstructRootFrame",
                           LAYOUT_FrameConstruction);
