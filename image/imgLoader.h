@@ -66,9 +66,23 @@ class imgCacheEntry {
   void UpdateLoadTime();
 
   uint32_t GetExpiryTime() const { return mExpiryTime; }
-  void SetExpiryTime(uint32_t aExpiryTime) {
-    mExpiryTime = aExpiryTime;
-    Touch();
+  void AccumulateExpiryTime(uint32_t aExpiryTime, bool aForceTouch = false) {
+    // 0 means "doesn't expire".
+    // Otherwise, calculate the minimum value.
+    if (aExpiryTime == 0) {
+      if (aForceTouch) {
+        Touch();
+      }
+      return;
+    }
+    if (mExpiryTime == 0 || aExpiryTime < mExpiryTime) {
+      mExpiryTime = aExpiryTime;
+      Touch();
+    } else {
+      if (aForceTouch) {
+        Touch();
+      }
+    }
   }
 
   bool GetMustValidate() const { return mMustValidate; }
