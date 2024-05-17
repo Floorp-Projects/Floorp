@@ -13,6 +13,12 @@ if CONFIG["TARGET_KERNEL"] == "WINNT":
 if CONFIG['MOZ_SYSTEM_LIBEVENT']:
     error('should not reach here if we are using a native libevent')
 
+# for gethostbyname_r
+OS_LIBS += CONFIG["C_R_LIBS"]
+
+# for socket
+OS_LIBS += CONFIG["SOCKET_LIBS"]
+
 UNIFIED_SOURCES += [
     'libevent/buffer.c',
     'libevent/bufferevent.c',

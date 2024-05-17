@@ -41,6 +41,9 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     ]
     UNIFIED_SOURCES += ["nsNamedPipeIOLayer.cpp", "nsNamedPipeService.cpp"]
 
+# for socket
+OS_LIBS += CONFIG["SOCKET_LIBS"]
+
 FINAL_LIBRARY = "xul"
 
 CONFIGURE_SUBST_FILES += ["neqo/extra-bindgen-flags"]
