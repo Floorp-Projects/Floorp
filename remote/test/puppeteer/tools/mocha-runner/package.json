@@ -13,7 +13,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsc -b && chmod +x ./bin/mocha-runner.js",
+      "command": "tsc -b && tsx ../../tools/chmod.ts 755 ./bin/mocha-runner.js",
       "clean": "if-file-deleted",
       "files": [
         "src/**"
@@ -36,8 +36,8 @@
   "devDependencies": {
     "@types/yargs": "17.0.32",
     "c8": "9.1.0",
-    "glob": "10.3.12",
+    "glob": "10.3.15",
     "yargs": "17.7.2",
-    "zod": "3.22.4"
+    "zod": "3.23.8"
   }
 }

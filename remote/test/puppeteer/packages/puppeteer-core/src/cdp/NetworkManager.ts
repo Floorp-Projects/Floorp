@@ -9,7 +9,7 @@ import type {Protocol} from 'devtools-protocol';
 import {CDPSessionEvent, type CDPSession} from '../api/CDPSession.js';
 import type {Frame} from '../api/Frame.js';
 import type {Credentials} from '../api/Page.js';
-import {EventEmitter, EventSubscription} from '../common/EventEmitter.js';
+import {EventEmitter} from '../common/EventEmitter.js';
 import {
   NetworkManagerEvent,
   type NetworkManagerEvents,
@@ -61,7 +61,6 @@ export interface FrameProvider {
  * @internal
  */
 export class NetworkManager extends EventEmitter<NetworkManagerEvents> {
-  #ignoreHTTPSErrors: boolean;
   #frameManager: FrameProvider;
   #networkEventManager = new NetworkEventManager();
   #extraHTTPHeaders?: Record<string, string>;
@@ -88,9 +87,8 @@ export class NetworkManager extends EventEmitter<NetworkManagerEvents> {
 
   #clients = new Map<CDPSession, DisposableStack>();
 
-  constructor(ignoreHTTPSErrors: boolean, frameManager: FrameProvider) {
+  constructor(frameManager: FrameProvider) {
     super();
-    this.#ignoreHTTPSErrors = ignoreHTTPSErrors;
     this.#frameManager = frameManager;
   }
 
@@ -100,20 +98,15 @@ export class NetworkManager extends EventEmitter<NetworkManagerEvents> {
     }
     const subscriptions = new DisposableStack();
     this.#clients.set(client, subscriptions);
+    const clientEmitter = subscriptions.use(new EventEmitter(client));
+
     for (const [event, handler] of this.#handlers) {
-      subscriptions.use(
-        // TODO: Remove any here.
-        new EventSubscription(client, event, (arg: any) => {
-          return handler.bind(this)(client, arg);
-        })
-      );
+      clientEmitter.on(event, (arg: any) => {
+        return handler.bind(this)(client, arg);
+      });
     }
+
     await Promise.all([
-      this.#ignoreHTTPSErrors
-        ? client.send('Security.setIgnoreCertificateErrors', {
-            ignore: true,
-          })
-        : null,
       client.send('Network.enable'),
       this.#applyExtraHTTPHeaders(client),
       this.#applyNetworkConditions(client),

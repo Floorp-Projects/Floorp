@@ -6,21 +6,25 @@
 
 import type {Protocol} from 'devtools-protocol';
 
+import {firstValueFrom, map, raceWith} from '../../third_party/rxjs/rxjs.js';
 import type {CDPSession} from '../api/CDPSession.js';
+import type {ElementHandle} from '../api/ElementHandle.js';
 import type {JSHandle} from '../api/JSHandle.js';
 import {Realm} from '../api/Realm.js';
+import {EventEmitter} from '../common/EventEmitter.js';
 import type {TimeoutSettings} from '../common/TimeoutSettings.js';
-import type {BindingPayload, EvaluateFunc, HandleFor} from '../common/types.js';
-import {debugError, withSourcePuppeteerURLIfNone} from '../common/util.js';
-import {Deferred} from '../util/Deferred.js';
+import type {EvaluateFunc, HandleFor} from '../common/types.js';
+import {
+  fromEmitterEvent,
+  withSourcePuppeteerURLIfNone,
+} from '../common/util.js';
 import {disposeSymbol} from '../util/disposable.js';
-import {Mutex} from '../util/Mutex.js';
 
-import type {Binding} from './Binding.js';
-import {ExecutionContext, createCdpHandle} from './ExecutionContext.js';
+import {CdpElementHandle} from './ElementHandle.js';
+import type {ExecutionContext} from './ExecutionContext.js';
 import type {CdpFrame} from './Frame.js';
 import type {MAIN_WORLD, PUPPETEER_WORLD} from './IsolatedWorlds.js';
-import {addPageBinding} from './utils.js';
+import {CdpJSHandle} from './JSHandle.js';
 import type {CdpWebWorker} from './WebWorker.js';
 
 /**
@@ -43,18 +47,23 @@ export interface IsolatedWorldChart {
 /**
  * @internal
  */
+type IsolatedWorldEmitter = EventEmitter<{
+  // Emitted when the isolated world gets a new execution context.
+  context: ExecutionContext;
+  // Emitted when the isolated world is disposed.
+  disposed: undefined;
+  // Emitted when a new console message is logged.
+  consoleapicalled: Protocol.Runtime.ConsoleAPICalledEvent;
+  /** Emitted when a binding that is not installed by the ExecutionContext is called. */
+  bindingcalled: Protocol.Runtime.BindingCalledEvent;
+}>;
+
+/**
+ * @internal
+ */
 export class IsolatedWorld extends Realm {
-  #context = Deferred.create<ExecutionContext>();
-
-  // Set of bindings that have been registered in the current context.
-  #contextBindings = new Set<string>();
-
-  // Contains mapping from functions that should be bound to Puppeteer functions.
-  #bindings = new Map<string, Binding>();
-
-  get _bindings(): Map<string, Binding> {
-    return this.#bindings;
-  }
+  #context?: ExecutionContext;
+  #emitter: IsolatedWorldEmitter = new EventEmitter();
 
   readonly #frameOrWorker: CdpFrame | CdpWebWorker;
 
@@ -64,50 +73,81 @@ export class IsolatedWorld extends Realm {
   ) {
     super(timeoutSettings);
     this.#frameOrWorker = frameOrWorker;
-    this.frameUpdated();
   }
 
   get environment(): CdpFrame | CdpWebWorker {
     return this.#frameOrWorker;
   }
 
-  frameUpdated(): void {
-    this.client.on('Runtime.bindingCalled', this.#onBindingCalled);
-  }
-
   get client(): CDPSession {
     return this.#frameOrWorker.client;
   }
 
-  clearContext(): void {
-    // The message has to match the CDP message expected by the WaitTask class.
-    this.#context?.reject(new Error('Execution context was destroyed'));
-    this.#context = Deferred.create();
+  get emitter(): IsolatedWorldEmitter {
+    return this.#emitter;
+  }
+
+  setContext(context: ExecutionContext): void {
+    this.#context?.[disposeSymbol]();
+    context.once('disposed', this.#onContextDisposed.bind(this));
+    context.on('consoleapicalled', this.#onContextConsoleApiCalled.bind(this));
+    context.on('bindingcalled', this.#onContextBindingCalled.bind(this));
+    this.#context = context;
+    this.#emitter.emit('context', context);
+    void this.taskManager.rerunAll();
+  }
+
+  #onContextDisposed(): void {
+    this.#context = undefined;
     if ('clearDocumentHandle' in this.#frameOrWorker) {
       this.#frameOrWorker.clearDocumentHandle();
     }
   }
 
-  setContext(context: ExecutionContext): void {
-    this.#contextBindings.clear();
-    this.#context.resolve(context);
-    void this.taskManager.rerunAll();
+  #onContextConsoleApiCalled(
+    event: Protocol.Runtime.ConsoleAPICalledEvent
+  ): void {
+    this.#emitter.emit('consoleapicalled', event);
+  }
+
+  #onContextBindingCalled(event: Protocol.Runtime.BindingCalledEvent): void {
+    this.#emitter.emit('bindingcalled', event);
   }
 
   hasContext(): boolean {
-    return this.#context.resolved();
+    return !!this.#context;
   }
 
-  #executionContext(): Promise<ExecutionContext> {
+  get context(): ExecutionContext | undefined {
+    return this.#context;
+  }
+
+  #executionContext(): ExecutionContext | undefined {
     if (this.disposed) {
       throw new Error(
-        `Execution context is not available in detached frame "${this.environment.url()}" (are you trying to evaluate?)`
+        `Execution context is not available in detached frame or worker "${this.environment.url()}" (are you trying to evaluate?)`
       );
     }
-    if (this.#context === null) {
-      throw new Error(`Execution content promise is missing`);
-    }
-    return this.#context.valueOrThrow();
+    return this.#context;
+  }
+
+  /**
+   * Waits for the next context to be set on the isolated world.
+   */
+  async #waitForExecutionContext(): Promise<ExecutionContext> {
+    const result = await firstValueFrom(
+      fromEmitterEvent(this.#emitter, 'context').pipe(
+        raceWith(
+          fromEmitterEvent(this.#emitter, 'disposed').pipe(
+            map(() => {
+              // The message has to match the CDP message expected by the WaitTask class.
+              throw new Error('Execution context was destroyed');
+            })
+          )
+        )
+      )
+    );
+    return result;
   }
 
   async evaluateHandle<
@@ -121,7 +161,13 @@ export class IsolatedWorld extends Realm {
       this.evaluateHandle.name,
       pageFunction
     );
-    const context = await this.#executionContext();
+    // This code needs to schedule evaluateHandle call synchroniously (at
+    // least when the context is there) so we cannot unconditionally
+    // await.
+    let context = this.#executionContext();
+    if (!context) {
+      context = await this.#waitForExecutionContext();
+    }
     return await context.evaluateHandle(pageFunction, ...args);
   }
 
@@ -136,102 +182,31 @@ export class IsolatedWorld extends Realm {
       this.evaluate.name,
       pageFunction
     );
-    let context = this.#context.value();
-    if (!context || !(context instanceof ExecutionContext)) {
-      context = await this.#executionContext();
+    // This code needs to schedule evaluate call synchroniously (at
+    // least when the context is there) so we cannot unconditionally
+    // await.
+    let context = this.#executionContext();
+    if (!context) {
+      context = await this.#waitForExecutionContext();
     }
     return await context.evaluate(pageFunction, ...args);
   }
 
-  // If multiple waitFor are set up asynchronously, we need to wait for the
-  // first one to set up the binding in the page before running the others.
-  #mutex = new Mutex();
-  async _addBindingToContext(
-    context: ExecutionContext,
-    name: string
-  ): Promise<void> {
-    if (this.#contextBindings.has(name)) {
-      return;
-    }
-
-    using _ = await this.#mutex.acquire();
-    try {
-      await context._client.send(
-        'Runtime.addBinding',
-        context._contextName
-          ? {
-              name,
-              executionContextName: context._contextName,
-            }
-          : {
-              name,
-              executionContextId: context._contextId,
-            }
-      );
-
-      await context.evaluate(addPageBinding, 'internal', name);
-
-      this.#contextBindings.add(name);
-    } catch (error) {
-      // We could have tried to evaluate in a context which was already
-      // destroyed. This happens, for example, if the page is navigated while
-      // we are trying to add the binding
-      if (error instanceof Error) {
-        // Destroyed context.
-        if (error.message.includes('Execution context was destroyed')) {
-          return;
-        }
-        // Missing context.
-        if (error.message.includes('Cannot find context with specified id')) {
-          return;
-        }
-      }
-
-      debugError(error);
-    }
-  }
-
-  #onBindingCalled = async (
-    event: Protocol.Runtime.BindingCalledEvent
-  ): Promise<void> => {
-    let payload: BindingPayload;
-    try {
-      payload = JSON.parse(event.payload);
-    } catch {
-      // The binding was either called by something in the page or it was
-      // called before our wrapper was initialized.
-      return;
-    }
-    const {type, name, seq, args, isTrivial} = payload;
-    if (type !== 'internal') {
-      return;
-    }
-    if (!this.#contextBindings.has(name)) {
-      return;
-    }
-
-    try {
-      const context = await this.#context.valueOrThrow();
-      if (event.executionContextId !== context._contextId) {
-        return;
-      }
-
-      const binding = this._bindings.get(name);
-      await binding?.run(context, seq, args, isTrivial);
-    } catch (err) {
-      debugError(err);
-    }
-  };
-
   override async adoptBackendNode(
     backendNodeId?: Protocol.DOM.BackendNodeId
   ): Promise<JSHandle<Node>> {
-    const executionContext = await this.#executionContext();
+    // This code needs to schedule resolveNode call synchroniously (at
+    // least when the context is there) so we cannot unconditionally
+    // await.
+    let context = this.#executionContext();
+    if (!context) {
+      context = await this.#waitForExecutionContext();
+    }
     const {object} = await this.client.send('DOM.resolveNode', {
       backendNodeId: backendNodeId,
-      executionContextId: executionContext._contextId,
+      executionContextId: context.id,
     });
-    return createCdpHandle(this, object) as JSHandle<Node>;
+    return this.createCdpHandle(object) as JSHandle<Node>;
   }
 
   async adoptHandle<T extends JSHandle<Node>>(handle: T): Promise<T> {
@@ -266,8 +241,22 @@ export class IsolatedWorld extends Realm {
     return newHandle;
   }
 
+  /**
+   * @internal
+   */
+  createCdpHandle(
+    remoteObject: Protocol.Runtime.RemoteObject
+  ): JSHandle | ElementHandle<Node> {
+    if (remoteObject.subtype === 'node') {
+      return new CdpElementHandle(this, remoteObject);
+    }
+    return new CdpJSHandle(this, remoteObject);
+  }
+
   [disposeSymbol](): void {
+    this.#context?.[disposeSymbol]();
+    this.#emitter.emit('disposed', undefined);
     super[disposeSymbol]();
-    this.client.off('Runtime.bindingCalled', this.#onBindingCalled);
+    this.#emitter.removeAllListeners();
   }
 }

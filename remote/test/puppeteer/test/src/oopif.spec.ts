@@ -404,7 +404,7 @@ describe('OOPIF', function () {
     expect(page.frames()).toHaveLength(2);
 
     const browserURL = 'http://127.0.0.1:21222';
-    const browser1 = await puppeteer.connect({browserURL});
+    using browser1 = await puppeteer.connect({browserURL});
     const target = await browser1.waitForTarget(target => {
       return target.url().endsWith('dynamic-oopif.html');
     });
@@ -423,6 +423,41 @@ describe('OOPIF', function () {
         return frame._hasStartedLoading;
       })
     ).toEqual([true, true, false]);
+  });
+
+  it('should exposeFunction on a page with a PDF viewer', async () => {
+    const {page, server} = state;
+
+    await page.goto(server.PREFIX + '/pdf-viewer.html', {
+      waitUntil: 'networkidle2',
+    });
+
+    await page.exposeFunction('test', () => {
+      console.log('test');
+    });
+  });
+
+  it('should evaluate on a page with a PDF viewer', async () => {
+    const {page, server} = state;
+
+    await page.goto(server.PREFIX + '/pdf-viewer.html', {
+      waitUntil: 'networkidle2',
+    });
+
+    expect(
+      await Promise.all(
+        page.frames().map(async frame => {
+          return await frame.evaluate(() => {
+            return window.location.pathname;
+          });
+        })
+      )
+    ).toEqual([
+      '/pdf-viewer.html',
+      '/sample.pdf',
+      '/index.html',
+      '/sample.pdf',
+    ]);
   });
 
   describe('waitForFrame', () => {

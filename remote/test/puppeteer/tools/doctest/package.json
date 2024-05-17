@@ -12,7 +12,7 @@
   },
   "wireit": {
     "build": {
-      "command": "tsc -b && chmod +x ./bin/doctest.js",
+      "command": "tsc -b && tsx ../../tools/chmod.ts 755 ./bin/doctest.js",
       "clean": "if-file-deleted",
       "files": [
         "src/**"
@@ -24,13 +24,13 @@
     }
   },
   "devDependencies": {
-    "@swc/core": "1.4.13",
+    "@swc/core": "1.5.5",
     "@types/doctrine": "0.0.9",
     "@types/source-map-support": "0.5.10",
     "@types/yargs": "17.0.32",
     "acorn": "8.11.3",
     "doctrine": "3.0.0",
-    "glob": "10.3.12",
+    "glob": "10.3.15",
     "pkg-dir": "8.0.0",
     "source-map-support": "0.5.21",
     "source-map": "0.7.4",
