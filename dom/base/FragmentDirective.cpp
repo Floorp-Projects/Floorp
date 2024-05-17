@@ -51,6 +51,21 @@ JSObject* FragmentDirective::WrapObject(JSContext* aCx,
   return FragmentDirective_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+bool FragmentDirective::ParseAndRemoveFragmentDirectiveFromFragmentString(
+    nsCString& aFragment, nsTArray<TextDirective>* aTextDirectives) {
+  ParsedFragmentDirectiveResult fragmentDirective;
+  const bool hasRemovedFragmentDirective =
+      StaticPrefs::dom_text_fragments_enabled() &&
+      parse_fragment_directive(&aFragment, &fragmentDirective);
+  if (hasRemovedFragmentDirective) {
+    aFragment = fragmentDirective.url_without_fragment_directive;
+    if (aTextDirectives) {
+      aTextDirectives->SwapElements(fragmentDirective.text_directives);
+    }
+  }
+  return hasRemovedFragmentDirective;
+}
+
 void FragmentDirective::ParseAndRemoveFragmentDirectiveFromFragment(
     nsCOMPtr<nsIURI>& aURI, nsTArray<TextDirective>* aTextDirectives) {
   if (!aURI || !StaticPrefs::dom_text_fragments_enabled()) {
@@ -65,18 +80,12 @@ void FragmentDirective::ParseAndRemoveFragmentDirectiveFromFragment(
   nsAutoCString hash;
   aURI->GetRef(hash);
 
-  ParsedFragmentDirectiveResult fragmentDirective;
   const bool hasRemovedFragmentDirective =
-      parse_fragment_directive(&hash, &fragmentDirective);
+      ParseAndRemoveFragmentDirectiveFromFragmentString(hash, aTextDirectives);
   if (!hasRemovedFragmentDirective) {
     return;
   }
-  Unused << NS_MutateURI(aURI)
-                .SetRef(fragmentDirective.url_without_fragment_directive)
-                .Finalize(aURI);
-  if (aTextDirectives) {
-    aTextDirectives->SwapElements(fragmentDirective.text_directives);
-  }
+  Unused << NS_MutateURI(aURI).SetRef(hash).Finalize(aURI);
 }
 
 nsTArray<RefPtr<nsRange>> FragmentDirective::FindTextFragmentsInDocument() {
@@ -88,7 +97,6 @@ nsTArray<RefPtr<nsRange>> FragmentDirective::FindTextFragmentsInDocument() {
       textDirectiveRanges.AppendElement(range);
     }
   }
-  mUninvokedTextDirectives.Clear();
   return textDirectiveRanges;
 }
 
