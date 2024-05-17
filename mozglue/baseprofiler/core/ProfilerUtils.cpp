@@ -102,8 +102,12 @@ BaseProfilerThreadId profiler_current_thread_id() {
 namespace mozilla::baseprofiler {
 
 BaseProfilerThreadId profiler_current_thread_id() {
-  // glibc doesn't provide a wrapper for gettid() until 2.30
-  return BaseProfilerThreadId::FromNativeId(syscall(SYS_gettid));
+  static thread_local pid_t tid;
+  if (!tid) {
+    // glibc doesn't provide a wrapper for gettid() until 2.30
+    tid = static_cast<pid_t>(syscall(SYS_gettid));
+  }
+  return BaseProfilerThreadId::FromNativeId(tid);
 }
 
 }  // namespace mozilla::baseprofiler
