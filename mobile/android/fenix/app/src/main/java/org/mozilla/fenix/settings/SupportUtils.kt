@@ -64,6 +64,7 @@ object SupportUtils {
         REVIEW_QUALITY_CHECK("review_checker_mobile"),
         FX_SUGGEST("search-suggestions-firefox"),
         TRANSLATIONS("android-translation"),
+        MANAGE_OPTIONAL_EXTENSION_PERMISSIONS("manage-optional-permissions-android-extensions"),
     }
 
     enum class MozillaPage(internal val path: String) {
