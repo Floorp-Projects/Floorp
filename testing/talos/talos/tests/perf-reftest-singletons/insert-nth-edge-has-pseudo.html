@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<style>
+:has(.descendant::is(:first-child)) .item {
+  color: green;
+}
+
+:has(.descendant:is(:last-child)) .item {
+  color: blue;
+}
+</style>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  function create_tree(depth, width) {
+    const d = document.createElement("div");
+    if (depth != 0) {
+      for (let i = 0; i < width; i++) {
+        d.appendChild(create_tree(depth - 1, width));
+      }
+    } else {
+      d.classList.add("item");
+    }
+    return d;
+  }
+  under.appendChild(create_tree(18, 2));
+  flush_layout();
+  perf_start();
+  const d = document.createElement("div");
+  first.after(d);
+  flush_layout();
+  perf_finish();
+};
+</script>
+<div class="container">
+  <div id="first" class="descendant"></div><div id="last" class="descendant"></div>
+  <div id="under"></div>
+</div>
+
