@@ -20,6 +20,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/IntegerRange.h"
@@ -1413,6 +1414,10 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
                                     StylePageSizeOrientation::Landscape);
       aPO->mPresContext->SetPageSize(pageSize);
     }
+  }
+  // Make sure animations are active.
+  for (DocumentTimeline* tl : aPO->mDocument->Timelines()) {
+    tl->TriggerAllPendingAnimationsNow();
   }
   // Process the reflow event Initialize posted
   presShell->FlushPendingNotifications(FlushType::Layout);

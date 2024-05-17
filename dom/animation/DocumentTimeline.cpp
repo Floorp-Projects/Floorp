@@ -19,7 +19,6 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(DocumentTimeline)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocumentTimeline,
                                                 AnimationTimeline)
-  tmp->UnregisterFromRefreshDriver();
   if (tmp->isInList()) {
     tmp->remove();
   }
@@ -45,7 +44,6 @@ DocumentTimeline::DocumentTimeline(Document* aDocument,
     : AnimationTimeline(aDocument->GetParentObject(),
                         aDocument->GetScopeObject()->GetRTPCallerType()),
       mDocument(aDocument),
-      mIsObservingRefreshDriver(false),
       mOriginTime(aOriginTime) {
   if (mDocument) {
     mDocument->Timelines().insertBack(this);
@@ -55,9 +53,6 @@ DocumentTimeline::DocumentTimeline(Document* aDocument,
 }
 
 DocumentTimeline::~DocumentTimeline() {
-  MOZ_RELEASE_ASSERT(!mIsObservingRefreshDriver,
-                     "Timeline should have disassociated"
-                     " from the refresh driver before being destroyed");
   if (isInList()) {
     remove();
   }
@@ -105,11 +100,8 @@ TimeStamp DocumentTimeline::GetCurrentTimeStamp() const {
                        : mLastRefreshDriverTime;
 }
 
-void DocumentTimeline::UpdateLastRefreshDriverTime(TimeStamp aKnownTime) {
+void DocumentTimeline::UpdateLastRefreshDriverTime() {
   TimeStamp result = [&] {
-    if (!aKnownTime.IsNull()) {
-      return aKnownTime;
-    }
     if (auto* rd = GetRefreshDriver()) {
       return rd->MostRecentRefresh();
     };
@@ -157,36 +149,13 @@ Nullable<TimeDuration> DocumentTimeline::ToTimelineTime(
 void DocumentTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
   AnimationTimeline::NotifyAnimationUpdated(aAnimation);
 
-  if (!mIsObservingRefreshDriver && !mAnimationOrder.isEmpty()) {
-    nsRefreshDriver* refreshDriver = GetRefreshDriver();
-    if (refreshDriver) {
+  if (!mAnimationOrder.isEmpty()) {
+    if (nsRefreshDriver* refreshDriver = GetRefreshDriver()) {
       MOZ_ASSERT(isInList(),
                  "We should not register with the refresh driver if we are not"
                  " in the document's list of timelines");
-
-      ObserveRefreshDriver(refreshDriver);
+      refreshDriver->EnsureAnimationUpdate();
     }
-  }
-}
-
-void DocumentTimeline::MostRecentRefreshTimeUpdated() {
-  MOZ_ASSERT(mIsObservingRefreshDriver);
-  MOZ_ASSERT(GetRefreshDriver(),
-             "Should be able to reach refresh driver from within WillRefresh");
-
-  nsAutoAnimationMutationBatch mb(mDocument);
-
-  TickState state;
-  bool ticked = Tick(state);
-  if (!ticked) {
-    // We already assert that GetRefreshDriver() is non-null at the beginning
-    // of this function but we check it again here to be sure that ticking
-    // animations does not have any side effects that cause us to lose the
-    // connection with the refresh driver, such as triggering the destruction
-    // of mDocument's PresShell.
-    MOZ_ASSERT(GetRefreshDriver(),
-               "Refresh driver should still be valid at end of WillRefresh");
-    UnregisterFromRefreshDriver();
   }
 }
 
@@ -196,71 +165,37 @@ void DocumentTimeline::TriggerAllPendingAnimationsNow() {
   }
 }
 
-void DocumentTimeline::WillRefresh(TimeStamp aTime) {
-  UpdateLastRefreshDriverTime();
-  MostRecentRefreshTimeUpdated();
-}
-
-void DocumentTimeline::NotifyTimerAdjusted(TimeStamp aTime) {
-  MostRecentRefreshTimeUpdated();
-}
-
-void DocumentTimeline::ObserveRefreshDriver(nsRefreshDriver* aDriver) {
-  MOZ_RELEASE_ASSERT(!mIsObservingRefreshDriver,
-                     "shouldn't register as an observer more than once");
-  // Set the mIsObservingRefreshDriver flag before calling AddRefreshObserver
-  // since it might end up calling NotifyTimerAdjusted which calls
-  // MostRecentRefreshTimeUpdated which has an assertion for
-  // mIsObserveingRefreshDriver check.
-  mIsObservingRefreshDriver = true;
-  aDriver->AddRefreshObserver(this, FlushType::Style,
-                              "DocumentTimeline animations");
-  aDriver->AddTimerAdjustmentObserver(this);
-}
-
-void DocumentTimeline::NotifyRefreshDriverCreated(nsRefreshDriver* aDriver) {
-  MOZ_RELEASE_ASSERT(
-      !mIsObservingRefreshDriver,
-      "Timeline should not be observing the refresh driver before"
-      " it is created");
-
-  if (!mAnimationOrder.isEmpty()) {
-    MOZ_ASSERT(isInList(),
-               "We should not register with the refresh driver if we are not"
-               " in the document's list of timelines");
-    ObserveRefreshDriver(aDriver);
-    // Although we have started observing the refresh driver, it's possible we
-    // could perform a paint before the first refresh driver tick happens.  To
-    // ensure we're in a consistent state in that case we run the first tick
-    // manually.
-    MostRecentRefreshTimeUpdated();
-  }
-}
-
-void DocumentTimeline::DisconnectRefreshDriver(nsRefreshDriver* aDriver) {
-  MOZ_ASSERT(mIsObservingRefreshDriver);
-
-  aDriver->RemoveRefreshObserver(this, FlushType::Style);
-  aDriver->RemoveTimerAdjustmentObserver(this);
-  mIsObservingRefreshDriver = false;
-}
-
-void DocumentTimeline::NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver) {
-  if (!mIsObservingRefreshDriver) {
+void DocumentTimeline::WillRefresh() {
+  if (!mDocument->GetPresShell()) {
+    // If we're not displayed, don't tick animations.
     return;
   }
+  UpdateLastRefreshDriverTime();
+  if (mAnimationOrder.isEmpty()) {
+    return;
+  }
+  nsAutoAnimationMutationBatch mb(mDocument);
 
-  DisconnectRefreshDriver(aDriver);
+  TickState state;
+  bool ticked = Tick(state);
+  if (!ticked) {
+    return;
+  }
+  // We already assert that GetRefreshDriver() is non-null at the beginning
+  // of this function but we check it again here to be sure that ticking
+  // animations does not have any side effects that cause us to lose the
+  // connection with the refresh driver, such as triggering the destruction
+  // of mDocument's PresShell.
+  if (nsRefreshDriver* refreshDriver = GetRefreshDriver()) {
+    refreshDriver->EnsureAnimationUpdate();
+  } else {
+    MOZ_ASSERT_UNREACHABLE(
+        "Refresh driver should still be valid at end of WillRefresh");
+  }
 }
 
 void DocumentTimeline::RemoveAnimation(Animation* aAnimation) {
   AnimationTimeline::RemoveAnimation(aAnimation);
-
-  if (!mIsObservingRefreshDriver || !mAnimationOrder.isEmpty()) {
-    return;
-  }
-
-  UnregisterFromRefreshDriver();
 }
 
 void DocumentTimeline::NotifyAnimationContentVisibilityChanged(
@@ -268,19 +203,11 @@ void DocumentTimeline::NotifyAnimationContentVisibilityChanged(
   AnimationTimeline::NotifyAnimationContentVisibilityChanged(aAnimation,
                                                              aIsVisible);
 
-  if (mIsObservingRefreshDriver && mAnimationOrder.isEmpty()) {
-    UnregisterFromRefreshDriver();
-  }
-
-  if (!mIsObservingRefreshDriver && !mAnimationOrder.isEmpty()) {
-    nsRefreshDriver* refreshDriver = GetRefreshDriver();
-    if (refreshDriver) {
-      MOZ_ASSERT(isInList(),
-                 "We should not register with the refresh driver if we are not"
-                 " in the document's list of timelines");
-
-      ObserveRefreshDriver(refreshDriver);
-    }
+  if (nsRefreshDriver* refreshDriver = GetRefreshDriver()) {
+    MOZ_ASSERT(isInList(),
+               "We should not register with the refresh driver if we are not"
+               " in the document's list of timelines");
+    refreshDriver->EnsureAnimationUpdate();
   }
 }
 
@@ -302,20 +229,7 @@ nsRefreshDriver* DocumentTimeline::GetRefreshDriver() const {
   if (MOZ_UNLIKELY(!presContext)) {
     return nullptr;
   }
-
   return presContext->RefreshDriver();
-}
-
-void DocumentTimeline::UnregisterFromRefreshDriver() {
-  if (!mIsObservingRefreshDriver) {
-    return;
-  }
-
-  nsRefreshDriver* refreshDriver = GetRefreshDriver();
-  if (!refreshDriver) {
-    return;
-  }
-  DisconnectRefreshDriver(refreshDriver);
 }
 
 }  // namespace mozilla::dom

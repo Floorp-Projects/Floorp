@@ -88,11 +88,12 @@ promise_test(async t => {
   div.style.animationPlayState = 'paused';
 
   await animation.ready;
+  await waitForPaints();
 
   assert_animation_is_not_running_on_compositor(animation,
      'Animation reports that it is NOT running on the compositor'
      + ' when paused');
-}, '');
+}, 'Basic test');
 
 promise_test(async t => {
   var div = addDiv(t, { style: 'animation: z-index 100s' });
@@ -126,6 +127,8 @@ promise_test(async t => {
 
   animation.pause();
   await animation.ready;
+
+  await waitForPaints();
 
   assert_animation_is_not_running_on_compositor(animation,
      'Animation reports that it is NOT running on the compositor'

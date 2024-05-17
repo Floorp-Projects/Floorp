@@ -103,12 +103,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
                           const char* aObserverDescription);
   bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
                              mozilla::FlushType aFlushType);
-  /**
-   * Add / remove an observer wants to know the time when the refresh driver
-   * updated the most recent refresh time due to its active timer changes.
-   */
-  void AddTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
-  void RemoveTimerAdjustmentObserver(nsATimerAdjustmentObserver* aObserver);
 
   void PostVisualViewportResizeEvent(VVPResizeEvent* aResizeEvent);
   void DispatchVisualViewportResizeEvents();
@@ -417,6 +411,11 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     mNeedToUpdateResizeObservers = true;
   }
 
+  void EnsureAnimationUpdate() {
+    EnsureTimerStarted();
+    mNeedToUpdateAnimations = true;
+  }
+
   void ScheduleMediaQueryListenerUpdate() {
     EnsureTimerStarted();
     mMightNeedMediaQueryListenerUpdate = true;
@@ -446,6 +445,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     eHasPendingMediaQueryListeners = 1 << 7,
     eNeedsToNotifyResizeObservers = 1 << 8,
     eRootNeedsMoreTicksForUserInput = 1 << 9,
+    eNeedsToUpdateAnimations = 1 << 10,
   };
 
   void AddForceNotifyContentfulPaintPresContext(nsPresContext* aPresContext);
@@ -487,7 +487,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   MOZ_CAN_RUN_SCRIPT
   void FlushAutoFocusDocuments();
   void RunFullscreenSteps();
-  void DispatchAnimationEvents();
+  void UpdateAnimationsAndSendEvents();
   MOZ_CAN_RUN_SCRIPT
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations(mozilla::TimeStamp aNowTime);
@@ -643,6 +643,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // all our documents.
   bool mNeedToUpdateResizeObservers : 1;
 
+  // True if we need to update animations.
+  bool mNeedToUpdateAnimations : 1;
+
   // True if we might need to report media query changes in any of our
   // documents.
   bool mMightNeedMediaQueryListenerUpdate : 1;
@@ -673,12 +676,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
-  // These observers should NOT be included in HasObservers() since that method
-  // is used to determine whether or not to stop the timer, or restore it when
-  // thawing the refresh driver. On the other hand these observers are intended
-  // to be called when the timer is re-started and should not influence its
-  // starting or stopping.
-  nsTObserverArray<nsATimerAdjustmentObserver*> mTimerAdjustmentObservers;
   nsTArray<mozilla::layers::CompositionPayload> mCompositionPayloads;
   RequestTable mRequests;
   ImageStartTable mStartTable;
