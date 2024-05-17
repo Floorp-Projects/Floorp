@@ -4,6 +4,7 @@
 
 import React from "react";
 import { connect } from "react-redux";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 
 export class _WallpapersSection extends React.PureComponent {
   constructor(props) {
@@ -25,6 +26,10 @@ export class _WallpapersSection extends React.PureComponent {
     const prefs = this.props.Prefs.values;
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
+    this.handleUserEvent({
+      selected_wallpaper: id,
+      hadPreviousWallpaper: !!this.props.activeWallpaper,
+    });
     // bug 1892095
     if (
       prefs["newtabWallpapers.wallpaper-dark"] === "" &&
@@ -50,6 +55,20 @@ export class _WallpapersSection extends React.PureComponent {
   handleReset() {
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
+    this.handleUserEvent({
+      selected_wallpaper: "none",
+      hadPreviousWallpaper: !!this.props.activeWallpaper,
+    });
+  }
+
+  // Record user interaction when changing wallpaper and reseting wallpaper to default
+  handleUserEvent(data) {
+    this.props.dispatch(
+      ac.OnlyToMain({
+        type: at.WALLPAPER_CLICK,
+        data,
+      })
+    );
   }
 
   render() {
