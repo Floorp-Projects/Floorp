@@ -46,6 +46,10 @@ const getSchemaNormalizedRule = (extensionTestWrapper, value) => {
     },
     preprocessors: {},
     manifestVersion: extension.manifestVersion,
+    // We shouldn't be ignoring unrecognized props here because they should
+    // have been filtered out by the schema normalization that happened when
+    // the extension was loaded.
+    ignoreUnrecognizedProperties: false,
   };
 
   return Schemas.normalize(
