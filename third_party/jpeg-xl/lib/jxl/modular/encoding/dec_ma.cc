@@ -5,9 +5,12 @@
 
 #include "lib/jxl/modular/encoding/dec_ma.h"
 
+#include <jxl/memory_manager.h>
+
 #include <limits>
 
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/modular/encoding/ma_common.h"
 #include "lib/jxl/modular/modular_image.h"
@@ -89,16 +92,18 @@ Status DecodeTree(BitReader *br, ANSSymbolReader *reader,
 }
 }  // namespace
 
-Status DecodeTree(BitReader *br, Tree *tree, size_t tree_size_limit) {
+Status DecodeTree(JxlMemoryManager *memory_manager, BitReader *br, Tree *tree,
+                  size_t tree_size_limit) {
   std::vector<uint8_t> tree_context_map;
   ANSCode tree_code;
-  JXL_RETURN_IF_ERROR(
-      DecodeHistograms(br, kNumTreeContexts, &tree_code, &tree_context_map));
+  JXL_RETURN_IF_ERROR(DecodeHistograms(memory_manager, br, kNumTreeContexts,
+                                       &tree_code, &tree_context_map));
   // TODO(eustas): investigate more infinite tree cases.
   if (tree_code.degenerate_symbols[tree_context_map[kPropertyContext]] > 0) {
     return JXL_FAILURE("Infinite tree");
   }
-  ANSSymbolReader reader(&tree_code, br);
+  JXL_ASSIGN_OR_RETURN(ANSSymbolReader reader,
+                       ANSSymbolReader::Create(&tree_code, br));
   JXL_RETURN_IF_ERROR(DecodeTree(br, &reader, tree_context_map, tree,
                                  std::min(tree_size_limit, kMaxTreeSize)));
   if (!reader.CheckANSFinalState()) {

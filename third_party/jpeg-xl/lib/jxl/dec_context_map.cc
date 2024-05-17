@@ -5,14 +5,14 @@
 
 #include "lib/jxl/dec_context_map.h"
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <vector>
 
-#include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_ans.h"
-#include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/inverse_mtf-inl.h"
 
 namespace jxl {
@@ -40,7 +40,8 @@ Status VerifyContextMap(const std::vector<uint8_t>& context_map,
 
 }  // namespace
 
-Status DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
+Status DecodeContextMap(JxlMemoryManager* memory_manager,
+                        std::vector<uint8_t>* context_map, size_t* num_htrees,
                         BitReader* input) {
   bool is_simple = static_cast<bool>(input->ReadFixedBits<1>());
   if (is_simple) {
@@ -61,9 +62,10 @@ Status DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
     // in malicious bitstreams by making every context map require its own
     // context map.
     JXL_RETURN_IF_ERROR(
-        DecodeHistograms(input, 1, &code, &sink_ctx_map,
+        DecodeHistograms(memory_manager, input, 1, &code, &sink_ctx_map,
                          /*disallow_lz77=*/context_map->size() <= 2));
-    ANSSymbolReader reader(&code, input);
+    JXL_ASSIGN_OR_RETURN(ANSSymbolReader reader,
+                         ANSSymbolReader::Create(&code, input));
     size_t i = 0;
     uint32_t maxsym = 0;
     while (i < context_map->size()) {

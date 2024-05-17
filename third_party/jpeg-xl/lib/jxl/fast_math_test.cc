@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include "lib/jxl/test_utils.h"
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/fast_math_test.cc"
 #include <jxl/cms.h>
@@ -158,7 +159,7 @@ HWY_NOINLINE void TestFast709EFD() {
 HWY_NOINLINE void TestFastXYB() {
   if (!HasFastXYBTosRGB8()) return;
   ImageMetadata metadata;
-  ImageBundle ib(&metadata);
+  ImageBundle ib(jxl::test::MemoryManager(), &metadata);
   int scaling = 1;
   int n = 256 * scaling;
   float inv_scaling = 1.0f / scaling;
@@ -168,7 +169,8 @@ HWY_NOINLINE void TestFastXYB() {
     for (int cg = 0; cg < n; cg += kChunk) {
       for (int cb = 0; cb < n; cb += kChunk) {
         JXL_ASSIGN_OR_DIE(Image3F chunk,
-                          Image3F::Create(kChunk * kChunk, kChunk));
+                          Image3F::Create(jxl::test::MemoryManager(),
+                                          kChunk * kChunk, kChunk));
         for (int ir = 0; ir < kChunk; ir++) {
           for (int ig = 0; ig < kChunk; ig++) {
             for (int ib = 0; ib < kChunk; ib++) {
@@ -183,7 +185,8 @@ HWY_NOINLINE void TestFastXYB() {
         }
         ib.SetFromImage(std::move(chunk), ColorEncoding::SRGB());
         JXL_ASSIGN_OR_DIE(Image3F xyb,
-                          Image3F::Create(kChunk * kChunk, kChunk));
+                          Image3F::Create(jxl::test::MemoryManager(),
+                                          kChunk * kChunk, kChunk));
         std::vector<uint8_t> roundtrip(kChunk * kChunk * kChunk * 3);
         JXL_CHECK(ToXYB(ib, nullptr, &xyb, *JxlGetDefaultCms()));
         for (int y = 0; y < kChunk; y++) {

@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_COMPRESSED_DC_H_
 #define LIB_JXL_COMPRESSED_DC_H_
 
+#include <jxl/memory_manager.h>
+
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/rect.h"
@@ -20,7 +22,8 @@
 namespace jxl {
 
 // Smooth DC in already-smooth areas, to counteract banding.
-Status AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
+Status AdaptiveDCSmoothing(JxlMemoryManager* memory_manager,
+                           const float* dc_factors, Image3F* dc,
                            ThreadPool* pool);
 
 void DequantDC(const Rect& r, Image3F* dc, ImageB* quant_dc, const Image& in,

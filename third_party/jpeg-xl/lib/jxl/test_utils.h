@@ -11,6 +11,7 @@
 // Macros and functions useful for tests.
 
 #include <jxl/codestream_header.h>
+#include <jxl/memory_manager.h>
 #include <jxl/thread_parallel_runner_cxx.h>
 
 #include <cstddef>
@@ -201,6 +202,8 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
                   std::vector<uint8_t>* compressed, ThreadPool* pool = nullptr);
 
 constexpr const char* BoolToCStr(bool b) { return b ? "true" : "false"; }
+
+JxlMemoryManager* MemoryManager();
 
 }  // namespace test
 

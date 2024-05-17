@@ -9,6 +9,8 @@
 // Chroma-from-luma, computed using heuristics to determine the best linear
 // model for the X and B channels from the Y channel.
 
+#include <jxl/memory_manager.h>
+
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -52,7 +54,8 @@ struct ColorCorrelationMap {
   // xsize/ysize are in pixels
   // set XYB=false to do something close to no-op cmap (needed for now since
   // cmap is mandatory)
-  static StatusOr<ColorCorrelationMap> Create(size_t xsize, size_t ysize,
+  static StatusOr<ColorCorrelationMap> Create(JxlMemoryManager* memory_manager,
+                                              size_t xsize, size_t ysize,
                                               bool XYB = true);
 
   float YtoXRatio(int32_t x_factor) const {

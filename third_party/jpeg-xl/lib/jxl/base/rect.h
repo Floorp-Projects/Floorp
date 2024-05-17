@@ -115,6 +115,11 @@ class RectT {
            y1() <= other.y1();
   }
 
+  bool IsSame(const RectT& other) const {
+    return x0_ == other.x0_ && xsize_ == other.xsize_ && y0_ == other.y0_ &&
+           ysize_ <= other.ysize_;
+  }
+
   // Returns true if this Rect fully resides in the given image. ImageT could be
   // Plane<T> or Image3<T>; however if ImageT is Rect, results are nonsensical.
   template <class ImageT>

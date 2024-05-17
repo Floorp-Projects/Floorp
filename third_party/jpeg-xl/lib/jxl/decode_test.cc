@@ -24,7 +24,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <ostream>
-#include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -203,6 +202,7 @@ enum PreviewMode {
 };
 
 void GeneratePreview(PreviewMode preview_mode, ImageBundle* ib) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   if (preview_mode == kSmallPreview) {
     ib->ShrinkTo(ib->xsize() / 7, ib->ysize() / 7);
   } else if (preview_mode == kBigPreview) {
@@ -213,15 +213,17 @@ void GeneratePreview(PreviewMode preview_mode, ImageBundle* ib) {
         }
       }
     };
-    JXL_ASSIGN_OR_DIE(Image3F preview,
-                      Image3F::Create(ib->xsize() * 7, ib->ysize() * 7));
+    JXL_ASSIGN_OR_DIE(
+        Image3F preview,
+        Image3F::Create(memory_manager, ib->xsize() * 7, ib->ysize() * 7));
     for (size_t c = 0; c < 3; ++c) {
       upsample7(ib->color()->Plane(c), &preview.Plane(c));
     }
     std::vector<ImageF> extra_channels;
     for (size_t i = 0; i < ib->extra_channels().size(); ++i) {
-      JXL_ASSIGN_OR_DIE(ImageF ec,
-                        ImageF::Create(ib->xsize() * 7, ib->ysize() * 7));
+      JXL_ASSIGN_OR_DIE(
+          ImageF ec,
+          ImageF::Create(memory_manager, ib->xsize() * 7, ib->ysize() * 7));
       upsample7(ib->extra_channels()[i], &ec);
       extra_channels.emplace_back(std::move(ec));
     }
@@ -257,12 +259,13 @@ struct TestCodestreamParams {
 std::vector<uint8_t> CreateTestJXLCodestream(
     Span<const uint8_t> pixels, size_t xsize, size_t ysize, size_t num_channels,
     const TestCodestreamParams& params) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   // Compress the pixels with JPEG XL.
   bool grayscale = (num_channels <= 2);
   bool have_alpha = ((num_channels & 1) == 0);
   bool include_alpha = have_alpha && params.jpeg_codestream == nullptr;
   size_t bitdepth = params.jpeg_codestream == nullptr ? 16 : 8;
-  CodecInOut io;
+  CodecInOut io{jxl::test::MemoryManager()};
   io.SetSize(xsize, ysize);
   ColorEncoding color_encoding;
   if (params.add_icc_profile) {
@@ -315,8 +318,8 @@ std::vector<uint8_t> CreateTestJXLCodestream(
       Bytes(jpeg_bytes).AppendTo(*params.jpeg_codestream);
       EXPECT_TRUE(jxl::jpeg::DecodeImageJPG(
           jxl::Bytes(jpeg_bytes.data(), jpeg_bytes.size()), &io));
-      EXPECT_TRUE(
-          EncodeJPEGData(*io.Main().jpeg_data, &jpeg_data, params.cparams));
+      EXPECT_TRUE(EncodeJPEGData(memory_manager, *io.Main().jpeg_data,
+                                 &jpeg_data, params.cparams));
       io.metadata.m.xyb_encoded = false;
     } else {
       JXL_ABORT(
@@ -720,7 +723,8 @@ std::vector<uint8_t> GetTestHeader(size_t xsize, size_t ysize,
                                    bool have_container, bool metadata_default,
                                    bool insert_extra_box,
                                    const jxl::IccBytes& icc_profile) {
-  jxl::BitWriter writer;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  jxl::BitWriter writer{memory_manager};
   jxl::BitWriter::Allotment allotment(&writer, 65536);  // Large enough
 
   if (have_container) {
@@ -1352,7 +1356,7 @@ TEST_P(DecodeTestParam, PixelTest) {
     jxl::ColorEncoding color_encoding =
         jxl::ColorEncoding::SRGB(config.grayscale);
 
-    jxl::CodecInOut io;
+    jxl::CodecInOut io{jxl::test::MemoryManager()};
     if (config.include_alpha) io.metadata.m.SetAlphaBits(16);
     io.metadata.m.color_encoding = color_encoding;
     io.SetSize(config.xsize, config.ysize);
@@ -1651,6 +1655,7 @@ TEST(DecodeTest, PixelTestWithICCProfileLossless) {
 }
 
 TEST(DecodeTest, PixelTestWithICCProfileLossy) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   JxlDecoder* dec = JxlDecoderCreate(nullptr);
 
   size_t xsize = 123;
@@ -1680,7 +1685,7 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
   jxl::ColorEncoding color_encoding0;
   EXPECT_TRUE(color_encoding0.SetICC(GetIccTestProfile(), JxlGetDefaultCms()));
   jxl::Span<const uint8_t> span0(pixels.data(), pixels.size());
-  jxl::CodecInOut io0;
+  jxl::CodecInOut io0{memory_manager};
   io0.SetSize(xsize, ysize);
   EXPECT_TRUE(ConvertFromExternal(span0, xsize, ysize, color_encoding0,
                                   /*bits_per_sample=*/16, format_orig,
@@ -1691,7 +1696,7 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
   jxl::Bytes(icc_data).AppendTo(icc);
   EXPECT_TRUE(color_encoding1.SetICC(std::move(icc), JxlGetDefaultCms()));
   jxl::Span<const uint8_t> span1(pixels2.data(), pixels2.size());
-  jxl::CodecInOut io1;
+  jxl::CodecInOut io1{memory_manager};
   io1.SetSize(xsize, ysize);
   EXPECT_TRUE(ConvertFromExternal(span1, xsize, ysize, color_encoding1,
                                   /*bits_per_sample=*/32, format,
@@ -1735,7 +1740,8 @@ double ButteraugliDistance(size_t xsize, size_t ysize,
                            const std::vector<uint8_t>& pixels_out,
                            const jxl::ColorEncoding& color_out,
                            float intensity_out) {
-  jxl::CodecInOut in;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  jxl::CodecInOut in{memory_manager};
   in.metadata.m.color_encoding = color_in;
   in.metadata.m.SetIntensityTarget(intensity_in);
   JxlPixelFormat format_in = {static_cast<uint32_t>(color_in.Channels()),
@@ -1744,7 +1750,7 @@ double ButteraugliDistance(size_t xsize, size_t ysize,
       jxl::Bytes(pixels_in.data(), pixels_in.size()), xsize, ysize, color_in,
       /*bits_per_sample=*/16, format_in,
       /*pool=*/nullptr, &in.Main()));
-  jxl::CodecInOut out;
+  jxl::CodecInOut out{memory_manager};
   out.metadata.m.color_encoding = color_out;
   out.metadata.m.SetIntensityTarget(intensity_out);
   JxlPixelFormat format_out = {static_cast<uint32_t>(color_out.Channels()),
@@ -2058,6 +2064,7 @@ TEST_P(DecodeAllEncodingsWithCMSTest, DecodeWithCMS) {
 // Tests the case of lossy sRGB image without alpha channel, decoded to RGB8
 // and to RGBA8
 TEST(DecodeTest, PixelTestOpaqueSrgbLossy) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   for (unsigned channels = 3; channels <= 4; channels++) {
     JxlDecoder* dec = JxlDecoderCreate(nullptr);
 
@@ -2083,7 +2090,7 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossy) {
 
     jxl::ColorEncoding color_encoding0 = jxl::ColorEncoding::SRGB(false);
     jxl::Span<const uint8_t> span0(pixels.data(), pixels.size());
-    jxl::CodecInOut io0;
+    jxl::CodecInOut io0{memory_manager};
     io0.SetSize(xsize, ysize);
     EXPECT_TRUE(ConvertFromExternal(span0, xsize, ysize, color_encoding0,
                                     /*bits_per_sample=*/16, format_orig,
@@ -2091,7 +2098,7 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossy) {
 
     jxl::ColorEncoding color_encoding1 = jxl::ColorEncoding::SRGB(false);
     jxl::Span<const uint8_t> span1(pixels2.data(), pixels2.size());
-    jxl::CodecInOut io1;
+    jxl::CodecInOut io1{memory_manager};
     EXPECT_TRUE(ConvertFromExternal(span1, xsize, ysize, color_encoding1,
                                     /*bits_per_sample=*/8, format,
                                     /*pool=*/nullptr, &io1.Main()));
@@ -2134,7 +2141,7 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
 
     jxl::ColorEncoding color_encoding0 = jxl::ColorEncoding::SRGB(false);
     jxl::Span<const uint8_t> span0(pixels.data(), pixels.size());
-    jxl::CodecInOut io0;
+    jxl::CodecInOut io0{jxl::test::MemoryManager()};
     io0.SetSize(xsize, ysize);
     EXPECT_TRUE(ConvertFromExternal(span0, xsize, ysize, color_encoding0,
                                     /*bits_per_sample=*/16, format_orig,
@@ -2142,7 +2149,7 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
 
     jxl::ColorEncoding color_encoding1 = jxl::ColorEncoding::SRGB(false);
     jxl::Span<const uint8_t> span1(pixels2.data(), pixels2.size());
-    jxl::CodecInOut io1;
+    jxl::CodecInOut io1{jxl::test::MemoryManager()};
     EXPECT_TRUE(ConvertFromExternal(span1, xsize, ysize, color_encoding1,
                                     /*bits_per_sample=*/8, format,
                                     /*pool=*/nullptr, &io1.Main()));
@@ -2510,6 +2517,7 @@ TEST(DecodeTest, DCNotGettableTest) {
 }
 
 TEST(DecodeTest, PreviewTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   size_t xsize = 77;
   size_t ysize = 120;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
@@ -2540,7 +2548,7 @@ TEST(DecodeTest, PreviewTest) {
               JxlDecoderPreviewOutBufferSize(dec, &format, &buffer_size));
 
     jxl::ColorEncoding c_srgb = jxl::ColorEncoding::SRGB(false);
-    jxl::CodecInOut io0;
+    jxl::CodecInOut io0{memory_manager};
     EXPECT_TRUE(jxl::ConvertFromExternal(
         jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, c_srgb,
         /*bits_per_sample=*/16, format_orig, /*pool=*/nullptr, &io0.Main()));
@@ -2561,7 +2569,7 @@ TEST(DecodeTest, PreviewTest) {
 
     EXPECT_EQ(JXL_DEC_PREVIEW_IMAGE, JxlDecoderProcessInput(dec));
 
-    jxl::CodecInOut io1;
+    jxl::CodecInOut io1{memory_manager};
     EXPECT_TRUE(
         jxl::ConvertFromExternal(jxl::Bytes(preview.data(), preview.size()),
                                  xsize_preview, ysize_preview, c_srgb,
@@ -2619,6 +2627,7 @@ TEST(DecodeTest, AlignTest) {
 }
 
 TEST(DecodeTest, AnimationTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   size_t xsize = 123;
   size_t ysize = 77;
   static const size_t num_frames = 2;
@@ -2627,7 +2636,7 @@ TEST(DecodeTest, AnimationTest) {
   frames[1] = jxl::test::GetSomeTestImage(xsize, ysize, 3, 1);
   JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{memory_manager};
   io.SetSize(xsize, ysize);
   io.metadata.m.SetUintSamples(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(false);
@@ -2642,7 +2651,7 @@ TEST(DecodeTest, AnimationTest) {
   }
 
   for (size_t i = 0; i < num_frames; ++i) {
-    jxl::ImageBundle bundle(&io.metadata.m);
+    jxl::ImageBundle bundle(memory_manager, &io.metadata.m);
 
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Bytes(frames[i].data(), frames[i].size()), xsize, ysize,
@@ -2720,6 +2729,7 @@ TEST(DecodeTest, AnimationTest) {
 }
 
 TEST(DecodeTest, AnimationTestStreaming) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   size_t xsize = 123;
   size_t ysize = 77;
   static const size_t num_frames = 2;
@@ -2728,7 +2738,7 @@ TEST(DecodeTest, AnimationTestStreaming) {
   frames[1] = jxl::test::GetSomeTestImage(xsize, ysize, 3, 1);
   JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{memory_manager};
   io.SetSize(xsize, ysize);
   io.metadata.m.SetUintSamples(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(false);
@@ -2743,7 +2753,7 @@ TEST(DecodeTest, AnimationTestStreaming) {
   }
 
   for (size_t i = 0; i < num_frames; ++i) {
-    jxl::ImageBundle bundle(&io.metadata.m);
+    jxl::ImageBundle bundle(memory_manager, &io.metadata.m);
 
     EXPECT_TRUE(ConvertFromExternal(
         jxl::Bytes(frames[i].data(), frames[i].size()), xsize, ysize,
@@ -2931,6 +2941,7 @@ TEST(DecodeTest, ExtraChannelTest) {
 }
 
 TEST(DecodeTest, SkipCurrentFrameTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   size_t xsize = 90;
   size_t ysize = 120;
   constexpr size_t num_frames = 7;
@@ -2940,7 +2951,7 @@ TEST(DecodeTest, SkipCurrentFrameTest) {
   }
   JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{memory_manager};
   io.SetSize(xsize, ysize);
   io.metadata.m.SetUintSamples(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(false);
@@ -2955,7 +2966,7 @@ TEST(DecodeTest, SkipCurrentFrameTest) {
   }
 
   for (size_t i = 0; i < num_frames; ++i) {
-    jxl::ImageBundle bundle(&io.metadata.m);
+    jxl::ImageBundle bundle(memory_manager, &io.metadata.m);
     if (i & 1) {
       // Mark some frames as referenceable, others not.
       bundle.use_for_next_frame = true;
@@ -3043,6 +3054,7 @@ TEST(DecodeTest, SkipCurrentFrameTest) {
 }
 
 TEST(DecodeTest, SkipFrameTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   size_t xsize = 90;
   size_t ysize = 120;
   constexpr size_t num_frames = 16;
@@ -3052,7 +3064,7 @@ TEST(DecodeTest, SkipFrameTest) {
   }
   JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{memory_manager};
   io.SetSize(xsize, ysize);
   io.metadata.m.SetUintSamples(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(false);
@@ -3067,7 +3079,7 @@ TEST(DecodeTest, SkipFrameTest) {
   }
 
   for (size_t i = 0; i < num_frames; ++i) {
-    jxl::ImageBundle bundle(&io.metadata.m);
+    jxl::ImageBundle bundle(memory_manager, &io.metadata.m);
     if (i & 1) {
       // Mark some frames as referenceable, others not.
       bundle.use_for_next_frame = true;
@@ -3180,13 +3192,14 @@ TEST(DecodeTest, SkipFrameTest) {
 }
 
 TEST(DecodeTest, SkipFrameWithBlendingTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   size_t xsize = 90;
   size_t ysize = 120;
   constexpr size_t num_frames = 16;
   std::vector<uint8_t> frames[num_frames];
   JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{memory_manager};
   io.SetSize(xsize, ysize);
   io.metadata.m.SetUintSamples(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(false);
@@ -3204,7 +3217,7 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
       // An internal frame with 0 duration, and use_for_next_frame, this is a
       // frame that is not rendered and not output by the API, but on which the
       // rendered frames depend
-      jxl::ImageBundle bundle_internal(&io.metadata.m);
+      jxl::ImageBundle bundle_internal(memory_manager, &io.metadata.m);
       EXPECT_TRUE(ConvertFromExternal(
           jxl::Bytes(frame_internal.data(), frame_internal.size()), xsize,
           ysize, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
@@ -3219,7 +3232,7 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
         jxl::test::GetSomeTestImage(xsize, ysize, 3, i * 2);
     // Actual rendered frame
     frame_durations[i] = 5 + i;
-    jxl::ImageBundle bundle(&io.metadata.m);
+    jxl::ImageBundle bundle(memory_manager, &io.metadata.m);
     EXPECT_TRUE(ConvertFromExternal(jxl::Bytes(frame.data(), frame.size()),
                                     xsize, ysize,
                                     jxl::ColorEncoding::SRGB(/*is_gray=*/false),
@@ -3394,13 +3407,14 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
 }
 
 TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   size_t xsize = 90;
   size_t ysize = 120;
   constexpr size_t num_frames = 16;
   std::vector<uint8_t> frames[num_frames + 5];
   JxlPixelFormat format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{memory_manager};
   io.SetSize(xsize, ysize);
   io.metadata.m.SetUintSamples(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(false);
@@ -3427,7 +3441,7 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
       // An internal frame with 0 duration, and use_for_next_frame, this is a
       // frame that is not rendered and not output by default by the API, but on
       // which the rendered frames depend
-      jxl::ImageBundle bundle_internal(&io.metadata.m);
+      jxl::ImageBundle bundle_internal(memory_manager, &io.metadata.m);
       EXPECT_TRUE(ConvertFromExternal(
           jxl::Bytes(frame_internal.data(), frame_internal.size()), xsize / 2,
           ysize / 2, jxl::ColorEncoding::SRGB(/*is_gray=*/false),
@@ -3447,7 +3461,7 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
     std::vector<uint8_t> frame =
         jxl::test::GetSomeTestImage(cropxsize, cropysize, 4, i * 2);
     // Actual rendered frame
-    jxl::ImageBundle bundle(&io.metadata.m);
+    jxl::ImageBundle bundle(memory_manager, &io.metadata.m);
     EXPECT_TRUE(ConvertFromExternal(jxl::Bytes(frame.data(), frame.size()),
                                     cropxsize, cropysize,
                                     jxl::ColorEncoding::SRGB(/*is_gray=*/false),
@@ -3684,14 +3698,15 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
 }
 
 TEST(DecodeTest, OrientedCroppedFrameTest) {
-  const auto test = [](bool keep_orientation, uint32_t orientation,
-                       uint32_t resampling) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  const auto test = [&](bool keep_orientation, uint32_t orientation,
+                        uint32_t resampling) {
     size_t xsize = 90;
     size_t ysize = 120;
     JxlPixelFormat format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     size_t oxsize = (!keep_orientation && orientation > 4 ? ysize : xsize);
     size_t oysize = (!keep_orientation && orientation > 4 ? xsize : ysize);
-    jxl::CodecInOut io;
+    jxl::CodecInOut io{memory_manager};
     io.SetSize(xsize, ysize);
     io.metadata.m.SetUintSamples(16);
     io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(false);
@@ -3707,7 +3722,7 @@ TEST(DecodeTest, OrientedCroppedFrameTest) {
 
       std::vector<uint8_t> frame =
           jxl::test::GetSomeTestImage(cropxsize, cropysize, 4, i * 2);
-      jxl::ImageBundle bundle(&io.metadata.m);
+      jxl::ImageBundle bundle(memory_manager, &io.metadata.m);
       EXPECT_TRUE(ConvertFromExternal(
           jxl::Bytes(frame.data(), frame.size()), cropxsize, cropysize,
           jxl::ColorEncoding::SRGB(/*is_gray=*/false),
@@ -3841,6 +3856,7 @@ struct StreamPositions {
 
 void AnalyzeCodestream(const std::vector<uint8_t>& data,
                        StreamPositions* streampos) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   // Unbox data to codestream and mark where it is broken up by boxes.
   std::vector<uint8_t> codestream;
   std::vector<std::pair<size_t, size_t>> breakpoints;
@@ -3926,8 +3942,9 @@ void AnalyzeCodestream(const std::vector<uint8_t>& data,
                            frame_header.passes.num_passes);
     std::vector<uint64_t> section_offsets;
     std::vector<uint32_t> section_sizes;
-    ASSERT_TRUE(ReadGroupOffsets(toc_entries, &br, &section_offsets,
-                                 &section_sizes, &groups_total_size));
+    ASSERT_TRUE(ReadGroupOffsets(memory_manager, toc_entries, &br,
+                                 &section_offsets, &section_sizes,
+                                 &groups_total_size));
     EXPECT_EQ(br.TotalBitsConsumed() % jxl::kBitsPerByte, 0);
     size_t sections_start = br.TotalBitsConsumed() / jxl::kBitsPerByte;
     p.toc_end = add_offset(sections_start);
@@ -4778,6 +4795,7 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(DecodeProgressiveTestInstantiation,
                                    DecodeProgressiveTest,
                                    ::testing::Range(0, 8));
 TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const int params = GetParam();
   bool single_group = ((params & 1) != 0);
   bool lossless = (((params >> 1) & 1) != 0);
@@ -4804,7 +4822,7 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
         jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
     JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     jxl::ColorEncoding color_encoding = jxl::ColorEncoding::SRGB(false);
-    jxl::CodecInOut io;
+    jxl::CodecInOut io{memory_manager};
     EXPECT_TRUE(jxl::ConvertFromExternal(
         jxl::Bytes(pixels.data(), pixels.size()), xsize, ysize, color_encoding,
         /*bits_per_sample=*/16, format,
@@ -4921,7 +4939,7 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
       jxl::ButteraugliParams ba;
       std::vector<float> distances(kNumPasses + 1);
       for (int p = 0;; p = next_pass(p)) {
-        jxl::CodecInOut io1;
+        jxl::CodecInOut io1{memory_manager};
         EXPECT_TRUE(jxl::ConvertFromExternal(
             jxl::Bytes(passes[p].data(), passes[p].size()), xsize, ysize,
             color_encoding,
@@ -4995,24 +5013,26 @@ JXL_TRANSCODE_JPEG_TEST(DecodeTest, JPEGReconstructTestCodestream) {
 }
 
 JXL_TRANSCODE_JPEG_TEST(DecodeTest, JPEGReconstructionTest) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
   const std::vector<uint8_t> orig = jxl::test::ReadTestData(jpeg_path);
-  jxl::CodecInOut orig_io;
+  jxl::CodecInOut orig_io{memory_manager};
   ASSERT_TRUE(jxl::jpeg::DecodeImageJPG(jxl::Bytes(orig), &orig_io));
   orig_io.metadata.m.xyb_encoded = false;
-  jxl::BitWriter writer;
+  jxl::BitWriter writer{memory_manager};
   ASSERT_TRUE(WriteCodestreamHeaders(&orig_io.metadata, &writer, nullptr));
   writer.ZeroPadToByte();
   jxl::CompressParams cparams;
   cparams.color_transform = jxl::ColorTransform::kNone;
-  ASSERT_TRUE(jxl::EncodeFrame(cparams, jxl::FrameInfo{}, &orig_io.metadata,
-                               orig_io.Main(), *JxlGetDefaultCms(),
+  ASSERT_TRUE(jxl::EncodeFrame(memory_manager, cparams, jxl::FrameInfo{},
+                               &orig_io.metadata, orig_io.Main(),
+                               *JxlGetDefaultCms(),
                                /*pool=*/nullptr, &writer,
                                /*aux_out=*/nullptr));
 
   std::vector<uint8_t> jpeg_data;
-  ASSERT_TRUE(
-      EncodeJPEGData(*orig_io.Main().jpeg_data.get(), &jpeg_data, cparams));
+  ASSERT_TRUE(EncodeJPEGData(memory_manager, *orig_io.Main().jpeg_data.get(),
+                             &jpeg_data, cparams));
   std::vector<uint8_t> container;
   jxl::Bytes(jxl::kContainerHeader).AppendTo(container);
   jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_data.size(), false,
@@ -5549,12 +5569,14 @@ JXL_BOXES_TEST(DecodeTest, PartialCodestreamBoxTest) {
 }
 
 TEST(DecodeTest, SpotColorTest) {
-  jxl::CodecInOut io;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  jxl::CodecInOut io{memory_manager};
   size_t xsize = 55;
   size_t ysize = 257;
   io.metadata.m.color_encoding = jxl::ColorEncoding::LinearSRGB();
-  JXL_ASSIGN_OR_DIE(Image3F main, Image3F::Create(xsize, ysize));
-  JXL_ASSIGN_OR_DIE(ImageF spot, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_DIE(Image3F main,
+                    Image3F::Create(memory_manager, xsize, ysize));
+  JXL_ASSIGN_OR_DIE(ImageF spot, ImageF::Create(memory_manager, xsize, ysize));
   jxl::ZeroFillImage(&main);
   jxl::ZeroFillImage(&spot);
 

@@ -6,9 +6,10 @@
 #ifndef LIB_JXL_AC_STRATEGY_H_
 #define LIB_JXL_AC_STRATEGY_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/memory_manager.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <hwy/base.h>  // kMaxVectorSize
 
 #include "lib/jxl/base/compiler_specific.h"
@@ -196,7 +197,8 @@ class AcStrategyRow {
 class AcStrategyImage {
  public:
   AcStrategyImage() = default;
-  static StatusOr<AcStrategyImage> Create(size_t xsize, size_t ysize);
+  static StatusOr<AcStrategyImage> Create(JxlMemoryManager* memory_manager,
+                                          size_t xsize, size_t ysize);
 
   AcStrategyImage(AcStrategyImage&&) = default;
   AcStrategyImage& operator=(AcStrategyImage&&) = default;
@@ -251,6 +253,8 @@ class AcStrategyImage {
 
   // Count the number of blocks of a given type.
   size_t CountBlocks(AcStrategy::Type type) const;
+
+  JxlMemoryManager* memory_manager() const { return layers_.memory_manager(); }
 
  private:
   ImageB layers_;

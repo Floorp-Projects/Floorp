@@ -8,6 +8,8 @@
 
 // Compressed representation of ICC profiles.
 
+#include <jxl/memory_manager.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <vector>
@@ -20,6 +22,9 @@
 namespace jxl {
 
 struct ICCReader {
+  explicit ICCReader(JxlMemoryManager* memory_manager)
+      : decompressed_(memory_manager) {}
+
   Status Init(BitReader* reader, size_t output_limit);
   Status Process(BitReader* reader, PaddedBytes* icc);
   void Reset() {

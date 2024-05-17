@@ -76,7 +76,7 @@ constexpr Matrix3x3 kBradfordInv{{{0.9869929f, -0.1470543f, 0.1599627f},
                                   {0.4323053f, 0.5183603f, 0.0492912f},
                                   {-0.0085287f, 0.0400428f, 0.9684867f}}};
 
-// Adapts whitepoint x, y to D50
+// Adapts white point x, y to D50
 static Status AdaptToXYZD50(float wx, float wy, Matrix3x3& matrix) {
   bool ok = (wx >= 0) && (wx <= 1) && (wy > 0) && (wy <= 1);
   if (!ok) {
@@ -359,7 +359,7 @@ static Status CreateICCChadMatrix(double wx, double wy, Matrix3x3& result) {
   return true;
 }
 
-// Creates RGB to XYZ matrix given RGB primaries and whitepoint in xy.
+// Creates RGB to XYZ matrix given RGB primaries and white point in xy.
 static Status CreateICCRGBMatrix(double rx, double ry, double gx, double gy,
                                  double bx, double by, double wx, double wy,
                                  Matrix3x3& result) {

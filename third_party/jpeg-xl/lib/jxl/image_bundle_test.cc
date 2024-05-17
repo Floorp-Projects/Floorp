@@ -3,18 +3,20 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jxl/image_bundle.h"
+#include <jxl/memory_manager.h>
 
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
 
 TEST(ImageBundleTest, ExtraChannelName) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   AuxOut aux_out;
-  BitWriter writer;
+  BitWriter writer{memory_manager};
   BitWriter::Allotment allotment(&writer, 99);
 
   ImageMetadata metadata;

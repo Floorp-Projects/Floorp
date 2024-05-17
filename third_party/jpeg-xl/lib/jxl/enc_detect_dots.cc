@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_detect_dots.h"
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -50,9 +52,11 @@ StatusOr<ImageF> SumOfSquareDifferences(const Image3F& forig,
   const auto color_coef0 = Set(d, 0.0f);
   const auto color_coef1 = Set(d, 10.0f);
   const auto color_coef2 = Set(d, 0.0f);
+  JxlMemoryManager* memory_manager = forig.memory_manager();
 
-  JXL_ASSIGN_OR_RETURN(ImageF sum_of_squares,
-                       ImageF::Create(forig.xsize(), forig.ysize()));
+  JXL_ASSIGN_OR_RETURN(
+      ImageF sum_of_squares,
+      ImageF::Create(memory_manager, forig.xsize(), forig.ysize()));
   JXL_CHECK(RunOnPool(
       pool, 0, forig.ysize(), ThreadPool::NoInit,
       [&](const uint32_t task, size_t thread) {
@@ -145,10 +149,13 @@ const WeightsSeparable5& WeightsSeparable5Gaussian3() {
 
 StatusOr<ImageF> ComputeEnergyImage(const Image3F& orig, Image3F* smooth,
                                     ThreadPool* pool) {
+  JxlMemoryManager* memory_manager = orig.memory_manager();
   // Prepare guidance images for dot selection.
-  JXL_ASSIGN_OR_RETURN(Image3F forig,
-                       Image3F::Create(orig.xsize(), orig.ysize()));
-  JXL_ASSIGN_OR_RETURN(*smooth, Image3F::Create(orig.xsize(), orig.ysize()));
+  JXL_ASSIGN_OR_RETURN(
+      Image3F forig,
+      Image3F::Create(memory_manager, orig.xsize(), orig.ysize()));
+  JXL_ASSIGN_OR_RETURN(
+      *smooth, Image3F::Create(memory_manager, orig.xsize(), orig.ysize()));
   Rect rect(orig);
 
   const auto& weights1 = WeightsSeparable5Gaussian0_65();
@@ -289,8 +296,10 @@ StatusOr<std::vector<ConnectedComponent>> FindCC(const ImageF& energy,
                                                  uint32_t maxWindow,
                                                  double minScore) {
   const int kExtraRect = 4;
-  JXL_ASSIGN_OR_RETURN(ImageF img,
-                       ImageF::Create(energy.xsize(), energy.ysize()));
+  JxlMemoryManager* memory_manager = energy.memory_manager();
+  JXL_ASSIGN_OR_RETURN(
+      ImageF img,
+      ImageF::Create(memory_manager, energy.xsize(), energy.ysize()));
   CopyImageTo(energy, &img);
   std::vector<ConnectedComponent> ans;
   for (size_t y = 0; y < rect.ysize(); y++) {
@@ -537,9 +546,11 @@ GaussianEllipse FitGaussian(const ConnectedComponent& cc, const Rect& rect,
 StatusOr<std::vector<PatchInfo>> DetectGaussianEllipses(
     const Image3F& opsin, const Rect& rect, const GaussianDetectParams& params,
     const EllipseQuantParams& qParams, ThreadPool* pool) {
+  JxlMemoryManager* memory_manager = opsin.memory_manager();
   std::vector<PatchInfo> dots;
-  JXL_ASSIGN_OR_RETURN(Image3F smooth,
-                       Image3F::Create(opsin.xsize(), opsin.ysize()));
+  JXL_ASSIGN_OR_RETURN(
+      Image3F smooth,
+      Image3F::Create(memory_manager, opsin.xsize(), opsin.ysize()));
   JXL_ASSIGN_OR_RETURN(ImageF energy, ComputeEnergyImage(opsin, &smooth, pool));
   JXL_ASSIGN_OR_RETURN(std::vector<ConnectedComponent> components,
                        FindCC(energy, rect, params.t_low, params.t_high,

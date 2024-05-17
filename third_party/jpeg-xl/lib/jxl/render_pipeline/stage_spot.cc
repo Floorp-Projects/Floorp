@@ -5,6 +5,13 @@
 
 #include "lib/jxl/render_pipeline/stage_spot.h"
 
+#include <cstddef>
+#include <memory>
+
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/render_pipeline/render_pipeline_stage.h"
+
 namespace jxl {
 class SpotColorStage : public RenderPipelineStage {
  public:

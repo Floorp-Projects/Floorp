@@ -8,11 +8,12 @@
 
 // std::vector replacement with padding to reduce bounds checks in WriteBits
 
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>  // memcpy
+#include <jxl/memory_manager.h>
 
 #include <algorithm>  // max
+#include <cstddef>
+#include <cstdint>
+#include <cstring>  // memcpy
 #include <initializer_list>
 #include <utility>  // swap
 
@@ -29,25 +30,31 @@ namespace jxl {
 class PaddedBytes {
  public:
   // Required for output params.
-  PaddedBytes() : size_(0), capacity_(0) {}
+  explicit PaddedBytes(JxlMemoryManager* memory_manager)
+      : memory_manager_(memory_manager), size_(0), capacity_(0) {}
 
-  explicit PaddedBytes(size_t size) : size_(size), capacity_(0) {
+  PaddedBytes(JxlMemoryManager* memory_manager, size_t size)
+      : memory_manager_(memory_manager), size_(size), capacity_(0) {
     reserve(size);
   }
 
-  PaddedBytes(size_t size, uint8_t value) : size_(size), capacity_(0) {
+  PaddedBytes(JxlMemoryManager* memory_manager, size_t size, uint8_t value)
+      : memory_manager_(memory_manager), size_(size), capacity_(0) {
     reserve(size);
     if (size_ != 0) {
       memset(data(), value, size);
     }
   }
 
-  PaddedBytes(const PaddedBytes& other) : size_(other.size_), capacity_(0) {
+  PaddedBytes(const PaddedBytes& other)
+      : memory_manager_(other.memory_manager_),
+        size_(other.size_),
+        capacity_(0) {
     reserve(size_);
     if (data() != nullptr) memcpy(data(), other.data(), size_);
   }
   PaddedBytes& operator=(const PaddedBytes& other) {
-    // Self-assignment is safe.
+    if (this == &other) return *this;
     resize(other.size());
     if (data() != nullptr) memmove(data(), other.data(), size_);
     return *this;
@@ -55,12 +62,14 @@ class PaddedBytes {
 
   // default is not OK - need to set other.size_ to 0!
   PaddedBytes(PaddedBytes&& other) noexcept
-      : size_(other.size_),
+      : memory_manager_(other.memory_manager_),
+        size_(other.size_),
         capacity_(other.capacity_),
         data_(std::move(other.data_)) {
     other.size_ = other.capacity_ = 0;
   }
   PaddedBytes& operator=(PaddedBytes&& other) noexcept {
+    memory_manager_ = other.memory_manager_;
     size_ = other.size_;
     capacity_ = other.capacity_;
     data_ = std::move(other.data_);
@@ -71,7 +80,10 @@ class PaddedBytes {
     return *this;
   }
 
+  JxlMemoryManager* memory_manager() const { return memory_manager_; }
+
   void swap(PaddedBytes& other) noexcept {
+    std::swap(memory_manager_, other.memory_manager_);
     std::swap(size_, other.size_);
     std::swap(capacity_, other.capacity_);
     std::swap(data_, other.data_);
@@ -198,6 +210,7 @@ class PaddedBytes {
     JXL_ASSERT(i <= size());
   }
 
+  JxlMemoryManager* memory_manager_;
   size_t size_;
   size_t capacity_;
   CacheAlignedUniquePtr data_;

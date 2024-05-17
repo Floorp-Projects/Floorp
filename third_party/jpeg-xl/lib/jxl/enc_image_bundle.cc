@@ -6,6 +6,7 @@
 #include "lib/jxl/enc_image_bundle.h"
 
 #include <jxl/cms_interface.h>
+#include <jxl/memory_manager.h>
 
 #include <atomic>
 #include <utility>
@@ -27,8 +28,10 @@ Status ApplyColorTransform(const ColorEncoding& c_current,
   // Changing IsGray is probably a bug.
   JXL_CHECK(c_current.IsGray() == c_desired.IsGray());
   bool is_gray = c_current.IsGray();
+  JxlMemoryManager* memory_amanger = color.memory_manager();
   if (out->xsize() < rect.xsize() || out->ysize() < rect.ysize()) {
-    JXL_ASSIGN_OR_RETURN(*out, Image3F::Create(rect.xsize(), rect.ysize()));
+    JXL_ASSIGN_OR_RETURN(
+        *out, Image3F::Create(memory_amanger, rect.xsize(), rect.ysize()));
   } else {
     out->ShrinkTo(rect.xsize(), rect.ysize());
   }
@@ -131,10 +134,12 @@ Status TransformIfNeeded(const ImageBundle& in, const ColorEncoding& c_desired,
     *out = &in;
     return true;
   }
+  JxlMemoryManager* memory_manager = in.memory_manager();
   // TODO(janwas): avoid copying via createExternal+copyBackToIO
   // instead of copy+createExternal+copyBackToIO
-  JXL_ASSIGN_OR_RETURN(Image3F color,
-                       Image3F::Create(in.color().xsize(), in.color().ysize()));
+  JXL_ASSIGN_OR_RETURN(
+      Image3F color,
+      Image3F::Create(memory_manager, in.color().xsize(), in.color().ysize()));
   CopyImageTo(in.color(), &color);
   store->SetFromImage(std::move(color), in.c_current());
 
@@ -142,8 +147,9 @@ Status TransformIfNeeded(const ImageBundle& in, const ColorEncoding& c_desired,
   if (in.HasExtraChannels()) {
     std::vector<ImageF> extra_channels;
     for (const ImageF& extra_channel : in.extra_channels()) {
-      JXL_ASSIGN_OR_RETURN(ImageF ec, ImageF::Create(extra_channel.xsize(),
-                                                     extra_channel.ysize()));
+      JXL_ASSIGN_OR_RETURN(ImageF ec,
+                           ImageF::Create(memory_manager, extra_channel.xsize(),
+                                          extra_channel.ysize()));
       CopyImageTo(extra_channel, &ec);
       extra_channels.emplace_back(std::move(ec));
     }

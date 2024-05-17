@@ -4,20 +4,16 @@
 // license that can be found in the LICENSE file.
 #include "lib/jxl/quant_weights.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <jxl/memory_manager.h>
 
-#include <algorithm>
 #include <cmath>
-#include <limits>
-#include <utility>
+#include <cstdio>
+#include <cstdlib>
 
-#include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dec_modular.h"
 #include "lib/jxl/fields.h"
-#include "lib/jxl/image.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/quant_weights.cc"
@@ -378,7 +374,8 @@ Status DecodeDctParams(BitReader* br, DctQuantWeightParams* params) {
   return true;
 }
 
-Status Decode(BitReader* br, QuantEncoding* encoding, size_t required_size_x,
+Status Decode(JxlMemoryManager* memory_manager, BitReader* br,
+              QuantEncoding* encoding, size_t required_size_x,
               size_t required_size_y, size_t idx,
               ModularFrameDecoder* modular_frame_decoder) {
   size_t required_size = required_size_x * required_size_y;
@@ -467,7 +464,7 @@ Status Decode(BitReader* br, QuantEncoding* encoding, size_t required_size_x,
       // Set mode early, to avoid mem-leak.
       encoding->mode = QuantEncoding::kQuantModeRAW;
       JXL_RETURN_IF_ERROR(ModularFrameDecoder::DecodeQuantTable(
-          required_size_x, required_size_y, br, encoding, idx,
+          memory_manager, required_size_x, required_size_y, br, encoding, idx,
           modular_frame_decoder));
       break;
     }
@@ -486,16 +483,16 @@ constexpr const std::array<int, 17> DequantMatrices::required_size_y;
 constexpr const size_t DequantMatrices::kSumRequiredXy;
 constexpr DequantMatrices::QuantTable DequantMatrices::kQuantTable[];
 
-Status DequantMatrices::Decode(BitReader* br,
+Status DequantMatrices::Decode(JxlMemoryManager* memory_manager, BitReader* br,
                                ModularFrameDecoder* modular_frame_decoder) {
   size_t all_default = br->ReadBits(1);
   size_t num_tables = all_default ? 0 : static_cast<size_t>(kNum);
   encodings_.clear();
   encodings_.resize(kNum, QuantEncoding::Library(0));
   for (size_t i = 0; i < num_tables; i++) {
-    JXL_RETURN_IF_ERROR(
-        jxl::Decode(br, &encodings_[i], required_size_x[i % kNum],
-                    required_size_y[i % kNum], i, modular_frame_decoder));
+    JXL_RETURN_IF_ERROR(jxl::Decode(
+        memory_manager, br, &encodings_[i], required_size_x[i % kNum],
+        required_size_y[i % kNum], i, modular_frame_decoder));
   }
   computed_mask_ = 0;
   return true;

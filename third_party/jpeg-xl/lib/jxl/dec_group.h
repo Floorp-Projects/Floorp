@@ -29,7 +29,7 @@ Status DecodeGroup(const FrameHeader& frame_header,
                    PassesDecoderState* JXL_RESTRICT dec_state,
                    GroupDecCache* JXL_RESTRICT group_dec_cache, size_t thread,
                    RenderPipelineInput& render_pipeline_input,
-                   ImageBundle* JXL_RESTRICT decoded, size_t first_pass,
+                   jpeg::JPEGData* JXL_RESTRICT jpeg_data, size_t first_pass,
                    bool force_draw, bool dc_only, bool* should_run_pipeline);
 
 Status DecodeGroupForRoundtrip(const FrameHeader& frame_header,
@@ -39,7 +39,7 @@ Status DecodeGroupForRoundtrip(const FrameHeader& frame_header,
                                GroupDecCache* JXL_RESTRICT group_dec_cache,
                                size_t thread,
                                RenderPipelineInput& render_pipeline_input,
-                               ImageBundle* JXL_RESTRICT decoded,
+                               jpeg::JPEGData* JXL_RESTRICT jpeg_data,
                                AuxOut* aux_out);
 
 }  // namespace jxl

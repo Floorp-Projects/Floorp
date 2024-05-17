@@ -5,18 +5,21 @@
 
 #include "lib/jxl/chroma_from_luma.h"
 
+#include <jxl/memory_manager.h>
+
 #include "lib/jxl/image_ops.h"
 
 namespace jxl {
 
-StatusOr<ColorCorrelationMap> ColorCorrelationMap::Create(size_t xsize,
-                                                          size_t ysize,
-                                                          bool XYB) {
+StatusOr<ColorCorrelationMap> ColorCorrelationMap::Create(
+    JxlMemoryManager* memory_manager, size_t xsize, size_t ysize, bool XYB) {
   ColorCorrelationMap result;
   size_t xblocks = DivCeil(xsize, kColorTileDim);
   size_t yblocks = DivCeil(ysize, kColorTileDim);
-  JXL_ASSIGN_OR_RETURN(result.ytox_map, ImageSB::Create(xblocks, yblocks));
-  JXL_ASSIGN_OR_RETURN(result.ytob_map, ImageSB::Create(xblocks, yblocks));
+  JXL_ASSIGN_OR_RETURN(result.ytox_map,
+                       ImageSB::Create(memory_manager, xblocks, yblocks));
+  JXL_ASSIGN_OR_RETURN(result.ytob_map,
+                       ImageSB::Create(memory_manager, xblocks, yblocks));
   ZeroFillImage(&result.ytox_map);
   ZeroFillImage(&result.ytob_map);
   if (!XYB) {

@@ -5,10 +5,16 @@
 
 include(jxl_lists.cmake)
 
+if(SANITIZER STREQUAL "msan")
+  message(STATUS "NOT building benchmarks under MSAN")
+  return()
+endif()
+
 # This is the Google benchmark project (https://github.com/google/benchmark).
-find_package(benchmark QUIET)
+find_package(benchmark)
 
 if(benchmark_FOUND)
+  message(STATUS "benchmark found")
   if(JPEGXL_STATIC AND NOT MINGW)
     # benchmark::benchmark hardcodes the librt.so which obviously doesn't
     # compile in static mode.
@@ -30,6 +36,9 @@ if(benchmark_FOUND)
   target_link_libraries(jxl_gbench
     jxl_extras-internal
     jxl-internal
+    jxl_tool
     benchmark::benchmark
   )
+else()
+  message(STATUS "benchmark NOT found")
 endif() # benchmark_FOUND

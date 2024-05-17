@@ -5,8 +5,11 @@
 
 #include "lib/jpegli/libjpeg_test_util.h"
 
+#include <cstring>
+
 #include "lib/jxl/base/include_jpeglib.h"  // NOLINT
-#include "lib/jxl/sanitizers.h"
+#include "lib/jxl/base/sanitizers.h"
+#include "lib/jxl/base/status.h"
 
 namespace jpegli {
 

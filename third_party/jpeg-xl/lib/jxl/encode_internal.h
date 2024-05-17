@@ -431,9 +431,11 @@ class JxlEncoderOutputProcessorWrapper {
   friend class JxlOutputProcessorBuffer;
 
  public:
-  JxlEncoderOutputProcessorWrapper() = default;
-  explicit JxlEncoderOutputProcessorWrapper(JxlEncoderOutputProcessor processor)
-      : external_output_processor_(
+  JxlEncoderOutputProcessorWrapper() : memory_manager_(nullptr) {}
+  JxlEncoderOutputProcessorWrapper(JxlMemoryManager* memory_manager,
+                                   JxlEncoderOutputProcessor processor)
+      : memory_manager_(memory_manager),
+        external_output_processor_(
             jxl::make_unique<JxlEncoderOutputProcessor>(processor)) {}
 
   bool HasAvailOut() const { return avail_out_ != nullptr; }
@@ -472,6 +474,8 @@ class JxlEncoderOutputProcessorWrapper {
   bool AppendBufferToExternalProcessor(void* data, size_t count);
 
   struct InternalBuffer {
+    explicit InternalBuffer(JxlMemoryManager* memory_manager)
+        : owned_data(memory_manager) {}
     // Bytes in the range `[output_position_ - start_of_the_buffer,
     // written_bytes)` need to be flushed out.
     size_t written_bytes = 0;
@@ -496,6 +500,7 @@ class JxlEncoderOutputProcessorWrapper {
   bool stop_requested_ = false;
   bool has_buffer_ = false;
 
+  JxlMemoryManager* memory_manager_;
   std::unique_ptr<JxlEncoderOutputProcessor> external_output_processor_;
 };
 

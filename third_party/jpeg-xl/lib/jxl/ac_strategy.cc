@@ -5,9 +5,10 @@
 
 #include "lib/jxl/ac_strategy.h"
 
-#include <string.h>
+#include <jxl/memory_manager.h>
 
 #include <algorithm>
+#include <cstring>
 #include <utility>
 
 #include "lib/jxl/base/bits.h"
@@ -83,9 +84,11 @@ constexpr size_t AcStrategy::kMaxCoeffBlocks;
 constexpr size_t AcStrategy::kMaxBlockDim;
 constexpr size_t AcStrategy::kMaxCoeffArea;
 
-StatusOr<AcStrategyImage> AcStrategyImage::Create(size_t xsize, size_t ysize) {
+StatusOr<AcStrategyImage> AcStrategyImage::Create(
+    JxlMemoryManager* memory_manager, size_t xsize, size_t ysize) {
   AcStrategyImage img;
-  JXL_ASSIGN_OR_RETURN(img.layers_, ImageB::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(img.layers_,
+                       ImageB::Create(memory_manager, xsize, ysize));
   img.row_ = img.layers_.Row(0);
   img.stride_ = img.layers_.PixelsPerRow();
   return img;

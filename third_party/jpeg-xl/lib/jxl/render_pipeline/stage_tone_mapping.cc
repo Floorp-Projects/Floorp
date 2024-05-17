@@ -5,6 +5,8 @@
 
 #include "lib/jxl/render_pipeline/stage_tone_mapping.h"
 
+#include "lib/jxl/base/sanitizers.h"
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_tone_mapping.cc"
 #include <hwy/foreach_target.h>
@@ -12,7 +14,6 @@
 
 #include "lib/jxl/cms/tone_mapping-inl.h"
 #include "lib/jxl/dec_xyb-inl.h"
-#include "lib/jxl/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {

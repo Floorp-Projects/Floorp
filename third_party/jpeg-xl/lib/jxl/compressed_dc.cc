@@ -5,11 +5,12 @@
 
 #include "lib/jxl/compressed_dc.h"
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include <jxl/memory_manager.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <vector>
 
 #undef HWY_TARGET_INCLUDE
@@ -121,7 +122,8 @@ JXL_INLINE void ComputePixel(
   Store(out, d, out_rows[2] + x);
 }
 
-Status AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
+Status AdaptiveDCSmoothing(JxlMemoryManager* memory_manager,
+                           const float* dc_factors, Image3F* dc,
                            ThreadPool* pool) {
   const size_t xsize = dc->xsize();
   const size_t ysize = dc->ysize();
@@ -132,7 +134,8 @@ Status AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
   // the x and b channels through color correlation.
   JXL_ASSERT(w1 + w2 < 0.25f);
 
-  JXL_ASSIGN_OR_RETURN(Image3F smoothed, Image3F::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(Image3F smoothed,
+                       Image3F::Create(memory_manager, xsize, ysize));
   // Fill in borders that the loop below will not. First and last are unused.
   for (size_t c = 0; c < 3; c++) {
     for (size_t y : {static_cast<size_t>(0), ysize - 1}) {
@@ -289,9 +292,11 @@ namespace jxl {
 
 HWY_EXPORT(DequantDC);
 HWY_EXPORT(AdaptiveDCSmoothing);
-Status AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
+Status AdaptiveDCSmoothing(JxlMemoryManager* memory_manager,
+                           const float* dc_factors, Image3F* dc,
                            ThreadPool* pool) {
-  return HWY_DYNAMIC_DISPATCH(AdaptiveDCSmoothing)(dc_factors, dc, pool);
+  return HWY_DYNAMIC_DISPATCH(AdaptiveDCSmoothing)(memory_manager, dc_factors,
+                                                   dc, pool);
 }
 
 void DequantDC(const Rect& r, Image3F* dc, ImageB* quant_dc, const Image& in,

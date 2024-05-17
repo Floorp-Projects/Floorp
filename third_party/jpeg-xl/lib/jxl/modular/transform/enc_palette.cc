@@ -5,6 +5,8 @@
 
 #include "lib/jxl/modular/transform/enc_palette.h"
 
+#include <jxl/memory_manager.h>
+
 #include <array>
 #include <map>
 #include <set>
@@ -166,6 +168,7 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
                            PaletteIterationData &palette_iteration_data) {
   JXL_QUIET_RETURN_IF_ERROR(CheckEqualChannels(input, begin_c, end_c));
   JXL_ASSERT(begin_c >= input.nb_meta_channels);
+  JxlMemoryManager *memory_manager = input.memory_manager();
   uint32_t nb = end_c - begin_c + 1;
 
   size_t w = input.channel[begin_c].w;
@@ -198,7 +201,8 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
         }
       }
       JXL_DEBUG_V(6, "Channel %i uses only %i colors.", begin_c, idx);
-      JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(idx, 1));
+      JXL_ASSIGN_OR_RETURN(Channel pch,
+                           Channel::Create(memory_manager, idx, 1));
       pch.hshift = -1;
       pch.vshift = -1;
       nb_colors = idx;
@@ -238,7 +242,7 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
       }
     }
     JXL_DEBUG_V(6, "Channel %i uses only %i colors.", begin_c, idx);
-    JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(idx, 1));
+    JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(memory_manager, idx, 1));
     pch.hshift = -1;
     pch.vshift = -1;
     nb_colors = idx;
@@ -261,10 +265,10 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
     return true;
   }
 
-  Image quantized_input;
+  Image quantized_input(memory_manager);
   if (lossy) {
-    JXL_ASSIGN_OR_RETURN(quantized_input,
-                         Image::Create(w, h, input.bitdepth, nb));
+    JXL_ASSIGN_OR_RETURN(quantized_input, Image::Create(memory_manager, w, h,
+                                                        input.bitdepth, nb));
     for (size_t c = 0; c < nb; c++) {
       CopyImageTo(input.channel[begin_c + c].plane,
                   &quantized_input.channel[c].plane);
@@ -383,7 +387,8 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
   JXL_DEBUG_V(6, "Channels %i-%i can be represented using a %i-color palette.",
               begin_c, end_c, nb_colors);
 
-  JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(nb_colors, nb));
+  JXL_ASSIGN_OR_RETURN(Channel pch,
+                       Channel::Create(memory_manager, nb_colors, nb));
   pch.hshift = -1;
   pch.vshift = -1;
   pixel_type *JXL_RESTRICT p_palette = pch.Row(0);

@@ -8,10 +8,10 @@
 
 #include <jxl/decode.h>
 #include <jxl/types.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -49,6 +49,7 @@ class FrameDecoder {
       : dec_state_(dec_state),
         pool_(pool),
         frame_header_(&metadata),
+        modular_frame_decoder_(dec_state_->memory_manager()),
         use_slow_rendering_pipeline_(use_slow_rendering_pipeline) {}
 
   void SetRenderSpotcolors(bool rsc) { render_spotcolors_ = rsc; }

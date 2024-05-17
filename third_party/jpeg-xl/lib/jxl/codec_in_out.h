@@ -8,16 +8,14 @@
 
 // Holds inputs/outputs for decoding/encoding images.
 
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/memory_manager.h>
 
-#include <type_traits>
+#include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
-#include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -37,9 +35,11 @@ struct Blobs {
 // to/from decoding/encoding.
 class CodecInOut {
  public:
-  CodecInOut() : preview_frame(&metadata.m) {
+  explicit CodecInOut(JxlMemoryManager* memory_manager)
+      : memory_manager(memory_manager),
+        preview_frame(memory_manager, &metadata.m) {
     frames.reserve(1);
-    frames.emplace_back(&metadata.m);
+    frames.emplace_back(memory_manager, &metadata.m);
   }
 
   // Move-only.
@@ -96,6 +96,8 @@ class CodecInOut {
   // -- DECODER OUTPUT, ENCODER INPUT:
 
   // Metadata stored into / retrieved from bitstreams.
+
+  JxlMemoryManager* memory_manager;
 
   Blobs blobs;
 

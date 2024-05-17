@@ -5,6 +5,8 @@
 
 #include "lib/jxl/render_pipeline/stage_blending.h"
 
+#include <jxl/memory_manager.h>
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_blending.cc"
 #include <hwy/foreach_target.h>
@@ -32,7 +34,7 @@ class BlendingStage : public RenderPipelineStage {
     info_ = frame_header_.blending_info;
     const std::vector<BlendingInfo>& ec_info =
         frame_header_.extra_channel_blending_info;
-    const ImageBundle& bg = state_.reference_frames[info_.source].frame;
+    const ImageBundle& bg = *state_.reference_frames[info_.source].frame;
     bg_ = &bg;
     if (bg.xsize() == 0 || bg.ysize() == 0) {
       zeroes_.resize(image_xsize_, 0.f);
@@ -44,7 +46,7 @@ class BlendingStage : public RenderPipelineStage {
     } else if (std::any_of(ec_info.begin(), ec_info.end(),
                            [this](const BlendingInfo& info) {
                              const ImageBundle& bg =
-                                 state_.reference_frames[info.source].frame;
+                                 *state_.reference_frames[info.source].frame;
                              return bg.xsize() == 0 || bg.ysize() == 0;
                            })) {
       zeroes_.resize(image_xsize_, 0.f);
@@ -63,7 +65,7 @@ class BlendingStage : public RenderPipelineStage {
 
     Status ok = verify_bg_size(bg);
     for (const auto& info : ec_info) {
-      const ImageBundle& bg = state_.reference_frames[info.source].frame;
+      const ImageBundle& bg = *state_.reference_frames[info.source].frame;
       if (!!ok) ok = verify_bg_size(bg);
     }
     if (!ok) {
@@ -121,6 +123,7 @@ class BlendingStage : public RenderPipelineStage {
                     size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                     size_t thread_id) const final {
     JXL_ASSERT(initialized_);
+    JxlMemoryManager* memory_manager = state_.memory_manager;
     const FrameOrigin& frame_origin = frame_header_.frame_origin;
     ssize_t bg_xpos = frame_origin.x0 + static_cast<ssize_t>(xpos);
     ssize_t bg_ypos = frame_origin.y0 + static_cast<ssize_t>(ypos);
@@ -151,19 +154,20 @@ class BlendingStage : public RenderPipelineStage {
                               : zeroes_.data();
       } else {
         const ImageBundle& ec_bg =
-            state_
-                .reference_frames
-                    [frame_header_.extra_channel_blending_info[c - 3].source]
-                .frame;
+            *state_
+                 .reference_frames
+                     [frame_header_.extra_channel_blending_info[c - 3].source]
+                 .frame;
         bg_row_ptrs_[c] =
             ec_bg.xsize() != 0 && ec_bg.ysize() != 0
                 ? ec_bg.extra_channels()[c - 3].ConstRow(bg_ypos) + bg_xpos
                 : zeroes_.data();
       }
     }
-    return PerformBlending(bg_row_ptrs_.data(), fg_row_ptrs_.data(),
-                           fg_row_ptrs_.data(), 0, xsize, blending_info_[0],
-                           blending_info_.data() + 1, *extra_channel_info_);
+    return PerformBlending(memory_manager, bg_row_ptrs_.data(),
+                           fg_row_ptrs_.data(), fg_row_ptrs_.data(), 0, xsize,
+                           blending_info_[0], blending_info_.data() + 1,
+                           *extra_channel_info_);
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
@@ -194,10 +198,10 @@ class BlendingStage : public RenderPipelineStage {
     }
     for (size_t ec = 0; ec < extra_channel_info_->size(); ++ec) {
       const ImageBundle& ec_bg =
-          state_
-              .reference_frames[frame_header_.extra_channel_blending_info[ec]
-                                    .source]
-              .frame;
+          *state_
+               .reference_frames[frame_header_.extra_channel_blending_info[ec]
+                                     .source]
+               .frame;
       if (ec_bg.xsize() == 0 || ec_bg.ysize() == 0) {
         memset(GetInputRow(output_rows, 3 + ec, 0), 0, xsize * sizeof(float));
       } else {

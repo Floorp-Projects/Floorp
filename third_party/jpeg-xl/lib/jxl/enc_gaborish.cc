@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_gaborish.h"
 
+#include <jxl/memory_manager.h>
+
 #include <hwy/base.h>
 
 #include "lib/jxl/base/data_parallel.h"
@@ -18,6 +20,7 @@ namespace jxl {
 
 Status GaborishInverse(Image3F* in_out, const Rect& rect, const float mul[3],
                        ThreadPool* pool) {
+  JxlMemoryManager* memory_manager = in_out->memory_manager();
   WeightsSymmetric5 weights[3];
   // Only an approximation. One or even two 3x3, and rank-1 (separable) 5x5
   // are insufficient. The numbers here have been obtained by butteraugli
@@ -49,8 +52,9 @@ Status GaborishInverse(Image3F* in_out, const Rect& rect, const float mul[3],
   // have planes of different stride. Instead, we copy one plane in a temporary
   // image and reuse the existing planes of the in/out image.
   ImageF temp;
-  JXL_ASSIGN_OR_RETURN(
-      temp, ImageF::Create(in_out->Plane(2).xsize(), in_out->Plane(2).ysize()));
+  JXL_ASSIGN_OR_RETURN(temp,
+                       ImageF::Create(memory_manager, in_out->Plane(2).xsize(),
+                                      in_out->Plane(2).ysize()));
   CopyImageTo(in_out->Plane(2), &temp);
   Rect xrect = rect.Extend(3, Rect(*in_out));
   Symmetric5(in_out->Plane(0), xrect, weights[0], pool, &in_out->Plane(2),

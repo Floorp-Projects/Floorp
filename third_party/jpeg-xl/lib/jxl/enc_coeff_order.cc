@@ -3,6 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -234,12 +236,14 @@ void TokenizePermutation(const coeff_order_t* JXL_RESTRICT order, size_t skip,
 void EncodePermutation(const coeff_order_t* JXL_RESTRICT order, size_t skip,
                        size_t size, BitWriter* writer, int layer,
                        AuxOut* aux_out) {
+  JxlMemoryManager* memory_manager = writer->memory_manager();
   std::vector<std::vector<Token>> tokens(1);
   TokenizePermutation(order, skip, size, tokens.data());
   std::vector<uint8_t> context_map;
   EntropyEncodingData codes;
-  BuildAndEncodeHistograms(HistogramParams(), kPermutationContexts, tokens,
-                           &codes, &context_map, writer, layer, aux_out);
+  BuildAndEncodeHistograms(memory_manager, HistogramParams(),
+                           kPermutationContexts, tokens, &codes, &context_map,
+                           writer, layer, aux_out);
   WriteTokens(tokens[0], codes, context_map, 0, writer, layer, aux_out);
 }
 
@@ -260,6 +264,7 @@ void EncodeCoeffOrders(uint16_t used_orders,
                        const coeff_order_t* JXL_RESTRICT order,
                        BitWriter* writer, size_t layer,
                        AuxOut* JXL_RESTRICT aux_out) {
+  JxlMemoryManager* memory_manager = writer->memory_manager();
   auto mem = hwy::AllocateAligned<coeff_order_t>(AcStrategy::kMaxCoeffArea);
   uint16_t computed = 0;
   std::vector<std::vector<Token>> tokens(1);
@@ -283,8 +288,9 @@ void EncodeCoeffOrders(uint16_t used_orders,
   if (used_orders != 0) {
     std::vector<uint8_t> context_map;
     EntropyEncodingData codes;
-    BuildAndEncodeHistograms(HistogramParams(), kPermutationContexts, tokens,
-                             &codes, &context_map, writer, layer, aux_out);
+    BuildAndEncodeHistograms(memory_manager, HistogramParams(),
+                             kPermutationContexts, tokens, &codes, &context_map,
+                             writer, layer, aux_out);
     WriteTokens(tokens[0], codes, context_map, 0, writer, layer, aux_out);
   }
 }

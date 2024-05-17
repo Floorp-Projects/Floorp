@@ -5,6 +5,13 @@
 
 #include "lib/jxl/render_pipeline/stage_patches.h"
 
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+#include "lib/jxl/dec_patch_dictionary.h"
+#include "lib/jxl/render_pipeline/render_pipeline_stage.h"
+
 namespace jxl {
 namespace {
 class PatchDictionaryStage : public RenderPipelineStage {

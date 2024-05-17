@@ -17,7 +17,11 @@ void ConvertToDiagonal(const Matrix2x2& A, Vector2& diag, Matrix2x2& U) {
   JXL_ASSERT(std::abs(A[0][1] - A[1][0]) < 1e-15);
 #endif
 
-  if (std::abs(A[0][1]) < 1e-15) {
+  double b = -(A[0][0] + A[1][1]);
+  double c = A[0][0] * A[1][1] - A[0][1] * A[0][1];
+  double d = b * b - 4.0 * c;
+
+  if (std::abs(A[0][1]) < 1e-10 || d < 0) {
     // Already diagonal.
     diag[0] = A[0][0];
     diag[1] = A[1][1];
@@ -25,9 +29,7 @@ void ConvertToDiagonal(const Matrix2x2& A, Vector2& diag, Matrix2x2& U) {
     U[0][1] = U[1][0] = 0.0;
     return;
   }
-  double b = -(A[0][0] + A[1][1]);
-  double c = A[0][0] * A[1][1] - A[0][1] * A[0][1];
-  double d = b * b - 4.0 * c;
+
   double sqd = std::sqrt(d);
   double l1 = (-b - sqd) * 0.5;
   double l2 = (-b + sqd) * 0.5;

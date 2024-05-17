@@ -5,31 +5,24 @@
 
 #include "lib/jxl/entropy_coder.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/memory_manager.h>
 
-#include <algorithm>
-#include <utility>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/ac_context.h"
-#include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/base/bits.h"
-#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_context_map.h"
-#include "lib/jxl/epf.h"
-#include "lib/jxl/image.h"
-#include "lib/jxl/image_ops.h"
+#include "lib/jxl/fields.h"
 #include "lib/jxl/pack_signed.h"
 
 namespace jxl {
 
-Status DecodeBlockCtxMap(BitReader* br, BlockCtxMap* block_ctx_map) {
+Status DecodeBlockCtxMap(JxlMemoryManager* memory_manager, BitReader* br,
+                         BlockCtxMap* block_ctx_map) {
   auto& dct = block_ctx_map->dc_thresholds;
   auto& qft = block_ctx_map->qf_thresholds;
   auto& ctx_map = block_ctx_map->ctx_map;
@@ -57,7 +50,8 @@ Status DecodeBlockCtxMap(BitReader* br, BlockCtxMap* block_ctx_map) {
 
   ctx_map.resize(3 * kNumOrders * block_ctx_map->num_dc_ctxs *
                  (qft.size() + 1));
-  JXL_RETURN_IF_ERROR(DecodeContextMap(&ctx_map, &block_ctx_map->num_ctxs, br));
+  JXL_RETURN_IF_ERROR(
+      DecodeContextMap(memory_manager, &ctx_map, &block_ctx_map->num_ctxs, br));
   if (block_ctx_map->num_ctxs > 16) {
     return JXL_FAILURE("Invalid block context map: too many distinct contexts");
   }

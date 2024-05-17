@@ -7,6 +7,7 @@
 #include <jxl/cms.h>
 #include <jxl/codestream_header.h>
 #include <jxl/encode.h>
+#include <jxl/memory_manager.h>
 #include <jxl/types.h>
 #include <jxl/version.h>
 
@@ -20,13 +21,13 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/exif.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_fast_lossless.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_frame.h"
@@ -37,7 +38,6 @@
 #include "lib/jxl/luminance.h"
 #include "lib/jxl/memory_manager_internal.h"
 #include "lib/jxl/padded_bytes.h"
-#include "lib/jxl/sanitizers.h"
 
 struct JxlErrorOrStatus {
   // NOLINTNEXTLINE(google-explicit-constructor)
@@ -123,14 +123,14 @@ JxlEncoderOutputProcessorWrapper::GetBuffer(size_t min_size,
         external_output_processor_->release_buffer(
             external_output_processor_->opaque, 0);
       } else {
-        internal_buffers_.emplace(position_, InternalBuffer());
+        internal_buffers_.emplace(position_, InternalBuffer(memory_manager_));
         has_buffer_ = true;
         return JxlOutputProcessorBuffer(user_buffer, size, 0, this);
       }
     }
   } else {
     if (min_size + additional_size < *avail_out_) {
-      internal_buffers_.emplace(position_, InternalBuffer());
+      internal_buffers_.emplace(position_, InternalBuffer(memory_manager_));
       has_buffer_ = true;
       return JxlOutputProcessorBuffer(*next_out_ + additional_size,
                                       *avail_out_ - additional_size, 0, this);
@@ -138,7 +138,9 @@ JxlEncoderOutputProcessorWrapper::GetBuffer(size_t min_size,
   }
 
   // Otherwise, we need to allocate our own buffer.
-  auto it = internal_buffers_.emplace(position_, InternalBuffer()).first;
+  auto it =
+      internal_buffers_.emplace(position_, InternalBuffer(memory_manager_))
+          .first;
   InternalBuffer& buffer = it->second;
   size_t alloc_size = requested_size;
   it++;
@@ -463,6 +465,7 @@ void QueueBox(JxlEncoder* enc,
 // TODO(lode): share this code and the Brotli compression code in enc_jpeg_data
 JxlEncoderStatus BrotliCompress(int quality, const uint8_t* in, size_t in_size,
                                 jxl::PaddedBytes* out) {
+  JxlMemoryManager* memory_manager = out->memory_manager();
   std::unique_ptr<BrotliEncoderState, decltype(BrotliEncoderDestroyInstance)*>
       enc(BrotliEncoderCreateInstance(nullptr, nullptr, nullptr),
           BrotliEncoderDestroyInstance);
@@ -472,7 +475,7 @@ JxlEncoderStatus BrotliCompress(int quality, const uint8_t* in, size_t in_size,
   BrotliEncoderSetParameter(enc.get(), BROTLI_PARAM_SIZE_HINT, in_size);
 
   constexpr size_t kBufferSize = 128 * 1024;
-  jxl::PaddedBytes temp_buffer(kBufferSize);
+  jxl::PaddedBytes temp_buffer(memory_manager, kBufferSize);
 
   size_t avail_in = in_size;
   const uint8_t* next_in = in;
@@ -694,7 +697,7 @@ bool EncodeFrameIndexBox(const jxl::JxlEncoderFrameIndexBox& frame_index_box,
 }  // namespace
 
 jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() {
-  jxl::PaddedBytes header_bytes;
+  jxl::PaddedBytes header_bytes{&memory_manager};
 
   jxl::JxlEncoderQueuedInput& input = input_queue[0];
 
@@ -730,7 +733,7 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() {
     }
     jxl::AuxOut* aux_out =
         input.frame ? input.frame->option_values.aux_out : nullptr;
-    jxl::BitWriter writer;
+    jxl::BitWriter writer{&memory_manager};
     if (!WriteCodestreamHeaders(&metadata, &writer, aux_out)) {
       return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
                            "Failed to write codestream header");
@@ -944,8 +947,8 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() {
       frame_info.timecode = timecode;
       frame_info.name = input_frame->option_values.frame_name;
 
-      if (!jxl::EncodeFrame(input_frame->option_values.cparams, frame_info,
-                            &metadata, input_frame->frame_data, cms,
+      if (!jxl::EncodeFrame(&memory_manager, input_frame->option_values.cparams,
+                            frame_info, &metadata, input_frame->frame_data, cms,
                             thread_pool.get(), &output_processor,
                             input_frame->option_values.aux_out)) {
         return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
@@ -1024,7 +1027,7 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() {
     num_queued_boxes--;
 
     if (box->compress_box) {
-      jxl::PaddedBytes compressed(4);
+      jxl::PaddedBytes compressed(&memory_manager, 4);
       // Prepend the original box type in the brob box contents
       for (size_t i = 0; i < 4; i++) {
         compressed[i] = static_cast<uint8_t>(box->type[i]);
@@ -1780,6 +1783,21 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       frame_settings->values.cparams.use_full_image_heuristics =
           default_to_false(value);
       break;
+    case JXL_ENC_FRAME_SETTING_DISABLE_PERCEPTUAL_HEURISTICS:
+      if (value < 0 || value > 1) {
+        return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
+                             "Option value has to be 0 or 1");
+      }
+      frame_settings->values.cparams.disable_percepeptual_optimizations =
+          default_to_false(value);
+      if (frame_settings->values.cparams.disable_percepeptual_optimizations &&
+          frame_settings->enc->basic_info_set &&
+          frame_settings->enc->metadata.m.xyb_encoded) {
+        return JXL_API_ERROR(
+            frame_settings->enc, JXL_ENC_ERR_API_USAGE,
+            "Set uses_original_profile=true for non-perceptual encoding");
+      }
+      break;
 
     default:
       return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
@@ -1923,9 +1941,15 @@ void JxlEncoderReset(JxlEncoder* enc) {
   enc->intensity_target_set = false;
   enc->use_container = false;
   enc->use_boxes = false;
+  enc->store_jpeg_metadata = false;
   enc->codestream_level = -1;
   enc->output_processor = JxlEncoderOutputProcessorWrapper();
   JxlEncoderInitBasicInfo(&enc->basic_info);
+
+  // jxl::JxlEncoderFrameIndexBox frame_index_box;
+  // JxlEncoderError error = JxlEncoderError::JXL_ENC_ERR_OK;
+  // bool allow_expert_options = false;
+  // int brotli_effort = -1;
 }
 
 void JxlEncoderDestroy(JxlEncoder* enc) {
@@ -2028,7 +2052,7 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
                          "Frame input is already closed");
   }
 
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{&frame_settings->enc->memory_manager};
   if (!jxl::jpeg::DecodeImageJPG(jxl::Bytes(buffer, size), &io)) {
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_BAD_INPUT,
                          "Error during decode of input JPEG");
@@ -2113,7 +2137,8 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
     }
     jxl::jpeg::JPEGData data_in = *io.Main().jpeg_data;
     std::vector<uint8_t> jpeg_data;
-    if (!jxl::jpeg::EncodeJPEGData(data_in, &jpeg_data,
+    if (!jxl::jpeg::EncodeJPEGData(&frame_settings->enc->memory_manager,
+                                   data_in, &jpeg_data,
                                    frame_settings->values.cparams)) {
       return JXL_API_ERROR(
           frame_settings->enc, JXL_ENC_ERR_JBRD,
@@ -2245,6 +2270,12 @@ JxlEncoderStatus JxlEncoderAddImageFrameInternal(
     return JXL_API_ERROR(
         frame_settings->enc, JXL_ENC_ERR_API_USAGE,
         "Set uses_original_profile=true for lossless encoding");
+  }
+  if (frame_settings->values.cparams.disable_percepeptual_optimizations &&
+      frame_settings->enc->metadata.m.xyb_encoded) {
+    return JXL_API_ERROR(
+        frame_settings->enc, JXL_ENC_ERR_API_USAGE,
+        "Set uses_original_profile=true for non-perceptual encoding");
   }
   if (JXL_ENC_SUCCESS !=
       VerifyInputBitDepth(frame_settings->values.image_bit_depth,
@@ -2514,7 +2545,8 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetOutputProcessor(
     return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
                          "Missing output processor functions");
   }
-  enc->output_processor = JxlEncoderOutputProcessorWrapper(output_processor);
+  enc->output_processor =
+      JxlEncoderOutputProcessorWrapper(&enc->memory_manager, output_processor);
   return JxlErrorOrStatus::Success();
 }
 

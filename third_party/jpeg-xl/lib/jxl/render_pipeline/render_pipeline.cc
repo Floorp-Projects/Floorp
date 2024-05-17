@@ -5,14 +5,16 @@
 
 #include "lib/jxl/render_pipeline/render_pipeline.h"
 
+#include <jxl/memory_manager.h>
+
 #include <memory>
 #include <utility>
 
 #include "lib/jxl/base/rect.h"
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/render_pipeline/low_memory_render_pipeline.h"
 #include "lib/jxl/render_pipeline/simple_render_pipeline.h"
-#include "lib/jxl/sanitizers.h"
 
 namespace jxl {
 
@@ -35,9 +37,9 @@ StatusOr<std::unique_ptr<RenderPipeline>> RenderPipeline::Builder::Finalize(
 
   std::unique_ptr<RenderPipeline> res;
   if (use_simple_implementation_) {
-    res = jxl::make_unique<SimpleRenderPipeline>();
+    res = jxl::make_unique<SimpleRenderPipeline>(memory_manager_);
   } else {
-    res = jxl::make_unique<LowMemoryRenderPipeline>();
+    res = jxl::make_unique<LowMemoryRenderPipeline>(memory_manager_);
   }
 
   res->padding_.resize(stages_.size());

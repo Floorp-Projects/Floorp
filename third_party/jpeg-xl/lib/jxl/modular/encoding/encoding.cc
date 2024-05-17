@@ -5,13 +5,15 @@
 
 #include "lib/jxl/modular/encoding/encoding.h"
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <jxl/memory_manager.h>
 
+#include <cstdint>
+#include <cstdlib>
 #include <queue>
 
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/scope_guard.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/frame_dimensions.h"
@@ -140,6 +142,7 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
                                  pixel_type chan, size_t group_id,
                                  TreeLut<uint8_t, true> &tree_lut,
                                  Image *image) {
+  JxlMemoryManager *memory_manager = image->memory_manager();
   Channel &channel = image->channel[chan];
 
   std::array<pixel_type, kNumStaticProperties> static_props = {
@@ -380,7 +383,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
     const intptr_t onerow = channel.plane.PixelsPerRow();
     JXL_ASSIGN_OR_RETURN(
         Channel references,
-        Channel::Create(properties.size() - kNumNonrefProperties, channel.w));
+        Channel::Create(memory_manager,
+                        properties.size() - kNumNonrefProperties, channel.w));
     for (size_t y = 0; y < channel.h; y++) {
       pixel_type *JXL_RESTRICT p = channel.Row(y);
       PrecomputeReferences(channel, y, *image, chan, &references);
@@ -428,7 +432,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
     const intptr_t onerow = channel.plane.PixelsPerRow();
     JXL_ASSIGN_OR_RETURN(
         Channel references,
-        Channel::Create(properties.size() - kNumNonrefProperties, channel.w));
+        Channel::Create(memory_manager,
+                        properties.size() - kNumNonrefProperties, channel.w));
     weighted::State wp_state(wp_header, channel.w, channel.h);
     for (size_t y = 0; y < channel.h; y++) {
       pixel_type *JXL_RESTRICT p = channel.Row(y);
@@ -529,6 +534,7 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
                      const std::vector<uint8_t> *global_ctx_map,
                      const bool allow_truncated_group) {
   if (image.channel.empty()) return true;
+  JxlMemoryManager *memory_manager = image.memory_manager();
 
   // decode transforms
   Status status = Bundle::Read(br, &header);
@@ -603,8 +609,10 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
       max_tree_size += pixels;
     }
     max_tree_size = std::min(static_cast<uint64_t>(1 << 20), max_tree_size);
-    JXL_RETURN_IF_ERROR(DecodeTree(br, &tree_storage, max_tree_size));
-    JXL_RETURN_IF_ERROR(DecodeHistograms(br, (tree_storage.size() + 1) / 2,
+    JXL_RETURN_IF_ERROR(
+        DecodeTree(memory_manager, br, &tree_storage, max_tree_size));
+    JXL_RETURN_IF_ERROR(DecodeHistograms(memory_manager, br,
+                                         (tree_storage.size() + 1) / 2,
                                          &code_storage, &context_map_storage));
   } else {
     if (!global_tree || !global_code || !global_ctx_map ||
@@ -617,7 +625,8 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
   }
 
   // Read channels
-  ANSSymbolReader reader(code, br, distance_multiplier);
+  JXL_ASSIGN_OR_RETURN(ANSSymbolReader reader,
+                       ANSSymbolReader::Create(code, br, distance_multiplier));
   auto tree_lut = jxl::make_unique<TreeLut<uint8_t, true>>();
   for (; next_channel < nb_channels; next_channel++) {
     Channel &channel = image.channel[next_channel];

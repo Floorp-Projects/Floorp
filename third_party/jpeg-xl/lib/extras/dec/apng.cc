@@ -42,16 +42,21 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <limits>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "lib/extras/packed_image.h"
 #include "lib/extras/size_constraints.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 #if JPEGXL_ENABLE_APNG
 #include "png.h" /* original (unpatched) libpng is ok */
 #endif
@@ -72,11 +77,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
 
 namespace {
 
-constexpr uint8_t kExifSignature[6] = {0x45, 0x78, 0x69, 0x66, 0x00, 0x00};
-
-/* hIST chunk tail is not proccesed properly; skip this chunk completely;
-   see https://github.com/glennrp/libpng/pull/413 */
-const uint8_t kIgnoredPngChunks[] = {'h', 'I', 'S', 'T', '\0'};
+constexpr std::array<uint8_t, 8> kPngSignature = {137,  'P',  'N', 'G',
+                                                  '\r', '\n', 26,  '\n'};
 
 // Returns floating-point value from the PNG encoding (times 10^5).
 double F64FromU32(const uint32_t x) { return static_cast<int32_t>(x) * 1E-5; }
@@ -393,15 +395,17 @@ Status DecodeBlob(const png_text_struct& info, PackedMetadata* metadata) {
     return false;
   }
   if (type == "exif") {
-    // Remove "Exif\0\0" prefix if present
-    if (bytes.size() >= sizeof kExifSignature &&
-        memcmp(bytes.data(), kExifSignature, sizeof kExifSignature) == 0) {
-      bytes.erase(bytes.begin(), bytes.begin() + sizeof kExifSignature);
+    // Remove prefix if present.
+    constexpr std::array<uint8_t, 6> kExifPrefix = {'E', 'x', 'i', 'f', 0, 0};
+    if (bytes.size() >= kExifPrefix.size() &&
+        memcmp(bytes.data(), kExifPrefix.data(), kExifPrefix.size()) == 0) {
+      bytes.erase(bytes.begin(), bytes.begin() + kExifPrefix.size());
     }
     if (!metadata->exif.empty()) {
-      JXL_WARNING("overwriting EXIF (%" PRIuS " bytes) with base16 (%" PRIuS
-                  " bytes)",
-                  metadata->exif.size(), bytes.size());
+      JXL_DEBUG(2,
+                "overwriting EXIF (%" PRIuS " bytes) with base16 (%" PRIuS
+                " bytes)",
+                metadata->exif.size(), bytes.size());
     }
     metadata->exif = std::move(bytes);
   } else if (type == "iptc") {
@@ -410,15 +414,16 @@ Status DecodeBlob(const png_text_struct& info, PackedMetadata* metadata) {
     // TODO(jon): Deal with 8bim in some way
   } else if (type == "xmp") {
     if (!metadata->xmp.empty()) {
-      JXL_WARNING("overwriting XMP (%" PRIuS " bytes) with base16 (%" PRIuS
-                  " bytes)",
-                  metadata->xmp.size(), bytes.size());
+      JXL_DEBUG(2,
+                "overwriting XMP (%" PRIuS " bytes) with base16 (%" PRIuS
+                " bytes)",
+                metadata->xmp.size(), bytes.size());
     }
     metadata->xmp = std::move(bytes);
   } else {
-    JXL_WARNING("Unknown type in 'Raw format type' text chunk: %s: %" PRIuS
-                " bytes",
-                type.c_str(), bytes.size());
+    JXL_DEBUG(
+        2, "Unknown type in 'Raw format type' text chunk: %s: %" PRIuS " bytes",
+        type.c_str(), bytes.size());
   }
   return true;
 }
@@ -513,7 +518,6 @@ void ProgressiveRead_OnRow(png_structp png_ptr, png_bytep new_row,
   Pixels* frame = reinterpret_cast<Pixels*>(png_get_progressive_ptr(png_ptr));
   JXL_CHECK(frame);
   JXL_CHECK(row_num < frame->rows.size());
-  JXL_CHECK(frame->rows[row_num] < frame->rows[0] + frame->pixels_size);
   png_progressive_combine_row(png_ptr, frame->rows[row_num], new_row);
 }
 
@@ -536,7 +540,8 @@ struct Context {
    *
    * TODO(eustas): add details
    */
-  bool InitPngDecoder(bool hasInfo, std::vector<Bytes>& chunksInfo) {
+  bool InitPngDecoder(const std::vector<Bytes>& chunksInfo,
+                      const RectT<uint64_t>& viewport) {
     ResetPngDecoder();
 
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr,
@@ -550,25 +555,31 @@ struct Context {
       return false;
     }
 
-    png_set_keep_unknown_chunks(
-        png_ptr, 1, kIgnoredPngChunks,
-        static_cast<int>(sizeof(kIgnoredPngChunks) / 5));
+    /* hIST chunk tail is not proccesed properly; skip this chunk completely;
+       see https://github.com/glennrp/libpng/pull/413 */
+    constexpr std::array<uint8_t, 5> kIgnoredChunks = {'h', 'I', 'S', 'T', 0};
+    png_set_keep_unknown_chunks(png_ptr, 1, kIgnoredChunks.data(),
+                                static_cast<int>(kIgnoredChunks.size() / 5));
 
     png_set_crc_action(png_ptr, PNG_CRC_QUIET_USE, PNG_CRC_QUIET_USE);
     png_set_progressive_read_fn(png_ptr, static_cast<void*>(&frameRaw),
                                 ProgressiveRead_OnInfo, ProgressiveRead_OnRow,
                                 nullptr);
 
-    std::array<uint8_t, 8> header = {137, 80, 78, 71, 13, 10, 26, 10};
-    png_process_data(png_ptr, info_ptr, header.data(), header.size());
+    png_process_data(png_ptr, info_ptr,
+                     const_cast<uint8_t*>(kPngSignature.data()),
+                     kPngSignature.size());
+
+    // Patch dimensions.
+    png_save_uint_32(ihdr.data() + 8, static_cast<uint32_t>(viewport.xsize()));
+    png_save_uint_32(ihdr.data() + 12, static_cast<uint32_t>(viewport.ysize()));
     png_process_data(png_ptr, info_ptr, ihdr.data(), ihdr.size());
 
-    if (hasInfo) {
-      for (auto& chunk : chunksInfo) {
-        png_process_data(png_ptr, info_ptr, const_cast<uint8_t*>(chunk.data()),
-                         chunk.size());
-      }
+    for (const auto& chunk : chunksInfo) {
+      png_process_data(png_ptr, info_ptr, const_cast<uint8_t*>(chunk.data()),
+                       chunk.size());
     }
+
     return true;
   }
 
@@ -624,27 +635,143 @@ struct Context {
     info_ptr = nullptr;
   }
 
-  std::vector<uint8_t> ihdr;  // (modified) copy of file IHDR chunk
+  std::array<uint8_t, 25> ihdr;  // (modified) copy of file IHDR chunk
   png_structp png_ptr = nullptr;
   png_infop info_ptr = nullptr;
   Pixels frameRaw = {};
 };
 
-constexpr uint32_t kMaxPNGSize = 1000000UL;
+enum class DisposeOp : uint8_t { NONE = 0, BACKGROUND = 1, PREVIOUS = 2 };
 
-struct FrameInfo {
-  PackedImage data;
-  uint32_t duration;
-  size_t x0, xsize;
-  size_t y0, ysize;
-  uint32_t dispose_op;
-  uint32_t blend_op;
+constexpr uint8_t kLastDisposeOp = static_cast<uint32_t>(DisposeOp::PREVIOUS);
+
+enum class BlendOp : uint8_t { SOURCE = 0, OVER = 1 };
+
+constexpr uint8_t kLastBlendOp = static_cast<uint32_t>(BlendOp::OVER);
+
+// fcTL
+struct FrameControl {
+  uint32_t delay_num;
+  uint32_t delay_den;
+  RectT<uint64_t> viewport;
+  DisposeOp dispose_op;
+  BlendOp blend_op;
+};
+
+struct Frame {
+  PackedImage pixels;
+  FrameControl metadata;
+};
+
+bool ValidateViewport(const RectT<uint64_t>& r) {
+  constexpr uint32_t kMaxPngDim = 1000000UL;
+  return (r.xsize() <= kMaxPngDim) && (r.ysize() <= kMaxPngDim);
+}
+
+/**
+ * Setup #channels, bpp, colorspace, etc. from PNG values.
+ */
+void SetColorData(PackedPixelFile* ppf, uint8_t color_type, uint8_t bit_depth,
+                  png_color_8p sig_bits, uint32_t has_transparency) {
+  bool palette_used = ((color_type & 1) != 0);
+  bool color_used = ((color_type & 2) != 0);
+  bool alpha_channel_used = ((color_type & 4) != 0);
+  if (palette_used) {
+    if (!color_used || alpha_channel_used) {
+      JXL_DEBUG(2, "Unexpected PNG color type");
+    }
+  }
+
+  ppf->info.bits_per_sample = bit_depth;
+
+  if (palette_used) {
+    // palette will actually be 8-bit regardless of the index bitdepth
+    ppf->info.bits_per_sample = 8;
+  }
+  if (color_used) {
+    ppf->info.num_color_channels = 3;
+    ppf->color_encoding.color_space = JXL_COLOR_SPACE_RGB;
+    if (sig_bits) {
+      if (sig_bits->red == sig_bits->green &&
+          sig_bits->green == sig_bits->blue) {
+        ppf->info.bits_per_sample = sig_bits->red;
+      } else {
+        int maxbps =
+            std::max(sig_bits->red, std::max(sig_bits->green, sig_bits->blue));
+        JXL_DEBUG(2,
+                  "sBIT chunk: bit depths for R, G, and B are not the same (%i "
+                  "%i %i), while in JPEG XL they have to be the same. Setting "
+                  "RGB bit depth to %i.",
+                  sig_bits->red, sig_bits->green, sig_bits->blue, maxbps);
+        ppf->info.bits_per_sample = maxbps;
+      }
+    }
+  } else {
+    ppf->info.num_color_channels = 1;
+    ppf->color_encoding.color_space = JXL_COLOR_SPACE_GRAY;
+    if (sig_bits) ppf->info.bits_per_sample = sig_bits->gray;
+  }
+  if (alpha_channel_used || has_transparency) {
+    ppf->info.alpha_bits = ppf->info.bits_per_sample;
+    if (sig_bits && sig_bits->alpha != ppf->info.bits_per_sample) {
+      JXL_DEBUG(2,
+                "sBIT chunk: bit depths for RGBA are inconsistent "
+                "(%i %i %i %i). Setting A bitdepth to %i.",
+                sig_bits->red, sig_bits->green, sig_bits->blue, sig_bits->alpha,
+                ppf->info.bits_per_sample);
+    }
+  } else {
+    ppf->info.alpha_bits = 0;
+  }
+  ppf->color_encoding.color_space = (ppf->info.num_color_channels == 1)
+                                        ? JXL_COLOR_SPACE_GRAY
+                                        : JXL_COLOR_SPACE_RGB;
+}
+
+// Color profile chunks: cICP has the highest priority, followed by
+// iCCP and sRGB (which shouldn't co-exist, but if they do, we use
+// iCCP), followed finally by gAMA and cHRM.
+enum class ColorInfoType {
+  NONE = 0,
+  GAMA_OR_CHRM = 1,
+  ICCP_OR_SRGB = 2,
+  CICP = 3
 };
 
 }  // namespace
 
 bool CanDecodeAPNG() { return true; }
 
+/**
+ * Parse and decode PNG file.
+ *
+ * Useful PNG chunks:
+ *   acTL : animation control (#frames, loop count)
+ *   fcTL : frame control (seq#, viewport, delay, disposal blending)
+ *   bKGD : preferable background
+ *   IDAT : "default image"
+ *          if single fcTL goes before IDAT, then it is also first frame
+ *   fdAT : seq# + IDAT-like content
+ *   PLTE : palette
+ *   cICP : coding-independent code points for video signal type identification
+ *   iCCP : embedded ICC profile
+ *   sRGB : standard RGB colour space
+ *   eXIf : exchangeable image file profile
+ *   gAMA : image gamma
+ *   cHRM : primary chromaticities and white point
+ *   tRNS : transparency
+ *
+ * PNG chunk ordering:
+ *  - IHDR first
+ *  - IEND last
+ *  - acTL, cHRM, cICP, gAMA, iCCP, sRGB, bKGD, eXIf, PLTE before IDAT
+ *  - fdAT after IDAT
+ *
+ * More rules:
+ *  - iCCP and sRGB are exclusive
+ *  - fcTL and fdAT seq# must be in order fro 0, with no gaps or duplicates
+ *  - fcTL before corresponding IDAT / fdAT
+ */
 Status DecodeImageAPNG(const Span<const uint8_t> bytes,
                        const ColorHints& color_hints, PackedPixelFile* ppf,
                        const SizeConstraints* constraints) {
@@ -661,347 +788,411 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
 
   Reader input(bytes);
 
-  // Not a PNG => not an error
-  unsigned char png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
-  Bytes sig = input.Read(8);
-  if (sig.size() != 8 || memcmp(sig.data(), png_signature, 8) != 0) {
-    return false;
+  // Check signature.
+  Bytes sig = input.Read(kPngSignature.size());
+  if (sig.size() != 8 ||
+      memcmp(sig.data(), kPngSignature.data(), kPngSignature.size()) != 0) {
+    return JXL_FAILURE("PNG signature mismatch");
   }
 
-  Bytes chunk_ihdr = input.ReadChunk();
-  if (chunk_ihdr.empty()) {
-    return false;
-  }
-  uint32_t id = LoadLE32(chunk_ihdr.data() + 4);
-  if (id != MakeTag('I', 'H', 'D', 'R') || chunk_ihdr.size() != 25) {
-    return false;
-  }
-  const uint32_t w = png_get_uint_32(chunk_ihdr.data() + 8);
-  const uint32_t h = png_get_uint_32(chunk_ihdr.data() + 12);
-  if (w > kMaxPNGSize || h > kMaxPNGSize) {
-    return false;
-  }
-
+  // Check IHDR chunk.
   Context ctx;
-  ctx.ihdr = chunk_ihdr.Copy();
-
-  std::vector<Bytes> chunksInfo;
-  if (!ctx.InitPngDecoder(false, chunksInfo)) {
-    return false;
+  Bytes ihdr = input.ReadChunk();
+  if (ihdr.size() != ctx.ihdr.size()) {
+    return JXL_FAILURE("Unexpected first chunk payload size");
+  }
+  memcpy(ctx.ihdr.data(), ihdr.data(), ihdr.size());
+  uint32_t id = LoadLE32(ihdr.data() + 4);
+  if (id != MakeTag('I', 'H', 'D', 'R')) {
+    return JXL_FAILURE("First chunk is not IHDR");
+  }
+  const RectT<uint64_t> image_rect(0, 0, png_get_uint_32(ihdr.data() + 8),
+                                   png_get_uint_32(ihdr.data() + 12));
+  if (!ValidateViewport(image_rect)) {
+    return JXL_FAILURE("PNG image dimensions are too large");
   }
 
-  bool isAnimated = false;
-  bool hasInfo = false;
+  // Chunks we supply to PNG decoder for every animation frame.
+  std::vector<Bytes> passthrough_chunks;
+  if (!ctx.InitPngDecoder(passthrough_chunks, image_rect)) {
+    return JXL_FAILURE("Failed to initialize PNG decoder");
+  }
+
+  // Marker that this PNG is animated.
+  bool seen_actl = false;
+  // First IDAT is a very important milestone; at this moment we freeze
+  // gathered metadata.
+  bool seen_idat = false;
+  // fCTL can occur multiple times, but only once before IDAT.
+  bool seen_fctl = false;
+  // Logical EOF.
+  bool seen_iend = false;
+
+  ColorInfoType color_info_type = ColorInfoType::NONE;
+
+  // Flag that we processed some IDAT / fDAT after image / frame start.
+  bool seen_pixel_data = false;
+
   uint32_t num_channels;
   JxlPixelFormat format = {};
-  unsigned int bytes_per_pixel = 0;
-  std::vector<FrameInfo> frames;
-  bool have_color = false;
-  bool have_cicp = false;
-  bool have_iccp = false;
-  bool have_srgb = false;
-  uint32_t x0 = 0;
-  uint32_t y0 = 0;
-  uint32_t delay_num = 1;
-  uint32_t delay_den = 10;
-  uint32_t dop = 0;
-  uint32_t bop = 0;
-  uint32_t w0 = w;
-  uint32_t h0 = h;
+  size_t bytes_per_pixel = 0;
+  std::vector<Frame> frames;
+  FrameControl current_frame = {/*delay_num=*/1, /*delay_den=*/10, image_rect,
+                                DisposeOp::NONE, BlendOp::SOURCE};
+
+  // Copies frame pixels / metadata from temporary storage.
+  // TODO(eustas): avoid copying.
+  const auto finalize_frame = [&]() -> Status {
+    if (!seen_pixel_data) {
+      return JXL_FAILURE("Frame / image without fdAT / IDAT chunks");
+    }
+    if (!ctx.FinalizeStream(&ppf->metadata)) {
+      return JXL_FAILURE("Failed to finalize PNG substream");
+    }
+    // Allocates the frame buffer.
+    const RectT<uint64_t>& vp = current_frame.viewport;
+    size_t xsize = static_cast<size_t>(vp.xsize());
+    size_t ysize = static_cast<size_t>(vp.ysize());
+    JXL_ASSIGN_OR_RETURN(PackedImage image,
+                         PackedImage::Create(xsize, ysize, format));
+    for (size_t y = 0; y < ysize; ++y) {
+      // TODO(eustas): ensure multiplication is safe
+      memcpy(static_cast<uint8_t*>(image.pixels()) + image.stride * y,
+             ctx.frameRaw.rows[y], bytes_per_pixel * xsize);
+    }
+    frames.push_back(Frame{std::move(image), current_frame});
+    seen_pixel_data = false;
+    return true;
+  };
 
   while (!input.Eof()) {
+    if (seen_iend) {
+      return JXL_FAILURE("Exuberant input after IEND chunk");
+    }
     Bytes chunk = input.ReadChunk();
     if (chunk.empty()) {
-      return false;
+      return JXL_FAILURE("Malformed chunk");
     }
-    id = LoadLE32(chunk.data() + 4);
+    Bytes type(chunk.data() + 4, 4);
+    id = LoadLE32(type.data());
+    // Cut 'size' and 'type' at front and 'CRC' at the end.
+    Bytes payload(chunk.data() + 8, chunk.size() - 12);
 
-    if (id == MakeTag('a', 'c', 'T', 'L') && !hasInfo && !isAnimated) {
-      isAnimated = true;
-      ppf->info.have_animation = JXL_TRUE;
-      ppf->info.animation.tps_numerator = 1000;
-      ppf->info.animation.tps_denominator = 1;
-    } else if (id == MakeTag('I', 'E', 'N', 'D') ||
-               (id == MakeTag('f', 'c', 'T', 'L') &&
-                (!hasInfo || isAnimated))) {
-      if (hasInfo) {
-        if (ctx.FinalizeStream(&ppf->metadata)) {
-          // Allocates the frame buffer.
-          uint32_t duration = delay_num * 1000 / delay_den;
-          JXL_ASSIGN_OR_RETURN(PackedImage image,
-                               PackedImage::Create(w0, h0, format));
-          frames.push_back(
-              FrameInfo{std::move(image), duration, x0, w0, y0, h0, dop, bop});
-          auto& frame = frames.back().data;
-          for (size_t y = 0; y < h0; ++y) {
-            // TODO(eustas): ensure multiplication is safe
-            memcpy(static_cast<uint8_t*>(frame.pixels()) + frame.stride * y,
-                   ctx.frameRaw.rows[y], bytes_per_pixel * w0);
+    if (!isAbc(type[0]) || !isAbc(type[1]) || !isAbc(type[2]) ||
+        !isAbc(type[3])) {
+      return JXL_FAILURE("Exotic PNG chunk");
+    }
+
+    switch (id) {
+      case MakeTag('a', 'c', 'T', 'L'):
+        if (seen_idat) {
+          JXL_DEBUG(2, "aCTL after IDAT ignored");
+          continue;
+        }
+        if (seen_actl) {
+          JXL_DEBUG(2, "Duplicate aCTL chunk ignored");
+          continue;
+        }
+        seen_actl = true;
+        ppf->info.have_animation = JXL_TRUE;
+        // TODO(eustas): decode from chunk?
+        ppf->info.animation.tps_numerator = 1000;
+        ppf->info.animation.tps_denominator = 1;
+        continue;
+
+      case MakeTag('I', 'E', 'N', 'D'):
+        seen_iend = true;
+        JXL_RETURN_IF_ERROR(finalize_frame());
+        continue;
+
+      case MakeTag('f', 'c', 'T', 'L'): {
+        if (payload.size() != 26) {
+          return JXL_FAILURE("Unexpected fcTL payload size: %u",
+                             static_cast<uint32_t>(payload.size()));
+        }
+        if (seen_fctl && !seen_idat) {
+          return JXL_FAILURE("More than one fcTL before IDAT");
+        }
+        if (seen_idat && !seen_actl) {
+          return JXL_FAILURE("fcTL after IDAT, but without acTL");
+        }
+        seen_fctl = true;
+
+        // TODO(eustas): check order?
+        // sequence_number = png_get_uint_32(payload.data());
+        RectT<uint64_t> raw_viewport(png_get_uint_32(payload.data() + 12),
+                                     png_get_uint_32(payload.data() + 16),
+                                     png_get_uint_32(payload.data() + 4),
+                                     png_get_uint_32(payload.data() + 8));
+        uint8_t dispose_op = payload[24];
+        if (dispose_op > kLastDisposeOp) {
+          return JXL_FAILURE("Invalid DisposeOp");
+        }
+        uint8_t blend_op = payload[25];
+        if (blend_op > kLastBlendOp) {
+          return JXL_FAILURE("Invalid BlendOp");
+        }
+        FrameControl next_frame = {
+            /*delay_num=*/png_get_uint_16(payload.data() + 20),
+            /*delay_den=*/png_get_uint_16(payload.data() + 22), raw_viewport,
+            static_cast<DisposeOp>(dispose_op), static_cast<BlendOp>(blend_op)};
+
+        if (!raw_viewport.Intersection(image_rect).IsSame(raw_viewport)) {
+          // Cropping happened.
+          return JXL_FAILURE("PNG frame is outside of image rect");
+        }
+
+        if (!seen_idat) {
+          // "Default" image is the first animation frame. Its viewport must
+          // cover the whole image area.
+          if (!raw_viewport.IsSame(image_rect)) {
+            return JXL_FAILURE(
+                "If the first animation frame is default image, its viewport "
+                "must cover full image");
           }
         } else {
-          return false;
+          JXL_RETURN_IF_ERROR(finalize_frame());
+          if (!ctx.InitPngDecoder(passthrough_chunks, next_frame.viewport)) {
+            return JXL_FAILURE("Failed to initialize PNG decoder");
+          }
         }
+        current_frame = next_frame;
+        continue;
       }
 
-      if (id == MakeTag('I', 'E', 'N', 'D')) {
-        break;
-      }
-      if (chunk.size() < 34) {
-        return JXL_FAILURE("Received a chunk that is too small (%" PRIuS "B)",
-                           chunk.size());
-      }
-      // At this point the old frame is done. Let's start a new one.
-      w0 = png_get_uint_32(chunk.data() + 12);
-      h0 = png_get_uint_32(chunk.data() + 16);
-      x0 = png_get_uint_32(chunk.data() + 20);
-      y0 = png_get_uint_32(chunk.data() + 24);
-      delay_num = png_get_uint_16(chunk.data() + 28);
-      delay_den = png_get_uint_16(chunk.data() + 30);
-      dop = chunk[32];
-      bop = chunk[33];
-
-      if (!delay_den) delay_den = 100;
-
-      if (w0 > kMaxPNGSize || h0 > kMaxPNGSize || x0 > kMaxPNGSize ||
-          y0 > kMaxPNGSize || x0 + w0 > w || y0 + h0 > h || dop > 2 ||
-          bop > 1) {
-        return false;
-      }
-
-      if (hasInfo) {
-        // Copy dimensions.
-        memcpy(ctx.ihdr.data() + 8, chunk.data() + 12, 8);
-        if (!ctx.InitPngDecoder(hasInfo, chunksInfo)) {
-          return false;
+      case MakeTag('I', 'D', 'A', 'T'): {
+        if (!frames.empty()) {
+          return JXL_FAILURE("IDAT after default image is over");
         }
-      }
-    } else if (id == MakeTag('I', 'D', 'A', 'T')) {
-      // First IDAT chunk means we now have all header info
-      hasInfo = true;
-      JXL_CHECK(w == png_get_image_width(ctx.png_ptr, ctx.info_ptr));
-      JXL_CHECK(h == png_get_image_height(ctx.png_ptr, ctx.info_ptr));
-      int colortype = png_get_color_type(ctx.png_ptr, ctx.info_ptr);
-      int png_bit_depth = png_get_bit_depth(ctx.png_ptr, ctx.info_ptr);
-      ppf->info.bits_per_sample = png_bit_depth;
-      png_color_8p sigbits = nullptr;
-      png_get_sBIT(ctx.png_ptr, ctx.info_ptr, &sigbits);
-      if (colortype & 1) {
-        // palette will actually be 8-bit regardless of the index bitdepth
-        ppf->info.bits_per_sample = 8;
-      }
-      if (colortype & 2) {
-        ppf->info.num_color_channels = 3;
-        ppf->color_encoding.color_space = JXL_COLOR_SPACE_RGB;
-        if (sigbits && sigbits->red == sigbits->green &&
-            sigbits->green == sigbits->blue) {
-          ppf->info.bits_per_sample = sigbits->red;
-        } else if (sigbits) {
-          int maxbps =
-              std::max(sigbits->red, std::max(sigbits->green, sigbits->blue));
-          JXL_WARNING(
-              "sBIT chunk: bit depths for R, G, and B are not the same (%i "
-              "%i %i), while in JPEG XL they have to be the same. Setting "
-              "RGB bit depth to %i.",
-              sigbits->red, sigbits->green, sigbits->blue, maxbps);
-          ppf->info.bits_per_sample = maxbps;
-        }
-      } else {
-        ppf->info.num_color_channels = 1;
-        ppf->color_encoding.color_space = JXL_COLOR_SPACE_GRAY;
-        if (sigbits) ppf->info.bits_per_sample = sigbits->gray;
-      }
-      if (colortype & 4 ||
-          png_get_valid(ctx.png_ptr, ctx.info_ptr, PNG_INFO_tRNS)) {
-        ppf->info.alpha_bits = ppf->info.bits_per_sample;
-        if (sigbits && sigbits->alpha != ppf->info.bits_per_sample) {
-          JXL_WARNING(
-              "sBIT chunk: bit depths for RGBA are inconsistent "
-              "(%i %i %i %i). Setting A bitdepth to %i.",
-              sigbits->red, sigbits->green, sigbits->blue, sigbits->alpha,
-              ppf->info.bits_per_sample);
-        }
-      } else {
-        ppf->info.alpha_bits = 0;
-      }
-      ppf->color_encoding.color_space =
-          (ppf->info.num_color_channels == 1 ? JXL_COLOR_SPACE_GRAY
-                                             : JXL_COLOR_SPACE_RGB);
-      ppf->info.xsize = w;
-      ppf->info.ysize = h;
-      JXL_RETURN_IF_ERROR(VerifyDimensions(constraints, w, h));
-      num_channels =
-          ppf->info.num_color_channels + (ppf->info.alpha_bits ? 1 : 0);
-      format = {
-          /*num_channels=*/num_channels,
-          /*data_type=*/ppf->info.bits_per_sample > 8 ? JXL_TYPE_UINT16
-                                                      : JXL_TYPE_UINT8,
-          /*endianness=*/JXL_BIG_ENDIAN,
-          /*align=*/0,
-      };
-      if (png_bit_depth > 8 && format.data_type == JXL_TYPE_UINT8) {
-        png_set_strip_16(ctx.png_ptr);
-      }
-      bytes_per_pixel =
-          num_channels * (format.data_type == JXL_TYPE_UINT16 ? 2 : 1);
-      // TODO(eustas): ensure multiplication is safe
-      size_t rowbytes = w * bytes_per_pixel;
-      if (h > std::numeric_limits<size_t>::max() / rowbytes) {
-        return JXL_FAILURE("Image too big.");
-      }
-      JXL_RETURN_IF_ERROR(ctx.frameRaw.Resize(rowbytes, h));
+        if (!seen_idat) {
+          // First IDAT means that all metadata is ready.
+          seen_idat = true;
+          JXL_CHECK(image_rect.xsize() ==
+                    png_get_image_width(ctx.png_ptr, ctx.info_ptr));
+          JXL_CHECK(image_rect.ysize() ==
+                    png_get_image_height(ctx.png_ptr, ctx.info_ptr));
+          JXL_RETURN_IF_ERROR(VerifyDimensions(constraints, image_rect.xsize(),
+                                               image_rect.ysize()));
+          ppf->info.xsize = image_rect.xsize();
+          ppf->info.ysize = image_rect.ysize();
 
-      if (!ctx.FeedChunks(chunk)) {
-        return false;
+          png_color_8p sig_bits = nullptr;
+          // Error is OK -> sig_bits remains nullptr.
+          png_get_sBIT(ctx.png_ptr, ctx.info_ptr, &sig_bits);
+          SetColorData(ppf, png_get_color_type(ctx.png_ptr, ctx.info_ptr),
+                       png_get_bit_depth(ctx.png_ptr, ctx.info_ptr), sig_bits,
+                       png_get_valid(ctx.png_ptr, ctx.info_ptr, PNG_INFO_tRNS));
+          num_channels =
+              ppf->info.num_color_channels + (ppf->info.alpha_bits ? 1 : 0);
+          format = {
+              /*num_channels=*/num_channels,
+              /*data_type=*/ppf->info.bits_per_sample > 8 ? JXL_TYPE_UINT16
+                                                          : JXL_TYPE_UINT8,
+              /*endianness=*/JXL_BIG_ENDIAN,
+              /*align=*/0,
+          };
+          bytes_per_pixel =
+              num_channels * (format.data_type == JXL_TYPE_UINT16 ? 2 : 1);
+          // TODO(eustas): ensure multiplication is safe
+          uint64_t row_bytes =
+              static_cast<uint64_t>(image_rect.xsize()) * bytes_per_pixel;
+          uint64_t max_rows = std::numeric_limits<size_t>::max() / row_bytes;
+          if (image_rect.ysize() > max_rows) {
+            return JXL_FAILURE("Image too big.");
+          }
+          // TODO(eustas): drop frameRaw
+          JXL_RETURN_IF_ERROR(
+              ctx.frameRaw.Resize(row_bytes, image_rect.ysize()));
+        }
+
+        if (!ctx.FeedChunks(chunk)) {
+          return JXL_FAILURE("Decoding IDAT failed");
+        }
+        seen_pixel_data = true;
+        continue;
       }
-    } else if (id == MakeTag('f', 'd', 'A', 'T') && isAnimated) {
-      if (!hasInfo) {
-        return JXL_FAILURE("fdAT chunk before IDAT");
+
+      case MakeTag('f', 'd', 'A', 'T'): {
+        if (!seen_idat) {
+          return JXL_FAILURE("fdAT chunk before IDAT");
+        }
+        if (!seen_actl) {
+          return JXL_FAILURE("fdAT chunk before acTL");
+        }
+        /* The 'fdAT' chunk has... the same structure as an 'IDAT' chunk,
+         * except preceded by a sequence number. */
+        if (payload.size() < 4) {
+          return JXL_FAILURE("Corrupted fdAT chunk");
+        }
+        // Turn 'fdAT' to 'IDAT' by cutting sequence number and replacing tag.
+        std::array<uint8_t, 8> preamble;
+        png_save_uint_32(preamble.data(), payload.size() - 4);
+        memcpy(preamble.data() + 4, "IDAT", 4);
+        // Cut-off 'size', 'type' and 'sequence_number'
+        Bytes chunk_tail(chunk.data() + 12, chunk.size() - 12);
+        if (!ctx.FeedChunks(Bytes(preamble), chunk_tail)) {
+          return JXL_FAILURE("Decoding fdAT failed");
+        }
+        seen_pixel_data = true;
+        continue;
       }
-      /* The 'fdAT' chunk has... the same structure as an 'IDAT' chunk,
-       * except preceded by a sequence number. */
-      size_t payload_size = chunk.size() - 12;
-      if (payload_size < 4) {
-        return JXL_FAILURE("Corrupted fdAT chunk");
-      }
-      // Turn 'fdAT' to 'IDAT' by cutting sequence number and replacing tag.
-      std::array<uint8_t, 8> preamble;
-      png_save_uint_32(preamble.data(), payload_size - 4);
-      memcpy(preamble.data() + 4, "IDAT", 4);
-      if (!ctx.FeedChunks(Bytes(preamble),
-                          Bytes(chunk.data() + 12, chunk.size() - 12))) {
-        return false;
-      }
-    } else if (id == MakeTag('c', 'I', 'C', 'P')) {
-      // Color profile chunks: cICP has the highest priority, followed by
-      // iCCP and sRGB (which shouldn't co-exist, but if they do, we use
-      // iCCP), followed finally by gAMA and cHRM.
-      if (DecodeCicpChunk(Bytes(chunk.data() + 8, chunk.size() - 12),
-                          &ppf->color_encoding)) {
-        have_cicp = true;
-        have_color = true;
+
+      case MakeTag('c', 'I', 'C', 'P'):
+        if (color_info_type == ColorInfoType::CICP) {
+          JXL_DEBUG(2, "Excessive colorspace definition; cICP chunk ignored");
+          continue;
+        }
+        JXL_RETURN_IF_ERROR(DecodeCicpChunk(payload, &ppf->color_encoding));
         ppf->icc.clear();
         ppf->primary_color_representation =
             PackedPixelFile::kColorEncodingIsPrimary;
-      }
-    } else if (!have_cicp && id == MakeTag('i', 'C', 'C', 'P')) {
-      if (!ctx.FeedChunks(chunk)) {
-        JXL_WARNING("Corrupt iCCP chunk");
-        return false;
-      }
+        color_info_type = ColorInfoType::CICP;
+        continue;
 
-      // TODO(jon): catch special case of PQ and synthesize color encoding
-      // in that case
-      int compression_type;
-      png_bytep profile;
-      png_charp name;
-      png_uint_32 proflen = 0;
-      auto ok = png_get_iCCP(ctx.png_ptr, ctx.info_ptr, &name,
-                             &compression_type, &profile, &proflen);
-      if (ok && proflen) {
-        ppf->icc.assign(profile, profile + proflen);
+      case MakeTag('i', 'C', 'C', 'P'): {
+        if (color_info_type == ColorInfoType::ICCP_OR_SRGB) {
+          return JXL_FAILURE("Repeated iCCP / sRGB chunk");
+        }
+        if (color_info_type > ColorInfoType::ICCP_OR_SRGB) {
+          JXL_DEBUG(2, "Excessive colorspace definition; iCCP chunk ignored");
+          continue;
+        }
+        // Let PNG decoder deal with chunk processing.
+        if (!ctx.FeedChunks(chunk)) {
+          return JXL_FAILURE("Corrupt iCCP chunk");
+        }
+        color_info_type = ColorInfoType::ICCP_OR_SRGB;
+
+        // TODO(jon): catch special case of PQ and synthesize color encoding
+        // in that case
+        int compression_type = 0;
+        png_bytep profile = nullptr;
+        png_charp name = nullptr;
+        png_uint_32 profile_len = 0;
+        png_uint_32 ok =
+            png_get_iCCP(ctx.png_ptr, ctx.info_ptr, &name, &compression_type,
+                         &profile, &profile_len);
+        if (!ok || !profile_len) {
+          return JXL_FAILURE("Malformed / incomplete iCCP chunk");
+        }
+        ppf->icc.assign(profile, profile + profile_len);
         ppf->primary_color_representation = PackedPixelFile::kIccIsPrimary;
-        have_color = true;
-        have_iccp = true;
-      } else {
-        // TODO(eustas): JXL_WARNING?
-      }
-    } else if (!have_cicp && !have_iccp && id == MakeTag('s', 'R', 'G', 'B')) {
-      JXL_RETURN_IF_ERROR(DecodeSrgbChunk(
-          Bytes(chunk.data() + 8, chunk.size() - 12), &ppf->color_encoding));
-      have_srgb = true;
-      have_color = true;
-    } else if (!have_cicp && !have_srgb && !have_iccp &&
-               id == MakeTag('g', 'A', 'M', 'A')) {
-      JXL_RETURN_IF_ERROR(DecodeGamaChunk(
-          Bytes(chunk.data() + 8, chunk.size() - 12), &ppf->color_encoding));
-      have_color = true;
-    } else if (!have_cicp && !have_srgb && !have_iccp &&
-               id == MakeTag('c', 'H', 'R', 'M')) {
-      JXL_RETURN_IF_ERROR(DecodeChrmChunk(
-          Bytes(chunk.data() + 8, chunk.size() - 12), &ppf->color_encoding));
-      have_color = true;
-    } else if (id == MakeTag('e', 'X', 'I', 'f')) {
-      ppf->metadata.exif.resize(chunk.size() - 12);
-      memcpy(ppf->metadata.exif.data(), chunk.data() + 8, chunk.size() - 12);
-    } else if (!isAbc(chunk[4]) || !isAbc(chunk[5]) || !isAbc(chunk[6]) ||
-               !isAbc(chunk[7])) {
-      return false;
-    } else {
-      if (!ctx.FeedChunks(chunk)) {
-        return false;
-      }
-      if (!hasInfo) {
-        chunksInfo.push_back(chunk);
+        color_info_type = ColorInfoType::ICCP_OR_SRGB;
         continue;
       }
+
+      case MakeTag('s', 'R', 'G', 'B'):
+        if (color_info_type == ColorInfoType::ICCP_OR_SRGB) {
+          return JXL_FAILURE("Repeated iCCP / sRGB chunk");
+        }
+        if (color_info_type > ColorInfoType::ICCP_OR_SRGB) {
+          JXL_DEBUG(2, "Excessive colorspace definition; sRGB chunk ignored");
+          continue;
+        }
+        JXL_RETURN_IF_ERROR(DecodeSrgbChunk(payload, &ppf->color_encoding));
+        color_info_type = ColorInfoType::ICCP_OR_SRGB;
+        continue;
+
+      case MakeTag('g', 'A', 'M', 'A'):
+        if (color_info_type >= ColorInfoType::GAMA_OR_CHRM) {
+          JXL_DEBUG(2, "Excessive colorspace definition; gAMA chunk ignored");
+          continue;
+        }
+        JXL_RETURN_IF_ERROR(DecodeGamaChunk(payload, &ppf->color_encoding));
+        color_info_type = ColorInfoType::GAMA_OR_CHRM;
+        continue;
+
+      case MakeTag('c', 'H', 'R', 'M'):
+        if (color_info_type >= ColorInfoType::GAMA_OR_CHRM) {
+          JXL_DEBUG(2, "Excessive colorspace definition; cHRM chunk ignored");
+          continue;
+        }
+        JXL_RETURN_IF_ERROR(DecodeChrmChunk(payload, &ppf->color_encoding));
+        color_info_type = ColorInfoType::GAMA_OR_CHRM;
+        continue;
+
+      case MakeTag('e', 'X', 'I', 'f'):
+        // TODO(eustas): next eXIF chunk overwrites current; is it ok?
+        ppf->metadata.exif.resize(payload.size());
+        memcpy(ppf->metadata.exif.data(), payload.data(), payload.size());
+        continue;
+
+      default:
+        // We don't know what is that, just pass through.
+        if (!ctx.FeedChunks(chunk)) {
+          return JXL_FAILURE("PNG decoder failed to process chunk");
+        }
+        // If it happens before IDAT, we consider it metadata and pass to all
+        // sub-decoders.
+        if (!seen_idat) {
+          passthrough_chunks.push_back(chunk);
+        }
+        continue;
     }
   }
 
-  JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, have_color,
-                                      ppf->info.num_color_channels == 1, ppf));
+  bool color_is_already_set = (color_info_type != ColorInfoType::NONE);
+  bool is_gray = (ppf->info.num_color_channels == 1);
+  JXL_RETURN_IF_ERROR(
+      ApplyColorHints(color_hints, color_is_already_set, is_gray, ppf));
 
   bool has_nontrivial_background = false;
   bool previous_frame_should_be_cleared = false;
-  enum {
-    DISPOSE_OP_NONE = 0,
-    DISPOSE_OP_BACKGROUND = 1,
-    DISPOSE_OP_PREVIOUS = 2,
-  };
-  enum {
-    BLEND_OP_SOURCE = 0,
-    BLEND_OP_OVER = 1,
-  };
   for (size_t i = 0; i < frames.size(); i++) {
-    auto& frame = frames[i];
-    JXL_ASSERT(frame.data.xsize == frame.xsize);
-    JXL_ASSERT(frame.data.ysize == frame.ysize);
+    Frame& frame = frames[i];
+    const FrameControl& fc = frame.metadata;
+    const RectT<uint64_t> vp = fc.viewport;
+    const auto& pixels = frame.pixels;
+    size_t xsize = pixels.xsize;
+    size_t ysize = pixels.ysize;
+    JXL_ASSERT(xsize == vp.xsize());
+    JXL_ASSERT(ysize == vp.ysize());
 
-    // Before encountering a DISPOSE_OP_NONE frame, the canvas is filled with 0,
-    // so DISPOSE_OP_BACKGROUND and DISPOSE_OP_PREVIOUS are equivalent.
-    if (frame.dispose_op == DISPOSE_OP_NONE) {
+    // Before encountering a DISPOSE_OP_NONE frame, the canvas is filled with
+    // 0, so DISPOSE_OP_BACKGROUND and DISPOSE_OP_PREVIOUS are equivalent.
+    if (fc.dispose_op == DisposeOp::NONE) {
       has_nontrivial_background = true;
     }
-    bool should_blend = frame.blend_op == BLEND_OP_OVER;
+    bool should_blend = fc.blend_op == BlendOp::OVER;
     bool use_for_next_frame =
-        has_nontrivial_background && frame.dispose_op != DISPOSE_OP_PREVIOUS;
-    size_t x0 = frame.x0;
-    size_t y0 = frame.y0;
-    size_t xsize = frame.data.xsize;
-    size_t ysize = frame.data.ysize;
+        has_nontrivial_background && fc.dispose_op != DisposeOp::PREVIOUS;
+    size_t x0 = vp.x0();
+    size_t y0 = vp.y0();
     if (previous_frame_should_be_cleared) {
-      size_t px0 = frames[i - 1].x0;
-      size_t py0 = frames[i - 1].y0;
-      size_t pxs = frames[i - 1].xsize;
-      size_t pys = frames[i - 1].ysize;
+      const auto& pvp = frames[i - 1].metadata.viewport;
+      size_t px0 = pvp.x0();
+      size_t py0 = pvp.y0();
+      size_t pxs = pvp.xsize();
+      size_t pys = pvp.ysize();
       if (px0 >= x0 && py0 >= y0 && px0 + pxs <= x0 + xsize &&
-          py0 + pys <= y0 + ysize && frame.blend_op == BLEND_OP_SOURCE &&
+          py0 + pys <= y0 + ysize && fc.blend_op == BlendOp::SOURCE &&
           use_for_next_frame) {
-        // If the previous frame is entirely contained in the current frame and
-        // we are using BLEND_OP_SOURCE, nothing special needs to be done.
-        ppf->frames.emplace_back(std::move(frame.data));
+        // If the previous frame is entirely contained in the current frame
+        // and we are using BLEND_OP_SOURCE, nothing special needs to be done.
+        ppf->frames.emplace_back(std::move(frame.pixels));
       } else if (px0 == x0 && py0 == y0 && px0 + pxs == x0 + xsize &&
                  py0 + pys == y0 + ysize && use_for_next_frame) {
         // If the new frame has the same size as the old one, but we are
         // blending, we can instead just not blend.
         should_blend = false;
-        ppf->frames.emplace_back(std::move(frame.data));
+        ppf->frames.emplace_back(std::move(frame.pixels));
       } else if (px0 <= x0 && py0 <= y0 && px0 + pxs >= x0 + xsize &&
                  py0 + pys >= y0 + ysize && use_for_next_frame) {
         // If the new frame is contained within the old frame, we can pad the
         // new frame with zeros and not blend.
         JXL_ASSIGN_OR_RETURN(PackedImage new_data,
-                             PackedImage::Create(pxs, pys, frame.data.format));
+                             PackedImage::Create(pxs, pys, pixels.format));
         memset(new_data.pixels(), 0, new_data.pixels_size);
         for (size_t y = 0; y < ysize; y++) {
           size_t bytes_per_pixel =
               PackedImage::BitsPerChannel(new_data.format.data_type) *
               new_data.format.num_channels / 8;
-          memcpy(static_cast<uint8_t*>(new_data.pixels()) +
-                     new_data.stride * (y + y0 - py0) +
-                     bytes_per_pixel * (x0 - px0),
-                 static_cast<const uint8_t*>(frame.data.pixels()) +
-                     frame.data.stride * y,
-                 xsize * bytes_per_pixel);
+          memcpy(
+              static_cast<uint8_t*>(new_data.pixels()) +
+                  new_data.stride * (y + y0 - py0) +
+                  bytes_per_pixel * (x0 - px0),
+              static_cast<const uint8_t*>(pixels.pixels()) + pixels.stride * y,
+              xsize * bytes_per_pixel);
         }
 
         x0 = px0;
@@ -1013,7 +1204,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
       } else {
         // If all else fails, insert a placeholder blank frame with kReplace.
         JXL_ASSIGN_OR_RETURN(PackedImage blank,
-                             PackedImage::Create(pxs, pys, frame.data.format));
+                             PackedImage::Create(pxs, pys, pixels.format));
         memset(blank.pixels(), 0, blank.pixels_size);
         ppf->frames.emplace_back(std::move(blank));
         auto& pframe = ppf->frames.back();
@@ -1028,10 +1219,10 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
         pframe.frame_info.layer_info.blend_info.blendmode = JXL_BLEND_REPLACE;
         pframe.frame_info.layer_info.blend_info.source = 1;
         pframe.frame_info.layer_info.save_as_reference = 1;
-        ppf->frames.emplace_back(std::move(frame.data));
+        ppf->frames.emplace_back(std::move(frame.pixels));
       }
     } else {
-      ppf->frames.emplace_back(std::move(frame.data));
+      ppf->frames.emplace_back(std::move(frame.pixels));
     }
 
     auto& pframe = ppf->frames.back();
@@ -1039,7 +1230,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
     pframe.frame_info.layer_info.crop_y0 = y0;
     pframe.frame_info.layer_info.xsize = xsize;
     pframe.frame_info.layer_info.ysize = ysize;
-    pframe.frame_info.duration = frame.duration;
+    pframe.frame_info.duration =
+        fc.delay_num * 1000 / (fc.delay_den ? fc.delay_den : 100);
     pframe.frame_info.layer_info.blend_info.blendmode =
         should_blend ? JXL_BLEND_BLEND : JXL_BLEND_REPLACE;
     bool is_full_size = x0 == 0 && y0 == 0 && xsize == ppf->info.xsize &&
@@ -1050,7 +1242,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
     pframe.frame_info.layer_info.save_as_reference = use_for_next_frame ? 1 : 0;
 
     previous_frame_should_be_cleared =
-        has_nontrivial_background && frame.dispose_op == DISPOSE_OP_BACKGROUND;
+        has_nontrivial_background && (fc.dispose_op == DisposeOp::BACKGROUND);
   }
 
   if (ppf->frames.empty()) return JXL_FAILURE("No frames decoded");

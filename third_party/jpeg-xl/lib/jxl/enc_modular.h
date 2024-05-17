@@ -7,6 +7,7 @@
 #define LIB_JXL_ENC_MODULAR_H_
 
 #include <jxl/cms_interface.h>
+#include <jxl/memory_manager.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +38,8 @@ struct AuxOut;
 
 class ModularFrameEncoder {
  public:
-  ModularFrameEncoder(const FrameHeader& frame_header,
+  ModularFrameEncoder(JxlMemoryManager* memory_manager,
+                      const FrameHeader& frame_header,
                       const CompressParams& cparams_orig, bool streaming_mode);
   Status ComputeEncodingData(
       const FrameHeader& frame_header, const ImageMetadata& metadata,
@@ -77,7 +79,8 @@ class ModularFrameEncoder {
   // null, the quantization table in `encoding` is used, with dimensions `size_x
   // x size_y`. Otherwise, the table with ID `idx` is encoded from the given
   // `modular_frame_encoder`.
-  static Status EncodeQuantTable(size_t size_x, size_t size_y,
+  static Status EncodeQuantTable(JxlMemoryManager* memory_manager,
+                                 size_t size_x, size_t size_y,
                                  BitWriter* writer,
                                  const QuantEncoding& encoding, size_t idx,
                                  ModularFrameEncoder* modular_frame_encoder);
@@ -88,11 +91,14 @@ class ModularFrameEncoder {
   std::vector<size_t> ac_metadata_size;
   std::vector<uint8_t> extra_dc_precision;
 
+  JxlMemoryManager* memory_manager() const { return memory_manager_; }
+
  private:
   Status PrepareStreamParams(const Rect& rect, const CompressParams& cparams,
                              int minShift, int maxShift,
                              const ModularStreamId& stream, bool do_color,
                              bool groupwise);
+  JxlMemoryManager* memory_manager_;
   std::vector<Image> stream_images_;
   std::vector<ModularOptions> stream_options_;
   std::vector<uint32_t> quants_;

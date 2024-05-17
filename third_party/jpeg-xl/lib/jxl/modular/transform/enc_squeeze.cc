@@ -5,7 +5,9 @@
 
 #include "lib/jxl/modular/transform/enc_squeeze.h"
 
-#include <stdlib.h>
+#include <jxl/memory_manager.h>
+
+#include <cstdlib>
 
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/modular/modular_image.h"
@@ -18,16 +20,17 @@ namespace jxl {
 
 Status FwdHSqueeze(Image &input, int c, int rc) {
   const Channel &chin = input.channel[c];
+  JxlMemoryManager *memory_manager = input.memory_manager();
 
   JXL_DEBUG_V(4, "Doing horizontal squeeze of channel %i to new channel %i", c,
               rc);
 
-  JXL_ASSIGN_OR_RETURN(
-      Channel chout,
-      Channel::Create((chin.w + 1) / 2, chin.h, chin.hshift + 1, chin.vshift));
-  JXL_ASSIGN_OR_RETURN(
-      Channel chout_residual,
-      Channel::Create(chin.w - chout.w, chout.h, chin.hshift + 1, chin.vshift));
+  JXL_ASSIGN_OR_RETURN(Channel chout,
+                       Channel::Create(memory_manager, (chin.w + 1) / 2, chin.h,
+                                       chin.hshift + 1, chin.vshift));
+  JXL_ASSIGN_OR_RETURN(Channel chout_residual,
+                       Channel::Create(memory_manager, chin.w - chout.w,
+                                       chout.h, chin.hshift + 1, chin.vshift));
 
   for (size_t y = 0; y < chout.h; y++) {
     const pixel_type *JXL_RESTRICT p_in = chin.Row(y);
@@ -66,16 +69,17 @@ Status FwdHSqueeze(Image &input, int c, int rc) {
 
 Status FwdVSqueeze(Image &input, int c, int rc) {
   const Channel &chin = input.channel[c];
+  JxlMemoryManager *memory_manager = input.memory_manager();
 
   JXL_DEBUG_V(4, "Doing vertical squeeze of channel %i to new channel %i", c,
               rc);
 
-  JXL_ASSIGN_OR_RETURN(
-      Channel chout,
-      Channel::Create(chin.w, (chin.h + 1) / 2, chin.hshift, chin.vshift + 1));
-  JXL_ASSIGN_OR_RETURN(
-      Channel chout_residual,
-      Channel::Create(chin.w, chin.h - chout.h, chin.hshift, chin.vshift + 1));
+  JXL_ASSIGN_OR_RETURN(Channel chout,
+                       Channel::Create(memory_manager, chin.w, (chin.h + 1) / 2,
+                                       chin.hshift, chin.vshift + 1));
+  JXL_ASSIGN_OR_RETURN(Channel chout_residual,
+                       Channel::Create(memory_manager, chin.w, chin.h - chout.h,
+                                       chin.hshift, chin.vshift + 1));
   intptr_t onerow_in = chin.plane.PixelsPerRow();
   for (size_t y = 0; y < chout_residual.h; y++) {
     const pixel_type *JXL_RESTRICT p_in = chin.Row(y * 2);

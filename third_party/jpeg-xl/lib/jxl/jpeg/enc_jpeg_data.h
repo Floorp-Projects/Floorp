@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_JPEG_ENC_JPEG_DATA_H_
 #define LIB_JXL_JPEG_ENC_JPEG_DATA_H_
 
+#include <jxl/memory_manager.h>
+
 #include <cstdint>
 #include <vector>
 
@@ -20,7 +22,8 @@ namespace jxl {
 class CodecInOut;
 
 namespace jpeg {
-Status EncodeJPEGData(JPEGData& jpeg_data, std::vector<uint8_t>* bytes,
+Status EncodeJPEGData(JxlMemoryManager* memory_manager, JPEGData& jpeg_data,
+                      std::vector<uint8_t>* bytes,
                       const CompressParams& cparams);
 
 void SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,

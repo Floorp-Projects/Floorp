@@ -13,6 +13,8 @@
 #include <cinttypes>  // PRIu64
 #endif
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -37,6 +39,7 @@ struct PlaneBase {
         orig_xsize_(0),
         orig_ysize_(0),
         bytes_per_row_(0),
+        memory_manager_(nullptr),
         bytes_(nullptr),
         sizeof_t_(0) {}
 
@@ -50,6 +53,12 @@ struct PlaneBase {
 
   // Move assignment (required for std::vector)
   PlaneBase& operator=(PlaneBase&& other) noexcept = default;
+
+  ~PlaneBase() {
+    if (bytes_.get()) {
+      JXL_CHECK(memory_manager_);
+    }
+  }
 
   void Swap(PlaneBase& other);
 
@@ -73,6 +82,10 @@ struct PlaneBase {
   // NOTE: do not use this for copying rows - the valid xsize may be much less.
   JXL_INLINE size_t bytes_per_row() const { return bytes_per_row_; }
 
+  JXL_INLINE JxlMemoryManager* memory_manager() const {
+    return memory_manager_;
+  }
+
   // Raw access to byte contents, for interfacing with other libraries.
   // Unsigned char instead of char to avoid surprises (sign extension).
   JXL_INLINE uint8_t* bytes() {
@@ -86,7 +99,7 @@ struct PlaneBase {
 
  protected:
   PlaneBase(size_t xsize, size_t ysize, size_t sizeof_t);
-  Status Allocate();
+  Status Allocate(JxlMemoryManager* memory_manager);
 
   // Returns pointer to the start of a row.
   JXL_INLINE void* VoidRow(const size_t y) const {
@@ -108,6 +121,7 @@ struct PlaneBase {
   uint32_t orig_xsize_;
   uint32_t orig_ysize_;
   size_t bytes_per_row_;  // Includes padding.
+  JxlMemoryManager* memory_manager_;
   CacheAlignedUniquePtr bytes_;
   size_t sizeof_t_;
 };
@@ -143,9 +157,10 @@ class Plane : public detail::PlaneBase {
 
   Plane() = default;
 
-  static StatusOr<Plane> Create(const size_t xsize, const size_t ysize) {
+  static StatusOr<Plane> Create(JxlMemoryManager* memory_manager,
+                                const size_t xsize, const size_t ysize) {
     Plane plane(xsize, ysize, sizeof(T));
-    JXL_RETURN_IF_ERROR(plane.Allocate());
+    JXL_RETURN_IF_ERROR(plane.Allocate(memory_manager));
     return plane;
   }
 
@@ -226,12 +241,13 @@ class Image3 {
     return *this;
   }
 
-  static StatusOr<Image3> Create(const size_t xsize, const size_t ysize) {
-    StatusOr<PlaneT> plane0 = PlaneT::Create(xsize, ysize);
+  static StatusOr<Image3> Create(JxlMemoryManager* memory_manager,
+                                 const size_t xsize, const size_t ysize) {
+    StatusOr<PlaneT> plane0 = PlaneT::Create(memory_manager, xsize, ysize);
     JXL_RETURN_IF_ERROR(plane0.status());
-    StatusOr<PlaneT> plane1 = PlaneT::Create(xsize, ysize);
+    StatusOr<PlaneT> plane1 = PlaneT::Create(memory_manager, xsize, ysize);
     JXL_RETURN_IF_ERROR(plane1.status());
-    StatusOr<PlaneT> plane2 = PlaneT::Create(xsize, ysize);
+    StatusOr<PlaneT> plane2 = PlaneT::Create(memory_manager, xsize, ysize);
     JXL_RETURN_IF_ERROR(plane2.status());
     return Image3(std::move(plane0).value(), std::move(plane1).value(),
                   std::move(plane2).value());
@@ -282,6 +298,9 @@ class Image3 {
   }
 
   // Sizes of all three images are guaranteed to be equal.
+  JXL_INLINE JxlMemoryManager* memory_manager() const {
+    return planes_[0].memory_manager();
+  }
   JXL_INLINE size_t xsize() const { return planes_[0].xsize(); }
   JXL_INLINE size_t ysize() const { return planes_[0].ysize(); }
   // Returns offset [bytes] from one row to the next row of the same plane.

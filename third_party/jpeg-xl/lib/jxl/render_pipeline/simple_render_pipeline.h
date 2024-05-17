@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_RENDER_PIPELINE_SIMPLE_RENDER_PIPELINE_H_
 #define LIB_JXL_RENDER_PIPELINE_SIMPLE_RENDER_PIPELINE_H_
 
+#include <jxl/memory_manager.h>
+
 #include <cstddef>
 #include <utility>
 #include <vector>
@@ -32,6 +34,10 @@ class SimpleRenderPipeline : public RenderPipeline {
   // kRenderPipelineXOffset.
   std::vector<ImageF> channel_data_;
   size_t processed_passes_ = 0;
+
+ public:
+  explicit SimpleRenderPipeline(JxlMemoryManager* memory_manager)
+      : RenderPipeline(memory_manager) {}
 
  private:
   Rect MakeChannelRect(size_t group_id, size_t channel);

@@ -5,14 +5,16 @@
 
 #include "lib/jxl/enc_external_image.h"
 
-#include <array>
-#include <new>
+#include <jxl/types.h>
 
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/data_parallel.h"
+#include <cstddef>
+#include <cstdint>
+
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/image_ops.h"
-#include "lib/jxl/image_test_utils.h"
+#include "lib/jxl/image_bundle.h"
+#include "lib/jxl/image_metadata.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
@@ -22,7 +24,7 @@ namespace {
 TEST(ExternalImageTest, InvalidSize) {
   ImageMetadata im;
   im.SetAlphaBits(8);
-  ImageBundle ib(&im);
+  ImageBundle ib(jxl::test::MemoryManager(), &im);
 
   JxlPixelFormat format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   const uint8_t buf[10 * 100 * 8] = {};
@@ -44,7 +46,7 @@ TEST(ExternalImageTest, InvalidSize) {
 TEST(ExternalImageTest, AlphaMissing) {
   ImageMetadata im;
   im.SetAlphaBits(0);  // No alpha
-  ImageBundle ib(&im);
+  ImageBundle ib(jxl::test::MemoryManager(), &im);
 
   const size_t xsize = 10;
   const size_t ysize = 20;
@@ -63,7 +65,7 @@ TEST(ExternalImageTest, AlphaPremultiplied) {
   ImageMetadata im;
   im.SetAlphaBits(8, true);
 
-  ImageBundle ib(&im);
+  ImageBundle ib(jxl::test::MemoryManager(), &im);
   const size_t xsize = 10;
   const size_t ysize = 20;
   const size_t size = xsize * ysize * 8;

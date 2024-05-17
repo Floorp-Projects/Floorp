@@ -8,11 +8,9 @@
 
 // Facade for image decoders (PNG, PNM, ...).
 
-#include <stddef.h>
-#include <stdint.h>
-
+#include <cstddef>
+#include <cstdint>
 #include <string>
-#include <vector>
 
 #include "lib/extras/dec/color_hints.h"
 #include "lib/jxl/base/span.h"

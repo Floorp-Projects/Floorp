@@ -6,6 +6,7 @@
 #ifndef LIB_JXL_TOC_H_
 #define LIB_JXL_TOC_H_
 
+#include <jxl/memory_manager.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -39,11 +40,13 @@ static JXL_INLINE size_t NumTocEntries(size_t num_groups, size_t num_dc_groups,
          num_groups * num_passes;
 }
 
-Status ReadToc(size_t toc_entries, BitReader* JXL_RESTRICT reader,
+Status ReadToc(JxlMemoryManager* memory_manager, size_t toc_entries,
+               BitReader* JXL_RESTRICT reader,
                std::vector<uint32_t>* JXL_RESTRICT sizes,
                std::vector<coeff_order_t>* JXL_RESTRICT permutation);
 
-Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
+Status ReadGroupOffsets(JxlMemoryManager* memory_manager, size_t toc_entries,
+                        BitReader* JXL_RESTRICT reader,
                         std::vector<uint64_t>* JXL_RESTRICT offsets,
                         std::vector<uint32_t>* JXL_RESTRICT sizes,
                         uint64_t* total_size);

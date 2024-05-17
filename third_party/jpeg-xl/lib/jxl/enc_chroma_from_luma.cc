@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_chroma_from_luma.h"
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
@@ -170,13 +172,15 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
   return std::max(-128.0f, std::min(127.0f, roundf(x)));
 }
 
-Status InitDCStorage(size_t num_blocks, ImageF* dc_values) {
+Status InitDCStorage(JxlMemoryManager* memory_manager, size_t num_blocks,
+                     ImageF* dc_values) {
   // First row: Y channel
   // Second row: X channel
   // Third row: Y channel
   // Fourth row: B channel
-  JXL_ASSIGN_OR_RETURN(*dc_values,
-                       ImageF::Create(RoundUpTo(num_blocks, Lanes(df)), 4));
+  JXL_ASSIGN_OR_RETURN(
+      *dc_values,
+      ImageF::Create(memory_manager, RoundUpTo(num_blocks, Lanes(df)), 4));
 
   JXL_ASSERT(dc_values->xsize() != 0);
   // Zero-fill the last lanes
@@ -349,11 +353,11 @@ namespace jxl {
 HWY_EXPORT(InitDCStorage);
 HWY_EXPORT(ComputeTile);
 
-Status CfLHeuristics::Init(const Rect& rect) {
+Status CfLHeuristics::Init(JxlMemoryManager* memory_manager, const Rect& rect) {
   size_t xsize_blocks = rect.xsize() / kBlockDim;
   size_t ysize_blocks = rect.ysize() / kBlockDim;
-  return HWY_DYNAMIC_DISPATCH(InitDCStorage)(xsize_blocks * ysize_blocks,
-                                             &dc_values);
+  return HWY_DYNAMIC_DISPATCH(InitDCStorage)(
+      memory_manager, xsize_blocks * ysize_blocks, &dc_values);
 }
 
 void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,

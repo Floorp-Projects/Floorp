@@ -37,6 +37,8 @@ struct CompressParams {
   bool max_error_mode = false;
   float max_error[3] = {0.0, 0.0, 0.0};
 
+  bool disable_percepeptual_optimizations = false;
+
   SpeedTier speed_tier = SpeedTier::kSquirrel;
   int brotli_effort = -1;
 

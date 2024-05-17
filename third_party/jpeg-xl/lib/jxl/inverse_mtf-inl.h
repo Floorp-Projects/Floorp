@@ -14,7 +14,7 @@
 
 #include <hwy/highway.h>
 
-#include "lib/jxl/sanitizers.h"
+#include "lib/jxl/base/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {

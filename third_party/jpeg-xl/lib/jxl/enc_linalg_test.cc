@@ -73,14 +73,24 @@ TEST(LinAlgTest, ConvertToDiagonal) {
     VerifyOrthogonal(U, 1e-12);
     VerifyMatrixEqual(A, MatMul(U, MatMul(Diagonal(d), Transpose(U))), 1e-12);
   }
+  {
+    Matrix2x2 A;
+    A[0] = {0.000208649, 1.13687e-12};
+    A[1] = {1.13687e-12, 0.000208649};
+    Matrix2x2 U;
+    Vector2 d;
+    ConvertToDiagonal(A, d, U);
+    VerifyOrthogonal(U, 1e-12);
+    VerifyMatrixEqual(A, MatMul(U, MatMul(Diagonal(d), Transpose(U))), 1e-11);
+  }
   Rng rng(0);
-  for (size_t i = 0; i < 100; ++i) {
+  for (size_t i = 0; i < 1000000; ++i) {
     Matrix2x2 A = RandomSymmetricMatrix(rng, -1.0, 1.0);
     Matrix2x2 U;
     Vector2 d;
     ConvertToDiagonal(A, d, U);
     VerifyOrthogonal(U, 1e-12);
-    VerifyMatrixEqual(A, MatMul(U, MatMul(Diagonal(d), Transpose(U))), 1e-12);
+    VerifyMatrixEqual(A, MatMul(U, MatMul(Diagonal(d), Transpose(U))), 5e-10);
   }
 }
 

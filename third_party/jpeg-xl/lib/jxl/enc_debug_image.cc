@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_debug_image.h"
 
+#include <jxl/memory_manager.h>
+
 #include <cstddef>
 #include <cstdint>
 
@@ -24,7 +26,9 @@ StatusOr<Image3F> ConvertToFloat(const Image3<From>& from) {
   if (std::is_same<From, double>::value || std::is_same<From, float>::value) {
     factor = 1.0f;
   }
-  JXL_ASSIGN_OR_RETURN(Image3F to, Image3F::Create(from.xsize(), from.ysize()));
+  JxlMemoryManager* memory_manager = from.memory_manager();
+  JXL_ASSIGN_OR_RETURN(
+      Image3F to, Image3F::Create(memory_manager, from.xsize(), from.ysize()));
   for (size_t c = 0; c < 3; ++c) {
     for (size_t y = 0; y < from.ysize(); ++y) {
       const From* const JXL_RESTRICT row_from = from.ConstPlaneRow(c, y);
@@ -63,8 +67,11 @@ Status DumpPlaneNormalizedT(const CompressParams& cparams, const char* label,
   T min;
   T max;
   ImageMinMax(image, &min, &max);
-  JXL_ASSIGN_OR_RETURN(Image3B normalized,
-                       Image3B::Create(image.xsize(), image.ysize()));
+  JxlMemoryManager* memory_manager = image.memory_manager();
+
+  JXL_ASSIGN_OR_RETURN(
+      Image3B normalized,
+      Image3B::Create(memory_manager, image.xsize(), image.ysize()));
   for (size_t c = 0; c < 3; ++c) {
     float mul = min == max ? 0 : (255.0f / (max - min));
     for (size_t y = 0; y < image.ysize(); ++y) {
@@ -93,9 +100,11 @@ Status DumpImage(const CompressParams& cparams, const char* label,
 Status DumpXybImage(const CompressParams& cparams, const char* label,
                     const Image3F& image) {
   if (!cparams.debug_image) return true;
+  JxlMemoryManager* memory_manager = image.memory_manager();
 
-  JXL_ASSIGN_OR_RETURN(Image3F linear,
-                       Image3F::Create(image.xsize(), image.ysize()));
+  JXL_ASSIGN_OR_RETURN(
+      Image3F linear,
+      Image3F::Create(memory_manager, image.xsize(), image.ysize()));
   OpsinParams opsin_params;
   opsin_params.Init(kDefaultIntensityTarget);
   OpsinToLinear(image, Rect(linear), nullptr, &linear, opsin_params);
