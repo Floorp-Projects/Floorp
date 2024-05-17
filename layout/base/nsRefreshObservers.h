@@ -62,17 +62,6 @@ class nsARefreshObserver {
 
 /**
  * An abstract base class to be implemented by callers wanting to be notified
- * when the observing refresh driver updated mMostRecentRefresh due to active
- * timer changes. Callers must ensure an observer is removed before it is
- * destroyed.
- */
-class nsATimerAdjustmentObserver {
- public:
-  virtual void NotifyTimerAdjusted(mozilla::TimeStamp aTime) = 0;
-};
-
-/**
- * An abstract base class to be implemented by callers wanting to be notified
  * that a refresh has occurred. Callers must ensure an observer is removed
  * before it is destroyed.
  */
