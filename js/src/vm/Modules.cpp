@@ -1260,7 +1260,8 @@ static bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
 
 // https://tc39.es/proposal-import-attributes/#sec-AllImportAttributesSupported
 static bool AllImportAttributesSupported(
-    JSContext* cx, mozilla::Span<const ImportAttribute> attributes) {
+    JSContext* cx, mozilla::Span<const ImportAttribute> attributes,
+    MutableHandle<JSAtom*> invalidKey) {
   // Step 1. Let supported be HostGetSupportedImportAttributes().
   //
   // Note: This should be driven by a host hook
@@ -1273,13 +1274,7 @@ static bool AllImportAttributesSupported(
   for (const ImportAttribute& attribute : attributes) {
     // Step 2.a. If supported does not contain attribute.[[Key]], return false.
     if (attribute.key() != cx->names().type) {
-      UniqueChars printableKey = AtomToPrintableString(cx, attribute.key());
-      if (!printableKey) {
-        return false;
-      }
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_IMPORT_ATTRIBUTES_UNSUPPORTED_ATTRIBUTE,
-                                printableKey.get());
+      invalidKey.set(attribute.key());
       return false;
     }
   }
@@ -1347,7 +1342,15 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
     // According to the spec, this should be in InnerModuleLoading, but
     // currently, our module code is not aligned with the spec text.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1894729
-    if (!AllImportAttributesSupported(cx, moduleRequest->attributes())) {
+    Rooted<JSAtom*> invalidKey(cx);
+    if (!AllImportAttributesSupported(cx, moduleRequest->attributes(),
+                                      &invalidKey)) {
+      UniqueChars printableKey = AtomToPrintableString(cx, invalidKey);
+      JS_ReportErrorNumberASCII(
+          cx, GetErrorMessage, nullptr,
+          JSMSG_IMPORT_ATTRIBUTES_STATIC_IMPORT_UNSUPPORTED_ATTRIBUTE,
+          printableKey ? printableKey.get() : "");
+
       return false;
     }
 
