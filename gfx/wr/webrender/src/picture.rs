@@ -5038,6 +5038,23 @@ impl PicturePrimitive {
 
                 for (sub_slice_index, sub_slice) in tile_cache.sub_slices.iter_mut().enumerate() {
                     for tile in sub_slice.tiles.values_mut() {
+                        // Ensure that the dirty rect doesn't extend outside the local valid rect.
+                        tile.local_dirty_rect = tile.local_dirty_rect
+                            .intersection(&tile.current_descriptor.local_valid_rect)
+                            .unwrap_or_else(PictureRect::zero);
+
+                        let scissor_rect = frame_state.composite_state.get_surface_rect(
+                            &tile.local_dirty_rect,
+                            &tile.local_tile_rect,
+                            tile_cache.transform_index,
+                        ).to_i32();
+
+                        let valid_rect = frame_state.composite_state.get_surface_rect(
+                            &tile.current_descriptor.local_valid_rect,
+                            &tile.local_tile_rect,
+                            tile_cache.transform_index,
+                        ).to_i32();
+
                         if tile.is_visible {
                             // Get the world space rect that this tile will actually occupy on screen
                             let world_draw_rect = world_clip_rect.intersection(&tile.world_valid_rect);
@@ -5078,6 +5095,17 @@ impl PicturePrimitive {
                                 None => {
                                     tile.is_visible = false;
                                 }
+                            }
+
+                            // In extreme zoom/offset cases, we may end up with a local scissor/valid rect
+                            // that becomes empty after transformation to device space (e.g. if the local
+                            // rect height is 0.00001 and the compositor transform has large scale + offset).
+                            // DirectComposition panics if we try to BeginDraw with an empty rect, so catch
+                            // that here and mark the tile non-visible. This is a bit of a hack - we should
+                            // ideally handle these in a more accurate way so we don't end up with an empty
+                            // rect here.
+                            if !tile.is_valid && (scissor_rect.is_empty() || valid_rect.is_empty()) {
+                                tile.is_visible = false;
                             }
                         }
 
@@ -5170,11 +5198,6 @@ impl PicturePrimitive {
                                 }
                             }
                         }
-
-                        // Ensure that the dirty rect doesn't extend outside the local valid rect.
-                        tile.local_dirty_rect = tile.local_dirty_rect
-                            .intersection(&tile.current_descriptor.local_valid_rect)
-                            .unwrap_or_else(|| { tile.is_valid = true; PictureRect::zero() });
 
                         surface_local_dirty_rect = surface_local_dirty_rect.union(&tile.local_dirty_rect);
 
@@ -5283,18 +5306,6 @@ impl PicturePrimitive {
                                     frame_state.resource_cache,
                                     tile_cache.current_tile_size,
                                 );
-
-                                let scissor_rect = frame_state.composite_state.get_surface_rect(
-                                    &tile.local_dirty_rect,
-                                    &tile.local_tile_rect,
-                                    tile_cache.transform_index,
-                                ).to_i32();
-
-                                let valid_rect = frame_state.composite_state.get_surface_rect(
-                                    &tile.current_descriptor.local_valid_rect,
-                                    &tile.local_tile_rect,
-                                    tile_cache.transform_index,
-                                ).to_i32();
 
                                 let composite_task_size = tile_cache.current_tile_size;
 
