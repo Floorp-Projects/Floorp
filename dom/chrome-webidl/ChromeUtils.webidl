@@ -618,12 +618,6 @@ partial namespace ChromeUtils {
   Promise<DOMString> collectPerfStats();
 
   /**
-  * Returns a Promise containing a sequence of I/O activities
-  */
-  [NewObject]
-  Promise<sequence<IOActivityDataDictionary>> requestIOActivity();
-
-  /**
   * Returns a Promise containing all processes info
   */
   [NewObject]
@@ -925,18 +919,6 @@ dictionary ParentProcInfoDictionary {
   // Type of this parent process.
   // As of this writing, this is always `browser`.
   WebIDLProcType type = "browser";
-};
-
-/**
- * Used by requestIOActivity() to return the number of bytes
- * that were read (rx) and/or written (tx) for a given location.
- *
- * Locations can be sockets or files.
- */
-dictionary IOActivityDataDictionary {
-  ByteString location = "";
-  unsigned long long rx = 0;
-  unsigned long long tx = 0;
 };
 
 /**

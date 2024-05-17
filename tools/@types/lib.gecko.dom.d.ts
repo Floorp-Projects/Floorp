@@ -1250,12 +1250,6 @@ interface IIRFilterOptions extends AudioNodeOptions {
     feedforward: number[];
 }
 
-interface IOActivityDataDictionary {
-    location?: string;
-    rx?: number;
-    tx?: number;
-}
-
 interface IdentityCredentialLogoutRPsRequest {
     accountId: UTF8String;
     url: UTF8String;
@@ -35509,7 +35503,6 @@ declare namespace ChromeUtils {
     function registerProcessActor(aName: UTF8String, aOptions?: ProcessActorOptions): void;
     function registerWindowActor(aName: UTF8String, aOptions?: WindowActorOptions): void;
     function releaseAssert(condition: boolean, message?: string): void;
-    function requestIOActivity(): Promise<IOActivityDataDictionary[]>;
     function requestProcInfo(): Promise<ParentProcInfoDictionary>;
     function resetLastExternalProtocolIframeAllowed(): void;
     function saveHeapSnapshot(boundaries?: HeapSnapshotBoundaries): string;

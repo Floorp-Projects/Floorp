@@ -1,7 +1,6 @@
 [DEFAULT]
 support-files = [
   "dummy.html",
-  "ioactivity.html",
   "redirect.sjs",
   "auth_post.sjs",
   "early_hint_main_html.sjs",
@@ -188,8 +187,5 @@ support-files = [
   "damonbowling.jpg^headers^",
   "file_favicon.html",
 ]
-
-["browser_test_io_activity.js"]
-skip-if = ["socketprocess_networking"]
 
 ["browser_test_offline_tab.js"]

@@ -5,7 +5,6 @@
 
 #include "nsSocketTransportService2.h"
 
-#include "IOActivityMonitor.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -784,7 +783,6 @@ nsSocketTransportService::Init() {
   // socket process. We have to make sure the topics registered below are also
   // registered in nsIObserver::Init().
   if (obsSvc) {
-    obsSvc->AddObserver(this, "profile-initial-state", false);
     obsSvc->AddObserver(this, "last-pb-context-exited", false);
     obsSvc->AddObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC, true);
     obsSvc->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
@@ -860,7 +858,6 @@ nsresult nsSocketTransportService::ShutdownThread() {
 
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   if (obsSvc) {
-    obsSvc->RemoveObserver(this, "profile-initial-state");
     obsSvc->RemoveObserver(this, "last-pb-context-exited");
     obsSvc->RemoveObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC);
     obsSvc->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC);
@@ -872,8 +869,6 @@ nsresult nsSocketTransportService::ShutdownThread() {
     mAfterWakeUpTimer->Cancel();
     mAfterWakeUpTimer = nullptr;
   }
-
-  IOActivityMonitor::Shutdown();
 
   mInitialized = false;
   mShuttingDown = false;
@@ -1611,13 +1606,6 @@ NS_IMETHODIMP
 nsSocketTransportService::Observe(nsISupports* subject, const char* topic,
                                   const char16_t* data) {
   SOCKET_LOG(("nsSocketTransportService::Observe topic=%s", topic));
-
-  if (!strcmp(topic, "profile-initial-state")) {
-    if (!Preferences::GetBool(IO_ACTIVITY_ENABLED_PREF, false)) {
-      return NS_OK;
-    }
-    return net::IOActivityMonitor::Init();
-  }
 
   if (!strcmp(topic, "last-pb-context-exited")) {
     nsCOMPtr<nsIRunnable> ev = NewRunnableMethod(
