@@ -78,14 +78,6 @@ export var FxAccountsConfig = {
     });
   },
 
-  async promiseForceSigninURI(entrypoint, extraParams = {}) {
-    const authParams = await this._getAuthParams();
-    return this._buildURL("force_auth", {
-      extraParams: { entrypoint, ...authParams, ...extraParams },
-      addAccountIdentifiers: true,
-    });
-  },
-
   async promiseManageURI(entrypoint, extraParams = {}) {
     return this._buildURL("settings", {
       extraParams: { entrypoint, ...extraParams },
@@ -186,7 +178,7 @@ export var FxAccountsConfig = {
 
   resetConfigURLs() {
     let autoconfigURL = this.getAutoConfigURL();
-    if (!autoconfigURL) {
+    if (autoconfigURL) {
       return;
     }
     // They have the autoconfig uri pref set, so we clear all the prefs that we

@@ -449,17 +449,7 @@ var gSyncPane = {
    * different entrypoints to accounts
    * */
   async reSignIn(entrypoint) {
-    // There's a bit of an edge-case here - we might be forcing reauth when we've
-    // lost the FxA account data - in which case we'll not get a URL as the re-auth
-    // URL embeds account info and the server endpoint complains if we don't
-    // supply it - So we just use the regular "sign in" URL in that case.
-    if (!(await FxAccounts.canConnectAccount())) {
-      return;
-    }
-
-    const url =
-      (await FxAccounts.config.promiseForceSigninURI(entrypoint)) ||
-      (await FxAccounts.config.promiseConnectAccountURI(entrypoint));
+    const url = await FxAccounts.config.promiseConnectAccountURI(entrypoint);
     this.replaceTabWithUrl(url);
   },
 

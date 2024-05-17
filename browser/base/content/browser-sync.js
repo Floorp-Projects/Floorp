@@ -1299,7 +1299,7 @@ var gSync = {
     if (!(await FxAccounts.canConnectAccount())) {
       return;
     }
-    const url = await FxAccounts.config.promiseForceSigninURI(entryPoint);
+    const url = await FxAccounts.config.promiseConnectAccountURI(entryPoint);
     switchToTabHavingURI(url, true, {
       replaceQueryString: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),

@@ -35,6 +35,7 @@ import {
   log,
   logPII,
 } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+import { SyncDisconnect } from "resource://services-sync/SyncDisconnect.sys.mjs";
 
 const lazy = {};
 
@@ -471,6 +472,10 @@ FxAccountsWebChannelHelpers.prototype = {
    * @param accountData the user's account data and credentials
    */
   async login(accountData) {
+    const signedInUser = await this._fxAccounts.getSignedInUser();
+    if (signedInUser) {
+      await this._disconnect();
+    }
     // We don't act on customizeSync anymore, it used to open a dialog inside
     // the browser to selecte the engines to sync but we do it on the web now.
     log.debug("Webchannel is logging a user in.");
@@ -499,6 +504,7 @@ FxAccountsWebChannelHelpers.prototype = {
     } else {
       const xps = await this._initializeSync();
       await this._fxAccounts._internal.setSignedInUser(accountData);
+
       if (requestedServices) {
         // User has enabled Sync.
         if (requestedServices.sync) {
@@ -509,6 +515,14 @@ FxAccountsWebChannelHelpers.prototype = {
         }
       }
     }
+  },
+
+  /**
+   * Disconnects the user from Sync and FxA
+   *
+   */
+  _disconnect() {
+    return SyncDisconnect.disconnect(false);
   },
 
   /**
