@@ -17,7 +17,6 @@
   skin/classic/browser/autocomplete.css                        (../shared/autocomplete.css)
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
   skin/classic/browser/browser-shared.css                      (../shared/browser-shared.css)
-  skin/classic/browser/ctrlTab.css                             (../shared/ctrlTab.css)
   skin/classic/browser/formautofill-notification.css           (../shared/formautofill-notification.css)
   skin/classic/browser/identity-credential-notification.css    (../shared/identity-credential-notification.css)
   skin/classic/browser/light-dark-overrides.css                (../shared/light-dark-overrides.css)
@@ -28,7 +27,6 @@
   skin/classic/browser/searchbar.css                           (../shared/searchbar.css)
   skin/classic/browser/setDesktopBackground.css                (../shared/setDesktopBackground.css)
   skin/classic/browser/sidebar.css                             (../shared/sidebar.css)
-  skin/classic/browser/tabs.css                                (../shared/tabs.css)
   skin/classic/browser/toolbarbuttons.css                      (../shared/toolbarbuttons.css)
   skin/classic/browser/toolbarbutton-icons.css                 (../shared/toolbarbutton-icons.css)
   skin/classic/browser/urlbar-dynamic-results.css              (../shared/urlbar-dynamic-results.css)
@@ -222,6 +220,7 @@
   skin/classic/browser/search-indicator-badge-add.svg          (../shared/search/search-indicator-badge-add.svg)
 
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
+  skin/classic/browser/tabbrowser/ctrlTab.css                  (../shared/tabbrowser/ctrlTab.css)
   skin/classic/browser/tabbrowser/hourglass.svg                (../shared/tabbrowser/hourglass.svg)
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
@@ -236,6 +235,7 @@
   skin/classic/browser/tabbrowser/tab-loading@2x.png           (../shared/tabbrowser/tab-loading@2x.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted.png     (../shared/tabbrowser/tab-loading-inverted.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted@2x.png  (../shared/tabbrowser/tab-loading-inverted@2x.png)
+  skin/classic/browser/tabbrowser/tabs.css                     (../shared/tabbrowser/tabs.css)
 
   skin/classic/browser/translations/beta.svg                   (../shared/translations/beta.svg)
 

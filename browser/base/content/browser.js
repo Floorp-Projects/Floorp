@@ -136,7 +136,7 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "FullZoom",
-  "chrome://browser/content/browser-fullZoom.js"
+  "chrome://browser/content/tabbrowser/browser-fullZoom.js"
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
@@ -151,7 +151,7 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "gTabsPanel",
-  "chrome://browser/content/browser-allTabsMenu.js"
+  "chrome://browser/content/tabbrowser/browser-allTabsMenu.js"
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
@@ -166,7 +166,7 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "ctrlTab",
-  "chrome://browser/content/browser-ctrlTab.js"
+  "chrome://browser/content/tabbrowser/browser-ctrlTab.js"
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
