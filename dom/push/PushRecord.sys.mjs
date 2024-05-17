@@ -128,7 +128,7 @@ PushRecord.prototype = {
       return Date.now();
     }
 
-    if (AppConstants.MOZ_ANDROID_HISTORY) {
+    if (AppConstants.MOZ_GECKOVIEW_HISTORY) {
       let result = await lazy.EventDispatcher.instance.sendRequestForResult({
         type: "History:GetPrePathLastVisitedTimeMilliseconds",
         prePath: this.uri.prePath,

@@ -53,7 +53,7 @@
 #include <pthread.h>
 #include <wchar.h>
 
-#ifdef MOZ_ANDROID_HISTORY
+#ifdef MOZ_GECKOVIEW_HISTORY
 #  include "nsNetUtil.h"
 #  include "nsIURI.h"
 #  include "IHistory.h"
