@@ -93,6 +93,9 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   mozilla::a11y::AccType AccessibleType() override;
 #endif
 
+  mozilla::IntrinsicSize ComputeIntrinsicSize(
+      bool aIgnoreContainment = false) const;
+
   nsIDocShell* GetDocShell() const;
   nsresult BeginSwapDocShells(nsIFrame* aOther);
   void EndSwapDocShells(nsIFrame* aOther);
@@ -106,6 +109,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   enum { IGNORE_PAINT_SUPPRESSION = 0x1 };
   mozilla::PresShell* GetSubdocumentPresShellForPainting(uint32_t aFlags);
   nsRect GetDestRect();
+  nsRect GetDestRect(const nsRect& aConstraintRect);
   mozilla::ScreenIntSize GetSubdocumentSize();
 
   // nsIReflowCallback
@@ -150,7 +154,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   void PropagateIsUnderHiddenEmbedderElement(bool aValue);
   void UpdateEmbeddedBrowsingContextDependentData();
 
-  bool IsInline() { return mIsInline; }
+  bool IsInline() const { return mIsInline; }
 
   nscoord GetIntrinsicBSize() {
     auto size = GetIntrinsicSize();

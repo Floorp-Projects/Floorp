@@ -200,6 +200,9 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   nsImageFrame* CreateContinuingFrame(mozilla::PresShell*,
                                       ComputedStyle*) const;
 
+  mozilla::AspectRatio ComputeIntrinsicRatioForImage(
+      imgIContainer*, bool aIgnoreContainment = false) const;
+
  private:
   friend nsIFrame* NS_NewImageFrame(mozilla::PresShell*, ComputedStyle*);
   friend nsIFrame* NS_NewXULImageFrame(mozilla::PresShell*, ComputedStyle*);
@@ -291,6 +294,11 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   void OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect);
   void OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
+  mozilla::IntrinsicSize ComputeIntrinsicSize(
+      bool aIgnoreContainment = false) const;
+  // Whether the image frame should use the mapped aspect ratio from width=""
+  // and height="".
+  bool ShouldUseMappedAspectRatio() const;
 
   /**
    * Notification that aRequest will now be the current request.
@@ -308,20 +316,16 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 #endif
 
   /**
-   * Computes the predicted dest rect that we'll draw into, in app units, based
-   * upon the provided frame content box. (The content box is what
-   * nsDisplayImage::GetBounds() returns.)
-   * The result is not necessarily contained in the frame content box.
+   * Computes the dest rect that we'll draw into, in app units, based upon the
+   * provided frame content box. The result is not necessarily contained in the
+   * frame content box.
    */
-  nsRect PredictedDestRect(const nsRect& aFrameContentBox);
+  nsRect GetDestRect(const nsRect& aFrameContentBox,
+                     nsPoint* aAnchorPoint = nullptr);
 
  private:
   nscoord GetContinuationOffset() const;
   bool ShouldDisplaySelection();
-
-  // Whether the image frame should use the mapped aspect ratio from width=""
-  // and height="".
-  bool ShouldUseMappedAspectRatio() const;
 
   // Recalculate mIntrinsicSize from the image.
   bool UpdateIntrinsicSize();
