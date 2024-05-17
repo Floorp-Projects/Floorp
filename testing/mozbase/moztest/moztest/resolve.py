@@ -8,6 +8,7 @@ import pickle
 import sys
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
+from urllib.parse import urlsplit
 
 import mozpack.path as mozpath
 import six
@@ -853,10 +854,9 @@ class TestResolver(MozbuildObject):
         if test["name"].startswith("/_mozilla/webgpu"):
             depth = 9001
 
-        group = os.path.dirname(test["name"])
-        while group.count("/") > depth:
-            group = os.path.dirname(group)
-        return group
+        # We have a leading / so the first component is always ""
+        components = depth + 1
+        return "/".join(urlsplit(test["name"]).path.split("/")[:-1][:components])
 
     def add_wpt_manifest_data(self):
         """Adds manifest data for web-platform-tests into the list of available tests.
