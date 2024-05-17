@@ -8,9 +8,7 @@ script topsrcdir = "@topsrcdir@"; lldb.debugger.HandleCommand("command source -s
 settings set symbols.enable-external-lookup true
 
 # This is where libxul.so and libmozglue.so are produced in full builds.
-settings append target.exec-search-paths @topobjdir@/toolkit/library/build
-settings append target.exec-search-paths @topobjdir@/mozglue/build
-settings append target.exec-search-paths @topobjdir@/security
+settings append target.exec-search-paths @topobjdir@/dist/bin
 
 # This is where artifact builds unpacks "crashreporter-symbols-full" uncompressed ELF debug symbols.
 settings append target.debug-file-search-paths @topobjdir@/dist/crashreporter-symbols
