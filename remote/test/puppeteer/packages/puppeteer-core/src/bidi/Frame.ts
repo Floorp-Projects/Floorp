@@ -20,14 +20,12 @@ import {
   switchMap,
 } from '../../third_party/rxjs/rxjs.js';
 import type {CDPSession} from '../api/CDPSession.js';
-import type {ElementHandle} from '../api/ElementHandle.js';
 import {
   Frame,
   throwIfDetached,
   type GoToOptions,
   type WaitForOptions,
 } from '../api/Frame.js';
-import type {WaitForSelectorOptions} from '../api/Page.js';
 import {PageEvent} from '../api/Page.js';
 import {
   ConsoleMessage,
@@ -35,7 +33,7 @@ import {
 } from '../common/ConsoleMessage.js';
 import {TargetCloseError, UnsupportedOperation} from '../common/Errors.js';
 import type {TimeoutSettings} from '../common/TimeoutSettings.js';
-import type {Awaitable, NodeFor} from '../common/types.js';
+import type {Awaitable} from '../common/types.js';
 import {debugError, fromEmitterEvent, timeout} from '../common/util.js';
 import {isErrorLike} from '../util/ErrorLike.js';
 
@@ -106,7 +104,7 @@ export class BidiFrame extends Frame {
     this.browsingContext.on('closed', () => {
       for (const session of BidiCdpSession.sessions.values()) {
         if (session.frame === this) {
-          void session.detach().catch(debugError);
+          session.onClose();
         }
       }
       this.page().trustedEmitter.emit(PageEvent.FrameDetached, this);
@@ -456,19 +454,6 @@ export class BidiFrame extends Frame {
     await exposedFunction[Symbol.asyncDispose]();
   }
 
-  override waitForSelector<Selector extends string>(
-    selector: Selector,
-    options?: WaitForSelectorOptions
-  ): Promise<ElementHandle<NodeFor<Selector>> | null> {
-    if (selector.startsWith('aria') && !this.page().browser().cdpSupported) {
-      throw new UnsupportedOperation(
-        'ARIA selector is not supported for BiDi!'
-      );
-    }
-
-    return super.waitForSelector(selector, options);
-  }
-
   async createCDPSession(): Promise<CDPSession> {
     const {sessionId} = await this.client.send('Target.attachToTarget', {
       targetId: this._id,
@@ -559,6 +544,18 @@ export class BidiFrame extends Frame {
       // SAFETY: ElementHandles are always remote references.
       element.remoteValue() as Bidi.Script.SharedReference,
       files
+    );
+  }
+
+  @throwIfDetached
+  async locateNodes(
+    element: BidiElementHandle,
+    locator: Bidi.BrowsingContext.Locator
+  ): Promise<Bidi.Script.NodeRemoteValue[]> {
+    return await this.browsingContext.locateNodes(
+      locator,
+      // SAFETY: ElementHandles are always remote references.
+      [element.remoteValue() as Bidi.Script.SharedReference]
     );
   }
 }

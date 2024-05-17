@@ -29,7 +29,8 @@
       "dependencies": [
         "../../packages/puppeteer:build",
         "../../packages/puppeteer-core:build",
-        "../../packages/browsers:build"
+        "../../packages/browsers:build",
+        "../../packages/testserver:build"
       ],
       "files": [],
       "output": [
@@ -44,7 +45,7 @@
     "assets"
   ],
   "dependencies": {
-    "glob": "10.3.12",
+    "glob": "10.3.15",
     "mocha": "10.4.0"
   }
 }

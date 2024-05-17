@@ -176,10 +176,15 @@ export class ChromeLauncher extends ProductLauncher {
       'AcceptCHFrame',
       'MediaRouter',
       'OptimizationHints',
-      // https://crbug.com/1492053
-      turnOnExperimentalFeaturesForTesting
-        ? ''
-        : 'ProcessPerSiteUpToMainFrameThreshold',
+
+      ...(turnOnExperimentalFeaturesForTesting
+        ? []
+        : [
+            // https://crbug.com/1492053
+            'ProcessPerSiteUpToMainFrameThreshold',
+            // https://github.com/puppeteer/puppeteer/issues/10715
+            'IsolateSandboxedIframes',
+          ]),
       ...userDisabledFeatures,
     ].filter(feature => {
       return feature !== '';
@@ -192,6 +197,7 @@ export class ChromeLauncher extends ProductLauncher {
 
     // Merge default enabled features with user-provided ones, if any.
     const enabledFeatures = [
+      'PdfOopif',
       // Add features to enable by default here.
       ...userEnabledFeatures,
     ].filter(feature => {
@@ -210,9 +216,6 @@ export class ChromeLauncher extends ProductLauncher {
       '--disable-default-apps',
       '--disable-dev-shm-usage',
       '--disable-extensions',
-      turnOnExperimentalFeaturesForTesting
-        ? ''
-        : '--disable-field-trial-config', // https://source.chromium.org/chromium/chromium/src/+/main:testing/variations/README.md
       '--disable-hang-monitor',
       '--disable-infobars',
       '--disable-ipc-flooding-protection',

@@ -285,7 +285,7 @@ describe('Page', function () {
       const [popup] = await Promise.all([
         waitEvent<Page>(page, 'popup'),
         page.$eval('a', a => {
-          return (a as HTMLAnchorElement).click();
+          return a.click();
         }),
       ]);
       expect(
@@ -1327,6 +1327,31 @@ describe('Page', function () {
       expect(uaData['platformVersion']).toBe('3.1');
       expect(request.headers['user-agent']).toBe('MockBrowser');
     });
+    it('should restore original', async () => {
+      const {page, server} = await getTestState();
+
+      const userAgent = await page.evaluate(() => {
+        return navigator.userAgent;
+      });
+
+      await page.setUserAgent('foobar');
+      const [requestWithOverride] = await Promise.all([
+        server.waitForRequest('/empty.html'),
+        page.goto(server.EMPTY_PAGE),
+      ]);
+      expect(requestWithOverride.headers['user-agent']).toBe('foobar');
+
+      await page.setUserAgent('');
+      const [request] = await Promise.all([
+        server.waitForRequest('/empty.html'),
+        page.goto(server.EMPTY_PAGE),
+      ]);
+      expect(request.headers['user-agent']).toBe(userAgent);
+      const userAgentRestored = await page.evaluate(() => {
+        return navigator.userAgent;
+      });
+      expect(userAgentRestored).toBe(userAgent);
+    });
   });
 
   describe('Page.setContent', function () {
@@ -1830,7 +1855,7 @@ describe('Page', function () {
         path: path.join(__dirname, '../assets/injectedstyle.css'),
       });
       using styleHandle = (await page.$('style'))!;
-      const styleContent = await page.evaluate((style: HTMLStyleElement) => {
+      const styleContent = await page.evaluate(style => {
         return style.innerHTML;
       }, styleHandle);
       expect(styleContent).toContain(path.join('assets', 'injectedstyle.css'));
@@ -2144,11 +2169,9 @@ describe('Page', function () {
       await page.select('select');
       expect(
         await page.$eval('select', select => {
-          return Array.from((select as HTMLSelectElement).options).every(
-            option => {
-              return !option.selected;
-            }
-          );
+          return Array.from(select.options).every(option => {
+            return !option.selected;
+          });
         })
       ).toEqual(true);
     });
@@ -2160,11 +2183,9 @@ describe('Page', function () {
       await page.select('select');
       expect(
         await page.$eval('select', select => {
-          return Array.from((select as HTMLSelectElement).options).filter(
-            option => {
-              return option.selected;
-            }
-          )[0]!.value;
+          return Array.from(select.options).filter(option => {
+            return option.selected;
+          })[0]!.value;
         })
       ).toEqual('');
     });

@@ -155,6 +155,7 @@ describe('BrowserContext', function () {
       skipContextCreation: true,
     });
 
+    const contextCount = browser.browserContexts().length;
     // Create two incognito contexts.
     const context1 = await browser.createBrowserContext();
     const context2 = await browser.createBrowserContext();
@@ -209,7 +210,7 @@ describe('BrowserContext', function () {
 
     // Cleanup contexts.
     await Promise.all([context1.close(), context2.close()]);
-    expect(browser.browserContexts()).toHaveLength(1);
+    expect(browser.browserContexts()).toHaveLength(contextCount);
   });
 
   it('should work across sessions', async () => {
@@ -221,13 +222,12 @@ describe('BrowserContext', function () {
     const context = await browser.createBrowserContext();
     try {
       expect(browser.browserContexts()).toHaveLength(2);
-      const remoteBrowser = await puppeteer.connect({
+      using remoteBrowser = await puppeteer.connect({
         browserWSEndpoint: browser.wsEndpoint(),
         protocol: browser.protocol,
       });
       const contexts = remoteBrowser.browserContexts();
       expect(contexts).toHaveLength(2);
-      await remoteBrowser.disconnect();
     } finally {
       await context.close();
     }
@@ -238,12 +238,13 @@ describe('BrowserContext', function () {
       skipContextCreation: true,
     });
 
-    expect(browser.browserContexts()).toHaveLength(1);
-    expect(browser.browserContexts()[0]!.id).toBeUndefined();
+    const contextCount = browser.browserContexts().length;
+
+    expect(contextCount).toBeGreaterThanOrEqual(1);
 
     const context = await browser.createBrowserContext();
-    expect(browser.browserContexts()).toHaveLength(2);
-    expect(browser.browserContexts()[1]!.id).toBeDefined();
+    expect(browser.browserContexts()).toHaveLength(contextCount + 1);
+    expect(context.id).toBeDefined();
     await context.close();
   });
 

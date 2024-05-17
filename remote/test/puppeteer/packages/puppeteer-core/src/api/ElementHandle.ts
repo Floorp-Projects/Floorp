@@ -10,6 +10,7 @@ import type {Frame} from '../api/Frame.js';
 import {getQueryHandlerAndSelector} from '../common/GetQueryHandler.js';
 import {LazyArg} from '../common/LazyArg.js';
 import type {
+  AwaitableIterable,
   ElementFor,
   EvaluateFuncWith,
   HandleFor,
@@ -146,6 +147,13 @@ export abstract class ElementHandle<
   declare [_isElementHandle]: boolean;
 
   /**
+   * @internal
+   * Cached isolatedHandle to prevent
+   * trying to adopt it multiple times
+   */
+  isolatedHandle?: typeof this;
+
+  /**
    * A given method will have it's `this` replaced with an isolated version of
    * `this` when decorated with this decorator.
    *
@@ -163,7 +171,14 @@ export abstract class ElementHandle<
       if (this.realm === this.frame.isolatedRealm()) {
         return await target.call(this, ...args);
       }
-      using adoptedThis = await this.frame.isolatedRealm().adoptHandle(this);
+      let adoptedThis: This;
+      if (this['isolatedHandle']) {
+        adoptedThis = this['isolatedHandle'];
+      } else {
+        this['isolatedHandle'] = adoptedThis = await this.frame
+          .isolatedRealm()
+          .adoptHandle(this);
+      }
       const result = await target.call(adoptedThis, ...args);
       // If the function returns `adoptedThis`, then we return `this`.
       if (result === adoptedThis) {
@@ -860,6 +875,14 @@ export abstract class ElementHandle<
   ): Promise<void>;
 
   /**
+   * @internal
+   */
+  abstract queryAXTree(
+    name?: string,
+    role?: string
+  ): AwaitableIterable<ElementHandle<Node>>;
+
+  /**
    * This method scrolls element into view if needed, and then uses
    * {@link Touchscreen.tap} to tap in the center of the element.
    * If the element is detached from DOM, the method throws an error.
@@ -1238,17 +1261,13 @@ export abstract class ElementHandle<
   ): Promise<string | Buffer> {
     const {scrollIntoView = true, clip} = options;
 
-    let elementClip = await this.#nonEmptyVisibleBoundingBox();
-
     const page = this.frame.page();
 
     // Only scroll the element into view if the user wants it.
     if (scrollIntoView) {
       await this.scrollIntoViewIfNeeded();
-
-      // We measure again just in case.
-      elementClip = await this.#nonEmptyVisibleBoundingBox();
     }
+    const elementClip = await this.#nonEmptyVisibleBoundingBox();
 
     const [pageLeft, pageTop] = await this.evaluate(() => {
       if (!window.visualViewport) {

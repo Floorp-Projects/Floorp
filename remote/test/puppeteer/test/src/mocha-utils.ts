@@ -96,7 +96,7 @@ const defaultBrowserOptions = Object.assign(
     headless: headless === 'shell' ? ('shell' as const) : isHeadless,
     dumpio: !!process.env['DUMPIO'],
     protocol,
-  },
+  } satisfies PuppeteerLaunchOptions,
   extraLaunchOptions
 );
 
@@ -161,6 +161,7 @@ export const setupTestBrowserHooks = (): void => {
         state.browser = await puppeteer.launch({
           ...processVariables.defaultBrowserOptions,
           timeout: this.timeout() - 1_000,
+          protocolTimeout: this.timeout() * 2,
         });
       }
     } catch (error) {
@@ -170,7 +171,7 @@ export const setupTestBrowserHooks = (): void => {
     }
   });
 
-  after(() => {
+  after(async () => {
     if (typeof gc !== 'undefined') {
       gc();
       const memory = process.memoryUsage();
@@ -182,6 +183,14 @@ export const setupTestBrowserHooks = (): void => {
           `${Math.round(((memory[key] / 1024 / 1024) * 100) / 100)} MB`
         );
       }
+    }
+  });
+
+  afterEach(async () => {
+    if (state.context) {
+      await state.context.close();
+      state.context = undefined;
+      state.page = undefined;
     }
   });
 };
@@ -207,16 +216,15 @@ export const getTestState = async (
 
   if (!state.browser) {
     throw new Error('Browser was not set-up in time!');
+  } else if (!state.browser.connected) {
+    throw new Error('Browser has disconnected!');
   }
-
   if (state.context) {
-    await state.context.close();
-    state.context = undefined;
-    state.page = undefined;
+    throw new Error('Previous state was not cleared');
   }
 
   if (!skipContextCreation) {
-    state.context = await state.browser!.createBrowserContext();
+    state.context = await state.browser.createBrowserContext();
     state.page = await state.context.newPage();
   }
   return state as PuppeteerTestState;
