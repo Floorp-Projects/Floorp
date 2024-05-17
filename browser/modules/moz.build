@@ -46,12 +46,6 @@ with Files("test/unit/test_SitePermissions.js"):
 with Files("AboutNewTab.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
-with Files("AsyncTabSwitcher.sys.mjs"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
-
-with Files("NewTabPagePreloading.sys.mjs"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
-
 with Files("BrowserWindowTracker.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "General")
 
@@ -69,9 +63,6 @@ with Files("ExtensionsUI.sys.mjs"):
 
 with Files("LaterRun.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Tours")
-
-with Files("OpenInTabsUtils.sys.mjs"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("PartnerLinkAttribution.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Search")
@@ -93,12 +84,6 @@ with Files("SiteDataManager.sys.mjs"):
 
 with Files("SitePermissions.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
-
-with Files("TabsList.sys.mjs"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
-
-with Files("TabUnloader.sys.mjs"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("TransientPrefs.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Settings UI")
@@ -125,7 +110,6 @@ XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 EXTRA_JS_MODULES += [
     "AboutNewTab.sys.mjs",
-    "AsyncTabSwitcher.sys.mjs",
     "BrowserUIUtils.sys.mjs",
     "BrowserUsageTelemetry.sys.mjs",
     "BrowserWindowTracker.sys.mjs",
@@ -137,8 +121,6 @@ EXTRA_JS_MODULES += [
     "FirefoxBridgeExtensionUtils.sys.mjs",
     "HomePage.sys.mjs",
     "LaterRun.sys.mjs",
-    "NewTabPagePreloading.sys.mjs",
-    "OpenInTabsUtils.sys.mjs",
     "PageActions.sys.mjs",
     "PartnerLinkAttribution.sys.mjs",
     "PermissionUI.sys.mjs",
@@ -147,8 +129,6 @@ EXTRA_JS_MODULES += [
     "SelectionChangedMenulist.sys.mjs",
     "SiteDataManager.sys.mjs",
     "SitePermissions.sys.mjs",
-    "TabsList.sys.mjs",
-    "TabUnloader.sys.mjs",
     "TransientPrefs.sys.mjs",
     "URILoadingHelper.sys.mjs",
     "webrtcUI.sys.mjs",

@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-05-10T16:56:31.242839+00:00'
+updated_at: '2024-05-16T14:45:06.160796+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3697,15 +3697,8 @@ modules:
       - name: Tabbed Browser
         description: The UI component controlling browser tabs.
         includes:
-          - browser/base/content/tabbrowser*
-          - browser/base/content/browser-allTabsMenu.js
-          - browser/base/content/browser-ctrlTab.js
-          - browser/base/content/browser-fullZoom.js
-          - browser/modules/AsyncTabSwitcher.sys.mjs
-          - browser/modules/NewTabPagePreloading.sys.mjs
-          - browser/modules/OpenInTabsUtils.sys.mjs
-          - browser/modules/TabsList.sys.mjs
-          - browser/modules/TabUnloader.sys.mjs
+          - browser/components/tabbrowser/**/*
+          - browser/themes/shared/tabbrowser/*
         meta:
           components:
             - Firefox::Tabbed Browser
@@ -4341,5 +4334,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: a84fae16ad73576d8d936341852994d1eed488a0
-  export: 8ffcfde8bf1cfdadc4753a90765c0e52e487064c
+  config: 611fc859adea1938ca1f58fff06f810b74b4c3cf
+  export: dd8ae72f677a4e255fbcf78f91d04482956d8c12

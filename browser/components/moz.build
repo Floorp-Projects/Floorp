@@ -64,6 +64,7 @@ DIRS += [
     "shopping",
     "sidebar",
     "syncedtabs",
+    "tabbrowser",
     "tabpreview",
     "tabunloader",
     "textrecognition",
