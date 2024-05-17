@@ -22,6 +22,7 @@
 #include "prtime.h"
 #include "prthread.h"
 #include <dlfcn.h>
+#include <mutex>
 #include <gtk/gtk.h>
 #include "nsCRT.h"
 #include "mozilla/BasicEvents.h"
