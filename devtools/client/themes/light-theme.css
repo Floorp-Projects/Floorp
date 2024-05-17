@@ -230,11 +230,6 @@ body {
   background: rgba(185, 215, 253, .35);
 }
 
-div.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */
-  outline: solid 1px rgba(0, 0, 0, .25);
-  color: black;
-}
-
 /* Highlight for a line that contains an error. */
 div.CodeMirror div.error-line {
   background: rgba(255,0,0,0.2);
