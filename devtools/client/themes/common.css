@@ -675,7 +675,8 @@ iframe {
 }
 
 .devtools-tab.selected .devtools-tab-line,
-.tabs-menu-item.is-active .devtools-tab-line {
+/* don't show the line when focus is visible to prevent overlapping with the outline */
+.tabs-menu-item.is-active .devtools-tab-line:not(:has(+ [role="tab"]:focus-visible)) {
   background: var(--tab-line-selected-color);
   opacity: 1;
   transform: scaleX(1);
