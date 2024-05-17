@@ -298,11 +298,18 @@ bitflags! {
     impl TSStateForInvalidation : u8 {
         /// :empty
         const EMPTY = 1 << 0;
-        /// :nth etc, without of.
+        /// :nth and related selectors, without of.
         const NTH = 1 << 1;
         /// "Simple" edge child selectors, like :first-child, :last-child, etc.
-        /// Excludes :*-of-type.
+        /// Excludes :*-of-type as well as :only-child.
         const NTH_EDGE = 1 << 2;
+    }
+}
+
+impl TSStateForInvalidation {
+    /// Return true if this state invalidation should not result in a blanket
+    pub fn avoid_blanket_invalidation_on_dom_mutation(&self) -> bool {
+        (Self::EMPTY | Self::NTH_EDGE).contains(*self)
     }
 }
 
@@ -1021,6 +1028,7 @@ impl<'a> RelativeSelectorDependencyCollector<'a> {
                 *self.alloc_error = Some(err);
                 return false;
             }
+
             if let Err(err) =
                 add_ts_pseudo_class_dependency(self.compound_state.ts_state, self.quirks_mode, self)
             {
@@ -1125,6 +1133,45 @@ impl<'a> Collector for RelativeSelectorDependencyCollector<'a> {
     }
 }
 
+enum ComponentVisitResult {
+    /// This component is not relevant for building up the invalidation map.
+    IsIrrelevant,
+    /// This component has been added to the invalidation map. Any additional
+    /// tree-structural pseudo-class dependency is also included, if required.
+    Handled(TSStateForInvalidation),
+}
+
+#[inline(always)]
+fn on_simple_selector<C: Collector>(
+    s: &Component<SelectorImpl>,
+    quirks_mode: QuirksMode,
+    collector: &mut C
+) -> Result<ComponentVisitResult, AllocErr> {
+    match *s {
+        Component::ID(..) | Component::Class(..) => {
+            on_id_or_class(s, quirks_mode, collector)?;
+            Ok(ComponentVisitResult::Handled(TSStateForInvalidation::empty()))
+        },
+        Component::NonTSPseudoClass(ref pc) => {
+            on_pseudo_class(pc, collector)?;
+            Ok(ComponentVisitResult::Handled(TSStateForInvalidation::empty()))
+        },
+        Component::Empty => {
+            Ok(ComponentVisitResult::Handled(TSStateForInvalidation::EMPTY))
+        },
+        Component::Nth(data) => {
+            let kind = if data.is_simple_edge() {
+                TSStateForInvalidation::NTH_EDGE
+            } else {
+                TSStateForInvalidation::NTH
+            };
+            Ok(ComponentVisitResult::Handled(kind))
+        },
+        Component::RelativeSelectorAnchor => unreachable!("Should not visit this far"),
+        _ => Ok(ComponentVisitResult::IsIrrelevant),
+    }
+}
+
 impl<'a> SelectorVisitor for RelativeSelectorDependencyCollector<'a> {
     type Impl = SelectorImpl;
 
@@ -1166,48 +1213,18 @@ impl<'a> SelectorVisitor for RelativeSelectorDependencyCollector<'a> {
     }
 
     fn visit_simple_selector(&mut self, s: &Component<SelectorImpl>) -> bool {
-        match *s {
-            Component::ID(..) | Component::Class(..) => {
-                self.compound_state.added_entry = true;
-                if let Err(err) = on_id_or_class(s, self.quirks_mode, self) {
-                    *self.alloc_error = Some(err.into());
-                    return false;
-                }
-                true
-            },
-            Component::NonTSPseudoClass(ref pc) => {
-                if !pc
-                    .state_flag()
-                    .intersects(ElementState::VISITED_OR_UNVISITED)
-                {
-                    // Visited/Unvisited styling doesn't take the usual state invalidation path.
+        match on_simple_selector(s, self.quirks_mode, self) {
+            Ok(result) => {
+                if let ComponentVisitResult::Handled(state) = result {
                     self.compound_state.added_entry = true;
-                }
-                if let Err(err) = on_pseudo_class(pc, self) {
-                    *self.alloc_error = Some(err.into());
-                    return false;
+                    self.compound_state.ts_state.insert(state);
                 }
                 true
             },
-            Component::Empty => {
-                self.compound_state
-                    .ts_state
-                    .insert(TSStateForInvalidation::EMPTY);
-                true
-            },
-            Component::Nth(data) => {
-                let kind = if data.is_simple_edge() {
-                    TSStateForInvalidation::NTH_EDGE
-                } else {
-                    TSStateForInvalidation::NTH
-                };
-                self.compound_state
-                    .ts_state
-                    .insert(kind);
-                true
-            },
-            Component::RelativeSelectorAnchor => unreachable!("Should not visit this far"),
-            _ => true,
+            Err(err) => {
+                *self.alloc_error = Some(err.into());
+                false
+            }
         }
     }
 
@@ -1401,48 +1418,18 @@ impl<'a, 'b> SelectorVisitor for RelativeSelectorInnerDependencyCollector<'a, 'b
     }
 
     fn visit_simple_selector(&mut self, s: &Component<SelectorImpl>) -> bool {
-        match *s {
-            Component::ID(..) | Component::Class(..) => {
-                self.compound_state.added_entry = true;
-                if let Err(err) = on_id_or_class(s, self.quirks_mode, self) {
-                    *self.alloc_error = Some(err.into());
-                    return false;
-                }
-                true
-            },
-            Component::NonTSPseudoClass(ref pc) => {
-                if !pc
-                    .state_flag()
-                    .intersects(ElementState::VISITED_OR_UNVISITED)
-                {
-                    // Visited/Unvisited styling doesn't take the usual state invalidation path.
+        match on_simple_selector(s, self.quirks_mode, self) {
+            Ok(result) => {
+                if let ComponentVisitResult::Handled(state) = result {
                     self.compound_state.added_entry = true;
-                }
-                if let Err(err) = on_pseudo_class(pc, self) {
-                    *self.alloc_error = Some(err.into());
-                    return false;
+                    self.compound_state.ts_state.insert(state);
                 }
                 true
             },
-            Component::Empty => {
-                self.compound_state
-                    .ts_state
-                    .insert(TSStateForInvalidation::EMPTY);
-                true
-            },
-            Component::Nth(data) => {
-                let kind = if data.is_simple_edge() {
-                    TSStateForInvalidation::NTH_EDGE
-                } else {
-                    TSStateForInvalidation::NTH
-                };
-                self.compound_state
-                    .ts_state
-                    .insert(kind);
-                true
-            },
-            Component::RelativeSelectorAnchor => unreachable!("Should not visit this far"),
-            _ => true,
+            Err(err) => {
+                *self.alloc_error = Some(err.into());
+                false
+            }
         }
     }
 
