@@ -30,11 +30,6 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 W32API_VERSION=3.14
 
-dnl Initialize the Pthread test variables early so they can be
-dnl  overridden by each platform.
-dnl ========================================================
-MOZ_USE_PTHREADS=
-_PTHREAD_LDFLAGS=""
 
 LDFLAGS="$LDFLAGS $LINKER_LDFLAGS $PACK_REL_RELOC_FLAGS"
 HOST_LDFLAGS="$HOST_LDFLAGS $HOST_LINKER_LDFLAGS"
@@ -458,109 +453,6 @@ AC_LANG_CPLUSPLUS
 MOZ_CXX11
 
 AC_LANG_C
-
-
-dnl ========================================================
-dnl = pthread support
-dnl = Start by checking whether the system support pthreads
-dnl ========================================================
-case "$target_os" in
-darwin*)
-    MOZ_USE_PTHREADS=1
-    ;;
-*)
-    AC_CHECK_LIB(pthreads, pthread_create,
-        MOZ_USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
-        AC_CHECK_LIB(pthread, pthread_create,
-            MOZ_USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
-            AC_CHECK_LIB(c_r, pthread_create,
-                MOZ_USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
-                AC_CHECK_LIB(c, pthread_create,
-                    MOZ_USE_PTHREADS=1
-                )
-            )
-        )
-    )
-    ;;
-esac
-
-dnl ========================================================
-dnl Do the platform specific pthread hackery
-dnl ========================================================
-if test "$MOZ_USE_PTHREADS"x != x
-then
-    dnl
-    dnl See if -pthread is supported.
-    dnl
-    rm -f conftest*
-    ac_cv_have_dash_pthread=no
-    AC_MSG_CHECKING(whether ${CC-cc} accepts -pthread)
-    echo 'int main() { return 0; }' | cat > conftest.c
-    ${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
-    if test $? -eq 0; then
-        if test -z "`grep -E -i '(unrecognize|unknown)' conftest.out | grep pthread`" -a -z "`grep -E -i '(error|incorrect)' conftest.out`" ; then
-            ac_cv_have_dash_pthread=yes
-            case "$target_os" in
-            freebsd*)
-# Freebsd doesn't use -pthread for compiles, it uses them for linking
-                ;;
-            *)
-                CFLAGS="$CFLAGS -pthread"
-                CXXFLAGS="$CXXFLAGS -pthread"
-                ;;
-            esac
-        fi
-    fi
-    rm -f conftest*
-    AC_MSG_RESULT($ac_cv_have_dash_pthread)
-
-    dnl
-    dnl See if -pthreads is supported.
-    dnl
-    ac_cv_have_dash_pthreads=no
-    if test "$ac_cv_have_dash_pthread" = "no"; then
-        AC_MSG_CHECKING(whether ${CC-cc} accepts -pthreads)
-        echo 'int main() { return 0; }' | cat > conftest.c
-        ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
-        if test $? -eq 0; then
-            if test -z "`grep -E -i '(unrecognize|unknown)' conftest.out | grep pthreads`" -a -z "`grep -E -i '(error|incorrect)' conftest.out`" ; then
-                ac_cv_have_dash_pthreads=yes
-                CFLAGS="$CFLAGS -pthreads"
-                CXXFLAGS="$CXXFLAGS -pthreads"
-            fi
-        fi
-        rm -f conftest*
-        AC_MSG_RESULT($ac_cv_have_dash_pthreads)
-    fi
-
-    case "$target" in
-        *-*-freebsd*)
-            AC_DEFINE(_REENTRANT)
-            AC_DEFINE(_THREAD_SAFE)
-            dnl -pthread links in -lpthread, so don't specify it explicitly.
-            if test "$ac_cv_have_dash_pthread" = "yes"; then
-                _PTHREAD_LDFLAGS="-pthread"
-            fi
-            ;;
-
-        *-*-openbsd*|*-*-bsdi*)
-            AC_DEFINE(_REENTRANT)
-            AC_DEFINE(_THREAD_SAFE)
-            dnl -pthread links in -lc_r, so don't specify it explicitly.
-            if test "$ac_cv_have_dash_pthread" = "yes"; then
-                _PTHREAD_LDFLAGS="-pthread"
-            fi
-            ;;
-
-        *-*-linux*|*-*-kfreebsd*-gnu|*-*-gnu*)
-            AC_DEFINE(_REENTRANT)
-            ;;
-
-    esac
-    LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
-    AC_SUBST(MOZ_USE_PTHREADS)
-    MOZ_CHECK_HEADERS(pthread.h)
-fi
 
 
 dnl ========================================================
