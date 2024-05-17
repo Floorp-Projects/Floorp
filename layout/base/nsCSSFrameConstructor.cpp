@@ -2635,7 +2635,7 @@ RestyleManager* nsCSSFrameConstructor::RestyleManager() const {
   return mPresShell->GetPresContext()->RestyleManager();
 }
 
-nsIFrame* nsCSSFrameConstructor::ConstructRootFrame() {
+ViewportFrame* nsCSSFrameConstructor::ConstructRootFrame() {
   AUTO_PROFILER_LABEL_HOT("nsCSSFrameConstructor::ConstructRootFrame",
                           LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);

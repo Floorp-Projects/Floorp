@@ -16,6 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresState.h"
+#include "mozilla/ViewportFrame.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
@@ -35,6 +36,12 @@ using namespace mozilla::dom;
 
 nsFrameManager::~nsFrameManager() {
   NS_ASSERTION(!mPresShell, "nsFrameManager::Destroy never called");
+}
+
+void nsFrameManager::SetRootFrame(ViewportFrame* aRootFrame) {
+  MOZ_ASSERT(aRootFrame, "The root frame should be valid!");
+  MOZ_ASSERT(!mRootFrame, "We should set a root frame only once!");
+  mRootFrame = aRootFrame;
 }
 
 void nsFrameManager::Destroy() {
