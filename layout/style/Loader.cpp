@@ -1260,12 +1260,22 @@ nsresult Loader::LoadSheetSyncInternal(SheetLoadData& aLoadData,
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   loadInfo->SetCspNonce(aLoadData.Nonce());
 
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIInterfaceRequestor> prevCallback;
+    channel->GetNotificationCallbacks(getter_AddRefs(prevCallback));
+    MOZ_ASSERT(!prevCallback);
+  }
+#endif
+  channel->SetNotificationCallbacks(streamLoader);
+
   nsCOMPtr<nsIInputStream> stream;
   rv = channel->Open(getter_AddRefs(stream));
 
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to open URI synchronously"));
     streamLoader->ChannelOpenFailed(rv);
+    channel->SetNotificationCallbacks(nullptr);
     SheetComplete(aLoadData, rv);
     return rv;
   }
@@ -1592,6 +1602,15 @@ nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
                         nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, mDocument);
   }
 
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIInterfaceRequestor> prevCallback;
+    channel->GetNotificationCallbacks(getter_AddRefs(prevCallback));
+    MOZ_ASSERT(!prevCallback);
+  }
+#endif
+  channel->SetNotificationCallbacks(streamLoader);
+
   if (aEarlyHintPreloaderId) {
     nsCOMPtr<nsIHttpChannelInternal> channelInternal =
         do_QueryInterface(channel);
@@ -1604,6 +1623,7 @@ nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create stream loader"));
     streamLoader->ChannelOpenFailed(rv);
+    channel->SetNotificationCallbacks(nullptr);
     // NOTE: NotifyStop will be done in SheetComplete -> NotifyObservers.
     aLoadData.NotifyStart(channel);
     SheetComplete(aLoadData, rv);
