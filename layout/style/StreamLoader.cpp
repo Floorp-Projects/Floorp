@@ -10,6 +10,7 @@
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/TaskQueue.h"
 #include "nsContentUtils.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIThreadRetargetableRequest.h"
@@ -34,7 +35,19 @@ StreamLoader::~StreamLoader() {
 }
 
 NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener,
-                  nsIThreadRetargetableStreamListener)
+                  nsIThreadRetargetableStreamListener, nsIChannelEventSink,
+                  nsIInterfaceRequestor)
+
+static uint32_t CalculateExpirationTime(nsIRequest* aRequest, nsIURI* aURI) {
+  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest, aURI);
+
+  // For now, we never cache entries that we have to revalidate, or whose
+  // channel don't support caching.
+  if (info.mMustRevalidate || !info.mExpirationTime) {
+    return nsContentUtils::SecondsFromPRTime(PR_Now()) - 1;
+  }
+  return *info.mExpirationTime;
+}
 
 /* nsIRequestObserver implementation */
 NS_IMETHODIMP
@@ -74,17 +87,8 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
     rr->RetargetDeliveryTo(queue);
   }
 
-  mSheetLoadData->mExpirationTime = [&] {
-    auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
-        aRequest, mSheetLoadData->mURI);
-
-    // For now, we never cache entries that we have to revalidate, or whose
-    // channel don't support caching.
-    if (info.mMustRevalidate || !info.mExpirationTime) {
-      return nsContentUtils::SecondsFromPRTime(PR_Now()) - 1;
-    }
-    return *info.mExpirationTime;
-  }();
+  mSheetLoadData->AccumulateExpirationTime(
+      CalculateExpirationTime(aRequest, mSheetLoadData->mURI));
 
   // We need to block block resolution of parse promise until we receive
   // OnStopRequest on Main thread. This is necessary because parse promise
@@ -138,6 +142,10 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   nsCString utf8String;
   {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+
+    if (NS_IsMainThread()) {
+      channel->SetNotificationCallbacks(nullptr);
+    }
 
     if (NS_FAILED(mStatus)) {
       mSheetLoadData->VerifySheetReadyToParse(mStatus, ""_ns, ""_ns, channel,
@@ -244,6 +252,26 @@ StreamLoader::OnDataFinished(nsresult aResult) {
     mOnDataFinishedTime = TimeStamp::Now();
     return OnStopRequest(mRequest, aResult);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StreamLoader::GetInterface(const nsIID& aIID, void** aResult) {
+  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    return QueryInterface(aIID, aResult);
+  }
+
+  return NS_NOINTERFACE;
+}
+
+nsresult StreamLoader::AsyncOnChannelRedirect(
+    nsIChannel* aOld, nsIChannel* aNew, uint32_t aFlags,
+    nsIAsyncVerifyRedirectCallback* aCallback) {
+  mSheetLoadData->AccumulateExpirationTime(
+      CalculateExpirationTime(aOld, mSheetLoadData->mURI));
+
+  aCallback->OnRedirectVerifyCallback(NS_OK);
 
   return NS_OK;
 }
