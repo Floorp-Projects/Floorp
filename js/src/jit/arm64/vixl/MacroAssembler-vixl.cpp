@@ -27,6 +27,7 @@
 #include "jit/arm64/vixl/MacroAssembler-vixl.h"
 
 #include <ctype.h>
+#include <limits>
 
 namespace vixl {
 
@@ -721,11 +722,14 @@ void MacroAssembler::Ccmp(const Register& rn,
                           const Operand& operand,
                           StatusFlags nzcv,
                           Condition cond) {
-  if (operand.IsImmediate() && (operand.immediate() < 0)) {
-    ConditionalCompareMacro(rn, -operand.immediate(), nzcv, cond, CCMN);
-  } else {
-    ConditionalCompareMacro(rn, operand, nzcv, cond, CCMP);
+  if (operand.IsImmediate()) {
+    int64_t imm = operand.immediate();
+    if (imm < 0 && imm != std::numeric_limits<int64_t>::min()) {
+      ConditionalCompareMacro(rn, -imm, nzcv, cond, CCMN);
+      return;
+    }
   }
+  ConditionalCompareMacro(rn, operand, nzcv, cond, CCMP);
 }
 
 
@@ -733,11 +737,14 @@ void MacroAssembler::Ccmn(const Register& rn,
                           const Operand& operand,
                           StatusFlags nzcv,
                           Condition cond) {
-  if (operand.IsImmediate() && (operand.immediate() < 0)) {
-    ConditionalCompareMacro(rn, -operand.immediate(), nzcv, cond, CCMP);
-  } else {
-    ConditionalCompareMacro(rn, operand, nzcv, cond, CCMN);
+  if (operand.IsImmediate()) {
+    int64_t imm = operand.immediate();
+    if (imm < 0 && imm != std::numeric_limits<int64_t>::min()) {
+      ConditionalCompareMacro(rn, -imm, nzcv, cond, CCMP);
+      return;
+    }
   }
+  ConditionalCompareMacro(rn, operand, nzcv, cond, CCMN);
 }
 
 
@@ -819,12 +826,15 @@ void MacroAssembler::Add(const Register& rd,
                          const Register& rn,
                          const Operand& operand,
                          FlagsUpdate S) {
-  if (operand.IsImmediate() && (operand.immediate() < 0) &&
-      IsImmAddSub(-operand.immediate())) {
-    AddSubMacro(rd, rn, -operand.immediate(), S, SUB);
-  } else {
-    AddSubMacro(rd, rn, operand, S, ADD);
+  if (operand.IsImmediate()) {
+    int64_t imm = operand.immediate();
+    if (imm < 0 && imm != std::numeric_limits<int64_t>::min() &&
+        IsImmAddSub(-imm)) {
+      AddSubMacro(rd, rn, -imm, S, SUB);
+      return;
+    }
   }
+  AddSubMacro(rd, rn, operand, S, ADD);
 }
 
 
@@ -839,12 +849,15 @@ void MacroAssembler::Sub(const Register& rd,
                          const Register& rn,
                          const Operand& operand,
                          FlagsUpdate S) {
-  if (operand.IsImmediate() && (operand.immediate() < 0) &&
-      IsImmAddSub(-operand.immediate())) {
-    AddSubMacro(rd, rn, -operand.immediate(), S, ADD);
-  } else {
-    AddSubMacro(rd, rn, operand, S, SUB);
+  if (operand.IsImmediate()) {
+    int64_t imm = operand.immediate();
+    if (imm < 0 && imm != std::numeric_limits<int64_t>::min() &&
+        IsImmAddSub(-imm)) {
+      AddSubMacro(rd, rn, -imm, S, ADD);
+      return;
+    }
   }
+  AddSubMacro(rd, rn, operand, S, SUB);
 }
 
 
@@ -948,10 +961,13 @@ void MacroAssembler::Fmov(VRegister vd, float imm) {
 void MacroAssembler::Neg(const Register& rd,
                          const Operand& operand) {
   if (operand.IsImmediate()) {
-    Mov(rd, -operand.immediate());
-  } else {
-    Sub(rd, AppropriateZeroRegFor(rd), operand);
+    int64_t imm = operand.immediate();
+    if (imm != std::numeric_limits<int64_t>::min()) {
+      Mov(rd, -imm);
+      return;
+    }
   }
+  Sub(rd, AppropriateZeroRegFor(rd), operand);
 }
 
 
