@@ -1267,7 +1267,13 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     newAcc = CreateAccessibleByFrameType(frame, content, aContext);
     MOZ_ASSERT(newAcc, "Accessible not created for text node!");
     document->BindToDocument(newAcc, nullptr);
-    newAcc->AsTextLeaf()->SetText(text.mString);
+    if (auto cssAlt = CssAltContent(content)) {
+      nsAutoString text;
+      cssAlt.AppendToString(text);
+      newAcc->AsTextLeaf()->SetText(text);
+    } else {
+      newAcc->AsTextLeaf()->SetText(text.mString);
+    }
     return newAcc;
   }
 
