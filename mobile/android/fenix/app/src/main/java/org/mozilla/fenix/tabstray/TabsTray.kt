@@ -32,7 +32,7 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.TabEntry
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.compose.Divider
@@ -138,10 +138,9 @@ fun TabsTray(
     onInactiveTabsCFRClick: () -> Unit,
     onInactiveTabsCFRDismiss: () -> Unit,
 ) {
-    val multiselectMode = tabsTrayStore
-        .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
-    val selectedPage = tabsTrayStore
-        .observeAsComposableState { state -> state.selectedPage }.value ?: Page.NormalTabs
+    val multiselectMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
+    val selectedPage by tabsTrayStore.observeAsState(Page.NormalTabs) { state -> state.selectedPage }
+
     val pagerState =
         rememberPagerState(initialPage = selectedPage.ordinal, pageCount = { Page.values().size })
     val isInMultiSelectMode = multiselectMode is TabsTrayState.Mode.Select

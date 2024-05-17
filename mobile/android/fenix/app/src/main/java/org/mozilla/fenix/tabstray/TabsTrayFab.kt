@@ -6,13 +6,14 @@ package org.mozilla.fenix.tabstray
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.FloatingActionButton
@@ -35,15 +36,9 @@ fun TabsTrayFab(
     onPrivateTabsFabClicked: () -> Unit,
     onSyncedTabsFabClicked: () -> Unit,
 ) {
-    val currentPage: Page = tabsTrayStore.observeAsComposableState { state ->
-        state.selectedPage
-    }.value ?: Page.NormalTabs
-    val isSyncing: Boolean = tabsTrayStore.observeAsComposableState { state ->
-        state.syncing
-    }.value ?: false
-    val isInNormalMode: Boolean = tabsTrayStore.observeAsComposableState { state ->
-        state.mode == TabsTrayState.Mode.Normal
-    }.value ?: false
+    val currentPage by tabsTrayStore.observeAsState(Page.NormalTabs) { state -> state.selectedPage }
+    val isSyncing by tabsTrayStore.observeAsState(false) { state -> state.syncing }
+    val isInNormalMode by tabsTrayStore.observeAsState(false) { state -> state.mode == TabsTrayState.Mode.Normal }
 
     val icon: Painter
     val contentDescription: String

@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Banner
 import org.mozilla.fenix.compose.BottomSheetHandle
@@ -104,18 +104,14 @@ fun TabsTrayBanner(
     onTabAutoCloseBannerDismiss: () -> Unit,
     onTabAutoCloseBannerShown: () -> Unit,
 ) {
-    val normalTabCount = tabsTrayStore.observeAsComposableState { state ->
-        state.normalTabs.size + state.inactiveTabs.size
-    }.value ?: 0
-    val privateTabCount = tabsTrayStore
-        .observeAsComposableState { state -> state.privateTabs.size }.value ?: 0
-    val multiselectMode = tabsTrayStore
-        .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
-    val selectedPage = tabsTrayStore
-        .observeAsComposableState { state -> state.selectedPage }.value ?: Page.NormalTabs
-    val showTabAutoCloseBanner = tabsTrayStore.observeAsComposableState { state ->
-        shouldShowTabAutoCloseBanner && max(state.normalTabs.size, state.privateTabs.size) >= TAB_COUNT_SHOW_CFR
-    }.value ?: false
+    val normalTabCount by tabsTrayStore.observeAsState(0) { state -> state.normalTabs.size + state.inactiveTabs.size }
+    val privateTabCount by tabsTrayStore.observeAsState(0) { state -> state.privateTabs.size }
+    val multiselectMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
+    val selectedPage by tabsTrayStore.observeAsState(Page.NormalTabs) { state -> state.selectedPage }
+    val showTabAutoCloseBanner by tabsTrayStore.observeAsState(false) { state ->
+        shouldShowTabAutoCloseBanner &&
+            max(state.normalTabs.size, state.privateTabs.size) >= TAB_COUNT_SHOW_CFR
+    }
     var hasAcknowledgedBanner by remember { mutableStateOf(false) }
 
     val menuItems = multiselectMode.getMenuItems(

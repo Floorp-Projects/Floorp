@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.tabstray.inactivetabs.InactiveTabsList
 
@@ -42,16 +42,11 @@ internal fun NormalTabsPage(
     onInactiveTabsCFRClick: () -> Unit,
     onInactiveTabsCFRDismiss: () -> Unit,
 ) {
-    val inactiveTabsExpanded = appStore
-        .observeAsComposableState { state -> state.inactiveTabsExpanded }.value ?: false
-    val selectedTabId = browserStore
-        .observeAsComposableState { state -> state.selectedTabId }.value
-    val normalTabs = tabsTrayStore
-        .observeAsComposableState { state -> state.normalTabs }.value ?: emptyList()
-    val inactiveTabs = tabsTrayStore
-        .observeAsComposableState { state -> state.inactiveTabs }.value ?: emptyList()
-    val selectionMode = tabsTrayStore
-        .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
+    val inactiveTabsExpanded by appStore.observeAsState(false) { state -> state.inactiveTabsExpanded }
+    val selectedTabId by browserStore.observeAsState(null) { state -> state.selectedTabId }
+    val normalTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.normalTabs }
+    val inactiveTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.inactiveTabs }
+    val selectionMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
 
     if (normalTabs.isNotEmpty() || inactiveTabs.isNotEmpty()) {
         val showInactiveTabsAutoCloseDialog =
