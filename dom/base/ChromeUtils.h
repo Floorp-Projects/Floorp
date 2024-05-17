@@ -240,9 +240,6 @@ class ChromeUtils {
                           JS::MutableHandle<JSObject*> aRetVal,
                           ErrorResult& aRv);
 
-  static already_AddRefed<Promise> RequestIOActivity(GlobalObject& aGlobal,
-                                                     ErrorResult& aRv);
-
   static bool HasReportingHeaderForOrigin(GlobalObject& global,
                                           const nsAString& aOrigin,
                                           ErrorResult& aRv);

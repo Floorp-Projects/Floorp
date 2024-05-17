@@ -8,7 +8,6 @@
 
 #include <string.h>
 #include "sqlite3.h"
-#include "mozilla/net/IOActivityMonitor.h"
 
 namespace {
 
@@ -19,40 +18,28 @@ constexpr int kLastKnowVfsVersion = 3;
 constexpr int kLastKnownIOMethodsVersion = 3;
 
 using namespace mozilla;
-using namespace mozilla::net;
 
 struct BaseFile {
   // Base class.  Must be first
   sqlite3_file base;
-  // The filename
-  char* location;
   // This points to the underlying sqlite3_file
   sqlite3_file pReal[1];
 };
 
 int BaseClose(sqlite3_file* pFile) {
   BaseFile* p = (BaseFile*)pFile;
-  delete[] p->location;
   return p->pReal->pMethods->xClose(p->pReal);
 }
 
 int BaseRead(sqlite3_file* pFile, void* zBuf, int iAmt, sqlite_int64 iOfst) {
   BaseFile* p = (BaseFile*)pFile;
-  int rc = p->pReal->pMethods->xRead(p->pReal, zBuf, iAmt, iOfst);
-  if (rc == SQLITE_OK && IOActivityMonitor::IsActive()) {
-    IOActivityMonitor::Read(nsDependentCString(p->location), iAmt);
-  }
-  return rc;
+  return p->pReal->pMethods->xRead(p->pReal, zBuf, iAmt, iOfst);
 }
 
 int BaseWrite(sqlite3_file* pFile, const void* zBuf, int iAmt,
               sqlite_int64 iOfst) {
   BaseFile* p = (BaseFile*)pFile;
-  int rc = p->pReal->pMethods->xWrite(p->pReal, zBuf, iAmt, iOfst);
-  if (rc == SQLITE_OK && IOActivityMonitor::IsActive()) {
-    IOActivityMonitor::Write(nsDependentCString(p->location), iAmt);
-  }
-  return rc;
+  return p->pReal->pMethods->xWrite(p->pReal, zBuf, iAmt, iOfst);
 }
 
 int BaseTruncate(sqlite3_file* pFile, sqlite_int64 size) {
@@ -148,15 +135,6 @@ int BaseUnfetch(sqlite3_file* pFile, sqlite3_int64 iOfst, void* pPage) {
 int BaseOpen(sqlite3_vfs* vfs, const char* zName, sqlite3_file* pFile,
              int flags, int* pOutFlags) {
   BaseFile* p = (BaseFile*)pFile;
-  if (zName) {
-    p->location = new char[7 + strlen(zName) + 1];
-    strcpy(p->location, "file://");
-    strcpy(p->location + 7, zName);
-  } else {
-    p->location = new char[8];
-    strcpy(p->location, "file://");
-  }
-
   sqlite3_vfs* origVfs = (sqlite3_vfs*)(vfs->pAppData);
   int rc = origVfs->xOpen(origVfs, zName, p->pReal, flags, pOutFlags);
   if (rc) {

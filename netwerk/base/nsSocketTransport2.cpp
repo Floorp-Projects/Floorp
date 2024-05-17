@@ -8,7 +8,6 @@
 
 #include "nsSocketTransport2.h"
 
-#include "IOActivityMonitor.h"
 #include "NSSErrorsService.h"
 #include "NetworkDataCountLayer.h"
 #include "QuicSocketControl.h"
@@ -1343,9 +1342,6 @@ nsresult nsSocketTransport::InitiateSocket() {
         ("  BuildSocket failed [rv=%" PRIx32 "]\n", static_cast<uint32_t>(rv)));
     return rv;
   }
-
-  // create proxy via IOActivityMonitor
-  IOActivityMonitor::MonitorSocket(fd);
 
 #ifdef FUZZING
   if (StaticPrefs::fuzzing_necko_enabled()) {

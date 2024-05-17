@@ -45,15 +45,3 @@ interface nsPISocketTransportService : nsIRoutedSocketTransportService
    */
   readonly attribute long keepaliveProbeCount;
 };
-
-%{C++
-/*
- * I/O activity observer topic. Sends out information about the
- * amount of data we're sending/receiving via sockets and disk files.
- *
- * Activated via the "io.activity.enabled" preference.
- */
-#define NS_IO_ACTIVITY "io-activity"
-
-
-%}

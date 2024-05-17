@@ -57,7 +57,6 @@
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/KeySystemConfig.h"
 #include "mozilla/WheelHandlingHelper.h"
-#include "IOActivityMonitor.h"
 #include "nsNativeTheme.h"
 #include "nsThreadUtils.h"
 #include "mozJSModuleLoader.h"
@@ -1849,22 +1848,6 @@ void ChromeUtils::CreateError(const GlobalObject& aGlobal,
 
   cleanup.release();
   aRetVal.set(retVal);
-}
-
-/* static */
-already_AddRefed<Promise> ChromeUtils::RequestIOActivity(GlobalObject& aGlobal,
-                                                         ErrorResult& aRv) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(Preferences::GetBool(IO_ACTIVITY_ENABLED_PREF, false));
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
-  RefPtr<Promise> domPromise = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  MOZ_ASSERT(domPromise);
-  mozilla::net::IOActivityMonitor::RequestActivities(domPromise);
-  return domPromise.forget();
 }
 
 /* static */

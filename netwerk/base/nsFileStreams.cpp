@@ -15,27 +15,23 @@
 #endif
 
 #include "private/pprio.h"
-#include "prerror.h"
 
-#include "IOActivityMonitor.h"
 #include "nsFileStreams.h"
 #include "nsIFile.h"
 #include "nsReadLine.h"
 #include "nsIClassInfoImpl.h"
-#include "nsLiteralString.h"
-#include "nsSocketTransport2.h"  // for ErrorAccordingToNSPR()
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/RandomAccessStreamParams.h"
 #include "mozilla/Unused.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsXULAppAPI.h"
 
 using FileHandleType = mozilla::ipc::FileDescriptor::PlatformHandleType;
 
 using namespace mozilla::ipc;
-using namespace mozilla::net;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
@@ -357,21 +353,6 @@ nsresult nsFileStreamBase::DoOpen() {
   {
     rv = mOpenParams.localFile->OpenNSPRFileDesc(mOpenParams.ioFlags,
                                                  mOpenParams.perm, &fd);
-  }
-
-  if (rv == NS_OK && IOActivityMonitor::IsActive()) {
-    auto nativePath = mOpenParams.localFile->NativePath();
-    if (!nativePath.IsEmpty()) {
-// registering the file to the activity monitor
-#ifdef XP_WIN
-      // 16 bits unicode
-      IOActivityMonitor::MonitorFile(
-          fd, NS_ConvertUTF16toUTF8(nativePath.get()).get());
-#else
-      // 8 bit unicode
-      IOActivityMonitor::MonitorFile(fd, nativePath.get());
-#endif
-    }
   }
 
   CleanUpOpen();
