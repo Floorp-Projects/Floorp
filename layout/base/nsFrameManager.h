@@ -22,6 +22,7 @@ class nsWindowSizes;
 namespace mozilla {
 struct FrameDestroyContext;
 class PresShell;
+class ViewportFrame;
 }  // namespace mozilla
 
 /**
@@ -35,21 +36,18 @@ class nsFrameManager {
   using DestroyContext = mozilla::FrameDestroyContext;
 
   explicit nsFrameManager(mozilla::PresShell* aPresShell)
-      : mPresShell(aPresShell), mRootFrame(nullptr) {
+      : mPresShell(aPresShell) {
     MOZ_ASSERT(mPresShell, "need a pres shell");
   }
   ~nsFrameManager();
 
   /*
-   * Gets and sets the root frame (typically the viewport). The lifetime of the
+   * Gets and sets the root frame (i.e. ViewportFrame). The lifetime of the
    * root frame is controlled by the frame manager. When the frame manager is
    * destroyed, it destroys the entire frame hierarchy.
    */
   nsIFrame* GetRootFrame() const { return mRootFrame; }
-  void SetRootFrame(nsIFrame* aRootFrame) {
-    NS_ASSERTION(!mRootFrame, "already have a root frame");
-    mRootFrame = aRootFrame;
-  }
+  void SetRootFrame(mozilla::ViewportFrame* aRootFrame);
 
   /*
    * After Destroy is called, it is an error to call any FrameManager methods.
@@ -94,7 +92,11 @@ class nsFrameManager {
  protected:
   // weak link, because the pres shell owns us
   mozilla::PresShell* MOZ_NON_OWNING_REF mPresShell;
-  nsIFrame* mRootFrame;
+
+  // Note: We use nsIFrame* instead of ViewportFrame* for mRootFrame to avoid
+  // exposing ViewportFrame to the callers via GetRootFrame(), since they do not
+  // depend on any ViewportFrame-specific APIs or details.
+  nsIFrame* mRootFrame = nullptr;
 };
 
 #endif

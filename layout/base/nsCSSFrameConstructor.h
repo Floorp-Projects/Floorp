@@ -45,6 +45,7 @@ class ComputedStyle;
 class PresShell;
 class PrintedSheetFrame;
 class RestyleManager;
+class ViewportFrame;
 
 namespace dom {
 
@@ -96,7 +97,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   mozilla::RestyleManager* RestyleManager() const;
 
-  nsIFrame* ConstructRootFrame();
+  mozilla::ViewportFrame* ConstructRootFrame();
 
  private:
   enum Operation { CONTENTAPPEND, CONTENTINSERT };
