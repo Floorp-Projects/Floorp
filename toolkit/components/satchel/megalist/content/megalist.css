@@ -13,12 +13,37 @@
   > .beforeList {
     margin: 20px;
 
-    .search {
+    .searchContainer {
+      margin-block-start: 8px;
       padding: 8px;
+      cursor: text;
       border-radius: 4px;
       border: 1px solid var(--in-content-border-color);
       box-sizing: border-box;
       width: 100%;
+      display: flex;
+
+      &:focus-within{
+        outline: 1px auto;
+      }
+    }
+
+    .searchIcon{
+      background-image: url(chrome://global/skin/icons/search-textbox.svg);
+      background-position: center;
+      background-repeat: no-repeat;
+      fill: currentColor;
+      width: 18px;
+      margin-inline-end: 4px;
+      flex-shrink: 0;
+    }
+
+    .search {
+      border: none;
+      background-color: transparent;
+      outline: none;
+      min-width: 0;
+      flex-grow: 1;
     }
   }
 }

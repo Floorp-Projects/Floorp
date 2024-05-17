@@ -486,13 +486,16 @@ export class MegalistView extends MozLitElement {
    */
   renderBeforeList() {
     return html`
-      <input
-        class="search"
-        type="search"
-        data-l10n-id="filter-placeholder"
-        .value=${this.searchText}
-        @input=${e => this.#handleInputChange(e)}
-      />
+      <div class="searchContainer" @click=${() => this.searchInput.select()}>
+        <div class="searchIcon"></div>
+        <input
+          class="search"
+          type="search"
+          data-l10n-id="filter-input"
+          .value=${this.searchText}
+          @input=${e => this.#handleInputChange(e)}
+        />
+      </div>
     `;
   }
 
