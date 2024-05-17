@@ -6430,10 +6430,13 @@ uint16_t nsHttpChannel::GetProxyDNSStrategy() {
     return DNS_PREFETCH_ORIGIN;
   }
 
+  uint32_t flags = 0;
   nsAutoCString type;
+  mProxyInfo->GetFlags(&flags);
   mProxyInfo->GetType(type);
 
-  if (!StaticPrefs::network_proxy_socks_remote_dns()) {
+  // If the proxy is not to perform name resolution itself.
+  if (!(flags & nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST)) {
     if (type.EqualsLiteral("socks")) {
       return DNS_PREFETCH_ORIGIN;
     }
