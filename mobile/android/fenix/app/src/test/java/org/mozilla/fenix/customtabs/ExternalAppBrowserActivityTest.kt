@@ -135,7 +135,7 @@ class ExternalAppBrowserActivityTest {
 
         val expected = NavGraphDirections.actionGlobalExternalAppBrowser(
             activeSessionId = customTabSessionId,
-            webAppManifest = null,
+            webAppManifestUrl = null,
             isSandboxCustomTab = true,
         )
         assertEquals(expected, directions)
@@ -163,7 +163,7 @@ class ExternalAppBrowserActivityTest {
 
         val expected = NavGraphDirections.actionGlobalExternalAppBrowser(
             activeSessionId = customTabSessionId,
-            webAppManifest = null,
+            webAppManifestUrl = null,
             isSandboxCustomTab = false,
         )
         assertEquals(expected, directions)

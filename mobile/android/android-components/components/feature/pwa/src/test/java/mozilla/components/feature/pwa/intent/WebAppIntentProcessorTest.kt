@@ -17,7 +17,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.pwa.ManifestStorage
-import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.feature.pwa.ext.putUrlOverride
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor.Companion.ACTION_VIEW_PWA
 import mozilla.components.feature.session.SessionUseCases
@@ -93,7 +92,6 @@ class WebAppIntentProcessorTest {
 
         assertNotNull(intent.getSessionId())
         assertEquals("42", intent.getSessionId())
-        assertEquals(manifest, intent.getWebAppManifest())
     }
 
     @Test

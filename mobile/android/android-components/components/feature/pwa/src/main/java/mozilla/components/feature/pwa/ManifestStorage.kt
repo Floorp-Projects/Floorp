@@ -5,12 +5,15 @@
 package mozilla.components.feature.pwa
 
 import android.content.Context
+import android.util.LruCache
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.db.ManifestDatabase
 import mozilla.components.feature.pwa.db.ManifestEntity
+
+private const val MAXIMUM_WEBMANIFEST_COUNT = 3
 
 /**
  * Disk storage for [WebAppManifest]. Other components use this class to reload a saved manifest.
@@ -24,6 +27,7 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
     @VisibleForTesting
     internal var manifestDao = lazy { ManifestDatabase.get(context).manifestDao() }
     internal var installedScopes: MutableMap<String, String>? = null
+    internal val manifestCache = LruCache<String, WebAppManifest>(MAXIMUM_WEBMANIFEST_COUNT)
 
     /**
      * Load a Web App Manifest for the given URL from disk.
@@ -150,6 +154,18 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
     suspend fun removeManifests(startUrls: List<String>) = withContext(IO) {
         manifestDao.value.deleteManifests(startUrls)
     }
+
+    /**
+     * Add WebAppManifest to cache
+     */
+    fun setManifestCache(url: String, manifest: WebAppManifest) = manifestCache.put(url, manifest)
+
+    /**
+     * Get WebAppManifest from cache
+     */
+    fun getManifestCache(url: String): WebAppManifest? = manifestCache.remove(url)
+
+    internal fun clearManifestCache() = manifestCache.evictAll()
 
     private fun deadline(currentTime: Long) = currentTime - activeThresholdMs
 

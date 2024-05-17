@@ -338,7 +338,7 @@
             app:argType="string"
             app:nullable="true" />
         <argument
-            android:name="webAppManifest"
+            android:name="webAppManifestUrl"
             app:argType="string"
             app:nullable="true" />
         <argument

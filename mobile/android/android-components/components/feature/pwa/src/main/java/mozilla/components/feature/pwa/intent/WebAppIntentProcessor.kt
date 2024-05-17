@@ -16,7 +16,6 @@ import mozilla.components.feature.intent.ext.putSessionId
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.getUrlOverride
-import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.toCustomTabConfig
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
@@ -59,7 +58,8 @@ class WebAppIntentProcessor(
 
             intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
             intent.putSessionId(id)
-            intent.putWebAppManifest(webAppManifest)
+
+            storage.setManifestCache(url, webAppManifest)
 
             true
         } else {
