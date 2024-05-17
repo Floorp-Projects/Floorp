@@ -2395,9 +2395,10 @@ static bool EvaluateDynamicImportOptions(
         if (!printableKey) {
           return false;
         }
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_IMPORT_ATTRIBUTES_UNSUPPORTED_ATTRIBUTE,
-                                  printableKey.get());
+        JS_ReportErrorNumberASCII(
+            cx, GetErrorMessage, nullptr,
+            JSMSG_IMPORT_ATTRIBUTES_DYNAMIC_IMPORT_UNSUPPORTED_ATTRIBUTE,
+            printableKey.get());
         return false;
       }
 
