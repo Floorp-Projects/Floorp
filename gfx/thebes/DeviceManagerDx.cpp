@@ -1106,33 +1106,31 @@ RefPtr<ID3D11Device> DeviceManagerDx::CreateDecoderDevice(
 
   bool isAMD = mDeviceStatus->adapter().VendorId == 0x1002;
   bool reuseDevice = false;
-  if (!aFlags.contains(DeviceFlag::disableDeviceReuse)) {
-    if (gfxVars::ReuseDecoderDevice()) {
-      reuseDevice = true;
-    } else if (isAMD) {
-      reuseDevice = true;
-      gfxCriticalNoteOnce << "Always have to reuse decoder device on AMD";
+  if (gfxVars::ReuseDecoderDevice()) {
+    reuseDevice = true;
+  } else if (isAMD) {
+    reuseDevice = true;
+    gfxCriticalNoteOnce << "Always have to reuse decoder device on AMD";
+  }
+
+  if (reuseDevice) {
+    // Use mCompositorDevice for decoder device only for hardware WebRender.
+    if (aFlags.contains(DeviceFlag::isHardwareWebRenderInUse) &&
+        mCompositorDevice && mCompositorDeviceSupportsVideo &&
+        !mDecoderDevice) {
+      mDecoderDevice = mCompositorDevice;
+
+      RefPtr<ID3D10Multithread> multi;
+      mDecoderDevice->QueryInterface(__uuidof(ID3D10Multithread),
+                                     getter_AddRefs(multi));
+      if (multi) {
+        MOZ_ASSERT(multi->GetMultithreadProtected());
+      }
     }
 
-    if (reuseDevice) {
-      // Use mCompositorDevice for decoder device only for hardware WebRender.
-      if (aFlags.contains(DeviceFlag::isHardwareWebRenderInUse) &&
-          mCompositorDevice && mCompositorDeviceSupportsVideo &&
-          !mDecoderDevice) {
-        mDecoderDevice = mCompositorDevice;
-
-        RefPtr<ID3D10Multithread> multi;
-        mDecoderDevice->QueryInterface(__uuidof(ID3D10Multithread),
-                                       getter_AddRefs(multi));
-        if (multi) {
-          MOZ_ASSERT(multi->GetMultithreadProtected());
-        }
-      }
-
-      if (mDecoderDevice) {
-        RefPtr<ID3D11Device> dev = mDecoderDevice;
-        return dev.forget();
-      }
+    if (mDecoderDevice) {
+      RefPtr<ID3D11Device> dev = mDecoderDevice;
+      return dev.forget();
     }
   }
 
