@@ -932,7 +932,26 @@ export class TelemetryFeed {
       case at.BLOCK_URL:
         this.handleBlockUrl(action);
         break;
+      case at.WALLPAPER_CLICK:
+        this.handleWallpaperUserEvent(action);
+        break;
     }
+  }
+
+  handleWallpaperUserEvent(action) {
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+
+    if (!session) {
+      return;
+    }
+    const { data } = action;
+    const { selected_wallpaper, hadPreviousWallpaper } = data;
+    // if either of the wallpaper prefs are truthy, they had a previous wallpaper
+    Glean.newtab.wallpaperClick.record({
+      newtab_visit_id: session.session_id,
+      selected_wallpaper,
+      hadPreviousWallpaper,
+    });
   }
 
   handleBlockUrl(action) {
