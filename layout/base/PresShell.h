@@ -9,27 +9,24 @@
 #ifndef mozilla_PresShell_h
 #define mozilla_PresShell_h
 
-#include "DepthOrderedFrameList.h"
-#include "mozilla/PresShellForwards.h"
-
 #include <stdio.h>  // for FILE definition
+
+#include "DepthOrderedFrameList.h"
 #include "FrameMetrics.h"
 #include "LayoutConstants.h"
-#include "TouchManager.h"
-#include "Units.h"
-#include "Visibility.h"
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/layers/FocusTarget.h"
+#include "mozilla/layout/LayoutTelemetryTools.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PresShellForwards.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/dom/DocumentBinding.h"
-#include "mozilla/layers/FocusTarget.h"
-#include "mozilla/layout/LayoutTelemetryTools.h"
 #include "mozilla/widget/ThemeChangeKind.h"
 #include "nsColor.h"
 #include "nsCOMArray.h"
@@ -40,9 +37,9 @@
 #include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsISelectionController.h"
-#include "nsQueryFrame.h"
 #include "nsPresArena.h"
 #include "nsPresContext.h"
+#include "nsQueryFrame.h"
 #include "nsRect.h"
 #include "nsRefreshObservers.h"
 #include "nsStringFwd.h"
@@ -50,6 +47,10 @@
 #include "nsTHashSet.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
+#include "TouchManager.h"
+#include "Units.h"
+#include "Visibility.h"
+
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
 #endif
@@ -68,39 +69,37 @@ class nsIDocShell;
 class nsIFrame;
 class nsILayoutHistoryState;
 class nsINode;
-class nsPageSequenceFrame;
 class nsIReflowCallback;
 class nsIScrollableFrame;
 class nsITimer;
+class nsPageSequenceFrame;
 class nsPIDOMWindowOuter;
 class nsPresShellEventCB;
 class nsRange;
 class nsRefreshDriver;
 class nsRegion;
+class nsTextFrame;
 class nsView;
 class nsViewManager;
 class nsWindowSizes;
+class WeakFrame;
+class ZoomConstraintsClient;
+struct nsCallbackEventRequest;
 struct RangePaintInfo;
+
 #ifdef MOZ_REFLOW_PERF
 class ReflowCountMgr;
 #endif
-class WeakFrame;
-class nsTextFrame;
-class ZoomConstraintsClient;
-
-struct nsCallbackEventRequest;
 
 namespace mozilla {
+class AccessibleCaretEventHub;
+class FallbackRenderer;
+class GeckoMVMContext;
 class nsDisplayList;
 class nsDisplayListBuilder;
-class FallbackRenderer;
-
-class AccessibleCaretEventHub;
-class GeckoMVMContext;
 class OverflowChangedTracker;
-class StyleSheet;
-
 class ProfileChunkedBuffer;
+class StyleSheet;
 
 #ifdef ACCESSIBILITY
 namespace a11y {

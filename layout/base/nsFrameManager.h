@@ -9,8 +9,8 @@
 #ifndef _nsFrameManager_h_
 #define _nsFrameManager_h_
 
-#include "nsDebug.h"
 #include "mozilla/Attributes.h"
+#include "nsDebug.h"
 #include "nsFrameList.h"
 
 class nsContainerFrame;
