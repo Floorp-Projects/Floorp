@@ -456,6 +456,10 @@ class Context {
     return this.params.url;
   }
 
+  get ignoreUnrecognizedProperties() {
+    return !!this.params.ignoreUnrecognizedProperties;
+  }
+
   get principal() {
     return (
       this.params.principal ||
@@ -2240,17 +2244,19 @@ class ObjectType extends Type {
           }
           result[prop] = r.value;
         }
-      } else if (remainingProps.size == 1) {
-        return context.error(
-          `Unexpected property "${[...remainingProps]}"`,
-          `not contain an unexpected "${[...remainingProps]}" property`
-        );
-      } else if (remainingProps.size) {
-        let props = [...remainingProps].sort().join(", ");
-        return context.error(
-          `Unexpected properties: ${props}`,
-          `not contain the unexpected properties [${props}]`
-        );
+      } else if (remainingProps.size && !context.ignoreUnrecognizedProperties) {
+        if (remainingProps.size == 1) {
+          return context.error(
+            `Unexpected property "${[...remainingProps]}"`,
+            `not contain an unexpected "${[...remainingProps]}" property`
+          );
+        } else if (remainingProps.size) {
+          let props = [...remainingProps].sort().join(", ");
+          return context.error(
+            `Unexpected properties: ${props}`,
+            `not contain the unexpected properties [${props}]`
+          );
+        }
       }
 
       return this.postprocess({ value: result }, context);

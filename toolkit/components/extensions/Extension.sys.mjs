@@ -1521,6 +1521,8 @@ export class ExtensionData {
       },
       preprocessors: {},
       manifestVersion: this.manifestVersion,
+      // We introduced this context param in Bug 1831417.
+      ignoreUnrecognizedProperties: false,
     };
 
     if (this.fluentL10n || this.localeData) {

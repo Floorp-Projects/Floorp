@@ -1034,6 +1034,7 @@ class RulesetsStore {
         logError: logRuleValidationError,
         preprocessors: {},
         manifestVersion: extension.manifestVersion,
+        ignoreUnrecognizedProperties: true,
       };
 
       // TODO(Bug 1803369): consider to also include the rule id if one was available.

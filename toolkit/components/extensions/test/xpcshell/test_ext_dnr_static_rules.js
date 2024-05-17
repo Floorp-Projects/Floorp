@@ -38,12 +38,11 @@ add_setup(async () => {
 });
 
 add_task(async function test_load_static_rules() {
-  const ruleset1Data = [
-    getDNRRule({
-      action: { type: "allow" },
-      condition: { resourceTypes: ["main_frame"] },
-    }),
-  ];
+  const ruleInRuleset1 = getDNRRule({
+    action: { type: "allow" },
+    condition: { resourceTypes: ["main_frame"] },
+  });
+  const ruleset1Data = [ruleInRuleset1];
   const ruleset2Data = [
     getDNRRule({
       action: { type: "block" },
@@ -70,7 +69,20 @@ add_task(async function test_load_static_rules() {
   ];
   const files = {
     // Missing ruleset_3.json on purpose.
-    "ruleset_1.json": JSON.stringify(ruleset1Data),
+    "ruleset_1.json": JSON.stringify([
+      {
+        ...ruleInRuleset1,
+        // Unrecognized props should be allowed.  We add the here instead of
+        // above because unrecognized properties are discarded after
+        // normalization, and the assertions do not expect any unrecognized
+        // props in the resf of the test.
+        condition: {
+          ...ruleInRuleset1.condition,
+          nested_unexpected_prop: true,
+        },
+        unexpected_prop: true,
+      },
+    ]),
     "ruleset_2.json": JSON.stringify(ruleset2Data),
   };
 
