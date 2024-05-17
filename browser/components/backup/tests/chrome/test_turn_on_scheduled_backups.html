@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for the turn-on-scheduled-backups component</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script
+  src="chrome://browser/content/backup/turn-on-scheduled-backups.mjs"
+  type="module"
+></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script>
+
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
+
+    /**
+     * Tests that adding a turn-on-scheduled-backups element to the DOM causes it to
+     * fire a BackupUI:InitWidget event.
+     */
+    add_task(async function test_initWidget() {
+      let turnOnScheduledBackups = document.createElement("turn-on-scheduled-backups");
+      let content = document.getElementById("content");
+
+      let sawInitWidget = BrowserTestUtils.waitForEvent(content, "BackupUI:InitWidget");
+      content.appendChild(turnOnScheduledBackups);
+      await sawInitWidget;
+      ok(true, "Saw BackupUI:InitWidget");
+
+      turnOnScheduledBackups.remove();
+    });
+
+    /**
+     * Tests that pressing the confirm button will dispatch the expected events.
+     */
+    add_task(async function test_confirm() {
+      let turnOnScheduledBackups = document.getElementById("test-turn-on-scheduled-backups");
+      let confirmButton = turnOnScheduledBackups.confirmButtonEl;
+
+      ok(confirmButton, "Confirm button should be found");
+
+      let content = document.getElementById("content");
+      let promise = BrowserTestUtils.waitForEvent(content, "scheduledBackupsConfirm");
+
+      confirmButton.click()
+
+      await promise;
+      ok(true, "Detected event after selecting the confirm button");
+    })
+
+    /**
+     * Tests that pressing the cancel button will dispatch the expected events.
+     */
+    add_task(async function test_cancel() {
+      let turnOnScheduledBackups = document.getElementById("test-turn-on-scheduled-backups");
+      let cancelButton = turnOnScheduledBackups.cancelButtonEl;
+
+      ok(cancelButton, "Cancel button should be found");
+
+      let content = document.getElementById("content");
+      let promise = BrowserTestUtils.waitForEvent(content, "scheduledBackupsCancel");
+
+      cancelButton.click()
+
+      await promise;
+      ok(true, "Detected event after selecting the cancel button");
+    })
+
+    /**
+     * Tests that selecting the checkbox for enabling backup encryption will show more
+     * options to configure the password needed for encryption.
+     */
+    add_task(async function test_expandedPasswords() {
+      let turnOnScheduledBackups = document.getElementById("test-turn-on-scheduled-backups");
+      let passwordsCheckbox = turnOnScheduledBackups.passwordOptionsCheckboxEl;
+
+      ok(passwordsCheckbox, "Passwords checkbox should be found");
+      ok(!turnOnScheduledBackups.passwordOptionsExpandedEl, "Passwords expanded options should not be found");
+
+      passwordsCheckbox.click();
+      await turnOnScheduledBackups.updateComplete;
+
+      ok(turnOnScheduledBackups.passwordOptionsExpandedEl, "Passwords expanded options should be found");
+    })
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <turn-on-scheduled-backups id="test-turn-on-scheduled-backups"></turn-on-scheduled-backups>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

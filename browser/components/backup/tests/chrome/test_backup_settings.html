@@ -31,6 +31,41 @@
 
       settings.remove();
     });
+
+    /**
+     * Tests that the dialog for turning on scheduled backups can be displayed
+     * from settings, or hidden if cancelled.
+     */
+    add_task(async function test_turnOnScheduledBackupsDialog() {
+      let settings = document.getElementById("test-backup-settings");
+      settings.backupServiceState = {
+        scheduledBackupsEnabled: false,
+      }
+
+      await settings.updateComplete;
+
+      let turnOnButton = settings.scheduledBackupsButtonEl;
+      let dialog = settings.turnOnScheduledBackupsDialogEl;
+
+      ok(turnOnButton, "Button to turn on scheduled backups should be found");
+      ok(!dialog.open, "Dialog should not be open");
+
+      turnOnButton.click();
+      await settings.updateComplete;
+
+      ok(dialog?.open, "Dialog should be open");
+
+      let turnOnScheduledBackups = dialog.querySelector("turn-on-scheduled-backups");
+      ok(turnOnScheduledBackups, "turn-on-scheduled-backups should be found");
+
+      let cancelButton = turnOnScheduledBackups.shadowRoot.getElementById("backup-turn-on-scheduled-cancel-button");
+      ok(cancelButton, "Cancel button should be found");
+
+      cancelButton.click();
+      await settings.updateComplete;
+
+      ok(!dialog.open, "Dialog should not be open");
+    });
   </script>
 </head>
 <body>

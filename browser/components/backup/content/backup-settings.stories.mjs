@@ -6,6 +6,9 @@
 import { html } from "lit.all.mjs";
 import "./backup-settings.mjs";
 
+window.MozXULElement.insertFTLIfNeeded("locales-preview/backupSettings.ftl");
+window.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
+
 export default {
   title: "Domain-specific UI Widgets/Backup/Backup Settings",
   component: "backup-settings",
@@ -19,13 +22,17 @@ const Template = ({ backupServiceState }) => html`
 export const BackingUpNotInProgress = Template.bind({});
 BackingUpNotInProgress.args = {
   backupServiceState: {
+    backupFilePath: "Documents",
     backupInProgress: false,
+    scheduledBackupsEnabled: false,
   },
 };
 
 export const BackingUpInProgress = Template.bind({});
 BackingUpInProgress.args = {
   backupServiceState: {
+    backupFilePath: "Documents",
     backupInProgress: true,
+    scheduledBackupsEnabled: false,
   },
 };

@@ -1,4 +1,9 @@
 [DEFAULT]
+prefs = [
+    "browser.backup.scheduled.enabled=false",
+]
 skip-if = ["os == 'android'"]
 
 ["test_backup_settings.html"]
+
+["test_turn_on_scheduled_backups.html"]
