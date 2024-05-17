@@ -233,6 +233,38 @@ newtab:
     send_in_pings:
       - newtab
 
+
+  wallpaper_click:
+    type: event
+    description: >
+      Whether the search input is enabled on the newtab.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.showSearch` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1896004
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1896004
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - nbarrett@mozilla.com
+    expires: never
+    extra_keys:
+      selected_wallpaper:
+        description: >
+          Which wallpaper has been selected by the user
+          Will be the title of a Wallpaper or 'none' for users
+          that reset the background to default
+        type: string
+      had_previous_wallpaper:
+        description: >
+          Wheather or not user had a previously set wallpaper
+        type: boolean
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+
 newtab.search:
   enabled:
     lifetime: application

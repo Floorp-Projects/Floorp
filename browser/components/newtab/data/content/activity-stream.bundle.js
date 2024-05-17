@@ -234,6 +234,7 @@ for (const type of [
   "UPDATE_SEARCH_SHORTCUTS",
   "UPDATE_SECTION_PREFS",
   "WALLPAPERS_SET",
+  "WALLPAPER_CLICK",
   "WEATHER_UPDATE",
   "WEBEXT_CLICK",
   "WEBEXT_DISMISS",
@@ -9003,6 +9004,7 @@ const DiscoveryStreamBase = (0,external_ReactRedux_namespaceObject.connect)(stat
 
 
 
+
 class _WallpapersSection extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
@@ -9021,6 +9023,10 @@ class _WallpapersSection extends (external_React_default()).PureComponent {
     const prefs = this.props.Prefs.values;
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
+    this.handleUserEvent({
+      selected_wallpaper: id,
+      hadPreviousWallpaper: !!this.props.activeWallpaper
+    });
     // bug 1892095
     if (prefs["newtabWallpapers.wallpaper-dark"] === "" && colorMode === "light") {
       this.props.setPref("newtabWallpapers.wallpaper-dark", id.replace("light", "dark"));
@@ -9032,6 +9038,18 @@ class _WallpapersSection extends (external_React_default()).PureComponent {
   handleReset() {
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
+    this.handleUserEvent({
+      selected_wallpaper: "none",
+      hadPreviousWallpaper: !!this.props.activeWallpaper
+    });
+  }
+
+  // Record user interaction when changing wallpaper and reseting wallpaper to default
+  handleUserEvent(data) {
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WALLPAPER_CLICK,
+      data
+    }));
   }
   render() {
     const {
