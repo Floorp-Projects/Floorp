@@ -18,8 +18,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.concept.engine.manifest.WebAppManifestParser
-import mozilla.components.concept.engine.manifest.getOrNull
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.customtabs.CustomTabWindowFeature
@@ -68,8 +66,9 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
         val activity = requireActivity()
         val components = activity.components
 
-        val manifest =
-            args.webAppManifest?.let { json -> WebAppManifestParser().parse(json).getOrNull() }
+        val manifest = args.webAppManifestUrl?.ifEmpty { null }?.let { url ->
+            requireComponents.core.webAppManifestStorage.getManifestCache(url)
+        }
 
         val isNavBarEnabled = IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled
 

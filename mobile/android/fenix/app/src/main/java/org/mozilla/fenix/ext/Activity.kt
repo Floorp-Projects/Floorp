@@ -19,10 +19,9 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.feature.intent.ext.getSessionId
-import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.support.utils.SafeIntent
+import mozilla.components.support.utils.toSafeIntent
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -254,14 +253,11 @@ private fun Activity.getExternalAppBrowserNavDirections(
         return null
     }
 
-    val manifest =
-        intent.getWebAppManifest()?.let { WebAppManifestParser().serialize(it).toString() }
-
     return when (from) {
         BrowserDirection.FromGlobal ->
             NavGraphDirections.actionGlobalExternalAppBrowser(
                 activeSessionId = customTabSessionId,
-                webAppManifest = manifest,
+                webAppManifestUrl = intent.toSafeIntent().dataString,
                 isSandboxCustomTab = intent.getBooleanExtra(EXTRA_IS_SANDBOX_CUSTOM_TAB, false),
             )
 
