@@ -50,7 +50,6 @@
 #include "nsComponentManagerUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIXULRuntime.h"
 #include "jsapi.h"
@@ -1365,7 +1364,6 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mNotifyDOMContentFlushed(false),
       mNeedToUpdateIntersectionObservations(false),
       mNeedToUpdateResizeObservers(false),
-      mNeedToUpdateAnimations(false),
       mMightNeedMediaQueryListenerUpdate(false),
       mNeedToUpdateContentRelevancy(false),
       mInNormalTick(false),
@@ -1489,6 +1487,18 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
              "Registration count shouldn't be able to go negative");
 #endif
   return true;
+}
+
+void nsRefreshDriver::AddTimerAdjustmentObserver(
+    nsATimerAdjustmentObserver* aObserver) {
+  MOZ_ASSERT(!mTimerAdjustmentObservers.Contains(aObserver));
+  mTimerAdjustmentObservers.AppendElement(aObserver);
+}
+
+void nsRefreshDriver::RemoveTimerAdjustmentObserver(
+    nsATimerAdjustmentObserver* aObserver) {
+  MOZ_ASSERT(mTimerAdjustmentObservers.Contains(aObserver));
+  mTimerAdjustmentObservers.RemoveElement(aObserver);
 }
 
 void nsRefreshDriver::PostVisualViewportResizeEvent(
@@ -1875,6 +1885,11 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
 
   if (mMostRecentRefresh != mActiveTimer->MostRecentRefresh()) {
     mMostRecentRefresh = mActiveTimer->MostRecentRefresh();
+
+    for (nsATimerAdjustmentObserver* obs :
+         mTimerAdjustmentObservers.EndLimitedRange()) {
+      obs->NotifyTimerAdjusted(mMostRecentRefresh);
+    }
   }
 }
 
@@ -1904,6 +1919,7 @@ uint32_t nsRefreshDriver::ObserverCount() const {
   sum += mThrottledFrameRequestCallbackDocs.Length();
   sum += mViewManagerFlushIsPending;
   sum += mEarlyRunners.Length();
+  sum += mTimerAdjustmentObservers.Length();
   sum += mAutoFocusFlushDocuments.Length();
   return sum;
 }
@@ -1995,9 +2011,6 @@ auto nsRefreshDriver::GetReasonsToTick() const -> TickReasons {
   if (mNeedToUpdateResizeObservers) {
     reasons |= TickReasons::eNeedsToNotifyResizeObservers;
   }
-  if (mNeedToUpdateAnimations) {
-    reasons |= TickReasons::eNeedsToUpdateAnimations;
-  }
   if (mNeedToUpdateIntersectionObservations) {
     reasons |= TickReasons::eNeedsToUpdateIntersectionObservations;
   }
@@ -2040,9 +2053,6 @@ void nsRefreshDriver::AppendTickReasonsToString(TickReasons aReasons,
   }
   if (aReasons & TickReasons::eNeedsToNotifyResizeObservers) {
     aStr.AppendLiteral(" NeedsToNotifyResizeObservers");
-  }
-  if (aReasons & TickReasons::eNeedsToUpdateAnimations) {
-    aStr.AppendLiteral(" NeedsToUpdateAnimations");
   }
   if (aReasons & TickReasons::eNeedsToUpdateIntersectionObservations) {
     aStr.AppendLiteral(" NeedsToUpdateIntersectionObservations");
@@ -2334,39 +2344,9 @@ void nsRefreshDriver::DetermineProximityToViewportAndNotifyResizeObservers() {
   }
 }
 
-static CallState UpdateAndReduceAnimations(Document& aDocument) {
-  for (DocumentTimeline* timeline : aDocument.Timelines()) {
-    timeline->WillRefresh();
-  }
-
-  if (nsPresContext* pc = aDocument.GetPresContext()) {
-    if (pc->EffectCompositor()->NeedsReducing()) {
-      pc->EffectCompositor()->ReduceAnimations();
-    }
-  }
-  aDocument.EnumerateSubDocuments(UpdateAndReduceAnimations);
-  return CallState::Continue;
-}
-
-void nsRefreshDriver::UpdateAnimationsAndSendEvents() {
-  // TODO(emilio): Can we early-return here if mNeedToUpdateAnimations is
-  // already false?
-  mNeedToUpdateAnimations = false;
+void nsRefreshDriver::DispatchAnimationEvents() {
   if (!mPresContext) {
     return;
-  }
-
-  {
-    // Animation updates may queue Promise resolution microtasks. We shouldn't
-    // run these, however, until we have fully updated the animation state. As
-    // per the "update animations and send events" procedure[1], we should
-    // remove replaced animations and then run these microtasks before
-    // dispatching the corresponding animation events.
-    //
-    // [1]:
-    // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
-    nsAutoMicroTask mt;
-    UpdateAndReduceAnimations(*mPresContext->Document());
   }
 
   // Hold all AnimationEventDispatcher in mAnimationEventFlushObservers as
@@ -2513,6 +2493,16 @@ void nsRefreshDriver::CancelIdleTask(Task* aTask) {
   if (sPendingIdleTasks->IsEmpty()) {
     sPendingIdleTasks = nullptr;
   }
+}
+
+static CallState ReduceAnimations(Document& aDocument) {
+  if (nsPresContext* pc = aDocument.GetPresContext()) {
+    if (pc->EffectCompositor()->NeedsReducing()) {
+      pc->EffectCompositor()->ReduceAnimations();
+    }
+  }
+  aDocument.EnumerateSubDocuments(ReduceAnimations);
+  return CallState::Continue;
 }
 
 bool nsRefreshDriver::TickObserverArray(uint32_t aIdx, TimeStamp aNowTime) {
@@ -2677,6 +2667,28 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     return StopTimer();
   }
 
+  // Any animation timelines updated above (animation timelines are style flush
+  // observers) may cause animations to queue Promise resolution microtasks. We
+  // shouldn't run these, however, until we have fully updated the animation
+  // state.
+  //
+  // As per the "update animations and send events" procedure[1], we should
+  // remove replaced animations and then run these microtasks before
+  // dispatching the corresponding animation events.
+  //
+  // FIXME(emilio, bug 1896762): This comment doesn't make much sense to me.
+  // We're running micro-tasks in the block below, but we don't "Update
+  // animations and send events" until we hit DispatchAnimationEvents() below.
+  // We should probably refactor the setup so that animation timelines are
+  // ticked as part of step 11 below or so, and do this only then.
+  //
+  // [1]:
+  // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
+  {
+    nsAutoMicroTask mt;
+    ReduceAnimations(*mPresContext->Document());
+  }
+
   // Check if running the microtask checkpoint above caused the pres context to
   // be destroyed.
   if (!mPresContext || !mPresContext->GetPresShell()) {
@@ -2701,7 +2713,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   EvaluateMediaQueriesAndReportChanges();
 
   // Step 11. For each doc of docs, update animations and send events for doc.
-  UpdateAnimationsAndSendEvents();
+  DispatchAnimationEvents();
 
   // Step 12. For each doc of docs, run the fullscreen steps for doc.
   RunFullscreenSteps();
