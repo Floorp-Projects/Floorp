@@ -994,8 +994,8 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
     animCtrl->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
   }
 
-  for (DocumentTimeline* timelines : mDocument->Timelines()) {
-    timelines->UpdateLastRefreshDriverTime();
+  for (DocumentTimeline* timeline : mDocument->Timelines()) {
+    timeline->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
   }
 
   // Get our activeness from the docShell.
@@ -1337,6 +1337,9 @@ void PresShell::Destroy() {
 
     if (mDocument->HasAnimationController()) {
       mDocument->GetAnimationController()->NotifyRefreshDriverDestroying(rd);
+    }
+    for (DocumentTimeline* timeline : mDocument->Timelines()) {
+      timeline->NotifyRefreshDriverDestroying(rd);
     }
   }
 

@@ -14,12 +14,15 @@
 #include "AnimationTimeline.h"
 #include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
 #include "nsRefreshDriver.h"
+#include "nsRefreshObservers.h"
 
 struct JSContext;
 
 namespace mozilla::dom {
 
 class DocumentTimeline final : public AnimationTimeline,
+                               public nsARefreshObserver,
+                               public nsATimerAdjustmentObserver,
                                public LinkedListElement<DocumentTimeline> {
  public:
   DocumentTimeline(Document* aDocument, const TimeDuration& aOriginTime);
@@ -32,7 +35,8 @@ class DocumentTimeline final : public AnimationTimeline,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(DocumentTimeline,
                                                          AnimationTimeline)
 
-  JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<DocumentTimeline> Constructor(
       const GlobalObject& aGlobal, const DocumentTimelineOptions& aOptions,
@@ -42,7 +46,7 @@ class DocumentTimeline final : public AnimationTimeline,
 
   // This is deliberately _not_ called GetCurrentTime since that would clash
   // with a macro defined in winbase.h
-  Nullable<TimeDuration> GetCurrentTimeAsDuration() const override;
+  virtual Nullable<TimeDuration> GetCurrentTimeAsDuration() const override;
 
   bool TracksWallclockTime() const override;
   Nullable<TimeDuration> ToTimelineTime(
@@ -57,17 +61,27 @@ class DocumentTimeline final : public AnimationTimeline,
 
   void TriggerAllPendingAnimationsNow();
 
-  void WillRefresh();
+  // nsARefreshObserver methods
+  void WillRefresh(TimeStamp aTime) override;
+  // nsATimerAdjustmentObserver methods
+  void NotifyTimerAdjusted(TimeStamp aTime) override;
+
+  void NotifyRefreshDriverCreated(nsRefreshDriver* aDriver);
+  void NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver);
 
   Document* GetDocument() const override { return mDocument; }
 
-  void UpdateLastRefreshDriverTime();
+  void UpdateLastRefreshDriverTime(TimeStamp aKnownTime = {});
 
   bool IsMonotonicallyIncreasing() const override { return true; }
 
  protected:
   TimeStamp GetCurrentTimeStamp() const;
   nsRefreshDriver* GetRefreshDriver() const;
+  void UnregisterFromRefreshDriver();
+  void MostRecentRefreshTimeUpdated();
+  void ObserveRefreshDriver(nsRefreshDriver* aDriver);
+  void DisconnectRefreshDriver(nsRefreshDriver* aDriver);
 
   RefPtr<Document> mDocument;
 
@@ -75,6 +89,8 @@ class DocumentTimeline final : public AnimationTimeline,
   // we don't have a refresh driver (e.g. because we are in a display:none
   // iframe).
   TimeStamp mLastRefreshDriverTime;
+  bool mIsObservingRefreshDriver;
+
   TimeDuration mOriginTime;
 };
 
