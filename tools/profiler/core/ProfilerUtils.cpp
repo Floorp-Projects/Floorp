@@ -67,8 +67,12 @@ ProfilerThreadId profiler_current_thread_id() {
 #    include <sys/syscall.h>
 
 ProfilerThreadId profiler_current_thread_id() {
-  // glibc doesn't provide a wrapper for gettid() until 2.30
-  return ProfilerThreadId::FromNativeId(syscall(SYS_gettid));
+  static thread_local pid_t tid;
+  if (!tid) {
+    // glibc doesn't provide a wrapper for gettid() until 2.30
+    tid = static_cast<pid_t>(syscall(SYS_gettid));
+  }
+  return ProfilerThreadId::FromNativeId(tid);
 }
 
 // ------------------------------------------------------- FreeBSD
