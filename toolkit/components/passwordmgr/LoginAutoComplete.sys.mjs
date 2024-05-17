@@ -150,7 +150,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
       login, // We have to keep login here to satisfy Android
       isDuplicateUsername,
       isOriginMatched,
-      comment:
+      secondary:
         isOriginMatched && login.httpRealm === null
           ? getLocalizedString("displaySameOrigin")
           : login.displayOrigin,
