@@ -72,3 +72,58 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test CSS image content in pseudo-elements.
+ */
+addAccessibleTask(
+  `
+<style>
+  #noAlt::before, #noAlt::after {
+    content: ${IMAGE};
+  }
+  .strings1::before {
+    content: ${IMAGE} / "be" "fore";
+  }
+  .strings2::before {
+    content: ${IMAGE} / "BE" "FORE";
+  }
+  #strings::after {
+    content: ${IMAGE} / "af" "ter";
+  }
+</style>
+<h1 id="noAlt">noAlt</h1>
+<h1 id="strings" class="strings1">inside</h1>
+  `,
+  async function testImagePseudo(browser, docAcc) {
+    testAccessibleTree(findAccessibleChildByID(docAcc, "noAlt"), {
+      role: ROLE_HEADING,
+      children: [{ role: ROLE_TEXT_LEAF, name: "noAlt" }],
+    });
+    const strings = findAccessibleChildByID(docAcc, "strings");
+    testAccessibleTree(strings, {
+      role: ROLE_HEADING,
+      name: "before inside after",
+      children: [
+        { role: ROLE_GRAPHIC, name: "before" },
+        { role: ROLE_TEXT_LEAF, name: "inside" },
+        { role: ROLE_GRAPHIC, name: "after" },
+      ],
+    });
+
+    info("Changing strings class to strings2");
+    let changed = waitForEvent(EVENT_NAME_CHANGE, strings);
+    await invokeSetAttribute(browser, "strings", "class", "strings2");
+    await changed;
+    testAccessibleTree(strings, {
+      role: ROLE_HEADING,
+      name: "BEFORE inside after",
+      children: [
+        { role: ROLE_GRAPHIC, name: "BEFORE" },
+        { role: ROLE_TEXT_LEAF, name: "inside" },
+        { role: ROLE_GRAPHIC, name: "after" },
+      ],
+    });
+  },
+  { chrome: true, topLevel: true }
+);

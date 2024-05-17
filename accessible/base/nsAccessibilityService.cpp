@@ -9,6 +9,7 @@
 #include "ApplicationAccessibleWrap.h"
 #include "ARIAGridAccessible.h"
 #include "ARIAMap.h"
+#include "CssAltContent.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
 #include "FocusManager.h"
@@ -241,12 +242,14 @@ bool nsAccessibilityService::ShouldCreateImgAccessible(
     return false;
   }
 
-  // If the element is not an img, and also not an embedded image via embed or
-  // object, then we should not create an accessible.
+  // If the element is not an img, not an embedded image via embed or object,
+  // and not a pseudo-element with CSS content alt text, then we should not
+  // create an accessible.
   if (!aElement->IsHTMLElement(nsGkAtoms::img) &&
       ((!aElement->IsHTMLElement(nsGkAtoms::embed) &&
         !aElement->IsHTMLElement(nsGkAtoms::object)) ||
-       frame->AccessibleType() != AccType::eImageType)) {
+       frame->AccessibleType() != AccType::eImageType) &&
+      !CssAltContent(aElement)) {
     return false;
   }
 
