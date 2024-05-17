@@ -72,6 +72,10 @@ div[hidetabs=true] .tabs .tabs-navigation {
   background-color: var(--theme-toolbar-hover-active);
 }
 
+.tabs .tabs-menu-item:has(a:focus-visible) {
+  z-index: 1;
+}
+
 .tabs .tabs-menu-item a {
   --text-height: 16px;
   --devtools-tab-border-width: 1px;
