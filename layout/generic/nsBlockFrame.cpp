@@ -2973,7 +2973,8 @@ bool nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
     // elements inside them.
     // XXX what can we do smarter here?
     if (!line->IsDirty() && line->IsBlock() &&
-        line->mFirstChild->HasAnyStateBits(NS_BLOCK_HAS_CLEAR_CHILDREN)) {
+        line->mFirstChild->HasAnyStateBits(NS_BLOCK_HAS_CLEAR_CHILDREN) &&
+        aState.FloatManager()->HasAnyFloats()) {
       line->MarkDirty();
     }
 
