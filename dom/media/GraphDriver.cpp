@@ -485,7 +485,6 @@ AudioCallbackDriver::AudioCallbackDriver(
 
   NS_WARNING_ASSERTION(mOutputChannelCount != 0,
                        "Invalid output channel count");
-  MOZ_ASSERT(mOutputChannelCount <= 8);
 
   if (aAudioInputType == AudioInputType::Voice &&
       StaticPrefs::
