@@ -28,7 +28,18 @@ class MOZ_STACK_CLASS CssAltContent {
    */
   void AppendToString(nsAString& aOut);
 
+  /**
+   * Update accessibility if there is CSS alt content on the given element or a
+   * descendant pseudo-element which references the given attribute.
+   */
+  static bool HandleAttributeChange(nsIContent* aContent, int32_t aNameSpaceID,
+                                    nsAtom* aAttribute);
+
  private:
+  bool HandleAttributeChange(int32_t aNameSpaceID, nsAtom* aAttribute);
+
+  dom::Element* mRealElement = nullptr;
+  dom::Element* mPseudoElement = nullptr;
   mozilla::Span<const mozilla::StyleContentItem> mItems;
 };
 
