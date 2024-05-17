@@ -38,4 +38,5 @@
 % http://localhost/tests/perf-reftest-singletons/remove-children.html
 % http://localhost/tests/perf-reftest-singletons/remove-front-has-pseudo.html
 % http://localhost/tests/perf-reftest-singletons/append-nth-edge-has-pseudo.html
+% http://localhost/tests/perf-reftest-singletons/insert-nth-edge-has-pseudo.html
 # When modifying this list, please also update build/pgo/index.html (If relevant to profile-guided optimzation).
