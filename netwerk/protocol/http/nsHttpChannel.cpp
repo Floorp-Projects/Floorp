@@ -4070,6 +4070,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
     rv = OpenCacheInputStream(entry, true);
     if (NS_SUCCEEDED(rv)) {
       mCachedContentIsValid = true;
+      entry->MaybeMarkValid();
     }
     return rv;
   }
@@ -4342,6 +4343,10 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
     if (doBackgroundValidation) {
       PerformBackgroundCacheRevalidation();
     }
+  }
+
+  if (mCachedContentIsValid) {
+    entry->MaybeMarkValid();
   }
 
   LOG(
@@ -4787,7 +4792,7 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
 
 // Actually process the cached response that we started to handle in CheckCache
 // and/or StartBufferingCachedEntity.
-nsresult nsHttpChannel::ReadFromCache(void) {
+nsresult nsHttpChannel::ReadFromCache(bool alreadyMarkedValid) {
   NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mCachedContentIsValid, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(!mCachePump, NS_OK);  // already opened
@@ -4852,6 +4857,16 @@ nsresult nsHttpChannel::ReadFromCache(void) {
   // from the cache, or 2) this may be due to a 304 not modified response,
   // in which case we could have security info from a socket transport.
   if (!mSecurityInfo) mSecurityInfo = mCachedSecurityInfo;
+
+  if (!alreadyMarkedValid && !LoadCachedContentIsPartial()) {
+    // We validated the entry, and we have write access to the cache, so
+    // mark the cache entry as valid in order to allow others access to
+    // this cache entry.
+    //
+    // TODO: This should be done asynchronously so we don't take the cache
+    // service lock on the main thread.
+    mCacheEntry->MaybeMarkValid();
+  }
 
   nsresult rv;
 
@@ -8272,12 +8287,12 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   // perform any final cache operations before we close the cache entry.
   if (mCacheEntry && LoadRequestTimeInitialized()) {
+    bool writeAccess;
     // New implementation just returns value of the !LoadCacheEntryIsReadOnly()
     // flag passed in. Old implementation checks on nsICache::ACCESS_WRITE
     // flag.
-
-    // Assume that write access is granted
-    if (!LoadCacheEntryIsReadOnly()) {
+    mCacheEntry->HasWriteAccess(!LoadCacheEntryIsReadOnly(), &writeAccess);
+    if (writeAccess) {
       nsresult rv = FinalizeCacheEntry();
       if (NS_FAILED(rv)) {
         LOG(("FinalizeCacheEntry failed (%08x)", static_cast<uint32_t>(rv)));
