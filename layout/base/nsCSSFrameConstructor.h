@@ -18,29 +18,26 @@
 #include "mozilla/FunctionRef.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ScrollStyles.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/PresShell.h"
-
 #include "nsCOMPtr.h"
-#include "nsILayoutHistoryState.h"
-#include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
+#include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
+#include "nsILayoutHistoryState.h"
 
 struct nsStyleDisplay;
 struct nsGenConInitializer;
 
 class nsBlockFrame;
 class nsContainerFrame;
-class nsFirstLineFrame;
-class nsFirstLetterFrame;
 class nsCSSAnonBoxPseudoStaticAtom;
-class nsPageSequenceFrame;
-
-class nsPageContentFrame;
-
+class nsFirstLetterFrame;
+class nsFirstLineFrame;
 class nsFrameConstructorState;
+class nsPageContentFrame;
+class nsPageSequenceFrame;
 
 namespace mozilla {
 

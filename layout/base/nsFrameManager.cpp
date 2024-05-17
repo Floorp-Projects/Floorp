@@ -8,31 +8,25 @@
 
 #include "nsFrameManager.h"
 
-#include "nscore.h"
-#include "nsCOMPtr.h"
-#include "plhash.h"
-#include "nsPlaceholderFrame.h"
-#include "nsGkAtoms.h"
-#include "nsILayoutHistoryState.h"
+#include "ChildIterator.h"
+#include "GeckoProfiler.h"
+#include "mozilla/ComputedStyle.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresState.h"
-#include "mozilla/ComputedStyle.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/Document.h"
-
-#include "nsError.h"
 #include "nsAbsoluteContainingBlock.h"
-#include "ChildIterator.h"
-
-#include "GeckoProfiler.h"
-#include "nsIStatefulFrame.h"
+#include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
+#include "nscore.h"
+#include "nsError.h"
+#include "nsGkAtoms.h"
+#include "nsILayoutHistoryState.h"
+#include "nsIStatefulFrame.h"
+#include "nsPlaceholderFrame.h"
 #include "nsWindowSizes.h"
-
-#include "mozilla/MemoryReporting.h"
-
-// #define DEBUG_UNDISPLAYED_MAP
-// #define DEBUG_DISPLAY_CONTENTS_MAP
+#include "plhash.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
