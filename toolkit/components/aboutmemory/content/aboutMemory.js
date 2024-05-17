@@ -1445,6 +1445,7 @@ function appendAboutMemoryMain(
 
     let filterInput = appendElement(filterItem, "input", "filterInput");
     filterInput.placeholder = "Memory report path filter";
+    filterInput.setAttribute("type", "text");
 
     let filterOptions = appendElement(filterItem, "div");
     let filterRegExLabel = appendElement(filterOptions, "label");
