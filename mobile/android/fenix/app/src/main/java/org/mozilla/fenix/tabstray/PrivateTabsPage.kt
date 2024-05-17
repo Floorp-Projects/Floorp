@@ -5,11 +5,12 @@
 package org.mozilla.fenix.tabstray
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.ext.observeAsState
 
 @Composable
 @Suppress("LongParameterList")
@@ -23,12 +24,9 @@ internal fun PrivateTabsPage(
     onTabLongClick: (TabSessionState) -> Unit,
     onMove: (String, String?, Boolean) -> Unit,
 ) {
-    val selectedTabId = browserStore
-        .observeAsComposableState { state -> state.selectedTabId }.value
-    val privateTabs = tabsTrayStore
-        .observeAsComposableState { state -> state.privateTabs }.value ?: emptyList()
-    val selectionMode = tabsTrayStore
-        .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
+    val selectedTabId by browserStore.observeAsState(null) { state -> state.selectedTabId }
+    val privateTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.privateTabs }
+    val selectionMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
 
     if (privateTabs.isNotEmpty()) {
         TabLayout(

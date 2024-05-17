@@ -5,7 +5,8 @@
 package org.mozilla.fenix.tabstray
 
 import androidx.compose.runtime.Composable
-import mozilla.components.lib.state.ext.observeAsComposableState
+import androidx.compose.runtime.getValue
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsList
 import org.mozilla.fenix.tabstray.syncedtabs.OnTabClick as OnSyncedTabClick
 import org.mozilla.fenix.tabstray.syncedtabs.OnTabCloseClick as OnSyncedTabClose
@@ -16,8 +17,7 @@ internal fun SyncedTabsPage(
     onTabClick: OnSyncedTabClick,
     onTabClose: OnSyncedTabClose,
 ) {
-    val syncedTabs = tabsTrayStore
-        .observeAsComposableState { state -> state.syncedTabs }.value ?: emptyList()
+    val syncedTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.syncedTabs }
 
     SyncedTabsList(
         syncedTabs = syncedTabs,
