@@ -1360,6 +1360,17 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       return true;
     }
 
+    // This check *must* come before the broken image check below.
+    if (frame && frame->IsReplaced() && frame->AccessibleType() == eImageType &&
+        !aRoot->IsHTMLElement(nsGkAtoms::img)) {
+      // This is an image specified using the CSS content property which
+      // replaces the content of the node. Its frame might be reconstructed,
+      // which means its alt text might have changed. We expose the alt text
+      // as the name, so fire a name change event.
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, acc);
+      return false;
+    }
+
     // It is a broken image that is being reframed because it either got
     // or lost an `alt` tag that would rerender this node as text.
     if (frame && (acc->IsImage() != (frame->AccessibleType() == eImageType))) {
