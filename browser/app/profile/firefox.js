@@ -3052,6 +3052,8 @@ pref("browser.mailto.prompt.os", true);
 
 // Pref to initialize the BackupService soon after startup.
 pref("browser.backup.enabled", true);
+// Pref to control whether scheduled backups run or not.
+pref("browser.backup.scheduled.enabled", false);
 // Pref to control the visibility of the backup section in about:preferences
 pref("browser.backup.preferences.ui.enabled", false);
 // The number of SQLite database pages to backup per step.

@@ -4,7 +4,9 @@
 
 import * as DefaultBackupResources from "resource:///modules/backup/BackupResources.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+const SCHEDULED_BACKUPS_ENABLED_PREF_NAME = "browser.backup.scheduled.enabled";
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
@@ -31,6 +33,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 ChromeUtils.defineLazyGetter(lazy, "ZipWriter", () =>
   Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter", "open")
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "scheduledBackupsPref",
+  SCHEDULED_BACKUPS_ENABLED_PREF_NAME,
+  false,
+  function onUpdateScheduledBackups(_pref, _prevVal, newVal) {
+    let bs = BackupService.get();
+    if (bs) {
+      bs.onUpdateScheduledBackups(newVal);
+    }
+  }
 );
 
 /**
@@ -94,7 +109,11 @@ export class BackupService extends EventTarget {
    *
    * @type {object}
    */
-  #_state = { backupInProgress: false };
+  #_state = {
+    backupFilePath: "Documents", // TODO: make save location configurable (bug 1895943)
+    backupInProgress: false,
+    scheduledBackupsEnabled: lazy.scheduledBackupsPref,
+  };
 
   /**
    * A Promise that will resolve once the postRecovery steps are done. It will
@@ -841,6 +860,35 @@ export class BackupService extends EventTarget {
     } finally {
       await IOUtils.remove(postRecoveryFile, { ignoreAbsent: true });
       this.#postRecoveryResolver();
+    }
+  }
+
+  /**
+   * Sets browser.backup.scheduled.enabled to true or false.
+   *
+   * @param { boolean } shouldEnableScheduledBackups true if scheduled backups should be enabled. Else, false.
+   */
+  setScheduledBackups(shouldEnableScheduledBackups) {
+    Services.prefs.setBoolPref(
+      SCHEDULED_BACKUPS_ENABLED_PREF_NAME,
+      shouldEnableScheduledBackups
+    );
+  }
+
+  /**
+   * Updates scheduledBackupsEnabled in the backup service state. Should be called every time
+   * the value for browser.backup.scheduled.enabled changes.
+   *
+   * @param {boolean} isScheduledBackupsEnabled True if scheduled backups are enabled. Else false.
+   */
+  onUpdateScheduledBackups(isScheduledBackupsEnabled) {
+    if (this.#_state.scheduledBackupsEnabled != isScheduledBackupsEnabled) {
+      lazy.logConsole.debug(
+        "Updating scheduled backups",
+        isScheduledBackupsEnabled
+      );
+      this.#_state.scheduledBackupsEnabled = isScheduledBackupsEnabled;
+      this.stateUpdate();
     }
   }
 

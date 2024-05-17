@@ -13,20 +13,24 @@ export class BackupUIChild extends JSWindowActorChild {
   #inittedWidgets = new WeakSet();
 
   /**
-   * Handles BackupUI:InitWidget custom events fired by widgets that want to
-   * register with BackupUIChild. Firing this event sends a message to the
-   * parent to request the BackupService state which will result in a
-   * `backupServiceState` property of the widget to be set when that state is
-   * received. Subsequent state updates will also cause that state property to
-   * be set.
+   * Handles custom events fired by widgets that want to register with
+   * BackupUIChild.
    *
    * @param {Event} event
-   *   The BackupUI:InitWidget custom event that the widget fired.
+   *   The custom event that the widget fired.
    */
   handleEvent(event) {
+    /**
+     * BackupUI:InitWidget sends a message to the parent to request the BackupService state
+     * which will result in a `backupServiceState` property of the widget to be set when that
+     * state is received. Subsequent state updates will also cause that state property to
+     * be set.
+     */
     if (event.type == "BackupUI:InitWidget") {
       this.#inittedWidgets.add(event.target);
       this.sendAsyncMessage("RequestState");
+    } else if (event.type == "BackupUI:ScheduledBackupsConfirm") {
+      this.sendAsyncMessage("ScheduledBackupsConfirm");
     }
   }
 

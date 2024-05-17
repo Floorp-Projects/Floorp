@@ -5,6 +5,9 @@
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/backup/turn-on-scheduled-backups.mjs";
+
 /**
  * The widget for managing the BackupService that is embedded within the main
  * document of about:settings / about:preferences.
@@ -14,14 +17,24 @@ export default class BackupSettings extends MozLitElement {
     backupServiceState: { type: Object },
   };
 
+  static get queries() {
+    return {
+      scheduledBackupsButtonEl: "#backup-toggle-scheduled-button",
+      turnOnScheduledBackupsDialogEl: "#turn-on-scheduled-backups-dialog",
+      turnOnScheduledBackupsEl: "turn-on-scheduled-backups",
+    };
+  }
+
   /**
-   * Creates a BackupSettings instance and sets the initial default
+   * Creates a BackupPreferences instance and sets the initial default
    * state.
    */
   constructor() {
     super();
     this.backupServiceState = {
+      backupFilePath: "Documents", // TODO: make save location configurable (bug 1895943)
       backupInProgress: false,
+      scheduledBackupsEnabled: false,
     };
   }
 
@@ -34,13 +47,68 @@ export default class BackupSettings extends MozLitElement {
     this.dispatchEvent(
       new CustomEvent("BackupUI:InitWidget", { bubbles: true })
     );
+
+    this.addEventListener("scheduledBackupsCancel", this);
+    this.addEventListener("scheduledBackupsConfirm", this);
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "scheduledBackupsConfirm":
+        this.turnOnScheduledBackupsDialogEl.close();
+        this.dispatchEvent(
+          new CustomEvent("BackupUI:ScheduledBackupsConfirm", {
+            bubbles: true,
+            composed: true,
+          })
+        );
+        break;
+      case "scheduledBackupsCancel":
+        this.turnOnScheduledBackupsDialogEl.close();
+        break;
+    }
+  }
+
+  handleShowScheduledBackups() {
+    if (
+      !this.backupServiceState.scheduledBackupsEnabled &&
+      this.turnOnScheduledBackupsDialogEl
+    ) {
+      this.turnOnScheduledBackupsDialogEl.showModal();
+    }
+  }
+
+  turnOnScheduledBackupsDialogTemplate() {
+    return html`<dialog id="turn-on-scheduled-backups-dialog">
+      <turn-on-scheduled-backups
+        .backupFilePath=${this.backupServiceState.backupFilePath}
+      ></turn-on-scheduled-backups>
+    </dialog>`;
   }
 
   render() {
-    return html`<div>
-      Backup in progress:
-      ${this.backupServiceState.backupInProgress ? "Yes" : "No"}
-    </div>`;
+    return html`<link
+        rel="stylesheet"
+        href="chrome://browser/skin/preferences/preferences.css"
+      />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/backup/backup-settings.css"
+      />
+      <div id="scheduled-backups">
+        <div>
+          Backup in progress:
+          ${this.backupServiceState.backupInProgress ? "Yes" : "No"}
+        </div>
+
+        ${this.turnOnScheduledBackupsDialogTemplate()}
+
+        <moz-button
+          id="backup-toggle-scheduled-button"
+          @click=${this.handleShowScheduledBackups}
+          data-l10n-id="settings-data-backup-toggle"
+        ></moz-button>
+      </div>`;
   }
 }
 

@@ -1,0 +1,109 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+:host {
+  --margin-inline-start-checkbox-content: calc(var(--checkbox-margin-inline) + var(--checkbox-size));
+}
+
+#backup-turn-on-scheduled-wrapper {
+  display: grid;
+  grid-template-areas:
+    "header"
+    "content"
+    "button-group";
+  grid-template-rows: auto auto auto;
+  line-height: 1.5;
+
+  #backup-turn-on-scheduled-header {
+    grid-area: header;
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight);
+    margin: 0;
+  }
+
+  & fieldset {
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #backup-turn-on-scheduled-content {
+    display: flex;
+    flex-direction: column;
+    grid-area: content;
+    margin-block-start: var(--space-small);
+    margin-block-end: var(--space-large);
+    row-gap: var(--space-large);
+  }
+
+  #all-controls {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--space-xlarge);
+  }
+
+  #backup-location-controls {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--space-xsmall);
+
+    #backup-location-filepicker {
+      display: flex;
+      column-gap: var(--space-small);
+      align-items: center;
+    }
+
+    #backup-location-filepicker-input {
+      margin: 0;
+      flex: 1;
+    }
+  }
+
+  #sensitive-data-controls {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--space-large);
+
+    #sensitive-data-checkbox-label {
+      display: flex;
+      gap: var(--checkbox-margin-inline);
+      align-items: center;
+    }
+
+    #sensitive-data-checkbox-label > input {
+      margin: 0;
+    }
+
+    #sensitive-data-checkbox {
+      display: flex;
+      flex-direction: column;
+      row-gap: var(--space-xsmall);
+    }
+
+    #sensitive-data-checkbox > span {
+      margin-inline-start: var(--margin-inline-start-checkbox-content);
+    }
+  }
+
+  #passwords {
+    display: flex;
+    flex-direction: column;
+    margin-inline-start: var(--margin-inline-start-checkbox-content);
+
+    & > #new-password-label, #repeat-password-label {
+      display: flex;
+      flex-direction: column;
+    }
+
+    & > #new-password-label > input, #repeat-password-label > input {
+      margin-inline-start: 0px;
+    }
+  }
+
+  #backup-turn-on-scheduled-button-group {
+    grid-area: button-group;
+  }
+}
