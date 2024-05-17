@@ -1,19 +1,24 @@
 <!-- -*- mode: Markdown; fill-column: 72; -*- -->
 
+(layout-overview)=
+
 # Layout Overview
+
+Last update: May 2024
+
+## Introduction
 
 Much of the layout code deals with operations on the frame tree (or
 rendering tree). In the frame tree, each node represents a rectangle
 (or, for SVG, other shapes). The frame tree has a shape similar to the
 content tree, since many content nodes have one corresponding frame,
-though it differs in a few ways, since some content nodes have more than
-one frame or don't have any frames at all. When elements are
-display:none in CSS or undisplayed for certain other reasons, they
-won't have any frames. When elements are broken across lines or pages,
-they have multiple frames; elements may also have multiple frames when
-multiple frames nested inside each other are needed to display a single
-element (for example, a table, a table cell, or many types of form
-controls).
+though it differs in a few ways: some content nodes have more than one
+frame or don't have any frames at all. When elements are `display:none`
+in CSS or undisplayed for certain other reasons, they won't have any
+frames. When elements are broken across lines or pages, they have
+multiple frames; elements may also have multiple frames when multiple
+frames nested inside each other are needed to display a single element
+(for example, `<table>`, or `<video controls>`).
 
 Each node in the frame tree is an instance of a class derived from
 `nsIFrame`. As with the content tree, there is a substantial type
@@ -21,10 +26,11 @@ hierarchy, but the type hierarchy is very different: it includes types
 like text frames, blocks and inlines, the various parts of tables, flex
 and grid containers, and the various types of HTML form controls.
 
-Frames are allocated within an arena owned by the PresShell. Each frame
-is owned by its parent; frames are not reference counted, and code must
-not hold on to pointers to frames. To mitigate potential security bugs
-when pointers to destroyed frames, we use [frame
+Frames are allocated within an arena owned by the `PresShell`. Each
+frame is owned by its parent, created in `nsCSSFrameConstructor` and
+destroyed via `nsIFrame::Destory()`. Frames are not reference counted,
+and code must not hold on to pointers to frames. To mitigate potential
+security bugs when pointers to destroyed frames, we use [frame
 poisoning](http://robert.ocallahan.org/2010/10/mitigating-dangling-pointer-bugs-using_15.html),
 which takes two parts. When a frame is destroyed other than at the end
 of life of the presentation, we fill its memory with a pattern
@@ -34,30 +40,26 @@ accesses the memory through a dangling pointer, it will either crash
 quickly by dereferencing the poison pattern or it will find a valid
 frame.
 
-Like the content tree, frames must be accessed only from the UI thread.
-
-The frame tree should not store any important data, i.e. any data that
-cannot be recomputed on-the-fly. While the frame tree does usually
-persist while a page is being displayed, frames are often destroyed and
-recreated in response to certain style changes, and in the future we may
-do the same to reduce memory use for pages that are currently inactive.
-There were a number of cases where this rule was violated in the past
-and we stored important data in the frame tree; however, most (though
-not quite all) such cases are now fixed.
+Like the content tree, frames must be accessed only from the main
+thread, in either the content processes or in the parent process.
 
 The rectangle represented by the frame is what CSS calls the element's
-border box. This is the outside edge of the border (or the inside edge
-of the margin). The margin lives outside the border; and the padding
-lives inside the border. In addition to nsIFrame::GetRect, we also have
-the APIs nsIFrame::GetPaddingRect to get the padding box (the outside
-edge of the padding, or inside edge of the border) and
-nsIFrame::GetContentRect to get the content box (the outside edge of the
-content, or inside edge of the padding). These APIs may produce out of
-date results when reflow is needed (or has not yet occurred).
+border box. See the illustration in [8.1 Box
+dimensions](https://www.w3.org/TR/CSS22/box.html#box-dimensions) in CSS2
+spec. This is the outside edge of the border (or the inside edge of the
+margin). The margin lives outside the border; and the padding lives
+inside the border. In addition to `nsIFrame::GetRect()`, we also have
+the APIs `nsIFrame::GetPaddingRect()` to get the padding box (the
+outside edge of the padding, or inside edge of the border) and
+`nsIFrame::GetContentRect()` to get the content box (the outside edge of
+the content, or inside edge of the padding). These APIs may produce out
+of date results when reflow is needed (or has not yet occurred).
+
+### Ink Overflow vs Scrollable Overflow
 
 In addition to tracking a rectangle, frames also track two overflow
-areas: ink overflow and scrollable overflow. These overflow areas
-represent the union of the area needed by the frame and by all its
+areas: **ink overflow** and **scrollable overflow**. These overflow
+areas represent the union of the area needed by the frame and by all its
 descendants. The ink overflow is used for painting-related
 optimizations: it is a rectangle covering all of the area that might be
 painted when the frame and all of its descendants paint. The scrollable
@@ -70,35 +72,46 @@ but there are differences: for example, margins are part of scrollable
 overflow but not ink overflow, whereas text-shadows are part of ink
 overflow but not scrollable overflow.
 
+```{seealso}
+- [CSS Overflow Module Level 3](https://drafts.csswg.org/css-overflow-3/)
+```
+
+### Brief Intro to Fragmentation (or why we need frame continuations?)
+
 When frames are broken across lines, columns, or pages, we create
 multiple frames representing the multiple rectangles of the element. The
-first one is the primary frame, and the rest are its continuations
-(which are more likely to be destroyed and recreated during reflow).
-These frames are linked together as continuations: they have a
-doubly-linked list that can be used to traverse the continuations using
-nsIFrame::GetPrevContinuation and nsIFrame::GetNextContinuation.
+first one is called the **primary frame**, and the rest are called its
+**continuation frames**, or just **continuations** (which are more
+likely to be destroyed and recreated during reflow). These frames are
+linked together as continuations: they have a doubly-linked list that
+can be used to traverse the continuations using
+`nsIFrame::GetPrevContinuation()` and `nsIFrame::GetNextContinuation()`.
 (Currently continuations always have the same style data, though we may
 at some point want to break that invariant.)
 
 Continuations are sometimes siblings of each other (i.e.
-nsIFrame::GetNextContinuation and nsIFrame::GetNextSibling might return
-the same frame), and sometimes not. For example, if a paragraph contains
-a span which contains a link, and the link is split across lines, then
-the continuations of the span are siblings (since they are both children
-of the paragraph), but the continuations of the link are not siblings
-(since each continuation of the link is descended from a different
-continuation of the span). Traversing the entire frame tree does **not**
-require explicit traversal of any frames' continuations-list, since all
-of the continuations are descendants of the element containing the
-break.
+`nsIFrame::GetNextContinuation()` and `nsIFrame::GetNextSibling()` might
+return the same frame), and sometimes not. For example, if a paragraph
+contains a span which contains a link, and the link is split across
+lines, then the continuations of the span are siblings (since they are
+both children of the paragraph), but the continuations of the link are
+not siblings (since each continuation of the link is descended from a
+different continuation of the span). Traversing the entire frame tree
+does **not** require explicit traversal of any frames'
+continuations-list, since all of the continuations are descendants of
+the element containing the break.
 
 We also use continuations for cases (most importantly, bidi reordering,
 where left-to-right text and right-to-left text need to be separated
 into different continuations since they may not form a contiguous
 rectangle) where the continuations should not be rewrapped during
-reflow: we call these continuations fixed rather than fluid.
-nsIFrame::GetNextInFlow and nsIFrame::GetPrevInFlow traverse only the
-fluid continuations and do not cross fixed continuation boundaries.
+reflow: we call these continuations **fixed** rather than **fluid**.
+`nsIFrame::GetNextInFlow()` and `nsIFrame::GetPrevInFlow()` traverse
+only the fluid continuations and do not cross fixed continuation
+boundaries. We'll explan more on continuations and fragmentation in a
+later section [](#layout-fragmentation).
+
+### IB-splitting
 
 If an inline frame has non-inline children, then we split the original
 inline frame into parts. The original inline's children are distributed
@@ -113,35 +126,68 @@ these child frames, and the relationship between the parts of a split
 inline is maintained using an ib-sibling chain. It is important to note
 that any wrappers created during frame construction (such as for tables)
 might not be included in the ib-sibling chain depending on when this
-wrapper creation takes place.
+wrapper creation takes place. See details in
+[`nsCSSFrameConstructor::CreateIBSiblings()`](https://searchfox.org/mozilla-central/rev/c34cf367c29601ed56ae4ea51e20b28cd8331f9c/layout/base/nsCSSFrameConstructor.h#1864-1884).
 
-TODO: nsBox craziness from
-<https://bugzilla.mozilla.org/show_bug.cgi?id=524925#c64>
+### Physical Coordinates vs Logical Coordinates
 
-TODO: link to documentation of block and inline layout
+In Western scripts, the text flows from left to right, and lines and
+block containers progress from top to bottom. To represent a rectangle
+in this writing mode, it is natural we choose the origin at the top-left
+corner in a space, i.e. `(left,right)` at `(0,0)`. The size of a frame
+(rectangle) is specified by its `(width, height)`. This is called the
+"physical coordinates."
 
-TODO: link to documentation of scrollframes
+However, to support various international writing modes on the web, we
+need to generalize the concept. For example, in Chinese or Japanese
+vertical typesetting, the text can flow from top to bottom while the
+lines progress from right to left; in Mongolian script, text can flow
+from top to bottom while the lines progress from left to right. We
+define "abstract coordinate" or "logical coordinates" to unify the
+coordinates under different writing modes. The text flow direction is
+defined as "inline direction" and the direction which lines or block
+containers stack is defined as "block direction". CSS defines three
+properties to determine a writing mode: `writing-mode`, `direction`, and
+`text-orientation`.
 
-TODO: link to documentation of XUL frame classes
+Nearly all the physical CSS properties have their logical counterparts.
+For example, `width` and `height` correspond to `inline-size` and
+`block-size`. `left`, `right`, `top`, and `bottom` correspond to
+`inline-start`, `inline-end`, `block-start`, and `block-end`.
+
+In layout, we have physical types, such as `nsPoint`, `nsSize`,
+`nsRect`, and `nsMargin`; their logical counterparts are `LogicalPoint`,
+`LogicalSize`, `LogicalRect`, and `LogicalMargin`. Ideally, we should
+all work on logical coordinates, and convert the code that still uses
+physical coordinates to logical ones, except when the physical
+coordinates might make more sense.
+
+```{seealso}
+- [CSS Writing Modes Level 3](https://drafts.csswg.org/css-writing-modes-3/)
+- [CSS Logical Properties and Values Level 1](https://drafts.csswg.org/css-logical/)
+- <https://bugzil.la/writing-mode>
+```
+
+### References
 
 Code (note that most files in base and generic have useful one line
-descriptions at the top that show up in DXR):
+descriptions when browsing a directory in searchfox):
 
-- [layout/base/](http://dxr.mozilla.org/mozilla-central/source/layout/base/)
+- [layout/base/](http://searchfox.org/mozilla-central/source/layout/base/)
   contains objects that coordinate everything and a bunch of other
   miscellaneous things
-- [layout/generic/](http://dxr.mozilla.org/mozilla-central/source/layout/generic/)
+- [layout/generic/](http://searchfox.org/mozilla-central/source/layout/generic/)
   contains the basic frame classes as well as support code for their
-  reflow methods (ReflowInput, ReflowOutput)
-- [layout/forms/](http://dxr.mozilla.org/mozilla-central/source/layout/forms/)
+  reflow methods (`ReflowInput`, `ReflowOutput`, `nsReflowStatus`)
+- [layout/forms/](http://searchfox.org/mozilla-central/source/layout/forms/)
   contains frame classes for HTML form controls
-- [layout/tables/](http://dxr.mozilla.org/mozilla-central/source/layout/tables/)
+- [layout/tables/](http://searchfox.org/mozilla-central/source/layout/tables/)
   contains frame classes for CSS/HTML tables
-- [layout/mathml/](http://dxr.mozilla.org/mozilla-central/source/layout/mathml/)
+- [layout/mathml/](http://searchfox.org/mozilla-central/source/layout/mathml/)
   contains frame classes for MathML
-- [layout/svg/](http://dxr.mozilla.org/mozilla-central/source/layout/svg/)
+- [layout/svg/](http://searchfox.org/mozilla-central/source/layout/svg/)
   contains frame classes for SVG
-- [layout/xul/](http://dxr.mozilla.org/mozilla-central/source/layout/xul/)
+- [layout/xul/](http://searchfox.org/mozilla-central/source/layout/xul/)
   contains frame classes for the XUL box model and for various XUL
   widgets
 
@@ -149,25 +195,21 @@ Bugzilla: all of the components whose names begin with "Layout" in the
 "Core" product.
 
 Further documentation:
-
-- Talk: [Introduction to graphics/layout
-  architecture](https://air.mozilla.org/introduction-to-graphics-layout-architecture/)
-  (Robert O'Callahan, 2014-04-18)
-- Talk: [Layout and
-  Styles](https://air.mozilla.org/bz-layout-and-styles/) (Boris
-  Zbarsky, 2014-10-14)
+- Talk: [An Overview of Gecko Layout](https://mozilla.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=34ff8151-353a-40c4-89e3-ac3201363608) (Cameron McCormack :heycam, 2018-06-13)
 
 ## Frame Construction
 
-Frame construction is the process of creating frames. This is done when
-styles change in ways that require frames to be created or recreated or
-when nodes are inserted into the document. The content tree and the
-frame tree don't have quite the same shape, and the frame construction
-process does some of the work of creating the right shape for the frame
-tree. It handles the aspects of creating the right shape that don't
-depend on layout information. So for example, frame construction handles
-the work needed to implement [table anonymous
-objects](http://www.w3.org/TR/CSS21/tables.html#anonymous-boxes) but
+Frame construction is the process of creating frames, which is handled
+by
+[`nsCSSFrameConstructor`](http://searchfox.org/mozilla-central/source/layout/base/nsCSSFrameConstructor.h).
+This is done when styles change in ways that require frames to be
+created or recreated or when nodes are inserted into the document. The
+content tree and the frame tree don't have quite the same shape, and the
+frame construction process does some of the work of creating the right
+shape for the frame tree. It handles the aspects of creating the right
+shape that don't depend on layout information. So for example, frame
+construction handles the work needed to implement [table anonymous
+objects](https://www.w3.org/TR/CSS22/tables.html#anonymous-boxes) but
 does not handle frames that need to be created when an element is broken
 across lines or pages.
 
@@ -177,19 +219,22 @@ of children, the frame constructor first determines, based on the
 siblings and parent of the nodes involved, where in the frame tree the
 new frames should be inserted. Then the frame constructor walks through
 the list of content nodes involved and for each one creates a temporary
-data structure called a **frame construction item**. The frame
-construction item encapsulates various information needed to create the
-frames for the content node: its style data, some metadata about how one
-would create a frame for this node based on its namespace, tag name, and
-styles, and some data about what sort of frame will be created. This
-list of frame construction items is then analyzed to see whether
-constructing frames based on it and inserting them at the chosen
+data structure called a **frame construction item**, i.e.
+[`FrameConstructionItem`](https://searchfox.org/mozilla-central/rev/c34cf367c29601ed56ae4ea51e20b28cd8331f9c/layout/base/nsCSSFrameConstructor.h#1125-1130).
+The frame construction item encapsulates various information needed to
+create the frames for the content node: its style data, some metadata
+about how one would create a frame for this node based on its namespace,
+tag name, and styles, and some data about what sort of frame will be
+created. This list of frame construction items is then analyzed to see
+whether constructing frames based on it and inserting them at the chosen
 insertion point will produce a valid frame tree. If it will not, the
 frame constructor either fixes up the list of frame construction items
 so that the resulting frame tree would be valid or throws away the list
 of frame construction items and requests the destruction and re-creation
 of the frame for the parent element so that it has a chance to create a
-list of frame construction items that it _can_ fix up.
+list of frame construction items that it _can_ fix up. The re-creation
+for the parent element is called "reframing", which is an expensive
+operation, and we'd love to avoid it if possible.
 
 Once the frame constructor has a list of frame construction items and an
 insertion point that would lead to a valid frame tree, it goes ahead and
@@ -210,27 +255,16 @@ into one of these categories:
 - Code to fix up the list of frame construction items.
 - Code to create frames from frame construction items.
 
-Code:
-[layout/base/nsCSSFrameConstructor.h](http://dxr.mozilla.org/mozilla-central/source/layout/base/nsCSSFrameConstructor.h)
-and
-[layout/base/nsCSSFrameConstructor.cpp](http://dxr.mozilla.org/mozilla-central/source/layout/base/nsCSSFrameConstructor.cpp)
-
-## Physical Sizes vs. Logical Sizes
-
-TODO: Discuss inline-size (typically width) and block size (typically
-height), writing modes, and the various logical vs. physical size/rect
-types.
-
 ## Reflow
 
 Reflow is the process of computing the positions and sizes of frames.
 (After all, frames represent rectangles, and at some point we need to
 figure out exactly **what** rectangle.) Reflow is done recursively, with
-each frame's Reflow method calling the Reflow methods on that frame's
-descendants.
+each frame's `Reflow()` method calling the `Reflow()` methods on that
+frame's descendants.
 
 In many cases, the correct results are defined by CSS specifications
-(particularly [CSS 2.1](http://www.w3.org/TR/CSS21/visudet.html)). In
+(particularly [CSS 2.2](https://www.w3.org/TR/CSS22/visudet.html)). In
 some cases, the details are not defined by CSS, though in some (but not
 all) of those cases we are constrained by Web compatibility. When the
 details are defined by CSS, however, the code to compute the layout is
@@ -239,93 +273,86 @@ in the CSS specifications, since the CSS specifications are generally
 written in terms of constraints, whereas our layout code consists of
 algorithms optimized for incremental recomputation.
 
+### Where does reflow start? How do we avoid reflowing the world every time?
+
 The reflow generally starts from the root of the frame tree, though some
 other types of frame can act as "reflow roots" and start a reflow from
-them (nsTextControlFrame is one example; see the
-[NS_FRAME_REFLOW_ROOT](https://searchfox.org/mozilla-central/search?q=symbol:E_%3CT_nsFrameState%3E_NS_FRAME_REFLOW_ROOT&redirect=true)
+them (`nsTextControlFrame` is one example; see the
+[`NS_FRAME_REFLOW_ROOT`](https://searchfox.org/mozilla-central/search?q=symbol:E_%3CT_nsFrameState%3E_NS_FRAME_REFLOW_ROOT&redirect=true)
 frame state bit). Reflow roots must obey the invariant that a change
 inside one of their descendants never changes their rect or overflow
-areas (though currently scrollbars are reflow roots but don't quite
-obey this invariant).
+areas (though currently scrollbars are reflow roots but don't quite obey
+this invariant).
 
 In many cases, we want to reflow a part of the frame tree, and we want
 this reflow to be efficient. For example, when content is added or
 removed from the document tree or when styles change, we want the amount
 of work we need to redo to be proportional to the amount of content. We
 also want to efficiently handle a series of changes to the same content.
-
 To do this, we maintain two bits on frames:
-[NS_FRAME_IS_DIRTY](https://searchfox.org/mozilla-central/search?q=symbol:E_%3CT_nsFrameState%3E_NS_FRAME_IS_DIRTY&redirect=true)
+[`NS_FRAME_IS_DIRTY`](https://searchfox.org/mozilla-central/rev/dbd654fa899a56a6a2e92f325c4608020e80afae/layout/generic/nsFrameStateBits.h#113-120)
 indicates that a frame and all of its descendants require reflow.
-[NS_FRAME_HAS_DIRTY_CHILDREN](https://searchfox.org/mozilla-central/search?q=symbol:E_%3CT_nsFrameState%3E_NS_FRAME_HAS_DIRTY_CHILDREN&redirect=true)
+[`NS_FRAME_HAS_DIRTY_CHILDREN`](https://searchfox.org/mozilla-central/rev/dbd654fa899a56a6a2e92f325c4608020e80afae/layout/generic/nsFrameStateBits.h#127-144)
 indicates that a frame has a descendant that is dirty or has had a
-descendant removed (i.e., that it has a child that has
-NS_FRAME_IS_DIRTY or NS_FRAME_HAS_DIRTY_CHILDREN or it had a
-child removed). These bits allow coalescing of multiple updates; this
-coalescing is done in PresShell, which tracks the set of reflow roots
-that require reflow. The bits are set during calls to
-[PresShell::FrameNeedsReflow](https://searchfox.org/mozilla-central/search?q=PresShell%3A%3AFrameNeedsReflow&path=)
+descendant removed (see its comment for details). These bits allow
+coalescing of multiple updates; this coalescing is done in `PresShell`,
+which tracks the set of reflow roots that require reflow. The bits are
+set during calls to
+[`PresShell::FrameNeedsReflow`](https://searchfox.org/mozilla-central/rev/dbd654fa899a56a6a2e92f325c4608020e80afae/layout/base/PresShell.h#1483-1496)
 and are cleared during reflow.
+
+### Reflow Contract
 
 The layout algorithms used by many of the frame classes are those
 specified in CSS, which are based on the traditional document formatting
-model, where widths are input and heights are output.
+model, where inline sizes (widths) are input and block sizes (heights)
+are output.
 
-In some cases, however, widths need to be determined based on the
-content. This depends on two *intrinsic widths*: the minimum intrinsic
-width (see
-[nsIFrame::GetMinISize](https://searchfox.org/mozilla-central/search?q=nsIFrame%3A%3AGetMinISize&path=))
-and the preferred intrinsic width (see
-[nsIFrame::GetPrefISize](https://searchfox.org/mozilla-central/search?q=nsIFrame%3A%3AGetPrefISize&path=)).
-The concept of what these widths represent is best explained by
+When an individual frame's `Reflow()` method is called, most of the
+input is provided in `ReflowInput`, which is setup by the parent frame.
+The output is filled in into `ReflowOutput` and `nsReflowStatus`. After
+reflow, the caller (usually the parent) is responsible for setting the
+frame's size based on the metrics reported in `ReflowOutput`. The caller
+is also responsible to create a continuation based on the completion
+status reported in `nsReflowStatus`. We will cover more on
+`nsReflowStatus` in a later section in [](#reflow-status).
+
+### Compute intrinsic sizes
+
+In some cases, inline sizes need to be determined based on the content.
+For example, an element with `width:min-content` or `width:max-content`.
+This depends on two **intrinsic inline sizes**: the minimum intrinsic
+inline size (see
+[`nsIFrame::GetMinISize()`](https://searchfox.org/mozilla-central/search?q=nsIFrame%3A%3AGetMinISize&path=))
+and the preferred intrinsic inline sizes (see
+[`nsIFrame::GetPrefISize()`](https://searchfox.org/mozilla-central/search?q=nsIFrame%3A%3AGetPrefISize&path=)).
+The concept of what these inline sizes represent is best explained by
 describing what they are on a paragraph containing only text: in such a
-paragraph the minimum intrinsic width is the width of the longest word,
-and the preferred intrinsic width is the width of the entire paragraph
-laid out on one line.
+paragraph the minimum intrinsic inline size is the inline size of the
+longest word, and the preferred intrinsic inline size is the inline size
+of the entire paragraph laid out on one line.
 
-Intrinsic widths are invalidated separately from the dirty bits
+Intrinsic inline sizes are invalidated separately from the dirty bits
 described above. When a caller informs the pres shell that a frame needs
-reflow (PresShell::FrameNeedsReflow), it passes one of three options:
+reflow via `PresShell::FrameNeedsReflow()`, it passes one of the three
+options:
 
-- eResize indicates that no intrinsic widths are dirty
-- eTreeChange indicates that intrinsic widths on it and its ancestors
-  are dirty (which happens, for example, if new children are added to
-  it)
-- eStyleChange indicates that intrinsic widths on it, its ancestors,
-  and its descendants are dirty (for example, if the font-size
-  changes)
-
-Reflow is the area where the XUL frame classes (those that inherit from
-nsBoxFrame or nsLeafBoxFrame) are most different from the rest. Instead
-of using nsIFrame::Reflow, they do their layout computations using
-intrinsic size methods called GetMinSize, GetPrefSize, and GetMaxSize
-(which report intrinsic sizes in two dimensions) and a final layout
-method called Layout. In many cases these methods defer some of the
-computation to a separate object called a layout manager.
-
-When an individual frame's Reflow method is called, most of the input
-is provided on an object called ReflowInput and the output is filled in
-to an object called ReflowOutput. After reflow, the caller (usually the
-parent) is responsible for setting the frame's size based on the
-metrics reported. (This can make some computations during reflow
-difficult, since the new size is found in either the reflow state or the
-metrics, but the frame's size is still the old size. However, it's
-useful for invalidating the correct areas that need to be repainted.)
-
-One major difference worth noting is that in XUL layout, the size of the
-child is set prior to its parent calling its Layout method. (Once
-invalidation uses display lists and is no longer tangled up in Reflow,
-it may be worth switching non-XUL layout to work this way as well.)
+- `None` indicates that no intrinsic inline sizes are dirty
+- `FrameAndAncestors` indicates that intrinsic inline sizes on it and
+   its ancestors are dirty (which happens, for example, if new children
+   are added to it)
+- `FrameAncestorsAndDescendants` indicates that intrinsic inline sizes
+   on it, its ancestors, and its descendants are dirty (for example, if
+   the font-size changes)
 
 ## Painting
 
-TODO: display lists (and event handling)
+See [](#rendering-overview).
 
-TODO: layers
+(layout-fragmentation)=
+## Fragmentation
 
-## Pagination
-
-Pagination (also known as fragmentation) is a concept used in printing,
+Fragmentation (or pagination) is a concept used in printing,
 print-preview, and multicolumn layout.
 
 ### Continuations in the Frame Tree
@@ -355,7 +382,7 @@ Similarly, consider text breaking across pages:
       |            |
 
 Again, a single rectangular frame cannot represent the layout of the
-node. Columns are similar.
+node. A multi-column container with multiple columns is similar.
 
 Another case where a single DOM node is represented by multiple frames
 is when a text node contains bidirectional text (e.g. both Hebrew and
@@ -378,10 +405,10 @@ The `NS_FRAME_IS_FLUID_CONTINUATION` state bit indicates whether a
 continuation frame is fluid or not.
 
 The frames for an element are put in a doubly-linked list. The links are
-accessible via `nsIFrame::GetNextContinuation` and
-`nsIFrame::GetPrevContinuation`. If only fluid continuations are to be
-accessed, `nsIFrame::GetNextInFlow` and `nsIFrame::GetPrevInFlow` are
-used instead.
+accessible via `nsIFrame::GetNextContinuation()` and
+`nsIFrame::GetPrevContinuation()`. If only fluid continuations are to be
+accessed, `nsIFrame::GetNextInFlow()` and `nsIFrame::GetPrevInFlow()`
+are used instead.
 
 The following diagram shows the relationship between the original frame
 tree considering just primary frames, and a possible layout with
@@ -415,18 +442,22 @@ content element:
   context and has `column-span:all` children, it is chopped into
   several flows, which are linked together as non-fluid continuations
   as well. See documentation and example frame trees in
-  [`nsCSSFrameConstructor::ConstructBlock()`](https://searchfox.org/mozilla-central/rev/d24696b5abaf9fb75f7985952eab50d5f4ed52ac/layout/base/nsCSSFrameConstructor.cpp#10431).
+  [`nsCSSFrameConstructor::ConstructBlock()`](https://searchfox.org/mozilla-central/rev/7f8450b7a32bfbafa060c184d3a3ac9c197e814f/layout/base/nsCSSFrameConstructor.cpp#10426-10491).
+
+```{seealso}
+- [CSS Fragmentation Module Level 3: Breaking the Web, one fragment at a time](https://drafts.csswg.org/css-break-3/)
+```
 
 #### Overflow Container Continuations
 
 Sometimes the content of a frame needs to break across pages even though
 the frame itself is complete. This usually happens if an element with
-fixed height has overflow that doesn't fit on one page. In this case,
+fixed block size has overflow that doesn't fit on one page. In this case,
 the completed frame is "overflow incomplete", and special
 continuations are created to hold its overflow. These continuations are
 called "overflow containers". They are invisible, and are kept on a
 special list in their parent. See documentation in
-[nsContainerFrame.h](https://searchfox.org/mozilla-central/source/layout/generic/nsContainerFrame.h)
+[nsContainerFrame.h](https://searchfox.org/mozilla-central/rev/7f8450b7a32bfbafa060c184d3a3ac9c197e814f/layout/generic/nsContainerFrame.h#294-342)
 and example trees in [bug 379349 comment
 3](https://bugzilla.mozilla.org/show_bug.cgi?id=379349#c3).
 
@@ -441,10 +472,10 @@ prev-continuation / next-continuation linkage to the existing frame tree
 structure.
 
 First, if you want to traverse the frame tree or a subtree thereof to
-examine all the frames once, you do `<em>`{=html}not`</em>`{=html} want
-to traverse next-continuation links. All continuations are reachable by
-traversing the `GetNextSibling` links from the result of `GetFirstChild`
-for all child lists.
+examine all the frames once, you do _not_ want to traverse
+next-continuation links. All continuations are reachable by traversing
+the `GetNextSibling()` links from the result of `GetFirstChild()` for
+all child lists.
 
 Second, the following property holds: consider two frames F1 and F2
 where F1's next-continuation is F2 and their respective parent frames
@@ -460,46 +491,46 @@ continuations of the parent. So in the frame tree for the markup
 <p>This is <b><i>some<br/>text</i></b>.</p>
 ```
 
-the two continuations for the `b` element are siblings (unless the line
-break is also a page break), but the two continuations for the `i`
+the two continuations for the `<b>` element are siblings (unless the line
+break is also a page break), but the two continuations for the `<i>`
 element are not.
 
 There is an exception to that property when F1 is a first-in-flow float
 placeholder. In that case F2's parent will be the next-in-flow of F1's
 containing block.
 
-### Reflow statuses
+### Reflow Status
 
-The aStatus argument of Reflow reflects that. `IsComplete()` means that
-we reflowed all the content and no more next-in-flows are needed. At
-that point there may still be next in flows, but the parent will delete
-them. `IsIncomplete()` means "some content did not fit in this frame".
-`IsOverflowIncomplete()` means that the frame is itself complete, but
-some of its content didn't fit: this triggers the creation of overflow
-containers for the frame's continuations. `IsIncomplete()` and
-`NextInFlowNeedsReflow()` means "some content did not fit in this frame
-AND it must be reflowed". These values are defined and documented in
-[nsIFrame.h](https://searchfox.org/mozilla-central/source/layout/generic/nsIFrame.h)
-(search for "Reflow status").
+Reflow status is found in `aStatus` argument of `Reflow()`.
+`IsComplete()` means that we reflowed all the content and no more
+next-in-flows are needed. At that point there may still be next in
+flows, but the parent will delete them. `IsIncomplete()` means "some
+content did not fit in this frame". `IsOverflowIncomplete()` means that
+the frame is itself complete, but some of its content didn't fit: this
+triggers the creation of overflow containers for the frame's
+continuations. `IsIncomplete()` and `NextInFlowNeedsReflow()` means
+"some content did not fit in this frame AND it must be reflowed". These
+values are defined and documented in
+[`nsReflowStatus::Completion`](https://searchfox.org/mozilla-central/rev/7f8450b7a32bfbafa060c184d3a3ac9c197e814f/layout/generic/nsIFrame.h#228-250).
 
 ### Dynamic Reflow Considerations
 
 When we reflow a frame F with fluid continuations, two things can
 happen:
 
-- Some child frames do not fit in the passed-in width or height
-  constraint. These frames must be "pushed" to F's next-in-flow. If
-  F has no next-in-flow, we must create one under F's parent's
-  next-in-flow --- or if F's parent is managing the breaking of F,
-  then we create F's next in flow directly under F's parent. If F is
-  a block, it pushes overflowing child frames to its "overflow"
-  child list and forces F's next in flow to be reflowed. When we
-  reflow a block, we pull the child frames from the prev-in-flow's
-  overflow list into the current frame.
-- All child frames fit in the passed-in width or height constraint.
-  Then child frames must be "pulled" from F's next-in-flow to fill
-  in the available space. If F's next-in-flow becomes empty, we may
-  be able to delete it.
+1. Some child frames do not fit in the passed-in inline size or block
+   size constraint. These frames must be "pushed" to F's next-in-flow.
+   If F has no next-in-flow, we must create one under F's parent's
+   next-in-flow --- or if F's parent is managing the breaking of F, then
+   we create F's next in flow directly under F's parent. If F is a
+   block, it pushes overflowing child frames to its "overflow" child
+   list and forces F's next in flow to be reflowed. When we reflow a
+   block, we pull the child frames from the prev-in-flow's overflow
+   list into the current frame.
+2. All child frames fit in the passed-in inline size or block size
+   constraint. Then child frames must be "pulled" from F's next-in-flow
+   to fill in the available space. If F's next-in-flow becomes empty, we
+   may be able to delete it.
 
 In both of these situations we might end up with a frame F containing
 two child frames, one of which is a continuation of the other. This is
