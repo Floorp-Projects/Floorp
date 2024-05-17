@@ -319,6 +319,13 @@
   padding-inline: 2px;
 }
 
+/* matching brackets highlight */
+.cm-s-mozilla .CodeMirror-matchingbracket {
+  text-decoration: 1px underline solid currentColor;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+
 /****************************************/
 /***** CodeMirror 6 specific styles *****/
 /****************************************/
