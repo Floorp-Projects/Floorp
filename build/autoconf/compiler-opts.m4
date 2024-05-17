@@ -31,12 +31,6 @@ dnl ========================================================
 AC_DEFUN([MOZ_DEBUGGING_OPTS],
 [
 
-if test -z "$MOZ_DEBUG" -o -n "$MOZ_ASAN"; then
-    MOZ_NO_DEBUG_RTL=1
-fi
-
-AC_SUBST(MOZ_NO_DEBUG_RTL)
-
 if test -n "$MOZ_DEBUG"; then
     if test -n "$COMPILE_ENVIRONMENT"; then
         AC_MSG_CHECKING([for valid debug flags])

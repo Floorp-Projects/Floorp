@@ -766,17 +766,6 @@ Android|WINNT|Darwin)
   AC_DEFINE(MOZ_GLUE_IN_PROGRAM)
   ;;
 esac
-
-dnl ========================================================
-dnl = Jemalloc build setup
-dnl ========================================================
-if test -n "$MOZ_MEMORY"; then
-  case "${target}" in
-  *-mingw*)
-    export MOZ_NO_DEBUG_RTL=1
-    ;;
-  esac
-fi # MOZ_MEMORY
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 
 dnl ========================================================

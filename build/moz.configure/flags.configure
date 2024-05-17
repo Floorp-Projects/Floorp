@@ -100,6 +100,20 @@ def pass_manager(enabled, compiler, host, target, pgo, enable_fuzzing, ubsan):
 
 set_config("MOZ_PASS_MANAGER_FLAGS", pass_manager.flags)
 
+# Debugging options
+##
+
+
+@depends(moz_debug, asan, target, "--enable-jemalloc")
+def moz_no_debug_rtl(moz_debug, asan, target, enable_jemalloc):
+    if not moz_debug or asan:
+        return True
+    if enable_jemalloc and target.kernel == "WINNT":
+        return True
+
+
+set_config("MOZ_NO_DEBUG_RTL", moz_no_debug_rtl)
+
 
 # Try to make builds more reproducible and allow sharing built artifacts across
 # source and object directories by using -ffile-prefix-map and friends.  To
