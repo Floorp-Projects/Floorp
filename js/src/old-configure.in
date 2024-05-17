@@ -669,13 +669,6 @@ else
   esac
 fi
 
-if test "$MOZ_MEMORY"; then
-  case "${target}" in
-  *-mingw*)
-    export MOZ_NO_DEBUG_RTL=1
-    ;;
-  esac
-fi
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 
 dnl ========================================================
