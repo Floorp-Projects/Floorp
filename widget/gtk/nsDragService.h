@@ -339,6 +339,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   static GdkAtom sFileMimeAtom;
   static GdkAtom sPortalFileAtom;
   static GdkAtom sPortalFileTransferAtom;
+  static GdkAtom sFilePromiseURLMimeAtom;
+  static GdkAtom sFilePromiseMimeAtom;
+  static GdkAtom sNativeImageMimeAtom;
 };
 
 #endif  // nsDragService_h__
