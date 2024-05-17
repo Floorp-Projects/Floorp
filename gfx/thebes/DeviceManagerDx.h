@@ -61,7 +61,6 @@ class DeviceManagerDx final {
 
   enum class DeviceFlag {
     isHardwareWebRenderInUse,
-    disableDeviceReuse,
   };
   using DeviceFlagSet = EnumSet<DeviceFlag, uint8_t>;
   RefPtr<ID3D11Device> GetCompositorDevice();
