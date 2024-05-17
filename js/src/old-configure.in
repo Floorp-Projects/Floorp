@@ -442,15 +442,6 @@ AC_LANG_CPLUSPLUS
 
 MOZ_CXX11
 
-dnl Checks for libraries.
-dnl ========================================================
-AC_CHECK_LIB(c_r, gethostbyname_r)
-
-if test ! "$GNU_CXX"; then
-    AC_CHECK_LIB(C, demangle)
-fi
-
-AC_CHECK_LIB(socket, socket)
 
 dnl ========================================================
 dnl = pthread support

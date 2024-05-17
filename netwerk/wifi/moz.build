@@ -12,6 +12,9 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = "necko_wifi"
 
+# for socket
+OS_LIBS += CONFIG["SOCKET_LIBS"]
+
 UNIFIED_SOURCES += [
     "nsWifiAccessPoint.cpp",
     "nsWifiMonitor.cpp",

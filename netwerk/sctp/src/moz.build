@@ -8,6 +8,9 @@ EXPORTS.mozilla.net += [
     'usrsctp.h',
 ]
 
+# for socket
+OS_LIBS += CONFIG["SOCKET_LIBS"]
+
 UNIFIED_SOURCES += [
     'netinet/sctp_asconf.c',
     'netinet/sctp_auth.c',
