@@ -137,12 +137,17 @@ C++ namespaces
 
 Mozilla project C++ declarations should be in the ``mozilla``
 namespace. Modules should avoid adding nested namespaces under
-``mozilla``, unless they are meant to contain names which have a high
-probability of colliding with other names in the code base. For example,
-``Point``, ``Path``, etc. Such symbols can be put under
-module-specific namespaces, under ``mozilla``, with short
-all-lowercase names. Other global namespaces besides ``mozilla`` are
-not allowed.
+``mozilla``. A couple of exceptions to this rule are:
+
+- Names which have a high probability of colliding with other names in the
+  code base. For example, ``Point``, ``Path``, etc. Such symbols can be put
+  under module-specific namespaces, under ``mozilla``, with short
+  all-lowercase names.
+- Classes that implement WebIDL bindings tend to live in ``mozilla::dom``,
+  though this is not strictly required and can be customized via
+  ``Bindings.conf``. See :ref:`Web IDL bindings` for more information.
+
+Other global namespaces besides ``mozilla`` are not allowed.
 
 No ``using`` directives are allowed in header files, except inside class
 definitions or functions. (We don't want to pollute the global scope of
