@@ -2892,7 +2892,7 @@
   {
     "testIdPattern": "[oopif.spec] OOPIF should evaluate on a page with a PDF viewer",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["firefox", "webDriverBiDi"],
+    "parameters": ["firefox"],
     "expectations": ["SKIP"],
     "comment": "chrome-specific test"
   },
