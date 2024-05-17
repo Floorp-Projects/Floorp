@@ -2229,16 +2229,10 @@ bool nsDragService::SourceDataGetText(nsITransferable* aItem,
 void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
                                   GtkSelectionData* aSelectionData,
                                   guint32 aTime) {
-  LOGDRAGSERVICE("nsDragService::SourceDataGet(%p)", aContext);
+  GdkAtom requestedFlavor = gtk_selection_data_get_target(aSelectionData);
+  LOGDRAGSERVICE("nsDragService::SourceDataGet(%p) MIME %s", aContext,
+                 GUniquePtr<gchar>(gdk_atom_name(requestedFlavor)).get());
 
-  GdkAtom target = gtk_selection_data_get_target(aSelectionData);
-  GUniquePtr<gchar> requestedTypeName(gdk_atom_name(target));
-  if (!requestedTypeName) {
-    LOGDRAGSERVICE("  failed to get atom name.\n");
-    return;
-  }
-
-  LOGDRAGSERVICE("  Gtk asks us for %s data type\n", requestedTypeName.get());
   // check to make sure that we have data items to return.
   if (!mSourceDataItems) {
     LOGDRAGSERVICE("  Failed to get our data items\n");
@@ -2249,8 +2243,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   mSourceDataItems->GetLength(&dragItems);
   LOGDRAGSERVICE("  source data items %d", dragItems);
 
-  nsDependentCString mimeFlavor(requestedTypeName.get());
-  if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
+  if (requestedFlavor == sTextUriListTypeAtom) {
     SourceDataGetUriList(aContext, aSelectionData, dragItems);
     return;
   }
@@ -2260,7 +2253,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     LOGDRAGSERVICE(
         "  There are %d data items but we're asked for %s MIME type. Only "
         "first data element can be transfered!",
-        dragItems, mimeFlavor.get());
+        dragItems, GUniquePtr<gchar>(gdk_atom_name(requestedFlavor)).get());
   }
 #endif
 
@@ -2270,8 +2263,8 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     return;
   }
 
-  if (mimeFlavor.EqualsLiteral(kTextMime) ||
-      mimeFlavor.EqualsLiteral(gTextPlainUTF8Type)) {
+  if (requestedFlavor == sTextMimeAtom ||
+      requestedFlavor == sTextPlainUTF8TypeAtom) {
     SourceDataGetText(item, nsDependentCString(kTextMime),
                       /* aNeedToDoConversionToPlainText */ true,
                       aSelectionData);
@@ -2279,18 +2272,18 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     return;
   }
   // Someone is asking for the special Direct Save Protocol type.
-  else if (mimeFlavor.EqualsLiteral(gXdndDirectSaveType)) {
+  else if (requestedFlavor == sXdndDirectSaveTypeAtom) {
     SourceDataGetXDND(item, aContext, aSelectionData);
     // no fallback for XDND mime types
     return;
-  } else if (mimeFlavor.EqualsLiteral(kPNGImageMime) ||
-             mimeFlavor.EqualsLiteral(kJPEGImageMime) ||
-             mimeFlavor.EqualsLiteral(kJPGImageMime) ||
-             mimeFlavor.EqualsLiteral(kGIFImageMime)) {
+  } else if (requestedFlavor == sPNGImageMimeAtom ||
+             requestedFlavor == sJPEGImageMimeAtom ||
+             requestedFlavor == sJPGImageMimeAtom ||
+             requestedFlavor == sGIFImageMimeAtom) {
     // no fallback for image mime types
     SourceDataGetImage(item, aSelectionData);
     return;
-  } else if (mimeFlavor.EqualsLiteral(gMozUrlType)) {
+  } else if (requestedFlavor == sMozUrlTypeAtom) {
     // Someone was asking for _NETSCAPE_URL. We need to get it from
     // transferable as x-moz-url and convert it to plain text.
     // No need to check
@@ -2301,7 +2294,8 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     }
   }
   // Just try to get and set whatever we're asked for.
-  SourceDataGetText(item, mimeFlavor,
+  GUniquePtr<gchar> flavorName(gdk_atom_name(requestedFlavor));
+  SourceDataGetText(item, nsDependentCString(flavorName.get()),
                     /* aNeedToDoConversionToPlainText */ false, aSelectionData);
 }
 
