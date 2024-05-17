@@ -72,6 +72,9 @@ class FragmentDirective final : public nsISupports, public nsWrapperCache {
     return !mUninvokedTextDirectives.IsEmpty();
   };
 
+  /** Clears all uninvoked directives. */
+  void ClearUninvokedDirectives() { mUninvokedTextDirectives.Clear(); }
+
   /** Searches for the current uninvoked text directives and creates a range for
    * each one that is found.
    *
@@ -93,6 +96,17 @@ class FragmentDirective final : public nsISupports, public nsWrapperCache {
   static void ParseAndRemoveFragmentDirectiveFromFragment(
       nsCOMPtr<nsIURI>& aURI,
       nsTArray<TextDirective>* aTextDirectives = nullptr);
+
+  /** Parses the fragment directive and removes it from the hash, given as
+   * string. This operation happens in-place.
+   *
+   * This function is called internally by
+   * `ParseAndRemoveFragmentDirectiveFromFragment()`.
+   *
+   * This function returns true if it modified `aFragment`.
+   */
+  static bool ParseAndRemoveFragmentDirectiveFromFragmentString(
+      nsCString& aFragment, nsTArray<TextDirective>* aTextDirectives = nullptr);
 
  private:
   RefPtr<nsRange> FindRangeForTextDirective(

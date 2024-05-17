@@ -13121,6 +13121,8 @@ void Document::ScrollToRef() {
   const bool didScrollToTextFragment =
       presShell->HighlightAndGoToTextFragment(true);
 
+  FragmentDirective()->ClearUninvokedDirectives();
+
   // 2. If fragment is the empty string and no text directives have been
   // scrolled to, then return the special value top of the document.
   if (didScrollToTextFragment || mScrollToRef.IsEmpty()) {
