@@ -265,7 +265,10 @@ impl TextDirective {
 /// If the hash does not contain a fragment directive, `url` is not modified
 /// and this function returns `None`.
 /// Otherwise, the fragment directive is removed from `url` and parsed.
-/// If parsing fails, this function returns `None`.
+/// The function returns a tuple of three elements:
+///   - The input url without the fragment directive. Trailing `#`s are removed as well.
+///   - The unparsed fragment directive.
+///   - All parsed valid text directives. Invalid text directives are silently ignored.
 pub fn parse_fragment_directive_and_remove_it_from_hash(
     url: &str,
 ) -> Option<(&str, &str, Vec<TextDirective>)> {
@@ -283,10 +286,16 @@ pub fn parse_fragment_directive_and_remove_it_from_hash(
     if let Some(fragment_directive) = fragment_directive_iter.next() {
         if fragment_directive_iter.next().is_some() {
             // There are multiple occurrences of `:~:`, which is not allowed.
-            return None;
+            return Some((
+                url_with_stripped_fragment_directive
+                    .strip_suffix("#")
+                    .unwrap_or(url_with_stripped_fragment_directive),
+                fragment_directive,
+                vec![],
+            ));
         }
         // - fragments are separated by `&`.
-        // - if a fragment does not start with `text=`, it is not a text fragment and will be ignored.
+        // - if a fragment does not start with `text=`, it is not a text directive and will be ignored.
         // - if parsing of the text fragment fails (for whatever reason), it will be ignored.
         let text_directives: Vec<_> = fragment_directive
             .split("&")
@@ -295,15 +304,14 @@ pub fn parse_fragment_directive_and_remove_it_from_hash(
             })
             .filter_map(|maybe_text_directive| maybe_text_directive)
             .collect();
-        if !text_directives.is_empty() {
-            return Some((
-                url_with_stripped_fragment_directive
-                    .strip_suffix("#")
-                    .unwrap_or(url_with_stripped_fragment_directive),
-                fragment_directive,
-                text_directives,
-            ));
-        }
+
+        return Some((
+            url_with_stripped_fragment_directive
+                .strip_suffix("#")
+                .unwrap_or(url_with_stripped_fragment_directive),
+            fragment_directive,
+            text_directives,
+        ));
     }
     None
 }
