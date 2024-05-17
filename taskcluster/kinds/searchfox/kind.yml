@@ -99,6 +99,45 @@ jobs:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 
+    macosx64-aarch64-searchfox/debug:
+        description: "MacOS X aarch64 Debug Cross-compile Searchfox"
+        index:
+            job-name: macosx64-aarch64-searchfox-debug
+        treeherder:
+            platform: osx-cross-aarch64/debug
+        worker-type: b-linux-gcp
+        worker:
+            max-run-time: 10800
+            env:
+                PERFHERDER_EXTRA_OPTIONS: searchfox
+                MOZSEARCH_PLATFORM: "macosx"
+        run:
+            using: mozharness
+            actions: [get-secrets, build]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_mac_64_cross_builds.py
+            extra-config:
+                extra_mozconfig_content:
+                    - ac_add_options --target=aarch64-apple-darwin
+            script: "mozharness/scripts/fx_desktop_build.py"
+            custom-build-variant-cfg: cross-debug-searchfox
+            secrets: true
+            keep-artifacts: false
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-hfsplus
+                - linux64-libdmg
+                - linux64-nasm
+                - linux64-node
+                - linux64-rust-cross
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - macosx64-sdk
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
     ios-searchfox/debug:
         description: "ios Debug Cross-compile Searchfox"
         index:

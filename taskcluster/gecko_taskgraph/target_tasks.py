@@ -1074,6 +1074,7 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
     return [
         "searchfox-linux64-searchfox/debug",
         "searchfox-macosx64-searchfox/debug",
+        "searchfox-macosx64-aarch64-searchfox/debug",
         "searchfox-win64-searchfox/debug",
         "searchfox-android-armv7-searchfox/debug",
         "searchfox-ios-searchfox/debug",
