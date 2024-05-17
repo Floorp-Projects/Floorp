@@ -18,7 +18,6 @@
 #include "mozilla/FunctionRef.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ScrollStyles.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -32,6 +31,7 @@ struct nsGenConInitializer;
 
 class nsBlockFrame;
 class nsContainerFrame;
+class nsCanvasFrame;
 class nsCSSAnonBoxPseudoStaticAtom;
 class nsFirstLetterFrame;
 class nsFirstLineFrame;
@@ -94,9 +94,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     Async,
   };
 
-  mozilla::RestyleManager* RestyleManager() const {
-    return mPresShell->GetPresContext()->RestyleManager();
-  }
+  mozilla::RestyleManager* RestyleManager() const;
 
   nsIFrame* ConstructRootFrame();
 

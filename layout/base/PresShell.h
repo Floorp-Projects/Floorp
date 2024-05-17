@@ -31,8 +31,8 @@
 #include "nsColor.h"
 #include "nsCOMArray.h"
 #include "nsCoord.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsFrameManager.h"
 #include "nsFrameState.h"
 #include "nsIContent.h"
 #include "nsIObserver.h"
@@ -426,13 +426,14 @@ class PresShell final : public nsStubDocumentObserver,
    * Called when document load completes.
    */
   void LoadComplete();
-  /**
-   * This calls through to the frame manager to get the root frame.
-   */
-  nsIFrame* GetRootFrame() const { return mFrameManager->GetRootFrame(); }
 
-  /*
-   * Get root scroll frame from FrameManager()->GetRootFrame().
+  /**
+   * This calls through to the frame constructor to get the root frame.
+   */
+  nsIFrame* GetRootFrame() const { return mFrameConstructor->GetRootFrame(); }
+
+  /**
+   * Get root scroll frame from the frame constructor.
    */
   nsIFrame* GetRootScrollFrame() const;
 
@@ -621,8 +622,8 @@ class PresShell final : public nsStubDocumentObserver,
                            ScrollFlags aScrollFlags);
 
   /**
-   * Suppress notification of the frame manager that frames are
-   * being destroyed.
+   * Suppress notification of the frame constructor that frames are being
+   * destroyed.
    */
   void SetIgnoreFrameDestruction(bool aIgnore);
 
@@ -2953,9 +2954,6 @@ class PresShell final : public nsStubDocumentObserver,
   RefPtr<nsCaret> mCaret;
   RefPtr<nsCaret> mOriginalCaret;
   RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;
-  // Pointer into mFrameConstructor - this is purely so that GetRootFrame() can
-  // be inlined:
-  nsFrameManager* mFrameManager;
   WeakPtr<nsDocShell> mForwardingContainer;
 
   // The `performance.now()` value when we last started to process reflows.
