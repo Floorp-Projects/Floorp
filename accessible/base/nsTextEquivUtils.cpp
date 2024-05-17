@@ -9,6 +9,7 @@
 
 #include "LocalAccessible-inl.h"
 #include "AccIterator.h"
+#include "CssAltContent.h"
 #include "nsCoreUtils.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Text.h"
@@ -98,10 +99,14 @@ nsresult nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent* aContent,
     if (aContent->TextLength() > 0) {
       nsIFrame* frame = aContent->GetPrimaryFrame();
       if (frame) {
-        nsIFrame::RenderedText text = frame->GetRenderedText(
-            0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
-            nsIFrame::TrailingWhitespace::DontTrim);
-        aString->Append(text.mString);
+        if (auto cssAlt = CssAltContent(aContent)) {
+          cssAlt.AppendToString(*aString);
+        } else {
+          nsIFrame::RenderedText text = frame->GetRenderedText(
+              0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
+              nsIFrame::TrailingWhitespace::DontTrim);
+          aString->Append(text.mString);
+        }
       } else {
         // If aContent is an object that is display: none, we have no a frame.
         aContent->GetAsText()->AppendTextTo(*aString);
