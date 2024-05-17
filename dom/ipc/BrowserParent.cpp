@@ -147,7 +147,7 @@
 #  include "mozilla/a11y/nsWinUtils.h"
 #endif
 
-#ifdef MOZ_ANDROID_HISTORY
+#ifdef MOZ_GECKOVIEW_HISTORY
 #  include "GeckoViewHistory.h"
 #endif
 
@@ -3947,7 +3947,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvVisitURI(
 
 mozilla::ipc::IPCResult BrowserParent::RecvQueryVisitedState(
     nsTArray<RefPtr<nsIURI>>&& aURIs) {
-#ifdef MOZ_ANDROID_HISTORY
+#ifdef MOZ_GECKOVIEW_HISTORY
   nsCOMPtr<IHistory> history = components::History::Service();
   if (NS_WARN_IF(!history)) {
     return IPC_OK();

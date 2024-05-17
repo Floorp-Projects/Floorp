@@ -970,8 +970,8 @@ project_flag(
 project_flag("MOZ_SERVICES_SYNC", help="Build Sync Services if required")
 
 project_flag(
-    "MOZ_ANDROID_HISTORY",
-    help="Enable Android History instead of Places",
+    "MOZ_GECKOVIEW_HISTORY",
+    help="Enable Geckoview History instead of Places",
     set_as_define=True,
 )
 
@@ -1001,12 +1001,12 @@ project_flag(
 )
 
 
-@depends("MOZ_PLACES", "MOZ_ANDROID_HISTORY")
-def check_places_and_android_history(places, android_history):
-    if places and android_history:
-        die("Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.")
-    if not places and not android_history:
-        die("One of MOZ_ANDROID_HISTORY or MOZ_PLACES must be set.")
+@depends("MOZ_PLACES", "MOZ_GECKOVIEW_HISTORY")
+def check_places_and_geckoview_history(places, geckoview_history):
+    if places and geckoview_history:
+        die("Cannot use MOZ_GECKOVIEW_HISTORY alongside MOZ_PLACES.")
+    if not places and not geckoview_history:
+        die("One of MOZ_GECKOVIEW_HISTORY or MOZ_PLACES must be set.")
 
 
 option(
