@@ -7,6 +7,7 @@
 
 #include "lib/jxl/enc_context_map.h"
 
+#include <jxl/memory_manager.h>
 #include <jxl/types.h>
 #include <stdint.h>
 
@@ -70,6 +71,7 @@ void EncodeContextMap(const std::vector<uint8_t>& context_map,
     return;
   }
 
+  JxlMemoryManager* memory_manager = writer->memory_manager();
   std::vector<uint8_t> transformed_symbols = MoveToFrontTransform(context_map);
   std::vector<std::vector<Token>> tokens(1);
   std::vector<std::vector<Token>> mtf_tokens(1);
@@ -86,14 +88,16 @@ void EncodeContextMap(const std::vector<uint8_t>& context_map,
   {
     EntropyEncodingData codes;
     std::vector<uint8_t> sink_context_map;
-    ans_cost = BuildAndEncodeHistograms(params, 1, tokens, &codes,
-                                        &sink_context_map, nullptr, 0, nullptr);
+    ans_cost =
+        BuildAndEncodeHistograms(memory_manager, params, 1, tokens, &codes,
+                                 &sink_context_map, nullptr, 0, nullptr);
   }
   {
     EntropyEncodingData codes;
     std::vector<uint8_t> sink_context_map;
-    mtf_cost = BuildAndEncodeHistograms(params, 1, mtf_tokens, &codes,
-                                        &sink_context_map, nullptr, 0, nullptr);
+    mtf_cost =
+        BuildAndEncodeHistograms(memory_manager, params, 1, mtf_tokens, &codes,
+                                 &sink_context_map, nullptr, 0, nullptr);
   }
   bool use_mtf = mtf_cost < ans_cost;
   // Rebuild token list.
@@ -118,8 +122,8 @@ void EncodeContextMap(const std::vector<uint8_t>& context_map,
     writer->Write(1, TO_JXL_BOOL(use_mtf));  // Use/don't use MTF.
     EntropyEncodingData codes;
     std::vector<uint8_t> sink_context_map;
-    BuildAndEncodeHistograms(params, 1, tokens, &codes, &sink_context_map,
-                             writer, layer, aux_out);
+    BuildAndEncodeHistograms(memory_manager, params, 1, tokens, &codes,
+                             &sink_context_map, writer, layer, aux_out);
     WriteTokens(tokens[0], codes, sink_context_map, 0, writer);
     allotment.ReclaimAndCharge(writer, layer, aux_out);
   }

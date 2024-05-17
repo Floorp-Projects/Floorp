@@ -5,6 +5,8 @@
 
 #include "lib/jxl/modular/transform/palette.h"
 
+#include <jxl/memory_manager.h>
+
 #include <atomic>
 
 #include "lib/jxl/modular/transform/transform.h"  // CheckEqualChannels
@@ -14,6 +16,7 @@ namespace jxl {
 Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
                   uint32_t nb_deltas, Predictor predictor,
                   const weighted::Header &wp_header, ThreadPool *pool) {
+  JxlMemoryManager *memory_manager = input.memory_manager();
   if (input.nb_meta_channels < 1) {
     return JXL_FAILURE("Error: Palette transform without palette.");
   }
@@ -27,8 +30,9 @@ Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
   size_t h = input.channel[c0].h;
   if (nb < 1) return JXL_FAILURE("Corrupted transforms");
   for (int i = 1; i < nb; i++) {
-    StatusOr<Channel> channel_or = Channel::Create(
-        w, h, input.channel[c0].hshift, input.channel[c0].vshift);
+    StatusOr<Channel> channel_or =
+        Channel::Create(memory_manager, w, h, input.channel[c0].hshift,
+                        input.channel[c0].vshift);
     JXL_RETURN_IF_ERROR(channel_or.status());
     input.channel.insert(input.channel.begin() + c0 + 1,
                          std::move(channel_or).value());
@@ -84,7 +88,8 @@ Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
     // Parallelized per channel.
     ImageI indices;
     ImageI &plane = input.channel[c0].plane;
-    JXL_ASSIGN_OR_RETURN(indices, ImageI::Create(plane.xsize(), plane.ysize()));
+    JXL_ASSIGN_OR_RETURN(
+        indices, ImageI::Create(memory_manager, plane.xsize(), plane.ysize()));
     plane.Swap(indices);
     if (predictor == Predictor::Weighted) {
       JXL_RETURN_IF_ERROR(RunOnPool(
@@ -163,6 +168,7 @@ Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
 Status MetaPalette(Image &input, uint32_t begin_c, uint32_t end_c,
                    uint32_t nb_colors, uint32_t nb_deltas, bool lossy) {
   JXL_RETURN_IF_ERROR(CheckEqualChannels(input, begin_c, end_c));
+  JxlMemoryManager *memory_manager = input.memory_manager();
 
   size_t nb = end_c - begin_c + 1;
   if (begin_c >= input.nb_meta_channels) {
@@ -176,7 +182,8 @@ Status MetaPalette(Image &input, uint32_t begin_c, uint32_t end_c,
   }
   input.channel.erase(input.channel.begin() + begin_c + 1,
                       input.channel.begin() + end_c + 1);
-  JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(nb_colors + nb_deltas, nb));
+  JXL_ASSIGN_OR_RETURN(
+      Channel pch, Channel::Create(memory_manager, nb_colors + nb_deltas, nb));
   pch.hshift = -1;
   pch.vshift = -1;
   input.channel.insert(input.channel.begin(), std::move(pch));

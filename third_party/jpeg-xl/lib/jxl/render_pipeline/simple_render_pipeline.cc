@@ -13,10 +13,10 @@
 #include <vector>
 
 #include "lib/jxl/base/rect.h"
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"
-#include "lib/jxl/sanitizers.h"
 
 namespace jxl {
 
@@ -32,6 +32,7 @@ Status SimpleRenderPipeline::PrepareForThreadsInternal(size_t num,
     JXL_ASSIGN_OR_RETURN(
         ImageF ch,
         ImageF::Create(
+            memory_manager_,
             ch_size(frame_dimensions_.xsize_upsampled, entry.first),
             ch_size(frame_dimensions_.ysize_upsampled, entry.second)));
     channel_data_.push_back(std::move(ch));
@@ -101,7 +102,8 @@ Status SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
       // problems with padding.
       JXL_ASSIGN_OR_RETURN(
           new_channels[c],
-          ImageF::Create(frame_dimensions_.xsize_upsampled_padded +
+          ImageF::Create(memory_manager_,
+                         frame_dimensions_.xsize_upsampled_padded +
                              kRenderPipelineXOffset * 2 +
                              hwy::kMaxVectorSize * 8,
                          frame_dimensions_.ysize_upsampled_padded +
@@ -236,7 +238,8 @@ Status SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
       for (size_t c = 0; c < old_channels.size(); c++) {
         JXL_ASSIGN_OR_RETURN(
             ImageF ch,
-            ImageF::Create(2 * kRenderPipelineXOffset + image_xsize,
+            ImageF::Create(memory_manager_,
+                           2 * kRenderPipelineXOffset + image_xsize,
                            2 * kRenderPipelineXOffset + image_ysize));
         channel_data_.emplace_back(std::move(ch));
       }

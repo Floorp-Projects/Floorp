@@ -202,7 +202,7 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
         fprintf(stderr,
                 "JPEG bitstream reconstruction data could not be created. "
                 "Possibly there is too much tail data.\n"
-                "Try using --jpeg_store_metadata 0, to losslessly "
+                "Try using --allow_jpeg_reconstruction 0, to losslessly "
                 "recompress the JPEG image data without bitstream "
                 "reconstruction data.\n");
       } else {
@@ -223,7 +223,14 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
         std::max<uint32_t>(num_alpha_channels, ppf.info.num_extra_channels);
     basic_info.num_color_channels = ppf.info.num_color_channels;
     const bool lossless = (params.distance == 0);
-    basic_info.uses_original_profile = TO_JXL_BOOL(lossless);
+    auto non_perceptual_option = std::find_if(
+        params.options.begin(), params.options.end(), [](JXLOption option) {
+          return option.id ==
+                 JXL_ENC_FRAME_SETTING_DISABLE_PERCEPTUAL_HEURISTICS;
+        });
+    const bool non_perceptual = non_perceptual_option != params.options.end() &&
+                                non_perceptual_option->ival == 1;
+    basic_info.uses_original_profile = TO_JXL_BOOL(lossless || non_perceptual);
     if (params.override_bitdepth != 0) {
       basic_info.bits_per_sample = params.override_bitdepth;
       basic_info.exponent_bits_per_sample =

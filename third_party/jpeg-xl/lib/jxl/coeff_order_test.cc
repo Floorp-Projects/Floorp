@@ -5,6 +5,8 @@
 
 #include "lib/jxl/coeff_order.h"
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <numeric>  // iota
 #include <utility>
@@ -16,6 +18,7 @@
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_coeff_order.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
@@ -23,14 +26,15 @@ namespace {
 
 void RoundtripPermutation(coeff_order_t* perm, coeff_order_t* out, size_t len,
                           size_t* size) {
-  BitWriter writer;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  BitWriter writer{memory_manager};
   EncodePermutation(perm, 0, len, &writer, 0, nullptr);
   writer.ZeroPadToByte();
   Status status = true;
   {
     BitReader reader(writer.GetSpan());
     BitReaderScopedCloser closer(&reader, &status);
-    ASSERT_TRUE(DecodePermutation(0, len, out, &reader));
+    ASSERT_TRUE(DecodePermutation(memory_manager, 0, len, out, &reader));
   }
   ASSERT_TRUE(status);
   *size = writer.GetSpan().size();

@@ -32,9 +32,14 @@ class ModularFrameEncoder;
 Status LossyFrameHeuristics(const FrameHeader& frame_header,
                             PassesEncoderState* enc_state,
                             ModularFrameEncoder* modular_frame_encoder,
-                            const Image3F* original_pixels, Image3F* opsin,
+                            const Image3F* linear, Image3F* opsin,
                             const Rect& rect, const JxlCmsInterface& cms,
                             ThreadPool* pool, AuxOut* aux_out);
+
+Status ComputeARHeuristics(const FrameHeader& frame_header,
+                           PassesEncoderState* enc_state,
+                           const Image3F& orig_opsin, const Rect& rect,
+                           ThreadPool* pool);
 
 void FindBestBlockEntropyModel(PassesEncoderState& enc_state);
 

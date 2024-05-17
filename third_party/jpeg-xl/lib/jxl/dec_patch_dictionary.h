@@ -8,6 +8,7 @@
 
 // Chooses reference patches, and avoids encoding them once per occurrence.
 
+#include <jxl/memory_manager.h>
 #include <sys/types.h>
 
 #include <cstddef>
@@ -99,8 +100,8 @@ class PatchDictionary {
 
   bool HasAny() const { return !positions_.empty(); }
 
-  Status Decode(BitReader* br, size_t xsize, size_t ysize,
-                bool* uses_extra_channels);
+  Status Decode(JxlMemoryManager* memory_manager, BitReader* br, size_t xsize,
+                size_t ysize, bool* uses_extra_channels);
 
   void Clear() {
     positions_.clear();

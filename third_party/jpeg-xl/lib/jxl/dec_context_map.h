@@ -6,9 +6,10 @@
 #ifndef LIB_JXL_DEC_CONTEXT_MAP_H_
 #define LIB_JXL_DEC_CONTEXT_MAP_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/memory_manager.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/dec_bit_reader.h"
@@ -22,7 +23,8 @@ constexpr size_t kMaxClusters = 256;
 // context_map->size() must be the number of possible context ids.
 // Sets *num_htrees to the number of different histogram ids in
 // *context_map.
-Status DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
+Status DecodeContextMap(JxlMemoryManager* memory_manager,
+                        std::vector<uint8_t>* context_map, size_t* num_htrees,
                         BitReader* input);
 
 }  // namespace jxl

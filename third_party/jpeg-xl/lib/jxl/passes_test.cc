@@ -4,6 +4,7 @@
 // license that can be found in the LICENSE file.
 
 #include <jxl/cms.h>
+#include <jxl/memory_manager.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -35,9 +36,10 @@ using test::ThreadPoolForTests;
 namespace {
 
 TEST(PassesTest, RoundtripSmallPasses) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(io.xsize() / 8, io.ysize() / 8);
 
@@ -46,7 +48,7 @@ TEST(PassesTest, RoundtripSmallPasses) {
   cparams.progressive_mode = Override::kOn;
   cparams.SetCms(*JxlGetDefaultCms());
 
-  CodecInOut io2;
+  CodecInOut io2{memory_manager};
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
   EXPECT_SLIGHTLY_BELOW(
       ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
@@ -56,9 +58,10 @@ TEST(PassesTest, RoundtripSmallPasses) {
 }
 
 TEST(PassesTest, RoundtripUnalignedPasses) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(io.xsize() / 12, io.ysize() / 7);
 
@@ -67,7 +70,7 @@ TEST(PassesTest, RoundtripUnalignedPasses) {
   cparams.progressive_mode = Override::kOn;
   cparams.SetCms(*JxlGetDefaultCms());
 
-  CodecInOut io2;
+  CodecInOut io2{memory_manager};
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
   EXPECT_SLIGHTLY_BELOW(
       ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
@@ -77,8 +80,9 @@ TEST(PassesTest, RoundtripUnalignedPasses) {
 }
 
 TEST(PassesTest, RoundtripMultiGroupPasses) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const std::vector<uint8_t> orig = ReadTestData("jxl/flower/flower.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   {
     ThreadPoolForTests pool(4);
     ASSERT_TRUE(SetFromBytes(Bytes(orig), &io, pool.get()));
@@ -91,7 +95,7 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
     cparams.butteraugli_distance = target_distance;
     cparams.progressive_mode = Override::kOn;
     cparams.SetCms(*JxlGetDefaultCms());
-    CodecInOut io2;
+    CodecInOut io2{memory_manager};
     JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _,
                             /* compressed_size */ nullptr, pool.get()));
     EXPECT_SLIGHTLY_BELOW(
@@ -106,9 +110,10 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
 }
 
 TEST(PassesTest, RoundtripLargeFastPasses) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig = ReadTestData("jxl/flower/flower.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io, pool.get()));
 
   CompressParams cparams;
@@ -116,7 +121,7 @@ TEST(PassesTest, RoundtripLargeFastPasses) {
   cparams.progressive_mode = Override::kOn;
   cparams.SetCms(*JxlGetDefaultCms());
 
-  CodecInOut io2;
+  CodecInOut io2{memory_manager};
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _,
                           /* compressed_size */ nullptr, pool.get()));
 }
@@ -125,9 +130,10 @@ TEST(PassesTest, RoundtripLargeFastPasses) {
 // which involves additional processing including adaptive reconstruction.
 // Failing this may be a sign of race conditions or invalid memory accesses.
 TEST(PassesTest, RoundtripProgressiveConsistent) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig = ReadTestData("jxl/flower/flower.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io, pool.get()));
 
   CompressParams cparams;
@@ -140,11 +146,11 @@ TEST(PassesTest, RoundtripProgressiveConsistent) {
   for (size_t xsize = 48; xsize > 40; --xsize) {
     io.ShrinkTo(xsize, 15);
 
-    CodecInOut io2;
+    CodecInOut io2{memory_manager};
     size_t size2;
     JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _, &size2, pool.get()));
 
-    CodecInOut io3;
+    CodecInOut io3{memory_manager};
     size_t size3;
     JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io3, _, &size3, pool.get()));
 
@@ -163,10 +169,11 @@ TEST(PassesTest, RoundtripProgressiveConsistent) {
 }
 
 TEST(PassesTest, AllDownsampleFeasible) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io, pool.get()));
 
   std::vector<uint8_t> compressed;
@@ -193,7 +200,7 @@ TEST(PassesTest, AllDownsampleFeasible) {
     const size_t downsampling = downsamplings[task];
     extras::JXLDecompressParams dparams;
     dparams.max_downsampling = downsampling;
-    CodecInOut output;
+    CodecInOut output{memory_manager};
     ASSERT_TRUE(test::DecodeFile(dparams, Bytes(compressed), &output));
     EXPECT_EQ(output.xsize(), io.xsize()) << "downsampling = " << downsampling;
     EXPECT_EQ(output.ysize(), io.ysize()) << "downsampling = " << downsampling;
@@ -208,10 +215,11 @@ TEST(PassesTest, AllDownsampleFeasible) {
 }
 
 TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io, pool.get()));
 
   std::vector<uint8_t> compressed;
@@ -238,7 +246,7 @@ TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
     const size_t downsampling = downsamplings[task];
     extras::JXLDecompressParams dparams;
     dparams.max_downsampling = downsampling;
-    CodecInOut output;
+    CodecInOut output{memory_manager};
     ASSERT_TRUE(test::DecodeFile(dparams, Bytes(compressed), &output));
     EXPECT_EQ(output.xsize(), io.xsize()) << "downsampling = " << downsampling;
     EXPECT_EQ(output.ysize(), io.ysize()) << "downsampling = " << downsampling;
@@ -253,17 +261,19 @@ TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
 }
 
 TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig = ReadTestData(
       "external/wesaturate/500px/cvo9xd_keong_macan_grayscale.png");
-  CodecInOut io_orig;
+  CodecInOut io_orig{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io_orig, pool.get()));
   Rect rect(0, 0, io_orig.xsize(), 128);
   // need 2 DC groups for the DC frame to actually be progressive.
-  JXL_ASSIGN_OR_DIE(Image3F large, Image3F::Create(4242, rect.ysize()));
+  JXL_ASSIGN_OR_DIE(Image3F large,
+                    Image3F::Create(memory_manager, 4242, rect.ysize()));
   ZeroFillImage(&large);
   CopyImageTo(rect, *io_orig.Main().color(), rect, &large);
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   io.metadata = io_orig.metadata;
   io.SetFromImage(std::move(large), io_orig.Main().c_current());
 
@@ -281,11 +291,11 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
 
   extras::JXLDecompressParams dparams;
   dparams.max_downsampling = 1;
-  CodecInOut output;
+  CodecInOut output{memory_manager};
   ASSERT_TRUE(test::DecodeFile(dparams, Bytes(compressed), &output));
 
   dparams.max_downsampling = 2;
-  CodecInOut output_d2;
+  CodecInOut output_d2{memory_manager};
   ASSERT_TRUE(test::DecodeFile(dparams, Bytes(compressed), &output_d2));
 
   // 0 if reading all the passes, ~15 if skipping the 8x pass.
@@ -298,16 +308,18 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
 }
 
 TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig = ReadTestData("jxl/flower/flower.png");
-  CodecInOut io_orig;
+  CodecInOut io_orig{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io_orig, pool.get()));
   Rect rect(0, 0, io_orig.xsize(), 128);
   // need 2 DC groups for the DC frame to actually be progressive.
-  JXL_ASSIGN_OR_DIE(Image3F large, Image3F::Create(4242, rect.ysize()));
+  JXL_ASSIGN_OR_DIE(Image3F large,
+                    Image3F::Create(memory_manager, 4242, rect.ysize()));
   ZeroFillImage(&large);
   CopyImageTo(rect, *io_orig.Main().color(), rect, &large);
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   io.SetFromImage(std::move(large), io_orig.Main().c_current());
 
   std::vector<uint8_t> compressed;
@@ -324,11 +336,11 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
 
   extras::JXLDecompressParams dparams;
   dparams.max_downsampling = 1;
-  CodecInOut output;
+  CodecInOut output{memory_manager};
   ASSERT_TRUE(test::DecodeFile(dparams, Bytes(compressed), &output));
 
   dparams.max_downsampling = 2;
-  CodecInOut output_d2;
+  CodecInOut output_d2{memory_manager};
   ASSERT_TRUE(test::DecodeFile(dparams, Bytes(compressed), &output_d2));
 
   // 0 if reading all the passes, ~15 if skipping the 8x pass.
@@ -341,9 +353,10 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
 }
 
 TEST(PassesTest, NonProgressiveDCImage) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig = ReadTestData("jxl/flower/flower.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io, pool.get()));
 
   std::vector<uint8_t> compressed;
@@ -358,7 +371,7 @@ TEST(PassesTest, NonProgressiveDCImage) {
   // image.
   extras::JXLDecompressParams dparams;
   dparams.max_downsampling = 100;
-  CodecInOut output;
+  CodecInOut output{memory_manager};
   ASSERT_TRUE(
       test::DecodeFile(dparams, Bytes(compressed), &output, pool.get()));
   EXPECT_EQ(output.xsize(), io.xsize());
@@ -366,9 +379,10 @@ TEST(PassesTest, NonProgressiveDCImage) {
 }
 
 TEST(PassesTest, RoundtripSmallNoGaborishPasses) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(io.xsize() / 8, io.ysize() / 8);
 
@@ -378,7 +392,7 @@ TEST(PassesTest, RoundtripSmallNoGaborishPasses) {
   cparams.progressive_mode = Override::kOn;
   cparams.SetCms(*JxlGetDefaultCms());
 
-  CodecInOut io2;
+  CodecInOut io2{memory_manager};
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
   EXPECT_SLIGHTLY_BELOW(
       ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),

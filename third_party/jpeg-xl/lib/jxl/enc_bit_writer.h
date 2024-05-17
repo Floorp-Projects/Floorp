@@ -8,9 +8,10 @@
 
 // BitWriter class: unbuffered writes using unaligned 64-bit stores.
 
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/memory_manager.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -32,7 +33,8 @@ struct BitWriter {
   // yet zero-initialized).
   static constexpr size_t kMaxBitsPerCall = 56;
 
-  BitWriter() : bits_written_(0) {}
+  explicit BitWriter(JxlMemoryManager* memory_manager)
+      : bits_written_(0), storage_(memory_manager) {}
 
   // Disallow copying - may lead to bugs.
   BitWriter(const BitWriter&) = delete;
@@ -41,6 +43,8 @@ struct BitWriter {
   BitWriter& operator=(BitWriter&&) = default;
 
   size_t BitsWritten() const { return bits_written_; }
+
+  JxlMemoryManager* memory_manager() const { return storage_.memory_manager(); }
 
   Span<const uint8_t> GetSpan() const {
     // Callers must ensure byte alignment to avoid uninitialized bits.

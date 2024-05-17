@@ -227,7 +227,7 @@ void VerifyFrameEncoding(size_t xsize, size_t ysize, JxlEncoder* enc,
   compressed.resize(next_out - compressed.data());
   EXPECT_LE(compressed.size(), max_compressed_size);
   EXPECT_EQ(JXL_ENC_SUCCESS, process_result);
-  jxl::CodecInOut decoded_io;
+  jxl::CodecInOut decoded_io{jxl::test::MemoryManager()};
   EXPECT_TRUE(jxl::test::DecodeFile(
       {}, jxl::Bytes(compressed.data(), compressed.size()), &decoded_io));
 
@@ -259,7 +259,7 @@ TEST(EncodeTest, EncoderResetTest) {
   JxlEncoderPtr enc = JxlEncoderMake(nullptr);
   EXPECT_NE(nullptr, enc.get());
   VerifyFrameEncoding(50, 200, enc.get(),
-                      JxlEncoderFrameSettingsCreate(enc.get(), nullptr), 4550,
+                      JxlEncoderFrameSettingsCreate(enc.get(), nullptr), 4577,
                       false);
   // Encoder should become reusable for a new image from scratch after using
   // reset.
@@ -1487,6 +1487,7 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
 
 JXL_TRANSCODE_JPEG_TEST(EncodeTest, JPEGFrameTest) {
   TEST_LIBJPEG_SUPPORT();
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   for (int skip_basic_info = 0; skip_basic_info < 2; skip_basic_info++) {
     for (int skip_color_encoding = 0; skip_color_encoding < 2;
          skip_color_encoding++) {
@@ -1494,7 +1495,7 @@ JXL_TRANSCODE_JPEG_TEST(EncodeTest, JPEGFrameTest) {
       if (skip_basic_info && !skip_color_encoding) continue;
       const std::string jpeg_path = "jxl/flower/flower_cropped.jpg";
       const std::vector<uint8_t> orig = jxl::test::ReadTestData(jpeg_path);
-      jxl::CodecInOut orig_io;
+      jxl::CodecInOut orig_io{memory_manager};
       ASSERT_TRUE(SetFromBytes(jxl::Bytes(orig), &orig_io,
                                /*pool=*/nullptr));
 
@@ -1539,7 +1540,7 @@ JXL_TRANSCODE_JPEG_TEST(EncodeTest, JPEGFrameTest) {
       compressed.resize(next_out - compressed.data());
       EXPECT_EQ(JXL_ENC_SUCCESS, process_result);
 
-      jxl::CodecInOut decoded_io;
+      jxl::CodecInOut decoded_io{memory_manager};
       EXPECT_TRUE(jxl::test::DecodeFile(
           {}, jxl::Bytes(compressed.data(), compressed.size()), &decoded_io));
 

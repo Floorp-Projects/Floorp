@@ -6,9 +6,10 @@
 #ifndef LIB_JXL_MODULAR_ENCODING_DEC_MA_H_
 #define LIB_JXL_MODULAR_ENCODING_DEC_MA_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/memory_manager.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/base/status.h"
@@ -59,7 +60,8 @@ struct PropertyDecisionNode {
 
 using Tree = std::vector<PropertyDecisionNode>;
 
-Status DecodeTree(BitReader *br, Tree *tree, size_t tree_size_limit);
+Status DecodeTree(JxlMemoryManager *memory_manager, BitReader *br, Tree *tree,
+                  size_t tree_size_limit);
 
 }  // namespace jxl
 

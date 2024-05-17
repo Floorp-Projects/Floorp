@@ -8,16 +8,16 @@
 #if JPEGXL_ENABLE_JPEG
 #include "lib/jxl/base/include_jpeglib.h"  // NOLINT
 #endif
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <utility>
 #include <vector>
 
 #include "lib/extras/size_constraints.h"
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/sanitizers.h"
 
 namespace jxl {
 namespace extras {

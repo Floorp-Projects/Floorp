@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_DEC_MODULAR_H_
 #define LIB_JXL_DEC_MODULAR_H_
 
+#include <jxl/memory_manager.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -91,6 +93,8 @@ struct ModularStreamId {
 
 class ModularFrameDecoder {
  public:
+  explicit ModularFrameDecoder(JxlMemoryManager* memory_manager)
+      : memory_manager_(memory_manager), full_image(memory_manager) {}
   void Init(const FrameDimensions& frame_dim) { this->frame_dim = frame_dim; }
   Status DecodeGlobalInfo(BitReader* reader, const FrameHeader& frame_header,
                           bool allow_truncated_group);
@@ -109,7 +113,8 @@ class ModularFrameDecoder {
   // Decodes a RAW quant table from `br` into the given `encoding`, of size
   // `required_size_x x required_size_y`. If `modular_frame_decoder` is passed,
   // its global tree is used, otherwise no global tree is used.
-  static Status DecodeQuantTable(size_t required_size_x, size_t required_size_y,
+  static Status DecodeQuantTable(JxlMemoryManager* memory_manager,
+                                 size_t required_size_x, size_t required_size_y,
                                  BitReader* br, QuantEncoding* encoding,
                                  size_t idx,
                                  ModularFrameDecoder* modular_frame_decoder);
@@ -122,6 +127,7 @@ class ModularFrameDecoder {
   bool have_dc() const { return have_something; }
   void MaybeDropFullImage();
   bool UsesFullImage() const { return use_full_image; }
+  JxlMemoryManager* memory_manager() const { return memory_manager_; }
 
  private:
   Status ModularImageToDecodedRect(const FrameHeader& frame_header, Image& gi,
@@ -129,7 +135,7 @@ class ModularFrameDecoder {
                                    jxl::ThreadPool* pool,
                                    RenderPipelineInput& render_pipeline_input,
                                    Rect modular_rect) const;
-
+  JxlMemoryManager* memory_manager_;
   Image full_image;
   std::vector<Transform> global_transform;
   FrameDimensions frame_dim;

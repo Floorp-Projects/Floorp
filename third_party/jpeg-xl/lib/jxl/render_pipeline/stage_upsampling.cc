@@ -5,6 +5,7 @@
 
 #include "lib/jxl/render_pipeline/stage_upsampling.h"
 
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/status.h"
 
 #undef HWY_TARGET_INCLUDE
@@ -12,7 +13,6 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/sanitizers.h"
 #include "lib/jxl/simd_util-inl.h"
 
 HWY_BEFORE_NAMESPACE();

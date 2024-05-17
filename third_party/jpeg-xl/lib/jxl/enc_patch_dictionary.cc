@@ -5,6 +5,7 @@
 
 #include "lib/jxl/enc_patch_dictionary.h"
 
+#include <jxl/memory_manager.h>
 #include <jxl/types.h>
 #include <sys/types.h>
 
@@ -46,6 +47,7 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
                                     BitWriter* writer, size_t layer,
                                     AuxOut* aux_out) {
   JXL_ASSERT(pdic.HasAny());
+  JxlMemoryManager* memory_manager = writer->memory_manager();
   std::vector<std::vector<Token>> tokens(1);
   size_t num_ec = pdic.shared_->metadata->m.num_extra_channels;
 
@@ -106,9 +108,9 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
 
   EntropyEncodingData codes;
   std::vector<uint8_t> context_map;
-  BuildAndEncodeHistograms(HistogramParams(), kNumPatchDictionaryContexts,
-                           tokens, &codes, &context_map, writer, layer,
-                           aux_out);
+  BuildAndEncodeHistograms(memory_manager, HistogramParams(),
+                           kNumPatchDictionaryContexts, tokens, &codes,
+                           &context_map, writer, layer, aux_out);
   WriteTokens(tokens[0], codes, context_map, 0, writer, layer, aux_out);
 }
 
@@ -137,13 +139,13 @@ void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
       size_t iy = y - by;
       size_t ref = ref_pos.ref;
       const float* JXL_RESTRICT ref_rows[3] = {
-          pdic.shared_->reference_frames[ref].frame.color().ConstPlaneRow(
+          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
               0, ref_pos.y0 + iy) +
               ref_pos.x0,
-          pdic.shared_->reference_frames[ref].frame.color().ConstPlaneRow(
+          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
               1, ref_pos.y0 + iy) +
               ref_pos.x0,
-          pdic.shared_->reference_frames[ref].frame.color().ConstPlaneRow(
+          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
               2, ref_pos.y0 + iy) +
               ref_pos.x0,
       };
@@ -213,6 +215,7 @@ StatusOr<std::vector<PatchInfo>> FindTextLikePatches(
   std::vector<PatchInfo> info;
   if (state->cparams.patches == Override::kOff) return info;
   const auto& frame_dim = state->shared.frame_dim;
+  JxlMemoryManager* memory_manager = opsin.memory_manager();
 
   PatchColorspaceInfo pci(is_xyb);
   float kSimilarThreshold = 0.8f;
@@ -258,9 +261,10 @@ StatusOr<std::vector<PatchInfo>> FindTextLikePatches(
 
   // Look for kPatchSide size squares, naturally aligned, that all have the same
   // pixel values.
-  JXL_ASSIGN_OR_RETURN(ImageB is_screenshot_like,
-                       ImageB::Create(DivCeil(frame_dim.xsize, kPatchSide),
-                                      DivCeil(frame_dim.ysize, kPatchSide)));
+  JXL_ASSIGN_OR_RETURN(
+      ImageB is_screenshot_like,
+      ImageB::Create(memory_manager, DivCeil(frame_dim.xsize, kPatchSide),
+                     DivCeil(frame_dim.ysize, kPatchSide)));
   ZeroFillImage(&is_screenshot_like);
   uint8_t* JXL_RESTRICT screenshot_row = is_screenshot_like.Row(0);
   const size_t screenshot_stride = is_screenshot_like.PixelsPerRow();
@@ -314,11 +318,13 @@ StatusOr<std::vector<PatchInfo>> FindTextLikePatches(
   }
 
   // Search for "similar enough" pixels near the screenshot-like areas.
-  JXL_ASSIGN_OR_RETURN(ImageB is_background,
-                       ImageB::Create(frame_dim.xsize, frame_dim.ysize));
+  JXL_ASSIGN_OR_RETURN(
+      ImageB is_background,
+      ImageB::Create(memory_manager, frame_dim.xsize, frame_dim.ysize));
   ZeroFillImage(&is_background);
-  JXL_ASSIGN_OR_RETURN(Image3F background,
-                       Image3F::Create(frame_dim.xsize, frame_dim.ysize));
+  JXL_ASSIGN_OR_RETURN(
+      Image3F background,
+      Image3F::Create(memory_manager, frame_dim.xsize, frame_dim.ysize));
   ZeroFillImage(&background);
   constexpr size_t kDistanceLimit = 50;
   float* JXL_RESTRICT background_rows[3] = {
@@ -394,7 +400,8 @@ StatusOr<std::vector<PatchInfo>> FindTextLikePatches(
     } else {
       JXL_RETURN_IF_ERROR(DumpImage(cparams, "background", background));
     }
-    JXL_ASSIGN_OR_RETURN(ccs, ImageF::Create(frame_dim.xsize, frame_dim.ysize));
+    JXL_ASSIGN_OR_RETURN(
+        ccs, ImageF::Create(memory_manager, frame_dim.xsize, frame_dim.ysize));
     ZeroFillImage(&ccs);
     paint_ccs = true;
   }
@@ -414,8 +421,9 @@ StatusOr<std::vector<PatchInfo>> FindTextLikePatches(
 
   // Find small CC outside the "similar enough" areas, compute bounding boxes,
   // and run heuristics to exclude some patches.
-  JXL_ASSIGN_OR_RETURN(ImageB visited,
-                       ImageB::Create(frame_dim.xsize, frame_dim.ysize));
+  JXL_ASSIGN_OR_RETURN(
+      ImageB visited,
+      ImageB::Create(memory_manager, frame_dim.xsize, frame_dim.ysize));
   ZeroFillImage(&visited);
   uint8_t* JXL_RESTRICT visited_row = visited.Row(0);
   const size_t visited_stride = visited.PixelsPerRow();
@@ -580,6 +588,7 @@ Status FindBestPatchDictionary(const Image3F& opsin,
   JXL_ASSIGN_OR_RETURN(
       std::vector<PatchInfo> info,
       FindTextLikePatches(state->cparams, opsin, state, pool, aux_out, is_xyb));
+  JxlMemoryManager* memory_manager = opsin.memory_manager();
 
   // TODO(veluca): this doesn't work if both dots and patches are enabled.
   // For now, since dots and patches are not likely to occur in the same kind of
@@ -588,7 +597,8 @@ Status FindBestPatchDictionary(const Image3F& opsin,
       ApplyOverride(
           state->cparams.dots,
           state->cparams.speed_tier <= SpeedTier::kSquirrel &&
-              state->cparams.butteraugli_distance >= kMinButteraugliForDots)) {
+              state->cparams.butteraugli_distance >= kMinButteraugliForDots &&
+              !state->cparams.disable_percepeptual_optimizations)) {
     Rect rect(0, 0, state->shared.frame_dim.xsize,
               state->shared.frame_dim.ysize);
     JXL_ASSIGN_OR_RETURN(info, FindDotDictionary(state->cparams, opsin, rect,
@@ -626,7 +636,8 @@ Status FindBestPatchDictionary(const Image3F& opsin,
     ref_xsize = ref_xsize * kBinPackingSlackness + 1;
     ref_ysize = ref_ysize * kBinPackingSlackness + 1;
 
-    JXL_ASSIGN_OR_RETURN(ImageB occupied, ImageB::Create(ref_xsize, ref_ysize));
+    JXL_ASSIGN_OR_RETURN(ImageB occupied,
+                         ImageB::Create(memory_manager, ref_xsize, ref_ysize));
     ZeroFillImage(&occupied);
     uint8_t* JXL_RESTRICT occupied_rows = occupied.Row(0);
     size_t occupied_stride = occupied.PixelsPerRow();
@@ -691,7 +702,7 @@ Status FindBestPatchDictionary(const Image3F& opsin,
   ref_ysize = max_y;
 
   JXL_ASSIGN_OR_RETURN(Image3F reference_frame,
-                       Image3F::Create(ref_xsize, ref_ysize));
+                       Image3F::Create(memory_manager, ref_xsize, ref_ysize));
   // TODO(veluca): figure out a better way to fill the image.
   ZeroFillImage(&reference_frame);
   std::vector<PatchPosition> positions;
@@ -755,6 +766,7 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
                            PassesEncoderState* JXL_RESTRICT state, int idx,
                            CompressParams& cparams, const JxlCmsInterface& cms,
                            ThreadPool* pool, AuxOut* aux_out, bool subtract) {
+  JxlMemoryManager* memory_manager = state->memory_manager();
   FrameInfo patch_frame_info;
   cparams.resampling = 1;
   cparams.ec_resampling = 1;
@@ -770,7 +782,7 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
   patch_frame_info.save_as_reference = idx;  // always saved.
   patch_frame_info.frame_type = FrameType::kReferenceOnly;
   patch_frame_info.save_before_color_transform = true;
-  ImageBundle ib(&state->shared.metadata->m);
+  ImageBundle ib(memory_manager, &state->shared.metadata->m);
   // TODO(veluca): metadata.color_encoding is a lie: ib is in XYB, but there is
   // no simple way to express that yet.
   patch_frame_info.ib_needs_color_transform = false;
@@ -783,7 +795,8 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
     std::vector<ImageF> extra_channels;
     extra_channels.reserve(ib.metadata()->extra_channel_info.size());
     for (size_t i = 0; i < ib.metadata()->extra_channel_info.size(); i++) {
-      JXL_ASSIGN_OR_RETURN(ImageF ch, ImageF::Create(ib.xsize(), ib.ysize()));
+      JXL_ASSIGN_OR_RETURN(
+          ImageF ch, ImageF::Create(memory_manager, ib.xsize(), ib.ysize()));
       extra_channels.emplace_back(std::move(ch));
       // Must initialize the image with data to not affect blending with
       // uninitialized memory.
@@ -792,11 +805,12 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
     }
     ib.SetExtraChannels(std::move(extra_channels));
   }
-  auto special_frame = std::unique_ptr<BitWriter>(new BitWriter());
+  auto special_frame =
+      std::unique_ptr<BitWriter>(new BitWriter(memory_manager));
   AuxOut patch_aux_out;
-  JXL_CHECK(EncodeFrame(cparams, patch_frame_info, state->shared.metadata, ib,
-                        cms, pool, special_frame.get(),
-                        aux_out ? &patch_aux_out : nullptr));
+  JXL_CHECK(EncodeFrame(
+      memory_manager, cparams, patch_frame_info, state->shared.metadata, ib,
+      cms, pool, special_frame.get(), aux_out ? &patch_aux_out : nullptr));
   if (aux_out) {
     for (const auto& l : patch_aux_out.layers) {
       aux_out->layers[kLayerDictionary].Assimilate(l);
@@ -805,8 +819,8 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
   const Span<const uint8_t> encoded = special_frame->GetSpan();
   state->special_frames.emplace_back(std::move(special_frame));
   if (subtract) {
-    ImageBundle decoded(&state->shared.metadata->m);
-    PassesDecoderState dec_state;
+    ImageBundle decoded(memory_manager, &state->shared.metadata->m);
+    PassesDecoderState dec_state(memory_manager);
     JXL_CHECK(dec_state.output_encoding_info.SetFromMetadata(
         *state->shared.metadata));
     const uint8_t* frame_start = encoded.data();
@@ -817,7 +831,7 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
     frame_start += decoded.decoded_bytes();
     encoded_size -= decoded.decoded_bytes();
     size_t ref_xsize =
-        dec_state.shared_storage.reference_frames[idx].frame.color()->xsize();
+        dec_state.shared_storage.reference_frames[idx].frame->color()->xsize();
     // if the frame itself uses patches, we need to decode another frame
     if (!ref_xsize) {
       JXL_CHECK(DecodeFrame(&dec_state, pool, frame_start, encoded_size,
@@ -828,7 +842,7 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
     state->shared.reference_frames[idx] =
         std::move(dec_state.shared_storage.reference_frames[idx]);
   } else {
-    state->shared.reference_frames[idx].frame = std::move(ib);
+    *state->shared.reference_frames[idx].frame = std::move(ib);
   }
   return true;
 }

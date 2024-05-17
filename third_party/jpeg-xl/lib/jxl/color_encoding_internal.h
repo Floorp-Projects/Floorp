@@ -155,7 +155,7 @@ struct ColorEncoding : public Fields {
   }
 
   // Sets the raw ICC profile bytes, without parsing the ICC, and without
-  // updating the direct fields such as whitepoint, primaries and color
+  // updating the direct fields such as white point, primaries and color
   // space. Functions to get and set fields, such as SetWhitePoint, cannot be
   // used anymore after this and functions such as IsSRGB return false no matter
   // what the contents of the icc profile.

@@ -200,14 +200,15 @@ Status LowMemoryRenderPipeline::EnsureBordersStorage() {
                                        1 << shifts[c].second);
     Rect horizontal = Rect(0, 0, downsampled_xsize, bordery * num_yborders);
     if (!SameSize(horizontal, borders_horizontal_[c])) {
-      JXL_ASSIGN_OR_RETURN(
-          borders_horizontal_[c],
-          ImageF::Create(horizontal.xsize(), horizontal.ysize()));
+      JXL_ASSIGN_OR_RETURN(borders_horizontal_[c],
+                           ImageF::Create(memory_manager_, horizontal.xsize(),
+                                          horizontal.ysize()));
     }
     Rect vertical = Rect(0, 0, borderx * num_xborders, downsampled_ysize);
     if (!SameSize(vertical, borders_vertical_[c])) {
-      JXL_ASSIGN_OR_RETURN(borders_vertical_[c],
-                           ImageF::Create(vertical.xsize(), vertical.ysize()));
+      JXL_ASSIGN_OR_RETURN(
+          borders_vertical_[c],
+          ImageF::Create(memory_manager_, vertical.xsize(), vertical.ysize()));
     }
   }
   return true;
@@ -379,7 +380,8 @@ Status LowMemoryRenderPipeline::PrepareForThreadsInternal(size_t num,
     for (size_t c = 0; c < shifts.size(); c++) {
       JXL_ASSIGN_OR_RETURN(
           group_data_[t][c],
-          ImageF::Create(GroupInputXSize(c) + group_data_x_border_ * 2,
+          ImageF::Create(memory_manager_,
+                         GroupInputXSize(c) + group_data_x_border_ * 2,
                          GroupInputYSize(c) + group_data_y_border_ * 2));
     }
   }
@@ -405,7 +407,8 @@ Status LowMemoryRenderPipeline::PrepareForThreadsInternal(size_t num,
           next_y_border = stages_[i]->settings_.border_y;
           JXL_ASSIGN_OR_RETURN(
               stage_data_[t][c][i],
-              ImageF::Create(stage_buffer_xsize, stage_buffer_ysize));
+              ImageF::Create(memory_manager_, stage_buffer_xsize,
+                             stage_buffer_ysize));
         }
       }
     }
@@ -427,8 +430,9 @@ Status LowMemoryRenderPipeline::PrepareForThreadsInternal(size_t num,
         std::max(left_padding, std::max(middle_padding, right_padding));
     out_of_frame_data_.resize(num);
     for (size_t t = 0; t < num; t++) {
-      JXL_ASSIGN_OR_RETURN(out_of_frame_data_[t],
-                           ImageF::Create(out_of_frame_xsize, shifts.size()));
+      JXL_ASSIGN_OR_RETURN(
+          out_of_frame_data_[t],
+          ImageF::Create(memory_manager_, out_of_frame_xsize, shifts.size()));
     }
   }
   return true;

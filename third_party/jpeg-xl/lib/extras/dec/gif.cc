@@ -9,8 +9,8 @@
 #include <gif_lib.h>
 #endif
 #include <jxl/codestream_header.h>
-#include <string.h>
 
+#include <cstring>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -18,7 +18,7 @@
 #include "lib/extras/size_constraints.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/rect.h"
-#include "lib/jxl/sanitizers.h"
+#include "lib/jxl/base/sanitizers.h"
 
 namespace jxl {
 namespace extras {

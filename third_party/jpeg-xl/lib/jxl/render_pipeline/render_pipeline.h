@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_RENDER_PIPELINE_RENDER_PIPELINE_H_
 #define LIB_JXL_RENDER_PIPELINE_RENDER_PIPELINE_H_
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -59,7 +61,10 @@ class RenderPipeline {
  public:
   class Builder {
    public:
-    explicit Builder(size_t num_c) : num_c_(num_c) { JXL_ASSERT(num_c > 0); }
+    explicit Builder(JxlMemoryManager* memory_manager, size_t num_c)
+        : memory_manager_(memory_manager), num_c_(num_c) {
+      JXL_ASSERT(num_c > 0);
+    }
 
     // Adds a stage to the pipeline. Must be called at least once; the last
     // added stage cannot have kInOut channels.
@@ -75,6 +80,7 @@ class RenderPipeline {
         FrameDimensions frame_dimensions) &&;
 
    private:
+    JxlMemoryManager* memory_manager_;
     std::vector<std::unique_ptr<RenderPipelineStage>> stages_;
     size_t num_c_;
     bool use_simple_implementation_ = false;
@@ -111,6 +117,10 @@ class RenderPipeline {
   virtual void ClearDone(size_t i) {}
 
  protected:
+  explicit RenderPipeline(JxlMemoryManager* memory_manager)
+      : memory_manager_(memory_manager) {}
+  JxlMemoryManager* memory_manager_;
+
   std::vector<std::unique_ptr<RenderPipelineStage>> stages_;
   // Shifts for every channel at the input of each stage.
   std::vector<std::vector<std::pair<size_t, size_t>>> channel_shifts_;

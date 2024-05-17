@@ -21,8 +21,8 @@
 
 #include "lib/extras/exif.h"
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/sanitizers.h"
 #if JPEGXL_ENABLE_SJPEG
 #include "sjpeg.h"
 #include "sjpegi.h"

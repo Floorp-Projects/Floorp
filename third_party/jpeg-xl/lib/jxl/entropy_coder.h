@@ -6,8 +6,10 @@
 #ifndef LIB_JXL_ENTROPY_CODER_H_
 #define LIB_JXL_ENTROPY_CODER_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/memory_manager.h>
+
+#include <cstddef>
+#include <cstdint>
 
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/base/compiler_specific.h"
@@ -38,7 +40,8 @@ static constexpr U32Enc kDCThresholdDist(Bits(4), BitsOffset(8, 16),
 static constexpr U32Enc kQFThresholdDist(Bits(2), BitsOffset(3, 4),
                                          BitsOffset(5, 12), BitsOffset(8, 44));
 
-Status DecodeBlockCtxMap(BitReader* br, BlockCtxMap* block_ctx_map);
+Status DecodeBlockCtxMap(JxlMemoryManager* memory_manager, BitReader* br,
+                         BlockCtxMap* block_ctx_map);
 
 }  // namespace jxl
 

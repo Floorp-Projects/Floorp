@@ -15,6 +15,7 @@
 
 #include "lib/extras/size_constraints.h"
 #include "lib/jxl/base/bits.h"
+#include "lib/jxl/base/c_callback_support.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jxl/icc_codec.h"
+#include <jxl/memory_manager.h>
 
 #include <cstdint>
 #include <string>
@@ -19,7 +19,8 @@ namespace jxl {
 namespace {
 
 void TestProfile(const IccBytes& icc) {
-  BitWriter writer;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  BitWriter writer{memory_manager};
   ASSERT_TRUE(WriteICC(icc, &writer, 0, nullptr));
   writer.ZeroPadToByte();
   std::vector<uint8_t> dec;

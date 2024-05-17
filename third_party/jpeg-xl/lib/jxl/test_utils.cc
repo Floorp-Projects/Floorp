@@ -7,6 +7,7 @@
 
 #include <jxl/cms.h>
 #include <jxl/cms_interface.h>
+#include <jxl/memory_manager.h>
 #include <jxl/types.h>
 
 #include <cstddef>
@@ -280,7 +281,8 @@ std::vector<ColorEncodingDescriptor> AllEncodings() {
 jxl::CodecInOut SomeTestImageToCodecInOut(const std::vector<uint8_t>& buf,
                                           size_t num_channels, size_t xsize,
                                           size_t ysize) {
-  jxl::CodecInOut io;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  jxl::CodecInOut io{memory_manager};
   io.SetSize(xsize, ysize);
   io.metadata.m.SetAlphaBits(16);
   io.metadata.m.color_encoding = jxl::ColorEncoding::SRGB(
@@ -557,9 +559,10 @@ double DistanceRMS(const uint8_t* a, const uint8_t* b, size_t xsize,
 
 float ButteraugliDistance(const extras::PackedPixelFile& a,
                           const extras::PackedPixelFile& b, ThreadPool* pool) {
-  CodecInOut io0;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  CodecInOut io0{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(a, pool, &io0));
-  CodecInOut io1;
+  CodecInOut io1{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, pool, &io1));
   // TODO(eustas): simplify?
   return ButteraugliDistance(io0.frames, io1.frames, ButteraugliParams(),
@@ -597,9 +600,10 @@ float ButteraugliDistance(const std::vector<ImageBundle>& frames0,
 
 float Butteraugli3Norm(const extras::PackedPixelFile& a,
                        const extras::PackedPixelFile& b, ThreadPool* pool) {
-  CodecInOut io0;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  CodecInOut io0{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(a, pool, &io0));
-  CodecInOut io1;
+  CodecInOut io1{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, pool, &io1));
   ButteraugliParams ba;
   ImageF distmap;
@@ -610,18 +614,20 @@ float Butteraugli3Norm(const extras::PackedPixelFile& a,
 
 float ComputeDistance2(const extras::PackedPixelFile& a,
                        const extras::PackedPixelFile& b) {
-  CodecInOut io0;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  CodecInOut io0{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(a, nullptr, &io0));
-  CodecInOut io1;
+  CodecInOut io1{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, nullptr, &io1));
   return ComputeDistance2(io0.Main(), io1.Main(), *JxlGetDefaultCms());
 }
 
 float ComputePSNR(const extras::PackedPixelFile& a,
                   const extras::PackedPixelFile& b) {
-  CodecInOut io0;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  CodecInOut io0{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(a, nullptr, &io0));
-  CodecInOut io1;
+  CodecInOut io1{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, nullptr, &io1));
   return ComputePSNR(io0.Main(), io1.Main(), *JxlGetDefaultCms());
 }
@@ -715,9 +721,10 @@ bool SamePixels(const extras::PackedPixelFile& a,
 
 Status ReadICC(BitReader* JXL_RESTRICT reader,
                std::vector<uint8_t>* JXL_RESTRICT icc, size_t output_limit) {
+  JxlMemoryManager* memort_manager = jxl::test::MemoryManager();
   icc->clear();
-  ICCReader icc_reader;
-  PaddedBytes icc_buffer;
+  ICCReader icc_reader{memort_manager};
+  PaddedBytes icc_buffer{memort_manager};
   JXL_RETURN_IF_ERROR(icc_reader.Init(reader, output_limit));
   JXL_RETURN_IF_ERROR(icc_reader.Process(reader, &icc_buffer));
   Bytes(icc_buffer).AppendTo(*icc);
@@ -752,7 +759,8 @@ Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
 Status EncodePreview(const CompressParams& cparams, const ImageBundle& ib,
                      const CodecMetadata* metadata, const JxlCmsInterface& cms,
                      ThreadPool* pool, BitWriter* JXL_RESTRICT writer) {
-  BitWriter preview_writer;
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  BitWriter preview_writer{memory_manager};
   // TODO(janwas): also support generating preview by downsampling
   if (ib.HasColor()) {
     AuxOut aux_out;
@@ -761,8 +769,9 @@ Status EncodePreview(const CompressParams& cparams, const ImageBundle& ib,
     // encoding this frame is warrented.
     FrameInfo frame_info;
     frame_info.is_preview = true;
-    JXL_RETURN_IF_ERROR(EncodeFrame(cparams, frame_info, metadata, ib, cms,
-                                    pool, &preview_writer, &aux_out));
+    JXL_RETURN_IF_ERROR(EncodeFrame(memory_manager, cparams, frame_info,
+                                    metadata, ib, cms, pool, &preview_writer,
+                                    &aux_out));
     preview_writer.ZeroPadToByte();
   }
 
@@ -778,10 +787,11 @@ Status EncodePreview(const CompressParams& cparams, const ImageBundle& ib,
 
 Status EncodeFile(const CompressParams& params, const CodecInOut* io,
                   std::vector<uint8_t>* compressed, ThreadPool* pool) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   compressed->clear();
   const JxlCmsInterface& cms = *JxlGetDefaultCms();
   io->CheckMetadata();
-  BitWriter writer;
+  BitWriter writer{memory_manager};
 
   CompressParams cparams = params;
   if (io->Main().color_transform != ColorTransform::kNone) {
@@ -818,8 +828,9 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
     if (io->frames[i].use_for_next_frame) {
       info.save_as_reference = 1;
     }
-    JXL_RETURN_IF_ERROR(EncodeFrame(cparams, info, metadata.get(),
-                                    io->frames[i], cms, pool, &writer,
+    JXL_RETURN_IF_ERROR(EncodeFrame(memory_manager, cparams, info,
+                                    metadata.get(), io->frames[i], cms, pool,
+                                    &writer,
                                     /* aux_out */ nullptr));
   }
 
@@ -827,6 +838,14 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
   Bytes(output).AppendTo(*compressed);
   return true;
 }
+
+namespace {
+void* TestAlloc(void* /* opaque*/, size_t size) { return malloc(size); }
+void TestFree(void* /* opaque*/, void* address) { free(address); }
+JxlMemoryManager kMemoryManager{nullptr, &TestAlloc, &TestFree};
+}  // namespace
+
+JxlMemoryManager* MemoryManager() { return &kMemoryManager; };
 
 }  // namespace test
 

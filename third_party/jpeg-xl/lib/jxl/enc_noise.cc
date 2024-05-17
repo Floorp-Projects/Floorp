@@ -5,19 +5,14 @@
 
 #include "lib/jxl/enc_noise.h"
 
-#include <stdint.h>
-#include <stdlib.h>
-
 #include <algorithm>
+#include <cstdint>
+#include <cstdlib>
 #include <numeric>
 #include <utility>
 
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/convolve.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_optimize.h"
-#include "lib/jxl/image_ops.h"
 
 namespace jxl {
 namespace {

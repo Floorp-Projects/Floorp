@@ -3,9 +3,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <jxl/memory_manager.h>
 
+#include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <queue>
 
@@ -95,6 +96,7 @@ Status GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
                       const ModularOptions &options, TreeSamples &tree_samples,
                       size_t *total_pixels) {
   const Channel &channel = image.channel[chan];
+  JxlMemoryManager *memory_manager = channel.memory_manager();
 
   JXL_DEBUG_V(7, "Learning %" PRIuS "x%" PRIuS " channel %d", channel.w,
               channel.h, chan);
@@ -128,7 +130,8 @@ Status GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
   const intptr_t onerow = channel.plane.PixelsPerRow();
   JXL_ASSIGN_OR_RETURN(
       Channel references,
-      Channel::Create(properties.size() - kNumNonrefProperties, channel.w));
+      Channel::Create(memory_manager, properties.size() - kNumNonrefProperties,
+                      channel.w));
   weighted::State wp_state(wp_header, channel.w, channel.h);
   tree_samples.PrepareForSamples(pixel_fraction * channel.h * channel.w + 64);
   const bool multiple_predictors = tree_samples.NumPredictors() != 1;
@@ -214,8 +217,8 @@ Tree PredefinedTree(ModularOptions::TreeKind tree_kind, size_t total_pixels) {
     tree.push_back(PropertyDecisionNode::Split(0, 2, 3));
     // 2: c > 0
     tree.push_back(PropertyDecisionNode::Split(0, 0, 5));
-    // 3: EPF control field (all 0 or 4), top > 0
-    tree.push_back(PropertyDecisionNode::Split(6, 0, 21));
+    // 3: EPF control field (all 0 or 4), top > 3
+    tree.push_back(PropertyDecisionNode::Split(6, 3, 21));
     // 4: ACS+QF, y > 0
     tree.push_back(PropertyDecisionNode::Split(2, 0, 7));
     // 5: CfL x
@@ -241,9 +244,9 @@ Tree PredefinedTree(ModularOptions::TreeKind tree_kind, size_t total_pixels) {
     tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
     tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
     tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
-    // EPF, left > 0
-    tree.push_back(PropertyDecisionNode::Split(7, 0, 23));
-    tree.push_back(PropertyDecisionNode::Split(7, 0, 25));
+    // EPF, left > 3
+    tree.push_back(PropertyDecisionNode::Split(7, 3, 23));
+    tree.push_back(PropertyDecisionNode::Split(7, 3, 25));
     tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
     tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
     tree.push_back(PropertyDecisionNode::Leaf(Predictor::Zero));
@@ -304,12 +307,14 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
                                  AuxOut *aux_out, size_t group_id,
                                  bool skip_encoder_fast_path) {
   const Channel &channel = image.channel[chan];
+  JxlMemoryManager *memory_manager = channel.memory_manager();
   Token *tokenp = *tokenpp;
   JXL_ASSERT(channel.w != 0 && channel.h != 0);
 
   Image3F predictor_img;
   if (kWantDebug) {
-    JXL_ASSIGN_OR_RETURN(predictor_img, Image3F::Create(channel.w, channel.h));
+    JXL_ASSIGN_OR_RETURN(predictor_img,
+                         Image3F::Create(memory_manager, channel.w, channel.h));
   }
 
   JXL_DEBUG_V(6,
@@ -452,7 +457,8 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
     const intptr_t onerow = channel.plane.PixelsPerRow();
     JXL_ASSIGN_OR_RETURN(
         Channel references,
-        Channel::Create(properties.size() - kNumNonrefProperties, channel.w));
+        Channel::Create(memory_manager,
+                        properties.size() - kNumNonrefProperties, channel.w));
     for (size_t y = 0; y < channel.h; y++) {
       const pixel_type *JXL_RESTRICT p = channel.Row(y);
       PrecomputeReferences(channel, y, image, chan, &references);
@@ -481,7 +487,8 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
     const intptr_t onerow = channel.plane.PixelsPerRow();
     JXL_ASSIGN_OR_RETURN(
         Channel references,
-        Channel::Create(properties.size() - kNumNonrefProperties, channel.w));
+        Channel::Create(memory_manager,
+                        properties.size() - kNumNonrefProperties, channel.w));
     weighted::State wp_state(wp_header, channel.w, channel.h);
     for (size_t y = 0; y < channel.h; y++) {
       const pixel_type *JXL_RESTRICT p = channel.Row(y);
@@ -528,6 +535,7 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
                      GroupHeader *header, std::vector<Token> *tokens,
                      size_t *width) {
   if (image.error) return JXL_FAILURE("Invalid image");
+  JxlMemoryManager *memory_manager = image.memory_manager();
   size_t nb_channels = image.channel.size();
   JXL_DEBUG_V(
       2, "Encoding %" PRIuS "-channel, %i-bit, %" PRIuS "x%" PRIuS " image.",
@@ -634,9 +642,9 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
     } */
 
     // Write tree
-    BuildAndEncodeHistograms(options.histogram_params, kNumTreeContexts,
-                             tree_tokens, &code, &context_map, writer,
-                             kLayerModularTree, aux_out);
+    BuildAndEncodeHistograms(memory_manager, options.histogram_params,
+                             kNumTreeContexts, tree_tokens, &code, &context_map,
+                             writer, kLayerModularTree, aux_out);
     WriteTokens(tree_tokens[0], code, context_map, 0, writer, kLayerModularTree,
                 aux_out);
   }
@@ -683,9 +691,9 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
     std::vector<uint8_t> context_map;
     HistogramParams histo_params = options.histogram_params;
     histo_params.image_widths.push_back(image_width);
-    BuildAndEncodeHistograms(histo_params, (tree->size() + 1) / 2,
-                             tokens_storage, &code, &context_map, writer, layer,
-                             aux_out);
+    BuildAndEncodeHistograms(memory_manager, histo_params,
+                             (tree->size() + 1) / 2, tokens_storage, &code,
+                             &context_map, writer, layer, aux_out);
     WriteTokens(tokens_storage[0], code, context_map, 0, writer, layer,
                 aux_out);
   } else {

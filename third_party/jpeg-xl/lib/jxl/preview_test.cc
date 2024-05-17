@@ -4,6 +4,7 @@
 // license that can be found in the LICENSE file.
 
 #include <jxl/cms.h>
+#include <jxl/memory_manager.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -28,9 +29,10 @@ using test::ReadTestData;
 using test::Roundtrip;
 
 TEST(PreviewTest, RoundtripGivenPreview) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
-  CodecInOut io;
+  CodecInOut io{memory_manager};
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io));
   io.ShrinkTo(io.xsize() / 8, io.ysize() / 8);
   // Same as main image
@@ -47,7 +49,7 @@ TEST(PreviewTest, RoundtripGivenPreview) {
   cparams.speed_tier = SpeedTier::kSquirrel;
   cparams.SetCms(*JxlGetDefaultCms());
 
-  CodecInOut io2;
+  CodecInOut io2{memory_manager};
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
   EXPECT_EQ(preview_xsize, io2.metadata.m.preview_size.xsize());
   EXPECT_EQ(preview_ysize, io2.metadata.m.preview_size.ysize());

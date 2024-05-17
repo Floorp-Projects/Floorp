@@ -5,6 +5,8 @@
 
 #include "lib/jxl/quantizer.h"
 
+#include <jxl/memory_manager.h>
+
 #include <cstddef>
 #include <cstdint>
 
@@ -16,6 +18,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/quant_weights.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
@@ -39,13 +42,15 @@ TEST(QuantizerTest, QuantizerParams) {
 }
 
 TEST(QuantizerTest, BitStreamRoundtripSameQuant) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const int qxsize = 8;
   const int qysize = 8;
   DequantMatrices dequant;
   Quantizer quantizer1(&dequant);
-  JXL_ASSIGN_OR_DIE(ImageI raw_quant_field, ImageI::Create(qxsize, qysize));
+  JXL_ASSIGN_OR_DIE(ImageI raw_quant_field,
+                    ImageI::Create(jxl::test::MemoryManager(), qxsize, qysize));
   quantizer1.SetQuant(0.17f, 0.17f, &raw_quant_field);
-  BitWriter writer;
+  BitWriter writer{memory_manager};
   QuantizerParams params = quantizer1.GetParams();
   EXPECT_TRUE(WriteQuantizerParams(params, &writer, 0, nullptr));
   writer.ZeroPadToByte();
@@ -60,17 +65,19 @@ TEST(QuantizerTest, BitStreamRoundtripSameQuant) {
 }
 
 TEST(QuantizerTest, BitStreamRoundtripRandomQuant) {
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
   const int qxsize = 8;
   const int qysize = 8;
   DequantMatrices dequant;
   Quantizer quantizer1(&dequant);
-  JXL_ASSIGN_OR_DIE(ImageI raw_quant_field, ImageI::Create(qxsize, qysize));
+  JXL_ASSIGN_OR_DIE(ImageI raw_quant_field,
+                    ImageI::Create(memory_manager, qxsize, qysize));
   quantizer1.SetQuant(0.17f, 0.17f, &raw_quant_field);
   float quant_dc = 0.17f;
-  JXL_ASSIGN_OR_DIE(ImageF qf, ImageF::Create(qxsize, qysize));
+  JXL_ASSIGN_OR_DIE(ImageF qf, ImageF::Create(memory_manager, qxsize, qysize));
   RandomFillImage(&qf, 0.0f, 1.0f);
   quantizer1.SetQuantField(quant_dc, qf, &raw_quant_field);
-  BitWriter writer;
+  BitWriter writer{memory_manager};
   QuantizerParams params = quantizer1.GetParams();
   EXPECT_TRUE(WriteQuantizerParams(params, &writer, 0, nullptr));
   writer.ZeroPadToByte();

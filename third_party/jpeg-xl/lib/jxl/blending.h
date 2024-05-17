@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_BLENDING_H_
 #define LIB_JXL_BLENDING_H_
 
+#include <jxl/memory_manager.h>
+
 #include <cstddef>
 #include <vector>
 
@@ -18,9 +20,9 @@ namespace jxl {
 
 bool NeedsBlending(const FrameHeader& frame_header);
 
-Status PerformBlending(const float* const* bg, const float* const* fg,
-                       float* const* out, size_t x0, size_t xsize,
-                       const PatchBlending& color_blending,
+Status PerformBlending(JxlMemoryManager* memory_manager, const float* const* bg,
+                       const float* const* fg, float* const* out, size_t x0,
+                       size_t xsize, const PatchBlending& color_blending,
                        const PatchBlending* ec_blending,
                        const std::vector<ExtraChannelInfo>& extra_channel_info);
 

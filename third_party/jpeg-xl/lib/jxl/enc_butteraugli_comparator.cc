@@ -16,8 +16,9 @@ JxlButteraugliComparator::JxlButteraugliComparator(
 
 Status JxlButteraugliComparator::SetReferenceImage(const ImageBundle& ref) {
   const ImageBundle* ref_linear_srgb;
+  JxlMemoryManager* memory_manager = ref.memory_manager();
   ImageMetadata metadata = *ref.metadata();
-  ImageBundle store(&metadata);
+  ImageBundle store(memory_manager, &metadata);
   if (!TransformIfNeeded(ref, ColorEncoding::LinearSRGB(ref.IsGray()), cms_,
                          /*pool=*/nullptr, &store, &ref_linear_srgb)) {
     return false;
@@ -46,17 +47,19 @@ Status JxlButteraugliComparator::CompareWith(const ImageBundle& actual,
   if (xsize_ != actual.xsize() || ysize_ != actual.ysize()) {
     return JXL_FAILURE("Images must have same size");
   }
+  JxlMemoryManager* memory_manager = actual.memory_manager();
 
   const ImageBundle* actual_linear_srgb;
   ImageMetadata metadata = *actual.metadata();
-  ImageBundle store(&metadata);
+  ImageBundle store(memory_manager, &metadata);
   if (!TransformIfNeeded(actual, ColorEncoding::LinearSRGB(actual.IsGray()),
                          cms_,
                          /*pool=*/nullptr, &store, &actual_linear_srgb)) {
     return false;
   }
 
-  JXL_ASSIGN_OR_RETURN(ImageF temp_diffmap, ImageF::Create(xsize_, ysize_));
+  JXL_ASSIGN_OR_RETURN(ImageF temp_diffmap,
+                       ImageF::Create(memory_manager, xsize_, ysize_));
   JXL_RETURN_IF_ERROR(
       comparator_->Diffmap(actual_linear_srgb->color(), temp_diffmap));
 

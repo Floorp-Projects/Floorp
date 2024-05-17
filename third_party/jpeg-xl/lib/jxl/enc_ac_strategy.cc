@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_ac_strategy.h"
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -213,7 +215,9 @@ const uint8_t* TypeMask(const uint8_t& raw_strategy) {
 Status DumpAcStrategy(const AcStrategyImage& ac_strategy, size_t xsize,
                       size_t ysize, const char* tag, AuxOut* aux_out,
                       const CompressParams& cparams) {
-  JXL_ASSIGN_OR_RETURN(Image3F color_acs, Image3F::Create(xsize, ysize));
+  JxlMemoryManager* memory_manager = ac_strategy.memory_manager();
+  JXL_ASSIGN_OR_RETURN(Image3F color_acs,
+                       Image3F::Create(memory_manager, xsize, ysize));
   for (size_t y = 0; y < ysize; y++) {
     float* JXL_RESTRICT rows[3] = {
         color_acs.PlaneRow(0, y),
@@ -451,11 +455,11 @@ float EstimateEntropy(const AcStrategy& acs, float entropy_mul, size_t x,
         }
       }
       static const double kChannelMul[3] = {
-          10.2,
-          1.0,
-          1.03,
+          pow(10.2, 8.0),
+          pow(1.0, 8.0),
+          pow(1.03, 8.0),
       };
-      lossc = Mul(Set(df8, pow(kChannelMul[c], 8.0)), lossc);
+      lossc = Mul(Set(df8, kChannelMul[c]), lossc);
       loss = Add(loss, lossc);
     }
     entropy += config.cost_delta * GetLane(SumOfLanes(df, entropy_v));
@@ -846,7 +850,7 @@ void ProcessRectACS(const CompressParams& cparams, const ACSConfig& config,
     float entropy_mul;
   };
   // These numbers need to be figured out manually and looking at
-  // ringing next to sky etc. Optimization will find larger numbers
+  // ringing next to sky etc. Optimization will find smaller numbers
   // and produce more ringing than is ideal. Larger numbers will
   // help stop ringing.
   const float entropy_mul16X8 = 1.25;

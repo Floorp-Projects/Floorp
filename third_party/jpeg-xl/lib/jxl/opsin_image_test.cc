@@ -4,6 +4,7 @@
 // license that can be found in the LICENSE file.
 
 #include <jxl/cms.h>
+#include <jxl/memory_manager.h>
 
 #include <cstddef>
 #include <utility>
@@ -19,6 +20,7 @@
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_metadata.h"
 #include "lib/jxl/opsin_params.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
@@ -29,7 +31,8 @@ namespace {
 void LinearSrgbToOpsin(float rgb_r, float rgb_g, float rgb_b,
                        float* JXL_RESTRICT xyb_x, float* JXL_RESTRICT xyb_y,
                        float* JXL_RESTRICT xyb_b) {
-  JXL_ASSIGN_OR_DIE(Image3F linear, Image3F::Create(1, 1));
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  JXL_ASSIGN_OR_DIE(Image3F linear, Image3F::Create(memory_manager, 1, 1));
   linear.PlaneRow(0, 0)[0] = rgb_r;
   linear.PlaneRow(1, 0)[0] = rgb_g;
   linear.PlaneRow(2, 0)[0] = rgb_b;
@@ -37,9 +40,9 @@ void LinearSrgbToOpsin(float rgb_r, float rgb_g, float rgb_b,
   ImageMetadata metadata;
   metadata.SetFloat32Samples();
   metadata.color_encoding = ColorEncoding::LinearSRGB();
-  ImageBundle ib(&metadata);
+  ImageBundle ib(memory_manager, &metadata);
   ib.SetFromImage(std::move(linear), metadata.color_encoding);
-  JXL_ASSIGN_OR_DIE(Image3F opsin, Image3F::Create(1, 1));
+  JXL_ASSIGN_OR_DIE(Image3F opsin, Image3F::Create(memory_manager, 1, 1));
   (void)ToXYB(ib, /*pool=*/nullptr, &opsin, *JxlGetDefaultCms());
 
   *xyb_x = opsin.PlaneRow(0, 0)[0];
@@ -52,11 +55,12 @@ void LinearSrgbToOpsin(float rgb_r, float rgb_g, float rgb_b,
 void OpsinToLinearSrgb(float xyb_x, float xyb_y, float xyb_b,
                        float* JXL_RESTRICT rgb_r, float* JXL_RESTRICT rgb_g,
                        float* JXL_RESTRICT rgb_b) {
-  JXL_ASSIGN_OR_DIE(Image3F opsin, Image3F::Create(1, 1));
+  JxlMemoryManager* memory_manager = jxl::test::MemoryManager();
+  JXL_ASSIGN_OR_DIE(Image3F opsin, Image3F::Create(memory_manager, 1, 1));
   opsin.PlaneRow(0, 0)[0] = xyb_x;
   opsin.PlaneRow(1, 0)[0] = xyb_y;
   opsin.PlaneRow(2, 0)[0] = xyb_b;
-  JXL_ASSIGN_OR_DIE(Image3F linear, Image3F::Create(1, 1));
+  JXL_ASSIGN_OR_DIE(Image3F linear, Image3F::Create(memory_manager, 1, 1));
   OpsinParams opsin_params;
   opsin_params.Init(/*intensity_target=*/255.0f);
   OpsinToLinear(opsin, Rect(opsin), nullptr, &linear, opsin_params);

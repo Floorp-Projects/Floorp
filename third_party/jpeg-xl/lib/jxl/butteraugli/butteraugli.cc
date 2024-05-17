@@ -22,6 +22,8 @@
 
 #include "lib/jxl/butteraugli/butteraugli.h"
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -409,8 +411,9 @@ Status SeparateMFAndHF(const ButteraugliParams& params, Image3F* mf, ImageF* hf,
   static const double kSigmaHf = 3.22489901262;
   const size_t xsize = mf->xsize();
   const size_t ysize = mf->ysize();
-  JXL_ASSIGN_OR_RETURN(hf[0], ImageF::Create(xsize, ysize));
-  JXL_ASSIGN_OR_RETURN(hf[1], ImageF::Create(xsize, ysize));
+  JxlMemoryManager* memory_manager = mf[0].memory_manager();
+  JXL_ASSIGN_OR_RETURN(hf[0], ImageF::Create(memory_manager, xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(hf[1], ImageF::Create(memory_manager, xsize, ysize));
   for (int i = 0; i < 3; ++i) {
     if (i == 2) {
       JXL_RETURN_IF_ERROR(
@@ -465,9 +468,10 @@ Status SeparateHFAndUHF(const ButteraugliParams& params, ImageF* hf,
   const HWY_FULL(float) d;
   const size_t xsize = hf[0].xsize();
   const size_t ysize = hf[0].ysize();
+  JxlMemoryManager* memory_manager = hf[0].memory_manager();
   static const double kSigmaUhf = 1.56416327805;
-  JXL_ASSIGN_OR_RETURN(uhf[0], ImageF::Create(xsize, ysize));
-  JXL_ASSIGN_OR_RETURN(uhf[1], ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(uhf[0], ImageF::Create(memory_manager, xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(uhf[1], ImageF::Create(memory_manager, xsize, ysize));
   for (int i = 0; i < 2; ++i) {
     // Divide hf into hf and uhf.
     for (size_t y = 0; y < ysize; ++y) {
@@ -531,8 +535,11 @@ void DeallocateHFAndUHF(ImageF* hf, ImageF* uhf) {
 Status SeparateFrequencies(size_t xsize, size_t ysize,
                            const ButteraugliParams& params, BlurTemp* blur_temp,
                            const Image3F& xyb, PsychoImage& ps) {
-  JXL_ASSIGN_OR_RETURN(ps.lf, Image3F::Create(xyb.xsize(), xyb.ysize()));
-  JXL_ASSIGN_OR_RETURN(ps.mf, Image3F::Create(xyb.xsize(), xyb.ysize()));
+  JxlMemoryManager* memory_manager = xyb.memory_manager();
+  JXL_ASSIGN_OR_RETURN(
+      ps.lf, Image3F::Create(memory_manager, xyb.xsize(), xyb.ysize()));
+  JXL_ASSIGN_OR_RETURN(
+      ps.mf, Image3F::Create(memory_manager, xyb.xsize(), xyb.ysize()));
   JXL_RETURN_IF_ERROR(SeparateLFAndMF(params, xyb, &ps.lf, &ps.mf, blur_temp));
   JXL_RETURN_IF_ERROR(SeparateMFAndHF(params, &ps.mf, &ps.hf[0], blur_temp));
   JXL_RETURN_IF_ERROR(
@@ -1204,14 +1211,19 @@ Status Mask(const ImageF& mask0, const ImageF& mask1,
             ImageF* BUTTERAUGLI_RESTRICT diff_ac) {
   const size_t xsize = mask0.xsize();
   const size_t ysize = mask0.ysize();
-  JXL_ASSIGN_OR_RETURN(*mask, ImageF::Create(xsize, ysize));
+  JxlMemoryManager* memory_manager = mask0.memory_manager();
+  JXL_ASSIGN_OR_RETURN(*mask, ImageF::Create(memory_manager, xsize, ysize));
   static const float kMul = 6.19424080439;
   static const float kBias = 12.61050594197;
   static const float kRadius = 2.7;
-  JXL_ASSIGN_OR_RETURN(ImageF diff0, ImageF::Create(xsize, ysize));
-  JXL_ASSIGN_OR_RETURN(ImageF diff1, ImageF::Create(xsize, ysize));
-  JXL_ASSIGN_OR_RETURN(ImageF blurred0, ImageF::Create(xsize, ysize));
-  JXL_ASSIGN_OR_RETURN(ImageF blurred1, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF diff0,
+                       ImageF::Create(memory_manager, xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF diff1,
+                       ImageF::Create(memory_manager, xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF blurred0,
+                       ImageF::Create(memory_manager, xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF blurred1,
+                       ImageF::Create(memory_manager, xsize, ysize));
   DiffPrecompute(mask0, kMul, kBias, &diff0);
   DiffPrecompute(mask1, kMul, kBias, &diff1);
   JXL_RETURN_IF_ERROR(Blur(diff0, kRadius, params, blur_temp, &blurred0));
@@ -1236,8 +1248,11 @@ Status MaskPsychoImage(const PsychoImage& pi0, const PsychoImage& pi1,
                        const ButteraugliParams& params, BlurTemp* blur_temp,
                        ImageF* BUTTERAUGLI_RESTRICT mask,
                        ImageF* BUTTERAUGLI_RESTRICT diff_ac) {
-  JXL_ASSIGN_OR_RETURN(ImageF mask0, ImageF::Create(xsize, ysize));
-  JXL_ASSIGN_OR_RETURN(ImageF mask1, ImageF::Create(xsize, ysize));
+  JxlMemoryManager* memory_manager = pi0.hf[0].memory_manager();
+  JXL_ASSIGN_OR_RETURN(ImageF mask0,
+                       ImageF::Create(memory_manager, xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF mask1,
+                       ImageF::Create(memory_manager, xsize, ysize));
   CombineChannelsForMasking(&pi0.hf[0], &pi0.uhf[0], &mask0);
   CombineChannelsForMasking(&pi1.hf[0], &pi1.uhf[0], &mask1);
   JXL_RETURN_IF_ERROR(Mask(mask0, mask1, params, blur_temp, mask, diff_ac));
@@ -1521,23 +1536,28 @@ Status ButteraugliDiffmapInPlace(Image3F& image0, Image3F& image1,
   // image0 and image1 are in linear sRGB color space
   const size_t xsize = image0.xsize();
   const size_t ysize = image0.ysize();
+  JxlMemoryManager* memory_manager = image0.memory_manager();
   BlurTemp blur_temp;
   {
     // Convert image0 and image1 to XYB in-place
-    JXL_ASSIGN_OR_RETURN(Image3F temp, Image3F::Create(xsize, ysize));
+    JXL_ASSIGN_OR_RETURN(Image3F temp,
+                         Image3F::Create(memory_manager, xsize, ysize));
     JXL_RETURN_IF_ERROR(
         OpsinDynamicsImage(image0, params, &temp, &blur_temp, &image0));
     JXL_RETURN_IF_ERROR(
         OpsinDynamicsImage(image1, params, &temp, &blur_temp, &image1));
   }
   // image0 and image1 are in XYB color space
-  JXL_ASSIGN_OR_RETURN(ImageF block_diff_dc, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF block_diff_dc,
+                       ImageF::Create(memory_manager, xsize, ysize));
   ZeroFillImage(&block_diff_dc);
   {
     // separate out LF components from image0 and image1 and compute the dc
     // diff image from them
-    JXL_ASSIGN_OR_RETURN(Image3F lf0, Image3F::Create(xsize, ysize));
-    JXL_ASSIGN_OR_RETURN(Image3F lf1, Image3F::Create(xsize, ysize));
+    JXL_ASSIGN_OR_RETURN(Image3F lf0,
+                         Image3F::Create(memory_manager, xsize, ysize));
+    JXL_ASSIGN_OR_RETURN(Image3F lf1,
+                         Image3F::Create(memory_manager, xsize, ysize));
     JXL_RETURN_IF_ERROR(
         SeparateLFAndMF(params, image0, &lf0, &image0, &blur_temp));
     JXL_RETURN_IF_ERROR(
@@ -1553,11 +1573,13 @@ Status ButteraugliDiffmapInPlace(Image3F& image0, Image3F& image1,
   JXL_RETURN_IF_ERROR(SeparateMFAndHF(params, &image1, &hf1[0], &blur_temp));
   // image0 and image1 are MF-images in XYB color space
 
-  JXL_ASSIGN_OR_RETURN(ImageF block_diff_ac, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF block_diff_ac,
+                       ImageF::Create(memory_manager, xsize, ysize));
   ZeroFillImage(&block_diff_ac);
   // start accumulating ac diff image from MF images
   {
-    JXL_ASSIGN_OR_RETURN(ImageF diffs, ImageF::Create(xsize, ysize));
+    JXL_ASSIGN_OR_RETURN(ImageF diffs,
+                         ImageF::Create(memory_manager, xsize, ysize));
     MaltaDiffMapLF(image0.Plane(1), image1.Plane(1), wMfMalta, wMfMalta,
                    norm1Mf, &diffs, &block_diff_ac);
     MaltaDiffMapLF(image0.Plane(0), image1.Plane(0), wMfMaltaX, wMfMaltaX,
@@ -1579,7 +1601,8 @@ Status ButteraugliDiffmapInPlace(Image3F& image0, Image3F& image1,
   // continue accumulating ac diff image from HF and UHF images
   const float hf_asymmetry = params.hf_asymmetry;
   {
-    JXL_ASSIGN_OR_RETURN(ImageF diffs, ImageF::Create(xsize, ysize));
+    JXL_ASSIGN_OR_RETURN(ImageF diffs,
+                         ImageF::Create(memory_manager, xsize, ysize));
     MaltaDiffMap(uhf0[1], uhf1[1], wUhfMalta * hf_asymmetry,
                  wUhfMalta / hf_asymmetry, norm1Uhf, &diffs, &block_diff_ac);
     MaltaDiffMap(uhf0[0], uhf1[0], wUhfMaltaX * hf_asymmetry,
@@ -1597,10 +1620,13 @@ Status ButteraugliDiffmapInPlace(Image3F& image0, Image3F& image1,
   }
 
   // compute mask image from HF and UHF X and Y images
-  JXL_ASSIGN_OR_RETURN(ImageF mask, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF mask,
+                       ImageF::Create(memory_manager, xsize, ysize));
   {
-    JXL_ASSIGN_OR_RETURN(ImageF mask0, ImageF::Create(xsize, ysize));
-    JXL_ASSIGN_OR_RETURN(ImageF mask1, ImageF::Create(xsize, ysize));
+    JXL_ASSIGN_OR_RETURN(ImageF mask0,
+                         ImageF::Create(memory_manager, xsize, ysize));
+    JXL_ASSIGN_OR_RETURN(ImageF mask1,
+                         ImageF::Create(memory_manager, xsize, ysize));
     CombineChannelsForMasking(&hf0[0], &uhf0[0], &mask0);
     CombineChannelsForMasking(&hf1[0], &uhf1[0], &mask1);
     DeallocateHFAndUHF(&hf1[0], &uhf1[0]);
@@ -1610,7 +1636,7 @@ Status ButteraugliDiffmapInPlace(Image3F& image0, Image3F& image1,
   }
 
   // compute final diffmap from mask image and ac and dc diff images
-  JXL_ASSIGN_OR_RETURN(diffmap, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(diffmap, ImageF::Create(memory_manager, xsize, ysize));
   for (size_t y = 0; y < ysize; ++y) {
     const float* row_dc = block_diff_dc.Row(y);
     const float* row_ac = block_diff_ac.Row(y);
@@ -1694,7 +1720,8 @@ static inline void CheckImage(const ImageF& image, const char* name) {
 static StatusOr<Image3F> SubSample2x(const Image3F& in) {
   size_t xs = (in.xsize() + 1) / 2;
   size_t ys = (in.ysize() + 1) / 2;
-  JXL_ASSIGN_OR_RETURN(Image3F retval, Image3F::Create(xs, ys));
+  JxlMemoryManager* memory_manager = in.memory_manager();
+  JXL_ASSIGN_OR_RETURN(Image3F retval, Image3F::Create(memory_manager, xs, ys));
   for (size_t c = 0; c < 3; ++c) {
     for (size_t y = 0; y < ys; ++y) {
       for (size_t x = 0; x < xs; ++x) {
@@ -1754,16 +1781,19 @@ StatusOr<std::unique_ptr<ButteraugliComparator>> ButteraugliComparator::Make(
     const Image3F& rgb0, const ButteraugliParams& params) {
   size_t xsize = rgb0.xsize();
   size_t ysize = rgb0.ysize();
+  JxlMemoryManager* memory_manager = rgb0.memory_manager();
   std::unique_ptr<ButteraugliComparator> result =
       std::unique_ptr<ButteraugliComparator>(
           new ButteraugliComparator(xsize, ysize, params));
-  JXL_ASSIGN_OR_RETURN(result->temp_, Image3F::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(result->temp_,
+                       Image3F::Create(memory_manager, xsize, ysize));
 
   if (xsize < 8 || ysize < 8) {
     return result;
   }
 
-  JXL_ASSIGN_OR_RETURN(Image3F xyb0, Image3F::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(Image3F xyb0,
+                       Image3F::Create(memory_manager, xsize, ysize));
   JXL_RETURN_IF_ERROR(HWY_DYNAMIC_DISPATCH(OpsinDynamicsImage)(
       rgb0, params, result->Temp(), &result->blur_temp_, &xyb0));
   result->ReleaseTemp();
@@ -1789,11 +1819,13 @@ Status ButteraugliComparator::Mask(ImageF* BUTTERAUGLI_RESTRICT mask) const {
 
 Status ButteraugliComparator::Diffmap(const Image3F& rgb1,
                                       ImageF& result) const {
+  JxlMemoryManager* memory_manager = rgb1.memory_manager();
   if (xsize_ < 8 || ysize_ < 8) {
     ZeroFillImage(&result);
     return true;
   }
-  JXL_ASSIGN_OR_RETURN(Image3F xyb1, Image3F::Create(xsize_, ysize_));
+  JXL_ASSIGN_OR_RETURN(Image3F xyb1,
+                       Image3F::Create(memory_manager, xsize_, ysize_));
   JXL_RETURN_IF_ERROR(HWY_DYNAMIC_DISPATCH(OpsinDynamicsImage)(
       rgb1, params_, Temp(), &blur_temp_, &xyb1));
   ReleaseTemp();
@@ -1802,8 +1834,9 @@ Status ButteraugliComparator::Diffmap(const Image3F& rgb1,
     if (sub_->xsize_ < 8 || sub_->ysize_ < 8) {
       return true;
     }
-    JXL_ASSIGN_OR_RETURN(Image3F sub_xyb,
-                         Image3F::Create(sub_->xsize_, sub_->ysize_));
+    JXL_ASSIGN_OR_RETURN(
+        Image3F sub_xyb,
+        Image3F::Create(memory_manager, sub_->xsize_, sub_->ysize_));
     JXL_ASSIGN_OR_RETURN(Image3F subsampledRgb1, SubSample2x(rgb1));
     JXL_RETURN_IF_ERROR(HWY_DYNAMIC_DISPATCH(OpsinDynamicsImage)(
         subsampledRgb1, params_, sub_->Temp(), &sub_->blur_temp_, &sub_xyb));
@@ -1817,6 +1850,7 @@ Status ButteraugliComparator::Diffmap(const Image3F& rgb1,
 
 Status ButteraugliComparator::DiffmapOpsinDynamicsImage(const Image3F& xyb1,
                                                         ImageF& result) const {
+  JxlMemoryManager* memory_manager = xyb1.memory_manager();
   if (xsize_ < 8 || ysize_ < 8) {
     ZeroFillImage(&result);
     return true;
@@ -1824,7 +1858,7 @@ Status ButteraugliComparator::DiffmapOpsinDynamicsImage(const Image3F& xyb1,
   PsychoImage pi1;
   JXL_RETURN_IF_ERROR(HWY_DYNAMIC_DISPATCH(SeparateFrequencies)(
       xsize_, ysize_, params_, &blur_temp_, xyb1, pi1));
-  JXL_ASSIGN_OR_RETURN(result, ImageF::Create(xsize_, ysize_));
+  JXL_ASSIGN_OR_RETURN(result, ImageF::Create(memory_manager, xsize_, ysize_));
   return DiffmapPsychoImage(pi1, result);
 }
 
@@ -1850,6 +1884,7 @@ void MaltaDiffMapLF(const ImageF& lum0, const ImageF& lum1, const double w_0gt1,
 
 Status ButteraugliComparator::DiffmapPsychoImage(const PsychoImage& pi1,
                                                  ImageF& diffmap) const {
+  JxlMemoryManager* memory_manager = diffmap.memory_manager();
   if (xsize_ < 8 || ysize_ < 8) {
     ZeroFillImage(&diffmap);
     return true;
@@ -1858,8 +1893,10 @@ Status ButteraugliComparator::DiffmapPsychoImage(const PsychoImage& pi1,
   const float hf_asymmetry_ = params_.hf_asymmetry;
   const float xmul_ = params_.xmul;
 
-  JXL_ASSIGN_OR_RETURN(ImageF diffs, ImageF::Create(xsize_, ysize_));
-  JXL_ASSIGN_OR_RETURN(Image3F block_diff_ac, Image3F::Create(xsize_, ysize_));
+  JXL_ASSIGN_OR_RETURN(ImageF diffs,
+                       ImageF::Create(memory_manager, xsize_, ysize_));
+  JXL_ASSIGN_OR_RETURN(Image3F block_diff_ac,
+                       Image3F::Create(memory_manager, xsize_, ysize_));
   ZeroFillImage(&block_diff_ac);
   MaltaDiffMap(pi0_.uhf[1], pi1.uhf[1], wUhfMalta * hf_asymmetry_,
                wUhfMalta / hf_asymmetry_, norm1Uhf, &diffs, &block_diff_ac, 1);
@@ -1877,7 +1914,8 @@ Status ButteraugliComparator::DiffmapPsychoImage(const PsychoImage& pi1,
   MaltaDiffMapLF(pi0_.mf.Plane(0), pi1.mf.Plane(0), wMfMaltaX, wMfMaltaX,
                  norm1MfX, &diffs, &block_diff_ac, 0);
 
-  JXL_ASSIGN_OR_RETURN(Image3F block_diff_dc, Image3F::Create(xsize_, ysize_));
+  JXL_ASSIGN_OR_RETURN(Image3F block_diff_dc,
+                       Image3F::Create(memory_manager, xsize_, ysize_));
   for (size_t c = 0; c < 3; ++c) {
     if (c < 2) {  // No blue channel error accumulated at HF.
       HWY_DYNAMIC_DISPATCH(L2DiffAsymmetric)
@@ -1925,6 +1963,7 @@ bool ButteraugliDiffmapSmall(const Image3F& rgb0, const Image3F& rgb1,
                              const ButteraugliParams& params, ImageF& diffmap) {
   const size_t xsize = rgb0.xsize();
   const size_t ysize = rgb0.ysize();
+  JxlMemoryManager* memory_manager = rgb0.memory_manager();
   // Butteraugli values for small (where xsize or ysize is smaller
   // than 8 pixels) images are non-sensical, but most likely it is
   // less disruptive to try to compute something than just give up.
@@ -1933,8 +1972,10 @@ bool ButteraugliDiffmapSmall(const Image3F& rgb0, const Image3F& rgb1,
   size_t yborder = ysize < kMax ? (kMax - ysize) / 2 : 0;
   size_t xscaled = std::max<size_t>(kMax, xsize);
   size_t yscaled = std::max<size_t>(kMax, ysize);
-  JXL_ASSIGN_OR_RETURN(Image3F scaled0, Image3F::Create(xscaled, yscaled));
-  JXL_ASSIGN_OR_RETURN(Image3F scaled1, Image3F::Create(xscaled, yscaled));
+  JXL_ASSIGN_OR_RETURN(Image3F scaled0,
+                       Image3F::Create(memory_manager, xscaled, yscaled));
+  JXL_ASSIGN_OR_RETURN(Image3F scaled1,
+                       Image3F::Create(memory_manager, xscaled, yscaled));
   for (int i = 0; i < 3; ++i) {
     for (size_t y = 0; y < yscaled; ++y) {
       for (size_t x = 0; x < xscaled; ++x) {
@@ -1947,7 +1988,7 @@ bool ButteraugliDiffmapSmall(const Image3F& rgb0, const Image3F& rgb1,
   }
   ImageF diffmap_scaled;
   const bool ok = ButteraugliDiffmap(scaled0, scaled1, params, diffmap_scaled);
-  JXL_ASSIGN_OR_RETURN(diffmap, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(diffmap, ImageF::Create(memory_manager, xsize, ysize));
   for (size_t y = 0; y < ysize; ++y) {
     for (size_t x = 0; x < xsize; ++x) {
       diffmap.Row(y)[x] = diffmap_scaled.Row(y + yborder)[x + xborder];
@@ -2111,8 +2152,10 @@ void ScoreToRgb(double score, double good_threshold, double bad_threshold,
 StatusOr<Image3F> CreateHeatMapImage(const ImageF& distmap,
                                      double good_threshold,
                                      double bad_threshold) {
-  JXL_ASSIGN_OR_RETURN(Image3F heatmap,
-                       Image3F::Create(distmap.xsize(), distmap.ysize()));
+  JxlMemoryManager* memory_manager = distmap.memory_manager();
+  JXL_ASSIGN_OR_RETURN(
+      Image3F heatmap,
+      Image3F::Create(memory_manager, distmap.xsize(), distmap.ysize()));
   for (size_t y = 0; y < distmap.ysize(); ++y) {
     const float* BUTTERAUGLI_RESTRICT row_distmap = distmap.ConstRow(y);
     float* BUTTERAUGLI_RESTRICT row_h0 = heatmap.PlaneRow(0, y);

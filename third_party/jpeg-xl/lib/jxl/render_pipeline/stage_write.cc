@@ -5,16 +5,19 @@
 
 #include "lib/jxl/render_pipeline/stage_write.h"
 
+#include <jxl/memory_manager.h>
+
+#include <cstdint>
 #include <type_traits>
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
-#include "lib/jxl/sanitizers.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_write.cc"
@@ -114,7 +117,8 @@ class WriteToOutputStage : public RenderPipelineStage {
   WriteToOutputStage(const ImageOutput& main_output, size_t width,
                      size_t height, bool has_alpha, bool unpremul_alpha,
                      size_t alpha_c, Orientation undo_orientation,
-                     const std::vector<ImageOutput>& extra_output)
+                     const std::vector<ImageOutput>& extra_output,
+                     JxlMemoryManager* memory_manager)
       : RenderPipelineStage(RenderPipelineStage::Settings()),
         width_(width),
         height_(height),
@@ -537,10 +541,10 @@ constexpr size_t WriteToOutputStage::kMaxPixelsPerCall;
 std::unique_ptr<RenderPipelineStage> GetWriteToOutputStage(
     const ImageOutput& main_output, size_t width, size_t height, bool has_alpha,
     bool unpremul_alpha, size_t alpha_c, Orientation undo_orientation,
-    std::vector<ImageOutput>& extra_output) {
+    std::vector<ImageOutput>& extra_output, JxlMemoryManager* memory_manager) {
   return jxl::make_unique<WriteToOutputStage>(
       main_output, width, height, has_alpha, unpremul_alpha, alpha_c,
-      undo_orientation, extra_output);
+      undo_orientation, extra_output, memory_manager);
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -565,6 +569,7 @@ class WriteToImageBundleStage : public RenderPipelineStage {
 
   Status SetInputSizes(
       const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
+    JxlMemoryManager* memory_manager = image_bundle_->memory_manager();
 #if JXL_ENABLE_ASSERT
     JXL_ASSERT(input_sizes.size() >= 3);
     for (size_t c = 1; c < input_sizes.size(); c++) {
@@ -573,14 +578,16 @@ class WriteToImageBundleStage : public RenderPipelineStage {
     }
 #endif
     // TODO(eustas): what should we do in the case of "want only ECs"?
-    JXL_ASSIGN_OR_RETURN(Image3F tmp, Image3F::Create(input_sizes[0].first,
-                                                      input_sizes[0].second));
+    JXL_ASSIGN_OR_RETURN(Image3F tmp,
+                         Image3F::Create(memory_manager, input_sizes[0].first,
+                                         input_sizes[0].second));
     image_bundle_->SetFromImage(std::move(tmp), color_encoding_);
     // TODO(veluca): consider not reallocating ECs if not needed.
     image_bundle_->extra_channels().clear();
     for (size_t c = 3; c < input_sizes.size(); c++) {
-      JXL_ASSIGN_OR_RETURN(ImageF ch, ImageF::Create(input_sizes[c].first,
-                                                     input_sizes[c].second));
+      JXL_ASSIGN_OR_RETURN(ImageF ch,
+                           ImageF::Create(memory_manager, input_sizes[c].first,
+                                          input_sizes[c].second));
       image_bundle_->extra_channels().emplace_back(std::move(ch));
     }
     return true;
@@ -617,8 +624,10 @@ class WriteToImageBundleStage : public RenderPipelineStage {
 
 class WriteToImage3FStage : public RenderPipelineStage {
  public:
-  explicit WriteToImage3FStage(Image3F* image)
-      : RenderPipelineStage(RenderPipelineStage::Settings()), image_(image) {}
+  WriteToImage3FStage(JxlMemoryManager* memory_manager, Image3F* image)
+      : RenderPipelineStage(RenderPipelineStage::Settings()),
+        memory_manager_(memory_manager),
+        image_(image) {}
 
   Status SetInputSizes(
       const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
@@ -629,8 +638,9 @@ class WriteToImage3FStage : public RenderPipelineStage {
       JXL_ASSERT(input_sizes[c].second == input_sizes[0].second);
     }
 #endif
-    JXL_ASSIGN_OR_RETURN(
-        *image_, Image3F::Create(input_sizes[0].first, input_sizes[0].second));
+    JXL_ASSIGN_OR_RETURN(*image_,
+                         Image3F::Create(memory_manager_, input_sizes[0].first,
+                                         input_sizes[0].second));
     return true;
   }
 
@@ -653,6 +663,7 @@ class WriteToImage3FStage : public RenderPipelineStage {
   const char* GetName() const override { return "WriteI3F"; }
 
  private:
+  JxlMemoryManager* memory_manager_;
   Image3F* image_;
 };
 
@@ -664,17 +675,18 @@ std::unique_ptr<RenderPipelineStage> GetWriteToImageBundleStage(
                                                    output_encoding_info);
 }
 
-std::unique_ptr<RenderPipelineStage> GetWriteToImage3FStage(Image3F* image) {
-  return jxl::make_unique<WriteToImage3FStage>(image);
+std::unique_ptr<RenderPipelineStage> GetWriteToImage3FStage(
+    JxlMemoryManager* memory_manager, Image3F* image) {
+  return jxl::make_unique<WriteToImage3FStage>(memory_manager, image);
 }
 
 std::unique_ptr<RenderPipelineStage> GetWriteToOutputStage(
     const ImageOutput& main_output, size_t width, size_t height, bool has_alpha,
     bool unpremul_alpha, size_t alpha_c, Orientation undo_orientation,
-    std::vector<ImageOutput>& extra_output) {
+    std::vector<ImageOutput>& extra_output, JxlMemoryManager* memory_manager) {
   return HWY_DYNAMIC_DISPATCH(GetWriteToOutputStage)(
       main_output, width, height, has_alpha, unpremul_alpha, alpha_c,
-      undo_orientation, extra_output);
+      undo_orientation, extra_output, memory_manager);
 }
 
 }  // namespace jxl

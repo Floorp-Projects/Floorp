@@ -6,11 +6,11 @@
 #include "lib/jxl/enc_bit_writer.h"
 
 #include <jxl/types.h>
-#include <string.h>  // memcpy
+
+#include <cstring>  // memcpy
 
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/printf_macros.h"
-#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_aux_out.h"
 
 namespace jxl {

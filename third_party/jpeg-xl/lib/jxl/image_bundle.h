@@ -9,6 +9,7 @@
 // The main image or frame consists of a bundle of associated images.
 
 #include <jxl/cms_interface.h>
+#include <jxl/memory_manager.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -35,24 +36,29 @@ namespace jxl {
 class ImageBundle {
  public:
   // Uninitialized state for use as output parameter.
-  ImageBundle() : metadata_(nullptr) {}
+  explicit ImageBundle(JxlMemoryManager* memory_manager)
+      : memory_manager_(memory_manager), metadata_(nullptr) {}
   // Caller is responsible for setting metadata before calling Set*.
-  explicit ImageBundle(const ImageMetadata* metadata) : metadata_(metadata) {}
+  ImageBundle(JxlMemoryManager* memory_manager, const ImageMetadata* metadata)
+      : memory_manager_(memory_manager), metadata_(metadata) {}
 
   // Move-only (allows storing in std::vector).
   ImageBundle(ImageBundle&&) = default;
   ImageBundle& operator=(ImageBundle&&) = default;
 
   StatusOr<ImageBundle> Copy() const {
-    ImageBundle copy(metadata_);
-    JXL_ASSIGN_OR_RETURN(copy.color_,
-                         Image3F::Create(color_.xsize(), color_.ysize()));
+    JxlMemoryManager* memory_manager = this->memory_manager();
+    ImageBundle copy(memory_manager, metadata_);
+    JXL_ASSIGN_OR_RETURN(
+        copy.color_,
+        Image3F::Create(memory_manager, color_.xsize(), color_.ysize()));
     CopyImageTo(color_, &copy.color_);
     copy.c_current_ = c_current_;
     copy.extra_channels_.reserve(extra_channels_.size());
     for (const ImageF& plane : extra_channels_) {
-      JXL_ASSIGN_OR_RETURN(ImageF ec,
-                           ImageF::Create(plane.xsize(), plane.ysize()));
+      JXL_ASSIGN_OR_RETURN(
+          ImageF ec,
+          ImageF::Create(memory_manager, plane.xsize(), plane.ysize()));
       CopyImageTo(plane, &ec);
       copy.extra_channels_.emplace_back(std::move(ec));
     }
@@ -95,7 +101,11 @@ class ImageBundle {
     }
   }
 
+  JxlMemoryManager* memory_manager_;
+
   // -- COLOR
+
+  JxlMemoryManager* memory_manager() const { return memory_manager_; }
 
   // Whether color() is valid/usable. Returns true in most cases. Even images
   // with spot colors (one example of when !planes().empty()) typically have a

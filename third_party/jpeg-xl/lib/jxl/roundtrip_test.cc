@@ -47,7 +47,7 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
                                  const size_t xsize, const size_t ysize,
                                  const JxlPixelFormat& pixel_format,
                                  const jxl::Bytes& icc_profile) {
-  jxl::CodecInOut io;
+  jxl::CodecInOut io{jxl::test::MemoryManager()};
   io.SetSize(xsize, ysize);
 
   bool is_gray = pixel_format.num_channels < 3;
@@ -237,7 +237,8 @@ void VerifyRoundtripCompression(
     }
   }
   if (alpha_in_extra_channels_vector && !has_interleaved_alpha) {
-    JXL_ASSIGN_OR_DIE(ImageF alpha_channel, ImageF::Create(xsize, ysize));
+    JXL_ASSIGN_OR_DIE(ImageF alpha_channel,
+                      ImageF::Create(jxl::test::MemoryManager(), xsize, ysize));
     EXPECT_TRUE(jxl::ConvertFromExternal(
         extra_channel_bytes.data(), extra_channel_bytes.size(), xsize, ysize,
         basic_info.bits_per_sample, extra_channel_pixel_format, 0,
@@ -946,7 +947,7 @@ JXL_TRANSCODE_JPEG_TEST(RoundtripTest, TestJPEGReconstruction) {
   TEST_LIBJPEG_SUPPORT();
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
   const std::vector<uint8_t> orig = jxl::test::ReadTestData(jpeg_path);
-  jxl::CodecInOut orig_io;
+  jxl::CodecInOut orig_io{jxl::test::MemoryManager()};
   ASSERT_TRUE(SetFromBytes(jxl::Bytes(orig), &orig_io, /*pool=*/nullptr));
 
   JxlEncoderPtr enc = JxlEncoderMake(nullptr);

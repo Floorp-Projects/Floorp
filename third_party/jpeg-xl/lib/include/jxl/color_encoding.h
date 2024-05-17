@@ -32,9 +32,9 @@ typedef enum {
   JXL_COLOR_SPACE_UNKNOWN,
 } JxlColorSpace;
 
-/** Built-in whitepoints for color encoding. When decoding, the numerical xy
- * whitepoint value can be read from the @ref JxlColorEncoding white_point field
- * regardless of the enum value. When encoding, enum values except
+/** Built-in white points for color encoding. When decoding, the numerical xy
+ * white point value can be read from the @ref JxlColorEncoding white_point
+ * field regardless of the enum value. When encoding, enum values except
  * ::JXL_WHITE_POINT_CUSTOM override the numerical fields. Some enum values
  * match a subset of CICP (Rec. ITU-T H.273 | ISO/IEC 23091-2:2019(E)), however
  * the white point and RGB primaries are separate enums here.
@@ -78,7 +78,7 @@ typedef enum {
  * of CICP (Rec. ITU-T H.273 | ISO/IEC 23091-2:2019(E)) unless specified
  * otherwise. */
 typedef enum {
-  /** As specified in SMPTE RP 431-2 */
+  /** As specified in ITU-R BT.709-6 */
   JXL_TRANSFER_FUNCTION_709 = 1,
   /** None of the other table entries describe the transfer function. */
   JXL_TRANSFER_FUNCTION_UNKNOWN = 2,
@@ -97,7 +97,7 @@ typedef enum {
   JXL_TRANSFER_FUNCTION_GAMMA = 65535,
 } JxlTransferFunction;
 
-/** Renderig intent for color encoding, as specified in ISO 15076-1:2010 */
+/** Rendering intent for color encoding, as specified in ISO 15076-1:2010 */
 typedef enum {
   /** vendor-specific */
   JXL_RENDERING_INTENT_PERCEPTUAL = 0,
@@ -117,7 +117,7 @@ typedef struct {
   JxlColorSpace color_space;
 
   /** Built-in white point. If this value is ::JXL_WHITE_POINT_CUSTOM, must
-   * use the numerical whitepoint values from white_point_xy.
+   * use the numerical white point values from white_point_xy.
    */
   JxlWhitePoint white_point;
 

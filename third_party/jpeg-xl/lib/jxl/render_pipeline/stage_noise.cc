@@ -5,14 +5,13 @@
 
 #include "lib/jxl/render_pipeline/stage_noise.h"
 
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/noise.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_noise.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
-
-#include "lib/jxl/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {

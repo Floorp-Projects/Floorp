@@ -6,13 +6,14 @@
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 
 #include <brotli/encode.h>
+#include <jxl/memory_manager.h>
 
+#include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/jpeg/enc_jpeg_data_reader.h"
 #include "lib/jxl/luminance.h"
-#include "lib/jxl/sanitizers.h"
 
 namespace jxl {
 namespace jpeg {
@@ -302,7 +303,8 @@ Status SetColorTransformFromJpegData(const JPEGData& jpg,
   return true;
 }
 
-Status EncodeJPEGData(JPEGData& jpeg_data, std::vector<uint8_t>* bytes,
+Status EncodeJPEGData(JxlMemoryManager* memory_manager, JPEGData& jpeg_data,
+                      std::vector<uint8_t>* bytes,
                       const CompressParams& cparams) {
   bytes->clear();
   jpeg_data.app_marker_type.resize(jpeg_data.app_data.size(),
@@ -326,7 +328,7 @@ Status EncodeJPEGData(JPEGData& jpeg_data, std::vector<uint8_t>* bytes,
   total_data += jpeg_data.tail_data.size();
   size_t brotli_capacity = BrotliEncoderMaxCompressedSize(total_data);
 
-  BitWriter writer;
+  BitWriter writer{memory_manager};
   JXL_RETURN_IF_ERROR(Bundle::Write(jpeg_data, &writer, 0, nullptr));
   writer.ZeroPadToByte();
   {
@@ -378,9 +380,10 @@ Status EncodeJPEGData(JPEGData& jpeg_data, std::vector<uint8_t>* bytes,
 
 Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io) {
   if (!IsJPG(bytes)) return false;
+  JxlMemoryManager* memory_manager = io->memory_manager;
   io->frames.clear();
   io->frames.reserve(1);
-  io->frames.emplace_back(&io->metadata.m);
+  io->frames.emplace_back(memory_manager, &io->metadata.m);
   io->Main().jpeg_data = make_unique<jpeg::JPEGData>();
   jpeg::JPEGData* jpeg_data = io->Main().jpeg_data.get();
   if (!jpeg::ReadJpeg(bytes.data(), bytes.size(), jpeg::JpegReadMode::kReadAll,
@@ -396,8 +399,9 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io) {
 
   io->metadata.m.SetIntensityTarget(kDefaultIntensityTarget);
   io->metadata.m.SetUintSamples(BITS_IN_JSAMPLE);
-  JXL_ASSIGN_OR_RETURN(Image3F tmp,
-                       Image3F::Create(jpeg_data->width, jpeg_data->height));
+  JXL_ASSIGN_OR_RETURN(
+      Image3F tmp,
+      Image3F::Create(memory_manager, jpeg_data->width, jpeg_data->height));
   io->SetFromImage(std::move(tmp), io->metadata.m.color_encoding);
   SetIntensityTarget(&io->metadata.m);
   return true;

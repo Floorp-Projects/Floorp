@@ -5,6 +5,8 @@
 
 #include "lib/jxl/image.h"
 
+#include <jxl/memory_manager.h>
+
 #include <algorithm>  // fill, swap
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +17,7 @@
 
 #if defined(MEMORY_SANITIZER)
 #include "lib/jxl/base/common.h"
-#include "lib/jxl/sanitizers.h"
+#include "lib/jxl/base/sanitizers.h"
 #endif
 
 namespace jxl {
@@ -66,6 +68,7 @@ PlaneBase::PlaneBase(const size_t xsize, const size_t ysize,
       orig_xsize_(static_cast<uint32_t>(xsize)),
       orig_ysize_(static_cast<uint32_t>(ysize)),
       bytes_per_row_(BytesPerRow(xsize_, sizeof_t)),
+      memory_manager_(nullptr),
       bytes_(nullptr),
       sizeof_t_(sizeof_t) {
   // TODO(eustas): turn to error instead of abort.
@@ -75,7 +78,9 @@ PlaneBase::PlaneBase(const size_t xsize, const size_t ysize,
   JXL_ASSERT(sizeof_t == 1 || sizeof_t == 2 || sizeof_t == 4 || sizeof_t == 8);
 }
 
-Status PlaneBase::Allocate() {
+Status PlaneBase::Allocate(JxlMemoryManager* memory_manager) {
+  JXL_CHECK(memory_manager_ == nullptr);
+  JXL_CHECK(memory_manager != nullptr);
   JXL_CHECK(!bytes_.get());
 
   // Dimensions can be zero, e.g. for lazily-allocated images. Only allocate
@@ -89,6 +94,7 @@ Status PlaneBase::Allocate() {
     // TODO(eustas): use specialized OOM error code
     return JXL_FAILURE("Failed to allocate memory for image surface");
   }
+  memory_manager_ = memory_manager;
   InitializePadding(*this, sizeof_t_);
 
   return true;
@@ -100,6 +106,7 @@ void PlaneBase::Swap(PlaneBase& other) {
   std::swap(orig_xsize_, other.orig_xsize_);
   std::swap(orig_ysize_, other.orig_ysize_);
   std::swap(bytes_per_row_, other.bytes_per_row_);
+  std::swap(memory_manager_, other.memory_manager_);
   std::swap(bytes_, other.bytes_);
 }
 

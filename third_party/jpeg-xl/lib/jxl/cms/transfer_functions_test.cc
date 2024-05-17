@@ -34,7 +34,7 @@ HWY_NOINLINE void TestPqEncodedFromDisplay() {
     const float actual = GetLane(tf_pq.EncodedFromDisplay(d, Set(d, f)));
     const float expected = TF_PQ_Base::EncodedFromDisplay(intensity, f);
     const float abs_err = std::abs(expected - actual);
-    EXPECT_LT(abs_err, 5e-7) << "f = " << f;
+    EXPECT_LT(abs_err, 6e-7) << "f = " << f;
     max_abs_err = std::max(max_abs_err, abs_err);
   }
   printf("max abs err %e\n", static_cast<double>(max_abs_err));
