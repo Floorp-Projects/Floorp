@@ -33,8 +33,8 @@ const {
 } = require("resource://devtools/client/shared/unicode-url.js");
 loader.lazyRequireGetter(
   this,
-  "BLOCKED_REASON_MESSAGES",
-  "resource://devtools/client/netmonitor/src/constants.js",
+  "getBlockedReasonString",
+  "resource://devtools/client/netmonitor/src/utils/l10n.js",
   true
 );
 
@@ -88,6 +88,7 @@ function NetworkEventMessage({
     isXHR,
     timeStamp,
     blockedReason,
+    blockingExtension,
     httpVersion,
     status,
     statusText,
@@ -135,7 +136,7 @@ function NetworkEventMessage({
   if (blockedReason) {
     statusInfo = dom.span(
       { className: "status-info" },
-      BLOCKED_REASON_MESSAGES[blockedReason]
+      getBlockedReasonString(blockedReason, blockingExtension)
     );
     topLevelClasses.push("network-message-blocked");
   }
