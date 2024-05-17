@@ -732,8 +732,6 @@ imgRequest::OnStopRequest(nsIRequest* aRequest, nsresult status) {
   LOG_FUNC(gImgLog, "imgRequest::OnStopRequest");
   MOZ_ASSERT(NS_IsMainThread(), "Can't send notifications off-main-thread");
 
-  RefPtr<Image> image = GetImage();
-
   RefPtr<imgRequest> strongThis = this;
 
   bool isMultipart = false;
@@ -746,6 +744,9 @@ imgRequest::OnStopRequest(nsIRequest* aRequest, nsresult status) {
   if (isMultipart && newPartPending) {
     OnDataAvailable(aRequest, nullptr, 0, 0);
   }
+
+  // Get this after OnDataAvailable because that might have created the image.
+  RefPtr<Image> image = GetImage();
 
   // XXXldb What if this is a non-last part of a multipart request?
   // xxx before we release our reference to mRequest, lets
