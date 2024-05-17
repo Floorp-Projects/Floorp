@@ -6,10 +6,6 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 
 const CC_NUM_USES_HISTOGRAM = "CREDITCARD_NUM_USES";
 
-function ccFormArgsv1(method, extra) {
-  return ["creditcard", method, "cc_form", undefined, extra];
-}
-
 function ccFormArgsv2(method, extra) {
   return ["creditcard", method, "cc_form_v2", undefined, extra];
 }
@@ -229,9 +225,7 @@ add_task(async function test_popup_opened() {
 
   await assertTelemetry([
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
-    ccFormArgsv1("popup_shown"),
   ]);
 
   TelemetryTestUtils.assertScalar(
@@ -297,9 +291,7 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
       "detected",
       buildccFormv2Extra({ cc_number: "1", cc_name: "1", cc_exp: "false" }, "0")
     ),
-    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
-    ccFormArgsv1("popup_shown"),
   ]);
 
   TelemetryTestUtils.assertScalar(
@@ -370,9 +362,7 @@ add_task(
 
     await assertTelemetry([
       ccFormArgsv2("detected", buildccFormv2Extra({ cc_number: "1" }, "false")),
-      ccFormArgsv1("detected"),
       ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
-      ccFormArgsv1("popup_shown"),
     ]);
 
     await assertGleanTelemetry([
@@ -412,9 +402,7 @@ add_task(
           "false"
         )
       ),
-      ccFormArgsv1("detected"),
       ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
-      ccFormArgsv1("popup_shown"),
     ]);
 
     TelemetryTestUtils.assertScalar(
@@ -517,17 +505,10 @@ add_task(async function test_submit_creditCard_new() {
 
   let expected_content = [
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-    ccFormArgsv1("detected"),
     ccFormArgsv2(
       "submitted",
       buildccFormv2Extra({ cc_exp: "unavailable" }, "user_filled")
     ),
-    ccFormArgsv1("submitted", {
-      // 5 fields plus submit button
-      fields_not_auto: "6",
-      fields_auto: "0",
-      fields_modified: "0",
-    }),
   ];
   let expected_glean_events = [
     {
@@ -622,23 +603,15 @@ add_task(async function test_submit_creditCard_autofill() {
   await assertTelemetry(
     [
       ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-      ccFormArgsv1("detected"),
       ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
-      ccFormArgsv1("popup_shown"),
       ccFormArgsv2(
         "filled",
         buildccFormv2Extra({ cc_exp: "unavailable" }, "filled")
       ),
-      ccFormArgsv1("filled"),
       ccFormArgsv2(
         "submitted",
         buildccFormv2Extra({ cc_exp: "unavailable" }, "autofilled")
       ),
-      ccFormArgsv1("submitted", {
-        fields_not_auto: "3",
-        fields_auto: "5",
-        fields_modified: "0",
-      }),
     ],
     []
   );
@@ -759,16 +732,12 @@ add_task(async function test_submit_creditCard_update() {
 
   let expected_content = [
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
-    ccFormArgsv1("popup_shown"),
     ccFormArgsv2(
       "filled",
       buildccFormv2Extra({ cc_exp: "unavailable" }, "filled")
     ),
-    ccFormArgsv1("filled"),
     ccFormArgsv2("filled_modified", { field_name: "cc-exp-year" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-exp-year" }),
     ccFormArgsv2(
       "submitted",
       buildccFormv2Extra(
@@ -776,11 +745,6 @@ add_task(async function test_submit_creditCard_update() {
         "autofilled"
       )
     ),
-    ccFormArgsv1("submitted", {
-      fields_not_auto: "3",
-      fields_auto: "5",
-      fields_modified: "1",
-    }),
   ];
   let expected_glean_events = [
     {
@@ -1047,14 +1011,11 @@ add_task(async function test_clear_creditCard_autofill() {
 
   let expected_content = [
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
-    ccFormArgsv1("detected"),
     ccFormArgsv2("popup_shown", { field_name: "cc-name" }),
-    ccFormArgsv1("popup_shown"),
     ccFormArgsv2(
       "filled",
       buildccFormv2Extra({ cc_exp: "unavailable" }, "filled")
     ),
-    ccFormArgsv1("filled"),
   ];
   await assertTelemetry(expected_content, []);
 
@@ -1095,10 +1056,7 @@ add_task(async function test_clear_creditCard_autofill() {
   // flushing Glean data before tab removal (see Bug 1843178)
   await Services.fog.testFlushAllChildren();
 
-  expected_content = [
-    ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
-    ccFormArgsv1("popup_shown"),
-  ];
+  expected_content = [ccFormArgsv2("popup_shown", { field_name: "cc-number" })];
   await assertTelemetry(expected_content, []);
   await assertGleanTelemetry([
     {
@@ -1134,20 +1092,14 @@ add_task(async function test_clear_creditCard_autofill() {
 
   expected_content = [
     ccFormArgsv2("filled_modified", { field_name: "cc-name" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-name" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-number" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-number" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-exp-month" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-exp-month" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-exp-year" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-exp-year" }),
     ccFormArgsv2("filled_modified", { field_name: "cc-type" }),
-    ccFormArgsv1("filled_modified", { field_name: "cc-type" }),
     ccFormArgsv2("cleared", { field_name: "cc-number" }),
     // popup is shown again because when the field is cleared and is focused,
     // we automatically triggers the popup.
     ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
-    ccFormArgsv1("popup_shown"),
   ];
 
   await assertTelemetry(expected_content, []);

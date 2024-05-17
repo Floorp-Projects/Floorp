@@ -536,38 +536,6 @@ creditcard:
       - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
-  cc_form:
-    description: >-
-      User interactions for credit card autofill forms
-    objects:
-      - "cc_form"
-    methods:
-      - "detected"
-      - "popup_shown"
-      - "filled"
-      - "filled_modified"
-      - "submitted"
-    bug_numbers: [1653073, 1653162, 1720608, 1767907]
-    notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
-    expiry_version: never
-    products:
-      - "firefox"
-    record_in_processes: ["content"]
-    release_channel_collection: opt-out
-    extra_keys:
-      cc_name_found: Whether the cardholder name field was identified
-      cc_number_found: Whether the credit card number field was identified
-      cc_exp_found: Whether the expiration date was identified
-      cc_name: Whether the name was autofilled (autofilled / not_filled / user_filled / unavailable)
-      cc_number: Whether the credit card number field was autofilled (autofilled / not_filled / user_filled / unavailable)
-      cc_exp: Whether the expiration date was autofilled (autofilled / not_filled / user_filled / unavailable)
-      field_name: Name of the field being affected by the method
-      fields_not_auto: >-
-        Number of fields in a `submitted` event that were not autofilled.
-        Note that this number counts all fields in a form, even if some of those fields might have been identified as password and/or address fields.
-        Additionally, it may include input elements that are not rendered as user-modifiable, such as hidden fields as well as <button> elements.
-      fields_auto: Number of fields in the `submitted` event that were autofilled
-      fields_modified: Number of fields in a `submitted` event that were autofilled and later modified
   cc_form_v2:
     description: >-
       User interactions for credit card autofill forms
