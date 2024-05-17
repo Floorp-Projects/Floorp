@@ -79,7 +79,8 @@ pub struct ParsedFragmentDirectiveResult {
 ///
 /// Directives which are unknown will be ignored.
 /// If new directive types are added in the future, they should also be considered here.
-/// This function returns false if no fragment directive is found, or it could not be parsed.
+/// This function returns false if no fragment directive is found. If there is any
+/// fragment directive (even if invalid), this function returns true.
 #[no_mangle]
 pub extern "C" fn parse_fragment_directive(
     url: &nsCString,
