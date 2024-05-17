@@ -116,8 +116,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     let wantsLocalSuggestions =
       lazy.UrlbarPrefs.get("maxHistoricalSearchSuggestions") &&
-      (queryContext.trimmedSearchString ||
-        lazy.UrlbarPrefs.get("update2.emptySearchBehavior") != 0);
+      queryContext.trimmedSearchString;
 
     return wantsLocalSuggestions || this._allowRemoteSuggestions(queryContext);
   }

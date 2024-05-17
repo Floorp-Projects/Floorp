@@ -467,12 +467,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Note: This pref will be removed once the feature is stable.
   ["untrimOnUserInteraction.featureGate", false],
 
-  // Controls the empty search behavior in Search Mode:
-  //  0 - Show nothing
-  //  1 - Show search history
-  //  2 - Show search and browsing history
-  ["update2.emptySearchBehavior", 0],
-
   // Feature gate pref for weather suggestions in the urlbar.
   ["weather.featureGate", false],
 

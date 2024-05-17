@@ -1447,8 +1447,7 @@ class ProviderPlaces extends UrlbarProvider {
   isActive(queryContext) {
     if (
       !queryContext.trimmedSearchString &&
-      queryContext.searchMode?.engineName &&
-      lazy.UrlbarPrefs.get("update2.emptySearchBehavior") < 2
+      queryContext.searchMode?.engineName
     ) {
       return false;
     }
