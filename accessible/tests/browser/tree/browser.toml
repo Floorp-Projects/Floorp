@@ -4,6 +4,7 @@ support-files = [
   "head.js",
   "!/accessible/tests/browser/shared-head.js",
   "!/accessible/tests/mochitest/*.js",
+  "!/accessible/tests/mochitest/moz.png",
 ]
 prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 
@@ -14,6 +15,8 @@ skip-if = [
 ]
 
 ["browser_browser_element.js"]
+
+["browser_css_alt.js"]
 
 ["browser_css_content_visibility.js"]
 

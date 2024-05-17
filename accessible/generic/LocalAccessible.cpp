@@ -10,6 +10,7 @@
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
 #include "CachedTableAccessible.h"
+#include "CssAltContent.h"
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/AccAttributes.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
@@ -151,6 +152,11 @@ ENameValueFlag LocalAccessible::Name(nsString& aName) const {
         return eNameFromTooltip;
       }
     }
+  }
+
+  if (auto cssAlt = CssAltContent(mContent)) {
+    cssAlt.AppendToString(aName);
+    return eNameOK;
   }
 
   aName.SetIsVoid(true);
