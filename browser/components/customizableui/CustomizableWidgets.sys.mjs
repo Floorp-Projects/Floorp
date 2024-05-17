@@ -278,6 +278,8 @@ export const CustomizableWidgets = [
   {
     id: "sidebar-button",
     tooltiptext: "sidebar-button.tooltiptext2",
+    defaultArea: "nav-bar",
+    _introducedByPref: "sidebar.revamp",
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.SidebarController.toggle();

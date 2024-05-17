@@ -8,3 +8,5 @@ support-files = ["head.js"]
 ["browser_history_sidebar.js"]
 
 ["browser_sidebar_context_menu.js"]
+
+["browser_toolbar_sidebar_button.js"]
