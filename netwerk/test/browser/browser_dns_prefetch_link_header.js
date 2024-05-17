@@ -36,7 +36,12 @@ Services.prefs.setStringPref(
 // 2. Ensure we don't disable dns prefetch despite using a proxy (this would otherwise happen after every request that the proxy completed)
 Services.prefs.setBoolPref("network.dns.prefetch_via_proxy", true);
 
-// 3. And finally enable dns prefetching via the private dns service api (generally disabled in mochitest proxy)
+// 3. Make sure that HTTPS-First does not interfere with us loading HTTP tests
+let initialHttpsFirst = Services.prefs.getBoolPref("dom.security.https_first");
+Services.prefs.setBoolPref("dom.security.https_first", false);
+
+// 4. And finally enable dns prefetching via the private dns service api (generally disabled in mochitest proxy)
+
 Services.dns.QueryInterface(Ci.nsPIDNSService).prefetchEnabled = true;
 /////////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +49,7 @@ registerCleanupFunction(function () {
   // Restore proxy pac and dns prefetch behaviour via proxy
   Services.prefs.setCharPref("network.proxy.autoconfig_url", existingPACScript);
   Services.prefs.clearUserPref("network.dns.prefetch_via_proxy");
+  Services.prefs.setBoolPref("dom.security.https_first", initialHttpsFirst);
   Services.dns.QueryInterface(Ci.nsPIDNSService).prefetchEnabled = false;
 });
 
