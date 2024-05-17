@@ -5041,7 +5041,7 @@ impl PicturePrimitive {
                         // Ensure that the dirty rect doesn't extend outside the local valid rect.
                         tile.local_dirty_rect = tile.local_dirty_rect
                             .intersection(&tile.current_descriptor.local_valid_rect)
-                            .unwrap_or_else(PictureRect::zero);
+                            .unwrap_or_else(|| { tile.is_valid = true; PictureRect::zero() });
 
                         let scissor_rect = frame_state.composite_state.get_surface_rect(
                             &tile.local_dirty_rect,
@@ -5199,6 +5199,12 @@ impl PicturePrimitive {
                             }
                         }
 
+                        // Ensure - again - that the dirty rect doesn't extend outside the local valid rect,
+                        // as the tile could have been invalidated since the first computation.
+                        tile.local_dirty_rect = tile.local_dirty_rect
+                            .intersection(&tile.current_descriptor.local_valid_rect)
+                            .unwrap_or_else(|| { tile.is_valid = true; PictureRect::zero() });
+
                         surface_local_dirty_rect = surface_local_dirty_rect.union(&tile.local_dirty_rect);
 
                         // Update the world/device dirty rect
@@ -5306,6 +5312,13 @@ impl PicturePrimitive {
                                     frame_state.resource_cache,
                                     tile_cache.current_tile_size,
                                 );
+
+                                // Recompute the scissor rect as the tile could have been invalidated since the first computation.
+                                let scissor_rect = frame_state.composite_state.get_surface_rect(
+                                    &tile.local_dirty_rect,
+                                    &tile.local_tile_rect,
+                                    tile_cache.transform_index,
+                                ).to_i32();
 
                                 let composite_task_size = tile_cache.current_tile_size;
 
