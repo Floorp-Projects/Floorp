@@ -11,8 +11,7 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 
-using namespace mozilla;
-using namespace mozilla::a11y;
+namespace mozilla::a11y {
 
 ////////////////////////////////////////////////////////////////////////////////
 // TreeWalker
@@ -346,3 +345,5 @@ dom::AllChildrenIterator* TreeWalker::PopState() {
   mStateStack.RemoveLastElement();
   return mStateStack.IsEmpty() ? nullptr : &mStateStack.LastElement();
 }
+
+}  // namespace mozilla::a11y
