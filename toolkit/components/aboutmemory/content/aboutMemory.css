@@ -9,8 +9,6 @@
  */
 
 html {
-  background: -moz-Dialog;
-  color: -moz-DialogText;
   font: message-box;
 }
 
@@ -33,10 +31,9 @@ div.ancillary {
 div.section {
   padding: 2em;
   margin: 1em 0em;
-  border: 1px solid ThreeDShadow;
-  border-radius: 10px;
-  background: Field;
-  color: FieldText;
+  border: 1px solid var(--in-content-border-color);
+  border-radius: var(--border-radius-small);
+  background: var(--in-content-box-background);
 }
 
 div.outputContainer {
@@ -61,10 +58,9 @@ div.sidebarContents {
 div.sidebarItem {
   padding: 0.5em;
   margin: 1em 0em;
-  border: 1px solid ThreeDShadow;
-  border-radius: 10px;
-  background: Field;
-  color: FieldText;
+  border: 1px solid var(--in-content-border-color);
+  border-radius: var(--border-radius-small);
+  background: var(--in-content-box-background);
   user-select: none;  /* no need to include this when cutting+pasting */
 }
 
@@ -86,10 +82,9 @@ div.opsRow {
   padding: 0.5em;
   margin-right: 0.5em;
   margin-top: 0.5em;
-  border: 1px solid ThreeDShadow;
-  border-radius: 10px;
-  background: Field;
-  color: FieldText;
+  border: 1px solid var(--in-content-border-color);
+  border-radius: var(--border-radius-small);
+  background: var(--in-content-box-background);
   display: inline-block;
 }
 
@@ -133,13 +128,10 @@ a.upDownArrow {
   user-select: none;  /* no need to include this when cutting+pasting */
 }
 
-.accuracyWarning, .badInputWarning, .invalid {
-  /*
-   * Technically this should be used with the default background colour,
-   * instead we're using the default field background colour,
-   * I hope this will be okay.
-   */
-  color: -moz-activehyperlinktext;
+.accuracyWarning,
+.badInputWarning,
+.invalid {
+  color: var(--text-color-error);
 }
 
 .treeline {
