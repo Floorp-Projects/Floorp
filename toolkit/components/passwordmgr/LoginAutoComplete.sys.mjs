@@ -452,21 +452,12 @@ export class LoginAutoCompleteResult {
     return this.getValueAt(index);
   }
 
-  isRemovableAt(index) {
-    this.#throwOnBadIndex(index);
-    return true;
+  isRemovableAt(_index) {
+    return false;
   }
 
-  removeValueAt(index) {
-    this.#throwOnBadIndex(index);
-
-    let [removedItem] = this.#rows.splice(index, 1);
-
-    if (this.defaultIndex > this.#rows.length) {
-      this.defaultIndex--;
-    }
-
-    removedItem.removeFromStorage();
+  removeValueAt(_index) {
+    return false;
   }
 }
 

@@ -725,11 +725,6 @@ add_task(async function test_all_patterns() {
         () => actual.getLabelAt(pattern.items.length),
         /Index out of range\./
       );
-
-      Assert.throws(
-        () => actual.removeValueAt(pattern.items.length),
-        /Index out of range\./
-      );
     }
   });
 });

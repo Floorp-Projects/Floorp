@@ -297,7 +297,7 @@ This tests the login manager in a secure setting using https. A similar test fil
     is(form.pword.value, "", "password is empty");
   });
 
-  add_named_task("delete", async () => {
+  add_named_task("do not delete last", async () => {
     await setStoredLoginsDuringTask(
       [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
       [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
@@ -309,89 +309,22 @@ This tests the login manager in a secure setting using https. A similar test fil
     form.uname.focus();
     await popupByArrowDown();
 
-    // XXX tried sending character "t" before/during dropdown to test
-    // filtering, but had no luck. Seemed like the character was getting lost.
-    // Setting uname.value didn't seem to work either. This works with a human
-    // driver, so I'm not sure what's up.
-
-    // Delete the first entry (of 3), "user-1"
+    // Try and fail to delete the last entry (of 3), "user-3"
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_ArrowDown");
     synthesizeKey("KEY_ArrowDown");
     const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-    is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
-
-    const countChangedPromise = notifyMenuChanged(3);
-    const deletionPromise = promiseStorageChanged(["removeLogin"]);
-    // On OS X, shift-backspace and shift-delete work, just delete does not.
-    // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-    synthesizeKey("KEY_Delete", {shiftKey: true});
-    await deletionPromise;
-
-    is(form.uname.value, "", "username is empty");
-    is(form.pword.value, "", "password is empty");
-    const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-    is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
-    await countChangedPromise;
-    synthesizeKey("KEY_Enter");
-    await untilAutocompletePopupClosed();
-    is(form.uname.value, "user-2", "username is set");
-    is(form.pword.value, "pass-2", "password is set");
-  });
-
-  add_named_task("delete second", async () => {
-    await setStoredLoginsDuringTask(
-      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-      [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
-    );
-    const form = setContentForTask(formTemplate);
-    const autofillResult = await formAutofillResult(form.id);
-    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-    form.uname.focus();
-    await popupByArrowDown();
-
-    // Delete the second entry (of 3), "user-2"
-    synthesizeKey("KEY_ArrowDown");
-    synthesizeKey("KEY_ArrowDown");
+    is(numLoginsBeforeDeletion, 3, "Correct number of logins before trying to delete one using an autocomplete form");
+    // Pressing the delete key shouldn't remove a login.
     synthesizeKey("KEY_Delete", {shiftKey: true});
     is(form.uname.value, "", "username is empty");
     is(form.pword.value, "", "password is empty");
-    const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-    is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
+    const numLoginsAfterAttemptedDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
+    is(numLoginsAfterAttemptedDeletion, 3, "Correct number of logins after trying to delete one using an autocomplete form");
     synthesizeKey("KEY_Enter");
     await untilAutocompletePopupClosed();
     is(form.uname.value, "user-3", "username is set");
     is(form.pword.value, "pass-3", "password is set");
-  });
-
-  add_named_task("delete last", async () => {
-    await setStoredLoginsDuringTask(
-      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-      [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
-    );
-    const form = setContentForTask(formTemplate);
-    const autofillResult = await formAutofillResult(form.id);
-    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-    form.uname.focus();
-    await popupByArrowDown();
-
-    /* test 54 */
-    // Delete the last entry (of 3), "user-3"
-    synthesizeKey("KEY_ArrowDown");
-    synthesizeKey("KEY_ArrowDown");
-    synthesizeKey("KEY_ArrowDown");
-    const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-    is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
-    synthesizeKey("KEY_Delete", {shiftKey: true});
-    is(form.uname.value, "", "username is empty");
-    is(form.pword.value, "", "password is empty");
-    const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-    is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
-    synthesizeKey("KEY_ArrowDown");
-    synthesizeKey("KEY_Enter");
-    await untilAutocompletePopupClosed();
-    is(form.uname.value, "user-1", "username is set");
-    is(form.pword.value, "pass-1", "password is set");
   });
 
   // Tests for single-user forms for ignoring autocomplete=off */
