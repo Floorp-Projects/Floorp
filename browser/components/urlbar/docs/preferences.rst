@@ -248,7 +248,3 @@ browser.urlbar.keepPanelOpenDuringImeComposition (boolean, default: false)
 browser.urlbar.restyleSearches (boolean, default: false)
   When true, URLs in the user's history that look like search result pages
   are restyled to look like search engine results instead of history results.
-
-browser.urlbar.update2.emptySearchBehavior (integer, default: 0)
-  Controls the empty search behavior in Search Mode: 0. Show nothing, 1. Show
-  search history, 2. Show search and browsing history
