@@ -1546,26 +1546,6 @@ nsresult CacheEntry::GetAltDataType(nsACString& aType) {
   return mFile->GetAltDataType(aType);
 }
 
-nsresult CacheEntry::MarkValid() {
-  // NOT IMPLEMENTED ACTUALLY
-  return NS_OK;
-}
-
-nsresult CacheEntry::MaybeMarkValid() {
-  // NOT IMPLEMENTED ACTUALLY
-  return NS_OK;
-}
-
-nsresult CacheEntry::HasWriteAccess(bool aWriteAllowed, bool* aWriteAccess) {
-  *aWriteAccess = aWriteAllowed;
-  return NS_OK;
-}
-
-nsresult CacheEntry::Close() {
-  // NOT IMPLEMENTED ACTUALLY
-  return NS_OK;
-}
-
 nsresult CacheEntry::GetDiskStorageSizeInKB(uint32_t* aDiskStorageSize) {
   if (NS_FAILED(mFileStatus)) {
     return NS_ERROR_NOT_AVAILABLE;
