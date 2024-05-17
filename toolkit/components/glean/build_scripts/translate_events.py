@@ -48,9 +48,9 @@ def get_bug_number_from_url(url: str) -> int:
 
 
 def create_legacy_mirror_def(category_name: str, metric_name: str, event_objects: list):
-    event_cpp_enum = convert_to_cpp_identifier(category_name, "_") + "_"
-    event_cpp_enum += convert_to_cpp_identifier(metric_name, ".") + "_"
-    event_cpp_enum += convert_to_cpp_identifier(event_objects[0], ".")
+    event_cpp_enum = convert_to_cpp_identifier(category_name, ".") + "_"
+    event_cpp_enum += convert_to_cpp_identifier(metric_name, "_") + "_"
+    event_cpp_enum += convert_to_cpp_identifier(event_objects[0], "_")
 
     print(
         f"""The Glean event {category_name}.{metric_name} has generated the {event_cpp_enum} Legacy Telemetry event. To link Glean to Legacy, please include in {category_name}.{metric_name}'s definition the following property:
@@ -110,9 +110,9 @@ def translate_event(
     for category_name, metrics in all_objects.value.items():
         for metric in metrics.values():
             metric_name = util.snake_case(metric.name)
-            category_name = util.snake_case(category_name)
+            category_snake = util.snake_case(category_name)
 
-            if metric_name != event_name or category_name != event_category:
+            if metric_name != event_name or category_snake != event_category:
                 continue
 
             if metric.type != "event":
@@ -148,7 +148,7 @@ def translate_event(
                 metric_dict["extra_keys"] = extra_keys
 
             metric_dict = {metric_name: metric_dict}
-            metric_dict = {category_name: metric_dict}
+            metric_dict = {category_snake: metric_dict}
 
             metric_yaml = yaml.dump(
                 metric_dict,
@@ -168,10 +168,10 @@ def translate_event(
                 print(legacy_yaml_file)
                 print("and checking that all fields are correct.")
 
-                create_legacy_mirror_def(event_name, category_name, event_objects)
+                create_legacy_mirror_def(category_snake, event_name, event_objects)
                 return 0
 
             print(metric_yaml)
-            create_legacy_mirror_def(event_name, category_name, event_objects)
+            create_legacy_mirror_def(category_snake, event_name, event_objects)
 
     return 0
