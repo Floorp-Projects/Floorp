@@ -48,6 +48,7 @@ UNIFIED_SOURCES += [
     "ARIAStateMap.cpp",
     "Asserts.cpp",
     "CachedTableAccessible.cpp",
+    "CssAltContent.cpp",
     "DocManager.cpp",
     "EmbeddedObjCollector.cpp",
     "EventQueue.cpp",
