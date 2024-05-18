@@ -145,6 +145,7 @@ async function test_permissions({
   granted_host_permissions,
   useAddonManager,
   expectAllGranted,
+  useOptionalHostPermissions,
 }) {
   const REQUIRED_PERMISSIONS = ["downloads"];
   const REQUIRED_ORIGINS = ["*://site.com/", "*://*.domain.com/"];
@@ -192,13 +193,22 @@ async function test_permissions({
     });
   }
 
+  let optional_permissions = OPTIONAL_PERMISSIONS;
+  let optional_host_permissions = undefined;
+  if (useOptionalHostPermissions) {
+    optional_host_permissions = OPTIONAL_ORIGINS;
+  } else {
+    optional_permissions = optional_permissions.concat(OPTIONAL_ORIGINS);
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
       manifest_version,
       permissions: REQUIRED_PERMISSIONS,
       host_permissions: REQUIRED_ORIGINS,
-      optional_permissions: [...OPTIONAL_PERMISSIONS, ...OPTIONAL_ORIGINS],
+      optional_permissions,
+      optional_host_permissions,
       granted_host_permissions,
     },
     useAddonManager,
@@ -485,6 +495,23 @@ add_task(function test_granted_only_for_privileged_mv3() {
       AddonTestUtils.usePrivilegedSignatures = false;
     }
   });
+});
+
+add_task(function test_mv3_optional_host_permissions() {
+  // TODO: unskip after date.
+  if (Services.env.get("CONDPROF_RUNNER") && new Date().toJSON() < "2024-06") {
+    // We use StartupCache for schemas, so any test with a new manifest
+    // key fails when run under condprof for a few days after landing.
+    return;
+  }
+  return runWithPrefs(WITH_INSTALL_PROMPT, () =>
+    test_permissions({
+      manifest_version: 3,
+      useAddonManager: "permanent",
+      useOptionalHostPermissions: true,
+      expectAllGranted: true,
+    })
+  );
 });
 
 add_task(async function test_startup() {
