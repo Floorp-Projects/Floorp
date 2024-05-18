@@ -2,6 +2,7 @@
 <resources>
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_toolbar_menu_button">Menua</string>
+    <!-- Content description: For the clear URL text button. -->
     <string name="mozac_clear_button_description">Garbitu</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Jarraipenaren babesa gaituta dago</string>

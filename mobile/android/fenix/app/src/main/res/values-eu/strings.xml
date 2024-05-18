@@ -49,12 +49,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Gordetako azkenak</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Gordetako azkenak</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Erakutsi gordetako laster-marka guztiak</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Erakutsi gordetako laster-marka guztiak</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Kendu</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Kendu</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Laster-markak</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Erakutsi laster-marka guztiak</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Kendu</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozillak egina da.</string>
@@ -144,8 +152,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Fitxa pribatu berria</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">Pasahitzen lasterbidea</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">Pasahitzak</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Pasahitzen lasterbidea</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -186,11 +196,17 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Gelditu</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Gehigarriak</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarriak</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Hedapenak</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Kudeatu hedapenak</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Deskubritu hedapen gehiago</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontuaren informazioa</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Gehigarririk ez hemen</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarririk ez hemen</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Laguntza</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -205,19 +221,27 @@
     <string name="browser_menu_open_in_regular_tab">Ireki fitxa arruntean</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Gehitu hasierako pantailan</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Gehitu hasierako pantailan…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Instalatu</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Instalatu</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Sinkronizatu berriro</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Bilatu orrian</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Bilatu orrian…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Itzuli orria</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Gorde bilduman…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Gorde bilduman</string>
 
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Partekatu</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Partekatu…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Ireki %1$s nabigatzailean</string>
@@ -245,6 +269,51 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Pertsonalizatu hasiera-orria</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in">Hasi saioa</string>
+
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">Sinkronizatu pasahitzak, fitxak eta gehiago</string>
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">Hasi berriro saioa sinkronizatzeko</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">Sinkronizazioa pausatuta</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">Fitxa pribatu berria</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">Pasahitzak</string>
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Berria %1$s(e)n</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Aldatu mahaigaineko gunera</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Tresnak</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Gorde</string>
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Egin orriaren laster-marka</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Editatu laster-marka</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Gorde PDF gisa…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Aktibatu irakurtzeko ikuspegia</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Desaktibatu irakurtzeko ikuspegia</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Itzuli orria…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">%1$s hizkuntzara itzulita</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Inprimatu…</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Hedapenik ez hemen</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -551,6 +620,10 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="preferences_account_sync_error">Birkonektatu sinkronizatzeari berrekiteko</string>
     <!-- Preference for language -->
     <string name="preferences_language">Hizkuntza</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Itzulpena</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Itzulpenak</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Datu-aukerak</string>
     <!-- Preference for data collection -->
@@ -603,10 +676,14 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="quit_application">Aplikaziotik irteten aldaketak aplikatzeko…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Gehigarriak</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarriak</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Hedapenak</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Instalatu gehigarria fitxategitik</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Instalatu gehigarria fitxategitik</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Instalatu hedapena fitxategitik</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Jakinarazpenak</string>
 
@@ -615,9 +692,25 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Ez dago baimenduta</string>
 
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Beharrezkoa</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Aukerakoa</string>
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Webguneetako datuak irakurri eta aldatzea</string>
+    <!-- The description of the icon that can delete one of the websites displayed  -->
+    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Ezabatu webgunea</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Baimendu gune guztietarako</string>
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Hedapena fidagarritzat baduzu, webgune guztietarako baimena eman diezaiokezu.</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Gehigarrien bilduma pertsonalizatua</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarrien bilduma pertsonalizatua</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Hedapenen bilduma pertsonalizatua</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Ados</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -627,13 +720,18 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Bildumaren jabea (erabiltzaile-IDa)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Gehigarrien bilduma aldatu egin da. Aplikaziotik irteten aldaketak aplikatzeko…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarrien bilduma aldatu egin da. Aplikaziotik irteten aldaketak aplikatzeko…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Hedapenen bilduma aldatu egin da. Aplikaziotik irteten aldaketak aplikatzeko…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Itzuli zeudenera</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Azken laster-markak</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Azken laster-markak</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Laster-markak</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Bisitatutako azkenak</string>
@@ -682,21 +780,37 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Gehigarri berriak erabilgarri orain</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarri berriak erabilgarri orain</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Hedapen berriak erabilgarri orain</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Eman begiratua Firefox zure egiten lagunduko dizuten 100 gehigarri berri baino gehiagori.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Esploratu gehigarriak</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Esploratu gehigarriak</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Arakatu hedapenak</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Gehigarriak aldi baterako desgaitu dira</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarriak aldi baterako desgaitu dira</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Hedapenak aldi baterako desgaitu dira</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Gehigarri bat edo gehiago ez dabil eta zure sistema desegonkortzen ari da. %1$s saiatu da gehigarriak berrabiarazten, arrakastarik gabe.\n\nEz da gehigarririk berrabiaraziko zure uneko saioan.\n\nGeghiarriak kendu edo desgaitzeak arazoa konpon lezake.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarri bat edo gehiago ez dabil eta zure sistema desegonkortzen ari da. %1$s saiatu da gehigarriak berrabiarazten, arrakastarik gabe.\n\nEz da gehigarririk berrabiaraziko zure uneko saioan.\n\nGeghiarriak kendu edo desgaitzeak arazoa konpon lezake.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Hedapen bat edo gehiago ez dabil eta zure sistema desegonkortzen ari da. %1$s saiatu da hedapena(k) berrabiarazten, arrakastarik gabe.\n\nEz da hedapenik berrabiaraziko zure uneko saioan.\n\nHedapenak kendu edo desgaitzeak arazoa konpon lezake.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Probatu gehigarriak berrabiarazten</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Probatu gehigarriak berrabiarazten</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Saiatu hedapenak berrabiarazten</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Jarraitu gehigarriak desgaituta</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Jarraitu gehigarriak desgaituta</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Jarraitu hedapenak desgaituta</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -756,6 +870,14 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="fxa_tab_received_notification_name">Fitxa jasota</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">%s gailuko fitxa</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">%1$s fitxa itxita: %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Ikusi itxitako azken fitxak</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -2443,10 +2565,14 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="translations_bottom_sheet_translate_from">Itzuli hemendik</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Itzuli hona</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Probatu beste iturburu-hizkuntza bat</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Une honetan ez</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">Erakutsi jatorrizkoa</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">Jatorrizko itzuli gabeko orria kargatuta</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Eginda</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2467,7 +2593,7 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Barkatu, %1$s ez dugu onartzen oraindik.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">Argibide gehiago</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Argibide gehiago</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Itzultzen…</string>
@@ -2481,7 +2607,9 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">Itzulpenen aukerak</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Itzulpenen aukerak</string>
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">Itzulpenen aukerak</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Eskaini beti itzultzea</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2499,6 +2627,9 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="translation_option_bottom_sheet_translation_settings">Itzulpenen ezarpenak</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">%1$s(e)ko itzulpenei buruz</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">Itxi itzulpenen orria</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2604,6 +2735,8 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="download_language_file_dialog_title">Deskargatu datuak aurrezteko moduan egotean (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Hizkuntzak erdizka deskargatzen ditugu zure cachera itzulpenak pribatu manten daitezen.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Hizkuntzak erdizka deskargatzen ditugu itzulpenak pribatu manten daitezen.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Deskargatu beti datuak aurrezteko moduan</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
@@ -2618,12 +2751,19 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="debug_drawer_title">Arazketa-tresnak</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Nabigatu atzera</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Ireki arazketarako menu lerrakorra</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Fitxen tresnak</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Fitxa kopurua</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Aktibo</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Aktibo</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Aktibo</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inaktibo</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2640,4 +2780,39 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Gehitu fitxa inaktiboetara</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Gehitu fitxa pribatuetara</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Jarraitu</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">Burutu inkesta</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">Pribatutasun-oharra</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Bidali</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label">Itxi</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Eskerrik asko zure iritziagatik!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Oso kontent</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Kontent</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Neutrala</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Kontentagaitz</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Oso kontentagaitz</string>
+
+    <!-- Debug drawer logins -->
+    <!-- The title of the Logins feature in the Debug Drawer. -->
+    <string name="debug_drawer_logins_title">Saio-hasierak</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">Uneko domeinua: %s</string>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Gehitu saio-hasiera faltsua domeinu honetarako</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Ezabatu %s erabiltzaile-izena duen saio-hasiera</string>
 </resources>

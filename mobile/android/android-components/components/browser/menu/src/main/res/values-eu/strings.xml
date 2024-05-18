@@ -5,11 +5,17 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">Nabarmendua</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">Gehigarriak</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarriak</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">Hedapenak</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">Gehigarrien kudeatzailea</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarrien kudeatzailea</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">Hedapenen kudeatzailea</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Nabigatu gora</string>
     <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
-    <string name="mozac_browser_menu_addons_description">Gehigarriak, nabigatu gora</string>
-    </resources>
+    <string name="mozac_browser_menu_addons_description" moz:removedIn="126" tools:ignore="UnusedResources">Gehigarriak, nabigatu gora</string>
+    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
+    <string name="mozac_browser_menu_extensions_content_description">Hedapenak, nabigatu gora</string>
+</resources>
