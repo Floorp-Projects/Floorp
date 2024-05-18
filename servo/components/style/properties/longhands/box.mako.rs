@@ -74,6 +74,19 @@ ${helpers.predefined_type(
     affects="",
 )}
 
+// Changes do not invalidate our element. We handle notify/invalidating
+// any affected descendants elsewhere.
+${helpers.predefined_type(
+    "anchor-scope",
+    "AnchorScope",
+    "computed::AnchorScope::none()",
+    engines="gecko",
+    animation_value_type="discrete",
+    gecko_pref="layout.css.anchor-positioning.enabled",
+    spec="https://drafts.csswg.org/css-anchor-position-1/#propdef-scope",
+    affects="",
+)}
+
 ${helpers.predefined_type(
     "float",
     "Float",

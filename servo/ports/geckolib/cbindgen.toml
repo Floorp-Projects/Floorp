@@ -83,6 +83,7 @@ exclude = [
 ]
 include = [
   "AnchorName",
+  "AnchorScope",
   "AnimationTimeline",
   "AnimationIterationCount",
   "AnimationDirection",
