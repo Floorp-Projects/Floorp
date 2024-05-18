@@ -28,6 +28,7 @@ use std::collections::hash_map::Entry;
 use std::fmt::{self, Write};
 use style_traits::values::specified::AllowedNumericType;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use style_traits::{KeywordsCollectFn, SpecifiedValueInfo};
 use style_traits::arc_slice::ArcSlice;
 
 /// The specified value of a CSS `<position>`
@@ -404,6 +405,94 @@ impl ToCss for AnchorName {
             name.to_css(dest)?;
         }
         Ok(())
+    }
+}
+
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-scope
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum AnchorScope {
+    /// `none`
+    None,
+    /// `all`
+    All,
+    /// `<dashed-ident>#`
+    Idents(#[ignore_malloc_size_of = "Arc"] crate::ArcSlice<DashedIdent>),
+}
+
+impl AnchorScope {
+    /// Return the `none` value.
+    pub fn none() -> Self {
+        Self::None
+    }
+
+    /// Returns whether this is the `none` value.
+    pub fn is_none(&self) -> bool {
+        *self == Self::None
+    }
+}
+
+impl Parse for AnchorScope {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        let location = input.current_source_location();
+        let first = input.expect_ident()?;
+        if first.eq_ignore_ascii_case("none") {
+            return Ok(Self::None);
+        }
+        if first.eq_ignore_ascii_case("all") {
+            return Ok(Self::All);
+        }
+        // Authors using more than a handful of anchored elements is likely
+        // uncommon, so we only pre-allocate for 8 on the stack here.
+        let mut idents: SmallVec<[DashedIdent; 8]> = smallvec![DashedIdent::from_ident(
+            location,
+            first,
+        )?];
+        while input.try_parse(|input| input.expect_comma()).is_ok() {
+            idents.push(DashedIdent::parse(context, input)?);
+        }
+        Ok(AnchorScope::Idents(ArcSlice::from_iter(idents.drain(..))))
+    }
+}
+
+impl ToCss for AnchorScope {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+       match *self {
+            Self::None => dest.write_str("none")?,
+            Self::All => dest.write_str("all")?,
+            Self::Idents(ref idents) => {
+                if let Some((ref first, rest)) = idents.split_first() {
+                    first.to_css(dest)?;
+                    for name in rest {
+                        dest.write_str(", ")?;
+                        name.to_css(dest)?;
+                    }
+                }
+            },
+        }
+        Ok(())
+    }
+}
+
+impl SpecifiedValueInfo for AnchorScope {
+    fn collect_completion_keywords(f: KeywordsCollectFn) {
+        // It would be nice if we could also list all the author defined dashed
+        // idents in the doc, but that's not practical.
+        f(&["none", "all"])
     }
 }
 
