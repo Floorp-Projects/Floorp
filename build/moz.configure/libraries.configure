@@ -114,3 +114,35 @@ with only_when(moz_use_pthreads):
         compilation_flags.cxxflags.extend(pthread_flags.cflags)
 
     set_config("MOZ_USE_PTHREADS", True)
+
+
+with only_when(building_with_gnu_cc):
+
+    @template
+    def check_std_atomic_requirements(flag=None, when=None):
+        return try_link(
+            includes=["cstdint", "atomic"],
+            body="std::atomic<uint64_t> foo; foo = 1;",
+            flags=flag or [],
+            when=when,
+        )
+
+    is_libatomic_optional = check_std_atomic_requirements()
+    is_libatomic_required = check_std_atomic_requirements(
+        flag="-latomic", when=~is_libatomic_optional
+    )
+
+    @depends(is_libatomic_optional, is_libatomic_required)
+    @checking("whether 64-bits std::atomic requires -latomic")
+    def checking_needs_libatomic(is_libatomic_optional, is_libatomic_required):
+        if is_libatomic_optional:
+            return False
+        if is_libatomic_required:
+            return True
+        return "do not know; assuming no"
+
+    set_config(
+        "LIBATOMIC_LIBS",
+        ["-latomic"],
+        when=depends(checking_needs_libatomic)(lambda c: c is True),
+    )

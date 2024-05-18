@@ -21,8 +21,7 @@ USE_LIBS += [
 # The memory library defines this, so it's needed here too.
 DEFINES["IMPL_MFBT"] = True
 
-if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
-    OS_LIBS += ["atomic"]
+OS_LIBS += CONFIG["LIBATOMIC_LIBS"]
 
 UNIFIED_SOURCES += [
     "/mfbt/double-conversion/double-conversion/bignum-dtoa.cc",

@@ -90,7 +90,6 @@ OS_LIBS += CONFIG['REALTIME_LIBS']
 if CONFIG['OS_TARGET'] != 'WINNT':
     OS_LIBS += ['m']
 
-if CONFIG['MOZ_NEEDS_LIBATOMIC']:
-    OS_LIBS += ['atomic']
+OS_LIBS += CONFIG["LIBATOMIC_LIBS"]
 
 include("../ffvpxcommon.mozbuild")

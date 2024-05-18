@@ -90,8 +90,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
             "synchronization",
         ]
 
-if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
-    OS_LIBS += ["atomic"]
+OS_LIBS += CONFIG["LIBATOMIC_LIBS"]
 
 if CONFIG["TARGET_OS"] == "iOS":
     OS_LIBS += ["-framework BrowserEngineCore"]
