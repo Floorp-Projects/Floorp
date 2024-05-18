@@ -62,6 +62,8 @@ class SnapTestsBase:
 
         assert self._dir is not None
 
+        self._update_channel = None
+
         self._wait = WebDriverWait(self._driver, self.get_timeout())
         self._longwait = WebDriverWait(self._driver, 60)
 
@@ -71,11 +73,17 @@ class SnapTestsBase:
         rv = False
         try:
             first_tab = self._driver.window_handles[0]
+            channel = self.update_channel()
             for m in object_methods:
                 tabs_before = set(self._driver.window_handles)
                 self._driver.switch_to.window(first_tab)
                 self._logger.test_start(m)
-                rv = getattr(self, m)(self._expectations[m])
+                expectations = (
+                    self._expectations[m]
+                    if not channel in self._expectations[m]
+                    else self._expectations[m][channel]
+                )
+                rv = getattr(self, m)(expectations)
                 self._driver.switch_to.parent_frame()
                 if rv:
                     self._logger.test_end(m, status="OK")
@@ -143,6 +151,19 @@ class SnapTestsBase:
         self._driver.get(url)
 
         return self._driver.current_window_handle
+
+    def update_channel(self):
+        if self._update_channel is None:
+            self._driver.set_context("chrome")
+            self._update_channel = self._driver.execute_script(
+                "return Services.prefs.getStringPref('app.update.channel');"
+            )
+            self._logger.info("Update channel: {}".format(self._update_channel))
+            self._driver.set_context("content")
+        return self._update_channel
+
+    def is_esr(self):
+        return self.update_channel() == "esr"
 
     def assert_rendering(self, exp, element_or_driver):
         # wait a bit for things to settle down
