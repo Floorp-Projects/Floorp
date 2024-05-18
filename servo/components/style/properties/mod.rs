@@ -1481,17 +1481,18 @@ impl UnparsedValue {
         let key = (shorthand, longhand_id);
         match shorthand_cache.get(&key) {
             Some(decl) => Cow::Borrowed(decl),
-            None => {
-                // FIXME: We should always have the key here but it seems
-                // sometimes we don't, see bug 1696409.
-                #[cfg(feature = "gecko")]
-                {
-                    if crate::gecko_bindings::structs::GECKO_IS_NIGHTLY {
-                        panic!("Expected {:?} to be in the cache but it was not!", key);
-                    }
-                }
-                invalid_at_computed_value_time()
-            },
+            // NOTE: Under normal circumstances we should always have a value, but when prefs
+            // change we might hit this case. Consider something like `animation-timeline`, which
+            // is a conditionally-enabled longhand of `animation`:
+            //
+            // If we have a sheet with `animation: var(--foo)`, and the `animation-timeline` pref
+            // enabled, then that expands to an `animation-timeline` declaration at parse time.
+            //
+            // If the user disables the pref and, some time later, we get here wanting to compute
+            // `animation-timeline`, parse_into won't generate any declaration for it anymore, so
+            // we haven't inserted in the cache. Computing to invalid / initial seems like the most
+            // sensible thing to do here.
+            None => invalid_at_computed_value_time(),
         }
     }
 }
