@@ -73,14 +73,15 @@ def main():
 
         # Create milestone and test runs
         devices = ["Google Pixel 3(Android11)", "Google Pixel 2(Android11)"]
-        testrail.create_milestone_and_test_runs(
-            testrail_project_id,
-            milestone_name,
-            milestone_description,
-            devices,
-            testrail_test_suite_id,
+        milestone = testrail.create_milestone(
+            testrail_project_id, milestone_name, milestone_description
         )
 
+        for device in devices:
+            test_run = testrail.create_test_run(
+                testrail_project_id, milestone["id"], device, testrail_test_suite_id
+            )
+            testrail.update_test_run_tests(test_run["id"], 1)  # 1 = Passed
         # Send success notification
         success_values = {
             "RELEASE_TYPE": release_type,
