@@ -86,8 +86,7 @@ def Libxul(name, output_category=None):
 
     Libxul_defines()
 
-    if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
-        OS_LIBS += ["atomic"]
+    OS_LIBS += CONFIG["LIBATOMIC_LIBS"]
 
     # TouchBar-related classes are only available in the 10.12.2 SDK and later.
     # We need to weak link these classes until we've upgraded our SDK to at

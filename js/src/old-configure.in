@@ -429,13 +429,6 @@ if test -n "$COMPILE_ENVIRONMENT"; then
 fi
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl ========================================================
-
-AC_LANG_CPLUSPLUS
-
-MOZ_CXX11
-
 
 dnl ========================================================
 dnl Put your C++ language/feature checks below
