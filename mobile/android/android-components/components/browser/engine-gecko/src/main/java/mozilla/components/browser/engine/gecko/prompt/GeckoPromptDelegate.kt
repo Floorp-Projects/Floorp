@@ -295,7 +295,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirmSelect: (Login) -> Unit = { login ->
             if (!prompt.isComplete) {
-                geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry())))
+                var hint = Autocomplete.SelectOption.Hint.NONE
+                if (generatedPassword != null && login.password == generatedPassword) {
+                    hint = Autocomplete.SelectOption.Hint.GENERATED
+                }
+                geckoResult.complete(prompt.confirm(Autocomplete.LoginSelectOption(login.toLoginEntry(), hint)))
             }
         }
         val onDismiss: () -> Unit = {

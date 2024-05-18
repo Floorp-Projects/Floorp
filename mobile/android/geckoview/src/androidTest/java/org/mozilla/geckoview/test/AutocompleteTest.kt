@@ -2452,6 +2452,16 @@ class AutocompleteTest : BaseSessionTest() {
             equalTo(genPass),
         )
 
+        val filledConfirmPass = mainSession.evaluateJS(
+            "document.querySelector('#passConfirm').value",
+        ) as String
+
+        assertThat(
+            "Confirm password should match filled password",
+            filledConfirmPass,
+            equalTo(genPass),
+        )
+
         // Submit the selection.
         mainSession.evaluateJS("document.querySelector('#form1').submit()")
         mainSession.waitForPageStop()
