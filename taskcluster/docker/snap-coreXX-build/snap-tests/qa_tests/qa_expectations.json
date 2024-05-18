@@ -1,5 +1,8 @@
 {
   "test_custom_fonts": {
+    "nightly": {
+      "reference": "test_custom_fonts_ref_nightly.png"
+    },
     "reference": "test_custom_fonts_ref.png"
   },
   "test_h264_mov": {},
