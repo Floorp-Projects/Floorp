@@ -97,7 +97,7 @@ body {
   background-image: url("chrome://mozapps/skin/extensions/category-languages.svg");
 }
 .category[name="extension"] {
-  background-image: url("chrome://browser/skin/addons.svg");
+  background-image: url("chrome://floorp/skin/addons.svg");
 }
 .category[name="theme"] {
   background-image: url("chrome://mozapps/skin/extensions/category-themes.svg");
