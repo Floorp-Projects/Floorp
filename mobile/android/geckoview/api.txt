@@ -254,6 +254,7 @@ package org.mozilla.geckoview {
   }
 
   public static class Autocomplete.LoginSelectOption extends Autocomplete.SelectOption<Autocomplete.LoginEntry> {
+    ctor public LoginSelectOption(@NonNull Autocomplete.LoginEntry, int);
     ctor public LoginSelectOption(@NonNull Autocomplete.LoginEntry);
   }
 
