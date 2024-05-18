@@ -1316,6 +1316,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   mozilla::StyleShapeOutside mShapeOutside;
 
+  // 'none', 'all', or a list of one or more `<dashed-ident>` identifiers that
+  // anchor positioned elements may reference.
+  mozilla::StyleAnchorName mAnchorName;
+
   mozilla::Maybe<mozilla::WindowButtonType> GetWindowButtonType() const {
     if (MOZ_LIKELY(mDefaultAppearance == mozilla::StyleAppearance::None)) {
       return mozilla::Nothing();

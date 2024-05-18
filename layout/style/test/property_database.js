@@ -13295,6 +13295,25 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
+  gCSSProperties["anchor-name"] = {
+    domProp: "anchorName",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["--foo", "--foo, --baz", "--foo,--baz", "--foo ,--baz"],
+    invalid_values: [
+      "--foo --bar",
+      "foo",
+      "none bar",
+      "none --baz",
+      "--foo bar",
+      ",--foo",
+      "--foo,",
+    ],
+  };
+}
+
 if (false) {
   // TODO These properties are chrome-only, and are not exposed via CSSOM.
   // We may still want to find a way to test them. See bug 1206999.

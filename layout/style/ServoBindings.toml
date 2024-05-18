@@ -620,6 +620,7 @@ cbindgen-types = [
     { gecko = "StyleLockedFontFaceRule", servo = "crate::gecko::arc_types::LockedFontFaceRule" },
     { gecko = "StyleBaselineSource", servo = "crate::values::computed::BaselineSource" },
     { gecko = "StyleAu", servo = "app_units::Au" },
+    { gecko = "StyleAnchorName", servo = "crate::values::computed::position::AnchorName" },
 ]
 
 mapped-generic-types = [

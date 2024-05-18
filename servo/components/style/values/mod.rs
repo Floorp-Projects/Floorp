@@ -592,6 +592,21 @@ impl ToCss for CustomIdent {
 )]
 pub struct DashedIdent(pub Atom);
 
+impl DashedIdent {
+    /// Parse an already-tokenizer identifier
+    pub fn from_ident<'i>(
+        location: SourceLocation,
+        ident: &CowRcStr<'i>,
+    ) -> Result<Self, ParseError<'i>> {
+        if !ident.starts_with("--") {
+            return Err(
+                location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(ident.clone()))
+            );
+        }
+        Ok(Self(Atom::from(ident.as_ref())))
+    }
+}
+
 impl Parse for DashedIdent {
     fn parse<'i, 't>(
         _: &ParserContext,
@@ -599,11 +614,7 @@ impl Parse for DashedIdent {
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
         let ident = input.expect_ident()?;
-        if ident.starts_with("--") {
-            Ok(Self(Atom::from(ident.as_ref())))
-        } else {
-            Err(location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(ident.clone())))
-        }
+        Self::from_ident(location, ident)
     }
 }
 
