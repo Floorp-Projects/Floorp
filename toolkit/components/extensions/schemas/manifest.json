@@ -278,6 +278,17 @@
             "default": []
           },
 
+          "optional_host_permissions": {
+            "min_manifest_version": 3,
+            "type": "array",
+            "items": {
+              "$ref": "MatchPattern",
+              "onError": "warn"
+            },
+            "optional": true,
+            "default": []
+          },
+
           "optional_permissions": {
             "type": "array",
             "items": {

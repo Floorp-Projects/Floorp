@@ -1273,7 +1273,8 @@ export class ExtensionData {
     }
 
     let { permissions, origins } = this.permissionsObject(
-      this.manifest.optional_permissions
+      this.manifest.optional_permissions,
+      this.manifest.optional_host_permissions
     );
     if (this.originControls) {
       for (let origin of this.getManifestOrigins()) {
