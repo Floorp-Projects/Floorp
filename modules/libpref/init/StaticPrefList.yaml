@@ -9239,6 +9239,13 @@
   value: true
   mirror: always
 
+# If enabled, textareas won't include 'overflow:auto' scrollbars in their
+# block-axis size (usually height).
+- name: layout.forms.textarea-sizing-excludes-auto-scrollbar.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Pref to control browser frame rate, in Hz. A value <= 0 means choose
 # automatically based on knowledge of the platform (or 60Hz if no platform-
 # specific information is available).
