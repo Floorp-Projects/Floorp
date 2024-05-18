@@ -422,7 +422,14 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
     Assign(already_AddRefed<mozilla::StringBuffer>(aBuffer), aLength);
   }
   void NS_FASTCALL Assign(already_AddRefed<mozilla::StringBuffer> aBuffer,
-                          size_type aLength);
+                          size_type aLength) {
+    mozilla::StringBuffer* buffer = aBuffer.take();
+    auto* data = reinterpret_cast<char_type*>(buffer->Data());
+    MOZ_DIAGNOSTIC_ASSERT(data[aLength] == char_type(0),
+                          "data should be null terminated");
+    Finalize();
+    SetData(data, aLength, DataFlags::REFCOUNTED | DataFlags::TERMINATED);
+  }
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
