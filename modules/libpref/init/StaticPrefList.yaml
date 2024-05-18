@@ -1848,7 +1848,7 @@
   do_not_use_directly: true
 
 # When true, zooming will be enabled on all sites, even ones that declare
-# user-scalable=no.
+# user-scalable=no or use touch-action to disable pinch gestures.
 - name: browser.ui.zoom.force-user-scalable
   type: RelaxedAtomicBool
   value: false
