@@ -11,6 +11,7 @@
 
 #include "mozilla/MouseEvents.h"
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_test.h"
@@ -727,8 +728,25 @@ void TouchBlockState::DispatchEvent(const InputData& aEvent) const {
 }
 
 bool TouchBlockState::TouchActionAllowsPinchZoom() const {
+  bool forceUserScalable = StaticPrefs::browser_ui_zoom_force_user_scalable();
+
   // Pointer events specification requires that all touch points allow zoom.
   for (auto& behavior : mAllowedTouchBehaviors) {
+    if (
+        // These flags represent 'touch-action: none'; if all of them are unset,
+        // we want to disable pinch zoom, even if forceUserScalable is true.
+        // This matches the behavior of other browsers.
+        !(behavior & AllowedTouchBehavior::PINCH_ZOOM) &&
+        !(behavior & AllowedTouchBehavior::ANIMATING_ZOOM) &&
+        !(behavior & AllowedTouchBehavior::VERTICAL_PAN) &&
+        !(behavior & AllowedTouchBehavior::HORIZONTAL_PAN)) {
+      return false;
+    }
+
+    if (forceUserScalable) {
+      return true;
+    }
+
     if (!(behavior & AllowedTouchBehavior::PINCH_ZOOM)) {
       return false;
     }

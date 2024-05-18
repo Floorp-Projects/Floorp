@@ -53,7 +53,8 @@ var subtests = [
   {"file": "helper_zoom_out_with_mainthread_clamping.html", "prefs": instant_repaint_prefs},
   {"file": "helper_fixed_html_hittest.html", "prefs": prefs},
   // {"file": "helper_zoom_oopif.html", "prefs": prefs}, // disabled, see bug 1716127
-  {"file": "helper_zoom_after_gpu_process_restart.html", "prefs": prefs}
+  {"file": "helper_zoom_after_gpu_process_restart.html", "prefs": prefs},
+  {"file": "helper_zoom_when_disabled_by_touch_action.html", "prefs": [...prefs, ["browser.ui.zoom.force-user-scalable", true]]}
 ];
 
 if (isApzEnabled()) {

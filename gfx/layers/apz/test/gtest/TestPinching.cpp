@@ -269,6 +269,30 @@ TEST_F(APZCPinchGestureDetectorTester,
   DoPinchTest(false, &behaviors);
 }
 
+TEST_F(
+    APZCPinchGestureDetectorTester,
+    Pinch_UseGestureDetector_TouchActionPanY_APZZoom_When_ForceUserScalable) {
+  SCOPED_GFX_PREF_BOOL("browser.ui.zoom.force-user-scalable", true);
+
+  nsTArray<uint32_t> behaviors = {
+      mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN,
+      mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN};
+  DoPinchTest(true, &behaviors);
+}
+
+TEST_F(
+    APZCPinchGestureDetectorTester,
+    Pinch_UseGestureDetector_TouchActionNone_NoAPZZoom_When_ForceUserScalable) {
+  SCOPED_GFX_PREF_BOOL("browser.ui.zoom.force-user-scalable", true);
+
+  EXPECT_CALL(*mcc, NotifyPinchGesture(_, _, _, _, _)).Times(0);
+  nsTArray<uint32_t> behaviors = {
+      {mozilla::layers::AllowedTouchBehavior::NONE,
+       mozilla::layers::AllowedTouchBehavior::NONE},
+  };
+  DoPinchTest(false, &behaviors);
+}
+
 TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
   DoPinchWithPreventDefaultTest();
 }
