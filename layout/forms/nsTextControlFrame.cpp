@@ -231,7 +231,21 @@ LogicalSize nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
       LogicalMargin scrollbarSizes(aWM,
                                    scrollableFrame->GetDesiredScrollbarSizes());
       intrinsicSize.ISize(aWM) += scrollbarSizes.IStartEnd(aWM);
-      intrinsicSize.BSize(aWM) += scrollbarSizes.BStartEnd(aWM);
+
+      // We only include scrollbar-thickness in our BSize if the scrollbar on
+      // that side is explicitly forced-to-be-present.
+      const bool includeScrollbarBSize = [&] {
+        if (!StaticPrefs::
+                layout_forms_textarea_sizing_excludes_auto_scrollbar_enabled()) {
+          return true;
+        }
+        auto overflow = aWM.IsVertical() ? StyleDisplay()->mOverflowY
+                                         : StyleDisplay()->mOverflowX;
+        return overflow == StyleOverflow::Scroll;
+      }();
+      if (includeScrollbarBSize) {
+        intrinsicSize.BSize(aWM) += scrollbarSizes.BStartEnd(aWM);
+      }
     }
   }
   return intrinsicSize;
