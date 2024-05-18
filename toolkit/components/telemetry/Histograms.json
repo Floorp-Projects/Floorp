@@ -1790,6 +1790,19 @@
     "description": "Number of PHC slots allocated-then-freed",
     "releaseChannelCollection": "opt-out"
   },
+  "PROCESS_LIFETIME": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["pbone@mozilla.com"],
+    "bug_numbers": [1897060],
+    "expires_in_version": "135",
+    "kind": "exponential",
+    "low": 15,
+    "high": 86400,
+    "n_buckets": 24,
+    "description": "Average lifetime of a content process in seconds",
+    "releaseChannelCollection": "opt-out"
+  },
 
   "FONTLIST_INITOTHERFAMILYNAMES": {
     "record_in_processes": ["main", "content"],
