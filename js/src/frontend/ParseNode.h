@@ -60,186 +60,185 @@ class FullParseHandler;
 
 class FunctionBox;
 
-#define FOR_EACH_PARSE_NODE_KIND(F)                                  \
-  F(EmptyStmt, NullaryNode)                                          \
-  F(ExpressionStmt, UnaryNode)                                       \
-  F(CommaExpr, ListNode)                                             \
-  F(ConditionalExpr, ConditionalExpression)                          \
-  F(PropertyDefinition, PropertyDefinition)                          \
-  F(Shorthand, BinaryNode)                                           \
-  F(PosExpr, UnaryNode)                                              \
-  F(NegExpr, UnaryNode)                                              \
-  F(PreIncrementExpr, UnaryNode)                                     \
-  F(PostIncrementExpr, UnaryNode)                                    \
-  F(PreDecrementExpr, UnaryNode)                                     \
-  F(PostDecrementExpr, UnaryNode)                                    \
-  F(PropertyNameExpr, NameNode)                                      \
-  F(DotExpr, PropertyAccess)                                         \
-  F(ArgumentsLength, ArgumentsLength)                                \
-  F(ElemExpr, PropertyByValue)                                       \
-  F(PrivateMemberExpr, PrivateMemberAccess)                          \
-  F(OptionalDotExpr, OptionalPropertyAccess)                         \
-  F(OptionalChain, UnaryNode)                                        \
-  F(OptionalElemExpr, OptionalPropertyByValue)                       \
-  F(OptionalPrivateMemberExpr, OptionalPrivateMemberAccess)          \
-  F(OptionalCallExpr, CallNode)                                      \
-  F(ArrayExpr, ListNode)                                             \
-  F(Elision, NullaryNode)                                            \
-  F(StatementList, ListNode)                                         \
-  F(LabelStmt, LabeledStatement)                                     \
-  F(ObjectExpr, ListNode)                                            \
-  F(CallExpr, CallNode)                                              \
-  F(Arguments, ListNode)                                             \
-  F(Name, NameNode)                                                  \
-  F(ObjectPropertyName, NameNode)                                    \
-  F(PrivateName, NameNode)                                           \
-  F(ComputedName, UnaryNode)                                         \
-  F(NumberExpr, NumericLiteral)                                      \
-  F(BigIntExpr, BigIntLiteral)                                       \
-  F(StringExpr, NameNode)                                            \
-  F(TemplateStringListExpr, ListNode)                                \
-  F(TemplateStringExpr, NameNode)                                    \
-  F(TaggedTemplateExpr, CallNode)                                    \
-  F(CallSiteObj, CallSiteNode)                                       \
-  F(RegExpExpr, RegExpLiteral)                                       \
-  F(TrueExpr, BooleanLiteral)                                        \
-  F(FalseExpr, BooleanLiteral)                                       \
-  F(NullExpr, NullLiteral)                                           \
-  F(RawUndefinedExpr, RawUndefinedLiteral)                           \
-  F(ThisExpr, UnaryNode)                                             \
-  IF_RECORD_TUPLE(F(RecordExpr, ListNode))                           \
-  IF_RECORD_TUPLE(F(TupleExpr, ListNode))                            \
-  F(Function, FunctionNode)                                          \
-  F(Module, ModuleNode)                                              \
-  F(IfStmt, TernaryNode)                                             \
-  F(SwitchStmt, SwitchStatement)                                     \
-  F(Case, CaseClause)                                                \
-  F(WhileStmt, BinaryNode)                                           \
-  F(DoWhileStmt, BinaryNode)                                         \
-  F(ForStmt, ForNode)                                                \
-  F(BreakStmt, BreakStatement)                                       \
-  F(ContinueStmt, ContinueStatement)                                 \
-  F(VarStmt, DeclarationListNode)                                    \
-  F(ConstDecl, DeclarationListNode)                                  \
-  IF_EXPLICIT_RESOURCE_MANAGEMENT(F(UsingDecl, DeclarationListNode)) \
-  F(WithStmt, BinaryNode)                                            \
-  F(ReturnStmt, UnaryNode)                                           \
-  F(NewExpr, CallNode)                                               \
-  IF_DECORATORS(F(DecoratorList, ListNode))                          \
-  /* Delete operations.  These must be sequential. */                \
-  F(DeleteNameExpr, UnaryNode)                                       \
-  F(DeletePropExpr, UnaryNode)                                       \
-  F(DeleteElemExpr, UnaryNode)                                       \
-  F(DeleteOptionalChainExpr, UnaryNode)                              \
-  F(DeleteExpr, UnaryNode)                                           \
-  F(TryStmt, TernaryNode)                                            \
-  F(Catch, BinaryNode)                                               \
-  F(ThrowStmt, UnaryNode)                                            \
-  F(DebuggerStmt, DebuggerStatement)                                 \
-  F(Generator, NullaryNode)                                          \
-  F(InitialYield, UnaryNode)                                         \
-  F(YieldExpr, UnaryNode)                                            \
-  F(YieldStarExpr, UnaryNode)                                        \
-  F(LexicalScope, LexicalScopeNode)                                  \
-  F(LetDecl, DeclarationListNode)                                    \
-  F(ImportDecl, BinaryNode)                                          \
-  F(ImportSpecList, ListNode)                                        \
-  F(ImportSpec, BinaryNode)                                          \
-  F(ImportNamespaceSpec, UnaryNode)                                  \
-  F(ImportAttributeList, ListNode)                                   \
-  F(ImportAttribute, BinaryNode)                                     \
-  F(ImportModuleRequest, BinaryNode)                                 \
-  F(ExportStmt, UnaryNode)                                           \
-  F(ExportFromStmt, BinaryNode)                                      \
-  F(ExportDefaultStmt, BinaryNode)                                   \
-  F(ExportSpecList, ListNode)                                        \
-  F(ExportSpec, BinaryNode)                                          \
-  F(ExportNamespaceSpec, UnaryNode)                                  \
-  F(ExportBatchSpecStmt, NullaryNode)                                \
-  F(ForIn, TernaryNode)                                              \
-  F(ForOf, TernaryNode)                                              \
-  F(ForHead, TernaryNode)                                            \
-  F(ParamsBody, ParamsBodyNode)                                      \
-  F(Spread, UnaryNode)                                               \
-  F(MutateProto, UnaryNode)                                          \
-  F(ClassDecl, ClassNode)                                            \
-  F(DefaultConstructor, ClassMethod)                                 \
-  F(ClassBodyScope, ClassBodyScopeNode)                              \
-  F(ClassMethod, ClassMethod)                                        \
-  F(StaticClassBlock, StaticClassBlock)                              \
-  F(ClassField, ClassField)                                          \
-  F(ClassMemberList, ListNode)                                       \
-  F(ClassNames, ClassNames)                                          \
-  F(NewTargetExpr, NewTargetNode)                                    \
-  F(PosHolder, NullaryNode)                                          \
-  F(SuperBase, UnaryNode)                                            \
-  F(SuperCallExpr, CallNode)                                         \
-  F(SetThis, BinaryNode)                                             \
-  F(ImportMetaExpr, BinaryNode)                                      \
-  F(CallImportExpr, BinaryNode)                                      \
-  F(CallImportSpec, BinaryNode)                                      \
-  F(InitExpr, BinaryNode)                                            \
-                                                                     \
-  /* Unary operators. */                                             \
-  F(TypeOfNameExpr, UnaryNode)                                       \
-  F(TypeOfExpr, UnaryNode)                                           \
-  F(VoidExpr, UnaryNode)                                             \
-  F(NotExpr, UnaryNode)                                              \
-  F(BitNotExpr, UnaryNode)                                           \
-  F(AwaitExpr, UnaryNode)                                            \
-                                                                     \
-  /*                                                                 \
-   * Binary operators.                                               \
-   * This list must be kept in the same order in several places:     \
-   *   - The binary operators in ParseNode.h                         \
-   *   - the binary operators in TokenKind.h                         \
-   *   - the precedence list in Parser.cpp                           \
-   *   - the JSOp code list in BytecodeEmitter.cpp                   \
-   */                                                                \
-  F(CoalesceExpr, ListNode)                                          \
-  F(OrExpr, ListNode)                                                \
-  F(AndExpr, ListNode)                                               \
-  F(BitOrExpr, ListNode)                                             \
-  F(BitXorExpr, ListNode)                                            \
-  F(BitAndExpr, ListNode)                                            \
-  F(StrictEqExpr, ListNode)                                          \
-  F(EqExpr, ListNode)                                                \
-  F(StrictNeExpr, ListNode)                                          \
-  F(NeExpr, ListNode)                                                \
-  F(LtExpr, ListNode)                                                \
-  F(LeExpr, ListNode)                                                \
-  F(GtExpr, ListNode)                                                \
-  F(GeExpr, ListNode)                                                \
-  F(InstanceOfExpr, ListNode)                                        \
-  F(InExpr, ListNode)                                                \
-  F(PrivateInExpr, ListNode)                                         \
-  F(LshExpr, ListNode)                                               \
-  F(RshExpr, ListNode)                                               \
-  F(UrshExpr, ListNode)                                              \
-  F(AddExpr, ListNode)                                               \
-  F(SubExpr, ListNode)                                               \
-  F(MulExpr, ListNode)                                               \
-  F(DivExpr, ListNode)                                               \
-  F(ModExpr, ListNode)                                               \
-  F(PowExpr, ListNode)                                               \
-                                                                     \
-  /* Assignment operators (= += -= etc.). */                         \
-  /* AssignmentNode::test assumes all these are consecutive. */      \
-  F(AssignExpr, AssignmentNode)                                      \
-  F(AddAssignExpr, AssignmentNode)                                   \
-  F(SubAssignExpr, AssignmentNode)                                   \
-  F(CoalesceAssignExpr, AssignmentNode)                              \
-  F(OrAssignExpr, AssignmentNode)                                    \
-  F(AndAssignExpr, AssignmentNode)                                   \
-  F(BitOrAssignExpr, AssignmentNode)                                 \
-  F(BitXorAssignExpr, AssignmentNode)                                \
-  F(BitAndAssignExpr, AssignmentNode)                                \
-  F(LshAssignExpr, AssignmentNode)                                   \
-  F(RshAssignExpr, AssignmentNode)                                   \
-  F(UrshAssignExpr, AssignmentNode)                                  \
-  F(MulAssignExpr, AssignmentNode)                                   \
-  F(DivAssignExpr, AssignmentNode)                                   \
-  F(ModAssignExpr, AssignmentNode)                                   \
+#define FOR_EACH_PARSE_NODE_KIND(F)                              \
+  F(EmptyStmt, NullaryNode)                                      \
+  F(ExpressionStmt, UnaryNode)                                   \
+  F(CommaExpr, ListNode)                                         \
+  F(ConditionalExpr, ConditionalExpression)                      \
+  F(PropertyDefinition, PropertyDefinition)                      \
+  F(Shorthand, BinaryNode)                                       \
+  F(PosExpr, UnaryNode)                                          \
+  F(NegExpr, UnaryNode)                                          \
+  F(PreIncrementExpr, UnaryNode)                                 \
+  F(PostIncrementExpr, UnaryNode)                                \
+  F(PreDecrementExpr, UnaryNode)                                 \
+  F(PostDecrementExpr, UnaryNode)                                \
+  F(PropertyNameExpr, NameNode)                                  \
+  F(DotExpr, PropertyAccess)                                     \
+  F(ArgumentsLength, ArgumentsLength)                            \
+  F(ElemExpr, PropertyByValue)                                   \
+  F(PrivateMemberExpr, PrivateMemberAccess)                      \
+  F(OptionalDotExpr, OptionalPropertyAccess)                     \
+  F(OptionalChain, UnaryNode)                                    \
+  F(OptionalElemExpr, OptionalPropertyByValue)                   \
+  F(OptionalPrivateMemberExpr, OptionalPrivateMemberAccess)      \
+  F(OptionalCallExpr, CallNode)                                  \
+  F(ArrayExpr, ListNode)                                         \
+  F(Elision, NullaryNode)                                        \
+  F(StatementList, ListNode)                                     \
+  F(LabelStmt, LabeledStatement)                                 \
+  F(ObjectExpr, ListNode)                                        \
+  F(CallExpr, CallNode)                                          \
+  F(Arguments, ListNode)                                         \
+  F(Name, NameNode)                                              \
+  F(ObjectPropertyName, NameNode)                                \
+  F(PrivateName, NameNode)                                       \
+  F(ComputedName, UnaryNode)                                     \
+  F(NumberExpr, NumericLiteral)                                  \
+  F(BigIntExpr, BigIntLiteral)                                   \
+  F(StringExpr, NameNode)                                        \
+  F(TemplateStringListExpr, ListNode)                            \
+  F(TemplateStringExpr, NameNode)                                \
+  F(TaggedTemplateExpr, CallNode)                                \
+  F(CallSiteObj, CallSiteNode)                                   \
+  F(RegExpExpr, RegExpLiteral)                                   \
+  F(TrueExpr, BooleanLiteral)                                    \
+  F(FalseExpr, BooleanLiteral)                                   \
+  F(NullExpr, NullLiteral)                                       \
+  F(RawUndefinedExpr, RawUndefinedLiteral)                       \
+  F(ThisExpr, UnaryNode)                                         \
+  IF_RECORD_TUPLE(F(RecordExpr, ListNode))                       \
+  IF_RECORD_TUPLE(F(TupleExpr, ListNode))                        \
+  F(Function, FunctionNode)                                      \
+  F(Module, ModuleNode)                                          \
+  F(IfStmt, TernaryNode)                                         \
+  F(SwitchStmt, SwitchStatement)                                 \
+  F(Case, CaseClause)                                            \
+  F(WhileStmt, BinaryNode)                                       \
+  F(DoWhileStmt, BinaryNode)                                     \
+  F(ForStmt, ForNode)                                            \
+  F(BreakStmt, BreakStatement)                                   \
+  F(ContinueStmt, ContinueStatement)                             \
+  F(VarStmt, DeclarationListNode)                                \
+  F(ConstDecl, DeclarationListNode)                              \
+  F(WithStmt, BinaryNode)                                        \
+  F(ReturnStmt, UnaryNode)                                       \
+  F(NewExpr, CallNode)                                           \
+  IF_DECORATORS(F(DecoratorList, ListNode))                      \
+  /* Delete operations.  These must be sequential. */            \
+  F(DeleteNameExpr, UnaryNode)                                   \
+  F(DeletePropExpr, UnaryNode)                                   \
+  F(DeleteElemExpr, UnaryNode)                                   \
+  F(DeleteOptionalChainExpr, UnaryNode)                          \
+  F(DeleteExpr, UnaryNode)                                       \
+  F(TryStmt, TernaryNode)                                        \
+  F(Catch, BinaryNode)                                           \
+  F(ThrowStmt, UnaryNode)                                        \
+  F(DebuggerStmt, DebuggerStatement)                             \
+  F(Generator, NullaryNode)                                      \
+  F(InitialYield, UnaryNode)                                     \
+  F(YieldExpr, UnaryNode)                                        \
+  F(YieldStarExpr, UnaryNode)                                    \
+  F(LexicalScope, LexicalScopeNode)                              \
+  F(LetDecl, DeclarationListNode)                                \
+  F(ImportDecl, BinaryNode)                                      \
+  F(ImportSpecList, ListNode)                                    \
+  F(ImportSpec, BinaryNode)                                      \
+  F(ImportNamespaceSpec, UnaryNode)                              \
+  F(ImportAttributeList, ListNode)                               \
+  F(ImportAttribute, BinaryNode)                                 \
+  F(ImportModuleRequest, BinaryNode)                             \
+  F(ExportStmt, UnaryNode)                                       \
+  F(ExportFromStmt, BinaryNode)                                  \
+  F(ExportDefaultStmt, BinaryNode)                               \
+  F(ExportSpecList, ListNode)                                    \
+  F(ExportSpec, BinaryNode)                                      \
+  F(ExportNamespaceSpec, UnaryNode)                              \
+  F(ExportBatchSpecStmt, NullaryNode)                            \
+  F(ForIn, TernaryNode)                                          \
+  F(ForOf, TernaryNode)                                          \
+  F(ForHead, TernaryNode)                                        \
+  F(ParamsBody, ParamsBodyNode)                                  \
+  F(Spread, UnaryNode)                                           \
+  F(MutateProto, UnaryNode)                                      \
+  F(ClassDecl, ClassNode)                                        \
+  F(DefaultConstructor, ClassMethod)                             \
+  F(ClassBodyScope, ClassBodyScopeNode)                          \
+  F(ClassMethod, ClassMethod)                                    \
+  F(StaticClassBlock, StaticClassBlock)                          \
+  F(ClassField, ClassField)                                      \
+  F(ClassMemberList, ListNode)                                   \
+  F(ClassNames, ClassNames)                                      \
+  F(NewTargetExpr, NewTargetNode)                                \
+  F(PosHolder, NullaryNode)                                      \
+  F(SuperBase, UnaryNode)                                        \
+  F(SuperCallExpr, CallNode)                                     \
+  F(SetThis, BinaryNode)                                         \
+  F(ImportMetaExpr, BinaryNode)                                  \
+  F(CallImportExpr, BinaryNode)                                  \
+  F(CallImportSpec, BinaryNode)                                  \
+  F(InitExpr, BinaryNode)                                        \
+                                                                 \
+  /* Unary operators. */                                         \
+  F(TypeOfNameExpr, UnaryNode)                                   \
+  F(TypeOfExpr, UnaryNode)                                       \
+  F(VoidExpr, UnaryNode)                                         \
+  F(NotExpr, UnaryNode)                                          \
+  F(BitNotExpr, UnaryNode)                                       \
+  F(AwaitExpr, UnaryNode)                                        \
+                                                                 \
+  /*                                                             \
+   * Binary operators.                                           \
+   * This list must be kept in the same order in several places: \
+   *   - The binary operators in ParseNode.h                     \
+   *   - the binary operators in TokenKind.h                     \
+   *   - the precedence list in Parser.cpp                       \
+   *   - the JSOp code list in BytecodeEmitter.cpp               \
+   */                                                            \
+  F(CoalesceExpr, ListNode)                                      \
+  F(OrExpr, ListNode)                                            \
+  F(AndExpr, ListNode)                                           \
+  F(BitOrExpr, ListNode)                                         \
+  F(BitXorExpr, ListNode)                                        \
+  F(BitAndExpr, ListNode)                                        \
+  F(StrictEqExpr, ListNode)                                      \
+  F(EqExpr, ListNode)                                            \
+  F(StrictNeExpr, ListNode)                                      \
+  F(NeExpr, ListNode)                                            \
+  F(LtExpr, ListNode)                                            \
+  F(LeExpr, ListNode)                                            \
+  F(GtExpr, ListNode)                                            \
+  F(GeExpr, ListNode)                                            \
+  F(InstanceOfExpr, ListNode)                                    \
+  F(InExpr, ListNode)                                            \
+  F(PrivateInExpr, ListNode)                                     \
+  F(LshExpr, ListNode)                                           \
+  F(RshExpr, ListNode)                                           \
+  F(UrshExpr, ListNode)                                          \
+  F(AddExpr, ListNode)                                           \
+  F(SubExpr, ListNode)                                           \
+  F(MulExpr, ListNode)                                           \
+  F(DivExpr, ListNode)                                           \
+  F(ModExpr, ListNode)                                           \
+  F(PowExpr, ListNode)                                           \
+                                                                 \
+  /* Assignment operators (= += -= etc.). */                     \
+  /* AssignmentNode::test assumes all these are consecutive. */  \
+  F(AssignExpr, AssignmentNode)                                  \
+  F(AddAssignExpr, AssignmentNode)                               \
+  F(SubAssignExpr, AssignmentNode)                               \
+  F(CoalesceAssignExpr, AssignmentNode)                          \
+  F(OrAssignExpr, AssignmentNode)                                \
+  F(AndAssignExpr, AssignmentNode)                               \
+  F(BitOrAssignExpr, AssignmentNode)                             \
+  F(BitXorAssignExpr, AssignmentNode)                            \
+  F(BitAndAssignExpr, AssignmentNode)                            \
+  F(LshAssignExpr, AssignmentNode)                               \
+  F(RshAssignExpr, AssignmentNode)                               \
+  F(UrshAssignExpr, AssignmentNode)                              \
+  F(MulAssignExpr, AssignmentNode)                               \
+  F(DivAssignExpr, AssignmentNode)                               \
+  F(ModAssignExpr, AssignmentNode)                               \
   F(PowAssignExpr, AssignmentNode)
 
 /*
@@ -1257,7 +1256,7 @@ class ListNode : public ParseNode {
 
   void checkConsistency() const
 #ifndef DEBUG
-  {}
+      {}
 #endif
   ;
 
@@ -1484,9 +1483,6 @@ class DeclarationListNode : public ListNode {
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::VarStmt) ||
                  node.isKind(ParseNodeKind::LetDecl) ||
-#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-                 node.isKind(ParseNodeKind::UsingDecl) ||
-#endif
                  node.isKind(ParseNodeKind::ConstDecl);
     MOZ_ASSERT_IF(match, node.is<ListNode>());
     return match;

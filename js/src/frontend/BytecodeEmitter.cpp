@@ -1086,11 +1086,6 @@ restart:
       MOZ_CRASH("Decorators are not supported yet");
 #endif
 
-#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-    case ParseNodeKind::UsingDecl:
-      MOZ_CRASH("Using declarations are not supported yet");
-#endif
-
     // Most other binary operations (parsed as lists in SpiderMonkey) may
     // perform conversions triggering side effects.  Math operations perform
     // ToNumber and may fail invoking invalid user-defined toString/valueOf:

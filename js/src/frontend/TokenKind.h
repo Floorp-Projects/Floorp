@@ -143,7 +143,6 @@
   MACRO(Set, "'set'")                                                  \
   MACRO(Static, "'static'")                                            \
   MACRO(Target, "'target'")                                            \
-  IF_EXPLICIT_RESOURCE_MANAGEMENT(MACRO(Using, "'using'"))             \
   MACRO(Yield, "'yield'")                                              \
   RANGE(ContextualKeywordLast, Yield)                                  \
                                                                        \
