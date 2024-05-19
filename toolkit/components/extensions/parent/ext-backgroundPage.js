@@ -497,8 +497,8 @@ class BackgroundContextOwner {
       EventManager.clearPrimedListeners(this.extension, false);
     }
 
-    // Ensure any idle background timer is not running.
-    this.backgroundBuilder.idleManager.clearTimer();
+    // Ensure there is no backgroundTimer running
+    this.backgroundBuilder.clearIdleTimer();
 
     const bgInstance = this.bgInstance;
     if (bgInstance) {
@@ -664,7 +664,6 @@ class BackgroundBuilder {
   constructor(extension) {
     this.extension = extension;
     this.backgroundContextOwner = new BackgroundContextOwner(this, extension);
-    this.idleManager = new IdleManager(extension);
   }
 
   async build() {
@@ -719,6 +718,26 @@ class BackgroundBuilder {
     }
   }
 
+  observe(subject, topic) {
+    if (topic == "timer-callback") {
+      let { extension } = this;
+      this.clearIdleTimer();
+      extension?.terminateBackground();
+    }
+  }
+
+  clearIdleTimer() {
+    this.backgroundTimer?.cancel();
+    this.backgroundTimer = null;
+  }
+
+  resetIdleTimer() {
+    this.clearIdleTimer();
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.init(this, backgroundIdleTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    this.backgroundTimer = timer;
+  }
+
   primeBackground(isInStartup = true) {
     let { extension } = this;
 
@@ -760,9 +779,20 @@ class BackgroundBuilder {
       return bgStartupPromise;
     };
 
-    let resetBackgroundIdle = (event, { reason } = {}) => {
+    let resetBackgroundIdle = (eventName, resetIdleDetails) => {
+      this.clearIdleTimer();
       if (!this.extension || extension.persistentBackground) {
-        // Extension was already shut down or is persistent.
+        // Extension was already shut down or is persistent and
+        // does not idle timout.
+        return;
+      }
+      // TODO remove at an appropriate point in the future prior
+      // to general availability.  There may be some racy conditions
+      // with idle timeout between an event starting and the event firing
+      // but we still want testing with an idle timeout.
+      if (
+        !Services.prefs.getBoolPref("extensions.background.idle.enabled", true)
+      ) {
         return;
       }
 
@@ -770,30 +800,52 @@ class BackgroundBuilder {
         extension.backgroundState == BACKGROUND_STATE.SUSPENDING &&
         // After we begin suspending the background, parent API calls from
         // runtime.onSuspend listeners shouldn't cancel the suspension.
-        reason !== "parentapicall"
+        resetIdleDetails?.reason !== "parentApiCall"
       ) {
         extension.backgroundState = BACKGROUND_STATE.RUNNING;
+        // call runtime.onSuspendCanceled
         extension.emit("background-script-suspend-canceled");
       }
 
-      this.idleManager.resetTimer();
+      this.resetIdleTimer();
 
-      if (this.isWorker) {
-        // TODO(Bug 1790087): record similar telemetry for service workers.
-        return;
-      }
-      if (!reason || reason === "event" || reason === "parentapicall") {
-        // Bug 1868960: not recording these because too frequent.
-        return;
-      }
+      if (
+        eventName === "background-script-reset-idle" &&
+        // TODO(Bug 1790087): record similar telemetry for background service worker.
+        !this.isWorker
+      ) {
+        // Record the reason for resetting the event page idle timeout
+        // in a idle result histogram, with the category set based
+        // on the reason for resetting (defaults to 'reset_other'
+        // if resetIdleDetails.reason is missing or not mapped into the
+        // telemetry histogram categories).
+        //
+        // Keep this in sync with the categories listed in Histograms.json
+        // for "WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT".
+        let category = "reset_other";
+        switch (resetIdleDetails?.reason) {
+          case "event":
+            category = "reset_event";
+            return; // not break; because too frequent, see bug 1868960.
+          case "hasActiveNativeAppPorts":
+            category = "reset_nativeapp";
+            break;
+          case "hasActiveStreamFilter":
+            category = "reset_streamfilter";
+            break;
+          case "pendingListeners":
+            category = "reset_listeners";
+            break;
+          case "parentApiCall":
+            category = "reset_parentapicall";
+            return; // not break; because too frequent, see bug 1868960.
+        }
 
-      // Record telemetry histogram for (known) idle reset reasons.
-      // Keep in sync with categories in WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT.
-      let KNOWN = ["nativeapp", "streamfilter", "listeners"];
-      ExtensionTelemetry.eventPageIdleResult.histogramAdd({
-        extension,
-        category: `reset_${KNOWN.includes(reason) ? reason : "other"}`,
-      });
+        ExtensionTelemetry.eventPageIdleResult.histogramAdd({
+          extension,
+          category,
+        });
+      }
     };
 
     // Listen for events from the EventManager
@@ -837,7 +889,9 @@ class BackgroundBuilder {
         !disableResetIdleForTest &&
         extension.backgroundContext?.hasActiveNativeAppPorts
       ) {
-        extension.emit("background-script-reset-idle", { reason: "nativeapp" });
+        extension.emit("background-script-reset-idle", {
+          reason: "hasActiveNativeAppPorts",
+        });
         return;
       }
 
@@ -846,7 +900,7 @@ class BackgroundBuilder {
         extension.backgroundContext?.pendingRunListenerPromisesCount
       ) {
         extension.emit("background-script-reset-idle", {
-          reason: "listeners",
+          reason: "pendingListeners",
           pendingListeners:
             extension.backgroundContext.pendingRunListenerPromisesCount,
         });
@@ -887,7 +941,7 @@ class BackgroundBuilder {
           });
         if (!disableResetIdleForTest && hasActiveStreamFilter) {
           extension.emit("background-script-reset-idle", {
-            reason: "streamfilter",
+            reason: "hasActiveStreamFilter",
           });
           return;
         }
@@ -902,7 +956,7 @@ class BackgroundBuilder {
       }
 
       extension.backgroundState = BACKGROUND_STATE.SUSPENDING;
-      this.idleManager.clearTimer();
+      this.clearIdleTimer();
       // call runtime.onSuspend
       await extension.emit("background-script-suspend");
       // If in the meantime another event fired, state will be RUNNING,
@@ -972,53 +1026,6 @@ class BackgroundBuilder {
     }
   }
 }
-
-/**
- * Times the suspension of the background page, acts like a 3-state machine:
- *  - suspended (or uninitialized)
- *  - waiting for a timeout (now() < sleepTime)
- *  - TODO: waiting on a promise (keepAwake.size > 0)
- */
-var IdleManager = class IdleManager {
-  sleepTime = 0;
-  /** @type {nsITimer} */
-  timer = null;
-  /** @type {Map<promise, string>} */
-  keepAlive = new Map();
-
-  constructor(extension) {
-    this.extension = extension;
-  }
-
-  clearTimer() {
-    this.timer?.cancel();
-    this.timer = null;
-  }
-
-  resetTimer() {
-    this.sleepTime = Cu.now() + backgroundIdleTimeout;
-    if (!this.timer) {
-      this.createTimer();
-    }
-  }
-
-  createTimer() {
-    let timeLeft = this.sleepTime - Cu.now();
-    this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.timer.init(() => this.timeout(), timeLeft, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
-
-  timeout() {
-    this.clearTimer();
-    if (!this.keepAlive.size) {
-      if (Cu.now() < this.sleepTime) {
-        this.createTimer();
-      } else {
-        this.extension.terminateBackground();
-      }
-    }
-  }
-};
 
 this.backgroundPage = class extends ExtensionAPI {
   async onManifestEntry() {
