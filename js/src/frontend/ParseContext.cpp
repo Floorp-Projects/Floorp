@@ -33,10 +33,6 @@ const char* DeclarationKindString(DeclarationKind kind) {
       return "let";
     case DeclarationKind::Const:
       return "const";
-#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-    case DeclarationKind::Using:
-      return "using";
-#endif
     case DeclarationKind::Class:
       return "class";
     case DeclarationKind::Import:

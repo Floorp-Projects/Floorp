@@ -173,24 +173,6 @@ def enable_decorators(value):
 set_config("ENABLE_DECORATORS", enable_decorators)
 set_define("ENABLE_DECORATORS", enable_decorators)
 
-# Enable explicit resource management
-# ===================================================
-option(
-    "--enable-explicit-resource-management",
-    default=False,
-    help="Enable explicit resource management",
-)
-
-
-@depends("--enable-explicit-resource-management")
-def enable_explicit_resource_management(value):
-    if value:
-        return True
-
-
-set_config("ENABLE_EXPLICIT_RESOURCE_MANAGEMENT", enable_explicit_resource_management)
-set_define("ENABLE_EXPLICIT_RESOURCE_MANAGEMENT", enable_explicit_resource_management)
-
 
 # Enable JSON.parse with source
 # ===================================================
