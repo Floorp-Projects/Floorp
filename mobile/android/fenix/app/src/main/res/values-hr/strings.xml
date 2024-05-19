@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="app_name_private_5">Privatni %s</string>
+    <string name="app_name_private_5">Privatne %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (privatno)</string>
 
@@ -49,12 +49,12 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Nedavno spremljeno</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Nedavno spremljeno</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Prikaži sve spremljene zabilješke</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Prikaži sve spremljene zabilješke</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Ukloni</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Ukloni</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s proizvodi Mozilla.</string>
@@ -144,8 +144,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nova privatna kartica</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">Prečac za lozinke</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Prečac za lozinke</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -187,11 +187,11 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zaustavi</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Dodaci</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Dodaci</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informacije računa</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Ovdje nema dodataka</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ovdje nema dodataka</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomoć</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -207,7 +207,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Dodaj na početni ekran</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Instaliraj</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Instaliraj</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Ponovna sinkronizacija</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -313,22 +313,22 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Obavijesti vam pomažu da učinite više s %s</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">Obavijesti vam pomažu da učinite više s %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Sinkronizirajte svoje kartice između uređaja, upravljajte preuzimanjima, dobivajte savjete o tome kako najbolje iskoristiti %s zaštitu privatnosti i još mnogo toga.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">Sinkronizirajte svoje kartice između uređaja, upravljajte preuzimanjima, dobivajte savjete o tome kako najbolje iskoristiti %s zaštitu privatnosti i još mnogo toga.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">Nastavi</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">Nastavi</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">Ne sada</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Ne sada</string>
 
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Volimo vas čuvati</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Naš neprofitni preglednik pomaže spriječiti tvrtke da vas tajno prate na webu.\n\nSaznajte više u našoj obavijesti o privatnosti.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Naš neprofitni preglednik pomaže spriječiti tvrtke da vas tajno prate na webu.\n\nSaznajte više u našoj obavijesti o privatnosti.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">politika privatnosti</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">politika privatnosti</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Postavi kao zadani preglednik</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -511,7 +511,7 @@
     <string name="quit_application">Zatvaranje aplikacije radi primjene promjena…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Dodaci</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Dodaci</string>
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Obavijesti</string>
@@ -523,7 +523,7 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Prilagođena kolekcija dodataka</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Prilagođena kolekcija dodataka</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">U redu</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -533,13 +533,13 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Vlasnik kolekcije (ID korisnika)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Izmijenjena je kolekcija dodataka. Napuštanje aplikacije za primjenu izmjena…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Izmijenjena je kolekcija dodataka. Napuštanje aplikacije za primjenu izmjena…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Vrati se natrag</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Nedavne zabilješke</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Nedavne zabilješke</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Nedavno posjećeno</string>
@@ -587,15 +587,15 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Istražite više pozadina</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Dodaci su privremeno onemogućeni</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Dodaci su privremeno onemogućeni</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Jedan ili više dodataka prestalo je raditi, što je vaš sustav učinilo nestabilnim. %1$s je bezuspješno pokušao ponovno pokrenuti dodatke.\n\nDodaci se neće ponovno pokrenuti tijekom vaše trenutačne sesije.\n\nUklanjanje ili onemogućavanje dodataka može riješiti ovaj problem.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Jedan ili više dodataka prestalo je raditi, što je vaš sustav učinilo nestabilnim. %1$s je bezuspješno pokušao ponovno pokrenuti dodatke.\n\nDodaci se neće ponovno pokrenuti tijekom vaše trenutačne sesije.\n\nUklanjanje ili onemogućavanje dodataka može riješiti ovaj problem.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Pokušajte ponovno pokrenuti dodatke</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Pokušajte ponovno pokrenuti dodatke</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Nastavite s onemogućenim dodacima</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Nastavite s onemogućenim dodacima</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -608,8 +608,6 @@
     <string name="preferences_sync_history">Povijest</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Zabilješke</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Prijave</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Otvorene kartice</string>
     <!-- Preference for signing out -->
@@ -635,8 +633,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s na %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Kreditne kartice</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adrese</string>
 
@@ -1571,10 +1567,6 @@
     <!-- Describes the add to homescreen functionality -->
     <string name="add_to_homescreen_description_2">Ovu stranicu lako možeš dodati na početni zaslon svog uređaja za brže pretraživanje s iskustvom sličnim aplikacijama.</string>
 
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Prijave i lozinke</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Spremi prijave i lozinke</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Pitaj treba li se spremiti</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1588,30 +1580,11 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Ispuni korisnička imena i lozinke u drugim aplikacijama na tvom uređaju.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Dodaj prijavu</string>
-
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sinkroniziraj prijave</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Sinkroniziraj prijave na svim uređajima</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Spremljene prijave</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Ovdje će se prikazati prijave koje spremaš ili sinkroniziraš s programom %s.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Saznaj više o sinkronizaciji.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Iznimke</string>
 
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Ovdje će se prikazati prijave i lozinke koje nisu spremljene.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Prijave i lozinke neće se spremiti za te web-stanice.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Obriši sve iznimke</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Traži prijave</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stranica</string>
     <!-- The header for the username for a login -->
@@ -1638,13 +1611,7 @@
     <string name="saved_login_reveal_password">Prikaži lozinku</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Sakrij lozinku</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Otključaj za pregled tvojih spremljenih prijava</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Osiguraj svoje prijave i lozinke</string>
 
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Postavi način za zaključavanje uređaja, PIN-a ili lozinke, kako bi se spriječio pristup spremljenim prijavama i lozinkama, kad netko drugi radi s tvojim uređajem.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Kasnije</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1661,39 +1628,21 @@
     <string name="saved_logins_sort_strategy_alphabetically">Naziv (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Zadnja upotreba</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Izbornik sortiranja prijava</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Automatsko ispunjavanje</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adrese</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Kreditne kartice</string>
-    <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Spremi i automatski ispuni polja kartice</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Podaci su šifrirani</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinkroniziraj kartice na uređajima</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sinkroniziraj kartice</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Dodaj kreditnu karticu</string>
-
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Upravljaj spremljenim karticama</string>
 
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Dodaj adresu</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Upravljaj adresama</string>
-
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Spremi i automatski ispuni adrese</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Uključi podatke kao što su brojevi, e-pošta i adresa dostave</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Dodaj karticu</string>
@@ -1713,8 +1662,6 @@
     <string name="credit_cards_menu_delete_card">Izbriši karticu</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Izbriši karticu</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Jeste li sigurni da želite obrisati ovu karticu?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Izbriši</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1727,17 +1674,8 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Spremljene kartice</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Unesi važeći broj kreditne kartice</string>
-
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Molimo ispuni ovo polje</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Otključaj za prikaz spremljenih kreditnih kartica</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Osiguraj svoje kreditne kartice</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Postavi uzorak za otključavanje uređaja, PIN ili lozinku da bi tvoje spremljene kreditne kartice bile zaštićene od neovlaštenog pristupa drugih osoba.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Postavi sada</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1745,21 +1683,12 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Otključaj svoj uređaj</string>
 
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Otključ za korištenje spremljenih podataka o kreditnim karticama</string>
-
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Dodaj adresu</string>
     <!-- Title of the "Edit address" screen -->
     <string name="addresses_edit_address">Uredi adresu</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Upravljaj adresama</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Ime</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Srednje ime</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Prezime</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Ulica</string>
     <!-- The header for the city of an address -->
@@ -1783,8 +1712,6 @@
     <string name="addresses_cancel_button">Odustani</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Izbriši adresu</string>
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Stvano želiš izbrisati ovu adresu?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Izbriši</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1883,30 +1810,10 @@
     <string name="login_menu_delete_button">Izbriši</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Uredi</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Sigurno izbrisati ovu prijavu?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Izbriši</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Odustani</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Opcije prijave</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Tekstualno polje za web adresu prijave koje se može uređivati.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Tekstualno polje za korisničko ime koje se može uređivati.</string>
-    <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Tekstualno polje za lozinku koje se može uređivati.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Spremi izmjene prijave.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit">Uređivanje</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login">Dodaj novu prijavu</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Potrebna je lozinka</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Korisničko ime je potrebno</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Domena je potrebna</string>
     <!-- Voice search button content description  -->
@@ -2004,7 +1911,7 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">%s pretraga</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Postavi automatsko otvaranje poveznica web stranica, e-pošte i poruka u Firefoxu.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2014,7 +1921,7 @@
     <string name="radio_preference_info_content_description">Klikni za više informacija</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Navigiraj gore</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Navigiraj gore</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Zatvori</string>
@@ -2055,5 +1962,7 @@
 
     <!-- Translations feature-->
 
+
+    <!-- Micro survey -->
 
     </resources>
