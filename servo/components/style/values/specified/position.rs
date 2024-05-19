@@ -28,7 +28,6 @@ use std::collections::hash_map::Entry;
 use std::fmt::{self, Write};
 use style_traits::values::specified::AllowedNumericType;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
-use style_traits::{KeywordsCollectFn, SpecifiedValueInfo};
 use style_traits::arc_slice::ArcSlice;
 
 /// The specified value of a CSS `<position>`
@@ -350,9 +349,11 @@ impl<S: Side> PositionComponent<S> {
     PartialEq,
     SpecifiedValueInfo,
     ToComputedValue,
+    ToCss,
     ToResolvedValue,
     ToShmem,
 )]
+#[css(comma)]
 pub struct AnchorName(#[css(iterable, if_empty = "none")] #[ignore_malloc_size_of = "Arc"] pub crate::ArcSlice<DashedIdent>);
 
 impl AnchorName {
@@ -390,31 +391,15 @@ impl Parse for AnchorName {
     }
 }
 
-impl ToCss for AnchorName {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: fmt::Write,
-    {
-        let mut iter = self.0.iter();
-        match iter.next() {
-            None => return dest.write_str("none"),
-            Some(f) => f.to_css(dest)?,
-        }
-        for name in iter {
-            dest.write_str(", ")?;
-            name.to_css(dest)?;
-        }
-        Ok(())
-    }
-}
-
 /// https://drafts.csswg.org/css-anchor-position-1/#propdef-scope
 #[derive(
     Clone,
     Debug,
     MallocSizeOf,
     PartialEq,
+    SpecifiedValueInfo,
     ToComputedValue,
+    ToCss,
     ToResolvedValue,
     ToShmem,
 )]
@@ -425,7 +410,12 @@ pub enum AnchorScope {
     /// `all`
     All,
     /// `<dashed-ident>#`
-    Idents(#[ignore_malloc_size_of = "Arc"] crate::ArcSlice<DashedIdent>),
+    #[css(comma)]
+    Idents(
+        #[css(iterable)]
+        #[ignore_malloc_size_of = "Arc"]
+        crate::ArcSlice<DashedIdent>,
+    ),
 }
 
 impl AnchorScope {
@@ -463,36 +453,6 @@ impl Parse for AnchorScope {
             idents.push(DashedIdent::parse(context, input)?);
         }
         Ok(AnchorScope::Idents(ArcSlice::from_iter(idents.drain(..))))
-    }
-}
-
-impl ToCss for AnchorScope {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: fmt::Write,
-    {
-       match *self {
-            Self::None => dest.write_str("none")?,
-            Self::All => dest.write_str("all")?,
-            Self::Idents(ref idents) => {
-                if let Some((ref first, rest)) = idents.split_first() {
-                    first.to_css(dest)?;
-                    for name in rest {
-                        dest.write_str(", ")?;
-                        name.to_css(dest)?;
-                    }
-                }
-            },
-        }
-        Ok(())
-    }
-}
-
-impl SpecifiedValueInfo for AnchorScope {
-    fn collect_completion_keywords(f: KeywordsCollectFn) {
-        // It would be nice if we could also list all the author defined dashed
-        // idents in the doc, but that's not practical.
-        f(&["none", "all"])
     }
 }
 
