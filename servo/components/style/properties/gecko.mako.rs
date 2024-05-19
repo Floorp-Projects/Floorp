@@ -20,7 +20,6 @@ use crate::gecko_bindings::bindings::Gecko_Construct_Default_${style_struct.geck
 use crate::gecko_bindings::bindings::Gecko_CopyConstruct_${style_struct.gecko_ffi_name};
 use crate::gecko_bindings::bindings::Gecko_Destroy_${style_struct.gecko_ffi_name};
 % endfor
-use crate::gecko_bindings::bindings::Gecko_CopyCounterStyle;
 use crate::gecko_bindings::bindings::Gecko_EnsureImageLayersLength;
 use crate::gecko_bindings::bindings::Gecko_nsStyleFont_SetLang;
 use crate::gecko_bindings::bindings::Gecko_nsStyleFont_CopyLangFrom;
@@ -1453,55 +1452,7 @@ fn static_assert() {
     <% impl_simple_image_array_property("blend_mode", "background", "mImage", "mBlendMode", "Background") %>
 </%self:impl_trait>
 
-<%self:impl_trait style_struct_name="List" skip_longhands="list-style-type">
-    pub fn set_list_style_type(&mut self, v: longhands::list_style_type::computed_value::T) {
-        use nsstring::{nsACString, nsCStr};
-        use self::longhands::list_style_type::computed_value::T;
-        match v {
-            T::None => unsafe {
-                bindings::Gecko_SetCounterStyleToNone(&mut self.mCounterStyle)
-            }
-            T::CounterStyle(s) => s.to_gecko_value(&mut self.mCounterStyle),
-            T::String(s) => unsafe {
-                bindings::Gecko_SetCounterStyleToString(
-                    &mut self.mCounterStyle,
-                    &nsCStr::from(&s) as &nsACString,
-                )
-            }
-        }
-    }
-
-    pub fn copy_list_style_type_from(&mut self, other: &Self) {
-        unsafe {
-            Gecko_CopyCounterStyle(&mut self.mCounterStyle, &other.mCounterStyle);
-        }
-    }
-
-    pub fn reset_list_style_type(&mut self, other: &Self) {
-        self.copy_list_style_type_from(other)
-    }
-
-    pub fn clone_list_style_type(&self) -> longhands::list_style_type::computed_value::T {
-        use self::longhands::list_style_type::computed_value::T;
-        use crate::values::Either;
-        use crate::values::generics::CounterStyle;
-        use crate::gecko_bindings::bindings;
-
-        let name = unsafe {
-            bindings::Gecko_CounterStyle_GetName(&self.mCounterStyle)
-        };
-        if !name.is_null() {
-            let name = unsafe { Atom::from_raw(name) };
-            if name == atom!("none") {
-                return T::None;
-            }
-        }
-        let result = CounterStyle::from_gecko_value(&self.mCounterStyle);
-        match result {
-            Either::First(counter_style) => T::CounterStyle(counter_style),
-            Either::Second(string) => T::String(string),
-        }
-    }
+<%self:impl_trait style_struct_name="List">
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Table">
