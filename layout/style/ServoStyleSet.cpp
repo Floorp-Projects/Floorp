@@ -750,7 +750,7 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
     }
     // ::marker only exist if we have 'content' or at least one of
     // 'list-style-type' or 'list-style-image'.
-    if (aPseudoStyle.StyleList()->mCounterStyle.IsNone() &&
+    if (aPseudoStyle.StyleList()->mListStyleType.IsNone() &&
         aPseudoStyle.StyleList()->mListStyleImage.IsNone() &&
         content.IsNormal()) {
       return false;

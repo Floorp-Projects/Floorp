@@ -960,34 +960,6 @@ void Gecko_SetFontPaletteOverride(
       uint32_t(aIndex), gfx::sRGBColor::FromABGR(aColor->ToColor())});
 }
 
-void Gecko_CounterStyle_ToPtr(const StyleCounterStyle* aStyle,
-                              CounterStylePtr* aPtr) {
-  *aPtr = CounterStylePtr::FromStyle(*aStyle);
-}
-
-void Gecko_SetCounterStyleToNone(CounterStylePtr* aPtr) {
-  *aPtr = nsGkAtoms::none;
-}
-
-void Gecko_SetCounterStyleToString(CounterStylePtr* aPtr,
-                                   const nsACString* aSymbol) {
-  *aPtr = new AnonymousCounterStyle(NS_ConvertUTF8toUTF16(*aSymbol));
-}
-
-void Gecko_CopyCounterStyle(CounterStylePtr* aDst,
-                            const CounterStylePtr* aSrc) {
-  *aDst = *aSrc;
-}
-
-nsAtom* Gecko_CounterStyle_GetName(const CounterStylePtr* aPtr) {
-  return aPtr->IsAtom() ? aPtr->AsAtom() : nullptr;
-}
-
-const AnonymousCounterStyle* Gecko_CounterStyle_GetAnonymous(
-    const CounterStylePtr* aPtr) {
-  return aPtr->AsAnonymous();
-}
-
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
                                    nsStyleImageLayers::LayerType aLayerType) {
   size_t oldLength = aLayers->mLayers.Length();

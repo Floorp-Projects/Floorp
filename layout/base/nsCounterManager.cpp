@@ -80,10 +80,11 @@ void nsCounterChangeNode::Calc(nsCounterList* aList) {
 }
 
 void nsCounterUseNode::GetText(nsString& aResult) {
-  CounterStyle* style =
-      mPseudoFrame->PresContext()->CounterStyleManager()->ResolveCounterStyle(
-          mCounterStyle);
-  GetText(mPseudoFrame->GetWritingMode(), style, aResult);
+  mPseudoFrame->PresContext()
+      ->CounterStyleManager()
+      ->WithCounterStyleNameOrSymbols(mCounterStyle, [&](CounterStyle* aStyle) {
+        GetText(mPseudoFrame->GetWritingMode(), aStyle, aResult);
+      });
 }
 
 void nsCounterUseNode::GetText(WritingMode aWM, CounterStyle* aStyle,

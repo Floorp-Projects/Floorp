@@ -46,7 +46,6 @@ ${helpers.single_keyword(
         engines="gecko",
         initial_specified_value="specified::ListStyleType::disc()",
         animation_value_type="discrete",
-        boxed=True,
         spec="https://drafts.csswg.org/css-lists/#propdef-list-style-type",
         servo_restyle_damage="rebuild_and_reflow",
         affects="layout",

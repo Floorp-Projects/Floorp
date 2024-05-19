@@ -6,9 +6,7 @@
 
 use crate::parser::{Parse, ParserContext};
 #[cfg(feature = "gecko")]
-use crate::values::generics::CounterStyle;
-#[cfg(feature = "gecko")]
-use crate::values::CustomIdent;
+use crate::counter_style::{CounterStyle, CounterStyleParsingFlags};
 use cssparser::{Parser, Token};
 use style_traits::{ParseError, StyleParseErrorKind};
 
@@ -26,37 +24,36 @@ use style_traits::{ParseError, StyleParseErrorKind};
     ToResolvedValue,
     ToShmem,
 )]
-pub enum ListStyleType {
-    /// `none`
-    None,
-    /// <counter-style>
-    CounterStyle(CounterStyle),
-    /// <string>
-    String(String),
-}
+#[repr(transparent)]
+pub struct ListStyleType(pub CounterStyle);
 
 #[cfg(feature = "gecko")]
 impl ListStyleType {
     /// Initial specified value for `list-style-type`.
     #[inline]
     pub fn disc() -> Self {
-        ListStyleType::CounterStyle(CounterStyle::disc())
+        Self(CounterStyle::disc())
+    }
+
+    /// none value.
+    #[inline]
+    pub fn none() -> Self {
+        Self(CounterStyle::None)
     }
 
     /// Convert from gecko keyword to list-style-type.
     ///
-    /// This should only be used for mapping type attribute to
-    /// list-style-type, and thus only values possible in that
-    /// attribute is considered here.
+    /// This should only be used for mapping type attribute to list-style-type, and thus only
+    /// values possible in that attribute is considered here.
     pub fn from_gecko_keyword(value: u32) -> Self {
         use crate::gecko_bindings::structs;
+        use crate::values::CustomIdent;
         let v8 = value as u8;
-
         if v8 == structs::ListStyle_None {
-            return ListStyleType::None;
+            return Self::none();
         }
 
-        ListStyleType::CounterStyle(CounterStyle::Name(CustomIdent(match v8 {
+        Self(CounterStyle::Name(CustomIdent(match v8 {
             structs::ListStyle_Disc => atom!("disc"),
             structs::ListStyle_Circle => atom!("circle"),
             structs::ListStyle_Square => atom!("square"),
@@ -69,13 +66,11 @@ impl ListStyleType {
         })))
     }
 
+
     /// Is this a bullet? (i.e. `list-style-type: disc|circle|square|disclosure-closed|disclosure-open`)
     #[inline]
     pub fn is_bullet(&self) -> bool {
-        match self {
-            ListStyleType::CounterStyle(ref style) => style.is_bullet(),
-            _ => false,
-        }
+        self.0.is_bullet()
     }
 }
 
@@ -85,15 +80,8 @@ impl Parse for ListStyleType {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        if let Ok(style) = input.try_parse(|i| CounterStyle::parse(context, i)) {
-            return Ok(ListStyleType::CounterStyle(style));
-        }
-        if input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
-            return Ok(ListStyleType::None);
-        }
-        Ok(ListStyleType::String(
-            input.expect_string()?.as_ref().to_owned(),
-        ))
+        let flags = CounterStyleParsingFlags::ALLOW_NONE | CounterStyleParsingFlags::ALLOW_STRING;
+        Ok(Self(CounterStyle::parse(context, input, flags)?))
     }
 }
 
