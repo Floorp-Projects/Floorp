@@ -208,7 +208,7 @@ add_task(
       "background-script-reset-idle"
     );
 
-    equal(resetData.reason, "parentApiCall", "Got the expected idle reset.");
+    equal(resetData.reason, "parentapicall", "Got the expected idle reset.");
 
     await promiseExtensionEvent(extension, "shutdown-background-script");
 
@@ -640,7 +640,7 @@ add_task(
     Assert.deepEqual(
       resetIdleData,
       {
-        reason: "pendingListeners",
+        reason: "listeners",
         pendingListeners: 2,
       },
       "Got the expected idle reset reason and pendingListeners count"
@@ -754,7 +754,7 @@ add_task(
     Assert.deepEqual(
       resetIdleData,
       {
-        reason: "pendingListeners",
+        reason: "listeners",
         pendingListeners: 1,
       },
       "Got the expected idle reset reason and pendingListeners count"
