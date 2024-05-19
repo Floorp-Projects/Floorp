@@ -68,11 +68,12 @@ export class DebugLine extends PureComponent {
         return;
       }
 
-      const { lineClass } = this.getTextClasses(why);
+      const { lineClass, markTextClass } = this.getTextClasses(why);
       // Remove the debug line marker when no longer paused, or the selected source
       // is no longer the source where the pause occured.
       if (!location || location.source.id !== selectedSource.id) {
         editor.removeLineContentMarker("debug-line-marker");
+        editor.removePositionContentMarker("debug-position-marker");
       } else {
         const isSourceWasm = isWasm(selectedSource.id);
         editor.setLineContentMarker({
@@ -87,6 +88,12 @@ export class DebugLine extends PureComponent {
             const editorLocation = toEditorPosition(location);
             return editorLocation.line == lineNumber;
           },
+        });
+        const editorLocation = toEditorPosition(location);
+        editor.setPositionContentMarker({
+          id: "debug-position-marker",
+          positionClassName: markTextClass,
+          positions: [editorLocation],
         });
       }
     } else {

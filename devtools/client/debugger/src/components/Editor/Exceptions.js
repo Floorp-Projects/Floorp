@@ -39,6 +39,8 @@ class Exceptions extends Component {
     }
 
     if (!selectedSource || !editor || !exceptions.length) {
+      editor.removeLineContentMarker("line-exception-marker");
+      editor.removePositionContentMarker("exception-position-marker");
       return;
     }
 
@@ -62,6 +64,15 @@ class Exceptions extends Component {
         const editorLocation = toEditorPosition(exceptionLocation);
         return editorLocation.line == lineNumber;
       },
+    });
+
+    editor.setPositionContentMarker({
+      id: "exception-position-marker",
+      positionClassName: "mark-text-exception",
+      positions: exceptions.map(e => ({
+        line: e.lineNumber,
+        column: e.columnNumber - 1,
+      })),
     });
   }
 

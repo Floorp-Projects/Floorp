@@ -866,13 +866,26 @@ class Editor extends EventEmitter {
     const {
       codemirrorView: { Decoration, ViewPlugin, WidgetType },
       codemirrorState: { RangeSet },
+      codemirrorLanguage: { syntaxTree },
     } = this.#CodeMirror6;
 
     class NodeWidget extends WidgetType {
-      constructor(line, column, createElementNode) {
+      constructor(line, column, createElementNode, domNode) {
         super();
-        this.toDOM = () => createElementNode(line, column);
+        this.toDOM = () => createElementNode(line, column, domNode);
       }
+    }
+
+    function getIndentation(lineText) {
+      if (!lineText) {
+        return 0;
+      }
+
+      const lineMatch = lineText.match(/^\s*/);
+      if (!lineMatch) {
+        return 0;
+      }
+      return lineMatch[0].length;
     }
 
     // Build and return the decoration set
@@ -888,7 +901,10 @@ class Editor extends EventEmitter {
             position.line <= vEndLine.number
           ) {
             const line = view.state.doc.line(position.line);
-            const pos = line.from + position.column;
+            // Make sure to track any indentation at the beginning of the line
+            const column = Math.max(position.column, getIndentation(line.text));
+            const pos = line.from + column;
+
             if (marker.createPositionElementNode) {
               const nodeDecoration = Decoration.widget({
                 widget: new NodeWidget(
@@ -901,6 +917,25 @@ class Editor extends EventEmitter {
                 side: 1,
               });
               ranges.push({ from: pos, to: pos, value: nodeDecoration });
+            }
+            if (marker.positionClassName) {
+              const tokenAtPos = syntaxTree(view.state).resolve(pos, 1);
+              const tokenString = line.text.slice(
+                position.column,
+                tokenAtPos.to - line.from
+              );
+              // ignore opening braces
+              if (tokenString === "{" || tokenString === "[") {
+                continue;
+              }
+              const classDecoration = Decoration.mark({
+                class: marker.positionClassName,
+              });
+              ranges.push({
+                from: pos,
+                to: tokenAtPos.to,
+                value: classDecoration,
+              });
             }
           }
         }
@@ -957,9 +992,11 @@ class Editor extends EventEmitter {
    * @param {string} markerId - The unique identifier for this marker
    */
   removePositionContentMarker(markerId) {
+    if (!this.#posContentMarkers.has(markerId)) {
+      return;
+    }
     const cm = editors.get(this);
     this.#posContentMarkers.delete(markerId);
-
     cm.dispatch({
       effects: this.#compartments.positionContentMarkersCompartment.reconfigure(
         this.#positionContentMarkersExtension(
