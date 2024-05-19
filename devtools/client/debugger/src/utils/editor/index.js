@@ -106,48 +106,6 @@ export function toSourceLine(sourceId, line) {
   return line + 1;
 }
 
-export function getLocationsInViewport(
-  { codeMirror },
-  // Offset represents an allowance of characters or lines offscreen to improve
-  // perceived performance of column breakpoint rendering
-  offsetHorizontalCharacters = 100,
-  offsetVerticalLines = 20
-) {
-  // Get scroll position
-  if (!codeMirror) {
-    return {
-      start: { line: 0, column: 0 },
-      end: { line: 0, column: 0 },
-    };
-  }
-  const charWidth = codeMirror.defaultCharWidth();
-  const scrollArea = codeMirror.getScrollInfo();
-  const { scrollLeft } = codeMirror.doc;
-  const rect = codeMirror.getWrapperElement().getBoundingClientRect();
-  const topVisibleLine =
-    codeMirror.lineAtHeight(rect.top, "window") - offsetVerticalLines;
-  const bottomVisibleLine =
-    codeMirror.lineAtHeight(rect.bottom, "window") + offsetVerticalLines;
-
-  const leftColumn = Math.floor(
-    scrollLeft > 0 ? scrollLeft / charWidth - offsetHorizontalCharacters : 0
-  );
-  const rightPosition = scrollLeft + (scrollArea.clientWidth - 30);
-  const rightCharacter =
-    Math.floor(rightPosition / charWidth) + offsetHorizontalCharacters;
-
-  return {
-    start: {
-      line: topVisibleLine || 0,
-      column: leftColumn || 0,
-    },
-    end: {
-      line: bottomVisibleLine || 0,
-      column: rightCharacter,
-    },
-  };
-}
-
 export function markText({ codeMirror }, className, { start, end }) {
   return codeMirror.markText(
     { ch: start.column, line: start.line },

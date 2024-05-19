@@ -189,11 +189,12 @@ class Editor extends PureComponent {
     }
   }
 
-  onEditorUpdated(v) {
+  onEditorUpdated = v => {
     if (v.docChanged || v.geometryChanged) {
       resizeToggleButton(v.view.dom.querySelector(".cm-gutters").clientWidth);
+      this.props.updateViewport();
     }
-  }
+  };
 
   setupEditor() {
     const editor = getEditor(features.codemirrorNext);
@@ -854,7 +855,10 @@ class Editor extends PureComponent {
               editor,
               range: highlightedLineRange,
             })
-          : null
+          : null,
+        React.createElement(ColumnBreakpoints, {
+          editor,
+        })
       );
     }
 

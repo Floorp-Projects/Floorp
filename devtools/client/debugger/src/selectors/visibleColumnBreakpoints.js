@@ -14,8 +14,19 @@ import { getVisibleBreakpoints } from "./visibleBreakpoints";
 import { getSelectedLocation } from "../utils/selected-location";
 import { sortSelectedLocations } from "../utils/location";
 import { getLineText } from "../utils/source";
+import { features } from "../utils/prefs";
 
 function contains(location, range) {
+  if (features.codemirrorNext) {
+    // If the location is within the viewport lines or if the location is on the first or last line
+    // and the columns are within the start or end line content.
+    return (
+      (location.line > range.start.line && location.line < range.end.line) ||
+      (location.line == range.start.line &&
+        location.column >= range.start.column) ||
+      (location.line == range.end.line && location.column <= range.end.column)
+    );
+  }
   return (
     location.line >= range.start.line &&
     location.line <= range.end.line &&
