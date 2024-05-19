@@ -60,7 +60,7 @@ static nscoord FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame) {
   }
 
   // We only want to adjust the margins if we're dealing with an ordered list.
-  const nsBlockFrame* blockFrame = static_cast<const nsBlockFrame*>(aFrame);
+  const auto* blockFrame = static_cast<const nsBlockFrame*>(aFrame);
   if (!blockFrame->HasMarker()) {
     return 0;
   }
@@ -70,22 +70,24 @@ static nscoord FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame) {
     return 0;
   }
 
+  const auto* list = aFrame->StyleList();
+  if (list->mListStyleType.IsNone()) {
+    return 0;
+  }
+
   // The HTML spec states that the default padding for ordered lists
   // begins at 40px, indicating that we have 40px of space to place a
   // bullet. When performing font inflation calculations, we add space
   // equivalent to this, but simply inflated at the same amount as the
   // text, in app units.
   auto margin = nsPresContext::CSSPixelsToAppUnits(40) * (inflation - 1);
-
-  auto* list = aFrame->StyleList();
-  if (!list->mCounterStyle.IsAtom()) {
+  if (!list->mListStyleType.IsName()) {
     return margin;
   }
 
-  nsAtom* type = list->mCounterStyle.AsAtom();
-  if (type != nsGkAtoms::none && type != nsGkAtoms::disc &&
-      type != nsGkAtoms::circle && type != nsGkAtoms::square &&
-      type != nsGkAtoms::disclosure_closed &&
+  nsAtom* type = list->mListStyleType.AsName().AsAtom();
+  if (type != nsGkAtoms::disc && type != nsGkAtoms::circle &&
+      type != nsGkAtoms::square && type != nsGkAtoms::disclosure_closed &&
       type != nsGkAtoms::disclosure_open) {
     return margin;
   }

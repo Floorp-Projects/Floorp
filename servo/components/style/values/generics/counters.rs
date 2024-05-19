@@ -7,7 +7,7 @@
 #[cfg(feature = "servo")]
 use crate::computed_values::list_style_type::T as ListStyleType;
 #[cfg(feature = "gecko")]
-use crate::values::generics::CounterStyle;
+use crate::counter_style::CounterStyle;
 use crate::values::specified::Attr;
 use crate::values::CustomIdent;
 use std::fmt::{self, Write};

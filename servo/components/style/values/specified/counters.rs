@@ -10,7 +10,7 @@ use crate::parser::{Parse, ParserContext};
 use crate::values::generics::counters as generics;
 use crate::values::generics::counters::CounterPair;
 #[cfg(feature = "gecko")]
-use crate::values::generics::CounterStyle;
+use crate::counter_style::CounterStyle;
 use crate::values::specified::image::Image;
 use crate::values::specified::Attr;
 use crate::values::specified::Integer;
@@ -161,12 +161,13 @@ impl Content {
 
     #[cfg(feature = "gecko")]
     fn parse_counter_style(context: &ParserContext, input: &mut Parser) -> CounterStyle {
+        use crate::counter_style::CounterStyleParsingFlags;
         input
             .try_parse(|input| {
                 input.expect_comma()?;
-                CounterStyle::parse(context, input)
+                CounterStyle::parse(context, input, CounterStyleParsingFlags::empty())
             })
-            .unwrap_or(CounterStyle::decimal())
+            .unwrap_or_else(|_| CounterStyle::decimal())
     }
 }
 
