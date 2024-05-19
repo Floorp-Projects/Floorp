@@ -36,7 +36,7 @@ add_setup(async () => {
   // e.g. see Bug 1803801) have a higher chance that the test extension may have hit the
   // idle timeout and being suspended by the time the test is going to trigger API method
   // calls through test API events (which do not expect the lifetime of the event page).
-  Services.prefs.setBoolPref("extensions.background.idle.enabled", false);
+  Services.prefs.setIntPref("extensions.background.idle.timeout", 300_000);
 
   // NOTE: reduce the static rules limits to reduce the amount of time needed to run
   // this xpcshell test.
