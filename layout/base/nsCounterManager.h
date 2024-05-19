@@ -94,7 +94,7 @@ struct nsCounterNode : public nsGenConNode {
 };
 
 struct nsCounterUseNode : public nsCounterNode {
-  mozilla::CounterStylePtr mCounterStyle;
+  mozilla::StyleCounterStyle mCounterStyle;
   nsString mSeparator;
 
   // false for counter(), true for counters()
@@ -103,16 +103,18 @@ struct nsCounterUseNode : public nsCounterNode {
   bool mForLegacyBullet = false;
 
   enum ForLegacyBullet { ForLegacyBullet };
-  nsCounterUseNode(enum ForLegacyBullet, mozilla::CounterStylePtr aCounterStyle)
+  nsCounterUseNode(enum ForLegacyBullet,
+                   const mozilla::StyleCounterStyle& aCounterStyle)
       : nsCounterNode(0, USE),
-        mCounterStyle(std::move(aCounterStyle)),
+        mCounterStyle(aCounterStyle),
         mForLegacyBullet(true) {}
 
   // args go directly to member variables here and of nsGenConNode
-  nsCounterUseNode(mozilla::CounterStylePtr aCounterStyle, nsString aSeparator,
-                   uint32_t aContentIndex, bool aAllCounters)
+  nsCounterUseNode(const mozilla::StyleCounterStyle& aCounterStyle,
+                   nsString aSeparator, uint32_t aContentIndex,
+                   bool aAllCounters)
       : nsCounterNode(aContentIndex, USE),
-        mCounterStyle(std::move(aCounterStyle)),
+        mCounterStyle(aCounterStyle),
         mSeparator(std::move(aSeparator)),
         mAllCounters(aAllCounters) {
     NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");

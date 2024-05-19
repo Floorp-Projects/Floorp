@@ -7980,7 +7980,7 @@ bool nsBlockFrame::MarkerIsEmpty() const {
   nsIFrame* marker = GetMarker();
   const nsStyleList* list = marker->StyleList();
   return marker->StyleContent()->mContent.IsNone() ||
-         (list->mCounterStyle.IsNone() && list->mListStyleImage.IsNone() &&
+         (list->mListStyleType.IsNone() && list->mListStyleImage.IsNone() &&
           marker->StyleContent()->NonAltContentItems().IsEmpty());
 }
 
@@ -8657,13 +8657,11 @@ void nsBlockFrame::VerifyOverflowSituation() {
       }
       LineIterator line = flow->LinesBegin();
       LineIterator line_end = flow->LinesEnd();
-      for (; line != line_end && line != cursor; ++line)
-        ;
+      for (; line != line_end && line != cursor; ++line);
       if (line == line_end && overflowLines) {
         line = overflowLines->mLines.begin();
         line_end = overflowLines->mLines.end();
-        for (; line != line_end && line != cursor; ++line)
-          ;
+        for (; line != line_end && line != cursor; ++line);
       }
       return line != line_end;
     };

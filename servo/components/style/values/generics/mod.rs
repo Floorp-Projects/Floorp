@@ -5,13 +5,8 @@
 //! Generic types that share their serialization implementations
 //! for both specified and computed values.
 
-use super::CustomIdent;
-use crate::counter_style::{parse_counter_style_name, Symbols};
-use crate::parser::{Parse, ParserContext};
 use crate::Zero;
-use cssparser::Parser;
 use std::ops::Add;
-use style_traits::{KeywordsCollectFn, ParseError, SpecifiedValueInfo, StyleParseErrorKind};
 
 pub mod animation;
 pub mod background;
@@ -41,123 +36,6 @@ pub mod text;
 pub mod transform;
 pub mod ui;
 pub mod url;
-
-/// https://drafts.csswg.org/css-counter-styles/#typedef-symbols-type
-#[allow(missing_docs)]
-#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    Parse,
-    PartialEq,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[repr(u8)]
-pub enum SymbolsType {
-    Cyclic,
-    Numeric,
-    Alphabetic,
-    Symbolic,
-    Fixed,
-}
-
-/// <https://drafts.csswg.org/css-counter-styles/#typedef-counter-style>
-///
-/// Note that 'none' is not a valid name.
-#[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
-#[derive(Clone, Debug, Eq, PartialEq, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
-#[repr(u8)]
-pub enum CounterStyle {
-    /// `<counter-style-name>`
-    Name(CustomIdent),
-    /// `symbols()`
-    #[css(function)]
-    Symbols(#[css(skip_if = "is_symbolic")] SymbolsType, Symbols),
-}
-
-#[inline]
-fn is_symbolic(symbols_type: &SymbolsType) -> bool {
-    *symbols_type == SymbolsType::Symbolic
-}
-
-impl CounterStyle {
-    /// disc value
-    pub fn disc() -> Self {
-        CounterStyle::Name(CustomIdent(atom!("disc")))
-    }
-
-    /// decimal value
-    pub fn decimal() -> Self {
-        CounterStyle::Name(CustomIdent(atom!("decimal")))
-    }
-
-    /// Is this a bullet? (i.e. `list-style-type: disc|circle|square|disclosure-closed|disclosure-open`)
-    #[inline]
-    pub fn is_bullet(&self) -> bool {
-        match self {
-            CounterStyle::Name(CustomIdent(ref name)) => {
-                name == &atom!("disc") ||
-                    name == &atom!("circle") ||
-                    name == &atom!("square") ||
-                    name == &atom!("disclosure-closed") ||
-                    name == &atom!("disclosure-open")
-            },
-            _ => false,
-        }
-    }
-}
-
-impl Parse for CounterStyle {
-    fn parse<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        if let Ok(name) = input.try_parse(|i| parse_counter_style_name(i)) {
-            return Ok(CounterStyle::Name(name));
-        }
-        input.expect_function_matching("symbols")?;
-        input.parse_nested_block(|input| {
-            let symbols_type = input
-                .try_parse(SymbolsType::parse)
-                .unwrap_or(SymbolsType::Symbolic);
-            let symbols = Symbols::parse(context, input)?;
-            // There must be at least two symbols for alphabetic or
-            // numeric system.
-            if (symbols_type == SymbolsType::Alphabetic || symbols_type == SymbolsType::Numeric) &&
-                symbols.0.len() < 2
-            {
-                return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-            }
-            // Identifier is not allowed in symbols() function.
-            if symbols.0.iter().any(|sym| !sym.is_allowed_in_symbols()) {
-                return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-            }
-            Ok(CounterStyle::Symbols(symbols_type, symbols))
-        })
-    }
-}
-
-impl SpecifiedValueInfo for CounterStyle {
-    fn collect_completion_keywords(f: KeywordsCollectFn) {
-        // XXX The best approach for implementing this is probably
-        // having a CounterStyleName type wrapping CustomIdent, and
-        // put the predefined list for that type in counter_style mod.
-        // But that's a non-trivial change itself, so we use a simpler
-        // approach here.
-        macro_rules! predefined {
-            ($($name:expr,)+) => {
-                f(&["symbols", $($name,)+])
-            }
-        }
-        include!("../../counter_style/predefined.rs");
-    }
-}
 
 /// A wrapper of Non-negative values.
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
