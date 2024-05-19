@@ -47,44 +47,29 @@ struct PadType {
 // points outside the BMP will need 2 16-bit units.
 #define LENGTH_LIMIT 150
 
-static void SymbolToString(const StyleSymbol& aSymbol, nsAString& aResult) {
-  if (aSymbol.IsIdent()) {
-    return aSymbol.AsIdent().AsAtom()->ToString(aResult);
-  }
-  MOZ_ASSERT(aSymbol.IsString());
-  return CopyUTF8toUTF16(aSymbol.AsString().AsString(), aResult);
-}
-
-static size_t SymbolLength(const StyleSymbol& aSymbol) {
-  if (aSymbol.IsIdent()) {
-    return aSymbol.AsIdent().AsAtom()->GetLength();
-  }
-  MOZ_ASSERT(aSymbol.IsString());
-  return aSymbol.AsString().AsString().Length();
-}
-
 static bool GetCyclicCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                 Span<const StyleSymbol> aSymbols) {
+                                 Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 1, "No symbol available for cyclic counter.");
   auto n = CounterValue(aSymbols.Length());
   CounterValue index = (aOrdinal - 1) % n;
-  SymbolToString(aSymbols[index >= 0 ? index : index + n], aResult);
+  aResult = aSymbols[index >= 0 ? index : index + n];
   return true;
 }
 
 static bool GetFixedCounterText(CounterValue aOrdinal, nsAString& aResult,
                                 CounterValue aStart,
-                                Span<const StyleSymbol> aSymbols) {
+                                Span<const nsString> aSymbols) {
   CounterValue index = aOrdinal - aStart;
   if (index >= 0 && index < CounterValue(aSymbols.Length())) {
-    SymbolToString(aSymbols[index], aResult);
+    aResult = aSymbols[index];
     return true;
+  } else {
+    return false;
   }
-  return false;
 }
 
 static bool GetSymbolicCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                   Span<const StyleSymbol> aSymbols) {
+                                   Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 1,
              "No symbol available for symbolic counter.");
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
@@ -94,25 +79,23 @@ static bool GetSymbolicCounterText(CounterValue aOrdinal, nsAString& aResult,
 
   aResult.Truncate();
   auto n = aSymbols.Length();
-  const StyleSymbol& symbol = aSymbols[(aOrdinal - 1) % n];
+  const nsString& symbol = aSymbols[(aOrdinal - 1) % n];
   size_t len = (aOrdinal + n - 1) / n;
-  auto symbolLength = SymbolLength(symbol);
+  auto symbolLength = symbol.Length();
   if (symbolLength > 0) {
     if (len > LENGTH_LIMIT || symbolLength > LENGTH_LIMIT ||
         len * symbolLength > LENGTH_LIMIT) {
       return false;
     }
-    nsAutoString str;
-    SymbolToString(symbol, str);
     for (size_t i = 0; i < len; ++i) {
-      aResult.Append(str);
+      aResult.Append(symbol);
     }
   }
   return true;
 }
 
 static bool GetAlphabeticCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                     Span<const StyleSymbol> aSymbols) {
+                                     Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 2, "Too few symbols for alphabetic counter.");
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
   if (aOrdinal == 0) {
@@ -132,23 +115,18 @@ static bool GetAlphabeticCounterText(CounterValue aOrdinal, nsAString& aResult,
 
   aResult.Truncate();
   for (auto i = indexes.Length(); i > 0; --i) {
-    const auto& symbol = aSymbols[indexes[i - 1]];
-    if (symbol.IsIdent()) {
-      aResult.Append(nsDependentAtomString(symbol.AsIdent().AsAtom()));
-    } else {
-      AppendUTF8toUTF16(symbol.AsString().AsString(), aResult);
-    }
+    aResult.Append(aSymbols[indexes[i - 1]]);
   }
   return true;
 }
 
 static bool GetNumericCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                  Span<const StyleSymbol> aSymbols) {
+                                  Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 2, "Too few symbols for numeric counter.");
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
 
   if (aOrdinal == 0) {
-    SymbolToString(aSymbols[0], aResult);
+    aResult = aSymbols[0];
     return true;
   }
 
@@ -161,12 +139,7 @@ static bool GetNumericCounterText(CounterValue aOrdinal, nsAString& aResult,
 
   aResult.Truncate();
   for (auto i = indexes.Length(); i > 0; --i) {
-    const auto& symbol = aSymbols[indexes[i - 1]];
-    if (symbol.IsIdent()) {
-      aResult.Append(nsDependentAtomString(symbol.AsIdent().AsAtom()));
-    } else {
-      AppendUTF8toUTF16(symbol.AsString().AsString(), aResult);
-    }
+    aResult.Append(aSymbols[indexes[i - 1]]);
   }
   return true;
 }
@@ -400,7 +373,7 @@ static bool HebrewToText(CounterValue aOrdinal, nsAString& aResult) {
       } else {
         n1 -= 100;
       }  // if
-    }  // for
+    }    // for
 
     // Process digit for 10 - 90
     int32_t n2;
@@ -542,22 +515,25 @@ class BuiltinCounterStyle : public CounterStyle {
 
   nsStaticAtom* GetStyleName() const { return mName; }
 
-  void GetPrefix(nsAString& aResult) override;
-  void GetSuffix(nsAString& aResult) override;
-  void GetSpokenCounterText(CounterValue aOrdinal, WritingMode aWritingMode,
-                            nsAString& aResult, bool& aIsBullet) override;
-  bool IsBullet() override;
+  virtual void GetPrefix(nsAString& aResult) override;
+  virtual void GetSuffix(nsAString& aResult) override;
+  virtual void GetSpokenCounterText(CounterValue aOrdinal,
+                                    WritingMode aWritingMode,
+                                    nsAString& aResult,
+                                    bool& aIsBullet) override;
+  virtual bool IsBullet() override;
 
-  void GetNegative(NegativeType& aResult) override;
-  bool IsOrdinalInRange(CounterValue aOrdinal) override;
-  bool IsOrdinalInAutoRange(CounterValue aOrdinal) override;
-  void GetPad(PadType& aResult) override;
-  CounterStyle* GetFallback() override;
-  SpeakAs GetSpeakAs() override;
-  bool UseNegativeSign() override;
+  virtual void GetNegative(NegativeType& aResult) override;
+  virtual bool IsOrdinalInRange(CounterValue aOrdinal) override;
+  virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) override;
+  virtual void GetPad(PadType& aResult) override;
+  virtual CounterStyle* GetFallback() override;
+  virtual SpeakAs GetSpeakAs() override;
+  virtual bool UseNegativeSign() override;
 
-  bool GetInitialCounterText(CounterValue aOrdinal, WritingMode aWritingMode,
-                             nsAString& aResult, bool& aIsRTL) override;
+  virtual bool GetInitialCounterText(CounterValue aOrdinal,
+                                     WritingMode aWritingMode,
+                                     nsAString& aResult, bool& aIsRTL) override;
 
  protected:
   constexpr BuiltinCounterStyle(const BuiltinCounterStyle& aOther)
@@ -977,24 +953,28 @@ class CustomCounterStyle final : public CounterStyle {
   const StyleLockedCounterStyleRule* GetRule() const { return mRule; }
   uint32_t GetRuleGeneration() const { return mRuleGeneration; }
 
-  void GetPrefix(nsAString& aResult) override;
-  void GetSuffix(nsAString& aResult) override;
-  void GetSpokenCounterText(CounterValue aOrdinal, WritingMode aWritingMode,
-                            nsAString& aResult, bool& aIsBullet) override;
-  bool IsBullet() override;
+  virtual void GetPrefix(nsAString& aResult) override;
+  virtual void GetSuffix(nsAString& aResult) override;
+  virtual void GetSpokenCounterText(CounterValue aOrdinal,
+                                    WritingMode aWritingMode,
+                                    nsAString& aResult,
+                                    bool& aIsBullet) override;
+  virtual bool IsBullet() override;
 
-  void GetNegative(NegativeType& aResult) override;
-  bool IsOrdinalInRange(CounterValue aOrdinal) override;
-  bool IsOrdinalInAutoRange(CounterValue aOrdinal) override;
-  void GetPad(PadType& aResult) override;
-  CounterStyle* GetFallback() override;
-  SpeakAs GetSpeakAs() override;
-  bool UseNegativeSign() override;
+  virtual void GetNegative(NegativeType& aResult) override;
+  virtual bool IsOrdinalInRange(CounterValue aOrdinal) override;
+  virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) override;
+  virtual void GetPad(PadType& aResult) override;
+  virtual CounterStyle* GetFallback() override;
+  virtual SpeakAs GetSpeakAs() override;
+  virtual bool UseNegativeSign() override;
 
-  void CallFallbackStyle(CounterValue aOrdinal, WritingMode aWritingMode,
-                         nsAString& aResult, bool& aIsRTL) override;
-  bool GetInitialCounterText(CounterValue aOrdinal, WritingMode aWritingMode,
-                             nsAString& aResult, bool& aIsRTL) override;
+  virtual void CallFallbackStyle(CounterValue aOrdinal,
+                                 WritingMode aWritingMode, nsAString& aResult,
+                                 bool& aIsRTL) override;
+  virtual bool GetInitialCounterText(CounterValue aOrdinal,
+                                     WritingMode aWritingMode,
+                                     nsAString& aResult, bool& aIsRTL) override;
 
   bool IsExtendsSystem() { return mSystem == StyleCounterSystem::Extends; }
 
@@ -1012,7 +992,7 @@ class CustomCounterStyle final : public CounterStyle {
  private:
   ~CustomCounterStyle() = default;
 
-  Span<const StyleSymbol> GetSymbols();
+  Span<const nsString> GetSymbols();
   Span<const AdditiveSymbol> GetAdditiveSymbols();
 
   // The speak-as values of counter styles may form a loop, and the
@@ -1059,6 +1039,7 @@ class CustomCounterStyle final : public CounterStyle {
   uint16_t mFlags;
 
   // Fields below will be initialized when necessary.
+  StyleOwnedSlice<nsString> mSymbols;
   StyleOwnedSlice<AdditiveSymbol> mAdditiveSymbols;
   NegativeType mNegative;
   nsString mPrefix, mSuffix;
@@ -1087,6 +1068,7 @@ class CustomCounterStyle final : public CounterStyle {
 };
 
 void CustomCounterStyle::ResetCachedData() {
+  mSymbols.Clear();
   mAdditiveSymbols.Clear();
   mFlags &= ~(FLAG_NEGATIVE_INITED | FLAG_PREFIX_INITED | FLAG_SUFFIX_INITED |
               FLAG_PAD_INITED | FLAG_SPEAKAS_INITED);
@@ -1314,10 +1296,11 @@ bool CustomCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
   }
 }
 
-Span<const StyleSymbol> CustomCounterStyle::GetSymbols() {
-  size_t count = 0;
-  const StyleSymbol* ptr = Servo_CounterStyleRule_GetSymbols(mRule, &count);
-  return Span(ptr, count);
+Span<const nsString> CustomCounterStyle::GetSymbols() {
+  if (mSymbols.IsEmpty()) {
+    Servo_CounterStyleRule_GetSymbols(mRule, &mSymbols);
+  }
+  return mSymbols.AsSpan();
 }
 
 Span<const AdditiveSymbol> CustomCounterStyle::GetAdditiveSymbols() {
@@ -1521,11 +1504,20 @@ CounterStyle* CustomCounterStyle::GetExtendsRoot() {
   return mExtendsRoot;
 }
 
-AnonymousCounterStyle::AnonymousCounterStyle(StyleSymbolsType aType,
-                                             Span<const StyleSymbol> aSymbols)
+AnonymousCounterStyle::AnonymousCounterStyle(const nsAString& aContent)
     : CounterStyle(ListStyle::Custom),
+      mSingleString(true),
+      mSymbolsType(StyleSymbolsType::Cyclic) {
+  mSymbols.SetCapacity(1);
+  mSymbols.AppendElement(aContent);
+}
+
+AnonymousCounterStyle::AnonymousCounterStyle(StyleSymbolsType aType,
+                                             nsTArray<nsString> aSymbols)
+    : CounterStyle(ListStyle::Custom),
+      mSingleString(false),
       mSymbolsType(aType),
-      mSymbols(aSymbols) {}
+      mSymbols(std::move(aSymbols)) {}
 
 /* virtual */
 void AnonymousCounterStyle::GetPrefix(nsAString& aResult) {
@@ -1533,7 +1525,13 @@ void AnonymousCounterStyle::GetPrefix(nsAString& aResult) {
 }
 
 /* virtual */
-void AnonymousCounterStyle::GetSuffix(nsAString& aResult) { aResult = ' '; }
+void AnonymousCounterStyle::GetSuffix(nsAString& aResult) {
+  if (IsSingleString()) {
+    aResult.Truncate();
+  } else {
+    aResult = ' ';
+  }
+}
 
 /* virtual */
 bool AnonymousCounterStyle::IsBullet() {

@@ -642,7 +642,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 
   mozilla::StyleListStylePosition mListStylePosition;
 
-  mozilla::StyleListStyleType mListStyleType;
+  mozilla::CounterStylePtr mCounterStyle;
   mozilla::StyleQuotes mQuotes;
   mozilla::StyleImage mListStyleImage;
 };

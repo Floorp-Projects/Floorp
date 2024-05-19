@@ -1584,23 +1584,23 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
     case Type::Counter:
     case Type::Counters: {
       RefPtr<nsAtom> name;
-      const StyleCounterStyle* style;
+      CounterStylePtr ptr;
       nsString separator;
       if (type == Type::Counter) {
-        const auto& counter = aItem.AsCounter();
+        auto& counter = aItem.AsCounter();
         name = counter._0.AsAtom();
-        style = &counter._1;
+        ptr = CounterStylePtr::FromStyle(counter._1);
       } else {
-        const auto& counters = aItem.AsCounters();
+        auto& counters = aItem.AsCounters();
         name = counters._0.AsAtom();
         CopyUTF8toUTF16(counters._1.AsString(), separator);
-        style = &counters._2;
+        ptr = CounterStylePtr::FromStyle(counters._2);
       }
 
       auto* counterList = mContainStyleScopeManager.GetOrCreateCounterList(
           aOriginatingElement, name);
       auto node = MakeUnique<nsCounterUseNode>(
-          *style, std::move(separator), aContentIndex,
+          std::move(ptr), std::move(separator), aContentIndex,
           /* aAllCounters = */ type == Type::Counters);
 
       auto initializer = MakeUnique<nsGenConInitializer>(
@@ -1747,6 +1747,8 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
       break;
     }
   }
+
+  return;
 }
 
 void nsCSSFrameConstructor::CreateGeneratedContentFromListStyle(
@@ -1770,41 +1772,37 @@ void nsCSSFrameConstructor::CreateGeneratedContentFromListStyleType(
     nsFrameConstructorState& aState, Element& aOriginatingElement,
     const ComputedStyle& aPseudoStyle,
     const FunctionRef<void(nsIContent*)> aAddChild) {
-  using Tag = StyleCounterStyle::Tag;
-  const auto& styleType = aPseudoStyle.StyleList()->mListStyleType;
-  switch (styleType.tag) {
-    case Tag::None:
+  const nsStyleList* styleList = aPseudoStyle.StyleList();
+  CounterStyle* counterStyle =
+      mPresShell->GetPresContext()->CounterStyleManager()->ResolveCounterStyle(
+          styleList->mCounterStyle);
+  bool needUseNode = false;
+  switch (counterStyle->GetStyle()) {
+    case ListStyle::None:
       return;
-    case Tag::String: {
-      nsDependentAtomString string(styleType.AsString().AsAtom());
-      RefPtr<nsIContent> child = CreateGenConTextNode(aState, string, nullptr);
-      aAddChild(child);
-      return;
-    }
-    case Tag::Name:
-    case Tag::Symbols:
+    case ListStyle::Disc:
+    case ListStyle::Circle:
+    case ListStyle::Square:
+    case ListStyle::DisclosureClosed:
+    case ListStyle::DisclosureOpen:
       break;
+    default:
+      const auto* anonStyle = counterStyle->AsAnonymous();
+      if (!anonStyle || !anonStyle->IsSingleString()) {
+        needUseNode = true;
+      }
   }
 
   auto node = MakeUnique<nsCounterUseNode>(nsCounterUseNode::ForLegacyBullet,
-                                           styleType);
-  if (styleType.IsName()) {
-    nsAtom* name = styleType.AsName().AsAtom();
-    if (name == nsGkAtoms::disc || name == nsGkAtoms::circle ||
-        name == nsGkAtoms::square || name == nsGkAtoms::disclosure_closed ||
-        name == nsGkAtoms::disclosure_open) {
-      // We don't need a use node inserted for these.
-      CounterStyle* counterStyle = mPresShell->GetPresContext()
-                                       ->CounterStyleManager()
-                                       ->ResolveCounterStyle(name);
-      nsAutoString text;
-      node->GetText(WritingMode(&aPseudoStyle), counterStyle, text);
-      // Note that we're done with 'node' in this case.  It's not inserted into
-      // any list so it's deleted when we return.
-      RefPtr<nsIContent> child = CreateGenConTextNode(aState, text, nullptr);
-      aAddChild(child);
-      return;
-    }
+                                           styleList->mCounterStyle);
+  if (!needUseNode) {
+    nsAutoString text;
+    node->GetText(WritingMode(&aPseudoStyle), counterStyle, text);
+    // Note that we're done with 'node' in this case.  It's not inserted into
+    // any list so it's deleted when we return.
+    RefPtr<nsIContent> child = CreateGenConTextNode(aState, text, nullptr);
+    aAddChild(child);
+    return;
   }
 
   auto* counterList = mContainStyleScopeManager.GetOrCreateCounterList(
@@ -3406,18 +3404,18 @@ nsCSSFrameConstructor::FindDataByTag(const Element& aElement,
 
 #define SUPPRESS_FCDATA() FrameConstructionData(nullptr, FCDATA_SUPPRESS_FRAME)
 #define SIMPLE_INT_CREATE(_int, _func) \
-  {int32_t(_int), FrameConstructionData(_func)}
+  { int32_t(_int), FrameConstructionData(_func) }
 #define SIMPLE_INT_CHAIN(_int, _func) \
-  {int32_t(_int), FrameConstructionData(_func)}
+  { int32_t(_int), FrameConstructionData(_func) }
 #define COMPLEX_INT_CREATE(_int, _func) \
-  {int32_t(_int), FrameConstructionData(_func)}
+  { int32_t(_int), FrameConstructionData(_func) }
 
 #define SIMPLE_TAG_CREATE(_tag, _func) \
-  {nsGkAtoms::_tag, FrameConstructionData(_func)}
+  { nsGkAtoms::_tag, FrameConstructionData(_func) }
 #define SIMPLE_TAG_CHAIN(_tag, _func) \
-  {nsGkAtoms::_tag, FrameConstructionData(_func)}
+  { nsGkAtoms::_tag, FrameConstructionData(_func) }
 #define COMPLEX_TAG_CREATE(_tag, _func) \
-  {nsGkAtoms::_tag, FrameConstructionData(_func)}
+  { nsGkAtoms::_tag, FrameConstructionData(_func) }
 
 static nsFieldSetFrame* GetFieldSetFrameFor(nsIFrame* aFrame) {
   auto pseudo = aFrame->Style()->GetPseudoType();
@@ -4093,9 +4091,9 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
       _func, FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME)
 
 #define SIMPLE_XUL_CREATE(_tag, _func) \
-  {nsGkAtoms::_tag, SIMPLE_XUL_FCDATA(_func)}
+  { nsGkAtoms::_tag, SIMPLE_XUL_FCDATA(_func) }
 #define SCROLLABLE_XUL_CREATE(_tag, _func) \
-  {nsGkAtoms::_tag, SCROLLABLE_XUL_FCDATA(_func)}
+  { nsGkAtoms::_tag, SCROLLABLE_XUL_FCDATA(_func) }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
@@ -4729,7 +4727,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructMarker(
                             FCDATA_SKIP_ABSPOS_PUSH | \
                             FCDATA_DISALLOW_GENERATED_CONTENT)
 #define SIMPLE_SVG_CREATE(_tag, _func) \
-  {nsGkAtoms::_tag, SIMPLE_SVG_FCDATA(_func)}
+  { nsGkAtoms::_tag, SIMPLE_SVG_FCDATA(_func) }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*

@@ -3750,15 +3750,13 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_IsInRange(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetSymbols(
     rule: &LockedCounterStyleRule,
-    count: &mut usize,
-) -> *const counter_style::Symbol {
+    symbols: &mut style::OwnedSlice<nsString>,
+) {
     read_locked_arc(rule, |rule: &CounterStyleRule| {
-        let symbols = match rule.symbols() {
-            Some(s) => &*s.0,
-            None => &[],
+        *symbols = match rule.symbols() {
+            Some(s) => s.0.iter().map(symbol_to_string).collect(),
+            None => style::OwnedSlice::default(),
         };
-        *count = symbols.len();
-        symbols.as_ptr()
     })
 }
 
@@ -5353,7 +5351,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
             })
         },
         FontWeight => longhands::font_weight::SpecifiedValue::from_gecko_keyword(value),
-        ListStyleType => longhands::list_style_type::SpecifiedValue::from_gecko_keyword(value),
+        ListStyleType => Box::new(longhands::list_style_type::SpecifiedValue::from_gecko_keyword(value)),
         MathStyle => longhands::math_style::SpecifiedValue::from_gecko_keyword(value),
         MozMathVariant => longhands::_moz_math_variant::SpecifiedValue::from_gecko_keyword(value),
         WhiteSpaceCollapse => get_from_computed::<longhands::white_space_collapse::SpecifiedValue>(value),
