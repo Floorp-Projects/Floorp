@@ -72,8 +72,8 @@ class HighlightLines extends Component {
     }
 
     if (features.codemirrorNext) {
-      // TODO: Fix scrolling into view if its out Bug 1894725
       if (editor) {
+        editor.scrollTo(range.start, 0);
         editor.setLineContentMarker({
           id: "multi-highlight-line-marker",
           lineClassName: "highlight-lines",
