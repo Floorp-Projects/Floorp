@@ -1206,7 +1206,7 @@ ParentAPIManager = {
         !context.extension.persistentBackground
       ) {
         context.extension.emit("background-script-reset-idle", {
-          reason: "parentApiCall",
+          reason: "parentapicall",
           path: data.path,
         });
       }
