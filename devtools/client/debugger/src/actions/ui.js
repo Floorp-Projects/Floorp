@@ -13,11 +13,7 @@ import {
   getBreakpointsForSource,
 } from "../selectors/index";
 import { selectSource } from "../actions/sources/select";
-import {
-  getEditor,
-  getLocationsInViewport,
-  updateEditorLineWrapping,
-} from "../utils/editor/index";
+import { getEditor, updateEditorLineWrapping } from "../utils/editor/index";
 import { blackboxSourceActorsForSource } from "./sources/blackbox";
 import { toggleBreakpoints } from "./breakpoints/index";
 import { copyToTheClipboard } from "../utils/clipboard";
@@ -198,9 +194,10 @@ export function closeConditionalPanel() {
 }
 
 export function updateViewport() {
+  const editor = getEditor();
   return {
     type: "SET_VIEWPORT",
-    viewport: getLocationsInViewport(getEditor()),
+    viewport: editor.getLocationsInViewport(),
   };
 }
 

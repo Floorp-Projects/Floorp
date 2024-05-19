@@ -6,6 +6,9 @@ import React, { Component } from "devtools/client/shared/vendor/react";
 import { div } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
+import { features } from "../../utils/prefs";
+const classnames = require("resource://devtools/client/shared/classnames.js");
+
 import ColumnBreakpoint from "./ColumnBreakpoint";
 
 import {
@@ -16,8 +19,25 @@ import {
 import actions from "../../actions/index";
 import { connect } from "devtools/client/shared/vendor/react-redux";
 import { makeBreakpointId } from "../../utils/breakpoint/index";
+import { fromEditorLine } from "../../utils/editor/index";
 
-// eslint-disable-next-line max-len
+const breakpointButton = document.createElement("button");
+const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("viewBox", "0 0 11 13");
+svg.setAttribute("width", 11);
+svg.setAttribute("height", 13);
+
+const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+path.setAttributeNS(
+  null,
+  "d",
+  "M5.07.5H1.5c-.54 0-1 .46-1 1v10c0 .54.46 1 1 1h3.57c.58 0 1.15-.26 1.53-.7l3.7-5.3-3.7-5.3C6.22.76 5.65.5 5.07.5z"
+);
+
+svg.appendChild(path);
+breakpointButton.appendChild(svg);
+
+const COLUMN_BREAKPOINT_MARKER = "column-breakpoint-marker";
 
 class ColumnBreakpoints extends Component {
   static get propTypes() {
@@ -33,6 +53,87 @@ class ColumnBreakpoints extends Component {
     };
   }
 
+  componentDidUpdate() {
+    const { selectedSource, columnBreakpoints, editor } = this.props;
+
+    // Only for codemirror 6
+    if (!features.codemirrorNext) {
+      return;
+    }
+
+    if (!selectedSource || !editor) {
+      return;
+    }
+
+    if (!columnBreakpoints.length) {
+      editor.removePositionContentMarker(COLUMN_BREAKPOINT_MARKER);
+      return;
+    }
+
+    editor.setPositionContentMarker({
+      id: COLUMN_BREAKPOINT_MARKER,
+      positions: columnBreakpoints.map(bp => bp.location),
+      createPositionElementNode: (line, column) => {
+        const lineNumber = fromEditorLine(selectedSource.id, line);
+        const columnBreakpoint = columnBreakpoints.find(
+          bp => bp.location.line === lineNumber && bp.location.column === column
+        );
+        const breakpointNode = breakpointButton.cloneNode(true);
+        breakpointNode.className = classnames("column-breakpoint", {
+          "has-condition": columnBreakpoint.breakpoint?.options.condition,
+          "has-log": columnBreakpoint.breakpoint?.options.logValue,
+          active:
+            columnBreakpoint.breakpoint &&
+            !columnBreakpoint.breakpoint.disabled,
+          disabled: columnBreakpoint.breakpoint?.disabled,
+        });
+        breakpointNode.addEventListener("click", event =>
+          this.onClick(event, columnBreakpoint)
+        );
+        breakpointNode.addEventListener("contextmenu", event =>
+          this.onContextMenu(event, columnBreakpoint)
+        );
+        return breakpointNode;
+      },
+    });
+  }
+
+  onClick = (event, columnBreakpoint) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const { toggleDisabledBreakpoint, removeBreakpoint, addBreakpoint } =
+      this.props;
+
+    // disable column breakpoint on shift-click.
+    if (event.shiftKey) {
+      toggleDisabledBreakpoint(columnBreakpoint.breakpoint);
+      return;
+    }
+
+    if (columnBreakpoint.breakpoint) {
+      removeBreakpoint(columnBreakpoint.breakpoint);
+    } else {
+      addBreakpoint(columnBreakpoint.location);
+    }
+  };
+
+  onContextMenu = (event, columnBreakpoint) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (columnBreakpoint.breakpoint) {
+      this.props.showEditorEditBreakpointContextMenu(
+        event,
+        columnBreakpoint.breakpoint
+      );
+    } else {
+      this.props.showEditorCreateBreakpointContextMenu(
+        event,
+        columnBreakpoint.location
+      );
+    }
+  };
+
   render() {
     const {
       editor,
@@ -44,6 +145,10 @@ class ColumnBreakpoints extends Component {
       removeBreakpoint,
       addBreakpoint,
     } = this.props;
+
+    if (features.codemirrorNext) {
+      return null;
+    }
 
     if (!selectedSource || columnBreakpoints.length === 0) {
       return null;
