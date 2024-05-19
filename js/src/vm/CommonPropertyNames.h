@@ -605,6 +605,7 @@
   MACRO_(use_asm_, "use asm")                                                  \
   MACRO_(use_strict_, "use strict")                                            \
   MACRO_(useGrouping, "useGrouping")                                           \
+  IF_EXPLICIT_RESOURCE_MANAGEMENT(MACRO_(using_, "using"))                     \
   MACRO_(UTC, "UTC")                                                           \
   MACRO_(value, "value")                                                       \
   MACRO_(valueOf, "valueOf")                                                   \
