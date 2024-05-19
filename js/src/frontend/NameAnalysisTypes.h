@@ -81,6 +81,9 @@ enum class DeclarationKind : uint8_t {
   Var,
   Let,
   Const,
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  Using,
+#endif
   Class,  // Handled as same as `let` after parsing.
   Import,
   BodyLevelFunction,
@@ -120,6 +123,10 @@ static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
       return BindingKind::Let;
 
     case DeclarationKind::Const:
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    case DeclarationKind::Using:  // we treat using as a const for now. (Bug
+                                  // 1897609)
+#endif
       return BindingKind::Const;
 
     case DeclarationKind::Import:
