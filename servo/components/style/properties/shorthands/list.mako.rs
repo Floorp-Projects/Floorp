@@ -69,14 +69,14 @@
                 Ok(expanded! {
                     list_style_position: position,
                     list_style_image: Image::None,
-                    list_style_type: ListStyleType::none(),
+                    list_style_type: ListStyleType::None,
                 })
             }
             (true, 1, None, Some(image)) => {
                 Ok(expanded! {
                     list_style_position: position,
                     list_style_image: image,
-                    list_style_type: ListStyleType::none(),
+                    list_style_type: ListStyleType::None,
                 })
             }
             (true, 1, Some(list_style_type), None) => {
@@ -90,7 +90,7 @@
                 Ok(expanded! {
                     list_style_position: position,
                     list_style_image: Image::None,
-                    list_style_type: ListStyleType::none(),
+                    list_style_type: ListStyleType::None,
                 })
             }
             (true, 0, list_style_type, image) => {

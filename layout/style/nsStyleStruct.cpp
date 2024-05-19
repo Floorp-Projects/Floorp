@@ -605,16 +605,17 @@ nsSize nsStyleOutline::EffectiveOffsetFor(const nsRect& aRect) const {
 //
 nsStyleList::nsStyleList()
     : mListStylePosition(StyleListStylePosition::Outside),
-      mListStyleType(StyleCounterStyle::Name({StyleAtom(nsGkAtoms::disc)})),
       mQuotes(StyleQuotes::Auto()),
       mListStyleImage(StyleImage::None()) {
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
+
+  mCounterStyle = nsGkAtoms::disc;
 }
 
 nsStyleList::nsStyleList(const nsStyleList& aSource)
     : mListStylePosition(aSource.mListStylePosition),
-      mListStyleType(aSource.mListStyleType),
+      mCounterStyle(aSource.mCounterStyle),
       mQuotes(aSource.mQuotes),
       mListStyleImage(aSource.mListStyleImage) {
   MOZ_COUNT_CTOR(nsStyleList);
@@ -640,7 +641,7 @@ nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aNewData,
   // value changes from something else to list-item, that change itself would
   // cause ReconstructFrame.
   if (mListStylePosition != aNewData.mListStylePosition ||
-      mListStyleType != aNewData.mListStyleType ||
+      mCounterStyle != aNewData.mCounterStyle ||
       mListStyleImage != aNewData.mListStyleImage) {
     if (aOldStyle.StyleDisplay()->IsListItem()) {
       return nsChangeHint_ReconstructFrame;
