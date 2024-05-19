@@ -46,11 +46,19 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Enrollet nevez ’zo</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Enrollet nevez ’zo</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Diskouez an holl sinedoù enrollet</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Diskouez an holl sinedoù enrollet</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Dilemel</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Dilemel</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Sinedoù</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Diskouez an holl sinedoù</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Dilemel</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Gant Mozilla eo produet %1$s.</string>
@@ -185,6 +193,8 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Askouezhioù</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Askouezhioù</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Merañ an askouezhioù</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Titouroù ar gont</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -209,12 +219,16 @@
     <string name="resync_button_content_description">Adgoubredañ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Kavout er bajennad</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Kavout er bajennad…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Treiñ ar bajenn</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Enrollañ en dastumad</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Rannañ</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Rannañ…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Digeriñ e %1$s</string>
@@ -247,6 +261,22 @@
     <string name="browser_menu_new_private_tab">Ivinell prevez nevez</string>
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Gerioù-tremen</string>
+
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Ostilhoù</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Enrollañ</string>
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Lakaat ur sined war ar bajenn-mañ</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Kemmañ ar sined</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Enrollañ evel PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Enaouiñ ar mod lenn</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Kuitaat ar mod lenn</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -486,6 +516,10 @@
     <string name="preferences_account_sync_error">Adkennaskit evit kendercʼhel gant ar goubredañ</string>
     <!-- Preference for language -->
     <string name="preferences_language">Yezh</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Troidigezh</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Troidigezhioù</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Dibaboù roadennoù</string>
     <!-- Preference for data collection -->
@@ -534,6 +568,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Askouezhioù</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Askouezhioù</string>
     <!-- Preference for installing a local add-on -->
     <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Staliañ un askouezh diouzh ar restr</string>
     <!-- Preference for notifications -->
@@ -574,7 +610,9 @@
     <string name="customize_toggle_jump_back_in">Distreiñ</string>
 
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Ivinelloù nevez</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Ivinelloù nevez</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Sinedoù</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Gweladennet nevez ’zo</string>
@@ -634,6 +672,8 @@
     <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Diweredekaet eo an askouezhioù evit ar mare</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Klask adloc’hañ an askouezhioù</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Klaskit adloc’hañ an askouezhioù</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Kenderc’hel gant an askouezhioù bet diweredekaet</string>
 
@@ -695,6 +735,14 @@
     <string name="fxa_tab_received_notification_name">Ivinell degemeret</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Ivinell eus %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">%1$s ivinell serret: %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Diskouez an ivinelloù bet serret nevez zo</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -2262,6 +2310,8 @@
     <string name="translations_bottom_sheet_translate_to">Treiñ e</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Diwezhatoc’h</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Diskouez an destenn orin</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Graet</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2293,6 +2343,8 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Na dreiñ biken %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Na dreiñ biken al lec’hienn-mañ</string>
+    <!-- Button text for the button that will take the user to the translation settings dialog. -->
+    <string name="translation_option_bottom_sheet_translation_settings">Arventennoù an droidigezh</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Diwar-benn an treiñ e-barzh %1$s</string>
 
@@ -2390,7 +2442,9 @@
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Niver a ivinelloù</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Oberiant</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Oberiant</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Oberiant</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Dizoberiant</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2398,4 +2452,16 @@
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Hollad</string>
 
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Kenderc’hel</string>
+
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label">Serriñ</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Trugarez da vezañ roet hoc’h ali!</string>
+
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">Domani a-vremañ: %s</string>
     </resources>
