@@ -192,7 +192,7 @@ NS_IMETHODIMP
 WorkerDebugger::GetIsClosed(bool* aResult) {
   AssertIsOnMainThread();
 
-  *aResult = !mWorkerPrivate;
+  *aResult = !mWorkerPrivate || mWorkerPrivate->IsDead();
   return NS_OK;
 }
 
