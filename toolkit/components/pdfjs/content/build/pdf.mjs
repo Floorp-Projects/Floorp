@@ -1824,7 +1824,6 @@ function opacityToHex(opacity) {
 }
 class IdManager {
   #id = 0;
-  constructor() {}
   get id() {
     return `${AnnotationEditorPrefix}${this.#id++}`;
   }
@@ -5028,7 +5027,6 @@ class FontLoader {
 class FontFaceObject {
   constructor(translatedData, {
     disableFontFace = false,
-    ignoreErrors = false,
     inspectFont = null
   }) {
     this.compiledGlyphs = Object.create(null);
@@ -5036,7 +5034,6 @@ class FontFaceObject {
       this[i] = translatedData[i];
     }
     this.disableFontFace = disableFontFace === true;
-    this.ignoreErrors = ignoreErrors === true;
     this._inspectFont = inspectFont;
   }
   createNativeFontFace() {
@@ -5085,9 +5082,6 @@ class FontFaceObject {
     try {
       cmds = objs.get(this.loadedName + "_path_" + character);
     } catch (ex) {
-      if (!this.ignoreErrors) {
-        throw ex;
-      }
       warn(`getPathGenerator - ignoring character: "${ex}".`);
     }
     if (!Array.isArray(cmds) || cmds.length === 0) {
@@ -7886,7 +7880,8 @@ const DEFAULT_FONT_SIZE = 30;
 const DEFAULT_FONT_ASCENT = 0.8;
 const ascentCache = new Map();
 let _canvasContext = null;
-function getCtx() {
+const pendingTextLayers = new Set();
+function getCtx(lang = null) {
   if (!_canvasContext) {
     const canvas = document.createElement("canvas");
     canvas.className = "hiddenCanvasElement";
@@ -7898,15 +7893,18 @@ function getCtx() {
   return _canvasContext;
 }
 function cleanupTextLayer() {
+  if (pendingTextLayers.size > 0) {
+    return;
+  }
   _canvasContext?.canvas.remove();
   _canvasContext = null;
 }
-function getAscent(fontFamily) {
+function getAscent(fontFamily, lang) {
   const cachedAscent = ascentCache.get(fontFamily);
   if (cachedAscent) {
     return cachedAscent;
   }
-  const ctx = getCtx();
+  const ctx = getCtx(lang);
   const savedFont = ctx.font;
   ctx.canvas.width = ctx.canvas.height = DEFAULT_FONT_SIZE;
   ctx.font = `${DEFAULT_FONT_SIZE}px ${fontFamily}`;
@@ -7951,72 +7949,6 @@ function getAscent(fontFamily) {
   ascentCache.set(fontFamily, DEFAULT_FONT_ASCENT);
   return DEFAULT_FONT_ASCENT;
 }
-function appendText(task, geom, styles) {
-  const textDiv = document.createElement("span");
-  const textDivProperties = {
-    angle: 0,
-    canvasWidth: 0,
-    hasText: geom.str !== "",
-    hasEOL: geom.hasEOL,
-    fontSize: 0
-  };
-  task._textDivs.push(textDiv);
-  const tx = Util.transform(task._transform, geom.transform);
-  let angle = Math.atan2(tx[1], tx[0]);
-  const style = styles[geom.fontName];
-  if (style.vertical) {
-    angle += Math.PI / 2;
-  }
-  const fontFamily = task._fontInspectorEnabled && style.fontSubstitution || style.fontFamily;
-  const fontHeight = Math.hypot(tx[2], tx[3]);
-  const fontAscent = fontHeight * getAscent(fontFamily);
-  let left, top;
-  if (angle === 0) {
-    left = tx[4];
-    top = tx[5] - fontAscent;
-  } else {
-    left = tx[4] + fontAscent * Math.sin(angle);
-    top = tx[5] - fontAscent * Math.cos(angle);
-  }
-  const scaleFactorStr = "calc(var(--scale-factor)*";
-  const divStyle = textDiv.style;
-  if (task._container === task._rootContainer) {
-    divStyle.left = `${(100 * left / task._pageWidth).toFixed(2)}%`;
-    divStyle.top = `${(100 * top / task._pageHeight).toFixed(2)}%`;
-  } else {
-    divStyle.left = `${scaleFactorStr}${left.toFixed(2)}px)`;
-    divStyle.top = `${scaleFactorStr}${top.toFixed(2)}px)`;
-  }
-  divStyle.fontSize = `${scaleFactorStr}${fontHeight.toFixed(2)}px)`;
-  divStyle.fontFamily = fontFamily;
-  textDivProperties.fontSize = fontHeight;
-  textDiv.setAttribute("role", "presentation");
-  textDiv.textContent = geom.str;
-  textDiv.dir = geom.dir;
-  if (task._fontInspectorEnabled) {
-    textDiv.dataset.fontName = style.fontSubstitutionLoadedName || geom.fontName;
-  }
-  if (angle !== 0) {
-    textDivProperties.angle = angle * (180 / Math.PI);
-  }
-  let shouldScaleText = false;
-  if (geom.str.length > 1) {
-    shouldScaleText = true;
-  } else if (geom.str !== " " && geom.transform[0] !== geom.transform[3]) {
-    const absScaleX = Math.abs(geom.transform[0]),
-      absScaleY = Math.abs(geom.transform[3]);
-    if (absScaleX !== absScaleY && Math.max(absScaleX, absScaleY) / Math.min(absScaleX, absScaleY) > 1.5) {
-      shouldScaleText = true;
-    }
-  }
-  if (shouldScaleText) {
-    textDivProperties.canvasWidth = style.vertical ? geom.height : geom.width;
-  }
-  task._textDivProperties.set(textDiv, textDivProperties);
-  if (task._isReadableStream) {
-    task._layoutText(textDiv);
-  }
-}
 function layout(params) {
   const {
     div,
@@ -8057,25 +7989,10 @@ function layout(params) {
     style.transform = transform;
   }
 }
-function render(task) {
-  if (task._canceled) {
-    return;
-  }
-  const textDivs = task._textDivs;
-  const capability = task._capability;
-  const textDivsLength = textDivs.length;
-  if (textDivsLength > MAX_TEXT_DIVS_TO_RENDER) {
-    capability.resolve();
-    return;
-  }
-  if (!task._isReadableStream) {
-    for (const textDiv of textDivs) {
-      task._layoutText(textDiv);
-    }
-  }
-  capability.resolve();
-}
 class TextLayerRenderTask {
+  #disableProcessItems = false;
+  #reader = null;
+  #textContentSource = null;
   constructor({
     textContentSource,
     container,
@@ -8084,13 +8001,15 @@ class TextLayerRenderTask {
     textDivProperties,
     textContentItemsStr
   }) {
-    this._textContentSource = textContentSource;
-    this._isReadableStream = textContentSource instanceof ReadableStream;
+    if (textContentSource instanceof ReadableStream) {
+      this.#textContentSource = textContentSource;
+    } else {
+      throw new Error('No "textContentSource" parameter specified.');
+    }
     this._container = this._rootContainer = container;
     this._textDivs = textDivs || [];
     this._textContentItemsStr = textContentItemsStr || [];
     this._fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
-    this._reader = null;
     this._textDivProperties = textDivProperties || new WeakMap();
     this._canceled = false;
     this._capability = Promise.withResolvers();
@@ -8100,8 +8019,9 @@ class TextLayerRenderTask {
       div: null,
       scale: viewport.scale * (globalThis.devicePixelRatio || 1),
       properties: null,
-      ctx: getCtx()
+      ctx: null
     };
+    this._styleCache = Object.create(null);
     const {
       pageWidth,
       pageHeight,
@@ -8112,8 +8032,11 @@ class TextLayerRenderTask {
     this._pageWidth = pageWidth;
     this._pageHeight = pageHeight;
     setLayerDimensions(container, viewport);
+    pendingTextLayers.add(this);
     this._capability.promise.finally(() => {
+      pendingTextLayers.delete(this);
       this._layoutTextParams = null;
+      this._styleCache = null;
     }).catch(() => {});
   }
   get promise() {
@@ -8121,14 +8044,29 @@ class TextLayerRenderTask {
   }
   cancel() {
     this._canceled = true;
-    if (this._reader) {
-      this._reader.cancel(new AbortException("TextLayer task cancelled.")).catch(() => {});
-      this._reader = null;
-    }
-    this._capability.reject(new AbortException("TextLayer task cancelled."));
+    const abortEx = new AbortException("TextLayer task cancelled.");
+    this.#reader?.cancel(abortEx).catch(() => {});
+    this.#reader = null;
+    this._capability.reject(abortEx);
   }
-  _processItems(items, styleCache) {
+  #processItems(items, lang) {
+    if (this.#disableProcessItems) {
+      return;
+    }
+    if (!this._layoutTextParams.ctx) {
+      this._textDivProperties.set(this._rootContainer, {
+        lang
+      });
+      this._layoutTextParams.ctx = getCtx(lang);
+    }
+    const textDivs = this._textDivs,
+      textContentItemsStr = this._textContentItemsStr;
     for (const item of items) {
+      if (textDivs.length > MAX_TEXT_DIVS_TO_RENDER) {
+        warn("Ignoring additional textDivs for performance reasons.");
+        this.#disableProcessItems = true;
+        return;
+      }
       if (item.str === undefined) {
         if (item.type === "beginMarkedContentProps" || item.type === "beginMarkedContent") {
           const parent = this._container;
@@ -8143,13 +8081,77 @@ class TextLayerRenderTask {
         }
         continue;
       }
-      this._textContentItemsStr.push(item.str);
-      appendText(this, item, styleCache);
+      textContentItemsStr.push(item.str);
+      this.#appendText(item, lang);
     }
   }
-  _layoutText(textDiv) {
-    const textDivProperties = this._layoutTextParams.properties = this._textDivProperties.get(textDiv);
+  #appendText(geom, lang) {
+    const textDiv = document.createElement("span");
+    const textDivProperties = {
+      angle: 0,
+      canvasWidth: 0,
+      hasText: geom.str !== "",
+      hasEOL: geom.hasEOL,
+      fontSize: 0
+    };
+    this._textDivs.push(textDiv);
+    const tx = Util.transform(this._transform, geom.transform);
+    let angle = Math.atan2(tx[1], tx[0]);
+    const style = this._styleCache[geom.fontName];
+    if (style.vertical) {
+      angle += Math.PI / 2;
+    }
+    const fontFamily = this._fontInspectorEnabled && style.fontSubstitution || style.fontFamily;
+    const fontHeight = Math.hypot(tx[2], tx[3]);
+    const fontAscent = fontHeight * getAscent(fontFamily, lang);
+    let left, top;
+    if (angle === 0) {
+      left = tx[4];
+      top = tx[5] - fontAscent;
+    } else {
+      left = tx[4] + fontAscent * Math.sin(angle);
+      top = tx[5] - fontAscent * Math.cos(angle);
+    }
+    const scaleFactorStr = "calc(var(--scale-factor)*";
+    const divStyle = textDiv.style;
+    if (this._container === this._rootContainer) {
+      divStyle.left = `${(100 * left / this._pageWidth).toFixed(2)}%`;
+      divStyle.top = `${(100 * top / this._pageHeight).toFixed(2)}%`;
+    } else {
+      divStyle.left = `${scaleFactorStr}${left.toFixed(2)}px)`;
+      divStyle.top = `${scaleFactorStr}${top.toFixed(2)}px)`;
+    }
+    divStyle.fontSize = `${scaleFactorStr}${fontHeight.toFixed(2)}px)`;
+    divStyle.fontFamily = fontFamily;
+    textDivProperties.fontSize = fontHeight;
+    textDiv.setAttribute("role", "presentation");
+    textDiv.textContent = geom.str;
+    textDiv.dir = geom.dir;
+    if (this._fontInspectorEnabled) {
+      textDiv.dataset.fontName = style.fontSubstitutionLoadedName || geom.fontName;
+    }
+    if (angle !== 0) {
+      textDivProperties.angle = angle * (180 / Math.PI);
+    }
+    let shouldScaleText = false;
+    if (geom.str.length > 1) {
+      shouldScaleText = true;
+    } else if (geom.str !== " " && geom.transform[0] !== geom.transform[3]) {
+      const absScaleX = Math.abs(geom.transform[0]),
+        absScaleY = Math.abs(geom.transform[3]);
+      if (absScaleX !== absScaleY && Math.max(absScaleX, absScaleY) / Math.min(absScaleX, absScaleY) > 1.5) {
+        shouldScaleText = true;
+      }
+    }
+    if (shouldScaleText) {
+      textDivProperties.canvasWidth = style.vertical ? geom.height : geom.width;
+    }
+    this._textDivProperties.set(textDiv, textDivProperties);
+    this.#layoutText(textDiv, textDivProperties);
+  }
+  #layoutText(textDiv, textDivProperties) {
     this._layoutTextParams.div = textDiv;
+    this._layoutTextParams.properties = textDivProperties;
     layout(this._layoutTextParams);
     if (textDivProperties.hasText) {
       this._container.append(textDiv);
@@ -8161,43 +8163,23 @@ class TextLayerRenderTask {
     }
   }
   _render() {
-    const {
-      promise,
-      resolve,
-      reject
-    } = Promise.withResolvers();
-    let styleCache = Object.create(null);
-    if (this._isReadableStream) {
-      const pump = () => {
-        this._reader.read().then(({
-          value,
-          done
-        }) => {
-          if (done) {
-            resolve();
-            return;
-          }
-          Object.assign(styleCache, value.styles);
-          this._processItems(value.items, styleCache);
-          pump();
-        }, reject);
-      };
-      this._reader = this._textContentSource.getReader();
-      pump();
-    } else if (this._textContentSource) {
-      const {
-        items,
-        styles
-      } = this._textContentSource;
-      this._processItems(items, styles);
-      resolve();
-    } else {
-      throw new Error('No "textContentSource" parameter specified.');
-    }
-    promise.then(() => {
-      styleCache = null;
-      render(this);
-    }, this._capability.reject);
+    const styleCache = this._styleCache;
+    const pump = () => {
+      this.#reader.read().then(({
+        value,
+        done
+      }) => {
+        if (done) {
+          this._capability.resolve();
+          return;
+        }
+        Object.assign(styleCache, value.styles);
+        this.#processItems(value.items, value.lang);
+        pump();
+      }, this._capability.reject);
+    };
+    this.#reader = this.#textContentSource.getReader();
+    pump();
   }
 }
 function renderTextLayer(params) {
@@ -8219,7 +8201,7 @@ function updateTextLayer({
     });
   }
   if (mustRescale) {
-    const ctx = getCtx();
+    const ctx = getCtx(textDivProperties.get(container)?.lang);
     const scale = viewport.scale * (globalThis.devicePixelRatio || 1);
     const params = {
       prevFontSize: null,
@@ -9349,9 +9331,9 @@ function getDocument(src) {
     worker = workerParams.port ? PDFWorker.fromPort(workerParams) : new PDFWorker(workerParams);
     task._worker = worker;
   }
-  const fetchDocParams = {
+  const docParams = {
     docId,
-    apiVersion: "4.3.27",
+    apiVersion: "4.3.77",
     data,
     password,
     disableAutoFetch,
@@ -9373,7 +9355,6 @@ function getDocument(src) {
     }
   };
   const transportParams = {
-    ignoreErrors,
     disableFontFace,
     fontExtraProperties,
     enableXfa,
@@ -9386,22 +9367,25 @@ function getDocument(src) {
     if (task.destroyed) {
       throw new Error("Loading aborted");
     }
-    const workerIdPromise = _fetchDocument(worker, fetchDocParams);
-    const networkStreamPromise = new Promise(function (resolve) {
-      let networkStream;
-      if (rangeTransport) {
-        networkStream = new PDFDataTransportStream(rangeTransport, {
-          disableRange,
-          disableStream
-        });
-      } else if (!data) {
-        throw new Error("Not implemented: createPDFNetworkStream");
-      }
-      resolve(networkStream);
-    });
-    return Promise.all([workerIdPromise, networkStreamPromise]).then(function ([workerId, networkStream]) {
+    if (worker.destroyed) {
+      throw new Error("Worker was destroyed");
+    }
+    const workerIdPromise = worker.messageHandler.sendWithPromise("GetDocRequest", docParams, data ? [data.buffer] : null);
+    let networkStream;
+    if (rangeTransport) {
+      networkStream = new PDFDataTransportStream(rangeTransport, {
+        disableRange,
+        disableStream
+      });
+    } else if (!data) {
+      throw new Error("Not implemented: createPDFNetworkStream");
+    }
+    return workerIdPromise.then(workerId => {
       if (task.destroyed) {
         throw new Error("Loading aborted");
+      }
+      if (worker.destroyed) {
+        throw new Error("Worker was destroyed");
       }
       const messageHandler = new MessageHandler(docId, workerId, worker.port);
       const transport = new WorkerTransport(messageHandler, task, networkStream, transportParams, transportFactory);
@@ -9410,16 +9394,6 @@ function getDocument(src) {
     });
   }).catch(task._capability.reject);
   return task;
-}
-async function _fetchDocument(worker, source) {
-  if (worker.destroyed) {
-    throw new Error("Worker was destroyed");
-  }
-  const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", source, source.data ? [source.data.buffer] : null);
-  if (worker.destroyed) {
-    throw new Error("Worker was destroyed");
-  }
-  return workerId;
 }
 function getUrlProp(val) {
   return null;
@@ -9764,8 +9738,13 @@ class PDFPageProxy {
       } else {
         internalRenderTask.capability.resolve();
       }
-      this._stats?.timeEnd("Rendering");
-      this._stats?.timeEnd("Overall");
+      if (this._stats) {
+        this._stats.timeEnd("Rendering");
+        this._stats.timeEnd("Overall");
+        if (globalThis.Stats?.enabled) {
+          globalThis.Stats.add(this.pageNumber, this._stats);
+        }
+      }
     };
     const internalRenderTask = new InternalRenderTask({
       callback: complete,
@@ -9843,6 +9822,7 @@ class PDFPageProxy {
             resolve(textContent);
             return;
           }
+          textContent.lang ??= value.lang;
           Object.assign(textContent.styles, value.styles);
           textContent.items.push(...value.items);
           pump();
@@ -9851,7 +9831,8 @@ class PDFPageProxy {
       const reader = readableStream.getReader();
       const textContent = {
         items: [],
-        styles: Object.create(null)
+        styles: Object.create(null),
+        lang: null
       };
       pump();
     });
@@ -10522,23 +10503,26 @@ class WorkerTransport {
       }
       switch (type) {
         case "Font":
-          const params = this._params;
+          const {
+            disableFontFace,
+            fontExtraProperties,
+            pdfBug
+          } = this._params;
           if ("error" in exportedData) {
             const exportedError = exportedData.error;
             warn(`Error during font loading: ${exportedError}`);
             this.commonObjs.resolve(id, exportedError);
             break;
           }
-          const inspectFont = params.pdfBug && globalThis.FontInspector?.enabled ? (font, url) => globalThis.FontInspector.fontAdded(font, url) : null;
+          const inspectFont = pdfBug && globalThis.FontInspector?.enabled ? (font, url) => globalThis.FontInspector.fontAdded(font, url) : null;
           const font = new FontFaceObject(exportedData, {
-            disableFontFace: params.disableFontFace,
-            ignoreErrors: params.ignoreErrors,
+            disableFontFace,
             inspectFont
           });
           this.fontLoader.bind(font).catch(() => messageHandler.sendWithPromise("FontFallback", {
             id
           })).finally(() => {
-            if (!params.fontExtraProperties && font.data) {
+            if (!fontExtraProperties && font.data) {
               font.data = null;
             }
             this.commonObjs.resolve(id, font);
@@ -10551,7 +10535,7 @@ class WorkerTransport {
           assert(imageRef, "The imageRef must be defined.");
           for (const pageProxy of this.#pageCache.values()) {
             for (const [, data] of pageProxy.objs) {
-              if (data.ref !== imageRef) {
+              if (data?.ref !== imageRef) {
                 continue;
               }
               if (!data.dataLen) {
@@ -11011,8 +10995,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.3.27";
-const build = "df23679bc";
+const version = "4.3.77";
+const build = "63b66b412";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -17798,8 +17782,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.3.27";
-const pdfjsBuild = "df23679bc";
+const pdfjsVersion = "4.3.77";
+const pdfjsBuild = "63b66b412";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

@@ -4887,6 +4887,8 @@ class TextLayerBuilder {
   #rotation = 0;
   #scale = 0;
   #textContentSource = null;
+  static #textLayers = new Map();
+  static #selectionChangeAbortController = null;
   constructor({
     highlighter = null,
     accessibilityManager = null,
@@ -4911,7 +4913,7 @@ class TextLayerBuilder {
     const endOfContent = document.createElement("div");
     endOfContent.className = "endOfContent";
     this.div.append(endOfContent);
-    this.#bindMouse();
+    this.#bindMouse(endOfContent);
   }
   get numTextDivs() {
     return this.textDivs.length;
@@ -4984,28 +4986,18 @@ class TextLayerBuilder {
     this.textContentItemsStr.length = 0;
     this.textDivs.length = 0;
     this.textDivProperties = new WeakMap();
+    TextLayerBuilder.#removeGlobalSelectionListener(this.div);
   }
   setTextContentSource(source) {
     this.cancel();
     this.#textContentSource = source;
   }
-  #bindMouse() {
+  #bindMouse(end) {
     const {
       div
     } = this;
     div.addEventListener("mousedown", evt => {
-      const end = div.querySelector(".endOfContent");
-      if (!end) {
-        return;
-      }
       end.classList.add("active");
-    });
-    div.addEventListener("mouseup", () => {
-      const end = div.querySelector(".endOfContent");
-      if (!end) {
-        return;
-      }
-      end.classList.remove("active");
     });
     div.addEventListener("copy", event => {
       if (!this.#enablePermissions) {
@@ -5014,6 +5006,54 @@ class TextLayerBuilder {
       }
       event.preventDefault();
       event.stopPropagation();
+    });
+    TextLayerBuilder.#textLayers.set(div, end);
+    TextLayerBuilder.#enableGlobalSelectionListener();
+  }
+  static #removeGlobalSelectionListener(textLayerDiv) {
+    this.#textLayers.delete(textLayerDiv);
+    if (this.#textLayers.size === 0) {
+      this.#selectionChangeAbortController?.abort();
+      this.#selectionChangeAbortController = null;
+    }
+  }
+  static #enableGlobalSelectionListener() {
+    if (TextLayerBuilder.#selectionChangeAbortController) {
+      return;
+    }
+    TextLayerBuilder.#selectionChangeAbortController = new AbortController();
+    const reset = (end, textLayer) => {
+      end.classList.remove("active");
+    };
+    document.addEventListener("pointerup", () => {
+      TextLayerBuilder.#textLayers.forEach(reset);
+    }, {
+      signal: TextLayerBuilder.#selectionChangeAbortController.signal
+    });
+    document.addEventListener("selectionchange", () => {
+      const selection = document.getSelection();
+      if (selection.rangeCount === 0) {
+        TextLayerBuilder.#textLayers.forEach(reset);
+        return;
+      }
+      const activeTextLayers = new Set();
+      for (let i = 0; i < selection.rangeCount; i++) {
+        const range = selection.getRangeAt(i);
+        for (const textLayerDiv of TextLayerBuilder.#textLayers.keys()) {
+          if (!activeTextLayers.has(textLayerDiv) && range.intersectsNode(textLayerDiv)) {
+            activeTextLayers.add(textLayerDiv);
+          }
+        }
+      }
+      for (const [textLayerDiv, endDiv] of TextLayerBuilder.#textLayers) {
+        if (activeTextLayers.has(textLayerDiv)) {
+          endDiv.classList.add("active");
+        } else {
+          reset(endDiv, textLayerDiv);
+        }
+      }
+    }, {
+      signal: TextLayerBuilder.#selectionChangeAbortController.signal
     });
   }
 }
@@ -5405,9 +5445,9 @@ class PDFPageView {
           onlyCssZoom = (Math.floor(width) * sx | 0) * (Math.floor(height) * sy | 0) > this.maxCanvasPixels;
         }
       }
-      const postponeDrawing = !onlyCssZoom && drawingDelay >= 0 && drawingDelay < 1000;
+      const postponeDrawing = drawingDelay >= 0 && drawingDelay < 1000;
       if (postponeDrawing || onlyCssZoom) {
-        if (postponeDrawing && this.renderingState !== RenderingStates.FINISHED) {
+        if (postponeDrawing && !onlyCssZoom && this.renderingState !== RenderingStates.FINISHED) {
           this.cancelRendering({
             keepZoomLayer: true,
             keepAnnotationLayer: true,
@@ -5872,7 +5912,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.3.27";
+    const viewerVersion = "4.3.77";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -7507,9 +7547,19 @@ const PDFViewerApplication = {
         viewerContainer
       } = this.appConfig,
       params = parseQueryString(hash);
+    const loadPDFBug = async () => {
+      if (this._PDFBug) {
+        return;
+      }
+      const {
+        PDFBug
+      } = await import( /*webpackIgnore: true*/AppOptions.get("debuggerSrc"));
+      this._PDFBug = PDFBug;
+    };
     if (params.get("disableworker") === "true") {
       try {
-        await loadFakeWorker();
+        GlobalWorkerOptions.workerSrc ||= AppOptions.get("workerSrc");
+        await import( /*webpackIgnore: true*/PDFWorker.workerSrc);
       } catch (ex) {
         console.error(`_parseHashParams: "${ex.message}".`);
       }
@@ -7542,7 +7592,7 @@ const PDFViewerApplication = {
         case "hover":
           viewerContainer.classList.add(`textLayer-${params.get("textlayer")}`);
           try {
-            await loadPDFBug(this);
+            await loadPDFBug();
             this._PDFBug.loadCSS();
           } catch (ex) {
             console.error(`_parseHashParams: "${ex.message}".`);
@@ -7551,11 +7601,13 @@ const PDFViewerApplication = {
       }
     }
     if (params.has("pdfbug")) {
-      AppOptions.set("pdfBug", true);
-      AppOptions.set("fontExtraProperties", true);
+      AppOptions.setAll({
+        pdfBug: true,
+        fontExtraProperties: true
+      });
       const enabled = params.get("pdfbug").split(",");
       try {
-        await loadPDFBug(this);
+        await loadPDFBug();
         this._PDFBug.init(mainContainer, enabled);
       } catch (ex) {
         console.error(`_parseHashParams: "${ex.message}".`);
@@ -8610,14 +8662,6 @@ const PDFViewerApplication = {
     eventBus._on("updatefindcontrolstate", webViewerUpdateFindControlState, {
       signal
     });
-    if (AppOptions.get("pdfBug")) {
-      eventBus._on("pagerendered", reportPageStatsPDFBug, {
-        signal
-      });
-      eventBus._on("pagechanging", reportPageStatsPDFBug, {
-        signal
-      });
-    }
     eventBus._on("annotationeditorstateschanged", webViewerAnnotationEditorStatesChanged, {
       signal
     });
@@ -8721,20 +8765,15 @@ const PDFViewerApplication = {
         passive: true,
         signal
       });
-      mainContainer.removeEventListener("scrollend", scrollend, {
-        signal
-      });
-      mainContainer.removeEventListener("blur", scrollend, {
-        signal
-      });
+      mainContainer.removeEventListener("scrollend", scrollend);
+      mainContainer.removeEventListener("blur", scrollend);
     };
     const scroll = () => {
       if (this._isCtrlKeyDown) {
         return;
       }
       mainContainer.removeEventListener("scroll", scroll, {
-        passive: true,
-        signal
+        passive: true
       });
       this._isScrolling = true;
       mainContainer.addEventListener("scrollend", scrollend, {
@@ -8797,25 +8836,6 @@ const PDFViewerApplication = {
   }
 };
 initCom(PDFViewerApplication);
-async function loadFakeWorker() {
-  GlobalWorkerOptions.workerSrc ||= AppOptions.get("workerSrc");
-  await import( /*webpackIgnore: true*/PDFWorker.workerSrc);
-}
-async function loadPDFBug(self) {
-  const {
-    PDFBug
-  } = await import( /*webpackIgnore: true*/AppOptions.get("debuggerSrc"));
-  self._PDFBug = PDFBug;
-}
-function reportPageStatsPDFBug({
-  pageNumber
-}) {
-  if (!globalThis.Stats?.enabled) {
-    return;
-  }
-  const pageView = PDFViewerApplication.pdfViewer.getPageView(pageNumber - 1);
-  globalThis.Stats.add(pageNumber, pageView?.pdfPage?.stats);
-}
 function webViewerPageRender({
   pageNumber
 }) {
@@ -9556,8 +9576,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.3.27";
-const pdfjsBuild = "df23679bc";
+const pdfjsVersion = "4.3.77";
+const pdfjsBuild = "63b66b412";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;

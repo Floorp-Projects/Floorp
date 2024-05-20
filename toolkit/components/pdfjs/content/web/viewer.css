@@ -17,13 +17,14 @@
   position:absolute;
   text-align:initial;
   inset:0;
-  overflow:hidden;
+  overflow:clip;
   opacity:1;
   line-height:1;
   text-size-adjust:none;
   forced-color-adjust:none;
   transform-origin:0 0;
   caret-color:CanvasText;
+  z-index:0;
 
   &.highlighting{
     touch-action:none;
@@ -35,6 +36,11 @@
     white-space:pre;
     cursor:text;
     transform-origin:0% 0%;
+  }
+
+  > :not(.markedContent),
+  .markedContent span:not(.markedContent){
+    z-index:1;
   }
 
   .highlight{
@@ -88,7 +94,7 @@
     display:block;
     position:absolute;
     inset:100% 0 0;
-    z-index:-1;
+    z-index:0;
     cursor:default;
     user-select:none;
 
@@ -1529,11 +1535,13 @@
 .annotationEditorLayer .stampEditor{
   width:auto;
   height:auto;
-}
 
-.annotationEditorLayer .stampEditor canvas{
-  width:100%;
-  height:100%;
+  canvas{
+    position:absolute;
+    width:100%;
+    height:100%;
+    margin:0;
+  }
 }
 
 .annotationEditorLayer{
@@ -2359,12 +2367,30 @@
   @media screen and (forced-colors: active){
     --hcm-highlight-filter:invert(100%);
   }
-}
 
-.pdfViewer .canvasWrapper{
-  overflow:hidden;
-  width:100%;
-  height:100%;
+  .canvasWrapper{
+    overflow:hidden;
+    width:100%;
+    height:100%;
+
+    canvas{
+      margin:0;
+      display:block;
+
+      &[hidden]{
+        display:none;
+      }
+
+      &[zooming]{
+        width:100%;
+        height:100%;
+      }
+
+      .structTree{
+        contain:strict;
+      }
+    }
+  }
 }
 
 .pdfViewer .page{
@@ -2413,24 +2439,6 @@
 .spread .page,
 .pdfViewer:is(.scrollHorizontal, .scrollWrapped) .page{
   margin-inline:var(--spreadHorizontalWrapped-margin-LR);
-}
-
-.pdfViewer .page canvas{
-  margin:0;
-  display:block;
-}
-
-.pdfViewer .page canvas .structTree{
-  contain:strict;
-}
-
-.pdfViewer .page canvas[hidden]{
-  display:none;
-}
-
-.pdfViewer .page canvas[zooming]{
-  width:100%;
-  height:100%;
 }
 
 .pdfViewer .page.loadingIcon::after{
