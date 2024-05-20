@@ -1235,9 +1235,7 @@ class PresShell final : public nsStubDocumentObserver,
     mIsNeverPainting = aNeverPainting;
   }
 
-  bool MightHavePendingFontLoads() const {
-    return ObservingStyleFlushes() || mReflowContinueTimer;
-  }
+  bool MightHavePendingFontLoads() const { return ObservingStyleFlushes(); }
 
   void SyncWindowProperties(bool aSync);
   struct WindowSizeConstraints {
@@ -2958,12 +2956,6 @@ class PresShell final : public nsStubDocumentObserver,
 
   // The `performance.now()` value when we last started to process reflows.
   DOMHighResTimeStamp mLastReflowStart{0.0};
-
-  // At least on Win32 and Mac after interupting a reflow we need to post
-  // the resume reflow event off a timer to avoid event starvation because
-  // posted messages are processed before other messages when the modal
-  // moving/sizing loop is running, see bug 491700 for details.
-  nsCOMPtr<nsITimer> mReflowContinueTimer;
 
 #ifdef DEBUG
   // We track allocated pointers in a diagnostic hash set, to assert against
