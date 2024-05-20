@@ -23,7 +23,7 @@ When the message is shown at startup:
 
 
 ### Example of a Moments page
-![Moments](./moments.png)
+![Moments](./moments-image.png)
 
 ## Testing Moments Page
 
