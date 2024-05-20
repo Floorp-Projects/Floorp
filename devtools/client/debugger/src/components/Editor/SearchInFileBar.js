@@ -30,6 +30,7 @@ import {
   removeOverlay,
 } from "../../utils/editor/index";
 import { isFulfilled } from "../../utils/async-value";
+import { features } from "../../utils/prefs";
 
 function getSearchShortcut() {
   return L10N.getStr("sourceSearch.search.key2");
@@ -108,11 +109,17 @@ class SearchInFileBar extends Component {
   };
 
   clearSearch = () => {
-    const { editor: ed } = this.props;
-    if (ed) {
-      const ctx = { ed, cm: ed.codeMirror };
-      removeOverlay(ctx);
+    const { editor } = this.props;
+    if (!editor) {
+      return;
     }
+    if (features.codemirrorNext) {
+      editor.clearSearchMatches();
+      editor.removePositionContentMarker("active-selection-marker");
+      return;
+    }
+    const ctx = { editor, cm: editor.codeMirror };
+    removeOverlay(ctx);
   };
 
   closeSearch = e => {
@@ -139,7 +146,8 @@ class SearchInFileBar extends Component {
     }
 
     if (searchInFileEnabled && editor) {
-      const query = editor.codeMirror.getSelection() || this.state.query;
+      const selectedText = editor.getSelectedText();
+      const query = selectedText || this.state.query;
 
       if (query !== "") {
         this.setState({ query, inputFocused: true });
@@ -162,10 +170,10 @@ class SearchInFileBar extends Component {
     }
     const selectedContent = selectedSourceTextContent.value;
 
-    const ctx = { ed: editor, cm: editor.codeMirror };
+    const ctx = { editor, cm: editor.codeMirror };
 
     if (!query) {
-      clearSearch(ctx.cm);
+      clearSearch(ctx);
       return;
     }
 
@@ -209,7 +217,7 @@ class SearchInFileBar extends Component {
       return;
     }
 
-    const ctx = { ed: editor, cm: editor.codeMirror };
+    const ctx = { editor, cm: editor.codeMirror };
 
     const { modifiers } = this.props;
     const { query } = this.state;
@@ -262,9 +270,8 @@ class SearchInFileBar extends Component {
       return;
     }
 
-    this.traverseResults(e, e.shiftKey);
     e.preventDefault();
-    this.doSearch(e.target.value);
+    this.traverseResults(e, e.shiftKey);
   };
 
   onHistoryScroll = query => {
