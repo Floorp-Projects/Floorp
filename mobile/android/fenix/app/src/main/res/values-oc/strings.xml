@@ -48,12 +48,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Salvats recentament</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Salvats recentament</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Afichar totes los marcapaginas enregistrats</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Afichar totes los marcapaginas enregistrats</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Levar</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Levar</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Marcapaginas</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Afichar totes los marcapaginas</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Suprimir</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es produch per Mozilla.</string>
@@ -191,6 +199,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Moduls</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Extensions</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Gerir las extensions</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Descobrir mai d’extensions</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informacion compte</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -209,18 +221,26 @@
     <string name="browser_menu_open_in_regular_tab">Dobrir dins un onglet classic</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Apondre a l’ecran d’acuèlh</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Apondre a l’ecran d’acuèlh…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installar</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Tornar sincronizar</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Recercar dins la pagina</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Recercar dins la pagina…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Traduire la pagina</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Salvar a la colleccion…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Salvar a la colleccion</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Partejar</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Partejar…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Dobrir amb %1$s</string>
@@ -261,6 +281,34 @@
     <string name="browser_menu_new_private_tab">Novèl onglet de nav. privada</string>
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Senhals</string>
+
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Novetats dins %1$s</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Passar en version ordenador</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Aisinas</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Enregistrar</string>
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Marcar aquesta pagina</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Modificar lo marcapagina</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Enregistrar en PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Passar a la vista lectura</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Quitar lo mòde lectura</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Traduire la pagina…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Traduch en %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Imprimir…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -358,8 +406,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Politica de confidencialitat de Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Ne saber mai tocant nòstra politica de confidencialitat</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Nos impòrta vòstra vida privada</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -570,6 +616,10 @@
     <!-- Preference for language -->
     <string name="preferences_language">Lenga</string>
 
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Traduccion</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Traduccions</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Donadas collectadas</string>
     <!-- Preference for data collection -->
@@ -641,10 +691,6 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Requesida</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Facultativa</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Consultar e modificar las donadas de sites web</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Suprimir lo site web</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Autorizar per totes los sites</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -675,7 +721,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Tornar a aqueste onglet</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Marcats recentament</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Marcats recentament</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Marcapaginas</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visitats fa res</string>
@@ -772,8 +820,6 @@
     <string name="preferences_sync_history">Istoric</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Marcapaginas</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificants</string>
 
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Senhals</string>
@@ -802,8 +848,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s sus %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Cartas de crèdit</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Metòdes de pagament</string>
     <!-- Preference for syncing addresses -->
@@ -818,6 +862,14 @@
     <string name="fxa_tab_received_notification_name">Onglet recebut</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Onglet de %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">%2$d onglets tampats de %1$s</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Veire los onglets tampats recentament</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -1767,11 +1819,7 @@
     <string name="add_to_homescreen_description_2">Podètz facilament apondre aqueste site a l’ecran d’acuèlh de vòstre periferic per i accedir dirèctament e i navegar coma se foguèsse una aplicacion.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificants e senhals</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Senhals</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Salvar los identificants e senhals</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Salvar senhals</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1789,47 +1837,28 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Emplena los noms d’utilizaires e los senhals d’autres aplicacions sus vòstre periferic.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Apondre un identificant</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Apondre un senhal</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincronizar los identificants</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Sincronizar los senhals</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincronizar los identificants entre totes los periferics</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">Sincronizar los senhals entre los periferics</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificants salvats</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Senhals salvats</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Aquí se mòstran los identificants que salvatz o sincronizatz amb %s.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">Los senhals que salvatz o sincronizatz amb %s seràn listats aquí. Totes los senhals qu’enregistratz son chifrats.
 </string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Per ne saber mai sus Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Per ne saber mai sus sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepcions</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Los identificants e senhals pas salvats seràn mostrats aquí.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s enregistrarà pas los senhals pels sites listats aicí.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Los identificants e senhals seràn pas salvats per aquestes sites.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s enregistrarà pas los senhals per aquestes sites.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Suprimir totas las excepcions</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Recercar d’identificants</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Recercar de senhals</string>
     <!-- The header for the site that a login is for -->
@@ -1859,16 +1888,10 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Amagar lo senhal</string>
 
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Desblocatz per veire los identificants enregistrats</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">Desblocatz per veire los senhals salvats</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Protegissètz vòstres identificants e senhals</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Securizatz los senhals salvats</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Configuratz un esquèma de verrolhatge, un còdi PIN o un senhal per protegir vòstres identificants de connexion e senhals enregistrats se per cas qualqu’un accedisca a vòstre periferic.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">Configuratz un esquèma de desverrolhatge, un còdi PIN o un senhal per protegir vòstres senhals salvats se per cas qualqu’un accedisca a vòstre aparelh.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1886,9 +1909,6 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Darrièra utilizacion</string>
 
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Menú per triar los identificants</string>
-
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Menú de tria dels senhals</string>
 
@@ -1897,42 +1917,28 @@
     <string name="preferences_autofill">Emplenament automatic</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adreças</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Cartas de crèdit</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Metòdes de pagament</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Salvar e completar automaticament las cartas</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Enregistrar e entresenhar los metòdes de pagament</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Donadas chifradas</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s chifra totes los metòdes de pagament qu’enregistratz</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar las cartas entre los periferics</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sincronizar las cartas</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Apondre una cartas de crèdit</string>
 
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Apondre una carta</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Gerir las cartas enregistradas</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Gerir las cartas</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Apondre una adreça</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Gerir las adreças</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Salvar e completar automaticament las adreças</string>
 
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Salvar e emplenar automaticament las adreças</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Inclutz las informacions coma los numèros, las adreças electronicas e las adreças de liurason</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Incluses los numèros de telefòn e las adreças electronicas</string>
@@ -1956,8 +1962,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Suprimir la carta</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Volètz vertadièrament suprimir aquesta carta bancària ?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Suprimir la carta ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Suprimir</string>
@@ -1971,24 +1975,15 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Cartas enregistradas</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Picatz un numèro de carta de crèdit valid</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Picatz un numèro de carta valid</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Completatz aqueste camp</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Apondre un nom</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Desblocatz per veire las cartas enregistradas</string>
 
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Securizatz vòstras cartas de crèdit</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">Securizatz los metòdes de pagament enregistrats</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Configuratz un esquèma de verrolhatge, un còdi PIN o un senhal per protegir vòstres identificants de cartas de crèdit enregistrats se per cas qualqu’un accedisca a vòstre periferic.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">Configuratz un esquèma de desverrolhatge, un còdi PIN o un senhal per protegir vòstres mejans de pagament se per cas qualqu’un accedisca a vòstre aparelh.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1998,9 +1993,6 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Desverrolhatz lo periferic</string>
 
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Desverrolhatz per utilizar las informacions de cartas de crèdit enregistradas</string>
-
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">Desblocatz per utilizar de metòdes de pagament enregistrats</string>
     <!-- Title of the "Add address" screen -->
@@ -2009,12 +2001,6 @@
     <string name="addresses_edit_address">Modificar l’adreça</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Gestion de las adreças</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Pichon nom</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Segond pichon nom</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Nom d’ostal</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Nom</string>
     <!-- The header for the street address of an address -->
@@ -2040,8 +2026,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Suprimir l’adreça</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Volètz vertadièrament suprimir aquesta adreça ?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Suprimir aquesta adreça ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2142,8 +2126,6 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="login_menu_delete_button">Suprimir</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Modificar</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Volètz vertadièrament suprimir aqueste identificant ?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">Volètz vertadièrament suprimir aqueste senhal ?</string>
     <!-- Positive action of a dialog asking to delete  -->
@@ -2151,40 +2133,22 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
 
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Anullar</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Opcions de l’identificant</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Opcions de senhal</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Lo camp de tèxt modificable per l’adreça web de l’identificant.</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">Lo camp de tèxt modificable per l’adreça del site web.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Lo camp de tèxt modificable pel nom d’utilizaire de l’identificant.</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">Lo camp de tèxt modificable pel nom d’utilizaire.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Lo camp de tèxt modificable pel senhal de l’identificant.</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">Lo camp de tèxt modificable pel senhal.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Enregistratz las modificacions de l’identificant.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Enregistrar las modificacions.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Modificar</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Modificar lo senhal</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Apondre un identificant novèl</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Apondre un senhal</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Senhal requesit</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Picar lo senhal</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Lo nom d’utilizaire es obligatòri</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Picar un nom d’utilizaire</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2535,6 +2499,8 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="translations_bottom_sheet_negative_button">Pas ara</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">Veire la pagina originala</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">Pagina originala non traducha cargada</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Acabat</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2718,13 +2684,18 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Tornar</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Dobrir lo panèl de desvolopament</string>
+
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Aisinas d’onglet</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Nombre d’onglets</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Actius</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Actius</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Actiu</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inactius</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2741,6 +2712,31 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Apondre als onglets inactius</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Apondre als onglets privats</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Contunhar</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">Participar al sondatge</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">Politica de confidencialitat</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label">Mandar</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Tampar</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Mercés per vòstre retorn !</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Plan satisfach</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Satisfach</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Indiferent</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Insatisfach</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Plan insatisfach</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
