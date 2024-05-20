@@ -790,20 +790,6 @@ class BackgroundBuilder {
       });
     };
 
-    let idleWaitUntil = (_, { promise, reason }) => {
-      this.idleManager.waitUntil(promise, reason);
-      let start = Cu.now();
-      promise.finally(() => {
-        if (Cu.now() - start > backgroundIdleTimeout) {
-          ExtensionTelemetry.eventPageIdleResult.histogramAdd({
-            extension: this.extension,
-            category: reason,
-            value: Math.round((Cu.now() - start) / backgroundIdleTimeout),
-          });
-        }
-      });
-    };
-
     if (!extension.persistentBackground) {
       // Listen for events from the EventManager
       extension.on("background-script-reset-idle", resetBackgroundIdle);
@@ -812,8 +798,6 @@ class BackgroundBuilder {
       extension.once("background-script-started", () => {
         this.idleManager.resetTimer();
       });
-
-      extension.on("background-script-idle-waituntil", idleWaitUntil);
     }
 
     // TODO bug 1844488: terminateBackground should account for externally
@@ -926,7 +910,6 @@ class BackgroundBuilder {
         return;
       }
       extension.off("background-script-reset-idle", resetBackgroundIdle);
-      extension.off("background-script-idle-waituntil", idleWaitUntil);
 
       // TODO(Bug 1790087): record similar telemetry for background service worker.
       if (!this.isWorker) {
@@ -993,7 +976,7 @@ class BackgroundBuilder {
  * Times the suspension of the background page, acts like a 3-state machine:
  *  - suspended (or uninitialized)
  *  - waiting for a timeout (now() < sleepTime)
- *  - waiting on a promise (keepAlive.size > 0)
+ *  - TODO: waiting on a promise (keepAwake.size > 0)
  */
 var IdleManager = class IdleManager {
   sleepTime = 0;
@@ -1004,19 +987,6 @@ var IdleManager = class IdleManager {
 
   constructor(extension) {
     this.extension = extension;
-  }
-
-  waitUntil(promise, reason) {
-    this.keepAlive.set(promise, reason);
-    promise.finally(() => {
-      this.keepAlive.delete(promise);
-      if (
-        !this.keepAlive.size &&
-        this.extension.backgroundState === BACKGROUND_STATE.RUNNING
-      ) {
-        this.resetTimer();
-      }
-    });
   }
 
   clearTimer() {
