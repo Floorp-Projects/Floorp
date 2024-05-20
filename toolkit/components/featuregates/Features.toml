@@ -1,13 +1,3 @@
-# is-public-jexl and default-value-jexl are both JEXL expressions.
-# They are evaluated using the Experimenter environment, plus some
-# additional variables defined by ASRouter and FeatureGate.
-# The result of evaluating is-public-jexl is exposed as `isPublic`
-# and controls whether the feature is shown to the user in e.g.
-# the relevant pane in Firefox's settings.
-# The result of evaluating default-value-jexl is exposed as
-# `defaultValue` and should match the default value of the pref
-# as set in the relevant .js prefs file or StaticPrefList.yaml.
-
 [css-masonry]
 title = "experimental-features-css-masonry2"
 description = "experimental-features-css-masonry-description"
@@ -16,8 +6,8 @@ restart-required = false
 preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"
 bug-numbers = [1607954]
-is-public-jexl = "nightly_build"
-default-value-jexl = "nightly_build || thunderbird"
+is-public = {default = false, nightly = true}
+default-value = {default = false, nightly = true, thunderbird = true}
 
 [web-api-webgpu]
 title = "experimental-features-web-gpu2"
@@ -27,8 +17,8 @@ restart-required = false
 preference = "dom.webgpu.enabled"
 type = "boolean"
 bug-numbers = [1616739]
-is-public-jexl = "nightly_build"
-default-value-jexl = "nightly_build"
+is-public = {default = false, nightly = true}
+default-value = {default = false, nightly = true}
 
 [media-jxl]
 title = "experimental-features-media-jxl"
@@ -38,8 +28,8 @@ restart-required = false
 preference = "image.jxl.enabled"
 type = "boolean"
 bug-numbers = [1539075]
-is-public-jexl = "nightly_build"
-default-value-jexl = "false"
+is-public = {default = false, nightly = true}
+default-value = false
 
 [cookie-samesite-none-requires-secure]
 title = "experimental-features-cookie-samesite-none-requires-secure2"
@@ -48,8 +38,8 @@ restart-required = false
 preference = "network.cookie.sameSite.noneRequiresSecure"
 type = "boolean"
 bug-numbers = [1618610, 1617609]
-is-public-jexl = "false"
-default-value-jexl = "nightly_build"
+is-public = false
+default-value = {default = false, nightly = true}
 
 [devtools-serviceworker-debugger-support]
 title = "experimental-features-devtools-serviceworker-debugger-support"
@@ -58,8 +48,8 @@ restart-required = true
 preference = "devtools.debugger.features.windowless-service-workers"
 type = "boolean"
 bug-numbers = [1651607]
-is-public-jexl = "true"
-default-value-jexl = "false"
+is-public = true
+default-value = false
 
 [webrtc-global-mute-toggles]
 title = "experimental-features-webrtc-global-mute-toggles"
@@ -68,8 +58,8 @@ restart-required = false
 preference = "privacy.webrtc.globalMuteToggles"
 type = "boolean"
 bug-numbers = [1643027]
-is-public-jexl = "nightly_build"
-default-value-jexl = "false"
+is-public = {default = false, nightly = true}
+default-value = false
 
 [url-bar-ime-search]
 title = "experimental-features-ime-search"
@@ -78,5 +68,5 @@ restart-required = false
 preference = "browser.urlbar.keepPanelOpenDuringImeComposition"
 type = "boolean"
 bug-numbers = [1673971]
-is-public-jexl = "true"
-default-value-jexl = "false"
+is-public = true
+default-value = false
