@@ -5,8 +5,8 @@ restart-required = false
 preference = "foo.bar.baz"
 type = "boolean"
 bug-numbers = [1479127]
-is-public = true
-default-value = false
+is-public-jexl = "true"
+default-value-jexl = "false"
 
 [minimal-feature]
 title = "Minimal Feature"
