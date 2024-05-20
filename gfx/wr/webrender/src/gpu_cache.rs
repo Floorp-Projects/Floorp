@@ -28,6 +28,7 @@ use api::{DebugFlags, DocumentId, PremultipliedColorF};
 #[cfg(test)]
 use api::IdNamespace;
 use api::units::*;
+use bytemuck::{Pod, Zeroable};
 use euclid::{HomogeneousVector, Box2D};
 use crate::internal_types::{FastHashMap, FastHashSet, FrameStamp, FrameId};
 use crate::profiler::{self, TransactionProfile};
@@ -159,7 +160,8 @@ impl GpuCacheHandle {
 // A unique address in the GPU cache. These are uploaded
 // as part of the primitive instances, to allow the vertex
 // shader to fetch the specific data.
-#[derive(Copy, Debug, Clone, MallocSizeOf, Eq, PartialEq)]
+#[repr(C)]
+#[derive(Copy, Debug, Clone, MallocSizeOf, Eq, PartialEq, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuCacheAddress {
