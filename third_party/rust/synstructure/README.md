@@ -59,8 +59,7 @@ fn main() {
             }
         }
         expands to {
-            #[allow(non_upper_case_globals)]
-            const _DERIVE_example_traits_WalkFields_FOR_A: () = {
+            const _: () = {
                 extern crate example_traits;
                 impl<T> example_traits::WalkFields for A<T>
                     where T: example_traits::WalkFields
@@ -129,8 +128,7 @@ fn main() {
             }
         }
         expands to {
-            #[allow(non_upper_case_globals)]
-            const _DERIVE_example_traits_Interest_FOR_A: () = {
+            const _: () = {
                 extern crate example_traits;
                 impl<T> example_traits::Interest for A<T>
                     where T: example_traits::Interest
