@@ -1126,7 +1126,7 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
 
 // Initialize a swap chain's surface factory given the desired surface type.
 void InitSwapChain(gl::GLContext& gl, gl::SwapChain& swapChain,
-                   const layers::TextureType consumerType) {
+                   const layers::TextureType consumerType, bool useAsync) {
   if (!swapChain.mFactory) {
     auto typedFactory = gl::SurfaceFactory::Create(&gl, consumerType);
     if (typedFactory) {
@@ -1138,6 +1138,11 @@ void InitSwapChain(gl::GLContext& gl, gl::SwapChain& swapChain,
     swapChain.mFactory = MakeUnique<gl::SurfaceFactory_Basic>(gl);
   }
   MOZ_ASSERT(swapChain.mFactory);
+  if (useAsync) {
+    // RemoteTextureMap will handle recycling any surfaces, so don't rely on the
+    // SwapChain's internal pooling.
+    swapChain.DisablePool();
+  }
 }
 
 void WebGLContext::Present(WebGLFramebuffer* const xrFb,
@@ -1158,7 +1163,10 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
     mResolvedDefaultFB = nullptr;
   }
 
-  InitSwapChain(*gl, *swapChain, consumerType);
+  bool useAsync = options.remoteTextureOwnerId.IsValid() &&
+                  options.remoteTextureId.IsValid();
+
+  InitSwapChain(*gl, *swapChain, consumerType, useAsync);
 
   bool valid =
       maybeFB ? PresentIntoXR(*swapChain, *maybeFB) : PresentInto(*swapChain);
@@ -1167,8 +1175,6 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
     return;
   }
 
-  bool useAsync = options.remoteTextureOwnerId.IsValid() &&
-                  options.remoteTextureId.IsValid();
   if (useAsync) {
     PushRemoteTexture(nullptr, *swapChain, swapChain->FrontBuffer(), options);
   }
@@ -1205,10 +1211,11 @@ bool WebGLContext::CopyToSwapChain(
   }
   gfx::IntSize size(info->width, info->height);
 
-  InitSwapChain(*gl, srcFb->mSwapChain, consumerType);
-
   bool useAsync = options.remoteTextureOwnerId.IsValid() &&
                   options.remoteTextureId.IsValid();
+
+  InitSwapChain(*gl, srcFb->mSwapChain, consumerType, useAsync);
+
   // If we're using async present and if there is no way to serialize surfaces,
   // then a readback is required to do the copy. In this case, there's no reason
   // to copy into a separate shared surface for the front buffer. Just directly
@@ -2429,7 +2436,7 @@ webgl::LinkActiveInfo GetLinkActiveInfo(
 
         ret.activeUniforms.push_back(std::move(info));
       }  // for i
-    }    // anon
+    }  // anon
 
     if (webgl2) {
       // -------------------------------------
@@ -2475,7 +2482,7 @@ webgl::LinkActiveInfo GetLinkActiveInfo(
 
           ret.activeUniformBlocks.push_back(std::move(info));
         }  // for i
-      }    // anon
+      }  // anon
 
       // -------------------------------------
       // active tf varyings
