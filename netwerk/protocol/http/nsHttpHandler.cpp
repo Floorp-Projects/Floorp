@@ -216,17 +216,33 @@ static nsCString ImageAcceptHeader() {
     mimeTypes.Append("image/jxl,");
   }
 
-  mimeTypes.Append("image/webp,*/*");
+  mimeTypes.Append("image/webp,");
+
+  // Default value as specified by fetch standard
+  // https://fetch.spec.whatwg.org/commit-snapshots/8dd73dbecfefdbef8f432164fb3a5b9785f7f520/#ref-for-header-list-contains%E2%91%A7
+  mimeTypes.Append("image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5");
 
   return mimeTypes;
 }
 
-static nsCString DocumentAcceptHeader(const nsCString& aImageAcceptHeader) {
-  nsPrintfCString mimeTypes(
-      "text/html,application/xhtml+xml,application/xml;q=0.9,%s;q=0.8",
-      aImageAcceptHeader.get());
+static nsCString DocumentAcceptHeader() {
+  // https://fetch.spec.whatwg.org/#document-accept-header-value
+  // The value specified by the fetch standard is
+  // `text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
+  // but we also insert all of the image formats before */*
+  nsCString mimeTypes("text/html,application/xhtml+xml,application/xml;q=0.9,");
 
-  return std::move(mimeTypes);
+  if (mozilla::StaticPrefs::image_avif_enabled()) {
+    mimeTypes.Append("image/avif,");
+  }
+
+  if (mozilla::StaticPrefs::image_jxl_enabled()) {
+    mimeTypes.Append("image/jxl,");
+  }
+
+  mimeTypes.Append("image/webp,image/png,image/svg+xml,*/*;q=0.8");
+
+  return mimeTypes;
 }
 
 nsHttpHandler::nsHttpHandler()
@@ -235,7 +251,7 @@ nsHttpHandler::nsHttpHandler()
           PR_SecondsToInterval(StaticPrefs::network_http_http2_timeout())),
       mResponseTimeout(PR_SecondsToInterval(300)),
       mImageAcceptHeader(ImageAcceptHeader()),
-      mDocumentAcceptHeader(DocumentAcceptHeader(ImageAcceptHeader())),
+      mDocumentAcceptHeader(DocumentAcceptHeader()),
       mLastUniqueID(NowInSeconds()),
       mDebugObservations(false),
       mEnableAltSvc(false),
@@ -1747,7 +1763,7 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
 
     if (userSetDocumentAcceptHeader.IsEmpty()) {
-      mDocumentAcceptHeader.Assign(DocumentAcceptHeader(mImageAcceptHeader));
+      mDocumentAcceptHeader.Assign(DocumentAcceptHeader());
     } else {
       mDocumentAcceptHeader.Assign(userSetDocumentAcceptHeader);
     }
