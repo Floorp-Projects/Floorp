@@ -51,6 +51,10 @@ module.exports = {
   ],
 
   rules: {
+    // Turn off no-insecure-url as it is not considered necessary for xpcshell
+    // level tests.
+    "@microsoft/sdl/no-insecure-url": "off",
+
     "mozilla/import-headjs-globals": "error",
     "mozilla/mark-test-function-used": "error",
     "mozilla/no-arbitrary-setTimeout": "error",

@@ -167,6 +167,10 @@ module.exports = {
       },
     },
     {
+      files: ["**/test/**", "**/tests/**"],
+      extends: ["plugin:mozilla/general-test"],
+    },
+    {
       ...removeOverrides(xpcshellTestConfig),
       files: testPaths.xpcshell.map(path => `${path}**`),
       excludedFiles: ["**/*.jsm", "**/*.mjs"],
@@ -248,10 +252,6 @@ module.exports = {
         // autofixing `ok()` to Assert.something is bad.
         "mozilla/no-comparison-or-assignment-inside-ok": "off",
       },
-    },
-    {
-      files: ["**/test/**", "**/tests/**"],
-      extends: ["plugin:mozilla/general-test"],
     },
     {
       // Some directories reuse `test_foo.js` files between mochitest-plain and
@@ -973,11 +973,6 @@ module.exports = {
       // Exempt all components and test files that explicitly want to test http urls from 'no-insecure-url' rule.
       // Gradually change test cases such that this list gets smaller and more precisely. Bug 1758951
       files: [
-        // Re-exempt all xpcshell-test files - some configurations cause rules to be re-applied, so we override them again here.
-        "test*/unit*/**",
-        "**/test*/unit/**",
-        "**/test*/xpcshell/**",
-        "test*/*/xpcshell/**",
         "testing/profiles/unittest-required/user.js",
         "testing/profiles/xpcshell/user.js",
         // Xpcshell test that aren't fitting the pattern Bug 1758951
@@ -1463,6 +1458,9 @@ module.exports = {
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest_configuration.js",
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest_indexes.js",
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest_telemetry.js",
+        "browser/components/urlbar/tests/quicksuggest/MerinoTestUtils.sys.mjs",
+        "browser/components/urlbar/tests/quicksuggest/QuickSuggestTestUtils.sys.mjs",
+        "browser/components/urlbar/tests/UrlbarTestUtils.sys.mjs",
         "browser/extensions/formautofill/test/browser/browser_dropdown_layout.js",
         "browser/extensions/formautofill/test/browser/creditCard/browser_anti_clickjacking.js",
         "browser/extensions/report-site-issue/test/browser/browser_button_state.js",
@@ -2018,6 +2016,7 @@ module.exports = {
         "dom/u2f/tests/frame_appid_facet_insecure.html",
         "dom/u2f/tests/frame_appid_facet_subdomain.html",
         "dom/url/tests/browser_download_after_revoke.js",
+        "dom/url/tests/file_url.jsm",
         "dom/url/tests/protocol_worker.js",
         "dom/url/tests/test_unknown_url_origin.html",
         "dom/url/tests/test_url.html",
@@ -2043,6 +2042,7 @@ module.exports = {
         "dom/workers/test/test_multi_sharedWorker_lifetimes_nobfcache.html",
         "dom/workers/test/test_subworkers_suspended.html",
         "dom/workers/test/test_suspend.html",
+        "dom/worklet/tests/specifier_with_user.mjs",
         "dom/xhr/tests/file_XHRResponseURL.js",
         "dom/xhr/tests/file_XHRSendData.sjs",
         "dom/xhr/tests/test_XHRDocURI.html",
@@ -2062,6 +2062,7 @@ module.exports = {
         "image/test/browser/head.js",
         "image/test/mochitest/test_animated_gif.html",
         "image/test/mochitest/test_bug671906.html",
+        "intl/locale/tests/LangPackMatcherTestUtils.sys.mjs",
         "layout/base/tests/browser_disableDialogs_onbeforeunload.js",
         "layout/base/tests/browser_lazyload_page_load_telemetry_iframe.js",
         "layout/base/tests/browser_lazyload_telemetry.js",
@@ -2093,7 +2094,9 @@ module.exports = {
         "netwerk/test/browser/browser_103_preload.js",
         "netwerk/test/browser/browser_cookie_filtering_subdomain.js",
         "netwerk/test/browser/browser_test_favicon.js",
-        "netwerk/test/httpserver/httpd.js",
+        "netwerk/test/browser/cookie_filtering_helper.sys.mjs",
+        "netwerk/test/browser/early_hint_preload_test_helper.sys.mjs",
+        "netwerk/test/httpserver/httpd.sys.mjs",
         "netwerk/test/mochitests/file_loadinfo_redirectchain.sjs",
         "netwerk/test/mochitests/file_testloadflags_chromescript.js",
         "netwerk/test/mochitests/test_1396395.html",
@@ -2128,6 +2131,8 @@ module.exports = {
         "testing/talos/talos/tests/cpstartup/extension/api.js",
         "testing/talos/talos/tests/devtools/addon/content/tests/debugger/custom.js",
         "testing/talos/talos/tests/devtools/addon/content/tests/head.js",
+        "testing/talos/talos/tests/devtools/addon/content/tests/source-map/source-map-loader.js",
+        "testing/talos/talos/tests/tabswitch/actors/TalosTabSwitchParent.sys.mjs",
         "testing/talos/talos/tests/tabswitch/api.js",
         "testing/talos/talos/webextensions/dummy/background.js",
         "testing/xpcshell/moz-http2/moz-http2.js",
@@ -2205,6 +2210,7 @@ module.exports = {
         "toolkit/components/normandy/test/browser/browser_RecipeRunner.js",
         "toolkit/components/normandy/test/browser/browser_actions_ShowHeartbeatAction.js",
         "toolkit/components/normandy/test/browser/head.js",
+        "toolkit/components/normandy/test/NormandyTestUtils.sys.mjs",
         "toolkit/components/passwordmgr/test/browser/browser_autofill_http.js",
         "toolkit/components/passwordmgr/test/browser/browser_context_menu.js",
         "toolkit/components/passwordmgr/test/browser/browser_context_menu_iframe.js",
@@ -2232,6 +2238,7 @@ module.exports = {
         "toolkit/components/passwordmgr/test/mochitest/test_prompt_promptAuth.html",
         "toolkit/components/passwordmgr/test/mochitest/test_prompt_promptAuth_proxy.html",
         "toolkit/components/passwordmgr/test/mochitest/test_username_focus.html",
+        "toolkit/components/passwordmgr/test/LoginTestUtils.sys.mjs",
         "toolkit/components/pdfjs/test/browser_pdfjs_download_button.js",
         "toolkit/components/pdfjs/test/browser_pdfjs_editing_contextmenu.js",
         "toolkit/components/pdfjs/test/browser_pdfjs_editing_telemetry.js",
