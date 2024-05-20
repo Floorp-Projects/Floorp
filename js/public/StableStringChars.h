@@ -53,9 +53,14 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoStableStringChars final {
     const char16_t* twoByteChars_;
     const Latin1Char* latin1Chars_;
   };
+  MOZ_INIT_OUTSIDE_CTOR uint32_t length_;
   mozilla::Maybe<js::Vector<uint8_t, InlineCapacity>> ownChars_;
   enum State { Uninitialized, Latin1, TwoByte };
   State state_;
+
+  // Prevent the string that owns s's chars from being collected (by storing it
+  // in s_) or deduplicated.
+  void holdStableChars(JSLinearString* s);
 
  public:
   explicit AutoStableStringChars(JSContext* cx)
@@ -99,7 +104,10 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoStableStringChars final {
     return true;
   }
 
-  size_t length() const { return GetStringLength(s_); }
+  size_t length() const {
+    MOZ_ASSERT(state_ != Uninitialized);
+    return length_;
+  }
 
  private:
   AutoStableStringChars(const AutoStableStringChars& other) = delete;
