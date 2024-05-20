@@ -2,8 +2,10 @@ const BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstre
 
 function isCatchall(v)
 {
-  // "*/*" exactly
-  return /^\*\/\*$/.test(v);
+  // bug 1249474 made this be */* exactly, but bug 1711622
+  // reverted to previous spec-conforming behaviour.
+  // "image/*" item exactly or with a quality factor
+  return /^image\/\*(?:|;q=(?:1(?:\.0{0,3})?|0(?:\.\d{0,3})?))$/.test(v);
 }
 
 /*
