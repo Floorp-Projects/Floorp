@@ -38,6 +38,12 @@ add_task(async function () {
     "Test the count of shown devtools tab after making all buttons to be visible"
   );
   await resizeWindow(toolbox, 800);
+
+  // Bug 1770282 - On MacOS the tabs aren't available right away and could cause intermittent failure
+  await waitFor(() => {
+    return !!toolbox.doc.querySelector(".devtools-tab");
+  });
+
   // Once, make all toolbox button to be invisible.
   setToolboxButtonsVisibility(checkButtons, false);
   // Get count of shown devtools tab elements.
