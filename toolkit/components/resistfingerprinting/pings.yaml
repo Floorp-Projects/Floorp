@@ -10,6 +10,8 @@ user-characteristics:
     A ping representing user hardware and software settings.  Note that this
     ping does not include client_id.  More details are available in Bug 1879151
   include_client_id: false
+  metadata:
+    include_info_sections: false
   bugs:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154
