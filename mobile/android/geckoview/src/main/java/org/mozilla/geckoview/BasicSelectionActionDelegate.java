@@ -398,17 +398,12 @@ public class BasicSelectionActionDelegate
 
   private boolean addProcessTextMenuItem(
       final Menu menu, final int menuId, final ResolveInfo info) {
+    final PackageManager pm = mActivity.getPackageManager();
     boolean isMenuItemAdded = false;
     try {
-      menu.addIntentOptions(
-          menuId,
-          menuId,
-          menuId,
-          mActivity.getComponentName(),
-          /* specifiec */ null,
-          getProcessTextIntent(info),
-          /* flags */ Menu.FLAG_APPEND_TO_GROUP, /* items */
-          null);
+      menu.add(menuId, menuId, menuId, info.loadLabel(pm))
+          .setIcon(info.loadIcon(pm))
+          .setIntent(getProcessTextIntent(info));
       isMenuItemAdded = true;
     } catch (final RuntimeException e) {
       if (e.getCause() instanceof TransactionTooLargeException) {
