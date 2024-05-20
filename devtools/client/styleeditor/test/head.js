@@ -199,3 +199,19 @@ function getRootElement(panel) {
 function getContextMenuElement(panel) {
   return panel.panelWindow.document.getElementById("sidebar-context");
 }
+
+/**
+ * Assert the number of rules displayed in UI
+ *
+ * @param {StyleSheetEditor} editor
+ * @param {Number} expected
+ */
+async function assertRuleCount(editor, expected) {
+  // The rule count is displayed via l10n.setArgs which only applies the value
+  // asynchronously, so wait for it to be applied.
+  const element = editor.summary.querySelector(".stylesheet-rule-count");
+  await waitFor(() => {
+    return parseInt(element.textContent, 10) === expected;
+  });
+  is(parseInt(element.textContent, 10), expected, "the rule count is correct");
+}
