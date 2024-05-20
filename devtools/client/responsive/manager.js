@@ -134,7 +134,7 @@ class ResponsiveUIManager {
 
       await gDevToolsBrowser.loadBrowserStyleSheet(window);
       await this.setMenuCheckFor(tab, window);
-      await ui.inited;
+      await ui.initialize();
       this.emit("on", { tab });
     }
 

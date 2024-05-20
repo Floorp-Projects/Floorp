@@ -97,8 +97,10 @@ class ResponsiveUI {
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
 
     this.networkFront = null;
-    // Promise resovled when the UI init has completed.
-    this.inited = this.init();
+    // Promise resolved when the UI init has completed.
+    const { promise, resolve } = Promise.withResolvers();
+    this.initialized = promise;
+    this.resolveInited = resolve;
 
     EventEmitter.decorate(this);
   }
@@ -126,7 +128,7 @@ class ResponsiveUI {
   /**
    * Open RDM while preserving the state of the page.
    */
-  async init() {
+  async initialize() {
     debug("Init start");
 
     this.initRDMFrame();
@@ -160,6 +162,7 @@ class ResponsiveUI {
     message.post(this.toolWindow, "post-init");
 
     debug("Init done");
+    this.resolveInited();
   }
 
   /**
@@ -273,7 +276,7 @@ class ResponsiveUI {
 
     // Ensure init has finished before starting destroy
     if (!isTabContentDestroying) {
-      await this.inited;
+      await this.initialized;
 
       // Restore screen orientation of physical device.
       await Promise.all([
@@ -355,7 +358,7 @@ class ResponsiveUI {
     this.browserStackEl = null;
     this.browserWindow = null;
     this.tab = null;
-    this.inited = null;
+    this.initialized = null;
     this.rdmFrame = null;
     this.resizeHandle = null;
     this.resizeHandleX = null;
@@ -1000,7 +1003,7 @@ class ResponsiveUI {
    * Helper for tests, etc. Assumes a single viewport for now.
    */
   async setViewportSize(size) {
-    await this.inited;
+    await this.initialized;
 
     // Ensure that width and height are valid.
     let { width, height } = size;
