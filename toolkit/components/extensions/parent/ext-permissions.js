@@ -112,7 +112,7 @@ this.permissions = class extends ExtensionAPIPersistent {
             }
 
             let browser = context.pendingEventBrowser || context.xulBrowser;
-            let allowPromise = new Promise(resolve => {
+            let allow = await new Promise(resolve => {
               let subject = {
                 wrappedJSObject: {
                   browser,
@@ -128,13 +128,7 @@ this.permissions = class extends ExtensionAPIPersistent {
                 "webextension-optional-permission-prompt"
               );
             });
-            if (context.isBackgroundContext) {
-              extension.emit("background-script-idle-waituntil", {
-                promise: allowPromise,
-                reason: "permissions_request",
-              });
-            }
-            if (!(await allowPromise)) {
+            if (!allow) {
               return false;
             }
           }
