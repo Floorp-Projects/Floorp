@@ -632,6 +632,13 @@ class WorkerPrivate final
     return mParentStatus < Canceling;
   }
 
+  // This method helps know if the Worker is already at Dead status.
+  // Note that it is racy. The status may change after the function returns.
+  bool IsDead() MOZ_EXCLUDES(mMutex) {
+    MutexAutoLock lock(mMutex);
+    return mStatus == Dead;
+  }
+
   WorkerStatus ParentStatusProtected() {
     AssertIsOnParentThread();
     MutexAutoLock lock(mMutex);
