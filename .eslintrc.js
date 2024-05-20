@@ -173,7 +173,7 @@ module.exports = {
     {
       ...removeOverrides(xpcshellTestConfig),
       files: testPaths.xpcshell.map(path => `${path}**`),
-      excludedFiles: ["**/*.jsm", "**/*.mjs"],
+      excludedFiles: ["**/*.jsm", "**/*.mjs", "**/*.sjs"],
     },
     {
       // If it is an xpcshell head file, we turn off global unused variable checks, as it
@@ -212,7 +212,7 @@ module.exports = {
     {
       ...removeOverrides(browserTestConfig),
       files: testPaths.browser.map(path => `${path}**`),
-      excludedFiles: ["**/*.jsm", "**/*.mjs"],
+      excludedFiles: ["**/*.jsm", "**/*.mjs", "**/*.sjs"],
     },
     {
       ...removeOverrides(mochitestTestConfig),
@@ -226,7 +226,7 @@ module.exports = {
     {
       ...removeOverrides(chromeTestConfig),
       files: testPaths.chrome.map(path => `${path}**`),
-      excludedFiles: ["**/*.jsm", "**/*.mjs"],
+      excludedFiles: ["**/*.jsm", "**/*.mjs", "**/*.sjs"],
     },
     {
       env: {
@@ -239,6 +239,7 @@ module.exports = {
         ...testPaths.mochitest.map(path => `${path}/**/*.js`),
         ...testPaths.chrome.map(path => `${path}/**/*.js`),
       ],
+      excludedFiles: ["**/*.jsm", "**/*.mjs", "**/*.sjs"],
     },
     {
       // Some directories have multiple kinds of tests, and some rules

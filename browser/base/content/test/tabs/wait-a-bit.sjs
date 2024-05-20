@@ -3,7 +3,6 @@
 
 "use strict";
 
-// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
