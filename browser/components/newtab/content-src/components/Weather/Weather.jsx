@@ -4,6 +4,7 @@
 
 import { connect } from "react-redux";
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import React from "react";
 
 export class _Weather extends React.PureComponent {
@@ -17,6 +18,7 @@ export class _Weather extends React.PureComponent {
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onUpdate = this.onUpdate.bind(this);
+    this.onProviderClick = this.onProviderClick.bind(this);
   }
 
   openContextMenu(isKeyBoard) {
@@ -46,6 +48,17 @@ export class _Weather extends React.PureComponent {
       this.props.onUpdate(showContextMenu);
     }
     this.setState({ showContextMenu });
+  }
+
+  onProviderClick() {
+    this.props.dispatch(
+      ac.OnlyToMain({
+        type: at.WEATHER_OPEN_PROVIDER_URL,
+        data: {
+          source: "WEATHER",
+        },
+      })
+    );
   }
 
   render() {
@@ -107,6 +120,7 @@ export class _Weather extends React.PureComponent {
               data-l10n-args='{"provider": "AccuWeather"}'
               href={WEATHER_SUGGESTION.forecast.url}
               className="weatherInfoLink"
+              onClick={this.onProviderClick}
             >
               <div className="weatherIconCol">
                 <span

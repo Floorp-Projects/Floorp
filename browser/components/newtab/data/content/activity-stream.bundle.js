@@ -235,6 +235,7 @@ for (const type of [
   "UPDATE_SECTION_PREFS",
   "WALLPAPERS_SET",
   "WALLPAPER_CLICK",
+  "WEATHER_OPEN_PROVIDER_URL",
   "WEATHER_UPDATE",
   "WEBEXT_CLICK",
   "WEBEXT_DISMISS",
@@ -1756,27 +1757,14 @@ const LinkMenuOptions = {
   OpenInPrivateWindow: (site, index, eventSource, isEnabled) =>
     isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem(),
   ChangeWeatherLocation: () => ({
-    // type: "empty",
     id: "newtab-weather-menu-change-location",
-    // icon: "search",
     action: actionCreators.OnlyToMain({
       type: actionTypes.CHANGE_WEATHER_LOCATION,
       data: { url: "https://mozilla.org" },
     }),
   }),
-  OpenWeatherDisplayMenu: () => ({
-    id: "newtab-weather-menu-weather-display",
-    // type: "empty",
-    // icon: "search",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.OPEN_WEATHER_DISPLAY_MENU,
-      data: { url: "https://mozilla.org" },
-    }),
-  }),
   ChangeWeatherDisplaySimple: () => ({
     id: "newtab-weather-menu-change-weather-display-simple",
-    // type: "empty",
-    // icon: "search",
     action: actionCreators.OnlyToMain({
       type: actionTypes.SET_PREF,
       data: {
@@ -1787,8 +1775,6 @@ const LinkMenuOptions = {
   }),
   ChangeWeatherDisplayDetailed: () => ({
     id: "newtab-weather-menu-change-weather-display-detailed",
-    // type: "empty",
-    // icon: "search",
     action: actionCreators.OnlyToMain({
       type: actionTypes.SET_PREF,
       data: {
@@ -1797,19 +1783,8 @@ const LinkMenuOptions = {
       },
     }),
   }),
-  OpenChangeTemperatureUnits: () => ({
-    id: "newtab-weather-menu-temperature-units",
-    // type: "empty",
-    // icon: "search",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.OPEN_CHANGE_TEMPERATURE_UNITS,
-      data: { url: "https://mozilla.org" },
-    }),
-  }),
   ChangeTempUnitFahrenheit: () => ({
     id: "newtab-weather-menu-change-temperature-units-fahrenheit",
-    // type: "empty",
-    // icon: "search",
     action: actionCreators.OnlyToMain({
       type: actionTypes.SET_PREF,
       data: {
@@ -1820,8 +1795,6 @@ const LinkMenuOptions = {
   }),
   ChangeTempUnitCelsius: () => ({
     id: "newtab-weather-menu-change-temperature-units-celsius",
-    // type: "empty",
-    // icon: "search",
     action: actionCreators.OnlyToMain({
       type: actionTypes.SET_PREF,
       data: {
@@ -1832,8 +1805,6 @@ const LinkMenuOptions = {
   }),
   HideWeather: () => ({
     id: "newtab-weather-menu-hide-weather",
-    // type: "empty",
-    // icon: "search",
     action: actionCreators.OnlyToMain({
       type: actionTypes.SET_PREF,
       data: {
@@ -1844,8 +1815,6 @@ const LinkMenuOptions = {
   }),
   OpenLearnMoreURL: site => ({
     id: "newtab-weather-menu-learn-more",
-    // type: "empty",
-    // icon: "search",
     action: actionCreators.OnlyToMain({
       type: actionTypes.OPEN_LINK,
       data: { url: site.url },
@@ -9642,6 +9611,7 @@ const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => (
 
 
 
+
 class _Weather extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
@@ -9653,6 +9623,7 @@ class _Weather extends (external_React_default()).PureComponent {
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onUpdate = this.onUpdate.bind(this);
+    this.onProviderClick = this.onProviderClick.bind(this);
   }
   openContextMenu(isKeyBoard) {
     if (this.props.onUpdate) {
@@ -9680,6 +9651,14 @@ class _Weather extends (external_React_default()).PureComponent {
     this.setState({
       showContextMenu
     });
+  }
+  onProviderClick() {
+    this.props.dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WEATHER_OPEN_PROVIDER_URL,
+      data: {
+        source: "WEATHER"
+      }
+    }));
   }
   render() {
     // Check if weather should be rendered
@@ -9718,7 +9697,8 @@ class _Weather extends (external_React_default()).PureComponent {
         "data-l10n-id": "newtab-weather-see-forecast",
         "data-l10n-args": "{\"provider\": \"AccuWeather\"}",
         href: WEATHER_SUGGESTION.forecast.url,
-        className: "weatherInfoLink"
+        className: "weatherInfoLink",
+        onClick: this.onProviderClick
       }, /*#__PURE__*/external_React_default().createElement("div", {
         className: "weatherIconCol"
       }, /*#__PURE__*/external_React_default().createElement("span", {

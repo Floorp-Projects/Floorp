@@ -307,27 +307,14 @@ export const LinkMenuOptions = {
   OpenInPrivateWindow: (site, index, eventSource, isEnabled) =>
     isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem(),
   ChangeWeatherLocation: () => ({
-    // type: "empty",
     id: "newtab-weather-menu-change-location",
-    // icon: "search",
     action: ac.OnlyToMain({
       type: at.CHANGE_WEATHER_LOCATION,
       data: { url: "https://mozilla.org" },
     }),
   }),
-  OpenWeatherDisplayMenu: () => ({
-    id: "newtab-weather-menu-weather-display",
-    // type: "empty",
-    // icon: "search",
-    action: ac.OnlyToMain({
-      type: at.OPEN_WEATHER_DISPLAY_MENU,
-      data: { url: "https://mozilla.org" },
-    }),
-  }),
   ChangeWeatherDisplaySimple: () => ({
     id: "newtab-weather-menu-change-weather-display-simple",
-    // type: "empty",
-    // icon: "search",
     action: ac.OnlyToMain({
       type: at.SET_PREF,
       data: {
@@ -338,8 +325,6 @@ export const LinkMenuOptions = {
   }),
   ChangeWeatherDisplayDetailed: () => ({
     id: "newtab-weather-menu-change-weather-display-detailed",
-    // type: "empty",
-    // icon: "search",
     action: ac.OnlyToMain({
       type: at.SET_PREF,
       data: {
@@ -348,19 +333,8 @@ export const LinkMenuOptions = {
       },
     }),
   }),
-  OpenChangeTemperatureUnits: () => ({
-    id: "newtab-weather-menu-temperature-units",
-    // type: "empty",
-    // icon: "search",
-    action: ac.OnlyToMain({
-      type: at.OPEN_CHANGE_TEMPERATURE_UNITS,
-      data: { url: "https://mozilla.org" },
-    }),
-  }),
   ChangeTempUnitFahrenheit: () => ({
     id: "newtab-weather-menu-change-temperature-units-fahrenheit",
-    // type: "empty",
-    // icon: "search",
     action: ac.OnlyToMain({
       type: at.SET_PREF,
       data: {
@@ -371,8 +345,6 @@ export const LinkMenuOptions = {
   }),
   ChangeTempUnitCelsius: () => ({
     id: "newtab-weather-menu-change-temperature-units-celsius",
-    // type: "empty",
-    // icon: "search",
     action: ac.OnlyToMain({
       type: at.SET_PREF,
       data: {
@@ -383,8 +355,6 @@ export const LinkMenuOptions = {
   }),
   HideWeather: () => ({
     id: "newtab-weather-menu-hide-weather",
-    // type: "empty",
-    // icon: "search",
     action: ac.OnlyToMain({
       type: at.SET_PREF,
       data: {
@@ -395,8 +365,6 @@ export const LinkMenuOptions = {
   }),
   OpenLearnMoreURL: site => ({
     id: "newtab-weather-menu-learn-more",
-    // type: "empty",
-    // icon: "search",
     action: ac.OnlyToMain({
       type: at.OPEN_LINK,
       data: { url: site.url },
