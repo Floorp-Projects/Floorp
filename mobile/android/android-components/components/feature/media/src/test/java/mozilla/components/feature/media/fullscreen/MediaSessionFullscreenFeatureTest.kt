@@ -110,6 +110,40 @@ class MediaSessionFullscreenFeatureTest {
     }
 
     @Test
+    fun `GIVEN the currently selected tab plays media with no size WHEN the feature is running THEN orientation is unchanged`() {
+        val activity: Activity = mock()
+        val window: Window = mock()
+        whenever(activity.window).thenReturn(window)
+
+        val elementMetadata = MediaSession.ElementMetadata(width = 0, height = 0)
+        val initialState = BrowserState(
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org",
+                    id = "tab1",
+                    mediaSessionState = MediaSessionState(
+                        mock(),
+                        elementMetadata = elementMetadata,
+                        playbackState = MediaSession.PlaybackState.PLAYING,
+                        fullscreen = true,
+                    ),
+                ),
+            ),
+            selectedTabId = "tab1",
+        )
+        val store = BrowserStore(initialState)
+        val feature = MediaSessionFullscreenFeature(
+            activity,
+            store,
+            null,
+        )
+
+        feature.start()
+
+        verify(activity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER)
+    }
+
+    @Test
     fun `GIVEN the currently selected tab plays landscape media WHEN it enters fullscreen THEN set orientation to landscape`() {
         val activity: Activity = mock()
         val window: Window = mock()
@@ -148,7 +182,7 @@ class MediaSessionFullscreenFeatureTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN the currently selected tab plays landscape media WHEN it enters pip mode THEN set orientation to unspecified`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        val elementMetadata = MediaSession.ElementMetadata()
+        val elementMetadata = MediaSession.ElementMetadata(width = 100, height = 100)
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
@@ -187,7 +221,7 @@ class MediaSessionFullscreenFeatureTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN the currently selected tab is in pip mode WHEN an external intent arrives THEN set orientation to default`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        val elementMetadata = MediaSession.ElementMetadata()
+        val elementMetadata = MediaSession.ElementMetadata(width = 100, height = 100)
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
@@ -239,7 +273,7 @@ class MediaSessionFullscreenFeatureTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN the currently selected tab is in pip mode WHEN it exits pip mode THEN set orientation to default`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        val elementMetadata = MediaSession.ElementMetadata()
+        val elementMetadata = MediaSession.ElementMetadata(width = 100, height = 100)
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
@@ -289,7 +323,7 @@ class MediaSessionFullscreenFeatureTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `GIVEN the currently selected tab is in pip mode WHEN a custom tab loads THEN display custom tab in device's current orientation`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        val elementMetadata = MediaSession.ElementMetadata()
+        val elementMetadata = MediaSession.ElementMetadata(width = 100, height = 100)
         val initialState = BrowserState(
             tabs = listOf(
                 createTab(
