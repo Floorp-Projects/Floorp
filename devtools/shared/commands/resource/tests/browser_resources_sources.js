@@ -153,11 +153,6 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         source: "/* eslint-disable */\nfunction scriptSource() {}\n",
       },
     },
-  ];
-
-  // Now list the sources that could be GC-ed for which the thread actor isn't able to resurrect.
-  // This is the sources that we can't assert when we fetch sources after the page is already loaded.
-  const unresurrectedSources = [
     {
       description: "DOM Timer",
       sourceForm: {
@@ -178,6 +173,11 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         source: new Array(39).join("\n") + `console.log("timeout")`,
       },
     },
+  ];
+
+  // Now list the sources that could be GC-ed for which the thread actor isn't able to resurrect.
+  // This is the sources that we can't assert when we fetch sources after the page is already loaded.
+  const unresurrectedSources = [
     {
       description: "javascript URL",
       sourceForm: {
@@ -289,6 +289,13 @@ add_task(async function testGarbagedCollectedSources() {
   const tab = await addTab(TEST_URL);
 
   info("Force some GC to free some sources");
+  // GC are not always guaranteed to be effective in one call,
+  // so increase our chances of effectively free objects by doing two with a pause between them.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    Cu.forceGC();
+    Cu.forceCC();
+  });
+  await wait(500);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     Cu.forceGC();
     Cu.forceCC();
