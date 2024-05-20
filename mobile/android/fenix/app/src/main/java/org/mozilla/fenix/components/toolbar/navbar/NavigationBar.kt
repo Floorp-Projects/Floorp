@@ -40,6 +40,8 @@ import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.LongPressIconButton
 import org.mozilla.fenix.compose.TabCounter
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.compose.utils.KeyboardState
+import org.mozilla.fenix.compose.utils.keyboardAsState
 import org.mozilla.fenix.search.SearchDialogFragment
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -253,15 +255,18 @@ fun CustomTabNavBar(
 private fun NavBar(
     content: @Composable RowScope.() -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .background(FirefoxTheme.colors.layer1)
-            .height(dimensionResource(id = R.dimen.browser_navbar_height))
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        content = content,
-    )
+    val keyboardState by keyboardAsState()
+    if (keyboardState == KeyboardState.Closed) {
+        Row(
+            modifier = Modifier
+                .background(FirefoxTheme.colors.layer1)
+                .height(dimensionResource(id = R.dimen.browser_navbar_height))
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            content = content,
+        )
+    }
 }
 
 @Composable
