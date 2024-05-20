@@ -28,9 +28,10 @@ and grid containers, and the various types of HTML form controls.
 
 Frames are allocated within an arena owned by the `PresShell`. Each
 frame is owned by its parent, created in `nsCSSFrameConstructor` and
-destroyed via `nsIFrame::Destory()`. Frames are not reference counted,
+destroyed via `nsIFrame::Destroy()`. Frames are not reference counted,
 and code must not hold on to pointers to frames. To mitigate potential
-security bugs when pointers to destroyed frames, we use [frame
+security bugs when pointers to destroyed frames are accessed, we use
+[frame
 poisoning](http://robert.ocallahan.org/2010/10/mitigating-dangling-pointer-bugs-using_15.html),
 which takes two parts. When a frame is destroyed other than at the end
 of life of the presentation, we fill its memory with a pattern
@@ -40,8 +41,14 @@ accesses the memory through a dangling pointer, it will either crash
 quickly by dereferencing the poison pattern or it will find a valid
 frame.
 
-Like the content tree, frames must be accessed only from the main
-thread, in either the content processes or in the parent process.
+Like the content tree, frames must be accessed only from the main thread
+of their processes.
+
+The frame tree should generally not store any data that cannot be
+recomputed on-the-fly. While the frame tree does usually persist while a
+page is being displayed, frames are often destroyed and recreated in
+response to certain style changes such as changing `display:block` to
+`display:flex` on an element.
 
 The rectangle represented by the frame is what CSS calls the element's
 border box. See the illustration in [8.1 Box
@@ -164,14 +171,15 @@ coordinates might make more sense.
 
 ```{seealso}
 - [CSS Writing Modes Level 3](https://drafts.csswg.org/css-writing-modes-3/)
-- [CSS Logical Properties and Values Level 1](https://drafts.csswg.org/css-logical/)
-- <https://bugzil.la/writing-mode>
+- [CSS Logical Properties and Values Level 1](https://drafts.csswg.org/css-logical-1/)
+- <https://bugzilla.mozilla.org/show_bug.cgi?id=writing-mode>
 ```
 
 ### References
 
 Code (note that most files in base and generic have useful one line
-descriptions when browsing a directory in searchfox):
+descriptions at the top that show up when browsing a directory in
+searchfox):
 
 - [layout/base/](http://searchfox.org/mozilla-central/source/layout/base/)
   contains objects that coordinate everything and a bunch of other
@@ -324,7 +332,7 @@ For example, an element with `width:min-content` or `width:max-content`.
 This depends on two **intrinsic inline sizes**: the minimum intrinsic
 inline size (see
 [`nsIFrame::GetMinISize()`](https://searchfox.org/mozilla-central/search?q=nsIFrame%3A%3AGetMinISize&path=))
-and the preferred intrinsic inline sizes (see
+and the preferred intrinsic inline size (see
 [`nsIFrame::GetPrefISize()`](https://searchfox.org/mozilla-central/search?q=nsIFrame%3A%3AGetPrefISize&path=)).
 The concept of what these inline sizes represent is best explained by
 describing what they are on a paragraph containing only text: in such a
