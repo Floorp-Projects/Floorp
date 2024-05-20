@@ -1120,7 +1120,8 @@ bool WebRenderBridgeParent::SetDisplayList(
 bool WebRenderBridgeParent::ProcessDisplayListData(
     DisplayListData& aDisplayList, wr::Epoch aWrEpoch,
     const TimeStamp& aTxnStartTime, bool aValidTransaction) {
-  wr::TransactionBuilder txn(mApi);
+  wr::TransactionBuilder txn(mApi, /* aUseSceneBuilderThread */ true,
+                             mRemoteTextureTxnScheduler, mFwdTransactionId);
   Maybe<wr::AutoTransactionSender> sender;
 
   if (aDisplayList.mScrollData && !aDisplayList.mScrollData->Validate()) {
@@ -1239,10 +1240,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mSmallShmems);
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mLargeShmems);
 
-  if (mRemoteTextureTxnScheduler) {
-    mRemoteTextureTxnScheduler->NotifyTxn(aFwdTransactionId);
-  }
-
   if (!success) {
     return IPC_FAIL(this, "Failed to process DisplayListData.");
   }
@@ -1253,7 +1250,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
     TransactionData& aData, bool* aScheduleComposite) {
   *aScheduleComposite = false;
-  wr::TransactionBuilder txn(mApi);
+  wr::TransactionBuilder txn(mApi, /* aUseSceneBuilderThread */ true,
+                             mRemoteTextureTxnScheduler, mFwdTransactionId);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
   if (!aData.mScrollUpdates.IsEmpty()) {
@@ -1393,10 +1391,6 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
                                               aTransactionData->mSmallShmems);
     wr::IpcResourceUpdateQueue::ReleaseShmems(this,
                                               aTransactionData->mLargeShmems);
-  }
-
-  if (mRemoteTextureTxnScheduler) {
-    mRemoteTextureTxnScheduler->NotifyTxn(aFwdTransactionId);
   }
 
   if (!success) {

@@ -199,15 +199,17 @@ void WebRenderImageHost::UseRemoteTexture() {
     while (!mPendingRemoteTextureWrappers.empty()) {
       auto* wrapper =
           mPendingRemoteTextureWrappers.front()->AsRemoteTextureHostWrapper();
+
       if (mWaitForRemoteTextureOwner) {
+        // XXX remove sync wait
         RemoteTextureMap::Get()->WaitForRemoteTextureOwner(wrapper);
       }
-      mWaitingReadyCallback =
-          RemoteTextureMap::Get()->GetRemoteTexture(wrapper, readyCallback);
-      MOZ_ASSERT_IF(mWaitingReadyCallback, !wrapper->IsReadyForRendering());
-      if (!wrapper->IsReadyForRendering()) {
+      mWaitingReadyCallback = !RemoteTextureMap::Get()->CheckRemoteTextureReady(
+          wrapper->GetRemoteTextureInfo(), readyCallback);
+      if (mWaitingReadyCallback) {
         break;
       }
+      RemoteTextureMap::Get()->GetRemoteTexture(wrapper);
       texture = mPendingRemoteTextureWrappers.front();
       mPendingRemoteTextureWrappers.pop_front();
     }
@@ -218,7 +220,7 @@ void WebRenderImageHost::UseRemoteTexture() {
     MOZ_ASSERT(mPendingRemoteTextureWrappers.empty());
 
     if (mWaitForRemoteTextureOwner) {
-      RemoteTextureMap::Get()->WaitForRemoteTextureOwner(wrapper);
+      wrapper->EnableWaitForRemoteTextureOwner(true);
     }
     mWaitForRemoteTextureOwner = false;
   }

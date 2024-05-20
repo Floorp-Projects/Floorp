@@ -213,18 +213,26 @@ class RemoveRenderer : public RendererEvent {
   layers::SynchronousTask* mTask;
 };
 
-TransactionBuilder::TransactionBuilder(WebRenderAPI* aApi,
-                                       bool aUseSceneBuilderThread)
-    : mUseSceneBuilderThread(aUseSceneBuilderThread),
+TransactionBuilder::TransactionBuilder(
+    WebRenderAPI* aApi, bool aUseSceneBuilderThread,
+    layers::RemoteTextureTxnScheduler* aRemoteTextureTxnScheduler,
+    layers::RemoteTextureTxnId aRemoteTextureTxnId)
+    : mRemoteTextureTxnScheduler(aRemoteTextureTxnScheduler),
+      mRemoteTextureTxnId(aRemoteTextureTxnId),
+      mUseSceneBuilderThread(aUseSceneBuilderThread),
       mApiBackend(aApi->GetBackendType()),
       mOwnsData(true) {
   mTxn = wr_transaction_new(mUseSceneBuilderThread);
 }
 
-TransactionBuilder::TransactionBuilder(WebRenderAPI* aApi, Transaction* aTxn,
-                                       bool aUseSceneBuilderThread,
-                                       bool aOwnsData)
-    : mTxn(aTxn),
+TransactionBuilder::TransactionBuilder(
+    WebRenderAPI* aApi, Transaction* aTxn, bool aUseSceneBuilderThread,
+    bool aOwnsData,
+    layers::RemoteTextureTxnScheduler* aRemoteTextureTxnScheduler,
+    layers::RemoteTextureTxnId aRemoteTextureTxnId)
+    : mRemoteTextureTxnScheduler(aRemoteTextureTxnScheduler),
+      mRemoteTextureTxnId(aRemoteTextureTxnId),
+      mTxn(aTxn),
       mUseSceneBuilderThread(aUseSceneBuilderThread),
       mApiBackend(aApi->GetBackendType()),
       mOwnsData(aOwnsData) {}
@@ -473,17 +481,19 @@ void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
       !mPendingAsyncImagePipelineOps->mList.empty()) {
     mPendingWrTransactionEvents.emplace(
         WrTransactionEvent::PendingAsyncImagePipelineOps(
-            std::move(mPendingAsyncImagePipelineOps), this, aTxn.Raw(),
-            aTxn.UseSceneBuilderThread()));
+            std::move(mPendingAsyncImagePipelineOps), this, aTxn));
   }
 
   if (!mPendingWrTransactionEvents.empty()) {
-    mPendingWrTransactionEvents.emplace(WrTransactionEvent::Transaction(
-        this, aTxn.Take(), aTxn.UseSceneBuilderThread()));
+    mPendingWrTransactionEvents.emplace(
+        WrTransactionEvent::Transaction(this, aTxn));
     HandleWrTransactionEvents(RemoteTextureWaitType::AsyncWait);
   } else {
     wr_api_send_transaction(mDocHandle, aTxn.Raw(),
                             aTxn.UseSceneBuilderThread());
+    if (aTxn.mRemoteTextureTxnScheduler) {
+      aTxn.mRemoteTextureTxnScheduler->NotifyTxn(aTxn.mRemoteTextureTxnId);
+    }
   }
 }
 
@@ -598,6 +608,10 @@ void WebRenderAPI::HandleWrTransactionEvents(RemoteTextureWaitType aType) {
       case WrTransactionEvent::Tag::Transaction:
         wr_api_send_transaction(mDocHandle, front.RawTransaction(),
                                 front.UseSceneBuilderThread());
+        if (front.GetTransactionBuilder()->mRemoteTextureTxnScheduler) {
+          front.GetTransactionBuilder()->mRemoteTextureTxnScheduler->NotifyTxn(
+              front.GetTransactionBuilder()->mRemoteTextureTxnId);
+        }
         break;
       case WrTransactionEvent::Tag::PendingRemoteTextures: {
         bool isReady = true;
@@ -612,7 +626,7 @@ void WebRenderAPI::HandleWrTransactionEvents(RemoteTextureWaitType aType) {
           while (!list->mList.empty()) {
             auto& front = list->mList.front();
             layers::RemoteTextureMap::Get()->SuppressRemoteTextureReadyCheck(
-                front.mTextureId, front.mForPid);
+                front);
             list->mList.pop();
           }
         }
