@@ -1516,7 +1516,8 @@ class ImportSymmetricKeyTask : public ImportKeyTask {
     }
     // Check that we have valid key data.
     if (mKeyData.Length() == 0 &&
-        !mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
+        (!mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2) &&
+         !mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HKDF))) {
       return NS_ERROR_DOM_DATA_ERR;
     }
 
@@ -2413,16 +2414,10 @@ class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask {
       return;
     }
 
-    // Check that we have a key.
-    if (mSymKey.Length() == 0) {
-      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      return;
-    }
-
     RootedDictionary<HkdfParams> params(aCx);
     mEarlyRv = Coerce(aCx, params, aAlgorithm);
     if (NS_FAILED(mEarlyRv)) {
-      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      mEarlyRv = NS_ERROR_DOM_TYPE_MISMATCH_ERR;
       return;
     }
 
