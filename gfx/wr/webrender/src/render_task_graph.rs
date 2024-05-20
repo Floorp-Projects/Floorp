@@ -827,12 +827,8 @@ impl RenderPass {
     /// Creates an intermediate off-screen pass.
     pub fn new(src: &Pass) -> Self {
         RenderPass {
-            color: RenderTargetList::new(
-                ImageFormat::RGBA8,
-            ),
-            alpha: RenderTargetList::new(
-                ImageFormat::R8,
-            ),
+            color: RenderTargetList::new(),
+            alpha: RenderTargetList::new(),
             texture_cache: FastHashMap::default(),
             picture_cache: Vec::new(),
             textures_to_invalidate: src.textures_to_invalidate.clone(),

@@ -4,7 +4,7 @@
 
 
 use api::{units::*, PremultipliedColorF, ClipMode};
-use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
+use api::{ColorF, LineOrientation, BorderStyle};
 use bytemuck::{Pod, Zeroable};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder, INVALID_SEGMENT_INDEX, ClipMaskInstanceList};
@@ -157,16 +157,12 @@ pub trait RenderTarget {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetList<T> {
-    pub format: ImageFormat,
     pub targets: Vec<T>,
 }
 
 impl<T: RenderTarget> RenderTargetList<T> {
-    pub fn new(
-        format: ImageFormat,
-    ) -> Self {
+    pub fn new() -> Self {
         RenderTargetList {
-            format,
             targets: Vec::new(),
         }
     }
