@@ -727,8 +727,6 @@ pub fn add_to_batch<F>(
         dst_task_address,
         prim_address_i,
         prim_address_f,
-        z_id,
-        transform_id,
         edge_flags: edge_flags_bits,
         quad_flags: quad_flags.bits(),
         part_index: PartIndex::All as u8,

@@ -44,8 +44,6 @@ pub struct PictureCacheEntry {
     pub last_access: FrameStamp,
     /// Handle to the resource rect in the GPU cache.
     pub uv_rect_handle: GpuCacheHandle,
-    /// Image format of the data that the entry expects.
-    pub filter: TextureFilter,
     /// The actual device texture ID this is part of.
     pub texture_id: CacheTextureId,
 }
@@ -222,7 +220,6 @@ impl PictureTextures {
             size: tile_size,
             last_access: self.now,
             uv_rect_handle: GpuCacheHandle::new(),
-            filter: self.filter,
             texture_id,
         };
 
