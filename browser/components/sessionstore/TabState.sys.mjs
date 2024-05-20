@@ -119,6 +119,12 @@ var TabStateInternal = {
     // Private Container
     tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
 
+    // Site Specific Browser
+    tabData.floorpSSB = tab.getAttribute("floorpSSB");
+
+    // WebPanel
+    tabData.floorpWebPanel = tab.hasAttribute("BMS-webpanel-tab");
+
     /*****Floorp Injections*****/
 
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
