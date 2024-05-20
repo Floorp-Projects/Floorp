@@ -6,10 +6,7 @@ function handleRequest(request, response) {
   file.append("test");
   file.append("mochitest");
 
-  if (
-    request.getHeader("Accept") ==
-    "image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
-  ) {
+  if (request.getHeader("Accept") == "image/avif,image/webp,*/*") {
     file.append("blue.png");
   } else {
     file.append("red.png");
