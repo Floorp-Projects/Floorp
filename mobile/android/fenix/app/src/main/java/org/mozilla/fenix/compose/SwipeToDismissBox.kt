@@ -124,6 +124,20 @@ class SwipeToDismissState(
      */
     val isSwipingToStart: Boolean
         get() = swipeDestination == SwipeToDismissAnchor.Start
+
+    /**
+     * The current [IntOffset] of the swipe. If the X-offset is currently [Float.NaN], it will return 0.
+     */
+    val safeSwipeOffset: IntOffset
+        get() {
+            val xOffset = if (anchoredDraggableState.offset.isNaN()) {
+                0
+            } else {
+                anchoredDraggableState.offset.roundToInt()
+            }
+
+            return IntOffset(x = xOffset, y = 0)
+        }
 }
 
 /**
@@ -186,7 +200,7 @@ fun SwipeToDismissBox(
         )
 
         Box(
-            modifier = Modifier.offset { IntOffset(state.anchoredDraggableState.offset.roundToInt(), 0) },
+            modifier = Modifier.offset { state.safeSwipeOffset },
             content = dismissContent,
         )
     }
