@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 
-const NORA_COMMENT_START = "//@nora|INJECT|START\n";
-const NORA_COMMENT_END = "//@nora|INJECT|END\n";
+const NORA_COMMENT_START = "/*@nora|INJECT|START*/";
+const NORA_COMMENT_END = "/*@nora|INJECT|END*/";
 
 export async function injectScript(
   scriptPath: string,

@@ -6,10 +6,9 @@ import { z } from "zod";
 const eventListener = z
   .function()
   .args(z.instanceof(Event))
-  .returns(z.void())
   .or(
     z.object({
-      handleEvent: z.function().args(z.instanceof(Event)).returns(z.void()),
+      handleEvent: z.function().args(z.instanceof(Event)),
     }),
   );
 
@@ -70,6 +69,8 @@ export const {
         node.setAttribute(name, value);
       } else if (typeof value === "number" || typeof value === "boolean") {
         node.setAttribute(name, value.toString());
+      } else if (value === undefined) {
+        node.removeAttribute(name);
       } else {
         throw Error(
           `unreachable! @nora:solid-xul:setProperty the value is not EventListener, style object, string, number, nor boolean | is ${value}`,
@@ -82,7 +83,7 @@ export const {
     }
   },
   insertNode: (parent: Node, node: JSX.Element, anchor?: Node): void => {
-    console.log(node);
+    //console.log(node);
     if (node instanceof Node) {
       parent.insertBefore(node, anchor ?? null);
     } else {

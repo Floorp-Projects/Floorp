@@ -4,6 +4,8 @@ declare module "solid-js" {
   namespace JSX {
     type XULElementBase = SolidJSX.HTMLAttributes<HTMLElement> & {
       flex?: `${number}`;
+      "data-l10n-id"?: string;
+      align?: "center";
     };
     interface XULBrowserElement extends XULElementBase {
       contextmenu?: string;
@@ -32,6 +34,11 @@ declare module "solid-js" {
       label?: string;
       accesskey?: string;
       oncommand?: string;
+    }
+
+    interface XULRichListItem extends XULElementBase {
+      value?: string;
+      helpTopic?: string;
     }
 
     interface IntrinsicElements {
@@ -72,6 +79,11 @@ declare module "solid-js" {
         id: string;
         oncommand: string | (() => void);
       };
+      "xul:description": XULElementBase;
+      "xul:checkbox": XULElementBase;
+      "xul:richlistitem": XULRichListItem;
+      "xul:image": XULElementBase;
+      "xul:label": XULElementBase;
     }
 
     interface Directives {

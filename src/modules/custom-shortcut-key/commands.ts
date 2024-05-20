@@ -1,24 +1,29 @@
-type Commands = {
-  [key in `gecko-${string}` | `floorp-${string}`]: {
-    command: (event: Event) => void;
-    type:
-      | "tab-action"
-      | "history-action"
-      | "page-action"
-      | "visible-action"
-      | "search-action"
-      | "tools-action"
-      | "pip-action"
-      | "bookmark-action"
-      | "open-page-action"
-      | "sidebar-action"
-      | "workspaces-action"
-      | "bms-action"
-      | "custom-action"
-      | "downloads-action"
-      | "split-view-action";
-  };
-};
+import { z } from "zod";
+
+export const csk_category = [
+  "tab-action",
+  "history-action",
+  "page-action",
+  "visible-action",
+  "search-action",
+  "tools-action",
+  "pip-action",
+  "bookmark-action",
+  "open-page-action",
+  "sidebar-action",
+  "workspaces-action",
+  "bms-action",
+  "custom-action",
+  "downloads-action",
+  "split-view-action",
+] as const;
+
+const zCommands = z.record(
+  z.union([z.string().startsWith("gecko-"), z.string().startsWith("floorp-")]),
+  z.object({ command: z.function(), type: z.enum(csk_category) }),
+);
+
+type Commands = z.infer<typeof zCommands>;
 
 export const commands: Commands = {
   "gecko-open-new-tab": {

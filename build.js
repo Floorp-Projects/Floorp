@@ -221,6 +221,10 @@ async function run() {
     userDataDir: "./dist/profile/test",
   });
 
+  const page = await browser.newPage();
+  await page.setViewport({ width: 0, height: 0 });
+  await page.goto("about:preferences");
+
   browser.on("disconnected", () => {
     if (!intended_close) exit();
   });

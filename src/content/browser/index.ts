@@ -1,8 +1,8 @@
 import { setBrowserDesign } from "./setBrowserDesign";
 import { initSidebar } from "./browser-sidebar";
-import { CustomShortcutKey } from "./custom-shortcut-key";
+import { CustomShortcutKey } from "@modules/custom-shortcut-key";
 
-export function initContentScripts() {
+export default function initScripts() {
   //@ts-expect-error ii
   SessionStore.promiseInitialized.then(() => {
     setBrowserDesign();

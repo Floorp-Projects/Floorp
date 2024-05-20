@@ -1,3 +1,3 @@
-import { initContentScripts } from "@content/preferences";
+import initScripts from "@content/preferences";
 
-initContentScripts();
+initScripts();

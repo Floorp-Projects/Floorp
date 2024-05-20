@@ -66,7 +66,8 @@ export function floorpCSKToNora(data: FloorpCSKData): CSKData {
   return zCSKData.parse(arr);
 }
 
-export const zCSKData = z.array(
+export const zCSKData = z.record(
+  zodEnumFromObjKeys(commands),
   z.object({
     modifiers: z.object({
       alt: z.boolean(),
@@ -75,8 +76,19 @@ export const zCSKData = z.array(
       shift: z.boolean(),
     }),
     key: z.string(),
-    command: zodEnumFromObjKeys(commands),
   }),
 );
 
 export type CSKData = z.infer<typeof zCSKData>;
+
+export const zCSKCommands = z.union([
+  z.object({
+    type: z.enum(["disable-csk"]),
+    data: z.boolean(),
+  }),
+  z.object({
+    type: z.enum(["update-pref"]),
+  }),
+]);
+
+export type CSKCommands = z.infer<typeof zCSKCommands>;
