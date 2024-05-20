@@ -2037,14 +2037,22 @@ _cairo_pdf_interchange_command_id (cairo_pdf_surface_t  *surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_RENDER && ic->current_render_node) {
 	/* TODO If the group does not have tags we don't need to close the current tag. */
 	if (command_list_is_group (surface, command_id)) {
+	    /* A "Do /xnnn" can not be inside a tag (since the
+	     * XObject may also contain tags). Close the tag.
+	     */
 	    if (ic->marked_content_open) {
 		status = _cairo_pdf_operators_tag_end (&surface->pdf_operators);
 		ic->marked_content_open = FALSE;
 	    }
-	    if (command_list_has_content (surface, command_id, NULL)) {
+	    /* If there is any more content after this and we are
+	     * inside a tag (current node is not the root node),
+	     * ensure that the next command will open the tag.
+	     */
+	    if (command_list_has_content (surface, command_id, NULL) && ic->current_render_node->parent) {
 		ic->render_next_command_has_content = TRUE;
 	    }
-	} else if (ic->render_next_command_has_content && ic->current_render_node->name) {
+	} else if (ic->render_next_command_has_content) {
+	    /* After a "Do /xnnn" operation, if there is more content, open the tag. */
 	    add_mcid_to_node (surface, ic->current_render_node, ic->command_id, &mcid);
 	    status = _cairo_pdf_operators_tag_begin (&surface->pdf_operators,
 						     ic->current_render_node->name, mcid);

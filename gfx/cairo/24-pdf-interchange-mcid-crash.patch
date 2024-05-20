@@ -1,20 +1,28 @@
-# HG changeset patch
-# User Jonathan Kew <jkew@mozilla.com>
-# Date 1715706811 -3600
-#      Tue May 14 18:13:31 2024 +0100
-# Node ID c3ad2cb3ec3c7833187b9cea6002632cb1b692b4
-# Parent  4df4e109202ff67836eaa61c66a7c65a2f712e11
-Bug 1896173 - Check that we have a render_node name before attempting MCID tagging in pdf output. r=#gfx-reviewers
-
 diff --git a/gfx/cairo/cairo/src/cairo-pdf-interchange.c b/gfx/cairo/cairo/src/cairo-pdf-interchange.c
+index 6bda9e8b813ba9f222dc10d83e3e7d0c4293bb79..0e910fd227be2d0904f8bd8c7b19a350afdf7ef3 100644
 --- a/gfx/cairo/cairo/src/cairo-pdf-interchange.c
 +++ b/gfx/cairo/cairo/src/cairo-pdf-interchange.c
-@@ -2043,7 +2043,7 @@ cairo_int_status_t
- 	    if (command_list_has_content (surface, command_id, NULL)) {
+@@ -1991,14 +1991,22 @@ _cairo_pdf_interchange_command_id (cairo_pdf_surface_t  *surface,
+     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_RENDER && ic->current_render_node) {
+ 	/* TODO If the group does not have tags we don't need to close the current tag. */
+ 	if (command_list_is_group (surface, command_id)) {
++	    /* A "Do /xnnn" can not be inside a tag (since the
++	     * XObject may also contain tags). Close the tag.
++	     */
+ 	    if (ic->marked_content_open) {
+ 		status = _cairo_pdf_operators_tag_end (&surface->pdf_operators);
+ 		ic->marked_content_open = FALSE;
+ 	    }
+-	    if (command_list_has_content (surface, command_id, NULL)) {
++	    /* If there is any more content after this and we are
++	     * inside a tag (current node is not the root node),
++	     * ensure that the next command will open the tag.
++	     */
++	    if (command_list_has_content (surface, command_id, NULL) && ic->current_render_node->parent) {
  		ic->render_next_command_has_content = TRUE;
  	    }
--	} else if (ic->render_next_command_has_content) {
-+	} else if (ic->render_next_command_has_content && ic->current_render_node->name) {
+ 	} else if (ic->render_next_command_has_content) {
++	    /* After a "Do /xnnn" operation, if there is more content, open the tag. */
  	    add_mcid_to_node (surface, ic->current_render_node, ic->command_id, &mcid);
  	    status = _cairo_pdf_operators_tag_begin (&surface->pdf_operators,
  						     ic->current_render_node->name, mcid);
