@@ -103,11 +103,16 @@ struct WrHitResult {
 
 class TransactionBuilder final {
  public:
-  explicit TransactionBuilder(WebRenderAPI* aApi,
-                              bool aUseSceneBuilderThread = true);
+  explicit TransactionBuilder(
+      WebRenderAPI* aApi, bool aUseSceneBuilderThread = true,
+      layers::RemoteTextureTxnScheduler* aRemoteTextureTxnScheduler = nullptr,
+      layers::RemoteTextureTxnId aRemoteTextureTxnId = 0);
 
-  TransactionBuilder(WebRenderAPI* aApi, Transaction* aTxn,
-                     bool aUseSceneBuilderThread, bool aOwnsData);
+  TransactionBuilder(
+      WebRenderAPI* aApi, Transaction* aTxn, bool aUseSceneBuilderThread,
+      bool aOwnsData,
+      layers::RemoteTextureTxnScheduler* aRemoteTextureTxnScheduler,
+      layers::RemoteTextureTxnId aRemoteTextureTxnId);
 
   ~TransactionBuilder();
 
@@ -207,7 +212,10 @@ class TransactionBuilder final {
 
   bool UseSceneBuilderThread() const { return mUseSceneBuilderThread; }
   layers::WebRenderBackend GetBackendType() { return mApiBackend; }
-  Transaction* Raw() { return mTxn; }
+  Transaction* Raw() const { return mTxn; }
+
+  const RefPtr<layers::RemoteTextureTxnScheduler> mRemoteTextureTxnScheduler;
+  const layers::RemoteTextureTxnId mRemoteTextureTxnId;
 
  protected:
   Transaction* mTxn;
@@ -391,10 +399,10 @@ class WebRenderAPI final {
 
    public:
     static WrTransactionEvent Transaction(WebRenderAPI* aApi,
-                                          wr::Transaction* aTxn,
-                                          bool aUseSceneBuilderThread) {
+                                          TransactionBuilder& aTxn) {
       auto transaction = MakeUnique<TransactionBuilder>(
-          aApi, aTxn, aUseSceneBuilderThread, /* aOwnsData */ true);
+          aApi, aTxn.Take(), aTxn.UseSceneBuilderThread(), /* aOwnsData */ true,
+          aTxn.mRemoteTextureTxnScheduler, aTxn.mRemoteTextureTxnId);
       return WrTransactionEvent(Tag::Transaction, std::move(transaction));
     }
 
@@ -407,10 +415,10 @@ class WebRenderAPI final {
     static WrTransactionEvent PendingAsyncImagePipelineOps(
         UniquePtr<layers::AsyncImagePipelineOps>&&
             aPendingAsyncImagePipelineOps,
-        WebRenderAPI* aApi, wr::Transaction* aTxn,
-        bool aUseSceneBuilderThread) {
+        WebRenderAPI* aApi, const TransactionBuilder& aTxn) {
       auto transaction = MakeUnique<TransactionBuilder>(
-          aApi, aTxn, aUseSceneBuilderThread, /* aOwnsData */ false);
+          aApi, aTxn.Raw(), aTxn.UseSceneBuilderThread(), /* aOwnsData */ false,
+          aTxn.mRemoteTextureTxnScheduler, aTxn.mRemoteTextureTxnId);
       return WrTransactionEvent(Tag::PendingAsyncImagePipelineOps,
                                 std::move(aPendingAsyncImagePipelineOps),
                                 std::move(transaction));
@@ -425,7 +433,8 @@ class WebRenderAPI final {
     }
 
     TransactionBuilder* GetTransactionBuilder() {
-      if (mTag == Tag::PendingAsyncImagePipelineOps) {
+      if (mTag == Tag::Transaction ||
+          mTag == Tag::PendingAsyncImagePipelineOps) {
         return mTransaction.get();
       }
       MOZ_CRASH("Should not be called");

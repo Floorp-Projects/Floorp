@@ -55,11 +55,24 @@ struct RemoteTextureInfo {
   RemoteTextureInfo(const RemoteTextureId aTextureId,
                     const RemoteTextureOwnerId aOwnerId,
                     const base::ProcessId aForPid)
-      : mTextureId(aTextureId), mOwnerId(aOwnerId), mForPid(aForPid) {}
+      : mTextureId(aTextureId),
+        mOwnerId(aOwnerId),
+        mForPid(aForPid),
+        mWaitForRemoteTextureOwner(false) {}
+
+  RemoteTextureInfo(const RemoteTextureId aTextureId,
+                    const RemoteTextureOwnerId aOwnerId,
+                    const base::ProcessId aForPid,
+                    const bool aWaitForRemoteTextureOwner)
+      : mTextureId(aTextureId),
+        mOwnerId(aOwnerId),
+        mForPid(aForPid),
+        mWaitForRemoteTextureOwner(aWaitForRemoteTextureOwner) {}
 
   const RemoteTextureId mTextureId;
   const RemoteTextureOwnerId mOwnerId;
   const base::ProcessId mForPid;
+  const bool mWaitForRemoteTextureOwner;
 };
 
 struct RemoteTextureInfoList {
@@ -307,11 +320,7 @@ class RemoteTextureMap {
   bool WaitForRemoteTextureOwner(RemoteTextureHostWrapper* aTextureHostWrapper);
 
   // Get remote texture's TextureHost for RemoteTextureHostWrapper.
-  //
-  // return true when aReadyCallback will be called.
-  bool GetRemoteTexture(
-      RemoteTextureHostWrapper* aTextureHostWrapper,
-      std::function<void(const RemoteTextureInfo&)>&& aReadyCallback);
+  void GetRemoteTexture(RemoteTextureHostWrapper* aTextureHostWrapper);
 
   bool WaitForTxn(const RemoteTextureOwnerId aOwnerId,
                   const base::ProcessId aForPid, RemoteTextureTxnType aTxnType,
@@ -334,8 +343,7 @@ class RemoteTextureMap {
 
   bool WaitRemoteTextureReady(const RemoteTextureInfo& aInfo);
 
-  void SuppressRemoteTextureReadyCheck(const RemoteTextureId aTextureId,
-                                       const base::ProcessId aForPid);
+  void SuppressRemoteTextureReadyCheck(const RemoteTextureInfo& aInfo);
 
   UniquePtr<TextureData> GetRecycledTextureData(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
@@ -385,6 +393,11 @@ class RemoteTextureMap {
     const RemoteTextureId mTextureId;
     // callback of RemoteTexture ready
     std::function<void(const RemoteTextureInfo&)> mCallback;
+  };
+
+  struct WaitingTextureOwner {
+    std::deque<UniquePtr<RenderingReadyCallbackHolder>>
+        mRenderingReadyCallbackHolders;
   };
 
   struct TextureOwner {
@@ -466,6 +479,10 @@ class RemoteTextureMap {
                               RemoteTextureTxnType aType);
 
   Monitor mMonitor MOZ_UNANNOTATED;
+
+  std::map<std::pair<base::ProcessId, RemoteTextureOwnerId>,
+           UniquePtr<WaitingTextureOwner>>
+      mWaitingTextureOwners;
 
   std::map<std::pair<base::ProcessId, RemoteTextureOwnerId>,
            UniquePtr<TextureOwner>>

@@ -228,8 +228,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
 
   auto* wrapper = aTexture ? aTexture->AsRemoteTextureHostWrapper() : nullptr;
   if (wrapper && !aPipeline->mImageHost->GetAsyncRef()) {
-    std::function<void(const RemoteTextureInfo&)> function;
-    RemoteTextureMap::Get()->GetRemoteTexture(wrapper, std::move(function));
+    RemoteTextureMap::Get()->GetRemoteTexture(wrapper);
   }
 
   if (!aTexture || aTexture->NumSubTextures() == 0) {
@@ -523,8 +522,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   // Store pending remote texture that is used for waiting at WebRenderAPI.
   if (aPendingRemoteTextures && texture &&
       texture != pipeline->mCurrentTexture && wrapper) {
-    aPendingRemoteTextures->mList.emplace(wrapper->mTextureId,
-                                          wrapper->mOwnerId, wrapper->mForPid);
+    aPendingRemoteTextures->mList.emplace(wrapper->GetRemoteTextureInfo());
   }
 
   if (aPendingOps && !pipeline->mImageHost->GetAsyncRef()) {
