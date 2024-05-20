@@ -6,6 +6,7 @@ support-files = [
   "beacon-originheader-handler.sjs",
   "beacon-redirect-handler.sjs",
 ]
+run-sequentially = "bug 1784963 - beacon-handler shares state"
 
 ["test_beacon.html"]
 
