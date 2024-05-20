@@ -29,8 +29,8 @@ class MediaSession {
         val audioTrackCount: Int = 0,
         val videoTrackCount: Int = 0,
     ) {
-        val portrait: Boolean
-            get() = height > width
+        val portrait: Boolean?
+            get() = if (height == 0L && width == 0L) null else height > width
     }
 
     /**
