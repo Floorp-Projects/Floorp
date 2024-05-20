@@ -6063,11 +6063,6 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
   bool preserves3DChildren = aFrame->Extend3DContext();
 
   for (const auto& [list, listID] : aFrame->ChildLists()) {
-    if (listID == FrameChildListID::Popup) {
-      // We assume all frames in popups are visible, so we skip them here.
-      continue;
-    }
-
     for (nsIFrame* child : list) {
       // Note: This assert should be trivially satisfied, just by virtue of how
       // nsFrameList and its iterator works (with nullptr being an end-of-list

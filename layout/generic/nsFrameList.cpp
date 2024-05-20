@@ -443,8 +443,6 @@ const char* ChildListName(FrameChildListID aListID) {
   switch (aListID) {
     case FrameChildListID::Principal:
       return "";
-    case FrameChildListID::Popup:
-      return "PopupList";
     case FrameChildListID::Caption:
       return "CaptionList";
     case FrameChildListID::ColGroup:

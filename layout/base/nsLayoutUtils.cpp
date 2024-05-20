@@ -572,12 +572,8 @@ bool nsLayoutUtils::GPUImageScalingEnabled() {
 void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
                                        OverflowAreas& aOverflowAreas,
                                        FrameChildListIDs aSkipChildLists) {
-  // Iterate over all children except pop-ups.
-  FrameChildListIDs skip(aSkipChildLists);
-  skip += FrameChildListID::Popup;
-
   for (const auto& [list, listID] : aFrame->ChildLists()) {
-    if (skip.contains(listID)) {
+    if (aSkipChildLists.contains(listID)) {
       continue;
     }
     for (nsIFrame* child : list) {
@@ -7634,14 +7630,10 @@ static void GetFontFacesForFramesInner(
     return;
   }
 
-  FrameChildListID childLists[] = {FrameChildListID::Principal,
-                                   FrameChildListID::Popup};
-  for (size_t i = 0; i < ArrayLength(childLists); ++i) {
-    for (nsIFrame* child : aFrame->GetChildList(childLists[i])) {
-      child = nsPlaceholderFrame::GetRealFrameFor(child);
-      GetFontFacesForFramesInner(child, aResult, aFontFaces, aMaxRanges,
-                                 aSkipCollapsedWhitespace);
-    }
+  for (nsIFrame* child : aFrame->PrincipalChildList()) {
+    child = nsPlaceholderFrame::GetRealFrameFor(child);
+    GetFontFacesForFramesInner(child, aResult, aFontFaces, aMaxRanges,
+                               aSkipCollapsedWhitespace);
   }
 }
 
