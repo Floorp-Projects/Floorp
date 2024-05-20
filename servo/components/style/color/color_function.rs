@@ -114,8 +114,20 @@ impl ColorFunction {
                 let mut result = AbsoluteColor::new(
                     ColorSpace::Hsl,
                     value!(h).map(|angle| normalize_hue(angle.degrees())),
-                    value!(s).map(|s| s.to_number(SATURATION_RANGE).clamp(0.0, SATURATION_RANGE)),
-                    value!(l).map(|l| l.to_number(LIGHTNESS_RANGE).clamp(0.0, LIGHTNESS_RANGE)),
+                    value!(s).map(|s| {
+                        if *is_legacy_syntax {
+                            s.to_number(SATURATION_RANGE).clamp(0.0, SATURATION_RANGE)
+                        } else {
+                            s.to_number(SATURATION_RANGE)
+                        }
+                    }),
+                    value!(l).map(|l| {
+                        if *is_legacy_syntax {
+                            l.to_number(LIGHTNESS_RANGE).clamp(0.0, LIGHTNESS_RANGE)
+                        } else {
+                            l.to_number(LIGHTNESS_RANGE)
+                        }
+                    }),
                     alpha!(alpha),
                 );
 
@@ -133,8 +145,20 @@ impl ColorFunction {
                 let mut result = AbsoluteColor::new(
                     ColorSpace::Hwb,
                     value!(h).map(|angle| normalize_hue(angle.degrees())),
-                    value!(w).map(|w| w.to_number(WHITENESS_RANGE).clamp(0.0, WHITENESS_RANGE)),
-                    value!(b).map(|b| b.to_number(BLACKNESS_RANGE).clamp(0.0, BLACKNESS_RANGE)),
+                    value!(w).map(|w| {
+                        if *is_legacy_syntax {
+                            w.to_number(WHITENESS_RANGE).clamp(0.0, WHITENESS_RANGE)
+                        } else {
+                            w.to_number(WHITENESS_RANGE)
+                        }
+                    }),
+                    value!(b).map(|b| {
+                        if *is_legacy_syntax {
+                            b.to_number(BLACKNESS_RANGE).clamp(0.0, BLACKNESS_RANGE)
+                        } else {
+                            b.to_number(BLACKNESS_RANGE)
+                        }
+                    }),
                     alpha!(alpha),
                 );
 
