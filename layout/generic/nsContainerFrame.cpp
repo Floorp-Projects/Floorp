@@ -956,9 +956,6 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
   // Currently only nsMenuFrame has a popupList and during layout will adjust
   // the view manually to position the popup.
   for (const auto& [list, listID] : aFrame->ChildLists()) {
-    if (listID == FrameChildListID::Popup) {
-      continue;
-    }
     for (nsIFrame* childFrame : list) {
       // Position the frame's view (if it has one) otherwise recursively
       // process its children

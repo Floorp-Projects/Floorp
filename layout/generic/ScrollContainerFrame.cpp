@@ -1311,10 +1311,6 @@ static void GetScrollableOverflowForPerspective(
     nsPoint aOffset, nsRect& aScrolledFrameOverflowArea) {
   // Iterate over all children except pop-ups.
   for (const auto& [list, listID] : aCurrentFrame->ChildLists()) {
-    if (listID == FrameChildListID::Popup) {
-      continue;
-    }
-
     for (nsIFrame* child : list) {
       nsPoint offset = aOffset;
 
@@ -2630,9 +2626,6 @@ static void AdjustViews(nsIFrame* aFrame) {
   // Call AdjustViews recursively for all child frames except the popup list as
   // the views for popups are not scrolled.
   for (const auto& [list, listID] : aFrame->ChildLists()) {
-    if (listID == FrameChildListID::Popup) {
-      continue;
-    }
     for (nsIFrame* child : list) {
       AdjustViews(child);
     }

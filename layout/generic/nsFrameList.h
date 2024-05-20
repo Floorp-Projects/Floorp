@@ -34,7 +34,6 @@ class FrameChildList;
 enum class FrameChildListID {
   // The individual concrete child lists.
   Principal,
-  Popup,
   Caption,
   ColGroup,
   Absolute,

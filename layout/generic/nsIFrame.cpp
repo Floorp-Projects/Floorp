@@ -10027,9 +10027,8 @@ static nsRect ComputeOutlineInnerRect(
   // Iterate over all children except pop-up, absolutely-positioned,
   // float, and overflow ones.
   const FrameChildListIDs skip = {
-      FrameChildListID::Popup, FrameChildListID::Absolute,
-      FrameChildListID::Fixed, FrameChildListID::Float,
-      FrameChildListID::Overflow};
+      FrameChildListID::Absolute, FrameChildListID::Fixed,
+      FrameChildListID::Float, FrameChildListID::Overflow};
   for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (skip.contains(listID)) {
       continue;
