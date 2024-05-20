@@ -935,6 +935,50 @@ export class TelemetryFeed {
       case at.WALLPAPER_CLICK:
         this.handleWallpaperUserEvent(action);
         break;
+      case at.SET_PREF:
+        this.handleSetPref(action);
+        break;
+      case at.WEATHER_OPEN_PROVIDER_URL:
+        this.handleWeatherUserEvent(action);
+        break;
+    }
+  }
+
+  handleSetPref(action) {
+    const prefName = action.data.name;
+
+    // TODO: Migrate this event to handleWeatherUserEvent()
+    if (prefName === "weather.display") {
+      const session = this.sessions.get(au.getPortIdOfSender(action));
+
+      if (!session) {
+        return;
+      }
+
+      Glean.newtab.weatherChangeDisplay.record({
+        newtab_visit_id: session.session_id,
+        weather_display_mode: action.data.value,
+      });
+    }
+  }
+
+  handleWeatherUserEvent(action) {
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+
+    if (!session) {
+      return;
+    }
+
+    // Note: This switch case is unnessary right now, but any other
+    // Weather specific telemtry events can be added and parsed here.
+    switch (action.type) {
+      case "WEATHER_OPEN_PROVIDER_URL":
+        Glean.newtab.weatherOpenProviderUrl.record({
+          newtab_visit_id: session.session_id,
+        });
+        break;
+      default:
+        break;
     }
   }
 

@@ -233,37 +233,45 @@ newtab:
     send_in_pings:
       - newtab
 
-
-  wallpaper_click:
+  weather_change_display:
     type: event
     description: >
-      Whether the search input is enabled on the newtab.
-      Corresponds to the value of the
-      `browser.newtabpage.activity-stream.showSearch` pref.
+      Recorded when a user changes the weather display.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1896004
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1895797
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1896004
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1895797
     data_sensitivity:
       - interaction
     notification_emails:
-      - nbarrett@mozilla.com
+      - mcrawford@mozilla.com
     expires: never
     extra_keys:
-      selected_wallpaper:
+      weather_display_mode: &weather_display_mode
         description: >
-          Which wallpaper has been selected by the user
-          Will be the title of a Wallpaper or 'none' for users
-          that reset the background to default
-        type: string
-      had_previous_wallpaper:
-        description: >
-          Wheather or not user had a previously set wallpaper
+          Which display mode is selected.
         type: boolean
       newtab_visit_id: *newtab_visit_id
     send_in_pings:
       - newtab
 
+  weather_open_provider_url:
+    type: event
+    description: >
+      Recorded when a user opens a link to the Weather provider website.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1895797
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1895797
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - mcrawford@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
 
 newtab.search:
   enabled:
