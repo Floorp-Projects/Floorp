@@ -116,6 +116,9 @@ add_task(async function () {
 
   info("Wait for all sources to be removed");
   await waitFor(() => dbg.selectors.getSourceCount() == 0);
+  info("Wait for target to be removed");
+  await waitFor(() => dbg.selectors.getAllThreads().length == 1);
+
   // The pause thread being removed, we are no longer paused.
   assertNotPaused(dbg);
 
