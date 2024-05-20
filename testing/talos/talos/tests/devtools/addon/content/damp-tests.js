@@ -5,7 +5,6 @@
 "use strict";
 
 const isWindows = Services.appinfo.OS === "WINNT";
-const isMacOS = Services.appinfo.OS === "Darwin";
 
 // DAMP is split in sub-suites to run the tests faster on continuous integration.
 // See the initial patches in Bug 1749928 if we need to add more suites.
@@ -233,8 +232,6 @@ module.exports = {
     {
       name: "browser-toolbox",
       path: "toolbox/browser-toolbox.js",
-      // Bug 1881503 - disabled toolbox/browser-toolbox on windows and mac for causing permafails
-      disabled: isWindows || isMacOS,
     },
     {
       name: "server.protocoljs",
