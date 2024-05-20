@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.junit.Rule
@@ -43,10 +44,16 @@ import org.mozilla.fenix.ui.robots.notificationShade
  */
 
 class TabbedBrowsingTest : TestSetup() {
-    @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
+    @get:Rule(order = 0)
+    val composeTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(
+                skipOnboarding = true,
+                tabsTrayRewriteEnabled = true,
+            ),
+        ) { it.activity }
 
-    @Rule
+    @Rule(order = 1)
     @JvmField
     val retryTestRule = RetryTestRule(3)
 
@@ -57,12 +64,12 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openTabDrawer {
-            verifyExistingTabList()
-        }.openTabsListThreeDotMenu {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyNormalTabsList()
+        }.openThreeDotMenu {
             verifyCloseAllTabsButton()
-            verifyShareTabButton()
-            verifySelectTabs()
+            verifyShareAllTabsButton()
+            verifySelectTabsButton()
         }.closeAllTabs {
             verifyTabCounter("0")
         }
@@ -73,10 +80,9 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openTabDrawer {
-            verifyPrivateModeSelected()
-            verifyExistingTabList()
-        }.openTabsListThreeDotMenu {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyPrivateTabsList()
+        }.openThreeDotMenu {
             verifyCloseAllTabsButton()
         }.closeAllTabs {
             verifyTabCounter("0")
@@ -90,7 +96,7 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             closeTab()
             verifySnackBarText("Tab closed")
@@ -109,7 +115,7 @@ class TabbedBrowsingTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             waitForPageToLoad()
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             swipeTabRight("Test_Page_1")
             verifySnackBarText("Tab closed")
@@ -119,7 +125,7 @@ class TabbedBrowsingTest : TestSetup() {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             waitForPageToLoad()
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             swipeTabLeft("Test_Page_1")
             verifySnackBarText("Tab closed")
@@ -137,9 +143,8 @@ class TabbedBrowsingTest : TestSetup() {
         homeScreen { }.togglePrivateBrowsingMode(switchPBModeOn = true)
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
-            verifyCloseTabsButton("Test_Page_1")
             closeTab()
             verifySnackBarText("Private tab closed")
             clickSnackbarButton("UNDO")
@@ -160,7 +165,7 @@ class TabbedBrowsingTest : TestSetup() {
             mDevice.waitForIdle()
             clickPageObject(MatcherHelper.itemWithText("Play"))
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyTabMediaControlButtonState("Pause")
             clickTabMediaControlButton("Pause")
             verifyTabMediaControlButtonState("Play")
@@ -190,56 +195,22 @@ class TabbedBrowsingTest : TestSetup() {
         }
     }
 
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903598
-    @SmokeTest
-    @Test
-    fun shareTabsFromTabsTrayTest() {
-        val firstWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-        val firstWebsiteTitle = firstWebsite.title
-        val secondWebsiteTitle = secondWebsite.title
-        val sharingApp = "Gmail"
-        val sharedUrlsString = "${firstWebsite.url}\n\n${secondWebsite.url}"
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebsite.url) {
-            verifyPageContent(firstWebsite.content)
-        }.openTabDrawer {
-        }.openNewTab {
-        }.submitQuery(secondWebsite.url.toString()) {
-            verifyPageContent(secondWebsite.content)
-        }.openTabDrawer {
-            verifyExistingOpenTabs("Test_Page_1")
-            verifyExistingOpenTabs("Test_Page_2")
-        }.openTabsListThreeDotMenu {
-            verifyShareAllTabsButton()
-        }.clickShareAllTabsButton {
-            verifyShareTabsOverlay(firstWebsiteTitle, secondWebsiteTitle)
-            verifySharingWithSelectedApp(
-                sharingApp,
-                sharedUrlsString,
-                "$firstWebsiteTitle, $secondWebsiteTitle",
-            )
-        }
-    }
-
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903602
     @Test
     fun verifyTabTrayNotShowingStateHalfExpanded() {
-        navigationToolbar {
-        }.openTabTray {
+        homeScreen {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyNoOpenTabsInNormalBrowsing()
             // With no tabs opened the state should be STATE_COLLAPSED.
-            verifyBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
+            verifyTabsTrayBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
             // Need to ensure the halfExpandedRatio is very small so that when in STATE_HALF_EXPANDED
             // the tabTray will actually have a very small height (for a very short time) akin to being hidden.
-            verifyHalfExpandedRatio()
+            verifyMinusculeHalfExpandedRatio()
         }.clickTopBar {
         }.waitForTabTrayBehaviorToIdle {
             // Touching the topBar would normally advance the tabTray to the next state.
             // We don't want that.
-            verifyBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
+            verifyTabsTrayBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
         }.advanceToHalfExpandedState {
         }.waitForTabTrayBehaviorToIdle {
             // TabTray should not be displayed in STATE_HALF_EXPANDED.
@@ -251,31 +222,35 @@ class TabbedBrowsingTest : TestSetup() {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903600
     @Test
     fun verifyEmptyTabTray() {
-        navigationToolbar {
-        }.openTabTray {
-            verifyNormalBrowsingButtonIsSelected(true)
+        homeScreen {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyNormalBrowsingButtonIsSelected()
             verifyPrivateBrowsingButtonIsSelected(false)
             verifySyncedTabsButtonIsSelected(false)
             verifyNoOpenTabsInNormalBrowsing()
-            verifyNormalBrowsingNewTabButton()
-            verifyTabTrayOverflowMenu(true)
-            verifyEmptyTabsTrayMenuButtons()
+            verifyFab()
+            verifyThreeDotButton()
+        }.openThreeDotMenu {
+            verifyTabSettingsButton()
+            verifyRecentlyClosedTabsButton()
         }
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903585
     @Test
     fun verifyEmptyPrivateTabsTrayTest() {
-        navigationToolbar {
-        }.openTabTray {
+        homeScreen {
+        }.openComposeTabDrawer(composeTestRule) {
         }.toggleToPrivateTabs {
             verifyNormalBrowsingButtonIsSelected(false)
             verifyPrivateBrowsingButtonIsSelected(true)
             verifySyncedTabsButtonIsSelected(false)
             verifyNoOpenTabsInPrivateBrowsing()
-            verifyPrivateBrowsingNewTabButton()
-            verifyTabTrayOverflowMenu(true)
-            verifyEmptyTabsTrayMenuButtons()
+            verifyFab()
+            verifyThreeDotButton()
+        }.openThreeDotMenu {
+            verifyTabSettingsButton()
+            verifyRecentlyClosedTabsButton()
         }
     }
 
@@ -284,21 +259,19 @@ class TabbedBrowsingTest : TestSetup() {
     fun verifyTabsTrayWithOpenTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        homeScreen {
-        }.openTabDrawer {
-        }.openNewTab {
-        }.submitQuery(defaultWebPage.url.toString()) {
-        }.openTabDrawer {
-            verifyNormalBrowsingButtonIsSelected(true)
-            verifyPrivateBrowsingButtonIsSelected(false)
-            verifySyncedTabsButtonIsSelected(false)
-            verifyTabTrayOverflowMenu(true)
-            verifyTabsTrayCounter()
-            verifyExistingTabList()
-            verifyNormalBrowsingNewTabButton()
-            verifyOpenedTabThumbnail()
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyNormalBrowsingButtonIsSelected()
+            verifyPrivateBrowsingButtonIsSelected(isSelected = false)
+            verifySyncedTabsButtonIsSelected(isSelected = false)
+            verifyThreeDotButton()
+            verifyNormalTabCounter()
+            verifyNormalTabsList()
+            verifyFab()
+            verifyTabThumbnail()
             verifyExistingOpenTabs(defaultWebPage.title)
-            verifyCloseTabsButton(defaultWebPage.title)
+            verifyTabCloseButton()
         }.openTab(defaultWebPage.title) {
             verifyUrl(defaultWebPage.url.toString())
             verifyTabCounter("1")
@@ -312,21 +285,21 @@ class TabbedBrowsingTest : TestSetup() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
         }.toggleToPrivateTabs {
         }.openNewTab {
         }.submitQuery(website.url.toString()) {
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyNormalBrowsingButtonIsSelected(false)
             verifyPrivateBrowsingButtonIsSelected(true)
             verifySyncedTabsButtonIsSelected(false)
-            verifyTabTrayOverflowMenu(true)
-            verifyTabsTrayCounter()
-            verifyExistingTabList()
+            verifyThreeDotButton()
+            verifyNormalTabCounter()
+            verifyPrivateTabsList()
             verifyExistingOpenTabs(website.title)
-            verifyCloseTabsButton(website.title)
-            verifyOpenedTabThumbnail()
-            verifyPrivateBrowsingNewTabButton()
+            verifyTabCloseButton()
+            verifyTabThumbnail()
+            verifyFab()
         }
     }
 
@@ -460,14 +433,47 @@ class TabbedBrowsingTest : TestSetup() {
     @Test
     fun verifySyncedTabsWhenUserIsNotSignedInTest() {
         navigationToolbar {
-        }.openTabTray {
+        }.openComposeTabDrawer(composeTestRule) {
             verifySyncedTabsButtonIsSelected(isSelected = false)
-            clickSyncedTabsButton()
         }.toggleToSyncedTabs {
             verifySyncedTabsButtonIsSelected(isSelected = true)
             verifySyncedTabsListWhenUserIsNotSignedIn()
         }.clickSignInToSyncButton {
             verifyTurnOnSyncMenu()
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903598
+    @SmokeTest
+    @Test
+    fun shareTabsFromTabsTrayTest() {
+        val firstWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+        val firstWebsiteTitle = firstWebsite.title
+        val secondWebsiteTitle = secondWebsite.title
+        val sharingApp = "Gmail"
+        val sharedUrlsString = "${firstWebsite.url}\n\n${secondWebsite.url}"
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebsite.url) {
+            verifyPageContent(firstWebsite.content)
+        }.openComposeTabDrawer(composeTestRule) {
+        }.openNewTab {
+        }.submitQuery(secondWebsite.url.toString()) {
+            verifyPageContent(secondWebsite.content)
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            verifyExistingOpenTabs("Test_Page_2")
+        }.openThreeDotMenu {
+            verifyShareAllTabsButton()
+        }.clickShareAllTabsButton {
+            verifyShareTabsOverlay(firstWebsiteTitle, secondWebsiteTitle)
+            verifySharingWithSelectedApp(
+                sharingApp,
+                sharedUrlsString,
+                "$firstWebsiteTitle, $secondWebsiteTitle",
+            )
         }
     }
 
@@ -480,11 +486,13 @@ class TabbedBrowsingTest : TestSetup() {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.goToHomescreen {
         }.togglePrivateBrowsingMode()
-        closeApp(activityTestRule)
-        restartApp(activityTestRule)
+
+        closeApp(composeTestRule.activityRule)
+        restartApp(composeTestRule.activityRule)
+
         homeScreen {
             verifyPrivateBrowsingHomeScreenItems()
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
         }.toggleToNormalTabs {
             verifyExistingOpenTabs(defaultWebPage.title)
         }
@@ -502,14 +510,15 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
         }.openNewTab {
-        }.submitQuery(secondWebPage.url.toString()) {}
-        closeApp(activityTestRule)
-        restartApp(activityTestRule)
+        }.submitQuery(secondWebPage.url.toString()) {
+        }
+        closeApp(composeTestRule.activityRule)
+        restartApp(composeTestRule.activityRule)
         homeScreen {
             verifyPrivateBrowsingHomeScreenItems()
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyNoOpenTabsInPrivateBrowsing()
         }
     }
