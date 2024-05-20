@@ -6,7 +6,10 @@ support-files = [
   "!/accessible/tests/mochitest/*.js",
   "!/accessible/tests/mochitest/moz.png",
 ]
-prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
+prefs = [
+  "javascript.options.asyncstack_capture_debuggee_only=false",
+  "layout.css.content.alt-text.enabled=true",
+]
 
 ["browser_aria_owns.js"]
 skip-if = [
