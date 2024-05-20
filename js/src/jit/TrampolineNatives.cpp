@@ -88,6 +88,8 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm,
       -int32_t(FrameSize) + ArraySortData::offsetOfComparatorReturnValue();
   constexpr int32_t DescriptorOffset =
       -int32_t(FrameSize) + ArraySortData::offsetOfDescriptor();
+  constexpr int32_t ComparatorThisOffset =
+      -int32_t(FrameSize) + ArraySortData::offsetOfComparatorThis();
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -157,6 +159,8 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm,
   Label callDone, jitCallFast, jitCallSlow;
   masm.bind(&jitCallFast);
   {
+    masm.storeValue(UndefinedValue(),
+                    Address(FramePointer, ComparatorThisOffset));
     masm.storePtr(ImmWord(jitCallDescriptor),
                   Address(FramePointer, DescriptorOffset));
     masm.loadPtr(Address(FramePointer, ComparatorOffset), temp0);
@@ -166,6 +170,8 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm,
   }
   masm.bind(&jitCallSlow);
   {
+    masm.storeValue(UndefinedValue(),
+                    Address(FramePointer, ComparatorThisOffset));
     masm.storePtr(ImmWord(jitCallDescriptor),
                   Address(FramePointer, DescriptorOffset));
     masm.loadPtr(Address(FramePointer, ComparatorOffset), temp0);
