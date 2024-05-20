@@ -887,7 +887,6 @@ skip-if = ["os == 'win'"] # bug 1374189
 
 ["test_video_low_power_telemetry.html"]
 run-if = ["os == 'mac'"] # This telemetry is macOS-specific.
-disabled = "https://bugzilla.mozilla.org/show_bug.cgi?id=1849680"
 
 ["test_video_to_canvas.html"]
 skip-if = ["os == 'android'"] # android(bug 1232305), bugs 1320418,1347953,1347954,1348140,1348386

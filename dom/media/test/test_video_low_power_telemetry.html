@@ -195,8 +195,17 @@ steps we run before each video. We keep track of which test we are running with 
       info("Clearing initial telemetry.");
       await retrieveSnapshotAndClearTelemetry();
 
-      ok(gVideoLowPowerTests.length >= 2, "Should have enough videos to test.");
-      manager.runTests(gVideoLowPowerTests, startTest);
+      if (!gVideoLowPowerTests.length) {
+        ok(false, "Need at least one video in gVideoLowPowerTests.");
+        return;
+      }
+
+      let atLeast2Videos = gVideoLowPowerTests.slice();
+      if (atLeast2Videos.length < 2) {
+        atLeast2Videos.splice(1, 0, atLeast2Videos[0]);
+      }
+
+      manager.runTests(atLeast2Videos, startTest);
   });
 
 </script>
