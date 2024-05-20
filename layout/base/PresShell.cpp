@@ -1255,12 +1255,6 @@ void PresShell::Destroy() {
   // If our paint suppression timer is still active, kill it.
   CancelPaintSuppressionTimer();
 
-  // Same for our reflow continuation timer
-  if (mReflowContinueTimer) {
-    mReflowContinueTimer->Cancel();
-    mReflowContinueTimer = nullptr;
-  }
-
   mSynthMouseMoveEvent.Revoke();
 
   mUpdateApproximateFrameVisibilityEvent.Revoke();
@@ -9714,11 +9708,13 @@ void PresShell::DidDoReflow(bool aInterruptible) {
       UnsuppressAndInvalidate();
     }
   } else {
-    // If any new reflow commands were enqueued during the reflow, schedule
-    // another reflow event to process them.  Note that we want to do this
-    // after DidDoReflow(), since that method can change whether there are
-    // dirty roots around by flushing, and there's no point in posting a
-    // reflow event just to have the flush revoke it.
+    // If any new reflow commands were enqueued during the reflow (or we didn't
+    // reflow everything because we were interrupted), schedule another reflow
+    // event to process them.
+    //
+    // Note that we want to do this after DidDoReflow(), since that method can
+    // change whether there are dirty roots around by flushing, and there's no
+    // point in posting a reflow event just to have the flush revoke it.
     EnsureLayoutFlush();
   }
 }
@@ -9735,25 +9731,6 @@ DOMHighResTimeStamp PresShell::GetPerformanceNowUnclamped() {
   }
 
   return now;
-}
-
-bool PresShell::ScheduleReflowOffTimer() {
-  MOZ_ASSERT(!mObservingStyleFlushes, "Shouldn't get here");
-  ASSERT_REFLOW_SCHEDULED_STATE();
-  if (mReflowContinueTimer) {
-    return true;
-  }
-  nsresult rv = NS_NewTimerWithFuncCallback(
-      getter_AddRefs(mReflowContinueTimer),
-      [](nsITimer* aTimer, void* aPresShell) {
-        RefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
-        MOZ_ASSERT(aTimer == self->mReflowContinueTimer, "Unexpected timer");
-        self->mReflowContinueTimer = nullptr;
-        self->EnsureLayoutFlush();
-      },
-      this, 30, nsITimer::TYPE_ONE_SHOT, "ReflowContinueCallback",
-      GetMainThreadSerialEventTarget());
-  return NS_SUCCEEDED(rv);
 }
 
 bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
@@ -9790,11 +9767,6 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   mReflowCause = nullptr;
 
   FlushPendingScrollAnchorSelections();
-
-  if (mReflowContinueTimer) {
-    mReflowContinueTimer->Cancel();
-    mReflowContinueTimer = nullptr;
-  }
 
   const bool isRoot = target == mFrameConstructor->GetRootFrame();
 
