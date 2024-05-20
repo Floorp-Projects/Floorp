@@ -11,6 +11,7 @@
 use euclid::{vec2, size2};
 use api::{ExtendMode, GradientStop, PremultipliedColorF, ColorU};
 use api::units::*;
+use bytemuck::{Pod, Zeroable};
 use crate::pattern::{Pattern, PatternKind, PatternShaderInput};
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
@@ -336,7 +337,7 @@ impl RadialGradientTask {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct RadialGradientInstance {
     pub task_rect: DeviceRect,
     pub center: DevicePoint,

@@ -4,6 +4,7 @@
 
 use api::{ColorU, ImageFormat, ImageBufferKind};
 use api::units::*;
+use bytemuck::{Pod, Zeroable};
 use crate::debug_font_data;
 use crate::device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
 use crate::device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexUsageHint};
@@ -62,6 +63,7 @@ const DESC_COLOR: VertexDescriptor = VertexDescriptor {
 };
 
 #[repr(C)]
+#[derive(Clone, Copy, Pod, Zeroable)]
 pub struct DebugFontVertex {
     pub x: f32,
     pub y: f32,
@@ -77,6 +79,7 @@ impl DebugFontVertex {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy, Pod, Zeroable)]
 pub struct DebugColorVertex {
     pub x: f32,
     pub y: f32,

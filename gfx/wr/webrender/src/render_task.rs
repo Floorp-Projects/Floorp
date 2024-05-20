@@ -6,6 +6,7 @@ use api::{CompositeOperator, FilterPrimitive, FilterPrimitiveInput, FilterPrimit
 use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace, FilterOpGraphPictureBufferId};
 use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
+use bytemuck::{Pod, Zeroable};
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
 use crate::command_buffer::{CommandBufferIndex, QuadFlags};
@@ -45,7 +46,7 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Pod, Zeroable)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
