@@ -4,7 +4,8 @@
 
 // Re-exports used by the decl_derive! and test_derive!
 pub use proc_macro2::TokenStream as TokenStream2;
-pub use syn::{parse_str, DeriveInput};
+pub use syn::{parse2, parse_str, DeriveInput};
+pub use quote::quote;
 
 #[cfg(all(
     not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
@@ -221,8 +222,8 @@ macro_rules! test_derive {
 
     ($name:path { $($i:tt)* } expands to { $($o:tt)* } no_build) => {
         {
-            let i = ::core::stringify!( $($i)* );
-            let parsed = $crate::macros::parse_str::<$crate::macros::DeriveInput>(i)
+            let i = $crate::macros::quote!( $($i)* );
+            let parsed = $crate::macros::parse2::<$crate::macros::DeriveInput>(i)
                 .expect(::core::concat!(
                     "Failed to parse input to `#[derive(",
                     ::core::stringify!($name),
@@ -237,11 +238,7 @@ macro_rules! test_derive {
                     ")]`",
                 ));
 
-            let expected = ::core::stringify!( $($o)* )
-                .parse::<$crate::macros::TokenStream2>()
-                .expect("output should be a valid TokenStream");
-            let mut expected_toks = <$crate::macros::TokenStream2
-                as ::core::convert::From<$crate::macros::TokenStream2>>::from(expected);
+            let expected_toks = $crate::macros::quote!( $($o)* );
             if <$crate::macros::TokenStream2 as ::std::string::ToString>::to_string(&res)
                 != <$crate::macros::TokenStream2 as ::std::string::ToString>::to_string(&expected_toks)
             {
