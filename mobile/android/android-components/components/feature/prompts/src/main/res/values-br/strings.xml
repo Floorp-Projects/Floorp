@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Ger-tremen</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">Na enrollañ</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">Na enrollañ</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Diwezhatoc’h</string>
+    <string name="mozac_feature_prompt_dont_save_2">Diwezhatoc’h</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Na enrollañ biken</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,27 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Enrollañ</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">Na hizivaat</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">Na hizivaat</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Diwezhatoc’h</string>
+    <string name="mozac_feature_prompt_dont_update_2">Diwezhatoc’h</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Hizivaat</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">Ar vaezienn ger-tremen a rank bezañ leuniet</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">Ar vaezienn ger-tremen a rank bezañ leuniet</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Enankit ur ger-tremen</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">Enankit ur ger-tremen</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Ne cʼhaller ket enrollañ an titour kennaskañ</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">Ne cʼhaller ket enrollañ an titour kennaskañ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">N’haller ket enrollañ ar ger-tremen</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">N’haller ket enrollañ ar ger-tremen</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Enrollañ an titour kennaskañ-mañ?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">Enrollañ an titour kennaskañ-mañ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Enrollañ ar ger-tremen?</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">Enrollañ ar ger-tremen?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Hizivaat an titour kennaskañ-mañ?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">Hizivaat an titour kennaskañ-mañ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Hizivaat ar ger-tremen?</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">Hizivaat ar ger-tremen?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Ouzhpennañ an anv arveriad dʼar gerioù-tremen enrollet?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -96,22 +96,29 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Dibab an eur</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Ardoer titouroù kennaskañ</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">Ardoer titouroù kennaskañ</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Merañ ar gerioù-tremen</string>
+    <string name="mozac_feature_prompts_manage_logins_2">Merañ ar gerioù-tremen</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Brasaat an titouroù kennaskañ aliet</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Brasaat an titouroù kennaskañ aliet</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Dispakañ ar gerioù-tremen enrollet</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Dispakañ ar gerioù-tremen enrollet</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Berraat an titouroù kennaskañ aliet</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Berraat an titouroù kennaskañ aliet</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Kuzhat ar gerioù-tremen enrollet</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">Kuzhat ar gerioù-tremen enrollet</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Titouroù kennaskañ aliet</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">Titouroù kennaskañ aliet</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Gerioù-tremen enrollet</string>
+    <string name="mozac_feature_prompts_saved_logins_2">Gerioù-tremen enrollet</string>
+
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Kinnig ur ger-tremen kreñv</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Kinnig ur ger-tremen kreñv</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Implij ur ger-tremen kreñv: %1$s</string>
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Kas roadennoù en-dro d’al lec’hienn?</string>
@@ -123,38 +130,43 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Diuzañ ur gartenn gred</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">Diuzañ ur gartenn gred</string>
+    <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
+    <string name="mozac_feature_prompts_select_credit_card_2">Ober gant ur gartenn enrollet</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Astenn ar cʼhartennoù kred kinniget</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Astenn ar cʼhartennoù kred kinniget</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Dispakañ ar c’hartennoù enrollet</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Dispakañ ar c’hartennoù enrollet</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Bihanaat ar cʼhartennoù kred kinniget</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Bihanaat ar cʼhartennoù kred kinniget</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Kuzhat ar c’hartennoù enrollet</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Kuzhat ar c’hartennoù enrollet</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">Merañ ar cʼhartennoù kred</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Merañ ar cʼhartennoù kred</string>
 
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Merañ ar c’hartennoù</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">Merañ ar c’hartennoù</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Enrollañ ar gartenn-mañ en surentez?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Hizivaat deiziad termen ar gartenn?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Enrigenet e vo niverenn ar gartenn. Ne vo ket enrollet ar c’hod surentez.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">Enrigenet e vo niverenn ar gartenn. Ne vo ket enrollet ar c’hod surentez.</string>
+
+    <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s a enrinego ho niverenn gartenn. Ne vo ket enrollet ho poneg surentez.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Dibab ur chomlec’h</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">Displegañ ar chomlec’hioù kinniget</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Displegañ ar chomlec’hioù kinniget</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Dispakañ ar chomlec’hioù enrollet</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Dispakañ ar chomlec’hioù enrollet</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">Plegañ ar chomlec’hioù kinniget</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Plegañ ar chomlec’hioù kinniget</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Kuzhat ar chomlec’hioù enrollet</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">Kuzhat ar chomlec’hioù enrollet</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Merañ ar chomlec’hioù</string>
 
