@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import buildQuery from "../build-query";
+import { features } from "../prefs";
 
 /**
  * @memberof utils/source-search
@@ -133,7 +134,35 @@ function doSearch(
   modifiers,
   focusFirstResult = true
 ) {
-  const { cm, ed } = ctx;
+  const { cm, editor } = ctx;
+
+  if (features.codemirrorNext) {
+    if (!query || isWhitespace(query)) {
+      editor.clearSearchMatches();
+      return null;
+    }
+    const regexQuery = buildQuery(query, modifiers, {
+      ignoreSpaces: true,
+      // regex must be global for the overlay
+      isGlobal: true,
+    });
+
+    if (editor.searchState.query?.toString() !== regexQuery.toString()) {
+      editor.highlightSearchMatches(regexQuery, "cm-highlight");
+    }
+    const cursor = editor.getNextSearchCursor(rev);
+    if (!cursor) {
+      return null;
+    }
+    editor.setPositionContentMarker({
+      id: "active-selection-marker",
+      positionClassName: "cm-matchhighlight",
+      positions: [{ from: cursor.from, to: cursor.to }],
+    });
+    editor.scrollToPosition(cursor.from);
+    return editor.getPositionFromSearchCursor(cursor);
+  }
+
   if (!cm) {
     return null;
   }
@@ -141,7 +170,7 @@ function doSearch(
 
   return cm.operation(function () {
     if (!query || isWhitespace(query)) {
-      clearSearch(cm);
+      clearSearch(ctx);
       return null;
     }
 
@@ -156,7 +185,7 @@ function doSearch(
     // We don't want to jump the editor
     // when we're selecting text
     if (!cm.state.selectingText && searchLocation && focusFirstResult) {
-      ed.alignLine(searchLocation.from.line, "center");
+      editor.alignLine(searchLocation.from.line, "center");
       cm.setSelection(searchLocation.from, searchLocation.to);
     }
 
@@ -173,7 +202,26 @@ export function searchSourceForHighlight(
   line,
   ch
 ) {
-  const { cm } = ctx;
+  const { cm, editor } = ctx;
+
+  if (features.codemirrorNext) {
+    if (!query || isWhitespace(query)) {
+      editor.clearSearchMatches();
+      return;
+    }
+
+    const regexQuery = buildQuery(query, modifiers, {
+      ignoreSpaces: true,
+      // regex must be global for the overlay
+      isGlobal: true,
+    });
+
+    if (editor.searchState.query?.toString() !== regexQuery.toString()) {
+      editor.highlightSearchMatches(regexQuery, "cm-highlight");
+    }
+    return;
+  }
+
   if (!cm) {
     return;
   }
@@ -234,7 +282,7 @@ function searchNext(ctx, rev, query, newQuery, modifiers) {
 }
 
 function findNextOnLine(ctx, rev, query, newQuery, modifiers, line, ch) {
-  const { cm, ed } = ctx;
+  const { cm, editor } = ctx;
   cm.operation(function () {
     const pos = { line: line - 1, ch };
     let cursor = getSearchCursor(cm, query, pos, modifiers);
@@ -249,7 +297,7 @@ function findNextOnLine(ctx, rev, query, newQuery, modifiers, line, ch) {
     // We don't want to jump the editor
     // when we're selecting text
     if (!cm.state.selectingText) {
-      ed.alignLine(cursor.from().line, "center");
+      editor.alignLine(cursor.from().line, "center");
       cm.setSelection(cursor.from(), cursor.to());
     }
   });
@@ -274,9 +322,14 @@ export function removeOverlay(ctx) {
  * @memberof utils/source-search
  * @static
  */
-export function clearSearch(cm) {
+export function clearSearch(ctx) {
+  const { cm, editor } = ctx;
+  if (features.codemirrorNext) {
+    editor.clearSearchMatches();
+    editor.removePositionContentMarker("active-selection-marker");
+    return;
+  }
   const state = getSearchState(cm);
-
   state.results = [];
 
   if (!state.query) {
@@ -293,7 +346,7 @@ export function clearSearch(cm) {
  * @static
  */
 export function find(ctx, query, keepSelection, modifiers, focusFirstResult) {
-  clearSearch(ctx.cm);
+  clearSearch(ctx);
   return doSearch(
     ctx,
     false,

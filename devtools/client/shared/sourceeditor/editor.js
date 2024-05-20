@@ -158,6 +158,11 @@ class Editor extends EventEmitter {
   version = null;
   config = null;
   Doc = null;
+  searchState = {
+    cursors: [],
+    currentCursorIndex: -1,
+    query: null,
+  };
 
   #CodeMirror6;
   #compartments;
@@ -630,6 +635,7 @@ class Editor extends EventEmitter {
     const lineNumberMarkersCompartment = new Compartment();
     const lineContentMarkerCompartment = new Compartment();
     const positionContentMarkersCompartment = new Compartment();
+    const searchHighlightCompartment = new Compartment();
 
     this.#compartments = {
       tabSizeCompartment,
@@ -639,6 +645,7 @@ class Editor extends EventEmitter {
       lineNumberMarkersCompartment,
       lineContentMarkerCompartment,
       positionContentMarkersCompartment,
+      searchHighlightCompartment,
     };
 
     const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
@@ -686,6 +693,7 @@ class Editor extends EventEmitter {
       positionContentMarkersCompartment.of(
         this.#positionContentMarkersExtension([])
       ),
+      searchHighlightCompartment.of(this.#searchHighlighterExtension([])),
       // keep last so other extension take precedence
       codemirror.minimalSetup,
     ];
@@ -896,6 +904,22 @@ class Editor extends EventEmitter {
       const vEndLine = view.state.doc.lineAt(to);
       for (const marker of markers) {
         for (const position of marker.positions) {
+          // If codemirror positions are provided (e.g from search cursor)
+          // compare that directly.
+          if (position?.from >= from && position?.to <= to) {
+            if (marker.positionClassName) {
+              const classDecoration = Decoration.mark({
+                class: marker.positionClassName,
+              });
+              ranges.push({
+                from: position.from,
+                to: position.to,
+                value: classDecoration,
+              });
+            }
+            continue;
+          }
+          // If line and column are provided
           if (
             position.line >= vStartLine.number &&
             position.line <= vEndLine.number
@@ -1125,6 +1149,113 @@ class Editor extends EventEmitter {
         lineNumberMarkers.of(builder.finish())
       ),
     });
+  }
+
+  /**
+   * This creates the extension used to manage the rendering of markers for
+   * results for any search pattern
+   * @param {RegExp}      pattern - The search pattern
+   * @param {String}      className - The class used to decorate each result
+   * @returns {Array<ViewPlugin>} An extension which is an array containing the view
+   *                              which manages the rendering of the line content markers.
+   */
+  #searchHighlighterExtension({
+    /* This defaults to matching nothing */ pattern = /.^/g,
+    className = "",
+  }) {
+    const cm = editors.get(this);
+    if (!cm) {
+      return [];
+    }
+    const {
+      codemirrorView: { Decoration, ViewPlugin, EditorView, MatchDecorator },
+      codemirrorSearch: { RegExpCursor },
+    } = this.#CodeMirror6;
+
+    this.searchState.query = pattern;
+    const searchCursor = new RegExpCursor(cm.state.doc, pattern, {
+      ignoreCase: pattern.ignoreCase,
+    });
+    this.searchState.cursors = Array.from(searchCursor);
+    this.searchState.currentCursorIndex = -1;
+
+    const patternMatcher = new MatchDecorator({
+      regexp: pattern,
+      decorate: (add, from, to) => {
+        add(from, to, Decoration.mark({ class: className }));
+      },
+    });
+
+    const searchHighlightView = ViewPlugin.fromClass(
+      class {
+        decorations;
+        constructor(view) {
+          this.decorations = patternMatcher.createDeco(view);
+        }
+        update(viewUpdate) {
+          this.decorations = patternMatcher.updateDeco(
+            viewUpdate,
+            this.decorations
+          );
+        }
+      },
+      {
+        decorations: instance => instance.decorations,
+        provide: plugin =>
+          EditorView.atomicRanges.of(view => {
+            return view.plugin(plugin)?.decorations || Decoration.none;
+          }),
+      }
+    );
+
+    return [searchHighlightView];
+  }
+
+  /**
+   * This should add the class to the results of a search pattern specified
+   *
+   * @param {RegExp} pattern - The search pattern
+   * @param {String} className - The class used to decorate each result
+   */
+  highlightSearchMatches(pattern, className) {
+    const cm = editors.get(this);
+    cm.dispatch({
+      effects: this.#compartments.searchHighlightCompartment.reconfigure(
+        this.#searchHighlighterExtension({ pattern, className })
+      ),
+    });
+  }
+
+  /**
+   * This clear any decoration on all the search results
+   */
+  clearSearchMatches() {
+    this.highlightSearchMatches(undefined, "");
+  }
+
+  /**
+   * Retrieves the cursor for the next selection to be highlighted
+   *
+   * @param {Boolean} reverse - Determines the direction of the cursor movement
+   * @returns {RegExpSearchCursor}
+   */
+  getNextSearchCursor(reverse) {
+    if (reverse) {
+      if (this.searchState.currentCursorIndex == 0) {
+        this.searchState.currentCursorIndex =
+          this.searchState.cursors.length - 1;
+      } else {
+        this.searchState.currentCursorIndex--;
+      }
+    } else if (
+      this.searchState.currentCursorIndex ==
+      this.searchState.cursors.length - 1
+    ) {
+      this.searchState.currentCursorIndex = 0;
+    } else {
+      this.searchState.currentCursorIndex++;
+    }
+    return this.searchState.cursors[this.searchState.currentCursorIndex];
   }
 
   /**
@@ -2258,6 +2389,42 @@ class Editor extends EventEmitter {
       console.warn(e.message);
     }
     return null;
+  }
+
+  /**
+   * This returns the line and column for the specified search cursor's position
+   *
+   * @param {RegExpSearchCursor} searchCursor
+   * @returns {Object}
+   */
+  getPositionFromSearchCursor(searchCursor) {
+    const cm = editors.get(this);
+    const lineFrom = cm.state.doc.lineAt(searchCursor.from);
+    return {
+      line: lineFrom.number - 1,
+      ch: searchCursor.to - searchCursor.match[0].length - lineFrom.from,
+    };
+  }
+
+  /**
+   * Scrolls the editor to the specified codemirror position
+   *
+   * @param {Number} position
+   */
+  scrollToPosition(position) {
+    const cm = editors.get(this);
+    if (!this.config.cm6) {
+      throw new Error("This function is only compatible with CM6");
+    }
+    const {
+      codemirrorView: { EditorView },
+    } = this.#CodeMirror6;
+    cm.dispatch({
+      effects: EditorView.scrollIntoView(position, {
+        x: "nearest",
+        y: "center",
+      }),
+    });
   }
 
   /**

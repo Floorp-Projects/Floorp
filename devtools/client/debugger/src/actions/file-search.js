@@ -38,7 +38,7 @@ export function searchContentsForHighlight(query, editor, line, ch) {
       return;
     }
 
-    const ctx = { ed: editor, cm: editor.codeMirror };
+    const ctx = { editor, cm: editor.codeMirror };
     searchSourceForHighlight(ctx, false, query, true, modifiers, line, ch);
   };
 }

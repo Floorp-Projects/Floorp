@@ -12,15 +12,16 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "codemirror": "6.0.1",
+    "@codemirror/lang-javascript": "^6.2.1",
     "@codemirror/language": "^6.10.0",
-    "@codemirror/lang-javascript": "^6.2.1"
+    "@codemirror/search": "^6.5.6",
+    "codemirror": "6.0.1"
   },
   "devDependencies": {
-    "webpack": "^4.28.4",
-    "webpack-cli": "^3.2.1",
-    "rollup": "^4.9.6",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-node-resolve": "^15.2.3"
+    "rollup": "^4.9.6",
+    "webpack": "^4.28.4",
+    "webpack-cli": "^3.2.1"
   }
 }
