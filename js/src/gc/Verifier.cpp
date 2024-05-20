@@ -496,6 +496,9 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
   MOZ_ASSERT(!gcmarker->isWeakMarking());
 
+  /* We require that the nursery is empty at the start of collection. */
+  MOZ_ASSERT(gc->nursery().isEmpty());
+
   /* Wait for off-thread parsing which can allocate. */
   WaitForAllHelperThreads();
 

@@ -3765,6 +3765,14 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         // this slice.
         rt->mainContextFromOwnThread()->traceWrapperGCRooters(
             marker().tracer());
+
+        // Incremental marking validation re-runs all marking non-incrementally,
+        // which requires collecting the nursery. If that might happen in this
+        // slice, do it now while it's safe to do so.
+        if (isIncremental &&
+            hasZealMode(ZealMode::IncrementalMarkingValidator)) {
+          collectNurseryFromMajorGC(JS::GCReason::EVICT_NURSERY);
+        }
       }
 
       {
