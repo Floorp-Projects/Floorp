@@ -108,6 +108,11 @@
     <string name="tcp_cfr_learn_more">Gouzout hiroc’h a-zivout ar gwarez toupinoù hollek</string>
 
 
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Stokit amañ da gregiñ un estez prevez nevez. Dilemel a raio ho roll istor, ho toupinoù — pep tra.</string>
+
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Ezhomm a zo haeziñ ar c’hamera. Kit e Arventennoù Android, stokit war an aotreoù ha stokit war aotren.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -195,6 +200,8 @@
     <string name="browser_menu_extensions">Askouezhioù</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Merañ an askouezhioù</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Dizoloit muioc’h a askouezhioù</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Titouroù ar gont</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -213,6 +220,8 @@
     <string name="browser_menu_open_in_regular_tab">Digeriñ en un ivinell ordinal</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Ouzhpennañ dʼar skramm degemer</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Ouzhpennañ d\'ar skramm degemer…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Staliañ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -223,6 +232,8 @@
     <string name="browser_menu_find_in_page_2">Kavout er bajennad…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Treiñ ar bajenn</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Enrollañ en dastumad…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Enrollañ en dastumad</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -257,11 +268,22 @@
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
     <string name="browser_menu_sign_in">Kennaskañ</string>
 
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">Goubredit gerioù-tremen, ivinelloù ha muioc’h c’hoazh</string>
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">Kennaskañ en-dro evit goubredañ</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">Ehanet eo ar goubredañ</string>
     <!-- Browser menu label that creates a private tab -->
     <string name="browser_menu_new_private_tab">Ivinell prevez nevez</string>
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Gerioù-tremen</string>
 
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Nevez e %1$s</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Mont d\'ar stumm evit an urzhiataer</string>
     <!-- Browser menu label that navigates to the page tools sub-menu -->
     <string name="browser_menu_tools">Ostilhoù</string>
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
@@ -278,6 +300,14 @@
     <!-- Browser menu label for turning OFF reader view of the current visited page -->
     <string name="browser_menu_turn_off_reader_view">Kuitaat ar mod lenn</string>
 
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Treiñ ar bajenn…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Troet e %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Moullañ…</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">Askouezh ebet da gaout amañ</string>
@@ -291,6 +321,11 @@
     <string name="browser_toolbar_erase">Skarzhañ ar roll istor</string>
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Treiñ ar bajenn</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Pajenn troet eus %1$s betek %2$s.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -364,8 +399,24 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Ket bremañ</string>
 
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Politikerezh prevezded Firefox</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ho surentez a zo talvoudus deomp</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Dizoloit perak e plij Firefox da vilionoù a dud</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Merdeiñ diogel ha muioc\'h a zibaboù</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_3">Hor merdeer harpet gant un aozadur hep gounidoù a sikour da herzel an embregerezhioù d\'ho heuliañ pep lec\'h er web.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Ouzhpenn 100 milion a dud a warez o buhez prevez en ur zibab ur merdeer a zo harpet gant un aozadur hep gounidoù.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Heulierien anavezet? Stanket diouzhtu. Askouezhioù? Esaeit 700 anezho. PDFoù? Hol lenner enkorfet a lako anezho aes da verañ.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Hor merdeer harpet gant un aozadur hep gounidoù a sikour da herzel an embregerezhioù d\'ho heuliañ pep lec\'h er web.\n\nGouzout hiroc’h en hor reolennoù a-fet buhez prevez.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">evezhiadennoù a-fet buhez prevez</string>
@@ -373,6 +424,11 @@
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Lakaat da verdeer dre ziouer</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Chomit enrineget pa tremenit eus un trevnad d\'egile</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Pa kennaskit hag e weredekait ar goubredañ eo kreñvoc\'h ho surentez. Fiefox a enrineg ho kerioù-tremen, ho sinedoù hag muioc’h c’hoazh.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kennaskañ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -585,8 +641,6 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Rediet</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Diret</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Dilemel al lec’hienn</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Aotren evit an holl lec’hiennoù</string>
 
@@ -690,8 +744,6 @@
     <string name="preferences_sync_history">Roll istor</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Sinedoù</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Titouroù kennaskañ</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Gerioù-tremen</string>
     <!-- Preference for syncing tabs -->
@@ -719,8 +771,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s war %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kartennoù kred</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Doareoù paeañ</string>
     <!-- Preference for syncing addresses -->
@@ -1659,11 +1709,7 @@
     <string name="add_to_homescreen_description_2">Gallout a rit ouzhpennañ al lec’hienn-mañ da bennbajenn ho trevnad evit mont war-eeun ha merdeiñ primoc’h evel ma vefe un arload.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Titouroù kennaskañ</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Gerioù-tremen</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Enrollañ an titouroù kennaskañ</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Enrollañ ar gerioù-tremen</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1680,36 +1726,18 @@
 
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Leuniañ anvioù-implijer ha gerioù-tremen en arloadoù-all war ho trevnad.</string>
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Ouzhpennañ titouroù kennaskañ</string>
 
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Ouzhpennañ ur ger-tremen</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Goubredañ an titouroù kennaskañ</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Goubredañ ar gerioù-tremen</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Goubredañ an titouroù kennaskañ dre an trevnadoù</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Titouroù kennaskañ enrollet</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Gerioù-tremen enrollet</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">An titouroù kennaskañ a enrollit pe c’houbredit e %s a vo diskouezet amañ.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Gouzout hiroc’h diwar-benn Sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Nemedennoù</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">An titouroù kennaskañ n’int ket enrollet a vo diskouezet amañ.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ne vo ket enrollet an titouroù kennaskañ evit al lec’hiennoù-mañ.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Dilemel an holl nemedennoù</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Klask titouroù kennaskañ</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Klask er gerioù-tremen</string>
     <!-- The header for the site that a login is for -->
@@ -1739,14 +1767,8 @@
     <string name="saved_login_reveal_password">Diskouez ar ger-tremen</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Kuzhat ar ger-tremen</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Dibrennit evit gwelet ho titouroù kennaskañ enrollet</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Diogelit ho titouroù kennaskañ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Diogelit ho kerioù-tremen enrollet</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Arventennit ur patrom morailh, ur PIN pe ur ger-tremen evit gwareziñ ho titouroù kennaskañ enrollet da vezañ lennet gant unan bennak all.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Diwezhatoc’h</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1761,34 +1783,22 @@
     <string name="saved_logins_sort_strategy_alphabetically">Anv (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Arver diwezhañ</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Lañser rummañ an titouroù kennaskañ</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Leuniañ ent emgefreek</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Chomlec’hioù</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kartennoù kred</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Doareoù paeañ</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Enrollañ ha leuniañ ar c’hartennoù en un doare emgefreek</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Enrollañ ha leuniañ an doareoù paeañ</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Rineget eo ar roadennoù</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Goubredañ ar c’hartennoù kred etre ho trevnadoù</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Goubredañ ar c\'hartennoù</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Ouzhpennañ ur gartenn gred</string>
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Ouzhpennañ ur gartenn</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Merañ ar c’hartennoù enrollet</string>
 
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Merañ ar c’hartennoù</string>
@@ -1797,12 +1807,8 @@
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Merañ ar chomlec’hioù</string>
 
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Enrollañ ha leuniañ ar chomlec’hioù en un doare emgefreek</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Enrollañ ha leuniañ ar chomlec’hioù</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Enkorfañ a ra titouroù evel niverennoù, posteloù ha chomlec’hioù</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Ouzhpennañ ur gartenn</string>
@@ -1824,8 +1830,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Dilemel ar gartenn</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ha fellout a ra deocʼh dilemel ar gartenn gred-mañ?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Dilemel ar gartenn?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Dilemel</string>
@@ -1838,24 +1842,15 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Kartennoù enrollet</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Biziatait un niverenn kartenn gred talvoudek mar plij.</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Enankit un niverenn gartenn reizh</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Mar plij, leugnit ar maez-mañ</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Ouzhpennañ un anv</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Dibrennit da welet ho kartennoù enrollet</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Diogelit ho kartennoù kred</string>
 
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">Diogelit ho toareoù paeañ enrollet</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Arventennit ur patrom prennañ, ur PIN pe ur ger-tremen evit gwareziñ ho kartennoù kred enrollet ma vez ho trevnad gant unan bennak all.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Arventennañ bremañ</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1863,21 +1858,12 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Dibrennit ho trevnad</string>
 
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Dibrennit evit implijout titouroù kartenn gred enrollet</string>
-
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Ouzhpennañ ur chomlec’h</string>
     <!-- Title of the "Edit address" screen -->
     <string name="addresses_edit_address">Embann ur chomlec’h</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Merañ ar chomlec’hioù</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Añv bihan</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Anv kreiz</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Anv familh</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Anv</string>
     <!-- The header for the street address of an address -->
@@ -1903,8 +1889,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Dilemel ar chomlec’h</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ha sur oc’h e fell deoc’h dilemel ar chomlec’h-mañ?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Dilemel ar chomlec’h-mañ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2002,40 +1986,20 @@
     <string name="login_menu_delete_button">Dilemel</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Embann</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Sur oc’h e fell deoc’h dilemel an titour-kennaskañ-mañ?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">Sur ocʼh e fell deocʼh dilemel ar ger-tremen-mañ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Dilemel</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Nullañ</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Dibarzhioù an titouroù kennaskañ</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ar vaezienn destenn kemmus evit chomlec’h web an titour kennaskañ.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ar vaezienn destenn kemmus evit anv arveriad an titour kennaskañ.</string>
-    <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ar vaezienn destenn kemmus evit ger-tremen an titour kennaskañ.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Enrollañ ar c’hemmoù d’an titouroù kennaskañ.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Enrollañ ar cʼhemmoù.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Embann</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Aozañ ar ger-tremen</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Ouzhpennañ titouroù kennaskañ nevez</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Ouzhpennañ ur ger-tremen</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Ger-tremen azgoulennet</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Enankit ur ger-tremen</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Anv-implijer rekis</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Enankit un anv-implijer</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2458,7 +2422,7 @@
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Kenderc’hel</string>
 
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">Serriñ</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Serriñ</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Trugarez da vezañ roet hoc’h ali!</string>
 
