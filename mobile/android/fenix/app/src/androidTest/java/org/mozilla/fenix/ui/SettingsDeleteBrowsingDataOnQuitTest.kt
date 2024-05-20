@@ -34,14 +34,17 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *
  */
 class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
-
-    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
-
-    @get:Rule
-    val composeTestRule = AndroidComposeTestRule(activityTestRule) { it.activity }
+    @get:Rule(order = 0)
+    val composeTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(
+                skipOnboarding = true,
+                tabsTrayRewriteEnabled = true,
+            ),
+        ) { it.activity }
 
     // Automatically allows app permissions, avoiding a system dialog showing up.
-    @get:Rule
+    @get:Rule(order = 1)
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.RECORD_AUDIO,
     )
@@ -92,10 +95,10 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
         }.goToHomescreen {
         }.openThreeDotMenu {
             clickQuit()
-            restartApp(activityTestRule)
+            restartApp(composeTestRule.activityRule)
         }
-        navigationToolbar {
-        }.openTabTray {
+        homeScreen {
+        }.openComposeTabDrawer(composeTestRule) {
             verifyNoOpenTabsInNormalBrowsing()
         }
     }
@@ -118,7 +121,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
         }.goToHomescreen {
         }.openThreeDotMenu {
             clickQuit()
-            restartApp(activityTestRule)
+            restartApp(composeTestRule.activityRule)
         }
 
         homeScreen {
@@ -151,7 +154,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
         }.goToHomescreen {
         }.openThreeDotMenu {
             clickQuit()
-            restartApp(activityTestRule)
+            restartApp(composeTestRule.activityRule)
         }
 
         navigationToolbar {
@@ -186,7 +189,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
             clickQuit()
             mDevice.waitForIdle()
         }
-        restartApp(activityTestRule)
+        restartApp(composeTestRule.activityRule)
         homeScreen {
         }.openThreeDotMenu {
         }.openDownloadsManager(composeTestRule) {
@@ -221,7 +224,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
             clickQuit()
             mDevice.waitForIdle()
         }
-        restartApp(activityTestRule)
+        restartApp(composeTestRule.activityRule)
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
@@ -253,7 +256,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
         }
         // disabling wifi to prevent downloads in the background
         setNetworkEnabled(enabled = false)
-        restartApp(activityTestRule)
+        restartApp(composeTestRule.activityRule)
         navigationToolbar {
         }.enterURLAndEnterToBrowser("about:cache".toUri()) {
             verifyNetworkCacheIsEmpty("memory")
