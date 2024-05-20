@@ -40,8 +40,6 @@ function onPropertyChange(editor) {
 async function testInitialState(editor) {
   info("Testing the initial state of the new editor");
 
-  let summary = editor.summary;
-
   ok(editor.sourceLoaded, "new editor is loaded when attached");
   ok(editor.isNew, "new editor has isNew flag");
 
@@ -51,9 +49,7 @@ async function testInitialState(editor) {
   }
   ok(editor.sourceEditor.hasFocus(), "new editor has focus");
 
-  summary = editor.summary;
-  const ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
-  is(parseInt(ruleCount, 10), 0, "new editor initially shows 0 rules");
+  await assertRuleCount(editor, 0);
 
   const color = await getComputedStyleProperty({
     selector: "body",
@@ -88,19 +84,7 @@ async function testUpdated(editor, originalHref) {
     "rule bracket has been auto-closed"
   );
 
-  const count = await waitFor(() => {
-    const int = parseInt(
-      editor.summary.querySelector(".stylesheet-rule-count").textContent,
-      10
-    );
-    if (int == 0) {
-      return false;
-    }
-
-    return int;
-  });
-
-  is(count, 1, "new editor shows 1 rule after modification");
+  await assertRuleCount(editor, 1);
 
   is(editor.styleSheet.href, originalHref, "style sheet href did not change");
 }
