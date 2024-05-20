@@ -1847,6 +1847,8 @@ pub struct TileCacheInstance {
     pub backdrop_surface: Option<BackdropSurface>,
     /// List of underlay compositor surfaces that exist in this picture cache
     pub underlays: Vec<ExternalSurfaceDescriptor>,
+    /// "Region" (actually a spanning rect) containing all overlay promoted surfaces
+    pub overlay_region: PictureRect,
 }
 
 enum SurfacePromotionResult {
@@ -1910,6 +1912,7 @@ impl TileCacheInstance {
             found_prims_after_backdrop: false,
             backdrop_surface: None,
             underlays: Vec::new(),
+            overlay_region: PictureRect::zero(),
         }
     }
 
@@ -2053,6 +2056,7 @@ impl TileCacheInstance {
         self.local_clip_rect = PictureRect::max_rect();
         self.deferred_dirty_tests.clear();
         self.underlays.clear();
+        self.overlay_region = PictureRect::zero();
 
         for sub_slice in &mut self.sub_slices {
             sub_slice.reset();
@@ -2457,6 +2461,7 @@ impl TileCacheInstance {
         is_root_tile_cache: bool,
         sub_slice_index: usize,
         surface_kind: CompositorSurfaceKind,
+        pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
     ) -> SurfacePromotionResult {
         // Check if this primitive _wants_ to be promoted to a compositor surface.
@@ -2475,8 +2480,7 @@ impl TileCacheInstance {
                 }
 
                 // If a complex clip is being applied to this primitive, it can't be
-                // promoted directly to a compositor surface unless it's opaque (in
-                // which case we draw as an underlay + alpha cutout)
+                // promoted directly to a compositor surface.
                 if prim_clip_chain.needs_mask {
                     return SurfacePromotionResult::Failed;
                 }
@@ -2485,6 +2489,12 @@ impl TileCacheInstance {
                 // Underlay strategy relies on the slice being opaque if a mask is needed,
                 // and only one underlay can rely on a mask.
                 if prim_clip_chain.needs_mask && (self.backdrop.kind.is_none() || !self.underlays.is_empty()) {
+                    return SurfacePromotionResult::Failed;
+                }
+
+                // Underlays can't appear on top of overlays, because they can't punch
+                // through the existing overlay.
+                if self.overlay_region.intersects(&pic_coverage_rect) {
                     return SurfacePromotionResult::Failed;
                 }
             }
@@ -2532,6 +2542,7 @@ impl TileCacheInstance {
         color_depth: ColorDepth,
         color_space: YuvRangedColorSpace,
         format: YuvFormat,
+        surface_kind: CompositorSurfaceKind,
     ) -> bool {
         for &key in api_keys {
             if key != ImageKey::DUMMY {
@@ -2565,7 +2576,7 @@ impl TileCacheInstance {
             composite_state,
             image_rendering,
             true,
-            CompositorSurfaceKind::Underlay,
+            surface_kind,
         )
     }
 
@@ -2855,6 +2866,11 @@ impl TileCacheInstance {
                     is_opaque,
                     descriptor,
                 });
+
+                // Add the pic_coverage_rect to the overlay region. This prevents
+                // future promoted surfaces from becoming underlays if they would
+                // intersect with the overlay region.
+                self.overlay_region = self.overlay_region.union(&pic_coverage_rect);
             }
             CompositorSurfaceKind::Blit => unreachable!(),
         }
@@ -3138,6 +3154,7 @@ impl TileCacheInstance {
                                                   is_root_tile_cache,
                                                   sub_slice_index,
                                                   CompositorSurfaceKind::Overlay,
+                                                  pic_coverage_rect,
                                                   frame_context) {
                     SurfacePromotionResult::Failed => {
                     }
@@ -3190,18 +3207,35 @@ impl TileCacheInstance {
             }
             PrimitiveInstanceKind::YuvImage { data_handle, ref mut compositor_surface_kind, .. } => {
                 let prim_data = &data_stores.yuv_image[data_handle];
-                let mut promote_to_surface = match self.can_promote_to_surface(
-                                            prim_data.common.flags,
-                                            prim_clip_chain,
-                                            prim_spatial_node_index,
-                                            is_root_tile_cache,
-                                            sub_slice_index,
-                                            CompositorSurfaceKind::Underlay,
-                                            frame_context) {
-                    SurfacePromotionResult::Failed => false,
-                    SurfacePromotionResult::Success => true,
+
+                let clip_on_top = prim_clip_chain.needs_mask;
+                let prefer_underlay = clip_on_top || !cfg!(target_os = "macos");
+                let promotion_attempts = if prefer_underlay {
+                    [CompositorSurfaceKind::Underlay, CompositorSurfaceKind::Overlay]
+                } else {
+                    [CompositorSurfaceKind::Overlay, CompositorSurfaceKind::Underlay]
                 };
 
+                let mut promotion_kind = None;
+                for kind in promotion_attempts {
+                    let success = match self.can_promote_to_surface(
+                                                prim_data.common.flags,
+                                                prim_clip_chain,
+                                                prim_spatial_node_index,
+                                                is_root_tile_cache,
+                                                sub_slice_index,
+                                                kind,
+                                                pic_coverage_rect,
+                                                frame_context) {
+                        SurfacePromotionResult::Failed => false,
+                        SurfacePromotionResult::Success => true,
+                    };
+                    if success {
+                        promotion_kind = Some(kind);
+                        break;
+                    }
+                }
+                
                 // TODO(gw): When we support RGBA images for external surfaces, we also
                 //           need to check if opaque (YUV images are implicitly opaque).
 
@@ -3210,7 +3244,7 @@ impl TileCacheInstance {
                 // add the image keys for this primitive as a dependency if this is _not_
                 // a promoted surface, since we don't want the tiles to invalidate when the
                 // video content changes, if it's a compositor surface!
-                if promote_to_surface {
+                if let Some(kind) = promotion_kind {
                     // Build dependency for each YUV plane, with current image generation for
                     // later detection of when the composited surface has changed.
                     let mut image_dependencies = [ImageDependency::INVALID; 3];
@@ -3221,7 +3255,7 @@ impl TileCacheInstance {
                         }
                     }
 
-                    promote_to_surface = self.setup_compositor_surfaces_yuv(
+                    let success = self.setup_compositor_surfaces_yuv(
                         sub_slice_index,
                         &mut prim_info,
                         prim_data.common.flags,
@@ -3238,15 +3272,22 @@ impl TileCacheInstance {
                         prim_data.kind.color_depth,
                         prim_data.kind.color_space.with_range(prim_data.kind.color_range),
                         prim_data.kind.format,
+                        kind,
                     );
+                    if !success {
+                        promotion_kind = None;
+                    }
                 }
 
                 // Store on the YUV primitive instance whether this is a promoted surface.
                 // This is used by the batching code to determine whether to draw the
                 // image to the content tiles, or just a transparent z-write.
-
-                if promote_to_surface {
-                    *compositor_surface_kind = CompositorSurfaceKind::Underlay;
+                if let Some(kind) = promotion_kind {
+                    *compositor_surface_kind = kind;
+                    if kind == CompositorSurfaceKind::Overlay {
+                        prim_instance.vis.state = VisibilityState::Culled;
+                        return;
+                    } 
                 } else {
                     *compositor_surface_kind = CompositorSurfaceKind::Blit;
 
@@ -4691,10 +4732,8 @@ pub struct PrimitiveList {
     pub clusters: Vec<PrimitiveCluster>,
     pub child_pictures: Vec<PictureIndex>,
     /// The number of preferred compositor surfaces that were found when
-    /// adding prims to this list, which would be rendered as overlays
+    /// adding prims to this list, which might be rendered as overlays
     pub overlay_surface_count: usize,
-    /// If true, we found an opaque compositor surface
-    pub has_opaque_compositor_surface: bool,
     pub needs_scissor_rect: bool,
 }
 
@@ -4709,7 +4748,6 @@ impl PrimitiveList {
             child_pictures: Vec::new(),
             overlay_surface_count: 0,
             needs_scissor_rect: false,
-            has_opaque_compositor_surface: false,
         }
     }
 
@@ -4718,7 +4756,6 @@ impl PrimitiveList {
         self.child_pictures.extend(other.child_pictures);
         self.overlay_surface_count += other.overlay_surface_count;
         self.needs_scissor_rect |= other.needs_scissor_rect;
-        self.has_opaque_compositor_surface |= other.has_opaque_compositor_surface;
     }
 
     /// Add a primitive instance to the end of the list
@@ -4743,9 +4780,14 @@ impl PrimitiveList {
                 self.needs_scissor_rect = true;
             }
             PrimitiveInstanceKind::YuvImage { .. } => {
-                // Any YUV image that requests a compositor surface is implicitly opaque
+                // Any YUV image that requests a compositor surface is implicitly
+                // opaque. Though we might treat this prim as an underlay, which
+                // doesn't require an overlay surface, we add to the count anyway
+                // in case we opt to present it as an overlay. This means we may
+                // be allocating more subslices than we actually need, but it
+                // gives us maximum flexibility.
                 if prim_flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
-                    self.has_opaque_compositor_surface = true;
+                    self.overlay_surface_count += 1;
                 }
             }
             PrimitiveInstanceKind::Image { .. } => {
