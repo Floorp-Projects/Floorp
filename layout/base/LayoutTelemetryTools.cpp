@@ -18,7 +18,8 @@ using LayoutSubsystemDurations =
 
 struct PerTickData {
   constexpr PerTickData() = default;
-  LayoutSubsystemDurations mLayoutSubsystemDurationMs;
+  LayoutSubsystemDurations mLayoutSubsystemDurationMs{0.0, 0.0, 0.0,
+                                                      0.0, 0.0, 0.0};
 };
 
 static PerTickData sData;
