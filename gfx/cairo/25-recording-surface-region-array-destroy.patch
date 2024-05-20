@@ -1,0 +1,20 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1716218236 -3600
+#      Mon May 20 16:17:16 2024 +0100
+# Node ID 475bcd0d578be25a21dd8ffedea8f2622c49b226
+# Parent  d43c2db9336dae716a8b17ea53f72312fa14fb0b
+Bug 1897561 - Avoid trying to access region elements that didn't get set up (in case of an error status on the surface). r=#gfx-reviewers
+
+diff --git a/gfx/cairo/cairo/src/cairo-recording-surface.c b/gfx/cairo/cairo/src/cairo-recording-surface.c
+--- a/gfx/cairo/cairo/src/cairo-recording-surface.c
++++ b/gfx/cairo/cairo/src/cairo-recording-surface.c
+@@ -480,7 +480,7 @@ static void
+     cairo_recording_region_element_t *region_elements;
+     int i, num_elements;
+ 
+-    num_elements = surface->commands.num_elements;
++    num_elements = MAX(surface->commands.num_elements, _cairo_array_num_elements(&region_array->regions));
+     elements = _cairo_array_index (&surface->commands, 0);
+     region_elements = _cairo_array_index (&region_array->regions, 0);
+     for (i = 0; i < num_elements; i++) {
