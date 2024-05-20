@@ -102,10 +102,10 @@
       // ////////////////////////////////////////////////////////////////////////
       // label element
 
-      // The label element contains the button. The name is calculated from
-      // this button.
-      // Note: the name contains the content of the button.
-      testName("btn_label_inside", "text 10 text");
+      // The label element contains the button. The name of the button is
+      // calculated from the content of the label.
+      // Note: the name does not contain the content of the button.
+      testName("btn_label_inside", "texttext");
 
       // The label element and the button are placed in the same form. Gets
       // the name from the label subtree.
@@ -120,7 +120,7 @@
       testName("btn_label_indocument", "in document");
 
       // Multiple label elements for single button
-      testName("btn_label_multi", "label1label2");
+      testName("btn_label_multi", "label1 label2");
 
       // Multiple controls inside a label element
       testName("ctrl_in_label_1", "Enable a button control");
@@ -163,15 +163,15 @@
       // ////////////////////////////////////////////////////////////////////////
       // textarea name
 
-      // textarea's name should have the value, which initially is specified by
-      // a text child.
-      testName("textareawithchild", "Story Foo is ended.");
+      // textarea's name should not have the value, which initially is specified
+      // by a text child.
+      testName("textareawithchild", "Story is ended.");
 
-      // new textarea name should reflect the value change.
+      // new textarea name should not reflect the value change.
       var elem = document.getElementById("textareawithchild");
       elem.value = "Bar";
 
-      testName("textareawithchild", "Story Bar is ended.");
+      testName("textareawithchild", "Story is ended.");
 
       // ////////////////////////////////////////////////////////////////////////
       // controls having a value used as a part of computed name
@@ -194,13 +194,13 @@
       testName("textbox1", "days.");
 
       testName("comboinmiddle", "Subscribe to ATOM feed.");
-      testName("combo4", "Subscribe to ATOM feed.");
+      testName("combo4", "Subscribe to feed.");
 
       testName("comboinmiddle2", "Play the Haliluya sound when new mail arrives");
       testName("combo5", null); // label isn't used as a name for control
       testName("checkbox", "Play the Haliluya sound when new mail arrives");
       testName("comboinmiddle3", "Play the Haliluya sound when new mail arrives");
-      testName("combo6", "Play the Haliluya sound when new mail arrives");
+      testName("combo6", "Play the sound when new mail arrives");
 
       testName("comboinend", "This day was sunny");
       testName("combo7", "This day was");

@@ -26,7 +26,7 @@ addAccessibleTask(
     is(n1Label.getAttributeValue("AXTitle"), "Label");
 
     let n2 = getNativeInterface(accDoc, "n2");
-    is(n2.getAttributeValue("AXDescription"), "TwoLabels");
+    is(n2.getAttributeValue("AXDescription"), "Two Labels");
 
     let n3 = getNativeInterface(accDoc, "n3");
     is(n3.getAttributeValue("AXDescription"), "ARIA Label");

@@ -24,6 +24,21 @@ using namespace mozilla::a11y;
  */
 static const Accessible* sInitiatorAcc = nullptr;
 
+/*
+ * Track whether we're in an aria-describedby or aria-labelledby traversal. The
+ * browser should only follow those IDREFs, per the "LabelledBy" section of the
+ * AccName spec, "if [...] the current node is not already part of an ongoing
+ * aria-labelledby or aria-describedby traversal [...]"
+ */
+static bool sInAriaRelationTraversal = false;
+
+/*
+ * Track the accessibles that we've consulted so far while computing the text
+ * alternative for an accessible. Per the Name From Content section of the Acc
+ * Name spec, "[e]ach node in the subtree is consulted only once."
+ */
+static nsTHashSet<const Accessible*> sReferencedAccs;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Public.
 
@@ -31,9 +46,16 @@ nsresult nsTextEquivUtils::GetNameFromSubtree(
     const LocalAccessible* aAccessible, nsAString& aName) {
   aName.Truncate();
 
-  if (sInitiatorAcc) return NS_OK;
+  if (sReferencedAccs.Contains(aAccessible)) {
+    return NS_OK;
+  }
 
-  sInitiatorAcc = aAccessible;
+  // Remember the initiating accessible so we know when we've returned to it.
+  if (sReferencedAccs.IsEmpty()) {
+    sInitiatorAcc = aAccessible;
+  }
+  sReferencedAccs.Insert(aAccessible);
+
   if (GetRoleRule(aAccessible->Role()) == eNameFromSubtreeRule) {
     // XXX: is it necessary to care the accessible is not a document?
     if (aAccessible->IsContent()) {
@@ -44,7 +66,13 @@ nsresult nsTextEquivUtils::GetNameFromSubtree(
     }
   }
 
-  sInitiatorAcc = nullptr;
+  // Once the text alternative computation is complete (i.e., once we've
+  // returned to the initiator acc), clear out the referenced accessibles and
+  // reset the initiator acc.
+  if (aAccessible == sInitiatorAcc) {
+    sReferencedAccs.Clear();
+    sInitiatorAcc = nullptr;
+  }
 
   return NS_OK;
 }
@@ -52,6 +80,16 @@ nsresult nsTextEquivUtils::GetNameFromSubtree(
 nsresult nsTextEquivUtils::GetTextEquivFromIDRefs(
     const LocalAccessible* aAccessible, nsAtom* aIDRefsAttr,
     nsAString& aTextEquiv) {
+  // If this is an aria-labelledby or aria-describedby traversal and we're
+  // already in such a traversal, or if we've already consulted the given
+  // accessible, early out.
+  const bool isAriaTraversal = aIDRefsAttr == nsGkAtoms::aria_labelledby ||
+                               aIDRefsAttr == nsGkAtoms::aria_describedby;
+  if ((sInAriaRelationTraversal && isAriaTraversal) ||
+      sReferencedAccs.Contains(aAccessible)) {
+    return NS_OK;
+  }
+
   aTextEquiv.Truncate();
 
   nsIContent* content = aAccessible->GetContent();
@@ -62,7 +100,18 @@ nsresult nsTextEquivUtils::GetTextEquivFromIDRefs(
   while ((refContent = iter.NextElem())) {
     if (!aTextEquiv.IsEmpty()) aTextEquiv += ' ';
 
-    if (refContent->IsHTMLElement(nsGkAtoms::slot)) printf("jtd idref slot\n");
+    // Note that we're in an aria-labelledby or aria-describedby traversal.
+    if (isAriaTraversal) {
+      sInAriaRelationTraversal = true;
+    }
+
+    // Reset the aria-labelledby / aria-describedby traversal tracking when we
+    // exit. Reset on scope exit because NS_ENSURE_SUCCESS may return.
+    auto onExit = MakeScopeExit([isAriaTraversal]() {
+      if (isAriaTraversal) {
+        sInAriaRelationTraversal = false;
+      }
+    });
     nsresult rv =
         AppendTextEquivFromContent(aAccessible, refContent, &aTextEquiv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -75,21 +124,36 @@ nsresult nsTextEquivUtils::AppendTextEquivFromContent(
     const LocalAccessible* aInitiatorAcc, nsIContent* aContent,
     nsAString* aString) {
   // Prevent recursion which can cause infinite loops.
-  if (sInitiatorAcc) return NS_OK;
+  LocalAccessible* accessible =
+      aInitiatorAcc->Document()->GetAccessible(aContent);
+  if (sReferencedAccs.Contains(aInitiatorAcc) ||
+      sReferencedAccs.Contains(accessible)) {
+    return NS_OK;
+  }
 
-  sInitiatorAcc = aInitiatorAcc;
+  // Remember the initiating accessible so we know when we've returned to it.
+  if (sReferencedAccs.IsEmpty()) {
+    sInitiatorAcc = aInitiatorAcc;
+  }
+  sReferencedAccs.Insert(aInitiatorAcc);
 
   nsresult rv = NS_ERROR_FAILURE;
-  if (LocalAccessible* accessible =
-          aInitiatorAcc->Document()->GetAccessible(aContent)) {
+  if (accessible) {
     rv = AppendFromAccessible(accessible, aString);
+    sReferencedAccs.Insert(accessible);
   } else {
     // The given content is invisible or otherwise inaccessible, so use the DOM
     // subtree.
     rv = AppendFromDOMNode(aContent, aString);
   }
 
-  sInitiatorAcc = nullptr;
+  // Once the text alternative computation is complete (i.e., once we've
+  // returned to the initiator acc), clear out the referenced accessibles and
+  // reset the initiator acc.
+  if (aInitiatorAcc == sInitiatorAcc) {
+    sReferencedAccs.Clear();
+    sInitiatorAcc = nullptr;
+  }
   return rv;
 }
 
@@ -147,6 +211,10 @@ nsresult nsTextEquivUtils::AppendFromAccessibleChildren(
   uint32_t childCount = aAccessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
     Accessible* child = aAccessible->ChildAt(childIdx);
+    // If we've already consulted this child, don't consult it again.
+    if (sReferencedAccs.Contains(child)) {
+      continue;
+    }
     rv = AppendFromAccessible(child, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -233,50 +301,31 @@ nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
     return NS_OK_NO_NAME_CLAUSE_HANDLED;
   }
 
-  // Implementation of step f. of text equivalent computation. If the given
-  // accessible is not root accessible (the accessible the text equivalent is
-  // computed for in the end) then append accessible value. Otherwise append
-  // value if and only if the given accessible is in the middle of its parent.
+  // Implementation of the "Embedded Control" step of the text alternative
+  // computation. If the given accessible is not the root accessible (the
+  // accessible the text alternative is computed for in the end) then append the
+  // accessible value.
 
+  if (aAccessible == sInitiatorAcc) {
+    return NS_OK_NO_NAME_CLAUSE_HANDLED;
+  }
+
+  // For listboxes in non-initiator computations, we need to get the selected
+  // item and append its text alternative.
   nsAutoString text;
-  if (aAccessible != sInitiatorAcc) {
-    // For listboxes in non-initiator computations, we need to get the selected
-    // item and append its text alternative.
-    if (aAccessible->IsListControl()) {
-      Accessible* selected = aAccessible->GetSelectedItem(0);
-      if (selected) {
-        nsresult rv = AppendFromAccessible(selected, &text);
-        NS_ENSURE_SUCCESS(rv, rv);
-        return AppendString(aString, text) ? NS_OK
-                                           : NS_OK_NO_NAME_CLAUSE_HANDLED;
-      }
-      return NS_ERROR_FAILURE;
+  if (aAccessible->IsListControl()) {
+    Accessible* selected = aAccessible->GetSelectedItem(0);
+    if (selected) {
+      nsresult rv = AppendFromAccessible(selected, &text);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return AppendString(aString, text) ? NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
     }
-
-    aAccessible->Value(text);
-
-    return AppendString(aString, text) ? NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
+    return NS_ERROR_FAILURE;
   }
 
-  // XXX: is it necessary to care the accessible is not a document?
-  if (aAccessible->IsDoc()) return NS_ERROR_UNEXPECTED;
+  aAccessible->Value(text);
 
-  for (Accessible* next = aAccessible->NextSibling(); next;
-       next = next->NextSibling()) {
-    if (!IsWhitespaceLeaf(next)) {
-      for (Accessible* prev = aAccessible->PrevSibling(); prev;
-           prev = prev->PrevSibling()) {
-        if (!IsWhitespaceLeaf(prev)) {
-          aAccessible->Value(text);
-
-          return AppendString(aString, text) ? NS_OK
-                                             : NS_OK_NO_NAME_CLAUSE_HANDLED;
-        }
-      }
-    }
-  }
-
-  return NS_OK_NO_NAME_CLAUSE_HANDLED;
+  return AppendString(aString, text) ? NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
 }
 
 nsresult nsTextEquivUtils::AppendFromDOMNode(nsIContent* aContent,

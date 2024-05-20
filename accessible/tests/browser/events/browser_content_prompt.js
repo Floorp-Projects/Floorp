@@ -40,7 +40,7 @@ addAccessibleTask(``, async function (browser) {
   testRole(dialog, ROLE_DIALOG);
   let infoBody = focusedEl.DOMNode.ownerDocument.getElementById("infoBody");
   testRelation(dialog, RELATION_DESCRIBED_BY, infoBody);
-  testDescr(dialog, "test ");
+  testDescr(dialog, "test  ");
   info("Dismissing alert");
   let hidden = waitForEvent(EVENT_HIDE, frame);
   EventUtils.synthesizeKey("KEY_Escape", {}, frame.DOMNode.contentWindow);
