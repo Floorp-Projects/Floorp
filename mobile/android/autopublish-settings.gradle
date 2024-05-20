@@ -40,15 +40,7 @@ def rootLocalProperties = new File(gradle.mozconfig.topsrcdir, "local.properties
 
 gradle.settingsEvaluated {
     if (gradle.hasProperty("localProperties.autoPublish.application-services.dir")) {
-        // The project that we're configuring now might have overridden
-        // the path from `$topsrcdir/local.properties`, so we need to
-        // resolve it again.
-        def appServicesLocalPath = gradle."localProperties.autoPublish.application-services.dir".with { relativeOrAbsolutePath ->
-            def absolutePath = rootDir.toPath().resolve(relativeOrAbsolutePath).toString()
-            gradle."localProperties.autoPublish.application-services.dir" = absolutePath
-            absolutePath
-        }
-
+        def appServicesLocalPath = gradle."localProperties.autoPublish.application-services.dir"
         logger.lifecycle("settings.gradle> Enabling automatic publication of application-services from: $appServicesLocalPath")
         // Windows can't execute .py files directly, so we assume a "manually installed" python,
         // which comes with a "py" launcher and respects the shebang line to specify the version.
@@ -63,13 +55,7 @@ gradle.settingsEvaluated {
     }
 
     if (gradle.hasProperty("localProperties.autoPublish.glean.dir")) {
-        // As above, absolutize the path.
-        def gleanLocalPath = gradle."localProperties.autoPublish.glean.dir".with { relativeOrAbsolutePath ->
-            def absolutePath = rootDir.toPath().resolve(relativeOrAbsolutePath).toString()
-            gradle."localProperties.autoPublish.glean.dir" = absolutePath
-            absolutePath
-        }
-
+        def gleanLocalPath = gradle."localProperties.autoPublish.glean.dir"
         logger.lifecycle("settings.gradle> Enabling automatic publication of Glean from: $gleanLocalPath")
         // As above, hacks to execute .py files on Windows.
         def publishGleanCmd = [];
@@ -88,13 +74,13 @@ gradle.projectsLoaded { ->
         // Allow local appservices substitution in each project.
         if (gradle.hasProperty("localProperties.autoPublish.application-services.dir")) {
             def appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
-            apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+            apply from: rootProject.file("${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle")
         }
 
         // Allow local Glean substitution in each project.
         if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
             def gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
-            apply from: "${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+            apply from: rootProject.file("${gleanSrcDir}/build-scripts/substitute-local-glean.gradle")
         }
     }
 }
