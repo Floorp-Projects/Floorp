@@ -1,3 +1,19 @@
+# Release 0.4.2 (2024-02-06)
+
+- [Use anon-const to avoid RFC 3373 warnings.][62]
+
+[62]: https://github.com/rust-num/num-derive/pull/62
+
+# Release 0.4.1 (2023-10-07)
+
+- [Make `Float` work with `no_std`][56] -- thanks @vkahl!
+- [Emit full paths for `Option` and `Result`.][57]
+- [Add derive macro for `num_traits::Signed` and `Unsigned`][55] -- thanks @tdelabro!
+
+[55]: https://github.com/rust-num/num-derive/pull/55
+[56]: https://github.com/rust-num/num-derive/pull/56
+[57]: https://github.com/rust-num/num-derive/pull/57
+
 # Release 0.4.0 (2023-06-29)
 
 - [Update to syn-2][54] -- thanks @maurer!
