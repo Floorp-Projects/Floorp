@@ -102,7 +102,7 @@ WebrtcVideoEncoderFactory::InternalFactory::Create(
   };
 
   auto createWebRTCEncoder =
-      [this, &aFormat]() -> std::unique_ptr<webrtc::VideoEncoder> {
+      [this, &aEnv, &aFormat]() -> std::unique_ptr<webrtc::VideoEncoder> {
     std::unique_ptr<webrtc::VideoEncoder> encoder;
     switch (webrtc::PayloadStringToCodecType(aFormat.name)) {
       case webrtc::VideoCodecType::kVideoCodecH264: {
@@ -116,10 +116,10 @@ WebrtcVideoEncoderFactory::InternalFactory::Create(
       }
       // libvpx fallbacks.
       case webrtc::VideoCodecType::kVideoCodecVP8:
-        encoder = webrtc::VP8Encoder::Create();
+        encoder = webrtc::CreateVp8Encoder(aEnv);
         break;
       case webrtc::VideoCodecType::kVideoCodecVP9:
-        encoder = webrtc::VP9Encoder::Create();
+        encoder = webrtc::CreateVp9Encoder(aEnv);
         break;
 
       default:
