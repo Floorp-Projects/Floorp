@@ -26,8 +26,6 @@ void PresShell::SetNeedLayoutFlush() {
   if (!mReflowCause) {
     mReflowCause = profiler_capture_backtrace();
   }
-
-  mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
 }
 
 void PresShell::SetNeedStyleFlush() {
@@ -48,8 +46,6 @@ void PresShell::SetNeedStyleFlush() {
   if (!mStyleCause) {
     mStyleCause = profiler_capture_backtrace();
   }
-
-  mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
 }
 
 void PresShell::EnsureStyleFlush() {

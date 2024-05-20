@@ -34,9 +34,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/layout/LayoutTelemetryTools.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/Hal.h"
 #include "mozilla/InputTaskManager.h"
@@ -2250,9 +2250,6 @@ void nsRefreshDriver::FlushLayoutOnPendingDocsAndFixUpFocus() {
     // promise if it needs to.
     presShell->NotifyFontFaceSetOnRefresh();
     mNeedToRecomputeVisibility = true;
-
-    // Record the telemetry for events that occurred between ticks.
-    presShell->PingPerTickTelemetry(FlushType::Layout);
   }
 }
 
@@ -2766,6 +2763,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   }
 
   UpdateAnimatedImages(previousRefresh, aNowTime);
+
+  layout_telemetry::PingPerTickTelemetry();
 
   bool dispatchTasksAfterTick = false;
   if (mViewManagerFlushIsPending && !mThrottled) {

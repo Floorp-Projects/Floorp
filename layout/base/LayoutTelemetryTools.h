@@ -9,23 +9,16 @@
 #ifndef mozilla_LayoutTelemetryTools_h
 #define mozilla_LayoutTelemetryTools_h
 
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/EnumeratedRange.h"
-#include "mozilla/FlushType.h"
-#include "mozilla/Saturate.h"
 #include "mozilla/TimeStamp.h"
 
 #define LAYOUT_TELEMETRY_RECORD(subsystem) \
-  layout_telemetry::AutoRecord a(layout_telemetry::LayoutSubsystem::subsystem)
+  mozilla::layout_telemetry::AutoRecord a( \
+      mozilla::layout_telemetry::LayoutSubsystem::subsystem)
 
-#define LAYOUT_TELEMETRY_RECORD_BASE(subsystem)     \
-  layout_telemetry::AutoRecord a(&mLayoutTelemetry, \
-                                 layout_telemetry::LayoutSubsystem::subsystem)
+namespace mozilla::layout_telemetry {
 
-namespace mozilla {
-namespace layout_telemetry {
-
-enum class FlushKind : uint8_t { Style, Layout, Count };
+// Send the current per-tick telemetry.
+void PingPerTickTelemetry();
 
 enum class LayoutSubsystem : uint8_t {
   Restyle,
@@ -37,54 +30,18 @@ enum class LayoutSubsystem : uint8_t {
   Count
 };
 
-using LayoutSubsystemDurations =
-    EnumeratedArray<LayoutSubsystem, double, size_t(LayoutSubsystem::Count)>;
-using LayoutFlushCount =
-    EnumeratedArray<FlushKind, SaturateUint8, size_t(FlushKind::Count)>;
-
-struct Data {
-  Data();
-
-  void IncReqsPerFlush(FlushType aFlushType);
-  void IncFlushesPerTick(FlushType aFlushType);
-
-  void PingTelemetry();
-
-  // Send the current number of flush requests for aFlushType to telemetry and
-  // reset the count.
-  void PingReqsPerFlushTelemetry(FlushType aFlushType);
-
-  // Send the current non-zero number of style and layout flushes to telemetry
-  // and reset the count.
-  void PingFlushPerTickTelemetry(FlushType aFlushType);
-
-  // Send the current non-zero time spent under style and layout processing this
-  // tick to telemetry and reset the total.
-  void PingTotalMsPerTickTelemetry(FlushType aFlushType);
-
-  // Send the current per-tick telemetry for `aFlushType`.
-  void PingPerTickTelemetry(FlushType aFlushType);
-
-  LayoutFlushCount mReqsPerFlush;
-  LayoutFlushCount mFlushesPerTick;
-  LayoutSubsystemDurations mLayoutSubsystemDurationMs;
-};
-
 class AutoRecord {
  public:
   explicit AutoRecord(LayoutSubsystem aSubsystem);
-  AutoRecord(Data* aLayoutTelemetry, LayoutSubsystem aSubsystem);
   ~AutoRecord();
 
  private:
-  AutoRecord* mParentRecord;
-  Data* mLayoutTelemetry;
-  LayoutSubsystem mSubsystem;
+  AutoRecord* const mParentRecord;
+  const LayoutSubsystem mSubsystem;
   TimeStamp mStartTime;
-  double mDurationMs;
+  double mDurationMs = 0.0;
 };
 
-}  // namespace layout_telemetry
-}  // namespace mozilla
+}  // namespace mozilla::layout_telemetry
 
 #endif  // !mozilla_LayoutTelemetryTools_h

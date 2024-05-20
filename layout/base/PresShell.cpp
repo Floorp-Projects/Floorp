@@ -21,11 +21,11 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AutoRestore.h"
 #include "mozilla/CaretAssociationHint.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/DisplayPortUtils.h"
+#include "mozilla/layout/LayoutTelemetryTools.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -4299,144 +4299,117 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mViewManager);
   MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mDocument->HasShellOrBFCacheEntry());
 
+  if (!isSafeToFlush) {
+    return;
+  }
+
   // Make sure the view manager stays alive.
   RefPtr<nsViewManager> viewManager = mViewManager;
-  bool didStyleFlush = false;
-  bool didLayoutFlush = false;
-  if (isSafeToFlush) {
-    // We need to make sure external resource documents are flushed too (for
-    // example, svg filters that reference a filter in an external document
-    // need the frames in the external document to be constructed for the
-    // filter to work). We only need external resources to be flushed when the
-    // main document is flushing >= FlushType::Frames, so we flush external
-    // resources here instead of Document::FlushPendingNotifications.
-    mDocument->FlushExternalResources(flushType);
+  // We need to make sure external resource documents are flushed too (for
+  // example, svg filters that reference a filter in an external document
+  // need the frames in the external document to be constructed for the
+  // filter to work). We only need external resources to be flushed when the
+  // main document is flushing >= FlushType::Frames, so we flush external
+  // resources here instead of Document::FlushPendingNotifications.
+  mDocument->FlushExternalResources(flushType);
 
-    // Force flushing of any pending content notifications that might have
-    // queued up while our event was pending.  That will ensure that we don't
-    // construct frames for content right now that's still waiting to be
-    // notified on,
-    mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
+  // Force flushing of any pending content notifications that might have
+  // queued up while our event was pending.  That will ensure that we don't
+  // construct frames for content right now that's still waiting to be
+  // notified on,
+  mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
 
-    mDocument->UpdateSVGUseElementShadowTrees();
+  mDocument->UpdateSVGUseElementShadowTrees();
 
-    // Process pending restyles, since any flush of the presshell wants
-    // up-to-date style data.
-    if (MOZ_LIKELY(!mIsDestroying)) {
-      viewManager->FlushDelayedResize();
-      mPresContext->FlushPendingMediaFeatureValuesChanged();
+  // Process pending restyles, since any flush of the presshell wants
+  // up-to-date style data.
+  if (MOZ_LIKELY(!mIsDestroying)) {
+    viewManager->FlushDelayedResize();
+    mPresContext->FlushPendingMediaFeatureValuesChanged();
+  }
+
+  if (MOZ_LIKELY(!mIsDestroying)) {
+    // Now that we have flushed media queries, update the rules before looking
+    // up @font-face / @counter-style / @font-feature-values rules.
+    StyleSet()->UpdateStylistIfNeeded();
+
+    // Flush any pending update of the user font set, since that could
+    // cause style changes (for updating ex/ch units, and to cause a
+    // reflow).
+    mDocument->FlushUserFontSet();
+
+    mPresContext->FlushCounterStyles();
+
+    mPresContext->FlushFontFeatureValues();
+
+    mPresContext->FlushFontPaletteValues();
+
+    // Flush any requested SMIL samples.
+    if (mDocument->HasAnimationController()) {
+      mDocument->GetAnimationController()->FlushResampleRequests();
+    }
+  }
+
+  // The FlushResampleRequests() above might have flushed style changes.
+  if (MOZ_LIKELY(!mIsDestroying)) {
+    if (aFlush.mFlushAnimations) {
+      mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
+      mNeedThrottledAnimationFlush = false;
     }
 
-    if (MOZ_LIKELY(!mIsDestroying)) {
-      // Now that we have flushed media queries, update the rules before looking
-      // up @font-face / @counter-style / @font-feature-values rules.
-      StyleSet()->UpdateStylistIfNeeded();
-
-      // Flush any pending update of the user font set, since that could
-      // cause style changes (for updating ex/ch units, and to cause a
-      // reflow).
-      mDocument->FlushUserFontSet();
-
-      mPresContext->FlushCounterStyles();
-
-      mPresContext->FlushFontFeatureValues();
-
-      mPresContext->FlushFontPaletteValues();
-
-      // Flush any requested SMIL samples.
-      if (mDocument->HasAnimationController()) {
-        mDocument->GetAnimationController()->FlushResampleRequests();
-      }
+    nsAutoScriptBlocker scriptBlocker;
+    Maybe<uint64_t> innerWindowID;
+    if (auto* window = mDocument->GetInnerWindow()) {
+      innerWindowID = Some(window->WindowID());
     }
+    AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
+                                              innerWindowID);
+    PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
+    LAYOUT_TELEMETRY_RECORD(Restyle);
 
-    // The FlushResampleRequests() above might have flushed style changes.
-    if (MOZ_LIKELY(!mIsDestroying)) {
-      if (aFlush.mFlushAnimations) {
-        mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
-        mNeedThrottledAnimationFlush = false;
-      }
+    mPresContext->RestyleManager()->ProcessPendingRestyles();
+    mNeedStyleFlush = false;
+  }
 
-      nsAutoScriptBlocker scriptBlocker;
-      Maybe<uint64_t> innerWindowID;
-      if (auto* window = mDocument->GetInnerWindow()) {
-        innerWindowID = Some(window->WindowID());
-      }
-      AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
-                                                innerWindowID);
-      PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
-      LAYOUT_TELEMETRY_RECORD_BASE(Restyle);
+  AssertFrameTreeIsSane(*this);
 
-      mPresContext->RestyleManager()->ProcessPendingRestyles();
-      mNeedStyleFlush = false;
-    }
-
-    AssertFrameTreeIsSane(*this);
-
-    didStyleFlush = true;
-
-    if (flushType >= (SuppressInterruptibleReflows()
-                          ? FlushType::Layout
-                          : FlushType::InterruptibleLayout) &&
-        !mIsDestroying) {
-      didLayoutFlush = true;
-      if (DoFlushLayout(/* aInterruptible = */ flushType < FlushType::Layout)) {
+  if (flushType >= (SuppressInterruptibleReflows()
+                        ? FlushType::Layout
+                        : FlushType::InterruptibleLayout) &&
+      !mIsDestroying) {
+    if (DoFlushLayout(/* aInterruptible = */ flushType < FlushType::Layout)) {
+      if (mContentToScrollTo) {
+        DoScrollContentIntoView();
         if (mContentToScrollTo) {
-          DoScrollContentIntoView();
-          if (mContentToScrollTo) {
-            mContentToScrollTo->RemoveProperty(nsGkAtoms::scrolling);
-            mContentToScrollTo = nullptr;
-          }
+          mContentToScrollTo->RemoveProperty(nsGkAtoms::scrolling);
+          mContentToScrollTo = nullptr;
         }
       }
-      // FIXME(emilio): Maybe we should assert here but it's not 100% sure it'd
-      // hold right now, UnsuppressAndInvalidate and so on can run script...
-      if (MOZ_LIKELY(mDirtyRoots.IsEmpty())) {
-        mNeedLayoutFlush = false;
-      }
     }
-
-    FlushPendingScrollResnap();
-
-    if (MOZ_LIKELY(!mIsDestroying)) {
-      // Try to trigger pending scroll-driven animations after we flush
-      // style and layout (if any). If we try to trigger them after flushing
-      // style but the frame tree is not ready, we will check them again after
-      // we flush layout because the requirement to trigger scroll-driven
-      // animations is that the associated scroll containers are ready (i.e. the
-      // scroll-timeline is active), and this depends on the readiness of the
-      // scrollable frame and the primary frame of the scroll container.
-      TriggerPendingScrollTimelineAnimations(mDocument);
-    }
-
-    if (flushType >= FlushType::Layout) {
-      if (!mIsDestroying) {
-        viewManager->UpdateWidgetGeometry();
-      }
+    // FIXME(emilio): Maybe we should assert here but it's not 100% sure it'd
+    // hold right now, UnsuppressAndInvalidate and so on can run script...
+    if (MOZ_LIKELY(mDirtyRoots.IsEmpty())) {
+      mNeedLayoutFlush = false;
     }
   }
 
-  // Update flush counters
-  if (didStyleFlush) {
-    mLayoutTelemetry.IncReqsPerFlush(FlushType::Style);
+  FlushPendingScrollResnap();
+
+  if (MOZ_LIKELY(!mIsDestroying)) {
+    // Try to trigger pending scroll-driven animations after we flush
+    // style and layout (if any). If we try to trigger them after flushing
+    // style but the frame tree is not ready, we will check them again after
+    // we flush layout because the requirement to trigger scroll-driven
+    // animations is that the associated scroll containers are ready (i.e. the
+    // scroll-timeline is active), and this depends on the readiness of the
+    // scrollable frame and the primary frame of the scroll container.
+    TriggerPendingScrollTimelineAnimations(mDocument);
   }
 
-  if (didLayoutFlush) {
-    mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
-  }
-
-  // Record telemetry for the number of requests per each flush type.
-  //
-  // Flushes happen as style or style+layout. This depends upon the `flushType`
-  // where flushType >= InterruptibleLayout means flush layout and flushType >=
-  // Style means flush style. We only report if didLayoutFlush or didStyleFlush
-  // is true because we care if a flush really did take place. (Flush is guarded
-  // by `isSafeToFlush == true`.)
-  if (flushType >= FlushType::InterruptibleLayout && didLayoutFlush) {
-    MOZ_ASSERT(didLayoutFlush == didStyleFlush);
-    mLayoutTelemetry.PingReqsPerFlushTelemetry(FlushType::Layout);
-  } else if (flushType >= FlushType::Style && didStyleFlush) {
-    MOZ_ASSERT(!didLayoutFlush);
-    mLayoutTelemetry.PingReqsPerFlushTelemetry(FlushType::Style);
+  if (flushType >= FlushType::Layout) {
+    if (!mIsDestroying) {
+      viewManager->UpdateWidgetGeometry();
+    }
   }
 }
 
@@ -9739,7 +9712,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
       "Reflow", LAYOUT_Reflow, uri ? uri->GetSpecOrDefault() : "N/A"_ns);
 
-  LAYOUT_TELEMETRY_RECORD_BASE(Reflow);
+  LAYOUT_TELEMETRY_RECORD(Reflow);
 
   PerfStats::AutoMetricRecording<PerfStats::Metric::Reflowing> autoRecording;
 
@@ -12094,10 +12067,6 @@ void PresShell::EndPaint() {
       }
     }
   }
-}
-
-void PresShell::PingPerTickTelemetry(FlushType aFlushType) {
-  mLayoutTelemetry.PingPerTickTelemetry(aFlushType);
 }
 
 bool PresShell::GetZoomableByAPZ() const {

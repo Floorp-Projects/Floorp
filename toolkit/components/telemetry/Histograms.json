@@ -16755,43 +16755,6 @@
     "keyed": true,
     "description": "How many milliseconds it took before 100 wakeups for the thread was done because of new Runnables."
   },
-  "PRESSHELL_REQS_PER_STYLE_FLUSH": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1571612, 1616147],
-    "expires_in_version": "82",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 32,
-    "description": "The number of style flush requests pending per style flush."
-  },
-  "PRESSHELL_REQS_PER_LAYOUT_FLUSH": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1571612, 1616147],
-    "expires_in_version": "82",
-    "keyed": true,
-    "keys": ["Style", "Layout"],
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 32,
-    "description": "The number of style flush requests and layout flush requests pending per layout flush. Both values are recorded because flushing a pending layout flush also flushes style."
-  },
-  "PRESSHELL_FLUSHES_PER_TICK": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1571612, 1616147],
-    "expires_in_version": "82",
-    "keyed": true,
-    "keys": ["Style", "Layout"],
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 32,
-    "description": "The number of style and layout flushes that occur per Refresh Driver tick."
-  },
   "PRESSHELL_LAYOUT_TOTAL_MS_PER_TICK": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
