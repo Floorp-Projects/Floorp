@@ -13,14 +13,13 @@ add_task(async function testSwitchToTabTextDisplay() {
       omnibox: {
         keyword: "omniboxtest",
       },
-
-      background() {
-        /* global browser */
-        browser.omnibox.setDefaultSuggestion({
-          description: "doit",
-        });
-        // Just do nothing for this test.
-      },
+    },
+    background() {
+      /* global browser */
+      browser.omnibox.setDefaultSuggestion({
+        description: "doit",
+      });
+      // Just do nothing for this test.
     },
   });
 
