@@ -135,8 +135,15 @@ class MessagingMiddleware(
             context.store.dispatch(UpdateMessageToShow(updatedMessage))
         }
         val oldMessageIndex = context.state.messaging.messages.indexOfFirst { it.id == updatedMessage.id }
-        val newList = context.state.messaging.messages.toMutableList()
-        newList[oldMessageIndex] = updatedMessage
-        return newList
+
+        return if (oldMessageIndex != -1) {
+            val newList = context.state.messaging.messages.toMutableList()
+            newList[oldMessageIndex] = updatedMessage
+            newList
+        } else {
+            // No need to update the message, it was removed. This is due to a race condition, see:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1897485
+            context.state.messaging.messages
+        }
     }
 }
