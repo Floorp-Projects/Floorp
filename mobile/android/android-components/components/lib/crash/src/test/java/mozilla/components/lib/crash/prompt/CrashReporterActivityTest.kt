@@ -61,7 +61,6 @@ class CrashReporterActivityTest {
             services = listOf(service),
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -87,7 +86,6 @@ class CrashReporterActivityTest {
             services = listOf(service),
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -116,7 +114,6 @@ class CrashReporterActivityTest {
             ),
             services = listOf(mock()),
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -136,7 +133,6 @@ class CrashReporterActivityTest {
             services = listOf(service),
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -165,7 +161,6 @@ class CrashReporterActivityTest {
             services = listOf(service),
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -192,7 +187,6 @@ class CrashReporterActivityTest {
             services = listOf(service),
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -219,7 +213,6 @@ class CrashReporterActivityTest {
             services = listOf(service),
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(

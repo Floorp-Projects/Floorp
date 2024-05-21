@@ -40,7 +40,6 @@ class BreadcrumbTest {
                 services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -78,7 +77,6 @@ class BreadcrumbTest {
                 services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -130,7 +128,6 @@ class BreadcrumbTest {
                 services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 

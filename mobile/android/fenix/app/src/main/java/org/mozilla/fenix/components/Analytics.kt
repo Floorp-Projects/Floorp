@@ -9,7 +9,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import mozilla.components.lib.crash.CrashBuilder
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.sentry.SentryService
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -123,7 +122,6 @@ class Analytics(
             enabled = true,
             nonFatalCrashIntent = pendingIntent,
             notificationsDelegate = context.components.notificationsDelegate,
-            crashBuilder = CrashBuilder(runtimeTagProviders = emptyList())
         )
     }
 

@@ -60,7 +60,6 @@ class CrashReporterTest {
             context = testContext,
             services = listOf(mock()),
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val newHandler = Thread.getDefaultUncaughtExceptionHandler()
@@ -75,7 +74,6 @@ class CrashReporterTest {
             context = testContext,
             services = emptyList(),
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
     }
 
@@ -92,7 +90,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -119,7 +116,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -172,7 +168,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -199,7 +194,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -272,7 +266,6 @@ class CrashReporterTest {
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -321,7 +314,6 @@ class CrashReporterTest {
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -345,7 +337,6 @@ class CrashReporterTest {
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -389,7 +380,6 @@ class CrashReporterTest {
                 context = testContext,
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext)
         } catch (e: IllegalArgumentException) {
             exceptionThrown = true
@@ -407,7 +397,6 @@ class CrashReporterTest {
                 context = testContext,
                 services = listOf(mock()),
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext)
         } catch (e: IllegalArgumentException) {
             exceptionThrown = true
@@ -419,7 +408,6 @@ class CrashReporterTest {
                 context = testContext,
                 telemetryServices = listOf(mock()),
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext)
         } catch (e: IllegalArgumentException) {
             exceptionThrown = true
@@ -435,7 +423,6 @@ class CrashReporterTest {
                 services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -453,7 +440,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -481,7 +467,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -516,7 +501,6 @@ class CrashReporterTest {
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -553,7 +537,6 @@ class CrashReporterTest {
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -607,7 +590,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -665,7 +647,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -709,7 +690,6 @@ class CrashReporterTest {
                 telemetryServices = listOf(telemetryService),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -737,7 +717,6 @@ class CrashReporterTest {
             context = testContext,
             services = listOf(mock()),
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         )
 
         expectException(IllegalStateException::class) {
@@ -762,7 +741,6 @@ class CrashReporterTest {
             services = listOf(mock()),
             nonFatalCrashIntent = pendingIntent,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -804,7 +782,6 @@ class CrashReporterTest {
             services = listOf(mock()),
             nonFatalCrashIntent = pendingIntent,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -834,7 +811,6 @@ class CrashReporterTest {
             services = listOf(mock()),
             nonFatalCrashIntent = pendingIntent,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(context)
 
         val nativeCrash = Crash.NativeCodeCrash(
@@ -865,7 +841,6 @@ class CrashReporterTest {
                 nonFatalCrashIntent = mock(),
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -898,7 +873,6 @@ class CrashReporterTest {
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ).install(testContext),
         )
 
@@ -938,7 +912,6 @@ class CrashReporterTest {
             maxBreadCrumbs = 5,
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         )
 
         repeat(10) {
@@ -953,7 +926,6 @@ class CrashReporterTest {
             maxBreadCrumbs = 5,
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         )
         repeat(15) {
             crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
@@ -976,7 +948,6 @@ class CrashReporterTest {
             maxBreadCrumbs = maxNum,
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         )
 
         repeat(maxNum) {
@@ -1034,7 +1005,6 @@ class CrashReporterTest {
             maxBreadCrumbs = 5,
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         )
 
         repeat(maxNum) {

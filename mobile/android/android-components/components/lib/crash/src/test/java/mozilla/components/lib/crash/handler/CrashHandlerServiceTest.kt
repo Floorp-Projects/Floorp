@@ -48,7 +48,6 @@ class CrashHandlerServiceTest {
                 nonFatalCrashIntent = mock(),
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ),
         ).install(testContext)
 
