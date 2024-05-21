@@ -2,7 +2,7 @@ import pytest
 
 from webdriver.error import NoSuchWindowException
 
-
+import time
 from tests.classic.perform_actions.support.refine import get_events
 from tests.support.keys import Keys
 
@@ -56,6 +56,15 @@ def test_scroll_iframe(session, test_actions_scroll_page, wheel_chain):
     wheel_chain.scroll(0, 0, 5, 10, origin=target).perform()
 
     events = get_events(session)
+
+    timeout_start = time.time()
+    # Chrome requires some time (~10ms) to process the event from the iframe, so try to get events until they are in
+    # place, for not longer than for 500ms.
+    while time.time() < timeout_start + 0.5:
+        events = get_events(session)
+        if len(events) > 0:
+            break
+
     assert len(events) == 1
     assert events[0]["type"] == "wheel"
     assert events[0]["deltaX"] == 5
