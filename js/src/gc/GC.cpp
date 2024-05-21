@@ -623,20 +623,20 @@ const char gc::ZealModeHelpText[] =
 "    18: (CheckGrayMarking) Check gray marking invariants after every GC\n"
 "    19: (YieldBeforeSweepingCaches) Incremental GC in two slices that yields\n"
 "        before sweeping weak caches\n"
-"    21: (YieldBeforeSweepingObjects) Incremental GC in two slices that\n"
-"        yields before sweeping foreground finalized objects\n"
-"    22: (YieldBeforeSweepingNonObjects) Incremental GC in two slices that\n"
-"        yields before sweeping non-object GC things\n"
-"    23: (YieldBeforeSweepingPropMapTrees) Incremental GC in two slices that\n"
-"        yields before sweeping shape trees\n"
+"    21: (YieldBeforeSweepingObjects) Incremental GC that yields once per\n"
+"        zone before sweeping foreground finalized objects\n"
+"    22: (YieldBeforeSweepingNonObjects) Incremental GC that yields once per\n"
+"        zone before sweeping non-object GC things\n"
+"    23: (YieldBeforeSweepingPropMapTrees) Incremental GC that yields once\n"
+"        per zone before sweeping shape trees\n"
 "    24: (CheckWeakMapMarking) Check weak map marking invariants after every\n"
 "        GC\n"
 "    25: (YieldWhileGrayMarking) Incremental GC in two slices that yields\n"
 "        during gray marking\n";
 // clang-format on
 
-// The set of zeal modes that trigger GCs with two incremental slices.
-static const EnumSet<ZealMode> TwoSliceZealModes = {
+// The set of zeal modes that yield at specific points in collection.
+static const EnumSet<ZealMode> YieldPointZealModes = {
     ZealMode::YieldBeforeRootMarking,
     ZealMode::YieldBeforeMarking,
     ZealMode::YieldBeforeSweeping,
@@ -649,7 +649,8 @@ static const EnumSet<ZealMode> TwoSliceZealModes = {
 
 // The set of zeal modes that control incremental slices.
 static const EnumSet<ZealMode> IncrementalSliceZealModes =
-    TwoSliceZealModes + EnumSet<ZealMode>{ZealMode::IncrementalMultipleSlices};
+    YieldPointZealModes +
+    EnumSet<ZealMode>{ZealMode::IncrementalMultipleSlices};
 
 // The set of zeal modes that trigger GC periodically.
 static const EnumSet<ZealMode> PeriodicGCZealModes =
@@ -830,10 +831,11 @@ bool GCRuntime::needZealousGC() {
   return false;
 }
 
-bool GCRuntime::hasIncrementalTwoSliceZealMode() const {
-  // Zeal modes that periodically start incremental collections that run in two
-  // slices, yielding at a specific point.
-  return hasAnyZealModeOf(TwoSliceZealModes);
+bool GCRuntime::zealModeControlsYieldPoint() const {
+  // Indicates whether a zeal mode is enabled that controls the point at which
+  // the collector yields to the mutator. Yield can happen once per collection
+  // or once per zone depending on the mode.
+  return hasAnyZealModeOf(YieldPointZealModes);
 }
 
 bool GCRuntime::hasZealMode(ZealMode mode) const {
@@ -3756,7 +3758,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       DescribeBudget(budget), budgetWasIncreased);
 #endif
 
-  if (useZeal && hasIncrementalTwoSliceZealMode()) {
+  if (useZeal && zealModeControlsYieldPoint()) {
     // Yields between slices occurs at predetermined points in these modes; the
     // budget is not used. |isIncremental| is still true.
     stats().log("Using unlimited budget for two-slice zeal mode");
@@ -4399,7 +4401,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
 
 inline bool GCRuntime::mightSweepInThisSlice(bool nonIncremental) {
   MOZ_ASSERT(incrementalState < State::Sweep);
-  return nonIncremental || lastMarkSlice || hasIncrementalTwoSliceZealMode();
+  return nonIncremental || lastMarkSlice || zealModeControlsYieldPoint();
 }
 
 #ifdef JS_GC_ZEAL
@@ -5050,7 +5052,7 @@ void GCRuntime::runDebugGC() {
         (initialState == State::Sweep && incrementalState == State::Compact)) {
       zealSliceBudget = zealFrequency / 2;
     }
-  } else if (hasIncrementalTwoSliceZealMode()) {
+  } else if (zealModeControlsYieldPoint()) {
     // These modes trigger incremental GC that happens in two slices and the
     // supplied budget is ignored by incrementalSlice.
     budget = SliceBudget(WorkBudget(1));
