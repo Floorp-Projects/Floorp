@@ -682,7 +682,7 @@ impl<T: Serialize> Serialize for Arc<T> {
 ///
 /// cbindgen:derive-eq=false
 /// cbindgen:derive-neq=false
-#[derive(Debug, Eq)]
+#[derive(Eq)]
 #[repr(C)]
 pub struct HeaderSlice<H, T> {
     /// The fixed-sized data.
@@ -710,6 +710,15 @@ impl<H, T> Drop for HeaderSlice<H, T> {
                 ptr = ptr.offset(1);
             }
         }
+    }
+}
+
+impl<H: fmt::Debug, T: fmt::Debug> fmt::Debug for HeaderSlice<H, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("HeaderSlice")
+            .field("header", &self.header)
+            .field("slice", &self.slice())
+            .finish()
     }
 }
 
