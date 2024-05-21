@@ -196,7 +196,7 @@ void Http2Stream::AdjustPushedPriority() {
   session->CreateFrameHeader(packet, 5, Http2Session::FRAME_TYPE_PRIORITY, 0,
                              mPushSource->StreamID());
 
-  mPushSource->SetPriorityDependency(mRFC7540Priority, mPriorityDependency);
+  mPushSource->SetPriorityDependency(mPriority, mPriorityDependency);
   uint32_t wireDep = PR_htonl(mPriorityDependency);
   memcpy(packet + Http2Session::kFrameHeaderBytes, &wireDep, 4);
   memcpy(packet + Http2Session::kFrameHeaderBytes + 4, &mPriorityWeight, 1);

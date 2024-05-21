@@ -290,9 +290,6 @@ class Http2Session final : public ASpdySession,
   void SendPriorityFrame(uint32_t streamID, uint32_t dependsOn, uint8_t weight);
   void IncrementTrrCounter() { mTrrStreams++; }
 
-  void SendPriorityUpdateFrame(uint32_t streamID, uint8_t urgency,
-                               bool incremental);
-
   WebSocketSupport GetWebSocketSupport() override;
 
   already_AddRefed<nsHttpConnection> CreateTunnelStream(
@@ -337,6 +334,7 @@ class Http2Session final : public ASpdySession,
   [[nodiscard]] nsresult UncompressAndDiscard(bool);
   void GeneratePing(bool);
   void GenerateSettingsAck();
+  void GeneratePriority(uint32_t, uint8_t);
   void GenerateRstStream(uint32_t, uint32_t);
   void GenerateGoAway(uint32_t);
   void CleanupStream(uint32_t, nsresult, errorType);
@@ -362,9 +360,6 @@ class Http2Session final : public ASpdySession,
   char* CreatePriorityFrame(uint32_t, uint32_t, uint8_t);
   bool VerifyStream(Http2StreamBase*, uint32_t);
   void SetNeedsCleanup();
-
-  char* CreatePriorityUpdateFrame(uint32_t streamID, uint8_t urgency,
-                                  bool incremental);
 
   void UpdateLocalRwin(Http2StreamBase* stream, uint32_t bytes);
   void UpdateLocalStreamWindow(Http2StreamBase* stream, uint32_t bytes);
