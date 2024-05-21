@@ -931,17 +931,6 @@ void Http2Session::GenerateSettingsAck() {
   FlushOutputQueue();
 }
 
-void Http2Session::GeneratePriority(uint32_t aID, uint8_t aPriorityWeight) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG3(("Http2Session::GeneratePriority %p %X %X\n", this, aID,
-        aPriorityWeight));
-
-  char* packet = CreatePriorityFrame(aID, 0, aPriorityWeight);
-
-  LogIO(this, nullptr, "Generate Priority", packet, kFrameHeaderBytes + 5);
-  FlushOutputQueue();
-}
-
 void Http2Session::GenerateRstStream(uint32_t aStatusCode, uint32_t aID) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -1136,6 +1125,12 @@ void Http2Session::SendHello() {
 
 void Http2Session::SendPriorityFrame(uint32_t streamID, uint32_t dependsOn,
                                      uint8_t weight) {
+  // If mUseH2Deps is false, that means that we've sent
+  // SETTINGS_NO_RFC7540_PRIORITIES = 1. Since the server must
+  // ignore priority frames anyway, we can skip sending it.
+  if (!UseH2Deps()) {
+    return;
+  }
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG3(
       ("Http2Session::SendPriorityFrame %p Frame 0x%X depends on 0x%X "
