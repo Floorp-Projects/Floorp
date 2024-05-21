@@ -9,6 +9,9 @@ LOCAL_INCLUDES += ["/xpcom/build"]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
+TEST_DIRS += [
+    "test/gtest",
+]
 
 JAR_MANIFESTS += ["jar.mn"]
 

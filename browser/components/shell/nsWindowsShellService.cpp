@@ -6,6 +6,7 @@
 #define UNICODE
 
 #include "nsWindowsShellService.h"
+#include "nsWindowsShellServiceInternal.h"
 
 #include "BinaryPath.h"
 #include "imgIContainer.h"
@@ -755,19 +756,12 @@ static nsresult WriteShortcutToLog(nsIFile* aShortcutsLogDir,
   return NS_OK;
 }
 
-static nsresult CreateShortcutImpl(
-    nsIFile* aBinary, const CopyableTArray<nsString>& aArguments,
-    const nsAString& aDescription, nsIFile* aIconFile, uint16_t aIconIndex,
-    const nsAString& aAppUserModelId, KNOWNFOLDERID aShortcutFolder,
-    const nsAString& aShortcutName, const nsString& aShortcutFile,
-    nsIFile* aShortcutsLogDir) {
-  NS_ENSURE_ARG(aBinary);
-  NS_ENSURE_ARG(aIconFile);
-
-  nsresult rv =
-      WriteShortcutToLog(aShortcutsLogDir, aShortcutFolder, aShortcutName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+nsresult CreateShellLinkObject(nsIFile* aBinary,
+                               const CopyableTArray<nsString>& aArguments,
+                               const nsAString& aDescription,
+                               nsIFile* aIconFile, uint16_t aIconIndex,
+                               const nsAString& aAppUserModelId,
+                               IShellLinkW** aLink) {
   RefPtr<IShellLinkW> link;
   HRESULT hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
                                 IID_IShellLinkW, getter_AddRefs(link));
@@ -787,8 +781,8 @@ static nsresult CreateShortcutImpl(
 
   // TODO: Properly escape quotes in the string, see bug 1604287.
   nsString arguments;
-  for (auto& arg : aArguments) {
-    arguments.AppendPrintf("\"%S\" ", static_cast<const wchar_t*>(arg.get()));
+  for (const auto& arg : aArguments) {
+    arguments += u"\""_ns + arg + u"\" "_ns;
   }
 
   link->SetArguments(arguments.get());
@@ -817,8 +811,30 @@ static nsresult CreateShortcutImpl(
     NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
   }
 
+  link.forget(aLink);
+  return NS_OK;
+}
+
+static nsresult CreateShortcutImpl(
+    nsIFile* aBinary, const CopyableTArray<nsString>& aArguments,
+    const nsAString& aDescription, nsIFile* aIconFile, uint16_t aIconIndex,
+    const nsAString& aAppUserModelId, KNOWNFOLDERID aShortcutFolder,
+    const nsAString& aShortcutName, const nsString& aShortcutFile,
+    nsIFile* aShortcutsLogDir) {
+  NS_ENSURE_ARG(aBinary);
+  NS_ENSURE_ARG(aIconFile);
+
+  nsresult rv =
+      WriteShortcutToLog(aShortcutsLogDir, aShortcutFolder, aShortcutName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<IShellLinkW> link;
+  rv = CreateShellLinkObject(aBinary, aArguments, aDescription, aIconFile,
+                             aIconIndex, aAppUserModelId, getter_AddRefs(link));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   RefPtr<IPersistFile> persist;
-  hr = link->QueryInterface(IID_IPersistFile, getter_AddRefs(persist));
+  HRESULT hr = link->QueryInterface(IID_IPersistFile, getter_AddRefs(persist));
   NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
 
   hr = persist->Save(aShortcutFile.get(), TRUE);
