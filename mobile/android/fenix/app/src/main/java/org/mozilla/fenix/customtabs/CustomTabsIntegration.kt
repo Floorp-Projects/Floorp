@@ -12,7 +12,9 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.feature.customtabs.CustomTabsToolbarButtonConfig
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
+import mozilla.components.feature.customtabs.CustomTabsToolbarListeners
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -70,12 +72,18 @@ class CustomTabsIntegration(
         menuBuilder = customTabToolbarMenu.menuBuilder,
         menuItemIndex = START_OF_MENU_ITEMS_INDEX,
         window = activity.window,
-        shareListener = { onItemTapped.invoke(ToolbarMenu.Item.Share) },
+        customTabsToolbarListeners = CustomTabsToolbarListeners(
+            shareListener = { onItemTapped.invoke(ToolbarMenu.Item.Share) },
+            refreshListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = false)) },
+        ),
         closeListener = { activity.finishAndRemoveTask() },
         updateTheme = !isPrivate,
         appNightMode = activity.settings().getAppNightMode(),
         forceActionButtonTinting = isPrivate,
-        isNavBarEnabled = isNavBarEnabled,
+        customTabsToolbarButtonConfig = CustomTabsToolbarButtonConfig(
+            showMenu = !isNavBarEnabled,
+            showRefreshButton = isNavBarEnabled,
+        ),
     )
 
     private fun Settings.getAppNightMode() = if (shouldFollowDeviceTheme) {
