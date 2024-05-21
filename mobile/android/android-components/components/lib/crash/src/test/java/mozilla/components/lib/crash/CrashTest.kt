@@ -52,14 +52,8 @@ class CrashTest {
     @Test
     fun `Serialize and deserialize UncaughtExceptionCrash`() {
         val exception = RuntimeException("Hello World!")
-        val runtimeTags = mapOf("one" to "two", "three" to "four")
 
-        val originalCrash = Crash.UncaughtExceptionCrash(
-            timestamp = 0,
-            throwable = exception,
-            breadcrumbs = arrayListOf(),
-            runtimeTags = runtimeTags,
-        )
+        val originalCrash = Crash.UncaughtExceptionCrash(0, exception, arrayListOf())
 
         val intent = Intent()
         originalCrash.fillIn(intent)
@@ -70,7 +64,6 @@ class CrashTest {
         assertEquals(exception, recoveredCrash.throwable)
         assertEquals("Hello World!", recoveredCrash.throwable.message)
         assertArrayEquals(exception.stackTrace, recoveredCrash.throwable.stackTrace)
-        assert(recoveredCrash.runtimeTags == runtimeTags)
     }
 
     @Test

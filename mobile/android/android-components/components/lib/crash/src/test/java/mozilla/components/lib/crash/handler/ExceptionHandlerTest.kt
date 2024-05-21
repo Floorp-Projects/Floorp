@@ -41,14 +41,12 @@ class ExceptionHandlerTest {
                 services = listOf(service),
                 scope = scope,
                 notificationsDelegate = mock(),
-                crashBuilder = mock(),
             ),
         )
 
         val handler = ExceptionHandler(
             testContext,
             crashReporter,
-            crashBuilder = mock()
         )
 
         val exception = RuntimeException("Hello World")
@@ -82,14 +80,12 @@ class ExceptionHandlerTest {
             ),
             scope = scope,
             notificationsDelegate = mock(),
-            crashBuilder = mock(),
         ).install(testContext)
 
         val handler = ExceptionHandler(
             testContext,
             crashReporter,
             defaultExceptionHandler,
-            crashBuilder = mock(),
         )
 
         verify(defaultExceptionHandler, never()).uncaughtException(any(), any())
