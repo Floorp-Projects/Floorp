@@ -384,6 +384,30 @@ add_task(async function test_loopbackRedirectURI() {
   await extension.awaitMessage("done");
   await extension.unload();
 });
+
+add_task(async function test_idle_suspend() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.background.idle.timeout", 100]],
+  });
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      browser_specific_settings: {
+        gecko: {
+          id: "identity@mozilla.org",
+        },
+      },
+      permissions: ["webRequest", "identity"],
+      host_permissions: ["https://*.example.com/*"],
+    },
+    background: `(${background_launchWebAuthFlow})({params: {delay: 200}})`,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
 </script>
 
 </body>
