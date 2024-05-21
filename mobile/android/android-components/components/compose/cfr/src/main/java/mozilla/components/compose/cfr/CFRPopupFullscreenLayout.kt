@@ -128,13 +128,18 @@ internal class CFRPopupFullscreenLayout(
      * with such behavior set in [CFRPopupProperties].
      */
     fun show() {
-        setViewTreeLifecycleOwner(anchor.findViewTreeLifecycleOwner())
-        this.setViewTreeSavedStateRegistryOwner(anchor.findViewTreeSavedStateRegistryOwner())
-        anchor.addOnAttachStateChangeListener(anchorDetachedListener)
-        orientationChangeListener = getDisplayOrientationListener(anchor.context).also {
-            it.start()
+        val anchorViewTreeLifecycleOwner = anchor.findViewTreeLifecycleOwner()
+        val anchorViewTreeSavedStateRegistryOwner = anchor.findViewTreeSavedStateRegistryOwner()
+
+        if (anchorViewTreeLifecycleOwner != null && anchorViewTreeSavedStateRegistryOwner != null) {
+            setViewTreeLifecycleOwner(anchorViewTreeLifecycleOwner)
+            this.setViewTreeSavedStateRegistryOwner(anchorViewTreeSavedStateRegistryOwner)
+            anchor.addOnAttachStateChangeListener(anchorDetachedListener)
+            orientationChangeListener = getDisplayOrientationListener(anchor.context).also {
+                it.start()
+            }
+            windowManager.addView(this, createLayoutParams())
         }
-        windowManager.addView(this, createLayoutParams())
     }
 
     @Composable
@@ -176,7 +181,7 @@ internal class CFRPopupFullscreenLayout(
             onDismissRequest = {
                 // For when tapping outside the popup.
                 dismiss()
-                onDismiss(false)
+                onDismiss(true)
             },
         ) {
             CFRPopupContent(
@@ -493,7 +498,7 @@ internal class CFRPopupFullscreenLayout(
         disposeComposition()
         setViewTreeLifecycleOwner(null)
         this.setViewTreeSavedStateRegistryOwner(null)
-        windowManager.removeViewImmediate(this)
+        windowManager.removeView(this)
     }
 
     /**

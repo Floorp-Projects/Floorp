@@ -175,8 +175,6 @@ private fun InactiveTabsHeader(
             dismissButtonColor = FirefoxTheme.colors.iconOnColor.toArgb(),
             indicatorDirection = CFRPopup.IndicatorDirection.UP,
             popupVerticalOffset = (-12).dp,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false,
         ),
         onCFRShown = onCFRShown,
         onDismiss = { onCFRDismiss() },
