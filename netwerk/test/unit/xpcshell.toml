@@ -647,7 +647,7 @@ run-sequentially = "http3server"
 ["test_http3_alt_svc.js"]
 skip-if = [
   "os == 'android'",
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
+  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
 ]
 run-sequentially = "http3server"
 
@@ -655,7 +655,7 @@ run-sequentially = "http3server"
 skip-if = [
   "os == 'android'",
   "socketprocess_networking",
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808049
+  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808049
   "apple_silicon", # https://bugzilla.mozilla.org/show_bug.cgi?id=1866067
 ]
 run-sequentially = "node server exceptions dont replay well"
@@ -663,14 +663,14 @@ run-sequentially = "node server exceptions dont replay well"
 ["test_http3_direct_proxy.js"]
 skip-if = [
   "os == 'android'",
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808049
+  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808049
 ]
 run-sequentially = "node server exceptions dont replay well"
 
 ["test_http3_dns_retry.js"]
 skip-if = [
   "os == 'android'",
-  "os == 'win' && msix",
+  "os == 'win'",
 ]
 run-sequentially = "node server exceptions dont replay well"
 
@@ -678,7 +678,7 @@ run-sequentially = "node server exceptions dont replay well"
 skip-if = [
   "os == 'android'",
   "os == 'linux'", # Bug 1773916
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808049
+  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808049
 ]
 run-sequentially = "http3server"
 
@@ -721,14 +721,14 @@ disabled = "bug 1771744 - telemetry probe expired"
 ["test_http3_perf.js"]
 skip-if = [
   "os == 'android'",
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
+  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
 ]
 run-sequentially = "http3server"
 
 ["test_http3_prio_disabled.js"]
 skip-if = [
   "os == 'android'",
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
+  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
 ]
 run-sequentially = "http3server"
 

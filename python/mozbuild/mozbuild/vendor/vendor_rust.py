@@ -90,7 +90,6 @@ PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
 # If you do need to make changes increasing the number of duplicates, please
 # add a comment as to why.
 TOLERATED_DUPES = {
-    "mio": 2,
     # Transition from time 0.1 to 0.3 underway, but chrono is stuck on 0.1
     # and hasn't been updated in 1.5 years (an hypothetical update is
     # expected to remove the dependency on time altogether).
