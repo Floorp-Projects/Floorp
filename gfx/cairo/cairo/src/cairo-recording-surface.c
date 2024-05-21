@@ -480,7 +480,7 @@ _cairo_recording_surface_region_array_destroy (cairo_recording_surface_t       *
     cairo_recording_region_element_t *region_elements;
     int i, num_elements;
 
-    num_elements = MAX(surface->commands.num_elements, _cairo_array_num_elements(&region_array->regions));
+    num_elements = MIN(surface->commands.num_elements, _cairo_array_num_elements(&region_array->regions));
     elements = _cairo_array_index (&surface->commands, 0);
     region_elements = _cairo_array_index (&region_array->regions, 0);
     for (i = 0; i < num_elements; i++) {
