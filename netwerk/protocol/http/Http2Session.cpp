@@ -6,6 +6,8 @@
 
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
+#include "nsCOMPtr.h"
+#include "nsStringFwd.h"
 
 // Log on level :5, instead of default :4.
 #undef LOG
@@ -1143,6 +1145,42 @@ void Http2Session::SendPriorityFrame(uint32_t streamID, uint32_t dependsOn,
   FlushOutputQueue();
 }
 
+void Http2Session::SendPriorityUpdateFrame(uint32_t streamID, uint8_t urgency,
+                                           bool incremental) {
+  CreatePriorityUpdateFrame(streamID, urgency, incremental);
+  FlushOutputQueue();
+}
+
+char* Http2Session::CreatePriorityUpdateFrame(uint32_t streamID,
+                                              uint8_t urgency,
+                                              bool incremental) {
+  // https://www.rfc-editor.org/rfc/rfc9218.html#section-7.1
+  nsPrintfCString priorityFieldValue(
+      "%s", urgency != 3 ? nsPrintfCString("u=%d", urgency).get() : "");
+  size_t payloadSize = 4 + priorityFieldValue.Length();
+  char* packet = EnsureOutputBuffer(kFrameHeaderBytes + payloadSize);
+  // The Stream Identifier field (see Section 5.1.1 of [HTTP/2]) in the
+  // PRIORITY_UPDATE frame header MUST be zero
+  CreateFrameHeader(packet, payloadSize,
+                    Http2Session::FRAME_TYPE_PRIORITY_UPDATE,
+                    0,   // unused flags
+                    0);  // streamID
+
+  // Reserved (1),
+  // Prioritized Stream ID (31),
+  MOZ_ASSERT(!(streamID & 0x80000000));
+  NetworkEndian::writeUint32(packet + kFrameHeaderBytes, streamID & 0x7FFFFFFF);
+  // Priority Field Value (..),
+  for (size_t i = 0; i < priorityFieldValue.Length(); ++i) {
+    packet[kFrameHeaderBytes + 4 + i] = priorityFieldValue[i];
+  }
+  mOutputQueueUsed += kFrameHeaderBytes + payloadSize;
+
+  LogIO(this, nullptr, "SendPriorityUpdateFrame", packet,
+        kFrameHeaderBytes + payloadSize);
+  return packet;
+}
+
 char* Http2Session::CreatePriorityFrame(uint32_t streamID, uint32_t dependsOn,
                                         uint8_t weight) {
   MOZ_ASSERT(streamID, "Priority on stream 0");
@@ -2162,9 +2200,28 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   pushedWeak->SetHTTPState(Http2StreamBase::RESERVED_BY_REMOTE);
   static_assert(Http2StreamBase::kWorstPriority >= 0,
                 "kWorstPriority out of range");
-  uint32_t priorityDependency = pushedWeak->PriorityDependency();
-  uint8_t priorityWeight = pushedWeak->PriorityWeight();
-  self->SendPriorityFrame(promisedID, priorityDependency, priorityWeight);
+  if (self->UseH2Deps()) {
+    uint32_t priorityDependency = pushedWeak->PriorityDependency();
+    uint8_t priorityWeight = pushedWeak->PriorityWeight();
+    self->SendPriorityFrame(promisedID, priorityDependency, priorityWeight);
+  } else {
+    nsHttpTransaction* trans = associatedStream->HttpTransaction();
+    if (trans) {
+      uint8_t urgency = nsHttpHandler::UrgencyFromCoSFlags(
+          trans->GetClassOfService().Flags());
+
+      // if the initial stream was kUrgentStartGroupID or kLeaderGroupID
+      // which are equivalent to urgency 1 and 2 then set the pushed stream
+      // as having the same urgency as kFollowerGroupID.
+      // See Http2PushedStream::Http2PushedStream changing mPriorityDependency
+      if (urgency < 3) {
+        urgency = 4;
+      }
+
+      bool incremental = trans->GetClassOfService().Incremental();
+      self->SendPriorityUpdateFrame(promisedID, urgency, incremental);
+    }
+  }
   self->ResetDownstreamState();
   return NS_OK;
 }
