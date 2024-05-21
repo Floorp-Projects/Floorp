@@ -122,12 +122,25 @@ function failure_check() {
     echo
     mkdir -p ${ARTIFACT_DIR}/github
     chmod +x ${PATH_TEST}/parse-ui-test.py
-    ${PATH_TEST}/parse-ui-test.py \
-        --exit-code "${exitcode}" \
-        --log flank.log \
-        --results "${RESULTS_DIR}" \
-        --output-md "${ARTIFACT_DIR}/github/customCheckRunText.md" \
-	--device-type "${device_type}"
+    chmod +x ${PATH_TEST}/parse-ui-test-fromfile.py
+    ${PATH_TEST}/parse-ui-test-fromfile.py \
+        --results "${RESULTS_DIR}"
+    if [[ $? -ne 0 ]]; then
+        ${PATH_TEST}/parse-ui-test.py \
+            --exit-code "${exitcode}" \
+            --log flank.log \
+            --results "${RESULTS_DIR}" \
+            --output-md "${ARTIFACT_DIR}/github/customCheckRunText.md" \
+            --device-type "${device_type}"
+    else
+        ${PATH_TEST}/parse-ui-test.py \
+            --exit-code "${exitcode}" \
+            --log flank.log \
+            --results "${RESULTS_DIR}" \
+            --output-md "${ARTIFACT_DIR}/github/customCheckRunText.md" \
+            --device-type "${device_type}" \
+            --report-treeherder-failures
+    fi
     echo
     echo
 }
