@@ -77,7 +77,7 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
 
  private:
   DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
-            nsIURI* aDocumentURI, nsIURI* aBaseURI);
+            nsIURI* aDocumentURI);
 
   already_AddRefed<Document> SetUpDocument(DocumentFlavor aFlavor,
                                            ErrorResult& aRv);
@@ -85,7 +85,6 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
-  nsCOMPtr<nsIURI> mBaseURI;
 
   bool mForceEnableXULXBL;
   bool mForceEnableDTD;
