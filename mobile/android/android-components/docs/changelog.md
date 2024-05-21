@@ -6,6 +6,11 @@ permalink: /changelog/
 
 # 128.0 (In Development)
 
+* **browser-toolbar**
+  * Added new data classes `CustomTabsToolbarButtonConfig` and `CustomTabsToolbarListeners` to `CustomTabsToolbarFeature`, see [Bug 1897811](https://bugzilla.mozilla.org/show_bug.cgi?id=1897811).
+  * Added new parameters for `showRefreshButton` and `showMenu` to `CustomTabsToolbarButtonConfig`, see [Bug 1897811](https://bugzilla.mozilla.org/show_bug.cgi?id=1897811).
+  * Added a new parameter for `refreshListener` and moved `shareListener` to `CustomTabsToolbarListeners`, see [Bug 1897811](https://bugzilla.mozilla.org/show_bug.cgi?id=1897811).
+
 # 127.0
 
 * **feature-prompts** **browser-storage-sync**

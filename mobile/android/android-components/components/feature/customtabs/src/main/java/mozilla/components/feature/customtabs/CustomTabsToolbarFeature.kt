@@ -69,8 +69,8 @@ import mozilla.components.ui.icons.R as iconsR
  * @property appNightMode The [NightMode] used in the app. Defaults to [MODE_NIGHT_FOLLOW_SYSTEM].
  * @property forceActionButtonTinting When set to true the [toolbar] action button will always be tinted
  * based on the [toolbar] background, ignoring the value of [CustomTabActionButtonConfig.tint].
- * @property isNavBarEnabled Whether or not the navigation bar is enabled.
- * @property shareListener Invoked when the share button is pressed.
+ * @property customTabsToolbarButtonConfig Holds button configurations for the toolbar.
+ * @property customTabsToolbarListeners Holds click listeners for buttons on the toolbar.
  * @property closeListener Invoked when the close button is pressed.
  */
 @Suppress("LargeClass")
@@ -85,8 +85,9 @@ class CustomTabsToolbarFeature(
     private val updateTheme: Boolean = true,
     @NightMode private val appNightMode: Int = MODE_NIGHT_FOLLOW_SYSTEM,
     private val forceActionButtonTinting: Boolean = false,
-    private val isNavBarEnabled: Boolean = false,
-    private val shareListener: (() -> Unit)? = null,
+    private val customTabsToolbarButtonConfig: CustomTabsToolbarButtonConfig =
+        CustomTabsToolbarButtonConfig(),
+    private val customTabsToolbarListeners: CustomTabsToolbarListeners = CustomTabsToolbarListeners(),
     private val closeListener: () -> Unit,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private var initialized: Boolean = false
@@ -176,12 +177,18 @@ class CustomTabsToolbarFeature(
             addShareButton(readableColor)
         }
 
+        if (customTabsToolbarButtonConfig.showRefreshButton &&
+            customTabsToolbarListeners.refreshListener != null
+        ) {
+            addRefreshButton(readableColor)
+        }
+
         // Add menu items
         if (config.menuItems.isNotEmpty() || menuBuilder?.items?.isNotEmpty() == true) {
             addMenuItems(config.menuItems, menuItemIndex)
         }
 
-        if (isNavBarEnabled) {
+        if (!customTabsToolbarButtonConfig.showMenu) {
             toolbar.display.hideMenuButton()
         }
     }
@@ -275,8 +282,29 @@ class CustomTabsToolbarFeature(
     }
 
     /**
+     * Display a refresh button as a button on the toolbar.
+     * When clicked, it activates [CustomTabsToolbarListeners.refreshListener].
+     */
+    @VisibleForTesting
+    internal fun addRefreshButton(@ColorInt readableColor: Int) {
+        val drawableIcon = getDrawable(context, iconsR.drawable.mozac_ic_arrow_clockwise_24)
+        drawableIcon?.setTint(readableColor)
+
+        val button = Toolbar.ActionButton(
+            drawableIcon,
+            context.getString(R.string.mozac_feature_customtabs_refresh_button),
+        ) {
+            emitActionButtonFact()
+            customTabsToolbarListeners.refreshListener?.invoke()
+        }
+
+        toolbar.addBrowserAction(button)
+    }
+
+    /**
      * Display a share button as a button on the toolbar.
-     * When clicked, it activates [shareListener] and defaults to the [share] KTX helper.
+     * When clicked, it activates [CustomTabsToolbarListeners.shareListener]
+     * and defaults to the [share] KTX helper.
      */
     @VisibleForTesting
     internal fun addShareButton(@ColorInt readableColor: Int) {
@@ -287,7 +315,7 @@ class CustomTabsToolbarFeature(
             drawableIcon,
             context.getString(R.string.mozac_feature_customtabs_share_link),
         ) {
-            val listener = shareListener ?: {
+            val listener = customTabsToolbarListeners.shareListener ?: {
                 session?.let {
                     context.share(it.content.url)
                 }
@@ -422,4 +450,27 @@ internal fun ColorSchemeParams.withDefault(defaultColorSchemeParam: ColorSchemeP
         ?: defaultColorSchemeParam?.navigationBarColor,
     navigationBarDividerColor = navigationBarDividerColor
         ?: defaultColorSchemeParam?.navigationBarDividerColor,
+)
+
+/**
+ * Holds button configurations for the custom tabs toolbar.
+ *
+ * @property showMenu Whether or not to show the menu button.
+ * @property showRefreshButton Whether or not to show the refresh button.
+ */
+
+data class CustomTabsToolbarButtonConfig(
+    val showMenu: Boolean = true,
+    val showRefreshButton: Boolean = false,
+)
+
+/**
+ * Holds click listeners for buttons on the custom tabs toolbar.
+ *
+ * @property refreshListener Invoked when the refresh button is pressed.
+ * @property shareListener Invoked when the share button is pressed.
+ */
+data class CustomTabsToolbarListeners(
+    val refreshListener: (() -> Unit)? = null,
+    val shareListener: (() -> Unit)? = null,
 )
