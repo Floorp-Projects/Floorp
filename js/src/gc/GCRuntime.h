@@ -285,6 +285,7 @@ class GCRuntime {
   JS::HeapState heapState() const { return heapState_; }
 
   bool hasZealMode(ZealMode mode) const;
+  bool hasAnyZealModeOf(mozilla::EnumSet<ZealMode> mode) const;
   void clearZealMode(ZealMode mode);
   bool needZealousGC();
   bool hasIncrementalTwoSliceZealMode() const;
