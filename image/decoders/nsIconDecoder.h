@@ -25,6 +25,8 @@ class RasterImage;
 // The format of the incoming data is as follows:
 //
 // The first two bytes contain the width and the height of the icon.
+// The third byte contains the pixel format.
+// The fourth byte contains the color transform.
 // The remaining bytes contain the icon data, 4 bytes per pixel, in
 // ARGB order (platform endianness, A in highest bits, B in lowest
 // bits), row-primary, top-to-bottom, left-to-right, with
