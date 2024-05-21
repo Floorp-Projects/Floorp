@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=968273
+
+If a load has redirects, reloading the page will load the page starting with the original
+URI and do the redirects again.
+-->
+<head>
+  <title>Test for Bug 968273</title>
+<script>
+</script>
+</head>
+<body>
+<div id="frames">
+<iframe name="child0" id="myIframe" src="bug968273_redirect.html"></iframe>
+</div>
+</body>
+</html>
