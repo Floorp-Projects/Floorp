@@ -134,104 +134,11 @@ panelview:not([visible]) {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-/* stylelint-disable-next-line media-query-no-invalid */
-@media not (-moz-bool-pref: "browser.tabs.tabmanager.enabled") {
-  #tabbrowser-tabs:not([overflow], [hashiddentabs]) ~ #alltabs-button {
-    display: none;
-  }
-  #tabbrowser-tabs:not([overflow])[using-closing-tabs-spacer] ~ #alltabs-button {
-    /* temporary space to keep a tab's close button under the cursor */
-    display: flex;
-    visibility: hidden;
-  }
-}
-
-#tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow]) ~ #new-tab-button,
-#tabbrowser-tabs[overflow] > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
-#tabbrowser-tabs:not([hasadjacentnewtabbutton]) > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
-#TabsToolbar[customizing="true"] #tabs-newtab-button {
-  display: none;
-}
-
-.tabbrowser-tab:not([pinned]) {
-  flex: 100 100;
-  max-width: 225px;
-  min-width: var(--tab-min-width);
-  transition: min-width 100ms ease-out,
-              max-width 100ms ease-out;
-}
-
-:root[uidensity=touch] .tabbrowser-tab:not([pinned]) {
-  /* Touch mode needs additional space for the close button. */
-  min-width: calc(var(--tab-min-width) + 10px);
-}
-
-.tabbrowser-tab:not([pinned], [fadein]) {
-  max-width: 0.1px;
-  min-width: 0.1px;
-  visibility: hidden;
-}
-
-.tab-icon-pending:not([fadein]),
-.tab-icon-image:not([fadein]),
-.tab-close-button:not([fadein]),
-.tabbrowser-tab:not([fadein])::after,
-.tab-background:not([fadein]) {
-  visibility: hidden;
-}
-
-.tab-label:not([fadein]),
-.tab-throbber:not([fadein]) {
-  display: none;
-}
-
-#tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
-  position: absolute !important;
-  display: block;
-}
-
-#tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[selected],
-#tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[multiselected] {
-  position: relative;
-  z-index: 2;
-  pointer-events: none; /* avoid blocking dragover events on scroll buttons */
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  #tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[fadein]:not([selected]):not([multiselected]),
-  .tabbrowser-tab[tab-grouping],
-  .tabbrowser-tab[tabdrop-samewindow] {
-    transition: transform 200ms var(--animation-easing-function);
-  }
-}
-
-.tabbrowser-tab[tab-grouping][multiselected]:not([selected]) {
-  z-index: 2;
-}
-
-/* Make it easier to drag tabs by expanding the drag area downwards. */
-#tabbrowser-tabs[movingtab] {
-  padding-bottom: 15px;
-  margin-bottom: -15px;
-}
-
-#navigator-toolbox[movingtab] > #nav-bar {
-  pointer-events: none;
-}
-
 #nav-bar-customization-target {
   /* Don't grow if potentially-user-sized elements (like the searchbar or the
    * bookmarks toolbar item list) are too wide. This forces them to flex to the
    * available space as much as possible, see bug 1795260. */
   min-width: 0;
-}
-
-/* Allow dropping a tab on buttons with associated drop actions. */
-#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #personal-bookmarks,
-#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #home-button,
-#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #downloads-button,
-#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #bookmarks-menu-button {
-  pointer-events: auto;
 }
 
 /* The address bar needs to be able to render outside of the toolbar, but as
@@ -432,27 +339,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-b
 #PlacesToolbarDropIndicatorHolder {
   display: block;
   position: absolute;
-}
-
-#allTabsMenu-dropIndicatorHolder {
-  display: block;
-  position: relative;
-}
-
-#allTabsMenu-dropIndicator {
-  background: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg) no-repeat center;
-  display: block;
-  position: absolute;
-  transform: rotate(-90deg);
-  width: 12px;
-  height: 29px;
-  inset-inline-start: 8px;
-  top: 0;
-  pointer-events: none;
-}
-
-#allTabsMenu-dropIndicator:-moz-locale-dir(rtl) {
-  transform: rotate(90deg);
 }
 
 #nav-bar-customization-target > #personal-bookmarks,

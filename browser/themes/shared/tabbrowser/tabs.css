@@ -85,6 +85,26 @@
        last tab is selected */
     padding-inline: var(--tab-shadow-max-size);
   }
+
+  /* Make it easier to drag tabs by expanding the drag area downwards. */
+  &[movingtab] {
+    padding-bottom: 15px;
+    margin-bottom: -15px;
+  }
+}
+
+#navigator-toolbox[movingtab] > #nav-bar {
+  pointer-events: none;
+
+  /* Allow dropping a tab on buttons with associated drop actions. */
+  > #nav-bar-customization-target {
+    > #personal-bookmarks,
+    > #home-button,
+    > #downloads-button,
+    > #bookmarks-menu-button {
+      pointer-events: auto;
+    }
+  }
 }
 
 .closing-tabs-spacer {
@@ -116,8 +136,32 @@
    * (we only have 2px padding in the inline direction) */
   overflow-clip-margin: 2px;
 
+  &:not([pinned]) {
+    flex: 100 100;
+    max-width: 225px;
+    min-width: var(--tab-min-width);
+    transition: min-width 100ms ease-out,
+                max-width 100ms ease-out;
+
+    :root[uidensity=touch] & {
+      /* Touch mode needs additional space for the close button. */
+      min-width: calc(var(--tab-min-width) + 10px);
+    }
+  }
+
+  &:not([pinned], [fadein]) {
+    max-width: 0.1px;
+    min-width: 0.1px;
+    visibility: hidden;
+  }
+
   &[pinned] {
     flex-shrink: 0;
+
+    #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > & {
+      position: absolute !important;
+      display: block;
+    }
   }
 
   /* tabbrowser-tab keyboard focus */
@@ -125,6 +169,24 @@
   &:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
     outline: var(--focus-outline);
     outline-offset: var(--focus-outline-inset);
+  }
+
+  #tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > &:is([selected], [multiselected]) {
+    position: relative;
+    z-index: 2;
+    pointer-events: none; /* avoid blocking dragover events on scroll buttons */
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > &[fadein]:not([selected]):not([multiselected]),
+    &[tab-grouping],
+    &[tabdrop-samewindow] {
+      transition: transform 200ms var(--animation-easing-function);
+    }
+  }
+
+  &[tab-grouping][multiselected]:not([selected]) {
+    z-index: 2;
   }
 }
 
@@ -199,6 +261,18 @@
       transform: scale(40);
     }
   }
+}
+
+.tab-icon-pending:not([fadein]),
+.tab-icon-image:not([fadein]),
+.tab-close-button:not([fadein]),
+.tab-background:not([fadein]) {
+  visibility: hidden;
+}
+
+.tab-label:not([fadein]),
+.tab-throbber:not([fadein]) {
+  display: none;
 }
 
 /* Width/height & margins apply on tab icon stack children */
@@ -751,26 +825,46 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
   list-style-image: url(chrome://global/skin/icons/plus.svg);
 }
 
+#tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow]) ~ #new-tab-button,
+#tabbrowser-tabs[overflow] > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
+#tabbrowser-tabs:not([hasadjacentnewtabbutton]) > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
+#TabsToolbar[customizing="true"] #tabs-newtab-button {
+  display: none;
+}
+
 /* All tabs button and menupopup */
 
 #alltabs-button {
   list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
-}
 
-#tabbrowser-tabs[hiddensoundplaying] ~ #alltabs-button > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: transparent url(chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg);
-  box-shadow: none;
-  /* Match the color of the button, rather than label default. */
-  color: inherit;
-  display: block;
-  -moz-context-properties: fill, fill-opacity, stroke;
-  fill: currentColor;
-  stroke: transparent;
-  /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin: -7px 0 0 !important;
-  margin-inline-end: -4px !important;
-  min-width: 12px;
-  min-height: 12px;
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media not (-moz-bool-pref: "browser.tabs.tabmanager.enabled") {
+    #tabbrowser-tabs:not([overflow], [hashiddentabs]) ~ & {
+      display: none;
+    }
+
+    #tabbrowser-tabs:not([overflow])[using-closing-tabs-spacer] ~ & {
+      /* temporary space to keep a tab's close button under the cursor */
+      display: flex;
+      visibility: hidden;
+    }
+  }
+
+  #tabbrowser-tabs[hiddensoundplaying] ~ & > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+    background: transparent url(chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg);
+    box-shadow: none;
+    /* Match the color of the button, rather than label default. */
+    color: inherit;
+    display: block;
+    -moz-context-properties: fill, fill-opacity, stroke;
+    fill: currentColor;
+    stroke: transparent;
+    /* "!important" is necessary to override the rule in toolbarbutton.css */
+    margin: -7px 0 0 !important;
+    margin-inline-end: -4px !important;
+    min-width: 12px;
+    min-height: 12px;
+  }
 }
 
 /* The list of tabs is in its own panel-subview-body which will scroll. We don't
@@ -782,6 +876,27 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
 
 #allTabsMenu-allTabsView-tabs {
   padding-top: 0;
+}
+
+#allTabsMenu-dropIndicatorHolder {
+  display: block;
+  position: relative;
+}
+
+#allTabsMenu-dropIndicator {
+  background: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg) no-repeat center;
+  display: block;
+  position: absolute;
+  transform: rotate(-90deg);
+  width: 12px;
+  height: 29px;
+  inset-inline-start: 8px;
+  top: 0;
+  pointer-events: none;
+
+  &:-moz-locale-dir(rtl) {
+    transform: rotate(90deg);
+  }
 }
 
 .all-tabs-item {
