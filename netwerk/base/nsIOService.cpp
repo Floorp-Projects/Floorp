@@ -67,6 +67,13 @@
 #include "ssl.h"
 #include "StaticComponents.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include <regex>
+#  include "AndroidBridge.h"
+#  include "mozilla/java/GeckoAppShellWrappers.h"
+#  include "mozilla/jni/Utils.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -384,6 +391,39 @@ nsIOService::~nsIOService() {
     gIOService = nullptr;
   }
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+bool nsIOService::ShouldAddAdditionalSearchHeaders(nsIURI* aURI,
+                                                   bool* aHeaderVal) {
+  if (!(mozilla::AndroidBridge::Bridge())) {
+    return false;
+  }
+
+  if (!aURI->SchemeIs("https")) {
+    return false;
+  }
+
+  // We need to improve below logic for matching google domains
+  // See Bug 1894642
+  // Is URI same as google ^https://www\\.google\\..+
+  nsAutoCString host;
+  aURI->GetHost(host);
+  LOG(("nsIOService::ShouldAddAdditionalSearchHeaders() checking host %s\n",
+       PromiseFlatCString(host).get()));
+
+  std::regex pattern("^www\\.google\\..+");
+  if (std::regex_match(host.get(), pattern)) {
+    LOG(("Google domain detected for host %s\n",
+         PromiseFlatCString(host).get()));
+    static bool ramAboveThreshold =
+        java::GeckoAppShell::IsDeviceRamThresholdOkay();
+    *aHeaderVal = ramAboveThreshold;
+    return true;
+  }
+
+  return false;
+}
+#endif
 
 // static
 void nsIOService::OnTLSPrefChange(const char* aPref, void* aSelf) {

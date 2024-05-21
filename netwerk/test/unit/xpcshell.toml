@@ -1282,3 +1282,7 @@ skip-if = [
 ["test_connection_coalescing.js"]
 
 ["test_default_uri_bypass.js"]
+["test_bug1883496.js"]
+skip-if = [
+  "os != 'android'",
+]
