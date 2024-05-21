@@ -13,6 +13,9 @@ permalink: /changelog/
 
 # 127.0
 
+* **lib-crash**
+  * Added `CrashBuilder` for building `Crash` objects with runtime tags for added context in reports
+
 * **feature-prompts** **browser-storage-sync**
   * A new `isLoginAutofillEnabled` callback is available in `PromptFeature` and `GeckoLoginStorageDelegate` to allow clients controlling whether saved logins should be autofilled or not. Default is false
 

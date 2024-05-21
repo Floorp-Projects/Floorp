@@ -9,6 +9,7 @@ import android.content.Context
 import android.os.Process
 import android.util.Log
 import mozilla.components.lib.crash.Crash
+import mozilla.components.lib.crash.CrashBuilder
 import mozilla.components.lib.crash.CrashReporter
 
 private const val TAG = "ExceptionHandler"
@@ -20,6 +21,7 @@ class ExceptionHandler(
     private val context: Context,
     private val crashReporter: CrashReporter,
     private val defaultExceptionHandler: Thread.UncaughtExceptionHandler? = null,
+    private val crashBuilder: CrashBuilder,
 ) : Thread.UncaughtExceptionHandler {
     private var crashing = false
 
@@ -39,8 +41,7 @@ class ExceptionHandler(
 
             crashReporter.onCrash(
                 context,
-                Crash.UncaughtExceptionCrash(
-                    timestamp = System.currentTimeMillis(),
+                crashBuilder.uncaughtExceptionCrash(
                     throwable = throwable,
                     breadcrumbs = crashReporter.crashBreadcrumbsCopy(),
                 ),
