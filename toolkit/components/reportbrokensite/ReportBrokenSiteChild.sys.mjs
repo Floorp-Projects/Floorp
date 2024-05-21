@@ -398,6 +398,8 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
           details[framework] = true;
           extra_labels.push(`type-${framework}`);
         }
+
+        extra_labels.sort();
       }
     }
 
