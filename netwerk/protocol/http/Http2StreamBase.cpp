@@ -886,7 +886,7 @@ void Http2StreamBase::SetPriority(uint32_t newPriority) {
   } else if (httpPriority < kBestPriority) {
     httpPriority = kBestPriority;
   }
-  mPriority = static_cast<uint32_t>(httpPriority);
+  mRFC7540Priority = static_cast<uint32_t>(httpPriority);
   mPriorityWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
                     (httpPriority - kNormalPriority);
 
@@ -999,16 +999,21 @@ void Http2StreamBase::CurrentBrowserIdChangedInternal(uint64_t id) {
 
   mCurrentBrowserId = id;
 
-  if (!session->UseH2Deps()) {
-    return;
-  }
-
   // Urgent start takes an absolute precedence, so don't
   // change mPriorityDependency here.
   if (mPriorityDependency == Http2Session::kUrgentStartGroupID) {
     return;
   }
 
+  if (session->UseH2Deps()) {
+    UpdatePriorityRFC7540(session);
+  } else {
+    // TODO: send PriorityUpdate H2 frame
+  }
+}
+
+void Http2StreamBase::UpdatePriorityRFC7540(Http2Session* session) {
+  MOZ_ASSERT(session->UseH2Deps());
   if (mTransactionBrowserId != mCurrentBrowserId) {
     mPriorityDependency = Http2Session::kBackgroundGroupID;
     LOG3(

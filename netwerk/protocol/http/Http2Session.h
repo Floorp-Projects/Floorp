@@ -334,7 +334,6 @@ class Http2Session final : public ASpdySession,
   [[nodiscard]] nsresult UncompressAndDiscard(bool);
   void GeneratePing(bool);
   void GenerateSettingsAck();
-  void GeneratePriority(uint32_t, uint8_t);
   void GenerateRstStream(uint32_t, uint32_t);
   void GenerateGoAway(uint32_t);
   void CleanupStream(uint32_t, nsresult, errorType);

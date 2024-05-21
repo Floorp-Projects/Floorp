@@ -132,7 +132,8 @@ Http2PushedStream::Http2PushedStream(
   }
   // Cache this for later use in case of tab switch.
   mDefaultPriorityDependency = mPriorityDependency;
-  SetPriorityDependency(aAssociatedStream->Priority() + 1, mPriorityDependency);
+  SetPriorityDependency(aAssociatedStream->RFC7540Priority() + 1,
+                        mPriorityDependency);
   // Assume we are on the same tab as our associated stream, for priority
   // purposes. It's possible this could change when we get paired with a sink,
   // but it's unlikely and doesn't much matter anyway.
