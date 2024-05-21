@@ -216,7 +216,7 @@ dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
 *mingw*)
-    if test -n "$_WIN32_MSVC"; then
+    if test "$HOST_CC_TYPE" = clang-cl; then
         HOST_CFLAGS="$HOST_CFLAGS"
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
@@ -227,12 +227,12 @@ case "$host" in
 
     case "${host_cpu}" in
     i*86)
-        if test -n "$_WIN32_MSVC"; then
+        if test "$HOST_CC_TYPE" = clang-cl; then
             HOST_LDFLAGS="$HOST_LDFLAGS -MACHINE:X86"
         fi
         ;;
     x86_64)
-        if test -n "$_WIN32_MSVC"; then
+        if test "$HOST_CC_TYPE" = clang-cl; then
             HOST_LDFLAGS="$HOST_LDFLAGS -MACHINE:X64"
         fi
         HOST_CFLAGS="$HOST_CFLAGS -D_AMD64_"
