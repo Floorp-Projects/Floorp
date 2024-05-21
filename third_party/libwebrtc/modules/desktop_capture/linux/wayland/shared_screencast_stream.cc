@@ -330,6 +330,19 @@ void SharedScreenCastStreamPrivate::OnStreamProcess(void* data) {
     return;
   }
 
+  struct spa_meta_header* header =
+      static_cast<spa_meta_header*>(spa_buffer_find_meta_data(
+          buffer->buffer, SPA_META_Header, sizeof(*header)));
+  if (header && (header->flags & SPA_META_HEADER_FLAG_CORRUPTED)) {
+    RTC_LOG(LS_INFO) << "Dropping corrupted buffer";
+    if (that->observer_) {
+      that->observer_->OnBufferCorruptedMetadata();
+    }
+    // Queue buffer for reuse; it will not be processed further.
+    pw_stream_queue_buffer(that->pw_stream_, buffer);
+    return;
+  }
+
   that->ProcessBuffer(buffer);
 
   pw_stream_queue_buffer(that->pw_stream_, buffer);
@@ -719,7 +732,20 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     }
   }
 
-  if (spa_buffer->datas[0].chunk->size == 0) {
+  if (spa_buffer->datas[0].chunk->flags & SPA_CHUNK_FLAG_CORRUPTED) {
+    RTC_LOG(LS_INFO) << "Dropping buffer with corrupted or missing data";
+    if (observer_) {
+      observer_->OnBufferCorruptedData();
+    }
+    return;
+  }
+
+  if (spa_buffer->datas[0].type == SPA_DATA_MemFd &&
+      spa_buffer->datas[0].chunk->size == 0) {
+    RTC_LOG(LS_INFO) << "Dropping buffer with empty data";
+    if (observer_) {
+      observer_->OnEmptyBuffer();
+    }
     return;
   }
 
