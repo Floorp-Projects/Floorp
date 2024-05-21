@@ -89,10 +89,6 @@ sysroot-wasm32-wasi-clang-17:
             - wasi-sdk.patch
         resources:
             - taskcluster/scripts/misc/wasi-sdk.patch
-        toolchain-alias:
-            by-project:
-                toolchains: null
-                default: sysroot-wasm32-wasi
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
@@ -114,6 +110,10 @@ sysroot-wasm32-wasi-clang-18:
             - wasi-sdk.patch
         resources:
             - taskcluster/scripts/misc/wasi-sdk.patch
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: sysroot-wasm32-wasi
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
