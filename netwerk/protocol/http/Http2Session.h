@@ -112,7 +112,7 @@ class Http2Session final : public ASpdySession,
     FRAME_TYPE_ALTSVC = 0xA,
     FRAME_TYPE_UNUSED = 0xB,
     FRAME_TYPE_ORIGIN = 0xC,
-    FRAME_TYPE_LAST = 0xD
+    FRAME_TYPE_PRIORITY_UPDATE = 0x10,
   };
 
   // NO_ERROR is a macro defined on windows, so we'll name the HTTP2 goaway
@@ -146,16 +146,22 @@ class Http2Session final : public ASpdySession,
   const static uint8_t kFlag_PRIORITY = 0x20;  // headers
 
   enum {
-    SETTINGS_TYPE_HEADER_TABLE_SIZE = 1,  // compression table size
-    SETTINGS_TYPE_ENABLE_PUSH = 2,        // can be used to disable push
-    SETTINGS_TYPE_MAX_CONCURRENT = 3,     // streams recvr allowed to initiate
-    SETTINGS_TYPE_INITIAL_WINDOW = 4,     // bytes for flow control default
-    SETTINGS_TYPE_MAX_FRAME_SIZE =
-        5,  // max frame size settings sender allows receipt of
+    // compression table size
+    SETTINGS_TYPE_HEADER_TABLE_SIZE = 1,
+    // can be used to disable push
+    SETTINGS_TYPE_ENABLE_PUSH = 2,
+    // streams recvr allowed to initiate
+    SETTINGS_TYPE_MAX_CONCURRENT = 3,
+    // bytes for flow control default
+    SETTINGS_TYPE_INITIAL_WINDOW = 4,
+    // max frame size settings sender allows receipt of
+    SETTINGS_TYPE_MAX_FRAME_SIZE = 5,
     // 6 is SETTINGS_TYPE_MAX_HEADER_LIST - advisory, we ignore it
     // 7 is unassigned
-    SETTINGS_TYPE_ENABLE_CONNECT_PROTOCOL =
-        8  // if sender implements extended CONNECT for websockets
+    // if sender implements extended CONNECT for websockets
+    SETTINGS_TYPE_ENABLE_CONNECT_PROTOCOL = 8,
+    // see rfc9218. used to disable HTTP/2 priority signals
+    SETTINGS_NO_RFC7540_PRIORITIES = 9,
   };
 
   // This should be big enough to hold all of your control packets,
@@ -220,6 +226,7 @@ class Http2Session final : public ASpdySession,
   static nsresult RecvAltSvc(Http2Session*);
   static nsresult RecvUnused(Http2Session*);
   static nsresult RecvOrigin(Http2Session*);
+  static nsresult RecvPriorityUpdate(Http2Session*);
 
   char* EnsureOutputBuffer(uint32_t needed);
 
