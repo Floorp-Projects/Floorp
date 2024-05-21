@@ -139,7 +139,7 @@ add_task(async function () {
   });
   checkContextSelectorMenuItemAt(hud, workerIndex, {
     label: workerFile,
-    tooltip: workerFile,
+    tooltip: workerUrl,
     checked: true,
   });
 

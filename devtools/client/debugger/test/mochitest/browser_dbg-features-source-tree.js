@@ -341,7 +341,7 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
 
   const workerThread = dbg.selectors
     .getAllThreads()
-    .find(thread => thread.name == testServer.urlFor("same-url.sjs"));
+    .find(thread => thread.url == testServer.urlFor("same-url.sjs"));
 
   is(
     sourceActors.filter(actor => actor.thread == workerThread.actor).length,

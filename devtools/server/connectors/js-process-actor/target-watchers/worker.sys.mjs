@@ -317,6 +317,16 @@ export class WorkerTargetWatcherClass {
       return false;
     }
 
+    // subprocess workers are ignored because they take several seconds to
+    // attach to when opening the browser toolbox. See bug 1594597.
+    if (
+      /resource:\/\/gre\/modules\/subprocess\/subprocess_.*\.worker\.js/.test(
+        dbg.url
+      )
+    ) {
+      return false;
+    }
+
     const { type: sessionContextType } = sessionData.sessionContext;
     if (sessionContextType == "all") {
       return true;

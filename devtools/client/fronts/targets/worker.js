@@ -28,6 +28,12 @@ class WorkerTargetFront extends TargetMixin(
   get isServiceWorker() {
     return this._type === Ci.nsIWorkerDebugger.TYPE_SERVICE;
   }
+
+  // Display file name instead of absolute URL in the context selector/threads panel
+  get name() {
+    return this._url.split("/").pop();
+  }
+
   form(json) {
     this.actorID = json.actor;
 

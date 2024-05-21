@@ -317,7 +317,7 @@ add_task(async function testSourceTextContent() {
 
   const workerThread = dbg.selectors
     .getAllThreads()
-    .find(thread => thread.name == `${BASE_URL}same-url.js`);
+    .find(thread => thread.url == `${BASE_URL}same-url.js`);
 
   is(
     sourceActors.filter(actor => actor.thread == workerThread.actor).length,

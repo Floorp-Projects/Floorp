@@ -38,7 +38,8 @@ add_task(async function () {
   await waitForThreadCount(dbg, 1);
   const threads = dbg.selectors.getThreads();
   is(threads.length, 1, "Got the page and the worker threads");
-  is(threads[0].name, WORKER_URL, "Thread name is correct");
+  is(threads[0].name, "worker.js", "Thread name is correct");
+  is(threads[0].url, WORKER_URL, "Thread URL is correct");
 
   const source = await waitForSource(dbg, "worker.js");
   await selectSource(dbg, source);
