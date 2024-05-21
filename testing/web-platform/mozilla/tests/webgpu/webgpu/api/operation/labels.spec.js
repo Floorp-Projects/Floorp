@@ -266,6 +266,14 @@ fn((t) => {
     vertex: {
       module,
       entryPoint: 'main'
+    },
+    // Specify a color attachment so we have at least one render target. Otherwise, details here
+    // are not relevant to this test.
+    fragment: {
+      targets: [{ format: 'rgba8unorm' }],
+      module: t.device.createShaderModule({
+        code: `@fragment fn main() -> @location(0) vec4f { return vec4f(0); }`
+      })
     }
   });
   const layout1 = pipeline.getBindGroupLayout(0);
