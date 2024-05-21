@@ -70,8 +70,6 @@ class BrowserToolbarView(
     var view: BrowserToolbar = layout
         .findViewById(R.id.toolbar)
 
-    private val tabStripView: ComposeView by lazy { layout.findViewById(R.id.tabStripView) }
-
     private val isNavBarEnabled = IncompleteRedesignToolbarFeature(context.settings()).isEnabled
 
     val toolbarIntegration: ToolbarIntegration
@@ -86,8 +84,8 @@ class BrowserToolbarView(
         container.addView(layout)
         val isCustomTabSession = customTabSession != null
 
-        if (shouldShowTabStrip()) {
-            tabStripView.apply {
+        if (toolbarLayout == R.layout.component_browser_top_toolbar_with_tab_strip) {
+            layout.findViewById<ComposeView>(R.id.tabStripView).apply {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 setContent {
                     tabStripContent()
