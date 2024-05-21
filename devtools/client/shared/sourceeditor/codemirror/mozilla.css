@@ -320,7 +320,9 @@
 }
 
 /* matching brackets highlight */
-.cm-s-mozilla .CodeMirror-matchingbracket {
+.cm-s-mozilla .CodeMirror-matchingbracket,
+/* Codemirror 6 */
+.cm-editor .cm-matchingBracket {
   text-decoration: 1px underline solid currentColor;
   text-decoration-skip-ink: none;
   text-underline-offset: 3px;
@@ -368,4 +370,16 @@
   color: var(--theme-body-color);
   background-color: var(--theme-sidebar-background);
   vertical-align: middle;
+}
+
+.cm-editor .cm-matchingBracket {
+  /* Removing the default background color */
+  background-color: unset !important;
+  /* Applying the same color that was set in cm5. Set the color on the parent so the
+     underline set on the parent has the correct color */
+  color: #0b0;
+
+  .tok-punctuation {
+    color: currentColor;
+  }
 }
