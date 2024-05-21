@@ -13,7 +13,6 @@
 #include "nsIAutoCompleteController.h"
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMEventListener.h"
-#include "nsIFormHistoryAutoComplete.h"
 #include "nsCOMPtr.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashMap.h"

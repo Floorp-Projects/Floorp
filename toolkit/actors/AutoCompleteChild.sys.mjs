@@ -141,7 +141,6 @@ export class AutoCompleteChild extends JSWindowActorChild {
       dir,
       inputElementIdentifier,
       formOrigin,
-      actorName: this.lastAutoCompleteProviderName,
     });
 
     this._input = input;
@@ -321,10 +320,6 @@ export class AutoCompleteChild extends JSWindowActorChild {
       // We have not yet supported showing autocomplete entries from multiple providers,
       // Note: The prioty is defined in AutoCompleteParent.
       if (acResult) {
-        // `lastAutoCompleteProviderName` should be removed once we implement
-        // the mapping of autocomplete entry to provider in the parent process.
-        this.lastAutoCompleteProviderName = provider.actorName;
-
         this.lastProfileAutoCompleteResult = acResult;
         listener.onSearchCompletion(acResult);
         return;

@@ -138,13 +138,9 @@ var AutoCompleteResultView = {
     this.results = [];
   },
 
-  setResults(actor, results, providerActorName) {
+  setResults(actor, results) {
     this.currentActor = actor;
     this.results = results;
-
-    if (providerActorName) {
-      this.providerActor = actor.manager.getActor(providerActorName);
-    }
   },
 };
 
@@ -202,7 +198,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     }
   }
 
-  showPopupWithResults({ rect, dir, results, actorName }) {
+  showPopupWithResults({ rect, dir, results }) {
     if (!results.length || this.openedPopup) {
       // We shouldn't ever be showing an empty popup, and if we
       // already have a popup open, the old one needs to close before
@@ -236,7 +232,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     );
     this.openedPopup.style.direction = dir;
 
-    AutoCompleteResultView.setResults(this, results, actorName);
+    AutoCompleteResultView.setResults(this, results);
 
     this.openedPopup.view = AutoCompleteResultView;
     this.openedPopup.selectedIndex = -1;
@@ -394,9 +390,14 @@ export class AutoCompleteParent extends JSWindowActorParent {
     }
 
     switch (message.name) {
+      // This is called when an autocomplete entry is selected by the users.
+      // In the current design, when a selection is triggered from the parent
+      // process (ex, select by mouse click), we still first send the "HandleEnter"
+      // message to the child and then child send the "SelectEntry" message back
+      // to the parent to indicate that an autocomplete entry is selected.
       case "AutoComplete:SelectEntry": {
         if (this.openedPopup) {
-          this.autofillProfile(this.openedPopup.selectedIndex);
+          this.selectEntry(this.openedPopup.selectedIndex);
         }
         break;
       }
@@ -410,14 +411,8 @@ export class AutoCompleteParent extends JSWindowActorParent {
       }
 
       case "AutoComplete:MaybeOpenPopup": {
-        let {
-          results,
-          rect,
-          dir,
-          inputElementIdentifier,
-          formOrigin,
-          actorName,
-        } = message.data;
+        let { results, rect, dir, inputElementIdentifier, formOrigin } =
+          message.data;
         if (lazy.DELEGATE_AUTOCOMPLETE) {
           lazy.GeckoViewAutocomplete.delegateSelection({
             browsingContext: this.browsingContext,
@@ -426,7 +421,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
             formOrigin,
           });
         } else {
-          this.showPopupWithResults({ results, rect, dir, actorName });
+          this.showPopupWithResults({ results, rect, dir });
           this.notifyListeners();
         }
         break;
@@ -553,34 +548,41 @@ export class AutoCompleteParent extends JSWindowActorParent {
 
   stopSearch() {}
 
-  previewAutofillProfile(index) {
-    const actor = AutoCompleteResultView.providerActor;
-    if (!actor) {
-      return;
-    }
+  // Hard-coded the mapping by using the message prefix to find the actor
+  // to process a given message.
+  #getActorByMessagePrefix(message) {
+    const prefixToActor = [
+      { prefix: "PasswordManager", actor: "LoginManager" },
+      { prefix: "FormAutofill", actor: "FormAutofill" },
+    ];
 
-    // Clear preview when the selected index is not valid
-    if (index < 0) {
-      actor.previewFields(null);
-      return;
-    }
+    const name = prefixToActor.find(x => message.startsWith(x.prefix))?.actor;
+    return this.browsingContext.currentWindowGlobal.getActor(name);
+  }
 
-    const result = AutoCompleteResultView.results[index];
-    actor.previewFields(result);
+  previewEntry(index) {
+    this.selectEntry(index, true);
   }
 
   /**
-   * When a field is autocompleted, fill relevant fields
+   * When an autocomplete entry is selected, notify the actor that provides the entry
    */
-  autofillProfile(index) {
-    // Find the provider of this autocomplete
-    const actor = AutoCompleteResultView.providerActor;
-    if (index < 0 || !actor) {
-      return;
-    }
-
+  selectEntry(index, hover = false) {
     const result = AutoCompleteResultView.results[index];
-    actor.autofillFields(result);
+
+    try {
+      const { fillMessageName, fillMessageData } = JSON.parse(result.comment);
+      if (!fillMessageName) {
+        return;
+      }
+
+      const actor = this.#getActorByMessagePrefix(fillMessageName);
+      if (hover) {
+        actor?.onAutoCompleteEntryHovered(fillMessageName, fillMessageData);
+      } else {
+        actor?.onAutoCompleteEntrySelected(fillMessageName, fillMessageData);
+      }
+    } catch {}
   }
 
   /**

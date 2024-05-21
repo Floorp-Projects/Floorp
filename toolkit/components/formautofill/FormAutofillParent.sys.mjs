@@ -27,7 +27,6 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-import { FirefoxRelayTelemetry } from "resource://gre/modules/FirefoxRelayTelemetry.mjs";
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 
@@ -278,11 +277,6 @@ export class FormAutofillParent extends JSWindowActorParent {
         await this._onFormSubmit(data);
         break;
       }
-      case "FormAutofill:OpenPreferences": {
-        const win = lazy.BrowserWindowTracker.getTopWindow();
-        win.openPreferences("privacy-form-autofill");
-        break;
-      }
       case "FormAutofill:GetDecryptedString": {
         let { cipherText, reauth } = data;
         if (
@@ -344,21 +338,6 @@ export class FormAutofillParent extends JSWindowActorParent {
         );
         break;
       }
-      case "PasswordManager:offerRelayIntegration": {
-        FirefoxRelayTelemetry.recordRelayOfferedEvent(
-          "clicked",
-          data.telemetry.flowId,
-          data.telemetry.scenarioName
-        );
-        return this.#offerRelayIntegration();
-      }
-      case "PasswordManager:generateRelayUsername": {
-        FirefoxRelayTelemetry.recordRelayUsernameFilledEvent(
-          "clicked",
-          data.telemetry.flowId
-        );
-        return this.#generateRelayUsername();
-      }
     }
 
     return undefined;
@@ -368,20 +347,6 @@ export class FormAutofillParent extends JSWindowActorParent {
     return lazy.LoginHelper.getLoginOrigin(
       this.manager.documentPrincipal?.originNoSuffix
     );
-  }
-
-  getRootBrowser() {
-    return this.browsingContext.topFrameElement;
-  }
-
-  async #offerRelayIntegration() {
-    const browser = this.getRootBrowser();
-    return lazy.FirefoxRelay.offerRelayIntegration(browser, this.formOrigin);
-  }
-
-  async #generateRelayUsername() {
-    const browser = this.getRootBrowser();
-    return lazy.FirefoxRelay.generateUsername(browser, this.formOrigin);
   }
 
   notifyMessageObservers(callbackName, data) {
@@ -704,23 +669,32 @@ export class FormAutofillParent extends JSWindowActorParent {
     return true;
   }
 
-  previewFields(result) {
-    try {
-      const comment =
-        result.style == "autofill" ? JSON.parse(result.comment) : null;
-      this.sendAsyncMessage("FormAutofill:PreviewProfile", comment?.profile);
-    } catch (e) {
-      lazy.log.debug("Fail to get preview profile: ", e.message);
+  onAutoCompleteEntryHovered(message, data) {
+    if (message == "FormAutofill:FillForm") {
+      this.sendAsyncMessage("FormAutofill:PreviewProfile", data);
+    } else {
+      // Make sure the preview is cleared when users select an entry
+      // that doesn't support preview.
+      this.sendAsyncMessage("FormAutofill:PreviewProfile", null);
     }
   }
 
-  autofillFields(result) {
-    if (result.style == "autofill") {
-      try {
-        const comment = JSON.parse(result.comment);
-        this.sendAsyncMessage("FormAutofill:FillForm", comment.profile);
-      } catch (e) {
-        lazy.log.debug("Fail to get autofill profile.");
+  onAutoCompleteEntrySelected(message, data) {
+    switch (message) {
+      case "FormAutofill:OpenPreferences": {
+        const win = lazy.BrowserWindowTracker.getTopWindow();
+        win.openPreferences("privacy-form-autofill");
+        break;
+      }
+
+      case "FormAutofill:ClearForm":
+      case "FormAutofill:FillForm": {
+        this.sendAsyncMessage(message, data);
+        break;
+      }
+      default: {
+        lazy.log.debug("Unsupported autocomplete message:", message);
+        break;
       }
     }
   }

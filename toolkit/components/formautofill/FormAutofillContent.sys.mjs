@@ -12,8 +12,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
-  ProfileAutocomplete:
-    "resource://autofill/AutofillProfileAutoComplete.sys.mjs",
 });
 
 const formFillController = Cc[
@@ -44,20 +42,6 @@ export var FormAutofillContent = {
 
     // eslint-disable-next-line mozilla/balanced-listeners
     Services.cpmm.sharedData.addEventListener("change", this);
-
-    const autofillEnabled = Services.cpmm.sharedData.get(
-      "FormAutofill:enabled"
-    );
-    // If storage hasn't be initialized yet autofillEnabled is undefined but we need to ensure
-    // autocomplete is registered before the focusin so register it in this case as long as the
-    // pref is true.
-    const shouldEnableAutofill =
-      autofillEnabled === undefined &&
-      (lazy.FormAutofill.isAutofillAddressesEnabled ||
-        lazy.FormAutofill.isAutofillCreditCardsEnabled);
-    if (autofillEnabled || shouldEnableAutofill) {
-      lazy.ProfileAutocomplete.ensureRegistered();
-    }
 
     this.activeAutofillChild = null;
   },
@@ -111,14 +95,11 @@ export var FormAutofillContent = {
           return;
         }
         if (Services.cpmm.sharedData.get("FormAutofill:enabled")) {
-          lazy.ProfileAutocomplete.ensureRegistered();
           if (this._popupPending) {
             this._popupPending = false;
             this.debug("handleEvent: Opening deferred popup");
             formFillController.showPopup();
           }
-        } else {
-          lazy.ProfileAutocomplete.ensureUnregistered();
         }
         break;
       }

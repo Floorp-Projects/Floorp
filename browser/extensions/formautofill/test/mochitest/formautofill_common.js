@@ -303,14 +303,15 @@ function checkMenuEntriesComment(expectedValues, extraRows = 1) {
 
   is(actualValues.length, expectedLength, " Checking length of expected menu");
   for (let i = 0; i < expectedValues.length; i++) {
-    let val = actualValues[i];
-    if (val) {
-      val = JSON.parse(val);
-      delete val.profile;
-      val = JSON.stringify(val);
+    const expectedValue = JSON.parse(expectedValues[i]);
+    const actualValue = JSON.parse(actualValues[i]);
+    for (const [key, value] of Object.entries(expectedValue)) {
+      is(
+        actualValue[key],
+        value,
+        ` Checking menu entry #${i}, ${key} should be ${value}`
+      );
     }
-
-    is(val, expectedValues[i], " Checking menu entry #" + i);
   }
 }
 

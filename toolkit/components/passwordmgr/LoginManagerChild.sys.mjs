@@ -1449,14 +1449,20 @@ export class LoginManagerChild extends JSWindowActorChild {
         this.notifyObserversOfFormProcessed(msg.data.formid);
         break;
       }
-      case "PasswordManager:fillFields": {
+      case "PasswordManager:OnFieldAutoComplete": {
+        const { focusedInput } = lazy.gFormFillService;
         const login = lazy.LoginHelper.vanillaObjectToLogin(msg.data);
-        this.fillFields(login);
+        this.onFieldAutoComplete(focusedInput, login);
         break;
       }
-      case "PasswordManager:fillGeneratedPassword": {
+      case "PasswordManager:FillGeneratedPassword": {
         const { focusedInput } = lazy.gFormFillService;
         this.filledWithGeneratedPassword(focusedInput);
+        break;
+      }
+      case "PasswordManager:FillRelayUsername": {
+        const { focusedInput } = lazy.gFormFillService;
+        this.fillRelayUsername(focusedInput, msg.data);
         break;
       }
     }
@@ -2607,6 +2613,13 @@ export class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
+   * Fill the relay generated username to a username field.
+   */
+  fillRelayUsername(usernameField, value) {
+    usernameField.setUserInput(value);
+  }
+
+  /**
    * Notify the parent that we are ignoring the password edit
    * so that tests can listen for this as opposed to waiting for
    * nothing to happen.
@@ -3320,10 +3333,5 @@ export class LoginManagerChild extends JSWindowActorChild {
    */
   #isWebAuthnCredentials(autocompleteInfo) {
     return autocompleteInfo.credentialType == "webauthn";
-  }
-
-  fillFields(login) {
-    let { focusedInput } = lazy.gFormFillService;
-    this.onFieldAutoComplete(focusedInput, login);
   }
 }

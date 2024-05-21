@@ -817,7 +817,7 @@
 
       setTimeout(() => {
         let selectedIndex = popup ? popup.selectedIndex : -1;
-        actor.previewAutofillProfile(selectedIndex);
+        actor.previewEntry(selectedIndex);
       }, 0);
     }
 

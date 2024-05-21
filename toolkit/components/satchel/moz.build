@@ -13,7 +13,6 @@ BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 XPIDL_SOURCES += [
     "nsIFormFillController.idl",
-    "nsIFormHistoryAutoComplete.idl",
 ]
 
 XPIDL_MODULE = "satchel"

@@ -3,12 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { sendFillRequestToParent } from "resource://gre/modules/FillHelpers.sys.mjs";
-
-const formFillController = Cc[
-  "@mozilla.org/satchel/form-fill-controller;1"
-].getService(Ci.nsIFormFillController);
-
 /**
  * This autocomplete result combines 3 arrays of entries, fixedEntries and
  * externalEntries.
@@ -164,34 +158,5 @@ export class FormHistoryAutoCompleteResult {
 
   #isFormHistoryEntry(index) {
     return index >= 0 && index < this.entries.length;
-  }
-}
-
-export class FormHistoryAutoComplete {
-  constructor() {
-    Services.obs.addObserver(this, "autocomplete-will-enter-text");
-  }
-
-  classID = Components.ID("{23530265-31d1-4ee9-864c-c081975fb7bc}");
-  QueryInterface = ChromeUtils.generateQI([
-    "nsIFormHistoryAutoComplete",
-    "nsISupportsWeakReference",
-  ]);
-
-  // AutoCompleteE10S needs to be able to call autoCompleteSearchAsync without
-  // going through IDL in order to pass a mock DOM object field.
-  get wrappedJSObject() {
-    return this;
-  }
-
-  async observe(subject, topic, data) {
-    switch (topic) {
-      case "autocomplete-will-enter-text": {
-        if (subject && subject == formFillController.controller?.input) {
-          await sendFillRequestToParent("FormHistory", subject, data);
-        }
-        break;
-      }
-    }
   }
 }

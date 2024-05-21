@@ -157,8 +157,11 @@ class ProfileAutoCompleteResult {
       return item.comment;
     }
 
-    item.profile = this._matchingProfiles[index];
-    return JSON.stringify(item);
+    return JSON.stringify({
+      ...item,
+      fillMessageName: "FormAutofill:FillForm",
+      fillMessageData: this._matchingProfiles[index],
+    });
   }
 
   /**
