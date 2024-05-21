@@ -44,14 +44,36 @@
     }
 
     .icon {
-      -moz-context-properties: fill;
-      fill: currentColor;
       background-image: var(--tool-icon);
-      background-size: var(--icon-size-default);
-      width: var(--icon-size-default);
-      height: var(--icon-size-default);
-      background-position: center;
-      background-repeat: no-repeat;
+    }
+  }
+}
+
+.icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-size: var(--icon-size-default);
+  width: var(--icon-size-default);
+  height: var(--icon-size-default);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.customize-extensions {
+  .extensions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-medium);
+  }
+
+  .extension-item {
+    display: flex;
+    gap: var(--space-medium);
+    align-items: center;
+    font-size: 0.9em;
+
+    .icon {
+      background-image: var(--extension-icon);
     }
   }
 }

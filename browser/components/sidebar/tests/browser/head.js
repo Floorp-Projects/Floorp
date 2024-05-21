@@ -119,3 +119,7 @@ function openAndWaitForContextMenu(popup, button, onShown, onHidden) {
     );
   });
 }
+
+function isActiveElement(el) {
+  return el.getRootNode().activeElement == el;
+}
