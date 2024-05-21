@@ -1738,8 +1738,8 @@ main section {
 }
 .customize-menu .close-button-wrapper {
   position: sticky;
-  top: var(--space-large);
-  margin-block-end: var(--space-large);
+  top: 0;
+  padding-block-start: var(--space-large);
   background-color: var(--newtab-background-color-secondary);
   z-index: 1;
 }
