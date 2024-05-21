@@ -8,24 +8,30 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-async function openPreview(tab) {
+async function openPreview(tab, win = window) {
   const previewShown = BrowserTestUtils.waitForPopupEvent(
-    document.getElementById("tab-preview-panel"),
+    win.document.getElementById("tab-preview-panel"),
     "shown"
   );
-  EventUtils.synthesizeMouseAtCenter(tab, { type: "mouseover" });
+  EventUtils.synthesizeMouseAtCenter(tab, { type: "mouseover" }, win);
   return previewShown;
 }
 
-async function closePreviews() {
-  const tabs = document.getElementById("tabbrowser-tabs");
+async function closePreviews(win = window) {
+  const tabs = win.document.getElementById("tabbrowser-tabs");
   const previewHidden = BrowserTestUtils.waitForPopupEvent(
-    document.getElementById("tab-preview-panel"),
+    win.document.getElementById("tab-preview-panel"),
     "hidden"
   );
-  EventUtils.synthesizeMouse(tabs, 0, tabs.outerHeight + 1, {
-    type: "mouseout",
-  });
+  EventUtils.synthesizeMouse(
+    tabs,
+    0,
+    tabs.outerHeight + 1,
+    {
+      type: "mouseout",
+    },
+    win
+  );
   return previewHidden;
 }
 
@@ -72,6 +78,36 @@ add_task(async function hoverTests() {
   );
 
   await closePreviews();
+
+  // Bug 1897475 - don't show tab previews in background windows
+  let fgWindow = await BrowserTestUtils.openNewBrowserWindow();
+  let fgTab = fgWindow.gBrowser.tabs[0];
+  let fgWindowPreviewContainer =
+    fgWindow.document.getElementById("tab-preview-panel");
+
+  await openPreview(fgTab, fgWindow);
+  Assert.equal(
+    fgWindowPreviewContainer.querySelector(".tab-preview-title").innerText,
+    "New Tab",
+    "Preview of foreground tab shows correct title"
+  );
+  await closePreviews(fgWindow);
+
+  // ensure tab1 preview doesn't open, as it's now in a background window
+  let resolved = false;
+  let openPreviewPromise = openPreview(tab1).then(() => {
+    resolved = true;
+  });
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  let timeoutPromise = new Promise(resolve => setTimeout(resolve, 100));
+  await Promise.race([openPreviewPromise, timeoutPromise]);
+  Assert.ok(!resolved, "preview does not open from background window");
+  Assert.ok(
+    BrowserTestUtils.isHidden(previewContainer),
+    "Background window tab preview hidden"
+  );
+
+  await BrowserTestUtils.closeWindow(fgWindow);
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
