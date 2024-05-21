@@ -2232,6 +2232,7 @@ class IDLDictionary(IDLObjectWithScope):
         "_extendedAttrDict",
         "needsConversionToJS",
         "needsConversionFromJS",
+        "needsEqualityOperator",
     )
 
     def __init__(self, location, parentScope, name, parent, members):
@@ -2246,6 +2247,7 @@ class IDLDictionary(IDLObjectWithScope):
         self._extendedAttrDict = {}
         self.needsConversionToJS = False
         self.needsConversionFromJS = False
+        self.needsEqualityOperator = None
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -2310,6 +2312,14 @@ class IDLDictionary(IDLObjectWithScope):
                     [self.identifier.location],
                 )
             inheritedMembers.extend(ancestor.members)
+            if (
+                self.getExtendedAttribute("GenerateEqualityOperator")
+                and ancestor.needsEqualityOperator is None
+            ):
+                # Store the dictionary that has the [GenerateEqualityOperator]
+                # extended attribute, so we can use it when generating error
+                # messages.
+                ancestor.needsEqualityOperator = self
             ancestor = ancestor.parent
 
         # Catch name duplication
@@ -2435,6 +2445,13 @@ class IDLDictionary(IDLObjectWithScope):
                 # implement ToJSON by converting to a JS object and
                 # then using JSON.stringify.
                 self.needsConversionToJS = True
+            elif identifier == "GenerateEqualityOperator":
+                if not attr.noArguments():
+                    raise WebIDLError(
+                        "[GenerateEqualityOperator] must take no arguments",
+                        [attr.location],
+                    )
+                self.needsEqualityOperator = self
             elif identifier == "Unsorted":
                 if not attr.noArguments():
                     raise WebIDLError(
