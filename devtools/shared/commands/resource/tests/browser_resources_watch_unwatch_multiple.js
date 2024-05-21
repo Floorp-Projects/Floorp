@@ -19,7 +19,8 @@ add_task(async function () {
   };
 
   info("Watch for error messages resources");
-  await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
+  const watchedResources = [resourceCommand.TYPES.ERROR_MESSAGE];
+  await resourceCommand.watchResources(watchedResources, {
     onAvailable,
   });
 
@@ -33,6 +34,10 @@ add_task(async function () {
     0,
     "no resources were received after the first watchResources call"
   );
+
+  // Clear the array which was passed to watchResources.
+  // It should not impact ResourceCommand behavior!
+  watchedResources.length = 0;
 
   info("Trigger an error in the page");
   await ContentTask.spawn(tab.linkedBrowser, [], function frameScript() {
