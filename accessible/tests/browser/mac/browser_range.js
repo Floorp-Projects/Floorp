@@ -242,3 +242,54 @@ addAccessibleTask(
     is(progress.getAttributeValue("AXValue"), 90, "Correct updated value");
   }
 );
+
+/**
+ * Verify meter HTML elements expose the value region as part of their value
+ * description.
+ */
+addAccessibleTask(
+  `<label for="fuel">Fuel level:</label><meter id="fuel" min="0" max="100" low="33" high="66" optimum="80" value="50"></meter>`,
+  async (browser, accDoc) => {
+    const meter = getNativeInterface(accDoc, "fuel");
+    is(meter.getAttributeValue("AXValue"), 50, "Correct value");
+    is(
+      meter.getAttributeValue("AXValueDescription"),
+      "50, Suboptimal value",
+      "Value description contains appropriate value region"
+    );
+
+    let evt = waitForMacEvent("AXValueChanged");
+    await invokeContentTask(browser, [], () => {
+      const f = content.document.getElementById("fuel");
+      f.setAttribute("value", "90");
+    });
+    await evt;
+
+    is(
+      meter.getAttributeValue("AXValueDescription"),
+      "90, Optimal value",
+      "Value description updated to optimal"
+    );
+
+    await invokeContentTask(browser, [], () => {
+      const f = content.document.getElementById("fuel");
+      f.setAttribute("optimum", "20");
+    });
+    await untilCacheIs(
+      () => meter.getAttributeValue("AXValueDescription"),
+      "90, Critical value",
+      "Value description updated to critical."
+    );
+
+    // XXX bug 1895627:
+    //   await invokeContentTask(browser, [], () => {
+    //     const f = content.document.getElementById("fuel");
+    //     f.textContent = "at 90/100";
+    //   });
+    //   await untilCacheIs(
+    //     () => meter.getAttributeValue("AXValueDescription"),
+    //     "at 90/100, Critical value",
+    //     "Value description updated to include inner text."
+    //   );
+  }
+);

@@ -243,6 +243,8 @@ class CacheKey {
   static constexpr nsStaticAtom* TextValue = nsGkAtoms::aria_valuetext;
   // gfx::Matrix4x4, CacheDomain::TransformMatrix
   static constexpr nsStaticAtom* TransformMatrix = nsGkAtoms::transform;
+  // int32_t, CacheDomain::Value
+  static constexpr nsStaticAtom* ValueRegion = nsGkAtoms::valuetype;
   // nsTArray<uint64_t>, CacheDomain::Viewport
   // The list of Accessibles in the viewport used for hit testing and on-screen
   // determination.

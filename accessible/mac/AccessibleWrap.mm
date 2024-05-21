@@ -195,6 +195,9 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::PROGRESSBAR:
       return [mozRangeAccessible class];
 
+    case roles::METER:
+      return [mozMeterAccessible class];
+
     case roles::SPINBUTTON:
     case roles::SLIDER:
       return [mozIncrementableAccessible class];

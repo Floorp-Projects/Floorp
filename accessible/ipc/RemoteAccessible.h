@@ -374,6 +374,9 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
   void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 #endif  // !defined(XP_WIN)
 
+  // HTMLMeterAccessible
+  int32_t ValueRegion() const;
+
   // HyperTextAccessibleBase
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
