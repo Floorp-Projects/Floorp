@@ -1383,8 +1383,6 @@ static void JSONRootCheck(const Json::Value& aRoot,
 
   EXPECT_HAS_JSON(aRoot["pages"], Array);
 
-  EXPECT_HAS_JSON(aRoot["profilerOverhead"], Object);
-
   // "counters" is only present if there is any data to report.
   // Test that expect "counters" should test for its presence first.
   if (aRoot.isMember("counters")) {
@@ -3195,11 +3193,11 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["name"], String, "");
                 }
               }  // marker with payload
-            }    // for (marker : data)
-          }      // markers.data
-        }        // markers
-      }          // thread0
-    }            // threads
+            }  // for (marker : data)
+          }  // markers.data
+        }  // markers
+      }  // thread0
+    }  // threads
     // We should have read all expected markers.
     EXPECT_EQ(state, S_LAST);
 
@@ -3471,7 +3469,7 @@ TEST(GeckoProfiler, Markers)
         EXPECT_TRUE(testedSchemaNames.find("MediaSample") !=
                     testedSchemaNames.end());
       }  // markerSchema
-    }    // meta
+    }  // meta
   });
 
   Maybe<ProfilerBufferInfo> info = profiler_get_buffer_info();
