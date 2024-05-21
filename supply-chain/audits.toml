@@ -699,6 +699,18 @@ who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.37.2+1.3.238 -> 0.37.3+1.3.251"
 
+[[audits.ash]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.37.3+1.3.251 -> 0.38.0+1.3.281"
+notes = """
+There are many sweeping changes to code generation that make this review intimidating, at first.
+However, I have audited all hand-written code, and vetted changes to the code generator (with some
+auditing of generated output to ensure correspondence to my mental model). Vulkan is an inherently
+unsafe API, but this crate makes many of the preparatory steps for calling Vulkan APIs safer and
+easier to use.
+"""
+
 [[audits.ashmem]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
