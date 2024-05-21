@@ -1652,6 +1652,12 @@ void ProfileBuffer::StreamMarkersToJSON(
 void ProfileBuffer::StreamProfilerOverheadToJSON(
     SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
     double aSinceTime, mozilla::ProgressLogger aProgressLogger) const {
+  const char* recordOverheads = getenv("MOZ_PROFILER_RECORD_OVERHEADS");
+  if (!recordOverheads || recordOverheads[0] == '\0') {
+    // Overheads were not recorded, return early.
+    return;
+  }
+
   mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
     MOZ_ASSERT(aReader,
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
