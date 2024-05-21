@@ -813,6 +813,41 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
   return true;
 }
 
+bool GCRuntime::needZealousGC() {
+  if (nextScheduled > 0 && --nextScheduled == 0) {
+    if (hasZealMode(ZealMode::Alloc) || hasZealMode(ZealMode::GenerationalGC) ||
+        hasZealMode(ZealMode::IncrementalMultipleSlices) ||
+        hasZealMode(ZealMode::Compact) || hasIncrementalTwoSliceZealMode()) {
+      nextScheduled = zealFrequency;
+    }
+    return true;
+  }
+  return false;
+}
+
+bool GCRuntime::hasIncrementalTwoSliceZealMode() const {
+  return hasZealMode(ZealMode::YieldBeforeRootMarking) ||
+         hasZealMode(ZealMode::YieldBeforeMarking) ||
+         hasZealMode(ZealMode::YieldBeforeSweeping) ||
+         hasZealMode(ZealMode::YieldBeforeSweepingAtoms) ||
+         hasZealMode(ZealMode::YieldBeforeSweepingCaches) ||
+         hasZealMode(ZealMode::YieldBeforeSweepingObjects) ||
+         hasZealMode(ZealMode::YieldBeforeSweepingNonObjects) ||
+         hasZealMode(ZealMode::YieldBeforeSweepingPropMapTrees) ||
+         hasZealMode(ZealMode::YieldWhileGrayMarking);
+}
+
+bool GCRuntime::hasZealMode(ZealMode mode) const {
+  static_assert(size_t(ZealMode::Limit) < sizeof(zealModeBits) * 8,
+                "Zeal modes must fit in zealModeBits");
+  return zealModeBits & (1 << uint32_t(mode));
+}
+
+void GCRuntime::clearZealMode(ZealMode mode) {
+  zealModeBits &= ~(1 << uint32_t(mode));
+  MOZ_ASSERT(!hasZealMode(mode));
+}
+
 const char* js::gc::AllocKindName(AllocKind kind) {
   static const char* const names[] = {
 #  define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) #allocKind,
