@@ -73,13 +73,40 @@ High priority tasks are also “drop everything”, except that in this case “
 Handling needinfos
 ------------------
 
-TL;DR: Don’t leave people hanging. Reply and convert needinfos from others to self-needinfos.
+TL;DR: Don’t leave people hanging.
 
-Many people have long lists of needinfos. Please don’t ignore them. Here’s how we suggest you burn them down, and keep them down:
+Many people have long lists of needinfos. Please don’t ignore them. Here’s how we suggest you burn them down, and keep them down.
 
-* Any needinfo older than 3 months has probably been forgotten about by the requester. It’s okay to declare needinfo bankruptcy. If you’re concerned about annoying the requester by clearing the needinfo, feel free to point them at this document and offer that they can re-request if there is still a problem.
 
-* For newer requests, don’t leave someone or something, .e.g BugBot hanging. If you can take action in the short term, do so. If you can’t do it straight away, reply letting the requester know that you intend to work on it, but can’t do so immediately. This clears the original needinfo. At the same time you can re-request a needinfo (using the “Request information from ‘myself’” feature). This converts the needinfo to a self-needinfo, and takes it off the attention list. Be mindful, do the conversion when you have given the right attention and response so that others are not hanging on there, or you've done the best you can for the time being to unblock others. We don't want it to become a way to ignore requests.
+
+Old needinfos
+~~~~~~~~~~~~~
+
+Any needinfo older than 3 months has probably been forgotten about by the requester. It’s okay to declare needinfo bankruptcy. Consider replying something like:
+
+* `Sorry that I didn't get to this needinfo earlier. Please request again if this needinfo is still needed.`
+
+This clears the needinfo and offers that the requester can ask again if there is still a problem.
+
+
+If you’re concerned about annoying the requester by clearing the needinfo, feel free to point them at this document.
+
+
+New needinfos
+~~~~~~~~~~~~~
+
+For newer requests, don’t leave someone or something, .e.g BugBot hanging. If you can take action in the short term, do so. If you can’t do it straight away to come with a detailed response, consider replying something that might help move on the discussion, like:
+
+* `I don't know, but you could do X in order to find out.`
+* `Can you please provide more information about Y?`
+* `I believe Z (someone else) can help.`
+
+Providing visibility of your current plan helps move the needle, too. You can also consider replying something like:
+
+* `Sorry that I don't have a quick thought or I don't expect to have bandwidth to help it now. Please request again if this should deserve a higher priority.`
+
+This clears the needinfo.
+
 
 
 Review requests
