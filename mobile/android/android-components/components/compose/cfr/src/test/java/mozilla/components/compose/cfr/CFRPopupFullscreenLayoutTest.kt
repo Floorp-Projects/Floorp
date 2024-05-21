@@ -91,13 +91,16 @@ class CFRPopupFullscreenLayoutTest {
 
         assertNull(popupView.findViewTreeLifecycleOwner())
         assertNull(popupView.findViewTreeSavedStateRegistryOwner())
-        verify(windowManager).removeViewImmediate(popupView)
+        verify(windowManager).removeView(popupView)
     }
 
     @Test
     fun `GIVEN a popup WHEN adding it to window THEN use translucent layout params`() {
         val context = spy(testContext)
-        val anchor = View(context)
+        val anchor = View(context).apply {
+            setViewTreeLifecycleOwner(mock())
+            this.setViewTreeSavedStateRegistryOwner(mock())
+        }
         val windowManager = spy(context.getSystemService(Context.WINDOW_SERVICE))
         doReturn(windowManager).`when`(context).getSystemService(Context.WINDOW_SERVICE)
         val popupView = CFRPopupFullscreenLayout(anchor, mock(), mock(), { }, { })
