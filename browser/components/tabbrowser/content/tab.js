@@ -575,7 +575,12 @@
       // Prepare connection to host beforehand.
       SessionStore.speculativeConnectOnTabHover(this);
 
-      this.dispatchEvent(new CustomEvent("TabHoverStart", { bubbles: true }));
+      const isForegroundWindow =
+        this.ownerGlobal ==
+        BrowserWindowTracker.getTopWindow({ allowPopups: true });
+      if (isForegroundWindow) {
+        this.dispatchEvent(new CustomEvent("TabHoverStart", { bubbles: true }));
+      }
     }
 
     _mouseleave() {

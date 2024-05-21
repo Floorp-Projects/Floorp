@@ -91,6 +91,7 @@ export default class TabPreviewPanel {
       this._panel.openPopup(this._tab, POPUP_OPTIONS);
     }, this._prefPreviewDelay);
     this._win.addEventListener("TabSelect", this);
+    this._win.addEventListener("blur", this);
     this._panel.addEventListener("popupshowing", this);
   }
 
@@ -129,6 +130,9 @@ export default class TabPreviewPanel {
           this._thumbnailElement.remove();
           this._thumbnailElement = null;
         }
+        break;
+      case "blur":
+        this.deactivate();
         break;
     }
   }
