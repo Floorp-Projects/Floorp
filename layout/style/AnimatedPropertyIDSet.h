@@ -17,6 +17,20 @@ namespace mozilla {
 
 class AnimatedPropertyIDSet {
  public:
+  using CustomNameSet = nsTHashSet<RefPtr<nsAtom>>;
+
+  AnimatedPropertyIDSet() = default;
+  AnimatedPropertyIDSet(AnimatedPropertyIDSet&& aOther) = default;
+  AnimatedPropertyIDSet(nsCSSPropertyIDSet&& aIDs, CustomNameSet&& aNames)
+      : mIDs(std::move(aIDs)), mCustomNames(std::move(aNames)) {}
+
+  AnimatedPropertyIDSet& operator=(AnimatedPropertyIDSet&& aRhs) {
+    MOZ_ASSERT(&aRhs != this);
+    this->~AnimatedPropertyIDSet();
+    new (this) AnimatedPropertyIDSet(std::move(aRhs));
+    return *this;
+  }
+
   void AddProperty(const AnimatedPropertyID& aProperty) {
     if (aProperty.IsCustom()) {
       mCustomNames.Insert(aProperty.mCustomName);
@@ -57,6 +71,8 @@ class AnimatedPropertyIDSet {
     return true;
   }
 
+  bool IsEmpty() const { return mIDs.IsEmpty() && mCustomNames.IsEmpty(); }
+
   void AddProperties(const AnimatedPropertyIDSet& aOther) {
     mIDs |= aOther.mIDs;
     for (const auto& name : aOther.mCustomNames) {
@@ -64,7 +80,46 @@ class AnimatedPropertyIDSet {
     }
   }
 
-  using CustomNameSet = nsTHashSet<RefPtr<nsAtom>>;
+  // Returns a new nsCSSPropertyIDSet with all properties that are both in this
+  // set and |aOther|.
+  nsCSSPropertyIDSet Intersect(const nsCSSPropertyIDSet& aOther) const {
+    return mIDs.Intersect(aOther);
+  }
+
+  // Returns a new AnimatedPropertyIDSet with all properties that are both in
+  // this set and |aOther|.
+  AnimatedPropertyIDSet Intersect(const AnimatedPropertyIDSet& aOther) const {
+    nsCSSPropertyIDSet ids = mIDs.Intersect(aOther.mIDs);
+    CustomNameSet names;
+    for (const auto& name : mCustomNames) {
+      if (!aOther.mCustomNames.Contains(name)) {
+        continue;
+      }
+      names.Insert(name);
+    }
+    return AnimatedPropertyIDSet(std::move(ids), std::move(names));
+  }
+
+  // Returns a new AnimatedPropertyIDSet with all properties that are in either
+  // this set or |aOther| but not both.
+  AnimatedPropertyIDSet Xor(const AnimatedPropertyIDSet& aOther) const {
+    nsCSSPropertyIDSet ids = mIDs.Xor(aOther.mIDs);
+    CustomNameSet names;
+    for (const auto& name : mCustomNames) {
+      if (aOther.mCustomNames.Contains(name)) {
+        continue;
+      }
+      names.Insert(name);
+    }
+
+    for (const auto& name : aOther.mCustomNames) {
+      if (mCustomNames.Contains(name)) {
+        continue;
+      }
+      names.Insert(name);
+    }
+    return AnimatedPropertyIDSet(std::move(ids), std::move(names));
+  }
 
   // Iterator for use in range-based for loops
   class Iterator {
@@ -140,8 +195,30 @@ class AnimatedPropertyIDSet {
   Iterator end() const { return Iterator::EndIterator(*this); }
 
  private:
+  AnimatedPropertyIDSet(const AnimatedPropertyIDSet&) = delete;
+  AnimatedPropertyIDSet& operator=(const AnimatedPropertyIDSet&) = delete;
+
   nsCSSPropertyIDSet mIDs;
   CustomNameSet mCustomNames;
+};
+
+// A wrapper to support the inversion of AnimatedPropertyIDSet.
+//
+// We are using this struct (for convenience) to check if we should skip the
+// AnimatedPropertyIDs when composing an animation rule, on either
+// CascadeLevel::Animations or CascadeLevel::Tranistions.
+struct InvertibleAnimatedPropertyIDSet {
+  const AnimatedPropertyIDSet* mSet = nullptr;
+  bool mIsInverted = false;
+
+  void Setup(const AnimatedPropertyIDSet* aSet, bool aIsInverted) {
+    mSet = aSet;
+    mIsInverted = aIsInverted;
+  }
+
+  bool HasProperty(const AnimatedPropertyID& aProperty) const {
+    return mSet && mIsInverted != mSet->HasProperty(aProperty);
+  }
 };
 
 }  // namespace mozilla

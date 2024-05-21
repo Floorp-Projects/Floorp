@@ -76,7 +76,7 @@ struct AnimationProperty {
 
   // The copy constructor/assignment doesn't copy mIsRunningOnCompositor and
   // mPerformanceWarning.
-  AnimationProperty() : mProperty(eCSSProperty_UNKNOWN){};
+  AnimationProperty() : mProperty(eCSSProperty_UNKNOWN) {};
   AnimationProperty(const AnimationProperty& aOther)
       : mProperty(aOther.mProperty), mSegments(aOther.mSegments.Clone()) {}
   AnimationProperty& operator=(const AnimationProperty& aOther) {
@@ -275,7 +275,7 @@ class KeyframeEffect : public AnimationEffect {
   // AnimationEffect for the current time except any properties contained
   // in |aPropertiesToSkip|.
   void ComposeStyle(StyleAnimationValueMap& aComposeResult,
-                    const nsCSSPropertyIDSet& aPropertiesToSkip);
+                    const InvertibleAnimatedPropertyIDSet& aPropertiesToSkip);
 
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;

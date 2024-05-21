@@ -188,10 +188,10 @@ class EffectSet {
   nsCSSPropertyIDSet& PropertiesWithImportantRules() {
     return mPropertiesWithImportantRules;
   }
-  nsCSSPropertyIDSet PropertiesForAnimationsLevel() const {
+  const AnimatedPropertyIDSet& PropertiesForAnimationsLevel() const {
     return mPropertiesForAnimationsLevel;
   }
-  nsCSSPropertyIDSet& PropertiesForAnimationsLevel() {
+  AnimatedPropertyIDSet& PropertiesForAnimationsLevel() {
     return mPropertiesForAnimationsLevel;
   }
 
@@ -221,7 +221,7 @@ class EffectSet {
   // Specifies the properties for which the result will be added to the
   // animations level of the cascade and hence should be skipped when we are
   // composing the animation style for the transitions level of the cascede.
-  nsCSSPropertyIDSet mPropertiesForAnimationsLevel;
+  AnimatedPropertyIDSet mPropertiesForAnimationsLevel;
 
 #ifdef DEBUG
   // Track how many iterators are referencing this effect set when we are

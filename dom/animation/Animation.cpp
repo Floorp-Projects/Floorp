@@ -1266,8 +1266,9 @@ void Animation::WillComposeStyle() {
   }
 }
 
-void Animation::ComposeStyle(StyleAnimationValueMap& aComposeResult,
-                             const nsCSSPropertyIDSet& aPropertiesToSkip) {
+void Animation::ComposeStyle(
+    StyleAnimationValueMap& aComposeResult,
+    const InvertibleAnimatedPropertyIDSet& aPropertiesToSkip) {
   if (!mEffect) {
     return;
   }
