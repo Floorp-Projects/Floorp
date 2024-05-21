@@ -1,22 +1,9 @@
+//! <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_NV_mesh_shader.html>
+
 use crate::vk;
-use crate::{Device, Instance};
-use std::ffi::CStr;
-use std::mem;
 
-#[derive(Clone)]
-pub struct MeshShader {
-    fp: vk::NvMeshShaderFn,
-}
-
-impl MeshShader {
-    pub fn new(instance: &Instance, device: &Device) -> Self {
-        let fp = vk::NvMeshShaderFn::load(|name| unsafe {
-            mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
-        });
-        Self { fp }
-    }
-
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksNV.html>
+impl crate::nv::mesh_shader::Device {
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksNV.html>
     #[inline]
     pub unsafe fn cmd_draw_mesh_tasks(
         &self,
@@ -27,7 +14,7 @@ impl MeshShader {
         (self.fp.cmd_draw_mesh_tasks_nv)(command_buffer, task_count, first_task);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksIndirectNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksIndirectNV.html>
     #[inline]
     pub unsafe fn cmd_draw_mesh_tasks_indirect(
         &self,
@@ -46,7 +33,7 @@ impl MeshShader {
         );
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>
     #[inline]
     pub unsafe fn cmd_draw_mesh_tasks_indirect_count(
         &self,
@@ -67,15 +54,5 @@ impl MeshShader {
             max_draw_count,
             stride,
         );
-    }
-
-    #[inline]
-    pub const fn name() -> &'static CStr {
-        vk::NvMeshShaderFn::name()
-    }
-
-    #[inline]
-    pub fn fp(&self) -> &vk::NvMeshShaderFn {
-        &self.fp
     }
 }

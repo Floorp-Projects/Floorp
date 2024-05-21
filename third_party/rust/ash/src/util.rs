@@ -1,9 +1,11 @@
 use crate::vk;
-use std::iter::Iterator;
-use std::marker::PhantomData;
-use std::mem::size_of;
-use std::os::raw::c_void;
-use std::{io, slice};
+use core::ffi::c_void;
+use core::iter::Iterator;
+use core::marker::PhantomData;
+use core::mem::size_of;
+use core::slice;
+#[cfg(feature = "std")]
+use std::io;
 
 /// [`Align`] handles dynamic alignment. The is useful for dynamic uniform buffers where
 /// the alignment might be different. For example a 4x4 f32 matrix has a size of 64 bytes
@@ -21,17 +23,16 @@ pub struct Align<T> {
 }
 
 #[derive(Debug)]
-pub struct AlignIter<'a, T: 'a> {
+pub struct AlignIter<'a, T> {
     align: &'a mut Align<T>,
     current: vk::DeviceSize,
 }
 
 impl<T: Copy> Align<T> {
     pub fn copy_from_slice(&mut self, slice: &[T]) {
-        use std::slice::from_raw_parts_mut;
         if self.elem_size == size_of::<T>() as u64 {
             unsafe {
-                let mapped_slice = from_raw_parts_mut(self.ptr.cast(), slice.len());
+                let mapped_slice = slice::from_raw_parts_mut(self.ptr.cast(), slice.len());
                 mapped_slice.copy_from_slice(slice);
             }
         } else {
@@ -59,7 +60,7 @@ impl<T> Align<T> {
         }
     }
 
-    pub fn iter_mut(&mut self) -> AlignIter<T> {
+    pub fn iter_mut(&mut self) -> AlignIter<'_, T> {
         AlignIter {
             current: 0,
             align: self,
@@ -103,6 +104,7 @@ impl<'a, T: Copy + 'a> Iterator for AlignIter<'a, T> {
 /// ];
 /// let words = ash::util::read_spv(&mut std::io::Cursor::new(&SPIRV[..])).unwrap();
 /// ```
+#[cfg(feature = "std")]
 pub fn read_spv<R: io::Read + io::Seek>(x: &mut R) -> io::Result<Vec<u32>> {
     // TODO use stream_len() once it is stabilized and remove the subsequent rewind() call
     let size = x.seek(io::SeekFrom::End(0))?;
@@ -113,11 +115,11 @@ pub fn read_spv<R: io::Read + io::Seek>(x: &mut R) -> io::Result<Vec<u32>> {
             "input length not divisible by 4",
         ));
     }
-    if size > usize::max_value() as u64 {
+    if size > usize::MAX as u64 {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "input too long"));
     }
     let words = (size / 4) as usize;
-    // https://github.com/MaikKlein/ash/issues/354:
+    // https://github.com/ash-rs/ash/issues/354:
     // Zero-initialize the result to prevent read_exact from possibly
     // reading uninitialized memory.
     let mut result = vec![0u32; words];

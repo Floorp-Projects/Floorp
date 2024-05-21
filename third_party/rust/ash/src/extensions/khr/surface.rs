@@ -1,26 +1,13 @@
+//! <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_surface.html>
+
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use crate::{Entry, Instance};
-use std::ffi::CStr;
-use std::mem;
+use alloc::vec::Vec;
+use core::mem;
 
-#[derive(Clone)]
-pub struct Surface {
-    handle: vk::Instance,
-    fp: vk::KhrSurfaceFn,
-}
-
-impl Surface {
-    pub fn new(entry: &Entry, instance: &Instance) -> Self {
-        let handle = instance.handle();
-        let fp = vk::KhrSurfaceFn::load(|name| unsafe {
-            mem::transmute(entry.get_instance_proc_addr(handle, name.as_ptr()))
-        });
-        Self { handle, fp }
-    }
-
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceSupportKHR.html>
+impl crate::khr::surface::Instance {
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceSupportKHR.html>
     #[inline]
     pub unsafe fn get_physical_device_surface_support(
         &self,
@@ -28,17 +15,18 @@ impl Surface {
         queue_family_index: u32,
         surface: vk::SurfaceKHR,
     ) -> VkResult<bool> {
-        let mut b = 0;
+        let mut b = mem::MaybeUninit::uninit();
         (self.fp.get_physical_device_surface_support_khr)(
             physical_device,
             queue_family_index,
             surface,
-            &mut b,
+            b.as_mut_ptr(),
         )
-        .result_with_success(b > 0)
+        .result()?;
+        Ok(b.assume_init() > 0)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfacePresentModesKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfacePresentModesKHR.html>
     #[inline]
     pub unsafe fn get_physical_device_surface_present_modes(
         &self,
@@ -55,23 +43,23 @@ impl Surface {
         })
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilitiesKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilitiesKHR.html>
     #[inline]
     pub unsafe fn get_physical_device_surface_capabilities(
         &self,
         physical_device: vk::PhysicalDevice,
         surface: vk::SurfaceKHR,
     ) -> VkResult<vk::SurfaceCapabilitiesKHR> {
-        let mut surface_capabilities = mem::zeroed();
+        let mut surface_capabilities = mem::MaybeUninit::uninit();
         (self.fp.get_physical_device_surface_capabilities_khr)(
             physical_device,
             surface,
-            &mut surface_capabilities,
+            surface_capabilities.as_mut_ptr(),
         )
-        .result_with_success(surface_capabilities)
+        .assume_init_on_success(surface_capabilities)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceFormatsKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceSurfaceFormatsKHR.html>
     #[inline]
     pub unsafe fn get_physical_device_surface_formats(
         &self,
@@ -83,28 +71,13 @@ impl Surface {
         })
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroySurfaceKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkDestroySurfaceKHR.html>
     #[inline]
     pub unsafe fn destroy_surface(
         &self,
         surface: vk::SurfaceKHR,
-        allocation_callbacks: Option<&vk::AllocationCallbacks>,
+        allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
     ) {
         (self.fp.destroy_surface_khr)(self.handle, surface, allocation_callbacks.as_raw_ptr());
-    }
-
-    #[inline]
-    pub const fn name() -> &'static CStr {
-        vk::KhrSurfaceFn::name()
-    }
-
-    #[inline]
-    pub fn fp(&self) -> &vk::KhrSurfaceFn {
-        &self.fp
-    }
-
-    #[inline]
-    pub fn instance(&self) -> vk::Instance {
-        self.handle
     }
 }

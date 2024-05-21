@@ -1,11 +1,11 @@
 #![allow(
     clippy::too_many_arguments,
     clippy::cognitive_complexity,
-    clippy::wrong_self_convention
+    clippy::wrong_self_convention,
+    unused_qualifications
 )]
 #[macro_use]
 mod macros;
-pub use macros::*;
 mod aliases;
 pub use aliases::*;
 mod bitflags;
@@ -21,7 +21,6 @@ pub use enums::*;
 mod extensions;
 pub use extensions::*;
 mod feature_extensions;
-pub use feature_extensions::*;
 mod features;
 pub use features::*;
 mod prelude;
@@ -33,8 +32,10 @@ mod platform_types;
 pub use platform_types::*;
 /// Iterates through the pointer chain. Includes the item that is passed into the function.
 /// Stops at the last [`BaseOutStructure`] that has a null [`BaseOutStructure::p_next`] field.
-pub(crate) unsafe fn ptr_chain_iter<T>(ptr: &mut T) -> impl Iterator<Item = *mut BaseOutStructure> {
-    let ptr = <*mut T>::cast::<BaseOutStructure>(ptr);
+pub(crate) unsafe fn ptr_chain_iter<T: ?Sized>(
+    ptr: &mut T,
+) -> impl Iterator<Item = *mut BaseOutStructure<'_>> {
+    let ptr = <*mut T>::cast::<BaseOutStructure<'_>>(ptr);
     (0..).scan(ptr, |p_ptr, _| {
         if p_ptr.is_null() {
             return None;
@@ -45,8 +46,21 @@ pub(crate) unsafe fn ptr_chain_iter<T>(ptr: &mut T) -> impl Iterator<Item = *mut
         Some(old)
     })
 }
-pub trait Handle {
+pub trait Handle: Sized {
     const TYPE: ObjectType;
     fn as_raw(self) -> u64;
     fn from_raw(_: u64) -> Self;
+
+    /// Returns whether the handle is a `NULL` value.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ash::vk::{Handle, Instance};
+    /// let instance = Instance::null();
+    /// assert!(instance.is_null());
+    /// ```
+    fn is_null(self) -> bool {
+        self.as_raw() == 0
+    }
 }

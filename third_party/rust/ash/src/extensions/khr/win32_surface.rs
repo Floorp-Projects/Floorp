@@ -1,43 +1,29 @@
+//! <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_win32_surface.html>
+
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use crate::{Entry, Instance};
-use std::ffi::CStr;
-use std::mem;
+use core::mem;
 
-#[derive(Clone)]
-pub struct Win32Surface {
-    handle: vk::Instance,
-    fp: vk::KhrWin32SurfaceFn,
-}
-
-impl Win32Surface {
-    pub fn new(entry: &Entry, instance: &Instance) -> Self {
-        let handle = instance.handle();
-        let fp = vk::KhrWin32SurfaceFn::load(|name| unsafe {
-            mem::transmute(entry.get_instance_proc_addr(handle, name.as_ptr()))
-        });
-        Self { handle, fp }
-    }
-
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateWin32SurfaceKHR.html>
+impl crate::khr::win32_surface::Instance {
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCreateWin32SurfaceKHR.html>
     #[inline]
     pub unsafe fn create_win32_surface(
         &self,
-        create_info: &vk::Win32SurfaceCreateInfoKHR,
-        allocation_callbacks: Option<&vk::AllocationCallbacks>,
+        create_info: &vk::Win32SurfaceCreateInfoKHR<'_>,
+        allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
     ) -> VkResult<vk::SurfaceKHR> {
-        let mut surface = mem::zeroed();
+        let mut surface = mem::MaybeUninit::uninit();
         (self.fp.create_win32_surface_khr)(
             self.handle,
             create_info,
             allocation_callbacks.as_raw_ptr(),
-            &mut surface,
+            surface.as_mut_ptr(),
         )
-        .result_with_success(surface)
+        .assume_init_on_success(surface)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceWin32PresentationSupportKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceWin32PresentationSupportKHR.html>
     #[inline]
     pub unsafe fn get_physical_device_win32_presentation_support(
         &self,
@@ -50,20 +36,5 @@ impl Win32Surface {
         );
 
         b > 0
-    }
-
-    #[inline]
-    pub const fn name() -> &'static CStr {
-        vk::KhrWin32SurfaceFn::name()
-    }
-
-    #[inline]
-    pub fn fp(&self) -> &vk::KhrWin32SurfaceFn {
-        &self.fp
-    }
-
-    #[inline]
-    pub fn instance(&self) -> vk::Instance {
-        self.handle
     }
 }

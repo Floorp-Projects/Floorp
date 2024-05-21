@@ -41,16 +41,11 @@ all-features = true
 name = "naga-test"
 path = "tests/root.rs"
 
-[[bench]]
-name = "criterion"
-harness = false
-
 [dependencies]
 arrayvec = "0.7"
 bit-set = "0.5"
 bitflags = "2.5"
 log = "0.4"
-num-traits = "0.2"
 rustc-hash = "1.1.0"
 thiserror = "1.0.59"
 
@@ -95,7 +90,6 @@ version = "0.2.3"
 optional = true
 
 [dev-dependencies]
-bincode = "1"
 diff = "0.1"
 env_logger = "0.11"
 ron = "0.8.0"
@@ -125,32 +119,28 @@ arbitrary = [
 compact = []
 default = []
 deserialize = [
-    "serde",
+    "dep:serde",
     "bitflags/serde",
     "indexmap/serde",
 ]
 dot-out = []
-glsl-in = ["pp-rs"]
+glsl-in = ["dep:pp-rs"]
 glsl-out = []
 hlsl-out = []
 msl-out = []
 serialize = [
-    "serde",
+    "dep:serde",
     "bitflags/serde",
     "indexmap/serde",
 ]
 spv-in = [
-    "petgraph",
-    "spirv",
+    "dep:petgraph",
+    "dep:spirv",
 ]
-spv-out = ["spirv"]
+spv-out = ["dep:spirv"]
 wgsl-in = [
-    "hexf-parse",
-    "unicode-xid",
+    "dep:hexf-parse",
+    "dep:unicode-xid",
     "compact",
 ]
 wgsl-out = []
-
-[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.criterion]
-version = "0.5"
-features = []

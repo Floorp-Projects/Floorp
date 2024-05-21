@@ -1,14 +1,25 @@
-#![deny(clippy::use_self)]
-#![warn(trivial_casts, trivial_numeric_casts)]
+#![warn(
+    clippy::alloc_instead_of_core,
+    clippy::use_self,
+    clippy::std_instead_of_alloc,
+    clippy::std_instead_of_core,
+    deprecated_in_future,
+    rust_2018_idioms,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_qualifications
+)]
 #![allow(
     clippy::too_many_arguments,
     clippy::missing_safety_doc,
     clippy::upper_case_acronyms
 )]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! # Vulkan API
 //!
-//! <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/index.html>
+//! <https://registry.khronos.org/vulkan/specs/1.3-extensions/html/index.html>
 //!
 //! ## Examples
 //!
@@ -39,25 +50,32 @@
 //! * **debug** (default): Whether Vulkan structs should implement `Debug`.
 //! * **loaded** (default): Support searching for the Vulkan loader manually at runtime.
 //! * **linked**: Link the Vulkan loader at compile time.
+//! * **std** (default): Whether ash depends on the standard library (otherwise `alloc` is required)
+
+extern crate alloc;
 
 pub use crate::device::Device;
 pub use crate::entry::Entry;
 #[cfg(feature = "loaded")]
 pub use crate::entry::LoadingError;
+pub use crate::extensions_generated::*;
 pub use crate::instance::Instance;
+pub use crate::tables::*;
 
 mod device;
 mod entry;
+mod extensions_generated;
 mod instance;
 pub mod prelude;
+mod tables;
 pub mod util;
 /// Raw Vulkan bindings and types, generated from `vk.xml`
 #[macro_use]
 pub mod vk;
 
 // macros of vk need to be defined beforehand
-/// Wrappers for Vulkan extensions
-pub mod extensions;
+/// Hand-written ergonomic wrappers for extension functions
+mod extensions;
 
 pub trait RawPtr<T> {
     fn as_raw_ptr(&self) -> *const T;
@@ -67,7 +85,7 @@ impl<'r, T> RawPtr<T> for Option<&'r T> {
     fn as_raw_ptr(&self) -> *const T {
         match *self {
             Some(inner) => inner,
-            _ => ::std::ptr::null(),
+            _ => ::core::ptr::null(),
         }
     }
 }
@@ -121,7 +139,7 @@ impl<'r, T> RawPtr<T> for Option<&'r T> {
 #[macro_export]
 macro_rules! match_out_struct {
     (match $p:ident { $($bind:ident @ $ty:path => $body:block $(,)?)+ $(_ => $any:block $(,)?)? }) => {
-        match std::ptr::addr_of!((*$p).s_type).read() {
+        match core::ptr::addr_of!((*$p).s_type).read() {
             $(<$ty as $crate::vk::TaggedStructure>::STRUCTURE_TYPE => {
                 let $bind = $p
                     .cast::<$ty>()
@@ -160,7 +178,7 @@ macro_rules! match_out_struct {
 #[macro_export]
 macro_rules! match_in_struct {
     (match $p:ident { $($bind:ident @ $ty:path => $body:block $(,)?)+ $(_ => $any:block $(,)?)? }) => {
-        match std::ptr::addr_of!((*$p).s_type).read() {
+        match core::ptr::addr_of!((*$p).s_type).read() {
             $(<$ty as $crate::vk::TaggedStructure>::STRUCTURE_TYPE => {
                 let $bind = $p
                     .cast::<$ty>()
@@ -176,18 +194,19 @@ macro_rules! match_in_struct {
 #[cfg(test)]
 mod tests {
     use super::vk;
+    use alloc::vec::Vec;
     #[test]
     fn test_ptr_chains() {
-        let mut variable_pointers = vk::PhysicalDeviceVariablePointerFeatures::builder();
-        let mut corner = vk::PhysicalDeviceCornerSampledImageFeaturesNV::builder();
-        let chain = vec![
+        let mut variable_pointers = vk::PhysicalDeviceVariablePointerFeatures::default();
+        let mut corner = vk::PhysicalDeviceCornerSampledImageFeaturesNV::default();
+        let chain = alloc::vec![
             <*mut _>::cast(&mut variable_pointers),
             <*mut _>::cast(&mut corner),
         ];
-        let mut device_create_info = vk::DeviceCreateInfo::builder()
+        let mut device_create_info = vk::DeviceCreateInfo::default()
             .push_next(&mut corner)
             .push_next(&mut variable_pointers);
-        let chain2: Vec<*mut vk::BaseOutStructure> = unsafe {
+        let chain2: Vec<*mut vk::BaseOutStructure<'_>> = unsafe {
             vk::ptr_chain_iter(&mut device_create_info)
                 .skip(1)
                 .collect()
