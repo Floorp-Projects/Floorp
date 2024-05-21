@@ -5,6 +5,9 @@
 
 "use strict";
 
+// A test blob that should be unique in the entire browser.
+const TEST_ICON_BLOB = new Blob([new Uint8Array([5, 11, 2013])]);
+
 // `URL.createObjectURL()` should be called the first time a blob icon is shown
 // while the view is open, and `revokeObjectURL()` should be called when the
 // view is closed.
@@ -25,11 +28,10 @@ add_task(async function test() {
   });
   await UrlbarTestUtils.promisePopupClose(window);
 
-  // No blob URLs should have been created or revoked since no results that have
-  // blob icons were matched.
-  checkCallCounts(spies, {
+  // No blob URLs should have been created since there were no results with blob
+  // icons.
+  await checkCallCounts(spies, null, {
     createObjectURL: 0,
-    revokeObjectURL: 0,
   });
 
   // Create a test provider that returns a result with a blob icon.
@@ -40,7 +42,7 @@ add_task(async function test() {
         UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         {
           url: "https://example.com/",
-          iconBlob: new Blob([new Uint8Array([])]),
+          iconBlob: TEST_ICON_BLOB,
         }
       ),
     ],
@@ -48,30 +50,24 @@ add_task(async function test() {
   UrlbarProvidersManager.registerProvider(provider);
 
   // Do some searches.
-  await doSearches(provider, spies, {
-    createObjectURL: 1,
-    revokeObjectURL: 0,
-  });
+  let blobUrl = await doSearches(provider, spies);
 
   // Closing the view should cause `revokeObjectURL()` to be called.
   await UrlbarTestUtils.promisePopupClose(window);
-  checkCallCounts(spies, {
-    createObjectURL: 1,
+  await checkCallCounts(spies, blobUrl, {
+    createObjectURL: 0,
     revokeObjectURL: 1,
   });
+  resetSpies(spies);
 
-  // Do some more searches.
-  await doSearches(provider, spies, {
-    createObjectURL: 2,
-    revokeObjectURL: 1,
-  });
-
-  // Close the view.
+  // Do some more searches and close the view again.
+  blobUrl = await doSearches(provider, spies);
   await UrlbarTestUtils.promisePopupClose(window);
-  checkCallCounts(spies, {
-    createObjectURL: 2,
-    revokeObjectURL: 2,
+  await checkCallCounts(spies, blobUrl, {
+    createObjectURL: 0,
+    revokeObjectURL: 1,
   });
+  resetSpies(spies);
 
   // Remove the provider, do another search, and close the view. Since no
   // results with blob icons are matched, the call counts should not change.
@@ -81,16 +77,16 @@ add_task(async function test() {
     value: "test",
   });
   await UrlbarTestUtils.promisePopupClose(window);
-  checkCallCounts(spies, {
-    createObjectURL: 2,
-    revokeObjectURL: 2,
+  await checkCallCounts(spies, blobUrl, {
+    createObjectURL: 0,
+    revokeObjectURL: 0,
   });
 
   sandbox.restore();
 });
 
-async function doSearches(provider, spies, expectedCountsByName) {
-  let previousImage;
+async function doSearches(provider, spies) {
+  let previousBlobUrl;
   for (let i = 0; i < 3; i++) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -104,15 +100,31 @@ async function doSearches(provider, spies, expectedCountsByName) {
     if (i > 0) {
       Assert.equal(
         result.image,
-        previousImage,
+        previousBlobUrl,
         "Blob URL should be the same as in previous searches"
       );
     }
-    previousImage = result.image;
+    previousBlobUrl = result.image;
 
-    // `createObjectURL()` should be called only once across all searches since
-    // the view remains open the whole time.
-    checkCallCounts(spies, expectedCountsByName);
+    // `createObjectURL()` should be called only once across all searches
+    // performed in this function since there's only one result with a blob and
+    // the view remains open the whole time. The URL should be created and
+    // cached on the first search, and the cached URL should be used for the
+    // later searches.
+    await checkCallCounts(spies, result.image, {
+      createObjectURL: 1,
+      revokeObjectURL: 0,
+    });
+  }
+
+  resetSpies(spies);
+
+  return previousBlobUrl;
+}
+
+function resetSpies(spies) {
+  for (let spy of Object.values(spies)) {
+    spy.resetHistory();
   }
 }
 
@@ -126,8 +138,53 @@ async function getTestResult(provider) {
   return null;
 }
 
-function checkCallCounts(spies, expectedCountsByName) {
-  for (let [name, count] of Object.entries(expectedCountsByName)) {
-    Assert.strictEqual(spies[name].callCount, count, "Spy call count: " + name);
+/**
+ * Checks calls to `createObjectURL()` and `revokeObjectURL()`.
+ *
+ * @param {object} spies
+ *   An object that maps spy names to Sinon spies, one entry per function being
+ *   spied on: `{ createObjectURL, revokeObjectURL }`
+ * @param {Array} knownBlobUrl
+ *   The blob URL that has been created and not yet verified as being revoked,
+ *   or null if no blob URL has been created.
+ * @param {object} expectedCountsByName
+ *   An object that maps function names to the expected number of times they
+ *   should have been called since spies were last reset:
+ *   `{ createObjectURL, revokeObjectURL }`
+ */
+async function checkCallCounts(spies, knownBlobUrl, expectedCountsByName) {
+  // Other parts of the browser may also create and revoke blob URLs, so first
+  // we filter `createObjectURL()` calls that were passed our test blob.
+  let createCalls = [];
+  for (let call of spies.createObjectURL.getCalls()) {
+    if (await areBlobsEqual(call.args[0], TEST_ICON_BLOB)) {
+      createCalls.push(call);
+    }
   }
+  Assert.strictEqual(
+    createCalls.length,
+    expectedCountsByName.createObjectURL,
+    "createObjectURL spy call count"
+  );
+
+  // Similarly there may be other callers of `revokeObjectURL()`, so first we
+  // filter calls that were passed the known blob URL.
+  if (knownBlobUrl) {
+    let calls = spies.revokeObjectURL
+      .getCalls()
+      .filter(call => call.args[0] == knownBlobUrl);
+    Assert.strictEqual(
+      calls.length,
+      expectedCountsByName.revokeObjectURL,
+      "revokeObjectURL spy call count"
+    );
+  }
+}
+
+async function areBlobsEqual(blob1, blob2) {
+  let buf1 = new Uint8Array(await blob1.arrayBuffer());
+  let buf2 = new Uint8Array(await blob2.arrayBuffer());
+  return (
+    buf1.length == buf2.length && buf1.every((element, i) => element == buf2[i])
+  );
 }
