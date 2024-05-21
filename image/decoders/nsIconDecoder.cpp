@@ -54,6 +54,12 @@ LexerTransition<nsIconDecoder::State> nsIconDecoder::ReadHeader(
   SurfaceFormat format = SurfaceFormat(aData[2]);
   bool transform = bool(aData[3]);
 
+  if (format != SurfaceFormat::B8G8R8A8 && format != SurfaceFormat::B8G8R8X8 &&
+      format != SurfaceFormat::R8G8B8A8 && format != SurfaceFormat::R8G8B8X8 &&
+      format != SurfaceFormat::A8R8G8B8 && format != SurfaceFormat::X8R8G8B8) {
+    return Transition::TerminateFailure();
+  }
+
   // FIXME(aosmond): On OSX we get the icon in device space and already
   // premultiplied, so we can't support the surface flags with icons right now.
   SurfacePipeFlags pipeFlags = SurfacePipeFlags();

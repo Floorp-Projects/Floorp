@@ -317,6 +317,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval,
   // nsIconDecoder) has the following format:
   //  - 1 byte for the image width, as u8
   //  - 1 byte for the image height, as u8
+  //  - 1 byte for format
+  //  - 1 byte for color transform
   //  - the raw image data as BGRA, width * height * 4 bytes.
   size_t bufferCapacity = 4 + width * height * 4;
   UniquePtr<uint8_t[]> fileBuf = MakeUniqueFallible<uint8_t[]>(bufferCapacity);
