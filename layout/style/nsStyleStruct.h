@@ -744,6 +744,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   StyleSize mHeight;
   StyleSize mMinHeight;
   StyleMaxSize mMaxHeight;
+
+  // 'auto' or a `<dashed-ident>` referencing an anchor positioning anchor
+  // element.
+  mozilla::StylePositionAnchor mPositionAnchor;
+
   mozilla::StyleFlexBasis mFlexBasis;
   StyleImplicitGridTracks mGridAutoColumns;
   StyleImplicitGridTracks mGridAutoRows;
