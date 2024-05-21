@@ -164,6 +164,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   void CurrentBrowserIdChangedInternal(uint64_t id);
 
   virtual void UpdatePriorityRFC7540(Http2Session* session);
+  virtual void UpdatePriority(Http2Session* session);
 
   virtual bool IsTunnel() { return false; }
 
