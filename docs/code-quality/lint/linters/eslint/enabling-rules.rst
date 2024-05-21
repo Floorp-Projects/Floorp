@@ -82,9 +82,9 @@ eslint-plugin-mozilla is used by a few projects outside of mozilla-central,
 so they will pick up the rule addition when eslint-plugin-mozilla is next released.
 
 Where existing failures are disabled/turned to warnings, these should be handled
-in the :searchfox:`top-level .eslintrc.js file <.eslintrc.js>`, and follow-up bugs
-must be filed before landing and referenced in the appropriate sections. The
-follow-up bugs should block
+in the :searchfox:`top-level .eslintrc-rollouts.js file <..eslintrc-rollouts.js>`,
+and follow-up bugs must be filed before landing and referenced in the appropriate
+sections. The follow-up bugs should block
 `bug 1596191 <https://bugzilla.mozilla.org/show_bug.cgi?id=1596191>`_
 
 Adding a New ESLint Plugin
