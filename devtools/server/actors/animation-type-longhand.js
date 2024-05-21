@@ -143,7 +143,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "paint-order",
       "pointer-events",
       "position",
-      "position-anchor",
       "print-color-adjust",
       "quotes",
       "resize",
