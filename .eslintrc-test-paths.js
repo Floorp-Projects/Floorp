@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* eslint-env node */
-
 // The `*testPaths` defined below for test paths are the main path formats we
 // prefer to support for tests as they are commonly used across the tree.
 
