@@ -9,18 +9,18 @@ Most of these changes just add/edit tests for the functionality. Only the
 change to src/cargo/core/compiler/standard_lib.rs is important.
 
 diff --git a/src/cargo/core/compiler/standard_lib.rs b/src/cargo/core/compiler/standard_lib.rs
-index c456c58d5..333389bc8 100644
+index 9f96ca27d..80723c06b 100644
 --- a/src/cargo/core/compiler/standard_lib.rs
 +++ b/src/cargo/core/compiler/standard_lib.rs
 @@ -11,6 +11,7 @@ use crate::ops::{self, Packages};
  use crate::util::errors::CargoResult;
- use crate::Config;
+ use crate::GlobalContext;
  use std::collections::{HashMap, HashSet};
 +use std::fs;
  use std::path::PathBuf;
  
  use super::BuildConfig;
-@@ -73,27 +74,45 @@ pub fn resolve_std<'cfg>(
+@@ -73,27 +74,45 @@ pub fn resolve_std<'gctx>(
      }
  
      let src_path = detect_sysroot_src_path(target_data)?;

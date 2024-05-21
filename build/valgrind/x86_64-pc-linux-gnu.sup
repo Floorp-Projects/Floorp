@@ -1066,3 +1066,10 @@
    ...
    fun:upload_to_texture_cache
 }
+
+{
+   False positive from new optimizations in rustc 1.78
+   Memcheck:Cond
+   fun:drop_in_place<core::option::Option<cssparser::cow_rc_str::CowRcStr>>
+   fun:_ZN5style6values9specified5color5Color14parse_internal*
+}
