@@ -294,7 +294,11 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     // respects different buttons (eg, to open in a new tab).
     item.addEventListener("click", e => {
       // We want to differentiate between when the fxa panel is within the app menu/hamburger bar
-      let object = this._getEntryPointForElement(e.currentTarget);
+      let object = "fxa_avatar_menu";
+      const appMenuPanel = document.getElementById("appMenu-popup");
+      if (appMenuPanel.contains(e.currentTarget)) {
+        object = "fxa_app_menu";
+      }
       SyncedTabs.recordSyncedTabsTelemetry(object, "click", {
         tab_pos: index.toString(),
       });
@@ -677,7 +681,7 @@ var gSync = {
       case "PanelUI-fxa-menu-sendtab-connect-device-button":
       // fall through
       case "PanelUI-fxa-menu-connect-device-button":
-        this.clickOpenConnectAnotherDevice(button);
+        this.openConnectAnotherDeviceFromFxaMenu(button);
         break;
 
       case "fxa-manage-account-button":
@@ -691,6 +695,9 @@ var gSync = {
         break;
       case "PanelUI-fxa-menu-account-signout-button":
         this.disconnect();
+        break;
+      case "PanelUI-fxa-menu-sync-button":
+        this.openPrefsFromFxaButton("sync_cta", button);
         break;
       case "PanelUI-fxa-menu-monitor-button":
         this.openMonitorLink(button);
@@ -739,6 +746,7 @@ var gSync = {
     this.updateSyncButtonsTooltip(state);
     this.updateSyncStatus(state);
     this.updateFxAPanel(state);
+    // Ensure we have something in the device list in the background.
     this.ensureFxaDevices();
   },
 
@@ -876,6 +884,16 @@ var gSync = {
       bodyNode.setAttribute("state", "notready");
     }
     if (reloadDevices) {
+      // We will only pick up new Fennec clients if we sync the clients engine,
+      // but all other send-tab targets can be identified purely from the fxa
+      // device list. Syncing the clients engine doesn't force a refresh of the
+      // fxa list, and it seems overkill to force *both* a clients engine sync
+      // and an fxa device list refresh, especially given (a) the clients engine
+      // will sync by itself every 10 minutes and (b) Fennec is (at time of
+      // writing) about to be replaced by Fenix.
+      // So we suck up the fact that new Fennec clients may not appear for 10
+      // minutes and don't bother syncing the clients engine.
+
       // Force a refresh of the fxa device list in case the user connected a new
       // device, and is waiting for it to show up.
       this.refreshFxaDevices().then(_ => {
@@ -1096,11 +1114,8 @@ var gSync = {
     ).hidden = !canSendAllURIs;
   },
 
-  // This is mis-named - it can be used to record any FxA UI telemetry, whether from
-  // the toolbar or not. The required `sourceElement` param is enough to help us know
-  // how to record the interaction.
   emitFxaToolbarTelemetry(type, sourceElement) {
-    if (UIState.isReady()) {
+    if (UIState.isReady() && sourceElement) {
       const state = UIState.get();
       const hasAvatar = state.avatarURL && !state.avatarIsDefault;
       let extraOptions = {
@@ -1108,7 +1123,13 @@ var gSync = {
         fxa_avatar: hasAvatar ? "true" : "false",
       };
 
-      let eventName = this._getEntryPointForElement(sourceElement);
+      // When the source element is within the Firefox app menu,
+      // we emit different telemetry.
+      let eventName = "fxa_avatar_menu";
+      if (this.isInsideAppMenu(sourceElement)) {
+        eventName = "fxa_app_menu";
+      }
+
       Services.telemetry.recordEvent(
         eventName,
         "click",
@@ -1117,6 +1138,14 @@ var gSync = {
         extraOptions
       );
     }
+  },
+
+  isInsideAppMenu(sourceElement = undefined) {
+    const appMenuPanel = document.getElementById("appMenu-popup");
+    if (sourceElement && appMenuPanel.contains(sourceElement)) {
+      return true;
+    }
+    return false;
   },
 
   updatePanelPopup({ email, displayName, status }) {
@@ -1290,9 +1319,12 @@ var gSync = {
     openTrustedLinkIn(url, "tab");
   },
 
-  async clickOpenConnectAnotherDevice(sourceElement) {
+  async openConnectAnotherDeviceFromFxaMenu(sourceElement = undefined) {
     this.emitFxaToolbarTelemetry("cad", sourceElement);
-    let entryPoint = this._getEntryPointForElement(sourceElement);
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isInsideAppMenu(sourceElement)) {
+      entryPoint = "fxa_app_menu";
+    }
     this.openConnectAnotherDevice(entryPoint);
   },
 
@@ -1303,7 +1335,7 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async clickFxAMenuHeaderButton(sourceElement) {
+  async clickFxAMenuHeaderButton(sourceElement = undefined) {
     // Depending on the current logged in state of a user,
     // clicking the FxA header will either open
     // a sign-in page, account management page, or sync
@@ -1320,36 +1352,8 @@ var gSync = {
         this.openFxAEmailFirstPage("fxa_app_menu_reverify");
         break;
       case UIState.STATUS_SIGNED_IN:
-        this._openFxAManagePageFromElement(sourceElement);
+        this.openFxAManagePageFromFxaMenu(sourceElement);
     }
-  },
-
-  // Gets the telemetry "entry point" we should use for a given UI element.
-  // This entry-point is recorded in both client telemetry (typically called the "object")
-  // and where applicable, also communicated to the server for server telemetry via a URL query param.
-  //
-  // It inspects the parent elements to determine if the element is within one of our "well known"
-  // UI groups, in which case it will return a string for that group (eg, "fxa_app_menu", "fxa_toolbar_button").
-  // Otherwise (eg, the item might be directly on the context menu), it will return "fxa_discoverability_native".
-  _getEntryPointForElement(sourceElement) {
-    // Note that when an element is in either the app menu or the toolbar button menu,
-    // in both cases it *will* have a parent with ID "PanelUI-fxa-menu". But when
-    // in the app menu, it will also have a grand-parent with ID "appMenu-popup".
-    // So we must check for that outer grandparent first.
-    const appMenuPanel = document.getElementById("appMenu-popup");
-    if (appMenuPanel.contains(sourceElement)) {
-      return "fxa_app_menu";
-    }
-    // If it *is* the toolbar button...
-    if (sourceElement.id == "fxa-toolbar-menu-button") {
-      return "fxa_toolbar_button";
-    }
-    // ... or is in the panel shown by that button.
-    const fxaMenu = document.getElementById("PanelUI-fxa-menu");
-    if (fxaMenu && fxaMenu.contains(sourceElement)) {
-      return "fxa_toolbar_button";
-    }
-    return "fxa_discoverability_native";
   },
 
   async openFxAEmailFirstPage(entryPoint, extraParams = {}) {
@@ -1363,12 +1367,16 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async openFxAEmailFirstPageFromFxaMenu(sourceElement, extraParams = {}) {
+  async openFxAEmailFirstPageFromFxaMenu(
+    sourceElement = undefined,
+    extraParams = {}
+  ) {
     this.emitFxaToolbarTelemetry("login", sourceElement);
-    this.openFxAEmailFirstPage(
-      this._getEntryPointForElement(sourceElement),
-      extraParams
-    );
+    let entryPoint = "fxa_discoverability_native";
+    if (sourceElement) {
+      entryPoint = "fxa_toolbar_button";
+    }
+    this.openFxAEmailFirstPage(entryPoint, extraParams);
   },
 
   async openFxAManagePage(entryPoint) {
@@ -1376,9 +1384,13 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async _openFxAManagePageFromElement(sourceElement) {
+  async openFxAManagePageFromFxaMenu(sourceElement = undefined) {
     this.emitFxaToolbarTelemetry("account_settings", sourceElement);
-    this.openFxAManagePage(this._getEntryPointForElement(sourceElement));
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isInsideAppMenu(sourceElement)) {
+      entryPoint = "fxa_app_menu";
+    }
+    this.openFxAManagePage(entryPoint);
   },
 
   // Returns true if we managed to send the tab to any targets, false otherwise.
@@ -1992,7 +2004,16 @@ var gSync = {
 
   openPrefsFromFxaMenu(type, sourceElement) {
     this.emitFxaToolbarTelemetry(type, sourceElement);
-    let entryPoint = this._getEntryPointForElement(sourceElement);
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isInsideAppMenu(sourceElement)) {
+      entryPoint = "fxa_app_menu";
+    }
+    this.openPrefs(entryPoint);
+  },
+
+  openPrefsFromFxaButton(type, sourceElement) {
+    let entryPoint = "fxa_toolbar_button_sync";
+    this.emitFxaToolbarTelemetry(type, sourceElement);
     this.openPrefs(entryPoint);
   },
 
@@ -2185,7 +2206,6 @@ var gSync = {
       !monitorEnabled && !relayEnabled && !vpnEnabled;
     mainPanelEl.hidden = false;
   },
-
   async openMonitorLink(sourceElement) {
     this.emitFxaToolbarTelemetry("monitor_cta", sourceElement);
     await this.openCtaLink(
