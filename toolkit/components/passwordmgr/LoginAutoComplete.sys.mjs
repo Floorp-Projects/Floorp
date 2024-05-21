@@ -7,10 +7,7 @@
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import {
-  GenericAutocompleteItem,
-  sendFillRequestToParent,
-} from "resource://gre/modules/FillHelpers.sys.mjs";
+import { GenericAutocompleteItem } from "resource://gre/modules/FillHelpers.sys.mjs";
 
 const lazy = {};
 
@@ -146,8 +143,9 @@ class LoginAutocompleteItem extends AutocompleteItem {
     this.label = username;
     this.value = hasBeenTypePassword ? login.password : login.username;
     this.comment = JSON.stringify({
+      fillMessageName: "PasswordManager:OnFieldAutoComplete",
+      fillMessageData: login,
       guid: login.guid,
-      login, // We have to keep login here to satisfy Android
       isDuplicateUsername,
       isOriginMatched,
       secondary:
@@ -177,6 +175,7 @@ class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
     this.label = getLocalizedString("useASecurelyGeneratedPassword");
     this.value = generatedPassword;
     this.comment = JSON.stringify({
+      fillMessageName: "PasswordManager:FillGeneratedPassword",
       generatedPassword,
       willAutoSaveGeneratedPassword,
     });
@@ -331,8 +330,6 @@ export class LoginAutoCompleteResult {
 
     // The footer comes last if it's enabled
     if (isFooterEnabled()) {
-      // TODO: This would be removed once autofill is triggered from the parent.
-      gAutoCompleteListener.init();
       if (autocompleteItems) {
         this.#rows.push(
           ...autocompleteItems.map(
@@ -460,25 +457,3 @@ export class LoginAutoCompleteResult {
     return false;
   }
 }
-
-let gAutoCompleteListener = {
-  added: false,
-
-  init() {
-    if (!this.added) {
-      Services.obs.addObserver(this, "autocomplete-will-enter-text");
-      this.added = true;
-    }
-  },
-
-  async observe(subject, topic, data) {
-    switch (topic) {
-      case "autocomplete-will-enter-text": {
-        if (subject && subject == lazy.formFillController.controller.input) {
-          await sendFillRequestToParent("LoginManager", subject, data);
-        }
-        break;
-      }
-    }
-  },
-};

@@ -603,17 +603,17 @@ export const GeckoViewAutocomplete = {
 
           selectOptions.push(
             new SelectOption({
-              value: LoginEntry.parse(comment.login),
+              value: LoginEntry.parse(comment.fillMessageData),
               hint,
             })
           );
           break;
         }
         case "autofill": {
-          const comment = JSON.parse(option.comment);
-          debug`delegateSelection ${comment}`;
-          const creditCard = CreditCard.fromGecko(comment.profile);
-          const address = Address.fromGecko(comment.profile);
+          const { fillMessageData } = JSON.parse(option.comment);
+          debug`delegateSelection ${fillMessageData}`;
+          const creditCard = CreditCard.fromGecko(fillMessageData);
+          const address = Address.fromGecko(fillMessageData);
           if (creditCard.isValid()) {
             selectionType = "creditCard";
             selectOptions.push(

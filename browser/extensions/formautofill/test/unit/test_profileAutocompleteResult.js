@@ -57,7 +57,25 @@ function makeAddressComment({ primary, secondary, status, profile }) {
     secondary,
     status,
     ariaLabel: primary + " " + secondary + " " + status,
-    profile,
+    fillMessageName: "FormAutofill:FillForm",
+    fillMessageData: profile,
+  });
+}
+
+function makeCreditCardComment({
+  primary,
+  secondary,
+  ariaLabel,
+  image,
+  profile,
+}) {
+  return JSON.stringify({
+    primary,
+    secondary,
+    ariaLabel,
+    image,
+    fillMessageName: "FormAutofill:FillForm",
+    fillMessageData: profile,
   });
 }
 
@@ -321,7 +339,7 @@ let creditCardTestCases = [
           value: "",
           style: "autofill",
           label: "Timothy Berners-Lee",
-          comment: JSON.stringify({
+          comment: makeCreditCardComment({
             primary: "Timothy Berners-Lee",
             secondary: "••••6785",
             ariaLabel: "Visa Timothy Berners-Lee ****6785",
@@ -334,7 +352,7 @@ let creditCardTestCases = [
           value: "",
           style: "autofill",
           label: "John Doe",
-          comment: JSON.stringify({
+          comment: makeCreditCardComment({
             primary: "John Doe",
             secondary: "••••1234",
             ariaLabel: "American Express John Doe ****1234",
@@ -361,7 +379,7 @@ let creditCardTestCases = [
           value: "",
           style: "autofill",
           label: "••••6785",
-          comment: JSON.stringify({
+          comment: makeCreditCardComment({
             primary: "••••6785",
             secondary: "Timothy Berners-Lee",
             ariaLabel: "Visa 6785 Timothy Berners-Lee",
@@ -374,7 +392,7 @@ let creditCardTestCases = [
           value: "",
           style: "autofill",
           label: "••••1234",
-          comment: JSON.stringify({
+          comment: makeCreditCardComment({
             primary: "••••1234",
             secondary: "John Doe",
             ariaLabel: "American Express 1234 John Doe",
@@ -387,7 +405,7 @@ let creditCardTestCases = [
           value: "",
           style: "autofill",
           label: "••••5678",
-          comment: JSON.stringify({
+          comment: makeCreditCardComment({
             primary: "••••5678",
             secondary: "",
             ariaLabel: "5678",
