@@ -3033,6 +3033,10 @@ nsIContent* nsContentUtils::GetCommonFlattenedTreeAncestorHelper(
 /* static */
 nsIContent* nsContentUtils::GetCommonFlattenedTreeAncestorForSelection(
     nsIContent* aContent1, nsIContent* aContent2) {
+  if (aContent1 == aContent2) {
+    return aContent1;
+  }
+
   return GetCommonAncestorInternal(
       aContent1, aContent2, [](nsIContent* aContent) {
         return aContent->GetFlattenedTreeParentNodeForSelection();
