@@ -23,6 +23,12 @@ const SYS_WEATHER_ENABLED =
   "browser.newtabpage.activity-stream.system.showWeather";
 
 add_task(async function test_construction() {
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(WeatherFeed.prototype, "PersistentCache").returns({
+    set: () => {},
+    get: () => {},
+  });
+
   let feed = new WeatherFeed();
 
   info("WeatherFeed constructor should create initial values");
@@ -35,18 +41,28 @@ add_task(async function test_construction() {
     "suggestions is initialized as a array with length of 0"
   );
   Assert.ok(feed.fetchTimer === null, "fetchTimer is initialized as null");
+  sandbox.restore();
 });
 
 add_task(async function test_onAction_INIT() {
   let sandbox = sinon.createSandbox();
-  let feed = new WeatherFeed();
-  Services.prefs.setBoolPref(WEATHER_ENABLED, true);
-  Services.prefs.setBoolPref(SYS_WEATHER_ENABLED, true);
-
-  sandbox.stub(feed, "MerinoClient").returns({
+  sandbox.stub(WeatherFeed.prototype, "MerinoClient").returns({
     get: () => [WEATHER_SUGGESTION],
     on: () => {},
   });
+  sandbox.stub(WeatherFeed.prototype, "PersistentCache").returns({
+    set: () => {},
+    get: () => {},
+  });
+  const dateNowTestValue = 1;
+  sandbox.stub(WeatherFeed.prototype, "Date").returns({
+    now: () => dateNowTestValue,
+  });
+
+  let feed = new WeatherFeed();
+
+  Services.prefs.setBoolPref(WEATHER_ENABLED, true);
+  Services.prefs.setBoolPref(SYS_WEATHER_ENABLED, true);
 
   sandbox.stub(feed, "isEnabled").returns(true);
 
@@ -70,7 +86,7 @@ add_task(async function test_onAction_INIT() {
         type: at.WEATHER_UPDATE,
         data: {
           suggestions: [WEATHER_SUGGESTION],
-          lastUpdated: null,
+          lastUpdated: dateNowTestValue,
         },
         meta: {
           isStartup: true,
