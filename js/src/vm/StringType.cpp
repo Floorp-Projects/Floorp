@@ -1499,18 +1499,17 @@ uint32_t JSAtom::getIndexSlow() const {
                           : AtomCharsToIndex(twoByteChars(nogc), len);
 }
 
-// Prevent the actual owner of the string's characters from being deduplicated
-// (and thus freeing its characters, which would invalidate the ASSC's chars
-// pointer). Intermediate dependent strings on the chain can be deduplicated,
-// since the base will be updated to the root base during tenuring anyway and
-// the intermediates won't matter.
-void PreventRootBaseDeduplication(JSLinearString* s) {
+// Ensure that the incoming s.chars pointer is stable, as in, it cannot be
+// changed even across a GC. That requires that the string that owns the chars
+// not be collected or deduplicated.
+void AutoStableStringChars::holdStableChars(JSLinearString* s) {
   while (s->hasBase()) {
     s = s->base();
   }
   if (!s->isTenured()) {
     s->setNonDeduplicatable();
   }
+  s_ = s;
 }
 
 bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
@@ -1520,6 +1519,7 @@ bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
   }
 
   MOZ_ASSERT(state_ == Uninitialized);
+  length_ = linearString->length();
 
   // Inline and nursery-allocated chars may move during a GC, so copy them
   // out into a temporary malloced buffer. Note that we cannot update the
@@ -1538,9 +1538,7 @@ bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
     twoByteChars_ = linearString->rawTwoByteChars();
   }
 
-  PreventRootBaseDeduplication(linearString);
-
-  s_ = linearString;
+  holdStableChars(linearString);
   return true;
 }
 
@@ -1551,6 +1549,7 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
   }
 
   MOZ_ASSERT(state_ == Uninitialized);
+  length_ = linearString->length();
 
   if (linearString->hasLatin1Chars()) {
     return copyAndInflateLatin1Chars(cx, linearString);
@@ -1564,9 +1563,7 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
   state_ = TwoByte;
   twoByteChars_ = linearString->rawTwoByteChars();
 
-  PreventRootBaseDeduplication(linearString);
-
-  s_ = linearString;
+  holdStableChars(linearString);
   return true;
 }
 
@@ -1596,16 +1593,18 @@ T* AutoStableStringChars::allocOwnChars(JSContext* cx, size_t count) {
 
 bool AutoStableStringChars::copyAndInflateLatin1Chars(
     JSContext* cx, Handle<JSLinearString*> linearString) {
-  size_t length = linearString->length();
-  char16_t* chars = allocOwnChars<char16_t>(cx, length);
+  MOZ_ASSERT(state_ == Uninitialized);
+  MOZ_ASSERT(s_ == nullptr);
+
+  char16_t* chars = allocOwnChars<char16_t>(cx, length_);
   if (!chars) {
     return false;
   }
 
   // Copy |src[0..length]| to |dest[0..length]| when copying doesn't narrow and
   // therefore can't lose information.
-  auto src = AsChars(Span(linearString->rawLatin1Chars(), length));
-  auto dest = Span(chars, length);
+  auto src = AsChars(Span(linearString->rawLatin1Chars(), length_));
+  auto dest = Span(chars, length_);
   ConvertLatin1toUtf16(src, dest);
 
   state_ = TwoByte;
@@ -1616,13 +1615,15 @@ bool AutoStableStringChars::copyAndInflateLatin1Chars(
 
 bool AutoStableStringChars::copyLatin1Chars(
     JSContext* cx, Handle<JSLinearString*> linearString) {
-  size_t length = linearString->length();
-  JS::Latin1Char* chars = allocOwnChars<JS::Latin1Char>(cx, length);
+  MOZ_ASSERT(state_ == Uninitialized);
+  MOZ_ASSERT(s_ == nullptr);
+
+  JS::Latin1Char* chars = allocOwnChars<JS::Latin1Char>(cx, length_);
   if (!chars) {
     return false;
   }
 
-  PodCopy(chars, linearString->rawLatin1Chars(), length);
+  PodCopy(chars, linearString->rawLatin1Chars(), length_);
 
   state_ = Latin1;
   latin1Chars_ = chars;
@@ -1632,13 +1633,15 @@ bool AutoStableStringChars::copyLatin1Chars(
 
 bool AutoStableStringChars::copyTwoByteChars(
     JSContext* cx, Handle<JSLinearString*> linearString) {
-  size_t length = linearString->length();
-  char16_t* chars = allocOwnChars<char16_t>(cx, length);
+  MOZ_ASSERT(state_ == Uninitialized);
+  MOZ_ASSERT(s_ == nullptr);
+
+  char16_t* chars = allocOwnChars<char16_t>(cx, length_);
   if (!chars) {
     return false;
   }
 
-  PodCopy(chars, linearString->rawTwoByteChars(), length);
+  PodCopy(chars, linearString->rawTwoByteChars(), length_);
 
   state_ = TwoByte;
   twoByteChars_ = chars;
