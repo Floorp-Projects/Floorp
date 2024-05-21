@@ -1,0 +1,14 @@
+[package]
+name = "socket2"
+version = "0.4.999"
+edition = "2021"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.socket2]
+version = "0.5"
+
+[features]
+all = ["socket2/all"]
