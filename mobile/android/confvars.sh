@@ -6,7 +6,7 @@ MOZ_APP_VENDOR=Mozilla
 
 MOZ_APP_UA_NAME=Firefox
 
-BROWSER_CHROME_URL=chrome://browser/content/browser.xul
+BROWSER_CHROME_URL=chrome://geckoview/content/geckoview.xhtml
 
 MOZ_BRANDING_DIRECTORY=mobile/android/branding/unofficial
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/android/branding/official
