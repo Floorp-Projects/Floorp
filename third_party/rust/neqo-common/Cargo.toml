@@ -13,19 +13,14 @@
 edition = "2021"
 rust-version = "1.76.0"
 name = "neqo-common"
-version = "0.7.7"
+version = "0.7.8"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
-build = "build.rs"
 homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
 
 [lib]
 bench = false
-
-[[bench]]
-name = "timer"
-harness = false
 
 [dependencies.enum-map]
 version = "2.7"

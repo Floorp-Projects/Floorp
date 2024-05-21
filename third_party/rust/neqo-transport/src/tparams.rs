@@ -22,6 +22,7 @@ use neqo_crypto::{
 
 use crate::{
     cid::{ConnectionId, ConnectionIdEntry, CONNECTION_ID_SEQNO_PREFERRED, MAX_CONNECTION_ID_LEN},
+    packet::MIN_INITIAL_PACKET_SIZE,
     version::{Version, VersionConfig, WireVersion},
     Error, Res,
 };
@@ -278,7 +279,7 @@ impl TransportParameter {
             },
 
             MAX_UDP_PAYLOAD_SIZE => match d.decode_varint() {
-                Some(v) if v >= 1200 => Self::Integer(v),
+                Some(v) if v >= MIN_INITIAL_PACKET_SIZE.try_into()? => Self::Integer(v),
                 _ => return Err(Error::TransportParameterError),
             },
 

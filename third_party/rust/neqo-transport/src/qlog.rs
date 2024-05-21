@@ -27,9 +27,9 @@ use crate::{
     frame::{CloseError, Frame},
     packet::{DecryptedPacket, PacketNumber, PacketType, PublicPacket},
     path::PathRef,
+    recovery::SentPacket,
     stream_id::StreamType as NeqoStreamType,
     tparams::{self, TransportParametersHandler},
-    tracking::SentPacket,
     version::{Version, VersionConfig, WireVersion},
 };
 
@@ -254,7 +254,8 @@ pub fn packet_dropped(qlog: &mut NeqoQlog, public_packet: &PublicPacket) {
 pub fn packets_lost(qlog: &mut NeqoQlog, pkts: &[SentPacket]) {
     qlog.add_event_with_stream(|stream| {
         for pkt in pkts {
-            let header = PacketHeader::with_type(pkt.pt.into(), Some(pkt.pn), None, None, None);
+            let header =
+                PacketHeader::with_type(pkt.packet_type().into(), Some(pkt.pn()), None, None, None);
 
             let ev_data = EventData::PacketLost(PacketLost {
                 header: Some(header),

@@ -246,6 +246,83 @@ fn test_103_response() {
     process_client_events(&mut hconn_c);
 }
 
+/// Test [`neqo_http3::SendMessage::send_data`] to set
+/// [`neqo_transport::SendStream::set_writable_event_low_watermark`].
+#[allow(clippy::cast_possible_truncation)]
+#[test]
+fn test_data_writable_events_low_watermark() -> Result<(), Box<dyn std::error::Error>> {
+    const STREAM_LIMIT: u64 = 5000;
+    const DATA_FRAME_HEADER_SIZE: usize = 3;
+
+    // Create a client and a server.
+    let mut hconn_c = http3_client_with_params(Http3Parameters::default().connection_parameters(
+        ConnectionParameters::default().max_stream_data(StreamType::BiDi, false, STREAM_LIMIT),
+    ));
+    let mut hconn_s = default_http3_server();
+    mem::drop(connect_peers(&mut hconn_c, &mut hconn_s));
+
+    // Client sends GET to server.
+    let stream_id = hconn_c.fetch(
+        now(),
+        "GET",
+        &("https", "something.com", "/"),
+        &[],
+        Priority::default(),
+    )?;
+    hconn_c.stream_close_send(stream_id)?;
+    exchange_packets(&mut hconn_c, &mut hconn_s, None);
+
+    // Server receives GET and responds with headers.
+    let mut request = receive_request(&mut hconn_s).unwrap();
+    request.send_headers(&[Header::new(":status", "200")])?;
+
+    // Sending these headers clears the server's send stream buffer and thus
+    // emits a DataWritable event.
+    exchange_packets(&mut hconn_c, &mut hconn_s, None);
+    let data_writable = |e| {
+        matches!(
+            e,
+            Http3ServerEvent::DataWritable {
+                stream
+            } if stream.stream_id() == stream_id
+        )
+    };
+    assert!(hconn_s.events().any(data_writable));
+
+    // Have server fill entire send buffer minus 1 byte.
+    let all_but_one = request.available()? - DATA_FRAME_HEADER_SIZE - 1;
+    let buf = vec![1; all_but_one];
+    let sent = request.send_data(&buf)?;
+    assert_eq!(sent, all_but_one);
+    assert_eq!(request.available()?, 1);
+
+    // Sending the buffered data clears the send stream buffer and thus emits a
+    // DataWritable event.
+    exchange_packets(&mut hconn_c, &mut hconn_s, None);
+    assert!(hconn_s.events().any(data_writable));
+
+    // Sending more fails, given that each data frame needs to be preceeded by a
+    // header, i.e. needs more than 1 byte of send space to send 1 byte payload.
+    assert_eq!(request.available()?, 1);
+    assert_eq!(request.send_data(&buf)?, 0);
+
+    // Have the client read all the pending data.
+    let mut recv_buf = vec![0_u8; all_but_one];
+    let (recvd, _) = hconn_c.read_data(now(), stream_id, &mut recv_buf)?;
+    assert_eq!(sent, recvd);
+    exchange_packets(&mut hconn_c, &mut hconn_s, None);
+
+    // Expect the server's available send space to be back to the stream limit.
+    assert_eq!(request.available()?, STREAM_LIMIT as usize);
+
+    // Expect the server to emit a DataWritable event, even though it always had
+    // at least 1 byte available to send, i.e. it never exhausted the entire
+    // available send space.
+    assert!(hconn_s.events().any(data_writable));
+
+    Ok(())
+}
+
 #[test]
 fn test_data_writable_events() {
     const STREAM_LIMIT: u64 = 5000;
@@ -445,14 +522,12 @@ fn fetch_noresponse_will_idletimeout() {
     let mut done = false;
     while !done {
         while let Some(event) = hconn_c.next_event() {
-            if let Http3ClientEvent::StateChange(state) = event {
-                match state {
-                    Http3State::Closing(error_code) | Http3State::Closed(error_code) => {
-                        assert_eq!(error_code, CloseReason::Transport(Error::IdleTimeout));
-                        done = true;
-                    }
-                    _ => {}
-                }
+            if let Http3ClientEvent::StateChange(
+                Http3State::Closing(error_code) | Http3State::Closed(error_code),
+            ) = event
+            {
+                assert_eq!(error_code, CloseReason::Transport(Error::IdleTimeout));
+                done = true;
             }
         }
 

@@ -17,9 +17,9 @@ use crate::{
     cc::MAX_DATAGRAM_SIZE,
     packet::PacketNumber,
     qlog::{self, QlogMetric},
+    recovery::SentPacket,
     rtt::RttEstimate,
     sender::PACING_BURST_SIZE,
-    tracking::SentPacket,
 };
 #[rustfmt::skip] // to keep `::` and thus prevent conflict with `crate::qlog`
 use ::qlog::events::{quic::CongestionStateUpdated, EventData};
@@ -167,8 +167,8 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             qdebug!(
                 "packet_acked this={:p}, pn={}, ps={}, ignored={}, lost={}, rtt_est={:?}",
                 self,
-                pkt.pn,
-                pkt.size,
+                pkt.pn(),
+                pkt.len(),
                 i32::from(!pkt.cc_outstanding()),
                 i32::from(pkt.lost()),
                 rtt_est,
@@ -176,12 +176,12 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             if !pkt.cc_outstanding() {
                 continue;
             }
-            if pkt.pn < self.first_app_limited {
+            if pkt.pn() < self.first_app_limited {
                 is_app_limited = false;
             }
             // BIF is set to 0 on a path change, but in case that was because of a simple rebinding
             // event, we may still get ACKs for packets sent before the rebinding.
-            self.bytes_in_flight = self.bytes_in_flight.saturating_sub(pkt.size);
+            self.bytes_in_flight = self.bytes_in_flight.saturating_sub(pkt.len());
 
             if !self.after_recovery_start(pkt) {
                 // Do not increase congestion window for packets sent before
@@ -194,7 +194,7 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
                 qlog::metrics_updated(&mut self.qlog, &[QlogMetric::InRecovery(false)]);
             }
 
-            new_acked += pkt.size;
+            new_acked += pkt.len();
         }
 
         if is_app_limited {
@@ -269,12 +269,12 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             qdebug!(
                 "packet_lost this={:p}, pn={}, ps={}",
                 self,
-                pkt.pn,
-                pkt.size
+                pkt.pn(),
+                pkt.len()
             );
             // BIF is set to 0 on a path change, but in case that was because of a simple rebinding
             // event, we may still declare packets lost that were sent before the rebinding.
-            self.bytes_in_flight = self.bytes_in_flight.saturating_sub(pkt.size);
+            self.bytes_in_flight = self.bytes_in_flight.saturating_sub(pkt.len());
         }
         qlog::metrics_updated(
             &mut self.qlog,
@@ -308,13 +308,13 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
 
     fn discard(&mut self, pkt: &SentPacket) {
         if pkt.cc_outstanding() {
-            assert!(self.bytes_in_flight >= pkt.size);
-            self.bytes_in_flight -= pkt.size;
+            assert!(self.bytes_in_flight >= pkt.len());
+            self.bytes_in_flight -= pkt.len();
             qlog::metrics_updated(
                 &mut self.qlog,
                 &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
             );
-            qtrace!([self], "Ignore pkt with size {}", pkt.size);
+            qtrace!([self], "Ignore pkt with size {}", pkt.len());
         }
     }
 
@@ -329,7 +329,7 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
     fn on_packet_sent(&mut self, pkt: &SentPacket) {
         // Record the recovery time and exit any transient state.
         if self.state.transient() {
-            self.recovery_start = Some(pkt.pn);
+            self.recovery_start = Some(pkt.pn());
             self.state.update();
         }
 
@@ -341,15 +341,15 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             // window. Assume that all in-flight packets up to this one are NOT app-limited.
             // However, subsequent packets might be app-limited. Set `first_app_limited` to the
             // next packet number.
-            self.first_app_limited = pkt.pn + 1;
+            self.first_app_limited = pkt.pn() + 1;
         }
 
-        self.bytes_in_flight += pkt.size;
+        self.bytes_in_flight += pkt.len();
         qdebug!(
             "packet_sent this={:p}, pn={}, ps={}",
             self,
-            pkt.pn,
-            pkt.size
+            pkt.pn(),
+            pkt.len()
         );
         qlog::metrics_updated(
             &mut self.qlog,
@@ -448,20 +448,20 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
         let cutoff = max(first_rtt_sample_time, prev_largest_acked_sent);
         for p in lost_packets
             .iter()
-            .skip_while(|p| Some(p.time_sent) < cutoff)
+            .skip_while(|p| Some(p.time_sent()) < cutoff)
         {
-            if p.pn != last_pn + 1 {
+            if p.pn() != last_pn + 1 {
                 // Not a contiguous range of lost packets, start over.
                 start = None;
             }
-            last_pn = p.pn;
+            last_pn = p.pn();
             if !p.cc_in_flight() {
                 // Not interesting, keep looking.
                 continue;
             }
             if let Some(t) = start {
                 let elapsed = p
-                    .time_sent
+                    .time_sent()
                     .checked_duration_since(t)
                     .expect("time is monotonic");
                 if elapsed > pc_period {
@@ -476,7 +476,7 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
                     return true;
                 }
             } else {
-                start = Some(p.time_sent);
+                start = Some(p.time_sent());
             }
         }
         false
@@ -490,7 +490,7 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
         // state and update the variable `self.recovery_start`. Before the
         // first recovery, all packets were sent after the recovery event,
         // allowing to reduce the cwnd on congestion events.
-        !self.state.transient() && self.recovery_start.map_or(true, |pn| packet.pn >= pn)
+        !self.state.transient() && self.recovery_start.map_or(true, |pn| packet.pn() >= pn)
     }
 
     /// Handle a congestion event.
@@ -560,8 +560,8 @@ mod tests {
             CongestionControl, CongestionControlAlgorithm, CWND_INITIAL_PKTS, MAX_DATAGRAM_SIZE,
         },
         packet::{PacketNumber, PacketType},
+        recovery::SentPacket,
         rtt::RttEstimate,
-        tracking::SentPacket,
     };
 
     const PTO: Duration = Duration::from_millis(100);
@@ -923,13 +923,13 @@ mod tests {
     fn persistent_congestion_ack_eliciting() {
         let mut lost = make_lost(&[1, PERSISTENT_CONG_THRESH + 2]);
         lost[0] = SentPacket::new(
-            lost[0].pt,
-            lost[0].pn,
-            lost[0].ecn_mark,
-            lost[0].time_sent,
+            lost[0].packet_type(),
+            lost[0].pn(),
+            lost[0].ecn_mark(),
+            lost[0].time_sent(),
             false,
             Vec::new(),
-            lost[0].size,
+            lost[0].len(),
         );
         assert!(!persistent_congestion_by_pto(
             ClassicCongestionControl::new(NewReno::default()),

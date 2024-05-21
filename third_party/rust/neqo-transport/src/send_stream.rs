@@ -12,6 +12,7 @@ use std::{
     collections::{btree_map::Entry, BTreeMap, VecDeque},
     hash::{Hash, Hasher},
     mem,
+    num::NonZeroUsize,
     ops::Add,
     rc::Rc,
 };
@@ -710,6 +711,7 @@ pub struct SendStream {
     sendorder: Option<SendOrder>,
     bytes_sent: u64,
     fair: bool,
+    writable_event_low_watermark: NonZeroUsize,
 }
 
 impl Hash for SendStream {
@@ -726,6 +728,7 @@ impl PartialEq for SendStream {
 impl Eq for SendStream {}
 
 impl SendStream {
+    #[allow(clippy::missing_panics_doc)] // not possible
     pub fn new(
         stream_id: StreamId,
         max_stream_data: u64,
@@ -745,6 +748,7 @@ impl SendStream {
             sendorder: None,
             bytes_sent: 0,
             fair: false,
+            writable_event_low_watermark: 1.try_into().unwrap(),
         };
         if ss.avail() > 0 {
             ss.conn_events.send_stream_writable(stream_id);
@@ -1128,10 +1132,10 @@ impl SendStream {
             SendStreamState::Send {
                 ref mut send_buf, ..
             } => {
+                let previous_limit = send_buf.avail();
                 send_buf.mark_as_acked(offset, len);
-                if self.avail() > 0 {
-                    self.conn_events.send_stream_writable(self.stream_id);
-                }
+                let current_limit = send_buf.avail();
+                self.maybe_emit_writable_event(previous_limit, current_limit);
             }
             SendStreamState::DataSent {
                 ref mut send_buf,
@@ -1203,14 +1207,21 @@ impl SendStream {
         }
     }
 
+    /// Set low watermark for [`crate::ConnectionEvent::SendStreamWritable`]
+    /// event.
+    ///
+    /// See [`crate::Connection::stream_set_writable_event_low_watermark`].
+    pub fn set_writable_event_low_watermark(&mut self, watermark: NonZeroUsize) {
+        self.writable_event_low_watermark = watermark;
+    }
+
     pub fn set_max_stream_data(&mut self, limit: u64) {
         if let SendStreamState::Ready { fc, .. } | SendStreamState::Send { fc, .. } =
             &mut self.state
         {
-            let stream_was_blocked = fc.available() == 0;
-            fc.update(limit);
-            if stream_was_blocked && self.avail() > 0 {
-                self.conn_events.send_stream_writable(self.stream_id);
+            let previous_limit = fc.available();
+            if let Some(current_limit) = fc.update(limit) {
+                self.maybe_emit_writable_event(previous_limit, current_limit);
             }
         }
     }
@@ -1368,6 +1379,27 @@ impl SendStream {
     #[cfg(test)]
     pub(crate) fn state(&mut self) -> &mut SendStreamState {
         &mut self.state
+    }
+
+    pub(crate) fn maybe_emit_writable_event(
+        &mut self,
+        previous_limit: usize,
+        current_limit: usize,
+    ) {
+        let low_watermark = self.writable_event_low_watermark.get();
+
+        // Skip if:
+        // - stream was not constrained by limit before,
+        // - or stream is still constrained by limit,
+        // - or stream is constrained by different limit.
+        if low_watermark < previous_limit
+            || current_limit < low_watermark
+            || self.avail() < low_watermark
+        {
+            return;
+        }
+
+        self.conn_events.send_stream_writable(self.stream_id);
     }
 }
 
@@ -1756,7 +1788,7 @@ pub struct SendStreamRecoveryToken {
 
 #[cfg(test)]
 mod tests {
-    use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+    use std::{cell::RefCell, collections::VecDeque, num::NonZeroUsize, rc::Rc};
 
     use neqo_common::{event::Provider, hex_with_len, qtrace, Encoder};
 
@@ -2450,7 +2482,7 @@ mod tests {
         // Increasing conn max (conn:4, stream:4) will unblock but not emit
         // event b/c that happens in Connection::emit_frame() (tested in
         // connection.rs)
-        assert!(conn_fc.borrow_mut().update(4));
+        assert!(conn_fc.borrow_mut().update(4).is_some());
         assert_eq!(conn_events.events().count(), 0);
         assert_eq!(s.avail(), 2);
         assert_eq!(s.send(b"hello").unwrap(), 2);
@@ -2474,6 +2506,53 @@ mod tests {
         s.set_max_stream_data(2_000_000_000);
         assert_eq!(conn_events.events().count(), 0);
         assert_eq!(s.send(b"hello").unwrap(), 0);
+    }
+
+    #[test]
+    fn send_stream_writable_event_gen_with_watermark() {
+        let conn_fc = connection_fc(0);
+        let mut conn_events = ConnectionEvents::default();
+
+        let mut s = SendStream::new(4.into(), 0, Rc::clone(&conn_fc), conn_events.clone());
+        // Set watermark at 3.
+        s.set_writable_event_low_watermark(NonZeroUsize::new(3).unwrap());
+
+        // Stream is initially blocked (conn:0, stream:0, watermark: 3) and will
+        // not accept data.
+        assert_eq!(s.avail(), 0);
+        assert_eq!(s.send(b"hi!").unwrap(), 0);
+
+        // Increasing the connection limit (conn:10, stream:0, watermark: 3) will not generate
+        // event or allow sending anything. Stream is constrained by stream limit.
+        assert!(conn_fc.borrow_mut().update(10).is_some());
+        assert_eq!(s.avail(), 0);
+        assert_eq!(conn_events.events().count(), 0);
+
+        // Increasing the connection limit further (conn:11, stream:0, watermark: 3) will not
+        // generate event or allow sending anything. Stream wasn't constrained by connection
+        // limit before.
+        assert!(conn_fc.borrow_mut().update(11).is_some());
+        assert_eq!(s.avail(), 0);
+        assert_eq!(conn_events.events().count(), 0);
+
+        // Increasing to (conn:11, stream:2, watermark: 3) will allow 2 bytes
+        // but not generate a SendStreamWritable event as it is still below the
+        // configured watermark.
+        s.set_max_stream_data(2);
+        assert_eq!(conn_events.events().count(), 0);
+        assert_eq!(s.avail(), 2);
+
+        // Increasing to (conn:11, stream:3, watermark: 3) will generate an
+        // event as available sendable bytes are >= watermark.
+        s.set_max_stream_data(3);
+        let evts = conn_events.events().collect::<Vec<_>>();
+        assert_eq!(evts.len(), 1);
+        assert!(matches!(
+            evts[0],
+            ConnectionEvent::SendStreamWritable { .. }
+        ));
+
+        assert_eq!(s.send(b"hi!").unwrap(), 3);
     }
 
     #[test]

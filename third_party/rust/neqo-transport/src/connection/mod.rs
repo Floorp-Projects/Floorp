@@ -12,6 +12,7 @@ use std::{
     fmt::{self, Debug},
     iter, mem,
     net::{IpAddr, SocketAddr},
+    num::NonZeroUsize,
     ops::RangeInclusive,
     rc::{Rc, Weak},
     time::{Duration, Instant},
@@ -45,7 +46,7 @@ use crate::{
     path::{Path, PathRef, Paths},
     qlog,
     quic_datagrams::{DatagramTracking, QuicDatagrams},
-    recovery::{LossRecovery, RecoveryToken, SendProfile},
+    recovery::{LossRecovery, RecoveryToken, SendProfile, SentPacket},
     recv_stream::RecvStreamStats,
     rtt::{RttEstimate, GRANULARITY},
     send_stream::SendStream,
@@ -56,7 +57,7 @@ use crate::{
         self, TransportParameter, TransportParameterId, TransportParameters,
         TransportParametersHandler,
     },
-    tracking::{AckTracker, PacketNumberSpace, RecvdPackets, SentPacket},
+    tracking::{AckTracker, PacketNumberSpace, RecvdPackets},
     version::{Version, WireVersion},
     AppError, CloseReason, Error, Res, StreamId,
 };
@@ -2369,7 +2370,7 @@ impl Connection {
                         packets.len(),
                         mtu
                     );
-                    initial.size += mtu - packets.len();
+                    initial.track_padding(mtu - packets.len());
                     // These zeros aren't padding frames, they are an invalid all-zero coalesced
                     // packet, which is why we don't increase `frame_tx.padding` count here.
                     packets.resize(mtu, 0);
@@ -2893,7 +2894,7 @@ impl Connection {
     /// to retransmit the frame as needed.
     fn handle_lost_packets(&mut self, lost_packets: &[SentPacket]) {
         for lost in lost_packets {
-            for token in &lost.tokens {
+            for token in lost.tokens() {
                 qdebug!([self], "Lost: {:?}", token);
                 match token {
                     RecoveryToken::Ack(_) => {}
@@ -2929,13 +2930,13 @@ impl Connection {
     fn handle_ack<R>(
         &mut self,
         space: PacketNumberSpace,
-        largest_acknowledged: u64,
+        largest_acknowledged: PacketNumber,
         ack_ranges: R,
         ack_ecn: Option<EcnCount>,
         ack_delay: u64,
         now: Instant,
     ) where
-        R: IntoIterator<Item = RangeInclusive<u64>> + Debug,
+        R: IntoIterator<Item = RangeInclusive<PacketNumber>> + Debug,
         R::IntoIter: ExactSizeIterator,
     {
         qdebug!([self], "Rx ACK space={}, ranges={:?}", space, ack_ranges);
@@ -2953,7 +2954,7 @@ impl Connection {
             now,
         );
         for acked in acked_packets {
-            for token in &acked.tokens {
+            for token in acked.tokens() {
                 match token {
                     RecoveryToken::Stream(stream_token) => self.streams.acked(stream_token),
                     RecoveryToken::Ack(at) => self.acks.acked(at),
@@ -3182,6 +3183,34 @@ impl Connection {
     /// When the stream ID is invalid.
     pub fn stream_avail_send_space(&self, stream_id: StreamId) -> Res<usize> {
         Ok(self.streams.get_send_stream(stream_id)?.avail())
+    }
+
+    /// Set low watermark for [`ConnectionEvent::SendStreamWritable`] event.
+    ///
+    /// Stream emits a [`crate::ConnectionEvent::SendStreamWritable`] event
+    /// when:
+    /// - the available sendable bytes increased to or above the watermark
+    /// - and was previously below the watermark.
+    ///
+    /// Default value is `1`. In other words
+    /// [`crate::ConnectionEvent::SendStreamWritable`] is emitted whenever the
+    /// available sendable bytes was previously at `0` and now increased to `1`
+    /// or more.
+    ///
+    /// Use this when your protocol needs at least `watermark` amount of available
+    /// sendable bytes to make progress.
+    ///
+    /// # Errors
+    /// When the stream ID is invalid.
+    pub fn stream_set_writable_event_low_watermark(
+        &mut self,
+        stream_id: StreamId,
+        watermark: NonZeroUsize,
+    ) -> Res<()> {
+        self.streams
+            .get_send_stream_mut(stream_id)?
+            .set_writable_event_low_watermark(watermark);
+        Ok(())
     }
 
     /// Close the stream. Enqueued data will be sent.

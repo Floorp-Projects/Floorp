@@ -23,6 +23,10 @@ use crate::{
     Error, Res,
 };
 
+/// `MIN_INITIAL_PACKET_SIZE` is the smallest packet that can be used to establish
+/// a new connection across all QUIC versions this server supports.
+pub const MIN_INITIAL_PACKET_SIZE: usize = 1200;
+
 pub const PACKET_BIT_LONG: u8 = 0x80;
 const PACKET_BIT_SHORT: u8 = 0x00;
 const PACKET_BIT_FIXED_QUIC: u8 = 0x40;

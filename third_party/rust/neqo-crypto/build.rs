@@ -421,6 +421,7 @@ fn setup_for_gecko() -> Vec<String> {
 }
 
 fn main() {
+    println!("cargo:rustc-check-cfg=cfg(nss_nodb)");
     let flags = if cfg!(feature = "gecko") {
         setup_for_gecko()
     } else if let Ok(nss_dir) = env::var("NSS_DIR") {
