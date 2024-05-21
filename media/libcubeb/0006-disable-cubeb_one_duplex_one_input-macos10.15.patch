@@ -1,0 +1,51 @@
+diff --git a/test/test_duplex.cpp b/test/test_duplex.cpp
+--- a/test/test_duplex.cpp
++++ b/test/test_duplex.cpp
+@@ -12,16 +12,19 @@
+ #define _XOPEN_SOURCE 600
+ #endif
+ #include "cubeb/cubeb.h"
+ #include <atomic>
+ #include <math.h>
+ #include <memory>
+ #include <stdio.h>
+ #include <stdlib.h>
++#ifdef __APPLE__
++#include <sys/utsname.h>
++#endif
+ 
+ #include "mozilla/gtest/MozHelpers.h"
+ 
+ // #define ENABLE_NORMAL_LOG
+ // #define ENABLE_VERBOSE_LOG
+ #include "common.h"
+ 
+ #define SAMPLE_FREQUENCY 48000
+@@ -294,16 +296,28 @@ TEST(cubeb, one_duplex_one_input)
+   cubeb * ctx;
+   cubeb_stream * duplex_stream;
+   cubeb_stream_params input_params;
+   cubeb_stream_params output_params;
+   int r;
+   user_state_duplex duplex_stream_state;
+   uint32_t latency_frames = 0;
+ 
++  // Disabled on 10.15, see bug 1867183
++#ifdef __APPLE__
++  struct utsname uts;
++  uname(&uts);
++  // 10.15 correspond to Darwin 19
++  if (strncmp(uts.release, "19", 2) == 0) {
++    printf("Test disabled on macOS 10.15, exiting.\n");
++    return;
++  }
++#endif
++
+   r = common_init(&ctx, "Cubeb duplex example");
+   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
+ 
+   std::unique_ptr<cubeb, decltype(&cubeb_destroy)> cleanup_cubeb_at_exit(
+       ctx, cubeb_destroy);
+ 
+   /* This test needs at least two available input devices. */
+   std::vector<cubeb_devid> input_devices =
