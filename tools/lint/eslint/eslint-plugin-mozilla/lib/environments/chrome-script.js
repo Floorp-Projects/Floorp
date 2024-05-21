@@ -9,20 +9,17 @@
 "use strict";
 
 var { globals } = require("./special-powers-sandbox");
-var util = require("util");
 
 module.exports = {
-  globals: util._extend(
-    {
-      // testing/specialpowers/content/SpecialPowersParent.sys.mjs
+  globals: {
+    // testing/specialpowers/content/SpecialPowersParent.sys.mjs
+    // SPLoadChromeScript block
+    createWindowlessBrowser: false,
+    sendAsyncMessage: false,
+    addMessageListener: false,
+    removeMessageListener: false,
+    actorParent: false,
 
-      // SPLoadChromeScript block
-      createWindowlessBrowser: false,
-      sendAsyncMessage: false,
-      addMessageListener: false,
-      removeMessageListener: false,
-      actorParent: false,
-    },
-    globals
-  ),
+    ...globals,
+  },
 };
