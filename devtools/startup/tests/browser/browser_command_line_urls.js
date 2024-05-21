@@ -85,6 +85,9 @@ add_task(async function openingWithDevToolsButUnknownSource() {
   );
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
+    // View source may not have updated the selection just yet
+    ContentTaskUtils.waitForCondition(() => !!content.getSelection());
+
     const selection = content.getSelection();
     Assert.equal(
       selection.toString(),
