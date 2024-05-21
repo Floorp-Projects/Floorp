@@ -1348,6 +1348,19 @@ void RemoteAccessible::Announce(const nsString& aAnnouncement,
 }
 #endif  // !defined(XP_WIN)
 
+int32_t RemoteAccessible::ValueRegion() const {
+  MOZ_ASSERT(TagName() == nsGkAtoms::meter,
+             "Accessing value region on non-meter element?");
+  if (mCachedFields) {
+    if (auto region =
+            mCachedFields->GetAttribute<int32_t>(CacheKey::ValueRegion)) {
+      return *region;
+    }
+  }
+  // Expose sub-optimal (but not critical) as the value region, as a fallback.
+  return 0;
+}
+
 void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                               int32_t aEndOffset,
                                               uint32_t aCoordinateType,

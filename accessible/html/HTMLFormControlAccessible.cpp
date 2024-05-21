@@ -18,6 +18,7 @@
 
 #include "nsContentList.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLMeterElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/HTMLFormControlsCollection.h"
 #include "nsIFormControl.h"
@@ -965,6 +966,39 @@ bool HTMLMeterAccessible::SetCurValue(double aValue) {
   return false;  // meters are readonly.
 }
 
+int32_t HTMLMeterAccessible::ValueRegion() const {
+  dom::HTMLMeterElement* elm = dom::HTMLMeterElement::FromNode(mContent);
+  if (!elm) {
+    return -1;
+  }
+  double high = elm->High();
+  double low = elm->Low();
+  double optimum = elm->Optimum();
+  double value = elm->Value();
+  // For more information on how these regions are defined, see
+  // "UA requirements for regions of the gauge"
+  // https://html.spec.whatwg.org/multipage/form-elements.html#the-meter-element
+  if (optimum > high) {
+    if (value > high) {
+      return 1;
+    }
+    return value > low ? 0 : -1;
+  }
+  if (optimum < low) {
+    if (value < low) {
+      return 1;
+    }
+    return value < high ? 0 : -1;
+  }
+  // optimum is between low and high, inclusive
+  if (value >= low && value <= high) {
+    return 1;
+  }
+  // Both upper and lower regions are considered equally
+  // non-optimal.
+  return 0;
+}
+
 void HTMLMeterAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                               nsAtom* aAttribute,
                                               int32_t aModType,
@@ -975,5 +1009,13 @@ void HTMLMeterAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
   if (aAttribute == nsGkAtoms::value) {
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, this);
+  }
+
+  if (aAttribute == nsGkAtoms::high || aAttribute == nsGkAtoms::low ||
+      aAttribute == nsGkAtoms::optimum) {
+    // Our meter's value region may have changed, queue an update for
+    // the value domain.
+    mDoc->QueueCacheUpdate(this, CacheDomain::Value);
+    return;
   }
 }

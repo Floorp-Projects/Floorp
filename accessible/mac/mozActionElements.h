@@ -88,6 +88,13 @@
 
 @end
 
+@interface mozMeterAccessible : mozRangeAccessible
+
+// override
+- (NSString*)moxValueDescription;
+
+@end
+
 /**
  * Base accessible for an incrementable, a settable range
  */

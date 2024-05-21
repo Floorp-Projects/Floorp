@@ -3452,6 +3452,14 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         fields->SetAttribute(CacheKey::SrcURL, DeleteEntry());
       }
     }
+
+    if (TagName() == nsGkAtoms::meter) {
+      // We should only cache value region for HTML meter elements. A meter
+      // should always have a value region, so this attribute should never
+      // be empty (i.e. there is no DeleteEntry() clause here).
+      HTMLMeterAccessible* meter = static_cast<HTMLMeterAccessible*>(this);
+      fields->SetAttribute(CacheKey::ValueRegion, meter->ValueRegion());
+    }
   }
 
   if (aCacheDomain & CacheDomain::Viewport && IsDoc()) {
