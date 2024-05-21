@@ -75,7 +75,6 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   void SetFieldSetInternal(HTMLFieldSetElement* aFieldset) override;
   HTMLFieldSetElement* GetFieldSetInternal() const override;
   bool CanBeDisabled() const override;
-  bool DoesReadOnlyApply() const override;
   void UpdateDisabledState(bool aNotify) override;
   void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement) override;
 

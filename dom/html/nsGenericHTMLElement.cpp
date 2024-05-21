@@ -2233,7 +2233,7 @@ void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify) {
 
   if (!changedStates.IsEmpty()) {
     ToggleStates(changedStates, aNotify);
-    if (DoesReadOnlyApply()) {
+    if (DoesReadWriteApply()) {
       // :disabled influences :read-only / :read-write.
       UpdateReadOnlyState(aNotify);
     }
@@ -2241,7 +2241,7 @@ void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify) {
 }
 
 bool nsGenericHTMLFormElement::IsReadOnlyInternal() const {
-  if (DoesReadOnlyApply()) {
+  if (DoesReadWriteApply()) {
     return IsDisabled() || GetBoolAttr(nsGkAtoms::readonly);
   }
   return nsGenericHTMLElement::IsReadOnlyInternal();
@@ -2682,7 +2682,7 @@ bool nsGenericHTMLFormControlElement::CanBeDisabled() const {
   return type != FormControlType::Object && type != FormControlType::Output;
 }
 
-bool nsGenericHTMLFormControlElement::DoesReadOnlyApply() const {
+bool nsGenericHTMLFormControlElement::DoesReadWriteApply() const {
   auto type = ControlType();
   if (!IsInputElement(type) && type != FormControlType::Textarea) {
     return false;
@@ -2716,7 +2716,7 @@ bool nsGenericHTMLFormControlElement::DoesReadOnlyApply() const {
     case FormControlType::InputDatetimeLocal:
       return true;
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesReadOnlyApply()");
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesReadWriteApply()");
       return true;
 #else   // DEBUG
     default:

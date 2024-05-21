@@ -381,10 +381,6 @@ HTMLFieldSetElement* HTMLElement::GetFieldSetInternal() const {
 
 bool HTMLElement::CanBeDisabled() const { return IsFormAssociatedElement(); }
 
-bool HTMLElement::DoesReadOnlyApply() const {
-  return IsFormAssociatedElement();
-}
-
 void HTMLElement::UpdateDisabledState(bool aNotify) {
   bool oldState = IsDisabled();
   nsGenericHTMLFormElement::UpdateDisabledState(aNotify);

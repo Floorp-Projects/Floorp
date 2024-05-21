@@ -1140,9 +1140,10 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
   virtual bool CanBeDisabled() const { return false; }
 
   /**
-   * Returns if the readonly attribute applies.
+   * Returns true if :read-write pseudo class may match the element even if the
+   * element isn't part of designMode or contenteditable.
    */
-  virtual bool DoesReadOnlyApply() const { return false; }
+  virtual bool DoesReadWriteApply() const { return false; }
 
   /**
    *  Returns true if the element is a form associated element.
@@ -1200,7 +1201,7 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
 
   // nsGenericHTMLFormElement
   bool CanBeDisabled() const override;
-  bool DoesReadOnlyApply() const override;
+  bool DoesReadWriteApply() const override;
   void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
                        bool aBindToTree) override;
   mozilla::dom::HTMLFormElement* GetFormInternal() const override;
