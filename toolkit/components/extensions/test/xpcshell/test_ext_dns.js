@@ -163,7 +163,11 @@ add_task(async function test_dns_resolve_socks() {
   );
   ok(
     Services.prefs.getBoolPref("network.proxy.socks_remote_dns"),
-    "socks remote dns"
+    "socks4 remote dns"
+  );
+  ok(
+    Services.prefs.getBoolPref("network.proxy.socks5_remote_dns"),
+    "socks5 remote dns"
   );
   extension.sendMessage("resolve", {
     hostname: "mozilla.org",

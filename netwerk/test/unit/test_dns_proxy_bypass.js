@@ -11,7 +11,6 @@ function setup() {
   prefs.setCharPref("network.proxy.socks", "127.0.0.1");
   prefs.setIntPref("network.proxy.socks_port", 9000);
   prefs.setIntPref("network.proxy.type", 1);
-  prefs.setBoolPref("network.proxy.socks_remote_dns", true);
 }
 
 setup();
@@ -19,7 +18,6 @@ registerCleanupFunction(async () => {
   prefs.clearUserPref("network.proxy.socks");
   prefs.clearUserPref("network.proxy.socks_port");
   prefs.clearUserPref("network.proxy.type");
-  prefs.clearUserPref("network.proxy.socks_remote_dns");
   prefs.clearUserPref("network.dns.notifyResolution");
 });
 

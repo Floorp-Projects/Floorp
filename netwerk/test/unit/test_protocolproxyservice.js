@@ -452,7 +452,7 @@ function pref_test1_3(pi) {
 }
 
 function pref_test1_4(pi) {
-  check_proxy(pi, "socks", "barbar", 1203, 0, -1, false);
+  check_proxy(pi, "socks", "barbar", 1203, 1, -1, false);
   run_pac_test();
 }
 
@@ -478,7 +478,7 @@ TestResolveCallback.prototype = {
       Assert.notEqual(channel, null);
       Assert.equal(status, 0);
       Assert.notEqual(pi, null);
-      check_proxy(pi, this.type, "foopy", 8080, 0, -1, true);
+      check_proxy(pi, this.type, "foopy", 8080, 1, -1, true);
       check_proxy(pi.failoverProxy, "direct", "", -1, -1, -1, false);
     }
 

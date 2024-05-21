@@ -38,7 +38,7 @@ add_task(async function test_proxy_boolean_settings() {
     },
   });
 
-  checkUnlockedPref("network.proxy.socks_remote_dns", false);
+  checkUnlockedPref("network.proxy.socks5_remote_dns", false);
   checkUnlockedPref("signon.autologin.proxy", false);
 
   await setupPolicyEngineWithJson({
@@ -50,7 +50,7 @@ add_task(async function test_proxy_boolean_settings() {
     },
   });
 
-  checkUnlockedPref("network.proxy.socks_remote_dns", true);
+  checkUnlockedPref("network.proxy.socks5_remote_dns", true);
   checkUnlockedPref("signon.autologin.proxy", true);
 });
 

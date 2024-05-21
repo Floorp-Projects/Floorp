@@ -12565,7 +12565,15 @@
   value: false
   mirror: always
 
-# Whether the SOCKS proxy should be in charge of DNS resolution.
+# Whether the SOCKS5 proxy should be in charge of DNS resolution. Making it a
+# SOCKS5h proxy by convention
+- name: network.proxy.socks5_remote_dns
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Whether the SOCKS4 proxy should be in charge of DNS resolution. Making it a
+# SOCKS4a proxy.
 - name: network.proxy.socks_remote_dns
   type: RelaxedAtomicBool
   value: false
