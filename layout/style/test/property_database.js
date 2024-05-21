@@ -13337,15 +13337,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
       "--foo,",
     ],
   };
-
-  gCSSProperties["position-anchor"] = {
-    domProp: "positionAnchor",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["--foo"],
-    invalid_values: ["none", "--foo, auto", "auto, --bar", "foo"],
-  };
 }
 
 if (false) {
