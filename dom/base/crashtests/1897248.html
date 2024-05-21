@@ -1,0 +1,10 @@
+<title>Ensure GetCommonFlattenedTreeAncestorForSelection won't crash when the provided contents are equal</title>
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  let b = a.attachShadow({mode: "open"})
+  let c = document.getSelection()
+  b.append(null)
+  c.setBaseAndExtent(a, 1, b, 1)
+})
+</script>
+<blockquote id="a">
