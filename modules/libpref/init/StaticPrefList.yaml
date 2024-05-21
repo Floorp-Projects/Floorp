@@ -11826,7 +11826,7 @@
 
 # Whether to add urgency and incremental to request headers
 - name: network.http.priority_header.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
