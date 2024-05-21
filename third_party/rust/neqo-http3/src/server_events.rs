@@ -84,6 +84,19 @@ impl StreamHandler {
             .send_data(self.stream_id(), buf, &mut self.conn.borrow_mut())
     }
 
+    /// Bytes sendable on stream at the QUIC layer.
+    ///
+    /// Note that this does not yet account for HTTP3 frame headers.
+    ///
+    /// # Errors
+    ///
+    /// It may return `InvalidStreamId` if a stream does not exist anymore.
+    pub fn available(&mut self) -> Res<usize> {
+        let stream_id = self.stream_id();
+        let n = self.conn.borrow_mut().stream_avail_send_space(stream_id)?;
+        Ok(n)
+    }
+
     /// Close sending side.
     ///
     /// # Errors

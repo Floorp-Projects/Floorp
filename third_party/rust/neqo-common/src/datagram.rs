@@ -81,12 +81,6 @@ impl std::fmt::Debug for Datagram {
     }
 }
 
-impl From<Datagram> for Vec<u8> {
-    fn from(datagram: Datagram) -> Self {
-        datagram.d
-    }
-}
-
 #[cfg(test)]
 use test_fixture::datagram;
 

@@ -25,8 +25,8 @@ use crate::{
         CongestionControl, MAX_DATAGRAM_SIZE, MAX_DATAGRAM_SIZE_F64,
     },
     packet::PacketType,
+    recovery::SentPacket,
     rtt::RttEstimate,
-    tracking::SentPacket,
 };
 
 const RTT: Duration = Duration::from_millis(100);

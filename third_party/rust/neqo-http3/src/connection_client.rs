@@ -1292,7 +1292,7 @@ mod tests {
     use neqo_qpack::{encoder::QPackEncoder, QpackSettings};
     use neqo_transport::{
         CloseReason, ConnectionEvent, ConnectionParameters, Output, State, StreamId, StreamType,
-        Version, RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
+        Version, MIN_INITIAL_PACKET_SIZE, RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
     };
     use test_fixture::{
         anti_replay, default_server_h3, fixture_init, new_server, now,
@@ -7157,8 +7157,9 @@ mod tests {
     #[test]
     fn priority_update_during_full_buffer() {
         // set a lower MAX_DATA on the server side to restrict the data the client can send
-        let (mut client, mut server) =
-            connect_with_connection_parameters(ConnectionParameters::default().max_data(1200));
+        let (mut client, mut server) = connect_with_connection_parameters(
+            ConnectionParameters::default().max_data(MIN_INITIAL_PACKET_SIZE.try_into().unwrap()),
+        );
 
         let request_stream_id = make_request_and_exchange_pkts(&mut client, &mut server, false);
         let data_writable = |e| matches!(e, Http3ClientEvent::DataWritable { .. });

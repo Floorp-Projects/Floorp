@@ -17,7 +17,7 @@ use super::{
 use crate::{
     packet::PACKET_BIT_LONG,
     tparams::{self, TransportParameter},
-    ConnectionParameters, Error, Version,
+    ConnectionParameters, Error, Version, MIN_INITIAL_PACKET_SIZE,
 };
 
 // The expected PTO duration after the first Initial is sent.
@@ -30,7 +30,7 @@ fn unknown_version() {
     mem::drop(client.process(None, now()).dgram());
 
     let mut unknown_version_packet = vec![0x80, 0x1a, 0x1a, 0x1a, 0x1a];
-    unknown_version_packet.resize(1200, 0x0);
+    unknown_version_packet.resize(MIN_INITIAL_PACKET_SIZE, 0x0);
     mem::drop(client.process(Some(&datagram(unknown_version_packet)), now()));
     assert_eq!(1, client.stats().dropped_rx);
 }
@@ -40,7 +40,7 @@ fn server_receive_unknown_first_packet() {
     let mut server = default_server();
 
     let mut unknown_version_packet = vec![0x80, 0x1a, 0x1a, 0x1a, 0x1a];
-    unknown_version_packet.resize(1200, 0x0);
+    unknown_version_packet.resize(MIN_INITIAL_PACKET_SIZE, 0x0);
 
     assert_eq!(
         server.process(Some(&datagram(unknown_version_packet,)), now(),),

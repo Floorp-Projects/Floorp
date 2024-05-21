@@ -64,15 +64,16 @@ where
         }
     }
 
-    /// Update the maximum.  Returns `true` if the change was an increase.
-    pub fn update(&mut self, limit: u64) -> bool {
+    /// Update the maximum. Returns `Some` with the updated available flow
+    /// control if the change was an increase and `None` otherwise.
+    pub fn update(&mut self, limit: u64) -> Option<usize> {
         debug_assert!(limit < u64::MAX);
         if limit > self.limit {
             self.limit = limit;
             self.blocked_frame = false;
-            true
+            Some(self.available())
         } else {
-            false
+            None
         }
     }
 

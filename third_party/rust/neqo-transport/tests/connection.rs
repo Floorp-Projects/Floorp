@@ -7,7 +7,9 @@
 mod common;
 
 use neqo_common::{Datagram, Decoder, Encoder, Role};
-use neqo_transport::{CloseReason, ConnectionParameters, Error, State, Version};
+use neqo_transport::{
+    CloseReason, ConnectionParameters, Error, State, Version, MIN_INITIAL_PACKET_SIZE,
+};
 use test_fixture::{
     default_client, default_server,
     header_protection::{
@@ -104,7 +106,7 @@ fn reorder_server_initial() {
 
     // And rebuild a packet.
     let mut packet = header.clone();
-    packet.resize(1200, 0);
+    packet.resize(MIN_INITIAL_PACKET_SIZE, 0);
     aead.encrypt(pn, &header, &plaintext, &mut packet[header.len()..])
         .unwrap();
     apply_header_protection(&hp, &mut packet, protected_header.len()..header.len());
@@ -237,7 +239,7 @@ fn overflow_crypto() {
         let plen = payload.len();
         payload.pad_to(plen + 1000, 44);
 
-        let mut packet = Encoder::with_capacity(1200);
+        let mut packet = Encoder::with_capacity(MIN_INITIAL_PACKET_SIZE);
         packet
             .encode_byte(0xc1) // Initial with packet number length of 2.
             .encode_uint(4, Version::Version1.wire_version())
@@ -254,7 +256,7 @@ fn overflow_crypto() {
         aead.encrypt(pn, &header, payload.as_ref(), &mut packet[header.len()..])
             .unwrap();
         apply_header_protection(&hp, &mut packet, pn_offset..(pn_offset + 2));
-        packet.resize(1200, 0); // Initial has to be 1200 bytes!
+        packet.resize(MIN_INITIAL_PACKET_SIZE, 0); // Initial has to be MIN_INITIAL_PACKET_SIZE bytes!
 
         let dgram = Datagram::new(
             server_initial.source(),

@@ -17,8 +17,8 @@ use crate::{
         MAX_DATAGRAM_SIZE,
     },
     packet::PacketType,
+    recovery::SentPacket,
     rtt::RttEstimate,
-    tracking::SentPacket,
 };
 
 const PTO: Duration = Duration::from_millis(100);
@@ -133,14 +133,14 @@ fn issue_876() {
 
     // and ack it. cwnd increases slightly
     cc.on_packets_acked(&sent_packets[6..], &RTT_ESTIMATE, time_now);
-    assert_eq!(cc.acked_bytes(), sent_packets[6].size);
+    assert_eq!(cc.acked_bytes(), sent_packets[6].len());
     cwnd_is_halved(&cc);
     assert_eq!(cc.bytes_in_flight(), 5 * MAX_DATAGRAM_SIZE - 2);
 
     // Packet from before is lost. Should not hurt cwnd.
     cc.on_packets_lost(Some(time_now), None, PTO, &sent_packets[1..2]);
     assert!(!cc.recovery_packet());
-    assert_eq!(cc.acked_bytes(), sent_packets[6].size);
+    assert_eq!(cc.acked_bytes(), sent_packets[6].len());
     cwnd_is_halved(&cc);
     assert_eq!(cc.bytes_in_flight(), 4 * MAX_DATAGRAM_SIZE);
 }

@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{cell::RefCell, cmp::min, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, cmp::min, fmt::Debug, num::NonZeroUsize, rc::Rc};
 
 use neqo_common::{qdebug, qtrace, Encoder, Header, MessageType};
 use neqo_qpack::encoder::QPackEncoder;
@@ -17,6 +17,7 @@ use crate::{
     SendStream, SendStreamEvents, Stream,
 };
 
+const MIN_DATA_FRAME_SIZE: usize = 3; // Minimal DATA frame size: 2 (header) + 1 (payload)
 const MAX_DATA_HEADER_SIZE_2: usize = (1 << 6) - 1; // Maximal amount of data with DATA frame header size 2
 const MAX_DATA_HEADER_SIZE_2_LIMIT: usize = MAX_DATA_HEADER_SIZE_2 + 3; // 63 + 3 (size of the next buffer data frame header)
 const MAX_DATA_HEADER_SIZE_3: usize = (1 << 14) - 1; // Maximal amount of data with DATA frame header size 3
@@ -177,7 +178,14 @@ impl SendStream for SendMessage {
         let available = conn
             .stream_avail_send_space(self.stream_id())
             .map_err(|e| Error::map_stream_send_errors(&e.into()))?;
-        if available <= 2 {
+        if available < MIN_DATA_FRAME_SIZE {
+            // Setting this once, instead of every time the available send space
+            // is exhausted, would suffice. That said, function call should be
+            // cheap, thus not worth optimizing.
+            conn.stream_set_writable_event_low_watermark(
+                self.stream_id(),
+                NonZeroUsize::new(MIN_DATA_FRAME_SIZE).unwrap(),
+            )?;
             return Ok(0);
         }
         let to_send = if available <= MAX_DATA_HEADER_SIZE_2_LIMIT {
