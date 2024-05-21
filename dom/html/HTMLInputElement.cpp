@@ -6553,7 +6553,7 @@ HTMLInputElement::ValueModeType HTMLInputElement::GetValueMode() const {
 
 bool HTMLInputElement::IsMutable() const {
   return !IsDisabled() &&
-         !(DoesReadOnlyApply() && State().HasState(ElementState::READONLY));
+         !(DoesReadWriteApply() && State().HasState(ElementState::READONLY));
 }
 
 bool HTMLInputElement::DoesRequiredApply() const {
