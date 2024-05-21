@@ -187,6 +187,13 @@ public class GeckoAppShell {
   // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
   private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
 
+  /*
+   * Google tier-1 search requirement for device ram threshold
+   * Keep in sync with RAM_THRESHOLD_MEGABYTES defined in
+   * https://searchfox.org/mozilla-central/source/mobile/android/fenix/app/src/main/java/org/mozilla/fenix/FenixApplication.kt
+   */
+  private static final int GOOGLE_SEARCH_RAM_THRESHOLD_MEGABYTES = 1024;
+
   private static int sDensityDpi;
   private static Float sDensity;
   private static int sScreenDepth;
@@ -862,6 +869,12 @@ public class GeckoAppShell {
     }
 
     return sTotalRam;
+  }
+
+  @WrapForJNI(calledFrom = "gecko")
+  private static synchronized boolean isDeviceRamThresholdOkay() {
+    final Context applicationContext = getApplicationContext();
+    return getTotalRam(applicationContext) > GOOGLE_SEARCH_RAM_THRESHOLD_MEGABYTES;
   }
 
   private static boolean isHighMemoryDevice(final Context context) {

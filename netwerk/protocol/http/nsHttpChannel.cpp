@@ -878,6 +878,13 @@ nsresult nsHttpChannel::Connect() {
     SetRequestHeader("Accept-Encoding"_ns, "identity"_ns, true);
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  bool val = false;
+  if (nsIOService::ShouldAddAdditionalSearchHeaders(mURI, &val)) {
+    SetRequestHeader("X-Search-Subdivision"_ns, val ? "1"_ns : "0"_ns, false);
+  }
+#endif
+
   bool isTrackingResource = IsThirdPartyTrackingResource();
   LOG(("nsHttpChannel %p tracking resource=%d, cos=%lu, inc=%d", this,
        isTrackingResource, mClassOfService.Flags(),
