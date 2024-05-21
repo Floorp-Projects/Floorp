@@ -107,7 +107,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 )
                 activity = "mozilla.telemetry.glean.debug.GleanDebugActivity"
 
-            if self.device.shell_output("getprop ro.product.model") in ["Pixel 6"]:
+            if int(self.device.shell_output("getprop ro.build.version.release")) > 11:
                 args_list.extend(
                     [
                         '--firefox.geckodriverArgs="--android-storage"',
