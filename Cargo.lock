@@ -4581,6 +4581,7 @@ dependencies = [
  "mach2",
  "memoffset 0.9.0",
  "mozilla-central-workspace-hack",
+ "scroll",
  "thiserror",
  "windows-sys 0.52.0",
 ]

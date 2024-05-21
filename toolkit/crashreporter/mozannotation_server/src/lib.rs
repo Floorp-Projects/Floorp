@@ -14,7 +14,7 @@ use process_reader::ProcessReader;
 use mozannotation_client::ANNOTATION_SECTION;
 use mozannotation_client::{Annotation, AnnotationContents, AnnotationMutex};
 #[cfg(any(target_os = "linux", target_os = "android"))]
-use mozannotation_client::{MozAnnotationNote, ANNOTATION_TYPE};
+use mozannotation_client::{MozAnnotationNote, ANNOTATION_NOTE_NAME, ANNOTATION_TYPE};
 use std::cmp::min;
 use std::iter::FromIterator;
 use std::mem::{size_of, ManuallyDrop};
@@ -110,6 +110,7 @@ fn find_annotations(reader: &ProcessReader) -> Result<usize, AnnotationsRetrieva
             libxul_address,
             ANNOTATION_TYPE,
             size_of::<MozAnnotationNote>(),
+            ANNOTATION_NOTE_NAME,
         )?;
 
         let note = reader
