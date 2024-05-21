@@ -279,8 +279,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
   unwatchTargets(targetType, options = {}) {
     const isWatchingTargets = ParentProcessWatcherRegistry.unwatchTargets(
       this,
-      targetType,
-      options
+      targetType
     );
     if (!isWatchingTargets) {
       return;
@@ -293,13 +292,6 @@ exports.WatcherActor = class WatcherActor extends Actor {
         targetType,
         options,
       });
-    }
-
-    // Unregister the JS Actors if there is no more DevTools code observing any target/resource,
-    // unless we're switching mode (having both condition at the same time should only
-    // happen in tests).
-    if (!options.isModeSwitching) {
-      ParentProcessWatcherRegistry.maybeUnregisterJSActors();
     }
   }
 
@@ -661,9 +653,6 @@ exports.WatcherActor = class WatcherActor extends Actor {
       );
       targetActor.removeSessionDataEntry("resources", targetActorResourceTypes);
     }
-
-    // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource
-    ParentProcessWatcherRegistry.maybeUnregisterJSActors();
   }
 
   clearResources(resourceTypes) {
