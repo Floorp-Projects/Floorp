@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, styleMap } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  html,
+  styleMap,
+  when,
+} from "chrome://global/content/vendor/lit.all.mjs";
 
 import { SidebarPage } from "./sidebar-page.mjs";
 // eslint-disable-next-line import/no-unassigned-import
@@ -15,17 +19,31 @@ const l10nMap = new Map([
 ]);
 
 export class SidebarCustomize extends SidebarPage {
+  constructor() {
+    super();
+    this.activeExtIndex = 0;
+  }
+
+  static properties = {
+    activeExtIndex: { type: Number },
+  };
+
   static queries = {
     toolInputs: { all: ".customize-firefox-tools input" },
+    extensionLinks: { all: ".extension-link" },
   };
 
   connectedCallback() {
     super.connectedCallback();
-    window.addEventListener("SidebarItemChanged", this);
+    this.getWindow().addEventListener("SidebarItemAdded", this);
+    this.getWindow().addEventListener("SidebarItemChanged", this);
+    this.getWindow().addEventListener("SidebarItemRemoved", this);
   }
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("SidebarItemChanged", this);
+    this.getWindow().removeEventListener("SidebarItemAdded", this);
+    this.getWindow().removeEventListener("SidebarItemChanged", this);
+    this.getWindow().removeEventListener("SidebarItemRemoved", this);
   }
 
   get sidebarLauncher() {
@@ -42,18 +60,11 @@ export class SidebarCustomize extends SidebarPage {
     this.getWindow().SidebarController.toggle(view);
   }
 
-  getTools() {
-    const toolsMap = new Map(
-      [...this.getWindow().SidebarController.toolsAndExtensions]
-        // eslint-disable-next-line no-unused-vars
-        .filter(([key, val]) => !val.extensionId)
-    );
-    return toolsMap;
-  }
-
   handleEvent(e) {
     switch (e.type) {
+      case "SidebarItemAdded":
       case "SidebarItemChanged":
+      case "SidebarItemRemoved":
         this.requestUpdate();
         break;
     }
@@ -87,7 +98,59 @@ export class SidebarCustomize extends SidebarPage {
     </div>`;
   }
 
+  async manageAddon(extensionId) {
+    await this.getWindow().BrowserAddonUI.manageAddon(
+      extensionId,
+      "unifiedExtensions"
+    );
+  }
+
+  handleKeydown(e) {
+    if (e.code == "ArrowUp") {
+      if (this.activeExtIndex >= 0) {
+        this.focusIndex(this.activeExtIndex - 1);
+      }
+    } else if (e.code == "ArrowDown") {
+      if (this.activeExtIndex < this.extensionLinks.length) {
+        this.focusIndex(this.activeExtIndex + 1);
+      }
+    } else if (
+      (e.type == "keydown" && e.code == "Enter") ||
+      (e.type == "keydown" && e.code == "Space")
+    ) {
+      this.manageAddon(e.target.getAttribute("extensionId"));
+    }
+  }
+
+  focusIndex(index) {
+    let extLinkList = Array.from(
+      this.shadowRoot.querySelectorAll(".extension-link")
+    );
+    extLinkList[index].focus();
+    this.activeExtIndex = index;
+  }
+
+  extensionTemplate(extension, index) {
+    return html`
+    <div class="extension-item">
+      <span class="icon ghost-icon" style=${styleMap({
+        "--extension-icon": extension.icon,
+      })} role="presentation"/>
+      </span>
+      <div class="extension-link" extensionId=${
+        extension.extensionId
+      } tabindex=${
+      index === this.activeExtIndex ? 0 : -1
+    } role="list-item" @click=${() =>
+      this.manageAddon(extension.extensionId)} @keydown=${this.handleKeydown}>
+          <a href="about:addons" tabindex="-1" target="_blank" @click=${e =>
+            e.preventDefault()}>${extension.tooltiptext}</a>
+      </div>
+    </div>`;
+  }
+
   render() {
+    let extensions = this.getWindow().SidebarController.getExtensions();
     return html`
       ${this.stylesheet()}
       <link rel="stylesheet" href="chrome://browser/content/sidebar/sidebar-customize.css"></link>
@@ -106,9 +169,22 @@ export class SidebarCustomize extends SidebarPage {
         <div class="customize-firefox-tools">
           <h5 data-l10n-id="sidebar-customize-firefox-tools"></h5>
           <div class="inputs">
-          ${[...this.getTools().values()].map(tool => this.inputTemplate(tool))}
+          ${this.getWindow()
+            .SidebarController.getTools()
+            .map(tool => this.inputTemplate(tool))}
           </div>
         </div>
+        ${when(
+          extensions.length,
+          () => html`<div class="customize-extensions">
+            <h5 data-l10n-id="sidebar-customize-extensions"></h5>
+            <div role="list" class="extensions">
+              ${extensions.map((extension, index) =>
+                this.extensionTemplate(extension, index)
+              )}
+            </div>
+          </div>`
+        )}
       </div>
     `;
   }

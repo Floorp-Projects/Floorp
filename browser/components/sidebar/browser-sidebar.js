@@ -107,21 +107,10 @@ var SidebarController = {
 
     this._toolsAndExtensions = new Map();
     this.getTools().forEach(tool => {
-      this._toolsAndExtensions.set(tool.commandID, {
-        view: tool.commandID,
-        icon: tool.icon,
-        l10nId: tool.revampL10nId,
-        disabled: tool.disabled ?? false,
-      });
+      this._toolsAndExtensions.set(tool.commandID, tool);
     });
     this.getExtensions().forEach(extension => {
-      this._toolsAndExtensions.set(extension.commandID, {
-        view: extension.commandID,
-        extensionId: extension.extensionId,
-        icon: extension.icon,
-        tooltiptext: extension.label,
-        disabled: false,
-      });
+      this._toolsAndExtensions.set(extension.commandID, extension);
     });
     return this._toolsAndExtensions;
   },
@@ -755,7 +744,13 @@ var SidebarController = {
     const extensions = [];
     for (const [commandID, sidebar] of this.sidebars.entries()) {
       if (Object.hasOwn(sidebar, "extensionId")) {
-        extensions.push({ commandID, ...sidebar });
+        extensions.push({
+          commandID,
+          extensionId: sidebar.extensionId,
+          icon: sidebar.icon,
+          tooltiptext: sidebar.label,
+          disabled: false,
+        });
       }
     }
     return extensions;
@@ -775,7 +770,13 @@ var SidebarController = {
     ];
     for (const [commandID, sidebar] of this.sidebars.entries()) {
       if (toolIds.includes(commandID)) {
-        tools.push({ commandID, ...sidebar });
+        tools.push({
+          commandID,
+          view: commandID,
+          icon: sidebar.icon,
+          l10nId: sidebar.revampL10nId,
+          disabled: sidebar.disabled ?? false,
+        });
       }
     }
     return tools;

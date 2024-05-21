@@ -41,3 +41,6 @@ sidebar-context-menu-remove-extension =
   .label = Remove extension
 sidebar-context-menu-report-extension =
   .label = Report extension
+
+# A header for a list of sidebar-specific extensions in the sidebar
+sidebar-customize-extensions = Sidebar extensions
