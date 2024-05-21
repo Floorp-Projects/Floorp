@@ -25,7 +25,7 @@ CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
       mFinalized(false) {}
 
 bool CrashReporterHost::GenerateCrashReport(base::ProcessId aPid) {
-  if (!TakeCrashedChildMinidump(aPid, nullptr)) {
+  if (!TakeCrashedChildMinidump(aPid)) {
     return false;
   }
 
@@ -35,13 +35,13 @@ bool CrashReporterHost::GenerateCrashReport(base::ProcessId aPid) {
 }
 
 RefPtr<nsIFile> CrashReporterHost::TakeCrashedChildMinidump(
-    base::ProcessId aPid, uint32_t* aOutSequence) {
+    base::ProcessId aPid) {
   CrashReporter::AnnotationTable annotations;
   MOZ_ASSERT(!HasMinidump());
 
   RefPtr<nsIFile> crashDump;
   if (!CrashReporter::TakeMinidumpForChild(aPid, getter_AddRefs(crashDump),
-                                           annotations, aOutSequence)) {
+                                           annotations)) {
     return nullptr;
   }
   if (!AdoptMinidump(crashDump, annotations)) {

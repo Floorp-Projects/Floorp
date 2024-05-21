@@ -288,18 +288,14 @@ static FileHandle gMagicChildCrashReportFd =
 static Mutex* dumpMapLock;
 struct ChildProcessData : public nsUint32HashKey {
   explicit ChildProcessData(KeyTypePointer aKey)
-      : nsUint32HashKey(aKey), sequence(0), annotations(nullptr) {}
+      : nsUint32HashKey(aKey), annotations(nullptr) {}
 
   nsCOMPtr<nsIFile> minidump;
-  // Each crashing process is assigned an increasing sequence number to
-  // indicate which process crashed first.
-  uint32_t sequence;
   UniquePtr<AnnotationTable> annotations;
 };
 
 typedef nsTHashtable<ChildProcessData> ChildMinidumpMap;
 static ChildMinidumpMap* pidToMinidump;
-static uint32_t crashSequence;
 static bool OOPInitialized();
 
 void RecordMainThreadId() {
@@ -3364,7 +3360,6 @@ static void OnChildProcessDumpRequested(
     ChildProcessData* pd = pidToMinidump->PutEntry(pid);
     MOZ_ASSERT(!pd->minidump);
     pd->minidump = minidump;
-    pd->sequence = ++crashSequence;
     pd->annotations = MakeUnique<AnnotationTable>();
     AnnotationTable& annotations = *(pd->annotations);
     AddSharedAnnotations(annotations);
@@ -3582,7 +3577,7 @@ void GetAnnotation(uint32_t childPid, Annotation annotation,
 }
 
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
-                          AnnotationTable& aAnnotations, uint32_t* aSequence) {
+                          AnnotationTable& aAnnotations) {
   if (!GetEnabled()) return false;
 
   MutexAutoLock lock(*dumpMapLock);
@@ -3592,10 +3587,6 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
 
   NS_IF_ADDREF(*dump = pd->minidump);
   aAnnotations = *(pd->annotations);
-
-  if (aSequence) {
-    *aSequence = pd->sequence;
-  }
 
   pidToMinidump->RemoveEntry(pd);
 
@@ -3637,7 +3628,7 @@ bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
 #  pragma section("mozwerpt", read, executable, shared)
 
 __declspec(allocate("mozwerpt")) MOZ_EXPORT DWORD WINAPI
-    WerNotifyProc(LPVOID aParameter) {
+WerNotifyProc(LPVOID aParameter) {
   const WindowsErrorReportingData* werData =
       static_cast<const WindowsErrorReportingData*>(aParameter);
 
@@ -3668,7 +3659,6 @@ __declspec(allocate("mozwerpt")) MOZ_EXPORT DWORD WINAPI
     ChildProcessData* pd = pidToMinidump->PutEntry(pid);
     MOZ_ASSERT(!pd->minidump);
     pd->minidump = minidump;
-    pd->sequence = ++crashSequence;
     pd->annotations = MakeUnique<AnnotationTable>();
     (*pd->annotations)[Annotation::WindowsErrorReporting] = "1"_ns;
     AddSharedAnnotations(*(pd->annotations));
