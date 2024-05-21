@@ -6,13 +6,20 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(
   lazy,
   {
+    loader: "resource://devtools/shared/loader/Loader.sys.mjs",
+  },
+  { global: "contextual" }
+);
+
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
     releaseDistinctSystemPrincipalLoader:
       "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
     useDistinctSystemPrincipalLoader:
       "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
-    loader: "resource://devtools/shared/loader/Loader.sys.mjs",
   },
-  { global: "contextual" }
+  { global: "shared" }
 );
 
 // Name of the attribute into which we save data in `sharedData` object.
