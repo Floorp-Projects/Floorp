@@ -6,6 +6,5 @@
 DevToolsModules(
     "actor-releaser.js",
     "batching.js",
-    "css-error-reporting.js",
     "message-cache-clearing.js",
 )

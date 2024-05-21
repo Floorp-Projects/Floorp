@@ -31,6 +31,9 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const App = createFactory(
   require("resource://devtools/client/webconsole/components/App.js")
 );
+const {
+  getAllFilters,
+} = require("resource://devtools/client/webconsole/selectors/filters.js");
 
 loader.lazyGetter(this, "AppErrorBoundary", () =>
   createFactory(
@@ -169,6 +172,19 @@ class WebConsoleWrapper {
     if (this.parentNode) {
       ReactDOM.unmountComponentAtNode(this.parentNode);
     }
+  }
+
+  /**
+   * Query the reducer store for the current state of filtering
+   * a given type of message
+   *
+   * @param {String} filter
+   *        Type of message to be filtered.
+   * @return {Boolean}
+   *         True if this type of message should be displayed.
+   */
+  getFilterState(filter) {
+    return getAllFilters(this.getStore().getState())[filter];
   }
 
   dispatchMessageAdd(packet) {

@@ -17,7 +17,10 @@ const {
   getAdHocFrontOrPrimitiveGrip,
 } = require("resource://devtools/client/fronts/object.js");
 
-const { PREFS } = require("resource://devtools/client/webconsole/constants.js");
+const {
+  PREFS,
+  FILTERS,
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const FirefoxDataProvider = require("resource://devtools/client/netmonitor/src/connector/firefox-data-provider.js");
 
@@ -179,21 +182,11 @@ class WebConsoleUI {
     });
 
     const resourceCommand = this.hud.resourceCommand;
-    resourceCommand.unwatchResources(
-      [
-        resourceCommand.TYPES.CONSOLE_MESSAGE,
-        resourceCommand.TYPES.ERROR_MESSAGE,
-        resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.DOCUMENT_EVENT,
-        resourceCommand.TYPES.LAST_PRIVATE_CONTEXT_EXIT,
-        resourceCommand.TYPES.JSTRACER_TRACE,
-        resourceCommand.TYPES.JSTRACER_STATE,
-      ],
-      { onAvailable: this._onResourceAvailable }
-    );
-    resourceCommand.unwatchResources([resourceCommand.TYPES.CSS_MESSAGE], {
-      onAvailable: this._onResourceAvailable,
-    });
+    if (this._watchedResources) {
+      resourceCommand.unwatchResources(this._watchedResources, {
+        onAvailable: this._onResourceAvailable,
+      });
+    }
 
     this.stopWatchingNetworkResources();
 
@@ -332,18 +325,26 @@ class WebConsoleUI {
       onDestroyed: this._onTargetDestroyed,
     });
 
-    await resourceCommand.watchResources(
-      [
-        resourceCommand.TYPES.CONSOLE_MESSAGE,
-        resourceCommand.TYPES.ERROR_MESSAGE,
-        resourceCommand.TYPES.PLATFORM_MESSAGE,
-        resourceCommand.TYPES.DOCUMENT_EVENT,
-        resourceCommand.TYPES.LAST_PRIVATE_CONTEXT_EXIT,
-        resourceCommand.TYPES.JSTRACER_TRACE,
-        resourceCommand.TYPES.JSTRACER_STATE,
-      ],
-      { onAvailable: this._onResourceAvailable }
-    );
+    this._watchedResources = [
+      resourceCommand.TYPES.CONSOLE_MESSAGE,
+      resourceCommand.TYPES.ERROR_MESSAGE,
+      resourceCommand.TYPES.PLATFORM_MESSAGE,
+      resourceCommand.TYPES.DOCUMENT_EVENT,
+      resourceCommand.TYPES.LAST_PRIVATE_CONTEXT_EXIT,
+      resourceCommand.TYPES.JSTRACER_TRACE,
+      resourceCommand.TYPES.JSTRACER_STATE,
+    ];
+
+    // CSS Warnings are only enabled when the user explicitely requested to show them
+    // as it can slow down page load.
+    const shouldShowCssWarnings = this.wrapper.getFilterState(FILTERS.CSS);
+    if (shouldShowCssWarnings) {
+      this._watchedResources.push(resourceCommand.TYPES.CSS_MESSAGE);
+    }
+
+    await resourceCommand.watchResources(this._watchedResources, {
+      onAvailable: this._onResourceAvailable,
+    });
 
     if (this.isBrowserConsole || this.isBrowserToolboxConsole) {
       const shouldEnableNetworkMonitoring = Services.prefs.getBoolPref(
@@ -451,11 +452,18 @@ class WebConsoleUI {
     this.wrapper.dispatchTabWillNavigate({ timeStamp, url });
   }
 
+  /**
+   * Called when the CSS Warning filter is enabled, in order to start observing for them in the backend.
+   */
   async watchCssMessages() {
     const { resourceCommand } = this.hud;
+    if (this._watchedResources.includes(resourceCommand.TYPES.CSS_MESSAGE)) {
+      return;
+    }
     await resourceCommand.watchResources([resourceCommand.TYPES.CSS_MESSAGE], {
       onAvailable: this._onResourceAvailable,
     });
+    this._watchedResources.push(resourceCommand.TYPES.CSS_MESSAGE);
   }
 
   _onResourceAvailable(resources) {
