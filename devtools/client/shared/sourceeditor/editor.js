@@ -653,6 +653,7 @@ class Editor extends EventEmitter {
     );
 
     const extensions = [
+      codemirrorLanguage.bracketMatching(),
       indentCompartment.of(codemirrorLanguage.indentUnit.of(indentStr)),
       tabSizeCompartment.of(EditorState.tabSize.of(this.config.tabSize)),
       lineWrapCompartment.of(
