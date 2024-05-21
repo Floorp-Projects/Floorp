@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
@@ -41,19 +42,26 @@ class NeverTranslateSitesPreferenceFragment : Fragment() {
                     state.translationEngine.neverTranslateSites
                 }.value
 
-                neverTranslateSites?.let { neverTranslateSitesList ->
-                    NeverTranslateSitesPreference(
-                        neverTranslateSitesListPreferences = neverTranslateSitesList,
-                        onItemClick = {
-                            findNavController().navigate(
-                                NeverTranslateSitesPreferenceFragmentDirections
-                                    .actionNeverTranslateSitePreferenceToNeverTranslateSiteDialogPreference(
-                                        neverTranslateSiteUrl = it,
-                                    ),
-                            )
-                        },
-                    )
-                }
+                val engineError = browserStore.observeAsComposableState { state ->
+                    state.translationEngine.engineError
+                }.value
+
+                val couldNotLoadNeverTranslateSites =
+                    engineError as? TranslationError.CouldNotLoadNeverTranslateSites
+
+                NeverTranslateSitesPreference(
+                    neverTranslateSitesListPreferences = neverTranslateSites,
+                    hasNeverTranslateSitesError = couldNotLoadNeverTranslateSites != null ||
+                        neverTranslateSites == null,
+                    onItemClick = {
+                        findNavController().navigate(
+                            NeverTranslateSitesPreferenceFragmentDirections
+                                .actionNeverTranslateSitePreferenceToNeverTranslateSiteDialogPreference(
+                                    neverTranslateSiteUrl = it,
+                                ),
+                        )
+                    },
+                )
             }
         }
     }

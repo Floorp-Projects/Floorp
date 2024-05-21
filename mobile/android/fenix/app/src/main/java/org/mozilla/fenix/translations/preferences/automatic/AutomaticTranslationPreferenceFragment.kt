@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.LanguageSetting
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.concept.engine.translate.findLanguage
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -45,12 +46,22 @@ class AutomaticTranslationPreferenceFragment : Fragment() {
                 val translationSupport = browserStore.observeAsComposableState { state ->
                     state.translationEngine.supportedLanguages
                 }.value
+                val engineError = browserStore.observeAsComposableState { state ->
+                    state.translationEngine.engineError
+                }.value
+                val couldNotLoadLanguagesError =
+                    engineError as? TranslationError.CouldNotLoadLanguagesError
+                val couldNotLoadLanguageSettingsError =
+                    engineError as? TranslationError.CouldNotLoadLanguageSettingsError
 
                 AutomaticTranslationPreference(
                     automaticTranslationListPreferences = getAutomaticTranslationListPreferences(
                         languageSettings = languageSettings,
                         translationSupport = translationSupport,
                     ),
+                    hasLanguageError = couldNotLoadLanguagesError != null ||
+                        couldNotLoadLanguageSettingsError != null ||
+                        languageSettings == null,
                     onItemClick = {
                         findNavController().navigate(
                             AutomaticTranslationPreferenceFragmentDirections

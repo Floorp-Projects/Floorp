@@ -401,11 +401,16 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
             state.translationEngine.offerTranslation
         }.value
 
+        val pageSettingsError = browserStore.observeAsComposableState { state ->
+            state.selectedTab?.translationsState?.settingsError
+        }.value
+
         val localView = LocalView.current
 
         TranslationsOptionsDialog(
             context = requireContext(),
             translationPageSettings = pageSettingsState,
+            translationPageSettingsError = pageSettingsError,
             offerTranslation = offerTranslation,
             showGlobalSettings = showGlobalSettings,
             initialFrom = initialFrom,
