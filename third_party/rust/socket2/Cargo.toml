@@ -10,9 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.63"
 name = "socket2"
-version = "0.4.9"
+version = "0.5.7"
 authors = [
     "Alex Crichton <alex@alexcrichton.com>",
     "Thomas de Zeeuw <thomasdezeeuw@gmail.com>",
@@ -49,6 +50,22 @@ rustdoc-args = [
     "--cfg",
     "docsrs",
 ]
+targets = [
+    "aarch64-apple-ios",
+    "aarch64-linux-android",
+    "x86_64-apple-darwin",
+    "x86_64-unknown-fuchsia",
+    "x86_64-pc-windows-msvc",
+    "x86_64-pc-solaris",
+    "x86_64-unknown-freebsd",
+    "x86_64-unknown-illumos",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-unknown-linux-musl",
+    "x86_64-unknown-netbsd",
+    "x86_64-unknown-redox",
+    "armv7-linux-androideabi",
+    "i686-linux-android",
+]
 
 [package.metadata.playground]
 features = ["all"]
@@ -57,12 +74,14 @@ features = ["all"]
 all = []
 
 [target."cfg(unix)".dependencies.libc]
-version = "0.2.139"
+version = "0.2.150"
 
-[target."cfg(windows)".dependencies.winapi]
-version = "0.3.9"
+[target."cfg(windows)".dependencies.windows-sys]
+version = "0.52"
 features = [
-    "handleapi",
-    "ws2ipdef",
-    "ws2tcpip",
+    "Win32_Foundation",
+    "Win32_Networking_WinSock",
+    "Win32_System_IO",
+    "Win32_System_Threading",
+    "Win32_System_WindowsProgramming",
 ]

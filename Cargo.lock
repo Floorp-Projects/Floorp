@@ -2775,7 +2775,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2",
+ "socket2 0.4.999",
  "tokio",
  "tower-service",
  "tracing",
@@ -3539,7 +3539,7 @@ dependencies = [
  "dns-parser",
  "gecko-profiler",
  "log",
- "socket2",
+ "socket2 0.4.999",
  "uuid",
 ]
 
@@ -5387,12 +5387,19 @@ dependencies = [
 
 [[package]]
 name = "socket2"
-version = "0.4.9"
+version = "0.4.999"
+dependencies = [
+ "socket2 0.5.7",
+]
+
+[[package]]
+name = "socket2"
+version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64a4a911eed85daf18834cfaa86a79b7d266ff93ff5ba14005426219480ed662"
+checksum = "ce305eb0b4296696835b71df73eb912e0f1ffd2556a501fcede6e0c50349191c"
 dependencies = [
  "libc",
- "winapi",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5859,7 +5866,7 @@ dependencies = [
  "mio 0.8.8",
  "num_cpus",
  "pin-project-lite",
- "socket2",
+ "socket2 0.4.999",
  "windows-sys 0.48.999",
 ]
 
