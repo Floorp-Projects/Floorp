@@ -9,6 +9,7 @@
 
 #include "X11UndefineNone.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/AnimatedPropertyIDSet.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
@@ -330,7 +331,7 @@ class Animation : public DOMEventTargetHelper,
    * updated in |aComposeResult|.
    */
   void ComposeStyle(StyleAnimationValueMap& aComposeResult,
-                    const nsCSSPropertyIDSet& aPropertiesToSkip);
+                    const InvertibleAnimatedPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();
   void NotifyEffectPropertiesUpdated();
@@ -344,7 +345,7 @@ class Animation : public DOMEventTargetHelper,
    * is canceled, it will be released by its owning element and may not still
    * exist when we would normally go to queue events on the next tick.
    */
-  virtual void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime){};
+  virtual void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime) {};
 
   Maybe<uint32_t>& CachedChildIndexRef() { return mCachedChildIndex; }
 

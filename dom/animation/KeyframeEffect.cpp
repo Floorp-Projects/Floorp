@@ -608,8 +608,9 @@ void KeyframeEffect::ComposeStyleRule(StyleAnimationValueMap& aAnimationValues,
                          &aComputedTiming, mEffectOptions.mIterationComposite);
 }
 
-void KeyframeEffect::ComposeStyle(StyleAnimationValueMap& aComposeResult,
-                                  const nsCSSPropertyIDSet& aPropertiesToSkip) {
+void KeyframeEffect::ComposeStyle(
+    StyleAnimationValueMap& aComposeResult,
+    const InvertibleAnimatedPropertyIDSet& aPropertiesToSkip) {
   ComputedTiming computedTiming = GetComputedTiming();
 
   // If the progress is null, we don't have fill data for the current
@@ -1652,8 +1653,8 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
   // transform-related animations on the main thread (where we have the
   // !important rule).
   nsCSSPropertyIDSet blockedProperties =
-      effectSet->PropertiesWithImportantRules().Intersect(
-          effectSet->PropertiesForAnimationsLevel());
+      effectSet->PropertiesForAnimationsLevel().Intersect(
+          effectSet->PropertiesWithImportantRules());
   if (blockedProperties.Intersects(aPropertySet)) {
     aPerformanceWarning =
         AnimationPerformanceWarning::Type::TransformIsBlockedByImportantRules;
