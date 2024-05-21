@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.debugsettings.tabs
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +51,9 @@ import org.mozilla.fenix.debugsettings.ui.DebugDrawer
 import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.theme.FirefoxTheme
+
+@VisibleForTesting
+internal const val MAX_TABS_GENERATED = 1000
 
 /**
  * Tab Tools UI for [DebugDrawer] that displays the tab counts and allows easy bulk-opening of tabs.
@@ -212,12 +216,14 @@ private fun TabCountRow(
 private const val DEFAULT_TABS_TO_ADD = 1
 
 @OptIn(ExperimentalComposeUiApi::class)
+@Suppress("LongMethod")
 @Composable
 private fun TabCreationTool(
     inactiveTabsEnabled: Boolean,
     onCreateTabsClick: ((quantity: Int, isInactive: Boolean, isPrivate: Boolean) -> Unit),
 ) {
     var tabQuantityToCreate by rememberSaveable { mutableStateOf(DEFAULT_TABS_TO_ADD.toLocaleString()) }
+    var textErrorID by rememberSaveable { mutableStateOf<Int?>(null) }
     var hasError by rememberSaveable { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -232,7 +238,8 @@ private fun TabCreationTool(
             value = tabQuantityToCreate,
             onValueChange = {
                 tabQuantityToCreate = it
-                hasError = it.isEmpty() || !it.isDigitsOnly() || it.toInt() == 0
+                textErrorID = validateTextField(it)
+                hasError = textErrorID != null
             },
             modifier = Modifier.fillMaxWidth(),
             textStyle = FirefoxTheme.typography.subtitle1,
@@ -263,6 +270,20 @@ private fun TabCreationTool(
                 errorIndicatorColor = FirefoxTheme.colors.borderCritical,
             ),
         )
+
+        textErrorID?.let {
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = if (textErrorID == R.string.debug_drawer_tab_tools_tab_quantity_exceed_max_error) {
+                    stringResource(id = it, MAX_TABS_GENERATED)
+                } else {
+                    stringResource(id = it)
+                },
+                color = FirefoxTheme.colors.textCritical,
+                style = FirefoxTheme.typography.caption,
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -295,6 +316,17 @@ private fun TabCreationTool(
                 onCreateTabsClick(tabQuantityToCreate.toInt(), false, true)
             },
         )
+    }
+}
+
+@VisibleForTesting
+internal fun validateTextField(text: String): Int? {
+    return when {
+        text.isEmpty() -> R.string.debug_drawer_tab_tools_tab_quantity_empty_error
+        !text.isDigitsOnly() -> R.string.debug_drawer_tab_tools_tab_quantity_non_digits_error
+        text.toInt() > MAX_TABS_GENERATED -> R.string.debug_drawer_tab_tools_tab_quantity_exceed_max_error
+        text.toInt() == 0 -> R.string.debug_drawer_tab_tools_tab_quantity_non_zero_error
+        else -> null
     }
 }
 
