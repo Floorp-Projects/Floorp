@@ -45,7 +45,6 @@ class TenuredChunk;
   _("gcNumber", JSGC_NUMBER, false)                                         \
   _("majorGCNumber", JSGC_MAJOR_GC_NUMBER, false)                           \
   _("minorGCNumber", JSGC_MINOR_GC_NUMBER, false)                           \
-  _("sliceNumber", JSGC_SLICE_NUMBER, false)                                \
   _("incrementalGCEnabled", JSGC_INCREMENTAL_GC_ENABLED, true)              \
   _("perZoneGCEnabled", JSGC_PER_ZONE_GC_ENABLED, true)                     \
   _("unusedChunks", JSGC_UNUSED_CHUNKS, false)                              \
