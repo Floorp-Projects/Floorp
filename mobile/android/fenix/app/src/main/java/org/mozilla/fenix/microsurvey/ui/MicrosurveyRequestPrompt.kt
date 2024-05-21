@@ -60,7 +60,7 @@ private fun Header(
     ) {
         Image(
             painter = painterResource(R.drawable.ic_firefox),
-            contentDescription = null, // todo update to string res once a11y strings are available FXDROID-1919.
+            contentDescription = null,
             modifier = Modifier.size(24.dp),
         )
 

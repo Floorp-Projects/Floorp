@@ -85,7 +85,7 @@ private fun Header(icon: Int, question: String) {
     ) {
         Image(
             painter = painterResource(icon),
-            contentDescription = "Survey icon", // todo update to string res once a11y strings are available.
+            contentDescription = null,
             modifier = Modifier.size(24.dp),
         )
 
