@@ -968,6 +968,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.4.0 -> 1.6.0"
 
+[[audits.clap-verbosity-flag]]
+who = "Kershaw Chang <kershaw@mozilla.com>"
+criteria = "safe-to-run"
+version = "2.2.0"
+
 [[audits.clap_lex]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -3312,6 +3317,11 @@ delta = "0.11.0 -> 0.12.0"
 who = "Kershaw Chang <kershaw@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.12.0 -> 0.13.0"
+
+[[audits.quinn-udp]]
+who = "Kershaw Chang <kershaw@mozilla.com>"
+criteria = "safe-to-run"
+version = "0.5.0"
 
 [[audits.quote]]
 who = "Nika Layzell <nika@thelayzells.com>"

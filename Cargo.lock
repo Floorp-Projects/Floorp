@@ -793,6 +793,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-verbosity-flag"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb9b20c0dd58e4c2e991c8d203bbeb76c11304d1011659686b5b644bc29aa478"
+dependencies = [
+ "clap",
+ "log",
+]
+
+[[package]]
 name = "clap_builder"
 version = "4.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2727,6 +2737,7 @@ dependencies = [
  "mio 0.6.23",
  "mio-extras",
  "mozilla-central-workspace-hack",
+ "neqo-bin",
  "neqo-common",
  "neqo-crypto",
  "neqo-http3",
@@ -4017,6 +4028,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "neqo-bin"
+version = "0.7.8"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.8#a71e43dacf8fae41e5aa30cf95b2e826f63a7466"
+dependencies = [
+ "clap",
+ "clap-verbosity-flag",
+ "futures",
+ "hex",
+ "log",
+ "neqo-common",
+ "neqo-crypto",
+ "neqo-http3",
+ "neqo-qpack",
+ "neqo-transport",
+ "qlog",
+ "quinn-udp",
+ "regex",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "neqo-common"
 version = "0.7.8"
 source = "git+https://github.com/mozilla/neqo?tag=v0.7.8#a71e43dacf8fae41e5aa30cf95b2e826f63a7466"
@@ -4736,6 +4769,19 @@ name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
+
+[[package]]
+name = "quinn-udp"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7ad7bc932e4968523fa7d9c320ee135ff779de720e9350fee8728838551764"
+dependencies = [
+ "libc",
+ "once_cell",
+ "socket2 0.5.7",
+ "tracing",
+ "windows-sys 0.52.0",
+]
 
 [[package]]
 name = "quote"
@@ -5867,7 +5913,19 @@ dependencies = [
  "num_cpus",
  "pin-project-lite",
  "socket2 0.4.999",
+ "tokio-macros",
  "windows-sys 0.48.999",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "630bdcf245f78637c13ec01ffae6187cca34625e8c63150d424b59e55af2675e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
