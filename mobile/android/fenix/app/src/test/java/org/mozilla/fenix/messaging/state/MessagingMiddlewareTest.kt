@@ -347,6 +347,41 @@ class MessagingMiddlewareTest {
         assertEquals(0, store.state.messaging.messages.size)
         assertEquals(0, store.state.messaging.messageToShow.size)
     }
+
+    @Test
+    fun `GIVEN message is not found WHEN updateMessage THEN do not update the message list`() = runTestOnMain {
+        val message = createMessage(messageId = "1")
+        val message2 = createMessage(messageId = "2")
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message,
+                    ),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(controller, coroutineScope),
+            ),
+        )
+
+        every {
+            controller.getNextMessage(
+                FenixMessageSurfaceId.HOMESCREEN,
+                any(),
+            )
+        } returns message
+
+        coEvery {
+            controller.onMessageDisplayed(eq(message), any())
+        } returns message2
+
+        store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN)).joinBlocking()
+        store.waitUntilIdle()
+
+        assertEquals(1, store.state.messaging.messages.count())
+        assertEquals(message, store.state.messaging.messages.first())
+    }
 }
 private fun createMessage(
     metadata: Message.Metadata = createMetadata(),
