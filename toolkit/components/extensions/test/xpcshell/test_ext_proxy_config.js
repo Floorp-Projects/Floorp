@@ -62,6 +62,7 @@ add_task(async function test_browser_settings() {
     "network.proxy.socks_port": 0,
     "network.proxy.socks_version": 5,
     "network.proxy.socks_remote_dns": false,
+    "network.proxy.socks5_remote_dns": true,
     "network.proxy.no_proxies_on": "",
     "network.proxy.autoconfig_url": "",
     "signon.autologin.proxy": false,
@@ -127,7 +128,7 @@ add_task(async function test_browser_settings() {
       proxyType: "none",
       autoConfigUrl: "",
       autoLogin: false,
-      proxyDNS: false,
+      proxyDNS: true,
       httpProxyAll: false,
       socksVersion: 5,
       passthrough: "",
@@ -161,6 +162,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.type": proxySvc.PROXYCONFIG_WPAD,
       "signon.autologin.proxy": true,
       "network.proxy.socks_remote_dns": true,
+      "network.proxy.socks5_remote_dns": true,
     }
   );
 
@@ -174,6 +176,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.type": proxySvc.PROXYCONFIG_SYSTEM,
       "signon.autologin.proxy": false,
       "network.proxy.socks_remote_dns": false,
+      "network.proxy.socks5_remote_dns": false,
     }
   );
 
@@ -187,6 +190,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.type": proxySvc.PROXYCONFIG_SYSTEM,
       "signon.autologin.proxy": false,
       "network.proxy.socks_remote_dns": false,
+      "network.proxy.socks5_remote_dns": false,
       "network.http.proxy.respect-be-conservative": true,
     }
   );
@@ -280,6 +284,7 @@ add_task(async function test_browser_settings() {
       ssl: "www.mozilla.org:8082",
       socks: "mozilla.org:8083",
       socksVersion: 4,
+      proxyDNS: false,
       passthrough: ".mozilla.org",
       respectBeConservative: true,
     }
@@ -315,6 +320,7 @@ add_task(async function test_browser_settings() {
       ssl: "www.mozilla.org:443",
       socks: "mozilla.org:1080",
       socksVersion: 4,
+      proxyDNS: false,
       passthrough: ".mozilla.org",
       respectBeConservative: false,
     }
@@ -350,6 +356,7 @@ add_task(async function test_browser_settings() {
       ssl: "www.mozilla.org:443",
       socks: "mozilla.org:1080",
       socksVersion: 4,
+      proxyDNS: false,
       passthrough: ".mozilla.org",
       respectBeConservative: true,
     }
@@ -385,6 +392,7 @@ add_task(async function test_browser_settings() {
       ssl: "www.mozilla.org:80",
       socks: "mozilla.org:80",
       socksVersion: 4,
+      proxyDNS: false,
       passthrough: ".mozilla.org",
       respectBeConservative: false,
     }
@@ -615,6 +623,84 @@ add_task(async function test_proxy_settings_permissions() {
     await extension.awaitMessage("removed");
     checkSettings("setting is reset after remove");
   });
+
+  await extension.unload();
+});
+
+add_task(async function test_proxy_socks_remote_dns() {
+  // TODO bug 1725981: proxy.settings is not supported on Android.
+  if (AppConstants.platform === "android") {
+    info("proxy.settings not supported on Android; skipping");
+    return;
+  }
+  async function background() {
+    browser.test.onMessage.addListener(async msg => {
+      if (msg === "get-proxy-settings") {
+        let proxySettings = await browser.proxy.settings.get({});
+        browser.test.sendMessage("return-proxy-settings", proxySettings.value);
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["proxy"],
+    },
+    incognitoOverride: "spanning",
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  registerCleanupFunction(() => {
+    // Reset the prefs.
+    Preferences.reset("network.proxy.socks_version");
+    Preferences.reset("network.proxy.socks_remote_dns");
+    Preferences.reset("network.proxy.socks5_remote_dns");
+  });
+
+  async function check_proxy_setting(
+    socksVersion,
+    socks4RemoteDNS,
+    socks5RemoteDNS,
+    expectedProxyDNS
+  ) {
+    Preferences.set("network.proxy.socks_version", socksVersion);
+    Preferences.set("network.proxy.socks_remote_dns", socks4RemoteDNS);
+    Preferences.set("network.proxy.socks5_remote_dns", socks5RemoteDNS);
+    extension.sendMessage("get-proxy-settings");
+    let settings = await extension.awaitMessage("return-proxy-settings");
+    Assert.equal(
+      expectedProxyDNS,
+      settings.proxyDNS,
+      `SOCKS${socksVersion}: remote4: ${socks4RemoteDNS}, remote5: ${socks5RemoteDNS}.`
+    );
+  }
+  // run tests
+  await check_proxy_setting(
+    Ci.nsIProxyInfo.SOCKS_V4, // socksVersion
+    true, // socks4RemoteDNS
+    false, // socks5RemoteDNS
+    true // expectedProxyDNS
+  );
+  await check_proxy_setting(
+    Ci.nsIProxyInfo.SOCKS_V5, // socksVersion
+    true, // socks4RemoteDNS
+    false, // socks5RemoteDNS
+    false // expectedProxyDNS
+  );
+  await check_proxy_setting(
+    Ci.nsIProxyInfo.SOCKS_V4, // socksVersion
+    false, // socks4RemoteDNS
+    true, // socks5RemoteDNS
+    false // expectedProxyDNS
+  );
+  await check_proxy_setting(
+    Ci.nsIProxyInfo.SOCKS_V5, // socksVersion
+    false, // socks4RemoteDNS
+    true, // socks5RemoteDNS
+    true // expectedProxyDNS
+  );
 
   await extension.unload();
 });

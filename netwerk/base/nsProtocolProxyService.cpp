@@ -1040,16 +1040,21 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
     int32_t version;
     proxy_GetIntPref(prefBranch, PROXY_PREF("socks_version"), version);
     // make sure this preference value remains sane
-    if (version == 5) {
-      mSOCKSProxyVersion = 5;
+    if (version == nsIProxyInfo::SOCKS_V5) {
+      mSOCKSProxyVersion = nsIProxyInfo::SOCKS_V5;
     } else {
-      mSOCKSProxyVersion = 4;
+      mSOCKSProxyVersion = nsIProxyInfo::SOCKS_V4;
     }
   }
 
   if (!pref || !strcmp(pref, PROXY_PREF("socks_remote_dns"))) {
     proxy_GetBoolPref(prefBranch, PROXY_PREF("socks_remote_dns"),
-                      mSOCKSProxyRemoteDNS);
+                      mSOCKS4ProxyRemoteDNS);
+  }
+
+  if (!pref || !strcmp(pref, PROXY_PREF("socks5_remote_dns"))) {
+    proxy_GetBoolPref(prefBranch, PROXY_PREF("socks5_remote_dns"),
+                      mSOCKS5ProxyRemoteDNS);
   }
 
   if (!pref || !strcmp(pref, PROXY_PREF("proxy_over_tls"))) {
@@ -1276,7 +1281,7 @@ const char* nsProtocolProxyService::ExtractProxyInfo(const char* start,
     // If it's a SOCKS5 proxy, do name resolution on the server side.
     // We could use this with SOCKS4a servers too, but they might not
     // support it.
-    if (type == kProxyType_SOCKS || mSOCKSProxyRemoteDNS) {
+    if (type == kProxyType_SOCKS || mSOCKS5ProxyRemoteDNS) {
       flags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
     }
 
@@ -2096,6 +2101,20 @@ nsresult nsProtocolProxyService::NewProxyInfo_Internal(
   return NS_OK;
 }
 
+const char* nsProtocolProxyService::SOCKSProxyType() {
+  if (mSOCKSProxyVersion == nsIProxyInfo::SOCKS_V4) {
+    return kProxyType_SOCKS4;
+  }
+  return kProxyType_SOCKS;
+}
+
+bool nsProtocolProxyService::SOCKSRemoteDNS() {
+  return (mSOCKSProxyVersion == nsIProxyInfo::SOCKS_V4 &&
+          mSOCKS4ProxyRemoteDNS) ||
+         (mSOCKSProxyVersion == nsIProxyInfo::SOCKS_V5 &&
+          mSOCKS5ProxyRemoteDNS);
+}
+
 nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
                                                   const nsProtocolInfo& info,
                                                   uint32_t flags,
@@ -2236,15 +2255,11 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   if ((flags & RESOLVE_PREFER_SOCKS_PROXY) && !mSOCKSProxyTarget.IsEmpty() &&
       (IsHostLocalTarget(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
     host = &mSOCKSProxyTarget;
-    if (mSOCKSProxyVersion == 4) {
-      type = kProxyType_SOCKS4;
-    } else {
-      type = kProxyType_SOCKS;
-    }
-    port = mSOCKSProxyPort;
-    if (mSOCKSProxyRemoteDNS) {
+    type = SOCKSProxyType();
+    if (SOCKSRemoteDNS()) {
       proxyFlags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
     }
+    port = mSOCKSProxyPort;
   } else if ((flags & RESOLVE_PREFER_HTTPS_PROXY) &&
              !mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0) {
     host = &mHTTPSProxyHost;
@@ -2265,15 +2280,11 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   } else if (!mSOCKSProxyTarget.IsEmpty() &&
              (IsHostLocalTarget(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
     host = &mSOCKSProxyTarget;
-    if (mSOCKSProxyVersion == 4) {
-      type = kProxyType_SOCKS4;
-    } else {
-      type = kProxyType_SOCKS;
-    }
-    port = mSOCKSProxyPort;
-    if (mSOCKSProxyRemoteDNS) {
+    type = SOCKSProxyType();
+    if (SOCKSRemoteDNS()) {
       proxyFlags |= nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST;
     }
+    port = mSOCKSProxyPort;
   }
 
   if (type) {

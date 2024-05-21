@@ -25,7 +25,7 @@ Preferences.addAll([
   { id: "network.proxy.socks", type: "string" },
   { id: "network.proxy.socks_port", type: "int" },
   { id: "network.proxy.socks_version", type: "int" },
-  { id: "network.proxy.socks_remote_dns", type: "bool" },
+  { id: "network.proxy.socks5_remote_dns", type: "bool" },
   { id: "network.proxy.no_proxies_on", type: "string" },
   { id: "network.proxy.share_proxy_settings", type: "bool" },
   { id: "signon.autologin.proxy", type: "bool" },
@@ -179,7 +179,7 @@ var gConnectionsDialog = {
 
   updateDNSPref() {
     var socksVersionPref = Preferences.get("network.proxy.socks_version");
-    var socksDNSPref = Preferences.get("network.proxy.socks_remote_dns");
+    var socksDNSPref = Preferences.get("network.proxy.socks5_remote_dns");
     var proxyTypePref = Preferences.get("network.proxy.type");
     var isDefinitelySocks4 =
       proxyTypePref.value == 1 && socksVersionPref.value == 4;

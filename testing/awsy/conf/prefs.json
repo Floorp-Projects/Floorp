@@ -6,6 +6,7 @@
   "network.proxy.socks": "localhost",
   "network.proxy.socks_port": 90000,
   "network.proxy.socks_remote_dns": true,
+  "network.proxy.socks5_remote_dns": true,
   "network.proxy.type": 1,
   "plugin.disable": true,
   "startup.homepage_override_url": "",

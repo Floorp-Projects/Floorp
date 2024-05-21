@@ -39,6 +39,7 @@ const API_PROXY_PREFS = [
   "network.proxy.socks_port",
   "network.proxy.socks_version",
   "network.proxy.socks_remote_dns",
+  "network.proxy.socks5_remote_dns",
   "network.proxy.no_proxies_on",
   "network.proxy.autoconfig_url",
   "signon.autologin.proxy",

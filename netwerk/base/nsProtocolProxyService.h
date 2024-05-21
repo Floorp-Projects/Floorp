@@ -393,8 +393,9 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
   // or a named-pipe name.
   nsCString mSOCKSProxyTarget;
   int32_t mSOCKSProxyPort{-1};
-  int32_t mSOCKSProxyVersion{4};
-  bool mSOCKSProxyRemoteDNS{false};
+  int32_t mSOCKSProxyVersion{nsIProxyInfo::SOCKS_V4};
+  bool mSOCKS4ProxyRemoteDNS{false};
+  bool mSOCKS5ProxyRemoteDNS{false};
   bool mProxyOverTLS{true};
   bool mWPADOverDHCPEnabled{false};
 
@@ -411,6 +412,11 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
                                 nsIProtocolProxyCallback* callback,
                                 nsICancelable** result, bool isSyncOK,
                                 nsISerialEventTarget* mainThreadEventTarget);
+
+  // compute `NewProxyInfo_Internal` parameters based on mSOCKS variables
+  const char* SOCKSProxyType();
+  bool SOCKSRemoteDNS();
+
   bool mIsShutdown{false};
   nsCOMPtr<nsITimer> mReloadPACTimer;
 };

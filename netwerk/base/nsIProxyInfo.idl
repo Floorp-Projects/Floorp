@@ -91,6 +91,13 @@ interface nsIProxyInfo : nsISupports
    */
   readonly attribute ACString connectionIsolationKey;
 
+  /**
+   * The following two constants can be used to compare against
+   * network.proxy.socks_version
+   */
+  const unsigned short SOCKS_V4 = 4;
+  const unsigned short SOCKS_V5 = 5;
+
   /****************************************************************************
    * The following "Proxy Flags" may be bit-wise combined to construct the
    * flags attribute defined on this interface.  All unspecified bits are

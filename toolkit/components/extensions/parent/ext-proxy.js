@@ -58,6 +58,7 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
     "network.proxy.socks_port",
     "network.proxy.socks_version",
     "network.proxy.socks_remote_dns",
+    "network.proxy.socks5_remote_dns",
     "network.proxy.no_proxies_on",
     "network.proxy.autoconfig_url",
     "signon.autologin.proxy",
@@ -69,6 +70,7 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
       "network.proxy.type": PROXY_TYPES_MAP.get(value.proxyType),
       "signon.autologin.proxy": value.autoLogin,
       "network.proxy.socks_remote_dns": value.proxyDNS,
+      "network.proxy.socks5_remote_dns": value.proxyDNS,
       "network.proxy.autoconfig_url": value.autoConfigUrl,
       "network.proxy.share_proxy_settings": value.httpProxyAll,
       "network.proxy.socks_version": value.socksVersion,
@@ -181,6 +183,20 @@ this.proxy = class extends ExtensionAPIPersistent {
             name: "proxy.settings",
             callback() {
               let prefValue = Services.prefs.getIntPref("network.proxy.type");
+              let socksVersion = Services.prefs.getIntPref(
+                "network.proxy.socks_version"
+              );
+              let proxyDNS;
+              if (socksVersion == 4) {
+                proxyDNS = Services.prefs.getBoolPref(
+                  "network.proxy.socks_remote_dns"
+                );
+              } else {
+                proxyDNS = Services.prefs.getBoolPref(
+                  "network.proxy.socks5_remote_dns"
+                );
+              }
+
               let proxyConfig = {
                 proxyType: Array.from(PROXY_TYPES_MAP.entries()).find(
                   entry => entry[1] === prefValue
@@ -189,15 +205,11 @@ this.proxy = class extends ExtensionAPIPersistent {
                   "network.proxy.autoconfig_url"
                 ),
                 autoLogin: Services.prefs.getBoolPref("signon.autologin.proxy"),
-                proxyDNS: Services.prefs.getBoolPref(
-                  "network.proxy.socks_remote_dns"
-                ),
+                proxyDNS,
                 httpProxyAll: Services.prefs.getBoolPref(
                   "network.proxy.share_proxy_settings"
                 ),
-                socksVersion: Services.prefs.getIntPref(
-                  "network.proxy.socks_version"
-                ),
+                socksVersion,
                 passthrough: Services.prefs.getCharPref(
                   "network.proxy.no_proxies_on"
                 ),

@@ -28,7 +28,8 @@ class DNSServiceBase : public nsIObserver {
   bool DNSForbiddenByActiveProxy(const nsACString& aHostname, uint32_t aFlags);
 
   mozilla::Atomic<bool, mozilla::Relaxed> mDisablePrefetch{false};
-  mozilla::Atomic<bool, mozilla::Relaxed> mHasSocksProxy{false};
+
+  mozilla::Atomic<uint32_t, mozilla::Relaxed> mSocksProxyVersion{0};
 };
 
 }  // namespace mozilla::net

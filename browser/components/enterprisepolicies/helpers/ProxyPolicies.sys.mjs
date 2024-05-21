@@ -33,6 +33,7 @@ let proxyPreferences = [
   "network.proxy.type",
   "network.proxy.autoconfig_url",
   "network.proxy.socks_remote_dns",
+  "network.proxy.socks5_remote_dns",
   "signon.autologin.proxy",
   "network.proxy.socks_version",
   "network.proxy.no_proxies_on",
@@ -57,6 +58,7 @@ export var ProxyPolicies = {
 
     if (param.UseProxyForDNS !== undefined) {
       setPref("network.proxy.socks_remote_dns", param.UseProxyForDNS);
+      setPref("network.proxy.socks5_remote_dns", param.UseProxyForDNS);
     }
 
     if (param.AutoLogin !== undefined) {
