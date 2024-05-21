@@ -202,6 +202,8 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
     }
   }
 
+  extra_labels.sort();
+
   return reformatted;
 }
 
