@@ -684,6 +684,11 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
     if (isIncrementalGCInProgress()) {
       finishGC(JS::GCReason::DEBUG_GC);
     }
+
+    zealModeBits = 0;
+    zealFrequency = 0;
+    nextScheduled = 0;
+    return;
   }
 
   // Modes that trigger periodically are mutually exclusive. If we're setting
@@ -702,14 +707,12 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
     nursery().enterZealMode();
   }
 
-  bool schedule = zealMode >= ZealMode::Alloc;
-  if (zeal != 0) {
-    zealModeBits |= 1 << unsigned(zeal);
-  } else {
-    zealModeBits = 0;
-  }
+  zealModeBits |= 1 << zeal;
   zealFrequency = frequency;
-  nextScheduled = schedule ? frequency : 0;
+
+  if (PeriodicGCZealModes.contains(zealMode)) {
+    nextScheduled = frequency;
+  }
 }
 
 void GCRuntime::unsetZeal(uint8_t zeal) {
