@@ -1051,6 +1051,7 @@ nsStylePosition::nsStylePosition()
       mHeight(StyleSize::Auto()),
       mMinHeight(StyleSize::Auto()),
       mMaxHeight(StyleMaxSize::None()),
+      mPositionAnchor(StylePositionAnchor::Auto()),
       mFlexBasis(StyleFlexBasis::Size(StyleSize::Auto())),
       mAspectRatio(StyleAspectRatio::Auto()),
       mGridAutoFlow(StyleGridAutoFlow::ROW),
@@ -1099,6 +1100,7 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
       mHeight(aSource.mHeight),
       mMinHeight(aSource.mMinHeight),
       mMaxHeight(aSource.mMaxHeight),
+      mPositionAnchor(aSource.mPositionAnchor),
       mFlexBasis(aSource.mFlexBasis),
       mGridAutoColumns(aSource.mGridAutoColumns),
       mGridAutoRows(aSource.mGridAutoRows),
@@ -1274,6 +1276,13 @@ nsChangeHint nsStylePosition::CalcDifference(
     if (isVertical ? heightChanged : widthChanged) {
       hint |= nsChangeHint_ReflowHintsForISizeChange;
     }
+  }
+
+  if (mPositionAnchor != aNewData.mPositionAnchor) {
+    // 'position-anchor' provides a default anchor for other anchor positioning
+    // properties in the event that they don't specify one explicitly.
+    // TODO(jwatt): Re-evaluate what we're doing here.
+    hint |= nsChangeHint_NeutralChange;
   }
 
   if (mAspectRatio != aNewData.mAspectRatio) {
