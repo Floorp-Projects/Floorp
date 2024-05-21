@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationPageSettings
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.BottomSheetHandle
@@ -171,6 +172,7 @@ internal fun TranslationsOptionsDialog(
     context: Context,
     showGlobalSettings: Boolean,
     translationPageSettings: TranslationPageSettings? = null,
+    translationPageSettingsError: TranslationError? = null,
     offerTranslation: Boolean? = null,
     initialFrom: Language? = null,
     onStateChange: (TranslationSettingsOption, Boolean) -> Unit,
@@ -187,6 +189,7 @@ internal fun TranslationsOptionsDialog(
             context = context,
             onStateChange = onStateChange,
         ),
+        pageSettingsError = translationPageSettingsError,
         onBackClicked = onBackClicked,
         onTranslationSettingsClicked = onTranslationSettingsClicked,
         aboutTranslationClicked = aboutTranslationClicked,
@@ -203,27 +206,27 @@ private fun getTranslationSwitchItemList(
 ): List<TranslationSwitchItem> {
     val translationSwitchItemList = mutableListOf<TranslationSwitchItem>()
 
+    val alwaysTranslateLanguage = translationPageSettings?.alwaysTranslateLanguage
+    val neverTranslateLanguage = translationPageSettings?.neverTranslateLanguage
+    val neverTranslateSite = translationPageSettings?.neverTranslateSite
+
+    offerTranslation?.let {
+        translationSwitchItemList.add(
+            TranslationSwitchItem(
+                type = TranslationPageSettingsOption.AlwaysOfferPopup(),
+                textLabel = context.getString(R.string.translation_option_bottom_sheet_always_translate),
+                isChecked = it,
+                isEnabled = !(
+                    alwaysTranslateLanguage == true ||
+                        neverTranslateLanguage == true ||
+                        neverTranslateSite == true
+                    ),
+                onStateChange = onStateChange,
+            ),
+        )
+    }
+
     translationPageSettings?.let {
-        val alwaysTranslateLanguage = translationPageSettings.alwaysTranslateLanguage
-        val neverTranslateLanguage = translationPageSettings.neverTranslateLanguage
-        val neverTranslateSite = translationPageSettings.neverTranslateSite
-
-        offerTranslation?.let {
-            translationSwitchItemList.add(
-                TranslationSwitchItem(
-                    type = TranslationPageSettingsOption.AlwaysOfferPopup(),
-                    textLabel = context.getString(R.string.translation_option_bottom_sheet_always_translate),
-                    isChecked = it,
-                    isEnabled = !(
-                        alwaysTranslateLanguage == true ||
-                            neverTranslateLanguage == true ||
-                            neverTranslateSite == true
-                        ),
-                    onStateChange = onStateChange,
-                ),
-            )
-        }
-
         if (initialFrom != null) {
             alwaysTranslateLanguage?.let {
                 translationSwitchItemList.add(

@@ -25,11 +25,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import mozilla.components.concept.engine.translate.TranslationError
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.TextListItem
+import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoCard
+import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoType
 import org.mozilla.fenix.theme.FirefoxTheme
 import java.util.Locale
 
@@ -38,6 +41,7 @@ import java.util.Locale
  *
  * @param translationOptionsList A list of [TranslationSwitchItem]s to display.
  * @param showGlobalSettings Whether to show to global settings entry point or not.
+ * @param pageSettingsError Could not load page settings error.
  * @param onBackClicked Invoked when the user clicks on the back button.
  * @param onTranslationSettingsClicked Invoked when the user clicks on the "Translation Settings" button.
  * @param aboutTranslationClicked Invoked when the user clicks on the "About Translation" button.
@@ -46,11 +50,16 @@ import java.util.Locale
 fun TranslationOptionsDialog(
     translationOptionsList: List<TranslationSwitchItem>,
     showGlobalSettings: Boolean,
+    pageSettingsError: TranslationError? = null,
     onBackClicked: () -> Unit,
     onTranslationSettingsClicked: () -> Unit,
     aboutTranslationClicked: () -> Unit,
 ) {
     TranslationOptionsDialogHeader(onBackClicked)
+
+    pageSettingsError?.let {
+        TranslationPageSettingsErrorWarning()
+    }
 
     translationOptionsList.forEach { item: TranslationSwitchItem ->
         Column {
@@ -75,7 +84,7 @@ fun TranslationOptionsDialog(
                 label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
                 modifier = Modifier
                     .padding(start = 56.dp)
-                    .defaultMinSize(minHeight = 57.dp)
+                    .defaultMinSize(minHeight = 56.dp)
                     .wrapContentHeight(),
                 onClick = {
                     onTranslationSettingsClicked()
@@ -93,13 +102,29 @@ fun TranslationOptionsDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 56.dp)
-                .defaultMinSize(minHeight = 57.dp)
+                .defaultMinSize(minHeight = 56.dp)
                 .wrapContentHeight(),
             onClick = { aboutTranslationClicked() },
         )
 
         Spacer(modifier = Modifier.height(16.dp))
     }
+}
+
+@Composable
+private fun TranslationPageSettingsErrorWarning() {
+    val modifier = Modifier
+        .fillMaxWidth()
+        .padding(start = 72.dp, end = 16.dp, bottom = 16.dp)
+        .defaultMinSize(minHeight = 56.dp)
+        .wrapContentHeight()
+
+    ReviewQualityCheckInfoCard(
+        description = stringResource(id = R.string.translation_option_bottom_sheet_error_warning_text),
+        type = ReviewQualityCheckInfoType.Warning,
+        verticalRowAlignment = Alignment.CenterVertically,
+        modifier = modifier,
+    )
 }
 
 @Composable

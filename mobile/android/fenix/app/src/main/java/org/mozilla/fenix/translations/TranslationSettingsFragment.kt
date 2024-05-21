@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import mozilla.components.browser.state.action.TranslationsAction
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.TranslationsBrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -53,6 +54,9 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
                     showAutomaticTranslations = FxNimbus.features.translations.value().globalLangSettingsEnabled,
                     showNeverTranslate = FxNimbus.features.translations.value().globalSiteSettingsEnabled,
                     showDownloads = FxNimbus.features.translations.value().downloadsEnabled,
+                    pageSettingsError = browserStore.observeAsComposableState { state ->
+                        state.selectedTab?.translationsState?.settingsError
+                    }.value,
                     onAutomaticTranslationClicked = {
                         Translations.action.record(Translations.ActionExtra("global_lang_settings"))
                         findNavController().navigate(
