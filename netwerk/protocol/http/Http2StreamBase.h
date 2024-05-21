@@ -138,7 +138,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
 
   bool BlockedOnRwin() { return mBlockedOnRwin; }
 
-  uint32_t RFC7540Priority() { return mRFC7540Priority; }
+  uint32_t Priority() { return mPriority; }
   uint32_t PriorityDependency() { return mPriorityDependency; }
   uint8_t PriorityWeight() { return mPriorityWeight; }
   void SetPriority(uint32_t);
@@ -160,11 +160,8 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   nsresult GetOriginAttributes(mozilla::OriginAttributes* oa);
 
   virtual void CurrentBrowserIdChanged(uint64_t id);
-  // For use by pushed streams only
-  void CurrentBrowserIdChangedInternal(uint64_t id);
-
-  virtual void UpdatePriorityRFC7540(Http2Session* session);
-  virtual void UpdatePriority(Http2Session* session);
+  void CurrentBrowserIdChangedInternal(
+      uint64_t id);  // For use by pushed streams only
 
   virtual bool IsTunnel() { return false; }
 
@@ -272,7 +269,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   uint32_t mTxInlineFrameSize{0};
   uint32_t mTxInlineFrameUsed{0};
 
-  uint32_t mRFC7540Priority = 0;  // geckoish weight
+  uint32_t mPriority = 0;  // geckoish weight
 
   // Buffer for request header compression.
   nsCString mFlatHttpRequestHeaders;

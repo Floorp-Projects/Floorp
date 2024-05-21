@@ -886,7 +886,7 @@ void Http2StreamBase::SetPriority(uint32_t newPriority) {
   } else if (httpPriority < kBestPriority) {
     httpPriority = kBestPriority;
   }
-  mRFC7540Priority = static_cast<uint32_t>(httpPriority);
+  mPriority = static_cast<uint32_t>(httpPriority);
   mPriorityWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
                     (httpPriority - kNormalPriority);
 
@@ -999,56 +999,16 @@ void Http2StreamBase::CurrentBrowserIdChangedInternal(uint64_t id) {
 
   mCurrentBrowserId = id;
 
+  if (!session->UseH2Deps()) {
+    return;
+  }
+
   // Urgent start takes an absolute precedence, so don't
   // change mPriorityDependency here.
   if (mPriorityDependency == Http2Session::kUrgentStartGroupID) {
     return;
   }
 
-  if (session->UseH2Deps()) {
-    UpdatePriorityRFC7540(session);
-  } else {
-    UpdatePriority(session);
-  }
-}
-
-void Http2StreamBase::UpdatePriority(Http2Session* session) {
-  MOZ_ASSERT(!session->UseH2Deps());
-  bool isInBackground = mTransactionBrowserId != mCurrentBrowserId;
-
-  if (isInBackground) {
-    LOG3(
-        ("Http2StreamBase::CurrentBrowserIdChangedInternal %p "
-         "move into background group.\n",
-         this));
-
-    nsHttp::NotifyActiveTabLoadOptimization();
-  }
-
-  nsHttpTransaction* trans = HttpTransaction();
-  if (!trans) {
-    return;
-  }
-
-  uint8_t urgency =
-      nsHttpHandler::UrgencyFromCoSFlags(trans->GetClassOfService().Flags());
-  bool incremental = trans->GetClassOfService().Incremental();
-  uint32_t streamID = GetWireStreamId();
-
-  // If the tab is in the background
-  // we can probably lower the priority of this request by 1.
-  // (to get lower priority we increase urgency).
-  if (isInBackground && urgency < 6) {
-    urgency++;
-  }
-
-  if (streamID) {
-    session->SendPriorityUpdateFrame(streamID, urgency, incremental);
-  }
-}
-
-void Http2StreamBase::UpdatePriorityRFC7540(Http2Session* session) {
-  MOZ_ASSERT(session->UseH2Deps());
   if (mTransactionBrowserId != mCurrentBrowserId) {
     mPriorityDependency = Http2Session::kBackgroundGroupID;
     LOG3(
