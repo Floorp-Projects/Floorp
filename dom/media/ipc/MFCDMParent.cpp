@@ -1041,8 +1041,10 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
       RequirementToStr(aParams.distinctiveID()),
       RequirementToStr(aParams.persistentState()),
       IsKeySystemHWSecure(mKeySystem, aParams.videoCapabilities()));
-  MOZ_ASSERT(IsTypeSupported(mFactory, mKeySystem));
 
+  MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+  MOZ_ASSERT(IsTypeSupported(mFactory, mKeySystem));
   MFCDM_REJECT_IF_FAILED(CreateContentDecryptionModule(
                              mFactory, MapKeySystem(mKeySystem), aParams, mCDM),
                          NS_ERROR_FAILURE);
