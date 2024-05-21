@@ -933,7 +933,7 @@ dictionary ParentProcInfoDictionary {
  *     serialization, deserialization, and inheritance.
  * (3) Update the methods on mozilla::OriginAttributesPattern, including matching.
  */
-[GenerateInitFromJSON]
+[GenerateInitFromJSON, GenerateEqualityOperator]
 dictionary OriginAttributesDictionary {
   unsigned long userContextId = 0;
   unsigned long privateBrowsingId = 0;
