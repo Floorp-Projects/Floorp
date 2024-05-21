@@ -1153,6 +1153,11 @@ panelview .toolbarbutton-1,
   stroke: var(--panel-item-hover-bgcolor);
 }
 
+#appMenu-zoomReset-button2:not([disabled]):hover > .toolbarbutton-text,
+#appMenu-fullscreen-button2:not([disabled]):hover > .toolbarbutton-icon {
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
 #appMenu-zoomReset-button2:not([disabled]):active:hover > .toolbarbutton-text,
 #appMenu-fullscreen-button2:not([disabled]):active:hover > .toolbarbutton-icon {
   background-color: var(--panel-item-active-bgcolor);
