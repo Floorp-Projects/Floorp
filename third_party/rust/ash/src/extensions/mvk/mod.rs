@@ -1,5 +1,2 @@
-pub use self::ios_surface::IOSSurface;
-pub use self::macos_surface::MacOSSurface;
-
-mod ios_surface;
-mod macos_surface;
+pub mod ios_surface;
+pub mod macos_surface;

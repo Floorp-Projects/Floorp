@@ -22,6 +22,9 @@ keywords = ["graphics"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/gfx-rs/wgpu"
 
+[package.metadata.cargo-machete]
+ignored = ["cfg_aliases"]
+
 [package.metadata.docs.rs]
 features = [
     "vulkan",
@@ -97,48 +100,50 @@ default = ["link"]
 device_lost_panic = []
 dx12 = [
     "naga/hlsl-out",
-    "d3d12",
-    "bit-set",
-    "libloading",
-    "range-alloc",
+    "dep:d3d12",
+    "dep:bit-set",
+    "dep:libloading",
+    "dep:range-alloc",
     "winapi/std",
     "winapi/winbase",
     "winapi/d3d12",
     "winapi/d3d12shader",
     "winapi/d3d12sdklayers",
     "winapi/dxgi1_6",
+    "winapi/errhandlingapi",
 ]
-dxc_shader_compiler = ["hassle-rs"]
+dxc_shader_compiler = ["dep:hassle-rs"]
 fragile-send-sync-non-atomic-wasm = ["wgt/fragile-send-sync-non-atomic-wasm"]
 gles = [
     "naga/glsl-out",
-    "glow",
-    "glutin_wgl_sys",
-    "khronos-egl",
-    "libloading",
-    "ndk-sys",
+    "dep:glow",
+    "dep:glutin_wgl_sys",
+    "dep:khronos-egl",
+    "dep:libloading",
+    "dep:ndk-sys",
+    "winapi/libloaderapi",
 ]
 internal_error_panic = []
 link = ["metal/link"]
 metal = [
     "naga/msl-out",
-    "block",
+    "dep:block",
 ]
 oom_panic = []
 renderdoc = [
-    "libloading",
-    "renderdoc-sys",
+    "dep:libloading",
+    "dep:renderdoc-sys",
 ]
 vulkan = [
     "naga/spv-out",
-    "ash",
-    "gpu-alloc",
-    "gpu-descriptor",
-    "libloading",
-    "smallvec",
-    "android_system_properties",
+    "dep:ash",
+    "dep:gpu-alloc",
+    "dep:gpu-descriptor",
+    "dep:libloading",
+    "dep:smallvec",
+    "dep:android_system_properties",
 ]
-windows_rs = ["gpu-allocator"]
+windows_rs = ["dep:gpu-allocator"]
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies]
 js-sys = "0.3.69"
@@ -165,7 +170,7 @@ optional = true
 version = "0.28.0"
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.ash]
-version = "0.37.3"
+version = "0.38.0"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.gpu-alloc]
@@ -254,7 +259,6 @@ optional = true
 version = "0.3"
 features = [
     "profileapi",
-    "libloaderapi",
     "windef",
     "winuser",
     "dcomp",

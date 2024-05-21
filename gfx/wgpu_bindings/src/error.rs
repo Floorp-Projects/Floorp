@@ -520,7 +520,6 @@ mod foreign {
                 | TransferError::CopyFromForbiddenTextureFormat { .. }
                 | TransferError::CopyToForbiddenTextureFormat { .. }
                 | TransferError::ExternalCopyToForbiddenTextureFormat(_)
-                | TransferError::InvalidDepthTextureExtent
                 | TransferError::TextureFormatsNotCopyCompatible { .. }
                 | TransferError::MissingDownlevelFlags(_)
                 | TransferError::InvalidSampleCount { .. }

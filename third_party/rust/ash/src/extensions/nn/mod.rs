@@ -1,3 +1,1 @@
-pub use self::vi_surface::ViSurface;
-
-mod vi_surface;
+pub mod vi_surface;

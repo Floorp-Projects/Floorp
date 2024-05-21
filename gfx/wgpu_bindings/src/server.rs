@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
+    command::RecordedComputePass,
     error::{ErrMsg, ErrorBuffer, ErrorBufferType},
     wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction, DropAction,
     QueueWriteAction, SwapChainId, TextureAction,
@@ -1093,12 +1094,35 @@ pub unsafe extern "C" fn wgpu_server_compute_pass(
     global: &Global,
     encoder_id: id::CommandEncoderId,
     byte_buf: &ByteBuf,
-    error_buf: ErrorBuffer,
+    mut error_buf: ErrorBuffer,
 ) {
-    let pass = bincode::deserialize(byte_buf.as_slice()).unwrap();
-    let action = crate::command::replay_compute_pass(encoder_id, &pass).into_command();
+    let src_pass = bincode::deserialize(byte_buf.as_slice()).unwrap();
 
-    gfx_select!(encoder_id => global.command_encoder_action(encoder_id, action, error_buf));
+    trait ReplayComputePass {
+        fn replay_compute_pass<A>(
+            &self,
+            encoder_id: id::CommandEncoderId,
+            src_pass: &RecordedComputePass,
+        ) -> Result<(), wgc::command::ComputePassError>
+        where
+            A: wgc::hal_api::HalApi;
+    }
+    impl ReplayComputePass for Global {
+        fn replay_compute_pass<A>(
+            &self,
+            encoder_id: id::CommandEncoderId,
+            src_pass: &RecordedComputePass,
+        ) -> Result<(), wgc::command::ComputePassError>
+        where
+            A: wgc::hal_api::HalApi,
+        {
+            crate::command::replay_compute_pass::<A>(self, encoder_id, src_pass)
+        }
+    }
+
+    if let Err(err) = gfx_select!(encoder_id => global.replay_compute_pass(encoder_id, &src_pass)) {
+        error_buf.init(err);
+    }
 }
 
 #[no_mangle]

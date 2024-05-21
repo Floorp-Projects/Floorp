@@ -1,23 +1,9 @@
+//! <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_extended_dynamic_state3.html>
+
 use crate::vk;
-use crate::{Device, Instance};
-use std::ffi::CStr;
-use std::mem;
 
-/// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_extended_dynamic_state3.html>
-#[derive(Clone)]
-pub struct ExtendedDynamicState3 {
-    fp: vk::ExtExtendedDynamicState3Fn,
-}
-
-impl ExtendedDynamicState3 {
-    pub fn new(instance: &Instance, device: &Device) -> Self {
-        let fp = vk::ExtExtendedDynamicState3Fn::load(|name| unsafe {
-            mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
-        });
-        Self { fp }
-    }
-
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetTessellationDomainOriginEXT.html>
+impl crate::ext::extended_dynamic_state3::Device {
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetTessellationDomainOriginEXT.html>
     #[inline]
     pub unsafe fn cmd_set_tessellation_domain_origin(
         &self,
@@ -27,7 +13,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_tessellation_domain_origin_ext)(command_buffer, domain_origin)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthClampEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthClampEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_depth_clamp_enable(
         &self,
@@ -37,7 +23,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_depth_clamp_enable_ext)(command_buffer, depth_clamp_enable.into())
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetPolygonModeEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetPolygonModeEXT.html>
     #[inline]
     pub unsafe fn cmd_set_polygon_mode(
         &self,
@@ -47,7 +33,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_polygon_mode_ext)(command_buffer, polygon_mode)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetRasterizationSamplesEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetRasterizationSamplesEXT.html>
     #[inline]
     pub unsafe fn cmd_set_rasterization_samples(
         &self,
@@ -57,7 +43,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_rasterization_samples_ext)(command_buffer, rasterization_samples)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetSampleMaskEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetSampleMaskEXT.html>
     #[inline]
     pub unsafe fn cmd_set_sample_mask(
         &self,
@@ -69,11 +55,11 @@ impl ExtendedDynamicState3 {
             samples.as_raw().is_power_of_two(),
             "Only one SampleCount bit must be set"
         );
-        assert_eq!(samples.as_raw() as usize / 32, sample_mask.len());
+        assert_eq!((samples.as_raw() as usize + 31) / 32, sample_mask.len());
         (self.fp.cmd_set_sample_mask_ext)(command_buffer, samples, sample_mask.as_ptr())
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetAlphaToCoverageEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetAlphaToCoverageEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_alpha_to_coverage_enable(
         &self,
@@ -86,7 +72,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetAlphaToOneEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetAlphaToOneEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_alpha_to_one_enable(
         &self,
@@ -96,7 +82,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_alpha_to_one_enable_ext)(command_buffer, alpha_to_one_enable.into())
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetLogicOpEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetLogicOpEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_logic_op_enable(
         &self,
@@ -106,7 +92,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_logic_op_enable_ext)(command_buffer, logic_op_enable.into())
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorBlendEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorBlendEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_color_blend_enable(
         &self,
@@ -122,7 +108,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorBlendEquationEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorBlendEquationEXT.html>
     #[inline]
     pub unsafe fn cmd_set_color_blend_equation(
         &self,
@@ -138,7 +124,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorWriteMaskEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorWriteMaskEXT.html>
     #[inline]
     pub unsafe fn cmd_set_color_write_mask(
         &self,
@@ -154,7 +140,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetRasterizationStreamEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetRasterizationStreamEXT.html>
     #[inline]
     pub unsafe fn cmd_set_rasterization_stream(
         &self,
@@ -164,7 +150,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_rasterization_stream_ext)(command_buffer, rasterization_stream)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetConservativeRasterizationModeEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetConservativeRasterizationModeEXT.html>
     #[inline]
     pub unsafe fn cmd_set_conservative_rasterization_mode(
         &self,
@@ -177,7 +163,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetExtraPrimitiveOverestimationSizeEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetExtraPrimitiveOverestimationSizeEXT.html>
     #[inline]
     pub unsafe fn cmd_set_extra_primitive_overestimation_size(
         &self,
@@ -190,7 +176,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthClipEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthClipEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_depth_clip_enable(
         &self,
@@ -200,7 +186,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_depth_clip_enable_ext)(command_buffer, depth_clip_enable.into())
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetSampleLocationsEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetSampleLocationsEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_sample_locations_enable(
         &self,
@@ -213,7 +199,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorBlendAdvancedEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetColorBlendAdvancedEXT.html>
     #[inline]
     pub unsafe fn cmd_set_color_blend_advanced(
         &self,
@@ -229,7 +215,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetProvokingVertexModeEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetProvokingVertexModeEXT.html>
     #[inline]
     pub unsafe fn cmd_set_provoking_vertex_mode(
         &self,
@@ -239,7 +225,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_provoking_vertex_mode_ext)(command_buffer, provoking_vertex_mode)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetLineRasterizationModeEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetLineRasterizationModeEXT.html>
     #[inline]
     pub unsafe fn cmd_set_line_rasterization_mode(
         &self,
@@ -249,7 +235,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_line_rasterization_mode_ext)(command_buffer, line_rasterization_mode)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetLineStippleEnableEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetLineStippleEnableEXT.html>
     #[inline]
     pub unsafe fn cmd_set_line_stipple_enable(
         &self,
@@ -259,7 +245,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_line_stipple_enable_ext)(command_buffer, stippled_line_enable.into())
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthClipNegativeOneToOneEXT.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetDepthClipNegativeOneToOneEXT.html>
     #[inline]
     pub unsafe fn cmd_set_depth_clip_negative_one_to_one(
         &self,
@@ -272,7 +258,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewportWScalingEnableNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewportWScalingEnableNV.html>
     #[inline]
     pub unsafe fn cmd_set_viewport_w_scaling_enable_nv(
         &self,
@@ -285,7 +271,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewportSwizzleNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewportSwizzleNV.html>
     #[inline]
     pub unsafe fn cmd_set_viewport_swizzle_nv(
         &self,
@@ -301,7 +287,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageToColorEnableNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageToColorEnableNV.html>
     #[inline]
     pub unsafe fn cmd_set_coverage_to_color_enable_nv(
         &self,
@@ -314,7 +300,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageToColorLocationNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageToColorLocationNV.html>
     #[inline]
     pub unsafe fn cmd_set_coverage_to_color_location_nv(
         &self,
@@ -324,7 +310,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_coverage_to_color_location_nv)(command_buffer, coverage_to_color_location)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageModulationModeNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageModulationModeNV.html>
     #[inline]
     pub unsafe fn cmd_set_coverage_modulation_mode_nv(
         &self,
@@ -334,7 +320,7 @@ impl ExtendedDynamicState3 {
         (self.fp.cmd_set_coverage_modulation_mode_nv)(command_buffer, coverage_modulation_mode)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageModulationTableEnableNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageModulationTableEnableNV.html>
     #[inline]
     pub unsafe fn cmd_set_coverage_modulation_table_enable_nv(
         &self,
@@ -347,7 +333,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageModulationTableNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageModulationTableNV.html>
     #[inline]
     pub unsafe fn cmd_set_coverage_modulation_table_nv(
         &self,
@@ -361,7 +347,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetShadingRateImageEnableNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetShadingRateImageEnableNV.html>
     #[inline]
     pub unsafe fn cmd_set_shading_rate_image_enable_nv(
         &self,
@@ -374,7 +360,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetRepresentativeFragmentTestEnableNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetRepresentativeFragmentTestEnableNV.html>
     #[inline]
     pub unsafe fn cmd_set_representative_fragment_test_enable_nv(
         &self,
@@ -387,7 +373,7 @@ impl ExtendedDynamicState3 {
         )
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageReductionModeNV.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdSetCoverageReductionModeNV.html>
     #[inline]
     pub unsafe fn cmd_set_coverage_reduction_mode_nv(
         &self,
@@ -395,15 +381,5 @@ impl ExtendedDynamicState3 {
         coverage_reduction_mode: vk::CoverageReductionModeNV,
     ) {
         (self.fp.cmd_set_coverage_reduction_mode_nv)(command_buffer, coverage_reduction_mode)
-    }
-
-    #[inline]
-    pub const fn name() -> &'static CStr {
-        vk::ExtExtendedDynamicState3Fn::name()
-    }
-
-    #[inline]
-    pub fn fp(&self) -> &vk::ExtExtendedDynamicState3Fn {
-        &self.fp
     }
 }

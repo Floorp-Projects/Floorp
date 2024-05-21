@@ -21,6 +21,9 @@ keywords = ["graphics"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/gfx-rs/wgpu"
 
+[package.metadata.cargo-machete]
+ignored = ["cfg_aliases"]
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = [
@@ -117,16 +120,9 @@ spirv = [
 ]
 strict_asserts = ["wgt/strict_asserts"]
 trace = [
-    "ron",
+    "dep:ron",
     "serde",
     "naga/serialize",
 ]
 vulkan = ["hal/vulkan"]
 wgsl = ["naga/wgsl-in"]
-
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.web-sys]
-version = "0.3.69"
-features = [
-    "HtmlCanvasElement",
-    "OffscreenCanvas",
-]

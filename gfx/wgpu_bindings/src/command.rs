@@ -2,14 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{id, RawString};
+use crate::{id, server::Global, RawString};
 use std::{borrow::Cow, ffi, slice};
 use wgc::{
     command::{
-        compute_commands as compute_ffi, render_commands as render_ffi, ComputePassDescriptor,
-        ComputePassTimestampWrites, RenderPassColorAttachment, RenderPassDepthStencilAttachment,
-        RenderPassDescriptor, RenderPassTimestampWrites,
+        render_commands as render_ffi, ComputePassDescriptor, ComputePassTimestampWrites,
+        RenderPassColorAttachment, RenderPassDepthStencilAttachment, RenderPassDescriptor,
+        RenderPassTimestampWrites,
     },
+    hal_api::HalApi,
     id::CommandEncoderId,
 };
 use wgt::{BufferAddress, BufferSize, Color, DynamicOffset, IndexFormat};
@@ -954,18 +955,18 @@ pub fn replay_render_pass(
     dst_pass
 }
 
-pub fn replay_compute_pass(
+pub fn replay_compute_pass<A: HalApi>(
+    global: &Global,
     id: CommandEncoderId,
     src_pass: &RecordedComputePass,
-) -> wgc::command::ComputePass {
-    let mut dst_pass = wgc::command::ComputePass::new(
+) -> Result<(), wgc::command::ComputePassError> {
+    let mut dst_pass = global.command_encoder_create_compute_pass::<A>(
         id,
         &wgc::command::ComputePassDescriptor {
             label: src_pass.base.label.as_ref().map(|s| s.as_str().into()),
             timestamp_writes: src_pass.timestamp_writes.as_ref(),
         },
     );
-
     let mut dynamic_offsets = src_pass.base.dynamic_offsets.as_slice();
     let mut dynamic_offsets = |len| {
         let offsets;
@@ -986,64 +987,55 @@ pub fn replay_compute_pass(
                 bind_group_id,
             } => {
                 let offsets = dynamic_offsets(num_dynamic_offsets);
-                compute_ffi::wgpu_compute_pass_set_bind_group(
-                    &mut dst_pass,
-                    index,
-                    bind_group_id,
-                    offsets,
-                );
+                global.compute_pass_set_bind_group(&mut dst_pass, index, bind_group_id, offsets)?;
             }
             ComputeCommand::SetPipeline(pipeline_id) => {
-                compute_ffi::wgpu_compute_pass_set_pipeline(&mut dst_pass, pipeline_id)
+                global.compute_pass_set_pipeline(&mut dst_pass, pipeline_id)?;
             }
             ComputeCommand::Dispatch([x, y, z]) => {
-                compute_ffi::wgpu_compute_pass_dispatch_workgroups(&mut dst_pass, x, y, z);
+                global.compute_pass_dispatch_workgroups(&mut dst_pass, x, y, z);
             }
             ComputeCommand::DispatchIndirect { buffer_id, offset } => {
-                compute_ffi::wgpu_compute_pass_dispatch_workgroups_indirect(
+                global.compute_pass_dispatch_workgroups_indirect(
                     &mut dst_pass,
                     buffer_id,
                     offset,
-                );
+                )?;
             }
             ComputeCommand::PushDebugGroup { color, len } => {
                 let label = strings(len);
                 let label = std::str::from_utf8(label).unwrap();
-                compute_ffi::wgpu_compute_pass_push_debug_group(&mut dst_pass, label, color);
+                global.compute_pass_push_debug_group(&mut dst_pass, label, color);
             }
             ComputeCommand::PopDebugGroup => {
-                compute_ffi::wgpu_compute_pass_pop_debug_group(&mut dst_pass);
+                global.compute_pass_pop_debug_group(&mut dst_pass);
             }
             ComputeCommand::InsertDebugMarker { color, len } => {
                 let label = strings(len);
                 let label = std::str::from_utf8(label).unwrap();
-                compute_ffi::wgpu_compute_pass_insert_debug_marker(&mut dst_pass, label, color);
+                global.compute_pass_insert_debug_marker(&mut dst_pass, label, color);
             }
             ComputeCommand::WriteTimestamp {
                 query_set_id,
                 query_index,
             } => {
-                compute_ffi::wgpu_compute_pass_write_timestamp(
-                    &mut dst_pass,
-                    query_set_id,
-                    query_index,
-                );
+                global.compute_pass_write_timestamp(&mut dst_pass, query_set_id, query_index)?;
             }
             ComputeCommand::BeginPipelineStatisticsQuery {
                 query_set_id,
                 query_index,
             } => {
-                compute_ffi::wgpu_compute_pass_begin_pipeline_statistics_query(
+                global.compute_pass_begin_pipeline_statistics_query(
                     &mut dst_pass,
                     query_set_id,
                     query_index,
-                );
+                )?;
             }
             ComputeCommand::EndPipelineStatisticsQuery => {
-                compute_ffi::wgpu_compute_pass_end_pipeline_statistics_query(&mut dst_pass);
+                global.compute_pass_end_pipeline_statistics_query(&mut dst_pass);
             }
         }
     }
 
-    dst_pass
+    global.command_encoder_run_compute_pass(&dst_pass)
 }

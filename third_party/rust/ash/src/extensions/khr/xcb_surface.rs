@@ -1,43 +1,29 @@
+//! <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_xcb_surface.html>
+
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use crate::{Entry, Instance};
-use std::ffi::CStr;
-use std::mem;
+use core::mem;
 
-#[derive(Clone)]
-pub struct XcbSurface {
-    handle: vk::Instance,
-    fp: vk::KhrXcbSurfaceFn,
-}
-
-impl XcbSurface {
-    pub fn new(entry: &Entry, instance: &Instance) -> Self {
-        let handle = instance.handle();
-        let fp = vk::KhrXcbSurfaceFn::load(|name| unsafe {
-            mem::transmute(entry.get_instance_proc_addr(handle, name.as_ptr()))
-        });
-        Self { handle, fp }
-    }
-
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateXcbSurfaceKHR.html>
+impl crate::khr::xcb_surface::Instance {
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCreateXcbSurfaceKHR.html>
     #[inline]
     pub unsafe fn create_xcb_surface(
         &self,
-        create_info: &vk::XcbSurfaceCreateInfoKHR,
-        allocation_callbacks: Option<&vk::AllocationCallbacks>,
+        create_info: &vk::XcbSurfaceCreateInfoKHR<'_>,
+        allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
     ) -> VkResult<vk::SurfaceKHR> {
-        let mut surface = mem::zeroed();
+        let mut surface = mem::MaybeUninit::uninit();
         (self.fp.create_xcb_surface_khr)(
             self.handle,
             create_info,
             allocation_callbacks.as_raw_ptr(),
-            &mut surface,
+            surface.as_mut_ptr(),
         )
-        .result_with_success(surface)
+        .assume_init_on_success(surface)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceXcbPresentationSupportKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceXcbPresentationSupportKHR.html>
     #[inline]
     pub unsafe fn get_physical_device_xcb_presentation_support(
         &self,
@@ -54,20 +40,5 @@ impl XcbSurface {
         );
 
         b > 0
-    }
-
-    #[inline]
-    pub const fn name() -> &'static CStr {
-        vk::KhrXcbSurfaceFn::name()
-    }
-
-    #[inline]
-    pub fn fp(&self) -> &vk::KhrXcbSurfaceFn {
-        &self.fp
-    }
-
-    #[inline]
-    pub fn instance(&self) -> vk::Instance {
-        self.handle
     }
 }

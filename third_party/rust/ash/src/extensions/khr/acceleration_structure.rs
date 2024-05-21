@@ -1,61 +1,35 @@
+//! <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_KHR_acceleration_structure.html>
+
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use crate::{Device, Instance};
-use std::ffi::CStr;
-use std::mem;
+use alloc::vec::Vec;
+use core::mem;
 
-#[derive(Clone)]
-pub struct AccelerationStructure {
-    handle: vk::Device,
-    fp: vk::KhrAccelerationStructureFn,
-}
-
-impl AccelerationStructure {
-    pub fn new(instance: &Instance, device: &Device) -> Self {
-        let handle = device.handle();
-        let fp = vk::KhrAccelerationStructureFn::load(|name| unsafe {
-            mem::transmute(instance.get_device_proc_addr(handle, name.as_ptr()))
-        });
-        Self { handle, fp }
-    }
-
-    #[inline]
-    pub unsafe fn get_properties(
-        instance: &Instance,
-        pdevice: vk::PhysicalDevice,
-    ) -> vk::PhysicalDeviceAccelerationStructurePropertiesKHR {
-        let mut props_rt = vk::PhysicalDeviceAccelerationStructurePropertiesKHR::default();
-        {
-            let mut props = vk::PhysicalDeviceProperties2::builder().push_next(&mut props_rt);
-            instance.get_physical_device_properties2(pdevice, &mut props);
-        }
-        props_rt
-    }
-
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateAccelerationStructureKHR.html>
+impl crate::khr::acceleration_structure::Device {
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCreateAccelerationStructureKHR.html>
     #[inline]
     pub unsafe fn create_acceleration_structure(
         &self,
-        create_info: &vk::AccelerationStructureCreateInfoKHR,
-        allocation_callbacks: Option<&vk::AllocationCallbacks>,
+        create_info: &vk::AccelerationStructureCreateInfoKHR<'_>,
+        allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
     ) -> VkResult<vk::AccelerationStructureKHR> {
-        let mut accel_struct = mem::zeroed();
+        let mut accel_struct = mem::MaybeUninit::uninit();
         (self.fp.create_acceleration_structure_khr)(
             self.handle,
             create_info,
             allocation_callbacks.as_raw_ptr(),
-            &mut accel_struct,
+            accel_struct.as_mut_ptr(),
         )
-        .result_with_success(accel_struct)
+        .assume_init_on_success(accel_struct)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureKHR.html>
     #[inline]
     pub unsafe fn destroy_acceleration_structure(
         &self,
         accel_struct: vk::AccelerationStructureKHR,
-        allocation_callbacks: Option<&vk::AllocationCallbacks>,
+        allocation_callbacks: Option<&vk::AllocationCallbacks<'_>>,
     ) {
         (self.fp.destroy_acceleration_structure_khr)(
             self.handle,
@@ -64,12 +38,12 @@ impl AccelerationStructure {
         );
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html>
     #[inline]
     pub unsafe fn cmd_build_acceleration_structures(
         &self,
         command_buffer: vk::CommandBuffer,
-        infos: &[vk::AccelerationStructureBuildGeometryInfoKHR],
+        infos: &[vk::AccelerationStructureBuildGeometryInfoKHR<'_>],
         build_range_infos: &[&[vk::AccelerationStructureBuildRangeInfoKHR]],
     ) {
         assert_eq!(infos.len(), build_range_infos.len());
@@ -91,12 +65,12 @@ impl AccelerationStructure {
         );
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresIndirectKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresIndirectKHR.html>
     #[inline]
     pub unsafe fn cmd_build_acceleration_structures_indirect(
         &self,
         command_buffer: vk::CommandBuffer,
-        infos: &[vk::AccelerationStructureBuildGeometryInfoKHR],
+        infos: &[vk::AccelerationStructureBuildGeometryInfoKHR<'_>],
         indirect_device_addresses: &[vk::DeviceAddress],
         indirect_strides: &[u32],
         max_primitive_counts: &[&[u32]],
@@ -124,12 +98,12 @@ impl AccelerationStructure {
         );
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkBuildAccelerationStructuresKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkBuildAccelerationStructuresKHR.html>
     #[inline]
     pub unsafe fn build_acceleration_structures(
         &self,
         deferred_operation: vk::DeferredOperationKHR,
-        infos: &[vk::AccelerationStructureBuildGeometryInfoKHR],
+        infos: &[vk::AccelerationStructureBuildGeometryInfoKHR<'_>],
         build_range_infos: &[&[vk::AccelerationStructureBuildRangeInfoKHR]],
     ) -> VkResult<()> {
         assert_eq!(infos.len(), build_range_infos.len());
@@ -153,39 +127,39 @@ impl AccelerationStructure {
         .result()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCopyAccelerationStructureKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCopyAccelerationStructureKHR.html>
     #[inline]
     pub unsafe fn copy_acceleration_structure(
         &self,
         deferred_operation: vk::DeferredOperationKHR,
-        info: &vk::CopyAccelerationStructureInfoKHR,
+        info: &vk::CopyAccelerationStructureInfoKHR<'_>,
     ) -> VkResult<()> {
         (self.fp.copy_acceleration_structure_khr)(self.handle, deferred_operation, info).result()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCopyAccelerationStructureToMemoryKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCopyAccelerationStructureToMemoryKHR.html>
     #[inline]
     pub unsafe fn copy_acceleration_structure_to_memory(
         &self,
         deferred_operation: vk::DeferredOperationKHR,
-        info: &vk::CopyAccelerationStructureToMemoryInfoKHR,
+        info: &vk::CopyAccelerationStructureToMemoryInfoKHR<'_>,
     ) -> VkResult<()> {
         (self.fp.copy_acceleration_structure_to_memory_khr)(self.handle, deferred_operation, info)
             .result()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCopyMemoryToAccelerationStructureKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCopyMemoryToAccelerationStructureKHR.html>
     #[inline]
     pub unsafe fn copy_memory_to_acceleration_structure(
         &self,
         deferred_operation: vk::DeferredOperationKHR,
-        info: &vk::CopyMemoryToAccelerationStructureInfoKHR,
+        info: &vk::CopyMemoryToAccelerationStructureInfoKHR<'_>,
     ) -> VkResult<()> {
         (self.fp.copy_memory_to_acceleration_structure_khr)(self.handle, deferred_operation, info)
             .result()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkWriteAccelerationStructuresPropertiesKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkWriteAccelerationStructuresPropertiesKHR.html>
     #[inline]
     pub unsafe fn write_acceleration_structures_properties(
         &self,
@@ -206,46 +180,46 @@ impl AccelerationStructure {
         .result()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyAccelerationStructureKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdCopyAccelerationStructureKHR.html>
     #[inline]
     pub unsafe fn cmd_copy_acceleration_structure(
         &self,
         command_buffer: vk::CommandBuffer,
-        info: &vk::CopyAccelerationStructureInfoKHR,
+        info: &vk::CopyAccelerationStructureInfoKHR<'_>,
     ) {
         (self.fp.cmd_copy_acceleration_structure_khr)(command_buffer, info);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyAccelerationStructureToMemoryKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdCopyAccelerationStructureToMemoryKHR.html>
     #[inline]
     pub unsafe fn cmd_copy_acceleration_structure_to_memory(
         &self,
         command_buffer: vk::CommandBuffer,
-        info: &vk::CopyAccelerationStructureToMemoryInfoKHR,
+        info: &vk::CopyAccelerationStructureToMemoryInfoKHR<'_>,
     ) {
         (self.fp.cmd_copy_acceleration_structure_to_memory_khr)(command_buffer, info);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyMemoryToAccelerationStructureKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdCopyMemoryToAccelerationStructureKHR.html>
     #[inline]
     pub unsafe fn cmd_copy_memory_to_acceleration_structure(
         &self,
         command_buffer: vk::CommandBuffer,
-        info: &vk::CopyMemoryToAccelerationStructureInfoKHR,
+        info: &vk::CopyMemoryToAccelerationStructureInfoKHR<'_>,
     ) {
         (self.fp.cmd_copy_memory_to_acceleration_structure_khr)(command_buffer, info);
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureHandleKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureHandleKHR.html>
     #[inline]
     pub unsafe fn get_acceleration_structure_device_address(
         &self,
-        info: &vk::AccelerationStructureDeviceAddressInfoKHR,
+        info: &vk::AccelerationStructureDeviceAddressInfoKHR<'_>,
     ) -> vk::DeviceAddress {
         (self.fp.get_acceleration_structure_device_address_khr)(self.handle, info)
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWriteAccelerationStructuresPropertiesKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkCmdWriteAccelerationStructuresPropertiesKHR.html>
     #[inline]
     pub unsafe fn cmd_write_acceleration_structures_properties(
         &self,
@@ -265,58 +239,38 @@ impl AccelerationStructure {
         );
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceAccelerationStructureCompatibilityKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetDeviceAccelerationStructureCompatibilityKHR.html>
     #[inline]
     pub unsafe fn get_device_acceleration_structure_compatibility(
         &self,
-        version: &vk::AccelerationStructureVersionInfoKHR,
+        version: &vk::AccelerationStructureVersionInfoKHR<'_>,
     ) -> vk::AccelerationStructureCompatibilityKHR {
-        let mut compatibility = vk::AccelerationStructureCompatibilityKHR::default();
-
+        let mut compatibility = mem::MaybeUninit::uninit();
         (self.fp.get_device_acceleration_structure_compatibility_khr)(
             self.handle,
             version,
-            &mut compatibility,
+            compatibility.as_mut_ptr(),
         );
-
-        compatibility
+        compatibility.assume_init()
     }
 
-    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureBuildSizesKHR.html>
+    /// <https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureBuildSizesKHR.html>
     #[inline]
     pub unsafe fn get_acceleration_structure_build_sizes(
         &self,
         build_type: vk::AccelerationStructureBuildTypeKHR,
-        build_info: &vk::AccelerationStructureBuildGeometryInfoKHR,
+        build_info: &vk::AccelerationStructureBuildGeometryInfoKHR<'_>,
         max_primitive_counts: &[u32],
-    ) -> vk::AccelerationStructureBuildSizesInfoKHR {
+        size_info: &mut vk::AccelerationStructureBuildSizesInfoKHR<'_>,
+    ) {
         assert_eq!(max_primitive_counts.len(), build_info.geometry_count as _);
-
-        let mut size_info = vk::AccelerationStructureBuildSizesInfoKHR::default();
 
         (self.fp.get_acceleration_structure_build_sizes_khr)(
             self.handle,
             build_type,
             build_info,
             max_primitive_counts.as_ptr(),
-            &mut size_info,
-        );
-
-        size_info
-    }
-
-    #[inline]
-    pub const fn name() -> &'static CStr {
-        vk::KhrAccelerationStructureFn::name()
-    }
-
-    #[inline]
-    pub fn fp(&self) -> &vk::KhrAccelerationStructureFn {
-        &self.fp
-    }
-
-    #[inline]
-    pub fn device(&self) -> vk::Device {
-        self.handle
+            size_info,
+        )
     }
 }
