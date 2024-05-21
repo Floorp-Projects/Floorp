@@ -96,6 +96,7 @@ class CrashReporter(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     private val maxBreadCrumbs: Int = 30,
     private val notificationsDelegate: NotificationsDelegate,
+    private val crashBuilder: CrashBuilder = CrashBuilder(),
 ) : CrashReporting {
     private val database: CrashDatabase by lazy { CrashDatabase.get(context) }
 
@@ -117,7 +118,12 @@ class CrashReporter(
         instance = this
 
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        val handler = ExceptionHandler(applicationContext, this, defaultHandler)
+        val handler = ExceptionHandler(
+            context = applicationContext,
+            crashReporter = this,
+            defaultExceptionHandler = defaultHandler,
+            crashBuilder = crashBuilder,
+        )
         Thread.setDefaultUncaughtExceptionHandler(handler)
 
         return this

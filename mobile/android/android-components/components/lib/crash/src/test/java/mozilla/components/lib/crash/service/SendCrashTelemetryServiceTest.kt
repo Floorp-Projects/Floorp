@@ -88,6 +88,7 @@ class SendCrashTelemetryServiceTest {
                 ),
                 scope = scope,
                 notificationsDelegate = mock(),
+                crashBuilder = mock(),
             ),
         ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(
