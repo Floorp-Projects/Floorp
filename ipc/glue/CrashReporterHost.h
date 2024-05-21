@@ -38,8 +38,7 @@ class CrashReporterHost {
 
   // Given an existing minidump for a crashed child process, take ownership of
   // it from IPDL. After this, FinalizeCrashReport may be called.
-  RefPtr<nsIFile> TakeCrashedChildMinidump(base::ProcessId aPid,
-                                           uint32_t* aOutSequence);
+  RefPtr<nsIFile> TakeCrashedChildMinidump(base::ProcessId aPid);
 
   // Replace the stored minidump with a new one. After this,
   // FinalizeCrashReport may be called.

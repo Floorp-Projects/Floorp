@@ -209,11 +209,9 @@ void OOPInit();
 // Return true if a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
 // is non-nullptr. The annotations for the crash will be stored in
-// |aAnnotations|. The sequence parameter will be filled with an ordinal
-// indicating which remote process crashed first.
+// |aAnnotations|.
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
-                          AnnotationTable& aAnnotations,
-                          uint32_t* aSequence = nullptr);
+                          AnnotationTable& aAnnotations);
 
 /**
  * If a dump was found for |childPid| then write a minimal .extra file to
