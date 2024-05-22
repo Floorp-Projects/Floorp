@@ -1,9 +1,9 @@
 [
   {
-    "size": 9802708,
-    "visibility": "public",
-    "digest": "bdd568bc510265641022d1f4600e2c8cb61a498fee14d9f48c7fa921518654833b302a363579921930955f876a49c22f7e96ba497bff15237d7689fe5d77ed63",
+    "filename": "mitm8-linux-firefox-ebay.zip",
+    "size": 8187666,
     "algorithm": "sha512",
-    "filename": "mitm8-linux-firefox-ebay.zip"
+    "digest": "4fd0eee2cce193d6916ce6aaff02112ee917329dfe6798ec5d88384b6824768a9e3a0057b229efb91e608884c0a96937dd023eefce35b149b85acda318d782aa",
+    "visibility": "public"
   }
 ]
