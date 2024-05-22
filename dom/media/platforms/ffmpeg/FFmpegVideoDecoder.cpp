@@ -46,6 +46,7 @@
 #  define AV_PIX_FMT_YUV444P PIX_FMT_YUV444P
 #  define AV_PIX_FMT_YUV444P10LE PIX_FMT_YUV444P10LE
 #  define AV_PIX_FMT_GBRP PIX_FMT_GBRP
+#  define AV_PIX_FMT_GBRP10LE PIX_FMT_GBRP10LE
 #  define AV_PIX_FMT_NONE PIX_FMT_NONE
 #  define AV_PIX_FMT_VAAPI_VLD PIX_FMT_VAAPI_VLD
 #endif
@@ -137,6 +138,9 @@ static AVPixelFormat ChoosePixelFormat(AVCodecContext* aCodecContext,
       case AV_PIX_FMT_GBRP:
         FFMPEGV_LOG("Requesting pixel format GBRP.");
         return AV_PIX_FMT_GBRP;
+      case AV_PIX_FMT_GBRP10LE:
+        FFMPEGV_LOG("Requesting pixel format GBRP10LE.");
+        return AV_PIX_FMT_GBRP10LE;
       default:
         break;
     }
@@ -210,7 +214,7 @@ template <>
 class VAAPIDisplayHolder<LIBAV_VER> {
  public:
   VAAPIDisplayHolder(FFmpegLibWrapper* aLib, VADisplay aDisplay, int aDRMFd)
-      : mLib(aLib), mDisplay(aDisplay), mDRMFd(aDRMFd){};
+      : mLib(aLib), mDisplay(aDisplay), mDRMFd(aDRMFd) {};
   ~VAAPIDisplayHolder() {
     mLib->vaTerminate(mDisplay);
     close(mDRMFd);
@@ -613,6 +617,7 @@ static gfx::ColorDepth GetColorDepth(const AVPixelFormat& aFormat) {
     case AV_PIX_FMT_YUV420P10LE:
     case AV_PIX_FMT_YUV422P10LE:
     case AV_PIX_FMT_YUV444P10LE:
+    case AV_PIX_FMT_GBRP10LE:
       return gfx::ColorDepth::COLOR_10;
 #if LIBAVCODEC_VERSION_MAJOR >= 57
     case AV_PIX_FMT_YUV420P12LE:
@@ -630,7 +635,7 @@ static gfx::ColorDepth GetColorDepth(const AVPixelFormat& aFormat) {
 }
 
 static bool IsYUVFormat(const AVPixelFormat& aFormat) {
-  return aFormat != AV_PIX_FMT_GBRP;
+  return aFormat != AV_PIX_FMT_GBRP && aFormat != AV_PIX_FMT_GBRP10LE;
 }
 
 static gfx::YUVColorSpace TransferAVColorSpaceToColorSpace(
@@ -1210,6 +1215,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 #  endif
             return Some(DecodeStage::YUV444P);
           case AV_PIX_FMT_GBRP:
+          case AV_PIX_FMT_GBRP10LE:
             return Some(DecodeStage::GBRP);
           case AV_PIX_FMT_VAAPI_VLD:
             return Some(DecodeStage::VAAPI_SURFACE);
@@ -1316,6 +1322,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 #  endif
             return Some(DecodeStage::YUV444P);
           case AV_PIX_FMT_GBRP:
+          case AV_PIX_FMT_GBRP10LE:
             return Some(DecodeStage::GBRP);
           default:
             return Nothing();
@@ -1404,14 +1411,16 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
   b.mPlanes[0].mHeight = mFrame->height;
   if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P ||
       mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE ||
-      mCodecContext->pix_fmt == AV_PIX_FMT_GBRP
+      mCodecContext->pix_fmt == AV_PIX_FMT_GBRP ||
+      mCodecContext->pix_fmt == AV_PIX_FMT_GBRP10LE
 #if LIBAVCODEC_VERSION_MAJOR >= 57
       || mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
 #endif
   ) {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
-    if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE) {
+    if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE ||
+        mCodecContext->pix_fmt == AV_PIX_FMT_GBRP10LE) {
       b.mColorDepth = gfx::ColorDepth::COLOR_10;
     }
 #if LIBAVCODEC_VERSION_MAJOR >= 57
@@ -1685,8 +1694,7 @@ static const struct {
   VAProfile va_profile;
   char name[100];
 } vaapi_profile_map[] = {
-#  define MAP(c, v, n) \
-    { AV_CODEC_ID_##c, VAProfile##v, n }
+#  define MAP(c, v, n) {AV_CODEC_ID_##c, VAProfile##v, n}
     MAP(H264, H264ConstrainedBaseline, "H264ConstrainedBaseline"),
     MAP(H264, H264Main, "H264Main"),
     MAP(H264, H264High, "H264High"),
