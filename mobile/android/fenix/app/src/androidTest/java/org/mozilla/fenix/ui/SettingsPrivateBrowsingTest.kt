@@ -27,7 +27,6 @@ class SettingsPrivateBrowsingTest : TestSetup() {
         AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(
                 skipOnboarding = true,
-                tabsTrayRewriteEnabled = true,
             ),
         ) { it.activity }
 
@@ -58,7 +57,7 @@ class SettingsPrivateBrowsingTest : TestSetup() {
 
         browserScreen {
             verifyUrl(firstWebPage.url.toString())
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             verifyPrivateBrowsingButtonIsSelected()
         }.closeTabDrawer {
         }.goToHomescreen { }
@@ -70,7 +69,7 @@ class SettingsPrivateBrowsingTest : TestSetup() {
 
         browserScreen {
             verifyUrl(secondWebPage.url.toString())
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             verifyNormalBrowsingButtonIsSelected()
         }
     }
@@ -97,14 +96,14 @@ class SettingsPrivateBrowsingTest : TestSetup() {
         restartApp(activityTestRule.activityRule)
 
         browserScreen {
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             verifyNormalBrowsingButtonIsSelected()
             closeTab()
         }
 
         addToHomeScreen {
         }.searchAndOpenHomeScreenShortcut(pageShortcutName) {
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             verifyPrivateBrowsingButtonIsSelected()
             closeTab()
         }
@@ -113,7 +112,7 @@ class SettingsPrivateBrowsingTest : TestSetup() {
 
         addToHomeScreen {
         }.searchAndOpenHomeScreenShortcut(pageShortcutName) {
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             verifyNormalBrowsingButtonIsSelected()
         }
     }
@@ -131,7 +130,7 @@ class SettingsPrivateBrowsingTest : TestSetup() {
         }.openPrivateBrowsingShortcut {
             verifySearchView()
         }.openBrowser {
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             verifyPrivateBrowsingButtonIsSelected()
         }
     }

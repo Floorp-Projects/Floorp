@@ -278,7 +278,7 @@ class DownloadTest : TestSetup() {
             openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "3GB.zip")
         }
         browserScreen {
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
         browserScreen {
@@ -298,7 +298,7 @@ class DownloadTest : TestSetup() {
             openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "3GB.zip")
         }
         browserScreen {
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
         browserScreen {

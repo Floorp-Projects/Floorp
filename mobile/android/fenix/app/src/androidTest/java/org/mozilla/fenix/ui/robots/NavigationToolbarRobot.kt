@@ -248,26 +248,10 @@ class NavigationToolbarRobot {
             return ThreeDotMenuMainRobot.Transition()
         }
 
-        fun openTabTray(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            Log.i(TAG, "openTabTray: Waiting for device to be idle for $waitingTime ms")
-            mDevice.waitForIdle(waitingTime)
-            Log.i(TAG, "openTabTray: Waited for device to be idle for $waitingTime ms")
-            Log.i(TAG, "openTabTray: Trying to click the tabs tray button")
-            tabTrayButton().click()
-            Log.i(TAG, "openTabTray: Clicked the tabs tray button")
-            mDevice.waitNotNull(
-                Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime,
-            )
-
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
-        fun openComposeTabDrawer(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+        fun openTabDrawer(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             for (i in 1..Constants.RETRY_COUNT) {
                 try {
-                    Log.i(TAG, "openComposeTabDrawer: Started try #$i")
+                    Log.i(TAG, "openTabDrawer: Started try #$i")
                     mDevice.waitForObjects(
                         mDevice.findObject(
                             UiSelector()
@@ -275,31 +259,31 @@ class NavigationToolbarRobot {
                         ),
                         waitingTime,
                     )
-                    Log.i(TAG, "openComposeTabDrawer: Trying to click the tabs tray button")
+                    Log.i(TAG, "openTabDrawer: Trying to click the tabs tray button")
                     tabTrayButton().click()
-                    Log.i(TAG, "openComposeTabDrawer: Clicked the tabs tray button")
-                    Log.i(TAG, "openComposeTabDrawer: Trying to verify that the tabs tray exists")
+                    Log.i(TAG, "openTabDrawer: Clicked the tabs tray button")
+                    Log.i(TAG, "openTabDrawer: Trying to verify that the tabs tray exists")
                     composeTestRule.onNodeWithTag(TabsTrayTestTag.tabsTray).assertExists()
-                    Log.i(TAG, "openComposeTabDrawer: Verified that the tabs tray exists")
+                    Log.i(TAG, "openTabDrawer: Verified that the tabs tray exists")
 
                     break
                 } catch (e: AssertionError) {
-                    Log.i(TAG, "openComposeTabDrawer: AssertionError caught, executing fallback methods")
+                    Log.i(TAG, "openTabDrawer: AssertionError caught, executing fallback methods")
                     if (i == Constants.RETRY_COUNT) {
                         throw e
                     } else {
-                        Log.i(TAG, "openComposeTabDrawer: Waiting for device to be idle")
+                        Log.i(TAG, "openTabDrawer: Waiting for device to be idle")
                         mDevice.waitForIdle()
-                        Log.i(TAG, "openComposeTabDrawer: Waited for device to be idle")
+                        Log.i(TAG, "openTabDrawer: Waited for device to be idle")
                     }
                 }
             }
-            Log.i(TAG, "openComposeTabDrawer: Trying to verify the tabs tray new tab FAB button exists")
+            Log.i(TAG, "openTabDrawer: Trying to verify the tabs tray new tab FAB button exists")
             composeTestRule.onNodeWithTag(TabsTrayTestTag.fab).assertExists()
-            Log.i(TAG, "openComposeTabDrawer: Verified the tabs tray new tab FAB button exists")
+            Log.i(TAG, "openTabDrawer: Verified the tabs tray new tab FAB button exists")
 
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
         fun visitLinkFromClipboard(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {

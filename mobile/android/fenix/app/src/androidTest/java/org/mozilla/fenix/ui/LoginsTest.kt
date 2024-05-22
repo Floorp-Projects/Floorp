@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui
 
 import android.os.Build
 import android.view.autofill.AutofillManager
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import org.junit.Before
 import org.junit.Rule
@@ -42,7 +43,9 @@ import org.mozilla.fenix.ui.robots.setPageObjectText
 class LoginsTest : TestSetup() {
     @get:Rule
     val activityTestRule =
-        HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
+        ) { it.activity }
 
     @Before
     override fun setUp() {
@@ -295,7 +298,7 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule)
+            clickThreeDotButton(activityTestRule.activityRule)
             clickEditLoginButton()
             setNewPassword("fenix")
             saveEditedLogin()
@@ -324,7 +327,7 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule)
+            clickThreeDotButton(activityTestRule.activityRule)
             clickEditLoginButton()
             setNewUserName("android")
             setNewPassword("fenix")
@@ -362,7 +365,7 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule)
+            clickThreeDotButton(activityTestRule.activityRule)
             clickEditLoginButton()
             clickClearUserNameButton()
             verifyUserNameRequiredErrorMessage()
@@ -392,7 +395,7 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule)
+            clickThreeDotButton(activityTestRule.activityRule)
             clickEditLoginButton()
             clickClearPasswordButton()
             verifyPasswordRequiredErrorMessage()
@@ -423,7 +426,7 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule)
+            clickThreeDotButton(activityTestRule.activityRule)
             clickEditLoginButton()
             setNewUserName("android")
             setNewPassword("fenix")
@@ -450,13 +453,13 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             viewSavedLoginDetails("test@example.com")
-            clickThreeDotButton(activityTestRule)
+            clickThreeDotButton(activityTestRule.activityRule)
             clickDeleteLoginButton()
             verifyLoginDeletionPrompt()
             clickCancelDeleteLogin()
             verifyLoginItemUsername("test@example.com")
             viewSavedLoginDetails("test@example.com")
-            clickThreeDotButton(activityTestRule)
+            clickThreeDotButton(activityTestRule.activityRule)
             clickDeleteLoginButton()
             verifyLoginDeletionPrompt()
             clickConfirmDeleteLogin()
@@ -505,7 +508,7 @@ class LoginsTest : TestSetup() {
             waitForPageToLoad()
             verifySaveLoginPromptIsDisplayed()
             clickPageObject(itemWithText("Save"))
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
 
@@ -514,7 +517,7 @@ class LoginsTest : TestSetup() {
             waitForPageToLoad()
             clickPageObject(itemWithResId("togglePassword"))
             verifyPrefilledLoginCredentials("mozilla", "firefox", true)
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
 
@@ -696,7 +699,7 @@ class LoginsTest : TestSetup() {
             verifySortedLogin(1, firstLoginPage.url.authority.toString())
         }
 
-        restartApp(activityTestRule)
+        restartApp(activityTestRule.activityRule)
 
         browserScreen {
         }.openThreeDotMenu {
@@ -741,7 +744,7 @@ class LoginsTest : TestSetup() {
             verifySortedLogin(1, originWebsite)
         }
 
-        restartApp(activityTestRule)
+        restartApp(activityTestRule.activityRule)
 
         browserScreen {
         }.openThreeDotMenu {

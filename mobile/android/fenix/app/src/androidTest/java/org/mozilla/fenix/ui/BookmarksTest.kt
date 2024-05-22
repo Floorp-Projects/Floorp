@@ -42,9 +42,7 @@ class BookmarksTest : TestSetup() {
     @get:Rule(order = 0)
     val activityTestRule =
         AndroidComposeTestRule(
-            HomeActivityIntentTestRule.withDefaultSettingsOverrides(
-                tabsTrayRewriteEnabled = true,
-            ),
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
     @Rule(order = 1)
@@ -359,7 +357,7 @@ class BookmarksTest : TestSetup() {
 
         browserScreen {
             createBookmark(defaultWebPage.url)
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
 

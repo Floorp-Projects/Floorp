@@ -36,7 +36,6 @@ class SettingsDeleteBrowsingDataTest : TestSetup() {
         AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(
                 skipOnboarding = true,
-                tabsTrayRewriteEnabled = true,
             ),
         ) { it.activity }
 
@@ -145,7 +144,7 @@ class SettingsDeleteBrowsingDataTest : TestSetup() {
             verifyOpenTabsDetails("0")
         }.goBack {
         }.goBack {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNoOpenTabsInNormalBrowsing()
         }
     }
@@ -234,7 +233,7 @@ class SettingsDeleteBrowsingDataTest : TestSetup() {
             verifyExistingTopSitesTabs(pocketTopArticles)
         }.openTopSiteTabWithTitle(pocketTopArticles) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.openNewTab {
         }.submitQuery("about:cache") {
             // disabling wifi to prevent downloads in the background

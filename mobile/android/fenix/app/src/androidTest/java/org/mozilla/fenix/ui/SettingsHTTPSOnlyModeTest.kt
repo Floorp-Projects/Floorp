@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import org.junit.Rule
 import org.junit.Test
@@ -29,7 +30,10 @@ class SettingsHTTPSOnlyModeTest : TestSetup() {
     private val httpsOnlyBackButton = "Go Back (Recommended)"
 
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
+    val activityTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
+        ) { it.activity }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1724825
     @Test
@@ -113,7 +117,7 @@ class SettingsHTTPSOnlyModeTest : TestSetup() {
             verifyPageContent(httpsOnlyErrorTitle)
             clickPageObject(itemContainingText(httpsOnlyContinueButton))
             verifyPageContent("http.badssl.com")
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
         navigationToolbar {

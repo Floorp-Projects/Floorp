@@ -33,7 +33,6 @@ class FirefoxSuggestTest : TestSetup() {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
-            tabsTrayRewriteEnabled = false,
         ),
     ) { it.activity }
 

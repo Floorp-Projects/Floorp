@@ -32,9 +32,7 @@ class NavigationToolbarTest : TestSetup() {
     @get:Rule
     val composeTestRule =
         AndroidComposeTestRule(
-            HomeActivityTestRule.withDefaultSettingsOverrides(
-                tabsTrayRewriteEnabled = true,
-            ),
+            HomeActivityTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/987326
@@ -47,7 +45,7 @@ class NavigationToolbarTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
             swipeNavBarRight(secondWebPage.url.toString())
@@ -68,7 +66,7 @@ class NavigationToolbarTest : TestSetup() {
         runWithSystemLocaleChanged(arabicLocale, composeTestRule.activityRule) {
             navigationToolbar {
             }.enterURLAndEnterToBrowser(firstWebPage.url) {
-            }.openComposeTabDrawer(composeTestRule) {
+            }.openTabDrawer(composeTestRule) {
             }.openNewTab {
             }.submitQuery(secondWebPage.url.toString()) {
                 swipeNavBarLeft(secondWebPage.url.toString())

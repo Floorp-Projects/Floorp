@@ -70,7 +70,6 @@ class SearchTest : TestSetup() {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
-            tabsTrayRewriteEnabled = true,
         ),
     ) { it.activity }
 
@@ -299,7 +298,7 @@ class SearchTest : TestSetup() {
             clickContextMenuItem("Open link in new tab")
             TestHelper.clickSnackbarButton("SWITCH")
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
@@ -340,7 +339,7 @@ class SearchTest : TestSetup() {
             clickContextMenuItem("Open link in new tab")
             TestHelper.clickSnackbarButton("SWITCH")
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
@@ -368,7 +367,7 @@ class SearchTest : TestSetup() {
             Espresso.pressBack()
             clickPageObject(MatcherHelper.itemContainingText("Link 2"))
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
@@ -391,12 +390,12 @@ class SearchTest : TestSetup() {
             clickContextMenuItem("Open link in private tab")
             longClickPageObject(MatcherHelper.itemWithText("Link 2"))
             clickContextMenuItem("Open link in private tab")
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.toggleToPrivateTabs {
         }.openPrivateTab(0) {
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openPrivateTab(1) {
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             togglePrivateBrowsingModeOnOff()
@@ -431,7 +430,7 @@ class SearchTest : TestSetup() {
             clickContextMenuItem("Open link in new tab")
             TestHelper.clickSnackbarButton("SWITCH")
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
@@ -472,7 +471,7 @@ class SearchTest : TestSetup() {
             clickContextMenuItem("Open link in new tab")
             TestHelper.clickSnackbarButton("SWITCH")
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
@@ -515,7 +514,7 @@ class SearchTest : TestSetup() {
             clickContextMenuItem("Open link in new tab")
             TestHelper.clickSnackbarButton("SWITCH")
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
@@ -535,8 +534,8 @@ class SearchTest : TestSetup() {
         }.closeTabDrawer {}
         Espresso.openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         multipleSelectionToolbar {
-        }.clickOpenPrivateTab {
-            verifyPrivateModeSelected()
+        }.clickOpenPrivateTab(activityTestRule) {
+            verifyPrivateBrowsingButtonIsSelected()
         }
     }
 
@@ -562,7 +561,7 @@ class SearchTest : TestSetup() {
             clickContextMenuItem("Open link in new tab")
             TestHelper.clickSnackbarButton("SWITCH")
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
             verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
@@ -774,7 +773,7 @@ class SearchTest : TestSetup() {
             )
         }.clickSearchSuggestion(firstPageUrl.url.toString()) {
             verifyTabCounter("2")
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             verifyOpenTabsOrder(position = 1, title = firstPageUrl.url.toString())
             verifyOpenTabsOrder(position = 2, title = secondPageUrl.url.toString())
         }

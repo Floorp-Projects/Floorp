@@ -73,11 +73,6 @@ interface FeatureSettingsHelper {
     var isOpenInAppBannerEnabled: Boolean
 
     /**
-     * Enable or disable the Tabs Tray to Compose rewrite.
-     */
-    var tabsTrayRewriteEnabled: Boolean
-
-    /**
      * Enable or disable the Top Sites to Compose rewrite.
      */
     var composeTopSitesEnabled: Boolean

@@ -46,7 +46,6 @@ class ContextMenusTest : TestSetup() {
     val composeTestRule =
         AndroidComposeTestRule(
             HomeActivityIntentTestRule(
-                tabsTrayRewriteEnabled = true,
                 isJumpBackInCFREnabled = false,
             ),
         ) { it.activity }
@@ -72,7 +71,7 @@ class ContextMenusTest : TestSetup() {
             verifySnackBarText("New tab opened")
             clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNormalBrowsingButtonIsSelected()
             verifyExistingOpenTabs("Test_Page_1")
             verifyExistingOpenTabs("Test_Page_4")
@@ -96,7 +95,7 @@ class ContextMenusTest : TestSetup() {
             verifySnackBarText("New private tab opened")
             clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyPrivateBrowsingButtonIsSelected()
             verifyExistingOpenTabs("Test_Page_2")
         }

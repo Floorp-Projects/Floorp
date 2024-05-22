@@ -7,6 +7,7 @@
 package org.mozilla.fenix.screenshots
 
 import android.os.SystemClock
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -42,7 +43,9 @@ class MenuScreenShotTest : ScreenshotTest() {
     val localeTestRule = LocaleTestRule()
 
     @get:Rule
-    var mActivityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
+    var activityTestRule = AndroidComposeTestRule(
+        HomeActivityTestRule.withDefaultSettingsOverrides(),
+    ) { it.activity }
 
     @Before
     fun setUp() {
@@ -55,7 +58,7 @@ class MenuScreenShotTest : ScreenshotTest() {
 
     @After
     fun tearDown() {
-        mActivityTestRule.getActivity().finishAndRemoveTask()
+        activityTestRule.activityRule.getActivity().finishAndRemoveTask()
         mockWebServer.shutdown()
     }
 
@@ -153,10 +156,10 @@ class MenuScreenShotTest : ScreenshotTest() {
             Screengrab.screenshot("NavigationToolbarRobot_navigation-toolbar")
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             Screengrab.screenshot("BrowserRobot_enter-url")
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             TestAssetHelper.waitingTime
             Screengrab.screenshot("TabDrawerRobot_one-tab-open")
-        }.openTabsListThreeDotMenu {
+        }.openThreeDotMenu {
             TestAssetHelper.waitingTime
             Screengrab.screenshot("TabDrawerRobot_three-dot-menu")
         }
@@ -170,7 +173,7 @@ class MenuScreenShotTest : ScreenshotTest() {
         }.openThreeDotMenu {
             Screengrab.screenshot("TabDrawerRobot_browser-tab-menu")
         }.closeBrowserMenuToBrowser {
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             Screengrab.screenshot("TabDrawerRobot_tab-drawer-with-tabs")
             closeTab()
             TestAssetHelper.waitingTime
