@@ -32,9 +32,7 @@ class MediaNotificationTest : TestSetup() {
     @get:Rule(order = 0)
     val composeTestRule =
         AndroidComposeTestRule(
-            HomeActivityTestRule.withDefaultSettingsOverrides(
-                tabsTrayRewriteEnabled = true,
-            ),
+            HomeActivityTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
     @Rule(order = 1)
@@ -62,7 +60,7 @@ class MediaNotificationTest : TestSetup() {
 
         browserScreen {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             closeTab()
         }
 
@@ -97,7 +95,7 @@ class MediaNotificationTest : TestSetup() {
 
         browserScreen {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             closeTab()
         }
 
@@ -117,7 +115,7 @@ class MediaNotificationTest : TestSetup() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
         homeScreen {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.toggleToPrivateTabs {
         }.openNewTab {
         }.submitQuery(audioTestPage.url.toString()) {
@@ -134,7 +132,7 @@ class MediaNotificationTest : TestSetup() {
 
         browserScreen {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             closeTab()
             verifySnackBarText("Private tab closed")
         }

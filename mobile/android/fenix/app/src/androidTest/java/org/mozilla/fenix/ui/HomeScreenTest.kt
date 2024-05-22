@@ -28,9 +28,7 @@ class HomeScreenTest : TestSetup() {
     @get:Rule(order = 0)
     val activityTestRule =
         AndroidComposeTestRule(
-            HomeActivityTestRule.withDefaultSettingsOverrides(
-                tabsTrayRewriteEnabled = true,
-            ),
+            HomeActivityTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
     @Rule(order = 1)
@@ -109,7 +107,7 @@ class HomeScreenTest : TestSetup() {
             verifyJumpBackInSectionIsDisplayed()
             verifyJumpBackInItemTitle(activityTestRule, secondWebPage.title)
             verifyJumpBackInItemWithUrl(activityTestRule, secondWebPage.url.toString())
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             closeTabWithTitle(secondWebPage.title)
         }.closeTabDrawer {
         }
@@ -118,7 +116,7 @@ class HomeScreenTest : TestSetup() {
             verifyJumpBackInSectionIsDisplayed()
             verifyJumpBackInItemTitle(activityTestRule, firstWebPage.title)
             verifyJumpBackInItemWithUrl(activityTestRule, firstWebPage.url.toString())
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
 

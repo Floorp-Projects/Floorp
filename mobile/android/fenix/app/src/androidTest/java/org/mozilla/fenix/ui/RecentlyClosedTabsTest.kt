@@ -28,9 +28,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class RecentlyClosedTabsTest : TestSetup() {
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
-        HomeActivityIntentTestRule.withDefaultSettingsOverrides(
-            tabsTrayRewriteEnabled = true,
-        ),
+        HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
     ) { it.activity }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1065414
@@ -44,7 +42,7 @@ class RecentlyClosedTabsTest : TestSetup() {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(website.url) {
             mDevice.waitForIdle()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
         homeScreen {
@@ -75,7 +73,7 @@ class RecentlyClosedTabsTest : TestSetup() {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(website.url) {
             mDevice.waitForIdle()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
         homeScreen {
@@ -102,11 +100,11 @@ class RecentlyClosedTabsTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstPage.url) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }.submitQuery(secondPage.url.toString()) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
         }.openThreeDotMenu {
@@ -121,7 +119,7 @@ class RecentlyClosedTabsTest : TestSetup() {
             browserScreen {
                 verifyPageContent(secondPage.content)
                 verifyUrl(secondPage.url.toString())
-            }.openComposeTabDrawer(activityTestRule) {
+            }.openTabDrawer(activityTestRule) {
                 verifyNormalBrowsingButtonIsSelected(true)
                 verifyExistingOpenTabs(firstPage.title, secondPage.title)
             }
@@ -137,11 +135,11 @@ class RecentlyClosedTabsTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstPage.url) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }.submitQuery(secondPage.url.toString()) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
         }.openThreeDotMenu {
@@ -156,7 +154,7 @@ class RecentlyClosedTabsTest : TestSetup() {
             browserScreen {
                 verifyPageContent(secondPage.content)
                 verifyUrl(secondPage.url.toString())
-            }.openComposeTabDrawer(activityTestRule) {
+            }.openTabDrawer(activityTestRule) {
                 verifyPrivateBrowsingButtonIsSelected(true)
                 verifyExistingOpenTabs(firstPage.title, secondPage.title)
             }
@@ -174,11 +172,11 @@ class RecentlyClosedTabsTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstPage.url) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }.submitQuery(secondPage.url.toString()) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
         }.openThreeDotMenu {
@@ -203,11 +201,11 @@ class RecentlyClosedTabsTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstPage.url) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }.submitQuery(secondPage.url.toString()) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
         }.openThreeDotMenu {
@@ -226,11 +224,11 @@ class RecentlyClosedTabsTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstPage.url) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }.submitQuery(secondPage.url.toString()) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
         }.openThreeDotMenu {
         }.closeAllTabs {
         }.openThreeDotMenu {

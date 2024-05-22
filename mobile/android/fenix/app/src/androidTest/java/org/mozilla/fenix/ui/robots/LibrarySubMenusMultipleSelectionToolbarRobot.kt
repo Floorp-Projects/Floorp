@@ -24,7 +24,6 @@ import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
-import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
@@ -165,21 +164,7 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
             return BookmarksRobot.Transition()
         }
 
-        fun clickOpenNewTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            Log.i(TAG, "clickOpenNewTab: Trying to click the multi-select \"Open in a new tab\" context menu button")
-            openInNewTabButton().click()
-            Log.i(TAG, "clickOpenNewTab: Clicked the multi-select \"Open in a new tab\" context menu button")
-
-            mDevice.waitNotNull(
-                Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime,
-            )
-
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
-        fun clickOpenNewTab(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+        fun clickOpenNewTab(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenNewTab: Trying to click the multi-select \"Open in a new tab\" context menu button")
             openInNewTabButton().click()
             Log.i(TAG, "clickOpenNewTab: Clicked the multi-select \"Open in a new tab\" context menu button")
@@ -187,30 +172,17 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
             composeTestRule.onNodeWithTag(TabsTrayTestTag.tabsTray).assertExists()
             Log.i(TAG, "clickOpenNewTab: Verified that the tabs tray exists")
 
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
-        fun clickOpenPrivateTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            Log.i(TAG, "clickOpenPrivateTab: Trying to click the multi-select \"Open in a private tab\" context menu button")
-            openInPrivateTabButton().click()
-            Log.i(TAG, "clickOpenPrivateTab: Clicked the multi-select \"Open in a private tab\" context menu button")
-            mDevice.waitNotNull(
-                Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime,
-            )
-
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
-        fun clickOpenPrivateTab(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+        fun clickOpenPrivateTab(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenPrivateTab: Trying to click the multi-select \"Open in a private tab\" context menu button")
             openInPrivateTabButton().click()
             Log.i(TAG, "clickOpenPrivateTab: Clicked the multi-select \"Open in a private tab\" context menu button")
 
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
     }
 }

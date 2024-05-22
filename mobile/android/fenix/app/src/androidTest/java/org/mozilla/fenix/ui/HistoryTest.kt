@@ -35,7 +35,6 @@ class HistoryTest : TestSetup() {
     val activityTestRule =
         AndroidComposeTestRule(
             HomeActivityIntentTestRule(
-                tabsTrayRewriteEnabled = true,
                 isJumpBackInCFREnabled = false,
             ),
         ) { it.activity }
@@ -160,7 +159,7 @@ class HistoryTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             mDevice.waitForIdle()
-        }.openComposeTabDrawer(activityTestRule) {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
 

@@ -108,22 +108,22 @@ class RecentlyClosedTabsRobot {
             return BrowserRobot.Transition()
         }
 
-        fun clickOpenInNewTab(testRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+        fun clickOpenInNewTab(testRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenInNewTab: Trying to click the multi-select \"Open in a new tab\" context menu button")
             openInNewTabOption().click()
             Log.i(TAG, "clickOpenInNewTab: Clicked the multi-select \"Open in a new tab\" context menu button")
 
-            ComposeTabDrawerRobot(testRule).interact()
-            return ComposeTabDrawerRobot.Transition(testRule)
+            TabDrawerRobot(testRule).interact()
+            return TabDrawerRobot.Transition(testRule)
         }
 
-        fun clickOpenInPrivateTab(testRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+        fun clickOpenInPrivateTab(testRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenInPrivateTab: Trying to click the multi-select \"Open in a private tab\" context menu button")
             openInPrivateTabOption().click()
             Log.i(TAG, "clickOpenInPrivateTab: Clicked the multi-select \"Open in a private tab\" context menu button")
 
-            ComposeTabDrawerRobot(testRule).interact()
-            return ComposeTabDrawerRobot.Transition(testRule)
+            TabDrawerRobot(testRule).interact()
+            return TabDrawerRobot.Transition(testRule)
         }
 
         fun clickShare(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {

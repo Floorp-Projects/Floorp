@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
 import org.junit.Ignore
@@ -40,11 +41,10 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class EnhancedTrackingProtectionTest : TestSetup() {
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule(
-        isJumpBackInCFREnabled = false,
-        isTCPCFREnabled = false,
-        isWallpaperOnboardingEnabled = false,
-    )
+    val activityTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
+        ) { it.activity }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416046
     @Test
@@ -143,7 +143,7 @@ class EnhancedTrackingProtectionTest : TestSetup() {
         }.toggleEnhancedTrackingProtectionFromSheet {
             verifyEnhancedTrackingProtectionSheetStatus("OFF", false)
         }
-        restartApp(activityTestRule)
+        restartApp(activityTestRule.activityRule)
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("OFF", false)
@@ -278,7 +278,7 @@ class EnhancedTrackingProtectionTest : TestSetup() {
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
             closeTab()
         }
 

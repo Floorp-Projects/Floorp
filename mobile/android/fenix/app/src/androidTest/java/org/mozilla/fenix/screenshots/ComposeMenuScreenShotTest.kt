@@ -36,9 +36,7 @@ class ComposeMenuScreenShotTest : ScreenshotTest() {
     @get:Rule
     val composeTestRule =
         AndroidComposeTestRule(
-            HomeActivityTestRule.withDefaultSettingsOverrides(
-                tabsTrayRewriteEnabled = true,
-            ),
+            HomeActivityTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
     @Before
@@ -150,7 +148,7 @@ class ComposeMenuScreenShotTest : ScreenshotTest() {
             Screengrab.screenshot("NavigationToolbarRobot_navigation-toolbar")
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             Screengrab.screenshot("BrowserRobot_enter-url")
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             TestAssetHelper.waitingTime
             Screengrab.screenshot("TabDrawerRobot_one-tab-open")
         }.openThreeDotMenu {
@@ -167,7 +165,7 @@ class ComposeMenuScreenShotTest : ScreenshotTest() {
         }.openThreeDotMenu {
             Screengrab.screenshot("TabDrawerRobot_browser-tab-menu")
         }.closeBrowserMenuToBrowser {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             Screengrab.screenshot("TabDrawerRobot_tab-drawer-with-tabs")
             closeTab()
             TestAssetHelper.waitingTime

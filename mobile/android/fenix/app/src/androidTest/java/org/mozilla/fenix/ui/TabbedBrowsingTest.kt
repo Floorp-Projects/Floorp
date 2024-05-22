@@ -49,7 +49,6 @@ class TabbedBrowsingTest : TestSetup() {
         AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(
                 skipOnboarding = true,
-                tabsTrayRewriteEnabled = true,
             ),
         ) { it.activity }
 
@@ -64,7 +63,7 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNormalTabsList()
         }.openThreeDotMenu {
             verifyCloseAllTabsButton()
@@ -80,7 +79,7 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyPrivateTabsList()
         }.openThreeDotMenu {
             verifyCloseAllTabsButton()
@@ -96,7 +95,7 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             closeTab()
             verifySnackBarText("Tab closed")
@@ -115,7 +114,7 @@ class TabbedBrowsingTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             swipeTabRight("Test_Page_1")
             verifySnackBarText("Tab closed")
@@ -125,7 +124,7 @@ class TabbedBrowsingTest : TestSetup() {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             waitForPageToLoad()
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             swipeTabLeft("Test_Page_1")
             verifySnackBarText("Tab closed")
@@ -143,7 +142,7 @@ class TabbedBrowsingTest : TestSetup() {
         homeScreen { }.togglePrivateBrowsingMode(switchPBModeOn = true)
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             closeTab()
             verifySnackBarText("Private tab closed")
@@ -165,7 +164,7 @@ class TabbedBrowsingTest : TestSetup() {
             mDevice.waitForIdle()
             clickPageObject(MatcherHelper.itemWithText("Play"))
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyTabMediaControlButtonState("Pause")
             clickTabMediaControlButton("Pause")
             verifyTabMediaControlButtonState("Play")
@@ -199,7 +198,7 @@ class TabbedBrowsingTest : TestSetup() {
     @Test
     fun verifyTabTrayNotShowingStateHalfExpanded() {
         homeScreen {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNoOpenTabsInNormalBrowsing()
             // With no tabs opened the state should be STATE_COLLAPSED.
             verifyTabsTrayBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
@@ -223,7 +222,7 @@ class TabbedBrowsingTest : TestSetup() {
     @Test
     fun verifyEmptyTabTray() {
         homeScreen {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNormalBrowsingButtonIsSelected()
             verifyPrivateBrowsingButtonIsSelected(false)
             verifySyncedTabsButtonIsSelected(false)
@@ -240,7 +239,7 @@ class TabbedBrowsingTest : TestSetup() {
     @Test
     fun verifyEmptyPrivateTabsTrayTest() {
         homeScreen {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.toggleToPrivateTabs {
             verifyNormalBrowsingButtonIsSelected(false)
             verifyPrivateBrowsingButtonIsSelected(true)
@@ -261,7 +260,7 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNormalBrowsingButtonIsSelected()
             verifyPrivateBrowsingButtonIsSelected(isSelected = false)
             verifySyncedTabsButtonIsSelected(isSelected = false)
@@ -285,11 +284,11 @@ class TabbedBrowsingTest : TestSetup() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.toggleToPrivateTabs {
         }.openNewTab {
         }.submitQuery(website.url.toString()) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNormalBrowsingButtonIsSelected(false)
             verifyPrivateBrowsingButtonIsSelected(true)
             verifySyncedTabsButtonIsSelected(false)
@@ -433,7 +432,7 @@ class TabbedBrowsingTest : TestSetup() {
     @Test
     fun verifySyncedTabsWhenUserIsNotSignedInTest() {
         navigationToolbar {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifySyncedTabsButtonIsSelected(isSelected = false)
         }.toggleToSyncedTabs {
             verifySyncedTabsButtonIsSelected(isSelected = true)
@@ -458,11 +457,11 @@ class TabbedBrowsingTest : TestSetup() {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebsite.url) {
             verifyPageContent(firstWebsite.content)
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.openNewTab {
         }.submitQuery(secondWebsite.url.toString()) {
             verifyPageContent(secondWebsite.content)
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             verifyExistingOpenTabs("Test_Page_2")
         }.openThreeDotMenu {
@@ -492,7 +491,7 @@ class TabbedBrowsingTest : TestSetup() {
 
         homeScreen {
             verifyPrivateBrowsingHomeScreenItems()
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.toggleToNormalTabs {
             verifyExistingOpenTabs(defaultWebPage.title)
         }
@@ -510,7 +509,7 @@ class TabbedBrowsingTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
         }
@@ -518,7 +517,7 @@ class TabbedBrowsingTest : TestSetup() {
         restartApp(composeTestRule.activityRule)
         homeScreen {
             verifyPrivateBrowsingHomeScreenItems()
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNoOpenTabsInPrivateBrowsing()
         }
     }

@@ -47,76 +47,40 @@ class ThreeDotMenuBookmarksRobot {
             return BookmarksRobot.Transition()
         }
 
-        fun clickOpenInNewTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+        fun clickOpenInNewTab(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenInNewTab: Trying to click the \"Open in new tab\" button")
             openInNewTabButton().click()
             Log.i(TAG, "clickOpenInNewTab: Clicked the \"Open in new tab\" button")
 
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
-        fun clickOpenInNewTab(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            Log.i(TAG, "clickOpenInNewTab: Trying to click the \"Open in new tab\" button")
-            openInNewTabButton().click()
-            Log.i(TAG, "clickOpenInNewTab: Clicked the \"Open in new tab\" button")
-
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
-        }
-
-        fun clickOpenInPrivateTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+        fun clickOpenInPrivateTab(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenInPrivateTab: Trying to click the \"Open in private tab\" button")
             openInPrivateTabButton().click()
             Log.i(TAG, "clickOpenInPrivateTab: Clicked the \"Open in private tab\" button")
 
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
-        fun clickOpenInPrivateTab(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            Log.i(TAG, "clickOpenInPrivateTab: Trying to click the \"Open in private tab\" button")
-            openInPrivateTabButton().click()
-            Log.i(TAG, "clickOpenInPrivateTab: Clicked the \"Open in private tab\" button")
-
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
-        }
-
-        fun clickOpenAllInTabs(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+        fun clickOpenAllInTabs(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenAllInTabs: Trying to click the \"Open all in new tabs\" button")
             openAllInTabsButton().click()
             Log.i(TAG, "clickOpenAllInTabs: Clicked the \"Open all in new tabs\" button")
 
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
-        fun clickOpenAllInTabs(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            Log.i(TAG, "clickOpenAllInTabs: Trying to click the \"Open all in new tabs\" button")
-            openAllInTabsButton().click()
-            Log.i(TAG, "clickOpenAllInTabs: Clicked the \"Open all in new tabs\" button")
-
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
-        }
-
-        fun clickOpenAllInPrivateTabs(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+        fun clickOpenAllInPrivateTabs(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickOpenAllInPrivateTabs: Trying to click the \"Open all in private tabs\" button")
             openAllInPrivateTabsButton().click()
             Log.i(TAG, "clickOpenAllInPrivateTabs: Clicked the \"Open all in private tabs\" button")
 
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
-        fun clickOpenAllInPrivateTabs(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            Log.i(TAG, "clickOpenAllInPrivateTabs: Trying to click the \"Open all in private tabs\" button")
-            openAllInPrivateTabsButton().click()
-            Log.i(TAG, "clickOpenAllInPrivateTabs: Clicked the \"Open all in private tabs\" button")
-
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
         fun clickDelete(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {

@@ -39,7 +39,6 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
         AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(
                 skipOnboarding = true,
-                tabsTrayRewriteEnabled = true,
             ),
         ) { it.activity }
 
@@ -98,7 +97,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
             restartApp(composeTestRule.activityRule)
         }
         homeScreen {
-        }.openComposeTabDrawer(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
             verifyNoOpenTabsInNormalBrowsing()
         }
     }

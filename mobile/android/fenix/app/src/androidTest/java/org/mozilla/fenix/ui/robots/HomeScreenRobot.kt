@@ -643,34 +643,19 @@ class HomeScreenRobot {
 
     class Transition {
 
-        fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            Log.i(TAG, "openTabDrawer: Waiting for $waitingTime ms for tab counter button to exist")
-            mDevice.findObject(
-                UiSelector().descriptionContains("open tab. Tap to switch tabs."),
-            ).waitForExists(waitingTime)
-            Log.i(TAG, "openTabDrawer: Waited for $waitingTime ms for tab counter button to exist")
-            Log.i(TAG, "openTabDrawer: Trying to click tab counter button")
-            tabsCounter().click()
-            Log.i(TAG, "openTabDrawer: Clicked tab counter button")
-            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")))
-
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
-        fun openComposeTabDrawer(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            Log.i(TAG, "openComposeTabDrawer: Waiting for device to be idle for $waitingTime ms")
+        fun openTabDrawer(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+            Log.i(TAG, "openTabDrawer: Waiting for device to be idle for $waitingTime ms")
             mDevice.waitForIdle(waitingTime)
-            Log.i(TAG, "openComposeTabDrawer: Device was idle for $waitingTime ms")
-            Log.i(TAG, "openComposeTabDrawer: Trying to click tab counter button")
+            Log.i(TAG, "openTabDrawer: Device was idle for $waitingTime ms")
+            Log.i(TAG, "openTabDrawer: Trying to click tab counter button")
             onView(withId(R.id.tab_button)).click()
-            Log.i(TAG, "openComposeTabDrawer: Clicked tab counter button")
-            Log.i(TAG, "openComposeTabDrawer: Trying to verify the tabs tray exists")
+            Log.i(TAG, "openTabDrawer: Clicked tab counter button")
+            Log.i(TAG, "openTabDrawer: Trying to verify the tabs tray exists")
             composeTestRule.onNodeWithTag(TabsTrayTestTag.tabsTray).assertExists()
-            Log.i(TAG, "openComposeTabDrawer: Verified the tabs tray exists")
+            Log.i(TAG, "openTabDrawer: Verified the tabs tray exists")
 
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
@@ -925,23 +910,13 @@ class HomeScreenRobot {
             return BrowserRobot.Transition()
         }
 
-        fun clickSaveTabsToCollectionButton(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+        fun clickSaveTabsToCollectionButton(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             scrollToElementByText(getStringResource(R.string.no_collections_description2))
             Log.i(TAG, "clickSaveTabsToCollectionButton: Trying to click save tabs to collection button")
             saveTabsToCollectionButton().click()
             Log.i(TAG, "clickSaveTabsToCollectionButton: Clicked save tabs to collection button")
-
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
-        fun clickSaveTabsToCollectionButton(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            scrollToElementByText(getStringResource(R.string.no_collections_description2))
-            Log.i(TAG, "clickSaveTabsToCollectionButton: Trying to click save tabs to collection button")
-            saveTabsToCollectionButton().click()
-            Log.i(TAG, "clickSaveTabsToCollectionButton: Clicked save tabs to collection button")
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
         fun expandCollection(title: String, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
@@ -986,7 +961,7 @@ class HomeScreenRobot {
             return SettingsSubMenuHomepageRobot.Transition()
         }
 
-        fun clickJumpBackInShowAllButton(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+        fun clickJumpBackInShowAllButton(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "clickJumpBackInShowAllButton: Trying to click \"Show all\" button and wait for $waitingTime ms for a new window")
             mDevice
                 .findObject(
@@ -995,21 +970,8 @@ class HomeScreenRobot {
                 ).clickAndWaitForNewWindow(waitingTime)
             Log.i(TAG, "clickJumpBackInShowAllButton: Clicked \"Show all\" button and wait for $waitingTime ms for a new window")
 
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
-        fun clickJumpBackInShowAllButton(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            Log.i(TAG, "clickJumpBackInShowAllButton: Trying to click \"Show all\" button and wait for $waitingTime ms for a new window")
-            mDevice
-                .findObject(
-                    UiSelector()
-                        .textContains(getStringResource(R.string.recent_tabs_show_all)),
-                ).clickAndWaitForNewWindow(waitingTime)
-            Log.i(TAG, "clickJumpBackInShowAllButton: Clicked \"Show all\" button and wait for $waitingTime ms for a new window")
-
-            ComposeTabDrawerRobot(composeTestRule).interact()
-            return ComposeTabDrawerRobot.Transition(composeTestRule)
+            TabDrawerRobot(composeTestRule).interact()
+            return TabDrawerRobot.Transition(composeTestRule)
         }
 
         fun clickPocketStoryItem(publisher: String, position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {

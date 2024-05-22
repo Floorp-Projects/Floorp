@@ -520,7 +520,7 @@ class SettingsSearchTest : TestSetup() {
             verifyClipboardSuggestionsAreDisplayed(link, true)
         }.visitLinkFromClipboard {
             waitForPageToLoad()
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }
         navigationToolbar {
@@ -528,7 +528,7 @@ class SettingsSearchTest : TestSetup() {
             verifyClipboardSuggestionsAreDisplayed(shouldBeDisplayed = false)
         }.goBackToHomeScreen {
             setTextToClipBoard(appContext, link)
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }
         navigationToolbar {
@@ -543,7 +543,7 @@ class SettingsSearchTest : TestSetup() {
             exitMenu()
         }
         homeScreen {
-        }.openTabDrawer {
+        }.openTabDrawer(activityTestRule) {
         }.openNewTab {
         }
         navigationToolbar {
