@@ -94,8 +94,8 @@ If you aren't modifying the Firefox backend, then select one of the
 :ref:`Artifact Mode <Understanding Artifact Builds>` options. If you are
 building Firefox for Android, you should also see the :ref:`GeckoView Contributor Guide <geckoview-contributor-guide>`.
 
-3. Build
---------
+3. Build and Run
+----------------
 
 Now that your system is bootstrapped, you should be able to build!
 
@@ -118,6 +118,15 @@ You can now use the ``./mach run`` command to run your locally built Firefox!
 
 If your build fails, please reference the steps in the `Troubleshooting section <#troubleshooting>`_.
 
+Signing
+~~~~~~~
+
+Code signing your Mac build is not required for local testing and is rarely
+needed for development. The way Firefox is signed does impact functionality
+such as passkey support so it is required in some cases. Generating a build as
+close to a production build as possible requires code signing.
+See :ref:`Signing Local macOS Builds` for more information.
+
 Running outside the development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -127,7 +136,18 @@ To test your changes on another macOS system (or to keep that particular Firefox
 
    ./mach package
 
-Copy the resulting ``.dmg`` file from ``obj-*/dist/`` to the target system, then double-click it as usual to find an ``.app`` bundle containing all dependencies. In newer versions of MacOS you will need to sign the package for this to work using :ref:`Signing Local macOS Builds`.
+Copy the resulting ``.dmg`` file from ``obj-*/dist/`` to the target system,
+then double-click it as usual to find an ``.app`` bundle containing all
+dependencies.
+
+On Apple Silicon Macs, you will need to sign the build for this to work using
+:ref:`Signing Local macOS Builds`.
+
+Once the build has been copied to the target system, open it with
+right-click->Open. The build will not launch by default because it is not
+notarized. In addition to code signing, notarization is required on macOS
+10.15+ for a downloaded app to be launchable by double clicking the app in
+Finder.
 
 Now the fun starts
 ------------------
