@@ -28,6 +28,11 @@ td {
   word-wrap: break-word;
 }
 
+#explanation-dataSize {
+  margin-top: 3em;
+  word-wrap: break-word;
+}
+
 #col-key {
   width: 60%;
 }
