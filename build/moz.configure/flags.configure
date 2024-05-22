@@ -223,6 +223,73 @@ def check_Bsymbolic(enable_asan, building_with_gnu_cc):
 # Using -Wl,-Bsymbolic ensures no exported symbol can be interposed.
 check_and_add_linker_flag("-Wl,-Bsymbolic", when=check_Bsymbolic)
 
+
+# Check what kind of list files are supported by the linker
+@depends(c_compiler, link, linker_ldflags, extra_toolchain_flags)
+@checking("what kind of list files are supported by the linker")
+@imports("os")
+@imports(_from="__builtin__", _import="open")
+@imports(_from="tempfile", _import="mkstemp")
+def expand_libs_list_style(c_compiler, link, linker_flags, extra_flags):
+    objfd, objname = mkstemp(prefix="conftest.", suffix=".o")
+    os.close(objfd)
+
+    listfd, listname = mkstemp(prefix="conftest.", suffix=".list")
+    os.write(listfd, objname.encode())
+    os.close(listfd)
+
+    outfd, outname = mkstemp(prefix="conftest.", suffix=".out")
+    os.close(outfd)
+
+    try:
+        cflags = c_compiler.flags
+
+        if (
+            try_invoke_compiler(
+                # No configure_cache because it would not create the
+                # expected output file.
+                None,
+                [c_compiler.compiler] + cflags,
+                c_compiler.language,
+                "int main() {}",
+                ["-c", "-o", objname],
+                wrapper=c_compiler.wrapper,
+                onerror=lambda: None,
+            )
+            is None
+        ):
+            die("couldn't compile a simple C file")
+
+        ldflags = linker_flags + (extra_flags or [])
+
+        if c_compiler.type == "clang-cl":
+            base_linker_cmd = [link] + ldflags + [f"-OUT:{outname}"]
+        else:
+            base_linker_cmd = [c_compiler.compiler] + cflags + ldflags + ["-o", outname]
+
+        # -filelist is for the OS X linker.  We need to try -filelist
+        # first because clang understands @file, but may pass an
+        # oversized argument list to the linker depending on the
+        # contents of @file.
+        options = [
+            ("linkerlist", f"-Wl,@{listname}"),
+            ("filelist", f"-Wl,@{listname}"),
+            ("list", f"@{listname}"),
+        ]
+        for kind, option in options:
+            linker_cmd = base_linker_cmd + [option]
+            if check_cmd_output(*linker_cmd, onerror=lambda: None) is not None:
+                return kind
+        die("Couldn't find one that works")
+
+    finally:
+        os.remove(objname)
+        os.remove(listname)
+        os.remove(outname)
+
+
+set_config("EXPAND_LIBS_LIST_STYLE", expand_libs_list_style)
+
 # Please keep these last in this file.
 add_old_configure_assignment("_COMPILATION_ASFLAGS", asm_flags.asflags)
 add_old_configure_assignment("_COMPILATION_HOST_ASFLAGS", asm_flags.host_asflags)

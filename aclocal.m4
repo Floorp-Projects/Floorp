@@ -10,7 +10,6 @@ builtin(include, build/autoconf/altoptions.m4)dnl
 builtin(include, build/autoconf/mozprog.m4)dnl
 builtin(include, build/autoconf/mozheader.m4)dnl
 builtin(include, build/autoconf/compiler-opts.m4)dnl
-builtin(include, build/autoconf/expandlibs.m4)dnl
 builtin(include, build/autoconf/arch.m4)dnl
 builtin(include, build/autoconf/android.m4)dnl
 builtin(include, build/autoconf/clang-plugin.m4)dnl
