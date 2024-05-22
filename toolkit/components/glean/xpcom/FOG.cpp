@@ -65,7 +65,6 @@ already_AddRefed<FOG> FOG::GetSingleton() {
   MOZ_LOG(sLog, LogLevel::Debug, ("FOG::GetSingleton()"));
 
   gFOG = new FOG();
-  gFOG->InitMemoryReporter();
 
   if (XRE_IsParentProcess()) {
     nsresult rv;
@@ -107,8 +106,6 @@ already_AddRefed<FOG> FOG::GetSingleton() {
 
 void FOG::Shutdown() {
   MOZ_ASSERT(XRE_IsParentProcess());
-
-  UnregisterWeakMemoryReporter(this);
   glean::impl::fog_shutdown();
 }
 
@@ -421,22 +418,6 @@ FOG::TestRegisterRuntimePing(
   *aPingIdOut = glean::jog::jog_test_register_ping(
       &aName, aIncludeClientId, aSendIfEmpty, aPreciseTimestamps,
       aIncludeInfoSections, aEnabled, &aSchedulesPings, &aReasonCodes);
-  return NS_OK;
-}
-
-void FOG::InitMemoryReporter() { RegisterWeakMemoryReporter(this); }
-
-MOZ_DEFINE_MALLOC_SIZE_OF(FOGMallocSizeOf)
-
-NS_IMETHODIMP
-FOG::CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                    bool aAnonymize) {
-  mozilla::MallocSizeOf aMallocSizeOf = FOGMallocSizeOf;
-
-  MOZ_COLLECT_REPORT("explicit/fog/impl", KIND_HEAP, UNITS_BYTES,
-                     aMallocSizeOf(this),
-                     "Memory used by the FOG core implementation");
-
   return NS_OK;
 }
 
