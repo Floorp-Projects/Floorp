@@ -389,7 +389,11 @@ class AddonTest {
         whenever(metadata.optionalPermissions).thenReturn(listOf("clipboardRead"))
         whenever(metadata.grantedOptionalPermissions).thenReturn(listOf("clipboardRead"))
         whenever(metadata.optionalOrigins).thenReturn(listOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"))
-        whenever(metadata.grantedOptionalOrigins).thenReturn(listOf("*://*.example.com/*"))
+        // NOTE: in grantedOptionalOrigins we are including one host permission that isn't part of the optionaOrigins list
+        // and so it wasn't explicitly listed in the extension manifest.json but  something granted by the user on
+        // an extension call to browser.permissions.request (allowed on the Gecko side because "*://sub.example.com" is a
+        // subset of the "*://*.example.com" host permission, which was explicitly included in the manifest).
+        whenever(metadata.grantedOptionalOrigins).thenReturn(listOf("*://*.example.com/*", "*://sub.example.com/*"))
         whenever(metadata.requiredOrigins).thenReturn(origins)
         whenever(metadata.name).thenReturn(name)
         whenever(metadata.description).thenReturn(description)
@@ -417,7 +421,11 @@ class AddonTest {
             addon.optionalPermissions,
         )
         assertEquals(
-            listOf(Addon.Permission(name = "*://*.example.com/*", granted = true), Addon.Permission(name = "*://opt-host-perm.example.com/*", granted = false)),
+            listOf(
+                Addon.Permission(name = "*://*.example.com/*", granted = true),
+                Addon.Permission(name = "*://opt-host-perm.example.com/*", granted = false),
+                Addon.Permission(name = "*://sub.example.com/*", granted = true),
+            ),
             addon.optionalOrigins,
         )
         assertEquals("", addon.updatedAt)

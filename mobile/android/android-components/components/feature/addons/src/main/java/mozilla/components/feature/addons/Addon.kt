@@ -435,12 +435,15 @@ data class Addon(
                 )
             } ?: emptyList()
 
-            val optionalOrigins = metadata?.optionalOrigins?.map { origin ->
+            val allOrigins = metadata?.optionalOrigins?.toMutableSet() ?: mutableSetOf()
+            allOrigins.addAll(grantedOptionalOrigins)
+
+            val optionalOrigins = allOrigins.map { origin ->
                 Permission(
                     name = origin,
                     granted = grantedOptionalOrigins.contains(origin),
                 )
-            } ?: emptyList()
+            }
 
             return Addon(
                 id = extension.id,
