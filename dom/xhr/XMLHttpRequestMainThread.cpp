@@ -3542,7 +3542,6 @@ XMLHttpRequestMainThread::AsyncOnChannelRedirect(
   // we need to strip Authentication headers for cross-origin requests
   // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
   bool stripAuth =
-      StaticPrefs::network_fetch_redirect_stripAuthHeader() &&
       NS_ShouldRemoveAuthHeaderOnRedirect(aOldChannel, aNewChannel, aFlags);
 
   OnRedirectVerifyCallback(NS_OK, stripAuth);
