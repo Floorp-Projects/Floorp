@@ -223,6 +223,42 @@ class AppLinksFeatureTest {
     }
 
     @Test
+    fun `WHEN non-custom tab and caller is the same as external app THEN an external app dialog is shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab =
+            createCustomTab(
+                id = "d",
+                url = webUrl,
+                source = SessionState.Source.External.ActionView(
+                    ExternalPackage("com.zxing.app", PackageCategory.PRODUCTIVITY),
+                ),
+            )
+
+        val appIntent: Intent = mock()
+        val componentName: ComponentName = mock()
+        doReturn(componentName).`when`(appIntent).component
+        doReturn("com.zxing.app").`when`(componentName).packageName
+
+        feature.handleAppIntent(tab, intentUrl, appIntent)
+
+        verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
+        verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any())
+    }
+
+    @Test
     fun `WHEN should prompt and in private mode THEN an external app dialog is shown`() {
         feature = spy(
             AppLinksFeature(
