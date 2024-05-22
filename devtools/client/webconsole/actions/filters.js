@@ -24,12 +24,18 @@ function filterTextSet(text) {
 }
 
 function filterToggle(filter) {
-  return ({ dispatch, getState, prefsService }) => {
+  return async ({ dispatch, getState, webConsoleUI, prefsService }) => {
+    // When enabling CSS Warning message, we have to start listening for it
+    let filterState = getAllFilters(getState());
+    if (filter == FILTERS.CSS && !filterState[FILTERS.CSS]) {
+      await webConsoleUI.watchCssMessages();
+    }
+
     dispatch({
       type: FILTER_TOGGLE,
       filter,
     });
-    const filterState = getAllFilters(getState());
+    filterState = getAllFilters(getState());
     prefsService.setBoolPref(
       PREFS.FILTER[filter.toUpperCase()],
       filterState[filter]
