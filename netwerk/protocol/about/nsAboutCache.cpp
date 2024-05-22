@@ -96,11 +96,7 @@ nsresult nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
 
   if (!mOverview) {
     mBuffer.AppendLiteral(
-        "<a href=\"about:cache?storage=\">Back to overview</a>\n");
-    mBuffer.AppendLiteral(
-        "<p id=\"explanation-dataSize\">Data sizes refer to the size of the "
-        "response body and do not reflect the amount of disk space that the "
-        "file occupies.</p>\n");
+        "<a href=\"about:cache?storage=\">Back to overview</a>");
   }
 
   rv = FlushBuffer();
