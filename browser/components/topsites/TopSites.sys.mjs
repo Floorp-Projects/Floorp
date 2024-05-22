@@ -18,7 +18,6 @@ import {
   CUSTOM_SEARCH_SHORTCUTS,
   SEARCH_SHORTCUTS_EXPERIMENT,
   SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
-  SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
   checkHasSearchEngine,
   getSearchProvider,
   getSearchFormURL,
@@ -44,7 +43,6 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
 });
 
 const DEFAULT_SITES_PREF = "default.sites";
-const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 export const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
@@ -55,6 +53,19 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
   "faviconSize",
 ];
 const ROWS_PREF = "topSitesRows";
+
+// Preferences
+const FEEDS_TOPSITES_PREF = "browser.newtabpage.activity-stream.feeds.topsites";
+const NO_DEFAULT_SEARCH_TILE_PREF =
+  "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile";
+const SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
+  "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.havePinned";
+// TODO: Rename this when re-subscribing to the search engines pref.
+const SEARCH_SHORTCUTS_ENGINES =
+  "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.searchEngines";
+const TOP_SITE_SEARCH_SHORTCUTS_PREF =
+  "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts";
+const TOP_SITES_ROWS_PREF = "browser.newtabpage.activity-stream.topSitesRows";
 
 // Search experiment stuff
 const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
@@ -131,7 +142,7 @@ class _TopSites {
         // We also need to drop search shortcuts when their engine gets removed / hidden.
         if (
           data === "engine-default" &&
-          this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF]
+          Services.prefs.getBoolPref(NO_DEFAULT_SEARCH_TILE_PREF, true)
         ) {
           delete this._currentSearchHostname;
           this._currentSearchHostname = getShortURLForCurrentSearch();
@@ -164,10 +175,8 @@ class _TopSites {
     this._useRemoteSetting = false;
 
     if (!Services.prefs.getBoolPref(REMOTE_SETTING_DEFAULTS_PREF)) {
-      this.refreshDefaults(
-        this.store.getState().Prefs.values[DEFAULT_SITES_PREF],
-        { isStartup }
-      );
+      let sites = Services.prefs.getStringPref(DEFAULT_SITES_OVERRIDE_PREF, "");
+      this.refreshDefaults(sites, { isStartup });
       return;
     }
 
@@ -338,7 +347,7 @@ class _TopSites {
    */
   shouldFilterSearchTile(hostname) {
     if (
-      this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF] &&
+      Services.prefs.getBoolPref(NO_DEFAULT_SEARCH_TILE_PREF, true) &&
       (SEARCH_FILTERS.includes(hostname) ||
         hostname === this._currentSearchHostname)
     ) {
@@ -356,19 +365,17 @@ class _TopSites {
    */
   async _maybeInsertSearchShortcuts(plainPinnedSites) {
     // Only insert shortcuts if the experiment is running
-    if (this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT]) {
+    if (Services.prefs.getBoolPref(TOP_SITE_SEARCH_SHORTCUTS_PREF, true)) {
       // We don't want to insert shortcuts we've previously inserted
-      const prevInsertedShortcuts = this.store
-        .getState()
-        .Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF].split(",")
+      const prevInsertedShortcuts = Services.prefs
+        .getStringPref(SEARCH_SHORTCUTS_HAVE_PINNED_PREF, "")
+        .split(",")
         .filter(s => s); // Filter out empty strings
       const newInsertedShortcuts = [];
 
       let shouldPin = this._useRemoteSetting
         ? DEFAULT_TOP_SITES.filter(s => s.searchTopSite).map(s => s.hostname)
-        : this.store
-            .getState()
-            .Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF].split(",");
+        : Services.prefs.getStringPref(SEARCH_SHORTCUTS_ENGINES, "").split(",");
       shouldPin = shouldPin
         .map(getSearchProvider)
         .filter(s => s && s.shortURL !== this._currentSearchHostname);
@@ -383,7 +390,7 @@ class _TopSites {
       }
 
       const numberOfSlots =
-        this.store.getState().Prefs.values[ROWS_PREF] *
+        Services.prefs.getIntPref(TOP_SITES_ROWS_PREF, 1) *
         TOP_SITES_MAX_SITES_PER_ROW;
 
       // The plainPinnedSites array is populated with pinned sites at their
@@ -417,11 +424,9 @@ class _TopSites {
       }
 
       if (newInsertedShortcuts.length) {
-        this.store.dispatch(
-          ac.SetPref(
-            SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
-            prevInsertedShortcuts.concat(newInsertedShortcuts).join(",")
-          )
+        Services.prefs.setStringPref(
+          SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+          prevInsertedShortcuts.concat(newInsertedShortcuts).join(",")
         );
         return true;
       }
@@ -432,9 +437,13 @@ class _TopSites {
 
   // eslint-disable-next-line max-statements
   async getLinksWithDefaults(isStartup = false) {
-    const prefValues = this.store.getState().Prefs.values;
-    const numItems = prefValues[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
-    const searchShortcutsExperiment = prefValues[SEARCH_SHORTCUTS_EXPERIMENT];
+    const numItems =
+      Services.prefs.getIntPref(TOP_SITES_ROWS_PREF, 1) *
+      TOP_SITES_MAX_SITES_PER_ROW;
+    const searchShortcutsExperiment = Services.prefs.getBoolPref(
+      TOP_SITE_SEARCH_SHORTCUTS_PREF,
+      true
+    );
     // We must wait for search services to initialize in order to access default
     // search engine properties without triggering a synchronous initialization
     try {
@@ -687,7 +696,12 @@ class _TopSites {
   }
 
   async updateCustomSearchShortcuts(isStartup = false) {
-    if (!this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT]) {
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+        true
+      )
+    ) {
       return;
     }
 
@@ -717,6 +731,12 @@ class _TopSites {
         },
       })
     );
+    if (Cu.isInAutomation) {
+      Services.obs.notifyObservers(
+        null,
+        "topsites-updated-custom-search-shortcuts"
+      );
+    }
   }
 
   async topSiteToSearchTopSite(site) {
@@ -768,7 +788,7 @@ class _TopSites {
     // We shouldn't bother caching screenshots if they won't be shown.
     if (
       link.screenshot ||
-      !this.store.getState().Prefs.values[SHOWN_ON_NEWTAB_PREF]
+      !Services.prefs.getBoolPref(FEEDS_TOPSITES_PREF, true)
     ) {
       return;
     }
@@ -893,9 +913,7 @@ class _TopSites {
   }
 
   unpinAllSearchShortcuts() {
-    Services.prefs.clearUserPref(
-      `browser.newtabpage.activity-stream.${SEARCH_SHORTCUTS_HAVE_PINNED_PREF}`
-    );
+    Services.prefs.clearUserPref(SEARCH_SHORTCUTS_HAVE_PINNED_PREF);
     for (let pinnedLink of lazy.NewTabUtils.pinnedLinks.links) {
       if (pinnedLink && pinnedLink.searchTopSite) {
         lazy.NewTabUtils.pinnedLinks.unpin(pinnedLink);
@@ -914,14 +932,13 @@ class _TopSites {
         lazy.NewTabUtils.pinnedLinks.unpin(pinnedLink);
         this.pinnedCache.expire();
 
-        const prevInsertedShortcuts = this.store
-          .getState()
-          .Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF].split(",");
-        this.store.dispatch(
-          ac.SetPref(
-            SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
-            prevInsertedShortcuts.filter(s => s !== vendor).join(",")
-          )
+        const prevInsertedShortcuts = Services.prefs.getStringPref(
+          SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+          ""
+        );
+        Services.prefs.setStringPref(
+          SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+          prevInsertedShortcuts.filter(s => s !== vendor).join(",")
         );
         break;
       }
@@ -963,7 +980,7 @@ class _TopSites {
     // we can end up with a bunch of pinned sites that can never be unpinned again
     // from the UI.
     const topSitesCount =
-      this.store.getState().Prefs.values[ROWS_PREF] *
+      Services.prefs.getIntPref(TOP_SITES_ROWS_PREF, 1) *
       TOP_SITES_MAX_SITES_PER_ROW;
     if (index >= topSitesCount) {
       return;
@@ -1016,7 +1033,7 @@ class _TopSites {
       index,
       action.data.draggedFromIndex !== undefined
         ? action.data.draggedFromIndex
-        : this.store.getState().Prefs.values[ROWS_PREF] *
+        : Services.prefs.getIntPref(TOP_SITES_ROWS_PREF, 1) *
             TOP_SITES_MAX_SITES_PER_ROW
     );
 
@@ -1032,7 +1049,7 @@ class _TopSites {
 
     // Pin the addedShortcuts.
     const numberOfSlots =
-      this.store.getState().Prefs.values[ROWS_PREF] *
+      Services.prefs.getIntPref(TOP_SITES_ROWS_PREF, 1) *
       TOP_SITES_MAX_SITES_PER_ROW;
     addedShortcuts.forEach(shortcut => {
       // Find first hole in pinnedLinks.
