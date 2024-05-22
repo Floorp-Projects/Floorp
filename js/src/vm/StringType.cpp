@@ -1518,8 +1518,6 @@ bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
     return false;
   }
 
-  linearString->setDependedOn();
-
   MOZ_ASSERT(state_ == Uninitialized);
   length_ = linearString->length();
 
@@ -1549,8 +1547,6 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
   if (!linearString) {
     return false;
   }
-
-  linearString->setDependedOn();
 
   MOZ_ASSERT(state_ == Uninitialized);
   length_ = linearString->length();
