@@ -192,20 +192,6 @@ ImageContainer::ImageContainer(Mode flag)
   }
 }
 
-ImageContainer::ImageContainer(const CompositableHandle& aHandle)
-    : mRecursiveMutex("ImageContainer.mRecursiveMutex"),
-      mGenerationCounter(++sGenerationCounter),
-      mPaintCount(0),
-      mDroppedImageCount(0),
-      mImageFactory(nullptr),
-      mRotation(VideoRotation::kDegree_0),
-      mRecycleBin(nullptr),
-      mIsAsync(true),
-      mAsyncContainerHandle(aHandle),
-      mCurrentProducerID(-1) {
-  MOZ_ASSERT(mAsyncContainerHandle);
-}
-
 ImageContainer::~ImageContainer() {
   if (mNotifyCompositeListener) {
     mNotifyCompositeListener->ClearImageContainer();
