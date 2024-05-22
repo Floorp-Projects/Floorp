@@ -96,11 +96,11 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         DEFINES["ANDROID_NDK_MAJOR_VERSION"] = CONFIG["ANDROID_NDK_MAJOR_VERSION"]
         DEFINES["ANDROID_NDK_MINOR_VERSION"] = CONFIG["ANDROID_NDK_MINOR_VERSION"]
         DEFINES["ANDROID_PACKAGE_NAME"] = '"%s"' % CONFIG["ANDROID_PACKAGE_NAME"]
-        # NDK5 workarounds
-        DEFINES["_STLP_CONST_CONSTRUCTOR_BUG"] = True
-        DEFINES["_STLP_NO_MEMBER_TEMPLATES"] = True
         LOCAL_INCLUDES += [
             "/toolkit/crashreporter/google-breakpad/src/common/android/include",
+        ]
+        UNIFIED_SOURCES += [
+            "bionic_missing_funcs.cpp",
         ]
 
     DEFINES["UNICODE"] = True
