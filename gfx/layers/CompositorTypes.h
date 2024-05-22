@@ -148,6 +148,20 @@ enum class CompositableType : uint8_t {
   COUNT
 };
 
+enum class ImageUsageType : uint8_t {
+  UNKNOWN,
+  WebRenderImageData,
+  WebRenderFallbackData,
+  Canvas,
+  OffscreenCanvas,
+  VideoFrameContainer,
+  RemoteVideoDecoder,
+  BlackImage,
+  Webrtc,
+  WebCodecs,
+  COUNT
+};
+
 /**
  * Sent from the compositor to the content-side LayerManager, includes
  * properties of the compositor and should (in the future) include information
@@ -223,15 +237,19 @@ struct TextureFactoryIdentifier {
  */
 struct TextureInfo {
   CompositableType mCompositableType;
+  ImageUsageType mUsageType;
   TextureFlags mTextureFlags;
 
   TextureInfo()
       : mCompositableType(CompositableType::UNKNOWN),
+        mUsageType(ImageUsageType::UNKNOWN),
         mTextureFlags(TextureFlags::NO_FLAGS) {}
 
-  explicit TextureInfo(CompositableType aType,
-                       TextureFlags aTextureFlags = TextureFlags::DEFAULT)
-      : mCompositableType(aType), mTextureFlags(aTextureFlags) {}
+  TextureInfo(CompositableType aType, ImageUsageType aUsageType,
+              TextureFlags aTextureFlags)
+      : mCompositableType(aType),
+        mUsageType(aUsageType),
+        mTextureFlags(aTextureFlags) {}
 
   bool operator==(const TextureInfo& aOther) const {
     return mCompositableType == aOther.mCompositableType &&

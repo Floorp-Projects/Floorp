@@ -202,7 +202,7 @@ void MediaEngineRemoteVideoSource::SetTrack(const RefPtr<MediaTrack>& aTrack,
 
   if (!mImageContainer) {
     mImageContainer = MakeAndAddRef<layers::ImageContainer>(
-        layers::ImageContainer::ASYNCHRONOUS);
+        layers::ImageUsageType::Webrtc, layers::ImageContainer::ASYNCHRONOUS);
   }
 
   {

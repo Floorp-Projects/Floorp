@@ -235,7 +235,8 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
 void WebRenderImageData::CreateImageClientIfNeeded() {
   if (!mImageClient) {
     mImageClient = ImageClient::CreateImageClient(
-        CompositableType::IMAGE, WrBridge(), TextureFlags::DEFAULT);
+        CompositableType::IMAGE, ImageUsageType::WebRenderImageData, WrBridge(),
+        TextureFlags::DEFAULT);
     if (!mImageClient) {
       return;
     }
@@ -399,7 +400,8 @@ void WebRenderCanvasData::SetImageContainer(ImageContainer* aImageContainer) {
 
 ImageContainer* WebRenderCanvasData::GetImageContainer() {
   if (!mContainer) {
-    mContainer = MakeAndAddRef<ImageContainer>();
+    mContainer = MakeAndAddRef<ImageContainer>(ImageUsageType::Canvas,
+                                               ImageContainer::SYNCHRONOUS);
   }
   return mContainer;
 }

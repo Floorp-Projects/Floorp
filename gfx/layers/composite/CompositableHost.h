@@ -100,9 +100,9 @@ class CompositableHost {
 
   virtual uint32_t GetDroppedFrames() { return 0; }
 
+  const TextureInfo mTextureInfo;
+
  protected:
- protected:
-  TextureInfo mTextureInfo;
   AsyncCompositableRef mAsyncRef;
 };
 

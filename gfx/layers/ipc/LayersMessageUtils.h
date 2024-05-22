@@ -668,11 +668,13 @@ struct ParamTraits<mozilla::layers::TextureInfo> {
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mCompositableType);
+    WriteParam(aWriter, aParam.mUsageType);
     WriteParam(aWriter, aParam.mTextureFlags);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mCompositableType) &&
+           ReadParam(aReader, &aResult->mUsageType) &&
            ReadParam(aReader, &aResult->mTextureFlags);
   }
 };
@@ -683,6 +685,13 @@ struct ParamTraits<mozilla::layers::CompositableType>
           mozilla::layers::CompositableType,
           mozilla::layers::CompositableType::UNKNOWN,
           mozilla::layers::CompositableType::COUNT> {};
+
+template <>
+struct ParamTraits<mozilla::layers::ImageUsageType>
+    : public ContiguousEnumSerializer<mozilla::layers::ImageUsageType,
+                                      mozilla::layers::ImageUsageType::UNKNOWN,
+                                      mozilla::layers::ImageUsageType::COUNT> {
+};
 
 template <>
 struct ParamTraits<mozilla::layers::ScrollableLayerGuid> {

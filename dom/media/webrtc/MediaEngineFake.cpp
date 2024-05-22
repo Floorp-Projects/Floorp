@@ -299,7 +299,7 @@ nsresult MediaEngineFakeVideoSource::Start() {
 
   if (!mImageContainer) {
     mImageContainer = MakeAndAddRef<layers::ImageContainer>(
-        layers::ImageContainer::ASYNCHRONOUS);
+        layers::ImageUsageType::Webrtc, layers::ImageContainer::ASYNCHRONOUS);
   }
 
   // Start timer for subsequent frames

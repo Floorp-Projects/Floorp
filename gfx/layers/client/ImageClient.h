@@ -41,8 +41,8 @@ class ImageClient : public CompositableClient {
    * host.
    */
   static already_AddRefed<ImageClient> CreateImageClient(
-      CompositableType aImageHostType, CompositableForwarder* aFwd,
-      TextureFlags aFlags);
+      CompositableType aImageHostType, ImageUsageType aUsageType,
+      CompositableForwarder* aFwd, TextureFlags aFlags);
 
   virtual ~ImageClient() = default;
 
@@ -72,11 +72,13 @@ class ImageClient : public CompositableClient {
 
   virtual RefPtr<TextureClient> GetForwardedTexture() { return nullptr; }
 
+  CompositableType mType;
+  ImageUsageType mUsageType;
+
  protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
-              CompositableType aType);
+              CompositableType aType, ImageUsageType aUsageType);
 
-  CompositableType mType;
   uint32_t mLastUpdateGenerationCounter;
 };
 
@@ -86,7 +88,7 @@ class ImageClient : public CompositableClient {
 class ImageClientSingle : public ImageClient {
  public:
   ImageClientSingle(CompositableForwarder* aFwd, TextureFlags aFlags,
-                    CompositableType aType);
+                    CompositableType aType, ImageUsageType aUsageType);
 
   bool UpdateImage(ImageContainer* aContainer) override;
 
