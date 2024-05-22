@@ -372,10 +372,9 @@ export class WorkerTargetWatcherClass {
     }
 
     if (dbg.type === TYPE_SHARED) {
-      // We still don't fully support instantiating targets for shared workers from the server side
-      throw new Error(
-        "Server side listening for shared workers isn't supported"
-      );
+      // Don't expose shared workers when debugging a tab.
+      // For now, they are only exposed in the browser toolbox, when Session Context Type is set to "all".
+      return false;
     }
 
     return false;
