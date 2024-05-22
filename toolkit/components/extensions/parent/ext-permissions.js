@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 function normalizePermissions(perms) {
   perms = { ...perms };
   perms.permissions = perms.permissions.filter(
-    perm => !perm.startsWith("internal:")
+    perm => !perm.startsWith("internal:") && perm !== "<all_urls>"
   );
   return perms;
 }
