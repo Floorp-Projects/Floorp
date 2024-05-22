@@ -8,6 +8,7 @@
 #[macro_use]
 mod macros;
 
+mod audio_dump;
 mod callbacks;
 mod channel;
 mod context;
@@ -19,6 +20,7 @@ mod mixer;
 mod resampler;
 mod stream;
 
+pub use audio_dump::*;
 pub use callbacks::*;
 pub use channel::*;
 pub use context::*;

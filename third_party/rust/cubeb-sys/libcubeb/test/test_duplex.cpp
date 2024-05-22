@@ -201,6 +201,7 @@ TEST(cubeb, duplex_collection_change)
   ASSERT_EQ(r, CUBEB_OK);
 }
 
+#ifdef GTEST_HAS_DEATH_TEST
 TEST(cubeb, duplex_collection_change_no_unregister)
 {
   cubeb * ctx;
@@ -221,6 +222,7 @@ TEST(cubeb, duplex_collection_change_no_unregister)
 
   duplex_collection_change_impl(ctx);
 }
+#endif
 
 long
 data_cb_input(cubeb_stream * stream, void * user, const void * inputbuffer,

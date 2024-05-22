@@ -6,7 +6,6 @@
 use ffi;
 use {ChannelLayout, SampleFormat, StreamParams, StreamPrefs};
 
-///
 #[derive(Debug)]
 pub struct StreamParamsBuilder(ffi::cubeb_stream_params);
 

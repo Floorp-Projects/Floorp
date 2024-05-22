@@ -283,7 +283,7 @@ pub struct PulseStream<'ctx> {
 }
 
 impl<'ctx> PulseStream<'ctx> {
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         context: &'ctx PulseContext,
         stream_name: Option<&CStr>,
@@ -447,9 +447,9 @@ impl<'ctx> PulseStream<'ctx> {
                             latency_frames * stm.output_sample_spec.frame_size() as u32;
 
                         let battr = pa_buffer_attr {
-                            maxlength: u32::max_value(),
-                            prebuf: u32::max_value(),
-                            fragsize: u32::max_value(),
+                            maxlength: u32::MAX,
+                            prebuf: u32::MAX,
+                            fragsize: u32::MAX,
                             tlength: buffer_size_bytes * 2,
                             minreq: buffer_size_bytes / 4,
                         };
@@ -490,8 +490,8 @@ impl<'ctx> PulseStream<'ctx> {
                         let buffer_size_bytes =
                             latency_frames * stm.input_sample_spec.frame_size() as u32;
                         let battr = pa_buffer_attr {
-                            maxlength: u32::max_value(),
-                            prebuf: u32::max_value(),
+                            maxlength: u32::MAX,
+                            prebuf: u32::MAX,
                             fragsize: buffer_size_bytes,
                             tlength: buffer_size_bytes,
                             minreq: buffer_size_bytes,
@@ -1033,7 +1033,7 @@ impl<'ctx> PulseStream<'ctx> {
         true
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
+    #[allow(clippy::cognitive_complexity)]
     fn trigger_user_callback(&mut self, input_data: *const c_void, nbytes: usize) {
         fn drained_cb(
             a: &pulse::MainloopApi,
@@ -1074,7 +1074,7 @@ impl<'ctx> PulseStream<'ctx> {
                             read_offset
                         );
                         let read_ptr = unsafe { (input_data as *const u8).add(read_offset) };
-                        #[cfg_attr(feature = "cargo-clippy", allow(clippy::unnecessary_cast))]
+                        #[allow(clippy::unnecessary_cast)]
                         let mut got = unsafe {
                             self.data_callback.unwrap()(
                                 self as *const _ as *mut _,
