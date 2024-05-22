@@ -3357,17 +3357,16 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
   const { descriptor, state, oneRealm = false } = cmd.parameters;
   const browsingContext = lazy.assert.open(this.getBrowsingContext());
 
-  lazy.permissions.validatePermission(descriptor.name);
+  lazy.permissions.validateDescriptor(descriptor);
+  lazy.permissions.validateState(state);
 
   // Bug 1878741: Allowing this permission causes timing related Android crash.
-  if (descriptor.name === "notifications") {
-    if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
-      // Okay, do nothing. The notifications module will work without permission.
-      return;
-    }
-    throw new lazy.error.UnsupportedOperationError(
-      `Setting "descriptor.name" "notifications" expected "notification.prompt.testing" preference to be set`
-    );
+  if (
+    descriptor.name === "notifications" &&
+    lazy.permissions.isNotificationPreferenceSet()
+  ) {
+    // Okay, do nothing. The notifications module will work without permission.
+    return;
   }
 
   let params;

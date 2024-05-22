@@ -14,12 +14,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
 });
 
-export const PermissionState = {
-  denied: "denied",
-  granted: "granted",
-  prompt: "prompt",
-};
-
 class PermissionsModule extends Module {
   constructor(messageHandler) {
     super(messageHandler);
@@ -65,27 +59,17 @@ class PermissionsModule extends Module {
       userContext: userContextId = null,
     } = options;
 
-    lazy.assert.object(
-      descriptor,
-      `Expected "descriptor" to be an object, got ${descriptor}`
-    );
-    const permissionName = descriptor.name;
-    lazy.assert.string(
-      permissionName,
-      `Expected "descriptor.name" to be a string, got ${permissionName}`
-    );
+    lazy.permissions.validateDescriptor(descriptor);
 
-    lazy.permissions.validatePermission(permissionName);
+    const permissionName = descriptor.name;
 
     // Bug 1878741: Allowing this permission causes timing related Android crash.
-    if (descriptor.name === "notifications") {
-      if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
-        // Okay, do nothing. The notifications module will work without permission.
-        return;
-      }
-      throw new lazy.error.UnsupportedOperationError(
-        `Setting "descriptor.name" "notifications" expected "notification.prompt.testing" preference to be set`
-      );
+    if (
+      permissionName === "notifications" &&
+      lazy.permissions.isNotificationPreferenceSet()
+    ) {
+      // Okay, do nothing. The notifications module will work without permission.
+      return;
     }
 
     if (permissionName === "storage-access") {
@@ -95,11 +79,7 @@ class PermissionsModule extends Module {
       );
     }
 
-    const permissionStateTypes = Object.keys(PermissionState);
-    lazy.assert.that(
-      state => permissionStateTypes.includes(state),
-      `Expected "state" to be one of ${permissionStateTypes}, got ${state}`
-    )(state);
+    lazy.permissions.validateState(state);
 
     lazy.assert.string(
       origin,
