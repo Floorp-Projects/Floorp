@@ -7,6 +7,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  DevToolsSocketStatus:
+    "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -229,22 +231,32 @@ export class BackgroundTasksManager {
       if (taskModule.backgroundTaskTimeoutSec) {
         timingSettings.maxTaskRuntimeSec = taskModule.backgroundTaskTimeoutSec;
       }
-
       try {
         let minimumReached = false;
-        let minRuntime = new Promise(resolve =>
-          lazy.setTimeout(() => {
-            minimumReached = true;
-            resolve(true);
-          }, timingSettings.minTaskRuntimeMS)
-        );
-        exitCode = await Promise.race([
-          new Promise(resolve =>
+        let minRuntime;
+        let maxRuntime;
+        if (lazy.DevToolsSocketStatus.hasSocketOpened()) {
+          lazy.log.info(
+            `Setting background task timeout period to indefinite because a DevTools server is listening.`
+          );
+          minimumReached = true;
+          maxRuntime = new Promise(() => {});
+        } else {
+          minRuntime = new Promise(resolve =>
+            lazy.setTimeout(() => {
+              minimumReached = true;
+              resolve(true);
+            }, timingSettings.minTaskRuntimeMS)
+          );
+          maxRuntime = new Promise(resolve =>
             lazy.setTimeout(() => {
               lazy.log.error(`Background task named '${name}' timed out`);
               resolve(EXIT_CODE.TIMEOUT);
             }, timingSettings.maxTaskRuntimeSec * 1000)
-          ),
+          );
+        }
+        exitCode = await Promise.race([
+          maxRuntime,
           taskModule.runBackgroundTask(commandLine),
         ]);
         if (!minimumReached) {
