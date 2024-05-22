@@ -231,6 +231,7 @@
   skin/classic/browser/tabbrowser/tab-connecting.png           (../shared/tabbrowser/tab-connecting.png)
   skin/classic/browser/tabbrowser/tab-connecting@2x.png        (../shared/tabbrowser/tab-connecting@2x.png)
   skin/classic/browser/tabbrowser/tab-drag-indicator.svg       (../shared/tabbrowser/tab-drag-indicator.svg)
+  skin/classic/browser/tabbrowser/tab-hover-preview.css        (../shared/tabbrowser/tab-hover-preview.css)
   skin/classic/browser/tabbrowser/tab-loading.png              (../shared/tabbrowser/tab-loading.png)
   skin/classic/browser/tabbrowser/tab-loading@2x.png           (../shared/tabbrowser/tab-loading@2x.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted.png     (../shared/tabbrowser/tab-loading-inverted.png)

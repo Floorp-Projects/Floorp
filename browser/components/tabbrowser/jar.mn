@@ -7,5 +7,6 @@ browser.jar:
    content/browser/tabbrowser/browser-ctrlTab.js     (content/browser-ctrlTab.js)
    content/browser/tabbrowser/browser-fullZoom.js    (content/browser-fullZoom.js)
    content/browser/tabbrowser/tab.js                 (content/tab.js)
+   content/browser/tabbrowser/tab-hover-preview.mjs  (content/tab-hover-preview.mjs)
    content/browser/tabbrowser/tabbrowser.js          (content/tabbrowser.js)
    content/browser/tabbrowser/tabs.js                (content/tabs.js)
