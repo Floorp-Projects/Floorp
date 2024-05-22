@@ -90,6 +90,9 @@ function getShortURLForCurrentSearch() {
 }
 
 class _TopSites {
+  #inited = false;
+  #sites = [];
+
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
     ChromeUtils.defineLazyGetter(
@@ -115,18 +118,25 @@ class _TopSites {
     lazy.PageThumbs.addExpirationFilter(this);
   }
 
-  init() {
+  async init() {
+    if (this.#inited) {
+      return;
+    }
+    this.#inited = true;
     lazy.log.debug("Initializing TopSites.");
     // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
-    this._readDefaults({ isStartup: true });
     Services.obs.addObserver(this, "browser-search-engine-modified");
     Services.obs.addObserver(this, "browser-region-updated");
     Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    await this._readDefaults({ isStartup: true });
   }
 
   uninit() {
+    if (!this.#inited) {
+      return;
+    }
     lazy.log.debug("Un-initializing TopSites.");
     lazy.PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
@@ -134,6 +144,15 @@ class _TopSites {
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    this.#sites = [];
+    this.#inited = false;
+  }
+
+  _reset() {
+    // Allow automated tests to reset the internal state of the component.
+    if (Cu.isInAutomation) {
+      this.#sites = [];
+    }
   }
 
   observe(subj, topic, data) {
@@ -166,6 +185,23 @@ class _TopSites {
     }
   }
 
+  /**
+   * Returns a copied version of non-sponsored Top Sites. It will initialize
+   * the component if it hasn't been already in order to set up and cache the
+   * list, which will include pinned sites and search shortcuts. The number of
+   * Top Sites returned is based on the number shown on New Tab due to the fact
+   * it is the interface in which sites can be pinned/removed.
+   *
+   * @returns {Array<object>}
+   *   A list of Top Sites.
+   */
+  async getSites() {
+    if (!this.#inited) {
+      await this.init();
+    }
+    return structuredClone(this.#sites);
+  }
+
   _dedupeKey(site) {
     return site && site.hostname;
   }
@@ -178,7 +214,7 @@ class _TopSites {
 
     if (!Services.prefs.getBoolPref(REMOTE_SETTING_DEFAULTS_PREF)) {
       let sites = Services.prefs.getStringPref(DEFAULT_SITES_OVERRIDE_PREF, "");
-      this.refreshDefaults(sites, { isStartup });
+      await this.refreshDefaults(sites, { isStartup });
       return;
     }
 
@@ -190,7 +226,7 @@ class _TopSites {
       Cu.isInAutomation
     ) {
       let sites = Services.prefs.getStringPref(DEFAULT_SITES_OVERRIDE_PREF, "");
-      this.refreshDefaults(sites, { isStartup });
+      await this.refreshDefaults(sites, { isStartup });
       return;
     }
 
@@ -221,10 +257,10 @@ class _TopSites {
       DEFAULT_TOP_SITES.push(link);
     }
 
-    this.refresh({ broadcast: true, isStartup });
+    await this.refresh({ isStartup });
   }
 
-  refreshDefaults(sites, { isStartup = false } = {}) {
+  async refreshDefaults(sites, { isStartup = false } = {}) {
     // Clear out the array of any previous defaults
     DEFAULT_TOP_SITES.length = 0;
 
@@ -240,7 +276,7 @@ class _TopSites {
       }
     }
 
-    this.refresh({ broadcast: true, isStartup });
+    await this.refresh({ isStartup });
   }
 
   async _getRemoteConfig(firstTime = true) {
@@ -439,6 +475,9 @@ class _TopSites {
 
   // eslint-disable-next-line max-statements
   async getLinksWithDefaults(isStartup = false) {
+    // Clear the previous sites.
+    this.#sites = [];
+
     const numItems =
       Services.prefs.getIntPref(TOP_SITES_ROWS_PREF, 1) *
       TOP_SITES_MAX_SITES_PER_ROW;
@@ -618,7 +657,7 @@ class _TopSites {
       }
     }
 
-    this._linksWithDefaults = withPinned;
+    this.#sites = withPinned;
 
     return withPinned;
   }
@@ -651,7 +690,6 @@ class _TopSites {
    * Refresh the top sites data for content.
    *
    * @param {object} options
-   * @param {bool} options.broadcast Should the update be broadcasted.
    * @param {bool} options.isStartup Being called while TopSitesFeed is initting.
    */
   async refresh(options = {}) {
@@ -670,31 +708,11 @@ class _TopSites {
       await this._tippyTopProvider.init();
     }
 
-    const links = await this.getLinksWithDefaults({
+    await this.getLinksWithDefaults({
       isStartup: options.isStartup,
     });
-    const newAction = {
-      type: at.TOP_SITES_UPDATED,
-      data: { links },
-    };
-
-    if (options.isStartup) {
-      newAction.meta = {
-        isStartup: true,
-      };
-    }
-
-    if (options.broadcast) {
-      // Broadcast an update to all open content pages
-      this.store.dispatch(ac.BroadcastToContent(newAction));
-    } else {
-      // Don't broadcast only update the state and update the preloaded tab.
-      this.store.dispatch(ac.AlsoToPreloaded(newAction));
-    }
     this._refreshing = false;
-    if (Cu.isInAutomation) {
-      Services.obs.notifyObservers(null, "topsites-refreshed");
-    }
+    Services.obs.notifyObservers(null, "topsites-refreshed", options.isStartup);
   }
 
   async updateCustomSearchShortcuts(isStartup = false) {
@@ -823,7 +841,7 @@ class _TopSites {
     this.pinnedCache.expire();
 
     // Refresh to update pinned sites with screenshots, trigger deduping, etc.
-    this.refresh({ broadcast: true });
+    this.refresh();
   }
 
   /**
@@ -931,19 +949,15 @@ class _TopSites {
    * effectively increasing their index again.
    */
   _adjustPinIndexForSponsoredLinks(site, index) {
-    if (!this._linksWithDefaults) {
+    if (!this.#sites) {
       return index;
     }
     // Adjust insertion index for sponsored sites since their position is
     // fixed.
     let adjustedIndex = index;
     for (let i = 0; i < index; i++) {
-      const link = this._linksWithDefaults[i];
-      if (
-        link &&
-        link.sponsored_position &&
-        this._linksWithDefaults[i]?.url !== site.url
-      ) {
+      const link = this.#sites[i];
+      if (link && link.sponsored_position && this.#sites[i]?.url !== site.url) {
         adjustedIndex--;
       }
     }
@@ -1059,22 +1073,22 @@ class _TopSites {
         this.updateCustomSearchShortcuts(true /* isStartup */);
         break;
       case at.SYSTEM_TICK:
-        this.refresh({ broadcast: false });
+        this.refresh();
         break;
       // All these actions mean we need new top sites
       case at.PLACES_HISTORY_CLEARED:
       case at.PLACES_LINKS_DELETED:
         this.frecentCache.expire();
-        this.refresh({ broadcast: true });
+        this.refresh();
         break;
       case at.PLACES_LINKS_CHANGED:
         this.frecentCache.expire();
-        this.refresh({ broadcast: false });
+        this.refresh();
         break;
       case at.PLACES_LINK_BLOCKED:
         this.frecentCache.expire();
         this.pinnedCache.expire();
-        this.refresh({ broadcast: true });
+        this.refresh();
         break;
       case at.PREF_CHANGED:
         switch (action.data.name) {
@@ -1086,7 +1100,7 @@ class _TopSites {
           case ROWS_PREF:
           case FILTER_DEFAULT_SEARCH_PREF:
           case SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF:
-            this.refresh({ broadcast: true });
+            this.refresh();
             break;
           case SEARCH_SHORTCUTS_EXPERIMENT:
             if (action.data.value) {
@@ -1094,7 +1108,7 @@ class _TopSites {
             } else {
               this.unpinAllSearchShortcuts();
             }
-            this.refresh({ broadcast: true });
+            this.refresh();
         }
         break;
       case at.PREFS_INITIAL_VALUES:
