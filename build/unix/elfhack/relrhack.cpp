@@ -114,7 +114,7 @@ struct RelR : public Elf<bits> {
     return 0;
   }
 
-  static bool hack(std::fstream& f);
+  static bool hack(std::fstream& f, bool set_relrhack_bit);
 };
 
 template <typename T>
@@ -150,7 +150,7 @@ void write_vector_at(std::ostream& out, off_t pos, const std::vector<T>& vec) {
 }
 
 template <int bits>
-bool RelR<bits>::hack(std::fstream& f) {
+bool RelR<bits>::hack(std::fstream& f, bool set_relrhack_bit) {
   auto ehdr = read_one_at<Elf_Ehdr>(f, 0);
   if (ehdr.e_phentsize != sizeof(Elf_Phdr)) {
     throw std::runtime_error("Invalid ELF?");
@@ -225,9 +225,11 @@ bool RelR<bits>::hack(std::fstream& f) {
     return false;
   }
 
-  // Change DT_RELR* tags to add DT_RELRHACK_BIT.
-  for (const auto tag : {DT_RELR, DT_RELRSZ, DT_RELRENT}) {
-    write_one_at(f, dyn_info.offset(tag), tag | DT_RELRHACK_BIT);
+  if (set_relrhack_bit) {
+    // Change DT_RELR* tags to add DT_RELRHACK_BIT.
+    for (const auto tag : {DT_RELR, DT_RELRSZ, DT_RELRENT}) {
+      write_one_at(f, dyn_info.offset(tag), tag | DT_RELRHACK_BIT);
+    }
   }
 
   bool is_glibc = false;
@@ -611,10 +613,14 @@ int main(int argc, char* argv[]) {
       f.exceptions(f.failbit);
       auto elf_class = get_elf_class(f);
       f.seekg(0, std::ios::beg);
+      // On Android, we don't set the relrhack bit so that the system linker
+      // can handle the RELR relocations when supported. On desktop, the
+      // glibc unfortunately rejects the binaries without the bit set.
+      // (see comment about GLIBC_ABI_DT_RELR)
       if (elf_class == ELFCLASS32) {
-        hacked = RelR<32>::hack(f);
+        hacked = RelR<32>::hack(f, /* set_relrhack_bit = */ !is_android);
       } else if (elf_class == ELFCLASS64) {
-        hacked = RelR<64>::hack(f);
+        hacked = RelR<64>::hack(f, /* set_relrhack_bit = */ !is_android);
       }
     } catch (const std::runtime_error& err) {
       std::cerr << "Failed to hack " << output->string() << ": " << err.what()
