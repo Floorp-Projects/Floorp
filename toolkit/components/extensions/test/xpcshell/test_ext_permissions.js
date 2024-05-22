@@ -1200,3 +1200,40 @@ add_task(function test_normalizeOptional() {
     `Expect both "all sites" permissions`
   );
 });
+
+add_task(async function test_onAdded_all_urls() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.onMessage.addListener(async () => {
+        let result = await browser.permissions.request({
+          permissions: [],
+          origins: ["<all_urls>"],
+        });
+        browser.test.sendMessage("result", result);
+      });
+      browser.permissions.onAdded.addListener(async permissions => {
+        browser.test.sendMessage("onAdded", permissions);
+      });
+      browser.test.sendMessage("ready");
+    },
+    manifest: {
+      optional_permissions: ["<all_urls>"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  await withHandlingUserInput(extension, async () => {
+    optionalPermissionsPromptHandler.acceptPrompt = true;
+    extension.sendMessage("request");
+    let result = await extension.awaitMessage("result");
+    equal(result, true, "request() for optional permissions succeeded");
+  });
+
+  let perms = await extension.awaitMessage("onAdded");
+  equal(perms.origins.join(), "<all_urls>", "Got expected origins.");
+  equal(perms.permissions.join(), "", "Not expecting api permissions.");
+
+  await extension.unload();
+});
