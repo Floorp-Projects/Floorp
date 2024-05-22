@@ -89,6 +89,7 @@ function stubTopSites(sandbox) {
     },
     dbStorage: { getDbTable: sandbox.stub().returns(storage) },
   };
+  TopSites._requestRichIcon = sandbox.stub();
   // Set preferences to match the store state.
   Services.prefs.setIntPref(
     "browser.newtabpage.activity-stream.topSitesRows",
@@ -843,7 +844,6 @@ add_task(
       NewTabUtils.activityStreamLinks.getTopSites.calledOnce,
       "getTopSites only called once"
     );
-
     Assert.equal(
       Screenshots.getScreenshotForURL.callCount,
       FAKE_LINKS.length,
@@ -855,7 +855,6 @@ add_task(
 
     TopSites.refreshDefaults("https://foo.com");
 
-    sandbox.stub(TopSites, "_requestRichIcon");
     await Promise.all([
       TopSites.getLinksWithDefaults(),
       TopSites.getLinksWithDefaults(),
