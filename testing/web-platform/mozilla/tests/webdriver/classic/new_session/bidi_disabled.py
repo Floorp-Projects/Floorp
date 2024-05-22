@@ -1,7 +1,11 @@
 from copy import deepcopy
 
+import pytest
 
-def test_marionette_fallback_webdriver_session(configuration, geckodriver):
+pytestmark = pytest.mark.asyncio
+
+
+async def test_marionette_fallback_webdriver_session(configuration, geckodriver):
     config = deepcopy(configuration)
     config["capabilities"]["webSocketUrl"] = True
 
@@ -20,7 +24,7 @@ def test_marionette_fallback_webdriver_session(configuration, geckodriver):
         assert len(driver.session.handles) >= 1
 
     finally:
-        driver.stop()
+        await driver.stop()
 
         # WebDriver BiDi has to be re-enabled. Because we cannot easily
         # get rid of the value let geckodriver overwrite it with the current

@@ -3,17 +3,19 @@ from copy import deepcopy
 
 import pytest
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.parametrize("port", ["0", "2828"], ids=["system allocated", "fixed"])
-def test_marionette_port(geckodriver, port):
+async def test_marionette_port(geckodriver, port):
     extra_args = ["--marionette-port", port]
 
     driver = geckodriver(extra_args=extra_args)
     driver.new_session()
-    driver.delete_session()
+    await driver.delete_session()
 
 
-def test_marionette_port_outdated_active_port_file(
+async def test_marionette_port_outdated_active_port_file(
     configuration, create_custom_profile, geckodriver
 ):
     config = deepcopy(configuration)
@@ -37,6 +39,6 @@ def test_marionette_port_outdated_active_port_file(
     with open(active_port_file, "rb") as f:
         assert f.readline() != b"53"
 
-    driver.delete_session()
+    await driver.delete_session()
     with pytest.raises(FileNotFoundError):
         open(active_port_file, "rb")

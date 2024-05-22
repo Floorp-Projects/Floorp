@@ -187,9 +187,9 @@ class Geckodriver:
             if m is not None:
                 self.port = int(m.groups()[0])
 
-    def stop(self):
+    async def stop(self):
         if self.session is not None:
-            self.delete_session()
+            await self.delete_session()
         if self.proc:
             self.proc.kill()
         self.port = None
@@ -199,7 +199,10 @@ class Geckodriver:
     def new_session(self):
         self.session.start()
 
-    def delete_session(self):
+    async def delete_session(self):
+        if self.session.bidi_session is not None:
+            await self.session.bidi_session.end()
+
         self.session.end()
 
 

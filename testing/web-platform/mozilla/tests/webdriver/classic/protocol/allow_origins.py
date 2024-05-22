@@ -3,6 +3,8 @@ from copy import deepcopy
 import pytest
 from support.network import http_request, websocket_request
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.parametrize(
     "allow_origins, origin, status",
@@ -38,7 +40,7 @@ def test_allow_hosts(configuration, geckodriver, allow_origins, origin, status):
     ],
     ids=["allowed", "not allowed"],
 )
-def test_allow_origins_passed_to_remote_agent(
+async def test_allow_origins_passed_to_remote_agent(
     configuration, geckodriver, allow_origins, origin, status
 ):
     config = deepcopy(configuration)
@@ -53,4 +55,4 @@ def test_allow_origins_passed_to_remote_agent(
     response = websocket_request("127.0.0.1", driver.remote_agent_port, origin=origin)
     assert response.status == status
 
-    driver.delete_session()
+    await driver.delete_session()

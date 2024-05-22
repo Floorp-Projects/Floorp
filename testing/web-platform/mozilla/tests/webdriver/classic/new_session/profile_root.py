@@ -3,8 +3,10 @@ import os
 
 import pytest
 
+pytestmark = pytest.mark.asyncio
 
-def test_profile_root(tmp_path, configuration, geckodriver, default_preferences):
+
+async def test_profile_root(tmp_path, configuration, geckodriver, default_preferences):
     profile_path = os.path.join(tmp_path, "geckodriver-test")
     os.makedirs(profile_path)
 
@@ -24,7 +26,7 @@ def test_profile_root(tmp_path, configuration, geckodriver, default_preferences)
     driver = geckodriver(config=config, extra_args=extra_args)
     driver.new_session()
     assert len(os.listdir(profile_path)) == 1
-    driver.delete_session()
+    await driver.delete_session()
     assert os.listdir(profile_path) == []
 
 
