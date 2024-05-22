@@ -115,6 +115,7 @@ fun TextListItem(
  * an optional [IconButton] at the end.
  *
  * @param label The label in the list item.
+ * @param modifier [Modifier] to be applied to the layout.
  * @param description An optional description text below the label.
  * @param faviconPainter Optional painter to use when fetching a new favicon is unnecessary.
  * @param onClick Called when the user clicks on the item.
@@ -126,6 +127,7 @@ fun TextListItem(
 @Composable
 fun FaviconListItem(
     label: String,
+    modifier: Modifier = Modifier,
     description: String? = null,
     faviconPainter: Painter? = null,
     onClick: (() -> Unit)? = null,
@@ -136,6 +138,7 @@ fun FaviconListItem(
 ) {
     ListItem(
         label = label,
+        modifier = modifier,
         description = description,
         onClick = onClick,
         beforeListAction = {
@@ -179,6 +182,7 @@ fun FaviconListItem(
  * text and an optional [IconButton] or [Icon] at the end.
  *
  * @param label The label in the list item.
+ * @param modifier [Modifier] to be applied to the layout.
  * @param labelTextColor [Color] to be applied to the label.
  * @param description An optional description text below the label.
  * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
@@ -196,6 +200,7 @@ fun FaviconListItem(
 @Composable
 fun IconListItem(
     label: String,
+    modifier: Modifier = Modifier,
     labelTextColor: Color = FirefoxTheme.colors.textPrimary,
     description: String? = null,
     enabled: Boolean = true,
@@ -210,6 +215,7 @@ fun IconListItem(
 ) {
     ListItem(
         label = label,
+        modifier = modifier,
         labelTextColor = labelTextColor,
         description = description,
         enabled = enabled,
@@ -256,6 +262,7 @@ fun IconListItem(
  * text and an optional [TextButton] at the end.
  *
  * @param label The label in the list item.
+ * @param modifier [Modifier] to be applied to the layout.
  * @param labelTextColor [Color] to be applied to the label.
  * @param description An optional description text below the label.
  * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
@@ -271,6 +278,7 @@ fun IconListItem(
 @Composable
 fun IconListItem(
     label: String,
+    modifier: Modifier = Modifier,
     labelTextColor: Color = FirefoxTheme.colors.textPrimary,
     description: String? = null,
     enabled: Boolean = true,
@@ -284,6 +292,7 @@ fun IconListItem(
 ) {
     ListItem(
         label = label,
+        modifier = modifier,
         labelTextColor = labelTextColor,
         description = description,
         enabled = enabled,
