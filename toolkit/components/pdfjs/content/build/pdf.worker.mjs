@@ -22739,8 +22739,7 @@ function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId, toUnicode) {
   let nextAvailableFontCharCode = privateUseOffetStart;
   let privateUseOffetEnd = PRIVATE_USE_AREAS[privateUseAreaIndex][1];
   const isInPrivateArea = code => PRIVATE_USE_AREAS[0][0] <= code && code <= PRIVATE_USE_AREAS[0][1] || PRIVATE_USE_AREAS[1][0] <= code && code <= PRIVATE_USE_AREAS[1][1];
-  for (let originalCharCode in charCodeToGlyphId) {
-    originalCharCode |= 0;
+  for (const originalCharCode in charCodeToGlyphId) {
     let glyphId = charCodeToGlyphId[originalCharCode];
     if (!hasGlyph(glyphId)) {
       continue;
@@ -24435,7 +24434,7 @@ class Font {
       tag: "post",
       data: createPostTable(properties)
     };
-    const charCodeToGlyphId = [];
+    const charCodeToGlyphId = Object.create(null);
     function hasGlyph(glyphId) {
       return !missingGlyphs[glyphId];
     }
@@ -54783,7 +54782,7 @@ class BasePdfManager {
     this._password = args.password;
     this.enableXfa = args.enableXfa;
     args.evaluatorOptions.isOffscreenCanvasSupported &&= FeatureTest.isOffscreenCanvasSupported;
-    this.evaluatorOptions = args.evaluatorOptions;
+    this.evaluatorOptions = Object.freeze(args.evaluatorOptions);
   }
   get docId() {
     return this._docId;
@@ -55476,7 +55475,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.3.77";
+    const workerVersion = "4.3.83";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -56039,8 +56038,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.3.77";
-const pdfjsBuild = "63b66b412";
+const pdfjsVersion = "4.3.83";
+const pdfjsBuild = "9ee7c07b8";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
