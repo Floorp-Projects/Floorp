@@ -74,6 +74,18 @@ class FxSuggestStorage(context: Context) {
         }
 
     /**
+     * Run startup ingestion
+     *
+     * This will run ingestion, only if there are currently no suggestions in the database.  This is
+     * used to initialize the database on first startup and also after Firefox updates that change
+     * the schema (which often cause the suggestions table to be cleared).
+     */
+    suspend fun runStartupIngestion() {
+        logger.info("runStartupIngestion")
+        ingest(SuggestIngestionConstraints(emptyOnly = true))
+    }
+
+    /**
      * Interrupts any ongoing queries for suggestions.
      */
     fun cancelReads() {
