@@ -426,9 +426,7 @@ class AsmFlags(BaseCompileFlags):
                 # armasm64 accepts a paucity of options compared to ml/ml64.
                 pass
             else:
-                debug_flags += self._context.config.substs.get(
-                    "MOZ_DEBUG_FLAGS", ""
-                ).split()
+                debug_flags += self._context.config.substs.get("MOZ_DEBUG_FLAGS", [])
         return debug_flags
 
 
@@ -503,7 +501,7 @@ class TargetCompileFlags(BaseCompileFlags):
         if self._context.config.substs.get(
             "MOZ_DEBUG"
         ) or self._context.config.substs.get("MOZ_DEBUG_SYMBOLS"):
-            return self._context.config.substs.get("MOZ_DEBUG_FLAGS", "").split()
+            return self._context.config.substs.get("MOZ_DEBUG_FLAGS", [])
         return []
 
     def _warnings_as_errors(self):

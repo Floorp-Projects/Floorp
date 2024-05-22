@@ -115,6 +115,23 @@ def moz_no_debug_rtl(moz_debug, asan, target, enable_jemalloc):
 set_config("MOZ_NO_DEBUG_RTL", moz_no_debug_rtl)
 
 
+@depends(
+    try_compile(
+        includes=["stdio.h"],
+        body='puts("Hello World");',
+        check_msg="for valid debug flags",
+        flags=debug_flags,
+        when=moz_debug,
+    ),
+    debug_flags,
+    when=moz_debug,
+)
+@imports(_from="mozbuild.shellutil", _import="quote")
+def check_debug_flags(check, flags):
+    if not check:
+        die(f"These compiler flags are invalid: {quote(*flags)}")
+
+
 # Try to make builds more reproducible and allow sharing built artifacts across
 # source and object directories by using -ffile-prefix-map and friends.  To
 # "unwind" the prefix maps, use:

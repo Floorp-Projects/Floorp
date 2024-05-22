@@ -2151,13 +2151,13 @@ try_compile(
 def default_debug_flags(compiler_info, target):
     # Debug info is ON by default.
     if compiler_info.type == "clang-cl":
-        return "-Z7"
+        return ("-Z7",)
     elif target.kernel == "WINNT" and compiler_info.type == "clang":
-        return "-g -gcodeview"
+        return ("-g", "-gcodeview")
     # The oldest versions of supported compilers default to DWARF-4, but
     # newer versions may default to DWARF-5 or newer (e.g. clang 14), which
     # Valgrind doesn't support. Force-use DWARF-4.
-    return "-gdwarf-4"
+    return ("-gdwarf-4",)
 
 
 option(env="MOZ_DEBUG_FLAGS", nargs=1, help="Debug compiler flags")
@@ -2174,14 +2174,15 @@ set_config("MOZ_DEBUG_SYMBOLS", depends_if("--enable-debug-symbols")(lambda _: T
 
 
 @depends("MOZ_DEBUG_FLAGS", "--enable-debug-symbols", default_debug_flags)
+@imports(_from="mozbuild.shellutil", _import="split")
 def debug_flags(env_debug_flags, enable_debug_flags, default_debug_flags):
     # If MOZ_DEBUG_FLAGS is set, and --enable-debug-symbols is set to a value,
     # --enable-debug-symbols takes precedence. Note, the value of
     # --enable-debug-symbols may be implied by --enable-debug.
     if len(enable_debug_flags):
-        return enable_debug_flags[0]
+        return split(enable_debug_flags[0])
     if env_debug_flags:
-        return env_debug_flags[0]
+        return split(env_debug_flags[0])
     return default_debug_flags
 
 
