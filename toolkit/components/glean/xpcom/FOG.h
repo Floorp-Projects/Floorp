@@ -8,16 +8,19 @@
 
 #include "nsIFOG.h"
 #include "nsIObserver.h"
+#include "nsIMemoryReporter.h"
 
 namespace mozilla {
-class FOG final : public nsIFOG, public nsIObserver {
+class FOG final : public nsIFOG, public nsIObserver, public nsIMemoryReporter {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFOG
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEMORYREPORTER
 
  public:
   FOG() = default;
   static already_AddRefed<FOG> GetSingleton();
+  void InitMemoryReporter();
 
  private:
   ~FOG() = default;
