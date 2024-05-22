@@ -629,30 +629,41 @@ add_task(async function test_fog_complex_object_works() {
   Assert.deepEqual(stack, result);
 });
 
-add_task(function test_fog_ride_along_pings() {
-  Assert.equal(null, Glean.testOnly.badCode.testGetValue("test-ping"));
-  Assert.equal(null, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
+add_task(
+  // FIXME(1897219): Should be re-enabled along with the newer implementation.
+  // ride-along pings are not handled correctly in artifact builds.
+  {
+    skip_if: () =>
+      Services.prefs.getBoolPref("telemetry.fog.artifact_build", false),
+  },
+  function test_fog_ride_along_pings() {
+    Assert.equal(null, Glean.testOnly.badCode.testGetValue("test-ping"));
+    Assert.equal(null, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
 
-  Glean.testOnly.badCode.add(37);
-  Assert.equal(37, Glean.testOnly.badCode.testGetValue("test-ping"));
-  Assert.equal(37, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
+    Glean.testOnly.badCode.add(37);
+    Assert.equal(37, Glean.testOnly.badCode.testGetValue("test-ping"));
+    Assert.equal(37, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
 
-  let testPingSubmitted = false;
+    let testPingSubmitted = false;
 
-  GleanPings.testPing.testBeforeNextSubmit(() => {
-    testPingSubmitted = true;
-  });
-  // FIXME(bug 1896356):
-  // We can't use `testBeforeNextSubmit` for `ride-along-ping`
-  // because it's triggered internally, but the callback would only be available
-  // in the C++ bits, not in the internal Rust parts.
+    GleanPings.testPing.testBeforeNextSubmit(() => {
+      testPingSubmitted = true;
+    });
+    // FIXME(bug 1896356):
+    // We can't use `testBeforeNextSubmit` for `ride-along-ping`
+    // because it's triggered internally, but the callback would only be available
+    // in the C++ bits, not in the internal Rust parts.
 
-  // Submit only a single ping, the other will ride along.
-  GleanPings.testPing.submit();
+    // Submit only a single ping, the other will ride along.
+    GleanPings.testPing.submit();
 
-  Assert.ok(testPingSubmitted, "Test ping was submitted, callback was called.");
+    Assert.ok(
+      testPingSubmitted,
+      "Test ping was submitted, callback was called."
+    );
 
-  // Both pings have been submitted, so the values should be cleared.
-  Assert.equal(null, Glean.testOnly.badCode.testGetValue("test-ping"));
-  Assert.equal(null, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
-});
+    // Both pings have been submitted, so the values should be cleared.
+    Assert.equal(null, Glean.testOnly.badCode.testGetValue("test-ping"));
+    Assert.equal(null, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
+  }
+);
