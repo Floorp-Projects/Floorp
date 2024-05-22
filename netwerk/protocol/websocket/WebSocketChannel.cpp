@@ -14,7 +14,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
-#include "mozilla/Components.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
@@ -177,8 +176,8 @@ class FailDelayManager {
 
     mDelaysDisabled = false;
 
-    nsCOMPtr<nsIPrefBranch> prefService;
-    prefService = mozilla::components::Preferences::Service();
+    nsCOMPtr<nsIPrefBranch> prefService =
+        do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefService) {
       return;
     }
@@ -1225,7 +1224,8 @@ WebSocketChannel::WebSocketChannel()
   mFramePtr = mBuffer = static_cast<uint8_t*>(moz_xmalloc(mBufferSize));
 
   nsresult rv;
-  mConnectionLogService = mozilla::components::Dashboard::Service(&rv);
+  mConnectionLogService =
+      do_GetService("@mozilla.org/network/dashboard;1", &rv);
   if (NS_FAILED(rv)) LOG(("Failed to initiate dashboard service."));
 
   mService = WebSocketEventService::GetOrCreate();
@@ -2743,8 +2743,8 @@ void ProcessServerWebSocketExtensions(const nsACString& aExtensions,
                                       nsACString& aNegotiatedExtensions) {
   aNegotiatedExtensions.Truncate();
 
-  nsCOMPtr<nsIPrefBranch> prefService;
-  prefService = mozilla::components::Preferences::Service();
+  nsCOMPtr<nsIPrefBranch> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefService) {
     bool boolpref;
     nsresult rv = prefService->GetBoolPref(
@@ -2895,8 +2895,7 @@ nsresult WebSocketChannel::DoAdmissionDNS() {
   rv = mURI->GetPort(&mPort);
   NS_ENSURE_SUCCESS(rv, rv);
   if (mPort == -1) mPort = (mEncrypted ? kDefaultWSSPort : kDefaultWSPort);
-  nsCOMPtr<nsIDNSService> dns;
-  dns = mozilla::components::DNS::Service(&rv);
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
   nsCOMPtr<nsICancelable> cancelable;
@@ -2921,8 +2920,8 @@ nsresult WebSocketChannel::ApplyForAdmission() {
   // CONNECTING state per server IP address (not hostname)
 
   // Check to see if a proxy is being used before making DNS call
-  nsCOMPtr<nsIProtocolProxyService> pps;
-  pps = mozilla::components::ProtocolProxy::Service();
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
 
   if (!pps) {
     // go straight to DNS
@@ -3451,14 +3450,14 @@ WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
     }
   }
 
-  mIOThread = mozilla::components::SocketTransport::Service(&rv);
+  mIOThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     NS_WARNING("unable to continue without socket transport service");
     return rv;
   }
 
   nsCOMPtr<nsIPrefBranch> prefService;
-  prefService = mozilla::components::Preferences::Service();
+  prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   if (prefService) {
     int32_t intpref;
@@ -3531,7 +3530,8 @@ WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
 
   mURI->GetHostPort(mHost);
 
-  mRandomGenerator = mozilla::components::RandomGenerator::Service(&rv);
+  mRandomGenerator =
+      do_GetService("@mozilla.org/security/random-generator;1", &rv);
   if (NS_FAILED(rv)) {
     NS_WARNING("unable to continue without random number generator");
     return rv;
@@ -3546,7 +3546,7 @@ WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIIOService> ioService;
-  ioService = mozilla::components::IO::Service(&rv);
+  ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     NS_WARNING("unable to continue without io service");
     return rv;
@@ -3926,8 +3926,8 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
     // NS_ERROR_WEBSOCKET_CONNECTION_REFUSED.
     if (NS_SUCCEEDED(mHttpChannel->GetStatus(&httpStatus))) {
       uint32_t errorClass;
-      nsCOMPtr<nsINSSErrorsService> errSvc;
-      errSvc = mozilla::components::NSSErrors::Service();
+      nsCOMPtr<nsINSSErrorsService> errSvc =
+          do_GetService("@mozilla.org/nss_errors_service;1");
       // If GetErrorClass succeeds httpStatus is TLS related failure.
       if (errSvc &&
           NS_SUCCEEDED(errSvc->GetErrorClass(httpStatus, &errorClass))) {

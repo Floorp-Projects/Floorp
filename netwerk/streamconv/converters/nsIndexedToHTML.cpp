@@ -5,7 +5,6 @@
 
 #include "nsIndexedToHTML.h"
 
-#include "mozilla/Components.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/intl/AppDateTimeFormat.h"
 #include "mozilla/intl/LocaleService.h"
@@ -68,8 +67,8 @@ nsresult nsIndexedToHTML::Init(nsIStreamListener* aListener) {
 
   mListener = aListener;
 
-  nsCOMPtr<nsIStringBundleService> sbs;
-  sbs = mozilla::components::StringBundle::Service(&rv);
+  nsCOMPtr<nsIStringBundleService> sbs =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   rv = sbs->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(mBundle));
 
@@ -477,7 +476,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   // otherwise we end up linking to file:///foo/dirfile
 
   if (!mTextToSubURI) {
-    mTextToSubURI = mozilla::components::TextToSubURI::Service(&rv);
+    mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
   }
 

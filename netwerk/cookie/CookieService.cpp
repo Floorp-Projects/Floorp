@@ -254,13 +254,13 @@ CookieService::CookieService() = default;
 
 nsresult CookieService::Init() {
   nsresult rv;
-  mTLDService = mozilla::components::EffectiveTLD::Service(&rv);
+  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mIDNService = mozilla::components::IDN::Service(&rv);
+  mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mThirdPartyUtil = mozilla::components::ThirdPartyUtil::Service();
+  mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Init our default, and possibly private CookieStorages.

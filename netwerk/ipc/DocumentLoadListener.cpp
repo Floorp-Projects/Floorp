@@ -10,7 +10,6 @@
 #include "NeckoCommon.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Components.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/RefPtr.h"
@@ -262,9 +261,9 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     }
 
     nsresult rv;
-    nsCOMPtr<nsIStreamConverterService> streamConvService;
+    nsCOMPtr<nsIStreamConverterService> streamConvService =
+        do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
     nsAutoCString str;
-    streamConvService = mozilla::components::StreamConverter::Service(&rv);
     rv = streamConvService->ConvertedType(mContentType, aChannel, str);
     NS_ENSURE_SUCCESS(rv, rv);
 

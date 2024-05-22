@@ -1809,7 +1809,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
     if (contentType.Equals("multipart/x-mixed-replace"_ns)) {
       nsCOMPtr<nsIStreamConverterService> convServ(
-          mozilla::components::StreamConverter::Service(&rv));
+          do_GetService("@mozilla.org/streamConverters;1", &rv));
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIStreamListener> toListener(mListener);
         nsCOMPtr<nsIStreamListener> fromListener;
@@ -2897,8 +2897,8 @@ nsresult nsHttpChannel::PromptTempRedirect() {
     return NS_OK;
   }
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> bundleService;
-  bundleService = mozilla::components::StringBundle::Service(&rv);
+  nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStringBundle> stringBundle;
@@ -2927,8 +2927,8 @@ nsresult nsHttpChannel::ProxyFailover() {
 
   nsresult rv;
 
-  nsCOMPtr<nsIProtocolProxyService> pps;
-  pps = mozilla::components::ProtocolProxy::Service(&rv);
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIProxyInfo> pi;
@@ -3314,8 +3314,8 @@ nsresult nsHttpChannel::ResolveProxy() {
 
   nsresult rv;
 
-  nsCOMPtr<nsIProtocolProxyService> pps;
-  pps = mozilla::components::ProtocolProxy::Service(&rv);
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // using the nsIProtocolProxyService2 allows a minor performance
@@ -5531,9 +5531,8 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
       if (!isRedirectURIInAllowList) {
         nsCOMPtr<nsIURI> strippedURI;
 
-        nsCOMPtr<nsIURLQueryStringStripper> queryStripper;
-        queryStripper =
-            mozilla::components::URLQueryStringStripper::Service(&rv);
+        nsCOMPtr<nsIURLQueryStringStripper> queryStripper =
+            components::URLQueryStringStripper::Service(&rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
         uint32_t numStripped;
@@ -6596,8 +6595,8 @@ nsresult nsHttpChannel::BeginConnect() {
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
-    nsCOMPtr<nsIConsoleService> consoleService;
-    consoleService = mozilla::components::Console::Service();
+    nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (consoleService && !host.Equals(mapping->AlternateHost())) {
       nsAutoString message(u"Alternate Service Mapping found: "_ns);
       AppendASCIItoUTF16(scheme, message);
@@ -7779,7 +7778,8 @@ static nsLiteralCString ContentTypeToTelemetryLabel(nsHttpChannel* aChannel) {
 }
 
 nsresult nsHttpChannel::LogConsoleError(const char* aTag) {
-  nsCOMPtr<nsIConsoleService> console(mozilla::components::Console::Service());
+  nsCOMPtr<nsIConsoleService> console(
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   NS_ENSURE_TRUE(console, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
@@ -8554,8 +8554,8 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
           count = delta;
 
           NS_WARNING("Listener OnDataAvailable contract violation");
-          nsCOMPtr<nsIConsoleService> consoleService;
-          consoleService = mozilla::components::Console::Service();
+          nsCOMPtr<nsIConsoleService> consoleService =
+              do_GetService(NS_CONSOLESERVICE_CONTRACTID);
           nsAutoString message(nsLiteralString(
               u"http channel Listener OnDataAvailable contract violation"));
           if (consoleService) {
@@ -10045,8 +10045,8 @@ nsresult nsHttpChannel::TriggerNetwork() {
 void nsHttpChannel::MaybeRaceCacheWithNetwork() {
   nsresult rv;
 
-  nsCOMPtr<nsINetworkLinkService> netLinkSvc;
-  netLinkSvc = mozilla::components::NetworkLink::Service(&rv);
+  nsCOMPtr<nsINetworkLinkService> netLinkSvc =
+      do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return;
   }

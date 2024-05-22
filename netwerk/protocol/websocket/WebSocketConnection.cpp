@@ -9,7 +9,6 @@
 
 #include "WebSocketLog.h"
 #include "mozilla/net/WebSocketConnectionListener.h"
-#include "mozilla/Components.h"
 #include "nsIOService.h"
 #include "nsITLSSocketControl.h"
 #include "nsISocketTransport.h"
@@ -39,7 +38,7 @@ nsresult WebSocketConnection::Init(WebSocketConnectionListener* aListener) {
 
   mListener = aListener;
   nsresult rv;
-  mSocketThread = mozilla::components::SocketTransport::Service(&rv);
+  mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }

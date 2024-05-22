@@ -6,7 +6,6 @@
 #include "TLSServerSocket.h"
 
 #include "mozilla/net/DNS.h"
-#include "mozilla/Components.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDependentSubstring.h"
 #include "nsIServerSocket.h"
@@ -392,8 +391,8 @@ nsresult TLSServerConnectionInfo::HandshakeCallback(PRFileDesc* aFD) {
 
   UniqueCERTCertificate clientCert(SSL_PeerCertificate(aFD));
   if (clientCert) {
-    nsCOMPtr<nsIX509CertDB> certDB;
-    certDB = mozilla::components::NSSConstructor::Service(&rv);
+    nsCOMPtr<nsIX509CertDB> certDB =
+        do_GetService(NS_X509CERTDB_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       return rv;
     }

@@ -7,7 +7,6 @@
 #include "PageThumbProtocolHandler.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Components.h"
 #include "mozilla/ipc/URIParams.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
@@ -152,8 +151,7 @@ RefPtr<RemoteStreamPromise> PageThumbProtocolHandler::NewStream(
   auto promiseHolder = MakeUnique<MozPromiseHolder<RemoteStreamPromise>>();
   RefPtr<RemoteStreamPromise> promise = promiseHolder->Ensure(__func__);
 
-  nsCOMPtr<nsIMIMEService> mime;
-  mime = mozilla::components::Mime::Service(&rv);
+  nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
   if (NS_FAILED(rv)) {
     return RemoteStreamPromise::CreateAndReject(rv, __func__);
   }
@@ -315,8 +313,8 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
 
   nsresult rv;
   if (aHost.EqualsLiteral(PAGE_THUMB_HOST)) {
-    nsCOMPtr<nsIPageThumbsStorageService> pageThumbsStorage;
-    pageThumbsStorage = mozilla::components::PageThumbsStorage::Service(&rv);
+    nsCOMPtr<nsIPageThumbsStorageService> pageThumbsStorage =
+        do_GetService("@mozilla.org/thumbnails/pagethumbs-service;1", &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -326,8 +324,8 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
                                               aThumbnailPath);
 #ifdef MOZ_PLACES
   } else if (aHost.EqualsLiteral(PLACES_PREVIEWS_HOST)) {
-    nsCOMPtr<nsIPlacesPreviewsHelperService> helper;
-    helper = mozilla::components::PlacesPreviewsHelper::Service(&rv);
+    nsCOMPtr<nsIPlacesPreviewsHelperService> helper =
+        do_GetService("@mozilla.org/places/previews-helper;1", &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
