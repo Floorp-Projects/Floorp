@@ -240,7 +240,10 @@ add_task(async function testCookiesWithCrossSiteServiceWorker() {
 add_task(async function testPartitionedCookiesWithCrossSiteServiceWorker() {
   // Enable blocking third-party cookies.
   await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.cookieBehavior.optInPartitioning", true]],
+    set: [
+      ["network.cookie.cookieBehavior.optInPartitioning", true],
+      ["network.cookie.CHIPS.enabled", true],
+    ],
   });
 
   info("Open a tab");
@@ -442,7 +445,10 @@ add_task(async function testCookiesWithABAServiceWorker() {
 add_task(async function testCookiesWithABAServiceWorker() {
   // Disable blocking third-party cookies.
   await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.cookieBehavior.optInPartitioning", true]],
+    set: [
+      ["network.cookie.cookieBehavior.optInPartitioning", true],
+      ["network.cookie.CHIPS.enabled", true],
+    ],
   });
 
   info("Open a tab");
