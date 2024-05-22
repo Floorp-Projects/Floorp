@@ -2334,44 +2334,29 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
       true
     );
     await TopSites.updateCustomSearchShortcuts();
-    Assert.ok(
-      TopSites.store.dispatch.calledOnce,
-      "TopSites.store.dispatch called once"
-    );
-    Assert.ok(
-      TopSites.store.dispatch.calledWith({
-        data: {
-          searchShortcuts: [
-            {
-              keyword: "@google",
-              shortURL: "google",
-              url: "https://google.com",
-              backgroundColor: undefined,
-              smallFavicon:
-                "chrome://activity-stream/content/data/content/tippytop/favicons/google-com.ico",
-              tippyTopIcon:
-                "chrome://activity-stream/content/data/content/tippytop/images/google-com@2x.png",
-            },
-            {
-              keyword: "@amazon",
-              shortURL: "amazon",
-              url: "https://amazon.com",
-              backgroundColor: undefined,
-              smallFavicon:
-                "chrome://activity-stream/content/data/content/tippytop/favicons/amazon.ico",
-              tippyTopIcon:
-                "chrome://activity-stream/content/data/content/tippytop/images/amazon@2x.png",
-            },
-          ],
-        },
-        meta: {
-          from: "ActivityStream:Main",
-          to: "ActivityStream:Content",
-          isStartup: false,
-        },
-        type: "UPDATE_SEARCH_SHORTCUTS",
-      })
-    );
+    let searchShortcuts = await TopSites.getSearchShortcuts();
+    Assert.deepEqual(searchShortcuts, [
+      {
+        keyword: "@google",
+        shortURL: "google",
+        url: "https://google.com",
+        backgroundColor: undefined,
+        smallFavicon:
+          "chrome://activity-stream/content/data/content/tippytop/favicons/google-com.ico",
+        tippyTopIcon:
+          "chrome://activity-stream/content/data/content/tippytop/images/google-com@2x.png",
+      },
+      {
+        keyword: "@amazon",
+        shortURL: "amazon",
+        url: "https://amazon.com",
+        backgroundColor: undefined,
+        smallFavicon:
+          "chrome://activity-stream/content/data/content/tippytop/favicons/amazon.ico",
+        tippyTopIcon:
+          "chrome://activity-stream/content/data/content/tippytop/images/amazon@2x.png",
+      },
+    ]);
     await cleanup();
   }
 

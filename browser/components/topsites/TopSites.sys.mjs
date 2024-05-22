@@ -91,6 +91,7 @@ function getShortURLForCurrentSearch() {
 
 class _TopSites {
   #inited = false;
+  #searchShortcuts = [];
   #sites = [];
 
   constructor() {
@@ -144,6 +145,7 @@ class _TopSites {
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    this.#searchShortcuts = [];
     this.#sites = [];
     this.#inited = false;
   }
@@ -151,6 +153,7 @@ class _TopSites {
   _reset() {
     // Allow automated tests to reset the internal state of the component.
     if (Cu.isInAutomation) {
+      this.#searchShortcuts = [];
       this.#sites = [];
     }
   }
@@ -200,6 +203,13 @@ class _TopSites {
       await this.init();
     }
     return structuredClone(this.#sites);
+  }
+
+  async getSearchShortcuts() {
+    if (!this.#inited) {
+      await this.init();
+    }
+    return structuredClone(this.#searchShortcuts);
   }
 
   _dedupeKey(site) {
@@ -742,21 +752,14 @@ class _TopSites {
       }
     }
 
-    this.store.dispatch(
-      ac.BroadcastToContent({
-        type: at.UPDATE_SEARCH_SHORTCUTS,
-        data: { searchShortcuts },
-        meta: {
-          isStartup,
-        },
-      })
+    // TODO: Determine what the purpose of this is.
+    this.#searchShortcuts = searchShortcuts;
+
+    Services.obs.notifyObservers(
+      null,
+      "topsites-updated-custom-search-shortcuts",
+      isStartup
     );
-    if (Cu.isInAutomation) {
-      Services.obs.notifyObservers(
-        null,
-        "topsites-updated-custom-search-shortcuts"
-      );
-    }
   }
 
   async topSiteToSearchTopSite(site) {
