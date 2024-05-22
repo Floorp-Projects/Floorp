@@ -155,7 +155,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
       const ConfigTypeInternal& aConfig) = 0;
   virtual nsTArray<RefPtr<OutputType>> DecodedDataToOutputType(
       nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
-      const ConfigTypeInternal& aConfig) = 0;
+      ConfigTypeInternal& aConfig) = 0;
 
  protected:
   // DecoderTemplate can run on either main thread or worker thread.
@@ -172,8 +172,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
   MOZ_CAN_RUN_SCRIPT void OutputDecodedData(
-      const nsTArray<RefPtr<MediaData>>&& aData,
-      const ConfigTypeInternal& aConfig);
+      const nsTArray<RefPtr<MediaData>>&& aData);
 
   void ScheduleDequeueEventIfNeeded();
   nsresult FireEvent(nsAtom* aTypeWithOn, const nsAString& aEventType);
