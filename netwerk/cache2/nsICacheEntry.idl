@@ -309,50 +309,6 @@ interface nsICacheEntry : nsISupports
    * Get the nsILoadContextInfo of the cache entry
    */
   readonly attribute nsILoadContextInfo loadContextInfo;
-
-  /****************************************************************************
-   * The following methods might be added to some nsICacheEntryInternal
-   * interface since we want to remove them as soon as the old cache backend is
-   * completely removed.
-   */
-
-  /**
-   * @deprecated
-   * FOR BACKWARD COMPATIBILITY ONLY
-   * When the old cache backend is eventually removed, this method
-   * can be removed too.
-   *
-   * In the new backend: this method is no-op
-   * In the old backend: this method delegates to nsICacheEntryDescriptor.close()
-   */
-  void close();
-
-  /**
-   * @deprecated
-   * FOR BACKWARD COMPATIBILITY ONLY
-   * Marks the entry as valid so that others can use it and get only readonly
-   * access when the entry is held by the 1st writer.
-   */
-  void markValid();
-
-  /**
-   * @deprecated
-   * FOR BACKWARD COMPATIBILITY ONLY
-   * Marks the entry as valid when write access is acquired.
-   */
-  void maybeMarkValid();
-
-  /**
-   * @deprecated
-   * FOR BACKWARD COMPATIBILITY ONLY / KINDA HACK
-   * @param aWriteAllowed
-   *    Consumer indicates whether write to the entry is allowed for it.
-   *    Depends on implementation how the flag is handled.
-   * @returns
-   *    true when write access is acquired for this entry,
-   *    false otherwise
-   */
-  boolean hasWriteAccess(in boolean aWriteAllowed);
 };
 
 /**
