@@ -33,6 +33,7 @@ import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Core
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragment.Companion.AMAZON_SPONSORED_TITLE
@@ -156,6 +157,7 @@ class HomeFragmentTest {
             every { any<LifecycleOwner>().lifecycleScope } returns lifecycleScope
             every { homeFragment.getString(R.string.snackbar_top_site_removed) } returns "Mocked Removed Top Site"
             every { homeFragment.getString(R.string.snackbar_deleted_undo) } returns "Mocked Undo Removal"
+            every { settings.toolbarPosition } returns ToolbarPosition.TOP
             every {
                 any<CoroutineScope>().allowUndo(
                     any(),
