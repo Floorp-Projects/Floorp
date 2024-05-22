@@ -41,7 +41,6 @@
 #include "nsThreadUtils.h"
 #include "WebTransportSessionProxy.h"
 #include "mozilla/AppShutdown.h"
-#include "mozilla/Components.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/Services.h"
@@ -453,7 +452,7 @@ nsresult nsIOService::InitializeCaptivePortalService() {
     return NS_OK;
   }
 
-  mCaptivePortalService = mozilla::components::CaptivePortal::Service();
+  mCaptivePortalService = do_GetService(NS_CAPTIVEPORTAL_CID);
   if (mCaptivePortalService) {
     static_cast<CaptivePortalService*>(mCaptivePortalService.get())
         ->Initialize();
@@ -478,7 +477,7 @@ nsresult nsIOService::InitializeSocketTransportService() {
 
   if (!mSocketTransportService) {
     mSocketTransportService =
-        mozilla::components::SocketTransport::Service(&rv);
+        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       NS_WARNING("failed to get socket transport service");
     }
@@ -508,7 +507,7 @@ nsresult nsIOService::InitializeNetworkLinkService() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mNetworkLinkService = mozilla::components::NetworkLink::Service(&rv);
+  mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
 
   if (mNetworkLinkService) {
     mNetworkLinkServiceInitialized = true;
@@ -525,7 +524,7 @@ nsresult nsIOService::InitializeProtocolProxyService() {
 
   if (XRE_IsParentProcess()) {
     // for early-initialization
-    Unused << mozilla::components::ProtocolProxy::Service(&rv);
+    Unused << do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   }
 
   return rv;
@@ -854,8 +853,8 @@ nsresult nsIOService::AsyncOnChannelRedirect(
   // This is silly. I wish there was a simpler way to get at the global
   // reference of the contentSecurityManager. But it lives in the XPCOM
   // service registry.
-  nsCOMPtr<nsIChannelEventSink> sink;
-  sink = mozilla::components::ContentSecurityManager::Service();
+  nsCOMPtr<nsIChannelEventSink> sink =
+      do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
   if (sink) {
     nsresult rv =
         helper->DelegateOnChannelRedirect(sink, oldChan, newChan, flags);
@@ -1191,8 +1190,8 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   if (!gHasWarnedUploadChannel2 && scheme.EqualsLiteral("http")) {
     nsCOMPtr<nsIUploadChannel2> uploadChannel2 = do_QueryInterface(channel);
     if (!uploadChannel2) {
-      nsCOMPtr<nsIConsoleService> consoleService;
-      consoleService = mozilla::components::Console::Service();
+      nsCOMPtr<nsIConsoleService> consoleService =
+          do_GetService(NS_CONSOLESERVICE_CONTRACTID);
       if (consoleService) {
         consoleService->LogStringMessage(
             u"Http channel implementation "
@@ -1707,7 +1706,8 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
       // Bug 870460 - Read cookie database at an early-as-possible time
       // off main thread. Hence, we have more chance to finish db query
       // before something calls into the cookie service.
-      mozilla::components::Cookies::Service();
+      nsCOMPtr<nsISupports> cookieServ =
+          do_GetService(NS_COOKIESERVICE_CONTRACTID);
     }
   } else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     // Remember we passed XPCOM shutdown notification to prevent any
@@ -2051,8 +2051,8 @@ nsresult nsIOService::SpeculativeConnectInternal(
   // speculative connect should not be performed because the potential
   // reward is slim with tcp peers closely located to the browser.
   nsresult rv;
-  nsCOMPtr<nsIProtocolProxyService> pps;
-  pps = mozilla::components::ProtocolProxy::Service(&rv);
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aPrincipal;

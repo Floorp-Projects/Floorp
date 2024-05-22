@@ -6,7 +6,6 @@
 
 #include "ProxyConfigLookup.h"
 #include "ProxyConfigLookupChild.h"
-#include "mozilla/Components.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsICancelable.h"
@@ -60,8 +59,8 @@ nsresult ProxyConfigLookup::DoProxyResolve(nsICancelable** aLookupCancellable) {
     return rv;
   }
 
-  nsCOMPtr<nsIProtocolProxyService> pps;
-  pps = mozilla::components::ProtocolProxy::Service(&rv);
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }

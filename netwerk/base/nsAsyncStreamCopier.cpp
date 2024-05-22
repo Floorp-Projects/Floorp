@@ -12,7 +12,6 @@
 #include "nsNetCID.h"
 #include "nsIBufferedStreams.h"
 #include "nsIRequestObserver.h"
-#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 
 using namespace mozilla;
@@ -252,7 +251,7 @@ nsresult nsAsyncStreamCopier::InitInternal(
     mTarget = target;
   } else {
     nsresult rv;
-    mTarget = mozilla::components::StreamTransport::Service(&rv);
+    mTarget = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       return rv;
     }

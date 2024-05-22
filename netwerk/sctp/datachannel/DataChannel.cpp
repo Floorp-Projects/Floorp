@@ -41,7 +41,6 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
-#include "mozilla/Components.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -548,7 +547,7 @@ bool DataChannelConnection::Init(const uint16_t aLocalPort,
   // XXX FIX! make this a global we get once
   // Find the STS thread
   nsresult rv;
-  mSTS = mozilla::components::SocketTransport::Service(&rv);
+  mSTS = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Open sctp with a callback
@@ -702,8 +701,8 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
   mMaxMessageSize = aMaxMessageSize;
 
   nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs;
-  prefs = mozilla::components::Preferences::Service(&rv);
+  nsCOMPtr<nsIPrefService> prefs =
+      do_GetService("@mozilla.org/preferences-service;1", &rv);
   if (!NS_WARN_IF(NS_FAILED(rv))) {
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
 

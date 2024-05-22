@@ -18,7 +18,6 @@
 #include "nsNetCID.h"
 
 #include "nsComponentManagerUtils.h"
-#include "mozilla/Components.h"
 #include "mozilla/DelayedRunnable.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -96,8 +95,8 @@ nsWifiMonitor::nsWifiMonitor(UniquePtr<mozilla::WifiScanner>&& aScanner)
   }
 
   nsresult rv;
-  nsCOMPtr<nsINetworkLinkService> nls;
-  nls = mozilla::components::NetworkLink::Service(&rv);
+  nsCOMPtr<nsINetworkLinkService> nls =
+      do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && nls) {
     uint32_t linkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
     rv = nls->GetLinkType(&linkType);

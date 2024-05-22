@@ -20,7 +20,6 @@
 #include "nsIURI.h"
 #include "nsHttpHeaderArray.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/Components.h"
 #include "mozilla/Tokenizer.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -813,8 +812,8 @@ nsresult nsMultiMixedConv::SendStart() {
   nsCOMPtr<nsIStreamListener> partListener(mFinalListener);
   if (mContentType.IsEmpty()) {
     mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
-    nsCOMPtr<nsIStreamConverterService> serv;
-    serv = mozilla::components::StreamConverter::Service(&rv);
+    nsCOMPtr<nsIStreamConverterService> serv =
+        do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIStreamListener> converter;
       rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE, "*/*", mFinalListener,

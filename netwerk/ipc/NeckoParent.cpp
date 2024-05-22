@@ -7,7 +7,6 @@
 
 #include "nsHttp.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/Components.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
@@ -79,7 +78,8 @@ NeckoParent::NeckoParent() : mSocketProcessBridgeInited(false) {
   // Init HTTP protocol handler now since we need atomTable up and running very
   // early (IPDL argument handling for PHttpChannel constructor needs it) so
   // normal init (during 1st Http channel request) isn't early enough.
-  mozilla::components::HttpHandler::Service();
+  nsCOMPtr<nsIProtocolHandler> proto =
+      do_GetService("@mozilla.org/network/protocol;1?name=http");
 }
 
 static PBOverrideStatus PBOverrideStatusFromLoadContext(
@@ -572,8 +572,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredPredict(
     const OriginAttributes& aOriginAttributes, const bool& hasVerifier) {
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictor> predictor;
-  predictor = mozilla::components::Predictor::Service(&rv);
+  nsCOMPtr<nsINetworkPredictor> predictor =
+      do_GetService("@mozilla.org/network/predictor;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsINetworkPredictorVerifier> verifier;
@@ -590,8 +590,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredLearn(
     const OriginAttributes& aOriginAttributes) {
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictor> predictor;
-  predictor = mozilla::components::Predictor::Service(&rv);
+  nsCOMPtr<nsINetworkPredictor> predictor =
+      do_GetService("@mozilla.org/network/predictor;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   predictor->LearnNative(aTargetURI, aSourceURI, aReason, aOriginAttributes);
@@ -601,8 +601,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredLearn(
 mozilla::ipc::IPCResult NeckoParent::RecvPredReset() {
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictor> predictor;
-  predictor = mozilla::components::Predictor::Service(&rv);
+  nsCOMPtr<nsINetworkPredictor> predictor =
+      do_GetService("@mozilla.org/network/predictor;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   predictor->Reset();

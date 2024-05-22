@@ -30,7 +30,6 @@
 #include "prio.h"
 #include <algorithm>
 
-#include "mozilla/Components.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 
@@ -150,8 +149,8 @@ nsresult nsFileCopyEvent::Dispatch(nsIRunnable* callback,
   if (NS_FAILED(rv)) return rv;
 
   // Dispatch ourselves to I/O thread pool...
-  nsCOMPtr<nsIEventTarget> pool;
-  pool = mozilla::components::StreamTransport::Service(&rv);
+  nsCOMPtr<nsIEventTarget> pool =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   return pool->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -321,8 +320,7 @@ nsresult nsFileChannel::MakeFileInputStream(nsIFile* file,
                                     async ? nsIFileInputStream::DEFER_OPEN : 0);
     if (NS_SUCCEEDED(rv) && !HasContentTypeHint()) {
       // Use file extension to infer content type
-      nsCOMPtr<nsIMIMEService> mime;
-      mime = mozilla::components::Mime::Service(&rv);
+      nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
       if (NS_SUCCEEDED(rv)) {
         mime->GetTypeFromFile(file, contentType);
       }
@@ -429,7 +427,8 @@ nsresult nsFileChannel::ListenerBlockingPromise(BlockingPromise** aPromise) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIEventTarget> sts(mozilla::components::StreamTransport::Service());
+  nsCOMPtr<nsIEventTarget> sts(
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID));
   if (!sts) {
     return FixupContentLength(true);
   }

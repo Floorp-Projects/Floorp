@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ThrottleQueue.h"
-#include "mozilla/Components.h"
 #include "mozilla/net/InputChannelThrottleQueueParent.h"
 #include "nsISeekableStream.h"
 #include "nsIAsyncInputStream.h"
@@ -252,7 +251,7 @@ ThrottleQueue::ThrottleQueue()
   nsCOMPtr<nsIEventTarget> sts;
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   if (NS_SUCCEEDED(rv)) {
-    sts = mozilla::components::SocketTransport::Service(&rv);
+    sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   }
   if (NS_SUCCEEDED(rv)) mTimer = NS_NewTimer(sts);
 }

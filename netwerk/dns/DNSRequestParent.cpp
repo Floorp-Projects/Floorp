@@ -12,7 +12,6 @@
 #include "nsICancelable.h"
 #include "nsIDNSRecord.h"
 #include "nsHostResolver.h"
-#include "mozilla/Components.h"
 #include "mozilla/Unused.h"
 #include "DNSAdditionalInfo.h"
 #include "nsServiceManagerUtils.h"
@@ -44,8 +43,7 @@ void DNSRequestHandler::DoAsyncResolve(const nsACString& hostname,
                                        nsIDNSService::DNSFlags flags) {
   nsresult rv;
   mFlags = flags;
-  nsCOMPtr<nsIDNSService> dns;
-  dns = mozilla::components::DNS::Service(&rv);
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
     nsCOMPtr<nsICancelable> unused;
@@ -68,8 +66,7 @@ void DNSRequestHandler::OnRecvCancelDNSRequest(
     const uint16_t& type, const OriginAttributes& originAttributes,
     const nsIDNSService::DNSFlags& flags, const nsresult& reason) {
   nsresult rv;
-  nsCOMPtr<nsIDNSService> dns;
-  dns = mozilla::components::DNS::Service(&rv);
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     RefPtr<DNSAdditionalInfo> info;
     if (!aTrrServer.IsEmpty() || port != -1) {
