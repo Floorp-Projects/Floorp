@@ -15,7 +15,7 @@ const POPUP_OPTIONS = {
 /**
  * Detailed preview card that displays when hovering a tab
  */
-export default class TabPreviewPanel {
+export default class TabHoverPreviewPanel {
   constructor(panel) {
     this._panel = panel;
     this._win = panel.ownerGlobal;

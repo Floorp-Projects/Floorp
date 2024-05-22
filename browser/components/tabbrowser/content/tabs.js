@@ -186,10 +186,10 @@
       }
       if (!this._previewPanel) {
         // load the tab preview component
-        const TabPreviewPanel = ChromeUtils.importESModule(
-          "chrome://browser/content/tabpreview/tab-preview-panel.mjs"
+        const TabHoverPreviewPanel = ChromeUtils.importESModule(
+          "chrome://browser/content/tabbrowser/tab-hover-preview.mjs"
         ).default;
-        this._previewPanel = new TabPreviewPanel(
+        this._previewPanel = new TabHoverPreviewPanel(
           document.getElementById("tab-preview-panel")
         );
       }
