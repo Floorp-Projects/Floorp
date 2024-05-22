@@ -652,10 +652,6 @@ fi # COMPILE_ENVIRONMENT
 
 AC_LANG_C
 
-if test "$COMPILE_ENVIRONMENT"; then
-MOZ_EXPAND_LIBS
-fi # COMPILE_ENVIRONMENT
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)

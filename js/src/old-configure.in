@@ -563,8 +563,6 @@ if test -n "$COMPILE_ENVIRONMENT"; then
 MOZ_CONFIG_CLANG_PLUGIN
 fi # COMPILE_ENVIRONMENT
 
-MOZ_EXPAND_LIBS
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
