@@ -25,6 +25,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -111,6 +112,9 @@ class IPCFuzzController {
   void AddToplevelActor(mojo::core::ports::PortName name,
                         mozilla::ipc::ProtocolId protocolId);
 
+  void InitAllowedIPCTypes();
+  void InitDisallowedIPCTypes();
+
   // Used for the IPC_SingleMessage fuzzer
   UniquePtr<IPC::Message> replaceIPCMessage(UniquePtr<IPC::Message> aMsg);
   void syncAfterReplace();
@@ -155,6 +159,13 @@ class IPCFuzzController {
 
   // If this is non-zero, we want a specific actor ID instead of the last.
   Atomic<int32_t> maybeLastActorId;
+
+  // If this is non-empty and in certain configurations, we only use a fixed
+  // set of messages, rather than sending any message type for that actor.
+  std::vector<uint32_t> actorAllowedMessages;
+
+  // Don't ever send messages contained in this set.
+  std::set<uint32_t> actorDisallowedMessages;
 
   // This is the deterministic ordering of toplevel actors for fuzzing.
   // In this matrix, each row (toplevel index) corresponds to one toplevel

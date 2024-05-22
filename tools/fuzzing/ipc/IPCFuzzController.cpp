@@ -138,11 +138,21 @@ void IPCFuzzController::InitializeIPCTypes() {
       validMsgTypes[(ProtocolId)start] = msgCount;
     }
   }
+
+  // Resolve potentially disallowed messages now that we have initialized IPC
+  // types.
+  InitDisallowedIPCTypes();
 }
 
 bool IPCFuzzController::GetRandomIPCMessageType(ProtocolId pId,
                                                 uint16_t typeOffset,
                                                 uint32_t* type) {
+  if (actorAllowedMessages.size() > 0) {
+    // We are fixed to a single actor with a particular message set allowed.
+    *type = actorAllowedMessages[typeOffset % actorAllowedMessages.size()];
+    return true;
+  }
+
   auto pIdEntry = validMsgTypes.find(pId);
   if (pIdEntry == validMsgTypes.end()) {
     return false;
@@ -155,7 +165,114 @@ bool IPCFuzzController::GetRandomIPCMessageType(ProtocolId pId,
     *type = *type - 1;
   }
 
+  // Check if we are allowed to send this message type.
+  if (actorDisallowedMessages.find(*type) != actorDisallowedMessages.end()) {
+    return false;
+  }
+
   return true;
+}
+
+void IPCFuzzController::InitDisallowedIPCTypes() {
+  const char* targetMsgName = getenv("MOZ_FUZZ_IPC_MSGFILTER_DISALLOW");
+  if (!targetMsgName) {
+    // Nothing to do.
+    return;
+  }
+
+  std::vector<std::string> targetMsgNames;
+  std::istringstream targetMsgNameStream(targetMsgName);
+  for (std::string msg; getline(targetMsgNameStream, msg, ';');) {
+    targetMsgNames.push_back(msg);
+  }
+
+  for (auto pIdEntry : validMsgTypes) {
+    for (uint16_t typeOffset = 0; typeOffset < pIdEntry.second; ++typeOffset) {
+      uint32_t type = ((uint32_t)pIdEntry.first << 16) + 1 + typeOffset;
+      const char* msgName = IPC::StringFromIPCMessageType(type);
+      if (strstr(msgName, "::Reply_")) {
+        continue;
+      }
+
+      for (std::string msg : targetMsgNames) {
+        if (strstr(msgName, msg.c_str())) {
+          actorDisallowedMessages.insert(type);
+          break;
+        }
+      }
+    }
+  }
+}
+
+void IPCFuzzController::InitAllowedIPCTypes() {
+  const char* targetMsgName = getenv("MOZ_FUZZ_IPC_MSGFILTER_ALLOW");
+  if (!targetMsgName) {
+    // Nothing to do.
+    return;
+  }
+
+  std::vector<std::string> targetMsgNames;
+  std::istringstream targetMsgNameStream(targetMsgName);
+  for (std::string msg; getline(targetMsgNameStream, msg, ';');) {
+    targetMsgNames.push_back(msg);
+  }
+
+  if (!maybeLastActorId) {
+    // We only want to call this if we are actually pinning to an actor.
+    // This also means that calling this is only valid with a PROTOID_FILTER
+    // set.
+    MOZ_FUZZING_NYX_ABORT("InitAllowedIPCTypes called without actor pinned?!");
+  }
+
+  auto result = actorIds.find(lastActorPortName);
+  if (result == actorIds.end()) {
+    MOZ_FUZZING_NYX_ABORT("ERROR: Couldn't find port in actors map?!\n");
+  }
+  auto actors = result->second;
+
+  bool found = false;
+  size_t actorIndex;
+  for (actorIndex = 0; actorIndex < actors.size(); ++actorIndex) {
+    if (actors[actorIndex].first == maybeLastActorId ||
+        (maybeLastActorId == MSG_ROUTING_CONTROL &&
+         !actors[actorIndex].first)) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    MOZ_FUZZING_NYX_ABORT(
+        "ERROR: Pinned to actor that's not in actors map!?\n");
+  }
+
+  ActorIdPair ids = actors[actorIndex];
+
+  ProtocolId pId = ids.second;
+
+  auto pIdEntry = validMsgTypes.find(pId);
+  if (pIdEntry == validMsgTypes.end()) {
+    MOZ_FUZZING_NYX_ABORT("ERROR: Pinned actor has no valid message types!?\n");
+  }
+
+  for (uint16_t typeOffset = 0; typeOffset < pIdEntry->second; ++typeOffset) {
+    uint32_t type = ((uint32_t)pIdEntry->first << 16) + 1 + typeOffset;
+    const char* msgName = IPC::StringFromIPCMessageType(type);
+    if (strstr(msgName, "::Reply_")) {
+      continue;
+    }
+
+    for (std::string msg : targetMsgNames) {
+      if (strstr(msgName, msg.c_str())) {
+        actorAllowedMessages.push_back(type);
+        break;
+      }
+    }
+  }
+
+  if (!actorAllowedMessages.size()) {
+    MOZ_FUZZING_NYX_ABORT("ERROR: Empty actorAllowedMessages!?\n");
+  }
 }
 
 static bool IsManagedByTargetActor(IProtocol* protocol,
@@ -390,6 +507,8 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
         MOZ_FUZZING_NYX_PRINTF("DEBUG: Pinned to port %lu %lu forever.\n",
                                lastActorPortName.v1, lastActorPortName.v2);
       }
+
+      InitAllowedIPCTypes();
     }
 
     // TODO: This is specific to PContent fuzzing. If we later want to fuzz
@@ -716,7 +835,7 @@ bool IPCFuzzController::MakeTargetDecision(
     *actorId = MSG_ROUTING_CONTROL;
   }
 
-  if (!isPreserveHeader) {
+  if (!isPreserveHeader || actorAllowedMessages.size() > 0) {
     // If msgType is already set, then we are in preserveHeaderMode
     if (!this->GetRandomIPCMessageType(ids.second, typeOffset, type)) {
       MOZ_FUZZING_NYX_PRINT("ERROR: GetRandomIPCMessageType failed?!\n");
@@ -727,6 +846,13 @@ bool IPCFuzzController::MakeTargetDecision(
     if (constructorTypes.find(*type) != constructorTypes.end()) {
       *is_cons = true;
     }
+  }
+
+  if (isPreserveHeader &&
+      actorDisallowedMessages.find(*type) != actorDisallowedMessages.end()) {
+    // If we have messages that aren't allowed to be sent, we need to
+    // confirm that the type set in the header is still allowed.
+    return false;
   }
 
   MOZ_FUZZING_NYX_PRINTF(
