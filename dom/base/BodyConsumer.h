@@ -32,6 +32,7 @@ class BodyConsumer final : public nsIObserver,
   enum class ConsumeType {
     ArrayBuffer,
     Blob,
+    Bytes,
     FormData,
     JSON,
     Text,

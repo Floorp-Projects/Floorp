@@ -157,6 +157,10 @@ class FetchBody : public FetchBodyBase, public AbortFollower {
     return ConsumeBody(aCx, BodyConsumer::ConsumeType::Blob, aRv);
   }
 
+  already_AddRefed<Promise> Bytes(JSContext* aCx, ErrorResult& aRv) {
+    return ConsumeBody(aCx, BodyConsumer::ConsumeType::Bytes, aRv);
+  }
+
   already_AddRefed<Promise> FormData(JSContext* aCx, ErrorResult& aRv) {
     return ConsumeBody(aCx, BodyConsumer::ConsumeType::FormData, aRv);
   }
