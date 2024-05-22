@@ -401,7 +401,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   [[nodiscard]] nsresult UpdateExpirationTime();
   [[nodiscard]] nsresult CheckPartial(nsICacheEntry* aEntry, int64_t* aSize,
                                       int64_t* aContentLength);
-  [[nodiscard]] nsresult ReadFromCache(void);
+  [[nodiscard]] nsresult ReadFromCache(bool alreadyMarkedValid);
   void CloseCacheEntry(bool doomOnFailure);
   [[nodiscard]] nsresult InitCacheEntry();
   void UpdateInhibitPersistentCachingFlag();
