@@ -151,6 +151,15 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                     "help": "Run the browser without fission enabled",
                 },
             ],
+            [
+                ["--subsuite"],
+                {
+                    "action": "store",
+                    "dest": "subsuite",
+                    "default": "marionette",
+                    "help": "Selects test paths from test-manifests.active",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -188,6 +197,7 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
         self.binary_path = c.get("binary_path")
         self.test_url = c.get("test_url")
         self.test_packages_url = c.get("test_packages_url")
+        self.subsuite = c.get("subsuite")
 
         self.test_suite = self._get_test_suite(c.get("emulator"))
         if self.test_suite not in self.config["suite_definitions"]:
@@ -357,7 +367,7 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
         test_paths = json.loads(os.environ.get("MOZHARNESS_TEST_PATHS", '""'))
         confirm_paths = json.loads(os.environ.get("MOZHARNESS_CONFIRM_PATHS", '""'))
 
-        suite = "marionette"
+        suite = self.subsuite
         if test_paths and suite in test_paths:
             suite_test_paths = test_paths[suite]
             if confirm_paths and suite in confirm_paths and confirm_paths[suite]:
