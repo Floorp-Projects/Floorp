@@ -53,6 +53,7 @@ UNIFIED_SOURCES += [
     "TestMediaDataDecoder.cpp",
     "TestMediaDataEncoder.cpp",
     "TestMediaEventSource.cpp",
+    "TestMediaInfo.cpp",
     "TestMediaMIMETypes.cpp",
     "TestMediaQueue.cpp",
     "TestMediaSpan.cpp",
