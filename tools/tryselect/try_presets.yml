@@ -80,7 +80,7 @@ desktop-frontend:
         # trade-off for query complexity + runtime on infrastructure.
         - "'browser-chrome                 'windows7 | '64 !spi !asan !tsan !msix !a11y !swr | 'linux"
         - "'mochitest-chrome               'windows7 | '64 !spi !asan !tsan             !swr !gpu"
-        - "'xpcshell                       'windows7 | '64 !spi !asan !tsan !msix !nofis !condprof"
+        - "'xpcshell                       'windows7 | '64 !spi !asan !tsan !msix !nofis !condprof !android"
         - "'browser-a11y | 'mochitest-a11y 'windows7 | '64 !spi !asan !tsan !no-cache   !swr"
         - "'marionette                     'windows7 | '64      !asan       !source !headless !swr"
         - "'firefox-ui-functional          'windows7 | '64      !asan !tsan"
