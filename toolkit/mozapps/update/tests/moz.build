@@ -14,6 +14,8 @@ if not CONFIG["MOZ_SUITE"]:
     if CONFIG["MOZ_BITS_DOWNLOAD"]:
         BROWSER_CHROME_MANIFESTS += ["browser/browser.bits.toml"]
 
+MARIONETTE_MANIFESTS += ["marionette/manifest.toml"]
+
 XPCSHELL_TESTS_MANIFESTS += [
     "unit_aus_update/xpcshell.toml",
     "unit_base_updater/xpcshell.toml",

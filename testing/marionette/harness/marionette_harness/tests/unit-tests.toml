@@ -13,12 +13,6 @@
 # marionette unit tests
 ["include:unit/unit-tests.toml"]
 
-# DOM tests
-["include:../../../../../dom/cache/test/marionette/manifest.toml"]
-["include:../../../../../dom/indexedDB/test/marionette/manifest.toml"]
-["include:../../../../../dom/quota/test/marionette/manifest.toml"]
-["include:../../../../../dom/workers/test/marionette/manifest.toml"]
-
 # browser tests
 ["include:../../../../../browser/components/backup/tests/marionette/manifest.toml"]
 ["include:../../../../../browser/components/migration/tests/marionette/manifest.toml"]
@@ -27,8 +21,17 @@
 ["include:../../../../../browser/components/sessionstore/test/marionette/manifest.toml"]
 ["include:../../../../../browser/components/tests/marionette/manifest.toml"]
 
+# DOM tests
+["include:../../../../../dom/cache/test/marionette/manifest.toml"]
+["include:../../../../../dom/indexedDB/test/marionette/manifest.toml"]
+["include:../../../../../dom/quota/test/marionette/manifest.toml"]
+["include:../../../../../dom/workers/test/marionette/manifest.toml"]
+
 # extensions tests
 ["include:../../../../../extensions/pref/autoconfig/test/marionette/manifest.toml"]
+
+# js tests
+["include:../../../../../js/xpconnect/tests/marionette/manifest.toml"]
 
 # layout tests
 ["include:../../../../../layout/base/tests/marionette/manifest.toml"]
@@ -40,7 +43,5 @@
 ["include:../../../../../toolkit/components/antitracking/bouncetrackingprotection/test/marionette/manifest.toml"]
 ["include:../../../../../toolkit/components/cleardata/tests/marionette/manifest.toml"]
 ["include:../../../../../toolkit/components/extensions/test/marionette/manifest-serviceworker.toml"]
-["include:../../../../../toolkit/xre/test/marionette/marionette.toml"]
-
-# update tests
-["include:../../../../../toolkit/mozapps/update/tests/marionette/marionette.toml"]
+["include:../../../../../toolkit/mozapps/update/tests/marionette/manifest.toml"]
+["include:../../../../../toolkit/xre/test/marionette/manifest.toml"]

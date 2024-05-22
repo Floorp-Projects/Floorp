@@ -17,7 +17,6 @@ XPIDL_SOURCES += [
 ]
 
 TEST_DIRS += ["tests"]
-MARIONETTE_MANIFESTS += ["tests/marionette/marionette.toml"]
 
 EXTRA_COMPONENTS += [
     "nsUpdateService.manifest",
