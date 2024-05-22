@@ -23,7 +23,7 @@ add_task(async function test() {
     );
     is(
       intervalInput.getAttribute("aria-valuemax"),
-      "100",
+      "1000",
       "aria-valuemax has the expected value"
     );
     is(
