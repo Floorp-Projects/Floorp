@@ -257,11 +257,11 @@ size_t BindingJSObjectMallocBytes(Blob* aBlob) {
 }
 
 already_AddRefed<Promise> Blob::Text(ErrorResult& aRv) const {
-  return ConsumeBody(BodyConsumer::CONSUME_TEXT, aRv);
+  return ConsumeBody(BodyConsumer::ConsumeType::Text, aRv);
 }
 
 already_AddRefed<Promise> Blob::ArrayBuffer(ErrorResult& aRv) const {
-  return ConsumeBody(BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
+  return ConsumeBody(BodyConsumer::ConsumeType::ArrayBuffer, aRv);
 }
 
 already_AddRefed<Promise> Blob::ConsumeBody(
