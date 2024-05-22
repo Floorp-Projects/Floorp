@@ -6,20 +6,13 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(
   lazy,
   {
-    loader: "resource://devtools/shared/loader/Loader.sys.mjs",
-  },
-  { global: "contextual" }
-);
-
-ChromeUtils.defineESModuleGetters(
-  lazy,
-  {
     releaseDistinctSystemPrincipalLoader:
       "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
     useDistinctSystemPrincipalLoader:
       "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
+    loader: "resource://devtools/shared/loader/Loader.sys.mjs",
   },
-  { global: "shared" }
+  { global: "contextual" }
 );
 
 // Name of the attribute into which we save data in `sharedData` object.
@@ -164,17 +157,11 @@ export const ContentProcessWatcherRegistry = {
       return { connection, loader };
     }
 
-    // When debugging a privileged page, like about:addons, this module will run in the same compartment
-    // as the debugged page. Both will run in the shared system compartment.
+    const { sessionContext, forwardingPrefix } = watcherDataObject;
+    // For the browser toolbox, we need to use a distinct loader in order to debug privileged JS.
     // The thread actor ultimately need to be in a distinct compartments from its debuggees.
-    // So we are using a special loader, which will use a distinct privileged global and compartment
-    // to load itself as well as all its modules.
-    //
-    // Note that when we are running the Browser Toolbox, this module will already be loaded in a special, distinct global and compartment
-    // Thanks to `loadInDevToolsLoader` flag of BrowserToolboxDevToolsProcess's JS Process Actor configuration.
-    // So that the Loader will also be loaded in the right, distinct compartment.
     loader =
-      useDistinctLoader || watcherDataObject.sessionContext.type == "all"
+      useDistinctLoader || sessionContext.type == "all"
         ? lazy.useDistinctSystemPrincipalLoader(watcherDataObject)
         : lazy.loader;
     watcherDataObject.loader = loader;
@@ -192,7 +179,6 @@ export const ContentProcessWatcherRegistry = {
 
     // Instantiate a DevToolsServerConnection which will pipe all its outgoing RDP packets
     // up to the parent process manager via DevToolsProcess JS Actor messages.
-    const { forwardingPrefix } = watcherDataObject;
     connection = DevToolsServer.connectToParentWindowActor(
       watcherDataObject.jsProcessActor,
       forwardingPrefix,
