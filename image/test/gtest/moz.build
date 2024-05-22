@@ -12,6 +12,7 @@ UNIFIED_SOURCES = [
     "TestAnimationFrameBuffer.cpp",
     "TestBlendAnimationFilter.cpp",
     "TestCopyOnWrite.cpp",
+    "TestDecoders.cpp",
     "TestDecodersPerf.cpp",
     "TestDecodeToSurface.cpp",
     "TestDeinterlacingFilter.cpp",
@@ -27,12 +28,6 @@ UNIFIED_SOURCES = [
     "TestSurfaceSink.cpp",
     "TestSwizzleFilter.cpp",
 ]
-
-# Bug 1894284 - Fails under TSAN
-if not CONFIG["MOZ_TSAN"]:
-    UNIFIED_SOURCES += [
-        "TestDecoders.cpp",
-    ]
 
 TEST_HARNESS_FILES.gtest += [
     "animated-with-extra-image-sub-blocks.gif",

@@ -88,7 +88,7 @@ class MetadataDecodingTask final : public IDecodingTask {
  * An IDecodingTask implementation for anonymous decoders - that is, decoders
  * with no associated Image object.
  */
-class AnonymousDecodingTask final : public IDecodingTask {
+class AnonymousDecodingTask : public IDecodingTask {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousDecodingTask, override)
 
@@ -101,7 +101,7 @@ class AnonymousDecodingTask final : public IDecodingTask {
 
   void Resume() override;
 
- private:
+ protected:
   virtual ~AnonymousDecodingTask() {}
 
   NotNull<RefPtr<Decoder>> mDecoder;

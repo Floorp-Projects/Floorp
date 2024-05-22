@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 
 #include "Common.h"
+#include "mozilla/Monitor.h"
 #include "AnimationSurfaceProvider.h"
 #include "DecodePool.h"
 #include "Decoder.h"
@@ -122,6 +123,67 @@ static void CheckDecoderBadBuffer(const ImageTestCase& aTestCase) {
   });
 }
 
+/**
+ * AnonymousDecodingTask but with a monitor so we can wait for it to finish
+ * safely.
+ */
+class MonitorAnonymousDecodingTask final : public AnonymousDecodingTask {
+ public:
+  explicit MonitorAnonymousDecodingTask(NotNull<Decoder*> aDecoder,
+                                        bool aResumable);
+
+  void Run() override;
+
+  void WaitUntilFinished();
+
+ private:
+  virtual ~MonitorAnonymousDecodingTask() = default;
+
+  Monitor mMonitor MOZ_UNANNOTATED;
+};
+
+MonitorAnonymousDecodingTask::MonitorAnonymousDecodingTask(
+    NotNull<Decoder*> aDecoder, bool aResumable)
+    : AnonymousDecodingTask(aDecoder, aResumable),
+      mMonitor("MonitorAnonymousDecodingTask") {}
+
+void MonitorAnonymousDecodingTask::Run() {
+  MonitorAutoLock lock(mMonitor);
+
+  while (true) {
+    LexerResult result = mDecoder->Decode(WrapNotNull(this));
+
+    if (result.is<TerminalState>()) {
+      mMonitor.NotifyAll();
+      return;  // We're done.
+    }
+
+    if (result == LexerResult(Yield::NEED_MORE_DATA)) {
+      // We can't make any more progress right now. Let the caller decide how to
+      // handle it.
+      mMonitor.NotifyAll();
+      return;
+    }
+
+    // Right now we don't do anything special for other kinds of yields, so just
+    // keep working.
+    MOZ_ASSERT(result.is<Yield>());
+  }
+}
+
+void MonitorAnonymousDecodingTask::WaitUntilFinished() {
+  MonitorAutoLock lock(mMonitor);
+
+  while (true) {
+    if (mDecoder->GetDecodeDone()) {
+      return;
+    }
+
+    // Not done yet, so we'll have to wait.
+    mMonitor.Wait();
+  }
+}
+
 template <typename Func>
 void WithSingleChunkDecode(const ImageTestCase& aTestCase,
                            const Maybe<IntSize>& aOutputSize,
@@ -150,15 +212,13 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
       decoderType, sourceBuffer, aOutputSize, decoderFlags,
       aTestCase.mSurfaceFlags);
   ASSERT_TRUE(decoder != nullptr);
-  RefPtr<IDecodingTask> task =
-      new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
+  RefPtr<MonitorAnonymousDecodingTask> task = new MonitorAnonymousDecodingTask(
+      WrapNotNull(decoder), /* aResumable */ false);
 
   if (aUseDecodePool) {
     DecodePool::Singleton()->AsyncRun(task.get());
 
-    while (!decoder->GetDecodeDone()) {
-      task->Resume();
-    }
+    task->WaitUntilFinished();
   } else {  // Run the full decoder synchronously on the main thread.
     task->Run();
   }
