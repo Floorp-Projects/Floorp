@@ -40,13 +40,12 @@ skip-if = [
 ]
 
 ["browser_creditCard_doorhanger_display.js"]
-skip-if = ["true"] # Bug 1895422
-# Bug 1895422 - Fix this test for linux then uncomment.
-# skip-if = [
-#  "apple_catalina && !debug", # perma-fail see Bug 1655601
-#  "apple_silicon && !debug", # perma-fail see Bug 1655601
-#  "win11_2009 && ccov",   # Bug 1655600
-# ]
+skip-if = [
+  "os == 'linux'", # Bug 1895422
+  "apple_catalina && !debug", # perma-fail see Bug 1655601
+  "apple_silicon && !debug", # perma-fail see Bug 1655601
+  "win11_2009 && ccov", # Bug 1655600
+]
 
 ["browser_creditCard_doorhanger_fields.js"]
 skip-if = [
