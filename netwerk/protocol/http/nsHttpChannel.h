@@ -617,7 +617,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // Total time the channel spent suspended. This value is reported to
   // telemetry in nsHttpChannel::OnStartRequest().
-  uint32_t mSuspendTotalTime{0};
+  TimeDuration mSuspendTotalTime{0};
 
   friend class AutoRedirectVetoNotifier;
   friend class HttpAsyncAborter<nsHttpChannel>;
