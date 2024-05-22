@@ -13,6 +13,7 @@ skip-if = ["os == 'android'"] # FOG isn't responsible for monitoring prefs and c
 run-sequentially = "very high failure rate in parallel"
 
 ["test_GIFFTIPC.js"]
+skip-if = ["os == 'android'"] # Telemetry IPC doesn't run on Android (bug 1896896)
 
 ["test_Glean.js"]
 
