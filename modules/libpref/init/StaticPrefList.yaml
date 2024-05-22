@@ -11654,6 +11654,13 @@
   value: false
   mirror: always
 
+# Changes cookieBehavior=5 to block third-party cookies in the private browsing
+# mode.
+- name: network.cookie.cookieBehavior.optInPartitioning.pbmode
+  type: bool
+  value: false
+  mirror: always
+
 # Whether to support CHIPS(Cookies Having Independent Partitioned State).
 - name: network.cookie.CHIPS.enabled
   type: bool
