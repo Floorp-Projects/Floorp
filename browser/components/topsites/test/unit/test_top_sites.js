@@ -1222,80 +1222,9 @@ add_task(async function test_refresh_handles_indexedDB_errors() {
   await cleanup();
 });
 
-add_task(async function test_getScreenshotPreview() {
-  let sandbox = sinon.createSandbox();
-
-  info(
-    "TopSites.getScreenshotPreview should dispatch preview if request is succesful"
-  );
-
-  let cleanup = stubTopSites(sandbox);
-  await TopSites.getScreenshotPreview("custom", 1234);
-
-  Assert.ok(TopSites.store.dispatch.calledOnce);
-  Assert.ok(
-    TopSites.store.dispatch.calledWithExactly(
-      ac.OnlyToOneContent(
-        {
-          data: { preview: FAKE_SCREENSHOT, url: "custom" },
-          type: at.PREVIEW_RESPONSE,
-        },
-        1234
-      )
-    )
-  );
-
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_getScreenshotPreview() {
-  let sandbox = sinon.createSandbox();
-
-  info(
-    "TopSites.getScreenshotPreview should return empty string if request fails"
-  );
-
-  let cleanup = stubTopSites(sandbox);
-  Screenshots.getScreenshotForURL.resolves(Promise.resolve(null));
-  await TopSites.getScreenshotPreview("custom", 1234);
-
-  Assert.ok(TopSites.store.dispatch.calledOnce);
-  Assert.ok(
-    TopSites.store.dispatch.calledWithExactly(
-      ac.OnlyToOneContent(
-        {
-          data: { preview: "", url: "custom" },
-          type: at.PREVIEW_RESPONSE,
-        },
-        1234
-      )
-    )
-  );
-
-  Screenshots.getScreenshotForURL.resolves(FAKE_SCREENSHOT);
-  sandbox.restore();
-  await cleanup();
-});
-
 add_task(async function test_onAction_part_1() {
   let sandbox = sinon.createSandbox();
-
-  info("TopSites.onAction should call getScreenshotPreview on PREVIEW_REQUEST");
-
   let cleanup = stubTopSites(sandbox);
-  sandbox.stub(TopSites, "getScreenshotPreview");
-  TopSites.onAction({
-    type: at.PREVIEW_REQUEST,
-    data: { url: "foo" },
-    meta: { fromTarget: 1234 },
-  });
-
-  Assert.ok(
-    TopSites.getScreenshotPreview.calledOnce,
-    "TopSites.getScreenshotPreview called once"
-  );
-  Assert.ok(TopSites.getScreenshotPreview.calledWithExactly("foo", 1234));
 
   info("TopSites.onAction should refresh on SYSTEM_TICK");
   sandbox.stub(TopSites, "refresh");
@@ -1525,25 +1454,6 @@ add_task(async function test_insert_part_1() {
   let sandbox = sinon.createSandbox();
   sandbox.stub(NewTabUtils.pinnedLinks, "pin");
   let cleanup = stubTopSites(sandbox);
-
-  info("TopSites.insert should pin site in first slot of empty pinned list");
-  Screenshots.getScreenshotForURL.resolves(Promise.resolve(null));
-  await TopSites.getScreenshotPreview("custom", 1234);
-
-  Assert.ok(TopSites.store.dispatch.calledOnce);
-  Assert.ok(
-    TopSites.store.dispatch.calledWithExactly(
-      ac.OnlyToOneContent(
-        {
-          data: { preview: "", url: "custom" },
-          type: at.PREVIEW_RESPONSE,
-        },
-        1234
-      )
-    )
-  );
-
-  Screenshots.getScreenshotForURL.resolves(FAKE_SCREENSHOT);
 
   {
     info(

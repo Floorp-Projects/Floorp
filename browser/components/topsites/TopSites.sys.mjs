@@ -809,25 +809,6 @@ class _TopSites {
     );
   }
 
-  /**
-   * Dispatch screenshot preview to target or notify if request failed.
-   *
-   * @param {string} url The URL used to capture the screenshot
-   * @param {string} target Id of content process where to dispatch the result
-   */
-  async getScreenshotPreview(url, target) {
-    const preview = (await lazy.Screenshots.getScreenshotForURL(url)) || "";
-    this.store.dispatch(
-      ac.OnlyToOneContent(
-        {
-          data: { url, preview },
-          type: at.PREVIEW_RESPONSE,
-        },
-        target
-      )
-    );
-  }
-
   _requestRichIcon(url) {
     this.store.dispatch({
       type: at.RICH_ICON_MISSING,
@@ -1130,9 +1111,6 @@ class _TopSites {
         break;
       case at.TOP_SITES_INSERT:
         this.insert(action);
-        break;
-      case at.PREVIEW_REQUEST:
-        this.getScreenshotPreview(action.data.url, action.meta.fromTarget);
         break;
       case at.UPDATE_PINNED_SEARCH_SHORTCUTS:
         this.updatePinnedSearchShortcuts(action.data);
