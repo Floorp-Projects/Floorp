@@ -70,7 +70,7 @@ export default class MozCard extends MozLitElement {
   cardTemplate() {
     if (this.type === "accordion") {
       return html`
-        <details id="moz-card-details" @toggle="${this.onToggle}">
+        <details id="moz-card-details">
           <summary>${this.headingTemplate()}</summary>
           <div id="content"><slot></slot></div>
         </details>
@@ -104,15 +104,6 @@ export default class MozCard extends MozLitElement {
    */
   toggleDetails(force) {
     this.detailsEl.open = force ?? !this.detailsEl.open;
-  }
-
-  onToggle() {
-    this.dispatchEvent(
-      new ToggleEvent("toggle", {
-        newState: this.detailsEl.open ? "open" : "closed",
-        oldState: this.detailsEl.open ? "closed" : "open",
-      })
-    );
   }
 
   render() {
