@@ -58,7 +58,7 @@ function setupStore(
   }
   const store = configureStore(webConsoleUI, {
     ...storeOptions,
-    thunkArgs: { toolbox: {}, webConsoleUI },
+    thunkArgs: { toolbox: {} },
     telemetry: new Telemetry(),
   });
 

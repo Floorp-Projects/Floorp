@@ -89,8 +89,7 @@ function getDistinctDevToolsServer() {
     useDistinctSystemPrincipalLoader,
     releaseDistinctSystemPrincipalLoader,
   } = ChromeUtils.importESModule(
-    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
-    { global: "shared" }
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
   );
   const requester = {};
   const distinctLoader = useDistinctSystemPrincipalLoader(requester);

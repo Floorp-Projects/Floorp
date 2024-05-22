@@ -15,8 +15,6 @@ ChromeUtils.defineESModuleGetters(
       "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
     ServiceWorkerTargetWatcher:
       "resource://devtools/server/connectors/js-process-actor/target-watchers/service_worker.sys.mjs",
-    SharedWorkerTargetWatcher:
-      "resource://devtools/server/connectors/js-process-actor/target-watchers/shared_worker.sys.mjs",
     WorkerTargetWatcher:
       "resource://devtools/server/connectors/js-process-actor/target-watchers/worker.sys.mjs",
     WindowGlobalTargetWatcher:
@@ -77,13 +75,6 @@ export class DevToolsProcessChild extends JSProcessActorChild {
       activeListener: 0,
       get watcher() {
         return lazy.ServiceWorkerTargetWatcher;
-      },
-    },
-
-    shared_worker: {
-      activeListener: 0,
-      get watcher() {
-        return lazy.SharedWorkerTargetWatcher;
       },
     },
   };
@@ -432,14 +423,6 @@ export class DevToolsProcessChild extends JSProcessActorChild {
         updateType
       );
     }
-    if (watchingTargetTypes.includes("shared_worker")) {
-      await this.#watchers.shared_worker.watcher.addOrSetSessionDataEntry(
-        watcherDataObject,
-        type,
-        entries,
-        updateType
-      );
-    }
   }
 
   /**
@@ -496,14 +479,14 @@ export class DevToolsProcessChild extends JSProcessActorChild {
    * but also within this class when the last watcher stopped watching for targets.
    */
   didDestroy() {
-    // Unregister all the active watchers.
-    // This will destroy all the active target actors and unregister the target observers.
-    for (const watcherDataObject of ContentProcessWatcherRegistry.getAllWatchersDataObjects()) {
-      this.#destroyWatcher(watcherDataObject);
+    // Stop watching for all target types
+    for (const entry of Object.values(this.#watchers)) {
+      if (entry.activeListener > 0) {
+        entry.watcher.unwatch();
+        entry.activeListener = 0;
+      }
     }
 
-    // The previous for loop should have removed all the elements,
-    // but just to be safe, wipe all stored data to avoid any possible leak.
     ContentProcessWatcherRegistry.clear();
   }
 }

@@ -256,8 +256,6 @@ function getResourceTypeDictionaryForTargetType(targetType) {
       return WorkerTargetResources;
     case Targets.TYPES.SERVICE_WORKER:
       return WorkerTargetResources;
-    case Targets.TYPES.SHARED_WORKER:
-      return WorkerTargetResources;
     default:
       throw new Error(`Unsupported target actor typeName '${targetType}'`);
   }
