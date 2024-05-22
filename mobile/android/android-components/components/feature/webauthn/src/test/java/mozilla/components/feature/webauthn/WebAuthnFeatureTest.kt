@@ -27,6 +27,7 @@ class WebAuthnFeatureTest {
 
     @Before
     fun setup() {
+        exitFullScreenUseCaseCalled = false
         engine = mock()
         activity = mock()
     }
@@ -84,6 +85,19 @@ class WebAuthnFeatureTest {
         val result = feature.onActivityResult(ACTIVITY_REQUEST_CODE - 5, Intent(), 0)
 
         assertFalse(result)
+    }
+
+    @Test
+    fun `when feature called by activity, then exit fullscreen if required`() {
+        val feature = webAuthnFeature()
+        val callback: ((Intent?) -> Unit) = { }
+        val intentSender: IntentSender = mock()
+
+        assertFalse(exitFullScreenUseCaseCalled)
+
+        feature.startIntentSenderForResult(intentSender, callback)
+
+        assertTrue(exitFullScreenUseCaseCalled)
     }
 
     private fun webAuthnFeature(): WebAuthnFeature {
