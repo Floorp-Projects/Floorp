@@ -498,7 +498,7 @@ void BodyConsumer::BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWorkerRef) {
     return;
   }
 
-  if (mConsumeType == ConsumeType::Blob) {
+  if (mConsumeType == CONSUME_BLOB) {
     nsresult rv;
 
     // If we're trying to consume a blob, and the request was for a blob URI,
@@ -547,7 +547,7 @@ void BodyConsumer::BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWorkerRef) {
       new ConsumeBodyDoneObserver(this, aWorkerRef);
 
   nsCOMPtr<nsIStreamListener> listener;
-  if (mConsumeType == ConsumeType::Blob) {
+  if (mConsumeType == CONSUME_BLOB) {
     listener = new MutableBlobStreamListener(mBlobStorageType, mBodyMimeType, p,
                                              mMainThreadEventTarget);
   } else {
@@ -703,31 +703,24 @@ void BodyConsumer::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength,
   ErrorResult error;
 
   switch (mConsumeType) {
-    case ConsumeType::ArrayBuffer: {
+    case CONSUME_ARRAYBUFFER: {
       JS::Rooted<JSObject*> arrayBuffer(cx);
       BodyUtil::ConsumeArrayBuffer(cx, &arrayBuffer, aResultLength,
                                    std::move(resultPtr), error);
+
       if (!error.Failed()) {
-        JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*arrayBuffer));
+        JS::Rooted<JS::Value> val(cx);
+        val.setObjectOrNull(arrayBuffer);
+
         localPromise->MaybeResolve(val);
       }
       break;
     }
-    case ConsumeType::Blob: {
+    case CONSUME_BLOB: {
       MOZ_CRASH("This should not happen.");
       break;
     }
-    case ConsumeType::Bytes: {
-      JS::Rooted<JSObject*> bytes(cx);
-      BodyUtil::ConsumeBytes(cx, &bytes, aResultLength, std::move(resultPtr),
-                             error);
-      if (!error.Failed()) {
-        JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*bytes));
-        localPromise->MaybeResolve(val);
-      }
-      break;
-    }
-    case ConsumeType::FormData: {
+    case CONSUME_FORMDATA: {
       nsCString data;
       data.Adopt(reinterpret_cast<char*>(resultPtr.release()), aResultLength);
 
@@ -738,13 +731,13 @@ void BodyConsumer::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength,
       }
       break;
     }
-    case ConsumeType::Text:
+    case CONSUME_TEXT:
       // fall through handles early exit.
-    case ConsumeType::JSON: {
+    case CONSUME_JSON: {
       nsString decoded;
       if (NS_SUCCEEDED(
               BodyUtil::ConsumeText(aResultLength, resultPtr.get(), decoded))) {
-        if (mConsumeType == ConsumeType::Text) {
+        if (mConsumeType == CONSUME_TEXT) {
           localPromise->MaybeResolve(decoded);
         } else {
           JS::Rooted<JS::Value> json(cx);
@@ -769,7 +762,7 @@ void BodyConsumer::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength,
 void BodyConsumer::ContinueConsumeBlobBody(BlobImpl* aBlobImpl,
                                            bool aShuttingDown) {
   AssertIsOnTargetThread();
-  MOZ_ASSERT(mConsumeType == ConsumeType::Blob);
+  MOZ_ASSERT(mConsumeType == CONSUME_BLOB);
 
   if (mBodyConsumed) {
     return;

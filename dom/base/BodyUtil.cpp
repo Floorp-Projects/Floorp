@@ -356,13 +356,12 @@ void BodyUtil::ConsumeArrayBuffer(JSContext* aCx,
                                   uint32_t aInputLength,
                                   UniquePtr<uint8_t[], JS::FreePolicy> aInput,
                                   ErrorResult& aRv) {
-  aRv.MightThrowJSException();
-
   JS::Rooted<JSObject*> arrayBuffer(aCx);
   arrayBuffer =
       JS::NewArrayBufferWithContents(aCx, aInputLength, std::move(aInput));
   if (!arrayBuffer) {
-    aRv.StealExceptionFromJSContext(aCx);
+    JS_ClearPendingException(aCx);
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
   aValue.set(arrayBuffer);
@@ -382,28 +381,6 @@ already_AddRefed<Blob> BodyUtil::ConsumeBlob(nsIGlobalObject* aParent,
     return nullptr;
   }
   return blob.forget();
-}
-
-// static
-void BodyUtil::ConsumeBytes(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
-                            uint32_t aInputLength,
-                            UniquePtr<uint8_t[], JS::FreePolicy> aInput,
-                            ErrorResult& aRv) {
-  aRv.MightThrowJSException();
-
-  JS::Rooted<JSObject*> arrayBuffer(aCx);
-  ConsumeArrayBuffer(aCx, &arrayBuffer, aInputLength, std::move(aInput), aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  JS::Rooted<JSObject*> bytes(
-      aCx, JS_NewUint8ArrayWithBuffer(aCx, arrayBuffer, 0, aInputLength));
-  if (!bytes) {
-    aRv.StealExceptionFromJSContext(aCx);
-    return;
-  }
-  aValue.set(bytes);
 }
 
 // static

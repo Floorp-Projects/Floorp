@@ -150,27 +150,23 @@ class FetchBody : public FetchBodyBase, public AbortFollower {
   bool BodyUsed() const;
 
   already_AddRefed<Promise> ArrayBuffer(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, BodyConsumer::ConsumeType::ArrayBuffer, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
   }
 
   already_AddRefed<Promise> Blob(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, BodyConsumer::ConsumeType::Blob, aRv);
-  }
-
-  already_AddRefed<Promise> Bytes(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, BodyConsumer::ConsumeType::Bytes, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_BLOB, aRv);
   }
 
   already_AddRefed<Promise> FormData(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, BodyConsumer::ConsumeType::FormData, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_FORMDATA, aRv);
   }
 
   already_AddRefed<Promise> Json(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, BodyConsumer::ConsumeType::JSON, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_JSON, aRv);
   }
 
   already_AddRefed<Promise> Text(JSContext* aCx, ErrorResult& aRv) {
-    return ConsumeBody(aCx, BodyConsumer::ConsumeType::Text, aRv);
+    return ConsumeBody(aCx, BodyConsumer::CONSUME_TEXT, aRv);
   }
 
   already_AddRefed<ReadableStream> GetBody(JSContext* aCx, ErrorResult& aRv);
