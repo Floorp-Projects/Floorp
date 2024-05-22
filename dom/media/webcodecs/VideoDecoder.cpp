@@ -109,7 +109,7 @@ VideoDecoderConfigInternal::VideoDecoderConfigInternal(
       mDisplayAspectHeight(std::move(aDisplayAspectHeight)),
       mDisplayAspectWidth(std::move(aDisplayAspectWidth)),
       mHardwareAcceleration(aHardwareAcceleration),
-      mOptimizeForLatency(std::move(aOptimizeForLatency)){};
+      mOptimizeForLatency(std::move(aOptimizeForLatency)) {};
 
 /*static*/
 UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
