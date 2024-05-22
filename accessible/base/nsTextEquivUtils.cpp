@@ -20,7 +20,7 @@ using namespace mozilla::a11y;
 /**
  * The accessible for which we are computing a text equivalent. It is useful
  * for bailing out during recursive text computation, or for special cases
- * like step f. of the ARIA implementation guide.
+ * like the "Embedded Control" section of the AccName spec.
  */
 static const Accessible* sInitiatorAcc = nullptr;
 
@@ -252,7 +252,7 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   bool isEmptyTextEquiv = true;
 
   // Attempt to find the value. If it's non-empty, append and return it. See the
-  // "embedded control" section of the name spec.
+  // "Embedded Control" section of the name spec.
   nsAutoString val;
   nsresult rv = AppendFromValue(aAccessible, &val);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -261,16 +261,15 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
     return NS_OK;
   }
 
-  // If the name is from tooltip then append it to result string in the end
-  // (see h. step of name computation guide).
+  // If the name is from tooltip, we retrieve it now but only append it to the
+  // result string later as a last resort. Otherwise, we append the name now.
   nsAutoString text;
   if (aAccessible->Name(text) != eNameFromTooltip) {
     isEmptyTextEquiv = !AppendString(aString, text);
   }
 
-  // Implementation of g) step of text equivalent computation guide. Go down
-  // into subtree if accessible allows "text equivalent from subtree rule" or
-  // it's not root and not control.
+  // Implementation of the "Name From Content" step of the text alternative
+  // computation guide. Traverse the accessible's subtree if allowed.
   if (isEmptyTextEquiv) {
     if (ShouldIncludeInSubtreeCalculation(aAccessible)) {
       rv = AppendFromAccessibleChildren(aAccessible, aString);
@@ -280,7 +279,7 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
     }
   }
 
-  // Implementation of h. step
+  // Implementation of the "Tooltip" step
   if (isEmptyTextEquiv && !text.IsEmpty()) {
     AppendString(aString, text);
     if (isHTMLBlock) {
@@ -305,7 +304,6 @@ nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
   // computation. If the given accessible is not the root accessible (the
   // accessible the text alternative is computed for in the end) then append the
   // accessible value.
-
   if (aAccessible == sInitiatorAcc) {
     return NS_OK_NO_NAME_CLAUSE_HANDLED;
   }
@@ -323,6 +321,7 @@ nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
     return NS_ERROR_FAILURE;
   }
 
+  // For other accessibles, get the value directly.
   aAccessible->Value(text);
 
   return AppendString(aString, text) ? NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
