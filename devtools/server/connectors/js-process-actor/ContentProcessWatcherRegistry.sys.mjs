@@ -164,11 +164,17 @@ export const ContentProcessWatcherRegistry = {
       return { connection, loader };
     }
 
-    const { sessionContext, forwardingPrefix } = watcherDataObject;
-    // For the browser toolbox, we need to use a distinct loader in order to debug privileged JS.
+    // When debugging a privileged page, like about:addons, this module will run in the same compartment
+    // as the debugged page. Both will run in the shared system compartment.
     // The thread actor ultimately need to be in a distinct compartments from its debuggees.
+    // So we are using a special loader, which will use a distinct privileged global and compartment
+    // to load itself as well as all its modules.
+    //
+    // Note that when we are running the Browser Toolbox, this module will already be loaded in a special, distinct global and compartment
+    // Thanks to `loadInDevToolsLoader` flag of BrowserToolboxDevToolsProcess's JS Process Actor configuration.
+    // So that the Loader will also be loaded in the right, distinct compartment.
     loader =
-      useDistinctLoader || sessionContext.type == "all"
+      useDistinctLoader || watcherDataObject.sessionContext.type == "all"
         ? lazy.useDistinctSystemPrincipalLoader(watcherDataObject)
         : lazy.loader;
     watcherDataObject.loader = loader;
@@ -186,6 +192,7 @@ export const ContentProcessWatcherRegistry = {
 
     // Instantiate a DevToolsServerConnection which will pipe all its outgoing RDP packets
     // up to the parent process manager via DevToolsProcess JS Actor messages.
+    const { forwardingPrefix } = watcherDataObject;
     connection = DevToolsServer.connectToParentWindowActor(
       watcherDataObject.jsProcessActor,
       forwardingPrefix,

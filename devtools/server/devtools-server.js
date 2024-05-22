@@ -258,6 +258,12 @@ var DevToolsServer = {
     // Remove connections that were accepted in the listener.
     for (const connID of Object.getOwnPropertyNames(this._connections)) {
       const connection = this._connections[connID];
+      // When calling connection.close on a previous element,
+      // this may unregister some of the following other connections in `_connections`
+      // and make them be null here.
+      if (!connection) {
+        continue;
+      }
       if (connection.isAcceptedBy(listener)) {
         connection.close();
       }
