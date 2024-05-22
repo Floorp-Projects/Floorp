@@ -24,3 +24,5 @@ skip-if = [
 ]
 
 ["test_disallowInheritPrincipal.html"]
+
+["test_loadLocalFont.html"]
