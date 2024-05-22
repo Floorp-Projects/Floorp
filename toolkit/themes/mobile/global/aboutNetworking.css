@@ -13,7 +13,7 @@
 }
 
 #refreshDiv > * {
-  font-size: 2em;
+  font-size: large;
   vertical-align: middle;
 }
 
@@ -33,7 +33,7 @@
 }
 
 .category {
-  font-size: 2em;
+  font-size: larger;
   padding: 0.2em;
   text-align: center;
   cursor: pointer;
@@ -74,10 +74,28 @@ th, td, table {
 th {
   padding-bottom: 0.5em;
   padding-inline: 1em;
-  font-size: larger;
+  font-size: large;
   white-space: nowrap;
 }
 
 td {
   padding-bottom: 0.25em;
+  font-size: medium;
+  padding-inline: 1em;
+}
+
+label {
+  font-size: medium;
+}
+
+input {
+  font-size: medium;
+}
+
+button {
+  font-size: large;
+}
+
+#logging {
+  font-size: medium;
 }
