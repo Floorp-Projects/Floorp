@@ -37,11 +37,6 @@ const FAKE_LINKS = new Array(2 * TOP_SITES_MAX_SITES_PER_ROW)
   }));
 const FAKE_SCREENSHOT = "data123";
 const SEARCH_SHORTCUTS_EXPERIMENT_PREF = "improvesearch.topSiteSearchShortcuts";
-const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF =
-  "improvesearch.topSiteSearchShortcuts.searchEngines";
-const SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
-  "improvesearch.topSiteSearchShortcuts.havePinned";
-const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -94,6 +89,11 @@ function stubTopSites(sandbox) {
     },
     dbStorage: { getDbTable: sandbox.stub().returns(storage) },
   };
+  // Set preferences to match the store state.
+  Services.prefs.setIntPref(
+    "browser.newtabpage.activity-stream.topSitesRows",
+    2
+  );
   info("Created mock store for TopSites.");
   return cleanup;
 }
@@ -491,11 +491,17 @@ add_task(async function test_getLinksWithDefaults_get_more_on_request() {
   TopSites.refreshDefaults("https://foo.com");
 
   const TEST_ROWS = 3;
-  TopSites.store.state.Prefs.values.topSitesRows = TEST_ROWS;
+  Services.prefs.setIntPref(
+    "browser.newtabpage.activity-stream.topSitesRows",
+    TEST_ROWS
+  );
 
   let result = await TopSites.getLinksWithDefaults();
   Assert.equal(result.length, TEST_ROWS * TOP_SITES_MAX_SITES_PER_ROW);
 
+  Services.prefs.clearUserPref(
+    "browser.newtabpage.activity-stream.topSitesRows"
+  );
   gGetTopSitesStub.resolves(FAKE_LINKS);
   sandbox.restore();
   await cleanup();
@@ -533,7 +539,10 @@ add_task(
     gGetTopSitesStub.resetHistory();
 
     await TopSites.getLinksWithDefaults();
-    TopSites.store.state.Prefs.values.topSitesRows *= 3;
+    Services.prefs.setIntPref(
+      "browser.newtabpage.activity-stream.topSitesRows",
+      3
+    );
     await TopSites.getLinksWithDefaults();
 
     Assert.ok(
@@ -541,6 +550,9 @@ add_task(
       "getTopSites called twice"
     );
 
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.topSitesRows"
+    );
     sandbox.restore();
     await cleanup();
   }
@@ -558,7 +570,10 @@ add_task(
 
     gGetTopSitesStub.resetHistory();
 
-    TopSites.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.feeds.topsites",
+      true
+    );
     await TopSites.getLinksWithDefaults();
 
     let originalCallCount = Screenshots.getScreenshotForURL.callCount;
@@ -577,6 +592,9 @@ add_task(
     );
     Assert.equal(result[0].screenshot, FAKE_SCREENSHOT);
 
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.feeds.topsites"
+    );
     sandbox.restore();
     await cleanup();
   }
@@ -808,7 +826,10 @@ add_task(
 
     let cleanup = stubTopSites(sandbox);
     TopSites.refreshDefaults("https://foo.com");
-    TopSites.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.feeds.topsites",
+      true
+    );
 
     NewTabUtils.activityStreamLinks.getTopSites.resetHistory();
     Screenshots.getScreenshotForURL.resetHistory();
@@ -831,7 +852,6 @@ add_task(
     await cleanup();
 
     cleanup = stubTopSites(sandbox);
-    TopSites.store.state.Prefs.values[SHOWN_ON_NEWTAB_PREF] = true;
 
     TopSites.refreshDefaults("https://foo.com");
 
@@ -847,6 +867,9 @@ add_task(
       "getLinksWithDefaults concurrent calls should dispatch once per link screenshot fetched"
     );
 
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.feeds.topsites"
+    );
     sandbox.restore();
     await cleanup();
   }
@@ -1397,8 +1420,13 @@ add_task(async function test_onAction_part_2() {
   info("TopSites.onAction should call init on INIT action");
   TopSites.onAction({ type: at.PLACES_LINKS_DELETED });
   sandbox.stub(TopSites, "init");
+  // SearchService.init is stubbed which won't initialize search settings,
+  // which retrieving appProvidedEngines relies on. Return an empty array
+  // to simulate no engines.
+  sandbox.stub(SearchService.prototype, "getAppProvidedEngines").resolves([]);
   TopSites.onAction({ type: at.INIT });
   Assert.ok(TopSites.init.calledOnce, "TopSites.init called once");
+  await TestUtils.topicObserved("topsites-updated-custom-search-shortcuts");
 
   info("TopSites.onAction should call refresh on PLACES_LINK_BLOCKED action");
   TopSites.refresh.resetHistory();
@@ -1601,7 +1629,10 @@ add_task(async function test_insert_part_2() {
     sandbox
       .stub(NewTabUtils.pinnedLinks, "links")
       .get(() => [site1, site2, site3, site4, site5, site6, site7, site8]);
-    TopSites.store.state.Prefs.values.topSitesRows = 1;
+    Services.prefs.setIntPref(
+      "browser.newtabpage.activity-stream.topSitesRows",
+      1
+    );
     let site = { url: "foo.bar", label: "foo" };
     await TopSites.insert({ data: { site } });
     Assert.equal(
@@ -1618,6 +1649,9 @@ add_task(async function test_insert_part_2() {
     Assert.ok(NewTabUtils.pinnedLinks.pin.calledWith(site6, 6));
     Assert.ok(NewTabUtils.pinnedLinks.pin.calledWith(site7, 7));
     NewTabUtils.pinnedLinks.pin.resetHistory();
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.topSitesRows"
+    );
   }
 
   {
@@ -2036,7 +2070,6 @@ add_task(async function test_integration() {
 
 add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
   let sandbox = sinon.createSandbox();
-  const NO_DEFAULT_SEARCH_TILE_PREF = "improvesearch.noDefaultSearchTile";
 
   sandbox.stub(SearchService.prototype, "getDefault").resolves({
     identifier: "google",
@@ -2049,7 +2082,10 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
         "search from the default sites"
     );
     let cleanup = stubTopSites(sandbox);
-    TopSites.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+      true
+    );
     let top5Test = [
       "https://google.com",
       "https://search.yahoo.com",
@@ -2075,6 +2111,9 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
       Assert.ok(!urlsReturned.includes(url), `Should not include ${url}`)
     );
 
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
+    );
     gGetTopSitesStub.resolves(FAKE_LINKS);
     await cleanup();
   }
@@ -2085,8 +2124,10 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
         "search from the query results if the experiment pref is off"
     );
     let cleanup = stubTopSites(sandbox);
-    TopSites.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = false;
-
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+      false
+    );
     gGetTopSitesStub.resolves([
       { url: "https://google.com" },
       { url: "https://foo.com" },
@@ -2098,6 +2139,9 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
 
     Assert.ok(urlsReturned.includes("https://google.com"));
     gGetTopSitesStub.resolves(FAKE_LINKS);
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
+    );
     await cleanup();
   }
 
@@ -2107,7 +2151,10 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
         "default search from the default sites"
     );
     let cleanup = stubTopSites(sandbox);
-    TopSites.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+      true
+    );
 
     sandbox.stub(TopSites, "_currentSearchHostname").get(() => "amazon");
     TopSites.onAction({
@@ -2121,6 +2168,9 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
     );
     Assert.ok(!urlsReturned.includes("https://amazon.com"));
 
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
+    );
     gGetTopSitesStub.resolves(FAKE_LINKS);
     await cleanup();
   }
@@ -2132,7 +2182,10 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
         "default search"
     );
     let cleanup = stubTopSites(sandbox);
-    TopSites.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+      true
+    );
 
     sandbox
       .stub(NewTabUtils.pinnedLinks, "links")
@@ -2144,6 +2197,9 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
     );
     Assert.ok(urlsReturned.includes("google.com"));
 
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
+    );
     gGetTopSitesStub.resolves(FAKE_LINKS);
     await cleanup();
   }
@@ -2170,7 +2226,10 @@ add_task(
           "default search engine has been set"
       );
       let cleanup = stubTopSites(sandbox);
-      TopSites.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
+      Services.prefs.setBoolPref(
+        "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+        true
+      );
 
       TopSites.observe(
         null,
@@ -2180,6 +2239,9 @@ add_task(
       Assert.equal(TopSites._currentSearchHostname, "duckduckgo");
       Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
 
+      Services.prefs.clearUserPref(
+        "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
+      );
       gGetTopSitesStub.resolves(FAKE_LINKS);
       TopSites.refresh.resetHistory();
       await cleanup();
@@ -2191,7 +2253,10 @@ add_task(
           "experiment pref has changed"
       );
       let cleanup = stubTopSites(sandbox);
-      TopSites.store.state.Prefs.values[NO_DEFAULT_SEARCH_TILE_PREF] = true;
+      Services.prefs.setBoolPref(
+        "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+        true
+      );
 
       TopSites.onAction({
         type: at.PREF_CHANGED,
@@ -2211,6 +2276,9 @@ add_task(
         "TopSites.refresh was called twice"
       );
 
+      Services.prefs.clearUserPref(
+        "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
+      );
       gGetTopSitesStub.resolves(FAKE_LINKS);
       TopSites.refresh.resetHistory();
       await cleanup();
@@ -2232,10 +2300,18 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
   });
 
   let prepTopSites = () => {
-    TopSites.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = true;
-    TopSites.store.state.Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF] =
-      "google,amazon";
-    TopSites.store.state.Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF] = "";
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+      true
+    );
+    Services.prefs.setStringPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.searchEngines",
+      "google,amazon"
+    );
+    Services.prefs.setStringPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.havePinned",
+      ""
+    );
   };
 
   {
@@ -2245,7 +2321,10 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
     );
     let cleanup = stubTopSites(sandbox);
     prepTopSites();
-    TopSites.store.state.Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT_PREF] = false;
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+      false
+    );
     sandbox.spy(TopSites, "updateCustomSearchShortcuts");
 
     // turn the experiment on
@@ -2344,9 +2423,10 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
     );
     let cleanup = stubTopSites(sandbox);
     prepTopSites();
-    TopSites.store.state.Prefs.values[
-      "improvesearch.noDefaultSearchTile"
-    ] = true;
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+      true
+    );
     await TopSites.updateCustomSearchShortcuts();
     Assert.ok(
       TopSites.store.dispatch.calledOnce,
@@ -2389,6 +2469,15 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
     await cleanup();
   }
 
+  Services.prefs.clearUserPref(
+    "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts"
+  );
+  Services.prefs.clearUserPref(
+    "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.searchEngines"
+  );
+  Services.prefs.clearUserPref(
+    "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.havePinned"
+  );
   sandbox.restore();
 });
 
