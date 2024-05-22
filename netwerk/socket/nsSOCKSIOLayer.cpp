@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
 #include "nsIFileProtocolHandler.h"
+#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/Unused.h"
@@ -127,7 +128,7 @@ class nsSOCKSSocketInfo : public nsIDNSListener {
     MOZ_ASSERT(aProxyAddr);
 
     nsCOMPtr<nsIProtocolHandler> protocolHandler(
-        do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file", &rv));
+        mozilla::components::FileProtocolHandler::Service(&rv));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -408,7 +409,8 @@ PRStatus nsSOCKSSocketInfo::StartDNS(PRFileDesc* fd) {
   MOZ_ASSERT(!mDnsRec && mState == SOCKS_INITIAL,
              "Must be in initial state to make DNS Lookup");
 
-  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  nsCOMPtr<nsIDNSService> dns;
+  dns = mozilla::components::DNS::Service();
   if (!dns) return PR_FAILURE;
 
   nsCString proxyHost;

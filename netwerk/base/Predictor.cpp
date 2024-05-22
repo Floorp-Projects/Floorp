@@ -33,6 +33,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 
+#include "mozilla/Components.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
@@ -365,17 +366,16 @@ nsresult Predictor::Init() {
     mDNSListener = new DNSListener();
   }
 
-  mCacheStorageService =
-      do_GetService("@mozilla.org/netwerk/cache-storage-service;1", &rv);
+  mCacheStorageService = mozilla::components::CacheStorage::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mSpeculativeService = do_GetService("@mozilla.org/network/io-service;1", &rv);
+  mSpeculativeService = mozilla::components::IO::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewURI(getter_AddRefs(mStartupURI), "predictor://startup");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
+  mDnsService = mozilla::components::DNS::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mInitialized = true;
@@ -1923,8 +1923,8 @@ static nsresult EnsureGlobalPredictor(nsINetworkPredictor** aPredictor) {
 
   if (!sPredictor) {
     nsresult rv;
-    nsCOMPtr<nsINetworkPredictor> predictor =
-        do_GetService("@mozilla.org/network/predictor;1", &rv);
+    nsCOMPtr<nsINetworkPredictor> predictor;
+    predictor = mozilla::components::Predictor::Service(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
     sPredictor = predictor;
     ClearOnShutdown(&sPredictor);
