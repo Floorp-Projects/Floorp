@@ -229,13 +229,6 @@ export class WorkerTargetWatcherClass {
     workerInfo.workerTargetForm = workerTargetForm;
     workerInfo.transport = transport;
 
-    // Bail out and cleanup the actor by closing the transport,
-    // if we stopped listening for workers while waiting for onConnectToWorker resolution.
-    if (!watcherDataObject.workers.includes(workerInfo)) {
-      transport.close();
-      return;
-    }
-
     const { forwardingPrefix } = watcherDataObject;
     // Immediately queue a message for the parent process, before applying any SessionData
     // as it may start emitting RDP events on the target actor and be lost if the client
@@ -280,11 +273,23 @@ export class WorkerTargetWatcherClass {
 
   destroyTargetsForWatcher(watcherDataObject) {
     // Notify to all worker threads to destroy their target actor running in them
-    for (const { transport } of watcherDataObject.workers) {
-      // The transport may not be set if the worker is still being connected to from createWorkerTargetActor.
+    for (const {
+      dbg,
+      workerThreadServerForwardingPrefix,
+      transport,
+    } of watcherDataObject.workers) {
+      if (isWorkerDebuggerAlive(dbg)) {
+        try {
+          dbg.postMessage(
+            JSON.stringify({
+              type: "disconnect",
+              forwardingPrefix: workerThreadServerForwardingPrefix,
+            })
+          );
+        } catch (e) {}
+      }
+      // Also cleanup the DevToolsTransport created in the main thread to bridge RDP to the worker thread
       if (transport) {
-        // Clean the DevToolsTransport created in the main thread to bridge RDP to the worker thread.
-        // This will also send a last message to the worker to clean things up in the other thread.
         transport.close();
       }
     }
@@ -313,16 +318,6 @@ export class WorkerTargetWatcherClass {
       (dbg.type === TYPE_DEDICATED && targetType != "worker") ||
       (dbg.type === TYPE_SERVICE && targetType != "service_worker") ||
       (dbg.type === TYPE_SHARED && targetType != "shared_worker")
-    ) {
-      return false;
-    }
-
-    // subprocess workers are ignored because they take several seconds to
-    // attach to when opening the browser toolbox. See bug 1594597.
-    if (
-      /resource:\/\/gre\/modules\/subprocess\/subprocess_.*\.worker\.js/.test(
-        dbg.url
-      )
     ) {
       return false;
     }
@@ -377,9 +372,10 @@ export class WorkerTargetWatcherClass {
     }
 
     if (dbg.type === TYPE_SHARED) {
-      // Don't expose shared workers when debugging a tab.
-      // For now, they are only exposed in the browser toolbox, when Session Context Type is set to "all".
-      return false;
+      // We still don't fully support instantiating targets for shared workers from the server side
+      throw new Error(
+        "Server side listening for shared workers isn't supported"
+      );
     }
 
     return false;

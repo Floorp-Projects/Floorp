@@ -32,8 +32,7 @@ if (DEBUG_ALLOCATIONS) {
     useDistinctSystemPrincipalLoader,
     releaseDistinctSystemPrincipalLoader,
   } = ChromeUtils.importESModule(
-    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
-    { global: "shared" }
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
   );
   const requester = {};
   const loader = useDistinctSystemPrincipalLoader(requester);
@@ -79,8 +78,7 @@ if (DEBUG_STEP) {
     useDistinctSystemPrincipalLoader,
     releaseDistinctSystemPrincipalLoader,
   } = ChromeUtils.importESModule(
-    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
-    { global: "shared" }
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
   );
   const requester = {};
   const loader = useDistinctSystemPrincipalLoader(requester);

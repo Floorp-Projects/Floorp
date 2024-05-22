@@ -46,6 +46,7 @@ const {
 // Enhancers
 const enableBatching = require("resource://devtools/client/webconsole/enhancers/batching.js");
 const enableActorReleaser = require("resource://devtools/client/webconsole/enhancers/actor-releaser.js");
+const ensureCSSErrorReportingEnabled = require("resource://devtools/client/webconsole/enhancers/css-error-reporting.js");
 const enableMessagesCacheClearing = require("resource://devtools/client/webconsole/enhancers/message-cache-clearing.js");
 
 /**
@@ -118,6 +119,7 @@ function configureStore(webConsoleUI, options = {}) {
       middleware,
       enableActorReleaser(webConsoleUI),
       enableMessagesCacheClearing(webConsoleUI),
+      ensureCSSErrorReportingEnabled(webConsoleUI),
       // ⚠️ Keep this one last so it will be executed before all the other ones. This is
       // needed so batched actions can be "unbatched" and handled in the other enhancers.
       enableBatching()
