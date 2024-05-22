@@ -51,7 +51,6 @@ DIRS += [
     "pocket",
     "preferences",
     "privatebrowsing",
-    "profiles",
     "prompts",
     "protections",
     "protocolhandler",
@@ -76,6 +75,8 @@ DIRS += [
 
 DIRS += ["build"]
 
+if CONFIG["MOZ_SELECTABLE_PROFILES"]:
+    DIRS += ["profiles"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     DIRS += ["touchbar"]
