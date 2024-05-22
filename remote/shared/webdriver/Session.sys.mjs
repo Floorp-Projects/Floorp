@@ -62,13 +62,12 @@ export class WebDriverSession {
    *  <dd>Indicates whether the remote end supports all of the resizing
    *   and repositioning commands.
    *
-   *  <dt><code>strictFileInteractability</code> (boolean)
-   *  <dd>Defines the current session’s strict file interactability.
-   *
    *  <dt><code>timeouts</code> (Timeouts object)
    *  <dd>Describes the timeouts imposed on certian session operations.
    *
-   *  TODO: update for WebDriver BiDi type
+   *  <dt><code>strictFileInteractability</code> (boolean)
+   *  <dd>Defines the current session’s strict file interactability.
+   *
    *  <dt><code>unhandledPromptBehavior</code> (string)
    *  <dd>Describes the current session’s user prompt handler.  Must be one of
    *   "<tt>accept</tt>", "<tt>accept and notify</tt>", "<tt>dismiss</tt>",
@@ -195,17 +194,17 @@ export class WebDriverSession {
       throw new lazy.error.SessionNotCreatedError(e);
     }
 
-    if (this.proxy.init()) {
-      lazy.logger.info(
-        `Proxy settings initialized: ${JSON.stringify(this.proxy)}`
-      );
-    }
-
     if (this.capabilities.get("acceptInsecureCerts")) {
       lazy.logger.warn(
         "TLS certificate errors will be ignored for this session"
       );
       lazy.allowAllCerts.enable();
+    }
+
+    if (this.proxy.init()) {
+      lazy.logger.info(
+        `Proxy settings initialised: ${JSON.stringify(this.proxy)}`
+      );
     }
 
     // If we are testing accessibility with marionette, start a11y service in
@@ -320,7 +319,7 @@ export class WebDriverSession {
     this.capabilities.set("timeouts", timeouts);
   }
 
-  get userPromptHandler() {
+  get unhandledPromptBehavior() {
     return this.capabilities.get("unhandledPromptBehavior");
   }
 

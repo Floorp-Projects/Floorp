@@ -17,6 +17,7 @@ const {
   processCapabilities,
   Proxy,
   Timeouts,
+  UnhandledPromptBehavior,
   validateCapabilities,
 } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs"
@@ -367,6 +368,14 @@ add_task(function test_Proxy_fromJSON() {
   p.noProxy = ["2001:db8::1"];
   let manual = { proxyType: "manual", noProxy: ["[2001:db8::1]"] };
   deepEqual(p, Proxy.fromJSON(manual));
+});
+
+add_task(function test_UnhandledPromptBehavior() {
+  equal(UnhandledPromptBehavior.Accept, "accept");
+  equal(UnhandledPromptBehavior.AcceptAndNotify, "accept and notify");
+  equal(UnhandledPromptBehavior.Dismiss, "dismiss");
+  equal(UnhandledPromptBehavior.DismissAndNotify, "dismiss and notify");
+  equal(UnhandledPromptBehavior.Ignore, "ignore");
 });
 
 add_task(function test_Capabilities_ctor() {
