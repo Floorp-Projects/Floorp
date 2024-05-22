@@ -7,7 +7,7 @@ const { TopSites, DEFAULT_TOP_SITES } = ChromeUtils.importESModule(
   "resource:///modules/TopSites.sys.mjs"
 );
 
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
+const { actionTypes: at } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.mjs"
 );
 
@@ -61,12 +61,14 @@ function stubTopSites(sandbox) {
       // Wait for refresh to finish or else removing the store while a process
       // is running will result in errors.
       await TestUtils.topicObserved("topsites-refreshed");
+      info("Top sites was refreshed.");
     }
     TopSites._tippyTopProvider.initialized = false;
     TopSites._storage = cachedStorage;
     TopSites.store = cachedStore;
     TopSites.pinnedCache.clear();
     TopSites.frecentCache.clear();
+    TopSites._reset();
     info("Finished cleaning up TopSites.");
   }
 
@@ -97,6 +99,27 @@ function stubTopSites(sandbox) {
   );
   info("Created mock store for TopSites.");
   return cleanup;
+}
+
+function createExpectedPinnedLink(link, index) {
+  link.isDefault = false;
+  link.isPinned = true;
+  link.searchTopSite = false;
+  link.favicon = FAKE_FAVICON;
+  link.faviconSize = FAKE_FAVICON_SIZE;
+  link.pinIndex = index;
+  return link;
+}
+
+function assertLinks(actualLinks, expectedLinks) {
+  Assert.equal(
+    actualLinks.length,
+    expectedLinks.length,
+    "Links have equal length."
+  );
+  for (let i = 0; i < actualLinks.length; ++i) {
+    Assert.deepEqual(actualLinks[i], expectedLinks[i], "Link entry matches");
+  }
 }
 
 add_setup(async () => {
@@ -1015,11 +1038,10 @@ add_task(async function test_init() {
   sandbox.stub(TopSites, "refresh");
   await TopSites.init();
 
-  info("TopSites.init should call refresh (broadcast: true)");
+  info("TopSites.init should call refresh");
   Assert.ok(TopSites.refresh.calledOnce, "refresh called once");
   Assert.ok(
     TopSites.refresh.calledWithExactly({
-      broadcast: true,
       isStartup: true,
     })
   );
@@ -1062,21 +1084,28 @@ add_task(async function test_refresh() {
     "tippyTopProvider not initted again"
   );
 
-  info("TopSites.refresh should broadcast TOP_SITES_UPDATED");
-  TopSites.store.dispatch.resetHistory();
-  sandbox.stub(TopSites, "getLinksWithDefaults").resolves([]);
+  sandbox.restore();
+  await cleanup();
+});
 
-  await TopSites.refresh({ broadcast: true });
+add_task(async function test_refresh_updateTopSites() {
+  let sandbox = sinon.createSandbox();
+  let cleanup = stubTopSites(sandbox);
 
-  Assert.ok(TopSites.store.dispatch.calledOnce, "dispatch called once");
-  Assert.ok(
-    TopSites.store.dispatch.calledWithExactly(
-      ac.BroadcastToContent({
-        type: at.TOP_SITES_UPDATED,
-        data: { links: [] },
-      })
-    )
-  );
+  // TODO: On New Tab, subscribe to updates to Top Sites.
+  let sites = await TopSites.getSites();
+  Assert.equal(sites.length, 0, "Sites is empty.");
+
+  info("TopSites.refresh should update TopSites.sites");
+  // sandbox.stub(TopSites._tippyTopProvider, "init").resolves();
+  sandbox.stub(TopSites, "_fetchIcon");
+
+  let promise = TestUtils.topicObserved("topsites-refreshed");
+  await TopSites.refresh({ isStartup: true });
+  await promise;
+
+  sites = await TopSites.getSites();
+  Assert.ok(sites.length, "Sites has values.");
 
   sandbox.restore();
   await cleanup();
@@ -1091,7 +1120,7 @@ add_task(async function test_refresh_dispatch() {
   sandbox.stub(TopSites, "_fetchIcon");
   TopSites._startedUp = true;
 
-  await TopSites.refresh({ broadcast: true });
+  await TopSites.refresh();
   let reference = FAKE_LINKS.map(site =>
     Object.assign({}, site, {
       hostname: shortURL(site),
@@ -1099,15 +1128,9 @@ add_task(async function test_refresh_dispatch() {
     })
   );
 
-  Assert.ok(TopSites.store.dispatch.calledOnce, "Store.dispatch called once");
-  Assert.equal(
-    TopSites.store.dispatch.firstCall.args[0].type,
-    at.TOP_SITES_UPDATED
-  );
-  Assert.deepEqual(
-    TopSites.store.dispatch.firstCall.args[0].data.links,
-    reference
-  );
+  // TODO: On New Tab, subscribe to updates to Top Sites.
+  let sites = await TopSites.getSites();
+  Assert.deepEqual(sites, reference, "Sites are updated.");
 
   sandbox.restore();
   await cleanup();
@@ -1138,39 +1161,30 @@ add_task(async function test_refresh_empty_slots() {
       null,
       FAKE_LINKS[2],
     ]);
+  await TopSites.refresh();
 
-  await TopSites.refresh({ broadcast: true });
-
-  Assert.ok(TopSites.store.dispatch.calledOnce, "Store.dispatch called once");
-
-  gGetTopSitesStub.resolves(FAKE_LINKS);
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_refresh_to_preloaded() {
-  let sandbox = sinon.createSandbox();
-
-  info(
-    "TopSites.refresh should dispatch AlsoToPreloaded when broadcast is false"
+  let reference = FAKE_LINKS.map(site =>
+    Object.assign({}, site, {
+      hostname: shortURL(site),
+      typedBonus: true,
+    })
   );
+  const expected = [
+    reference[0],
+    null,
+    createExpectedPinnedLink(reference[1], 2),
+    null,
+    null,
+    null,
+    null,
+    null,
+    createExpectedPinnedLink(reference[2], 8),
+  ];
 
-  let cleanup = stubTopSites(sandbox);
-  sandbox.stub(TopSites, "_fetchIcon");
-  TopSites._startedUp = true;
+  // TODO: On New Tab, subscribe to updates to Top Sites.
+  let sites = await TopSites.getSites();
+  assertLinks(sites, expected);
 
-  gGetTopSitesStub.resolves([]);
-  await TopSites.refresh({ broadcast: false });
-
-  Assert.ok(TopSites.store.dispatch.calledOnce, "Store.dispatch called once");
-  Assert.ok(
-    TopSites.store.dispatch.calledWithExactly(
-      ac.AlsoToPreloaded({
-        type: at.TOP_SITES_UPDATED,
-        data: { links: [] },
-      })
-    )
-  );
   gGetTopSitesStub.resolves(FAKE_LINKS);
   sandbox.restore();
   await cleanup();
@@ -1230,7 +1244,6 @@ add_task(async function test_onAction_part_1() {
   TopSites.onAction({ type: at.SYSTEM_TICK });
 
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
-  Assert.ok(TopSites.refresh.calledWithExactly({ broadcast: false }));
 
   info(
     "TopSites.onAction should call with correct parameters on TOP_SITES_PIN"
@@ -1332,7 +1345,6 @@ add_task(async function test_onAction_part_2() {
   TopSites.onAction({ type: at.PLACES_HISTORY_CLEARED });
 
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
-  Assert.ok(TopSites.refresh.calledWithExactly({ broadcast: true }));
 
   TopSites.refresh.resetHistory();
 
@@ -1343,7 +1355,6 @@ add_task(async function test_onAction_part_2() {
   TopSites.onAction({ type: at.PLACES_LINKS_DELETED });
 
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
-  Assert.ok(TopSites.refresh.calledWithExactly({ broadcast: true }));
 
   info("TopSites.onAction should call init on INIT action");
   TopSites.onAction({ type: at.PLACES_LINKS_DELETED });
@@ -1360,13 +1371,11 @@ add_task(async function test_onAction_part_2() {
   TopSites.refresh.resetHistory();
   await TopSites.onAction({ type: at.PLACES_LINK_BLOCKED });
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
-  Assert.ok(TopSites.refresh.calledWithExactly({ broadcast: true }));
 
   info("TopSites.onAction should call refresh on PLACES_LINKS_CHANGED action");
   TopSites.refresh.resetHistory();
   await TopSites.onAction({ type: at.PLACES_LINKS_CHANGED });
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
-  Assert.ok(TopSites.refresh.calledWithExactly({ broadcast: false }));
 
   info(
     "TopSites.onAction should call pin with correct args on " +
@@ -1944,34 +1953,22 @@ add_task(async function test_integration() {
   TopSites._startedUp = true;
   sandbox.stub(TopSites, "_fetchScreenshot");
 
-  let forDispatch = action =>
-    new Promise(resolve => {
-      resolvers.push(resolve);
-      TopSites.onAction(action);
-    });
-
   TopSites._requestRichIcon = sandbox.stub();
   let url = "https://pin.me";
   sandbox.stub(NewTabUtils.pinnedLinks, "pin").callsFake(link => {
     NewTabUtils.pinnedLinks.links.push(link);
   });
 
-  await forDispatch({ type: at.TOP_SITES_INSERT, data: { site: { url } } });
+  TopSites.onAction({ type: at.TOP_SITES_INSERT, data: { site: { url } } });
+  await TestUtils.topicObserved("topsites-refreshed");
+  let oldSites = await TopSites.getSites();
   NewTabUtils.pinnedLinks.links.pop();
-  await forDispatch({ type: at.PLACES_LINK_BLOCKED });
+  TopSites.onAction({ type: at.PLACES_LINK_BLOCKED });
+  await TestUtils.topicObserved("topsites-refreshed");
+  let newSites = await TopSites.getSites();
 
-  Assert.ok(
-    TopSites.store.dispatch.calledTwice,
-    "TopSites.store.dispatch called twice"
-  );
-  Assert.equal(
-    TopSites.store.dispatch.firstCall.args[0].data.links[0].url,
-    url
-  );
-  Assert.equal(
-    TopSites.store.dispatch.secondCall.args[0].data.links[0].url,
-    FAKE_LINKS[0].url
-  );
+  Assert.equal(oldSites[0].url, url, "Url matches.");
+  Assert.equal(newSites[0].url, FAKE_LINKS[0].url, "Url matches.");
 
   sandbox.restore();
   await cleanup();
