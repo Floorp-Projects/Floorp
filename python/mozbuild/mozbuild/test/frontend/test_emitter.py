@@ -227,7 +227,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_debug_flags(self):
         reader = self.reader(
             "compile-flags",
-            extra_substs={"MOZ_DEBUG_FLAGS": "-g", "MOZ_DEBUG_SYMBOLS": "1"},
+            extra_substs={"MOZ_DEBUG_FLAGS": ["-g"], "MOZ_DEBUG_SYMBOLS": "1"},
         )
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -236,7 +236,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_disable_debug_flags(self):
         reader = self.reader(
             "compile-flags",
-            extra_substs={"MOZ_DEBUG_FLAGS": "-g", "MOZ_DEBUG_SYMBOLS": ""},
+            extra_substs={"MOZ_DEBUG_FLAGS": ["-g"], "MOZ_DEBUG_SYMBOLS": ""},
         )
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)

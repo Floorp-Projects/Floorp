@@ -23,36 +23,10 @@ if test -z "$_MOZ_USE_RTTI"; then
 fi
 ])
 
-dnl ========================================================
-dnl =
-dnl = Debugging Options
-dnl =
-dnl ========================================================
-AC_DEFUN([MOZ_DEBUGGING_OPTS],
-[
-
-if test -n "$MOZ_DEBUG"; then
-    if test -n "$COMPILE_ENVIRONMENT"; then
-        AC_MSG_CHECKING([for valid debug flags])
-        _SAVE_CFLAGS=$CFLAGS
-        CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-        AC_TRY_COMPILE([#include <stdio.h>],
-            [printf("Hello World\n");],
-            _results=yes,
-            _results=no)
-        AC_MSG_RESULT([$_results])
-        if test "$_results" = "no"; then
-            AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
-        fi
-        CFLAGS=$_SAVE_CFLAGS
-    fi
-fi
-])
 
 dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
-  MOZ_DEBUGGING_OPTS
   MOZ_RTTI
 
 if test "$GNU_CC"; then
