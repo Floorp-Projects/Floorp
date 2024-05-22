@@ -30,6 +30,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
 #include "nsIScriptError.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIURL.h"
 #include "nsIURI.h"
 #include "nsIWebProgressListener.h"
@@ -773,10 +774,12 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
     CookieStruct cookieData;
     bool canSetCookie = false;
 
-    moreCookieToRead =
-        CanSetCookie(aHostURI, baseDomain, cookieData, requireHostMatch,
-                     cookieStatus, cookieHeader, true, isForeignAndNotAddon,
-                     mustBePartitioned, crc, canSetCookie);
+    moreCookieToRead = CanSetCookie(
+        aHostURI, baseDomain, cookieData, requireHostMatch, cookieStatus,
+        cookieHeader, true, isForeignAndNotAddon, mustBePartitioned,
+        storagePrincipalOriginAttributes.mPrivateBrowsingId !=
+            nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID,
+        crc, canSetCookie);
 
     if (!canSetCookie) {
       continue;
@@ -1162,7 +1165,11 @@ void CookieService::GetCookiesForURI(
       // We will only allow partitioned cookies with "partitioned" attribution
       // if opt-in partitioning is enabled.
       if (aIsForeign && cookieJarSettings->GetPartitionForeign() &&
-          StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() &&
+          (StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() ||
+           (attrs.mPrivateBrowsingId !=
+                nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID &&
+            StaticPrefs::
+                network_cookie_cookieBehavior_optInPartitioning_pbmode())) &&
           !(cookie->IsPartitioned() && cookie->RawIsPartitioned()) &&
           !aStorageAccessPermissionGranted) {
         continue;
@@ -1268,7 +1275,8 @@ bool CookieService::CanSetCookie(
     nsIURI* aHostURI, const nsACString& aBaseDomain, CookieStruct& aCookieData,
     bool aRequireHostMatch, CookieStatus aStatus, nsCString& aCookieHeader,
     bool aFromHttp, bool aIsForeignAndNotAddon, bool aPartitionedOnly,
-    nsIConsoleReportCollector* aCRC, bool& aSetCookie) {
+    bool aIsInPrivateBrowsing, nsIConsoleReportCollector* aCRC,
+    bool& aSetCookie) {
   MOZ_ASSERT(aHostURI);
 
   aSetCookie = false;
@@ -1468,7 +1476,10 @@ bool CookieService::CanSetCookie(
   // that we have upcoming changes. Otherwise we give a rejection message.
   if (aPartitionedOnly && !aCookieData.isPartitioned() &&
       aIsForeignAndNotAddon) {
-    if (StaticPrefs::network_cookie_cookieBehavior_optInPartitioning()) {
+    if (StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() ||
+        (aIsInPrivateBrowsing &&
+         StaticPrefs::
+             network_cookie_cookieBehavior_optInPartitioning_pbmode())) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                         "foreign cookies must be partitioned");
       CookieLogging::LogMessageToConsole(

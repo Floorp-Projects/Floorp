@@ -218,7 +218,7 @@ AntiTracking._createTask({
 });
 
 AntiTracking._createTask({
-  name: "Block cookies with BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN when preference is enabled in pbmode",
+  name: "Block cookies in pbm with BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN when preference is enabled",
   cookieBehavior: BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
   allowList: false,
   callback: async _ => {
@@ -245,6 +245,43 @@ AntiTracking._createTask({
     );
   },
   extraPrefs: [["network.cookie.cookieBehavior.optInPartitioning", true]],
+  thirdPartyPage: TEST_4TH_PARTY_PAGE,
+  runInPrivateWindow: true,
+  iframeSandbox: null,
+  accessRemoval: null,
+  callbackAfterRemoval: null,
+});
+
+AntiTracking._createTask({
+  name: "Block cookies with BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN when preference is enabled for pbmode",
+  cookieBehavior: BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+  allowList: false,
+  callback: async _ => {
+    document.cookie = "name=value";
+    is(document.cookie, "", "Document cookie is blocked");
+    await fetch("server.sjs")
+      .then(r => r.text())
+      .then(text => {
+        is(text, "cookie-not-present", "We should not have HTTP cookies");
+      });
+    await fetch("server.sjs?checkonly")
+      .then(r => r.text())
+      .then(text => {
+        is(
+          text,
+          "cookie-not-present",
+          "We should still not have HTTP cookies after setting them via HTTP"
+        );
+      });
+    is(
+      document.cookie,
+      "",
+      "Document cookie is still blocked after setting via HTTP"
+    );
+  },
+  extraPrefs: [
+    ["network.cookie.cookieBehavior.optInPartitioning.pbmode", true],
+  ],
   thirdPartyPage: TEST_4TH_PARTY_PAGE,
   runInPrivateWindow: true,
   iframeSandbox: null,

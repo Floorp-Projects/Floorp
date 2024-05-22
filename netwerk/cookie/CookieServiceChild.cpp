@@ -29,6 +29,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
 #include "nsIPrefBranch.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIWebProgressListener.h"
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
@@ -669,8 +670,10 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
     bool canSetCookie = false;
     moreCookies = CookieService::CanSetCookie(
         aHostURI, baseDomain, cookieData, requireHostMatch, cookieStatus,
-        cookieString, true, isForeignAndNotAddon, mustBePartitioned, crc,
-        canSetCookie);
+        cookieString, true, isForeignAndNotAddon, mustBePartitioned,
+        storagePrincipalOriginAttributes.mPrivateBrowsingId !=
+            nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID,
+        crc, canSetCookie);
     if (!canSetCookie) {
       continue;
     }
