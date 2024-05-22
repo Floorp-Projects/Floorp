@@ -112,6 +112,22 @@ power:
     expires: never
     telemetry_mirror: POWER_GPU_TIME_BOGUS_VALUES
 
+  energy_per_process_type:
+    type: labeled_counter
+    description: >
+      How much energy (in µWh) has been used, broken down by process type.
+      Only available on Apple Silicon.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898057
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898057
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    labels: *per_process_type_labels
+
   wakeups_per_process_type:
     type: labeled_counter
     description: >
