@@ -71,8 +71,8 @@ Next write the initial :code:`.idl` file: :code:`path/to/nsIComponentName.idl`
 
     // `scriptable` designates that this object will be used with JavaScript
     // `uuid`       The example below uses a UUID with all Xs. Replace the Xs with
-    //              your own UUID generated here:
-    //              http://mozilla.pettay.fi/cgi-bin/mozuuid.pl
+    //              your own UUID generated with `mach gen-uuid`, `uuidgen`, or
+    //              https://mozilla.pettay.fi/uuidgen.html
 
     /**
      * Make sure to document your interface.
@@ -219,8 +219,8 @@ The easiest way to do that is to copy from ``<objdir>/xpcom/components/services.
     Classes = [
         {
             # This CID is the ID for component entries, and needs a separate UUID from
-            # the .idl file. Replace the Xs with a uuid from:
-            # http://mozilla.pettay.fi/cgi-bin/mozuuid.pl
+            # the .idl file. Replace the Xs with a uuid from `mach gen-uuid`,
+            # `uuidgen`, or https://mozilla.pettay.fi/uuidgen.html
             'cid': '{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}',
             'interfaces': ['nsIComponentName'],
 
