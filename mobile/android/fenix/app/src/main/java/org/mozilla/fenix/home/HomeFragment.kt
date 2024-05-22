@@ -720,6 +720,7 @@ class HomeFragment : Fragment() {
                 )
             },
             operation = { },
+            anchorView = snackbarAnchorView,
             elevation = TOAST_ELEVATION,
             paddedForBottomToolbar = true,
         )
