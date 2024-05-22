@@ -20,10 +20,10 @@ diff --git a/test/test_duplex.cpp b/test/test_duplex.cpp
  #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
  #define INPUT_CHANNELS 1
  #define INPUT_LAYOUT CUBEB_LAYOUT_MONO
-@@ -201,16 +203,18 @@ TEST(cubeb, duplex_collection_change)
-   ASSERT_EQ(r, CUBEB_OK);
+@@ -202,16 +204,18 @@ TEST(cubeb, duplex_collection_change)
  }
  
+ #ifdef GTEST_HAS_DEATH_TEST
  TEST(cubeb, duplex_collection_change_no_unregister)
  {
    cubeb * ctx;
