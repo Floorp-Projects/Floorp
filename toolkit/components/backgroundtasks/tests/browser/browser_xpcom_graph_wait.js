@@ -37,6 +37,7 @@ const backgroundtaskPhases = {
         "resource://gre/modules/EnterprisePoliciesParent.sys.mjs",
         "resource://gre/modules/XPCOMUtils.sys.mjs",
         "resource://gre/modules/nsAsyncShutdown.sys.mjs",
+        "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
       ],
       // Human-readable contract IDs are many-to-one mapped to CIDs, so this
       // list is a little misleading.  For example, all of
