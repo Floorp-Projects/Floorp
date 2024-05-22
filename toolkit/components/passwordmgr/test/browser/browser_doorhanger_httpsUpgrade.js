@@ -26,6 +26,14 @@ let login1HTTPS = new nsLoginInfo(
   "pass"
 );
 
+add_setup(async function () {
+  // We explicitly test differences between secure and insecure pages here, so
+  // we do not want HTTPS-First upgrades.
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
+});
+
 add_task(async function test_httpsUpgradeCaptureFields_noChange() {
   info(
     "Check that we don't prompt to remember when capturing an upgraded login with no change"
