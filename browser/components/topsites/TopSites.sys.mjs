@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "resource://activity-stream/common/Actions.mjs";
+import { actionTypes as at } from "resource://activity-stream/common/Actions.mjs";
 import { TippyTopProvider } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
 import {
   insertPinned,
@@ -32,7 +29,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -55,7 +51,6 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
 const ROWS_PREF = "topSitesRows";
 
 // Preferences
-const FEEDS_TOPSITES_PREF = "browser.newtabpage.activity-stream.feeds.topsites";
 const NO_DEFAULT_SEARCH_TILE_PREF =
   "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile";
 const SEARCH_SHORTCUTS_HAVE_PINNED_PREF =
@@ -468,7 +463,7 @@ class _TopSites {
   }
 
   // eslint-disable-next-line max-statements
-  async getLinksWithDefaults(isStartup = false) {
+  async getLinksWithDefaults() {
     // Clear the previous sites.
     this.#sites = [];
 
@@ -631,16 +626,13 @@ class _TopSites {
     // Remove excess items.
     withPinned = withPinned.slice(0, numItems);
 
-    // Now, get a tippy top icon, a rich icon, or screenshot for every item
+    // Now, get a tippy top icon or a rich icon for every item.
     for (const link of withPinned) {
       if (link) {
-        // If there is a custom screenshot this is the only image we display
-        if (link.customScreenshotURL) {
-          this._fetchScreenshot(link, link.customScreenshotURL, isStartup);
-        } else if (link.searchTopSite && !link.isDefault) {
+        if (link.searchTopSite && !link.isDefault) {
           await this._attachTippyTopIconForSearchShortcut(link, link.label);
         } else {
-          this._fetchIcon(link, isStartup);
+          this._fetchIcon(link);
         }
 
         // Remove internal properties that might be updated after dispatch
@@ -702,9 +694,7 @@ class _TopSites {
       await this._tippyTopProvider.init();
     }
 
-    await this.getLinksWithDefaults({
-      isStartup: options.isStartup,
-    });
+    await this.getLinksWithDefaults();
     this._refreshing = false;
     Services.obs.notifyObservers(null, "topsites-refreshed", options.isStartup);
   }
@@ -762,9 +752,9 @@ class _TopSites {
   }
 
   /**
-   * Get an image for the link preferring tippy top, rich favicon, screenshots.
+   * Get an image for the link preferring tippy top, or rich favicon.
    */
-  async _fetchIcon(link, isStartup = false) {
+  async _fetchIcon(link) {
     // Nothing to do if we already have a rich icon from the page
     if (link.favicon && link.faviconSize >= MIN_FAVICON_SIZE) {
       return;
@@ -778,42 +768,6 @@ class _TopSites {
 
     // Make a request for a better icon
     this._requestRichIcon(link.url);
-
-    // Also request a screenshot if we don't have one yet
-    await this._fetchScreenshot(link, link.url, isStartup);
-  }
-
-  /**
-   * Fetch, cache and broadcast a screenshot for a specific topsite.
-   *
-   * @param {object} link cached topsite object
-   * @param {string} url where to fetch the image from
-   * @param {boolean} isStartup Whether the screenshot is fetched while
-   * initting TopSitesFeed.
-   */
-  async _fetchScreenshot(link, url, isStartup = false) {
-    // We shouldn't bother caching screenshots if they won't be shown.
-    if (
-      link.screenshot ||
-      !Services.prefs.getBoolPref(FEEDS_TOPSITES_PREF, true)
-    ) {
-      return;
-    }
-    await lazy.Screenshots.maybeCacheScreenshot(
-      link,
-      url,
-      "screenshot",
-      screenshot =>
-        this.store.dispatch(
-          ac.BroadcastToContent({
-            data: { screenshot, url: link.url },
-            type: at.SCREENSHOT_UPDATED,
-            meta: {
-              isStartup,
-            },
-          })
-        )
-    );
   }
 
   _requestRichIcon(url) {
