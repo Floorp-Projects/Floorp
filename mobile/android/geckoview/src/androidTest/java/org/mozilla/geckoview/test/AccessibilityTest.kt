@@ -1202,6 +1202,19 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
+    @Test fun testLiveRegionStatus() {
+        loadTestPage("test-live-region-status")
+        waitForInitialFocus()
+
+        mainSession.evaluateJS("document.querySelector('#status').textContent = 'hello';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAnnouncement(event: AccessibilityEvent) {
+                assertThat("Announcement is correct", event.text[0].toString(), equalTo("hello"))
+            }
+        })
+    }
+
     private fun screenContainsNode(nodeId: Int): Boolean {
         var node = createNodeInfo(nodeId)
         var nodeBounds = Rect()
