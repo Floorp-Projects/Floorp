@@ -3360,15 +3360,6 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
   lazy.permissions.validateDescriptor(descriptor);
   lazy.permissions.validateState(state);
 
-  // Bug 1878741: Allowing this permission causes timing related Android crash.
-  if (
-    descriptor.name === "notifications" &&
-    lazy.permissions.isNotificationPreferenceSet()
-  ) {
-    // Okay, do nothing. The notifications module will work without permission.
-    return;
-  }
-
   let params;
   try {
     params =

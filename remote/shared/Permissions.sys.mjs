@@ -43,24 +43,6 @@ permissions.getStorageAccessPermissionsType = function (uri) {
 };
 
 /**
- * Check if the notification preference is set.
- *
- * @returns {boolean}
- *     Returns `true` if the notification preference is set.
- *
- * @throws {UnsupportedOperationError}
- *     If the notification preference is not set.
- */
-permissions.isNotificationPreferenceSet = function () {
-  if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
-    return true;
-  }
-  throw new lazy.error.UnsupportedOperationError(
-    `Setting "descriptor.name" "notifications" expected "notification.prompt.testing" preference to be set`
-  );
-};
-
-/**
  * Set a permission given a permission descriptor, a permission state,
  * an origin.
  *
