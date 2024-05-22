@@ -3882,39 +3882,3 @@ void SetNotificationPipeForChild(int childCrashFd) {
 #endif
 
 }  // namespace CrashReporter
-
-#if defined(__ANDROID_API__) && (__ANDROID_API__ < 24)
-
-// Bionic introduced support for getgrgid_r() and getgrnam_r() only in version
-// 24 (that is Android Nougat / 7.1.2). Since GeckoView is built by version 16
-// (32-bit) or 21 (64-bit), those functions aren't defined, but nix needs them
-// and minidump-writer relies on nix. These functions should never be called
-// in practice hence we implement them only to satisfy nix linking
-// requirements but we crash if we accidentally enter them.
-
-extern "C" {
-
-int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen,
-               struct group** result) {
-  MOZ_CRASH("getgrgid_r() is not available");
-  return EPERM;
-}
-
-int getgrnam_r(const char* name, struct group* grp, char* buf, size_t buflen,
-               struct group** result) {
-  MOZ_CRASH("getgrnam_r() is not available");
-  return EPERM;
-}
-
-int mlockall(int flags) {
-  MOZ_CRASH("mlockall() is not available");
-  return EPERM;
-}
-
-int munlockall(void) {
-  MOZ_CRASH("munlockall() is not available");
-  return EPERM;
-}
-}
-
-#endif  // __ANDROID_API__ && (__ANDROID_API__ < 24)
