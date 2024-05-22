@@ -63,15 +63,6 @@ class PermissionsModule extends Module {
 
     const permissionName = descriptor.name;
 
-    // Bug 1878741: Allowing this permission causes timing related Android crash.
-    if (
-      permissionName === "notifications" &&
-      lazy.permissions.isNotificationPreferenceSet()
-    ) {
-      // Okay, do nothing. The notifications module will work without permission.
-      return;
-    }
-
     if (permissionName === "storage-access") {
       // TODO: Bug 1895457. Add support for "storage-access" permission.
       throw new lazy.error.UnsupportedOperationError(
