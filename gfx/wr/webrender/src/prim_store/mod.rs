@@ -12,6 +12,7 @@ use euclid::{SideOffsets2D, Size2D};
 use malloc_size_of::MallocSizeOf;
 use crate::composite::CompositorSurfaceKind;
 use crate::clip::ClipLeafId;
+use crate::quad::QuadTileClassifier;
 use crate::segment::EdgeAaSegmentMask;
 use crate::border::BorderSegmentCacheKey;
 use crate::debug_item::{DebugItem, DebugMessage};
@@ -1219,6 +1220,10 @@ pub struct PrimitiveScratchBuffer {
     /// Temporary buffers for building segments in to during prepare pass
     pub quad_direct_segments: Vec<QuadSegment>,
     pub quad_indirect_segments: Vec<QuadSegment>,
+
+    /// A retained classifier for checking which segments of a tiled primitive
+    /// need a mask / are clipped / can be rendered directly
+    pub quad_tile_classifier: QuadTileClassifier,
 }
 
 impl Default for PrimitiveScratchBuffer {
@@ -1235,6 +1240,7 @@ impl Default for PrimitiveScratchBuffer {
             required_sub_graphs: FastHashSet::default(),
             quad_direct_segments: Vec::new(),
             quad_indirect_segments: Vec::new(),
+            quad_tile_classifier: QuadTileClassifier::new(),
         }
     }
 }
