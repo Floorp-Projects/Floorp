@@ -5,8 +5,25 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
 });
+
+/**
+ * @typedef {string} PermissionState
+ */
+
+/**
+ * Enum of possible permission states supported by permission APIs.
+ *
+ * @readonly
+ * @enum {PermissionState}
+ */
+const PermissionState = {
+  denied: "denied",
+  granted: "granted",
+  prompt: "prompt",
+};
 
 /** @namespace */
 export const permissions = {};
@@ -23,6 +40,24 @@ export const permissions = {};
 permissions.getStorageAccessPermissionsType = function (uri) {
   const thirdPartyPrincipalSite = Services.eTLD.getSite(uri);
   return "3rdPartyFrameStorage^" + thirdPartyPrincipalSite;
+};
+
+/**
+ * Check if the notification preference is set.
+ *
+ * @returns {boolean}
+ *     Returns `true` if the notification preference is set.
+ *
+ * @throws {UnsupportedOperationError}
+ *     If the notification preference is not set.
+ */
+permissions.isNotificationPreferenceSet = function () {
+  if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
+    return true;
+  }
+  throw new lazy.error.UnsupportedOperationError(
+    `Setting "descriptor.name" "notifications" expected "notification.prompt.testing" preference to be set`
+  );
 };
 
 /**
@@ -81,19 +116,48 @@ permissions.set = function (descriptor, state, origin, userContextId) {
 };
 
 /**
- * Validate the permission.
+ * Validate the permission descriptor.
  *
- * @param {string} permissionName
- *     The name of the permission which will be validated.
+ * @param {PermissionDescriptor} descriptor
+ *     The descriptor of the permission which will be validated.
  *
+ * @throws {InvalidArgumentError}
+ *     Raised if an argument is of an invalid type or value.
  * @throws {UnsupportedOperationError}
- *     If <var>permissionName</var> is not supported.
+ *     If a permission with <var>descriptor</var> is not supported.
  */
-permissions.validatePermission = function (permissionName) {
+permissions.validateDescriptor = function (descriptor) {
+  lazy.assert.object(
+    descriptor,
+    `Expected "descriptor" to be an object, got ${descriptor}`
+  );
+  const permissionName = descriptor.name;
+  lazy.assert.string(
+    permissionName,
+    `Expected "descriptor.name" to be a string, got ${permissionName}`
+  );
+
   // Bug 1609427: PermissionDescriptor for "camera" and "microphone" are not yet implemented.
   if (["camera", "microphone"].includes(permissionName)) {
     throw new lazy.error.UnsupportedOperationError(
       `"descriptor.name" "${permissionName}" is currently unsupported`
     );
   }
+};
+
+/**
+ * Validate the permission state.
+ *
+ * @param {PermissionState} state
+ *     The state of the permission which will be validated.
+ *
+ * @throws {InvalidArgumentError}
+ *     Raised if an argument is of an invalid type or value.
+ */
+permissions.validateState = function (state) {
+  const permissionStateTypes = Object.keys(PermissionState);
+  lazy.assert.that(
+    state => permissionStateTypes.includes(state),
+    `Expected "state" to be one of ${permissionStateTypes}, got ${state}`
+  )(state);
 };
