@@ -38,6 +38,28 @@ internal interface CrashDao {
     fun getCrashesWithReports(): LiveData<List<CrashWithReports>>
 
     /**
+     * Returns saved crashes that haven't been reported.
+     */
+    @Transaction
+    @Query("""
+    SELECT * FROM crashes
+    LEFT JOIN reports ON crashes.uuid = reports.crash_uuid
+    WHERE reports.crash_uuid IS NULL
+    """)
+    suspend fun getCrashesWithoutReports(): List<CrashEntity>
+
+    /**
+     * Returns saved crashes that haven't been reported.
+     */
+    @Transaction
+    @Query("""
+    SELECT COUNT(*) FROM crashes
+    LEFT JOIN reports ON crashes.uuid = reports.crash_uuid
+    WHERE reports.crash_uuid IS NULL
+    """)
+    suspend fun numberOfUnsentCrashes(): Int
+
+    /**
      * Delete table.
      */
     @Transaction
