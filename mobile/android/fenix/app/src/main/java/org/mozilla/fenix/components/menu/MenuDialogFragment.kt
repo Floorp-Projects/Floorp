@@ -39,6 +39,7 @@ import org.mozilla.fenix.components.menu.compose.TOOLS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.ToolsSubmenu
 import org.mozilla.fenix.components.menu.middleware.MenuDialogMiddleware
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
+import org.mozilla.fenix.components.menu.middleware.MenuTelemetryMiddleware
 import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
@@ -108,6 +109,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     browsingModeManager = browsingModeManager,
                                     openToBrowser = ::openToBrowser,
                                     scope = coroutineScope,
+                                ),
+                                MenuTelemetryMiddleware(
+                                    accessPoint = args.accesspoint,
                                 ),
                             ),
                         )
