@@ -1398,8 +1398,8 @@ class MediaPipelineReceiveVideo::PipelineListener
   PipelineListener(RefPtr<SourceMediaTrack> aSource, TrackingId aTrackingId,
                    PrincipalHandle aPrincipalHandle, PrincipalPrivacy aPrivacy)
       : GenericReceiveListener(std::move(aSource), std::move(aTrackingId)),
-        mImageContainer(
-            MakeAndAddRef<ImageContainer>(ImageContainer::ASYNCHRONOUS)),
+        mImageContainer(MakeAndAddRef<ImageContainer>(
+            ImageUsageType::Webrtc, ImageContainer::ASYNCHRONOUS)),
         mMutex("MediaPipelineReceiveVideo::PipelineListener::mMutex"),
         mPrincipalHandle(std::move(aPrincipalHandle)),
         mPrivacy(aPrivacy) {}

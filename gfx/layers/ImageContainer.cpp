@@ -163,30 +163,32 @@ void ImageContainer::EnsureImageClient() {
   }
 
   RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
-  if (imageBridge) {
-    mImageClient =
-        imageBridge->CreateImageClient(CompositableType::IMAGE, this);
-    if (mImageClient) {
-      mAsyncContainerHandle = mImageClient->GetAsyncHandle();
-    } else {
-      // It's okay to drop the async container handle since the ImageBridgeChild
-      // is going to die anyway.
-      mAsyncContainerHandle = CompositableHandle();
-    }
+  if (!imageBridge) {
+    return;
+  }
+
+  mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this);
+  if (mImageClient) {
+    mAsyncContainerHandle = mImageClient->GetAsyncHandle();
+  } else {
+    // It's okay to drop the async container handle since the ImageBridgeChild
+    // is going to die anyway.
+    mAsyncContainerHandle = CompositableHandle();
   }
 }
 
-ImageContainer::ImageContainer(Mode flag)
-    : mRecursiveMutex("ImageContainer.mRecursiveMutex"),
+ImageContainer::ImageContainer(ImageUsageType aUsageType, Mode aFlag)
+    : mUsageType(aUsageType),
+      mIsAsync(aFlag == ASYNCHRONOUS),
+      mRecursiveMutex("ImageContainer.mRecursiveMutex"),
       mGenerationCounter(++sGenerationCounter),
       mPaintCount(0),
       mDroppedImageCount(0),
       mImageFactory(new ImageFactory()),
       mRotation(VideoRotation::kDegree_0),
       mRecycleBin(new BufferRecycleBin()),
-      mIsAsync(flag == ASYNCHRONOUS),
       mCurrentProducerID(-1) {
-  if (flag == ASYNCHRONOUS) {
+  if (aFlag == ASYNCHRONOUS) {
     mNotifyCompositeListener = new ImageContainerListener(this);
     EnsureImageClient();
   }
@@ -350,6 +352,10 @@ void ImageContainer::ClearImagesFromImageBridge() {
 void ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages) {
   AUTO_PROFILER_LABEL("ImageContainer::SetCurrentImages", GRAPHICS);
   MOZ_ASSERT(!aImages.IsEmpty());
+  MOZ_ASSERT(mUsageType == ImageUsageType::Canvas ||
+             mUsageType == ImageUsageType::OffscreenCanvas ||
+             mUsageType == ImageUsageType::VideoFrameContainer);
+
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   if (mIsAsync) {
     if (RefPtr<ImageBridgeChild> imageBridge =
@@ -399,6 +405,9 @@ void ImageContainer::SetCurrentImageInTransaction(Image* aImage) {
 
 void ImageContainer::SetCurrentImagesInTransaction(
     const nsTArray<NonOwningImage>& aImages) {
+  MOZ_ASSERT(!mIsAsync);
+  MOZ_ASSERT(mUsageType == ImageUsageType::WebRenderFallbackData);
+
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ASSERTION(!HasImageClient(),
                "Should use async image transfer with ImageBridge.");

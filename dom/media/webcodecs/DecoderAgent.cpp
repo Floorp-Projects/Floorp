@@ -51,6 +51,7 @@ DecoderAgent::DecoderAgent(Id aId, UniquePtr<TrackInfo>&& aInfo)
       mOwnerThread(GetCurrentSerialEventTarget()),
       mPDMFactory(MakeRefPtr<PDMFactory>()),
       mImageContainer(MakeAndAddRef<layers::ImageContainer>(
+          layers::ImageUsageType::WebCodecs,
           layers::ImageContainer::ASYNCHRONOUS)),
       mDecoder(nullptr),
       mState(State::Unconfigured) {

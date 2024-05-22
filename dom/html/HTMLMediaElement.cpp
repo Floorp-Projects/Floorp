@@ -6278,7 +6278,8 @@ VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer() {
   }
 
   mVideoFrameContainer = new VideoFrameContainer(
-      this, MakeAndAddRef<ImageContainer>(ImageContainer::ASYNCHRONOUS));
+      this, MakeAndAddRef<ImageContainer>(ImageUsageType::VideoFrameContainer,
+                                          ImageContainer::ASYNCHRONOUS));
 
   return mVideoFrameContainer;
 }

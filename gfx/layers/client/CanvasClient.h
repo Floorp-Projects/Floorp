@@ -54,7 +54,8 @@ class CanvasClient final : public CompositableClient {
   }
 
   TextureInfo GetTextureInfo() const override {
-    return TextureInfo(CompositableType::IMAGE, mTextureFlags);
+    return TextureInfo(CompositableType::IMAGE, ImageUsageType::Canvas,
+                       mTextureFlags);
   }
 
   void OnDetach() override { Clear(); }

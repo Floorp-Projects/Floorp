@@ -40,13 +40,13 @@ using namespace mozilla::gfx;
 
 /* static */
 already_AddRefed<ImageClient> ImageClient::CreateImageClient(
-    CompositableType aCompositableHostType, CompositableForwarder* aForwarder,
-    TextureFlags aFlags) {
+    CompositableType aCompositableHostType, ImageUsageType aUsageType,
+    CompositableForwarder* aForwarder, TextureFlags aFlags) {
   RefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
     case CompositableType::IMAGE:
-      result =
-          new ImageClientSingle(aForwarder, aFlags, CompositableType::IMAGE);
+      result = new ImageClientSingle(aForwarder, aFlags,
+                                     CompositableType::IMAGE, aUsageType);
       break;
     case CompositableType::UNKNOWN:
       result = nullptr;
@@ -66,11 +66,13 @@ void ImageClient::RemoveTexture(TextureClient* aTexture) {
 
 ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
                                      TextureFlags aFlags,
-                                     CompositableType aType)
-    : ImageClient(aFwd, aFlags, aType) {}
+                                     CompositableType aType,
+                                     ImageUsageType aUsageType)
+    : ImageClient(aFwd, aFlags, aType, aUsageType) {}
 
 TextureInfo ImageClientSingle::GetTextureInfo() const {
-  return TextureInfo(CompositableType::IMAGE);
+  return TextureInfo(CompositableType::IMAGE, mUsageType,
+                     TextureFlags::DEFAULT);
 }
 
 void ImageClientSingle::FlushAllImages() {
@@ -270,9 +272,10 @@ bool ImageClientSingle::AddTextureClient(TextureClient* aTexture) {
 void ImageClientSingle::OnDetach() { mBuffers.Clear(); }
 
 ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
-                         CompositableType aType)
+                         CompositableType aType, ImageUsageType aUsageType)
     : CompositableClient(aFwd, aFlags),
       mType(aType),
+      mUsageType(aUsageType),
       mLastUpdateGenerationCounter(0) {}
 
 }  // namespace layers

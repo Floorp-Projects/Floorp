@@ -324,7 +324,7 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
 
   static const uint64_t sInvalidAsyncContainerId = 0;
 
-  explicit ImageContainer(ImageContainer::Mode flag = SYNCHRONOUS);
+  ImageContainer(ImageUsageType aUsageType, ImageContainer::Mode aFlag);
 
   ~ImageContainer();
 
@@ -579,6 +579,9 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
 
   void DropImageClient();
 
+  const ImageUsageType mUsageType;
+  const bool mIsAsync;
+
  private:
   typedef mozilla::RecursiveMutex RecursiveMutex;
 
@@ -655,7 +658,6 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   // than asynchronusly using the ImageBridge IPDL protocol.
   RefPtr<ImageClient> mImageClient MOZ_GUARDED_BY(mRecursiveMutex);
 
-  const bool mIsAsync;
   CompositableHandle mAsyncContainerHandle MOZ_GUARDED_BY(mRecursiveMutex);
 
   // ProducerID for last current image(s)

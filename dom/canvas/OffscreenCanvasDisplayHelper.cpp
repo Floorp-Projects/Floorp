@@ -92,7 +92,9 @@ void OffscreenCanvasDisplayHelper::UpdateContext(
     OffscreenCanvas* aOffscreenCanvas, RefPtr<ThreadSafeWorkerRef>&& aWorkerRef,
     CanvasContextType aType, const Maybe<int32_t>& aChildId) {
   RefPtr<layers::ImageContainer> imageContainer =
-      MakeRefPtr<layers::ImageContainer>(layers::ImageContainer::ASYNCHRONOUS);
+      MakeRefPtr<layers::ImageContainer>(
+          layers::ImageUsageType::OffscreenCanvas,
+          layers::ImageContainer::ASYNCHRONOUS);
 
   MutexAutoLock lock(mMutex);
 
