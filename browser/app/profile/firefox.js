@@ -802,6 +802,9 @@ pref("browser.shopping.experience2023.sidebarClosedCount", 0);
 // When conditions are met, shows a prompt on the shopping sidebar asking users if they want to disable auto-open behavior
 pref("browser.shopping.experience2023.showKeepSidebarClosedMessage", true);
 
+// Spin the cursor while the page is loading
+pref("browser.spin_cursor_while_busy", false);
+
 // Enable display of megalist option in browser sidebar
 // Keep it hidden from about:config for now.
 // pref("browser.megalist.enabled", false);

@@ -3435,6 +3435,10 @@ var XULBrowserWindow = {
       ) {
         this.busyUI = true;
 
+        if (this.spinCursorWhileBusy) {
+          window.setCursor("progress");
+        }
+
         // XXX: This needs to be based on window activity...
         this.stopCommand.removeAttribute("disabled");
         CombinedStopReload.switchToStop(aRequest, aWebProgress);
@@ -3501,6 +3505,8 @@ var XULBrowserWindow = {
 
       if (this.busyUI && aWebProgress.isTopLevel) {
         this.busyUI = false;
+
+        window.setCursor("auto");
 
         this.stopCommand.setAttribute("disabled", "true");
         CombinedStopReload.switchToReload(aRequest, aWebProgress);
@@ -3966,6 +3972,12 @@ var XULBrowserWindow = {
     this.onStatusChange(gBrowser.webProgress, null, 0, aMessage);
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  XULBrowserWindow,
+  "spinCursorWhileBusy",
+  "browser.spin_cursor_while_busy"
+);
 
 var LinkTargetDisplay = {
   get DELAY_SHOW() {
