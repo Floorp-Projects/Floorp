@@ -1,5 +1,3 @@
-/* eslint max-len: ["error", 80] */
-
 const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
 );
@@ -14,11 +12,26 @@ const { PERMISSION_L10N, PERMISSION_L10N_ID_OVERRIDES } =
 AddonTestUtils.initMochitest(this);
 
 async function background() {
+  let listening = false;
+
   browser.permissions.onAdded.addListener(perms => {
-    browser.test.sendMessage("permission-added", perms);
+    if (listening) {
+      browser.test.sendMessage("permission-added", perms);
+    }
   });
   browser.permissions.onRemoved.addListener(perms => {
-    browser.test.sendMessage("permission-removed", perms);
+    if (listening) {
+      browser.test.sendMessage("permission-removed", perms);
+    }
+  });
+
+  browser.test.onMessage.addListener(_msg => {
+    // Only start listening for changes now to avoid intermittent events
+    // from initial granting of origin permissions in mv3 on startup.
+    // This can happen because we're not awaiting in _setupStartupPermissions:
+    // https://searchfox.org/mozilla-central/rev/55944eaee1/toolkit/components/extensions/Extension.sys.mjs#3694-3697
+    listening = true;
+    browser.test.sendMessage("ready");
   });
 }
 
@@ -265,10 +278,14 @@ async function runTest(options) {
     let change;
     if (addon.userDisabled || !extension) {
       change = waitForPermissionChange(addonId);
-    } else if (!enabled) {
-      change = extension.awaitMessage("permission-added");
     } else {
-      change = extension.awaitMessage("permission-removed");
+      extension.sendMessage("init");
+      await extension.awaitMessage("ready");
+      if (!enabled) {
+        change = extension.awaitMessage("permission-added");
+      } else {
+        change = extension.awaitMessage("permission-removed");
+      }
     }
 
     button.click();
@@ -703,6 +720,8 @@ add_task(async function test_OneOfMany_AllSites_toggle() {
     useAddonManager: "permanent",
   });
   await extension.startup();
+  extension.sendMessage("init");
+  await extension.awaitMessage("ready");
 
   // Grant the second "all sites" permission as listed in the manifest.
   await ExtensionPermissions.add("addon9@mochi.test", {
