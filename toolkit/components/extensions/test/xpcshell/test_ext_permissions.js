@@ -498,12 +498,6 @@ add_task(function test_granted_only_for_privileged_mv3() {
 });
 
 add_task(function test_mv3_optional_host_permissions() {
-  // TODO: unskip after date.
-  if (Services.env.get("CONDPROF_RUNNER") && new Date().toJSON() < "2024-06") {
-    // We use StartupCache for schemas, so any test with a new manifest
-    // key fails when run under condprof for a few days after landing.
-    return;
-  }
   return runWithPrefs(WITH_INSTALL_PROMPT, () =>
     test_permissions({
       manifest_version: 3,

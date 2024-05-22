@@ -6,13 +6,6 @@ async function runTest({
   expectOptionalOrigins = [],
   expectWarning = false,
 }) {
-  // TODO: unskip after date.
-  if (Services.env.get("CONDPROF_RUNNER") && new Date().toJSON() < "2024-06") {
-    // We use StartupCache for schemas, so any test with a new manifest
-    // key fails when run under condprof for a few days after landing.
-    return;
-  }
-
   ExtensionTestUtils.failOnSchemaWarnings(!expectWarning);
 
   const extension = ExtensionTestUtils.loadExtension({
