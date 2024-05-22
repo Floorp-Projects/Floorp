@@ -730,7 +730,7 @@ class TestChecksConfigure(unittest.TestCase):
                 toolchain_prefix = depends(when=True)(lambda: None)
                 target_multiarch_dir = depends(when=True)(lambda: None)
                 target_sysroot = depends(when=True)(lambda: %(sysroot)s)
-                target = depends(when=True)(lambda: None)
+                target = depends(when=True)(lambda: namespace(os="unknown"))
                 include('%(topsrcdir)s/build/moz.configure/util.configure')
                 include('%(topsrcdir)s/build/moz.configure/checks.configure')
                 # Skip bootstrapping.
