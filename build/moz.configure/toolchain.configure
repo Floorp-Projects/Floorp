@@ -1208,7 +1208,11 @@ target_sysroot = sysroot(target)
 def system_lib_option(name, *args, **kwargs):
     option(name, *args, **kwargs)
 
-    @depends(name, target_sysroot.bootstrapped)
+    @depends(
+        name,
+        target_sysroot.bootstrapped,
+        when=kwargs.get("when"),
+    )
     def no_system_lib_in_sysroot(value, bootstrapped):
         if bootstrapped and value:
             die(

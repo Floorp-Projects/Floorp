@@ -10,13 +10,17 @@ def pkg_config(prefixes):
     return tuple("{}pkg-config".format(p) for p in (prefixes or ()) + ("",))
 
 
+@depends(compile_environment, target)
+def use_pkg_config(compile_environment, target):
+    return compile_environment and target.os not in ("WINNT", "OSX", "Android")
+
+
 pkg_config = check_prog(
     "PKG_CONFIG",
     pkg_config,
     bootstrap=depends(when=target_sysroot.bootstrapped)(lambda: "pkgconf"),
     allow_missing=True,
-    when=compile_environment
-    & depends(target.os)(lambda os: os not in ("WINNT", "OSX", "iOS", "Android")),
+    when=use_pkg_config,
 )
 
 
@@ -103,7 +107,12 @@ set_config("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
 #   Returns `True` when the package description is fulfilled.
 @template
 def pkg_check_modules(
-    var, package_desc, when=always, allow_missing=False, config=True, cflags_only=False
+    var,
+    package_desc,
+    when=always,
+    allow_missing=False,
+    config=True,
+    cflags_only=False,
 ):
     @depends(dependable(package_desc), when=when)
     def package_desc(desc):
@@ -118,11 +127,11 @@ def pkg_check_modules(
 
     allow_missing = dependable(allow_missing)
 
-    @depends(when, "--enable-compile-environment")
-    def when_and_compile_environment(when, compile_environment):
-        return when and compile_environment
+    @depends(when, when=use_pkg_config)
+    def when_and_use_pkg_config(when):
+        return when
 
-    @depends(pkg_config, pkg_config_version, when=when_and_compile_environment)
+    @depends(pkg_config, pkg_config_version, when=when_and_use_pkg_config)
     def check_pkg_config(pkg_config, version):
         min_version = "0.9.0"
         if pkg_config is None:
@@ -142,7 +151,7 @@ def pkg_check_modules(
         pkg_config_env,
         package_desc,
         allow_missing,
-        when=when_and_compile_environment,
+        when=when_and_use_pkg_config,
     )
     @imports("sys")
     @imports(_from="mozbuild.configure.util", _import="LineIO")
