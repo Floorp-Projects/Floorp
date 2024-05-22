@@ -26,6 +26,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FaviconFeed: "resource://activity-stream/lib/FaviconFeed.sys.mjs",
   FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
@@ -110,6 +111,7 @@ class _TopSites {
       "links",
       [...CACHED_LINK_PROPS_TO_MIGRATE, ...PINNED_FAVICON_PROPS_TO_MIGRATE]
     );
+    this.faviconFeed = new lazy.FaviconFeed();
     lazy.PageThumbs.addExpirationFilter(this);
   }
 
@@ -810,10 +812,7 @@ class _TopSites {
   }
 
   _requestRichIcon(url) {
-    this.store.dispatch({
-      type: at.RICH_ICON_MISSING,
-      data: { url },
-    });
+    this.faviconFeed.fetchIcon(url);
   }
 
   /**
