@@ -51,9 +51,6 @@ let gSearchServiceInitStub;
 let gGetTopSitesStub;
 
 function stubTopSites(sandbox) {
-  let cachedStorage = TopSites._storage;
-  let cachedStore = TopSites.store;
-
   async function cleanup() {
     if (TopSites._refreshing) {
       info("Wait for refresh to finish.");
@@ -63,33 +60,12 @@ function stubTopSites(sandbox) {
       info("Top sites was refreshed.");
     }
     TopSites._tippyTopProvider.initialized = false;
-    TopSites._storage = cachedStorage;
-    TopSites.store = cachedStore;
     TopSites.pinnedCache.clear();
     TopSites.frecentCache.clear();
     TopSites._reset();
     info("Finished cleaning up TopSites.");
   }
 
-  const storage = {
-    init: sandbox.stub().resolves(),
-    get: sandbox.stub().resolves(),
-    set: sandbox.stub().resolves(),
-  };
-
-  // Setup for tests that don't call `init` but require feed.storage
-  TopSites._storage = storage;
-  TopSites.store = {
-    dispatch: sinon.spy(),
-    getState() {
-      return this.state;
-    },
-    state: {
-      Prefs: { values: { topSitesRows: 2 } },
-      TopSites: { rows: Array(12).fill("site") },
-    },
-    dbStorage: { getDbTable: sandbox.stub().returns(storage) },
-  };
   TopSites._requestRichIcon = sandbox.stub();
   // Set preferences to match the store state.
   Services.prefs.setIntPref(
@@ -1045,51 +1021,6 @@ add_task(async function test_refresh_empty_slots() {
   await cleanup();
 });
 
-add_task(async function test_refresh_init_storage() {
-  let sandbox = sinon.createSandbox();
-
-  info("TopSites.refresh should not init storage of it's already initialized");
-
-  let cleanup = stubTopSites(sandbox);
-  sandbox.stub(TopSites, "_fetchIcon");
-  TopSites._startedUp = true;
-
-  TopSites._storage.initialized = true;
-
-  await TopSites.refresh({ broadcast: false });
-
-  Assert.ok(
-    TopSites._storage.init.notCalled,
-    "TopSites._storage.init was not called."
-  );
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_refresh_handles_indexedDB_errors() {
-  let sandbox = sinon.createSandbox();
-
-  info(
-    "TopSites.refresh should dispatch AlsoToPreloaded when broadcast is false"
-  );
-
-  let cleanup = stubTopSites(sandbox);
-  sandbox.stub(TopSites, "_fetchIcon");
-  TopSites._startedUp = true;
-
-  TopSites._storage.get.throws(new Error());
-
-  try {
-    await TopSites.refresh({ broadcast: false });
-    Assert.ok(true, "refresh should have succeeded");
-  } catch (e) {
-    Assert.ok(false, "Should not have thrown");
-  }
-
-  sandbox.restore();
-  await cleanup();
-});
-
 add_task(async function test_onAction_part_1() {
   let sandbox = sinon.createSandbox();
   let cleanup = stubTopSites(sandbox);
@@ -1788,10 +1719,6 @@ add_task(async function test_integration() {
   info("Test adding a pinned site and removing it with actions");
   let cleanup = stubTopSites(sandbox);
 
-  let resolvers = [];
-  TopSites.store.dispatch = sandbox.stub().callsFake(() => {
-    resolvers.shift()();
-  });
   TopSites._startedUp = true;
 
   TopSites._requestRichIcon = sandbox.stub();
@@ -2159,7 +2086,6 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
     Assert.equal(defaultSearchTopsite.backgroundColor, "#fff");
     gGetTopSitesStub.resolves(FAKE_LINKS);
     TopSites._tippyTopProvider.processSite.restore();
-    TopSites.store.dispatch.resetHistory();
     await cleanup();
   }
 
