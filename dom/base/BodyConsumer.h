@@ -29,13 +29,12 @@ class BodyConsumer final : public nsIObserver,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  enum class ConsumeType {
-    ArrayBuffer,
-    Blob,
-    Bytes,
-    FormData,
-    JSON,
-    Text,
+  enum ConsumeType {
+    CONSUME_ARRAYBUFFER,
+    CONSUME_BLOB,
+    CONSUME_FORMDATA,
+    CONSUME_JSON,
+    CONSUME_TEXT,
   };
 
   /**
@@ -49,15 +48,15 @@ class BodyConsumer final : public nsIObserver,
    * @param aSignalImpl an AbortSignal object. Optional.
    * @param aType the consume type.
    * @param aBodyBlobURISpec this is used only if the consume type is
-   *          ConsumeType::Blob. Optional.
+   *          CONSUME_BLOB. Optional.
    * @param aBodyLocalPath local path in case the blob is created from a local
-   *          file. Used only by ConsumeType::Blob. Optional.
-   * @param aBodyMimeType the mime-type for blob. Used only by
-   * ConsumeType::Blob. Optional.
+   *          file. Used only by CONSUME_BLOB. Optional.
+   * @param aBodyMimeType the mime-type for blob. Used only by CONSUME_BLOB.
+   *          Optional.
    * @param aMixedCaseMimeType is needed to get mixed case multipart
    *          boundary value to FormDataParser.
    * @param aBlobStorageType Blobs can be saved in temporary file. This is the
-   *          type of blob storage to use. Used only by ConsumeType::Blob.
+   *          type of blob storage to use. Used only by CONSUME_BLOB.
    * @param aRv An ErrorResult.
    */
   static already_AddRefed<Promise> Create(
