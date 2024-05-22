@@ -5,6 +5,7 @@
 
 #include "NotificationController.h"
 
+#include "CssAltContent.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
 #include "LocalAccessible-inl.h"
@@ -822,6 +823,14 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
         logging::MsgEnd();
       }
 #endif
+
+      if (CssAltContent(textNode)) {
+        // A11y doesn't care about the text rendered by layout if there is CSS
+        // content alt text. We skip this here rather than when the update is
+        // queued because the TextLeafAccessible might not exist yet and we
+        // might need to create it below.
+        continue;
+      }
 
       TextUpdater::Run(mDocument, textAcc->AsTextLeaf(), text.mString);
       continue;
