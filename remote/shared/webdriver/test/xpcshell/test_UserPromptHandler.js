@@ -65,7 +65,11 @@ add_task(function test_UserPromptHandler_fromJSON() {
     ok(promptHandler.activePromptHandlers.has("default"));
     const handler = promptHandler.activePromptHandlers.get("default");
     ok(behavior.startsWith(handler.handler));
-    equal(handler.notify, /and notify/.test(behavior));
+    if (behavior == "ignore") {
+      ok(handler.notify);
+    } else {
+      equal(handler.notify, /and notify/.test(behavior));
+    }
   }
 
   // Unhandled prompt behavior as object
@@ -77,7 +81,11 @@ add_task(function test_UserPromptHandler_fromJSON() {
       ok(promptHandler.activePromptHandlers.has(promptType));
       const handler = promptHandler.activePromptHandlers.get(promptType);
       ok(behavior.startsWith(handler.handler));
-      equal(handler.notify, /and notify/.test(behavior));
+      if (behavior == "ignore") {
+        ok(handler.notify);
+      } else {
+        equal(handler.notify, /and notify/.test(behavior));
+      }
     }
   }
 });
