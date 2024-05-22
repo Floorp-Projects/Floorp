@@ -3580,7 +3580,7 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
         displayPanFeedback = true;
       }
     }  // scrollableFrame
-  }    // ancestor chain
+  }  // ancestor chain
   aEvent->mDisplayPanFeedback = displayPanFeedback;
   aEvent->mPanDirection = panDirection;
 }
@@ -4819,6 +4819,11 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
   uint32_t y = aHotspot ? aHotspot->y.value : 0;
   aWidget->SetCursor(nsIWidget::Cursor{c, aContainer, x, y, aResolution});
   return NS_OK;
+}
+
+bool EventStateManager::CursorSettingManagerHasLockedCursor() {
+  return sCursorSettingManager &&
+         sCursorSettingManager->mLockCursor != kInvalidCursorKind;
 }
 
 class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback {
