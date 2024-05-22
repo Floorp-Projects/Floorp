@@ -447,7 +447,7 @@ already_AddRefed<MediaRawData> AudioDecoder::InputDataToMediaRawData(
 
 nsTArray<RefPtr<AudioData>> AudioDecoder::DecodedDataToOutputType(
     nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
-    const AudioDecoderConfigInternal& aConfig) {
+    AudioDecoderConfigInternal& aConfig) {
   AssertIsOnOwningThread();
 
   nsTArray<RefPtr<AudioData>> frames;

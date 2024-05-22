@@ -75,7 +75,7 @@ class AudioDecoder final : public DecoderTemplate<AudioDecoderTraits> {
 
   virtual nsTArray<RefPtr<AudioData>> DecodedDataToOutputType(
       nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
-      const AudioDecoderConfigInternal& aConfig) override;
+      AudioDecoderConfigInternal& aConfig) override;
 };
 
 }  // namespace mozilla::dom

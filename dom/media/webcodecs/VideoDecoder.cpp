@@ -109,7 +109,7 @@ VideoDecoderConfigInternal::VideoDecoderConfigInternal(
       mDisplayAspectHeight(std::move(aDisplayAspectHeight)),
       mDisplayAspectWidth(std::move(aDisplayAspectWidth)),
       mHardwareAcceleration(aHardwareAcceleration),
-      mOptimizeForLatency(std::move(aOptimizeForLatency)) {};
+      mOptimizeForLatency(std::move(aOptimizeForLatency)){};
 
 /*static*/
 UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
@@ -904,7 +904,7 @@ already_AddRefed<MediaRawData> VideoDecoder::InputDataToMediaRawData(
 
 nsTArray<RefPtr<VideoFrame>> VideoDecoder::DecodedDataToOutputType(
     nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
-    const VideoDecoderConfigInternal& aConfig) {
+    VideoDecoderConfigInternal& aConfig) {
   AssertIsOnOwningThread();
 
   nsTArray<RefPtr<VideoFrame>> frames;
