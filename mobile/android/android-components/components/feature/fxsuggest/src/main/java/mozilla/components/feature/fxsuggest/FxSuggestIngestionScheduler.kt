@@ -55,6 +55,10 @@ class FxSuggestIngestionScheduler(
             this.frequency.repeatInterval,
             this.frequency.repeatIntervalTimeUnit,
         ).apply {
+            // Don't run the ingestion immediately, wait until the first repeat interval has passed.
+            // FenixApplication calls `runStartupIngestion` on startup to handle ingestion on first
+            // run and after updates.
+            setInitialDelay(frequency.repeatInterval, frequency.repeatIntervalTimeUnit)
             setConstraints(constraints)
             addTag(FxSuggestIngestionWorker.WORK_TAG)
         }.build()

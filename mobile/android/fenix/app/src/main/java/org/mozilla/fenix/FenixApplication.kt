@@ -441,6 +441,15 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
         }
 
+        @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
+        fun queueSuggestIngest() {
+            queue.runIfReadyOrQueue {
+                GlobalScope.launch(Dispatchers.IO) {
+                    components.fxSuggest.storage.runStartupIngestion()
+                }
+            }
+        }
+
         initQueue()
 
         // We init these items in the visual completeness queue to avoid them initing in the critical
@@ -451,6 +460,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         queueRestoreLocale()
         queueStorageMaintenance()
         queueNimbusFetchInForeground()
+        if (settings().enableFxSuggest) {
+            queueSuggestIngest()
+        }
     }
 
     private fun startMetricsIfEnabled() {
