@@ -172,7 +172,8 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
   MOZ_CAN_RUN_SCRIPT void OutputDecodedData(
-      const nsTArray<RefPtr<MediaData>>&& aData);
+      const nsTArray<RefPtr<MediaData>>&& aData,
+      const ConfigTypeInternal& aConfig);
 
   void ScheduleDequeueEventIfNeeded();
   nsresult FireEvent(nsAtom* aTypeWithOn, const nsAString& aEventType);
