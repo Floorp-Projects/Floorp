@@ -173,9 +173,6 @@ memoffset = { path = "build/rust/memoffset" }
 # Patch `hashbrown` 0.12.* to depend on 0.14.*
 hashbrown = { path = "build/rust/hashbrown" }
 
-# Patch `libloading` 0.7 to depend on 0.8, which moves from `winapi` to `windows-sys`.
-libloading = { path = "build/rust/libloading" }
-
 # Patch `socket2` 0.4 to 0.5
 socket2 = { path = "build/rust/socket2" }
 

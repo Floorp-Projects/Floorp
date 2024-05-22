@@ -160,7 +160,7 @@ version = "0.38.0+1.3.281"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0bb44936d800fea8f016d7f2311c6a4f97aebd5dc86f09906139ec848cf3a46f"
 dependencies = [
- "libloading 0.8.3",
+ "libloading",
 ]
 
 [[package]]
@@ -766,13 +766,13 @@ checksum = "bb7bdea464ae038f09197b82430b921c53619fc8d2bcaf7b151013b3ca008017"
 
 [[package]]
 name = "clang-sys"
-version = "1.6.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77ed9a53e5d4d9c573ae844bfac6872b159cb1d1585a83b29e7a64b7eef7332a"
+checksum = "67523a3b4be3ce1989d607a828d036249522dd9c1c8de7f4dd2dae43a37369d1"
 dependencies = [
  "glob",
  "libc",
- "libloading 0.7.999",
+ "libloading",
 ]
 
 [[package]]
@@ -1017,7 +1017,7 @@ dependencies = [
  "fluent",
  "gtkbind",
  "intl-memoizer",
- "libloading 0.8.3",
+ "libloading",
  "log",
  "mozbuild",
  "mozilla-central-workspace-hack",
@@ -1233,7 +1233,7 @@ version = "0.20.0"
 source = "git+https://github.com/gfx-rs/wgpu?rev=18b758e3889bdd6ffa769085de15e2b96a0c1eb5#18b758e3889bdd6ffa769085de15e2b96a0c1eb5"
 dependencies = [
  "bitflags 2.5.0",
- "libloading 0.8.3",
+ "libloading",
  "winapi",
 ]
 
@@ -3288,13 +3288,6 @@ dependencies = [
 
 [[package]]
 name = "libloading"
-version = "0.7.999"
-dependencies = [
- "libloading 0.8.3",
-]
-
-[[package]]
-name = "libloading"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19"
@@ -4313,7 +4306,7 @@ dependencies = [
  "core-foundation",
  "env_logger",
  "lazy_static",
- "libloading 0.8.3",
+ "libloading",
  "log",
  "mozilla-central-workspace-hack",
  "pkcs11-bindings",
@@ -6697,7 +6690,7 @@ dependencies = [
  "js-sys",
  "khronos-egl",
  "libc",
- "libloading 0.8.3",
+ "libloading",
  "log",
  "metal",
  "naga",
