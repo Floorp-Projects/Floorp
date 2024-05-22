@@ -21,6 +21,7 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/CookieServiceParent.h"
+#include "mozilla/Components.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
@@ -119,8 +120,7 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
 
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
-  nsCOMPtr<nsIHttpProtocolHandler> dummyInitializer =
-      do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http");
+  mozilla::components::HttpHandler::Service();
 
   MOZ_ASSERT(gHttpHandler);
   mHttpHandler = gHttpHandler;
@@ -325,8 +325,8 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
   if (!mBrowserParent && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
                           aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
     nsresult rv;
-    nsCOMPtr<nsIWindowWatcher> wwatch =
-        do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+    nsCOMPtr<nsIWindowWatcher> wwatch;
+    wwatch = mozilla::components::WindowWatcher::Service(&rv);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_NO_INTERFACE);
 
     bool hasWindowCreator = false;

@@ -7,6 +7,7 @@
 #include "ExtensionProtocolHandler.h"
 
 #include "mozilla/BinarySearch.h"
+#include "mozilla/Components.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
@@ -551,8 +552,8 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                    nsIChannel* channel,
                                    nsIChannel* origChannel) -> nsresult {
       nsresult rv;
-      nsCOMPtr<nsIStreamConverterService> convService =
-          do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+      nsCOMPtr<nsIStreamConverterService> convService;
+      convService = mozilla::components::StreamConverter::Service(&rv);
       MOZ_TRY(rv);
 
       nsCOMPtr<nsIURI> uri;
@@ -901,7 +902,8 @@ Result<Ok, nsresult> ExtensionProtocolHandler::NewFD(
 void ExtensionProtocolHandler::SetContentType(nsIURI* aURI,
                                               nsIChannel* aChannel) {
   nsresult rv;
-  nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
+  nsCOMPtr<nsIMIMEService> mime;
+  mime = mozilla::components::Mime::Service(&rv);
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString contentType;
     rv = mime->GetTypeFromURI(aURI, contentType);

@@ -128,7 +128,8 @@ using mozilla::dom::ServiceWorkerDescriptor;
 #define MAX_RECURSION_COUNT 50
 
 already_AddRefed<nsIIOService> do_GetIOService(nsresult* error /* = 0 */) {
-  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service();
+  nsCOMPtr<nsIIOService> io;
+  io = mozilla::components::IO::Service();
   if (error) *error = io ? NS_OK : NS_ERROR_FAILURE;
   return io.forget();
 }
@@ -1132,8 +1133,8 @@ nsresult NS_CheckPortSafety(nsIURI* uri) {
 nsresult NS_NewProxyInfo(const nsACString& type, const nsACString& host,
                          int32_t port, uint32_t flags, nsIProxyInfo** result) {
   nsresult rv;
-  nsCOMPtr<nsIProtocolProxyService> pps =
-      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIProtocolProxyService> pps;
+  pps = mozilla::components::ProtocolProxy::Service(&rv);
   if (NS_SUCCEEDED(rv)) {
     rv = pps->NewProxyInfo(type, host, port, ""_ns, ""_ns, flags, UINT32_MAX,
                            nullptr, result);
@@ -1222,8 +1223,10 @@ void NS_GetReferrerFromChannel(nsIChannel* channel, nsIURI** referrer) {
 }
 
 already_AddRefed<nsINetUtil> do_GetNetUtil(nsresult* error /* = 0 */) {
-  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service();
+  nsCOMPtr<nsIIOService> io;
   nsCOMPtr<nsINetUtil> util;
+
+  io = mozilla::components::IO::Service();
   if (io) util = do_QueryInterface(io);
 
   if (error) *error = !!util ? NS_OK : NS_ERROR_FAILURE;
@@ -1556,8 +1559,8 @@ class BufferWriter final : public nsIInputStreamCallback {
     NS_ASSERT_OWNINGTHREAD(BufferWriter);
 
     if (!mTaskQueue) {
-      nsCOMPtr<nsIEventTarget> target =
-          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+      nsCOMPtr<nsIEventTarget> target;
+      target = mozilla::components::StreamTransport::Service();
       if (!target) {
         return NS_ERROR_FAILURE;
       }
@@ -2216,8 +2219,8 @@ bool NS_IsSafeMethodNav(nsIChannel* aChannel) {
 
 void NS_WrapAuthPrompt(nsIAuthPrompt* aAuthPrompt,
                        nsIAuthPrompt2** aAuthPrompt2) {
-  nsCOMPtr<nsIAuthPromptAdapterFactory> factory =
-      do_GetService(NS_AUTHPROMPT_ADAPTER_FACTORY_CONTRACTID);
+  nsCOMPtr<nsIAuthPromptAdapterFactory> factory;
+  factory = mozilla::components::AuthPromptAdapter::Service();
   if (!factory) return;
 
   NS_WARNING("Using deprecated nsIAuthPrompt");
@@ -2719,8 +2722,8 @@ uint32_t NS_GetContentDispositionFromToken(const nsAString& aDispToken) {
 uint32_t NS_GetContentDispositionFromHeader(const nsACString& aHeader,
                                             nsIChannel* aChan /* = nullptr */) {
   nsresult rv;
-  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
-      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar;
+  mimehdrpar = mozilla::components::MimeHeaderParam::Service(&rv);
   if (NS_FAILED(rv)) return nsIChannel::DISPOSITION_ATTACHMENT;
 
   nsAutoString dispToken;
@@ -2743,8 +2746,8 @@ nsresult NS_GetFilenameFromDisposition(nsAString& aFilename,
   aFilename.Truncate();
 
   nsresult rv;
-  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
-      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar;
+  mimehdrpar = mozilla::components::MimeHeaderParam::Service(&rv);
   if (NS_FAILED(rv)) return rv;
 
   // Get the value of 'filename' parameter
@@ -2760,8 +2763,8 @@ nsresult NS_GetFilenameFromDisposition(nsAString& aFilename,
 
   // Filename may still be percent-encoded. Fix:
   if (aFilename.FindChar('%') != -1) {
-    nsCOMPtr<nsITextToSubURI> textToSubURI =
-        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+    nsCOMPtr<nsITextToSubURI> textToSubURI;
+    textToSubURI = mozilla::components::TextToSubURI::Service(&rv);
     if (NS_SUCCEEDED(rv)) {
       nsAutoString unescaped;
       textToSubURI->UnEscapeURIForUI(NS_ConvertUTF16toUTF8(aFilename),
@@ -3511,8 +3514,8 @@ already_AddRefed<nsIURI> TryChangeProtocol(nsIURI* aURI,
 // passed value alone)
 static bool Decode5987Format(nsAString& aEncoded) {
   nsresult rv;
-  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
-      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar;
+  mimehdrpar = mozilla::components::MimeHeaderParam::Service(&rv);
   if (NS_FAILED(rv)) return false;
 
   nsAutoCString asciiValue;

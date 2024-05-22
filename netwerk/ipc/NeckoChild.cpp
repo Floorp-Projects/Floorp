@@ -39,6 +39,7 @@
 #include "nsINetworkLinkService.h"
 #include "nsQueryObject.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/Components.h"
 #include "nsNetUtil.h"
 #include "SimpleChannel.h"
 
@@ -263,8 +264,8 @@ mozilla::ipc::IPCResult NeckoChild::RecvPredOnPredictPrefetch(
 
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictorVerifier> predictor =
-      do_GetService("@mozilla.org/network/predictor;1", &rv);
+  nsCOMPtr<nsINetworkPredictorVerifier> predictor;
+  predictor = mozilla::components::Predictor::Service(&rv);
   NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
 
   predictor->OnPredictPrefetch(aURI, aHttpStatus);
@@ -280,8 +281,8 @@ mozilla::ipc::IPCResult NeckoChild::RecvPredOnPredictPreconnect(nsIURI* aURI) {
   }
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictorVerifier> predictor =
-      do_GetService("@mozilla.org/network/predictor;1", &rv);
+  nsCOMPtr<nsINetworkPredictorVerifier> predictor;
+  predictor = mozilla::components::Predictor::Service(&rv);
   NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
 
   predictor->OnPredictPreconnect(aURI);
@@ -297,8 +298,8 @@ mozilla::ipc::IPCResult NeckoChild::RecvPredOnPredictDNS(nsIURI* aURI) {
   }
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictorVerifier> predictor =
-      do_GetService("@mozilla.org/network/predictor;1", &rv);
+  nsCOMPtr<nsINetworkPredictorVerifier> predictor;
+  predictor = mozilla::components::Predictor::Service(&rv);
   NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
 
   predictor->OnPredictDNS(aURI);

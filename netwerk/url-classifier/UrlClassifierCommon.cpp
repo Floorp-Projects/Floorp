@@ -222,8 +222,8 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   // to correct top-level window), we need to do this in the parent process
   // instead (find the top-level window in the parent and send an IPC to child
   // processes to report console).
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      components::ThirdPartyUtil::Service();
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil;
+  thirdPartyUtil = mozilla::components::ThirdPartyUtil::Service();
   if (NS_WARN_IF(!thirdPartyUtil)) {
     return NS_OK;
   }
@@ -366,8 +366,8 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIScriptSecurityManager> securityManager;
+  securityManager = mozilla::components::ScriptSecurityManager::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIPrincipal> chanPrincipal;
   rv = securityManager->GetChannelURIPrincipal(aChannel,

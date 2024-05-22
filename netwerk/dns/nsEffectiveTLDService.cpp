@@ -9,6 +9,7 @@
 // http://wiki.mozilla.org/Gecko:Effective_TLD_Service
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Components.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ResultExtensions.h"
@@ -59,7 +60,7 @@ nsresult nsEffectiveTLDService::Init() {
   }
 
   nsresult rv;
-  mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+  mIDNService = mozilla::components::IDN::Service(&rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -116,8 +117,8 @@ nsEffectiveTLDService* nsEffectiveTLDService::GetInstance() {
   if (gService) {
     return gService;
   }
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  nsCOMPtr<nsIEffectiveTLDService> tldService;
+  tldService = mozilla::components::EffectiveTLD::Service();
   if (!tldService) {
     return nullptr;
   }

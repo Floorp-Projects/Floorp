@@ -7,6 +7,7 @@
 #include "CachePushChecker.h"
 
 #include "LoadContextInfo.h"
+#include "mozilla/Components.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "nsICacheEntry.h"
@@ -54,8 +55,8 @@ nsresult CachePushChecker::DoCheck() {
   }
 
   nsresult rv;
-  nsCOMPtr<nsICacheStorageService> css =
-      do_GetService("@mozilla.org/netwerk/cache-storage-service;1", &rv);
+  nsCOMPtr<nsICacheStorageService> css;
+  css = mozilla::components::CacheStorage::Service(&rv);
   if (NS_FAILED(rv)) {
     return rv;
   }

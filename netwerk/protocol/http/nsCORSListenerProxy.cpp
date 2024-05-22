@@ -7,6 +7,7 @@
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsString.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Components.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPrefs_content.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -1721,7 +1722,7 @@ void nsCORSListenerProxy::LogBlockedCORSRequest(
 
   // Build the error object and log it to the console
   nsCOMPtr<nsIConsoleService> console(
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv));
+      mozilla::components::Console::Service(&rv));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to log blocked cross-site request (no console)");
     return;
