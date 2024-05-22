@@ -178,8 +178,9 @@ The internal unique identifier for the interface. it must be unique, and the
 uuid must be generated when creating the interface. After that, it doesn't need
 to be changed any more.
 
-Online tools such as http://mozilla.pettay.fi/cgi-bin/mozuuid.pl can help
-generate UUIDs for new interfaces.
+``mach gen-uuid``, a cli tool like ``uuidgen``, or an online tool like
+https://mozilla.pettay.fi/mozuuid.html can help generate UUIDs for new
+interfaces.
 
 ``builtinclass``
 ````````````````
