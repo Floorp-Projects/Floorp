@@ -72,9 +72,14 @@ export function DevToolsLoader({
     "toolkit/locales": "chrome://global/locale",
   };
 
-  const sharedGlobal = useDevToolsLoaderGlobal
-    ? Cu.getGlobalForObject({})
-    : undefined;
+  // In case the Loader ESM is loaded in DevTools global,
+  // also reuse this global for all CommonJS modules.
+  const sharedGlobal =
+    useDevToolsLoaderGlobal ||
+    // eslint-disable-next-line mozilla/reject-globalThis-modification
+    Cu.getRealmLocation(globalThis) == "DevTools global"
+      ? Cu.getGlobalForObject({})
+      : undefined;
   this.loader = new Loader({
     paths,
     sharedGlobal,
