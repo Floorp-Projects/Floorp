@@ -2366,67 +2366,51 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
                rtStats.gcHeapUnusedArenas,
                "The same as 'explicit/js-non-window/gc-heap/unused-arenas'.");
 
-  REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/objects"),
-      KIND_OTHER, rtStats.zTotals.unusedGCThings.object,
-      "Unused object cells within non-empty arenas.");
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/objects"_ns,
+               KIND_OTHER, rtStats.zTotals.unusedGCThings.object,
+               "Unused object cells within non-empty arenas.");
 
-  REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/strings"),
-      KIND_OTHER, rtStats.zTotals.unusedGCThings.string,
-      "Unused string cells within non-empty arenas.");
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/strings"_ns,
+               KIND_OTHER, rtStats.zTotals.unusedGCThings.string,
+               "Unused string cells within non-empty arenas.");
 
-  REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/symbols"),
-      KIND_OTHER, rtStats.zTotals.unusedGCThings.symbol,
-      "Unused symbol cells within non-empty arenas.");
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/symbols"_ns,
+               KIND_OTHER, rtStats.zTotals.unusedGCThings.symbol,
+               "Unused symbol cells within non-empty arenas.");
 
-  REPORT_BYTES(nsLiteralCString(
-                   "js-main-runtime-gc-heap-committed/unused/gc-things/shapes"),
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/shapes"_ns,
                KIND_OTHER, rtStats.zTotals.unusedGCThings.shape,
                "Unused shape cells within non-empty arenas.");
 
   REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/base-shapes"),
+      "js-main-runtime-gc-heap-committed/unused/gc-things/base-shapes"_ns,
       KIND_OTHER, rtStats.zTotals.unusedGCThings.baseShape,
       "Unused base shape cells within non-empty arenas.");
 
   REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/getter-setters"),
+      "js-main-runtime-gc-heap-committed/unused/gc-things/getter-setters"_ns,
       KIND_OTHER, rtStats.zTotals.unusedGCThings.getterSetter,
       "Unused getter-setter cells within non-empty arenas.");
 
   REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/property-maps"),
+      "js-main-runtime-gc-heap-committed/unused/gc-things/property-maps"_ns,
       KIND_OTHER, rtStats.zTotals.unusedGCThings.propMap,
       "Unused property map cells within non-empty arenas.");
 
-  REPORT_BYTES(nsLiteralCString(
-                   "js-main-runtime-gc-heap-committed/unused/gc-things/scopes"),
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/scopes"_ns,
                KIND_OTHER, rtStats.zTotals.unusedGCThings.scope,
                "Unused scope cells within non-empty arenas.");
 
-  REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/scripts"),
-      KIND_OTHER, rtStats.zTotals.unusedGCThings.script,
-      "Unused script cells within non-empty arenas.");
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/scripts"_ns,
+               KIND_OTHER, rtStats.zTotals.unusedGCThings.script,
+               "Unused script cells within non-empty arenas.");
+
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/jitcode"_ns,
+               KIND_OTHER, rtStats.zTotals.unusedGCThings.jitcode,
+               "Unused jitcode cells within non-empty arenas.");
 
   REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/jitcode"),
-      KIND_OTHER, rtStats.zTotals.unusedGCThings.jitcode,
-      "Unused jitcode cells within non-empty arenas.");
-
-  REPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/unused/gc-things/regexp-shareds"),
+      "js-main-runtime-gc-heap-committed/unused/gc-things/regexp-shareds"_ns,
       KIND_OTHER, rtStats.zTotals.unusedGCThings.regExpShared,
       "Unused regexpshared cells within non-empty arenas.");
 
@@ -2440,66 +2424,55 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
 
   size_t gcThingTotal = 0;
 
-  MREPORT_BYTES(nsLiteralCString(
-                    "js-main-runtime-gc-heap-committed/used/gc-things/objects"),
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/objects"_ns,
                 KIND_OTHER, rtStats.realmTotals.classInfo.objectsGCHeap,
                 "Used object cells.");
 
-  MREPORT_BYTES(nsLiteralCString(
-                    "js-main-runtime-gc-heap-committed/used/gc-things/strings"),
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/strings"_ns,
                 KIND_OTHER, rtStats.zTotals.stringInfo.sizeOfLiveGCThings(),
                 "Used string cells.");
 
-  MREPORT_BYTES(nsLiteralCString(
-                    "js-main-runtime-gc-heap-committed/used/gc-things/symbols"),
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/symbols"_ns,
                 KIND_OTHER, rtStats.zTotals.symbolsGCHeap,
                 "Used symbol cells.");
 
-  MREPORT_BYTES(nsLiteralCString(
-                    "js-main-runtime-gc-heap-committed/used/gc-things/shapes"),
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/shapes"_ns,
                 KIND_OTHER,
                 rtStats.zTotals.shapeInfo.shapesGCHeapShared +
                     rtStats.zTotals.shapeInfo.shapesGCHeapDict,
                 "Used shape cells.");
 
   MREPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/used/gc-things/base-shapes"),
+      "js-main-runtime-gc-heap-committed/used/gc-things/base-shapes"_ns,
       KIND_OTHER, rtStats.zTotals.shapeInfo.shapesGCHeapBase,
       "Used base shape cells.");
 
   MREPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/used/gc-things/getter-setters"),
+      "js-main-runtime-gc-heap-committed/used/gc-things/getter-setters"_ns,
       KIND_OTHER, rtStats.zTotals.getterSettersGCHeap,
       "Used getter/setter cells.");
 
   MREPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/used/gc-things/property-maps"),
+      "js-main-runtime-gc-heap-committed/used/gc-things/property-maps"_ns,
       KIND_OTHER,
       rtStats.zTotals.dictPropMapsGCHeap +
           rtStats.zTotals.compactPropMapsGCHeap +
           rtStats.zTotals.normalPropMapsGCHeap,
       "Used property map cells.");
 
-  MREPORT_BYTES(nsLiteralCString(
-                    "js-main-runtime-gc-heap-committed/used/gc-things/scopes"),
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/scopes"_ns,
                 KIND_OTHER, rtStats.zTotals.scopesGCHeap, "Used scope cells.");
 
-  MREPORT_BYTES(nsLiteralCString(
-                    "js-main-runtime-gc-heap-committed/used/gc-things/scripts"),
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/scripts"_ns,
                 KIND_OTHER, rtStats.realmTotals.scriptsGCHeap,
                 "Used script cells.");
 
-  MREPORT_BYTES(nsLiteralCString(
-                    "js-main-runtime-gc-heap-committed/used/gc-things/jitcode"),
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/jitcode"_ns,
                 KIND_OTHER, rtStats.zTotals.jitCodesGCHeap,
                 "Used jitcode cells.");
 
   MREPORT_BYTES(
-      nsLiteralCString(
-          "js-main-runtime-gc-heap-committed/used/gc-things/regexp-shareds"),
+      "js-main-runtime-gc-heap-committed/used/gc-things/regexp-shareds"_ns,
       KIND_OTHER, rtStats.zTotals.regExpSharedsGCHeap,
       "Used regexpshared cells.");
 
