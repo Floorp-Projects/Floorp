@@ -2460,16 +2460,10 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
   // GDK_DRAG_CANCEL_ERROR error code
   // (see data_source_cancelled/gdkselection-wayland.c).
   // Bug 1527976
+  // Emulate what X11 does here as Gecko expect it and handles NO_TARGET
+  // result correctly according to drop destination.
   if (widget::GdkIsWaylandDisplay() && aResult == GTK_DRAG_RESULT_ERROR) {
-    for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
-         tmp = tmp->next) {
-      if (nsDragService::sTabDropTypeAtom == GDK_POINTER_TO_ATOM(tmp->data)) {
-        aResult = GTK_DRAG_RESULT_NO_TARGET;
-        LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p): Wayland tab drop",
-                             aContext);
-        break;
-      }
-    }
+    aResult = GTK_DRAG_RESULT_NO_TARGET;
   }
 
   LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p) %s", aContext,
