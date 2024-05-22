@@ -395,7 +395,7 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
   // CHIPS - If CHIPS is enabled the partitioned cookie jar is always available
   // (and therefore the partitioned principal), the unpartitioned cookie jar is
   // only available in first-party or third-party with storageAccess contexts.
-  bool isCHIPS = StaticPrefs::network_cookie_cookieBehavior_optInPartitioning();
+  bool isCHIPS = StaticPrefs::network_cookie_CHIPS_enabled();
   bool isUnpartitioned =
       cookiePrincipal->OriginAttributesRef().mPartitionKey.IsEmpty();
   if (isCHIPS && isUnpartitioned) {
@@ -547,7 +547,7 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
   // (and therefore the partitioned OriginAttributes), the unpartitioned cookie
   // jar is only available in first-party or third-party with storageAccess
   // contexts.
-  bool isCHIPS = StaticPrefs::network_cookie_cookieBehavior_optInPartitioning();
+  bool isCHIPS = StaticPrefs::network_cookie_CHIPS_enabled();
   bool isUnpartitioned = storageOriginAttributes.mPartitionKey.IsEmpty();
   if (isCHIPS && isUnpartitioned) {
     // Assert that we are only doing this if we are first-party or third-party
@@ -759,7 +759,7 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
   OriginAttributes partitionedPrincipalOriginAttributes;
   bool isPartitionedPrincipal =
       !storagePrincipalOriginAttributes.mPartitionKey.IsEmpty();
-  bool isCHIPS = StaticPrefs::network_cookie_cookieBehavior_optInPartitioning();
+  bool isCHIPS = StaticPrefs::network_cookie_CHIPS_enabled();
   // Only need to get OAs if we don't already use the partitioned principal.
   if (isCHIPS && !isPartitionedPrincipal) {
     StoragePrincipalHelper::GetOriginAttributes(
@@ -1155,6 +1155,16 @@ void CookieService::GetCookiesForURI(
 
       // check if the cookie has expired
       if (cookie->Expiry() <= currentTime) {
+        continue;
+      }
+
+      // Check if we need to block the cookie because of opt-in partitioning.
+      // We will only allow partitioned cookies with "partitioned" attribution
+      // if opt-in partitioning is enabled.
+      if (aIsForeign && cookieJarSettings->GetPartitionForeign() &&
+          StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() &&
+          !(cookie->IsPartitioned() && cookie->RawIsPartitioned()) &&
+          !aStorageAccessPermissionGranted) {
         continue;
       }
 
@@ -1811,7 +1821,7 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
         AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
 
     // We only drop the cookie if CHIPS is enabled.
-    if (StaticPrefs::network_cookie_cookieBehavior_optInPartitioning()) {
+    if (StaticPrefs::network_cookie_CHIPS_enabled()) {
       return newCookie;
     }
   }

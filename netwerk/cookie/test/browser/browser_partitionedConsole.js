@@ -136,7 +136,10 @@ add_task(async _ => {
 // secure context.
 add_task(async function partitionedAttrRequiresSecure() {
   await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.cookieBehavior.optInPartitioning", true]],
+    set: [
+      ["network.cookie.cookieBehavior.optInPartitioning", true],
+      ["network.cookie.CHIPS.enabled", true],
+    ],
   });
 
   // Clear all cookies before testing.

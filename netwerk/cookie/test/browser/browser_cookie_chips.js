@@ -18,6 +18,7 @@ add_setup(() => {
     "network.cookie.cookieBehavior.optInPartitioning",
     true
   );
+  Services.prefs.setBoolPref("network.cookie.CHIPS.enabled", true);
   Services.prefs.setBoolPref("dom.storage_access.enabled", true);
   Services.prefs.setBoolPref("dom.storage_access.prompt.testing", true);
   Services.cookies.removeAll();
@@ -32,6 +33,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(
     "network.cookie.cookieBehavior.optInPartitioning"
   );
+  Services.prefs.clearUserPref("network.cookie.CHIPS.enabled");
   Services.prefs.clearUserPref("dom.storage_access.enabled");
   Services.prefs.clearUserPref("dom.storage_access.prompt.testing");
   Services.cookies.removeAll();
