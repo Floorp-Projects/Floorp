@@ -904,7 +904,7 @@ already_AddRefed<MediaRawData> VideoDecoder::InputDataToMediaRawData(
 
 nsTArray<RefPtr<VideoFrame>> VideoDecoder::DecodedDataToOutputType(
     nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
-    VideoDecoderConfigInternal& aConfig) {
+    const VideoDecoderConfigInternal& aConfig) {
   AssertIsOnOwningThread();
 
   nsTArray<RefPtr<VideoFrame>> frames;
