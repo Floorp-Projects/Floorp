@@ -561,48 +561,6 @@ add_task(
 );
 
 add_task(
-  async function test_getLinksWithDefaults_migrate_frecent_screenshot_data() {
-    let sandbox = sinon.createSandbox();
-    info(
-      "getLinksWithDefaults should migrate frecent screenshot data without getting screenshots again"
-    );
-
-    let cleanup = stubTopSites(sandbox);
-    TopSites.refreshDefaults("https://foo.com");
-
-    gGetTopSitesStub.resetHistory();
-
-    Services.prefs.setBoolPref(
-      "browser.newtabpage.activity-stream.feeds.topsites",
-      true
-    );
-    await TopSites.getLinksWithDefaults();
-
-    let originalCallCount = Screenshots.getScreenshotForURL.callCount;
-    TopSites.frecentCache.expire();
-
-    let result = await TopSites.getLinksWithDefaults();
-
-    Assert.ok(
-      NewTabUtils.activityStreamLinks.getTopSites.calledTwice,
-      "getTopSites called twice"
-    );
-    Assert.equal(
-      Screenshots.getScreenshotForURL.callCount,
-      originalCallCount,
-      "getScreenshotForURL was not called again."
-    );
-    Assert.equal(result[0].screenshot, FAKE_SCREENSHOT);
-
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.feeds.topsites"
-    );
-    sandbox.restore();
-    await cleanup();
-  }
-);
-
-add_task(
   async function test_getLinksWithDefaults_migrate_pinned_favicon_data() {
     let sandbox = sinon.createSandbox();
     info(
@@ -819,62 +777,6 @@ add_task(async function test_getLinksWithDefaults_concurrency_getTopSites() {
   await cleanup();
 });
 
-add_task(
-  async function test_getLinksWithDefaults_concurrency_getScreenshotForURL() {
-    let sandbox = sinon.createSandbox();
-    info(
-      "getLinksWithDefaults concurrent calls should call the backing data once"
-    );
-
-    let cleanup = stubTopSites(sandbox);
-    TopSites.refreshDefaults("https://foo.com");
-    Services.prefs.setBoolPref(
-      "browser.newtabpage.activity-stream.feeds.topsites",
-      true
-    );
-
-    NewTabUtils.activityStreamLinks.getTopSites.resetHistory();
-    Screenshots.getScreenshotForURL.resetHistory();
-
-    await Promise.all([
-      TopSites.getLinksWithDefaults(),
-      TopSites.getLinksWithDefaults(),
-    ]);
-
-    Assert.ok(
-      NewTabUtils.activityStreamLinks.getTopSites.calledOnce,
-      "getTopSites only called once"
-    );
-    Assert.equal(
-      Screenshots.getScreenshotForURL.callCount,
-      FAKE_LINKS.length,
-      "getLinksWithDefaults concurrent calls should get screenshots once per link"
-    );
-    await cleanup();
-
-    cleanup = stubTopSites(sandbox);
-
-    TopSites.refreshDefaults("https://foo.com");
-
-    await Promise.all([
-      TopSites.getLinksWithDefaults(),
-      TopSites.getLinksWithDefaults(),
-    ]);
-
-    Assert.equal(
-      TopSites.store.dispatch.callCount,
-      FAKE_LINKS.length,
-      "getLinksWithDefaults concurrent calls should dispatch once per link screenshot fetched"
-    );
-
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.feeds.topsites"
-    );
-    sandbox.restore();
-    await cleanup();
-  }
-);
-
 add_task(async function test_getLinksWithDefaults_deduping_no_dedupe_pinned() {
   let sandbox = sinon.createSandbox();
   info("getLinksWithDefaults should not dedupe pinned sites");
@@ -977,31 +879,6 @@ add_task(async function test_getLinksWithDefaults_calls__fetchIcon() {
     Assert.ok(TopSites._fetchIcon.calledWith(result));
   }
 
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_getLinksWithDefaults_calls__fetchScreenshot() {
-  let sandbox = sinon.createSandbox();
-
-  info(
-    "getLinksWithDefaults should call _fetchScreenshot when customScreenshotURL is set"
-  );
-
-  gGetTopSitesStub.resolves([]);
-  sandbox
-    .stub(NewTabUtils.pinnedLinks, "links")
-    .get(() => [{ url: "https://foo.com", customScreenshotURL: "custom" }]);
-
-  let cleanup = stubTopSites(sandbox);
-  TopSites.refreshDefaults();
-
-  sandbox.stub(TopSites, "_fetchScreenshot");
-  await TopSites.getLinksWithDefaults();
-
-  Assert.ok(TopSites._fetchScreenshot.calledWith(sinon.match.object, "custom"));
-
-  gGetTopSitesStub.resolves(FAKE_LINKS);
   sandbox.restore();
   await cleanup();
 });
@@ -1916,7 +1793,6 @@ add_task(async function test_integration() {
     resolvers.shift()();
   });
   TopSites._startedUp = true;
-  sandbox.stub(TopSites, "_fetchScreenshot");
 
   TopSites._requestRichIcon = sandbox.stub();
   let url = "https://pin.me";
