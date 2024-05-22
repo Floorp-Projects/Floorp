@@ -25,7 +25,7 @@ test_url = "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
 secondary_url = "https://www.amazon.com/Acer-A515-46-R14K-Quad-Core-Processor-Backlit/dp/B08VKNVDDR/ref=sr_1_3?dchild=1&keywords=laptop&qid=1627047187&sr=8-3"
 
 ["bing-search"]
-playback_pageset_manifest = "mitm5-linux-firefox-bing-search.manifest"
+playback_pageset_manifest = "mitm8-linux-firefox-bing-search.manifest"
 test_url = "https://www.bing.com/search?q=barack+obama"
 
 ["buzzfeed"]
@@ -34,6 +34,7 @@ secondary_url = "https://www.buzzfeed.com/quizzes"
 test_url = "https://www.buzzfeed.com/"
 
 ["cnn"]
+playback_pageset_manifest = "mitm8-linux-firefox-cnn.manifest"
 secondary_url = "https://www.cnn.com/weather"
 test_url = "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html"
 
@@ -63,6 +64,7 @@ playback_pageset_manifest = "mitm5-linux-firefox-fandom.manifest"
 test_url = "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase"
 
 ["google-docs"]
+playback_pageset_manifest = "mitm8-linux-firefox-google-docs.manifest"
 page_complete_wait_time = 8000
 secondary_url = "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
 test_url = "https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing"
@@ -73,7 +75,7 @@ playback_pageset_manifest = "mitm5-linux-firefox-google-mail.manifest"
 test_url = "https://mail.google.com/"
 
 ["google-search"]
-playback_pageset_manifest = "mitm5-linux-firefox-google-search.manifest"
+playback_pageset_manifest = "mitm8-linux-firefox-google-search.manifest"
 test_url = "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
 
 ["google-slides"]
@@ -83,6 +85,7 @@ secondary_url = "https://docs.google.com/presentation/d/e/2PACX-1vRWwPQQFMDkSR4R
 test_url = "https://docs.google.com/presentation/d/1Ici0ceWwpFvmIb3EmKeWSq_vAQdmmdFcWqaiLqUkJng/edit?usp=sharing"
 
 ["imdb"]
+playback_pageset_manifest = "mitm8-linux-firefox-imdb.manifest"
 test_url = "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2"
 secondary_url = "https://www.imdb.com/title/tt0084967/episodes/?ref_=tt_ov_epl"
 
@@ -142,7 +145,7 @@ test_url = "https://pinterest.com/"
 
 ["reddit"]
 benchmark_page = false
-playback_pageset_manifest = "mitm6-linux-firefox-reddit.manifest"
+playback_pageset_manifest = "mitm8-linux-firefox-reddit.manifest"
 secondary_url = "https://www.reddit.com/r/technology/"
 test_url = "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/"
 
