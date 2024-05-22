@@ -10,6 +10,22 @@ import marionette_driver.errors as errors
 from marionette_harness import MarionetteTestCase
 
 
+PROMPT_HANDLERS = [
+    "accept",
+    "accept and notify",
+    "dismiss",
+    "dismiss and notify",
+    "ignore",
+]
+
+PROMPT_TYPES = [
+    "alert",
+    "beforeUnload",
+    "confirm",
+    "prompt",
+]
+
+
 class TestCapabilities(MarionetteTestCase):
     def setUp(self):
         super(TestCapabilities, self).setUp()
@@ -155,7 +171,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_accept_insecure_certs(self):
         for value in ["", 42, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"acceptInsecureCerts": value})
 
@@ -165,7 +181,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_page_load_strategy(self):
         for strategy in ["none", "eager", "normal"]:
-            print("valid strategy {}".format(strategy))
+            print(f"valid strategy {strategy}")
             self.delete_session()
             self.marionette.start_session({"pageLoadStrategy": strategy})
             self.assertEqual(
@@ -175,7 +191,7 @@ class TestCapabilityMatching(MarionetteTestCase):
         self.delete_session()
 
         for value in ["", "EAGER", True, 42, {}, []]:
-            print("invalid strategy {}".format(value))
+            print(f"invalid strategy {value}")
             with self.assertRaisesRegexp(
                 errors.SessionNotCreatedException, "InvalidArgumentError"
             ):
@@ -189,7 +205,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_timeouts(self):
         for value in ["", 2.5, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"timeouts": {"pageLoad": value}})
 
@@ -205,7 +221,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_strict_file_interactability(self):
         for value in ["", 2.5, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"strictFileInteractability": value})
 
@@ -225,25 +241,19 @@ class TestCapabilityMatching(MarionetteTestCase):
             self.marionette.session_capabilities["strictFileInteractability"]
         )
 
-    def test_unhandled_prompt_behavior(self):
-        behaviors = [
-            "accept",
-            "accept and notify",
-            "dismiss",
-            "dismiss and notify",
-            "ignore",
-        ]
+    def test_unhandled_prompt_behavior_as_string(self):
+        """WebDriver Classic (HTTP) style"""
 
-        for behavior in behaviors:
-            print("valid unhandled prompt behavior {}".format(behavior))
-            self.delete_session()
-            self.marionette.start_session({"unhandledPromptBehavior": behavior})
-            self.assertEqual(
-                self.marionette.session_capabilities["unhandledPromptBehavior"],
-                behavior,
-            )
+        # Invalid values
+        self.delete_session()
+        for handler in ["", "ACCEPT", True, 42, []]:
+            print(f"invalid unhandled prompt behavior {handler}")
+            with self.assertRaisesRegexp(
+                errors.SessionNotCreatedException, "InvalidArgumentError"
+            ):
+                self.marionette.start_session({"unhandledPromptBehavior": handler})
 
-        # Default value
+        # Default value if capability is not requested when creating a new session.
         self.delete_session()
         self.marionette.start_session()
         self.assertEqual(
@@ -251,14 +261,45 @@ class TestCapabilityMatching(MarionetteTestCase):
             "dismiss and notify",
         )
 
+        for handler in PROMPT_HANDLERS:
+            print(f"  value {handler}")
+            self.delete_session()
+            self.marionette.start_session({"unhandledPromptBehavior": handler})
+            self.assertEqual(
+                self.marionette.session_capabilities["unhandledPromptBehavior"],
+                handler,
+            )
+
+    def test_unhandled_prompt_behavior_as_object(self):
+        """WebDriver BiDi style"""
+
         # Invalid values
         self.delete_session()
-        for behavior in ["", "ACCEPT", True, 42, {}, []]:
-            print("invalid unhandled prompt behavior {}".format(behavior))
+        for handler in [{"foo": "accept"}, {"alert": "bar"}]:
+            print(f"invalid unhandled prompt behavior {handler}")
             with self.assertRaisesRegexp(
                 errors.SessionNotCreatedException, "InvalidArgumentError"
             ):
-                self.marionette.start_session({"unhandledPromptBehavior": behavior})
+                self.marionette.start_session({"unhandledPromptBehavior": handler})
+
+        # Default value if capability is not requested when creating a new session.
+        self.delete_session()
+        self.marionette.start_session({"unhandledPromptBehavior": {}})
+        self.assertEqual(
+            self.marionette.session_capabilities["unhandledPromptBehavior"],
+            "dismiss and notify",
+        )
+
+        for prompt_type in PROMPT_TYPES:
+            for handler in PROMPT_HANDLERS:
+                value = {prompt_type: handler}
+                print(f"  value {value}")
+                self.delete_session()
+                self.marionette.start_session({"unhandledPromptBehavior": value})
+                self.assertEqual(
+                    self.marionette.session_capabilities["unhandledPromptBehavior"],
+                    value,
+                )
 
     def test_web_socket_url(self):
         self.marionette.start_session({"webSocketUrl": True})
@@ -267,7 +308,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_webauthn_extension_cred_blob(self):
         for value in ["", 42, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"webauthn:extension:credBlob": value})
 
@@ -279,7 +320,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_webauthn_extension_large_blob(self):
         for value in ["", 42, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"webauthn:extension:largeBlob": value})
 
@@ -291,7 +332,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_webauthn_extension_prf(self):
         for value in ["", 42, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"webauthn:extension:prf": value})
 
@@ -301,7 +342,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_webauthn_extension_uvm(self):
         for value in ["", 42, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"webauthn:extension:uvm": value})
 
@@ -311,7 +352,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_webauthn_virtual_authenticators(self):
         for value in ["", 42, {}, []]:
-            print("  type {}".format(type(value)))
+            print(f"  type {type(value)}")
             with self.assertRaises(errors.SessionNotCreatedException):
                 self.marionette.start_session({"webauthn:virtualAuthenticators": value})
 

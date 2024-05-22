@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
+  UserPromptHandler:
+    "chrome://remote/content/shared/webdriver/UserPromptHandler.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "remoteAgent", () => {
@@ -405,30 +407,6 @@ export class Proxy {
   }
 }
 
-/**
- * Enum of unhandled prompt behavior.
- *
- * @enum
- */
-export const UnhandledPromptBehavior = {
-  /** All simple dialogs encountered should be accepted. */
-  Accept: "accept",
-  /**
-   * All simple dialogs encountered should be accepted, and an error
-   * returned that the dialog was handled.
-   */
-  AcceptAndNotify: "accept and notify",
-  /** All simple dialogs encountered should be dismissed. */
-  Dismiss: "dismiss",
-  /**
-   * All simple dialogs encountered should be dismissed, and an error
-   * returned that the dialog was handled.
-   */
-  DismissAndNotify: "dismiss and notify",
-  /** All simple dialogs encountered should be left to the user to handle. */
-  Ignore: "ignore",
-};
-
 /** WebDriver session capabilities representation. */
 export class Capabilities extends Map {
   /** @class */
@@ -444,7 +422,7 @@ export class Capabilities extends Map {
       ["setWindowRect", !lazy.AppInfo.isAndroid],
       ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
-      ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
+      ["unhandledPromptBehavior", new lazy.UserPromptHandler()],
       [
         "userAgent",
         Cc["@mozilla.org/network/protocol;1?name=http"].getService(
@@ -513,6 +491,7 @@ export class Capabilities extends Map {
     }
 
     marshalled.timeouts = super.get("timeouts");
+    marshalled.unhandledPromptBehavior = super.get("unhandledPromptBehavior");
 
     return marshalled;
   }
@@ -588,15 +567,7 @@ export class Capabilities extends Map {
           break;
 
         case "unhandledPromptBehavior":
-          lazy.assert.string(
-            v,
-            lazy.pprint`Expected ${k} to be a string, got ${v}`
-          );
-          if (!Object.values(UnhandledPromptBehavior).includes(v)) {
-            throw new lazy.error.InvalidArgumentError(
-              `Unknown unhandled prompt behavior: ${v}`
-            );
-          }
+          v = lazy.UserPromptHandler.fromJSON(v);
           break;
 
         case "webSocketUrl":
@@ -751,16 +722,7 @@ export class Capabilities extends Map {
         return Timeouts.fromJSON(value);
 
       case "unhandledPromptBehavior":
-        lazy.assert.string(
-          value,
-          lazy.pprint`Expected ${name} to be a string, got ${value}`
-        );
-        if (!Object.values(UnhandledPromptBehavior).includes(value)) {
-          throw new lazy.error.InvalidArgumentError(
-            `Unknown unhandled prompt behavior: ${value}`
-          );
-        }
-        return value;
+        return lazy.UserPromptHandler.fromJSON(value);
 
       case "webSocketUrl":
         lazy.assert.boolean(
@@ -1002,9 +964,8 @@ export function validateCapabilities(capabilities) {
   Object.entries(capabilities).forEach(([name, value]) => {
     const deserialized = Capabilities.validate(name, value);
     if (deserialized !== null) {
-      if (name === "proxy" || name === "timeouts") {
-        // Return pure value, the Proxy and Timeouts objects will be setup
-        // during session creation.
+      if (["proxy", "timeouts", "unhandledPromptBehavior"].includes(name)) {
+        // Return pure values for objects that will be setup during session creation.
         result[name] = value;
       } else {
         result[name] = deserialized;
@@ -1062,7 +1023,8 @@ export function processCapabilities(params) {
   });
 
   // TODO: Bug 1836288. Implement the capability matching logic
-  // for "browserName", "browserVersion" and "platformName" features,
+  // for "browserName", "browserVersion", "platformName", and
+  // "unhandledPromptBehavior" features,
   // for now we can just pick the first merged capability.
   const matchedCapabilities = mergedCapabilities[0];
 

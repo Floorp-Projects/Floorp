@@ -32,6 +32,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   permissions: "chrome://remote/content/shared/Permissions.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
+  PromptHandlers:
+    "chrome://remote/content/shared/webdriver/UserPromptHandler.sys.mjs",
   PromptListener:
     "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
   quit: "chrome://remote/content/shared/Browser.sys.mjs",
@@ -43,8 +45,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TimedPromise: "chrome://remote/content/marionette/sync.sys.mjs",
   Timeouts: "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
-  UnhandledPromptBehavior:
-    "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
   unregisterCommandsActor:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs",
   waitForInitialNavigationCompleted:
@@ -2817,43 +2817,35 @@ GeckoDriver.prototype._handleUserPrompts = async function () {
     return;
   }
 
-  if (this.dialog.promptType == "beforeunload") {
-    // Wait until the "beforeunload" prompt has been accepted.
-    await this.promptListener.dialogClosed();
-    return;
+  const textContent = await this.dialog.getText();
+  const promptType = this.dialog.promptType;
+
+  let type = "default";
+  if (["alert", "confirm", "prompt"].includes(this.dialog.promptType)) {
+    type = promptType;
   }
 
-  const textContent = await this.dialog.getText();
+  const userPromptHandler = this.currentSession.userPromptHandler;
 
-  const behavior = this.currentSession.unhandledPromptBehavior;
-  switch (behavior) {
-    case lazy.UnhandledPromptBehavior.Accept:
+  const handler = userPromptHandler.getPromptHandler(type);
+  switch (handler.handler) {
+    case lazy.PromptHandlers.Accept:
       await this.acceptDialog();
       break;
-
-    case lazy.UnhandledPromptBehavior.AcceptAndNotify:
-      await this.acceptDialog();
-      throw new lazy.error.UnexpectedAlertOpenError(
-        `Accepted user prompt dialog: ${textContent}`
-      );
-
-    case lazy.UnhandledPromptBehavior.Dismiss:
+    case lazy.PromptHandlers.Dismiss:
       await this.dismissDialog();
       break;
+    case lazy.PromptHandlers.Ignore:
+      break;
+  }
 
-    case lazy.UnhandledPromptBehavior.DismissAndNotify:
-      await this.dismissDialog();
-      throw new lazy.error.UnexpectedAlertOpenError(
-        `Dismissed user prompt dialog: ${textContent}`
-      );
-
-    case lazy.UnhandledPromptBehavior.Ignore:
-      throw new lazy.error.UnexpectedAlertOpenError(
-        "Encountered unhandled user prompt dialog"
-      );
-
-    default:
-      throw new TypeError(`Unknown unhandledPromptBehavior "${behavior}"`);
+  if (handler.notify) {
+    throw new lazy.error.UnexpectedAlertOpenError(
+      `Unexpected ${promptType} dialog detected. Performed handler "${handler.handler}"`,
+      {
+        text: textContent,
+      }
+    );
   }
 };
 
