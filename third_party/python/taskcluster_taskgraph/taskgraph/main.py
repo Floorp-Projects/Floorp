@@ -697,6 +697,9 @@ def image_digest(args):
     "--tasks-for", required=True, help="the tasks_for value used to generate this task"
 )
 @argument("--try-task-config-file", help="path to try task configuration file")
+@argument(
+    "--verbose", "-v", action="store_true", help="include debug-level logging output"
+)
 def decision(options):
     from taskgraph.decision import taskgraph_decision
 
