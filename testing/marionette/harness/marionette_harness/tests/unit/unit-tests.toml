@@ -165,6 +165,8 @@ skip-if = ["os == 'mac'"] # bug 1674411
 
 ["test_typing.py"]
 
+["test_unhandled_prompt_behavior.py"]
+
 ["test_visibility.py"]
 
 ["test_wait.py"]
