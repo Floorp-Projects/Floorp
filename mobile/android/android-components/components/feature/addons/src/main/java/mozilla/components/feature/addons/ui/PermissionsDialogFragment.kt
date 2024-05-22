@@ -153,9 +153,10 @@ class PermissionsDialogFragment : AddonDialogFragment() {
             },
             addon.translateName(requireContext()),
         )
-        rootView.findViewById<TextView>(R.id.optional_or_required_text).text = buildOptionalOrRequiredText()
-
         val listPermissions = buildPermissionsList()
+        rootView.findViewById<TextView>(R.id.optional_or_required_text).text =
+            buildOptionalOrRequiredText(listPermissions.isNotEmpty())
+
         val permissionsRecyclerView = rootView.findViewById<RecyclerView>(R.id.permissions)
         val positiveButton = rootView.findViewById<Button>(R.id.allow_button)
         val negativeButton = rootView.findViewById<Button>(R.id.deny_button)
@@ -211,7 +212,10 @@ class PermissionsDialogFragment : AddonDialogFragment() {
     }
 
     @VisibleForTesting
-    internal fun buildOptionalOrRequiredText(): String {
+    internal fun buildOptionalOrRequiredText(hasPermissions: Boolean): String {
+        if (!hasPermissions) {
+            return ""
+        }
         val optionalOrRequiredText = if (forOptionalPermissions) {
             getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)
         } else {
