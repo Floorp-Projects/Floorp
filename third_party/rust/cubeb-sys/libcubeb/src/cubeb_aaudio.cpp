@@ -244,13 +244,24 @@ shutdown_with_error(cubeb_stream * stm)
   }
 
   int64_t poll_frequency_ns = NS_PER_S * stm->out_frame_size / stm->sample_rate;
+  int rv;
   if (stm->istream) {
-    wait_for_state_change(stm->istream, AAUDIO_STREAM_STATE_STOPPED,
-                          poll_frequency_ns);
+    rv = wait_for_state_change(stm->istream, AAUDIO_STREAM_STATE_STOPPED,
+                               poll_frequency_ns);
+    if (rv != CUBEB_OK) {
+      LOG("Failure when waiting for stream change on the input side when "
+          "shutting down in error");
+      // Not much we can do, carry on
+    }
   }
   if (stm->ostream) {
-    wait_for_state_change(stm->ostream, AAUDIO_STREAM_STATE_STOPPED,
-                          poll_frequency_ns);
+    rv = wait_for_state_change(stm->ostream, AAUDIO_STREAM_STATE_STOPPED,
+                               poll_frequency_ns);
+    if (rv != CUBEB_OK) {
+      LOG("Failure when waiting for stream change on the output side when "
+          "shutting down in error");
+      // Not much we can do, carry on
+    }
   }
 
   assert(!stm->in_data_callback.load());
@@ -920,7 +931,7 @@ aaudio_error_cb(AAudioStream * astream, void * user_data, aaudio_result_t error)
   assert(stm->ostream == astream || stm->istream == astream);
 
   // Device change -- reinitialize on the new default device.
-  if (error == AAUDIO_ERROR_DISCONNECTED) {
+  if (error == AAUDIO_ERROR_DISCONNECTED || error == AAUDIO_ERROR_TIMEOUT) {
     LOG("Audio device change, reinitializing stream");
     reinitialize_stream(stm);
     return;

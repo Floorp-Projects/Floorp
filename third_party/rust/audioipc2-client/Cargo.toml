@@ -21,7 +21,7 @@ description = "Cubeb Backend for talking to remote cubeb server."
 license = "ISC"
 
 [dependencies]
-cubeb-backend = "0.12"
+cubeb-backend = "0.13"
 log = "0.4"
 
 [dependencies.audio_thread_priority]

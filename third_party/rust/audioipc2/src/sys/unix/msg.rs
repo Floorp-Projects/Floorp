@@ -34,7 +34,7 @@ pub(crate) fn recv_msg_with_flags(
     flags: libc::c_int,
 ) -> io::Result<(usize, usize, libc::c_int)> {
     let slice = unix::as_os_slice_mut(bufs);
-    let len = cmp::min(<libc::c_int>::max_value() as usize, slice.len());
+    let len = cmp::min(<libc::c_int>::MAX as usize, slice.len());
     let (control, controllen) = if cmsg.len() == 0 {
         (ptr::null_mut(), 0)
     } else {
@@ -63,7 +63,7 @@ pub(crate) fn send_msg_with_flags(
     flags: libc::c_int,
 ) -> io::Result<usize> {
     let slice = unix::as_os_slice(bufs);
-    let len = cmp::min(<libc::c_int>::max_value() as usize, slice.len());
+    let len = cmp::min(<libc::c_int>::MAX as usize, slice.len());
     let (control, controllen) = if cmsg.is_empty() {
         (ptr::null_mut(), 0)
     } else {

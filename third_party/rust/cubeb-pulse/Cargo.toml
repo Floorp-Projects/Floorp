@@ -24,7 +24,7 @@ crate-type = [
 ]
 
 [dependencies]
-cubeb-backend = "0.12.0"
+cubeb-backend = "0.13"
 ringbuf = "0.2"
 semver = "1.0"
 
