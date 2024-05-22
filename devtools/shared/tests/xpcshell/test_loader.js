@@ -7,7 +7,8 @@ const {
   useDistinctSystemPrincipalLoader,
   releaseDistinctSystemPrincipalLoader,
 } = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
+  { global: "shared" }
 );
 
 function run_test() {

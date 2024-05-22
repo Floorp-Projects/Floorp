@@ -21,7 +21,8 @@ export function initContentProcessTarget(msg) {
     useDistinctSystemPrincipalLoader,
     releaseDistinctSystemPrincipalLoader,
   } = ChromeUtils.importESModule(
-    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
+    { global: "shared" }
   );
 
   // Use a unique object to identify this one usage of the loader
