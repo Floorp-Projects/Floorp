@@ -85,7 +85,8 @@ class IPCFuzzController {
   bool ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
                          IPC::Message& aMessage);
   bool MakeTargetDecision(uint8_t portIndex, uint8_t portInstanceIndex,
-                          uint8_t actorIndex, uint16_t typeOffset,
+                          uint8_t actorIndex, uint8_t actorProtocolIndex,
+                          uint16_t typeOffset,
                           mojo::core::ports::PortName* name, int32_t* seqno,
                           uint64_t* fseqno, int32_t* actorId, uint32_t* type,
                           bool* is_cons, bool update = true);
