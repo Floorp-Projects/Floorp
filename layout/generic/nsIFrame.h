@@ -3312,9 +3312,9 @@ class nsIFrame : public nsQueryFrame {
 
   /**
    * Whether this frame hides its contents via the `content-visibility`
-   * property, while doing layout. This might be true when `HidesContent()` is
-   * true in the case that hidden content is being forced to lay out by position
-   * or size queries from script.
+   * property, while doing layout. This might return false when `HidesContent()`
+   * returns true in the case that hidden content is being forced to lay out
+   * by position or size queries from script.
    */
   bool HidesContentForLayout() const;
 
