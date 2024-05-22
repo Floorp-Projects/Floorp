@@ -603,6 +603,7 @@ skip-if = [
 skip-if = [
    "os == 'android' && debug",
 ]
+requesttimeoutfactor = 4 # Prevents TV job failures on Android builds.
 
 ["test_ext_webRequest_cached.js"]
 skip-if = ["os == 'android'"] # Bug 1573511
