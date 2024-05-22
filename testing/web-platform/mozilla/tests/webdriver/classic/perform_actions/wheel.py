@@ -3,9 +3,13 @@ from copy import deepcopy
 import pytest
 from tests.classic.perform_actions.support.refine import get_events
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.parametrize("device_pixel_ratio", ["1.0", "2.0", "0.5"])
-def test_scroll_delta_device_pixel(configuration, url, geckodriver, device_pixel_ratio):
+async def test_scroll_delta_device_pixel(
+    configuration, url, geckodriver, device_pixel_ratio
+):
     config = deepcopy(configuration)
 
     prefs = config["capabilities"]["moz:firefoxOptions"].get("prefs", {})
@@ -34,4 +38,4 @@ def test_scroll_delta_device_pixel(configuration, url, geckodriver, device_pixel
         assert events[0]["target"] == "scrollable-content"
 
     finally:
-        driver.stop()
+        await driver.stop()

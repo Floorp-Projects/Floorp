@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 
 from .helpers import (
     Browser,
@@ -107,8 +108,8 @@ def firefox_options(configuration):
     return configuration["capabilities"]["moz:firefoxOptions"]
 
 
-@pytest.fixture
-def geckodriver(configuration):
+@pytest_asyncio.fixture
+async def geckodriver(configuration):
     """Start a geckodriver instance directly."""
     driver = None
 
@@ -126,7 +127,7 @@ def geckodriver(configuration):
     yield _geckodriver
 
     if driver is not None:
-        driver.stop()
+        await driver.stop()
 
 
 @pytest.fixture

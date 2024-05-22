@@ -3,6 +3,8 @@ from copy import deepcopy
 import pytest
 from support.network import get_host, http_request, websocket_request
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.parametrize(
     "allow_hosts, hostname, port_type, status",
@@ -34,7 +36,7 @@ def test_allow_hosts(geckodriver, allow_hosts, hostname, port_type, status):
     ],
     ids=["allowed", "not allowed"],
 )
-def test_allow_hosts_passed_to_remote_agent(
+async def test_allow_hosts_passed_to_remote_agent(
     configuration, geckodriver, allow_hosts, hostname, status
 ):
     config = deepcopy(configuration)
@@ -50,4 +52,4 @@ def test_allow_hosts_passed_to_remote_agent(
     response = websocket_request("127.0.0.1", driver.remote_agent_port, host=host)
     assert response.status == status
 
-    driver.delete_session()
+    await driver.delete_session()
