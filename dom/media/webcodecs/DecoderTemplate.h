@@ -155,7 +155,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
       const ConfigTypeInternal& aConfig) = 0;
   virtual nsTArray<RefPtr<OutputType>> DecodedDataToOutputType(
       nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
-      ConfigTypeInternal& aConfig) = 0;
+      const ConfigTypeInternal& aConfig) = 0;
 
  protected:
   // DecoderTemplate can run on either main thread or worker thread.
