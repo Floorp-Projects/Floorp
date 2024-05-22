@@ -39,6 +39,12 @@ ChromeUtils.defineLazyGetter(lazy, "UNLOAD_TIMEOUT_MULTIPLIER", () => {
 
 export const DEFAULT_UNLOAD_TIMEOUT = 200;
 
+// Load flag for an error page from the DocShell (0x0001U << 16)
+const LOAD_FLAG_ERROR_PAGE = 0x10000;
+
+const STATE_START = Ci.nsIWebProgressListener.STATE_START;
+const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
+
 /**
  * Returns the multiplier used for the unload timer. Useful for tests which
  * assert the behavior of this timeout.
@@ -107,7 +113,14 @@ export async function waitForInitialNavigationCompleted(
     listener.stop();
   }
 
-  await navigated;
+  try {
+    await navigated;
+  } catch (e) {
+    // Ignore any error if the initial navigation failed.
+    lazy.logger.debug(
+      lazy.truncate`[${browsingContext.id}] Initial Navigation to ${listener.currentURI?.spec} failed: ${e}`
+    );
+  }
 
   return {
     currentURI: listener.currentURI,
@@ -126,6 +139,7 @@ export class ProgressListener {
   #webProgress;
 
   #deferredNavigation;
+  #errorName;
   #seenStartFlag;
   #targetURI;
   #unloadTimerId;
@@ -171,6 +185,7 @@ export class ProgressListener {
     this.#webProgress = webProgress;
 
     this.#deferredNavigation = null;
+    this.#errorName = null;
     this.#seenStartFlag = false;
     this.#targetURI = null;
     this.#unloadTimerId = null;
@@ -188,12 +203,25 @@ export class ProgressListener {
     return this.#webProgress.browsingContext.currentURI;
   }
 
+  get documentURI() {
+    return this.#webProgress.browsingContext.currentWindowGlobal.documentURI;
+  }
+
+  get isInitialDocument() {
+    return this.#webProgress.browsingContext.currentWindowGlobal
+      .isInitialDocument;
+  }
+
   get isLoadingDocument() {
     return this.#webProgress.isLoadingDocument;
   }
 
   get isStarted() {
     return !!this.#deferredNavigation;
+  }
+
+  get loadType() {
+    return this.#webProgress.loadType;
   }
 
   get targetURI() {
@@ -203,13 +231,17 @@ export class ProgressListener {
   #checkLoadingState(request, options = {}) {
     const { isStart = false, isStop = false, status = 0 } = options;
 
-    this.#trace(`Check loading state: isStart=${isStart} isStop=${isStop}`);
+    this.#trace(
+      `Loading state: isStart=${isStart} isStop=${isStop} status=0x${status.toString(
+        16
+      )}, loadType=0x${this.loadType.toString(16)}`
+    );
     if (isStart && !this.#seenStartFlag) {
       this.#seenStartFlag = true;
 
       this.#targetURI = this.#getTargetURI(request);
 
-      this.#trace(`state=start: ${this.targetURI?.spec}`);
+      this.#trace(lazy.truncate`Started loading ${this.targetURI?.spec}`);
 
       if (this.#unloadTimerId !== null) {
         lazy.clearTimeout(this.#unloadTimerId);
@@ -231,29 +263,32 @@ export class ProgressListener {
         !Components.isSuccessCode(status) &&
         status != Cr.NS_ERROR_PARSED_DATA_CACHED
       ) {
-        if (
-          status == Cr.NS_BINDING_ABORTED &&
-          this.browsingContext.currentWindowGlobal.isInitialDocument
-        ) {
+        const errorName = ChromeUtils.getXPCOMErrorName(status);
+
+        if (this.loadType & LOAD_FLAG_ERROR_PAGE) {
+          // Wait for the next location change notification to ensure that the
+          // real error page was loaded.
+          this.#trace(`Error=${errorName}, wait for redirect to error page`);
+          this.#errorName = errorName;
+          return;
+        }
+
+        // Handle an aborted navigation. While for an initial document another
+        // navigation to the real document will happen it's not the case for
+        // normal documents. Here we need to stop the listener immediately.
+        if (status == Cr.NS_BINDING_ABORTED && this.isInitialDocument) {
           this.#trace(
-            "Ignore aborted navigation error to the initial document, real document will be loaded."
+            "Ignore aborted navigation error to the initial document."
           );
           return;
         }
 
-        // The navigation request caused an error.
-        const errorName = ChromeUtils.getXPCOMErrorName(status);
-        this.#trace(
-          `state=stop: error=0x${status.toString(16)} (${errorName})`
-        );
         this.stop({ error: new Error(errorName) });
         return;
       }
 
-      this.#trace(`state=stop: ${this.currentURI.spec}`);
-
       // If a non initial page finished loading the navigation is done.
-      if (!this.browsingContext.currentWindowGlobal.isInitialDocument) {
+      if (!this.isInitialDocument) {
         this.stop();
         return;
       }
@@ -264,6 +299,18 @@ export class ProgressListener {
       );
       this.#seenStartFlag = false;
       this.#setUnloadTimer();
+    }
+  }
+
+  #getErrorName(documentURI) {
+    try {
+      // Otherwise try to retrieve it from the document URI if it is an
+      // error page like `about:neterror?e=contentEncodingError&u=http%3A//...`
+      const regex = /about:.*error\?e=([^&]*)/;
+      return documentURI.spec.match(regex)[1];
+    } catch (e) {
+      // Or return a generic name
+      return "Address rejected";
     }
   }
 
@@ -296,8 +343,8 @@ export class ProgressListener {
 
   onStateChange(progress, request, flag, status) {
     this.#checkLoadingState(request, {
-      isStart: flag & Ci.nsIWebProgressListener.STATE_START,
-      isStop: flag & Ci.nsIWebProgressListener.STATE_STOP,
+      isStart: !!(flag & STATE_START),
+      isStop: !!(flag & STATE_STOP),
       status,
     });
   }
@@ -305,15 +352,18 @@ export class ProgressListener {
   onLocationChange(progress, request, location, flag) {
     // If an error page has been loaded abort the navigation.
     if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-      this.#trace(`location=errorPage: ${location.spec}`);
-      this.stop({ error: new Error("Address restricted") });
+      const errorName = this.#errorName || this.#getErrorName(this.documentURI);
+      this.#trace(
+        lazy.truncate`Location=errorPage, error=${errorName}, url=${this.documentURI.spec}`
+      );
+      this.stop({ error: new Error(errorName) });
       return;
     }
 
     // If location has changed in the same document the navigation is done.
     if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       this.#targetURI = location;
-      this.#trace(`location=sameDocument: ${this.targetURI?.spec}`);
+      this.#trace(`Location=sameDocument: ${this.targetURI?.spec}`);
       this.stop();
     }
   }
@@ -383,7 +433,9 @@ export class ProgressListener {
   stop(options = {}) {
     const { error } = options;
 
-    this.#trace(`Stop: has error=${!!error}`);
+    this.#trace(
+      lazy.truncate`Stop: has error=${!!error} url=${this.currentURI.spec}`
+    );
 
     if (!this.#deferredNavigation) {
       throw new Error("Progress listener not yet started");
