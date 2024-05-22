@@ -326,13 +326,6 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
 
   explicit ImageContainer(ImageContainer::Mode flag = SYNCHRONOUS);
 
-  /**
-   * Create ImageContainer just to hold another ASYNCHRONOUS ImageContainer's
-   * async container ID.
-   * @param aAsyncContainerID async container ID for which we are a proxy
-   */
-  explicit ImageContainer(const CompositableHandle& aHandle);
-
   ~ImageContainer();
 
   typedef ContainerFrameID FrameID;
