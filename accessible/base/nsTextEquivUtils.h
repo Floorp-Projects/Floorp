@@ -20,17 +20,19 @@ class LocalAccessible;
 }  // namespace mozilla
 
 /**
- * Text equivalent computation rules (see nsTextEquivUtils::gRoleToNameRulesMap)
+ * Text equivalent computation rules. These rules are mapped to accessible roles
+ * in RoleMap.h.
  */
 enum ETextEquivRule {
-  // No rule.
+  // No rule. Equivalent to "name from author."
   eNoNameRule = 0x00,
 
   // Walk into subtree only if the currently navigated accessible is not root
   // accessible (i.e. if the accessible is part of text equivalent computation).
   eNameFromSubtreeIfReqRule = 0x01,
 
-  // Text equivalent computation from subtree is allowed.
+  // Text equivalent computation from subtree is allowed. Equivalent to "name
+  // from content."
   eNameFromSubtreeRule = 0x03,
 
   // The accessible allows to append its value to text equivalent.
@@ -41,7 +43,9 @@ enum ETextEquivRule {
 
 /**
  * The class provides utils methods to compute the accessible name and
- * description.
+ * description. Note that, as of the Accessible Name and Description Computation
+ * 1.2 specification, the phrases "text equivalent" and "text alternative" are
+ * used interchangably.
  */
 class nsTextEquivUtils {
  public:
@@ -61,7 +65,7 @@ class nsTextEquivUtils {
   }
 
   /**
-   * Calculates the name from accessible subtree if allowed.
+   * Calculates the name from the given accessible's subtree, if allowed.
    *
    * @param aAccessible [in] the given accessible
    * @param aName       [out] accessible name
@@ -70,8 +74,10 @@ class nsTextEquivUtils {
                                      nsAString& aName);
 
   /**
-   * Calculates text equivalent from the subtree. Similar to GetNameFromSubtree.
-   * However it returns not empty result for things like HTML p.
+   * Calculates text equivalent from the subtree. This function is similar to
+   * GetNameFromSubtree, but it returns a non-empty result for things like
+   * HTML:p, since it does not verify that the given accessible allows name
+   * from content.
    */
   static void GetTextEquivFromSubtree(const Accessible* aAccessible,
                                       nsString& aTextEquiv) {
@@ -82,8 +88,8 @@ class nsTextEquivUtils {
   }
 
   /**
-   * Calculates text equivalent for the given accessible from its IDRefs
-   * attribute (like aria-labelledby or aria-describedby).
+   * Calculates the text equivalent for the given accessible from one of its
+   * IDRefs attributes (like aria-labelledby or aria-describedby).
    *
    * @param aAccessible  [in] the accessible text equivalent is computed for
    * @param aIDRefsAttr  [in] IDRefs attribute on DOM node of the accessible
@@ -94,8 +100,8 @@ class nsTextEquivUtils {
                                          nsAString& aTextEquiv);
 
   /**
-   * Calculates the text equivalent from the given content and its subtree if
-   * allowed and appends it to the given string.
+   * Calculates the text equivalent from the given content - and its subtree, if
+   * allowed - and appends it to the given string.
    *
    * @param aInitiatorAcc  [in] the accessible text equivalent is computed for
    *                       in the end (root accessible of text equivalent
@@ -119,8 +125,8 @@ class nsTextEquivUtils {
                                                  nsAString* aString);
 
   /**
-   * Iterates DOM children and calculates text equivalent from each child node.
-   * Then, appends found text to the given string.
+   * Iterates DOM children and calculates the text equivalent from each child
+   * node. Then, appends the calculated text to the given string.
    *
    * @param aContent      [in] the node to fetch DOM children from
    * @param aString       [in, out] the string
@@ -130,33 +136,35 @@ class nsTextEquivUtils {
 
  private:
   /**
-   * Iterates accessible children and calculates text equivalent from each
-   * child.
+   * Iterates the given accessible's children and calculates the text equivalent
+   * from each child. Then, appends the calculated text to the given string.
    */
   static nsresult AppendFromAccessibleChildren(const Accessible* aAccessible,
                                                nsAString* aString);
 
   /**
-   * Calculates text equivalent from the given accessible and its subtree if
-   * allowed.
+   * Calculates the text equivalent from the given accessible - and its subtree,
+   * if allowed. Then, appends the calculated text to the given string.
    */
   static nsresult AppendFromAccessible(Accessible* aAccessible,
                                        nsAString* aString);
 
   /**
-   * Calculates text equivalent from the value of given accessible.
+   * Calculates the text equivalent from the value of the given accessible.
+   * Then, appends the calculated text to the given string. This function
+   * implements the "Embedded Control" section of the AccName spec.
    */
   static nsresult AppendFromValue(Accessible* aAccessible, nsAString* aString);
 
   /**
-   * Calculates text equivalent from the given DOM node and its subtree if
-   * allowed.
+   * Calculates the text equivalent from the given DOM node - and its subtree,
+   * if allowed. Then, appends the calculated text to the given string.
    */
   static nsresult AppendFromDOMNode(nsIContent* aContent, nsAString* aString);
 
   /**
-   * Concatenates strings and appends space between them. Returns true if
-   * text equivalent string was appended.
+   * Concatenates the given strings and appends space between them. Returns true
+   * if the text equivalent string was appended.
    */
   static bool AppendString(nsAString* aString,
                            const nsAString& aTextEquivalent);
@@ -173,7 +181,7 @@ class nsTextEquivUtils {
   static bool ShouldIncludeInSubtreeCalculation(Accessible* aAccessible);
 
   /**
-   * Returns true if a given accessible is a text leaf containing only
+   * Returns true if the given accessible is a text leaf containing only
    * whitespace.
    */
   static bool IsWhitespaceLeaf(Accessible* aAccessible);
