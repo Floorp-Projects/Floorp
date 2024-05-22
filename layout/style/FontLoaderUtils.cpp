@@ -30,18 +30,13 @@ namespace mozilla {
   // aCORSMode is ignored.  We always load as crossorigin=anonymous, but a
   // preload started with anything other then "anonymous" will never be found.
   aCorsMapping =
-      aURI->SchemeIs("file") || aURI->SchemeIs("resource") ||
-              aURI->SchemeIs("chrome")
+      aURI->SchemeIs("file")
           ? nsContentSecurityManager::CORSSecurityMapping::
                 CORS_NONE_MAPS_TO_INHERITED_CONTEXT
           : nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS;
 
-  // Besides the CORS flags, include SEC_ALLOW_CHROME to allow a font to come
-  // from a resource:// or chrome:// URL (as long as it is marked
-  // contentaccessible)
   aSecurityFlags = nsContentSecurityManager::ComputeSecurityFlags(
-                       CORSMode::CORS_NONE, aCorsMapping) |
-                   nsILoadInfo::SEC_ALLOW_CHROME;
+      CORSMode::CORS_NONE, aCorsMapping);
 
   aContentPolicyType = aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD
                                   : nsIContentPolicy::TYPE_FONT;
