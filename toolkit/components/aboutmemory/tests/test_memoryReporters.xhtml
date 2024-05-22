@@ -70,6 +70,9 @@
     shortStrings.push(newString(str, {tenured: true}));
   }
 
+  // Don't assert when BigInt values are used.
+  let bigIntValue = BigInt("1234567891234567891234") + 12n;
+
   // Strings in the nursery are not reported, so make sure the above test
   // strings are tenured (not all are created tenured).
   Cu.forceGC();

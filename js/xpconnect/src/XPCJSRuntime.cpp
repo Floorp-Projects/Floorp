@@ -1419,6 +1419,12 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
       "Extra data attached to each compartment by XPConnect, including "
       "its wrapped-js.");
 
+  ZRREPORT_GC_BYTES(pathPrefix + "bigints/gc-heap"_ns, zStats.bigIntsGCHeap,
+                    "BigInt values.");
+
+  ZRREPORT_BYTES(pathPrefix + "bigints/malloc-heap"_ns,
+                 zStats.bigIntsMallocHeap, "BigInt values.");
+
   ZRREPORT_GC_BYTES(pathPrefix + "jit-codes-gc-heap"_ns, zStats.jitCodesGCHeap,
                     "References to executable code pools used by the JITs.");
 
@@ -2387,6 +2393,10 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       KIND_OTHER, rtStats.zTotals.unusedGCThings.baseShape,
       "Unused base shape cells within non-empty arenas.");
 
+  REPORT_BYTES("js-main-runtime-gc-heap-committed/unused/gc-things/bigints"_ns,
+               KIND_OTHER, rtStats.zTotals.unusedGCThings.bigInt,
+               "Unused BigInt cells within non-empty arenas.");
+
   REPORT_BYTES(
       "js-main-runtime-gc-heap-committed/unused/gc-things/getter-setters"_ns,
       KIND_OTHER, rtStats.zTotals.unusedGCThings.getterSetter,
@@ -2446,6 +2456,10 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       "js-main-runtime-gc-heap-committed/used/gc-things/base-shapes"_ns,
       KIND_OTHER, rtStats.zTotals.shapeInfo.shapesGCHeapBase,
       "Used base shape cells.");
+
+  MREPORT_BYTES("js-main-runtime-gc-heap-committed/used/gc-things/bigints"_ns,
+                KIND_OTHER, rtStats.zTotals.bigIntsGCHeap,
+                "Used BigInt cells.");
 
   MREPORT_BYTES(
       "js-main-runtime-gc-heap-committed/used/gc-things/getter-setters"_ns,
