@@ -1,5 +1,15 @@
+## [1.7.0] - 2023-12-31
+
+### Added
+- Added support for `clang` 17.0.x
+
+## [1.6.1] - 2023-03-29
+
+### Fixed
+- Improved error message when calling a `libclang` function that is not supported by the loaded `libclang` instance (https://github.com/rust-lang/rust-bindgen/issues/2446)
+
 ## [1.6.0] - 2023-02-18
-w
+
 ### Changed
 - MinGW directories are not searched for `libclang` instances on Windows when
 compiling for an MSVC target

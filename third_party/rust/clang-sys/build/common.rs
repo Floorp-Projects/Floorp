@@ -336,7 +336,7 @@ pub fn search_libclang_directories(filenames: &[String], variable: &str) -> Vec<
             .map(|d| d.strip_prefix('/').or_else(|| d.strip_prefix("C:\\")).unwrap_or(d))
             .collect::<Vec<_>>()
     } else {
-        directories.into()
+        directories
     };
 
     // Search the directories provided by the `libclang` directory patterns.

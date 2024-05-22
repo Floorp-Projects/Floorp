@@ -980,6 +980,16 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.4.0 -> 1.6.0"
 
+[[audits.clang-sys]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "1.6.0 -> 1.7.0"
+notes = """
+Adds several new symbols for Clang versions 11.0, 12.0, 16.0, and 17.0, conditionally enabled based
+on Cargo feature flags. Some other minor internal refactors were implemented that shouldn't change
+functionality otherwise.
+"""
+
 [[audits.clap-verbosity-flag]]
 who = "Kershaw Chang <kershaw@mozilla.com>"
 criteria = "safe-to-run"

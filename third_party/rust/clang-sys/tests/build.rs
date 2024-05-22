@@ -2,7 +2,7 @@
 
 extern crate glob;
 extern crate serial_test;
-extern crate tempdir;
+extern crate tempfile;
 
 use std::collections::HashMap;
 use std::env;
@@ -12,7 +12,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use serial_test::serial;
-use tempdir::TempDir;
+use tempfile::TempDir;
 
 #[macro_use]
 #[path = "../build/macros.rs"]
@@ -51,7 +51,7 @@ impl Env {
             env: None,
             vars: HashMap::new(),
             cwd: env::current_dir().unwrap(),
-            tmp: TempDir::new("clang_sys_test").unwrap(),
+            tmp: tempfile::Builder::new().prefix("clang_sys_test").tempdir().unwrap(),
             files: vec![],
             commands: Default::default(),
         }
