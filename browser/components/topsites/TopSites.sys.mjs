@@ -30,7 +30,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
-  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
@@ -116,7 +115,6 @@ class _TopSites {
       [...CACHED_LINK_PROPS_TO_MIGRATE, ...PINNED_FAVICON_PROPS_TO_MIGRATE]
     );
     this.faviconFeed = new lazy.FaviconFeed();
-    lazy.PageThumbs.addExpirationFilter(this);
   }
 
   async init() {
@@ -139,7 +137,6 @@ class _TopSites {
       return;
     }
     lazy.log.debug("Un-initializing TopSites.");
-    lazy.PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
     Services.obs.removeObserver(this, "browser-region-updated");
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
@@ -372,19 +369,6 @@ class _TopSites {
     });
 
     return result;
-  }
-
-  filterForThumbnailExpiration(callback) {
-    const { rows } = this.store.getState().TopSites;
-    callback(
-      rows.reduce((acc, site) => {
-        acc.push(site.url);
-        if (site.customScreenshotURL) {
-          acc.push(site.customScreenshotURL);
-        }
-        return acc;
-      }, [])
-    );
   }
 
   /**
