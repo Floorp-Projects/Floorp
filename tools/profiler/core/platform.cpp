@@ -284,6 +284,8 @@ mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed> gStopAndDumpFromSignal(
 // Forward declare the function to call when we need to dump + stop from within
 // the async control thread
 void profiler_dump_and_stop();
+// Forward declare the function to call when we need to start the profiler.
+void profiler_start_from_signal();
 
 mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
 
@@ -628,16 +630,12 @@ class AsyncSignalControlThread {
       MOZ_RELEASE_ASSERT(nread == 1);
 
       if (msg[0] == sAsyncSignalControlCharStart) {
-        // Start the profiler here directly, as we're on a background thread.
-        // set of preferences, configuration of them is TODO, see Bug 1866007
-        uint32_t features = ProfilerFeature::JS | ProfilerFeature::StackWalk |
-                            ProfilerFeature::CPUUtilization;
-        // as we often don't know what threads we'll care about, tell the
-        // profiler to profile all threads.
-        const char* filters[] = {"*"};
-        profiler_start(PROFILER_DEFAULT_SIGHANDLE_ENTRIES,
-                       PROFILER_DEFAULT_INTERVAL, features, filters,
-                       MOZ_ARRAY_LENGTH(filters), 0);
+        // Check to see if the profiler is already running. This is done within
+        // `profiler_start` anyway, but if we check sooner we avoid running all
+        // the other code between now and that check.
+        if (!profiler_is_active()) {
+          profiler_start_from_signal();
+        }
       } else if (msg[0] == sAsyncSignalControlCharStop) {
         // Check to see whether the profiler is even running before trying to
         // stop the profiler. Most other methods of stopping the profiler (i.e.
@@ -5559,18 +5557,39 @@ Maybe<nsAutoCString> profiler_find_dump_path() {
 }
 
 void profiler_dump_and_stop() {
-  // pause the profiler until we are done dumping
-  profiler_pause();
+  // Do nothing unless we're the parent process, as we're sandboxed and can't
+  // write anyway.
+  if (XRE_IsParentProcess()) {
+    // pause the profiler until we are done dumping
+    profiler_pause();
 
-  // Try to save the profile to a file
-  if (auto path = profiler_find_dump_path()) {
-    profiler_save_profile_to_file(path.value().get());
-  } else {
-    LOG("Failed to dump profile to disk");
+    // Try to save the profile to a file
+    if (auto path = profiler_find_dump_path()) {
+      profiler_save_profile_to_file(path.value().get());
+    } else {
+      LOG("Failed to dump profile to disk");
+    }
+
+    // Stop the profiler
+    profiler_stop();
   }
+}
 
-  // Stop the profiler
-  profiler_stop();
+void profiler_start_from_signal() {
+  // Do nothing unless we're the parent process, as we're sandboxed and can't
+  // write any data that we gather anyway.
+  if (XRE_IsParentProcess()) {
+    // Start the profiler here directly, as we're on a background thread.
+    // set of preferences, configuration of them is TODO, see Bug 1866007
+    uint32_t features = ProfilerFeature::JS | ProfilerFeature::StackWalk |
+                        ProfilerFeature::CPUUtilization;
+    // as we often don't know what threads we'll care about, tell the
+    // profiler to profile all threads.
+    const char* filters[] = {"*"};
+    profiler_start(PROFILER_DEFAULT_SIGHANDLE_ENTRIES,
+                   PROFILER_DEFAULT_INTERVAL, features, filters,
+                   MOZ_ARRAY_LENGTH(filters), 0);
+  }
 }
 
 #if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
