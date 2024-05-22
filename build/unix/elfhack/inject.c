@@ -210,6 +210,15 @@ static void _relrhack_init(void) {
   }
 }
 
+#  ifdef ANDROID
+// This creates a value that uses a relative relocation.
+// In the case we've not set DT_RELRHACK_BIT on the RELR tags in the
+// dynamic section, if the dynamic loader applied the relocation,
+// the value will correctly point to the function address in memory.
+__attribute__((visibility("hidden"))) void (*__relrhack_init)(void) =
+    _relrhack_init;
+#  endif
+
 // The Android CRT doesn't contain an init function.
 #  ifndef ANDROID
 extern __attribute__((visibility("hidden"))) void _init(int argc, char** argv,
@@ -217,6 +226,13 @@ extern __attribute__((visibility("hidden"))) void _init(int argc, char** argv,
 #  endif
 
 void _relrhack_wrap_init(int argc, char** argv, char** env) {
+#  ifdef ANDROID
+  // When the dynamic loader has applied the relocations itself, do nothing.
+  // (see comment above __relrhack_init)
+  if (__relrhack_init == _relrhack_init) {
+    return;
+  }
+#  endif
   _relrhack_init();
 #  ifndef ANDROID
   _init(argc, argv, env);
