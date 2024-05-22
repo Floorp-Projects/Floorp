@@ -11654,6 +11654,12 @@
   value: false
   mirror: always
 
+# Whether to support CHIPS(Cookies Having Independent Partitioned State).
+- name: network.cookie.CHIPS.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Stale threshold for cookies in seconds.
 - name: network.cookie.staleThreshold
   type: uint32_t
