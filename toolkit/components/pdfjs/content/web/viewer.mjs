@@ -1187,6 +1187,7 @@ const {
   renderTextLayer,
   setLayerDimensions,
   shadow,
+  TextLayer,
   UnexpectedResponseException,
   updateTextLayer,
   Util,
@@ -7448,9 +7449,8 @@ class TextHighlighter {
 class TextLayerBuilder {
   #enablePermissions = false;
   #onAppend = null;
-  #rotation = 0;
-  #scale = 0;
   #textContentSource = null;
+  #textLayer = null;
   static #textLayers = new Map();
   static #selectionChangeAbortController = null;
   constructor({
@@ -7459,11 +7459,7 @@ class TextLayerBuilder {
     enablePermissions = false,
     onAppend = null
   }) {
-    this.textContentItemsStr = [];
     this.renderingDone = false;
-    this.textDivs = [];
-    this.textDivProperties = new WeakMap();
-    this.textLayerRenderTask = null;
     this.highlighter = highlighter;
     this.accessibilityManager = accessibilityManager;
     this.#enablePermissions = enablePermissions === true;
@@ -7479,51 +7475,32 @@ class TextLayerBuilder {
     this.div.append(endOfContent);
     this.#bindMouse(endOfContent);
   }
-  get numTextDivs() {
-    return this.textDivs.length;
-  }
   async render(viewport) {
     if (!this.#textContentSource) {
       throw new Error('No "textContentSource" parameter specified.');
     }
-    const scale = viewport.scale * (globalThis.devicePixelRatio || 1);
-    const {
-      rotation
-    } = viewport;
-    if (this.renderingDone) {
-      const mustRotate = rotation !== this.#rotation;
-      const mustRescale = scale !== this.#scale;
-      if (mustRotate || mustRescale) {
-        this.hide();
-        updateTextLayer({
-          container: this.div,
-          viewport,
-          textDivs: this.textDivs,
-          textDivProperties: this.textDivProperties,
-          mustRescale,
-          mustRotate
-        });
-        this.#scale = scale;
-        this.#rotation = rotation;
-      }
+    if (this.renderingDone && this.#textLayer) {
+      this.#textLayer.update({
+        viewport,
+        onBefore: this.hide.bind(this)
+      });
       this.show();
       return;
     }
     this.cancel();
-    this.highlighter?.setTextMapping(this.textDivs, this.textContentItemsStr);
-    this.accessibilityManager?.setTextMapping(this.textDivs);
-    this.textLayerRenderTask = renderTextLayer({
+    this.#textLayer = new TextLayer({
       textContentSource: this.#textContentSource,
       container: this.div,
-      viewport,
-      textDivs: this.textDivs,
-      textDivProperties: this.textDivProperties,
-      textContentItemsStr: this.textContentItemsStr
+      viewport
     });
-    await this.textLayerRenderTask.promise;
+    const {
+      textDivs,
+      textContentItemsStr
+    } = this.#textLayer;
+    this.highlighter?.setTextMapping(textDivs, textContentItemsStr);
+    this.accessibilityManager?.setTextMapping(textDivs);
+    await this.#textLayer.render();
     this.#finishRendering();
-    this.#scale = scale;
-    this.#rotation = rotation;
     this.#onAppend?.(this.div);
     this.highlighter?.enable();
     this.accessibilityManager?.enable();
@@ -7541,15 +7518,10 @@ class TextLayerBuilder {
     }
   }
   cancel() {
-    if (this.textLayerRenderTask) {
-      this.textLayerRenderTask.cancel();
-      this.textLayerRenderTask = null;
-    }
+    this.#textLayer?.cancel();
+    this.#textLayer = null;
     this.highlighter?.disable();
     this.accessibilityManager?.disable();
-    this.textContentItemsStr.length = 0;
-    this.textDivs.length = 0;
-    this.textDivProperties = new WeakMap();
     TextLayerBuilder.#removeGlobalSelectionListener(this.div);
   }
   setTextContentSource(source) {
@@ -7866,7 +7838,6 @@ class PDFPageView {
     this.eventBus.dispatch("textlayerrendered", {
       source: this,
       pageNumber: this.id,
-      numTextDivs: textLayer.numTextDivs,
       error
     });
     this.#renderStructTreeLayer();
@@ -8476,7 +8447,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.3.77";
+    const viewerVersion = "4.3.83";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12666,8 +12637,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.3.77";
-const pdfjsBuild = "63b66b412";
+const pdfjsVersion = "4.3.83";
+const pdfjsBuild = "9ee7c07b8";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
