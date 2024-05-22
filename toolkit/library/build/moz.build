@@ -39,4 +39,4 @@ if CONFIG["OS_ARCH"] == "Linux":
     # Create a GDB Python auto-load file alongside the libxul shared library
     # in the build directory.
     DEFINES["topsrcdir"] = TOPSRCDIR
-    OBJDIR_FILES.toolkit.library.build += ["../libxul.so-gdb.py"]
+    OBJDIR_FILES.dist.bin += ["../libxul.so-gdb.py"]
