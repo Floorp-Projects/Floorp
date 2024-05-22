@@ -1185,6 +1185,106 @@ impl ClipNode {
             }
         }
     }
+
+    /// Find the mask regions of a given clip node. For each mask region, map it in to the space defined
+    /// by `prim_spatial_node_index`, and invoke a closure with the local rect of that region. Returns
+    /// false for transformed clips (we can handle this case better in future).
+    pub fn get_local_mask_rects<F>(
+        &self,
+        prim_spatial_node_index: SpatialNodeIndex,
+        spatial_tree: &SpatialTree,
+        mut f: F,
+    ) -> bool where F: FnMut(LayoutRect) {
+        let conversion = ClipSpaceConversion::new(
+            prim_spatial_node_index,
+            self.item.spatial_node_index,
+            spatial_tree,
+        );
+
+        match self.item.kind {
+            ClipItemKind::Rectangle { mode, .. } => {
+                match conversion {
+                    ClipSpaceConversion::Local | ClipSpaceConversion::ScaleOffset(_) => {
+                        // These clips will be handled by the vertex shader, so no mask is needed
+                        // Ensure we don't see any ClipOut though - they should only arrive in
+                        // this code path when we start passing box-shadows through here.
+                        assert!(mode != ClipMode::ClipOut);
+                    }
+                    ClipSpaceConversion::Transform(..) => {
+                        // For now, we don't handle mask regions for complex transforms. Previously, we didn't
+                        // handle mask regions at all, so this is no worse than existing state. In future, we
+                        // should conservatively map these cases if we come across any content which shows
+                        // up as slow in this case.
+                        return false;
+                    }
+                }
+            }
+            ClipItemKind::RoundedRectangle { mode: ClipMode::Clip, rect, radius } => {
+                // Construct the mask regions for each corner
+
+                let mut top_left = LayoutRect::from_origin_and_size(
+                    LayoutPoint::new(rect.min.x, rect.min.y),
+                    LayoutSize::new(radius.top_left.width, radius.top_left.height),
+                );
+                let mut top_right = LayoutRect::from_origin_and_size(
+                    LayoutPoint::new(
+                        rect.max.x - radius.top_right.width,
+                        rect.min.y,
+                    ),
+                    LayoutSize::new(radius.top_right.width, radius.top_right.height),
+                );
+                let mut bottom_left = LayoutRect::from_origin_and_size(
+                    LayoutPoint::new(
+                        rect.min.x,
+                        rect.max.y - radius.bottom_left.height,
+                    ),
+                    LayoutSize::new(radius.bottom_left.width, radius.bottom_left.height),
+                );
+                let mut bottom_right = LayoutRect::from_origin_and_size(
+                    LayoutPoint::new(
+                        rect.max.x - radius.bottom_right.width,
+                        rect.max.y - radius.bottom_right.height,
+                    ),
+                    LayoutSize::new(radius.bottom_right.width, radius.bottom_right.height),
+                );
+
+                match conversion {
+                    ClipSpaceConversion::Local => {
+                        // No mapping necessary, same local space
+                    }
+                    ClipSpaceConversion::ScaleOffset(scale_offset) => {
+                        top_left = scale_offset.map_rect(&top_left);
+                        top_right = scale_offset.map_rect(&top_right);
+                        bottom_left = scale_offset.map_rect(&bottom_left);
+                        bottom_right = scale_offset.map_rect(&bottom_right);
+                    }
+                    ClipSpaceConversion::Transform(..) => {
+                        // For now, we don't handle mask regions for complex transforms. Previously, we didn't
+                        // handle mask regions at all, so this is no worse than existing state. In future, we
+                        // should conservatively map these cases if we come across any content which shows
+                        // up as slow in this case.
+                        return false;
+                    }
+                }
+
+                f(top_left);
+                f(top_right);
+                f(bottom_left);
+                f(bottom_right);
+            }
+            ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => {
+                panic!("bug: old box-shadow clips unexpected in this path");
+            }
+            ClipItemKind::BoxShadow { .. } => {
+                panic!("bug: old box-shadow clips unexpected in this path");
+            }
+            ClipItemKind::Image { .. } => {
+                panic!("bug: image clips unexpected in this path");
+            }
+        }
+
+        true
+    }
 }
 
 #[derive(Default)]
