@@ -21,6 +21,8 @@
 #include "nsIChannel.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIRedirectHistoryEntry.h"
+#include "nsICookieManager.h"
+#include "nsICookieService.h"
 #include "nsIURI.h"
 #include "nsIWebProgressListener.h"
 #include "nsIPrincipal.h"
@@ -219,6 +221,15 @@ bool BounceTrackingState::ShouldCreateBounceTrackingStateForWebProgress(
   if (!browsingContext || !browsingContext->IsTopContent()) {
     MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
             ("%s: Skip non top-content.", __FUNCTION__));
+    return false;
+  }
+
+  bool isPrivate = browsingContext->UsePrivateBrowsing();
+  uint32_t cookieBehavior = nsICookieManager::GetCookieBehavior(isPrivate);
+  if (cookieBehavior == nsICookieService::BEHAVIOR_ACCEPT ||
+      cookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
+    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
+            ("%s: Skip on cookie behavior %i", __FUNCTION__, cookieBehavior));
     return false;
   }
 
