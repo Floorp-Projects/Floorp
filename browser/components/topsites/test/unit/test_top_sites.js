@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(this, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   shortURL: "resource://activity-stream/lib/ShortURL.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
@@ -259,27 +258,6 @@ add_task(async function test_refreshDefaults() {
     0,
     "Should have 0 DEFAULT_TOP_SITES now."
   );
-
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_filterForThumbnailExpiration() {
-  let sandbox = sinon.createSandbox();
-  let cleanup = stubTopSites(sandbox);
-
-  info(
-    "filterForThumbnailExpiration should pass rows.urls to the callback provided"
-  );
-  const rows = [
-    { url: "foo.com" },
-    { url: "bar.com", customScreenshotURL: "custom" },
-  ];
-  TopSites.store.state.TopSites = { rows };
-  const stub = sandbox.stub();
-  TopSites.filterForThumbnailExpiration(stub);
-  Assert.ok(stub.calledOnce);
-  Assert.ok(stub.calledWithExactly(["foo.com", "bar.com", "custom"]));
 
   sandbox.restore();
   await cleanup();
@@ -1409,19 +1387,6 @@ add_task(async function test_onAction_part_2() {
     "NewTabUtils.pinnedLinks.pin called once"
   );
   Assert.ok(NewTabUtils.pinnedLinks.pin.calledWith(dropAction.data.site, 3));
-
-  // TopSites.init needs to actually run in order to register the observers that'll
-  // be removed in the following UNINIT test, otherwise uninit will throw.
-  TopSites.init.restore();
-  TopSites.init();
-
-  info("TopSites.onAction should remove the expiration filter on UNINIT");
-  sandbox.stub(PageThumbs, "removeExpirationFilter");
-  TopSites.onAction({ type: "UNINIT" });
-  Assert.ok(
-    PageThumbs.removeExpirationFilter.calledOnce,
-    "PageThumbs.removeExpirationFilter called once"
-  );
 
   sandbox.restore();
   await cleanup();
