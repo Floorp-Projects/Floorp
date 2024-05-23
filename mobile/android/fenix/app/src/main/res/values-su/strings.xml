@@ -220,8 +220,6 @@
     <string name="browser_menu_open_in_regular_tab">Buka dina tab biasa</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Tambahkeun ka layar Tepas</string>
-    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen_2">Tambahkeun ka layar Tepas...</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Pasang</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -234,7 +232,7 @@
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Tarjamahkeun kaca</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Simpen koléksi...</string>
+    <string name="browser_menu_save_to_collection">Simpen koléksi…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Simpen kana koléksi</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -296,13 +294,13 @@
     <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
     <string name="browser_menu_edit_bookmark">Édit markah</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
-    <string name="browser_menu_save_as_pdf">Simpen menangka PDF...</string>
+    <string name="browser_menu_save_as_pdf">Simpen menangka PDF…</string>
     <!-- Browser menu label for turning ON reader view of the current visited page -->
     <string name="browser_menu_turn_on_reader_view">Hurungkeun Pamintonan Pamaca</string>
     <!-- Browser menu label for turning OFF reader view of the current visited page -->
     <string name="browser_menu_turn_off_reader_view">Pareuman Pamintonan Pamaca</string>
     <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
-    <string name="browser_menu_translate_page">Tarjamahkeun kaca...</string>
+    <string name="browser_menu_translate_page">Tarjamahkeun kaca…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
