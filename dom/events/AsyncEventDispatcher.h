@@ -205,6 +205,19 @@ class LoadBlockingAsyncEventDispatcher final : public AsyncEventDispatcher {
   RefPtr<dom::Document> mBlockedDoc;
 };
 
+class AsyncSelectionChangeEventDispatcher : public AsyncEventDispatcher {
+ public:
+  AsyncSelectionChangeEventDispatcher(dom::EventTarget* aTarget,
+                                      EventMessage aEventMessage,
+                                      CanBubble aCanBubble)
+      : AsyncEventDispatcher(aTarget, aEventMessage, aCanBubble) {}
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    mTarget->GetAsNode()->ClearHasScheduledSelectionChangeEvent();
+    return AsyncEventDispatcher::Run();
+  }
+};
+
 }  // namespace mozilla
 
 #endif  // mozilla_AsyncEventDispatcher_h_
