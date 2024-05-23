@@ -88,8 +88,7 @@ terms:
 |                      |         | | stack for each log statement.                                                           |
 +----------------------+---------+-------------------------------------------------------------------------------------------+
 
-This syntax is used for most methods of enabling logging, with the exception of
-settings preferences directly, see :ref:`this section <Enabling logging using preferences>` for directions.
+This syntax is used for most methods of enabling logging.
 
 
 Enabling Logging
@@ -239,9 +238,14 @@ Enabling logging using preferences
 ''''''''''''''''''''''''''''''''''
 
 To adjust the logging after Firefox has started, you can set prefs under the
-`logging.` prefix. For example, setting `logging.foo` to `3` will set the log
-module `foo` to start logging at level 3. A number of special prefs can be set,
-described in the table below:
+``logging.`` prefix. For example, setting ``logging.foo`` to ``3`` will set the log
+module ``foo`` to start logging at level 3.
+
+The MOZ_LOG syntax can be used directly as well, by setting the preference
+``logging.config.modules``. All modules can be used but only the special string
+`profilerstacks` is supported.
+
+A number of special prefs can be set as well, described in the table below:
 
 +-------------------------------------+------------+-------------------------------+--------------------------------------------------------+
 |         Preference name             | Preference |   Preference value            |                  Description                           |
