@@ -288,7 +288,7 @@ class GCRuntime {
   bool hasAnyZealModeOf(mozilla::EnumSet<ZealMode> mode) const;
   void clearZealMode(ZealMode mode);
   bool needZealousGC();
-  bool hasIncrementalTwoSliceZealMode() const;
+  bool zealModeControlsYieldPoint() const;
 
   [[nodiscard]] bool addRoot(Value* vp, const char* name);
   void removeRoot(Value* vp);
@@ -1436,7 +1436,7 @@ class GCRuntime {
 inline bool GCRuntime::hasZealMode(ZealMode mode) const { return false; }
 inline void GCRuntime::clearZealMode(ZealMode mode) {}
 inline bool GCRuntime::needZealousGC() { return false; }
-inline bool GCRuntime::hasIncrementalTwoSliceZealMode() const { return false; }
+inline bool GCRuntime::zealModeControlsYieldPoint() const { return false; }
 #endif
 
 /* Prevent compartments and zones from being collected during iteration. */

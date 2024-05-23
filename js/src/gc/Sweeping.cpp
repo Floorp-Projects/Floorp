@@ -736,8 +736,8 @@ void GCRuntime::groupZonesForSweeping(JS::GCReason reason) {
     finder.useOneComponent();
   }
 
-  // Use one component for two-slice zeal modes.
-  if (useZeal && hasIncrementalTwoSliceZealMode()) {
+  // Use one component for zeal modes that yield at specific points.
+  if (useZeal && zealModeControlsYieldPoint()) {
     finder.useOneComponent();
   }
 
