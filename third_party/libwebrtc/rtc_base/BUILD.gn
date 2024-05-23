@@ -1023,6 +1023,12 @@ rtc_library("threading") {
     "thread.cc",
     "thread.h",
   ]
+  if (is_bsd && build_with_mozilla) {
+    sources -= [
+      "physical_socket_server.cc",
+      "physical_socket_server.h",
+    ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
