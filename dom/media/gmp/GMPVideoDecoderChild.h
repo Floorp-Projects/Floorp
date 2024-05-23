@@ -59,6 +59,7 @@ class GMPVideoDecoderChild : public PGMPVideoDecoderChild,
   mozilla::ipc::IPCResult RecvReset();
   mozilla::ipc::IPCResult RecvDrain();
   mozilla::ipc::IPCResult RecvDecodingComplete();
+  void ActorDestroy(ActorDestroyReason why) override;
 
   GMPContentChild* mPlugin;
   GMPVideoDecoder* mVideoDecoder;
