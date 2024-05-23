@@ -486,6 +486,11 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
 
   PREDICTOR_LOG(("Predictor::Predict"));
 
+  if (!StaticPrefs::network_predictor_enabled()) {
+    PREDICTOR_LOG(("    not enabled"));
+    return NS_OK;
+  }
+
   if (IsNeckoChild()) {
     if (!gNeckoChild) {
       return NS_ERROR_FAILURE;
@@ -511,11 +516,6 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
 
   if (!mInitialized) {
     PREDICTOR_LOG(("    not initialized"));
-    return NS_OK;
-  }
-
-  if (!StaticPrefs::network_predictor_enabled()) {
-    PREDICTOR_LOG(("    not enabled"));
     return NS_OK;
   }
 
@@ -1238,6 +1238,11 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
 
   PREDICTOR_LOG(("Predictor::Learn"));
 
+  if (!StaticPrefs::network_predictor_enabled()) {
+    PREDICTOR_LOG(("    not enabled"));
+    return NS_OK;
+  }
+
   if (IsNeckoChild()) {
     if (!gNeckoChild) {
       return NS_ERROR_FAILURE;
@@ -1255,11 +1260,6 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
 
   if (!mInitialized) {
     PREDICTOR_LOG(("    not initialized"));
-    return NS_OK;
-  }
-
-  if (!StaticPrefs::network_predictor_enabled()) {
-    PREDICTOR_LOG(("    not enabled"));
     return NS_OK;
   }
 
@@ -1718,6 +1718,11 @@ Predictor::Reset() {
 
   PREDICTOR_LOG(("Predictor::Reset"));
 
+  if (!StaticPrefs::network_predictor_enabled()) {
+    PREDICTOR_LOG(("    not enabled"));
+    return NS_OK;
+  }
+
   if (IsNeckoChild()) {
     if (!gNeckoChild) {
       return NS_ERROR_FAILURE;
@@ -1732,11 +1737,6 @@ Predictor::Reset() {
 
   if (!mInitialized) {
     PREDICTOR_LOG(("    not initialized"));
-    return NS_OK;
-  }
-
-  if (!StaticPrefs::network_predictor_enabled()) {
-    PREDICTOR_LOG(("    not enabled"));
     return NS_OK;
   }
 
