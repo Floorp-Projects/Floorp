@@ -11,7 +11,6 @@
 
 function setup() {
   trr_test_setup();
-  Services.prefs.setBoolPref("network.trr.fetch_off_main_thread", true);
 }
 
 setup();
