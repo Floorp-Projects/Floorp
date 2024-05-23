@@ -822,25 +822,25 @@ export var BrowserTestUtils = {
    *
    * @param {tabbrowser} tabbrowser
    *        The tabbrowser to wait for the location change on.
-   * @param {string} url
+   * @param {string} [url]
    *        The string URL to look for. The URL must match the URL in the
    *        location bar exactly.
    * @return {Promise}
-   * @resolves When onLocationChange fires.
+   * @resolves {webProgress, request, flags} When onLocationChange fires.
    */
   waitForLocationChange(tabbrowser, url) {
     return new Promise(resolve => {
       let progressListener = {
-        onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI) {
+        onLocationChange(browser, webProgress, request, newURI, flags) {
           if (
-            (url && aLocationURI.spec != url) ||
-            (!url && aLocationURI.spec == "about:blank")
+            (url && newURI.spec != url) ||
+            (!url && newURI.spec == "about:blank")
           ) {
             return;
           }
 
           tabbrowser.removeTabsProgressListener(progressListener);
-          resolve();
+          resolve({ webProgress, request, flags });
         },
       };
       tabbrowser.addTabsProgressListener(progressListener);
