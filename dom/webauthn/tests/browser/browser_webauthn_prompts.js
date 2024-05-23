@@ -128,12 +128,13 @@ async function test_register() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential and wait for the prompt.
+  let notificationPromise = promiseNotification("webauthn-prompt-presence");
   let active = true;
   let request = promiseWebAuthnMakeCredential(tab)
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-presence");
+  await notificationPromise;
 
   // Cancel the request with the button.
   ok(active, "request should still be active");
@@ -149,12 +150,13 @@ async function test_register_escape() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential and wait for the prompt.
+  let notificationPromise = promiseNotification("webauthn-prompt-presence");
   let active = true;
   let request = promiseWebAuthnMakeCredential(tab)
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-presence");
+  await notificationPromise;
 
   // Cancel the request by hitting escape.
   ok(active, "request should still be active");
@@ -170,12 +172,13 @@ async function test_sign() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new assertion and wait for the prompt.
+  let notificationPromise = promiseNotification("webauthn-prompt-presence");
   let active = true;
   let request = promiseWebAuthnGetAssertion(tab)
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-presence");
+  await notificationPromise;
 
   // Cancel the request with the button.
   ok(active, "request should still be active");
@@ -191,12 +194,13 @@ async function test_sign_escape() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new assertion and wait for the prompt.
+  let notificationPromise = promiseNotification("webauthn-prompt-presence");
   let active = true;
   let request = promiseWebAuthnGetAssertion(tab)
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-presence");
+  await notificationPromise;
 
   // Cancel the request by hitting escape.
   ok(active, "request should still be active");
@@ -214,12 +218,13 @@ async function test_tab_switching() {
   let tab_one = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential and wait for the prompt.
+  let notificationPromise = promiseNotification("webauthn-prompt-presence");
   let active = true;
   let request = promiseWebAuthnMakeCredential(tab_one)
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-presence");
+  await notificationPromise;
   is(PopupNotifications.panel.state, "open", "Doorhanger is visible");
 
   // Open and switch to a second tab.
@@ -233,10 +238,12 @@ async function test_tab_switching() {
   );
   is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
 
+  let notificationPromise2 = promiseNotification("webauthn-prompt-presence");
+
   // Go back to the first tab
   await BrowserTestUtils.removeTab(tab_two);
 
-  await promiseNotification("webauthn-prompt-presence");
+  await notificationPromise2;
 
   await TestUtils.waitForCondition(
     () => PopupNotifications.panel.state == "open"
@@ -260,12 +267,13 @@ async function test_window_switching() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential and wait for the prompt.
+  let notificationPromise = promiseNotification("webauthn-prompt-presence");
   let active = true;
   let request = promiseWebAuthnMakeCredential(tab)
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-presence");
+  await notificationPromise;
 
   await TestUtils.waitForCondition(
     () => PopupNotifications.panel.state == "open"
@@ -309,8 +317,11 @@ async function test_register_direct_with_consent() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential with direct attestation and wait for the prompt.
+  let notificationPromise = promiseNotification(
+    "webauthn-prompt-register-direct"
+  );
   let request = promiseWebAuthnMakeCredential(tab, "direct");
-  await promiseNotification("webauthn-prompt-register-direct");
+  await notificationPromise;
 
   // Click "Allow".
   PopupNotifications.panel.firstElementChild.button.click();
@@ -327,8 +338,11 @@ async function test_register_direct_without_consent() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // Request a new credential with direct attestation and wait for the prompt.
+  let notificationPromise = promiseNotification(
+    "webauthn-prompt-register-direct"
+  );
   let request = promiseWebAuthnMakeCredential(tab, "direct");
-  await promiseNotification("webauthn-prompt-register-direct");
+  await notificationPromise;
 
   // Click "Block".
   PopupNotifications.panel.firstElementChild.secondaryButton.click();
@@ -349,6 +363,9 @@ async function test_select_sign_result() {
   let cred1 = await addCredential(gAuthenticatorId, "example.com");
   let cred2 = await addCredential(gAuthenticatorId, "example.com");
 
+  let notificationPromise = promiseNotification(
+    "webauthn-prompt-select-sign-result"
+  );
   let active = true;
   let request = promiseWebAuthnGetAssertionDiscoverable(tab)
     .then(arrivingHereIsBad)
@@ -356,7 +373,7 @@ async function test_select_sign_result() {
     .then(() => (active = false));
 
   // Ensure the selection prompt is shown
-  await promiseNotification("webauthn-prompt-select-sign-result");
+  await notificationPromise;
 
   ok(active, "request is active");
 
