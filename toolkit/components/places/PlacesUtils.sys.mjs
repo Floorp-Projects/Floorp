@@ -1618,7 +1618,7 @@ export var PlacesUtils = {
       }
 
       switch (type) {
-        case PlacesUtils.bookmarks.TYPE_BOOKMARK:
+        case PlacesUtils.bookmarks.TYPE_BOOKMARK: {
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE;
           // If this throws due to an invalid url, the item will be skipped.
           try {
@@ -1635,6 +1635,7 @@ export var PlacesUtils = {
             item.postData = entry.postData;
           }
           break;
+        }
         case PlacesUtils.bookmarks.TYPE_FOLDER:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
           // Mark root folders.
@@ -1840,11 +1841,12 @@ export var PlacesUtils = {
     data = new TextEncoder().encode(data);
     hasher.update(data, data.length);
     switch (format) {
-      case "hex":
+      case "hex": {
         let hash = hasher.finish(false);
         return Array.from(hash, (c, i) =>
           hash.charCodeAt(i).toString(16).padStart(2, "0")
         ).join("");
+      }
       case "base64":
       default:
         return hasher.finish(true);
@@ -1874,11 +1876,12 @@ export var PlacesUtils = {
       hasher.update(data, data.length);
     }
     switch (format) {
-      case "hex":
+      case "hex": {
         let hash = hasher.finish(false);
         return Array.from(hash, (c, i) =>
           hash.charCodeAt(i).toString(16).padStart(2, "0")
         ).join("");
+      }
       case "base64url":
         return hasher.finish(true).replaceAll("+", "-").replaceAll("/", "_");
       case "base64":

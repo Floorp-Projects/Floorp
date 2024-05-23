@@ -13,7 +13,7 @@ var bookmarksObserver = {
     Assert.equal(events.length, 1);
     let event = events[0];
     switch (event.type) {
-      case "bookmark-added":
+      case "bookmark-added": {
         bookmarksObserver._itemAddedId = event.id;
         bookmarksObserver._itemAddedParent = event.parentId;
         bookmarksObserver._itemAddedIndex = event.index;
@@ -35,6 +35,7 @@ var bookmarksObserver = {
         Assert.equal(stmt.row.guid, event.guid);
         stmt.finalize();
         break;
+      }
       case "bookmark-removed":
         bookmarksObserver._itemRemovedId = event.id;
         bookmarksObserver._itemRemovedFolder = event.parentId;

@@ -1379,7 +1379,7 @@ export function PlacesDBUtilsIdleMaintenance() {}
 PlacesDBUtilsIdleMaintenance.prototype = {
   observe(subject, topic) {
     switch (topic) {
-      case "idle-daily":
+      case "idle-daily": {
         // Once a week run places.sqlite maintenance tasks.
         let lastMaintenance = Services.prefs.getIntPref(
           "places.database.lastMaintenance",
@@ -1390,6 +1390,7 @@ PlacesDBUtilsIdleMaintenance.prototype = {
           PlacesDBUtils.maintenanceOnIdle();
         }
         break;
+      }
       default:
         throw new Error("Trying to handle an unknown category.");
     }
