@@ -2217,14 +2217,16 @@ void CanvasRenderingContext2D::Transform(double aM11, double aM12, double aM21,
 
 already_AddRefed<DOMMatrix> CanvasRenderingContext2D::GetTransform(
     ErrorResult& aError) {
-  if (!EnsureTarget(aError)) {
+  // If we are silently failing, then we still need to return a transform while
+  // we are in the process of recovering.
+  Matrix transform;
+  if (EnsureTarget(aError)) {
+    transform = mTarget->GetTransform();
+  } else if (aError.Failed()) {
     return nullptr;
   }
 
-  MOZ_ASSERT(IsTargetValid());
-
-  RefPtr<DOMMatrix> matrix =
-      new DOMMatrix(GetParentObject(), mTarget->GetTransform());
+  RefPtr<DOMMatrix> matrix = new DOMMatrix(GetParentObject(), transform);
   return matrix.forget();
 }
 

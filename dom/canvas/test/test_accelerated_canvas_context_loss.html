@@ -58,6 +58,12 @@ let countRestoredEvents = 0;
 
 function onContextLost() {
   ok(context.isContextLost(), "Canvas context should be lost during contextlost event");
+
+  try {
+    let transform = context.getTransform();
+    ok(transform.isIdentity, "Canvas context should return identity transform while context lost");
+  } catch (e) {}
+
   countLostEvents += 1;
 }
 
@@ -87,6 +93,12 @@ async function start() {
     await waitRAF();
 
     ok(!context.isContextLost(), "Canvas context should not be lost after initial fill");
+
+    let transform = context.getTransform();
+    ok(transform.isIdentity, "Canvas context should default to identity transform");
+    context.setTransform(2.0, 3.0, 4.0, 5.0, 6.0, 7.0);
+    transform = context.getTransform();
+    ok(!transform.isIdentity, "Canvas context should have non-identity transform");
 
     const restarted = await restartGPUProcess();
     const expectedEvents = restarted ? 1 : 0;
