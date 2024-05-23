@@ -111,7 +111,7 @@ class nsContextMenu {
    * A promise to retrieve the translations language pair
    * if the context menu was opened in a context relevant to
    * open the SelectTranslationsPanel.
-   * @type {Promise<{fromLang: string, toLang: string}>}
+   * @type {Promise<{fromLanguage: string, toLanguage: string}>}
    */
   #translationsLangPairPromise;
 
@@ -2552,9 +2552,9 @@ class nsContextMenu {
    * @returns {Promise<void>}
    */
   async localizeTranslateSelectionItem(translateSelectionItem) {
-    const { toLang } = await this.#translationsLangPairPromise;
+    const { toLanguage } = await this.#translationsLangPairPromise;
 
-    if (toLang) {
+    if (toLanguage) {
       // A valid to-language exists, so localize the menuitem for that language.
       let displayName;
 
@@ -2562,7 +2562,7 @@ class nsContextMenu {
         const displayNames = new Services.intl.DisplayNames(undefined, {
           type: "language",
         });
-        displayName = displayNames.of(toLang);
+        displayName = displayNames.of(toLanguage);
       } catch {
         // Services.intl.DisplayNames.of threw, do nothing.
       }
