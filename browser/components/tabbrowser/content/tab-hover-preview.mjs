@@ -50,6 +50,9 @@ export default class TabHoverPreviewPanel {
   getPrettyURI(uri) {
     try {
       const url = new URL(uri);
+      if (url.protocol === "about:") {
+        return url.href;
+      }
       return `${url.hostname}`.replace(/^w{3}\./, "");
     } catch {
       return uri;
