@@ -64,11 +64,6 @@ export default class MozButton extends MozLitElement {
     this.hasVisibleLabel = !!this.label;
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.dataset.l10nAttrs = "label";
-  }
-
   willUpdate(changes) {
     if (changes.has("titleAttribute")) {
       this.title = this.titleAttribute;
@@ -87,7 +82,7 @@ export default class MozButton extends MozLitElement {
 
   checkForLabelText() {
     this.hasVisibleLabel = this.slotEl
-      .assignedNodes()
+      ?.assignedNodes()
       .some(node => node.textContent.trim());
   }
 

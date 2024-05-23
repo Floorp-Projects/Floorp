@@ -47,6 +47,7 @@ moz-button-aria-labelled =
 const Template = ({ type, size, l10nId, iconSrc, disabled }) => html`
   <moz-button
     data-l10n-id=${l10nId}
+    data-l10n-attrs="label"
     type=${type}
     size=${size}
     ?disabled=${disabled}
