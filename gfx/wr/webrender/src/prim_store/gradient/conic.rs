@@ -11,6 +11,7 @@
 use euclid::vec2;
 use api::{ExtendMode, GradientStop, PremultipliedColorF};
 use api::units::*;
+use bytemuck::{Pod, Zeroable};
 use crate::pattern::{Pattern, PatternKind, PatternShaderInput};
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
@@ -370,7 +371,7 @@ impl ConicGradientTask {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ConicGradientInstance {
     pub task_rect: DeviceRect,
     pub center: DevicePoint,

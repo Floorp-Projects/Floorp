@@ -4,6 +4,7 @@
 
 use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvRangedColorSpace};
 use api::units::*;
+use bytemuck::{Pod, Zeroable};
 use crate::composite::CompositeFeatures;
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
@@ -58,7 +59,7 @@ impl ZBufferIdGenerator {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -95,17 +96,26 @@ pub enum BlurDirection {
     Vertical,
 }
 
-#[derive(Clone, Debug)]
+impl BlurDirection {
+    pub fn as_int(self) -> i32 {
+        match self {
+            BlurDirection::Horizontal => 0,
+            BlurDirection::Vertical => 1,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BlurInstance {
     pub task_address: RenderTaskAddress,
     pub src_task_address: RenderTaskAddress,
-    pub blur_direction: BlurDirection,
+    pub blur_direction: i32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -114,7 +124,7 @@ pub struct ScalingInstance {
     pub source_rect: DeviceRect,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -129,7 +139,7 @@ pub struct SvgFilterInstance {
     pub extra_data_address: GpuCacheAddress,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -159,7 +169,7 @@ pub enum BorderSegment {
     Bottom,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -174,7 +184,7 @@ pub struct BorderInstance {
     pub clip_params: [f32; 8],
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -187,7 +197,7 @@ pub struct ClipMaskInstanceCommon {
     pub prim_transform_id: TransformPaletteId,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -197,7 +207,7 @@ pub struct ClipMaskInstanceRect {
     pub clip_data: ClipData,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -209,7 +219,7 @@ pub struct BoxShadowData {
     pub dest_rect: LayoutRect,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
@@ -221,7 +231,7 @@ pub struct ClipMaskInstanceBoxShadow {
 
 // 16 bytes per instance should be enough for anyone!
 #[repr(C)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveInstanceData {
@@ -234,7 +244,7 @@ const UV_TYPE_NORMALIZED: u32 = 0;
 const UV_TYPE_UNNORMALIZED: u32 = 1;
 
 /// A GPU-friendly representation of the `ScaleOffset` type
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C)]
 pub struct CompositorTransform {
     pub sx: f32,
@@ -268,7 +278,7 @@ impl From<ScaleOffset> for CompositorTransform {
 /// Vertex format for picture cache composite shader.
 /// When editing the members, update desc::COMPOSITE
 /// so its list of instance_attributes matches:
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 #[repr(C)]
 pub struct CompositeInstance {
     // Picture space destination rectangle of surface
@@ -377,7 +387,7 @@ impl CompositeInstance {
 }
 
 /// Vertex format for issuing colored quads.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct ClearInstance {
     pub rect: [f32; 4],
@@ -580,15 +590,24 @@ pub enum ClipSpace {
     Primitive = 1,
 }
 
+impl ClipSpace {
+    pub fn as_int(self) -> u32 {
+        match self {
+            ClipSpace::Raster => 0,
+            ClipSpace::Primitive => 1,
+        }
+    }
+}
+
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, Copy, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct MaskInstance {
     pub prim: PrimitiveInstanceData,
     pub clip_transform_id: TransformPaletteId,
     pub clip_address: i32,
-    pub clip_space: ClipSpace,
+    pub clip_space: u32,
     pub unused: i32,
 }
 
@@ -696,7 +715,7 @@ impl ImageBrushData {
 // only flag currently used determines whether the
 // transform is axis-aligned (and this should have
 // pixel snapping applied).
-#[derive(Copy, Debug, Clone, PartialEq)]
+#[derive(Copy, Debug, Clone, PartialEq, Pod, Zeroable)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
