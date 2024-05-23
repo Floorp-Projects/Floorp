@@ -30,42 +30,41 @@ add_task(
       {
         expectedEventCount: 1,
         expectNewFlowId: true,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 1,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value =>
-            value.extra.source_text_code_units ===
-            (AppConstants.platform === "win"
-              ? "1616" // With carriage returns
-              : "1607"), // No carriage returns
-          value => value.extra.source_text_word_count === "257",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units:
+            AppConstants.platform === "win"
+              ? 1616 // With carriage returns
+              : 1607, // No carriage returns
+          source_text_word_count: 257,
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.translationFailureMessage,
       {
         expectedEventCount: 1,
-        finalValuePredicates: [
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          from_language: "fr",
+          to_language: "en",
+        },
       }
     );
 
@@ -84,30 +83,29 @@ add_task(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 2,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value =>
-            value.extra.source_text_code_units ===
-            (AppConstants.platform === "win"
-              ? "1616" // With carriage returns
-              : "1607"), // No carriage returns
-          value => value.extra.source_text_word_count === "257",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units:
+            AppConstants.platform === "win"
+              ? 1616 // With carriage returns
+              : 1607, // No carriage returns
+          source_text_word_count: 257,
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.translationFailureMessage,
       {
         expectedEventCount: 2,
-        finalValuePredicates: [
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          from_language: "fr",
+          to_language: "en",
+        },
       }
     );
 
@@ -139,42 +137,41 @@ add_task(
       {
         expectedEventCount: 2,
         expectNewFlowId: true,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 3,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value =>
-            value.extra.source_text_code_units ===
-            (AppConstants.platform === "win"
-              ? "1616" // With carriage returns
-              : "1607"), // No carriage returns
-          value => value.extra.source_text_word_count === "257",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units:
+            AppConstants.platform === "win"
+              ? 1616 // With carriage returns
+              : 1607, // No carriage returns
+          source_text_word_count: 257,
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.translationFailureMessage,
       {
         expectedEventCount: 3,
-        finalValuePredicates: [
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          from_language: "fr",
+          to_language: "en",
+        },
       }
     );
 
@@ -192,20 +189,19 @@ add_task(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 4,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value =>
-            value.extra.source_text_code_units ===
-            (AppConstants.platform === "win"
-              ? "1616" // With carriage returns
-              : "1607"), // No carriage returns
-          value => value.extra.source_text_word_count === "257",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units:
+            AppConstants.platform === "win"
+              ? 1616 // With carriage returns
+              : 1607, // No carriage returns
+          source_text_word_count: 257,
+        },
       }
     );
 

@@ -38,19 +38,21 @@ add_task(async function test_translations_telemetry_auto_translate() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
     expectNewFlowId: true,
-    finalValuePredicates: [
-      value => value.extra.auto_show === "false",
-      value => value.extra.view_name === "defaultView",
-      value => value.extra.opened_from === "translationsButton",
-      value => value.extra.document_language === "es",
-    ],
+    assertForMostRecentEvent: {
+      auto_show: false,
+      view_name: "defaultView",
+      opened_from: "translationsButton",
+      document_language: "es",
+    },
   });
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.alwaysTranslateLanguage,
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
-      finalValuePredicates: [value => value.extra.language === "es"],
+      assertForMostRecentEvent: {
+        language: "es",
+      },
     }
   );
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
@@ -66,9 +68,9 @@ add_task(async function test_translations_telemetry_auto_translate() {
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
-      finalValuePredicates: [
-        value => value.extra.request_target === "full-page",
-      ],
+      assertForMostRecentEvent: {
+        request_target: "full-page",
+      },
     }
   );
 
@@ -81,12 +83,12 @@ add_task(async function test_translations_telemetry_auto_translate() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 2,
     expectNewFlowId: true,
-    finalValuePredicates: [
-      value => value.extra.auto_show === "false",
-      value => value.extra.view_name === "revisitView",
-      value => value.extra.opened_from === "translationsButton",
-      value => value.extra.document_language === "es",
-    ],
+    assertForMostRecentEvent: {
+      auto_show: false,
+      view_name: "revisitView",
+      opened_from: "translationsButton",
+      document_language: "es",
+    },
   });
 
   await TestTranslationsTelemetry.assertEvent(

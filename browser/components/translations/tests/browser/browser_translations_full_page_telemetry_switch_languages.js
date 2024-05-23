@@ -29,19 +29,21 @@ add_task(async function test_translations_telemetry_switch_from_language() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
     expectNewFlowId: true,
-    finalValuePredicates: [
-      value => value.extra.auto_show === "false",
-      value => value.extra.view_name === "defaultView",
-      value => value.extra.opened_from === "translationsButton",
-      value => value.extra.document_language === "es",
-    ],
+    assertForMostRecentEvent: {
+      auto_show: false,
+      view_name: "defaultView",
+      opened_from: "translationsButton",
+      document_language: "es",
+    },
   });
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeFromLanguage,
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
-      finalValuePredicates: [value => value.extra.language === "en"],
+      assertForMostRecentEvent: {
+        language: "en",
+      },
     }
   );
 
@@ -52,7 +54,9 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     {
       expectedEventCount: 2,
       expectNewFlowId: false,
-      finalValuePredicates: [value => value.extra.language === "es"],
+      assertForMostRecentEvent: {
+        language: "es",
+      },
     }
   );
 
@@ -72,7 +76,9 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     {
       expectedEventCount: 3,
       expectNewFlowId: false,
-      finalValuePredicates: [value => value.extra.language === "en"],
+      assertForMostRecentEvent: {
+        language: "en",
+      },
     }
   );
 
@@ -105,19 +111,21 @@ add_task(async function test_translations_telemetry_switch_to_language() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
     expectNewFlowId: true,
-    finalValuePredicates: [
-      value => value.extra.auto_show === "false",
-      value => value.extra.view_name === "defaultView",
-      value => value.extra.opened_from === "translationsButton",
-      value => value.extra.document_language === "es",
-    ],
+    assertForMostRecentEvent: {
+      auto_show: false,
+      view_name: "defaultView",
+      opened_from: "translationsButton",
+      document_language: "es",
+    },
   });
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeToLanguage,
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
-      finalValuePredicates: [value => value.extra.language === "fr"],
+      assertForMostRecentEvent: {
+        language: "fr",
+      },
     }
   );
 
@@ -128,7 +136,9 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     {
       expectedEventCount: 2,
       expectNewFlowId: false,
-      finalValuePredicates: [value => value.extra.language === "en"],
+      assertForMostRecentEvent: {
+        language: "en",
+      },
     }
   );
 
@@ -148,7 +158,9 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     {
       expectedEventCount: 3,
       expectNewFlowId: false,
-      finalValuePredicates: [value => value.extra.language === "en"],
+      assertForMostRecentEvent: {
+        language: "en",
+      },
     }
   );
 

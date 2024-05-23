@@ -41,28 +41,28 @@ add_task(
       {
         expectedEventCount: 1,
         expectNewFlowId: true,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "es",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "es",
+          to_language: "en",
+          top_preferred_language: "en",
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 1,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "es",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value => value.extra.source_text_code_units === "165",
-          value => value.extra.source_text_word_count === "28",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "es",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units: 165,
+          source_text_word_count: 28,
+        },
       }
     );
 
@@ -83,16 +83,16 @@ add_task(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 2,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fi",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value => value.extra.source_text_code_units === "165",
-          value => value.extra.source_text_word_count === "28",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fi",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units: 165,
+          source_text_word_count: 28,
+        },
       }
     );
 
@@ -131,28 +131,28 @@ add_task(
       {
         expectedEventCount: 2,
         expectNewFlowId: true,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "es",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "es",
+          to_language: "en",
+          top_preferred_language: "en",
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 3,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "es",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value => value.extra.source_text_code_units === "165",
-          value => value.extra.source_text_word_count === "28",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "es",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units: 165,
+          source_text_word_count: 28,
+        },
       }
     );
 
@@ -166,16 +166,16 @@ add_task(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 4,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "es",
-          value => value.extra.to_language === "fa",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value => value.extra.source_text_code_units === "165",
-          value => value.extra.source_text_word_count === "28",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "es",
+          to_language: "fa",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units: 165,
+          source_text_word_count: 28,
+        },
       }
     );
 
@@ -204,14 +204,14 @@ add_task(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 5,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "es",
-          value => value.extra.to_language === "fa",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "full-page",
-          value => value.extra.auto_translate === "false",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "es",
+          to_language: "fa",
+          top_preferred_language: "en",
+          request_target: "full-page",
+          auto_translate: false,
+        },
       }
     );
 
