@@ -3218,13 +3218,6 @@
   value: true
   mirror: always
 
-# Whether we shouldn't show an error page for unknown protocols (and should
-# show a console warning instead).
-- name: dom.no_unknown_protocol_error.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether origin trials are enabled.
 - name: dom.origin-trials.enabled
   type: bool
