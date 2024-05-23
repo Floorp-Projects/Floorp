@@ -1338,7 +1338,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   // State of keys when the original gesture-down happened
   Modifiers mGestureModifiers;
   uint16_t mGestureDownButtons;
-  int16_t mGestureDownButton;
 
   LastMouseDownInfo mLastLeftMouseDownInfo;
   LastMouseDownInfo mLastMiddleMouseDownInfo;
