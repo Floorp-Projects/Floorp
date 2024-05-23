@@ -93,7 +93,6 @@
   --red-70: #a4000f;
 
   --grey-10: #f9f9fa;
-  --grey-10-a15: rgba(249, 249, 250, 0.15);
   --grey-10-a20: rgba(249, 249, 250, 0.2);
   --grey-10-a25: rgba(249, 249, 250, 0.25);
   --grey-10-a30: rgba(249, 249, 250, 0.3);
@@ -111,9 +110,7 @@
   --grey-80: #2a2a2e;
   --grey-85: #1b1b1d;
   --grey-90: #0c0c0d;
-  --grey-90-a05: rgba(12, 12, 13, 0.05);
   --grey-90-a10: rgba(12, 12, 13, 0.1);
-  --grey-90-a15: rgba(12, 12, 13, 0.15);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
 }
@@ -213,13 +210,18 @@
   /* Styling for devtool buttons */
   --theme-toolbarbutton-background: none;
   --theme-toolbarbutton-color: var(--grey-70);
-  --theme-toolbarbutton-hover-background: var(--grey-90-a05);
-  --theme-toolbarbutton-checked-background: var(--grey-90-a10);
-  --theme-toolbarbutton-checked-color: var(--grey-90);
-  --theme-toolbarbutton-checked-hover-background: var(--grey-90-a15);
-  --theme-toolbarbutton-checked-hover-color: var(--grey-90);
-  --theme-toolbarbutton-active-background: var(--grey-90-a20);
-  --theme-toolbarbutton-active-color: var(--grey-90);
+  --theme-toolbarbutton-hover-background: color-mix(in srgb, currentColor 14%, transparent);
+  --theme-toolbarbutton-checked-background: color-mix(
+      in srgb,
+      var(--theme-toolbarbutton-checked-color) 5%,
+      transparent);
+  --theme-toolbarbutton-checked-color: var(--blue-60);
+  --theme-toolbarbutton-checked-hover-background: var(--theme-toolbarbutton-hover-background);
+  --theme-toolbarbutton-checked-hover-color: var(--theme-toolbarbutton-color);
+  --theme-toolbarbutton-active-background: color-mix(
+      in srgb,
+      var(--theme-toolbarbutton-checked-color) 20%,
+      transparent);
 
   /* Used for select elements */
   /* Note: we don't use the pair of system properties Field/FieldText here (like
@@ -339,13 +341,18 @@
   /* Styling for devtool buttons */
   --theme-toolbarbutton-background: none;
   --theme-toolbarbutton-color: var(--grey-40);
-  --theme-toolbarbutton-hover-background: var(--grey-10-a15);
-  --theme-toolbarbutton-checked-background: var(--grey-10-a20);
-  --theme-toolbarbutton-checked-color: var(--grey-30);
-  --theme-toolbarbutton-checked-hover-background: var(--grey-10-a25);
-  --theme-toolbarbutton-checked-hover-color: var(--grey-30);
-  --theme-toolbarbutton-active-background: var(--grey-10-a30);
-  --theme-toolbarbutton-active-color: var(--grey-30);
+  --theme-toolbarbutton-hover-background: color-mix(in srgb, currentColor 14%, transparent);
+  --theme-toolbarbutton-checked-background: color-mix(
+      in srgb,
+      var(--theme-toolbarbutton-checked-color) 5%,
+      transparent);
+  --theme-toolbarbutton-checked-color: var(--blue-30);
+  --theme-toolbarbutton-checked-hover-background: var(--theme-toolbarbutton-hover-background);
+  --theme-toolbarbutton-checked-hover-color: var(--theme-toolbarbutton-color);
+  --theme-toolbarbutton-active-background: color-mix(
+      in srgb,
+      var(--theme-toolbarbutton-checked-color) 25%,
+      transparent);
 
   /* Used for select elements */
   --theme-select-background: var(--grey-60);

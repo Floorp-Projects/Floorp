@@ -273,7 +273,8 @@ iframe {
 
 .devtools-togglebutton {
   padding: 1px 6px;
-  /* Separate the outline from the button as it might have a similar background color (after Bug 1590432) */
+  border-block: 2px solid transparent;
+  /* Separate the outline from the button as it might have a similar background color */
   outline-offset: 2px;
 }
 
@@ -382,6 +383,7 @@ iframe {
 .devtools-togglebutton[aria-pressed="true"] {
   background-color: var(--theme-toolbarbutton-checked-background);
   color: var(--theme-toolbarbutton-checked-color);
+  border-block-end-color: currentColor;
 }
 
 .devtools-togglebutton[aria-pressed="true"]:hover:not(:active) {
@@ -391,7 +393,6 @@ iframe {
 
 .devtools-togglebutton:active {
   background: var(--theme-toolbarbutton-active-background);
-  color: var(--theme-toolbarbutton-active-color);
 }
 
 .devtools-togglebutton::-moz-focus-inner {
