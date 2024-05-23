@@ -2988,7 +2988,48 @@ void nsGenericHTMLFormControlElementWithState::HandleInvokeTargetAction() {
     return;
   }
 
-  invokee->HandleInvokeInternal(action, IgnoreErrors());
+  invokee->HandleInvokeInternal(this, action, IgnoreErrors());
+}
+
+bool nsGenericHTMLElement::IsValidInvokeAction(InvokeAction aAction) const {
+  return Element::IsValidInvokeAction(aAction) ||
+         aAction == InvokeAction::ShowPopover ||
+         aAction == InvokeAction::TogglePopover ||
+         aAction == InvokeAction::HidePopover;
+}
+
+MOZ_CAN_RUN_SCRIPT bool nsGenericHTMLElement::HandleInvokeInternal(
+    Element* aInvoker, InvokeAction aAction, ErrorResult& aRv) {
+  if (Element::HandleInvokeInternal(aInvoker, aAction, aRv)) {
+    return true;
+  }
+
+  // If the element is a `popover` then we may want to handle the
+  // invokeaction...
+  auto popoverState = GetPopoverAttributeState();
+  if (popoverState == PopoverAttributeState::None) {
+    return false;
+  }
+
+  const bool canShow = aAction == InvokeAction::Auto ||
+                       aAction == InvokeAction::TogglePopover ||
+                       aAction == InvokeAction::ShowPopover;
+  const bool canHide = aAction == InvokeAction::Auto ||
+                       aAction == InvokeAction::TogglePopover ||
+                       aAction == InvokeAction::HidePopover;
+
+  if (canShow && !IsPopoverOpen()) {
+    ShowPopoverInternal(aInvoker, aRv);
+    return true;
+  }
+
+  if (canHide && IsPopoverOpen()) {
+    HidePopoverInternal(/* aFocusPreviousElement = */ true,
+                        /* aFireEvents = */ true, IgnoreErrors());
+    return true;
+  }
+
+  return false;
 }
 
 void nsGenericHTMLFormControlElementWithState::GenerateStateKey() {
