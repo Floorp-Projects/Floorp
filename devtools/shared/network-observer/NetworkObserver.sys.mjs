@@ -1028,29 +1028,10 @@ export class NetworkObserver {
       return;
     }
 
-    let sentBody = lazy.NetworkHelper.readPostTextFromRequest(
+    const sentBody = lazy.NetworkHelper.readPostTextFromRequest(
       httpActivity.channel,
       httpActivity.charset
     );
-
-    if (
-      sentBody !== null &&
-      this.window &&
-      httpActivity.url == this.window.location.href
-    ) {
-      // If the request URL is the same as the current page URL, then
-      // we can try to get the posted text from the page directly.
-      // This check is necessary as otherwise the
-      //   lazy.NetworkHelper.readPostTextFromPageViaWebNav()
-      // function is called for image requests as well but these
-      // are not web pages and as such don't store the posted text
-      // in the cache of the webpage.
-      const webNav = this.window.docShell.QueryInterface(Ci.nsIWebNavigation);
-      sentBody = lazy.NetworkHelper.readPostTextFromPageViaWebNav(
-        webNav,
-        httpActivity.charset
-      );
-    }
 
     if (sentBody !== null) {
       httpActivity.sentBody = sentBody;
