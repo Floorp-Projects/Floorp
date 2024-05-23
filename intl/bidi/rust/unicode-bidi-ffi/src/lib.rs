@@ -43,7 +43,7 @@ impl UnicodeBidi<'_> {
         };
         let adapter = BidiClassAdapter::new(maps::bidi_class());
         Box::new(UnicodeBidi {
-            paragraph_info: utf16::ParagraphBidiInfo::<'a>::new_with_data_source(
+            paragraph_info: utf16::ParagraphBidiInfo::new_with_data_source(
                 &adapter, text, level,
             ),
             resolved: None,
@@ -56,7 +56,7 @@ impl UnicodeBidi<'_> {
             let len = self.paragraph_info.text.len();
             self.resolved = Some(self.paragraph_info.visual_runs(0..len));
         }
-        &self.resolved.as_ref().unwrap()
+        self.resolved.as_ref().unwrap()
     }
 }
 
@@ -78,15 +78,13 @@ pub extern "C" fn bidi_destroy(bidi: *mut UnicodeBidi) {
 
 /// Get the length of the text covered by the Bidi object.
 #[no_mangle]
-pub extern "C" fn bidi_get_length(bidi: *const UnicodeBidi) -> i32 {
-    let bidi = unsafe { &(*bidi) };
+pub extern "C" fn bidi_get_length(bidi: &UnicodeBidi) -> i32 {
     bidi.paragraph_info.text.len().try_into().unwrap()
 }
 
 /// Get the paragraph direction: LTR=1, RTL=-1, mixed=0.
 #[no_mangle]
-pub extern "C" fn bidi_get_direction(bidi: *const UnicodeBidi) -> i8 {
-    let bidi = unsafe { &(*bidi) };
+pub extern "C" fn bidi_get_direction(bidi: &UnicodeBidi) -> i8 {
     match bidi.paragraph_info.direction() {
         Direction::Mixed => 0,
         Direction::Ltr => 1,
@@ -96,15 +94,13 @@ pub extern "C" fn bidi_get_direction(bidi: *const UnicodeBidi) -> i8 {
 
 /// Get the paragraph level.
 #[no_mangle]
-pub extern "C" fn bidi_get_paragraph_level(bidi: *const UnicodeBidi) -> u8 {
-    let bidi = unsafe { &(*bidi) };
+pub extern "C" fn bidi_get_paragraph_level(bidi: &UnicodeBidi) -> u8 {
     bidi.paragraph_info.paragraph_level.into()
 }
 
 /// Get the number of runs present.
 #[no_mangle]
-pub extern "C" fn bidi_count_runs(bidi: *mut UnicodeBidi) -> i32 {
-    let bidi = unsafe { &mut (*bidi) };
+pub extern "C" fn bidi_count_runs(bidi: &mut UnicodeBidi) -> i32 {
     if bidi.paragraph_info.text.is_empty() {
         return 0;
     }
@@ -114,8 +110,7 @@ pub extern "C" fn bidi_count_runs(bidi: *mut UnicodeBidi) -> i32 {
 /// Get a pointer to the Levels array. The resulting pointer is valid only as long as
 /// the UnicodeBidi object exists!
 #[no_mangle]
-pub extern "C" fn bidi_get_levels(bidi: *mut UnicodeBidi) -> *const Level {
-    let bidi = unsafe { &mut (*bidi) };
+pub extern "C" fn bidi_get_levels(bidi: &mut UnicodeBidi) -> *const Level {
     bidi.resolved().0.as_ptr()
 }
 
@@ -124,8 +119,7 @@ pub extern "C" fn bidi_get_levels(bidi: *mut UnicodeBidi) -> *const Level {
 /// or if the run's start or length exceeds u32::MAX (which cannot happen
 /// because Gecko can't create such a huge text buffer).
 #[no_mangle]
-pub extern "C" fn bidi_get_visual_run(bidi: *mut UnicodeBidi, run_index: u32) -> LevelRun {
-    let bidi = unsafe { &mut (*bidi) };
+pub extern "C" fn bidi_get_visual_run(bidi: &mut UnicodeBidi, run_index: u32) -> LevelRun {
     let level_runs = &bidi.resolved().1;
     let start = level_runs[run_index as usize].start;
     let length = level_runs[run_index as usize].end - start;
@@ -160,17 +154,14 @@ pub extern "C" fn bidi_get_base_direction(
 ) -> i8 {
     let text = unsafe { slice::from_raw_parts(text, length) };
     let adapter = BidiClassAdapter::new(maps::bidi_class());
-    if first_paragraph {
-        match unicode_bidi::get_base_direction_with_data_source(&adapter, text) {
-            Direction::Mixed => 0,
-            Direction::Ltr => 1,
-            Direction::Rtl => -1,
-        }
+    let direction = if first_paragraph {
+        unicode_bidi::get_base_direction_with_data_source(&adapter, text)
     } else {
-        match unicode_bidi::get_base_direction_full_with_data_source(&adapter, text) {
-            Direction::Mixed => 0,
-            Direction::Ltr => 1,
-            Direction::Rtl => -1,
-        }
+        unicode_bidi::get_base_direction_full_with_data_source(&adapter, text)
+    };
+    match direction {
+        Direction::Mixed => 0,
+        Direction::Ltr => 1,
+        Direction::Rtl => -1,
     }
 }
