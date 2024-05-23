@@ -146,6 +146,27 @@ fun Activity.openSetDefaultBrowserOption(
     }
 }
 
+/**
+ * Checks if the app can prompt the user to set it as the default browser.
+ *
+ * From Android 10, a new method to prompt the user to set default apps has been introduced.
+ * This method checks if the app can prompt the user to set it as the default browser
+ * based on the Android version and the availability of the ROLE_BROWSER.
+ */
+fun Activity.isDefaultBrowserPromptSupported(): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        getSystemService(RoleManager::class.java).also {
+            if (it.isRoleAvailable(RoleManager.ROLE_BROWSER) && !it.isRoleHeld(
+                    RoleManager.ROLE_BROWSER,
+                )
+            ) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 @RequiresApi(Build.VERSION_CODES.N)
 private fun Activity.navigateToDefaultBrowserAppsSettings(
     from: BrowserDirection,
