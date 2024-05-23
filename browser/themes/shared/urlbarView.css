@@ -904,10 +904,6 @@
   background-color: var(--urlbarView-result-button-selected-background-color);
 }
 
-.urlbarView-row[type$=_yelp][icon-size="38"] > .urlbarView-row-inner > .urlbarView-favicon {
-  padding: calc((52px - 38px) / 2);
-}
-
 /* Search one-offs */
 
 #urlbar .search-one-offs:not([hidden]) {

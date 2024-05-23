@@ -100,11 +100,9 @@ export class YelpSuggestions extends BaseFeature {
 
     let resultProperties = {
       isRichSuggestion: true,
-      richSuggestionIconSize: 38,
       showFeedbackMenu: true,
     };
     if (!suggestion.is_top_pick) {
-      resultProperties.richSuggestionIconSize = 16;
       resultProperties.isSuggestedIndexRelativeToGroup = true;
       resultProperties.suggestedIndex = lazy.UrlbarPrefs.get(
         "yelpSuggestNonPriorityIndex"
