@@ -71,7 +71,7 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
 
   virtual nsTArray<RefPtr<VideoFrame>> DecodedDataToOutputType(
       nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
-      VideoDecoderConfigInternal& aConfig) override;
+      const VideoDecoderConfigInternal& aConfig) override;
 };
 
 }  // namespace mozilla::dom
