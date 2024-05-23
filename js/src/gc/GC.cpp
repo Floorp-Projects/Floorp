@@ -591,6 +591,7 @@ void GCRuntime::getZealBits(uint32_t* zealBits, uint32_t* frequency,
   *scheduled = nextScheduled;
 }
 
+// Please also update jit-test/tests/gc/gczeal.js when updating this help text.
 // clang-format off
 const char gc::ZealModeHelpText[] =
 "  Specifies how zealous the garbage collector should be. Some of these modes\n"
@@ -1280,6 +1281,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(majorGCNumber);
     case JSGC_MINOR_GC_NUMBER:
       return uint32_t(minorGCNumber);
+    case JSGC_SLICE_NUMBER:
+      return uint32_t(sliceNumber);
     case JSGC_INCREMENTAL_GC_ENABLED:
       return incrementalGCEnabled;
     case JSGC_PER_ZONE_GC_ENABLED:
