@@ -34,13 +34,6 @@ typedef struct {
 #endif
 int __wrap_dladdr(const void* addr, Dl_info* info);
 
-struct dl_phdr_info {
-  Elf::Addr dlpi_addr;
-  const char* dlpi_name;
-  const Elf::Phdr* dlpi_phdr;
-  Elf::Half dlpi_phnum;
-};
-
 typedef int (*dl_phdr_cb)(struct dl_phdr_info*, size_t, void*);
 int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void* data);
 
@@ -407,17 +400,6 @@ class ElfLoader : public SEGVHandler {
   /* System loader handle for the library/program containing our code. This
    * is used to resolve wrapped functions. */
   RefPtr<LibHandle> self_elf;
-
-#if defined(ANDROID)
-  /* System loader handle for the libc. This is used to resolve weak symbols
-   * that some libcs contain that the Android linker won't dlsym(). Normally,
-   * we wouldn't treat non-Android differently, but glibc uses versioned
-   * symbols which this linker doesn't support. */
-  RefPtr<LibHandle> libc;
-
-  /* And for libm. */
-  RefPtr<LibHandle> libm;
-#endif
 
   /* Bookkeeping */
   typedef std::vector<LibHandle*> LibHandleList;
