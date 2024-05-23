@@ -452,6 +452,7 @@ export var AppConstants = Object.freeze({
     false,
 #endif
 
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
   MOZ_CAN_FOLLOW_SYSTEM_TIME:
 #ifdef XP_WIN
     true,
@@ -465,6 +466,7 @@ export var AppConstants = Object.freeze({
   #endif
 #else
     false,
+#endif
 #endif
 
   MOZ_SYSTEM_POLICIES:
