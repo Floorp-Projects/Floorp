@@ -89,6 +89,8 @@ class SurveyExperimentIntegrationTest {
         browserScreen {
             verifySurveyNoThanksButton()
             verifySurveyButton()
+        }.clickNoThanksSurveyButton {
+            verifyTabCounter("0")
         }
 
         checkExperimentExists()

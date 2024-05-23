@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 
-from syncintegration.adbrun import ADBrun
+from experimentintegration.adbrun import ADBrun
 
 here = os.path.dirname(__file__)
 logging.getLogger(__name__).addHandler(logging.NullHandler())
