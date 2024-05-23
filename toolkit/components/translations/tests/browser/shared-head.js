@@ -1195,8 +1195,12 @@ class TestTranslationsTelemetry {
   static async assertCounter(name, counter, expectedCount) {
     // Ensures that glean metrics are collected from all child processes
     // so that calls to testGetValue() are up to date.
-    await Services.fog.testFlushAllChildren();
-    const count = counter.testGetValue() ?? 0;
+    let count;
+    await waitForCondition(async () => {
+      await Services.fog.testFlushAllChildren();
+      count = counter.testGetValue() ?? 0;
+      return expectedCount === count;
+    });
     is(
       count,
       expectedCount,
@@ -1227,9 +1231,15 @@ class TestTranslationsTelemetry {
   ) {
     // Ensures that glean metrics are collected from all child processes
     // so that calls to testGetValue() are up to date.
-    await Services.fog.testFlushAllChildren();
-    const events = event.testGetValue() ?? [];
-    const eventCount = events.length;
+    let events;
+    let eventCount;
+    await waitForCondition(async () => {
+      await Services.fog.testFlushAllChildren();
+      events = event.testGetValue() ?? [];
+      eventCount = events.length;
+      return expectedEventCount === eventCount;
+    });
+
     const name =
       eventCount > 0 ? `${events[0].category}.${events[0].name}` : null;
 

@@ -66,6 +66,9 @@ add_task(async function test_translations_telemetry_auto_translate() {
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
+      finalValuePredicates: [
+        value => value.extra.request_target === "full-page",
+      ],
     }
   );
 
