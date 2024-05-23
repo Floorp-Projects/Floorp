@@ -311,8 +311,8 @@ impl AssertFiles {
                 "type": "crash",
                 "id": MOCK_PING_UUID,
                 "version": 4,
-                "creation_date": MOCK_CURRENT_TIME,
-                "client_id": "telemetry_client",
+                "creationDate": MOCK_CURRENT_TIME,
+                "clientId": "telemetry_client",
                 "payload": {
                     "sessionId": "telemetry_session",
                     "version": 1,

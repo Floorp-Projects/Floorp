@@ -20,6 +20,7 @@ include!(concat!(env!("OUT_DIR"), "/ping_annotations.rs"));
 #[derive(Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Ping<'a> {
+    #[serde(rename_all = "camelCase")]
     Crash {
         id: Uuid,
         version: u64,
