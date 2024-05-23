@@ -583,6 +583,7 @@ EventStateManager::EventStateManager()
       mGestureDownPoint(0, 0),
       mGestureModifiers(0),
       mGestureDownButtons(0),
+      mGestureDownButton(0),
       mPresContext(nullptr),
       mShouldAlwaysUseLineDeltas(false),
       mShouldAlwaysUseLineDeltasInitialized(false),
@@ -2273,6 +2274,13 @@ void EventStateManager::FireContextClick() {
       event.mClickCount = 1;
       FillInEventFromGestureDown(&event);
 
+      // we need to forget the clicking content and click count for the
+      // following eMouseUp event when click-holding context menus
+      LastMouseDownInfo& mouseDownInfo = GetLastMouseDownInfo(event.mButton);
+      mouseDownInfo.mLastMouseDownContent = nullptr;
+      mouseDownInfo.mClickCount = 0;
+      mouseDownInfo.mLastMouseDownInputControlType = Nothing();
+
       // stop selection tracking, we're in control now
       if (mCurrentTarget) {
         RefPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
@@ -2287,10 +2295,15 @@ void EventStateManager::FireContextClick() {
       AutoHandlingUserInputStatePusher userInpStatePusher(true, &event);
 
       // dispatch to DOM
-      RefPtr<nsIContent> gestureDownContent = mGestureDownContent;
       RefPtr<nsPresContext> presContext = mPresContext;
-      EventDispatcher::Dispatch(gestureDownContent, presContext, &event,
-                                nullptr, &status);
+
+      // The contextmenu event handled by PresShell will apply to elements (not
+      // all nodes) correctly and will be dispatched to EventStateManager for
+      // further handling preventing click event and stopping tracking drag
+      // gesture.
+      if (RefPtr<PresShell> presShell = presContext->GetPresShell()) {
+        presShell->HandleEvent(mCurrentTarget, &event, false, &status);
+      }
 
       // We don't need to dispatch to frame handling because no frames
       // watch eContextMenu except for nsMenuFrame and that's only for
@@ -2299,10 +2312,8 @@ void EventStateManager::FireContextClick() {
     }
   }
 
-  // now check if the event has been handled. If so, stop tracking a drag
-  if (status == nsEventStatus_eConsumeNoDefault) {
-    StopTrackingDragGesture(true);
-  }
+  // stop tracking a drag whatever the event has been handled or not.
+  StopTrackingDragGesture(true);
 
   KillClickHoldTimer();
 
@@ -2342,6 +2353,7 @@ void EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   }
   mGestureModifiers = inDownEvent->mModifiers;
   mGestureDownButtons = inDownEvent->mButtons;
+  mGestureDownButton = inDownEvent->mButton;
 
   if (inDownEvent->mMessage != eMouseTouchDrag &&
       StaticPrefs::ui_click_hold_context_menus()) {
@@ -2415,6 +2427,9 @@ void EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent) {
       mGestureDownPoint - aEvent->mWidget->WidgetToScreenOffset();
   aEvent->mModifiers = mGestureModifiers;
   aEvent->mButtons = mGestureDownButtons;
+  if (aEvent->mMessage == eContextMenu) {
+    aEvent->mButton = mGestureDownButton;
+  }
 }
 
 void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
@@ -3793,8 +3808,6 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // we need to forget the clicking content and click count for the
       // following eMouseUp event.
       if (mouseEvent->mClickEventPrevented) {
-        RefPtr<EventStateManager> esm =
-            ESMFromContentOrThis(aOverrideClickTarget);
         switch (mouseEvent->mButton) {
           case MouseButton::ePrimary:
           case MouseButton::eSecondary:
