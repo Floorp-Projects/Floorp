@@ -44,6 +44,15 @@ export class TranslationsTelemetry {
   }
 
   /**
+   * Telemetry functions for the SelectTranslationsPanel.
+   *
+   * @returns {SelectTranslationsPanelTelemetry}
+   */
+  static selectTranslationsPanel() {
+    return SelectTranslationsPanelTelemetry;
+  }
+
+  /**
    * Forces the creation of a new Translations telemetry flowId and returns it.
    *
    * @returns {string}
@@ -90,19 +99,25 @@ export class TranslationsTelemetry {
    * Records a telemetry event when a full-page translation request is sent.
    *
    * @param {object} data
+   * @param {boolean} data.autoTranslate
    * @param {string} data.docLangTag
    * @param {string} data.fromLanguage
    * @param {string} data.toLanguage
    * @param {string} data.topPreferredLanguage
-   * @param {boolean} data.autoTranslate
+   * @param {string} data.requestTarget
+   * @param {number} data.sourceTextCodeUnits
+   * @param {number} data.sourceTextWordCount
    */
   static onTranslate(data) {
     const {
+      autoTranslate,
       docLangTag,
       fromLanguage,
+      requestTarget,
       toLanguage,
-      autoTranslate,
       topPreferredLanguage,
+      sourceTextCodeUnits,
+      sourceTextWordCount,
     } = data;
     Glean.translations.requestsCount.add(1);
     Glean.translations.translationRequest.record({
@@ -112,6 +127,9 @@ export class TranslationsTelemetry {
       auto_translate: autoTranslate,
       document_language: docLangTag,
       top_preferred_language: topPreferredLanguage,
+      request_target: requestTarget,
+      source_text_code_units: sourceTextCodeUnits,
+      source_text_word_count: sourceTextWordCount,
     });
     TranslationsTelemetry.logEventToConsole(
       TranslationsTelemetry.onTranslate,
@@ -373,6 +391,178 @@ class FullPageTranslationsPanelTelemetry {
     });
     TranslationsTelemetry.logEventToConsole(
       FullPageTranslationsPanelTelemetry.onLearnMoreLink
+    );
+  }
+}
+
+/**
+ * Telemetry functions for the SelectTranslationsPanel UI
+ */
+class SelectTranslationsPanelTelemetry {
+  /**
+   * Records a telemetry event when the SelectTranslationsPanel is opened.
+   *
+   * @param {object} data
+   * @param {string} data.docLangTag
+   * @param {boolean} data.maintainFlow
+   * @param {string} data.fromLanguage
+   * @param {string} data.toLanguage
+   * @param {string} data.topPreferredLanguage
+   */
+  static onOpen(data) {
+    Glean.translationsSelectTranslationsPanel.open.record({
+      flow_id: data.maintainFlow
+        ? TranslationsTelemetry.getOrCreateFlowId()
+        : TranslationsTelemetry.createFlowId(),
+      document_language: data.docLangTag,
+      from_language: data.fromLanguage,
+      to_language: data.toLanguage,
+      top_preferred_language: data.topPreferredLanguage,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onOpen,
+      data
+    );
+  }
+
+  static onClose() {
+    Glean.translationsSelectTranslationsPanel.close.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onClose
+    );
+  }
+
+  static onCancelButton() {
+    Glean.translationsSelectTranslationsPanel.cancelButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onCancelButton
+    );
+  }
+
+  static onCopyButton() {
+    Glean.translationsSelectTranslationsPanel.copyButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onCopyButton
+    );
+  }
+
+  static onDoneButton() {
+    Glean.translationsSelectTranslationsPanel.doneButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onDoneButton
+    );
+  }
+
+  static onTranslateButton() {
+    Glean.translationsSelectTranslationsPanel.translateButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslateButton
+    );
+  }
+
+  static onTranslateFullPageButton() {
+    Glean.translationsSelectTranslationsPanel.translateFullPageButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslateFullPageButton
+    );
+  }
+
+  static onTryAgainButton() {
+    Glean.translationsSelectTranslationsPanel.tryAgainButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTryAgainButton
+    );
+  }
+
+  static onOpenSettingsMenu() {
+    Glean.translationsSelectTranslationsPanel.openSettingsMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onOpenSettingsMenu
+    );
+  }
+
+  static onTranslationSettings() {
+    Glean.translationsSelectTranslationsPanel.translationSettings.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslationSettings
+    );
+  }
+
+  static onAboutTranslations() {
+    Glean.translationsSelectTranslationsPanel.aboutTranslations.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onAboutTranslations
+    );
+  }
+
+  static onInitializationFailureMessage() {
+    Glean.translationsSelectTranslationsPanel.initializationFailureMessage.record(
+      {
+        flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      }
+    );
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onInitializationFailureMessage
+    );
+  }
+
+  /**
+   * Records a telemetry event when the translation-failure message is displayed.
+   *
+   * @param {object} data
+   * @param {string} data.fromLanguage
+   * @param {string} data.toLanguage
+   */
+  static onTranslationFailureMessage(data) {
+    Glean.translationsSelectTranslationsPanel.translationFailureMessage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      from_language: data.fromLanguage,
+      to_language: data.toLanguage,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslationFailureMessage,
+      data
+    );
+  }
+
+  /**
+   * Records a telemetry event when the unsupported-language message is displayed.
+   *
+   * @param {object} data
+   * @param {string} data.docLangTag
+   * @param {string} data.detectedLanguage
+   */
+  static onUnsupportedLanguageMessage(data) {
+    Glean.translationsSelectTranslationsPanel.unsupportedLanguageMessage.record(
+      {
+        flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+        document_language: data.docLangTag,
+        detected_language: data.detectedLanguage,
+      }
+    );
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onUnsupportedLanguageMessage,
+      data
     );
   }
 }
