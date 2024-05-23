@@ -108,6 +108,10 @@ class FirefoxSuggestTest : TestSetup() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
+                // The Google related suggestions aren't always displayed on cold run
+                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
@@ -129,6 +133,10 @@ class FirefoxSuggestTest : TestSetup() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
+                // The Google related suggestions aren't always displayed on cold run
+                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord.dropLast(1))
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
@@ -150,6 +158,10 @@ class FirefoxSuggestTest : TestSetup() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
+                // The Google related suggestions aren't always displayed on cold run
+                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
@@ -174,6 +186,10 @@ class FirefoxSuggestTest : TestSetup() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
+                // The Google related suggestions aren't always displayed on cold run
+                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord)
                 deleteSearchKeywordCharacters(numberOfDeletionSteps = 1)
                 verifySearchEngineSuggestionResults(
