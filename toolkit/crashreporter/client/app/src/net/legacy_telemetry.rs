@@ -18,8 +18,9 @@ const PAYLOAD_VERSION: u64 = 1;
 include!(concat!(env!("OUT_DIR"), "/ping_annotations.rs"));
 
 #[derive(Serialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type")]
 pub enum Ping<'a> {
+    #[serde(rename_all = "camelCase")]
     Crash {
         id: Uuid,
         version: u64,
