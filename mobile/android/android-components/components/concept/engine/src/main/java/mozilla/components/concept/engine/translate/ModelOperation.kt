@@ -17,4 +17,12 @@ enum class ModelOperation(val operation: String) {
      * Delete the model(s).
      */
     DELETE("delete"),
+    ;
+
+    /**
+     * The operation will use the string literal on the engine.
+     */
+    override fun toString(): String {
+        return operation
+    }
 }
