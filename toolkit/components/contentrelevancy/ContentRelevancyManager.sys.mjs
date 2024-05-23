@@ -80,6 +80,7 @@ class RelevancyManager {
 
     lazy.log.info("Initializing the manager");
 
+    this.#storeManager = new RustRelevancyStoreManager(this.#storePath);
     if (this.shouldEnable) {
       this.#enable();
     }
@@ -101,6 +102,7 @@ class RelevancyManager {
     lazy.NimbusFeatures.contentRelevancy.offUpdate(this._nimbusUpdateCallback);
     Services.prefs.removeObserver(PREF_LOG_ENABLED, this);
     this.#disable();
+    this.#storeManager = null;
 
     this.#initialized = false;
   }
@@ -153,19 +155,7 @@ class RelevancyManager {
   }
 
   #enable() {
-    if (!this.#_store) {
-      // Init the relevancy store.
-      const path = this.#storePath;
-      lazy.log.info(`Initializing RelevancyStore: ${path}`);
-
-      try {
-        this.#_store = lazy.RelevancyStore.init(path);
-      } catch (error) {
-        lazy.log.error(`Error initializing RelevancyStore: ${error}`);
-        return;
-      }
-    }
-
+    this.#storeManager.enable();
     this._shutdownBlocker = () => this.interrupt();
     // Interrupt sooner prior to the `profile-before-change` phase to allow
     // all the in-progress IOs to exit.
@@ -173,7 +163,6 @@ class RelevancyManager {
       "ContentRelevancyManager: Interrupt IO operations on relevancy store",
       this._shutdownBlocker
     );
-
     this.#startUpTimer();
   }
 
@@ -183,11 +172,6 @@ class RelevancyManager {
    * called.
    */
   #disable() {
-    if (this._isStoreReady) {
-      this.#_store.close();
-      this.#_store = null;
-    }
-
     if (this._shutdownBlocker) {
       lazy.AsyncShutdown.profileChangeTeardown.removeBlocker(
         this._shutdownBlocker
@@ -195,6 +179,7 @@ class RelevancyManager {
       this._shutdownBlocker = null;
     }
     lazy.timerManager.unregisterTimer(TIMER_ID);
+    this.#storeManager.disable();
   }
 
   #toggleFeature() {
@@ -267,7 +252,7 @@ class RelevancyManager {
       lazy.log.info("Starting interest classification");
       timerId = Glean.relevancyClassify.duration.start();
 
-      const interestVector = await this.#doClassificationHelper(urls);
+      const interestVector = await this.#classifyUrls(urls);
       const sortedVector = Object.entries(interestVector).sort(
         ([, a], [, b]) => b - a // descending
       );
@@ -286,8 +271,10 @@ class RelevancyManager {
     } catch (error) {
       let reason;
 
-      if (error instanceof StoreNotAvailableError) {
-        lazy.log.error("#store became null, aborting interest classification");
+      if (error instanceof StoreDisabledError) {
+        lazy.log.error(
+          "RustRelevancyStoreManager not enabled, aborting interest classification"
+        );
         reason = "store-not-ready";
       } else {
         lazy.log.error("Classification error: " + (error.reason ?? error));
@@ -306,12 +293,12 @@ class RelevancyManager {
    * Interrupt all the IO operations on the relevancy store.
    */
   interrupt() {
-    if (this.#_store) {
+    if (this.#storeManager.enabled) {
       try {
         lazy.log.debug(
           "Interrupting all the IO operations on the relevancy store"
         );
-        this.#_store.interrupt();
+        this.#storeManager.store.interrupt();
       } catch (error) {
         lazy.log.error("Interrupt error: " + (error.reason ?? error));
       }
@@ -326,23 +313,21 @@ class RelevancyManager {
   }
 
   /**
-   * Classification helper. Use the getter `this.#store` rather than `#_store`
-   * to access the store so that when it becomes null, a `StoreNotAvailableError`
-   * will be raised. Likewise, other store related errors should be propagated
-   * to the caller if you want to perform custom error handling in this helper.
+   * Classify a list of URLs.
+   *
+   * If the nimbus feature is disabled, then this will succeed but return an empty InterestVector.
    *
    * @param {Array} urls
    *   An array of URLs.
    * @returns {InterestVector}
    *   An interest vector.
-   * @throws {StoreNotAvailableError}
-   *   Thrown when the store became unavailable (i.e. set to null elsewhere).
+   * @throws {StoreDisabledError}
+   *   Thrown when storeManager is disabled.
    * @throws {RelevancyAPIError}
    *   Thrown for other API errors on the store.
    */
-  async #doClassificationHelper(urls) {
+  async #classifyUrls(urls) {
     lazy.log.info("Classification input: " + urls);
-
     let interestVector = new lazy.InterestVector({
       animals: 0,
       arts: 0,
@@ -371,29 +356,10 @@ class RelevancyManager {
       ) ??
       false
     ) {
-      interestVector = await this.#store.ingest(urls);
+      interestVector = await this.#storeManager.store.ingest(urls);
     }
 
     return interestVector;
-  }
-
-  /**
-   * Internal getter for `#_store` used by for classification. It will throw
-   * a `StoreNotAvailableError` is the store is not ready.
-   */
-  get #store() {
-    if (!this._isStoreReady) {
-      throw new StoreNotAvailableError("Store is not available");
-    }
-
-    return this.#_store;
-  }
-
-  /**
-   * Whether or not the store is ready (i.e. not null).
-   */
-  get _isStoreReady() {
-    return !!this.#_store;
   }
 
   /**
@@ -417,8 +383,8 @@ class RelevancyManager {
     }
   }
 
-  // The `RustRelevancy` store.
-  #_store;
+  // The `RustRelevancyStoreManager`
+  #storeManager;
 
   // Whether or not the module is initialized.
   #initialized = false;
@@ -429,12 +395,50 @@ class RelevancyManager {
 }
 
 /**
+ * Holds the RustRelevancyStore and handles enabling/disabling it.
+ */
+class RustRelevancyStoreManager {
+  constructor(path, rustRelevancyStore = undefined) {
+    lazy.log.info(`Initializing RelevancyStore: ${path}`);
+    if (rustRelevancyStore === undefined) {
+      rustRelevancyStore = lazy.RelevancyStore;
+    }
+    this.#store = rustRelevancyStore.init(path);
+  }
+
+  get store() {
+    if (!this.enabled) {
+      throw new StoreDisabledError();
+    }
+    return this.#store;
+  }
+
+  enable() {
+    this.enabled = true;
+  }
+
+  disable() {
+    // Calling `close()` makes the store release all resources.  In particular, it closes all
+    // database connections until a read/write method is called.  The `store` method ensures that
+    // this won't happen before `enable` is called.
+    this.#store.close();
+    this.enabled = false;
+  }
+
+  // The `RustRelevancy` store.
+  #store;
+
+  // Is the store enabled?
+  enabled = false;
+}
+
+/**
  * Error raised when attempting to access a null store.
  */
-class StoreNotAvailableError extends Error {
-  constructor(message, ...params) {
-    super(message, ...params);
-    this.name = "StoreNotAvailableError";
+class StoreDisabledError extends Error {
+  constructor() {
+    super("RustRelevancyStoreManager is disabled");
+    this.name = "StoreDisabledError";
   }
 }
 
@@ -453,3 +457,7 @@ export var ContentRelevancyManager = new RelevancyManager();
 export function classifyOnce() {
   ContentRelevancyManager._test_doClassification();
 }
+
+export var exposedForTesting = {
+  RustRelevancyStoreManager,
+};
