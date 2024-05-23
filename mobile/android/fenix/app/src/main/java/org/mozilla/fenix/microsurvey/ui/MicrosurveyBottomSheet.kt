@@ -77,13 +77,17 @@ fun MicrosurveyBottomSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            MicroSurveyContent(
-                question = question,
-                icon = icon,
-                answers = answers,
-                selectedAnswer = selectedAnswer,
-                onSelectionChange = { selectedAnswer = it },
-            )
+            if (isSubmitted) {
+                MicrosurveyCompleted()
+            } else {
+                MicroSurveyContent(
+                    question = question,
+                    icon = icon,
+                    answers = answers,
+                    selectedAnswer = selectedAnswer,
+                    onSelectionChange = { selectedAnswer = it },
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
