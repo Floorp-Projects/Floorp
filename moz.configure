@@ -49,6 +49,25 @@ def imply_disable_compile_environment(value):
 
 
 option(
+    env="MOZ_BUILD_HOOK",
+    nargs=1,
+    help="moz.build file that will be executed as if it were appended to"
+    " every moz.build in the tree.",
+)
+
+
+@depends_if("MOZ_BUILD_HOOK")
+@imports("os")
+def moz_build_hook(value):
+    if not os.path.exists(value[0]):
+        die(f"MOZ_BUILD_HOOK set to {value[0]} but the file doesn't exist")
+    return os.path.abspath(value[0])
+
+
+set_config("MOZ_BUILD_HOOK", moz_build_hook)
+
+
+option(
     env="MOZ_COPY_PDBS",
     help="For builds that do not support symbols in the normal fashion,"
     " generate and copy them into the resulting build archive.",

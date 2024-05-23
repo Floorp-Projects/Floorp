@@ -124,12 +124,14 @@ class TestedSandbox(MozbuildSandbox):
     def source_path(self, path):
         return SourcePath(self._context, path)
 
-    def exec_file(self, path):
-        super(TestedSandbox, self).exec_file(self.normalize_path(path))
+    def exec_file(self, path, becomes_current_path=True):
+        super(TestedSandbox, self).exec_file(
+            self.normalize_path(path), becomes_current_path
+        )
 
-    def exec_source(self, source, path=""):
+    def exec_source(self, source, path="", becomes_current_path=True):
         super(TestedSandbox, self).exec_source(
-            source, self.normalize_path(path) if path else ""
+            source, self.normalize_path(path) if path else "", becomes_current_path
         )
 
 
