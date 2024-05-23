@@ -612,7 +612,8 @@
             "type": "string",
             "optional": true
           }
-        }
+        },
+        "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
         "id": "GeckoAndroidSpecificProperties",
@@ -627,7 +628,7 @@
             "optional": true
           }
         },
-        "additionalProperties": { "type": "any" }
+        "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
         "id": "DeprecatedApplications",

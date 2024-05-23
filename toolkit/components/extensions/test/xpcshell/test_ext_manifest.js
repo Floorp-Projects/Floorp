@@ -372,20 +372,6 @@ add_task(async function test_bss_gecko_android() {
       expectedError: `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
     },
     {
-      title: "unsupported prop in gecko_android",
-      browser_specific_settings: {
-        gecko: {
-          id: addonId,
-          strict_min_version: "2",
-          strict_max_version: "2",
-        },
-        gecko_android: {
-          aPropThatIsNotSupported: "aPropThatIsNotSupported",
-        },
-      },
-      expectedError: `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
-    },
-    {
       title: "only strict min/max version in gecko_android",
       browser_specific_settings: {
         gecko: {
@@ -486,3 +472,79 @@ add_task(
     await extension.unload();
   }
 );
+
+// Regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1542351
+// Test that presence of 'edge' property in 'browser_specific_settings' doesn't
+// prevent installation from completing successfully.
+add_task(async function test_non_gecko_bss_install() {
+  const ID = "ms_edge@tests.mozilla.org";
+
+  const manifest = {
+    name: "MS Edge and unknown browser test",
+    description:
+      "extension with bss properties for 'edge', and 'unknown_browser'",
+    manifest_version: 2,
+    version: "1.0",
+    applications: { gecko: { id: ID } },
+    browser_specific_settings: {
+      edge: {
+        browser_action_next_to_addressbar: true,
+      },
+      unknown_browser: {
+        unknown_setting: true,
+      },
+    },
+  };
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest,
+    useAddonManager: "temporary",
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+
+  notEqual(extension.addon, null, "Add-on is installed");
+  Assert.deepEqual(extension.extension.warnings, [], "expected no warnings");
+
+  await extension.unload();
+});
+
+// Tests that the presence of an unrecognized property in the gecko and
+// gecko_android objects does not prevent successful installation.
+add_task(async function test_gecko_bss_unrecognized_property() {
+  const ID = "with-unknown-gecko-prop@tests.mozilla.org";
+
+  const manifest = {
+    browser_specific_settings: {
+      gecko: {
+        id: ID,
+        aPropThatIsNotSupported: "value does not matter",
+      },
+      gecko_android: {
+        aPropThatIsNotSupported: "aPropThatIsNotSupported",
+      },
+    },
+  };
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest,
+    useAddonManager: "temporary",
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+
+  Assert.deepEqual(
+    extension.extension.warnings,
+    [
+      "Reading manifest: Warning processing browser_specific_settings.gecko.aPropThatIsNotSupported: An unexpected property was found in the WebExtension manifest.",
+      "Reading manifest: Warning processing browser_specific_settings.gecko_android.aPropThatIsNotSupported: An unexpected property was found in the WebExtension manifest.",
+    ],
+    "Expected warnings about unrecognized properties"
+  );
+
+  notEqual(extension.addon, null, "Add-on is installed");
+
+  await extension.unload();
+});
