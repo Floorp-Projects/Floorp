@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use bytemuck::{Pod, Zeroable};
 use peek_poke::PeekPoke;
 use std::cmp;
 use std::hash::{Hash, Hasher};
@@ -15,7 +14,7 @@ use std::hash::{Hash, Hasher};
 /// In premultiplied colors transitions to transparent always look "nice"
 /// therefore they are used in CSS gradients.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
 pub struct PremultipliedColorF {
     pub r: f32,
     pub g: f32,
@@ -113,7 +112,7 @@ impl Hash for PremultipliedColorF {
 /// If the alpha value `a` is 255 the color is opaque.
 #[repr(C)]
 #[derive(Clone, Copy, Hash, Eq, Debug, Deserialize, MallocSizeOf, PartialEq)]
-#[derive(PartialOrd, Ord, Serialize, PeekPoke, Default, Pod, Zeroable)]
+#[derive(PartialOrd, Ord, Serialize, PeekPoke, Default)]
 pub struct ColorU {
     pub r: u8,
     pub g: u8,
