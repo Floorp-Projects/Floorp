@@ -251,6 +251,7 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::EnumSet;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
 using mozilla::Nothing;
@@ -641,18 +642,28 @@ const char gc::ZealModeHelpText[] =
     "    25: (YieldWhileGrayMarking) Incremental GC in two slices that yields\n"
     "        during gray marking\n";
 
-// The set of zeal modes that control incremental slices. These modes are
-// mutually exclusive.
-static const mozilla::EnumSet<ZealMode> IncrementalSliceZealModes = {
+// The set of zeal modes that trigger GCs with two incremental slices.
+static const EnumSet<ZealMode> TwoSliceZealModes = {
     ZealMode::YieldBeforeRootMarking,
     ZealMode::YieldBeforeMarking,
     ZealMode::YieldBeforeSweeping,
-    ZealMode::IncrementalMultipleSlices,
     ZealMode::YieldBeforeSweepingAtoms,
     ZealMode::YieldBeforeSweepingCaches,
     ZealMode::YieldBeforeSweepingObjects,
     ZealMode::YieldBeforeSweepingNonObjects,
-    ZealMode::YieldBeforeSweepingPropMapTrees};
+    ZealMode::YieldBeforeSweepingPropMapTrees,
+    ZealMode::YieldWhileGrayMarking};
+
+// The set of zeal modes that control incremental slices. These modes are
+// mutually exclusive.
+static const EnumSet<ZealMode> IncrementalSliceZealModes =
+    TwoSliceZealModes + EnumSet<ZealMode>{ZealMode::IncrementalMultipleSlices};
+
+// The set of zeal modes that periodically trigger GC.
+static const EnumSet<ZealMode> PeriodicZealModes =
+    IncrementalSliceZealModes + EnumSet<ZealMode>{ZealMode::Alloc,
+                                                  ZealMode::GenerationalGC,
+                                                  ZealMode::Compact};
 
 void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
   MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
@@ -815,9 +826,7 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
 
 bool GCRuntime::needZealousGC() {
   if (nextScheduled > 0 && --nextScheduled == 0) {
-    if (hasZealMode(ZealMode::Alloc) || hasZealMode(ZealMode::GenerationalGC) ||
-        hasZealMode(ZealMode::IncrementalMultipleSlices) ||
-        hasZealMode(ZealMode::Compact) || hasIncrementalTwoSliceZealMode()) {
+    if (hasAnyZealModeOf(PeriodicZealModes)) {
       nextScheduled = zealFrequency;
     }
     return true;
@@ -826,21 +835,19 @@ bool GCRuntime::needZealousGC() {
 }
 
 bool GCRuntime::hasIncrementalTwoSliceZealMode() const {
-  return hasZealMode(ZealMode::YieldBeforeRootMarking) ||
-         hasZealMode(ZealMode::YieldBeforeMarking) ||
-         hasZealMode(ZealMode::YieldBeforeSweeping) ||
-         hasZealMode(ZealMode::YieldBeforeSweepingAtoms) ||
-         hasZealMode(ZealMode::YieldBeforeSweepingCaches) ||
-         hasZealMode(ZealMode::YieldBeforeSweepingObjects) ||
-         hasZealMode(ZealMode::YieldBeforeSweepingNonObjects) ||
-         hasZealMode(ZealMode::YieldBeforeSweepingPropMapTrees) ||
-         hasZealMode(ZealMode::YieldWhileGrayMarking);
+  // Zeal modes that periodically start incremental collections that run in two
+  // slices, yielding at a specific point.
+  return hasAnyZealModeOf(TwoSliceZealModes);
 }
 
 bool GCRuntime::hasZealMode(ZealMode mode) const {
   static_assert(size_t(ZealMode::Limit) < sizeof(zealModeBits) * 8,
                 "Zeal modes must fit in zealModeBits");
   return zealModeBits & (1 << uint32_t(mode));
+}
+
+bool GCRuntime::hasAnyZealModeOf(EnumSet<ZealMode> modes) const {
+  return zealModeBits & modes.serialize();
 }
 
 void GCRuntime::clearZealMode(ZealMode mode) {
