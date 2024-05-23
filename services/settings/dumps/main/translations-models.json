@@ -283,24 +283,6 @@
       "last_modified": 1709674886815
     },
     {
-      "name": "qualityModel.enet.bin",
-      "schema": 1709574556632,
-      "toLang": "et",
-      "version": "1.0",
-      "fileType": "qualityModel",
-      "fromLang": "en",
-      "attachment": {
-        "hash": "bb9b9c449c705297fe6b83542d64406201960971f102787b9b6c733416406707",
-        "size": 68,
-        "filename": "qualityModel.enet.bin",
-        "location": "main-workspace/translations-models/e1233b94-e22d-4e37-a065-92d66e49fe97.bin",
-        "mimetype": "application/octet-stream"
-      },
-      "filter_expression": "",
-      "id": "5d7d9bb7-def8-4424-965d-a06ae69b0654",
-      "last_modified": 1709674886811
-    },
-    {
       "name": "model.enet.intgemm.alphas.bin",
       "schema": 1709574558010,
       "toLang": "et",
@@ -1165,24 +1147,6 @@
       "last_modified": 1701186751722
     },
     {
-      "name": "qualityModel.encs.bin",
-      "schema": 1700619908215,
-      "toLang": "cs",
-      "version": "1.0a1",
-      "fileType": "qualityModel",
-      "fromLang": "en",
-      "attachment": {
-        "hash": "d7eba90036a065e4a1e93e889befe09f93a7d9a3417f3edffdb09a0db88fe83a",
-        "size": 68,
-        "filename": "qualityModel.encs.bin",
-        "location": "main-workspace/translations-models/ef7dad4b-40b5-4f73-a72b-a98a465123c9.bin",
-        "mimetype": "application/octet-stream"
-      },
-      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
-      "id": "39dc5368-4d1f-4e83-9db4-fa4bdaf747ca",
-      "last_modified": 1701186751719
-    },
-    {
       "name": "vocab.encs.spm",
       "schema": 1700619911362,
       "toLang": "cs",
@@ -1289,24 +1253,6 @@
       "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
       "id": "05af2465-bb63-4fe1-8653-5476583cf9d6",
       "last_modified": 1701186751700
-    },
-    {
-      "name": "qualityModel.enet.bin",
-      "schema": 1700619939863,
-      "toLang": "et",
-      "version": "1.0a1",
-      "fileType": "qualityModel",
-      "fromLang": "en",
-      "attachment": {
-        "hash": "bb9b9c449c705297fe6b83542d64406201960971f102787b9b6c733416406707",
-        "size": 68,
-        "filename": "qualityModel.enet.bin",
-        "location": "main-workspace/translations-models/49913732-7c8b-42b2-8824-bf11bd119ce4.bin",
-        "mimetype": "application/octet-stream"
-      },
-      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
-      "id": "fafbaa61-5049-40dc-8bb4-3a15d4d7f968",
-      "last_modified": 1701186751697
     },
     {
       "name": "model.enet.intgemm.alphas.bin",
@@ -2371,24 +2317,6 @@
       "last_modified": 1701186751494
     },
     {
-      "name": "qualityModel.enes.bin",
-      "schema": 1700620251765,
-      "toLang": "es",
-      "version": "1.0",
-      "fileType": "qualityModel",
-      "fromLang": "en",
-      "attachment": {
-        "hash": "ce141f8e9e50a5ef4d8e3243a274b1734dc532f6963794a8869dce35acb543c2",
-        "size": 68,
-        "filename": "qualityModel.enes.bin",
-        "location": "main-workspace/translations-models/bf47c1e1-b01e-40e4-ad4b-b16edec5510f.bin",
-        "mimetype": "application/octet-stream"
-      },
-      "filter_expression": "",
-      "id": "f0accb47-36ef-4996-98df-8c59de49bc0c",
-      "last_modified": 1701186751491
-    },
-    {
       "name": "lex.50.50.esen.s2t.bin",
       "schema": 1700620254899,
       "toLang": "en",
@@ -2821,5 +2749,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1715291348584
+  "timestamp": 1716389617204
 }
