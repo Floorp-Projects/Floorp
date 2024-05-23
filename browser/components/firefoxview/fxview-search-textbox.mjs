@@ -5,13 +5,7 @@
 import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
-});
-
 const SEARCH_DEBOUNCE_RATE_MS = 500;
-const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
 
 /**
  * A search box that displays a search icon and is clearable. Updates to the
@@ -42,21 +36,11 @@ export default class FxviewSearchTextbox extends MozLitElement {
   };
 
   #query = "";
-
-  constructor() {
-    super();
-    this.searchTask = new lazy.DeferredTask(
-      () => this.#dispatchQueryEvent(),
-      SEARCH_DEBOUNCE_RATE_MS,
-      SEARCH_DEBOUNCE_TIMEOUT_MS
-    );
-  }
+  #searchTimer;
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (!this.searchTask?.isFinalized) {
-      this.searchTask?.finalize();
-    }
+    clearTimeout(this.#searchTimer);
   }
 
   focus() {
@@ -78,7 +62,11 @@ export default class FxviewSearchTextbox extends MozLitElement {
    * button.
    */
   onSearch() {
-    this.searchTask?.arm();
+    clearTimeout(this.#searchTimer);
+    this.#searchTimer = setTimeout(
+      () => this.#dispatchQueryEvent(),
+      SEARCH_DEBOUNCE_RATE_MS
+    );
     this.requestUpdate();
   }
 
@@ -103,16 +91,17 @@ export default class FxviewSearchTextbox extends MozLitElement {
         detail: { query: this.#query },
       })
     );
-
-    Services.telemetry.recordEvent(
-      "firefoxview_next",
-      "search_initiated",
-      "search",
-      null,
-      {
-        page: this.pageName,
-      }
-    );
+    if (!window.IS_STORYBOOK) {
+      Services.telemetry.recordEvent(
+        "firefoxview_next",
+        "search_initiated",
+        "search",
+        null,
+        {
+          page: this.pageName,
+        }
+      );
+    }
   }
 
   render() {
