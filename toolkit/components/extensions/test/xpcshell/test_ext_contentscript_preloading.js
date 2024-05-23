@@ -19,13 +19,15 @@
  */
 
 const server = createHttpServer({ hosts: ["example.com"] });
-
+let gRequestCount = 0;
 server.registerPathHandler("/dummy", (request, response) => {
+  ++gRequestCount;
   response.setStatusLine(request.httpVersion, 200, "OK");
   // The test will add iframes.
   response.write("(dummy, no iframes from server)");
 });
 server.registerPathHandler("/sandboxed", (request, response) => {
+  ++gRequestCount;
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Security-Policy", "sandbox allow-scripts;");
   response.write("This page has an opaque origin.");
@@ -679,6 +681,57 @@ add_task(async function test_preload_at_data_url() {
       { matches: ["<all_urls>", "*://2/"], isPreload: false },
     ],
     "Should match sandboxed data:-URI when match_origin_as_fallback is true"
+  );
+
+  await contentPage.close();
+  await extension.unload();
+});
+
+// No execution nor preload for content scripts at view-source:-URLs.
+add_task(async function test_no_preload_nor_execution_at_view_source() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["*://example.com/*"],
+          match_origin_as_fallback: true,
+          js: ["done.js"],
+          run_at: "document_start",
+        },
+      ],
+    },
+    files: {
+      "done.js": `browser.test.fail("Unexpected:: " + origin + document.URL);`,
+    },
+  });
+  await extension.startup();
+
+  gRequestCount = 0;
+
+  // Load initial view-source to get the right process.
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "view-source:http://example.com/dummy?initial-viewSource"
+  );
+  await ensureContentScriptDetector(extension, contentPage);
+  // Since we are not expecting content script execution, there is no event to
+  // wait for, so we just load another page to maximize the chance of catching
+  // an unexpected content script, if any.
+  await contentPage.loadURL("view-source:http://example.com/dummy?viewSource");
+
+  // Also test sandboxed origins (regression test for bug 1897759).
+  await contentPage.loadURL("view-source:http://example.com/sandboxed?viewS1");
+  // Call ensureContentScriptDetector() again to make sure that we can detect
+  // content scripts even if sandboxed origins somehow get their own process.
+  await ensureContentScriptDetector(extension, contentPage);
+  await contentPage.loadURL("view-source:http://example.com/sandboxed?viewS2");
+
+  Assert.equal(gRequestCount, 4, "Got two view-source requests.");
+  gRequestCount = 0;
+
+  Assert.deepEqual(
+    await getSeenContentScriptInjections(extension, contentPage),
+    undefined,
+    "Should not have observed any content scripts at view-source:-URLs"
   );
 
   await contentPage.close();
