@@ -396,9 +396,9 @@ nsresult WebMDemuxer::ReadMetadata() {
         WEBM_DEBUG("nestegg_track_audio_params error");
         return NS_ERROR_FAILURE;
       }
-      if (params.rate >
-              static_cast<decltype(params.rate)>(AudioInfo::MAX_RATE) ||
-          params.rate <= static_cast<decltype(params.rate)>(0) ||
+
+      const uint32_t rate = AssertedCast<uint32_t>(std::max(0., params.rate));
+      if (rate > AudioInfo::MAX_RATE || rate == 0 ||
           params.channels > AudioConfig::ChannelLayout::MAX_CHANNELS) {
         WEBM_DEBUG("Invalid audio param rate: %lf channel count: %d",
                    params.rate, params.channels);
@@ -424,7 +424,7 @@ nsresult WebMDemuxer::ReadMetadata() {
             AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
       }
       mSeekPreroll = params.seek_preroll;
-      mInfo.mAudio.mRate = AssertedCast<uint32_t>(params.rate);
+      mInfo.mAudio.mRate = rate;
       mInfo.mAudio.mChannels = params.channels;
 
       unsigned int nheaders = 0;
