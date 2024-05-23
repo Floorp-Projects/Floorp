@@ -126,6 +126,20 @@ sealed class TranslationError(
         TranslationError(errorName = "language-not-supported", displayError = true, cause = cause)
 
     /**
+     * A non-specific issue occurred when trying to update the language model with the engine.
+     * Usually will have a [cause] of [ModelCouldNotRetrieveError], [ModelCouldNotDeleteError],
+     * [ModelCouldNotDownloadError], [ModelLanguageRequiredError], or [ModelDownloadRequiredError].
+     *
+     * @param cause The original throwable before it was converted into this error state.
+     */
+    class LanguageModelUpdateError(override val cause: Throwable?) :
+        TranslationError(
+            errorName = "model-could-not-update",
+            displayError = false,
+            cause = cause,
+        )
+
+    /**
      * Could not retrieve information on the language model.
      *
      * @param cause The original throwable before it was converted into this error state.

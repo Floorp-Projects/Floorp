@@ -31,6 +31,7 @@ import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
 import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.ModelManagementOptions
 import mozilla.components.concept.engine.translate.ModelOperation
+import mozilla.components.concept.engine.translate.ModelState
 import mozilla.components.concept.engine.translate.OperationLevel
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.InstallationMethod
@@ -3001,13 +3002,13 @@ class GeckoEngineTest {
         var onSuccessCalled = false
         var onErrorCalled = false
 
-        var code = "es"
-        var localizedDisplayName = "Spanish"
-        var isDownloaded = true
-        var size: Long = 1234
-        var geckoLanguage = TranslationsController.Language(code, localizedDisplayName)
-        var geckoLanguageModel = LanguageModel(geckoLanguage, isDownloaded, size)
-        var geckoResultValue: List<LanguageModel> = mutableListOf(geckoLanguageModel)
+        val code = "es"
+        val localizedDisplayName = "Spanish"
+        val isDownloaded = true
+        val size: Long = 1234
+        val geckoLanguage = TranslationsController.Language(code, localizedDisplayName)
+        val geckoLanguageModel = LanguageModel(geckoLanguage, isDownloaded, size)
+        val geckoResultValue: List<LanguageModel> = mutableListOf(geckoLanguageModel)
         val geckoResult = GeckoResult<List<LanguageModel>>()
 
         Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
@@ -3020,7 +3021,7 @@ class GeckoEngineTest {
                     onSuccessCalled = true
                     assertTrue(it[0].language!!.code == code)
                     assertTrue(it[0].language!!.localizedDisplayName == localizedDisplayName)
-                    assertTrue(it[0].isDownloaded == isDownloaded)
+                    assertTrue(it[0].status == ModelState.DOWNLOADED)
                     assertTrue(it[0].size == size)
                 },
                 onError = { onErrorCalled = true },

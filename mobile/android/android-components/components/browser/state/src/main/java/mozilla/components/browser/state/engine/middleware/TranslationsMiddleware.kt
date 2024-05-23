@@ -15,7 +15,11 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.LanguageSetting
+import mozilla.components.concept.engine.translate.ModelManagementOptions
+import mozilla.components.concept.engine.translate.ModelOperation
+import mozilla.components.concept.engine.translate.ModelState
 import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
@@ -32,6 +36,7 @@ import kotlin.coroutines.suspendCoroutine
  * This middleware is for use with managing any states or resources required for translating a
  * webpage.
  */
+@Suppress("LargeClass")
 class TranslationsMiddleware(
     private val engine: Engine,
     private val scope: CoroutineScope,
@@ -172,6 +177,15 @@ class TranslationsMiddleware(
                         context = context,
                         languageCode = action.languageCode,
                         setting = action.setting,
+                    )
+                }
+            }
+
+            is TranslationsAction.ManageLanguageModelsAction -> {
+                scope.launch {
+                    updateLanguageModel(
+                        context = context,
+                        options = action.options,
                     )
                 }
             }
@@ -905,5 +919,67 @@ class TranslationsMiddleware(
             ?.translationsState?.translationEngineState?.detectedLanguages?.userPreferredLangTag ?: return null
         val supportedLanguages = context.store.state.translationEngine.supportedLanguages ?: return null
         return supportedLanguages.findLanguage(userPreferredLang)
+    }
+
+    /**
+     * Requests the language model updates occur on the [Engine].
+     *
+     * Examples of operations include downloading and deleting individual models, all models,
+     * or the cache.
+     *
+     * @param context The context used to update the language models.
+     * @param options The change and specified language models that should change state.
+     */
+    private fun updateLanguageModel(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        options: ModelManagementOptions,
+    ) {
+        logger.info("Requesting the translations engine update the language model(s).")
+        engine.manageTranslationsLanguageModel(
+            options = options,
+
+            onSuccess = {
+                // Value was set to a wait state in [TranslationsStateReducer] for
+                // [TranslationsBrowserState.languageModels], so we need to resolve the state.
+                val processState = if (options.operation == ModelOperation.DOWNLOAD) {
+                    ModelState.DOWNLOADED
+                } else {
+                    ModelState.NOT_DOWNLOADED
+                }
+                val newModelState = LanguageModel.determineNewLanguageModelState(
+                    currentLanguageModels = context.store.state.translationEngine.languageModels,
+                    options = options,
+                    newStatus = processState,
+                )
+                if (newModelState != null) {
+                    context.store.dispatch(
+                        TranslationsAction.SetLanguageModelsAction(
+                            languageModels = newModelState,
+                        ),
+                    )
+                    logger.info("Successfully updated the language model(s).")
+                } else {
+                    logger.warn(
+                        "The model(s) were updated with the engine, " +
+                            "but unexpectedly could not update state. " +
+                            "Re-requesting state be retrieved from the engine.",
+                    )
+                    // Unexpectedly lost state, so check with the engine to put it back in-sync.
+                    requestLanguageModels(context)
+                }
+            },
+
+            onError = { error ->
+                logger.error("Could not update the language model(s).", error)
+                // The browser store [TranslationsBrowserState.languageModels] is out of sync,
+                // re-request to sync the state.
+                requestLanguageModels(context)
+                context.store.dispatch(
+                    TranslationsAction.EngineExceptionAction(
+                        error = TranslationError.LanguageModelUpdateError(error),
+                    ),
+                )
+            },
+        )
     }
 }

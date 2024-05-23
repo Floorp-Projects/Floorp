@@ -21,6 +21,10 @@ import mozilla.components.concept.engine.translate.DetectedLanguages
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.LanguageSetting
+import mozilla.components.concept.engine.translate.ModelManagementOptions
+import mozilla.components.concept.engine.translate.ModelOperation
+import mozilla.components.concept.engine.translate.ModelState
+import mozilla.components.concept.engine.translate.OperationLevel
 import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
@@ -73,10 +77,10 @@ class TranslationsMiddlewareTest {
         fromLanguages = listOf(mockFrom, mockTo),
         toLanguages = listOf(mockFrom, mockTo),
     )
-    private val mockIsDownloaded = true
+    private val mockDownloaded = ModelState.DOWNLOADED
     private val mockSize: Long = 1234
     private val mockLanguage = Language(mockFrom.code, mockFrom.localizedDisplayName)
-    private val mockLanguageModel = LanguageModel(mockLanguage, mockIsDownloaded, mockSize)
+    private val mockLanguageModel = LanguageModel(mockLanguage, mockDownloaded, mockSize)
     private val mockLanguageModels = mutableListOf(mockLanguageModel)
 
     @Before
@@ -106,7 +110,7 @@ class TranslationsMiddlewareTest {
         )
         whenever(store.state.findTab(tab.id)?.translationsState).thenReturn(mockSessionState)
 
-        val mockBrowserState = TranslationsBrowserState(isEngineSupported = true, supportedLanguages = mockSupportedLanguages)
+        val mockBrowserState = TranslationsBrowserState(isEngineSupported = true, supportedLanguages = mockSupportedLanguages, languageModels = mockLanguageModels)
         whenever(store.state.translationEngine).thenReturn(mockBrowserState)
     }
 
@@ -1056,5 +1060,83 @@ class TranslationsMiddlewareTest {
         val mockLanguageSetting = mapOf("en" to LanguageSetting.OFFER)
         languageSettingsCallback.value.invoke(mockLanguageSetting)
         waitForIdle()
+    }
+
+    @Test
+    fun `WHEN ManageLanguageModelsAction is dispatched and is successful THEN SetLanguageModelsAction is dispatched with the new state`() = runTest {
+        setupMockState()
+        // Send Action
+        val options = ModelManagementOptions(languageToManage = "es", operation = ModelOperation.DOWNLOAD, operationLevel = OperationLevel.LANGUAGE)
+        val action =
+            TranslationsAction.ManageLanguageModelsAction(
+                options,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+
+        waitForIdle()
+
+        // Mock success from engine
+        val updateModelsErrorCallback = argumentCaptor<(() -> Unit)>()
+        verify(engine).manageTranslationsLanguageModel(
+            options = any(),
+            onSuccess = updateModelsErrorCallback.capture(),
+            onError = any(),
+        )
+        updateModelsErrorCallback.value.invoke()
+
+        waitForIdle()
+
+        // Should set the latest state
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetLanguageModelsAction(
+                languageModels = mockLanguageModels,
+            ),
+        )
+    }
+
+    @Test
+    fun `WHEN ManageLanguageModelsAction is dispatched and fails THEN SetLanguageModelsAction is dispatched and an error is dispatched`() = runTest {
+        // Send Action
+        val options = ModelManagementOptions(languageToManage = "es", operation = ModelOperation.DOWNLOAD, operationLevel = OperationLevel.LANGUAGE)
+        val action =
+            TranslationsAction.ManageLanguageModelsAction(
+                options,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+
+        waitForIdle()
+
+        // Mock failure from engine
+        val updateModelsErrorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine).manageTranslationsLanguageModel(
+            options = any(),
+            onSuccess = any(),
+            onError = updateModelsErrorCallback.capture(),
+        )
+        updateModelsErrorCallback.value.invoke(Throwable())
+
+        waitForIdle()
+
+        // Verify engine call to get models happened (due to failure)
+        val modelListCallback = argumentCaptor<((List<LanguageModel>) -> Unit)>()
+        verify(engine, atLeastOnce()).getTranslationsModelDownloadStates(
+            onSuccess = modelListCallback.capture(),
+            onError = any(),
+        )
+        modelListCallback.value.invoke(mockLanguageModels)
+        waitForIdle()
+
+        // Should set the latest state
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetLanguageModelsAction(
+                languageModels = mockLanguageModels,
+            ),
+        )
+        // Should report an error
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.EngineExceptionAction(
+                error = TranslationError.LanguageModelUpdateError(any()),
+            ),
+        )
     }
 }

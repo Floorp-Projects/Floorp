@@ -47,6 +47,7 @@ import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.ModelManagementOptions
+import mozilla.components.concept.engine.translate.ModelState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.concept.engine.translate.TranslationsRuntime
@@ -806,13 +807,14 @@ class GeckoEngine(
         TranslationsController.RuntimeTranslation.listModelDownloadStates().then(
             {
                 if (it != null) {
-                    var listOfModels = mutableListOf<LanguageModel>()
+                    val listOfModels = mutableListOf<LanguageModel>()
                     for (each in it) {
-                        var language = each.language?.let {
+                        val language = each.language?.let {
                                 language ->
                             Language(language.code, each.language?.localizedDisplayName)
                         }
-                        var model = LanguageModel(language, each.isDownloaded, each.size)
+                        val status = if (each.isDownloaded) ModelState.DOWNLOADED else ModelState.NOT_DOWNLOADED
+                        val model = LanguageModel(language, status, each.size)
                         listOfModels.add(model)
                     }
                     onSuccess(listOfModels)
