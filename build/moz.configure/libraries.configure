@@ -14,7 +14,7 @@ def check_clock_monotonic_support(lib=None, when=None):
         check_msg += f" in {lib}"
         flags.append(f"-l{lib}")
 
-    check_when = building_with_gnu_compatible_cc
+    check_when = building_with_gnu_cc
     if when is not None:
         check_when &= when
 
@@ -49,7 +49,7 @@ have_res_ninit = try_link(
     body="int foo = res_ninit(&_res);",
     check_msg="for res_ninit()",
     flags=depends(when=building_linux)(["-D_BSD_SOURCE=1"]),
-    when=building_with_gnu_compatible_cc & ~target_is_netbsd & ~target_is_openbsd,
+    when=building_with_gnu_cc & ~target_is_netbsd & ~target_is_openbsd,
 )
 
 set_define("HAVE_RES_NINIT", have_res_ninit)
@@ -59,7 +59,7 @@ set_define("HAVE_RES_NINIT", have_res_ninit)
 # We don't want to link against libm or libpthread on Darwin since
 # they both are just symlinks to libSystem and explicitly linking
 # against libSystem causes issues when debugging (see bug 299601).
-with only_when(building_with_gnu_compatible_cc):
+with only_when(building_with_gnu_cc):
     dladdr_check = check_symbol_in_libs([None, "dl"], symbol="dladdr")
     set_define(
         "HAVE_DLADDR", depends(dladdr_check)(lambda check: "1" if check.found else "0")
@@ -77,15 +77,13 @@ set_config(
     "C_R_LIBS",
     ["-lc_r"],
     when=check_symbol_in_lib(
-        "c_r", symbol="gethostbyname_r", when=building_with_gnu_compatible_cc
+        "c_r", symbol="gethostbyname_r", when=building_with_gnu_cc
     ),
 )
 set_config(
     "SOCKET_LIBS",
     ["-lsocket"],
-    when=check_symbol_in_lib(
-        "socket", symbol="socket", when=building_with_gnu_compatible_cc
-    ),
+    when=check_symbol_in_lib("socket", symbol="socket", when=building_with_gnu_cc),
 )
 
 moz_use_pthreads = (
@@ -93,7 +91,7 @@ moz_use_pthreads = (
     | check_symbol_in_libs(
         [None, "pthread"],
         symbol="pthread_create",
-        when=building_with_gnu_compatible_cc & ~target_is_darwin,
+        when=building_with_gnu_cc & ~target_is_darwin,
     ).found
 )
 
@@ -118,7 +116,7 @@ with only_when(moz_use_pthreads):
     set_config("MOZ_USE_PTHREADS", True)
 
 
-with only_when(building_with_gnu_compatible_cc):
+with only_when(building_with_gnu_cc):
 
     @template
     def check_std_atomic_requirements(flag=None, when=None):
