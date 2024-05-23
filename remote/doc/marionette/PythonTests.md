@@ -67,3 +67,35 @@ The full API documentation is found [here], but the key objects are:
 * {class}`Marionette <marionette_driver.marionette.Marionette>`: client that speaks to Firefox
 
 [here]: /python/marionette_driver.rst
+
+## Registering Test Manifests
+
+To run Marionette Python tests locally via `mach` or as part of the `Mn` tests jobs
+in CI they need to be registered. This happens by adding a manifest file to the tree,
+which includes a reference to the test files and expectations for results.
+
+Such a manifest file can look like the following and is stored with the extension `.toml`:
+
+```ini
+[DEFAULT]
+
+["test_expected_fail.py"]
+expected = "fail"
+
+["test_not_on_windows.py"]
+skip-if = ["os == 'win'"]
+```
+
+The registration of such a manifest file is done in two different ways:
+
+1. To run the tests locally via `./mach test` or `./mach marionette-test` the
+created Marionette manifest file needs to be referenced in the folder's related
+`moz.build` file by adding it to the `MARIONETTE_MANIFESTS` variable like:
+
+    MARIONETTE_MANIFESTS += ["test/marionette/manifest.toml"]
+
+2. To run the tests in CI the manifest file also needs to be included in the
+Marionette's own [master manifest file]. This ensures that the test packaging step
+will find the tests and include them as well in the test package.
+
+[master manifest file]: https://searchfox.org/mozilla-central/source/testing/marionette/harness/marionette_harness/tests/unit-tests.toml
