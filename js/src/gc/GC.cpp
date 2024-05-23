@@ -654,16 +654,20 @@ static const EnumSet<ZealMode> TwoSliceZealModes = {
     ZealMode::YieldBeforeSweepingPropMapTrees,
     ZealMode::YieldWhileGrayMarking};
 
-// The set of zeal modes that control incremental slices. These modes are
-// mutually exclusive.
+// The set of zeal modes that control incremental slices.
 static const EnumSet<ZealMode> IncrementalSliceZealModes =
     TwoSliceZealModes + EnumSet<ZealMode>{ZealMode::IncrementalMultipleSlices};
 
-// The set of zeal modes that periodically trigger GC.
-static const EnumSet<ZealMode> PeriodicZealModes =
+// The set of zeal modes that trigger GC periodically.
+static const EnumSet<ZealMode> PeriodicGCZealModes =
     IncrementalSliceZealModes + EnumSet<ZealMode>{ZealMode::Alloc,
                                                   ZealMode::GenerationalGC,
                                                   ZealMode::Compact};
+
+// The set of zeal modes that are mutually exclusive. All of these trigger GC
+// except VerifierPre.
+static const EnumSet<ZealMode> ExclusiveZealModes =
+    PeriodicGCZealModes + EnumSet<ZealMode>{ZealMode::VerifierPre};
 
 void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
   MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
@@ -674,8 +678,7 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
 
   if (zeal == 0) {
     if (hasZealMode(ZealMode::GenerationalGC)) {
-      evictNursery();
-      nursery().leaveZealMode();
+      clearZealMode(ZealMode::GenerationalGC);
     }
 
     if (isIncrementalGCInProgress()) {
@@ -683,18 +686,20 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
     }
   }
 
+  // Modes that trigger periodically are mutually exclusive. If we're setting
+  // one of those, we first reset all of them.
   ZealMode zealMode = ZealMode(zeal);
+  if (ExclusiveZealModes.contains(zealMode)) {
+    for (auto mode : ExclusiveZealModes) {
+      if (hasZealMode(mode)) {
+        clearZealMode(mode);
+      }
+    }
+  }
+
   if (zealMode == ZealMode::GenerationalGC) {
     evictNursery(JS::GCReason::EVICT_NURSERY);
     nursery().enterZealMode();
-  }
-
-  // Some modes are mutually exclusive. If we're setting one of those, we
-  // first reset all of them.
-  if (IncrementalSliceZealModes.contains(zealMode)) {
-    for (auto mode : IncrementalSliceZealModes) {
-      clearZealMode(mode);
-    }
   }
 
   bool schedule = zealMode >= ZealMode::Alloc;
@@ -717,11 +722,6 @@ void GCRuntime::unsetZeal(uint8_t zeal) {
 
   if (verifyPreData) {
     VerifyBarriers(rt, PreBarrierVerifier);
-  }
-
-  if (zealMode == ZealMode::GenerationalGC) {
-    evictNursery();
-    nursery().leaveZealMode();
   }
 
   clearZealMode(zealMode);
@@ -826,7 +826,7 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
 
 bool GCRuntime::needZealousGC() {
   if (nextScheduled > 0 && --nextScheduled == 0) {
-    if (hasAnyZealModeOf(PeriodicZealModes)) {
+    if (hasAnyZealModeOf(PeriodicGCZealModes)) {
       nextScheduled = zealFrequency;
     }
     return true;
@@ -851,6 +851,13 @@ bool GCRuntime::hasAnyZealModeOf(EnumSet<ZealMode> modes) const {
 }
 
 void GCRuntime::clearZealMode(ZealMode mode) {
+  MOZ_ASSERT(hasZealMode(mode));
+
+  if (mode == ZealMode::GenerationalGC) {
+    evictNursery();
+    nursery().leaveZealMode();
+  }
+
   zealModeBits &= ~(1 << uint32_t(mode));
   MOZ_ASSERT(!hasZealMode(mode));
 }
