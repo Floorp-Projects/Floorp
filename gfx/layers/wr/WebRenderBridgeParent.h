@@ -365,6 +365,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                                     wr::TransactionBuilder& aTxn,
                                     wr::TransactionBuilder& aTxnForImageBridge);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,
+                                       AsyncImagePipelineOps* aPendingOps,
                                        wr::TransactionBuilder& aTxn);
 
   void DeleteImage(const wr::ImageKey& aKey, wr::TransactionBuilder& aUpdates);

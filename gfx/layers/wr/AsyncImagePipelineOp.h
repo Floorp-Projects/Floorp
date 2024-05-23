@@ -28,6 +28,7 @@ class AsyncImagePipelineOp {
  public:
   enum class Tag {
     ApplyAsyncImageForPipeline,
+    RemoveAsyncImagePipeline,
   };
 
   const Tag mTag;
@@ -48,12 +49,28 @@ class AsyncImagePipelineOp {
     MOZ_ASSERT(mTag == Tag::ApplyAsyncImageForPipeline);
   }
 
+  AsyncImagePipelineOp(const Tag aTag,
+                       AsyncImagePipelineManager* aAsyncImageManager,
+                       const wr::PipelineId& aPipelineId)
+      : mTag(aTag),
+        mAsyncImageManager(aAsyncImageManager),
+        mPipelineId(aPipelineId) {
+    MOZ_ASSERT(mTag == Tag::RemoveAsyncImagePipeline);
+  }
+
  public:
   static AsyncImagePipelineOp ApplyAsyncImageForPipeline(
       AsyncImagePipelineManager* aAsyncImageManager,
       const wr::PipelineId& aPipelineId, TextureHost* aTextureHost) {
     return AsyncImagePipelineOp(Tag::ApplyAsyncImageForPipeline,
                                 aAsyncImageManager, aPipelineId, aTextureHost);
+  }
+
+  static AsyncImagePipelineOp RemoveAsyncImagePipeline(
+      AsyncImagePipelineManager* aAsyncImageManager,
+      const wr::PipelineId& aPipelineId) {
+    return AsyncImagePipelineOp(Tag::RemoveAsyncImagePipeline,
+                                aAsyncImageManager, aPipelineId);
   }
 };
 
