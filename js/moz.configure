@@ -1461,7 +1461,7 @@ with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT"
             includes=["langinfo.h"],
             body="char* cs = nl_langinfo(CODESET);",
             check_msg="for nl_langinfo and CODESET",
-            when=building_with_gnu_cc,
+            when=building_with_gnu_compatible_cc,
         ),
     )
 
