@@ -206,7 +206,6 @@ pub struct Wrench {
     graphics_api: webrender::GraphicsApiInfo,
 
     pub rebuild_display_lists: bool,
-    pub verbose: bool,
 
     pub frame_start_sender: chase_lev::Worker<time::SteadyTime>,
 
@@ -294,7 +293,6 @@ impl Wrench {
             window_title_to_set: None,
 
             rebuild_display_lists: do_rebuild,
-            verbose,
 
             root_pipeline_id: PipelineId(0, 0),
 
