@@ -103,8 +103,20 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
   Services.console.logMessage(error);
 }
 
-function extensionAllowedToInspectPrincipal(extensionPolicy, principal) {
+/**
+ * @param {WebExtensionPolicy} extensionPolicy
+ * @param {nsIPrincipal} principal
+ * @param {Location} location
+ * @returns {boolean} Whether the extension is allowed to run code in execution
+ *   contexts with the given principal.
+ */
+function extensionAllowedToInspectPrincipal(extensionPolicy, principal, location) {
   if (principal.isNullPrincipal) {
+    if (location.protocol === "view-source:") {
+      // Don't fall back to the precursor, we never want extensions to be able
+      // to run code in view-source:-documents.
+      return false;
+    }
     // data: and sandboxed documents.
     //
     // Rather than returning true unconditionally, we go through additional
@@ -555,7 +567,8 @@ class WebExtensionInspectedWindowActor extends Actor {
     if (
       !extensionAllowedToInspectPrincipal(
         extensionPolicy,
-        window.document.nodePrincipal
+        window.document.nodePrincipal,
+        window.location
       )
     ) {
       // Log the error for the user to know that the extension request has been
