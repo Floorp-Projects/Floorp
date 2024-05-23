@@ -28,28 +28,28 @@ add_task(
       {
         expectedEventCount: 1,
         expectNewFlowId: true,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+        },
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
         expectedEventCount: 1,
-        finalValuePredicates: [
-          value => value.extra.document_language === "es",
-          value => value.extra.from_language === "fr",
-          value => value.extra.to_language === "en",
-          value => value.extra.top_preferred_language === "en",
-          value => value.extra.request_target === "select",
-          value => value.extra.auto_translate === "false",
-          value => value.extra.source_text_code_units == "56",
-          value => value.extra.source_text_word_count === "9",
-        ],
+        assertForMostRecentEvent: {
+          document_language: "es",
+          from_language: "fr",
+          to_language: "en",
+          top_preferred_language: "en",
+          request_target: "select",
+          auto_translate: false,
+          source_text_code_units: 56,
+          source_text_word_count: 9,
+        },
       }
     );
 

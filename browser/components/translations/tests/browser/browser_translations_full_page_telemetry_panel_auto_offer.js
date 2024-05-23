@@ -18,12 +18,12 @@ add_task(async function test_translations_panel_auto_offer() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
     expectNewFlowId: true,
-    allValuePredicates: [
-      value => value.extra.auto_show === "true",
-      value => value.extra.view_name === "defaultView",
-      value => value.extra.opened_from === "translationsButton",
-      value => value.extra.document_language === "es",
-    ],
+    assertForAllEvents: {
+      auto_show: true,
+      view_name: "defaultView",
+      opened_from: "translationsButton",
+      document_language: "es",
+    },
   });
 
   await TestTranslationsTelemetry.assertEvent(
@@ -58,12 +58,12 @@ add_task(async function test_translations_panel_auto_offer() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 2,
     expectNewFlowId: true,
-    allValuePredicates: [
-      value => value.extra.auto_show === "true",
-      value => value.extra.view_name === "defaultView",
-      value => value.extra.opened_from === "translationsButton",
-      value => value.extra.document_language === "es",
-    ],
+    assertForAllEvents: {
+      auto_show: true,
+      view_name: "defaultView",
+      opened_from: "translationsButton",
+      document_language: "es",
+    },
   });
 
   await TestTranslationsTelemetry.assertEvent(
