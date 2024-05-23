@@ -735,6 +735,7 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
     case DeclarationKind::Const:
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
     case DeclarationKind::Using:
+    case DeclarationKind::AwaitUsing:
 #endif
     case DeclarationKind::Class:
       // The BoundNames of LexicalDeclaration and ForDeclaration must not
@@ -4765,7 +4766,8 @@ GeneralParser<ParseHandler, Unit>::declarationName(DeclarationKind declKind,
       if (isForIn) {
         *forHeadKind = ParseNodeKind::ForIn;
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-        if (declKind == DeclarationKind::Using) {
+        if (declKind == DeclarationKind::Using ||
+            declKind == DeclarationKind::AwaitUsing) {
           errorAt(namePos.begin, JSMSG_NO_IN_WITH_USING);
           return errorResult();
         }
@@ -4808,7 +4810,8 @@ GeneralParser<ParseHandler, Unit>::declarationList(
   MOZ_ASSERT(kind == ParseNodeKind::VarStmt || kind == ParseNodeKind::LetDecl ||
              kind == ParseNodeKind::ConstDecl
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-             || kind == ParseNodeKind::UsingDecl
+             || kind == ParseNodeKind::UsingDecl ||
+             kind == ParseNodeKind::AwaitUsingDecl
 #endif
   );
 
@@ -4826,6 +4829,9 @@ GeneralParser<ParseHandler, Unit>::declarationList(
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
     case ParseNodeKind::UsingDecl:
       declKind = DeclarationKind::Using;
+      break;
+    case ParseNodeKind::AwaitUsingDecl:
+      declKind = DeclarationKind::AwaitUsing;
       break;
 #endif
     default:
@@ -4882,7 +4888,8 @@ GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
     YieldHandling yieldHandling, DeclarationKind kind) {
   MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-             || kind == DeclarationKind::Using
+             || kind == DeclarationKind::Using ||
+             kind == DeclarationKind::AwaitUsing
 #endif
   );
 
@@ -4911,6 +4918,9 @@ GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
     case DeclarationKind::Using:
       pnk = ParseNodeKind::UsingDecl;
+      break;
+    case DeclarationKind::AwaitUsing:
+      pnk = ParseNodeKind::AwaitUsingDecl;
       break;
 #endif
     case DeclarationKind::Let:
@@ -6481,7 +6491,49 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
     tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
   }
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-  else if (tt == TokenKind::Using) {
+  else if (tt == TokenKind::Await) {
+    if (!pc_->isAsync()) {
+      if (pc_->atModuleTopLevel()) {
+        if (!options().topLevelAwait) {
+          error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
+          return false;
+        }
+        pc_->sc()->asModuleContext()->setIsAsync();
+        MOZ_ASSERT(pc_->isAsync());
+      }
+    }
+    if (pc_->isAsync()) {
+      // Try finding evidence of a AwaitUsingDeclaration the syntax for which
+      // would be:
+      //   await [no LineTerminator here] using [no LineTerminator here]
+      //     identifier
+      tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
+
+      TokenKind nextTok = TokenKind::Eof;
+      if (!tokenStream.peekTokenSameLine(&nextTok,
+                                         TokenStream::SlashIsRegExp)) {
+        return false;
+      }
+
+      if (nextTok == TokenKind::Using) {
+        tokenStream.consumeKnownToken(nextTok, TokenStream::SlashIsRegExp);
+
+        TokenKind nextTokIdent = TokenKind::Eof;
+        if (!tokenStream.peekTokenSameLine(&nextTokIdent)) {
+          return false;
+        }
+
+        if (TokenKindIsPossibleIdentifier(nextTokIdent)) {
+          parsingLexicalDeclaration = true;
+        } else {
+          anyChars.ungetToken();  // put back using token
+          anyChars.ungetToken();  // put back await token
+        }
+      } else {
+        anyChars.ungetToken();  // put back await token
+      }
+    }
+  } else if (tt == TokenKind::Using) {
     tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
 
     // Look ahead to find either a 'of' token or if not identifier
@@ -6562,6 +6614,9 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
       case TokenKind::Using:
         declKind = ParseNodeKind::UsingDecl;
+        break;
+      case TokenKind::Await:
+        declKind = ParseNodeKind::AwaitUsingDecl;
         break;
 #endif
       case TokenKind::Let:
@@ -9559,8 +9614,37 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
         }
       }
 
-      // Avoid getting next token with SlashIsDiv.
       if (tt == TokenKind::Await && pc_->isAsync()) {
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+        // Try finding evidence of a AwaitUsingDeclaration the syntax for which
+        // would be:
+        //   await [no LineTerminator here] using [no LineTerminator here]
+        //     identifier
+
+        TokenKind nextTokUsing = TokenKind::Eof;
+        // Scan with regex modifier because when its await expression, `/`
+        // should be treated as a regexp.
+        if (!tokenStream.peekTokenSameLine(&nextTokUsing,
+                                           TokenStream::SlashIsRegExp)) {
+          return errorResult();
+        }
+
+        if (nextTokUsing == TokenKind::Using) {
+          tokenStream.consumeKnownToken(nextTokUsing,
+                                        TokenStream::SlashIsRegExp);
+          TokenKind nextTokIdentifier = TokenKind::Eof;
+          // Here we can use the Div modifier because if the next token is using
+          // then a `/` as the next token can only be considered a division.
+          if (!tokenStream.peekTokenSameLine(&nextTokIdentifier)) {
+            return errorResult();
+          }
+          if (TokenKindIsPossibleIdentifier(nextTokIdentifier)) {
+            return lexicalDeclaration(yieldHandling,
+                                      DeclarationKind::AwaitUsing);
+          }
+          anyChars.ungetToken();  // put back using.
+        }
+#endif
         return expressionStatement(yieldHandling);
       }
 
