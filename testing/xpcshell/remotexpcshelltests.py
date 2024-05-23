@@ -62,7 +62,6 @@ class RemoteProcessMonitor(object):
                 self.package,
                 intent="org.mozilla.geckoview.test_runner.XPCSHELL_TEST_MAIN",
                 activity_name="TestRunnerActivity",
-                e10s=True,
             )
             # Newer Androids require that background services originate from
             # active apps, so wait here until the test runner is the top
@@ -98,7 +97,6 @@ class RemoteProcessMonitor(object):
         self.device.launch_service(
             self.package,
             activity_name=("XpcshellTestRunnerService$i%d" % selectedProcess),
-            e10s=True,
             moz_env=env,
             grant_runtime_permissions=False,
             extra_args=extra_args,

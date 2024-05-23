@@ -83,7 +83,7 @@ class DeviceRunner(BaseRunner):
         if "geckoview" in app:
             activity = "TestRunnerActivity"
             self.app_ctx.device.launch_activity(
-                app, activity, e10s=True, moz_env=env, extra_args=args, url=url
+                app, activity, moz_env=env, extra_args=args, url=url
             )
         else:
             self.app_ctx.device.launch_fennec(
