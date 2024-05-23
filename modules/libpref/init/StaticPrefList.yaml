@@ -12794,12 +12794,6 @@
   value: false
   mirror: always
 
-# This pref controls whether to use TRRServiceChannel off main thread.
-- name: network.trr.fetch_off_main_thread
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # If we should wait for captive portal confirmation before enabling TRR
 - name: network.trr.wait-for-portal
   type: RelaxedAtomicBool

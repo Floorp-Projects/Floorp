@@ -109,12 +109,8 @@ async function do_test_pac_dnsResolve() {
 
   trr_test_setup();
 
-  async function test_with(DOMAIN, trrMode, fetchOffMainThread) {
+  async function test_with(DOMAIN, trrMode) {
     Services.prefs.setIntPref("network.trr.mode", trrMode); // TRR first
-    Services.prefs.setBoolPref(
-      "network.trr.fetch_off_main_thread",
-      fetchOffMainThread
-    );
     override.addIPOverride(DOMAIN, "127.0.0.1");
 
     chan = NetUtil.newChannel({
@@ -126,10 +122,8 @@ async function do_test_pac_dnsResolve() {
     await override.clearHostOverride(DOMAIN);
   }
 
-  await test_with("test1.com", 2, true);
-  await test_with("test2.com", 3, true);
-  await test_with("test3.com", 2, false);
-  await test_with("test4.com", 3, false);
+  await test_with("test1.com", 2);
+  await test_with("test2.com", 3);
   await httpserv.stop();
 }
 

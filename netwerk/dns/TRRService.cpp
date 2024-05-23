@@ -532,8 +532,7 @@ nsresult TRRService::DispatchTRRRequestInternal(TRR* aTrrRequest,
 }
 
 already_AddRefed<nsIThread> TRRService::MainThreadOrTRRThread(bool aWithLock) {
-  if (!StaticPrefs::network_trr_fetch_off_main_thread() ||
-      XRE_IsSocketProcess() || mDontUseTRRThread) {
+  if (XRE_IsSocketProcess() || mDontUseTRRThread) {
     return do_GetMainThread();
   }
 
