@@ -50,9 +50,7 @@ nsDataHandler::GetScheme(nsACString& result) {
   // Strip whitespace unless this is text, where whitespace is important
   // Don't strip escaped whitespace though (bug 391951)
   nsresult rv;
-  if (base64 || (StaticPrefs::network_url_strip_data_url_whitespace() &&
-                 strncmp(contentType.get(), "text/", 5) != 0 &&
-                 contentType.Find("xml") == kNotFound)) {
+  if (base64) {
     // it's ascii encoded binary, don't let any spaces in
     rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
              .Apply(&nsISimpleURIMutator::SetSpecAndFilterWhitespace, aSpec,
