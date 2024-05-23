@@ -49,7 +49,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   class ControlMessage {
    public:
-    ControlMessage() = default;
+    ControlMessage(WebCodecsId aConfigId) : mConfigId(aConfigId){};
     virtual ~ControlMessage() = default;
     virtual void Cancel() = 0;
     virtual bool IsProcessing() = 0;
@@ -58,14 +58,18 @@ class DecoderTemplate : public DOMEventTargetHelper {
     virtual ConfigureMessage* AsConfigureMessage() { return nullptr; }
     virtual DecodeMessage* AsDecodeMessage() { return nullptr; }
     virtual FlushMessage* AsFlushMessage() { return nullptr; }
+
+    // All the control message follows a specific configuration. Knowing the
+    // associated configuration of a decode/flush request is helpful in
+    // debugging logs. This id is used to identify which ConfigureMessage the
+    // request follows.
+    const WebCodecsId mConfigId;
   };
 
   class ConfigureMessage final
       : public ControlMessage,
         public MessageRequestHolder<DecoderAgent::ConfigurePromise> {
    public:
-    using Id = DecoderAgent::Id;
-    static constexpr Id NoId = 0;
     static ConfigureMessage* Create(UniquePtr<ConfigTypeInternal>&& aConfig);
 
     ~ConfigureMessage() = default;
@@ -76,11 +80,9 @@ class DecoderTemplate : public DOMEventTargetHelper {
     const ConfigTypeInternal& Config() { return *mConfig; }
     UniquePtr<ConfigTypeInternal> TakeConfig() { return std::move(mConfig); }
 
-    // The id of a configure request.
-    const Id mId;
-
    private:
-    ConfigureMessage(Id aId, UniquePtr<ConfigTypeInternal>&& aConfig);
+    ConfigureMessage(WebCodecsId aConfigId,
+                     UniquePtr<ConfigTypeInternal>&& aConfig);
 
     UniquePtr<ConfigTypeInternal> mConfig;
   };
@@ -89,9 +91,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
       : public ControlMessage,
         public MessageRequestHolder<DecoderAgent::DecodePromise> {
    public:
-    using SeqId = size_t;
-    using ConfigId = typename Self::ConfigureMessage::Id;
-    DecodeMessage(SeqId aSeqId, ConfigId aConfigId,
+    DecodeMessage(WebCodecsId aSeqId, WebCodecsId aConfigId,
                   UniquePtr<InputTypeInternal>&& aData);
     ~DecodeMessage() = default;
     virtual void Cancel() override { Disconnect(); }
@@ -99,11 +99,9 @@ class DecoderTemplate : public DOMEventTargetHelper {
     virtual nsCString ToString() const override;
     virtual DecodeMessage* AsDecodeMessage() override { return this; }
 
-    // The id of the associated ConfigureMessage.
-    const ConfigId mConfigId;
     // The sequence id of a decode request associated with a specific
     // configuration.
-    const SeqId mSeqId;
+    const WebCodecsId mSeqId;
     UniquePtr<InputTypeInternal> mData;
   };
 
@@ -111,20 +109,16 @@ class DecoderTemplate : public DOMEventTargetHelper {
       : public ControlMessage,
         public MessageRequestHolder<DecoderAgent::DecodePromise> {
    public:
-    using SeqId = size_t;
-    using ConfigId = typename Self::ConfigureMessage::Id;
-    FlushMessage(SeqId aSeqId, ConfigId aConfigId);
+    FlushMessage(WebCodecsId aSeqId, WebCodecsId aConfigId);
     ~FlushMessage() = default;
     virtual void Cancel() override { Disconnect(); }
     virtual bool IsProcessing() override { return Exists(); };
     virtual nsCString ToString() const override;
     virtual FlushMessage* AsFlushMessage() override { return this; }
 
-    // The id of the associated ConfigureMessage.
-    const ConfigId mConfigId;
     // The sequence id of a flush request associated with a specific
     // configuration.
-    const SeqId mSeqId;
+    const WebCodecsId mSeqId;
     const int64_t mUniqueId;
   };
 
