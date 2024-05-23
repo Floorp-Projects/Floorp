@@ -851,12 +851,6 @@ pocketNewtab:
         pref: browser.newtabpage.activity-stream.newtabWallpapers.enabled
       description: >-
         Turns on and off wallpaper support.
-    newtabWeatherEnabled:
-      type: boolean
-      description: >-
-        Turns on and off the weather widget in home and newtab
-      fallbackPref: >-
-        browser.newtabpage.activity-stream.system.showWeather
     recsPersonalized:
       type: boolean
       fallbackPref: >-
@@ -939,6 +933,11 @@ pocketNewtab:
       type: string
       fallbackPref: >-
         browser.newtabpage.activity-stream.discoverystream.region-spocs-config
+    regionWeatherConfig:
+      description: A comma-separated list of regions that get weather by default.
+      type: string
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.region-weather-config
     topSitesMaxSponsored:
       # Defined under `pocketNewtab` as it needs to be used along with other variables
       type: int

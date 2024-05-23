@@ -1696,12 +1696,13 @@ pref("browser.partnerlink.campaign.topsites", "amzn_2020_a1");
 pref("browser.newtab.preload", true);
 
 // Weather widget for newtab
-pref("browser.newtabpage.activity-stream.system.showWeather", false);
 pref("browser.newtabpage.activity-stream.showWeather", true);
 pref("browser.newtabpage.activity-stream.weather.query", "");
 pref("browser.newtabpage.activity-stream.weather.locationSearchEnabled", false);
 pref("browser.newtabpage.activity-stream.weather.temperatureUnits", "f");
 pref("browser.newtabpage.activity-stream.weather.display", "simple");
+// List of regions that get weather by default.
+pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "");
 
 // Preference to enable wallpaper selection in the Customize Menu of new tab page
 pref("browser.newtabpage.activity-stream.newtabWallpapers.enabled", false);
