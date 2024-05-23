@@ -49,7 +49,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   class ControlMessage {
    public:
-    ControlMessage(WebCodecsId aConfigId) : mConfigId(aConfigId){};
+    ControlMessage(WebCodecsId aConfigId) : mConfigId(aConfigId) {};
     virtual ~ControlMessage() = default;
     virtual void Cancel() = 0;
     virtual bool IsProcessing() = 0;
