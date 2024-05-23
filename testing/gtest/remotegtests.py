@@ -128,7 +128,6 @@ class RemoteGTests(object):
             self.device.launch_activity(
                 self.package,
                 activity_name=activity,
-                e10s=False,  # gtest is non-e10s on desktop
                 moz_env=env,
                 extra_args=args,
                 wait=False,

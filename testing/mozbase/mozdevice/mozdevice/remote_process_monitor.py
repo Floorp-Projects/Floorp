@@ -56,7 +56,6 @@ class RemoteProcessMonitor:
         self.device.launch_activity(
             self.app_name,
             activity_name=activity,
-            e10s=e10s,
             moz_env=env,
             extra_args=args,
             url=test_url,

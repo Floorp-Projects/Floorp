@@ -4239,7 +4239,7 @@ class ADBDevice(ADBCommand):
             application.
         :param str extra_args: Extra arguments to be parsed by the app.
         :param str url: URL to open
-        :param bool e10s: If True, run in multiprocess mode.
+        :param bool e10s: No longer used.
         :param bool wait: If True, wait for application to start before
             returning.
         :param bool grant_runtime_permissions: Grant special runtime
@@ -4268,7 +4268,6 @@ class ADBDevice(ADBCommand):
             for arg_count, arg in enumerate(extra_args):
                 extras["arg" + str(arg_count)] = arg
 
-        extras["use_multiprocess"] = e10s
         extras["out_file"] = out_file
         self.launch_application(
             app_name,
@@ -4308,7 +4307,7 @@ class ADBDevice(ADBCommand):
             application.
         :param str extra_args: Extra arguments to be parsed by the app.
         :param str url: URL to open
-        :param bool e10s: If True, run in multiprocess mode.
+        :param bool e10s: No longer used.
         :param bool wait: If True, wait for application to start before
             returning.
         :param bool fail_if_running: Raise an exception if instance of
@@ -4336,7 +4335,6 @@ class ADBDevice(ADBCommand):
             for arg_count, arg in enumerate(extra_args):
                 extras["arg" + str(arg_count)] = arg
 
-        extras["use_multiprocess"] = e10s
         self.launch_application(
             app_name,
             "%s.%s" % (app_name, activity_name),
