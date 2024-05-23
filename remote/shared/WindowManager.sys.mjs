@@ -257,7 +257,7 @@ class WindowManager {
   waitForInitialApplicationWindowLoaded() {
     return new lazy.TimedPromise(
       async resolve => {
-        // This call includes a fallback to "mail3:pane" as well.
+        // This call includes a fallback to "mail:3pane" as well.
         const win = Services.wm.getMostRecentBrowserWindow();
 
         const windowLoaded = lazy.waitForObserverTopic(

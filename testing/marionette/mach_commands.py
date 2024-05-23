@@ -81,7 +81,7 @@ def marionette_test(command_context, tests, **kwargs):
             tests = [
                 os.path.join(
                     command_context.topsrcdir,
-                    "comm/testing/marionette/unit-tests.ini",
+                    "comm/testing/marionette/unit-tests.toml",
                 )
             ]
         else:
