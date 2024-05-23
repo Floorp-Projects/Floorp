@@ -185,6 +185,12 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void ForgetPreviouslyFocusedElementAfterHidingPopover();
   MOZ_CAN_RUN_SCRIPT void FocusPreviousElementAfterHidingPopover();
 
+  bool IsValidInvokeAction(mozilla::dom::InvokeAction aAction) const override;
+
+  MOZ_CAN_RUN_SCRIPT bool HandleInvokeInternal(
+      Element* aInvoker, mozilla::dom::InvokeAction aAction,
+      ErrorResult& aRv) override;
+
   MOZ_CAN_RUN_SCRIPT void FocusCandidate(Element*, bool aClearUpFocus);
 
   void SetNonce(const nsAString& aNonce) {

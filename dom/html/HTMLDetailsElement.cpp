@@ -145,24 +145,34 @@ JSObject* HTMLDetailsElement::WrapNode(JSContext* aCx,
 }
 
 bool HTMLDetailsElement::IsValidInvokeAction(InvokeAction aAction) const {
-  return Element::IsValidInvokeAction(aAction) ||
+  return nsGenericHTMLElement::IsValidInvokeAction(aAction) ||
          aAction == InvokeAction::Toggle || aAction == InvokeAction::Close ||
          aAction == InvokeAction::Open;
 }
 
-void HTMLDetailsElement::HandleInvokeInternal(InvokeAction aAction,
+bool HTMLDetailsElement::HandleInvokeInternal(Element* aInvoker,
+                                              InvokeAction aAction,
                                               ErrorResult& aRv) {
+  if (nsGenericHTMLElement::HandleInvokeInternal(aInvoker, aAction, aRv)) {
+    return true;
+  }
+
   if (aAction == InvokeAction::Auto || aAction == InvokeAction::Toggle) {
     ToggleOpen();
+    return true;
   } else if (aAction == InvokeAction::Close) {
     if (Open()) {
       SetOpen(false, IgnoreErrors());
     }
+    return true;
   } else if (aAction == InvokeAction::Open) {
     if (!Open()) {
       SetOpen(true, IgnoreErrors());
     }
+    return true;
   }
+
+  return false;
 }
 
 }  // namespace mozilla::dom
