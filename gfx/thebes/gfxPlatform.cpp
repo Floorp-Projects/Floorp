@@ -329,6 +329,8 @@ class LogForwarderEvent : public Runnable {
 
 void CrashStatsLogForwarder::Log(const std::string& aString) {
   MutexAutoLock lock(mMutex);
+  PROFILER_MARKER_TEXT("gfx::CriticalError", GRAPHICS, {},
+                       nsDependentCString(aString.c_str()));
 
   if (UpdateStringsVector(aString)) {
     UpdateCrashReport();
@@ -798,6 +800,8 @@ bool gfxPlatform::HasVariationFontSupport() {
 }
 
 void gfxPlatform::Init() {
+  AUTO_PROFILER_MARKER_TEXT("gfxPlatform", GRAPHICS, {},
+                            "gfxPlatform::Init"_ns);
   MOZ_RELEASE_ASSERT(!XRE_IsGPUProcess(), "GFX: Not allowed in GPU process.");
   MOZ_RELEASE_ASSERT(!XRE_IsRDDProcess(), "GFX: Not allowed in RDD process.");
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
