@@ -18,6 +18,7 @@ package mozilla.components.feature.qr
 import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.ImageFormat
 import android.graphics.Matrix
 import android.graphics.Point
@@ -253,6 +254,11 @@ class QrFragment : Fragment() {
         if (requireContext().isPermissionGranted(permission.CAMERA)) {
             startScanning()
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        startScanning()
     }
 
     override fun onPause() {
