@@ -1894,12 +1894,10 @@ void GeckoViewSupport::AttachAccessibility(
           sessionAccessibility);
 }
 
-auto GeckoViewSupport::OnLoadRequest(mozilla::jni::String::Param aUri,
-                                     int32_t aWindowType, int32_t aFlags,
-                                     mozilla::jni::String::Param aTriggeringUri,
-                                     bool aHasUserGesture,
-                                     bool aIsTopLevel) const
-    -> java::GeckoResult::LocalRef {
+auto GeckoViewSupport::OnLoadRequest(
+    mozilla::jni::String::Param aUri, int32_t aWindowType, int32_t aFlags,
+    mozilla::jni::String::Param aTriggeringUri, bool aHasUserGesture,
+    bool aIsTopLevel) const -> java::GeckoResult::LocalRef {
   GeckoSession::Window::LocalRef window(mGeckoViewWindow);
   if (!window) {
     return nullptr;
@@ -2317,15 +2315,6 @@ RefPtr<MozPromise<bool, bool, false>> nsWindow::OnLoadRequest(
              : nullptr;
 }
 
-void nsWindow::OnUpdateSessionStore(mozilla::jni::Object::Param aBundle) {
-  auto geckoViewSupport(mGeckoViewSupport.Access());
-  if (!geckoViewSupport) {
-    return;
-  }
-
-  geckoViewSupport->OnUpdateSessionStore(aBundle);
-}
-
 float nsWindow::GetDPI() {
   float dpi = 160.0f;
 
@@ -2655,16 +2644,6 @@ void nsWindow::ShowDynamicToolbar() {
   }
 
   acc->OnShowDynamicToolbar();
-}
-
-void GeckoViewSupport::OnUpdateSessionStore(
-    mozilla::jni::Object::Param aBundle) {
-  GeckoSession::Window::LocalRef window(mGeckoViewWindow);
-  if (!window) {
-    return;
-  }
-
-  window->OnUpdateSessionStore(aBundle);
 }
 
 static EventMessage convertDragEventActionToGeckoEvent(int32_t aAction) {
