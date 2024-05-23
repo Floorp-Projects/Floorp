@@ -624,6 +624,37 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
     }
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct LegacyNewSessionParameters {
+    #[serde(rename = "desiredCapabilities", default = "Capabilities::default")]
+    pub desired: Capabilities,
+    #[serde(rename = "requiredCapabilities", default = "Capabilities::default")]
+    pub required: Capabilities,
+}
+
+impl CapabilitiesMatching for LegacyNewSessionParameters {
+    fn match_browser<T: BrowserCapabilities>(
+        &self,
+        browser_capabilities: &mut T,
+    ) -> WebDriverResult<Option<Capabilities>> {
+        // For now don't do anything much, just merge the
+        // desired and required and return the merged list.
+
+        let mut capabilities: Capabilities = Map::new();
+        self.required.iter().chain(self.desired.iter()).fold(
+            &mut capabilities,
+            |caps, (key, value)| {
+                if !caps.contains_key(key) {
+                    caps.insert(key.clone(), value.clone());
+                }
+                caps
+            },
+        );
+        browser_capabilities.init(&capabilities);
+        Ok(Some(capabilities))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -692,6 +723,72 @@ mod tests {
         };
         caps.alwaysMatch.insert("foo".into(), "bar".into());
         caps.firstMatch[0].insert("foo2".into(), "bar2".into());
+
+        assert_de(&caps, json);
+    }
+
+    #[test]
+    fn test_json_spec_legacy_new_session_parameters_desired_only() {
+        let caps = LegacyNewSessionParameters {
+            desired: Capabilities::new(),
+            required: Capabilities::new(),
+        };
+        assert_de(&caps, json!({"desiredCapabilities": {}}));
+    }
+
+    #[test]
+    fn test_json_spec_legacy_new_session_parameters_required_only() {
+        let caps = LegacyNewSessionParameters {
+            desired: Capabilities::new(),
+            required: Capabilities::new(),
+        };
+        assert_de(&caps, json!({"requiredCapabilities": {}}));
+    }
+
+    #[test]
+    fn test_json_spec_legacy_new_session_parameters_desired_null() {
+        let json = json!({
+            "desiredCapabilities": null,
+            "requiredCapabilities": {},
+        });
+        assert!(serde_json::from_value::<LegacyNewSessionParameters>(json).is_err());
+    }
+
+    #[test]
+    fn test_json_spec_legacy_new_session_parameters_required_null() {
+        let json = json!({
+            "desiredCapabilities": {},
+            "requiredCapabilities": null,
+        });
+        assert!(serde_json::from_value::<LegacyNewSessionParameters>(json).is_err());
+    }
+
+    #[test]
+    fn test_json_spec_legacy_new_session_parameters_both_empty() {
+        let json = json!({
+            "desiredCapabilities": {},
+            "requiredCapabilities": {},
+        });
+        let caps = LegacyNewSessionParameters {
+            desired: Capabilities::new(),
+            required: Capabilities::new(),
+        };
+
+        assert_de(&caps, json);
+    }
+
+    #[test]
+    fn test_json_spec_legacy_new_session_parameters_both_with_capabilities() {
+        let json = json!({
+            "desiredCapabilities": {"foo": "bar"},
+            "requiredCapabilities": {"foo2": "bar2"},
+        });
+        let mut caps = LegacyNewSessionParameters {
+            desired: Capabilities::new(),
+            required: Capabilities::new(),
+        };
+        caps.desired.insert("foo".into(), "bar".into());
+        caps.required.insert("foo2".into(), "bar2".into());
 
         assert_de(&caps, json);
     }
