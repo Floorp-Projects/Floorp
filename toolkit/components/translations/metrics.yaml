@@ -131,11 +131,14 @@ translations:
       - translations-telemetry-alerts@mozilla.com
     expires: never
 
+# The following metrics pertain to the full-page translations panel, however the the name "panel"
+# is retained (instead of "fullPageTranslationsPanel") for legacy reasons dating back to when this
+# was first implemented and the full-page translations panel was the only translations panel.
 translations.panel:
   open:
     type: event
     description: >
-      Triggers when the translations panel is opened.
+      Triggers when the full-page translations panel is opened.
     extra_keys:
       flow_id: *flow_id
       auto_show:
@@ -146,7 +149,7 @@ translations.panel:
         description: The type of view shown in the panel.
       opened_from:
         type: string
-        description: The method by which the translations panel was opened.
+        description: The method by which the full-page translations panel was opened.
       document_language:
         type: string
         description: The detected BCP-47 language tag of the document.
@@ -171,7 +174,7 @@ translations.panel:
   close:
     type: event
     description: >
-      Triggers when translations panel is closed.
+      Triggers when full-page translations panel is closed.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -189,7 +192,7 @@ translations.panel:
   open_from_language_menu:
     type: event
     description: >
-      Triggers when the from-language dropdown is opened in the translations panel.
+      Triggers when the from-language dropdown is opened in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -229,7 +232,7 @@ translations.panel:
   close_from_language_menu:
     type: event
     description: >
-      Triggers when the from-language dropdown is closed in the translations panel.
+      Triggers when the from-language dropdown is closed in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -247,7 +250,7 @@ translations.panel:
   open_to_language_menu:
     type: event
     description: >
-      Triggers when the from-language dropdown is opened in the translations panel.
+      Triggers when the from-language dropdown is opened in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -287,7 +290,7 @@ translations.panel:
   close_to_language_menu:
     type: event
     description: >
-      Triggers when the from-language dropdown is closed in the translations panel.
+      Triggers when the from-language dropdown is closed in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -305,7 +308,7 @@ translations.panel:
   open_settings_menu:
     type: event
     description: >
-      Triggers when the settings menu is opened in the translations panel.
+      Triggers when the settings menu is opened in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -323,7 +326,7 @@ translations.panel:
   close_settings_menu:
     type: event
     description: >
-      Triggers when the settings menu is closed in the translations panel.
+      Triggers when the settings menu is closed in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -341,7 +344,7 @@ translations.panel:
   cancel_button:
     type: event
     description: >
-      Triggers when the cancel button is invoked in the translations panel.
+      Triggers when the cancel button is invoked in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -359,7 +362,7 @@ translations.panel:
   change_source_language_button:
     type: event
     description: >
-      Triggers when the change-source-language button is invoked in the translations panel.
+      Triggers when the change-source-language button is invoked in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -377,7 +380,7 @@ translations.panel:
   dismiss_error_button:
     type: event
     description: >
-      Triggers when the dismiss-error button is invoked in the translations panel.
+      Triggers when the dismiss-error button is invoked in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -395,7 +398,7 @@ translations.panel:
   restore_page_button:
     type: event
     description: >
-      Triggers when the restore-page button is invoked in the translations panel.
+      Triggers when the restore-page button is invoked in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -413,7 +416,7 @@ translations.panel:
   translate_button:
     type: event
     description: >
-      Triggers when the translate button is invoked in the translations panel.
+      Triggers when the translate button is invoked in the full-page translations panel.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -431,7 +434,7 @@ translations.panel:
   always_offer_translations:
     type: event
     description: >
-      Triggers when the always-offer-translations menuitem is invoked in the translations panel seeings.
+      Triggers when the always-offer-translations menuitem is invoked in the full-page translations panel seeings.
     extra_keys:
       flow_id: *flow_id
       toggled_on:
@@ -453,7 +456,7 @@ translations.panel:
   always_translate_language:
     type: event
     description: >
-      Triggers when the always-translate-language menuitem is invoked in the translations panel settings.
+      Triggers when the always-translate-language menuitem is invoked in the full-page translations panel settings.
     extra_keys:
       flow_id: *flow_id
       language:
@@ -479,7 +482,7 @@ translations.panel:
   never_translate_language:
     type: event
     description: >
-      Triggers when the never-translate-language menuitem is invoked in the translations panel settings.
+      Triggers when the never-translate-language menuitem is invoked in the full-page translations panel settings.
     extra_keys:
       flow_id: *flow_id
       language:
@@ -505,7 +508,7 @@ translations.panel:
   never_translate_site:
     type: event
     description: >
-      Triggers when the never-translate-site menuitem is invoked in the translations panel settings.
+      Triggers when the never-translate-site menuitem is invoked in the full-page translations panel settings.
     extra_keys:
       flow_id: *flow_id
       toggled_on:
@@ -527,7 +530,7 @@ translations.panel:
   manage_languages:
     type: event
     description: >
-      Triggers when the manage-languages menuitem is invoked in the translations panel settings.
+      Triggers when the manage-languages menuitem is invoked in the full-page translations panel settings.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -545,7 +548,7 @@ translations.panel:
   about_translations:
     type: event
     description: >
-      Triggers when the about-translations menuitem is invoked in the translations panel settings.
+      Triggers when the about-translations menuitem is invoked in the full-page translations panel settings.
     extra_keys:
       flow_id: *flow_id
     bugs:
@@ -563,7 +566,7 @@ translations.panel:
   learn_more:
     type: event
     description: >
-      Triggers when the learn-more link is invoked in the translations panel first interaction.
+      Triggers when the learn-more link is invoked in the full-page translations panel first interaction.
     extra_keys:
       flow_id: *flow_id
     bugs:
