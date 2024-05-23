@@ -95,7 +95,7 @@ impl ContextRef {
     ///
     /// This function is unsafe because it dereferences the given `data_callback`, `state_callback`, and `user_ptr` pointers.
     /// The caller should ensure those pointers are valid.
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
+    #[allow(clippy::too_many_arguments)]
     pub unsafe fn stream_init(
         &self,
         stream_name: Option<&CStr>,

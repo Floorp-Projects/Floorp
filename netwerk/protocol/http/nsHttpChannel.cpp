@@ -6086,8 +6086,7 @@ nsHttpChannel::Resume() {
   LogCallingScriptLocation(this);
 
   if (--mSuspendCount == 0) {
-    mSuspendTotalTime +=
-        (TimeStamp::NowLoRes() - mSuspendTimestamp).ToMilliseconds();
+    mSuspendTotalTime += TimeStamp::NowLoRes() - mSuspendTimestamp;
 
     if (mCallOnResume) {
       // Resume the interrupted procedure first, then resume
@@ -7497,8 +7496,8 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     mOnStartRequestTimestamp = TimeStamp::Now();
   }
 
-  Telemetry::Accumulate(Telemetry::HTTP_ONSTART_SUSPEND_TOTAL_TIME,
-                        mSuspendTotalTime);
+  mozilla::glean::networking::http_onstart_suspend_total_time
+      .AccumulateRawDuration(mSuspendTotalTime);
 
   if (mTransaction) {
     mProxyConnectResponseCode = mTransaction->GetProxyConnectResponseCode();

@@ -441,7 +441,7 @@ fn test_stream_tester() {
             return;
         }
         let mut params = InputProcessingParams::NONE;
-        {
+        run_serially(|| {
             let mut bypass = u32::from(true);
             let mut size: usize = mem::size_of::<u32>();
             assert_eq!(
@@ -477,7 +477,7 @@ fn test_stream_tester() {
             if agc == 1 {
                 params.set(InputProcessingParams::AUTOMATIC_GAIN_CONTROL, true);
             }
-        }
+        });
         let mut done = false;
         while !done {
             println!(

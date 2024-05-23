@@ -71,6 +71,7 @@ __webpack_require__.d(__webpack_exports__, {
   PermissionFlag: () => (/* reexport */ PermissionFlag),
   PixelsPerInch: () => (/* reexport */ PixelsPerInch),
   RenderingCancelledException: () => (/* reexport */ RenderingCancelledException),
+  TextLayer: () => (/* reexport */ TextLayer),
   UnexpectedResponseException: () => (/* reexport */ UnexpectedResponseException),
   Util: () => (/* reexport */ Util),
   VerbosityLevel: () => (/* reexport */ VerbosityLevel),
@@ -7872,353 +7873,6 @@ for (const op in OPS) {
   }
 }
 
-;// CONCATENATED MODULE: ./src/display/text_layer.js
-
-
-const MAX_TEXT_DIVS_TO_RENDER = 100000;
-const DEFAULT_FONT_SIZE = 30;
-const DEFAULT_FONT_ASCENT = 0.8;
-const ascentCache = new Map();
-let _canvasContext = null;
-const pendingTextLayers = new Set();
-function getCtx(lang = null) {
-  if (!_canvasContext) {
-    const canvas = document.createElement("canvas");
-    canvas.className = "hiddenCanvasElement";
-    document.body.append(canvas);
-    _canvasContext = canvas.getContext("2d", {
-      alpha: false
-    });
-  }
-  return _canvasContext;
-}
-function cleanupTextLayer() {
-  if (pendingTextLayers.size > 0) {
-    return;
-  }
-  _canvasContext?.canvas.remove();
-  _canvasContext = null;
-}
-function getAscent(fontFamily, lang) {
-  const cachedAscent = ascentCache.get(fontFamily);
-  if (cachedAscent) {
-    return cachedAscent;
-  }
-  const ctx = getCtx(lang);
-  const savedFont = ctx.font;
-  ctx.canvas.width = ctx.canvas.height = DEFAULT_FONT_SIZE;
-  ctx.font = `${DEFAULT_FONT_SIZE}px ${fontFamily}`;
-  const metrics = ctx.measureText("");
-  let ascent = metrics.fontBoundingBoxAscent;
-  let descent = Math.abs(metrics.fontBoundingBoxDescent);
-  if (ascent) {
-    const ratio = ascent / (ascent + descent);
-    ascentCache.set(fontFamily, ratio);
-    ctx.canvas.width = ctx.canvas.height = 0;
-    ctx.font = savedFont;
-    return ratio;
-  }
-  ctx.strokeStyle = "red";
-  ctx.clearRect(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE);
-  ctx.strokeText("g", 0, 0);
-  let pixels = ctx.getImageData(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE).data;
-  descent = 0;
-  for (let i = pixels.length - 1 - 3; i >= 0; i -= 4) {
-    if (pixels[i] > 0) {
-      descent = Math.ceil(i / 4 / DEFAULT_FONT_SIZE);
-      break;
-    }
-  }
-  ctx.clearRect(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE);
-  ctx.strokeText("A", 0, DEFAULT_FONT_SIZE);
-  pixels = ctx.getImageData(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE).data;
-  ascent = 0;
-  for (let i = 0, ii = pixels.length; i < ii; i += 4) {
-    if (pixels[i] > 0) {
-      ascent = DEFAULT_FONT_SIZE - Math.floor(i / 4 / DEFAULT_FONT_SIZE);
-      break;
-    }
-  }
-  ctx.canvas.width = ctx.canvas.height = 0;
-  ctx.font = savedFont;
-  if (ascent) {
-    const ratio = ascent / (ascent + descent);
-    ascentCache.set(fontFamily, ratio);
-    return ratio;
-  }
-  ascentCache.set(fontFamily, DEFAULT_FONT_ASCENT);
-  return DEFAULT_FONT_ASCENT;
-}
-function layout(params) {
-  const {
-    div,
-    scale,
-    properties,
-    ctx,
-    prevFontSize,
-    prevFontFamily
-  } = params;
-  const {
-    style
-  } = div;
-  let transform = "";
-  if (properties.canvasWidth !== 0 && properties.hasText) {
-    const {
-      fontFamily
-    } = style;
-    const {
-      canvasWidth,
-      fontSize
-    } = properties;
-    if (prevFontSize !== fontSize || prevFontFamily !== fontFamily) {
-      ctx.font = `${fontSize * scale}px ${fontFamily}`;
-      params.prevFontSize = fontSize;
-      params.prevFontFamily = fontFamily;
-    }
-    const {
-      width
-    } = ctx.measureText(div.textContent);
-    if (width > 0) {
-      transform = `scaleX(${canvasWidth * scale / width})`;
-    }
-  }
-  if (properties.angle !== 0) {
-    transform = `rotate(${properties.angle}deg) ${transform}`;
-  }
-  if (transform.length > 0) {
-    style.transform = transform;
-  }
-}
-class TextLayerRenderTask {
-  #disableProcessItems = false;
-  #reader = null;
-  #textContentSource = null;
-  constructor({
-    textContentSource,
-    container,
-    viewport,
-    textDivs,
-    textDivProperties,
-    textContentItemsStr
-  }) {
-    if (textContentSource instanceof ReadableStream) {
-      this.#textContentSource = textContentSource;
-    } else {
-      throw new Error('No "textContentSource" parameter specified.');
-    }
-    this._container = this._rootContainer = container;
-    this._textDivs = textDivs || [];
-    this._textContentItemsStr = textContentItemsStr || [];
-    this._fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
-    this._textDivProperties = textDivProperties || new WeakMap();
-    this._canceled = false;
-    this._capability = Promise.withResolvers();
-    this._layoutTextParams = {
-      prevFontSize: null,
-      prevFontFamily: null,
-      div: null,
-      scale: viewport.scale * (globalThis.devicePixelRatio || 1),
-      properties: null,
-      ctx: null
-    };
-    this._styleCache = Object.create(null);
-    const {
-      pageWidth,
-      pageHeight,
-      pageX,
-      pageY
-    } = viewport.rawDims;
-    this._transform = [1, 0, 0, -1, -pageX, pageY + pageHeight];
-    this._pageWidth = pageWidth;
-    this._pageHeight = pageHeight;
-    setLayerDimensions(container, viewport);
-    pendingTextLayers.add(this);
-    this._capability.promise.finally(() => {
-      pendingTextLayers.delete(this);
-      this._layoutTextParams = null;
-      this._styleCache = null;
-    }).catch(() => {});
-  }
-  get promise() {
-    return this._capability.promise;
-  }
-  cancel() {
-    this._canceled = true;
-    const abortEx = new AbortException("TextLayer task cancelled.");
-    this.#reader?.cancel(abortEx).catch(() => {});
-    this.#reader = null;
-    this._capability.reject(abortEx);
-  }
-  #processItems(items, lang) {
-    if (this.#disableProcessItems) {
-      return;
-    }
-    if (!this._layoutTextParams.ctx) {
-      this._textDivProperties.set(this._rootContainer, {
-        lang
-      });
-      this._layoutTextParams.ctx = getCtx(lang);
-    }
-    const textDivs = this._textDivs,
-      textContentItemsStr = this._textContentItemsStr;
-    for (const item of items) {
-      if (textDivs.length > MAX_TEXT_DIVS_TO_RENDER) {
-        warn("Ignoring additional textDivs for performance reasons.");
-        this.#disableProcessItems = true;
-        return;
-      }
-      if (item.str === undefined) {
-        if (item.type === "beginMarkedContentProps" || item.type === "beginMarkedContent") {
-          const parent = this._container;
-          this._container = document.createElement("span");
-          this._container.classList.add("markedContent");
-          if (item.id !== null) {
-            this._container.setAttribute("id", `${item.id}`);
-          }
-          parent.append(this._container);
-        } else if (item.type === "endMarkedContent") {
-          this._container = this._container.parentNode;
-        }
-        continue;
-      }
-      textContentItemsStr.push(item.str);
-      this.#appendText(item, lang);
-    }
-  }
-  #appendText(geom, lang) {
-    const textDiv = document.createElement("span");
-    const textDivProperties = {
-      angle: 0,
-      canvasWidth: 0,
-      hasText: geom.str !== "",
-      hasEOL: geom.hasEOL,
-      fontSize: 0
-    };
-    this._textDivs.push(textDiv);
-    const tx = Util.transform(this._transform, geom.transform);
-    let angle = Math.atan2(tx[1], tx[0]);
-    const style = this._styleCache[geom.fontName];
-    if (style.vertical) {
-      angle += Math.PI / 2;
-    }
-    const fontFamily = this._fontInspectorEnabled && style.fontSubstitution || style.fontFamily;
-    const fontHeight = Math.hypot(tx[2], tx[3]);
-    const fontAscent = fontHeight * getAscent(fontFamily, lang);
-    let left, top;
-    if (angle === 0) {
-      left = tx[4];
-      top = tx[5] - fontAscent;
-    } else {
-      left = tx[4] + fontAscent * Math.sin(angle);
-      top = tx[5] - fontAscent * Math.cos(angle);
-    }
-    const scaleFactorStr = "calc(var(--scale-factor)*";
-    const divStyle = textDiv.style;
-    if (this._container === this._rootContainer) {
-      divStyle.left = `${(100 * left / this._pageWidth).toFixed(2)}%`;
-      divStyle.top = `${(100 * top / this._pageHeight).toFixed(2)}%`;
-    } else {
-      divStyle.left = `${scaleFactorStr}${left.toFixed(2)}px)`;
-      divStyle.top = `${scaleFactorStr}${top.toFixed(2)}px)`;
-    }
-    divStyle.fontSize = `${scaleFactorStr}${fontHeight.toFixed(2)}px)`;
-    divStyle.fontFamily = fontFamily;
-    textDivProperties.fontSize = fontHeight;
-    textDiv.setAttribute("role", "presentation");
-    textDiv.textContent = geom.str;
-    textDiv.dir = geom.dir;
-    if (this._fontInspectorEnabled) {
-      textDiv.dataset.fontName = style.fontSubstitutionLoadedName || geom.fontName;
-    }
-    if (angle !== 0) {
-      textDivProperties.angle = angle * (180 / Math.PI);
-    }
-    let shouldScaleText = false;
-    if (geom.str.length > 1) {
-      shouldScaleText = true;
-    } else if (geom.str !== " " && geom.transform[0] !== geom.transform[3]) {
-      const absScaleX = Math.abs(geom.transform[0]),
-        absScaleY = Math.abs(geom.transform[3]);
-      if (absScaleX !== absScaleY && Math.max(absScaleX, absScaleY) / Math.min(absScaleX, absScaleY) > 1.5) {
-        shouldScaleText = true;
-      }
-    }
-    if (shouldScaleText) {
-      textDivProperties.canvasWidth = style.vertical ? geom.height : geom.width;
-    }
-    this._textDivProperties.set(textDiv, textDivProperties);
-    this.#layoutText(textDiv, textDivProperties);
-  }
-  #layoutText(textDiv, textDivProperties) {
-    this._layoutTextParams.div = textDiv;
-    this._layoutTextParams.properties = textDivProperties;
-    layout(this._layoutTextParams);
-    if (textDivProperties.hasText) {
-      this._container.append(textDiv);
-    }
-    if (textDivProperties.hasEOL) {
-      const br = document.createElement("br");
-      br.setAttribute("role", "presentation");
-      this._container.append(br);
-    }
-  }
-  _render() {
-    const styleCache = this._styleCache;
-    const pump = () => {
-      this.#reader.read().then(({
-        value,
-        done
-      }) => {
-        if (done) {
-          this._capability.resolve();
-          return;
-        }
-        Object.assign(styleCache, value.styles);
-        this.#processItems(value.items, value.lang);
-        pump();
-      }, this._capability.reject);
-    };
-    this.#reader = this.#textContentSource.getReader();
-    pump();
-  }
-}
-function renderTextLayer(params) {
-  const task = new TextLayerRenderTask(params);
-  task._render();
-  return task;
-}
-function updateTextLayer({
-  container,
-  viewport,
-  textDivs,
-  textDivProperties,
-  mustRotate = true,
-  mustRescale = true
-}) {
-  if (mustRotate) {
-    setLayerDimensions(container, {
-      rotation: viewport.rotation
-    });
-  }
-  if (mustRescale) {
-    const ctx = getCtx(textDivProperties.get(container)?.lang);
-    const scale = viewport.scale * (globalThis.devicePixelRatio || 1);
-    const params = {
-      prevFontSize: null,
-      prevFontFamily: null,
-      div: null,
-      scale,
-      properties: null,
-      ctx
-    };
-    for (const div of textDivs) {
-      params.properties = textDivProperties.get(div);
-      params.div = div;
-      layout(params);
-    }
-  }
-}
-
 ;// CONCATENATED MODULE: ./src/display/worker_options.js
 class GlobalWorkerOptions {
   static #port = null;
@@ -9192,6 +8846,346 @@ class PDFDataTransportStreamRangeReader {
   }
 }
 
+;// CONCATENATED MODULE: ./src/display/text_layer.js
+
+
+const MAX_TEXT_DIVS_TO_RENDER = 100000;
+const DEFAULT_FONT_SIZE = 30;
+const DEFAULT_FONT_ASCENT = 0.8;
+class TextLayer {
+  #capability = Promise.withResolvers();
+  #container = null;
+  #disableProcessItems = false;
+  #fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
+  #lang = null;
+  #layoutTextParams = null;
+  #pageHeight = 0;
+  #pageWidth = 0;
+  #reader = null;
+  #rootContainer = null;
+  #rotation = 0;
+  #scale = 0;
+  #styleCache = Object.create(null);
+  #textContentItemsStr = [];
+  #textContentSource = null;
+  #textDivs = [];
+  #textDivProperties = new WeakMap();
+  #transform = null;
+  static #ascentCache = new Map();
+  static #canvasCtx = null;
+  static #pendingTextLayers = new Set();
+  constructor({
+    textContentSource,
+    container,
+    viewport
+  }) {
+    if (textContentSource instanceof ReadableStream) {
+      this.#textContentSource = textContentSource;
+    } else {
+      throw new Error('No "textContentSource" parameter specified.');
+    }
+    this.#container = this.#rootContainer = container;
+    this.#scale = viewport.scale * (globalThis.devicePixelRatio || 1);
+    this.#rotation = viewport.rotation;
+    this.#layoutTextParams = {
+      prevFontSize: null,
+      prevFontFamily: null,
+      div: null,
+      properties: null,
+      ctx: null
+    };
+    const {
+      pageWidth,
+      pageHeight,
+      pageX,
+      pageY
+    } = viewport.rawDims;
+    this.#transform = [1, 0, 0, -1, -pageX, pageY + pageHeight];
+    this.#pageWidth = pageWidth;
+    this.#pageHeight = pageHeight;
+    setLayerDimensions(container, viewport);
+    TextLayer.#pendingTextLayers.add(this);
+    this.#capability.promise.catch(() => {}).then(() => {
+      TextLayer.#pendingTextLayers.delete(this);
+      this.#layoutTextParams = null;
+      this.#styleCache = null;
+    });
+  }
+  render() {
+    const pump = () => {
+      this.#reader.read().then(({
+        value,
+        done
+      }) => {
+        if (done) {
+          this.#capability.resolve();
+          return;
+        }
+        this.#lang ??= value.lang;
+        Object.assign(this.#styleCache, value.styles);
+        this.#processItems(value.items);
+        pump();
+      }, this.#capability.reject);
+    };
+    this.#reader = this.#textContentSource.getReader();
+    pump();
+    return this.#capability.promise;
+  }
+  update({
+    viewport,
+    onBefore = null
+  }) {
+    const scale = viewport.scale * (globalThis.devicePixelRatio || 1);
+    const rotation = viewport.rotation;
+    if (rotation !== this.#rotation) {
+      onBefore?.();
+      this.#rotation = rotation;
+      setLayerDimensions(this.#rootContainer, {
+        rotation
+      });
+    }
+    if (scale !== this.#scale) {
+      onBefore?.();
+      this.#scale = scale;
+      const params = {
+        prevFontSize: null,
+        prevFontFamily: null,
+        div: null,
+        properties: null,
+        ctx: TextLayer.#getCtx(this.#lang)
+      };
+      for (const div of this.#textDivs) {
+        params.properties = this.#textDivProperties.get(div);
+        params.div = div;
+        this.#layout(params);
+      }
+    }
+  }
+  cancel() {
+    const abortEx = new AbortException("TextLayer task cancelled.");
+    this.#reader?.cancel(abortEx).catch(() => {});
+    this.#reader = null;
+    this.#capability.reject(abortEx);
+  }
+  get textDivs() {
+    return this.#textDivs;
+  }
+  get textContentItemsStr() {
+    return this.#textContentItemsStr;
+  }
+  #processItems(items) {
+    if (this.#disableProcessItems) {
+      return;
+    }
+    this.#layoutTextParams.ctx ||= TextLayer.#getCtx(this.#lang);
+    const textDivs = this.#textDivs,
+      textContentItemsStr = this.#textContentItemsStr;
+    for (const item of items) {
+      if (textDivs.length > MAX_TEXT_DIVS_TO_RENDER) {
+        warn("Ignoring additional textDivs for performance reasons.");
+        this.#disableProcessItems = true;
+        return;
+      }
+      if (item.str === undefined) {
+        if (item.type === "beginMarkedContentProps" || item.type === "beginMarkedContent") {
+          const parent = this.#container;
+          this.#container = document.createElement("span");
+          this.#container.classList.add("markedContent");
+          if (item.id !== null) {
+            this.#container.setAttribute("id", `${item.id}`);
+          }
+          parent.append(this.#container);
+        } else if (item.type === "endMarkedContent") {
+          this.#container = this.#container.parentNode;
+        }
+        continue;
+      }
+      textContentItemsStr.push(item.str);
+      this.#appendText(item);
+    }
+  }
+  #appendText(geom) {
+    const textDiv = document.createElement("span");
+    const textDivProperties = {
+      angle: 0,
+      canvasWidth: 0,
+      hasText: geom.str !== "",
+      hasEOL: geom.hasEOL,
+      fontSize: 0
+    };
+    this.#textDivs.push(textDiv);
+    const tx = Util.transform(this.#transform, geom.transform);
+    let angle = Math.atan2(tx[1], tx[0]);
+    const style = this.#styleCache[geom.fontName];
+    if (style.vertical) {
+      angle += Math.PI / 2;
+    }
+    const fontFamily = this.#fontInspectorEnabled && style.fontSubstitution || style.fontFamily;
+    const fontHeight = Math.hypot(tx[2], tx[3]);
+    const fontAscent = fontHeight * TextLayer.#getAscent(fontFamily, this.#lang);
+    let left, top;
+    if (angle === 0) {
+      left = tx[4];
+      top = tx[5] - fontAscent;
+    } else {
+      left = tx[4] + fontAscent * Math.sin(angle);
+      top = tx[5] - fontAscent * Math.cos(angle);
+    }
+    const scaleFactorStr = "calc(var(--scale-factor)*";
+    const divStyle = textDiv.style;
+    if (this.#container === this.#rootContainer) {
+      divStyle.left = `${(100 * left / this.#pageWidth).toFixed(2)}%`;
+      divStyle.top = `${(100 * top / this.#pageHeight).toFixed(2)}%`;
+    } else {
+      divStyle.left = `${scaleFactorStr}${left.toFixed(2)}px)`;
+      divStyle.top = `${scaleFactorStr}${top.toFixed(2)}px)`;
+    }
+    divStyle.fontSize = `${scaleFactorStr}${fontHeight.toFixed(2)}px)`;
+    divStyle.fontFamily = fontFamily;
+    textDivProperties.fontSize = fontHeight;
+    textDiv.setAttribute("role", "presentation");
+    textDiv.textContent = geom.str;
+    textDiv.dir = geom.dir;
+    if (this.#fontInspectorEnabled) {
+      textDiv.dataset.fontName = style.fontSubstitutionLoadedName || geom.fontName;
+    }
+    if (angle !== 0) {
+      textDivProperties.angle = angle * (180 / Math.PI);
+    }
+    let shouldScaleText = false;
+    if (geom.str.length > 1) {
+      shouldScaleText = true;
+    } else if (geom.str !== " " && geom.transform[0] !== geom.transform[3]) {
+      const absScaleX = Math.abs(geom.transform[0]),
+        absScaleY = Math.abs(geom.transform[3]);
+      if (absScaleX !== absScaleY && Math.max(absScaleX, absScaleY) / Math.min(absScaleX, absScaleY) > 1.5) {
+        shouldScaleText = true;
+      }
+    }
+    if (shouldScaleText) {
+      textDivProperties.canvasWidth = style.vertical ? geom.height : geom.width;
+    }
+    this.#textDivProperties.set(textDiv, textDivProperties);
+    this.#layoutTextParams.div = textDiv;
+    this.#layoutTextParams.properties = textDivProperties;
+    this.#layout(this.#layoutTextParams);
+    if (textDivProperties.hasText) {
+      this.#container.append(textDiv);
+    }
+    if (textDivProperties.hasEOL) {
+      const br = document.createElement("br");
+      br.setAttribute("role", "presentation");
+      this.#container.append(br);
+    }
+  }
+  #layout(params) {
+    const {
+      div,
+      properties,
+      ctx,
+      prevFontSize,
+      prevFontFamily
+    } = params;
+    const {
+      style
+    } = div;
+    let transform = "";
+    if (properties.canvasWidth !== 0 && properties.hasText) {
+      const {
+        fontFamily
+      } = style;
+      const {
+        canvasWidth,
+        fontSize
+      } = properties;
+      if (prevFontSize !== fontSize || prevFontFamily !== fontFamily) {
+        ctx.font = `${fontSize * this.#scale}px ${fontFamily}`;
+        params.prevFontSize = fontSize;
+        params.prevFontFamily = fontFamily;
+      }
+      const {
+        width
+      } = ctx.measureText(div.textContent);
+      if (width > 0) {
+        transform = `scaleX(${canvasWidth * this.#scale / width})`;
+      }
+    }
+    if (properties.angle !== 0) {
+      transform = `rotate(${properties.angle}deg) ${transform}`;
+    }
+    if (transform.length > 0) {
+      style.transform = transform;
+    }
+  }
+  static cleanup() {
+    if (this.#pendingTextLayers.size > 0) {
+      return;
+    }
+    this.#ascentCache.clear();
+    this.#canvasCtx?.canvas.remove();
+    this.#canvasCtx = null;
+  }
+  static #getCtx(lang = null) {
+    if (!this.#canvasCtx) {
+      const canvas = document.createElement("canvas");
+      canvas.className = "hiddenCanvasElement";
+      document.body.append(canvas);
+      this.#canvasCtx = canvas.getContext("2d", {
+        alpha: false
+      });
+    }
+    return this.#canvasCtx;
+  }
+  static #getAscent(fontFamily, lang) {
+    const cachedAscent = this.#ascentCache.get(fontFamily);
+    if (cachedAscent) {
+      return cachedAscent;
+    }
+    const ctx = this.#getCtx(lang);
+    const savedFont = ctx.font;
+    ctx.canvas.width = ctx.canvas.height = DEFAULT_FONT_SIZE;
+    ctx.font = `${DEFAULT_FONT_SIZE}px ${fontFamily}`;
+    const metrics = ctx.measureText("");
+    let ascent = metrics.fontBoundingBoxAscent;
+    let descent = Math.abs(metrics.fontBoundingBoxDescent);
+    if (ascent) {
+      const ratio = ascent / (ascent + descent);
+      this.#ascentCache.set(fontFamily, ratio);
+      ctx.canvas.width = ctx.canvas.height = 0;
+      ctx.font = savedFont;
+      return ratio;
+    }
+    ctx.strokeStyle = "red";
+    ctx.clearRect(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE);
+    ctx.strokeText("g", 0, 0);
+    let pixels = ctx.getImageData(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE).data;
+    descent = 0;
+    for (let i = pixels.length - 1 - 3; i >= 0; i -= 4) {
+      if (pixels[i] > 0) {
+        descent = Math.ceil(i / 4 / DEFAULT_FONT_SIZE);
+        break;
+      }
+    }
+    ctx.clearRect(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE);
+    ctx.strokeText("A", 0, DEFAULT_FONT_SIZE);
+    pixels = ctx.getImageData(0, 0, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE).data;
+    ascent = 0;
+    for (let i = 0, ii = pixels.length; i < ii; i += 4) {
+      if (pixels[i] > 0) {
+        ascent = DEFAULT_FONT_SIZE - Math.floor(i / 4 / DEFAULT_FONT_SIZE);
+        break;
+      }
+    }
+    ctx.canvas.width = ctx.canvas.height = 0;
+    ctx.font = savedFont;
+    const ratio = ascent ? ascent / (ascent + descent) : DEFAULT_FONT_ASCENT;
+    this.#ascentCache.set(fontFamily, ratio);
+    return ratio;
+  }
+}
+function renderTextLayer() {}
+function updateTextLayer() {}
+
 ;// CONCATENATED MODULE: ./src/display/xfa_text.js
 class XfaText {
   static textContent(xfa) {
@@ -9333,7 +9327,7 @@ function getDocument(src) {
   }
   const docParams = {
     docId,
-    apiVersion: "4.3.77",
+    apiVersion: "4.3.83",
     data,
     password,
     disableAutoFetch,
@@ -10323,7 +10317,7 @@ class WorkerTransport {
       this.fontLoader.clear();
       this.#methodPromises.clear();
       this.filterFactory.destroy();
-      cleanupTextLayer();
+      TextLayer.cleanup();
       this._networkStream?.cancelAllRequests(new AbortException("Worker was terminated."));
       if (this.messageHandler) {
         this.messageHandler.destroy();
@@ -10765,7 +10759,7 @@ class WorkerTransport {
     }
     this.#methodPromises.clear();
     this.filterFactory.destroy(true);
-    cleanupTextLayer();
+    TextLayer.cleanup();
   }
   cachedPageNumber(ref) {
     if (!isRefProxy(ref)) {
@@ -10995,8 +10989,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.3.77";
-const build = "63b66b412";
+const version = "4.3.83";
+const build = "9ee7c07b8";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -17782,8 +17776,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.3.77";
-const pdfjsBuild = "63b66b412";
+const pdfjsVersion = "4.3.83";
+const pdfjsBuild = "9ee7c07b8";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
@@ -17810,6 +17804,7 @@ var __webpack_exports__PasswordResponses = __webpack_exports__.PasswordResponses
 var __webpack_exports__PermissionFlag = __webpack_exports__.PermissionFlag;
 var __webpack_exports__PixelsPerInch = __webpack_exports__.PixelsPerInch;
 var __webpack_exports__RenderingCancelledException = __webpack_exports__.RenderingCancelledException;
+var __webpack_exports__TextLayer = __webpack_exports__.TextLayer;
 var __webpack_exports__UnexpectedResponseException = __webpack_exports__.UnexpectedResponseException;
 var __webpack_exports__Util = __webpack_exports__.Util;
 var __webpack_exports__VerbosityLevel = __webpack_exports__.VerbosityLevel;
@@ -17830,4 +17825,4 @@ var __webpack_exports__setLayerDimensions = __webpack_exports__.setLayerDimensio
 var __webpack_exports__shadow = __webpack_exports__.shadow;
 var __webpack_exports__updateTextLayer = __webpack_exports__.updateTextLayer;
 var __webpack_exports__version = __webpack_exports__.version;
-export { __webpack_exports__AbortException as AbortException, __webpack_exports__AnnotationEditorLayer as AnnotationEditorLayer, __webpack_exports__AnnotationEditorParamsType as AnnotationEditorParamsType, __webpack_exports__AnnotationEditorType as AnnotationEditorType, __webpack_exports__AnnotationEditorUIManager as AnnotationEditorUIManager, __webpack_exports__AnnotationLayer as AnnotationLayer, __webpack_exports__AnnotationMode as AnnotationMode, __webpack_exports__CMapCompressionType as CMapCompressionType, __webpack_exports__ColorPicker as ColorPicker, __webpack_exports__DOMSVGFactory as DOMSVGFactory, __webpack_exports__DrawLayer as DrawLayer, __webpack_exports__FeatureTest as FeatureTest, __webpack_exports__GlobalWorkerOptions as GlobalWorkerOptions, __webpack_exports__ImageKind as ImageKind, __webpack_exports__InvalidPDFException as InvalidPDFException, __webpack_exports__MissingPDFException as MissingPDFException, __webpack_exports__OPS as OPS, __webpack_exports__Outliner as Outliner, __webpack_exports__PDFDataRangeTransport as PDFDataRangeTransport, __webpack_exports__PDFDateString as PDFDateString, __webpack_exports__PDFWorker as PDFWorker, __webpack_exports__PasswordResponses as PasswordResponses, __webpack_exports__PermissionFlag as PermissionFlag, __webpack_exports__PixelsPerInch as PixelsPerInch, __webpack_exports__RenderingCancelledException as RenderingCancelledException, __webpack_exports__UnexpectedResponseException as UnexpectedResponseException, __webpack_exports__Util as Util, __webpack_exports__VerbosityLevel as VerbosityLevel, __webpack_exports__XfaLayer as XfaLayer, __webpack_exports__build as build, __webpack_exports__createValidAbsoluteUrl as createValidAbsoluteUrl, __webpack_exports__fetchData as fetchData, __webpack_exports__getDocument as getDocument, __webpack_exports__getFilenameFromUrl as getFilenameFromUrl, __webpack_exports__getPdfFilenameFromUrl as getPdfFilenameFromUrl, __webpack_exports__getXfaPageViewport as getXfaPageViewport, __webpack_exports__isDataScheme as isDataScheme, __webpack_exports__isPdfFile as isPdfFile, __webpack_exports__noContextMenu as noContextMenu, __webpack_exports__normalizeUnicode as normalizeUnicode, __webpack_exports__renderTextLayer as renderTextLayer, __webpack_exports__setLayerDimensions as setLayerDimensions, __webpack_exports__shadow as shadow, __webpack_exports__updateTextLayer as updateTextLayer, __webpack_exports__version as version };
+export { __webpack_exports__AbortException as AbortException, __webpack_exports__AnnotationEditorLayer as AnnotationEditorLayer, __webpack_exports__AnnotationEditorParamsType as AnnotationEditorParamsType, __webpack_exports__AnnotationEditorType as AnnotationEditorType, __webpack_exports__AnnotationEditorUIManager as AnnotationEditorUIManager, __webpack_exports__AnnotationLayer as AnnotationLayer, __webpack_exports__AnnotationMode as AnnotationMode, __webpack_exports__CMapCompressionType as CMapCompressionType, __webpack_exports__ColorPicker as ColorPicker, __webpack_exports__DOMSVGFactory as DOMSVGFactory, __webpack_exports__DrawLayer as DrawLayer, __webpack_exports__FeatureTest as FeatureTest, __webpack_exports__GlobalWorkerOptions as GlobalWorkerOptions, __webpack_exports__ImageKind as ImageKind, __webpack_exports__InvalidPDFException as InvalidPDFException, __webpack_exports__MissingPDFException as MissingPDFException, __webpack_exports__OPS as OPS, __webpack_exports__Outliner as Outliner, __webpack_exports__PDFDataRangeTransport as PDFDataRangeTransport, __webpack_exports__PDFDateString as PDFDateString, __webpack_exports__PDFWorker as PDFWorker, __webpack_exports__PasswordResponses as PasswordResponses, __webpack_exports__PermissionFlag as PermissionFlag, __webpack_exports__PixelsPerInch as PixelsPerInch, __webpack_exports__RenderingCancelledException as RenderingCancelledException, __webpack_exports__TextLayer as TextLayer, __webpack_exports__UnexpectedResponseException as UnexpectedResponseException, __webpack_exports__Util as Util, __webpack_exports__VerbosityLevel as VerbosityLevel, __webpack_exports__XfaLayer as XfaLayer, __webpack_exports__build as build, __webpack_exports__createValidAbsoluteUrl as createValidAbsoluteUrl, __webpack_exports__fetchData as fetchData, __webpack_exports__getDocument as getDocument, __webpack_exports__getFilenameFromUrl as getFilenameFromUrl, __webpack_exports__getPdfFilenameFromUrl as getPdfFilenameFromUrl, __webpack_exports__getXfaPageViewport as getXfaPageViewport, __webpack_exports__isDataScheme as isDataScheme, __webpack_exports__isPdfFile as isPdfFile, __webpack_exports__noContextMenu as noContextMenu, __webpack_exports__normalizeUnicode as normalizeUnicode, __webpack_exports__renderTextLayer as renderTextLayer, __webpack_exports__setLayerDimensions as setLayerDimensions, __webpack_exports__shadow as shadow, __webpack_exports__updateTextLayer as updateTextLayer, __webpack_exports__version as version };

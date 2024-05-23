@@ -1652,8 +1652,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     // we need to strip Authentication headers for cross-origin requests
     // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
     bool skipAuthHeader =
-        (StaticPrefs::network_fetch_redirect_stripAuthHeader() &&
-         NS_ShouldRemoveAuthHeaderOnRedirect(aOldChannel, aNewChannel, aFlags));
+        NS_ShouldRemoveAuthHeaderOnRedirect(aOldChannel, aNewChannel, aFlags);
 
     SetRequestHeaders(newHttpChannel, rewriteToGET, skipAuthHeader);
   }

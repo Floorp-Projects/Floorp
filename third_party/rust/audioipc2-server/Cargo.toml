@@ -21,7 +21,7 @@ description = "Remote cubeb server"
 license = "ISC"
 
 [dependencies]
-cubeb-core = "0.12.0"
+cubeb-core = "0.13"
 log = "0.4"
 once_cell = "1.2.0"
 slab = "0.4"

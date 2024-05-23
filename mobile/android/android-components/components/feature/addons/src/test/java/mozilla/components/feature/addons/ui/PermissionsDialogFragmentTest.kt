@@ -48,8 +48,8 @@ class PermissionsDialogFragmentTest {
         val optionalOrRequiredTextView = dialog.findViewById<TextView>(R.id.optional_or_required_text)
         val permissionsRecyclerView = dialog.findViewById<RecyclerView>(R.id.permissions)
         val recyclerAdapter = permissionsRecyclerView.adapter!! as RequiredPermissionsAdapter
-        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText()
         val permissionList = fragment.buildPermissionsList()
+        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText(hasPermissions = permissionList.isNotEmpty())
 
         assertTrue(titleTextView.text.contains(name))
         assertTrue(optionalOrRequiredText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
@@ -152,12 +152,12 @@ class PermissionsDialogFragmentTest {
         val optionalOrRequiredTextView = dialog.findViewById<TextView>(R.id.optional_or_required_text)
         val permissionsRecyclerView = dialog.findViewById<RecyclerView>(R.id.permissions)
         val recyclerAdapter = permissionsRecyclerView.adapter!! as RequiredPermissionsAdapter
-        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText()
         val permissionList = fragment.buildPermissionsList()
+        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText(hasPermissions = permissionList.isNotEmpty())
 
         assertTrue(titleTextView.text.contains(name))
-        assertTrue(optionalOrRequiredText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
-        assertTrue(optionalOrRequiredTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        assertFalse(optionalOrRequiredText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        assertFalse(optionalOrRequiredTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
         assertEquals(0, recyclerAdapter.itemCount)
         assertFalse(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
         assertFalse(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
@@ -184,8 +184,8 @@ class PermissionsDialogFragmentTest {
         val recyclerAdapter = permissionsRecyclerView.adapter!! as RequiredPermissionsAdapter
         val allowButton = dialog.findViewById<Button>(R.id.allow_button)
         val denyButton = dialog.findViewById<Button>(R.id.deny_button)
-        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText()
         val permissionsList = fragment.buildPermissionsList()
+        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText(hasPermissions = permissionsList.isNotEmpty())
 
         assertEquals(
             titleTextView.text,

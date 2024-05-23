@@ -1456,8 +1456,10 @@ void BrowserParent::MouseEnterIntoWidget() {
     // When we mouseenter the remote target, the remote target's cursor should
     // become the current cursor.  When we mouseexit, we stop.
     mRemoteTargetSetsCursor = true;
-    widget->SetCursor(mCursor);
-    EventStateManager::ClearCursorSettingManager();
+    if (!EventStateManager::CursorSettingManagerHasLockedCursor()) {
+      widget->SetCursor(mCursor);
+      EventStateManager::ClearCursorSettingManager();
+    }
   }
 
   // Mark that we have missed a mouse enter event, so that
@@ -1495,8 +1497,10 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
     // become the current cursor.  When we mouseexit, we stop.
     if (eMouseEnterIntoWidget == aEvent.mMessage) {
       mRemoteTargetSetsCursor = true;
-      widget->SetCursor(mCursor);
-      EventStateManager::ClearCursorSettingManager();
+      if (!EventStateManager::CursorSettingManagerHasLockedCursor()) {
+        widget->SetCursor(mCursor);
+        EventStateManager::ClearCursorSettingManager();
+      }
     } else if (eMouseExitFromWidget == aEvent.mMessage) {
       mRemoteTargetSetsCursor = false;
     }
@@ -2351,6 +2355,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
                               aHotspotY,
                               {aResolutionX, aResolutionY}};
   if (!mRemoteTargetSetsCursor) {
+    return IPC_OK();
+  }
+
+  if (EventStateManager::CursorSettingManagerHasLockedCursor()) {
     return IPC_OK();
   }
 

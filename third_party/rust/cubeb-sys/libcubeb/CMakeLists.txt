@@ -78,6 +78,7 @@ endif()
 
 add_library(cubeb
   src/cubeb.c
+  src/cubeb_audio_dump.cpp
   src/cubeb_mixer.cpp
   src/cubeb_resampler.cpp
   src/cubeb_log.cpp
@@ -264,7 +265,7 @@ if(USE_WASAPI)
   target_sources(cubeb PRIVATE
     src/cubeb_wasapi.cpp)
   target_compile_definitions(cubeb PRIVATE USE_WASAPI)
-  target_link_libraries(cubeb PRIVATE avrt ole32 ksuser)
+  target_link_libraries(cubeb PRIVATE ole32 ksuser)
 endif()
 
 check_include_files("windows.h;mmsystem.h" USE_WINMM)
@@ -406,6 +407,7 @@ if(BUILD_TESTS)
   cubeb_add_test(duplex)
   cubeb_add_test(logging)
   cubeb_add_test(triple_buffer)
+  cubeb_add_test(audio_dump)
 
   if (USE_WASAPI)
     cubeb_add_test(overload_callback)

@@ -29,6 +29,7 @@ import org.mozilla.fenix.components.menu.compose.EXTENSIONS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.TOOLS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
+import org.mozilla.fenix.components.menu.store.BookmarkState
 import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
@@ -256,6 +257,34 @@ class MenuNavigationMiddlewareTest {
         store.dispatch(MenuAction.Navigate.Back).join()
 
         verify { navHostController.popBackStack() }
+    }
+
+    @Test
+    fun `WHEN navigate to edit bookmark action is dispatched THEN navigate to bookmark edit fragment`() = runTest {
+        val tab = createTab(url = "https://www.mozilla.org")
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = BrowserMenuState(
+                    selectedTab = tab,
+                    bookmarkState = BookmarkState(
+                        guid = BookmarkRoot.Mobile.id,
+                        isBookmarked = true,
+                    ),
+                ),
+            ),
+        )
+
+        store.dispatch(MenuAction.Navigate.EditBookmark).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalBookmarkEditFragment(
+                    guidToEdit = BookmarkRoot.Mobile.id,
+                    requiresSnackbarPaddingForToolbar = true,
+                ),
+            )
+        }
     }
 
     @Test

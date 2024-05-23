@@ -425,6 +425,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static EventStateManager* sCursorSettingManager;
   static void ClearCursorSettingManager() { sCursorSettingManager = nullptr; }
 
+  // Checks if the manager in this process has a locked cursor
+  static bool CursorSettingManagerHasLockedCursor();
+
   static EventStateManager* GetActiveEventStateManager() { return sActiveESM; }
 
   // Sets aNewESM to be the active event state manager, and

@@ -173,7 +173,7 @@ class AppLinksFeature(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun isSameCallerAndApp(tab: SessionState, appIntent: Intent): Boolean {
-        return (tab.source as? SessionState.Source.External)?.let { externalSource ->
+        return (tab.source as? SessionState.Source.External.CustomTab)?.let { externalSource ->
             when (externalSource.caller?.packageId) {
                 null -> false
                 appIntent.component?.packageName -> true

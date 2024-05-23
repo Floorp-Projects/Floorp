@@ -840,7 +840,6 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
     // cross-origin redirects.
     // See Bug 1874132
     bool stripAuthHeader =
-        StaticPrefs::network_fetch_redirect_stripAuthHeader() &&
         NS_ShouldRemoveAuthHeaderOnRedirect(aOldChannel, aNewChannel, aFlags);
 
     nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(aOldChannel);

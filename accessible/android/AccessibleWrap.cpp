@@ -403,12 +403,20 @@ int32_t AccessibleWrap::GetInputType(const nsString& aInputTypeAttr) {
 }
 
 void AccessibleWrap::GetTextEquiv(nsString& aText) {
-  if (nsTextEquivUtils::HasNameRule(this, eNameFromSubtreeIfReqRule)) {
-    // This is an accessible that normally doesn't get its name from its
-    // subtree, so we collect the text equivalent explicitly.
-    nsTextEquivUtils::GetTextEquivFromSubtree(this, aText);
-  } else {
-    Name(aText);
+  // 1. Start with the name, since it might have been explicitly specified.
+  if (Name(aText) != eNameFromSubtree) {
+    // 2. If the name didn't come from the subtree, add the text from the
+    // subtree.
+    if (aText.IsEmpty()) {
+      nsTextEquivUtils::GetTextEquivFromSubtree(this, aText);
+    } else {
+      nsAutoString subtree;
+      nsTextEquivUtils::GetTextEquivFromSubtree(this, subtree);
+      if (!subtree.IsEmpty()) {
+        aText.Append(' ');
+        aText.Append(subtree);
+      }
+    }
   }
 }
 

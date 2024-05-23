@@ -9,6 +9,7 @@
 --blinterp-eager
 --cache-ir-stubs=off
 --cache-ir-stubs=on
+--enable-json-parse-with-source
 --ion-check-range-analysis
 --ion-eager
 --ion-edgecase-analysis=off

@@ -33,10 +33,13 @@ jobs:
         rustc --version
         cargo --version
 
-    - name: Setup Audio
+    - name: Setup switchaudio
       if: ${{ matrix.os == 'macos-13' || matrix.os == 'macos-14' }}
       run: |
         brew install switchaudio-osx
+
+    - name: Setup blackhole-2ch
+      run: |
         brew install blackhole-2ch
         SwitchAudioSource -s "BlackHole 2ch" -t input
         SwitchAudioSource -s "BlackHole 2ch" -t output

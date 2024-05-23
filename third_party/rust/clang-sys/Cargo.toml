@@ -11,7 +11,7 @@
 
 [package]
 name = "clang-sys"
-version = "1.6.0"
+version = "1.7.0"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 build = "build.rs"
 links = "clang"
@@ -23,7 +23,7 @@ repository = "https://github.com/KyleMayes/clang-sys"
 
 [package.metadata.docs.rs]
 features = [
-    "clang_16_0",
+    "clang_17_0",
     "runtime",
 ]
 
@@ -35,7 +35,7 @@ version = "0.2.39"
 default-features = false
 
 [dependencies.libloading]
-version = "0.7"
+version = "0.8"
 optional = true
 
 [dev-dependencies.glob]
@@ -44,8 +44,8 @@ version = "0.3"
 [dev-dependencies.serial_test]
 version = "1"
 
-[dev-dependencies.tempdir]
-version = "0.3"
+[dev-dependencies.tempfile]
+version = "3"
 
 [build-dependencies.glob]
 version = "0.3"
@@ -58,6 +58,7 @@ clang_13_0 = ["clang_12_0"]
 clang_14_0 = ["clang_13_0"]
 clang_15_0 = ["clang_14_0"]
 clang_16_0 = ["clang_15_0"]
+clang_17_0 = ["clang_16_0"]
 clang_3_5 = []
 clang_3_6 = ["clang_3_5"]
 clang_3_7 = ["clang_3_6"]

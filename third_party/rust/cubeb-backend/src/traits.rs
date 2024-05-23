@@ -24,7 +24,7 @@ pub trait ContextOps {
         collection: &DeviceCollectionRef,
     ) -> Result<()>;
     fn device_collection_destroy(&mut self, collection: &mut DeviceCollectionRef) -> Result<()>;
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
+    #[allow(clippy::too_many_arguments)]
     fn stream_init(
         &mut self,
         stream_name: Option<&CStr>,

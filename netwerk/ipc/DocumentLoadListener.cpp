@@ -173,11 +173,10 @@ static auto CreateDocumentLoadInfo(CanonicalBrowsingContext* aBrowsingContext,
 
 // Construct a LoadInfo object to use when creating the internal channel for an
 // Object/Embed load.
-static auto CreateObjectLoadInfo(nsDocShellLoadState* aLoadState,
-                                 uint64_t aInnerWindowId,
-                                 nsContentPolicyType aContentPolicyType,
-                                 uint32_t aSandboxFlags)
-    -> already_AddRefed<LoadInfo> {
+static auto CreateObjectLoadInfo(
+    nsDocShellLoadState* aLoadState, uint64_t aInnerWindowId,
+    nsContentPolicyType aContentPolicyType,
+    uint32_t aSandboxFlags) -> already_AddRefed<LoadInfo> {
   RefPtr<WindowGlobalParent> wgp =
       WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
   MOZ_RELEASE_ASSERT(wgp);
@@ -810,6 +809,24 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     if (cos && aUrgentStart) {
       cos->AddClassFlags(nsIClassOfService::UrgentStart);
     }
+
+    // ClientChannelHelper below needs us to have finalized the principal for
+    // the channel because it will request that StoragePrincipalHelper mint us a
+    // principal that needs to match the same principal that a later call to
+    // StoragePrincipalHelper will mint when determining the right origin to
+    // look up the ServiceWorker.
+    //
+    // Because nsHttpChannel::AsyncOpen calls UpdateAntiTrackingInfoForChannel
+    // which potentially flips the third party bit/flag on the partition key on
+    // the cookie jar which impacts the principal that will be minted, it is
+    // essential that UpdateAntiTrackingInfoForChannel is called before
+    // AddClientChannelHelperInParent below.
+    //
+    // Because the call to UpdateAntiTrackingInfoForChannel is largely
+    // idempotent, we currently just make the call ourselves right now.  The one
+    // caveat is that the RFPRandomKey may be spuriously regenerated for
+    // top-level documents.
+    AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(httpChannel);
   }
 
   // Setup a ClientChannelHelper to watch for redirects, and copy
@@ -995,8 +1012,8 @@ auto DocumentLoadListener::OpenObject(
     uint64_t aInnerWindowId, nsLoadFlags aLoadFlags,
     nsContentPolicyType aContentPolicyType, bool aUrgentStart,
     dom::ContentParent* aContentParent,
-    ObjectUpgradeHandler* aObjectUpgradeHandler, nsresult* aRv)
-    -> RefPtr<OpenPromise> {
+    ObjectUpgradeHandler* aObjectUpgradeHandler,
+    nsresult* aRv) -> RefPtr<OpenPromise> {
   LOG(("DocumentLoadListener [%p] OpenObject [uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
@@ -1203,10 +1220,9 @@ void DocumentLoadListener::CleanupParentLoadAttempt(uint64_t aLoadIdent) {
   registrar->DeregisterChannels(aLoadIdent);
 }
 
-auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
-                                           uint64_t aLoadIdent,
-                                           Maybe<uint64_t> aChannelId)
-    -> RefPtr<OpenPromise> {
+auto DocumentLoadListener::ClaimParentLoad(
+    DocumentLoadListener** aListener, uint64_t aLoadIdent,
+    Maybe<uint64_t> aChannelId) -> RefPtr<OpenPromise> {
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
 

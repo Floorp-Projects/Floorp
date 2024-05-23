@@ -21,7 +21,7 @@ diff --git a/test/test_duplex.cpp b/test/test_duplex.cpp
  #include "common.h"
  
  #define SAMPLE_FREQUENCY 48000
-@@ -294,16 +296,28 @@ TEST(cubeb, one_duplex_one_input)
+@@ -294,16 +296,27 @@ TEST(cubeb, one_duplex_one_input)
    cubeb * ctx;
    cubeb_stream * duplex_stream;
    cubeb_stream_params input_params;
