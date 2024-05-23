@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function createFrame(width, height, timestamp) {
+  let duration = 33333; // 30fps
+  let cnv = new OffscreenCanvas(width, height);
+  let ctx = cnv.getContext("2d");
+  ctx.fillStyle = "#FF0000";
+  ctx.fillRect(0, 0, width, height);
+  return new VideoFrame(cnv, { timestamp, duration });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  let encoderCallbacks = { error: (e) => {} };
+  let gotEncoderOutput = new Promise(resolve => {
+    encoderCallbacks.output = (chunk, metadata) => {
+      resolve([metadata.decoderConfig, chunk]);
+    }
+  });
+  const encoder = new VideoEncoder({
+    output: encoderCallbacks.output,
+    error: encoderCallbacks.error,
+  });
+  encoder.configure({
+    codec: "vp8",
+    width: 640,
+    height: 480,
+    displayWidth: 640,
+    displayHeight: 480,
+  });
+  encoder.encode(createFrame(640, 480, 0));
+  let [decoderConfig, chunk] = await gotEncoderOutput;
+
+  let decoderCallbacks = { error: (e) => {} };
+  let gotDecoderOutput = new Promise(resolve => {
+    decoderCallbacks.output = (frame) => {
+      frame.close();
+      resolve();
+    }
+  });
+
+  const decoder = new VideoDecoder({
+    output: decoderCallbacks.output,
+    error: decoderCallbacks.error,
+  });
+  decoder.configure({ ...decoderConfig, optimizeForLatency: true });
+  decoder.decode(chunk);
+  decoder.configure({
+    codec: "󠋚᩿",
+    width: 2147483648,
+    height: 60,
+  });
+
+  await gotDecoderOutput;
+  document.documentElement.removeAttribute("class");
+});
+</script>
+</html>
