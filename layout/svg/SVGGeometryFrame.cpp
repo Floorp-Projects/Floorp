@@ -133,7 +133,7 @@ void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (!IsVisibleForPainting()) {
       return;
     }
-    if (StyleEffects()->IsTransparent()) {
+    if (StyleEffects()->IsTransparent() && SVGUtils::CanOptimizeOpacity(this)) {
       return;
     }
     const auto* styleSVG = StyleSVG();
@@ -678,7 +678,8 @@ bool SVGGeometryFrame::IsInvisible() const {
   // Anything below will round to zero later down the pipeline.
   constexpr float opacity_threshold = 1.0 / 128.0;
 
-  if (StyleEffects()->mOpacity <= opacity_threshold) {
+  if (StyleEffects()->mOpacity <= opacity_threshold &&
+      SVGUtils::CanOptimizeOpacity(this)) {
     return true;
   }
 
