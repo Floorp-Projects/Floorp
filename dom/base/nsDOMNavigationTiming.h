@@ -210,7 +210,7 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
     return timing.forget();
   }
 
-  bool DocShellHasBeenActiveSinceNavigationStart() {
+  bool DocShellHasBeenActiveSinceNavigationStart() const {
     return mDocShellHasBeenActiveSinceNavigationStart;
   }
 
