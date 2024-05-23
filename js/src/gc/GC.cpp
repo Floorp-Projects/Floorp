@@ -3100,20 +3100,14 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
         return QueueSuspended;
       }
 
-      // Mark the object and push it onto the stack.
-      size_t oldPosition = marker().stack.position();
-      marker().markAndTraverse<NormalMarkingOptions>(obj);
-
-      // If we overflow the stack here and delay marking, then we won't be
-      // testing what we think we're testing.
-      if (marker().stack.position() == oldPosition) {
+      // Mark the object.
+      AutoEnterOOMUnsafeRegion oomUnsafe;
+      if (!marker().markOneObjectForTest(obj)) {
+        // If we overflowed the stack here and delayed marking, then we won't be
+        // testing what we think we're testing.
         MOZ_ASSERT(obj->asTenured().arena()->onDelayedMarkingList());
-        AutoEnterOOMUnsafeRegion oomUnsafe;
         oomUnsafe.crash("Overflowed stack while marking test queue");
       }
-
-      SliceBudget unlimited = SliceBudget::unlimited();
-      marker().processMarkStackTop<NormalMarkingOptions>(unlimited);
     } else if (val.isString()) {
       JSLinearString* str = &val.toString()->asLinear();
       if (js::StringEqualsLiteral(str, "yield") && isIncrementalGc()) {
