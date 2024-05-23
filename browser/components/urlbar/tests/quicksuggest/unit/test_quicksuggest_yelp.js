@@ -1103,7 +1103,6 @@ function makeExpectedResult({
       source: "rust",
       provider: "Yelp",
       telemetryType: "yelp",
-      shouldShowUrl: true,
       bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
       url,
       originalUrl,
