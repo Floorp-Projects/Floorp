@@ -2236,7 +2236,7 @@ export class TranslationsParent extends JSWindowActorParent {
       return false;
     }
     let languagePairs = await TranslationsParent.getLanguagePairs();
-    return Boolean(languagePairs.find(({ fromLang }) => fromLang === langTag));
+    return Boolean(languagePairs.find(({ toLang }) => toLang === langTag));
   }
 
   /**
