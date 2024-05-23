@@ -511,7 +511,7 @@ class NetworkModule extends Module {
         )(deserializedHeader[0]);
         lazy.assert.that(
           value => this.#isValidHeaderValue(value),
-          `Expected header value to be a valid header value, got ${deserializedHeader[1]}`
+          `Expected "header" value to be a valid header value, got ${deserializedHeader[1]}`
         )(deserializedHeader[1]);
         deserializedHeaders.push(deserializedHeader);
       }
