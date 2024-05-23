@@ -271,6 +271,11 @@ function init() {
     }
   });
 
+  let clearHTTPCache = document.getElementById("clearHTTPCache");
+  clearHTTPCache.addEventListener("click", async function () {
+    Services.cache2.clear();
+  });
+
   let dnsLookupButton = document.getElementById("dnsLookupButton");
   dnsLookupButton.addEventListener("click", function () {
     doLookup();

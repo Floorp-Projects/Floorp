@@ -48,6 +48,56 @@ pub extern "C" fn draining_data_callback(
     nframes - 1
 }
 
+#[derive(Default)]
+pub struct StateCallbackData {
+    started_cnt: AtomicU32,
+    stopped_cnt: AtomicU32,
+    drained_cnt: AtomicU32,
+    error_cnt: AtomicU32,
+}
+
+impl StateCallbackData {
+    pub fn started_cnt(&self) -> u32 {
+        self.started_cnt.load(Ordering::SeqCst)
+    }
+    pub fn stopped_cnt(&self) -> u32 {
+        self.stopped_cnt.load(Ordering::SeqCst)
+    }
+    pub fn drained_cnt(&self) -> u32 {
+        self.drained_cnt.load(Ordering::SeqCst)
+    }
+    pub fn error_cnt(&self) -> u32 {
+        self.error_cnt.load(Ordering::SeqCst)
+    }
+}
+
+pub extern "C" fn state_tracking_cb(
+    stream: *mut ffi::cubeb_stream,
+    _usr_ptr: *mut c_void,
+    state: u32,
+) {
+    let data = unsafe { (_usr_ptr as *mut StateCallbackData).as_mut() }.unwrap();
+    match state {
+        ffi::CUBEB_STATE_STARTED => {
+            data.started_cnt.fetch_add(1, Ordering::SeqCst);
+            cubeb_log!("({:p}) state is now started", stream);
+        }
+        ffi::CUBEB_STATE_STOPPED => {
+            data.stopped_cnt.fetch_add(1, Ordering::SeqCst);
+            cubeb_log!("({:p}) state is now stopped", stream);
+        }
+        ffi::CUBEB_STATE_DRAINED => {
+            data.drained_cnt.fetch_add(1, Ordering::SeqCst);
+            cubeb_log!("({:p}) state is now drained", stream);
+        }
+        ffi::CUBEB_STATE_ERROR => {
+            data.error_cnt.fetch_add(1, Ordering::SeqCst);
+            cubeb_log!("({:p}) state is now error", stream);
+        }
+        _ => unreachable!("unknown state"),
+    };
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Scope {
     Input,
@@ -357,14 +407,14 @@ impl TestDeviceInfo {
     }
 
     fn get_label(id: AudioObjectID, scope: Scope) -> String {
-        match get_device_uid(id, scope.into()) {
+        match run_serially_forward_panics(|| get_device_uid(id, scope.into())) {
             Ok(uid) => uid.into_string(),
             Err(status) => format!("Unknow. Error: {}", status).to_string(),
         }
     }
 
     fn get_uid(id: AudioObjectID, scope: Scope) -> String {
-        match get_device_label(id, scope.into()) {
+        match run_serially_forward_panics(|| get_device_label(id, scope.into())) {
             Ok(label) => label.into_string(),
             Err(status) => format!("Unknown. Error: {}", status).to_string(),
         }

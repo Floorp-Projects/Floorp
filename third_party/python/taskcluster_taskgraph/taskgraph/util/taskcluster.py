@@ -193,6 +193,48 @@ def find_task_id(index_path, use_proxy=False):
     return response.json()["taskId"]
 
 
+def find_task_id_batched(index_paths, use_proxy=False):
+    """Gets the task id of multiple tasks given their respective index.
+
+    Args:
+        index_paths (List[str]): A list of task indexes.
+        use_proxy (bool): Whether to use taskcluster-proxy (default: False)
+
+    Returns:
+        Dict[str, str]: A dictionary object mapping each valid index path
+                        to its respective task id.
+
+    See the endpoint here:
+        https://docs.taskcluster.net/docs/reference/core/index/api#findTasksAtIndex
+    """
+    endpoint = liburls.api(get_root_url(use_proxy), "index", "v1", "tasks/indexes")
+    task_ids = {}
+    continuation_token = None
+
+    while True:
+        response = _do_request(
+            endpoint,
+            json={
+                "indexes": index_paths,
+            },
+            params={"continuationToken": continuation_token},
+        )
+
+        response_data = response.json()
+        if not response_data["tasks"]:
+            break
+        response_tasks = response_data["tasks"]
+        if (len(task_ids) + len(response_tasks)) > len(index_paths):
+            # Sanity check
+            raise ValueError("more task ids were returned than were asked for")
+        task_ids.update((t["namespace"], t["taskId"]) for t in response_tasks)
+
+        continuationToken = response_data.get("continuationToken")
+        if continuationToken is None:
+            break
+    return task_ids
+
+
 def get_artifact_from_index(index_path, artifact_path, use_proxy=False):
     full_path = index_path + "/artifacts/" + artifact_path
     response = _do_request(get_index_url(full_path, use_proxy))
@@ -269,6 +311,49 @@ def status_task(task_id, use_proxy=False):
         resp = _do_request(get_task_url(task_id, use_proxy) + "/status")
         status = resp.json().get("status", {})
         return status
+
+
+def status_task_batched(task_ids, use_proxy=False):
+    """Gets the status of multiple tasks given task_ids.
+
+    In testing mode, just logs that it would have retrieved statuses.
+
+    Args:
+        task_id (List[str]): A list of task ids.
+        use_proxy (bool): Whether to use taskcluster-proxy (default: False)
+
+    Returns:
+        dict: A dictionary object as defined here:
+          https://docs.taskcluster.net/docs/reference/platform/queue/api#statuses
+    """
+    if testing:
+        logger.info(f"Would have gotten status for {len(task_ids)} tasks.")
+        return
+    endpoint = liburls.api(get_root_url(use_proxy), "queue", "v1", "tasks/status")
+    statuses = {}
+    continuation_token = None
+
+    while True:
+        response = _do_request(
+            endpoint,
+            json={
+                "taskIds": task_ids,
+            },
+            params={
+                "continuationToken": continuation_token,
+            },
+        )
+        response_data = response.json()
+        if not response_data["statuses"]:
+            break
+        response_tasks = response_data["statuses"]
+        if (len(statuses) + len(response_tasks)) > len(task_ids):
+            raise ValueError("more task statuses were returned than were asked for")
+        statuses.update((t["taskId"], t["status"]) for t in response_tasks)
+        continuationToken = response_data.get("continuationToken")
+        if continuationToken is None:
+            break
+    return statuses
 
 
 def state_task(task_id, use_proxy=False):

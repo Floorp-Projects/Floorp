@@ -9,6 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   getFrecentRecentCombinedUrls:
     "resource://gre/modules/contentrelevancy/private/InputUtils.sys.mjs",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   RelevancyStore: "resource://gre/modules/RustRelevancy.sys.mjs",
   InterestVector: "resource://gre/modules/RustRelevancy.sys.mjs",
@@ -165,6 +166,14 @@ class RelevancyManager {
       }
     }
 
+    this._shutdownBlocker = () => this.interrupt();
+    // Interrupt sooner prior to the `profile-before-change` phase to allow
+    // all the in-progress IOs to exit.
+    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
+      "ContentRelevancyManager: Interrupt IO operations on relevancy store",
+      this._shutdownBlocker
+    );
+
     this.#startUpTimer();
   }
 
@@ -177,6 +186,13 @@ class RelevancyManager {
     if (this._isStoreReady) {
       this.#_store.close();
       this.#_store = null;
+    }
+
+    if (this._shutdownBlocker) {
+      lazy.AsyncShutdown.profileChangeTeardown.removeBlocker(
+        this._shutdownBlocker
+      );
+      this._shutdownBlocker = null;
     }
     lazy.timerManager.unregisterTimer(TIMER_ID);
   }
@@ -284,6 +300,22 @@ class RelevancyManager {
     }
 
     lazy.log.info("Finished interest classification");
+  }
+
+  /**
+   * Interrupt all the IO operations on the relevancy store.
+   */
+  interrupt() {
+    if (this.#_store) {
+      try {
+        lazy.log.debug(
+          "Interrupting all the IO operations on the relevancy store"
+        );
+        this.#_store.interrupt();
+      } catch (error) {
+        lazy.log.error("Interrupt error: " + (error.reason ?? error));
+      }
+    }
   }
 
   /**

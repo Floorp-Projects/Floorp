@@ -349,6 +349,15 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                     "help": "Whether to use the Http2 server",
                 },
             ],
+            [
+                ["--mochitest-flavor"],
+                {
+                    "action": "store",
+                    "dest": "mochitest_flavor",
+                    "help": "Specify which mochitest flavor to run."
+                    "Examples: 'plain', 'browser'",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -385,6 +394,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
         self.binary_path = c.get("binary_path")
         self.abs_app_dir = None
         self.abs_res_dir = None
+        self.mochitest_flavor = c.get("mochitest_flavor", None)
 
         # Construct an identifier to be used to identify Perfherder data
         # for resource monitoring recording. This attempts to uniquely
@@ -642,6 +652,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 "gtest_dir": os.path.join(dirs["abs_test_install_dir"], "gtest"),
             }
 
+            if self.mochitest_flavor:
+                str_format_values.update({"mochitest_flavor": self.mochitest_flavor})
+
             # TestingMixin._download_and_extract_symbols() will set
             # self.symbols_path when downloading/extracting.
             if self.symbols_path:
@@ -700,6 +713,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                         "--no-random does not currently work with suites other than "
                         "mochitest."
                     )
+
+            if c.get("mochitest_flavor", None):
+                base_cmd.append("--flavor={}".format(c["mochitest_flavor"]))
 
             if c["headless"]:
                 base_cmd.append("--headless")
@@ -1210,7 +1226,14 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                     options_list = suites[suite]
                     tests_list = []
 
-                flavor = self._query_try_flavor(suite_category, suite)
+                flavor = (
+                    self.mochitest_flavor
+                    if self.mochitest_flavor
+                    else self._query_try_flavor(suite_category, suite)
+                )
+                if self.mochitest_flavor:
+                    replace_dict.update({"mochitest_flavor": flavor})
+
                 try_options, try_tests = self.try_args(flavor)
 
                 suite_name = suite_category + "-" + suite

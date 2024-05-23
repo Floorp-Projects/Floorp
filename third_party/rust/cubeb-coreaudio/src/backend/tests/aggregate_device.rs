@@ -352,7 +352,7 @@ fn test_aggregate_activate_clock_drift_compensation() {
     assert_eq!(devices.len(), compensations.len());
 
     for (device, compensation) in zip(devices, compensations) {
-        let uid = get_device_uid(device);
+        let uid = run_serially(|| get_device_uid(device));
         assert_eq!(
             compensation,
             if uid == master_device_uid {

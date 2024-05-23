@@ -12,6 +12,7 @@
       content="default-src chrome:; object-src 'none'"
     />
     <meta name="color-scheme" content="light dark" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-l10n-id="about-networking-title"></title>
     <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css" />
     <script src="chrome://global/content/aboutNetworking.js"></script>
@@ -85,6 +86,10 @@
       </div>
 
       <div id="http" class="tab active">
+        <button
+          id="clearHTTPCache"
+          data-l10n-id="about-networking-http-clear-cache-button"
+        ></button>
         <table>
           <thead>
             <tr>

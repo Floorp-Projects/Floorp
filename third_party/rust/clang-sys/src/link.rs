@@ -40,6 +40,7 @@ macro_rules! link {
         )+
     ) => (
         use std::cell::{RefCell};
+        use std::fmt;
         use std::sync::{Arc};
         use std::path::{Path, PathBuf};
 
@@ -58,6 +59,33 @@ macro_rules! link {
             V7_0 = 70,
             V8_0 = 80,
             V9_0 = 90,
+            V11_0 = 110,
+            V12_0 = 120,
+            V16_0 = 160,
+            V17_0 = 170,
+        }
+
+        impl fmt::Display for Version {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                use Version::*;
+                match self {
+                    V3_5 => write!(f, "3.5.x"),
+                    V3_6 => write!(f, "3.6.x"),
+                    V3_7 => write!(f, "3.7.x"),
+                    V3_8 => write!(f, "3.8.x"),
+                    V3_9 => write!(f, "3.9.x"),
+                    V4_0 => write!(f, "4.0.x"),
+                    V5_0 => write!(f, "5.0.x"),
+                    V6_0 => write!(f, "6.0.x"),
+                    V7_0 => write!(f, "7.0.x"),
+                    V8_0 => write!(f, "8.0.x"),
+                    V9_0 => write!(f, "9.0.x - 10.0.x"),
+                    V11_0 => write!(f, "11.0.x"),
+                    V12_0 => write!(f, "12.0.x - 15.0.x"),
+                    V16_0 => write!(f, "16.0.x"),
+                    V17_0 => write!(f, "17.0.x or later"),
+                }
+            }
         }
 
         /// The set of functions loaded dynamically.
@@ -104,6 +132,10 @@ macro_rules! link {
                 }
 
                 unsafe {
+                    check!(b"clang_CXXMethod_isExplicit", V17_0);
+                    check!(b"clang_CXXMethod_isCopyAssignmentOperator", V16_0);
+                    check!(b"clang_Cursor_getVarDeclInitializer", V12_0);
+                    check!(b"clang_Type_getValueType", V11_0);
                     check!(b"clang_Cursor_isAnonymousRecordDecl", V9_0);
                     check!(b"clang_Cursor_getObjCPropertyGetterName", V8_0);
                     check!(b"clang_File_tryGetRealPathName", V7_0);
@@ -142,13 +174,31 @@ macro_rules! link {
             #[cfg_attr(feature="cargo-clippy", allow(clippy::too_many_arguments))]
             $(#[doc=$doc] #[cfg($cfg)])*
             pub unsafe fn $name($($pname: $pty), *) $(-> $ret)* {
-                let f = with_library(|l| {
-                    l.functions.$name.expect(concat!(
-                        "`libclang` function not loaded: `",
-                        stringify!($name),
-                        "`. This crate requires that `libclang` 3.9 or later be installed on your ",
-                        "system. For more information on how to accomplish this, see here: ",
-                        "https://rust-lang.github.io/rust-bindgen/requirements.html#installing-clang-39"))
+                let f = with_library(|library| {
+                    if let Some(function) = library.functions.$name {
+                        function
+                    } else {
+                        panic!(
+                            r#"
+A `libclang` function was called that is not supported by the loaded `libclang` instance.
+
+    called function = `{0}`
+    loaded `libclang` instance = {1}
+
+This crate only supports `libclang` 3.5 and later.
+The minimum `libclang` requirement for this particular function can be found here:
+https://docs.rs/clang-sys/latest/clang_sys/{0}/index.html
+
+Instructions for installing `libclang` can be found here:
+https://rust-lang.github.io/rust-bindgen/requirements.html
+"#, 
+                            stringify!($name),
+                            library
+                                .version()
+                                .map(|v| format!("{}", v))
+                                .unwrap_or_else(|| "unsupported version".into()),
+                        );
+                    }
                 }).expect("a `libclang` shared library is not loaded on this thread");
                 f($($pname), *)
             }

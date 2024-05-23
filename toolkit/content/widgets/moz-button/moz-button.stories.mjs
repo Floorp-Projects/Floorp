@@ -32,7 +32,8 @@ export default {
     },
     status: "in-development",
     fluent: `
-moz-button-labelled = Button
+moz-button-labelled =
+  .label = Button
 moz-button-primary = Primary
 moz-button-destructive = Destructive
 moz-button-titled =

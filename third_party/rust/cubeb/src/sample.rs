@@ -13,7 +13,7 @@ pub trait Sample: Send + Copy {
 
 impl Sample for i16 {
     fn from_float(x: f32) -> i16 {
-        (x * f32::from(i16::max_value())) as i16
+        (x * f32::from(i16::MAX)) as i16
     }
 }
 

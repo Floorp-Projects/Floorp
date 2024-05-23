@@ -474,15 +474,21 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
   //    properly cases when interface is implemented in JS and used
   //    as a dictionary.
   nsAutoString json;
-  NS_ENSURE_TRUE(
-      nsContentUtils::StringifyJSON(aCx, v, json, UndefinedIsNullStringLiteral),
-      false);
+  if (!nsContentUtils::StringifyJSON(aCx, v, json,
+                                     UndefinedIsNullStringLiteral)) {
+    NS_WARNING("nsContentUtils::StringifyJSON() failed");
+    JS_ClearPendingException(aCx);
+    return false;
+  }
   NS_ENSURE_TRUE(!json.IsEmpty(), false);
 
   JS::Rooted<JS::Value> val(aCx, JS::NullValue());
-  NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const char16_t*>(json.get()),
-                              json.Length(), &val),
-                 false);
+  if (!JS_ParseJSON(aCx, static_cast<const char16_t*>(json.get()),
+                    json.Length(), &val)) {
+    NS_WARNING("JS_ParseJSON");
+    JS_ClearPendingException(aCx);
+    return false;
+  }
 
   aData.Write(aCx, val, rv);
   if (NS_WARN_IF(rv.Failed())) {

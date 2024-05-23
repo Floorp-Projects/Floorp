@@ -59,7 +59,7 @@ impl Clang {
     pub fn find(path: Option<&Path>, args: &[String]) -> Option<Clang> {
         if let Ok(path) = env::var("CLANG_PATH") {
             let p = Path::new(&path);
-            if p.is_file() && is_executable(&p).unwrap_or(false) {
+            if p.is_file() && is_executable(p).unwrap_or(false) {
                 return Some(Clang::new(p, args));
             }
         }
@@ -184,7 +184,7 @@ fn run(executable: &str, arguments: &[&str]) -> Result<(String, String), String>
 
 /// Runs `clang`, returning the `stdout` and `stderr` output.
 fn run_clang(path: &Path, arguments: &[&str]) -> (String, String) {
-    run(&path.to_string_lossy().into_owned(), arguments).unwrap()
+    run(&path.to_string_lossy(), arguments).unwrap()
 }
 
 /// Runs `llvm-config`, returning the `stdout` output if successful.
@@ -197,7 +197,7 @@ fn run_llvm_config(arguments: &[&str]) -> Result<String, String> {
 fn parse_version_number(number: &str) -> Option<c_int> {
     number
         .chars()
-        .take_while(|c| c.is_digit(10))
+        .take_while(|c| c.is_ascii_digit())
         .collect::<String>()
         .parse()
         .ok()
