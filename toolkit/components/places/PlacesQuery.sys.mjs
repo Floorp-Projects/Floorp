@@ -272,11 +272,12 @@ export class PlacesQuery {
     switch (this.cachedHistoryOptions.sortBy) {
       case "date":
         return this.getStartOfDayTimestamp(visit.date);
-      case "site":
+      case "site": {
         const { protocol } = new URL(visit.url);
         return protocol === "http:" || protocol === "https:"
           ? lazy.BrowserUtils.formatURIStringForDisplay(visit.url)
           : "";
+      }
     }
     return null;
   }

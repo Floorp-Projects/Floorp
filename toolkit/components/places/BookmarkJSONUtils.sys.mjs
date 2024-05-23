@@ -405,7 +405,7 @@ function translateTreeTypes(node) {
   }
 
   switch (node.type) {
-    case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
+    case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER: {
       node.type = PlacesUtils.bookmarks.TYPE_FOLDER;
 
       // Older type mobile folders have a random guid with an annotation. We need
@@ -424,6 +424,7 @@ function translateTreeTypes(node) {
       // queries later.
       folderIdToGuidMap[node.id] = node.guid;
       break;
+    }
     case PlacesUtils.TYPE_X_MOZ_PLACE:
       node.type = PlacesUtils.bookmarks.TYPE_BOOKMARK;
       break;

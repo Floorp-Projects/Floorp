@@ -55,7 +55,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   let nodesCount = 1;
 
   switch (aNode.type) {
-    case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
+    case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER: {
       Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
       Assert.equal(aItem.typeCode, PlacesUtils.bookmarks.TYPE_FOLDER);
       compare_prop("title", "title", true);
@@ -101,12 +101,13 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         check_unset("root");
       }
       break;
+    }
     case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
       Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
       Assert.equal(aItem.typeCode, PlacesUtils.bookmarks.TYPE_SEPARATOR);
       check_unset(...BOOKMARK_ONLY_PROPS, ...FOLDER_ONLY_PROPS);
       break;
-    default:
+    default: {
       Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE);
       Assert.equal(aItem.typeCode, PlacesUtils.bookmarks.TYPE_BOOKMARK);
       compare_prop("uri");
@@ -152,6 +153,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       } else {
         Assert.equal(null, aNode.title);
       }
+    }
   }
 
   if (aIsRootItem) {
