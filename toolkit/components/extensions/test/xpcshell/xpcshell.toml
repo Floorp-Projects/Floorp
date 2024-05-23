@@ -72,6 +72,7 @@ skip-if = ["os == 'android'"] # Not shipped on Android
 ["test_ext_json_parser.js"]
 
 ["test_ext_manifest.js"]
+skip-if = ["condprof"] # Bug 1898471
 
 ["test_ext_manifest_content_security_policy.js"]
 
