@@ -10994,15 +10994,16 @@
 # depends on the backend.
 - name: media.getusermedia.microphone.prefer_voice_stream_with_processing.enabled
   type: RelaxedAtomicBool
-  value: True
+  value: true
   mirror: always
 
 # Tell the audio backend to create a voice stream for later re-use before asking
 # the user for microphone permissions, if approving those permissions would
 # result in a voice stream when created later on.
+# Disabled on macOS since it breaks VPIO's AEC. See bug 1895787.
 - name: media.getusermedia.microphone.voice_stream_priming.enabled
   type: RelaxedAtomicBool
-  value: @IS_XP_MACOSX@
+  value: false
   mirror: always
 
 # This pref turns on legacy (non-spec) exposure of camera and microphone
