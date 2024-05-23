@@ -110,7 +110,11 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
  * @returns {boolean} Whether the extension is allowed to run code in execution
  *   contexts with the given principal.
  */
-function extensionAllowedToInspectPrincipal(extensionPolicy, principal, location) {
+function extensionAllowedToInspectPrincipal(
+  extensionPolicy,
+  principal,
+  location
+) {
   if (principal.isNullPrincipal) {
     if (location.protocol === "view-source:") {
       // Don't fall back to the precursor, we never want extensions to be able
