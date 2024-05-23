@@ -186,10 +186,20 @@ def run_perftest(command_context, **kwargs):
 @CommandArgument(
     "-v", "--verbose", action="store_true", default=False, help="Verbose mode"
 )
+@CommandArgument(
+    "-r",
+    "--raptor",
+    action="store_true",
+    default=False,
+    help="Run raptor tests",
+)
 def run_tests(command_context, **kwargs):
     from pathlib import Path
 
     from mozperftest.utils import temporary_env
+
+    if "raptor" in kwargs:
+        print("Running raptor unit tests through mozperftest")
 
     with temporary_env(
         COVERAGE_RCFILE=str(Path(HERE, ".coveragerc")), RUNNING_TESTS="YES"
@@ -206,7 +216,7 @@ def _run_tests(command_context, **kwargs):
     skip_linters = kwargs.get("skip_linters", False)
     verbose = kwargs.get("verbose", False)
 
-    if not ON_TRY and not skip_linters:
+    if not ON_TRY and not skip_linters and not kwargs.get("raptor"):
         cmd = "./mach lint "
         if verbose:
             cmd += " -v"
@@ -220,6 +230,7 @@ def _run_tests(command_context, **kwargs):
     # 2/ coverage run pytest ... => run the tests and collect info
     # 3/ coverage report => generate the report
     tests_dir = Path(HERE, "tests").resolve()
+
     tests = kwargs.get("tests", [])
     if tests == []:
         tests = str(tests_dir)
@@ -244,11 +255,19 @@ def _run_tests(command_context, **kwargs):
     if kwargs.get("verbose"):
         options += "v"
 
+    # If we run mozperftest with the --raptor argument,
+    # then only run the raptor unit tests
+    if kwargs.get("raptor"):
+        run_coverage_check = True
+        tests = str(Path(command_context.topsrcdir, "testing", "raptor", "test"))
+
     if run_coverage_check:
         assert checkout_python_script(
             venv, "coverage", ["erase"], label="remove old coverage data"
         )
+
     args = ["run", "-m", "pytest", options, "--durations", "10", tests]
+
     assert checkout_python_script(
         venv, "coverage", args, label="running tests", verbose=verbose
     )
