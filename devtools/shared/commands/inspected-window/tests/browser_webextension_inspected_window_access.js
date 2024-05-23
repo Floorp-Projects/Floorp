@@ -137,6 +137,12 @@ add_task(async function test_eval_at_https() {
     url: "https://example.com/",
   });
 
+  await checkEvalAllowed({
+    extension,
+    description: "https:-URL with opaque origin (CSP sandbox)",
+    url: URL_ROOT_SSL + "csp_sandbox.sjs",
+  });
+
   await checkEvalDenied({
     extension,
     description: "a restricted domain",
@@ -324,6 +330,11 @@ add_task(async function test_eval_at_view_source() {
     extension,
     description: "view-source at https:-URL",
     url: "view-source:https://example.com/?somepage",
+  });
+  await checkEvalDenied({
+    extension,
+    description: "view-source at https:-URL with opaque origin (CSP sandbox)",
+    url: `view-source:${URL_ROOT_SSL}csp_sandbox.sjs`,
   });
   await checkEvalDenied({
     extension,
