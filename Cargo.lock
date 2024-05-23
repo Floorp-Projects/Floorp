@@ -592,26 +592,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ff69b9dd49fd426c69a0db9fc04dd934cdb6645ff000864d98f7e2af8830eaa"
 
 [[package]]
-name = "bytemuck"
-version = "1.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d6d68c57235a3a081186990eca2867354726650f42f7516ca50c28d6281fd15"
-dependencies = [
- "bytemuck_derive",
-]
-
-[[package]]
-name = "bytemuck_derive"
-version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4da9a32f3fed317401fa3c862968128267c3106685286e15d5aaa3d7389c2f60"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1732,7 +1712,6 @@ version = "0.22.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b52c2ef4a78da0ba68fbe1fd920627411096d2ac478f7f4c9f3a54ba6705bade"
 dependencies = [
- "bytemuck",
  "num-traits",
  "serde",
 ]
@@ -6537,7 +6516,6 @@ dependencies = [
  "bincode",
  "bitflags 2.5.0",
  "build-parallel",
- "bytemuck",
  "byteorder",
  "derive_more 0.99.999",
  "etagere",
@@ -6574,7 +6552,6 @@ version = "0.62.0"
 dependencies = [
  "app_units",
  "bitflags 2.5.0",
- "bytemuck",
  "byteorder",
  "crossbeam-channel",
  "euclid",

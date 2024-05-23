@@ -12,7 +12,6 @@ use euclid::approxeq::ApproxEq;
 use euclid::{point2, vec2, size2};
 use api::{ExtendMode, GradientStop, LineOrientation, PremultipliedColorF, ColorF, ColorU};
 use api::units::*;
-use bytemuck::{Pod, Zeroable};
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
@@ -686,7 +685,7 @@ pub type FastLinearGradientCacheKey = FastLinearGradientTask;
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+#[derive(Clone, Debug)]
 pub struct FastLinearGradientInstance {
     pub task_rect: DeviceRect,
     pub color0: PremultipliedColorF,
@@ -724,7 +723,7 @@ impl LinearGradientTask {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+#[derive(Clone, Debug)]
 pub struct LinearGradientInstance {
     pub task_rect: DeviceRect,
     pub start: DevicePoint,
