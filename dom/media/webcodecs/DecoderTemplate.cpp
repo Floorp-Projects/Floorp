@@ -59,18 +59,15 @@ namespace mozilla::dom {
  */
 
 template <typename DecoderType>
-DecoderTemplate<DecoderType>::ControlMessage::ControlMessage(
-    const nsACString& aTitle)
-    : mTitle(aTitle) {}
-
-template <typename DecoderType>
 DecoderTemplate<DecoderType>::ConfigureMessage::ConfigureMessage(
     Id aId, UniquePtr<ConfigTypeInternal>&& aConfig)
-    : ControlMessage(
-          nsPrintfCString("configure #%d (%s)", aId,
-                          NS_ConvertUTF16toUTF8(aConfig->mCodec).get())),
-      mId(aId),
-      mConfig(std::move(aConfig)) {}
+    : ControlMessage(), mId(aId), mConfig(std::move(aConfig)) {}
+
+template <typename DecoderType>
+nsCString DecoderTemplate<DecoderType>::ConfigureMessage::ToString() const {
+  return nsPrintfCString("configure #%d (%s)", mId,
+                         NS_ConvertUTF16toUTF8(mConfig->mCodec).get());
+}
 
 /* static */
 template <typename DecoderType>
@@ -86,10 +83,15 @@ DecoderTemplate<DecoderType>::ConfigureMessage::Create(
 template <typename DecoderType>
 DecoderTemplate<DecoderType>::DecodeMessage::DecodeMessage(
     SeqId aSeqId, ConfigId aConfigId, UniquePtr<InputTypeInternal>&& aData)
-    : ControlMessage(
-          nsPrintfCString("decode #%zu (config #%d)", aSeqId, aConfigId)),
+    : ControlMessage(),
+      mConfigId(aConfigId),
       mSeqId(aSeqId),
       mData(std::move(aData)) {}
+
+template <typename DecoderType>
+nsCString DecoderTemplate<DecoderType>::DecodeMessage::ToString() const {
+  return nsPrintfCString("decode #%zu (config #%d)", mSeqId, mConfigId);
+}
 
 static int64_t GenerateUniqueId() {
   // This needs to be atomic since this can run on the main thread or worker
@@ -101,10 +103,15 @@ static int64_t GenerateUniqueId() {
 template <typename DecoderType>
 DecoderTemplate<DecoderType>::FlushMessage::FlushMessage(SeqId aSeqId,
                                                          ConfigId aConfigId)
-    : ControlMessage(
-          nsPrintfCString("flush #%zu (config #%d)", aSeqId, aConfigId)),
+    : ControlMessage(),
+      mConfigId(aConfigId),
       mSeqId(aSeqId),
       mUniqueId(GenerateUniqueId()) {}
+
+template <typename DecoderType>
+nsCString DecoderTemplate<DecoderType>::FlushMessage::ToString() const {
+  return nsPrintfCString("flush #%zu (config #%d)", mSeqId, mConfigId);
+}
 
 /*
  * Below are DecoderTemplate implementation

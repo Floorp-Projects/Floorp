@@ -49,17 +49,15 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   class ControlMessage {
    public:
-    explicit ControlMessage(const nsACString& aTitle);
+    ControlMessage() = default;
     virtual ~ControlMessage() = default;
     virtual void Cancel() = 0;
     virtual bool IsProcessing() = 0;
 
-    virtual const nsCString& ToString() const { return mTitle; }
+    virtual nsCString ToString() const = 0;
     virtual ConfigureMessage* AsConfigureMessage() { return nullptr; }
     virtual DecodeMessage* AsDecodeMessage() { return nullptr; }
     virtual FlushMessage* AsFlushMessage() { return nullptr; }
-
-    const nsCString mTitle;  // Used to identify the message in the logs.
   };
 
   class ConfigureMessage final
@@ -73,6 +71,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
     ~ConfigureMessage() = default;
     virtual void Cancel() override { Disconnect(); }
     virtual bool IsProcessing() override { return Exists(); };
+    virtual nsCString ToString() const override;
     virtual ConfigureMessage* AsConfigureMessage() override { return this; }
     const ConfigTypeInternal& Config() { return *mConfig; }
     UniquePtr<ConfigTypeInternal> TakeConfig() { return std::move(mConfig); }
@@ -97,8 +96,11 @@ class DecoderTemplate : public DOMEventTargetHelper {
     ~DecodeMessage() = default;
     virtual void Cancel() override { Disconnect(); }
     virtual bool IsProcessing() override { return Exists(); };
+    virtual nsCString ToString() const override;
     virtual DecodeMessage* AsDecodeMessage() override { return this; }
 
+    // The id of the associated ConfigureMessage.
+    const ConfigId mConfigId;
     // The sequence id of a decode request associated with a specific
     // configuration.
     const SeqId mSeqId;
@@ -115,8 +117,11 @@ class DecoderTemplate : public DOMEventTargetHelper {
     ~FlushMessage() = default;
     virtual void Cancel() override { Disconnect(); }
     virtual bool IsProcessing() override { return Exists(); };
+    virtual nsCString ToString() const override;
     virtual FlushMessage* AsFlushMessage() override { return this; }
 
+    // The id of the associated ConfigureMessage.
+    const ConfigId mConfigId;
     // The sequence id of a flush request associated with a specific
     // configuration.
     const SeqId mSeqId;
