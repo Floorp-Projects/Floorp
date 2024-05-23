@@ -51,7 +51,7 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
   friend class mozilla::safebrowsing::VariableLengthPrefixSet;
 
  private:
-  virtual ~nsUrlClassifierPrefixSet();
+  virtual ~nsUrlClassifierPrefixSet() MOZ_REQUIRES(mLock);
 
   static const uint32_t DELTAS_LIMIT = 120;
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);

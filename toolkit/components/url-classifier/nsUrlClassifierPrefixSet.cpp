@@ -37,6 +37,8 @@ nsUrlClassifierPrefixSet::Init(const nsACString& aName) {
 }
 
 nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet() {
+  MutexAutoLock lock(mLock);
+
   for (uint32_t i = 0; i < mIndexDeltas.Length(); i++) {
     mIndexDeltas[i].Clear();
   }
