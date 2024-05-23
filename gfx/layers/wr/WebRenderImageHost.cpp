@@ -19,6 +19,7 @@
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsAString.h"
 #include "nsDebug.h"          // for NS_WARNING, NS_ASSERTION
@@ -220,7 +221,11 @@ void WebRenderImageHost::UseRemoteTexture() {
     MOZ_ASSERT(mPendingRemoteTextureWrappers.empty());
 
     if (mWaitForRemoteTextureOwner) {
-      wrapper->EnableWaitForRemoteTextureOwner(true);
+      if (StaticPrefs::gfx_remote_texture_wait_owner_at_image_host()) {
+        RemoteTextureMap::Get()->WaitForRemoteTextureOwner(wrapper);
+      } else {
+        wrapper->EnableWaitForRemoteTextureOwner(true);
+      }
     }
     mWaitForRemoteTextureOwner = false;
   }

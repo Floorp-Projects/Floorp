@@ -6932,6 +6932,11 @@
   value: false
   mirror: always
 
+- name: gfx.remote-texture.wait-owner-at-image-host
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "gl." (OpenGL)
 #---------------------------------------------------------------------------
