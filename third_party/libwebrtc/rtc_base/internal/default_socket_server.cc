@@ -14,7 +14,7 @@
 
 #include "rtc_base/socket_server.h"
 
-#if defined(__native_client__)
+#if defined(__native_client__) || defined(WEBRTC_BSD)
 #include "rtc_base/null_socket_server.h"
 #else
 #include "rtc_base/physical_socket_server.h"
@@ -23,7 +23,7 @@
 namespace rtc {
 
 std::unique_ptr<SocketServer> CreateDefaultSocketServer() {
-#if defined(__native_client__)
+#if defined(__native_client__) || defined(WEBRTC_BSD)
   return std::unique_ptr<SocketServer>(new rtc::NullSocketServer);
 #else
   return std::unique_ptr<SocketServer>(new rtc::PhysicalSocketServer);
