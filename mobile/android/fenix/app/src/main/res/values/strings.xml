@@ -2583,7 +2583,7 @@
     <!-- The error message of the text field in the tab creation tool when the text field is a
         quantity greater than the max tabs. The first parameter is the maximum number of tabs
         that can be generated in one operation.-->
-    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">No more than %1$s tabs can be generated in one operation</string>
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Exceeded the maximum number of tabs (%1$s) that can be generated in one operation</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Add to active tabs</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
