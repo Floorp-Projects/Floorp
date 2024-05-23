@@ -21,6 +21,7 @@ EXTRA_JS_MODULES += [
     "ExtensionDNR.sys.mjs",
     "ExtensionDNRLimits.sys.mjs",
     "ExtensionDNRStore.sys.mjs",
+    "ExtensionMenus.sys.mjs",
     "ExtensionPageChild.sys.mjs",
     "ExtensionParent.sys.mjs",
     "ExtensionPermissionMessages.sys.mjs",

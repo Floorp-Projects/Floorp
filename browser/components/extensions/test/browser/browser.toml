@@ -287,6 +287,8 @@ https_first_disabled = true
 
 ["browser_ext_menus_replace_menu_permissions.js"]
 
+["browser_ext_menus_startup_restored.js"]
+
 ["browser_ext_menus_targetElement.js"]
 
 ["browser_ext_menus_targetElement_extension.js"]
