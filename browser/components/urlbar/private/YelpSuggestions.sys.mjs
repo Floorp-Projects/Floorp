@@ -117,7 +117,6 @@ export class YelpSuggestions extends BaseFeature {
           url: url.toString(),
           originalUrl: suggestion.url,
           title: [title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
-          shouldShowUrl: true,
           bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
         })
       ),
