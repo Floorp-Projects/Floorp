@@ -126,6 +126,11 @@ class LogModule {
   static void SetCaptureStacks(bool aCaptureStacks);
 
   /**
+   * Disable all log modules.
+   */
+  static void DisableModules();
+
+  /**
    * Indicates whether or not the given log level is enabled.
    */
   bool ShouldLog(LogLevel aLevel) const { return mLevel >= aLevel; }
