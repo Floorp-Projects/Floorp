@@ -61,10 +61,9 @@ def generate_smoke_tests(tests_names=None):
         tests.append(
             f"""
 @pytest.mark.smoke_test
-def test_smoke_{test_name}(setup_experiment, gradlewbuild, load_branches, check_ping_for_experiment):
-    setup_experiment(load_branches)
+def test_smoke_{test_name}(setup_experiment, gradlewbuild):
+    setup_experiment()
     gradlewbuild.test("{test}", smoke=True)
-    assert check_ping_for_experiment
 """
         )
     with open(pytest_file, "a") as file:

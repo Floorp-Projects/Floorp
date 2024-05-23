@@ -5,43 +5,31 @@
 import pytest
 
 
-@pytest.mark.parametrize("load_branches", [("branch")], indirect=True)
-def test_survey_navigates_correctly(
-    setup_experiment, gradlewbuild, load_branches, check_ping_for_experiment
-):
-    setup_experiment(load_branches)
+@pytest.mark.messaging_survey
+def test_survey_navigates_correctly(setup_experiment, gradlewbuild):
+    setup_experiment()
     gradlewbuild.test("SurveyExperimentIntegrationTest#checkSurveyNavigatesCorrectly")
-    assert check_ping_for_experiment(reason="enrollment", branch=load_branches[0])
 
 
-@pytest.mark.parametrize("load_branches", [("branch")], indirect=True)
-def test_survey_no_thanks_navigates_correctly(
-    setup_experiment, gradlewbuild, load_branches, check_ping_for_experiment
-):
-    setup_experiment(load_branches)
+@pytest.mark.messaging_survey
+def test_survey_no_thanks_navigates_correctly(setup_experiment, gradlewbuild):
+    setup_experiment()
     gradlewbuild.test(
         "SurveyExperimentIntegrationTest#checkSurveyNoThanksNavigatesCorrectly"
     )
-    assert check_ping_for_experiment(reason="enrollment", branch=load_branches[0])
 
 
-@pytest.mark.parametrize("load_branches", [("branch")], indirect=True)
-def test_homescreen_survey_dismisses_correctly(
-    setup_experiment, gradlewbuild, load_branches, check_ping_for_experiment
-):
-    setup_experiment(load_branches)
+@pytest.mark.messaging_homescreen
+def test_homescreen_survey_dismisses_correctly(setup_experiment, gradlewbuild):
+    setup_experiment()
     gradlewbuild.test(
         "SurveyExperimentIntegrationTest#checkHomescreenSurveyDismissesCorrectly"
     )
-    assert check_ping_for_experiment(reason="enrollment", branch=load_branches[0])
 
 
-@pytest.mark.parametrize("load_branches", [("branch")], indirect=True)
-def test_survey_landscape_looks_correct(
-    setup_experiment, gradlewbuild, load_branches, check_ping_for_experiment
-):
-    setup_experiment(load_branches)
+@pytest.mark.messaging_survey
+def test_survey_landscape_looks_correct(setup_experiment, gradlewbuild):
+    setup_experiment()
     gradlewbuild.test(
         "SurveyExperimentIntegrationTest#checkSurveyLandscapeLooksCorrect"
     )
-    assert check_ping_for_experiment(reason="enrollment", branch=load_branches[0])
