@@ -11,12 +11,12 @@ their contents are ignored in favour of the actual stdlib.
 For firefox's purposes, these patches still work fine, and are necessary
 to make -Zbuild-std work in a vendored environment.
 
-diff --git a/src/bootstrap/dist.rs b/src/bootstrap/dist.rs
-index 3cb0eccd324..a3b8154c024 100644
+diff --git a/src/bootstrap/src/core/build_steps/dist.rs b/src/bootstrap/src/core/build_steps/dist.rs
+index 012d64e5344..aedb53358ef 100644
 --- a/src/bootstrap/src/core/build_steps/dist.rs
 +++ b/src/bootstrap/src/core/build_steps/dist.rs
-@@ -905,6 +905,31 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
-             builder.copy(&builder.src.join(file), &dst_src.join(file));
+@@ -927,6 +927,31 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
+             builder.copy_link(&builder.src.join(file), &dst_src.join(file));
          }
  
 +        // libsysroot includes std and everything else, so vendoring it
@@ -47,11 +47,11 @@ index 3cb0eccd324..a3b8154c024 100644
          tarball.generate()
      }
  }
-diff --git a/src/bootstrap/lib.rs b/src/bootstrap/lib.rs
-index 3ed53452309..1fc0d887748 100644
+diff --git a/src/bootstrap/src/lib.rs b/src/bootstrap/src/lib.rs
+index 5ed6b357e20..ad617948c4b 100644
 --- a/src/bootstrap/src/lib.rs
 +++ b/src/bootstrap/src/lib.rs
-@@ -1437,6 +1437,27 @@ fn read_stamp_file(&self, stamp: &Path) -> Vec<(PathBuf, DependencyType)> {
+@@ -1649,6 +1649,27 @@ fn read_stamp_file(&self, stamp: &Path) -> Vec<(PathBuf, DependencyType)> {
          paths
      }
  
@@ -61,7 +61,7 @@ index 3ed53452309..1fc0d887748 100644
 +        if self.config.dry_run() {
 +            return;
 +        }
-+        self.verbose_than(1, &format!("Copy {:?} to {:?}", src, dst));
++        self.verbose_than(1, || println!("Copy {:?} to {:?}", src, dst));
 +        if src == dst {
 +            return;
 +        }
@@ -76,6 +76,6 @@ index 3ed53452309..1fc0d887748 100644
 +        t!(filetime::set_file_times(dst, atime, mtime));
 +    }
 +
-     /// Copies a file from `src` to `dst`
-     pub fn copy(&self, src: &Path, dst: &Path) {
-         self.copy_internal(src, dst, false);
+     /// Links a file from `src` to `dst`.
+     /// Attempts to use hard links if possible, falling back to copying.
+     /// You can neither rely on this being a copy nor it being a link,
