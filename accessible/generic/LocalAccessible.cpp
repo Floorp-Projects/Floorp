@@ -1182,8 +1182,6 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
   // xul tree item) then don't calculate content based attributes.
   if (!HasOwnContent()) return attributes.forget();
 
-  nsEventShell::GetEventAttributes(GetNode(), attributes);
-
   // Get container-foo computed live region properties based on the closest
   // container with the live region attribute. Inner nodes override outer nodes
   // within the same document. The inner nodes can be used to override live

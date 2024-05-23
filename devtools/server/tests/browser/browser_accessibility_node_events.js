@@ -105,7 +105,6 @@ add_task(async function () {
         attributes: {
           "container-live": "polite",
           display: "inline-block",
-          "event-from-input": "false",
           "explicit-name": "true",
           id: "button",
           live: "polite",

@@ -2341,7 +2341,6 @@ STATIC_ATOMS = [
     Atom("contentinfo", "contentinfo"),
     Atom("cycles", "cycles"),
     Atom("datatable", "datatable"),
-    Atom("eventFromInput", "event-from-input"),
     Atom("feed", "feed"),
     Atom("grammar", "grammar"),
     Atom("gridcell", "gridcell"),
