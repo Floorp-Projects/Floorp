@@ -52,11 +52,6 @@ translations:
       flow_id: &flow_id
         type: string
         description: A uuid to relate events associated with the current panel session.
-      first_interaction: &first_interaction
-        type: boolean
-        description: >
-          True if this event occurred in the user's first interaction with translations,
-          otherwise false.
       reason:
         type: string
         description: The reason for the error.
@@ -82,7 +77,6 @@ translations:
       Triggers when a full-page translation request is sent.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       from_language:
         type: string
         description: The language being translated from.
@@ -125,7 +119,6 @@ translations:
       Triggers when the a restore-page event is triggered.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -145,7 +138,6 @@ translations.panel:
       Triggers when the translations panel is opened.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       auto_show:
         type: boolean
         description: Whether the panel was opened automatically or manually by the user.
@@ -182,7 +174,6 @@ translations.panel:
       Triggers when translations panel is closed.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -201,7 +192,6 @@ translations.panel:
       Triggers when the from-language dropdown is opened in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -220,7 +210,6 @@ translations.panel:
       Triggers when the from-language selected value is changed.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       language:
         type: string
         description: >
@@ -243,7 +232,6 @@ translations.panel:
       Triggers when the from-language dropdown is closed in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -262,7 +250,6 @@ translations.panel:
       Triggers when the from-language dropdown is opened in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -281,7 +268,6 @@ translations.panel:
       Triggers when the to-language selected value is changed.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       language:
         type: string
         description: >
@@ -304,7 +290,6 @@ translations.panel:
       Triggers when the from-language dropdown is closed in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -323,7 +308,6 @@ translations.panel:
       Triggers when the settings menu is opened in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -342,7 +326,6 @@ translations.panel:
       Triggers when the settings menu is closed in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -361,7 +344,6 @@ translations.panel:
       Triggers when the cancel button is invoked in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -380,7 +362,6 @@ translations.panel:
       Triggers when the change-source-language button is invoked in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -399,7 +380,6 @@ translations.panel:
       Triggers when the dismiss-error button is invoked in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -418,7 +398,6 @@ translations.panel:
       Triggers when the restore-page button is invoked in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -437,7 +416,6 @@ translations.panel:
       Triggers when the translate button is invoked in the translations panel.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -456,7 +434,6 @@ translations.panel:
       Triggers when the always-offer-translations menuitem is invoked in the translations panel seeings.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       toggled_on:
         type: boolean
         description: >
@@ -479,7 +456,6 @@ translations.panel:
       Triggers when the always-translate-language menuitem is invoked in the translations panel settings.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       language:
         type: string
         description: >
@@ -506,7 +482,6 @@ translations.panel:
       Triggers when the never-translate-language menuitem is invoked in the translations panel settings.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       language:
         type: string
         description: >
@@ -533,7 +508,6 @@ translations.panel:
       Triggers when the never-translate-site menuitem is invoked in the translations panel settings.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
       toggled_on:
         type: boolean
         description: >
@@ -556,7 +530,6 @@ translations.panel:
       Triggers when the manage-languages menuitem is invoked in the translations panel settings.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -575,7 +548,6 @@ translations.panel:
       Triggers when the about-translations menuitem is invoked in the translations panel settings.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -594,7 +566,6 @@ translations.panel:
       Triggers when the learn-more link is invoked in the translations panel first interaction.
     extra_keys:
       flow_id: *flow_id
-      first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319

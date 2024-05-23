@@ -4,10 +4,9 @@
 "use strict";
 
 /**
- * Tests that events in the first panel session are marked as first-interaction events
- * and that events in the subsequent panel session are not marked as first-interaction events.
+ * Tests basic usage of the Translations panel, and that the telemetry events are logged accordingly
  */
-add_task(async function test_translations_telemetry_firstrun_basics() {
+add_task(async function test_translations_telemetry_basics() {
   const { cleanup } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
@@ -32,7 +31,6 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
     expectNewFlowId: true,
-    expectFirstInteraction: true,
     finalValuePredicates: [
       value => value.extra.auto_show === "false",
       value => value.extra.view_name === "defaultView",
@@ -46,14 +44,12 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
-      expectFirstInteraction: true,
     }
   );
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
     expectedEventCount: 1,
     expectNewFlowId: false,
-    expectFirstInteraction: true,
   });
 
   await FullPageTranslationsTestUtils.openPanel({
@@ -65,7 +61,6 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 2,
     expectNewFlowId: true,
-    expectFirstInteraction: false,
     allValuePredicates: [
       value => value.extra.auto_show === "false",
       value => value.extra.view_name === "defaultView",
@@ -79,14 +74,12 @@ add_task(async function test_translations_telemetry_firstrun_basics() {
     {
       expectedEventCount: 2,
       expectNewFlowId: false,
-      expectFirstInteraction: false,
     }
   );
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
     expectedEventCount: 2,
     expectNewFlowId: false,
-    expectFirstInteraction: false,
   });
 
   await cleanup();
