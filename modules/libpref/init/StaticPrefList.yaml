@@ -13042,12 +13042,6 @@
   value: 32 * 1024 * 1024
   mirror: always
 
-# Should be removed if no breakage occurs. See bug 1797846
-- name: network.url.strip-data-url-whitespace
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
   # If true, will be more strict with status code parsing
 - name: network.url.strict_data_url_base64_placement
   type: RelaxedAtomicBool
