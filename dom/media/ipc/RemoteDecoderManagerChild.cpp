@@ -96,7 +96,6 @@ StaticRefPtr<ShutdownObserver> sObserver;
 
 /* static */
 void RemoteDecoderManagerChild::Init() {
-  MOZ_ASSERT(NS_IsMainThread());
   LOG("RemoteDecoderManagerChild Init");
 
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
