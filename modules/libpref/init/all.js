@@ -600,6 +600,9 @@ pref("toolkit.telemetry.dap_helper", "https://dap.services.mozilla.com");
 pref("toolkit.telemetry.dap_helper_owner", "Mozilla");
 pref("toolkit.telemetry.dap.logLevel", "Warn");
 
+// Controls telemetry logs for the Translations feature throughout Firefox.
+pref("toolkit.telemetry.translations.logLevel", "Error");
+
 // pref for mozilla to induce a new ping from users. This value should only ever be increased
 // and doing so will induce a new data ping from all users, so be careful. Mozilla may edit
 // this pref via our remote update/experimentation system
