@@ -1,0 +1,10 @@
+DEFINES["ALL"] = True
+
+if RELATIVEDIR == "foo":
+    DEFINES["FOO_ONLY"] = True
+
+if RELATIVEDIR.startswith("foo"):
+    DEFINES["FOO"] = True
+
+if RELATIVEDIR == "bar":
+    DEFINES["BAR_ONLY"] = True

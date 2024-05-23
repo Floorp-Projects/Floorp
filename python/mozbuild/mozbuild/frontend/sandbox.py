@@ -144,7 +144,7 @@ class Sandbox(dict):
     def _context(self):
         return self._active_contexts[-1]
 
-    def exec_file(self, path):
+    def exec_file(self, path, becomes_current_path=True):
         """Execute code at a path in the sandbox.
 
         The path must be absolute.
@@ -158,9 +158,9 @@ class Sandbox(dict):
                 self._context.source_stack, sys.exc_info()[2], read_error=path
             )
 
-        self.exec_source(source, path)
+        self.exec_source(source, path, becomes_current_path)
 
-    def exec_source(self, source, path=""):
+    def exec_source(self, source, path="", becomes_current_path=True):
         """Execute Python code within a string.
 
         The passed string should contain Python code to be executed. The string
@@ -185,7 +185,9 @@ class Sandbox(dict):
             finally:
                 self._current_source = old_source
 
-        self.exec_function(execute, path=path)
+        self.exec_function(
+            execute, path=path, becomes_current_path=becomes_current_path
+        )
 
     def exec_function(
         self, func, args=(), kwargs={}, path="", becomes_current_path=True

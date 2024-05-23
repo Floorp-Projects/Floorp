@@ -125,6 +125,10 @@ def is_read_allowed(path, config):
     if mozpath.basedir(path, [topsrcdir]):
         return True
 
+    hook = config.substs.get("MOZ_BUILD_HOOK")
+    if hook and path == hook:
+        return True
+
     return False
 
 
@@ -206,7 +210,7 @@ class MozbuildSandbox(Sandbox):
             return
         Sandbox.__setitem__(self, key, value)
 
-    def exec_file(self, path):
+    def exec_file(self, path, becomes_current_path=True):
         """Override exec_file to normalize paths and restrict file loading.
 
         Paths will be rejected if they do not fall under topsrcdir or one of
@@ -220,7 +224,7 @@ class MozbuildSandbox(Sandbox):
                 self._context.source_stack, sys.exc_info()[2], illegal_path=path
             )
 
-        Sandbox.exec_file(self, path)
+        Sandbox.exec_file(self, path, becomes_current_path)
 
     def _export(self, varname):
         """Export the variable to all subdirectories of the current path."""
@@ -1145,6 +1149,9 @@ class BuildReader(object):
         context = Context(VARIABLES, config, self.finder)
         sandbox = MozbuildSandbox(context, metadata=metadata, finder=self.finder)
         sandbox.exec_file(path)
+        hook = config.substs.get("MOZ_BUILD_HOOK")
+        if hook:
+            sandbox.exec_file(hook, becomes_current_path=False)
         self._execution_time += time.monotonic() - time_start
         self._file_count += len(context.all_paths)
 

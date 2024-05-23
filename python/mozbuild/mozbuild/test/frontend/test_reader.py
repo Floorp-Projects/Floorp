@@ -534,6 +534,26 @@ class TestBuildReader(unittest.TestCase):
             set(info["win.and.osx"]["SCHEDULES"].exclusive), set(["macosx", "windows"])
         )
 
+    def test_hook(self):
+        extra = {
+            "MOZ_BUILD_HOOK": mozpath.abspath(self.file_path("mozbuild.hook")),
+        }
+        config = self.config(
+            "traversal-simple", extra_substs=extra, error_is_fatal=True
+        )
+
+        reader = BuildReader(config)
+
+        contexts = {ctx.relsrcdir: ctx for ctx in reader.read_topsrcdir()}
+
+        self.assertEqual(len(contexts), 4)
+        self.assertEqual(contexts[""]["DEFINES"], {"ALL": True})
+        self.assertEqual(
+            contexts["foo"]["DEFINES"], {"ALL": True, "FOO": True, "FOO_ONLY": True}
+        )
+        self.assertEqual(contexts["foo/biz"]["DEFINES"], {"ALL": True, "FOO": True})
+        self.assertEqual(contexts["bar"]["DEFINES"], {"ALL": True, "BAR_ONLY": True})
+
 
 if __name__ == "__main__":
     main()
