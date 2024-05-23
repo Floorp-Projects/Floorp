@@ -172,9 +172,6 @@ browser/base/content/test/siteIdentity/test_mcb_redirect_image.html
 browser/base/content/test/siteIdentity/test_no_mcb_for_loopback.html
 browser/base/content/test/siteIdentity/test_no_mcb_for_onions.html
 browser/base/content/test/static/dummy_page.html
-browser/base/content/test/tabs/dummy_page.html
-browser/base/content/test/tabs/file_anchor_elements.html
-browser/base/content/test/tabs/tab_that_closes.html
 browser/base/content/test/webrtc/get_user_media_in_xorigin_frame_ancestor.html
 browser/components/aboutlogins/content/aboutLogins.html
 browser/components/extensions/test/browser/file_dummy.html
@@ -194,6 +191,9 @@ browser/components/sessionstore/test/browser_423132_sample.html
 browser/components/sessionstore/test/browser_485482_sample.html
 browser/components/sessionstore/test/browser_frametree_sample_frameset.html
 browser/components/sessionstore/test/browser_scrollPositions_sample_frameset.html
+browser/components/tabbrowser/test/tabs/dummy_page.html
+browser/components/tabbrowser/test/tabs/file_anchor_elements.html
+browser/components/tabbrowser/test/tabs/tab_that_closes.html
 browser/components/textrecognition/textrecognition.html
 browser/components/urlbar/content/quicksuggestOnboarding.html
 browser/components/urlbar/tests/browser/dummy_page.html

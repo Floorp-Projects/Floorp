@@ -100,9 +100,6 @@ with Files("test/tabPrompts/**"):
 with Files("test/tabcrashed/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("test/tabs/**"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
-
 with Files("test/touch/**"):
     BUG_COMPONENT = ("Firefox", "General")
 

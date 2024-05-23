@@ -133,8 +133,8 @@ function initXulFrameLoaderCreatedCounter(aXulFrameLoaderCreatedListenerInfo) {
 }
 
 // Expected remote types for the following tests:
-// browser/base/content/test/tabs/browser_navigate_through_urls_origin_attributes.js
-// browser/base/content/test/tabs/browser_origin_attrs_in_remote_type.js
+// browser/components/tabbrowser/test/tabs/browser_navigate_through_urls_origin_attributes.js
+// browser/components/tabbrowser/test/tabs/browser_origin_attrs_in_remote_type.js
 function getExpectedRemoteTypes(gFissionBrowser, numPagesOpen) {
   var remoteTypes;
   if (gFissionBrowser) {

@@ -115,11 +115,6 @@
     "browser/base/content/test/tabcrashed/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/tabs/browser.toml": [
-      "test-windows11-64-2009-asan/opt-*",
-      "test-linux1804-64/debug-*",
-      "test-windows11-64-2009/opt-*"
-    ],
     "browser/base/content/test/webextensions/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
@@ -279,6 +274,11 @@
     ],
     "browser/components/ssb/tests/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
+    ],
+    "browser/components/tabbrowser/test/tabs/browser.toml": [
+      "test-windows11-64-2009-asan/opt-*",
+      "test-linux1804-64/debug-*",
+      "test-windows11-64-2009/opt-*"
     ],
     "browser/components/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
@@ -1929,7 +1929,6 @@
     "browser/base/content/test/static/browser.toml": 0.8,
     "browser/base/content/test/tabPrompts/browser.toml": 0.73,
     "browser/base/content/test/tabcrashed/browser.toml": 0.6,
-    "browser/base/content/test/tabs/browser.toml": 0.81,
     "browser/base/content/test/webextensions/browser.toml": 0.88,
     "browser/base/content/test/zoom/browser.toml": 0.7,
     "browser/components/aboutlogins/tests/browser/browser.toml": 0.75,
@@ -1968,6 +1967,7 @@
     "browser/components/shell/test/browser.toml": 0.95,
     "browser/components/shell/test/chrome.toml": 0.79,
     "browser/components/ssb/tests/browser/browser.toml": 0.81,
+    "browser/components/tabbrowser/test/tabs/browser.toml": 0.81,
     "browser/components/tests/browser/browser.toml": 0.67,
     "browser/components/tests/browser/whats_new_page/browser.toml": 0.56,
     "browser/components/tests/unit/xpcshell.toml": 0.82,

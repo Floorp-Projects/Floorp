@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Test the behavior of the tab and the urlbar when opening normal web page by
-// clicking link that the target is "_blank".
+// clicking link that the target is "other".
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
@@ -11,18 +11,18 @@ ChromeUtils.defineESModuleGetters(this, {
 
 /* import-globals-from common_link_in_tab_title_and_url_prefilled.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/base/content/test/tabs/common_link_in_tab_title_and_url_prefilled.js",
+  "chrome://mochitests/content/browser/browser/components/tabbrowser/test/tabs/common_link_in_tab_title_and_url_prefilled.js",
   this
 );
 
-add_task(async function normal_page__foreground__click() {
+add_task(async function normal_page__other_target__foreground() {
   await doTestInSameWindow({
-    link: "wait-a-bit--blank-target",
+    link: "wait-a-bit--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
-      tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
+      tab: BLANK_TITLE,
+      urlbar: UrlbarTestUtils.trimURL(BLANK_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -36,56 +36,35 @@ add_task(async function normal_page__foreground__click() {
   });
 });
 
-add_task(async function normal_page__foreground__contextmenu() {
+add_task(async function normal_page__other_target__foreground__abort() {
   await doTestInSameWindow({
-    link: "wait-a-bit--blank-target",
-    openBy: OPEN_BY.CONTEXT_MENU,
-    openAs: OPEN_AS.FOREGROUND,
-    loadingState: {
-      tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
-    },
-    async actionWhileLoading(onTabLoaded) {
-      info("Wait until loading the link target");
-      await onTabLoaded;
-    },
-    finalState: {
-      tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
-      history: [WAIT_A_BIT_URL],
-    },
-  });
-});
-
-add_task(async function normal_page__foreground__abort() {
-  await doTestInSameWindow({
-    link: "wait-a-bit--blank-target",
+    link: "wait-a-bit--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
-      tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
+      tab: BLANK_TITLE,
+      urlbar: UrlbarTestUtils.trimURL(BLANK_URL),
     },
     async actionWhileLoading() {
       info("Abort loading");
       document.getElementById("stop-button").click();
     },
     finalState: {
-      tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
-      history: [WAIT_A_BIT_URL],
+      tab: BLANK_TITLE,
+      urlbar: UrlbarTestUtils.trimURL(BLANK_URL),
+      history: [],
     },
   });
 });
 
-add_task(async function normal_page__foreground__timeout() {
+add_task(async function normal_page__other_target__foreground__timeout() {
   await doTestInSameWindow({
-    link: "request-timeout--blank-target",
+    link: "request-timeout--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
-      tab: REQUEST_TIMEOUT_LOADING_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(REQUEST_TIMEOUT_URL),
+      tab: BLANK_TITLE,
+      urlbar: UrlbarTestUtils.trimURL(BLANK_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -101,17 +80,16 @@ add_task(async function normal_page__foreground__timeout() {
 
 add_task(async function normal_page__foreground__session_restore() {
   await doSessionRestoreTest({
-    link: "wait-a-bit--blank-target",
+    link: "wait-a-bit--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.FOREGROUND,
-    expectedSessionHistory: [WAIT_A_BIT_URL],
-    expectedSessionRestored: true,
+    expectedSessionRestored: false,
   });
 });
 
-add_task(async function normal_page__background__click() {
+add_task(async function normal_page__other_target__background() {
   await doTestInSameWindow({
-    link: "wait-a-bit--blank-target",
+    link: "wait-a-bit--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.BACKGROUND,
     loadingState: {
@@ -130,30 +108,9 @@ add_task(async function normal_page__background__click() {
   });
 });
 
-add_task(async function normal_page__background__contextmenu() {
+add_task(async function normal_page__other_target__background__abort() {
   await doTestInSameWindow({
-    link: "wait-a-bit--blank-target",
-    openBy: OPEN_BY.CONTEXT_MENU,
-    openAs: OPEN_AS.BACKGROUND,
-    loadingState: {
-      tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
-    },
-    async actionWhileLoading(onTabLoaded) {
-      info("Wait until loading the link target");
-      await onTabLoaded;
-    },
-    finalState: {
-      tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
-      history: [WAIT_A_BIT_URL],
-    },
-  });
-});
-
-add_task(async function normal_page__background__abort() {
-  await doTestInSameWindow({
-    link: "wait-a-bit--blank-target",
+    link: "wait-a-bit--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.BACKGROUND,
     loadingState: {
@@ -172,9 +129,9 @@ add_task(async function normal_page__background__abort() {
   });
 });
 
-add_task(async function normal_page__background__timeout() {
+add_task(async function normal_page__other_target__background__timeout() {
   await doTestInSameWindow({
-    link: "request-timeout--blank-target",
+    link: "request-timeout--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.BACKGROUND,
     loadingState: {
@@ -193,9 +150,9 @@ add_task(async function normal_page__background__timeout() {
   });
 });
 
-add_task(async function normal_page__background__session_restore() {
+add_task(async function normal_page__foreground__session_restore() {
   await doSessionRestoreTest({
-    link: "wait-a-bit--blank-target",
+    link: "wait-a-bit--other-target",
     openBy: OPEN_BY.CLICK,
     openAs: OPEN_AS.BACKGROUND,
     expectedSessionRestored: false,
