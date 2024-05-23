@@ -5,7 +5,6 @@
 
 use api::{units::*, PremultipliedColorF, ClipMode};
 use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
-use bytemuck::{Pod, Zeroable};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder, INVALID_SEGMENT_INDEX, ClipMaskInstanceList};
 use crate::command_buffer::{CommandBufferList, QuadFlags};
@@ -831,7 +830,7 @@ fn add_blur_instances(
     let instance = BlurInstance {
         task_address,
         src_task_address: src_task_id.into(),
-        blur_direction: blur_direction.as_int(),
+        blur_direction,
     };
 
     instances
@@ -1135,8 +1134,7 @@ pub struct BlitJob {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+#[derive(Clone, Debug)]
 pub struct LineDecorationJob {
     pub task_rect: DeviceRect,
     pub local_size: LayoutSize,
@@ -1365,7 +1363,7 @@ fn build_mask_tasks(
                     prim,
                     clip_transform_id,
                     clip_address: clip_address.as_int(),
-                    clip_space: clip_space.as_int(),
+                    clip_space,
                     unused: 0,
                 };
 
