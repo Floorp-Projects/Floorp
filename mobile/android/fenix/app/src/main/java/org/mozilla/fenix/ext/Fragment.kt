@@ -226,7 +226,7 @@ fun Fragment.updateMicrosurveyPromptForConfigurationChange(
         bottomToolbarContainerView?.let {
             parent.removeView(it)
         }
-
-        reinitializeMicrosurveyPrompt()
     }
+
+    reinitializeMicrosurveyPrompt()
 }
