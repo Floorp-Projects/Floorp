@@ -100,8 +100,14 @@ DEFINE_STATIC_ATOM_SET(WildcardSchemes, nsGkAtoms::http, nsGkAtoms::https,
 // usually equal to the origin component of such URLs.
 // Counter-examples: about: and data: do not have any embedded origin,
 // blob:-URLs have an origin (becomes "null" when opaque) and no path.
+//
+// Note: view-source: is part of this set to make sure that we always look at
+// the URL and never at the principal in these cases, because in case of null
+// principals, the precursor could be a http(s) URL. We don't want to run
+// scripts in view-source: because we have historically not allowed extensions
+// to do so.
 DEFINE_STATIC_ATOM_SET(NonOpaqueSchemes, nsGkAtoms::http, nsGkAtoms::https,
-                       nsGkAtoms::file);
+                       nsGkAtoms::file, nsGkAtoms::view_source);
 
 #undef DEFINE_STATIC_ATOM_SET
 

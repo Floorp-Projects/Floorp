@@ -2009,6 +2009,7 @@ STATIC_ATOMS = [
     Atom("webRequestFilterResponse_serviceWorkerScript", "webRequestFilterResponse.serviceWorkerScript"),
     Atom("http", "http"),
     Atom("https", "https"),
+    Atom("view_source", "view-source"),
     Atom("ws", "ws"),
     Atom("wss", "wss"),
     Atom("ftp", "ftp"),
