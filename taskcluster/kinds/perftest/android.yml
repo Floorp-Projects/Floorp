@@ -42,14 +42,14 @@ hw-a51-aarch64:
 
 hw-a51-startup-fenix-cold-main-first-frame:
     worker-type: t-bitbar-gw-perf-a51
-    run-on-projects: [autoland]
+    run-on-projects: [trunk-only]
     description: Run android startup perftest on Fenix on a Samsung A51
     treeherder:
         symbol: perftest(startup-fenix-cmff)
         tier: 2
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
-        cron: true
+        cron: false
     fetches:
         build:
             - artifact: target.arm64-v8a.apk
@@ -71,14 +71,14 @@ hw-a51-startup-fenix-cold-main-first-frame:
 
 hw-a51-startup-fenix-cold-view-nav-start:
     worker-type: t-bitbar-gw-perf-a51
-    run-on-projects: [autoland]
+    run-on-projects: [trunk-only]
     description: Run android startup perftest on Fenix on a Samsung A51
     treeherder:
         symbol: perftest(startup-fenix-cvns)
         tier: 2
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
-        cron: true
+        cron: false
     fetches:
         build:
             - artifact: target.arm64-v8a.apk
@@ -156,14 +156,14 @@ hw-a51-startup-focus-cold-view-nav-start:
 
 hw-a51-startup-geckoview-cold-main-first-frame:
     worker-type: t-bitbar-gw-perf-a51
-    run-on-projects: [autoland]
+    run-on-projects: [trunk-only]
     description: Run android startup perftest on Geckoview on a Samsung A51
     treeherder:
         symbol: perftest(startup-geckoview-cmff)
         tier: 2
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
-        cron: true
+        cron: false
     fetches:
         build:
             - artifact: geckoview_example.apk
@@ -185,14 +185,14 @@ hw-a51-startup-geckoview-cold-main-first-frame:
 
 hw-a51-startup-geckoview-cold-view-nav-start:
     worker-type: t-bitbar-gw-perf-a51
-    run-on-projects: [autoland]
+    run-on-projects: [trunk-only]
     description: Run android startup perftest on Geckoview_example on a Samsung A51
     treeherder:
         symbol: perftest(startup-geckoview-cvns)
         tier: 2
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
-        cron: true
+        cron: false
     fetches:
         build:
             - artifact: geckoview_example.apk
