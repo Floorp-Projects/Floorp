@@ -188,6 +188,20 @@ sealed class AppAction : Action {
          * Indicates the given [message] was dismissed.
          */
         data class MessageDismissed(val message: Message) : MessagingAction()
+
+        /**
+         * Sealed class representing actions related to microsurveys within messaging functionality.
+         * Extends [MessagingAction].
+         */
+        sealed class MicrosurveyAction : MessagingAction() {
+            /**
+             * Indicates that the microsurvey associated with the [message] has been completed.
+             *
+             * @property message The message associated with the completed microsurvey.
+             * @property answer The answer provided for the microsurvey.
+             */
+            data class Completed(val message: Message, val answer: String) : MicrosurveyAction()
+        }
     }
 
     /**

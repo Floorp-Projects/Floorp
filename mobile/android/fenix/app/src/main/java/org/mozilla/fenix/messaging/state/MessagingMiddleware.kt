@@ -16,6 +16,7 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.ConsumeMe
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Evaluate
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageClicked
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDismissed
+import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MicrosurveyAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Restore
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessageToShow
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessages
@@ -58,11 +59,28 @@ class MessagingMiddleware(
 
             is MessageDismissed -> onMessageDismissed(context, action.message)
 
+            is MicrosurveyAction.Completed -> {
+                onMicrosurveyCompleted(context, action.message, action.answer)
+            }
+
             else -> {
                 // no-op
             }
         }
         next(action)
+    }
+
+    private fun onMicrosurveyCompleted(
+        context: AppStoreMiddlewareContext,
+        message: Message,
+        answer: String,
+    ) {
+        val newMessages = removeMessage(context, message = message)
+        context.store.dispatch(UpdateMessages(newMessages))
+        consumeMessageToShowIfNeeded(context, message)
+        coroutineScope.launch {
+            controller.onMicrosurveyCompleted(message, answer)
+        }
     }
 
     private fun onMessagedDisplayed(

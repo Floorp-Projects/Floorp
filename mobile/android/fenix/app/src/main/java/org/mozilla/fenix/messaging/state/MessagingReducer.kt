@@ -15,7 +15,7 @@ import org.mozilla.fenix.messaging.MessagingState
  * Reducer for [MessagingState].
  */
 internal object MessagingReducer {
-    fun reduce(state: AppState, action: AppAction.MessagingAction): AppState = when (action) {
+    fun reduce(state: AppState, action: AppAction): AppState = when (action) {
         is UpdateMessageToShow -> {
             val messageToShow = state.messaging.messageToShow.toMutableMap()
             messageToShow[action.message.surface] = action.message
