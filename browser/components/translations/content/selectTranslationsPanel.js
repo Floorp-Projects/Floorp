@@ -103,6 +103,44 @@ var SelectTranslationsPanel = new (class {
   #alignmentPosition = "";
 
   /**
+   * A value to cache the most recent state that caused the panel's UI to update.
+   *
+   * The event-driven nature of this code can sometimes make redundant calls to
+   * idempotent UI updates, however the telemetry data is not idempotent and will
+   * be double counted.
+   *
+   * This value allows us to avoid double-counting telemetry if we're making a
+   * redundant call to a UI update.
+   *
+   * @type {string}
+   */
+  #mostRecentUIPhase = "closed";
+
+  /**
+   * A cached value for the count of words in the source text as determined by the Intl.Segmenter
+   * for the currently selected from-language, which is reported to telemetry. This prevents us
+   * from having to allocate resource for the segmenter multiple times if the user changes the target
+   * language.
+   *
+   * This value should be invalidated when the panel opens and when the from-language is changed.
+   *
+   * @type {number}
+   */
+  #sourceTextWordCount = undefined;
+
+  /**
+   * Cached information about the document's detected language and the user's
+   * current language settings, useful for populating telemetry events.
+   *
+   * @type {object}
+   */
+  #languageInfo = {
+    docLangTag: undefined,
+    isDocLangTagSupported: undefined,
+    topPreferredLanguage: undefined,
+  };
+
+  /**
    * Retrieves the read-only textarea height for longer text.
    *
    * @see #longTextHeight
@@ -270,14 +308,43 @@ var SelectTranslationsPanel = new (class {
 
     // Since none of the detected languages were supported, check to see if the
     // document has a specified language tag that is supported.
+    const { docLangTag, isDocLangTagSupported } = this.#languageInfo;
+    if (isDocLangTagSupported) {
+      return docLangTag;
+    }
+
+    // No supported language was found, so return the top detected language
+    // to inform the panel's unsupported language state.
+    return language;
+  }
+
+  /**
+   * Attempts to cache the languageInformation for this page and the user's current settings.
+   * This data is helpful for telemetry. Leaves the cache unpopulated if the info failed to be
+   * retrieved.
+   *
+   * @returns {object} - The cached language-info object.
+   */
+  #maybeCacheLanguageInfo() {
+    this.#languageInfo = {
+      docLangTag: undefined,
+      isDocLangTagSupported: undefined,
+      topPreferredLanguage: undefined,
+    };
     try {
       const actor = TranslationsParent.getTranslationsActor(
         gBrowser.selectedBrowser
       );
-      const detectedLanguages = actor.languageState.detectedLanguages;
-      if (detectedLanguages?.isDocLangTagSupported) {
-        return detectedLanguages.docLangTag;
-      }
+      const {
+        detectedLanguages: { docLangTag, isDocLangTagSupported },
+      } = actor.languageState;
+      const preferredLanguages = TranslationsParent.getPreferredLanguages();
+      const topPreferredLanguage = preferredLanguages?.[0];
+      this.#languageInfo = {
+        docLangTag,
+        isDocLangTagSupported,
+        topPreferredLanguage,
+      };
     } catch (error) {
       // Failed to retrieve the Translations actor to detect the document language.
       // This is most likely due to attempting to retrieve the actor in a page that
@@ -298,9 +365,7 @@ var SelectTranslationsPanel = new (class {
       }
     }
 
-    // No supported language was found, so return the top detected language
-    // to inform the panel's unsupported language state.
-    return language;
+    return this.#languageInfo;
   }
 
   /**
@@ -338,6 +403,7 @@ var SelectTranslationsPanel = new (class {
    */
   close() {
     PanelMultiView.hidePopup(this.elements.panel);
+    this.#mostRecentUIPhase = "closed";
   }
 
   /**
@@ -438,10 +504,18 @@ var SelectTranslationsPanel = new (class {
    * @param {number} screenY - The y-axis location of the screen at which to open the popup.
    * @param {string} sourceText - The text to translate.
    * @param {Promise} langPairPromise - Promise resolving to language pair data for initializing dropdowns.
+   * @param {boolean} maintainFlow - Whether the telemetry flow-id should be persisted or assigned a new id.
    *
    * @returns {Promise<void>}
    */
-  async open(event, screenX, screenY, sourceText, langPairPromise) {
+  async open(
+    event,
+    screenX,
+    screenY,
+    sourceText,
+    langPairPromise,
+    maintainFlow = false
+  ) {
     if (this.#isOpen()) {
       await this.#forceReopen(
         event,
@@ -453,7 +527,19 @@ var SelectTranslationsPanel = new (class {
       return;
     }
 
+    const { docLangTag, topPreferredLanguage } = this.#maybeCacheLanguageInfo();
+    const { fromLanguage, toLanguage } = await langPairPromise;
+
+    TranslationsParent.telemetry().selectTranslationsPanel().onOpen({
+      maintainFlow,
+      docLangTag,
+      fromLanguage,
+      toLanguage,
+      topPreferredLanguage,
+    });
+
     try {
+      this.#sourceTextWordCount = undefined;
       this.#isFullPageTranslationsRestrictedForPage =
         TranslationsParent.isFullPageTranslationsRestrictedForPage(gBrowser);
       this.#initializeEventListeners();
@@ -599,10 +685,15 @@ var SelectTranslationsPanel = new (class {
    * Opens the settings menu popup at the settings button gear-icon.
    */
   #openSettingsPopup() {
+    TranslationsParent.telemetry()
+      .selectTranslationsPanel()
+      .onOpenSettingsMenu();
+
     const { settingsButton } = this.elements;
     const popup = settingsButton.ownerDocument.getElementById(
       "select-translations-panel-settings-menupopup"
     );
+
     popup.openPopup(settingsButton, "after_start");
   }
 
@@ -610,6 +701,10 @@ var SelectTranslationsPanel = new (class {
    * Opens the "About translation in Firefox" Mozilla support page in a new tab.
    */
   onAboutTranslations() {
+    TranslationsParent.telemetry()
+      .selectTranslationsPanel()
+      .onAboutTranslations();
+
     this.close();
     const window =
       gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
@@ -628,6 +723,10 @@ var SelectTranslationsPanel = new (class {
    * Opens the Translations section of about:preferences in a new tab.
    */
   openTranslationsSettingsPage() {
+    TranslationsParent.telemetry()
+      .selectTranslationsPanel()
+      .onTranslationSettings();
+
     this.close();
     const window =
       gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
@@ -657,14 +756,17 @@ var SelectTranslationsPanel = new (class {
       tryAnotherSourceMenuPopup,
     } = this.elements;
     switch (target.id) {
-      case cancelButton.id:
-      case doneButtonPrimary.id:
-      case doneButtonSecondary.id: {
-        this.close();
+      case cancelButton.id: {
+        this.onClickCancelButton();
         break;
       }
       case copyButton.id: {
         this.onClickCopyButton();
+        break;
+      }
+      case doneButtonPrimary.id:
+      case doneButtonSecondary.id: {
+        this.onClickDoneButton();
         break;
       }
       case fromMenuList.id:
@@ -943,6 +1045,7 @@ var SelectTranslationsPanel = new (class {
     const { panel } = this.elements;
     switch (target.id) {
       case panel.id: {
+        TranslationsParent.telemetry().selectTranslationsPanel().onClose();
         this.#changeStateToClosed();
         this.#removeActiveTranslationListeners();
         break;
@@ -984,6 +1087,7 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panels select from-language is changed.
    */
   onChangeFromLanguage() {
+    this.#sourceTextWordCount = undefined;
     this.#updateConditionalUIEnabledState();
   }
 
@@ -1005,9 +1109,19 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles events when the panel's cancel button is clicked.
+   */
+  onClickCancelButton() {
+    TranslationsParent.telemetry().selectTranslationsPanel().onCancelButton();
+    this.close();
+  }
+
+  /**
    * Handles events when the panel's copy button is clicked.
    */
   onClickCopyButton() {
+    TranslationsParent.telemetry().selectTranslationsPanel().onCopyButton();
+
     try {
       ClipboardHelper.copyString(this.getTranslatedText());
     } catch (error) {
@@ -1019,10 +1133,23 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles events when the panel's done button is clicked.
+   */
+  onClickDoneButton() {
+    TranslationsParent.telemetry().selectTranslationsPanel().onDoneButton();
+    this.close();
+  }
+
+  /**
    * Handles events when the panel's translate button is clicked.
    */
   onClickTranslateButton() {
+    TranslationsParent.telemetry()
+      .selectTranslationsPanel()
+      .onTranslateButton();
+
     const { fromMenuList, tryAnotherSourceMenuList } = this.elements;
+
     fromMenuList.value = tryAnotherSourceMenuList.value;
     this.#maybeRequestTranslation();
   }
@@ -1031,6 +1158,10 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panel's translate-full-page button is clicked.
    */
   onClickTranslateFullPageButton() {
+    TranslationsParent.telemetry()
+      .selectTranslationsPanel()
+      .onTranslateFullPageButton();
+
     const { panel } = this.elements;
     const { fromLanguage, toLanguage } = this.#getSelectedLanguagePair();
 
@@ -1064,6 +1195,8 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panel's try-again button is clicked.
    */
   onClickTryAgainButton() {
+    TranslationsParent.telemetry().selectTranslationsPanel().onTryAgainButton();
+
     switch (this.phase()) {
       case "translation-failure": {
         // If the translation failed, we just need to try translating again.
@@ -1079,7 +1212,15 @@ var SelectTranslationsPanel = new (class {
 
         panel.addEventListener(
           "popuphidden",
-          () => this.open(event, screenX, screenY, sourceText, langPairPromise),
+          () =>
+            this.open(
+              event,
+              screenX,
+              screenY,
+              sourceText,
+              langPairPromise,
+              /* maintainFlow */ true
+            ),
           { once: true }
         );
 
@@ -1620,9 +1761,12 @@ var SelectTranslationsPanel = new (class {
    */
   #updatePanelUIFromState() {
     const phase = this.phase();
+
     this.#handlePrimaryUIChanges(phase);
     this.#handleCopyButtonChanges(phase);
     this.#handleTextAreaBackgroundChanges(phase);
+
+    this.#mostRecentUIPhase = phase;
   }
 
   /**
@@ -1706,6 +1850,12 @@ var SelectTranslationsPanel = new (class {
    * Displays the panel content for when the language dropdowns fail to populate.
    */
   #displayInitFailureMessage() {
+    if (this.#mostRecentUIPhase !== "init-failure") {
+      TranslationsParent.telemetry()
+        .selectTranslationsPanel()
+        .onInitializationFailureMessage();
+    }
+
     const {
       cancelButton,
       copyButton,
@@ -1737,6 +1887,13 @@ var SelectTranslationsPanel = new (class {
    * Displays the panel content for when a translation fails to complete.
    */
   #displayTranslationFailureMessage() {
+    if (this.#mostRecentUIPhase !== "translation-failure") {
+      const { fromLanguage, toLanguage } = this.#getSelectedLanguagePair();
+      TranslationsParent.telemetry()
+        .selectTranslationsPanel()
+        .onTranslationFailureMessage({ fromLanguage, toLanguage });
+    }
+
     const {
       cancelButton,
       copyButton,
@@ -1778,6 +1935,14 @@ var SelectTranslationsPanel = new (class {
    */
   #displayUnsupportedLanguageMessage() {
     const { detectedLanguage } = this.#translationState;
+
+    if (this.#mostRecentUIPhase !== "unsupported") {
+      const { docLangTag } = this.#languageInfo;
+      TranslationsParent.telemetry()
+        .selectTranslationsPanel()
+        .onUnsupportedLanguageMessage({ docLangTag, detectedLanguage });
+    }
+
     const { unsupportedLanguageMessageBar, tryAnotherSourceMenuList } =
       this.elements;
     const displayNames = new Services.intl.DisplayNames(undefined, {
@@ -1884,7 +2049,10 @@ var SelectTranslationsPanel = new (class {
       return;
     }
 
+    const { docLangTag, topPreferredLanguage } = this.#languageInfo;
+    const sourceText = this.getSourceText();
     const translationId = ++this.#translationId;
+
     this.#createTranslator(fromLanguage, toLanguage)
       .then(translator => {
         if (
@@ -1915,6 +2083,30 @@ var SelectTranslationsPanel = new (class {
         this.console?.error(error);
         this.#changeStateToTranslationFailure();
       });
+
+    try {
+      if (!this.#sourceTextWordCount) {
+        this.#sourceTextWordCount = TranslationsParent.countWords(
+          fromLanguage,
+          sourceText
+        );
+      }
+    } catch (error) {
+      // Failed to create an Intl.Segmenter for the fromLanguage.
+      // Continue on to report undefined to telemetry.
+      this.console?.warn(error);
+    }
+
+    TranslationsParent.telemetry().onTranslate({
+      docLangTag,
+      fromLanguage,
+      toLanguage,
+      topPreferredLanguage,
+      autoTranslate: false,
+      requestTarget: "select",
+      sourceTextCodeUnits: sourceText.length,
+      sourceTextWordCount: this.#sourceTextWordCount,
+    });
   }
 
   /**

@@ -582,6 +582,21 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Returns the word count of the text for a given language.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   * @param {string} text - The text for which to count words.
+   *
+   * @returns {number} - The count of words in the text.
+   * @throws If a segmenter could not be created for the given language tag.
+   */
+  static countWords(langTag, text) {
+    const segmenter = new Intl.Segmenter(langTag, { granularity: "word" });
+    const segments = Array.from(segmenter.segment(text));
+    return segments.filter(segment => segment.isWordLike).length;
+  }
+
+  /**
    * Retrieves the Translations actor from the current browser context.
    *
    * @param {object} browser - The browser object from which to get the context.
@@ -2118,6 +2133,7 @@ export class TranslationsParent extends JSWindowActorParent {
         toLanguage,
         topPreferredLanguage,
         autoTranslate: reportAsAutoTranslate,
+        requestTarget: "full-page",
       });
 
       this.sendAsyncMessage(
