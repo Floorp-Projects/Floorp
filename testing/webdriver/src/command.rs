@@ -4,8 +4,7 @@
 
 use crate::actions::ActionSequence;
 use crate::capabilities::{
-    BrowserCapabilities, Capabilities, CapabilitiesMatching, LegacyNewSessionParameters,
-    SpecNewSessionParameters,
+    BrowserCapabilities, Capabilities, CapabilitiesMatching, SpecNewSessionParameters,
 };
 use crate::common::{
     CredentialParameters, Date, FrameId, LocatorStrategy, ShadowRoot, WebElement, MAX_SAFE_INTEGER,
@@ -522,35 +521,28 @@ pub struct LocatorParameters {
     pub value: String,
 }
 
-/// Wrapper around the two supported variants of new session paramters.
-///
-/// The Spec variant is used for storing spec-compliant parameters whereas
-/// the legacy variant is used to store `desiredCapabilities`/`requiredCapabilities`
-/// parameters, and is intended to minimise breakage as we transition users to
-/// the spec design.
-#[derive(Debug, PartialEq)]
-pub enum NewSessionParameters {
-    Spec(SpecNewSessionParameters),
-    Legacy(LegacyNewSessionParameters),
+#[derive(Debug, PartialEq, Serialize)]
+pub struct NewSessionParameters {
+    capabilities: SpecNewSessionParameters,
 }
 
+// Manual deserialize implementation to error if capabilities is not an object
+// Without this the empty list test fails
 impl<'de> Deserialize<'de> for NewSessionParameters {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let value = serde_json::Value::deserialize(deserializer)?;
-        if let Some(caps) = value.get("capabilities") {
-            if !caps.is_object() {
-                return Err(de::Error::custom("capabilities must be objects"));
-            }
-            let caps = SpecNewSessionParameters::deserialize(caps).map_err(de::Error::custom)?;
-            return Ok(NewSessionParameters::Spec(caps));
+        let caps = value
+            .get("capabilities")
+            .ok_or(de::Error::missing_field("capabilities"))?;
+        if !caps.is_object() {
+            return Err(de::Error::custom("capabilities must be objects"));
         }
-
-        warn!("You are using deprecated legacy session negotiation patterns (desiredCapabilities/requiredCapabilities), see https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities#Legacy");
-        let legacy = LegacyNewSessionParameters::deserialize(value).map_err(de::Error::custom)?;
-        Ok(NewSessionParameters::Legacy(legacy))
+        let capabilities =
+            SpecNewSessionParameters::deserialize(caps).map_err(de::Error::custom)?;
+        Ok(NewSessionParameters { capabilities })
     }
 }
 
@@ -559,10 +551,7 @@ impl CapabilitiesMatching for NewSessionParameters {
         &self,
         browser_capabilities: &mut T,
     ) -> WebDriverResult<Option<Capabilities>> {
-        match self {
-            NewSessionParameters::Spec(x) => x.match_browser(browser_capabilities),
-            NewSessionParameters::Legacy(x) => x.match_browser(browser_capabilities),
-        }
+        self.capabilities.match_browser(browser_capabilities)
     }
 }
 
@@ -1236,10 +1225,12 @@ mod tests {
             "alwaysMatch": {},
             "firstMatch": [{}],
         }});
-        let caps = NewSessionParameters::Spec(SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        });
+        let caps = NewSessionParameters {
+            capabilities: SpecNewSessionParameters {
+                alwaysMatch: Capabilities::new(),
+                firstMatch: vec![Capabilities::new()],
+            },
+        };
 
         assert_de(&caps, json);
     }
@@ -1251,17 +1242,18 @@ mod tests {
     }
 
     #[test]
+    fn test_json_new_session_parameters_capabilities_empty_list() {
+        let json = json!({ "capabilities": []});
+        assert!(serde_json::from_value::<NewSessionParameters>(json).is_err());
+    }
+
+    #[test]
     fn test_json_new_session_parameters_legacy() {
         let json = json!({
             "desiredCapabilities": {},
             "requiredCapabilities": {},
         });
-        let caps = NewSessionParameters::Legacy(LegacyNewSessionParameters {
-            desired: Capabilities::new(),
-            required: Capabilities::new(),
-        });
-
-        assert_de(&caps, json);
+        assert!(serde_json::from_value::<NewSessionParameters>(json).is_err());
     }
 
     #[test]
@@ -1274,10 +1266,12 @@ mod tests {
             "desiredCapabilities": {},
             "requiredCapabilities": {},
         });
-        let caps = NewSessionParameters::Spec(SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        });
+        let caps = NewSessionParameters {
+            capabilities: SpecNewSessionParameters {
+                alwaysMatch: Capabilities::new(),
+                firstMatch: vec![Capabilities::new()],
+            },
+        };
 
         assert_de(&caps, json);
     }
@@ -1291,10 +1285,12 @@ mod tests {
             },
             "foo": "bar",
         });
-        let caps = NewSessionParameters::Spec(SpecNewSessionParameters {
-            alwaysMatch: Capabilities::new(),
-            firstMatch: vec![Capabilities::new()],
-        });
+        let caps = NewSessionParameters {
+            capabilities: SpecNewSessionParameters {
+                alwaysMatch: Capabilities::new(),
+                firstMatch: vec![Capabilities::new()],
+            },
+        };
 
         assert_de(&caps, json);
     }
