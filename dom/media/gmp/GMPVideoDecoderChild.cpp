@@ -36,11 +36,16 @@ void GMPVideoDecoderChild::Init(GMPVideoDecoder* aDecoder) {
 GMPVideoHostImpl& GMPVideoDecoderChild::Host() { return mVideoHost; }
 
 void GMPVideoDecoderChild::Decoded(GMPVideoi420Frame* aDecodedFrame) {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
   if (!aDecodedFrame) {
     MOZ_CRASH("Not given a decoded frame!");
   }
+
+  if (NS_WARN_IF(!mPlugin)) {
+    aDecodedFrame->Destroy();
+    return;
+  }
+
+  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   auto df = static_cast<GMPVideoi420FrameImpl*>(aDecodedFrame);
 
@@ -53,36 +58,60 @@ void GMPVideoDecoderChild::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 
 void GMPVideoDecoderChild::ReceivedDecodedReferenceFrame(
     const uint64_t aPictureId) {
+  if (NS_WARN_IF(!mPlugin)) {
+    return;
+  }
+
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendReceivedDecodedReferenceFrame(aPictureId);
 }
 
 void GMPVideoDecoderChild::ReceivedDecodedFrame(const uint64_t aPictureId) {
+  if (NS_WARN_IF(!mPlugin)) {
+    return;
+  }
+
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendReceivedDecodedFrame(aPictureId);
 }
 
 void GMPVideoDecoderChild::InputDataExhausted() {
+  if (NS_WARN_IF(!mPlugin)) {
+    return;
+  }
+
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendInputDataExhausted();
 }
 
 void GMPVideoDecoderChild::DrainComplete() {
+  if (NS_WARN_IF(!mPlugin)) {
+    return;
+  }
+
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendDrainComplete();
 }
 
 void GMPVideoDecoderChild::ResetComplete() {
+  if (NS_WARN_IF(!mPlugin)) {
+    return;
+  }
+
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendResetComplete();
 }
 
 void GMPVideoDecoderChild::Error(GMPErr aError) {
+  if (NS_WARN_IF(!mPlugin)) {
+    return;
+  }
+
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendError(aError);
@@ -121,9 +150,9 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecode(
 
 mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvChildShmemForPool(
     Shmem&& aFrameBuffer) {
-  if (aFrameBuffer.IsWritable()) {
-    mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData,
-                                               aFrameBuffer);
+  GMPSharedMemManager* memMgr = mVideoHost.SharedMemMgr();
+  if (memMgr && aFrameBuffer.IsWritable()) {
+    memMgr->MgrDeallocShmem(GMPSharedMem::kGMPFrameData, aFrameBuffer);
   }
   return IPC_OK();
 }
@@ -153,6 +182,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDrain() {
 }
 
 mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecodingComplete() {
+  MOZ_ASSERT(mPlugin);
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   if (mNeedShmemIntrCount) {
@@ -163,6 +193,13 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecodingComplete() {
     mPendingDecodeComplete = true;
     return IPC_OK();
   }
+
+  // This will call ActorDestroy.
+  Unused << Send__delete__(this);
+  return IPC_OK();
+}
+
+void GMPVideoDecoderChild::ActorDestroy(ActorDestroyReason why) {
   if (mVideoDecoder) {
     // Ignore any return code. It is OK for this to fail without killing the
     // process.
@@ -173,13 +210,13 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecodingComplete() {
   mVideoHost.DoneWithAPI();
 
   mPlugin = nullptr;
-
-  Unused << Send__delete__(this);
-
-  return IPC_OK();
 }
 
 bool GMPVideoDecoderChild::Alloc(size_t aSize, Shmem* aMem) {
+  if (NS_WARN_IF(!mPlugin)) {
+    return false;
+  }
+
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   bool rv;
