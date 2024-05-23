@@ -268,6 +268,39 @@ add_task(async function go_button_after_tab_switch() {
   gBrowser.removeCurrentTab();
 });
 
+add_task(async function changing_ref_does_not_reload() {
+  // Load a page with ref, change the ref and confirm again, it should not
+  // cause a reload of the page.
+  for (let protocol of ["http://", "https://"]) {
+    let url = protocol + "example.com/#ref";
+    await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
+      await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+        let link = content.document.createElement("a");
+        link.textContent = "Click me";
+        link.name = "refmod";
+        link.setAttribute("name", "refmod");
+        content.document.body.append(link);
+      });
+
+      await UrlbarTestUtils.promisePopupOpen(window, () => {
+        EventUtils.synthesizeKey("l", { accelKey: true });
+      });
+      Assert.equal(
+        document.activeElement,
+        gURLBar.inputField,
+        "urlbar is focused"
+      );
+
+      EventUtils.synthesizeKey("KEY_ArrowRight", {});
+      EventUtils.sendString("mod");
+
+      let promise = promiseHashChangeLoad(url + "mod");
+      EventUtils.synthesizeKey("VK_RETURN");
+      await promise;
+    });
+  }
+});
+
 async function typeAndCommand(eventType, details = {}) {
   await UrlbarTestUtils.inputIntoURLBar(window, TEST_VALUE);
   await triggerCommand(eventType, details);
@@ -307,6 +340,14 @@ function promiseLoadStarted() {
       },
     });
   });
+}
+
+async function promiseHashChangeLoad(url) {
+  let { flags } = await BrowserTestUtils.waitForLocationChange(gBrowser, url);
+  Assert.ok(
+    flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_HASHCHANGE,
+    "Only ref fragment was changed"
+  );
 }
 
 let gUserContextIdSerial = 1;
