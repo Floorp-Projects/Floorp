@@ -4,31 +4,9 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 dnl Add compiler specific options
 
-dnl ============================================================================
-dnl C++ rtti
-dnl We don't use it in the code, but it can be usefull for debugging, so give
-dnl the user the option of enabling it.
-dnl ============================================================================
-AC_DEFUN([MOZ_RTTI],
-[
-if test -z "$_MOZ_USE_RTTI"; then
-    if test "$GNU_CC"; then
-        CXXFLAGS="$CXXFLAGS -fno-rtti"
-    else
-        case "$target" in
-        *-mingw*)
-            CXXFLAGS="$CXXFLAGS -GR-"
-        esac
-    fi
-fi
-])
-
-
 dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
-  MOZ_RTTI
-
 if test "$GNU_CC"; then
     if test -z "$DEVELOPER_OPTIONS"; then
         CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
