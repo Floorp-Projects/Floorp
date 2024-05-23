@@ -7,16 +7,6 @@ dnl Add compiler specific options
 dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
-if test "$GNU_CC"; then
-    if test -z "$DEVELOPER_OPTIONS"; then
-        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
-    fi
-
-    CFLAGS="$CFLAGS -fno-math-errno"
-    CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-math-errno"
-fi
-
 dnl ========================================================
 dnl = Identical Code Folding
 dnl ========================================================
