@@ -24,3 +24,6 @@ skip-if = [
 ]
 
 ["test_disallowInheritPrincipal.html"]
+
+["test_loadLocalFont.html"]
+skip-if = ["os == 'android'"] # Font does not exist on Android
