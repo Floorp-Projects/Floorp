@@ -40,7 +40,7 @@ add_task(function test_WebDriverSession_getters() {
   );
   equal(session.timeouts, session.capabilities.get("timeouts"));
   equal(
-    session.unhandledPromptBehavior,
+    session.userPromptHandler,
     session.capabilities.get("unhandledPromptBehavior")
   );
 });

@@ -18,3 +18,5 @@ head = "head.js"
 ["test_URLPattern_matchURLPattern.js"]
 
 ["test_URLPattern_parseURLPattern.js"]
+
+["test_UserPromptHandler.js"]
