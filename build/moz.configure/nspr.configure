@@ -19,10 +19,19 @@ def enable_nspr_build(enable):
         return enable
 
 
-system_lib_option("--with-system-nspr", help="Use system NSPR")
+system_lib_option(
+    "--with-system-nspr",
+    help="Use system NSPR",
+    when=use_pkg_config,
+)
 
 
-@depends(enable_nspr_build, "--with-system-nspr", js_standalone)
+@depends("--with-system-nspr", when=use_pkg_config)
+def with_system_nspr_option(with_system_nspr):
+    return with_system_nspr
+
+
+@depends(enable_nspr_build, with_system_nspr_option, js_standalone)
 def build_nspr(nspr_build, system_nspr, js_standalone):
     if nspr_build is not None and nspr_build.origin != "default":
         if nspr_build and system_nspr:
@@ -36,7 +45,7 @@ set_config("MOZ_BUILD_NSPR", True, when=build_nspr)
 set_config("MOZ_SYSTEM_NSPR", True, when="--with-system-nspr")
 
 
-@depends(build_nspr, "--with-system-nspr", js_standalone)
+@depends(build_nspr, with_system_nspr_option, js_standalone)
 def js_without_nspr(build_nspr, system_nspr, js_standalone):
     if js_standalone:
         return not build_nspr and not system_nspr
@@ -74,7 +83,7 @@ def nspr_pkg(nspr_pkg):
     )
 
 
-@depends("--with-system-nspr", nspr_minver)
+@depends(with_system_nspr_option, nspr_minver)
 def pkgconf_requires_private(system_nspr, nspr_minver):
     if not system_nspr:
         return ""
