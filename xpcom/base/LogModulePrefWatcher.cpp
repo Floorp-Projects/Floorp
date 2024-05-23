@@ -13,6 +13,7 @@
 #include "NSPRLogModulesParser.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
+#include "prenv.h"
 #include "base/process_util.h"
 
 static const char kLoggingPrefPrefix[] = "logging.";
@@ -92,27 +93,29 @@ static void LoadPrefValue(const char* aName) {
       // the corresponding log modules (if any) will be enabled, others will be
       // disabled.
       LogModule::DisableModules();
+      LogModule::SetCaptureStacks(false);
+
+      const char* modulesFromEnv = PR_GetEnv("MOZ_LOG");
+      const bool hasModulesEnv = modulesFromEnv && modulesFromEnv[0];
 
       rv = Preferences::GetCString(aName, prefValue);
-      if (NS_FAILED(rv)) {
-        // If the preference is missing, there's nothing to set.
-        return;
-      }
+      const bool hasModulesPref = NS_SUCCEEDED(rv) && !prefValue.IsEmpty();
 
-      NSPRLogModulesParser(
-          prefValue.BeginReading(),
-          [](const char* aName, LogLevel aLevel, int32_t aValue) mutable {
-            // Only the special string "profilerstacks" is taken into account,
-            // because we're especially interested in usage with the Firefox
-            // Profiler.
-            if (strcmp(aName, "profilerstacks") == 0) {
-              LogModule::SetCaptureStacks(true);
-            } else {
-              LogModule::Get(aName)->SetLevel(aLevel);
-            }
-          });
+      if (hasModulesEnv || hasModulesPref) {
+        NSPRLogModulesParser(
+            hasModulesPref ? prefValue.BeginReading() : modulesFromEnv,
+            [](const char* aName, LogLevel aLevel, int32_t aValue) mutable {
+              // Only the special string "profilerstacks" is taken into account,
+              // because we're especially interested in usage with the Firefox
+              // Profiler.
+              if (strcmp(aName, "profilerstacks") == 0) {
+                LogModule::SetCaptureStacks(true);
+              } else {
+                LogModule::Get(aName)->SetLevel(aLevel);
+              }
+            });
+      }
     }
-    return;
   }
 
   if (Preferences::GetInt(aName, &prefLevel) == NS_OK) {
