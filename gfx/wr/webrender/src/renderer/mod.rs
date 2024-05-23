@@ -46,7 +46,6 @@ use api::FramePublishId;
 use api::units::*;
 use api::channel::{Sender, Receiver};
 pub use api::DebugFlags;
-use bytemuck::Pod;
 use core::time::Duration;
 
 use crate::pattern::PatternKind;
@@ -2000,7 +1999,7 @@ impl Renderer {
         }
     }
 
-    fn draw_instanced_batch<T: Pod + Clone>(
+    fn draw_instanced_batch<T: Clone>(
         &mut self,
         data: &[T],
         vertex_array_kind: VertexArrayKind,
