@@ -180,3 +180,4 @@ test-pref(media.wmf.hevc.enabled,1) load 1860840.mp4
 load 1864450.html
 load 1872787.html
 load small-timebase.html
+load vp9cake_corrupt.webm
