@@ -1028,18 +1028,10 @@ var FullPageTranslationsPanel = new (class {
    *   True if the panel was automatically opened, otherwise false.
    * @param {boolean} telemetryData.maintainFlow
    *   Whether or not to maintain the flow of telemetry.
-   * @param {boolean} telemetryData.isFirstUserInteraction
-   *   Whether or not this is the first user interaction with the panel.
    */
   async #openPanelPopup(
     target,
-    {
-      event = null,
-      viewName = null,
-      autoShow = false,
-      maintainFlow = false,
-      isFirstUserInteraction = null,
-    }
+    { event = null, viewName = null, autoShow = false, maintainFlow = false }
   ) {
     const { panel, appMenuButton } = this.elements;
     const openedFromAppMenu = target.id === appMenuButton.id;
@@ -1051,7 +1043,6 @@ var FullPageTranslationsPanel = new (class {
       docLangTag,
       maintainFlow,
       openedFromAppMenu,
-      isFirstUserInteraction,
     });
 
     this.#isPopupOpen = true;
@@ -1112,9 +1103,6 @@ var FullPageTranslationsPanel = new (class {
         gBrowser.selectedBrowser
       ).languageState;
 
-    // Store this value because it gets modified when #showDefaultView is called below.
-    const isFirstUserInteraction = !this._hasShownPanel;
-
     await this.#ensureLangListsBuilt();
 
     if (requestedTranslationPair) {
@@ -1144,7 +1132,6 @@ var FullPageTranslationsPanel = new (class {
       autoShow: reportAsAutoShow,
       viewName: requestedTranslationPair ? "revisitView" : "defaultView",
       maintainFlow: false,
-      isFirstUserInteraction,
     });
   }
 

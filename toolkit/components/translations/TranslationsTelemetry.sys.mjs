@@ -33,9 +33,7 @@ export class TranslationsTelemetry {
       return;
     }
     lazy.console.debug(
-      `${
-        Panel.isFirstUserInteraction() ? "[FIRST OPEN] " : ""
-      }flowId(${TranslationsTelemetry.getOrCreateFlowId()}): ${eventInfo}`
+      `flowId(${TranslationsTelemetry.getOrCreateFlowId()}): ${eventInfo}`
     );
   }
 
@@ -84,7 +82,6 @@ export class TranslationsTelemetry {
     Glean.translations.errorRate.addToNumerator(1);
     Glean.translations.error.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       reason: errorMessage,
     });
     TranslationsTelemetry.logEventToConsole("onError");
@@ -111,7 +108,6 @@ export class TranslationsTelemetry {
     Glean.translations.requestsCount.add(1);
     Glean.translations.translationRequest.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       from_language: fromLanguage,
       to_language: toLanguage,
       auto_translate: autoTranslate,
@@ -128,7 +124,6 @@ export class TranslationsTelemetry {
   static onRestorePage() {
     Glean.translations.restorePage.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onRestorePage");
   }
@@ -139,25 +134,6 @@ export class TranslationsTelemetry {
  */
 class Panel {
   /**
-   * A value to retain whether this is the user's first time
-   * interacting with the translations panel. It is propagated
-   * to all events.
-   *
-   * This value is set only through the onOpen() function.
-   */
-  static #isFirstUserInteraction = false;
-
-  /**
-   * True if this is the user's first time interacting with the
-   * Translations panel, otherwise false.
-   *
-   * @returns {boolean}
-   */
-  static isFirstUserInteraction() {
-    return Panel.#isFirstUserInteraction;
-  }
-
-  /**
    * Records a telemetry event when the translations panel is opened.
    *
    * @param {object} data
@@ -166,7 +142,6 @@ class Panel {
    * @param {boolean} data.autoShow
    * @param {boolean} data.maintainFlow
    * @param {boolean} data.openedFromAppMenu
-   * @param {boolean} data.isFirstUserInteraction
    */
   static onOpen({
     viewName = null,
@@ -174,11 +149,7 @@ class Panel {
     docLangTag = null,
     maintainFlow = false,
     openedFromAppMenu = false,
-    isFirstUserInteraction = null,
   }) {
-    if (isFirstUserInteraction !== null || !maintainFlow) {
-      Panel.#isFirstUserInteraction = isFirstUserInteraction ?? false;
-    }
     Glean.translationsPanel.open.record({
       flow_id: maintainFlow
         ? TranslationsTelemetry.getOrCreateFlowId()
@@ -186,7 +157,6 @@ class Panel {
       auto_show: autoShow,
       view_name: viewName,
       document_language: docLangTag,
-      first_interaction: Panel.isFirstUserInteraction(),
       opened_from: openedFromAppMenu ? "appMenu" : "translationsButton",
     });
     TranslationsTelemetry.logEventToConsole(
@@ -199,7 +169,6 @@ class Panel {
   static onClose() {
     Glean.translationsPanel.close.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onClose");
   }
@@ -207,7 +176,6 @@ class Panel {
   static onOpenFromLanguageMenu() {
     Glean.translationsPanel.openFromLanguageMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onOpenFromLanguageMenu");
   }
@@ -215,7 +183,6 @@ class Panel {
   static onChangeFromLanguage(langTag) {
     Glean.translationsPanel.changeFromLanguage.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       language: langTag,
     });
     TranslationsTelemetry.logEventToConsole(`onChangeFromLanguage(${langTag})`);
@@ -224,7 +191,6 @@ class Panel {
   static onCloseFromLanguageMenu() {
     Glean.translationsPanel.closeFromLanguageMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onCloseFromLanguageMenu");
   }
@@ -232,7 +198,6 @@ class Panel {
   static onOpenToLanguageMenu() {
     Glean.translationsPanel.openToLanguageMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onOpenToLanguageMenu");
   }
@@ -240,7 +205,6 @@ class Panel {
   static onChangeToLanguage(langTag) {
     Glean.translationsPanel.changeToLanguage.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       language: langTag,
     });
     TranslationsTelemetry.logEventToConsole(`onChangeToLanguage(${langTag})`);
@@ -249,7 +213,6 @@ class Panel {
   static onCloseToLanguageMenu() {
     Glean.translationsPanel.closeToLanguageMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onCloseToLanguageMenu");
   }
@@ -257,7 +220,6 @@ class Panel {
   static onOpenSettingsMenu() {
     Glean.translationsPanel.openSettingsMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onOpenSettingsMenu");
   }
@@ -265,7 +227,6 @@ class Panel {
   static onCloseSettingsMenu() {
     Glean.translationsPanel.closeSettingsMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onCloseSettingsMenu");
   }
@@ -273,7 +234,6 @@ class Panel {
   static onCancelButton() {
     Glean.translationsPanel.cancelButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onCancelButton");
   }
@@ -281,7 +241,6 @@ class Panel {
   static onChangeSourceLanguageButton() {
     Glean.translationsPanel.changeSourceLanguageButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onChangeSourceLanguageButton");
   }
@@ -289,7 +248,6 @@ class Panel {
   static onDismissErrorButton() {
     Glean.translationsPanel.dismissErrorButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onDismissErrorButton");
   }
@@ -297,7 +255,6 @@ class Panel {
   static onRestorePageButton() {
     Glean.translationsPanel.restorePageButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onRestorePageButton");
   }
@@ -305,7 +262,6 @@ class Panel {
   static onTranslateButton() {
     Glean.translationsPanel.translateButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onTranslateButton");
   }
@@ -313,7 +269,6 @@ class Panel {
   static onAlwaysOfferTranslations(toggledOn) {
     Glean.translationsPanel.alwaysOfferTranslations.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       toggled_on: toggledOn,
     });
     TranslationsTelemetry.logEventToConsole(
@@ -324,7 +279,6 @@ class Panel {
   static onAlwaysTranslateLanguage(langTag, toggledOn) {
     Glean.translationsPanel.alwaysTranslateLanguage.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       language: langTag,
       toggled_on: toggledOn,
     });
@@ -336,7 +290,6 @@ class Panel {
   static onNeverTranslateLanguage(langTag, toggledOn) {
     Glean.translationsPanel.neverTranslateLanguage.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       language: langTag,
       toggled_on: toggledOn,
     });
@@ -348,7 +301,6 @@ class Panel {
   static onNeverTranslateSite(toggledOn) {
     Glean.translationsPanel.neverTranslateSite.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
       toggled_on: toggledOn,
     });
     TranslationsTelemetry.logEventToConsole(
@@ -359,7 +311,6 @@ class Panel {
   static onManageLanguages() {
     Glean.translationsPanel.manageLanguages.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onManageLanguages");
   }
@@ -367,7 +318,6 @@ class Panel {
   static onAboutTranslations() {
     Glean.translationsPanel.aboutTranslations.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onAboutTranslations");
   }
@@ -375,7 +325,6 @@ class Panel {
   static onLearnMoreLink() {
     Glean.translationsPanel.learnMore.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
-      first_interaction: Panel.isFirstUserInteraction(),
     });
     TranslationsTelemetry.logEventToConsole("onLearnMoreLink");
   }

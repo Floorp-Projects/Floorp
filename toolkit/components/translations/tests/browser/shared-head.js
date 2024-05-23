@@ -1211,9 +1211,6 @@ class TestTranslationsTelemetry {
    * @param {object} expectations - The test expectations.
    * @param {number} expectations.expectedEventCount - The expected count of events.
    * @param {boolean} expectations.expectNewFlowId
-   * @param {boolean} [expectations.expectFirstInteraction]
-   * - Expects the flowId to be different than the previous flowId if true,
-   *   and expects it to be the same if false.
    * @param {Array<Function>} [expectations.allValuePredicates=[]]
    * - An array of function predicates to assert for all event values.
    * @param {Array<Function>} [expectations.finalValuePredicates=[]]
@@ -1224,7 +1221,6 @@ class TestTranslationsTelemetry {
     {
       expectedEventCount,
       expectNewFlowId = null,
-      expectFirstInteraction = null,
       allValuePredicates = [],
       finalValuePredicates = [],
     }
@@ -1236,14 +1232,6 @@ class TestTranslationsTelemetry {
     const eventCount = events.length;
     const name =
       eventCount > 0 ? `${events[0].category}.${events[0].name}` : null;
-
-    if (eventCount > 0 && expectFirstInteraction !== null) {
-      is(
-        events[eventCount - 1].extra.first_interaction,
-        expectFirstInteraction ? "true" : "false",
-        "The newest event should be match the given first-interaction expectation"
-      );
-    }
 
     if (eventCount > 0 && expectNewFlowId !== null) {
       const flowId = events[eventCount - 1].extra.flow_id;

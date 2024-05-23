@@ -85,13 +85,9 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_full_page_reader_mode.js"]
 
-["browser_translations_full_page_telemetry_firstrun_auto_translate.js"]
+["browser_translations_full_page_telemetry_auto_translate.js"]
 
-["browser_translations_full_page_telemetry_firstrun_basics.js"]
-
-["browser_translations_full_page_telemetry_firstrun_translation_failure.js"]
-
-["browser_translations_full_page_telemetry_firstrun_unsupported_lang.js"]
+["browser_translations_full_page_telemetry_basics.js"]
 
 ["browser_translations_full_page_telemetry_open_panel.js"]
 
@@ -104,6 +100,8 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 ["browser_translations_full_page_telemetry_translation_failure.js"]
 
 ["browser_translations_full_page_telemetry_translation_request.js"]
+
+["browser_translations_full_page_telemetry_unsupported_lang.js"]
 
 ["browser_translations_select_context_menu_engine_unsupported.js"]
 
