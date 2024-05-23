@@ -7,6 +7,7 @@ use api::{ImageDescriptor, ImageFormat, Parameter, BoolParameter, IntParameter, 
 use api::{MixBlendMode, ImageBufferKind, VoidPtrToSizeFn};
 use api::{CrashAnnotator, CrashAnnotation, CrashAnnotatorGuard};
 use api::units::*;
+use bytemuck::Pod;
 use euclid::default::Transform3D;
 use gleam::gl;
 use crate::render_api::MemoryReport;
@@ -3507,7 +3508,7 @@ impl Device {
         );
     }
 
-    fn update_vbo_data<V>(
+    fn update_vbo_data<V: Pod>(
         &mut self,
         vbo: VBOId,
         vertices: &[V],
@@ -3539,7 +3540,7 @@ impl Device {
         )
     }
 
-    pub fn update_vao_main_vertices<V>(
+    pub fn update_vao_main_vertices<V: Pod>(
         &mut self,
         vao: &VAO,
         vertices: &[V],
@@ -3549,7 +3550,7 @@ impl Device {
         self.update_vbo_data(vao.main_vbo_id, vertices, usage_hint)
     }
 
-    pub fn update_vao_instances<V: Clone>(
+    pub fn update_vao_instances<V: Pod + Clone>(
         &mut self,
         vao: &VAO,
         instances: &[V],

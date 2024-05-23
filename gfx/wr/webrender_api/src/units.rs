@@ -13,6 +13,7 @@
 //! in the context of coordinate systems.
 
 pub use app_units::Au;
+use bytemuck::{Pod, Zeroable};
 use euclid::{Length, Rect, Scale, Size2D, Transform3D, Translation2D};
 use euclid::{Point2D, Point3D, Vector2D, Vector3D, SideOffsets2D, Box2D};
 use euclid::HomogeneousVector;
@@ -155,7 +156,8 @@ pub type BlobToDeviceTranslation = Translation2D<i32, LayoutPixel, DevicePixel>;
 /// may grow. Storing them as texel coords and normalizing
 /// the UVs in the vertex shader means nothing needs to be
 /// updated on the CPU when the texture size changes.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Pod, Zeroable)]
+#[repr(C)]
 pub struct TexelRect {
     pub uv0: DevicePoint,
     pub uv1: DevicePoint,
