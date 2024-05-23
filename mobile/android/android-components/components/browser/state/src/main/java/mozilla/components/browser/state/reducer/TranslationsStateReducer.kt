@@ -9,6 +9,9 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TranslationsState
+import mozilla.components.concept.engine.translate.LanguageModel
+import mozilla.components.concept.engine.translate.ModelOperation
+import mozilla.components.concept.engine.translate.ModelState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
@@ -482,6 +485,24 @@ internal object TranslationsStateReducer {
                 translationEngine = state.translationEngine.copy(
                     languageSettings = action.languageSettings,
                     engineError = null,
+                ),
+            )
+        }
+
+        is TranslationsAction.ManageLanguageModelsAction -> {
+            val processState = if (action.options.operation == ModelOperation.DOWNLOAD) {
+                ModelState.DOWNLOAD_IN_PROGRESS
+            } else {
+                ModelState.DELETION_IN_PROGRESS
+            }
+            val newModelState = LanguageModel.determineNewLanguageModelState(
+                currentLanguageModels = state.translationEngine.languageModels,
+                options = action.options,
+                newStatus = processState,
+            )
+            state.copy(
+                translationEngine = state.translationEngine.copy(
+                    languageModels = newModelState,
                 ),
             )
         }

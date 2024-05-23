@@ -48,6 +48,7 @@ import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.LanguageSetting
+import mozilla.components.concept.engine.translate.ModelManagementOptions
 import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
@@ -1120,6 +1121,16 @@ sealed class TranslationsAction : BrowserAction() {
      */
     data class SetLanguageModelsAction(
         val languageModels: List<LanguageModel>,
+    ) : TranslationsAction()
+
+    /**
+     * Manages the language machine learning translation models the translation engine has available.
+     * Has options for downloading and deleting models.
+     *
+     * @property options The operation to perform to manage the model.
+     */
+    data class ManageLanguageModelsAction(
+        val options: ModelManagementOptions,
     ) : TranslationsAction()
 }
 
