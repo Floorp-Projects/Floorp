@@ -6151,7 +6151,6 @@ nsresult nsDocShell::FilterStatusForErrorPage(
     // to see the error page.
     nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
     if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
-        StaticPrefs::dom_no_unknown_protocol_error_enabled() &&
         !aIsInitialDocument) {
       if (aSkippedUnknownProtocolNavigation) {
         *aSkippedUnknownProtocolNavigation = true;
