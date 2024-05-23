@@ -164,20 +164,12 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
 
   nsINode* target =
       textControl ? static_cast<nsINode*>(textControl.get()) : aDoc;
-  if (!target) {
-    return;
+  if (target) {
+    CanBubble canBubble = textControl ? CanBubble::eYes : CanBubble::eNo;
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(target, eSelectionChange, canBubble);
+    asyncDispatcher->PostDOMEvent();
   }
-
-  if (target->HasScheduledSelectionChangeEvent()) {
-    return;
-  }
-
-  target->SetHasScheduledSelectionChangeEvent();
-  CanBubble canBubble = textControl ? CanBubble::eYes : CanBubble::eNo;
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncSelectionChangeEventDispatcher(target, eSelectionChange,
-                                              canBubble);
-  asyncDispatcher->PostDOMEvent();
 }
 
 }  // namespace mozilla

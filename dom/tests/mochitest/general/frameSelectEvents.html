@@ -645,7 +645,14 @@
             { x: 50 },
             "mousedown",
             {
-              selectionchangeOnDocument: 1,
+              // XXX Bug 1721287: For some reason we fire 2 selectchange events
+              // on the body when switching from the <input> to the <textarea>.
+              selectionchangeOnDocument:
+                document.activeElement != textControl &&
+                  (document.activeElement.tagName.toLocaleLowerCase() == "input" ||
+                   document.activeElement.tagName.toLocaleLowerCase() == "textarea")
+                  ? 2
+                  : 1,
             }
           );
 
