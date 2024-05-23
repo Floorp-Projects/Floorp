@@ -22,8 +22,6 @@ support-files = [
 
 ["test_attrchange.html"]
 
-["test_attrs.html"]
-
 ["test_bug1322593-2.html"]
 
 ["test_bug1322593.html"]

@@ -5,11 +5,9 @@
 
 #include "nsEventShell.h"
 
-#include "nsAccUtils.h"
+#include "nsAccessibilityService.h"
 #include "Logging.h"
-#include "AccAttributes.h"
 
-#include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMStringList.h"
 
 using namespace mozilla;
@@ -24,12 +22,6 @@ void nsEventShell::FireEvent(AccEvent* aEvent) {
 
   LocalAccessible* accessible = aEvent->GetAccessible();
   NS_ENSURE_TRUE_VOID(accessible);
-
-  nsINode* node = accessible->GetNode();
-  if (node) {
-    sEventTargetNode = node;
-    sEventFromUserInput = aEvent->IsFromUserInput();
-  }
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eEvents)) {
@@ -53,8 +45,6 @@ void nsEventShell::FireEvent(AccEvent* aEvent) {
 
   accessible->HandleAccEvent(aEvent);
   aEvent->mEventRule = AccEvent::eDoNotEmit;
-
-  sEventTargetNode = nullptr;
 }
 
 void nsEventShell::FireEvent(uint32_t aEventType, LocalAccessible* aAccessible,
@@ -66,16 +56,3 @@ void nsEventShell::FireEvent(uint32_t aEventType, LocalAccessible* aAccessible,
 
   FireEvent(event);
 }
-
-void nsEventShell::GetEventAttributes(nsINode* aNode,
-                                      AccAttributes* aAttributes) {
-  if (aNode != sEventTargetNode) return;
-
-  aAttributes->SetAttribute(nsGkAtoms::eventFromInput, sEventFromUserInput);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsEventShell: private
-
-bool nsEventShell::sEventFromUserInput = false;
-StaticRefPtr<nsINode> nsEventShell::sEventTargetNode;

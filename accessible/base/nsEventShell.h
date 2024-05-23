@@ -47,20 +47,6 @@ class nsEventShell {
                               : mozilla::a11y::eNoUserInput));
     FireEvent(stateChangeEvent);
   }
-
-  /**
-   * Append 'event-from-input' object attribute if the accessible event has
-   * been fired just now for the given node.
-   *
-   * @param  aNode        [in] the DOM node
-   * @param  aAttributes  [in, out] the attributes
-   */
-  static void GetEventAttributes(nsINode* aNode,
-                                 mozilla::a11y::AccAttributes* aAttributes);
-
- private:
-  static mozilla::StaticRefPtr<nsINode> sEventTargetNode;
-  static bool sEventFromUserInput;
 };
 
 #endif
