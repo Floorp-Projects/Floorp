@@ -1,0 +1,29 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="reftest-wait reftest-snapshot-all reftest-no-flush">
+<style>
+#r {
+  fill: lime;
+  animation: opacity 30s;
+  opacity: 0;
+}
+@keyframes opacity {
+  0% {
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+</style>
+<rect fill="red" width="100%" height="100%" />
+<rect id="r" width="100%" height="100%" />
+<script>
+function doTest() {
+  setTimeout(function(){ document.documentElement.classList.remove('reftest-wait'); }, 500);
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</svg>
+

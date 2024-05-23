@@ -404,7 +404,7 @@ void SVGImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (!IsVisibleForPainting()) {
       return;
     }
-    if (StyleEffects()->IsTransparent()) {
+    if (StyleEffects()->IsTransparent() && SVGUtils::CanOptimizeOpacity(this)) {
       return;
     }
     aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
@@ -423,7 +423,8 @@ bool SVGImageFrame::IsInvisible() const {
   // Anything below will round to zero later down the pipeline.
   constexpr float opacity_threshold = 1.0 / 128.0;
 
-  return StyleEffects()->mOpacity <= opacity_threshold;
+  return StyleEffects()->mOpacity <= opacity_threshold &&
+         SVGUtils::CanOptimizeOpacity(this);
 }
 
 bool SVGImageFrame::CreateWebRenderCommands(
