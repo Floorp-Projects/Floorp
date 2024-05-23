@@ -543,6 +543,8 @@ pub struct QuadInstance {
     pub dst_task_address: RenderTaskAddress,
     pub prim_address_i: GpuBufferAddress,
     pub prim_address_f: GpuBufferAddress,
+    pub z_id: ZBufferId,
+    pub transform_id: TransformPaletteId,
     pub quad_flags: u8,
     pub edge_flags: u8,
     pub part_index: u8,
