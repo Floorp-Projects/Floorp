@@ -41,6 +41,9 @@
   <script>
     let generatedSlotText = "generated slotted element";
     let testHeading = "test heading";
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
 
     function assertBasicProperties(card, expectedValues) {
       info(`Testing card with ID: ${card.id}`);
@@ -69,10 +72,24 @@
 
     }
 
-    function assertAccordionCardProperties(card) {
+    async function assertAccordionCardProperties(card) {
       ok(card.detailsEl, "The details element should exist");
       ok(card.detailsEl.querySelector("summary"), "There should be a summary element within the details element");
       ok(card.detailsEl.querySelector("summary").querySelector(".chevron-icon"), "There should be a chevron icon div within the summary element");
+
+      let cardToggled = BrowserTestUtils.waitForEvent(card, "toggle");
+      card.detailsEl.querySelector("summary").click();
+      let openEvent = await cardToggled;
+      is(openEvent.newState, "open", "Event shows new state is open");
+      is(openEvent.oldState, "closed", "Event shows old state is closed");
+      ok(card.detailsEl.open, "When the accordion is closed, it should expand when clicked");
+
+      cardToggled = BrowserTestUtils.waitForEvent(card, "toggle");
+      card.detailsEl.querySelector("summary").click();
+      let closeEvent = await cardToggled;
+      is(closeEvent.newState, "closed", "Event shows new state is closed");
+      is(closeEvent.oldState, "open", "Event shows old state is open");
+      ok(!card.detailsEl.open, "When the accordion is open, it should collapse when clicked");
     }
 
     function assertHeadingIconCardProperties(card) {
@@ -130,7 +147,7 @@
           headingText: "accordion heading",
         }
       );
-      assertAccordionCardProperties(document.getElementById("accordion-card"),
+      await assertAccordionCardProperties(document.getElementById("accordion-card"),
         {
           "data-l10n-id": "test-id-2",
           "data-l10n-attrs": "heading",
@@ -157,7 +174,7 @@
           contentText: generatedSlotText,
         }
       );
-      assertAccordionCardProperties(accordionCard,
+      await assertAccordionCardProperties(accordionCard,
         {
           "data-l10n-id": "generated-id-2",
           "data-l10n-attrs": "heading",
