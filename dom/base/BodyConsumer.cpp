@@ -707,17 +707,24 @@ void BodyConsumer::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength,
       JS::Rooted<JSObject*> arrayBuffer(cx);
       BodyUtil::ConsumeArrayBuffer(cx, &arrayBuffer, aResultLength,
                                    std::move(resultPtr), error);
-
       if (!error.Failed()) {
-        JS::Rooted<JS::Value> val(cx);
-        val.setObjectOrNull(arrayBuffer);
-
+        JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*arrayBuffer));
         localPromise->MaybeResolve(val);
       }
       break;
     }
     case ConsumeType::Blob: {
       MOZ_CRASH("This should not happen.");
+      break;
+    }
+    case ConsumeType::Bytes: {
+      JS::Rooted<JSObject*> bytes(cx);
+      BodyUtil::ConsumeBytes(cx, &bytes, aResultLength, std::move(resultPtr),
+                             error);
+      if (!error.Failed()) {
+        JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*bytes));
+        localPromise->MaybeResolve(val);
+      }
       break;
     }
     case ConsumeType::FormData: {
