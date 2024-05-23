@@ -279,8 +279,10 @@ class TokenStreamPosition;
  */
 class TokenStreamShared {
  protected:
-  static constexpr size_t ntokens = 4;  // 1 current + 2 lookahead, rounded
-                                        // to power of 2 to avoid divmod by 3
+  // 1 current + (3 lookahead if EXPLICIT_RESOURCE_MANAGEMENT is enabled
+  // else 2 lookahead and rounded up to ^2)
+  // NOTE: This must be power of 2, in order to make `ntokensMask` work.
+  static constexpr size_t ntokens = 4;
 
   static constexpr unsigned ntokensMask = ntokens - 1;
 
@@ -288,7 +290,12 @@ class TokenStreamShared {
   friend class TokenStreamPosition;
 
  public:
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  // We need a lookahead buffer of atleast 3 for the AwaitUsing syntax.
+  static constexpr unsigned maxLookahead = 3;
+#else
   static constexpr unsigned maxLookahead = 2;
+#endif
 
   using Modifier = Token::Modifier;
   static constexpr Modifier SlashIsDiv = Token::SlashIsDiv;

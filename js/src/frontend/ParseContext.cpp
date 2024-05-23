@@ -36,6 +36,8 @@ const char* DeclarationKindString(DeclarationKind kind) {
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
     case DeclarationKind::Using:
       return "using";
+    case DeclarationKind::AwaitUsing:
+      return "await using";
 #endif
     case DeclarationKind::Class:
       return "class";

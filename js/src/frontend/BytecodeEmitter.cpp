@@ -1088,6 +1088,7 @@ restart:
 
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
     case ParseNodeKind::UsingDecl:
+    case ParseNodeKind::AwaitUsingDecl:
       MOZ_CRASH("Using declarations are not supported yet");
 #endif
 
