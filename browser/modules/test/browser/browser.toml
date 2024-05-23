@@ -32,8 +32,8 @@ https_first_disabled = true
 ["browser_TabUnloader.js"]
 support-files = [
   "file_webrtc.html",
-  "../../../base/content/test/tabs/dummy_page.html",
-  "../../../base/content/test/tabs/file_mediaPlayback.html",
+  "../../../components/tabbrowser/test/tabs/dummy_page.html",
+  "../../../components/tabbrowser/test/tabs/file_mediaPlayback.html",
   "../../../base/content/test/general/audio.ogg",
 ]
 skip-if = [

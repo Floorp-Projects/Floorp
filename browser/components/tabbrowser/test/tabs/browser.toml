@@ -2,7 +2,7 @@
 support-files = [
   "head.js",
   "dummy_page.html",
-  "../general/audio.ogg",
+  "audio.ogg",
   "file_mediaPlayback.html",
   "test_process_flags_chrome.html",
   "helper_origin_attrs_testing.js",

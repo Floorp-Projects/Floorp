@@ -59,7 +59,6 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/tabdialogs/browser.toml",
     "content/test/tabMediaIndicator/browser.toml",
     "content/test/tabPrompts/browser.toml",
-    "content/test/tabs/browser.toml",
     "content/test/touch/browser.toml",
     "content/test/utilityOverlay/browser.toml",
     "content/test/webextensions/browser.toml",

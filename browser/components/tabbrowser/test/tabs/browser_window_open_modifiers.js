@@ -9,7 +9,7 @@ requestLongerTimeout(4);
 
 add_task(async function () {
   await BrowserTestUtils.withNewTab(
-    "https://example.com/browser/browser/base/content/test/tabs/file_window_open.html",
+    "https://example.com/browser/browser/components/tabbrowser/test/tabs/file_window_open.html",
     async function (browser) {
       const metaKey = AppConstants.platform == "macosx" ? "metaKey" : "ctrlKey";
       const normalEvent = {};

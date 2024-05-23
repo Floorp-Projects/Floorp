@@ -14,3 +14,7 @@ EXTRA_JS_MODULES += [
     "TabsList.sys.mjs",
     "TabUnloader.sys.mjs",
 ]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/tabs/browser.toml",
+]

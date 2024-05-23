@@ -1,6 +1,6 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 const PAGE =
-  "https://example.com/browser/browser/base/content/test/tabs/file_mediaPlayback.html";
+  "https://example.com/browser/browser/components/tabbrowser/test/tabs/file_mediaPlayback.html";
 const TABATTR_REMOVAL_PREFNAME = "browser.tabs.delayHidingAudioPlayingIconMS";
 const INITIAL_TABATTR_REMOVAL_DELAY_MS = Services.prefs.getIntPref(
   TABATTR_REMOVAL_PREFNAME

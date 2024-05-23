@@ -5,7 +5,7 @@
 /* import-globals-from helper_origin_attrs_testing.js */
 loadTestSubscript("helper_origin_attrs_testing.js");
 
-const PATH = "browser/browser/base/content/test/tabs/blank.html";
+const PATH = "browser/browser/components/tabbrowser/test/tabs/blank.html";
 
 var TEST_CASES = [
   { uri: "https://example.com/" + PATH },
