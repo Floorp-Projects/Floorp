@@ -117,7 +117,7 @@ add_task(async function switchToTab() {
 });
 
 add_task(async function searchSuggestions() {
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });

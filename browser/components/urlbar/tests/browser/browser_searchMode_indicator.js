@@ -23,7 +23,7 @@ let suggestionsEngine;
 let defaultEngine;
 
 add_setup(async function () {
-  suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+  suggestionsEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
   });
 

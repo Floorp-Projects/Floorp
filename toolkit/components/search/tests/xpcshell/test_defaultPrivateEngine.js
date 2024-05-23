@@ -233,7 +233,7 @@ add_task(async function test_defaultPrivateEngine() {
 });
 
 add_task(async function test_telemetry_private_empty_submission_url() {
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}simple.xml`,
     setAsDefaultPrivate: true,
   });

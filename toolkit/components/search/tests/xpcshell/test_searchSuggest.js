@@ -72,16 +72,16 @@ add_setup(async function () {
     alternativeJSONType: true,
   };
 
-  getEngine = await SearchTestUtils.promiseNewSearchEngine({
+  getEngine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engineMaker.sjs?${JSON.stringify(getEngineData)}`,
   });
-  postEngine = await SearchTestUtils.promiseNewSearchEngine({
+  postEngine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engineMaker.sjs?${JSON.stringify(postEngineData)}`,
   });
-  unresolvableEngine = await SearchTestUtils.promiseNewSearchEngine({
+  unresolvableEngine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engineMaker.sjs?${JSON.stringify(unresolvableEngineData)}`,
   });
-  alternateJSONEngine = await SearchTestUtils.promiseNewSearchEngine({
+  alternateJSONEngine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engineMaker.sjs?${JSON.stringify(
       alternateJSONSuggestEngineData
     )}`,

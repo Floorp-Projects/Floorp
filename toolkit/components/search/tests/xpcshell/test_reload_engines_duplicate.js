@@ -130,7 +130,7 @@ add_task(async function test_reload_engines_with_duplicate() {
   );
   // Simulate a user installing a search engine that shares the same name as an
   // application provided search engine not currently installed in their browser.
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
       baseURL: gDataUrl,
       name: "engine-pref",

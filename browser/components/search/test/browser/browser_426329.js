@@ -86,7 +86,7 @@ add_setup(async function () {
 
   await gCUITestUtils.addSearchBar();
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: "http://mochi.test:8888/browser/browser/components/search/test/browser/426329.xml",
     setAsDefault: true,
   });

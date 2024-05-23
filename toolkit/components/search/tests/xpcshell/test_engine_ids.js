@@ -142,7 +142,7 @@ add_task(async function test_user_engine_id() {
 });
 
 add_task(async function test_open_search_engine_id() {
-  let openSearchEngine = await SearchTestUtils.promiseNewSearchEngine({
+  let openSearchEngine = await SearchTestUtils.installOpenSearchEngine({
     url: gDataUrl + "simple.xml",
   });
 

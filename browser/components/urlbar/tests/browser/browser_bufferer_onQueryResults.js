@@ -11,7 +11,7 @@
 
 add_setup(async function () {
   sandbox = sinon.createSandbox();
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
     setAsDefault: true,
   });

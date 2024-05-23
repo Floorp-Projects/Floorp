@@ -48,7 +48,7 @@ add_task(async function test_icon_types() {
     };
     // The easiest way to test adding the icon is via a generated xml, otherwise
     // we have to somehow insert the address of the server into it.
-    SearchTestUtils.promiseNewSearchEngine({
+    SearchTestUtils.installOpenSearchEngine({
       url: `${gDataUrl}engineMaker.sjs?${JSON.stringify(engineData)}`,
     });
     let engine = await promiseEngineAdded;
@@ -65,7 +65,7 @@ add_task(async function test_icon_types() {
 });
 
 add_task(async function test_multiple_icons_in_file() {
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engineImages.xml`,
   });
 

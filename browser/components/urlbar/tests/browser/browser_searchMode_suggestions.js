@@ -16,7 +16,7 @@ let suggestionsEngine;
 let expectedFormHistoryResults = [];
 
 add_setup(async function () {
-  suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+  suggestionsEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
   });
 
@@ -244,7 +244,7 @@ add_task(async function nonEmptySearch_nonMatching() {
 });
 
 add_task(async function nonEmptySearch_withHistory() {
-  let manySuggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+  let manySuggestionsEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + MANY_SUGGESTIONS_ENGINE_NAME,
   });
   // URLs with the same host as the search engine.

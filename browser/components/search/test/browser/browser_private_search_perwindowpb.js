@@ -4,7 +4,7 @@
 
 add_setup(async function () {
   await gCUITestUtils.addSearchBar();
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "426329.xml",
     setAsDefault: true,
   });

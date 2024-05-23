@@ -92,7 +92,7 @@ add_setup(async function () {
 
   // Create an engine to generate search suggestions and add it as default
   // for this test.
-  let suggestionEngine = await SearchTestUtils.promiseNewSearchEngine({
+  let suggestionEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "urlbarTelemetrySearchSuggestions.xml",
     setAsDefault: true,
   });

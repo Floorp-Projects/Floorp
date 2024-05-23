@@ -460,7 +460,7 @@ add_task(async function test_adaptive_mouse() {
 add_task(async function test_adaptive_searchmode() {
   info("Check adaptive history is not shown in search mode.");
 
-  let suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+  let suggestionsEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
   });
 

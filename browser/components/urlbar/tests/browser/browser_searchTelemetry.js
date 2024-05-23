@@ -13,7 +13,7 @@ add_task(async function prepare() {
     ],
   });
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });

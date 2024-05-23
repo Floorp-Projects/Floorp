@@ -80,7 +80,7 @@ add_task(async function checkCtrlWorks() {
 
 add_task(async function checkPrefTurnsOffCanonize() {
   // Add a dummy search engine to avoid hitting the network.
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });

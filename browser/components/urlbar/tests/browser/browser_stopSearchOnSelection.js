@@ -24,7 +24,7 @@ add_setup(async function () {
     set: [["browser.urlbar.suggest.searches", true]],
   });
   // Add a test search engine that returns suggestions on a delay.
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });

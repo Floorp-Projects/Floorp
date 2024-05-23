@@ -22,7 +22,7 @@ add_setup(async function () {
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
   let defaultEngine = await Services.search.getDefault();
-  engine = await SearchTestUtils.promiseNewSearchEngine({
+  engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine_diacritics.xml",
   });
   registerCleanupFunction(async () => {

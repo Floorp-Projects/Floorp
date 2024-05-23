@@ -49,7 +49,7 @@ function clickSearchbarSuggestion(entryName, clickOptions = {}) {
 add_setup(async function () {
   await gCUITestUtils.addSearchBar();
   const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
-  suggestionEngine = await SearchTestUtils.promiseNewSearchEngine({ url });
+  suggestionEngine = await SearchTestUtils.installOpenSearchEngine({ url });
 
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

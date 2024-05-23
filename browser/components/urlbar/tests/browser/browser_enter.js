@@ -10,7 +10,7 @@ add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.quickactions", false]],
   });
-  const engine = await SearchTestUtils.promiseNewSearchEngine({
+  const engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
     setAsDefault: true,
   });

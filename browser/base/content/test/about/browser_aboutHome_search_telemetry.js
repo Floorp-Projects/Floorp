@@ -23,7 +23,7 @@ add_task(async function () {
     async function (browser) {
       let engine;
       await promiseContentSearchChange(browser, async () => {
-        engine = await SearchTestUtils.promiseNewSearchEngine({
+        engine = await SearchTestUtils.installOpenSearchEngine({
           url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
           setAsDefault: true,
         });

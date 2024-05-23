@@ -43,7 +43,7 @@ add_setup(async function () {
   searchbar = await gCUITestUtils.addSearchBar();
   textbox = searchbar.textbox;
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine.xml",
     setAsDefault: true,
   });

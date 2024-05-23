@@ -34,7 +34,7 @@ add_setup(async function () {
     await resetEngines();
   });
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
   });
 });

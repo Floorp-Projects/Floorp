@@ -46,7 +46,7 @@ add_setup(async function () {
   await Services.search.init();
 
   for (let file of openSearchEngineFiles) {
-    await SearchTestUtils.promiseNewSearchEngine({ url: gDataUrl + file });
+    await SearchTestUtils.installOpenSearchEngine({ url: gDataUrl + file });
   }
 
   registerCleanupFunction(async () => {

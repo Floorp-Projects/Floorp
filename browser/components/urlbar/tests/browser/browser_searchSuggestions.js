@@ -17,7 +17,7 @@ const MAX_CHARS_PREF = "browser.urlbar.maxCharsForSearchSuggestions";
 add_task(async function prepare() {
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });

@@ -596,7 +596,7 @@ async function withSuggestions(
   await SpecialPowers.pushPrefEnv({
     set: [[SUGGESTIONS_PREF, true]],
   });
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + engineBasename,
   });
   let oldDefaultEngine = await Services.search.getDefault();

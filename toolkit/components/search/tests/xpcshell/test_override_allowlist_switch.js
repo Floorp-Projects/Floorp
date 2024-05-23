@@ -551,7 +551,7 @@ async function assertCorrectlySwitchedWhenExtended(
 
   let engine;
   if (testOpenSearch) {
-    engine = await SearchTestUtils.promiseNewSearchEngine({
+    engine = await SearchTestUtils.installOpenSearchEngine({
       url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
         baseURL: SEARCH_URL_BASE,
         queryString: SEARCH_URL_PARAMS,

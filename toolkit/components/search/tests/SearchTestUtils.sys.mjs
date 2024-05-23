@@ -51,7 +51,7 @@ export var SearchTestUtils = {
    * @returns {Promise} Returns a promise that is resolved with the new engine
    *                    or rejected if it fails.
    */
-  async promiseNewSearchEngine({
+  async installOpenSearchEngine({
     url,
     setAsDefault = false,
     setAsDefaultPrivate = false,

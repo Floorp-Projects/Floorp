@@ -30,7 +30,7 @@ add_task(async function test_nosettings() {
   settingsFile.append(SETTINGS_FILENAME);
   Assert.ok(settingsFile.exists());
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engine.xml`,
   });
 

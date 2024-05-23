@@ -28,7 +28,7 @@ add_setup(async function () {
     method: "GET",
   };
 
-  engine = await SearchTestUtils.promiseNewSearchEngine({
+  engine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engineMaker.sjs?${JSON.stringify(engineData)}`,
   });
 });

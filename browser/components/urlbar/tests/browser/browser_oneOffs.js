@@ -21,7 +21,7 @@ add_setup(async function () {
 
   // Add a search suggestion engine and move it to the front so that it appears
   // as the first one-off.
-  engine = await SearchTestUtils.promiseNewSearchEngine({
+  engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
   });
   await Services.search.moveEngine(engine, 0);

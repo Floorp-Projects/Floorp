@@ -79,14 +79,14 @@ add_setup(async function () {
 
   let unicodeName = ["\u30a8", "\u30c9"].join("");
   engines = [
-    await SearchTestUtils.promiseNewSearchEngine({
+    await SearchTestUtils.installOpenSearchEngine({
       url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
         baseURL: gDataUrl,
         name: unicodeName,
         method: "GET",
       })}`,
     }),
-    await SearchTestUtils.promiseNewSearchEngine({
+    await SearchTestUtils.installOpenSearchEngine({
       url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
         baseURL: gDataUrl,
         name: "engine two",
