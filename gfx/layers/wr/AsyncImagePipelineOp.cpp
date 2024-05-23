@@ -16,12 +16,23 @@ void AsyncImagePipelineOps::HandleOps(wr::TransactionBuilder& aTxn) {
 
   while (!mList.empty()) {
     auto& frontOp = mList.front();
-    auto* manager = frontOp.mAsyncImageManager;
-    const auto& pipelineId = frontOp.mPipelineId;
-    const auto& textureHost = frontOp.mTextureHost;
+    switch (frontOp.mTag) {
+      case AsyncImagePipelineOp::Tag::ApplyAsyncImageForPipeline: {
+        auto* manager = frontOp.mAsyncImageManager;
+        const auto& pipelineId = frontOp.mPipelineId;
+        const auto& textureHost = frontOp.mTextureHost;
 
-    manager->ApplyAsyncImageForPipeline(pipelineId, textureHost, aTxn);
-
+        manager->ApplyAsyncImageForPipeline(pipelineId, textureHost, aTxn);
+        break;
+      }
+      case AsyncImagePipelineOp::Tag::RemoveAsyncImagePipeline: {
+        auto* manager = frontOp.mAsyncImageManager;
+        const auto& pipelineId = frontOp.mPipelineId;
+        manager->RemoveAsyncImagePipeline(pipelineId, /* aPendingOps */ nullptr,
+                                          aTxn);
+        break;
+      }
+    }
     mList.pop();
   }
 }

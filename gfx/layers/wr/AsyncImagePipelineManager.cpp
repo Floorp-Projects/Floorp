@@ -176,8 +176,15 @@ void AsyncImagePipelineManager::AddAsyncImagePipeline(
 }
 
 void AsyncImagePipelineManager::RemoveAsyncImagePipeline(
-    const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn) {
+    const wr::PipelineId& aPipelineId, AsyncImagePipelineOps* aPendingOps,
+    wr::TransactionBuilder& aTxn) {
   if (mDestroyed) {
+    return;
+  }
+
+  if (aPendingOps) {
+    aPendingOps->mList.emplace(
+        AsyncImagePipelineOp::RemoveAsyncImagePipeline(this, aPipelineId));
     return;
   }
 
