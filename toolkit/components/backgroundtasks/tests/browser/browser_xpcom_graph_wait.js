@@ -117,7 +117,9 @@ const backgroundtaskPhases = {
   },
   AfterAwaitRunBackgroundTask: {
     allowlist: {
-      modules: [],
+      modules: [
+        "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
+      ],
       services: [],
     },
   },
