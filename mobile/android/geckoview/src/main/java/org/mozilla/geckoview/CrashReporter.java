@@ -56,9 +56,9 @@ public class CrashReporter {
   /**
    * Sends a crash report to the Mozilla <a href="https://wiki.mozilla.org/Socorro">Socorro</a>
    * crash report server. <br>
-   * The {@code appName} needs to be whitelisted for the server to accept the crash. <a
+   * The {@code appName} needs to be allowlisted for the server to accept the crash. <a
    * href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro">File a bug</a> if you would
-   * like to get your app added to the whitelist.
+   * like to get your app added to the allowlist.
    *
    * @param context The current Context
    * @param intent The Intent sent to the {@link GeckoRuntime} crash handler
@@ -81,9 +81,9 @@ public class CrashReporter {
   /**
    * Sends a crash report to the Mozilla <a href="https://wiki.mozilla.org/Socorro">Socorro</a>
    * crash report server. <br>
-   * The {@code appName} needs to be whitelisted for the server to accept the crash. <a
+   * The {@code appName} needs to be allowlisted for the server to accept the crash. <a
    * href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro">File a bug</a> if you would
-   * like to get your app added to the whitelist.
+   * like to get your app added to the allowlist.
    *
    * @param context The current Context
    * @param intentExtras The Bundle of extras attached to the Intent received by a crash handler.
@@ -111,9 +111,9 @@ public class CrashReporter {
   /**
    * Sends a crash report to the Mozilla <a href="https://wiki.mozilla.org/Socorro">Socorro</a>
    * crash report server. <br>
-   * The {@code appName} needs to be whitelisted for the server to accept the crash. <a
+   * The {@code appName} needs to be allowlisted for the server to accept the crash. <a
    * href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro">File a bug</a> if you would
-   * like to get your app added to the whitelist.
+   * like to get your app added to the allowlist.
    *
    * @param context The current {@link Context}
    * @param minidumpFile A {@link File} referring to the minidump.
