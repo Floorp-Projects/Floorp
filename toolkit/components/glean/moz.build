@@ -112,6 +112,20 @@ SOURCES += [
 
 # Provides us the list of dependent metrics|pings.yaml.
 include("metrics_index.py")
+
+# Allow defining metrics/pings/tags elsewhere (like for Thunderbird).
+if CONFIG["MOZ_GLEAN_EXTRA_METRICS_FILES"]:
+    metrics_yamls.extend(CONFIG["MOZ_GLEAN_EXTRA_METRICS_FILES"])
+    metrics_yamls = sorted(metrics_yamls)
+
+if CONFIG["MOZ_GLEAN_EXTRA_PINGS_FILES"]:
+    pings_yamls.extend(CONFIG["MOZ_GLEAN_EXTRA_PINGS_FILES"])
+    pings_yamls = sorted(pings_yamls)
+
+if CONFIG["MOZ_GLEAN_EXTRA_TAGS_FILES"]:
+    tags_yamls.extend(CONFIG["MOZ_GLEAN_EXTRA_TAGS_FILES"])
+    tags_yamls = sorted(tags_yamls)
+
 # GeneratedFile's `inputs` are relative to our dir.
 # The yamls arrays are relative to topsrcdir, so we need to transform:
 metrics_yamls = ["../../../" + x for x in metrics_yamls]
