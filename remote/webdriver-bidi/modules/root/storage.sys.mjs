@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   BytesValueType:
     "chrome://remote/content/webdriver-bidi/modules/root/network.sys.mjs",
+  deserializeBytesValue:
+    "chrome://remote/content/webdriver-bidi/modules/root/network.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   UserContextManager:
@@ -283,7 +285,8 @@ class StorageModule extends Module {
     // The cookie store is defined by originAttributes.
     const originAttributes = this.#getOriginAttributes(partitionKey);
 
-    const deserializedValue = this.#deserializeProtocolBytes(value);
+    // The cookie value is a network.BytesValue.
+    const deserializedValue = lazy.deserializeBytesValue(value);
 
     // The XPCOM interface requires to be specified if a cookie is session.
     const isSession = expiry === null;
@@ -571,7 +574,7 @@ class StorageModule extends Module {
           break;
 
         case "value":
-          deserializedValue = this.#deserializeProtocolBytes(value);
+          deserializedValue = lazy.deserializeBytesValue(value);
           break;
 
         default:
@@ -582,21 +585,6 @@ class StorageModule extends Module {
     }
 
     return deserializedFilter;
-  }
-
-  /**
-   * Deserialize the value to string, since platform API
-   * returns cookie's value as a string.
-   */
-  #deserializeProtocolBytes(cookieValue) {
-    const { type, value } = cookieValue;
-
-    if (type === lazy.BytesValueType.String) {
-      return value;
-    }
-
-    // For type === BytesValueType.Base64.
-    return atob(value);
   }
 
   /**

@@ -208,6 +208,67 @@ export class NetworkRequest {
   }
 
   /**
+   * Set the request post body
+   *
+   * @param {string} body
+   *     The body to set.
+   */
+  setRequestBody(body) {
+    // Update the requestObserversCalled flag to allow modifying the request,
+    // and reset once done.
+    this.#channel.requestObserversCalled = false;
+
+    try {
+      this.#channel.QueryInterface(Ci.nsIUploadChannel2);
+      const bodyStream = Cc[
+        "@mozilla.org/io/string-input-stream;1"
+      ].createInstance(Ci.nsIStringInputStream);
+      bodyStream.setData(body, body.length);
+      this.#channel.explicitSetUploadStream(
+        bodyStream,
+        null,
+        -1,
+        this.#channel.requestMethod,
+        false
+      );
+    } finally {
+      // Make sure to reset the flag once the modification was attempted.
+      this.#channel.requestObserversCalled = true;
+    }
+  }
+
+  /**
+   * Set a request header
+   *
+   * @param {string} name
+   *     The header's name.
+   * @param {string} value
+   *     The header's value.
+   */
+  setRequestHeader(name, value) {
+    this.#channel.setRequestHeader(name, value, false);
+  }
+
+  /**
+   * Update the request's method.
+   *
+   * @param {string} method
+   *     The method to set.
+   */
+  setRequestMethod(method) {
+    // Update the requestObserversCalled flag to allow modifying the request,
+    // and reset once done.
+    this.#channel.requestObserversCalled = false;
+
+    try {
+      this.#channel.requestMethod = method;
+    } finally {
+      // Make sure to reset the flag once the modification was attempted.
+      this.#channel.requestObserversCalled = true;
+    }
+  }
+
+  /**
    * Convert the provided request timing to a timing relative to the beginning
    * of the request. All timings are numbers representing high definition
    * timestamps.
