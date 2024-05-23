@@ -15,6 +15,7 @@ import android.content.Intent
  * - [onMessageClicked] and [getIntentForMessage] to be called when the user taps on
  *  the message, and to get the action for the message.
  * - [onMessageDismissed] to be called when the user dismisses the message.
+ * - [onMicrosurveyCompleted] to be called when a microsurvey has been completed by the user.
  */
 interface NimbusMessagingControllerInterface {
     /**
@@ -46,6 +47,18 @@ interface NimbusMessagingControllerInterface {
      * has been dismissed.
      */
     suspend fun onMessageDismissed(message: Message)
+
+    /**
+     * Called when a microsurvey has been completed by the user.
+     *
+     * This function should be called when a microsurvey associated with a message
+     * has been completed by the user, providing the message object and the user's
+     * response in the form of LikertAnswers.
+     *
+     * @param message The message associated with the microsurvey.
+     * @param answer The user's response to the microsurvey, represented as LikertAnswers.
+     */
+    suspend fun onMicrosurveyCompleted(message: Message, answer: String)
 
     /**
      * Called once the user has clicked on a message.

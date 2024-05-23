@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
+import mozilla.components.service.nimbus.GleanMetrics.MicroSurvey
 import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
 /**
@@ -43,6 +44,19 @@ open class NimbusMessagingController(
         val messageMetadata = message.metadata
         sendDismissedMessageTelemetry(messageMetadata.id)
         val updatedMetadata = messageMetadata.copy(dismissed = true)
+        messagingStorage.updateMetadata(updatedMetadata)
+    }
+
+    /**
+     * Called when a microsurvey attached to a message has been completed by the user.
+     *
+     * @param message The message containing the microsurvey that was completed.
+     * @param answer The user's response to the microsurvey question.
+     */
+    override suspend fun onMicrosurveyCompleted(message: Message, answer: String) {
+        val messageMetadata = message.metadata
+        sendMicrosurveyCompletedTelemetry(messageMetadata.id, answer)
+        val updatedMetadata = messageMetadata.copy(pressed = true)
         messagingStorage.updateMetadata(updatedMetadata)
     }
 
@@ -110,6 +124,10 @@ open class NimbusMessagingController(
         GleanMessaging.messageClicked.record(
             GleanMessaging.MessageClickedExtra(messageKey = messageId, actionUuid = uuid),
         )
+    }
+
+    private fun sendMicrosurveyCompletedTelemetry(messageId: String, answer: String?) {
+        MicroSurvey.response.record(MicroSurvey.ResponseExtra(surveyId = messageId, userSelection = answer))
     }
 
     private fun convertActionIntoDeepLinkSchemeUri(action: String): Uri =
