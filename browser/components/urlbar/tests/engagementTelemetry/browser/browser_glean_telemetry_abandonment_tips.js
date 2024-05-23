@@ -17,7 +17,7 @@ add_setup(async function () {
       ["browser.urlbar.showSearchTerms.featureGate", true],
     ],
   });
-  const engine = await SearchTestUtils.promiseNewSearchEngine({
+  const engine = await SearchTestUtils.installOpenSearchEngine({
     url: "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
   });
   const originalDefaultEngine = await Services.search.getDefault();

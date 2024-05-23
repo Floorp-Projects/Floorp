@@ -5,7 +5,7 @@
 let engine;
 
 add_setup(async function () {
-  engine = await SearchTestUtils.promiseNewSearchEngine({
+  engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine.xml",
     setAsDefault: true,
   });

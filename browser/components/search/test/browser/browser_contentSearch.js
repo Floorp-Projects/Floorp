@@ -37,17 +37,17 @@ add_setup(async function () {
     ],
   });
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml",
     setAsDefault: true,
   });
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml",
     setAsDefaultPrivate: true,
   });
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine_chromeicon.xml",
   });
 
@@ -443,7 +443,7 @@ async function waitForNewEngine(browser, basename) {
   // There are two events triggerd by engine-added and engine-loaded
   let statePromise = await waitForTestMsg(browser, "CurrentState");
 
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + basename,
   });
   return [engine, await statePromise.donePromise];

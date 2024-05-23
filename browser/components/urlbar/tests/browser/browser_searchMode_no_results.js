@@ -236,7 +236,7 @@ add_task(async function backspaceRemainOpen() {
 // Types a search alias and then a space to enter search mode, with no results.
 // The one-offs should be shown.
 add_task(async function spaceToEnterSearchMode() {
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
   });
   engine.alias = "@test";

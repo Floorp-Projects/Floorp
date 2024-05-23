@@ -9,7 +9,7 @@ const ORIGINAL_CHUNK_RESULTS_DELAY =
   UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS;
 
 add_setup(async function setup() {
-  let suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+  let suggestionsEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
   });
   await SearchTestUtils.installSearchExtension(

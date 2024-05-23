@@ -18,7 +18,7 @@ add_setup(async function () {
   );
 
   useHttpServer();
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engine.xml`,
   });
 });

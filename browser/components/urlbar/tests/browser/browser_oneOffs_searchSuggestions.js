@@ -28,10 +28,10 @@ add_setup(async function () {
       ["browser.urlbar.maxHistoricalSearchSuggestions", 2],
     ],
   });
-  gEngine = await SearchTestUtils.promiseNewSearchEngine({
+  gEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
   });
-  gEngine2 = await SearchTestUtils.promiseNewSearchEngine({
+  gEngine2 = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE2_BASENAME,
   });
   let oldDefaultEngine = await Services.search.getDefault();

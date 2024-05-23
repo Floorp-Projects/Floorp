@@ -21,7 +21,7 @@ add_setup(async function () {
       ["browser.urlbar.shortcuts.quickactions", false],
     ],
   });
-  engine = await SearchTestUtils.promiseNewSearchEngine({
+  engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
     setAsDefault: true,
   });

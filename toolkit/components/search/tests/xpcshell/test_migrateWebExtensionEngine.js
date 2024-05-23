@@ -13,7 +13,7 @@ add_setup(async function () {
 });
 
 add_task(async function test_migrateLegacyEngine() {
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: gDataUrl + "simple.xml",
   });
 
@@ -50,7 +50,7 @@ add_task(async function test_migrateLegacyEngine() {
 });
 
 add_task(async function test_migrateLegacyEngineDifferentName() {
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: gDataUrl + "simple.xml",
   });
 

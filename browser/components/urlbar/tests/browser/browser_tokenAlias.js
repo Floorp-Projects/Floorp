@@ -24,7 +24,7 @@ if (AppConstants.platform == "macosx") {
 add_setup(async function () {
   // Add a default engine with suggestions, to avoid hitting the network when
   // fetching them.
-  let defaultEngine = await SearchTestUtils.promiseNewSearchEngine({
+  let defaultEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });

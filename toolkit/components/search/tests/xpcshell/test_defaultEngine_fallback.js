@@ -402,7 +402,7 @@ async function checkNonBuiltinFallback(checkPrivate) {
     : SearchUtils.MODIFIED_TYPE.DEFAULT;
   Services.search.restoreDefaultEngines();
 
-  let addedEngine = await SearchTestUtils.promiseNewSearchEngine({
+  let addedEngine = await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engine2.xml`,
   });
 

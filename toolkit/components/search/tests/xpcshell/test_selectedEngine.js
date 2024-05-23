@@ -17,7 +17,7 @@ add_setup(async function () {
 // Check that the default engine matches the defaultenginename pref
 add_task(async function test_defaultEngine() {
   await Services.search.init();
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: `${gDataUrl}engine.xml`,
   });
 

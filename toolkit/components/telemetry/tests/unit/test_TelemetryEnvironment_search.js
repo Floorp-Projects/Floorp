@@ -267,7 +267,7 @@ add_task(async function test_defaultSearchEngine() {
       resolve
     );
   });
-  let engine = await SearchTestUtils.promiseNewSearchEngine({
+  let engine = await SearchTestUtils.installOpenSearchEngine({
     url: gDataRoot + "engine.xml",
     setAsDefault: true,
     skipReset: true,

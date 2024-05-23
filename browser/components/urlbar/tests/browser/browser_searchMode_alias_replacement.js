@@ -19,7 +19,7 @@ const TEST_SPACES = [" ", "\u3000", " \u3000", "\u3000 "];
 let defaultEngine, aliasEngine;
 
 add_setup(async function () {
-  defaultEngine = await SearchTestUtils.promiseNewSearchEngine({
+  defaultEngine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });

@@ -31,7 +31,7 @@ add_setup(async function () {
   textbox = searchbar.textbox;
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
-  await SearchTestUtils.promiseNewSearchEngine({
+  await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine.xml",
     setAsDefault: true,
   });
