@@ -341,6 +341,10 @@ class NetworkEventWatcher {
     const { resourceUpdates, receivedUpdates } = networkEvent;
 
     switch (updateResource.updateType) {
+      case "cacheDetails":
+        resourceUpdates.fromCache = updateResource.fromCache;
+        resourceUpdates.fromServiceWorker = updateResource.fromServiceWorker;
+        break;
       case "responseStart":
         resourceUpdates.httpVersion = updateResource.httpVersion;
         resourceUpdates.status = updateResource.status;
