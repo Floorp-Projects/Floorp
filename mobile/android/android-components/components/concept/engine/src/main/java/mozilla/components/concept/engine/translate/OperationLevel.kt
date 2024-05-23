@@ -23,4 +23,12 @@ enum class OperationLevel(val operationLevel: String) {
      * Complete the operation all models.
      */
     ALL("all"),
+    ;
+
+    /**
+     * The operation level will use the string literal on the engine.
+     */
+    override fun toString(): String {
+        return operationLevel
+    }
 }

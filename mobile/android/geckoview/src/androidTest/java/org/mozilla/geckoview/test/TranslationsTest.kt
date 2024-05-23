@@ -352,10 +352,23 @@ class TranslationsTest : BaseSessionTest() {
     fun testManageLanguageModel() {
         val options = ModelManagementOptions.Builder()
             .languageToManage("en")
-            .operation(TranslationsController.RuntimeTranslation.DOWNLOAD)
+            .operation(DOWNLOAD)
             .build()
 
-        assertTrue("ModelManagementOptions builder options work as expected.", options.language == "en" && options.operation == DOWNLOAD)
+        assertTrue(
+            "ModelManagementOptions builder options work as expected.",
+            options.language == "en" && options.operation == DOWNLOAD,
+        )
+
+        val nonNormalizedOptions = ModelManagementOptions.Builder()
+            .languageToManage("EN")
+            .operation("DoWnLoAd")
+            .build()
+
+        assertTrue(
+            "ModelManagementOptions builder options work as expected on non-normalized options.",
+            nonNormalizedOptions.language == "en" && nonNormalizedOptions.operation == DOWNLOAD,
+        )
     }
 
     @Test
@@ -639,6 +652,22 @@ class TranslationsTest : BaseSessionTest() {
                 assertTrue(
                     "Correctly could not delete on automated test harness.",
                     te.code == ERROR_MODEL_COULD_NOT_DELETE,
+                )
+            }
+
+            val malformedRequest = ModelManagementOptions.Builder()
+                .operation("not-a-function")
+                .operationLevel("not-an-operation")
+                .build()
+            try {
+                sessionRule.waitForResult(RuntimeTranslation.manageLanguageModel(malformedRequest))
+                assertTrue("Should not complete malformed requests in automation.", false)
+            } catch (e: RuntimeException) {
+                // Wait call causes a runtime exception too.
+                val te = e.cause as TranslationsException
+                assertTrue(
+                    "Correctly could not submit a malformed request.",
+                    te.code == TranslationsException.ERROR_UNKNOWN,
                 )
             }
         }

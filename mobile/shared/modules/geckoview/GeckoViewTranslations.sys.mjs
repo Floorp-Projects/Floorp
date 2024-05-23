@@ -218,10 +218,8 @@ export const GeckoViewTranslationsSettings = {
                 );
               }
             );
-            return;
           }
-        }
-        if (operation === "download") {
+        } else if (operation === "download") {
           if (operationLevel === "all") {
             lazy.TranslationsParent.downloadAllFiles().then(
               function () {
@@ -253,6 +251,11 @@ export const GeckoViewTranslationsSettings = {
               }
             );
           }
+        } else {
+          aCallback.onError(
+            `ERROR_UNKNOWN - The request to manage models appears to be malformed. Please check the parameters and try again.
+            Language: ${language}, Operation: ${operation}, Operation Level: ${operationLevel}`
+          );
         }
         break;
       }

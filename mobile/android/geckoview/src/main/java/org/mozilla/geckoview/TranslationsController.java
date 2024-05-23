@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import org.mozilla.gecko.EventDispatcher;
@@ -410,9 +411,13 @@ public class TranslationsController {
        */
       protected ModelManagementOptions(
           final @NonNull RuntimeTranslation.ModelManagementOptions.Builder builder) {
-        this.language = builder.mLanguage;
-        this.operation = builder.mOperation;
-        this.operationLevel = builder.mOperationLevel;
+        if (builder.mLanguage != null) {
+          this.language = builder.mLanguage.toLowerCase(Locale.ROOT);
+        } else {
+          this.language = builder.mLanguage;
+        }
+        this.operation = builder.mOperation.toLowerCase(Locale.ROOT);
+        this.operationLevel = builder.mOperationLevel.toLowerCase(Locale.ROOT);
       }
 
       /** Serializer for Model Management Options */
