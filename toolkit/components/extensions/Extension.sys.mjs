@@ -44,6 +44,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
+  ExtensionMenus: "resource://gre/modules/ExtensionMenus.sys.mjs",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
@@ -581,6 +582,12 @@ var ExtensionAddonObserver = {
     addShutdownBlocker(
       `Clear ServiceWorkers for ${addonId}`,
       lazy.ServiceWorkerCleanUp.removeFromPrincipal(principal)
+    );
+
+    // Clear the persisted menus created with the menus/contextMenus API (if any).
+    addShutdownBlocker(
+      `Clear menus store for ${addonId}`,
+      lazy.ExtensionMenus.clearPersistedMenusOnUninstall(addonId)
     );
 
     // Clear the persisted dynamic content scripts created with the scripting
