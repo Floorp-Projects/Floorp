@@ -301,6 +301,43 @@ newtab:
     send_in_pings:
       - newtab
 
+  weather_impression:
+      type: event
+      description: >
+        Recorded when the weather widget is viewed
+      bugs:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1898275
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1895797
+      data_sensitivity:
+        - interaction
+      notification_emails:
+        - mcrawford@mozilla.com
+      expires: never
+      extra_keys:
+        newtab_visit_id: *newtab_visit_id
+      send_in_pings:
+        - newtab
+
+  weather_load_error:
+      type: event
+      description: >
+        Recorded when the weather widget is not available
+      bugs:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1898275
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1895797
+      data_sensitivity:
+        - interaction
+      notification_emails:
+        - mcrawford@mozilla.com
+      expires: never
+      extra_keys:
+        newtab_visit_id: *newtab_visit_id
+      send_in_pings:
+        - newtab
+
+
 newtab.search:
   enabled:
     lifetime: application

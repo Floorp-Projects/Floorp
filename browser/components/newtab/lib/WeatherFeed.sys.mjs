@@ -81,11 +81,16 @@ export class WeatherFeed {
   async fetchHelper() {
     this.restartFetchTimer();
     const weatherQuery = this.store.getState().Prefs.values[PREF_WEATHER_QUERY];
-    let suggestions = await this.merino.fetch({
-      query: weatherQuery || "",
-      providers: [MERINO_PROVIDER],
-      timeoutMs: 5000,
-    });
+    let suggestions = [];
+    try {
+      suggestions = await this.merino.fetch({
+        query: weatherQuery || "",
+        providers: [MERINO_PROVIDER],
+        timeoutMs: 5000,
+      });
+    } catch (error) {
+      // We don't need to do anything with this right now.
+    }
 
     // results from the API or empty array if null
     this.suggestions = suggestions ?? [];
@@ -105,8 +110,9 @@ export class WeatherFeed {
         suggestions: this.suggestions,
         lastUpdated: this.lastUpdated,
       });
-      this.update(isStartup);
     }
+
+    this.update(isStartup);
   }
 
   async loadWeather(isStartup = false) {
