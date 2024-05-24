@@ -4,8 +4,6 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkHelper:
-    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 
@@ -24,6 +22,7 @@ export class NetworkRequest {
   #contextId;
   #navigationId;
   #navigationManager;
+  #postData;
   #rawHeaders;
   #redirectCount;
   #requestId;
@@ -85,12 +84,7 @@ export class NetworkRequest {
   }
 
   get postDataSize() {
-    const charset = lazy.NetworkUtils.getCharset(this.#channel);
-    const sentBody = lazy.NetworkHelper.readPostTextFromRequest(
-      this.#channel,
-      charset
-    );
-    return sentBody ? sentBody.length : 0;
+    return this.#postData ? this.#postData.size : 0;
   }
 
   get redirectCount() {
@@ -107,16 +101,6 @@ export class NetworkRequest {
 
   get wrappedChannel() {
     return this.#wrappedChannel;
-  }
-
-  /**
-   * Add information about raw headers, collected from NetworkObserver events.
-   *
-   * @param {string} rawHeaders
-   *     The raw headers.
-   */
-  addRawHeaders(rawHeaders) {
-    this.#rawHeaders = rawHeaders || "";
   }
 
   /**
@@ -199,64 +183,18 @@ export class NetworkRequest {
   }
 
   /**
-   * Set the request post body
+   * Update the postData for this NetworkRequest. This is currently forwarded
+   * by the DevTools' NetworkObserver.
    *
-   * @param {string} body
-   *     The body to set.
-   */
-  setRequestBody(body) {
-    // Update the requestObserversCalled flag to allow modifying the request,
-    // and reset once done.
-    this.#channel.requestObserversCalled = false;
-
-    try {
-      this.#channel.QueryInterface(Ci.nsIUploadChannel2);
-      const bodyStream = Cc[
-        "@mozilla.org/io/string-input-stream;1"
-      ].createInstance(Ci.nsIStringInputStream);
-      bodyStream.setData(body, body.length);
-      this.#channel.explicitSetUploadStream(
-        bodyStream,
-        null,
-        -1,
-        this.#channel.requestMethod,
-        false
-      );
-    } finally {
-      // Make sure to reset the flag once the modification was attempted.
-      this.#channel.requestObserversCalled = true;
-    }
-  }
-
-  /**
-   * Set a request header
+   * TODO: We should read this information dynamically from the channel so that
+   * we can get updated information in case it was modified via network
+   * interception.
    *
-   * @param {string} name
-   *     The header's name.
-   * @param {string} value
-   *     The header's value.
+   * @param {object} postData
+   *     The request POST data.
    */
-  setRequestHeader(name, value) {
-    this.#channel.setRequestHeader(name, value, false);
-  }
-
-  /**
-   * Update the request's method.
-   *
-   * @param {string} method
-   *     The method to set.
-   */
-  setRequestMethod(method) {
-    // Update the requestObserversCalled flag to allow modifying the request,
-    // and reset once done.
-    this.#channel.requestObserversCalled = false;
-
-    try {
-      this.#channel.requestMethod = method;
-    } finally {
-      // Make sure to reset the flag once the modification was attempted.
-      this.#channel.requestObserversCalled = true;
-    }
+  setPostData(postData) {
+    this.#postData = postData;
   }
 
   /**
