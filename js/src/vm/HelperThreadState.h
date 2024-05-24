@@ -32,8 +32,8 @@
 #include "js/AllocPolicy.h"               // SystemAllocPolicy
 #include "js/CompileOptions.h"            // JS::ReadOnlyCompileOptions
 #include "js/experimental/JSStencil.h"    // JS::InstantiationStorage
-#include "js/HelperThreadAPI.h"  // JS::HelperThreadTaskCallback, JS::DispatchReason
-#include "js/MemoryMetrics.h"  // JS::GlobalStats
+#include "js/HelperThreadAPI.h"           // JS::HelperThreadTaskCallback
+#include "js/MemoryMetrics.h"             // JS::GlobalStats
 #include "js/ProfilingStack.h"  // JS::RegisterThreadCallback, JS::UnregisterThreadCallback
 #include "js/RootingAPI.h"                // JS::Handle
 #include "js/UniquePtr.h"                 // UniquePtr
@@ -435,10 +435,9 @@ class GlobalHelperThreadState {
                   const AutoLockHelperThreadState& locked);
 
   void runOneTask(HelperThreadTask* task, AutoLockHelperThreadState& lock);
+  void dispatch(const AutoLockHelperThreadState& locked);
 
  private:
-  void dispatch(JS::DispatchReason reason,
-                const AutoLockHelperThreadState& locked);
   HelperThreadTask* findHighestPriorityTask(
       const AutoLockHelperThreadState& locked);
 
@@ -447,7 +446,6 @@ class GlobalHelperThreadState {
   using Selector = HelperThreadTask* (
       GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
   static const Selector selectors[];
-
 };
 
 static inline bool IsHelperThreadStateInitialized() {

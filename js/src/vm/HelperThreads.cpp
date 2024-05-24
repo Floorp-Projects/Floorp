@@ -39,8 +39,6 @@ using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::Utf8Unit;
 
-using JS::DispatchReason;
-
 namespace js {
 
 Mutex gHelperThreadLock(mutexid::GlobalHelperThreadState);
@@ -153,7 +151,7 @@ bool GlobalHelperThreadState::submitTask(wasm::CompileTask* task,
     return false;
   }
 
-  dispatch(DispatchReason::NewTask, lock);
+  dispatch(lock);
   return true;
 }
 
@@ -181,7 +179,7 @@ bool GlobalHelperThreadState::submitTask(wasm::UniqueTier2GeneratorTask task) {
   }
   (void)task.release();
 
-  dispatch(DispatchReason::NewTask, lock);
+  dispatch(lock);
   return true;
 }
 
@@ -257,7 +255,7 @@ bool GlobalHelperThreadState::submitTask(
   // unwanted mutations.
   task->alloc().lifoAlloc()->setReadOnly();
 
-  dispatch(DispatchReason::NewTask, locked);
+  dispatch(locked);
   return true;
 }
 
@@ -315,7 +313,7 @@ bool GlobalHelperThreadState::submitTask(
     return false;
   }
 
-  dispatch(DispatchReason::NewTask, locked);
+  dispatch(locked);
   return true;
 }
 
@@ -763,7 +761,7 @@ void js::WaitForAllDelazifyTasks(JSRuntime* rt) {
 void GlobalHelperThreadState::submitTask(
     DelazifyTask* task, const AutoLockHelperThreadState& locked) {
   delazifyWorklist(locked).insertBack(task);
-  dispatch(DispatchReason::NewTask, locked);
+  dispatch(locked);
 }
 
 bool GlobalHelperThreadState::submitTask(
@@ -771,7 +769,7 @@ bool GlobalHelperThreadState::submitTask(
   if (!freeDelazifyTaskVector(locked).append(std::move(task))) {
     return false;
   }
-  dispatch(DispatchReason::NewTask, locked);
+  dispatch(locked);
   return true;
 }
 
@@ -878,8 +876,7 @@ void GlobalHelperThreadState::assertIsLockedByCurrentThread() const {
 }
 #endif  // DEBUG
 
-void GlobalHelperThreadState::dispatch(DispatchReason reason,
-                                       const AutoLockHelperThreadState& lock) {
+void GlobalHelperThreadState::dispatch(const AutoLockHelperThreadState& lock) {
   if (helperTasks_.length() >= threadCount) {
     return;
   }
@@ -899,7 +896,7 @@ void GlobalHelperThreadState::dispatch(DispatchReason reason,
   runningTaskCount[task->threadType()]++;
   totalCountRunningTasks++;
 
-  lock.queueTaskToDispatch(task, reason);
+  lock.queueTaskToDispatch(task);
 }
 
 void GlobalHelperThreadState::wait(
@@ -1397,14 +1394,14 @@ bool GlobalHelperThreadState::submitTask(
     return false;
   }
 
-  dispatch(DispatchReason::NewTask, locked);
+  dispatch(locked);
   return true;
 }
 
 bool GlobalHelperThreadState::submitTask(
     GCParallelTask* task, const AutoLockHelperThreadState& locked) {
   gcParallelWorklist().insertBack(task, locked);
-  dispatch(DispatchReason::NewTask, locked);
+  dispatch(locked);
   return true;
 }
 
@@ -1590,7 +1587,7 @@ bool GlobalHelperThreadState::submitTask(PromiseHelperTask* task) {
     return false;
   }
 
-  dispatch(DispatchReason::NewTask, lock);
+  dispatch(lock);
   return true;
 }
 
@@ -1681,6 +1678,7 @@ void JS::RunHelperThreadTask(HelperThreadTask* task) {
   }
 
   HelperThreadState().runOneTask(task, lock);
+  HelperThreadState().dispatch(lock);
 }
 
 void GlobalHelperThreadState::runOneTask(HelperThreadTask* task,
@@ -1693,8 +1691,6 @@ void GlobalHelperThreadState::runOneTask(HelperThreadTask* task,
   runTaskLocked(task, lock);
 
   notifyAll(lock);
-
-  dispatch(DispatchReason::FinishedTask, lock);
 }
 
 HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
@@ -1746,28 +1742,24 @@ void GlobalHelperThreadState::runTaskLocked(HelperThreadTask* task,
   runningTaskCount[threadType]--;
 }
 
-void AutoHelperTaskQueue::queueTaskToDispatch(JS::HelperThreadTask* task,
-                                              JS::DispatchReason reason) const {
+void AutoHelperTaskQueue::queueTaskToDispatch(
+    JS::HelperThreadTask* task) const {
   // This is marked const because it doesn't release the mutex.
 
   task->onThreadPoolDispatch();
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!tasksToDispatch.append(task) || !dispatchReasons.append(reason)) {
+  if (!tasksToDispatch.append(task)) {
     oomUnsafe.crash("AutoLockHelperThreadState::queueTaskToDispatch");
   }
 }
 
 void AutoHelperTaskQueue::dispatchQueuedTasks() {
-  MOZ_ASSERT(tasksToDispatch.length() == dispatchReasons.length());
-
   // The hazard analysis can't tell that the callback doesn't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
   for (size_t i = 0; i < tasksToDispatch.length(); i++) {
-    HelperThreadState().dispatchTaskCallback(tasksToDispatch[i],
-                                             dispatchReasons[i]);
+    HelperThreadState().dispatchTaskCallback(tasksToDispatch[i]);
   }
   tasksToDispatch.clear();
-  dispatchReasons.clear();
 }
