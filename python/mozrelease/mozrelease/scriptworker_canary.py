@@ -90,7 +90,7 @@ def push_canary(scriptworkers, addresses, ssh_key_secret):
             logger.info("No tasks for {}.".format(scriptworker))
 
     mach = Path(GECKO) / "mach"
-    base_command = [str(mach), "try", "scriptworker"]
+    base_command = [str(mach), "try", "scriptworker", "--closed-tree"]
     for address in addresses:
         base_command.extend(
             [
