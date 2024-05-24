@@ -76,18 +76,9 @@ class MenuDialogMiddleware(
         val selectedTab = browserMenuState.selectedTab
         val url = selectedTab.getUrl() ?: return@launch
 
-        val guid = addBookmarkUseCase(
+        addBookmarkUseCase(
             url = url,
             title = selectedTab.content.title,
-        )
-
-        store.dispatch(
-            MenuAction.UpdateBookmarkState(
-                BookmarkState(
-                    guid = guid,
-                    isBookmarked = true,
-                ),
-            ),
         )
     }
 }

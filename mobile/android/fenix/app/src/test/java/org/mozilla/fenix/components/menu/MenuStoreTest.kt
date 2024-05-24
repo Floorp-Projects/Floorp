@@ -39,8 +39,12 @@ class MenuStoreTest {
             initialState = MenuState(),
             middleware = listOf(testMiddleware),
         )
+
+        // Wait for InitAction and middleware
         store.waitUntilIdle()
+
         assertTrue(initActionObserved)
+        assertNull(store.state.browserMenuState)
     }
 
     @Test
@@ -129,6 +133,7 @@ class MenuStoreTest {
             isBookmarked = true,
         )
         store.dispatch(MenuAction.UpdateBookmarkState(bookmarkState = newBookmarkState)).join()
+
         assertEquals(newBookmarkState, store.state.browserMenuState!!.bookmarkState)
     }
 }
