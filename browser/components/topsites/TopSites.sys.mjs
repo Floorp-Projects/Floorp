@@ -1125,9 +1125,6 @@ class _TopSites {
 
   onAction(action) {
     switch (action.type) {
-      case at.SYSTEM_TICK:
-        this.refresh();
-        break;
       case at.PREFS_INITIAL_VALUES:
         if (!this._useRemoteSetting) {
           this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);

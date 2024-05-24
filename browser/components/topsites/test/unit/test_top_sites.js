@@ -1046,20 +1046,6 @@ add_task(async function test_refresh_empty_slots() {
   await cleanup();
 });
 
-add_task(async function test_onAction_part_1() {
-  let sandbox = sinon.createSandbox();
-  let cleanup = stubTopSites(sandbox);
-
-  info("TopSites.onAction should refresh on SYSTEM_TICK");
-  sandbox.stub(TopSites, "refresh");
-  TopSites.onAction({ type: at.SYSTEM_TICK });
-
-  Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
-
-  sandbox.restore();
-  await cleanup();
-});
-
 add_task(async function test_onAction_part_2() {
   let sandbox = sinon.createSandbox();
 
