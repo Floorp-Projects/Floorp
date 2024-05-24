@@ -1958,6 +1958,7 @@ var SessionStoreInternal = {
       // we actually restored the session just now.
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
     }
+
     if (this._restoreLastWindow && aWindow.toolbar.visible) {
       // always reset (if not a popup window)
       // we don't want to restore a window directly after, for example,
@@ -2284,6 +2285,7 @@ var SessionStoreInternal = {
       // _closedWindows from a previous call to this function.
       let winIndex = this._closedWindows.indexOf(winData);
       let alreadyStored = winIndex != -1;
+      // If sidebar command is truthy, i.e. sidebar is open, store sidebar settings
       let shouldStore = hasSaveableTabs || isLastWindow;
 
       if (shouldStore && !alreadyStored) {
@@ -4566,6 +4568,7 @@ var SessionStoreInternal = {
       winData.sidebar = {
         command,
         positionEnd: sidebarBox.getAttribute("positionend"),
+        style: sidebarBox.style.cssText,
       };
     } else if (winData.sidebar?.command) {
       delete winData.sidebar.command;
@@ -5613,7 +5616,7 @@ var SessionStoreInternal = {
    * @param aWindow
    *        Window reference
    * @param aSidebar
-   *        Object containing command (sidebarcommand/category) and
+   *        Object containing command (sidebarcommand/category),styles and
    *        positionEnd (reflecting the sidebar.position_start pref)
    */
   restoreSidebar(aWindow, aSidebar) {
@@ -5624,9 +5627,8 @@ var SessionStoreInternal = {
         !sidebarBox.getAttribute("checked"))
     ) {
       aWindow.SidebarController.showInitially(aSidebar.command);
-      if (aSidebar?.positionEnd) {
-        sidebarBox.setAttribute("positionend", "");
-      }
+      sidebarBox.setAttribute("style", aSidebar.style);
+      sidebarBox.setAttribute("positionend", !!aSidebar?.positionEnd);
     }
   },
 
@@ -6326,6 +6328,7 @@ var SessionStoreInternal = {
         newWindowState.sidebar = {
           command: window.sidebar.command,
           positionEnd: !!window.sidebar.positionEnd,
+          style: window.sidebar.style,
         };
       }
 

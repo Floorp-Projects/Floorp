@@ -26,7 +26,6 @@ add_task(async function persist_sidebar_width() {
   {
     info("Showing new window and seeing persisted width");
     const win = await BrowserTestUtils.openNewBrowserWindow();
-    await win.SidebarController.show("viewBookmarksSidebar");
     is(
       win.document.getElementById("sidebar-box").style.width,
       "100px",

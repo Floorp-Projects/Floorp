@@ -9,5 +9,6 @@
 ["browser_sidebar_move.js"]
 
 ["browser_sidebar_persist.js"]
+skip-if = ["true"] # Bug 1898613
 
 ["browser_sidebar_switcher.js"]
