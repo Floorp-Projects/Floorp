@@ -13,8 +13,6 @@ import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
 
 import {
   CUSTOM_SEARCH_SHORTCUTS,
-  SEARCH_SHORTCUTS_EXPERIMENT,
-  SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
   checkHasSearchEngine,
   getSearchProvider,
   getSearchFormURL,
@@ -49,7 +47,6 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
   "faviconRef",
   "faviconSize",
 ];
-const ROWS_PREF = "topSitesRows";
 
 // Preferences
 const NO_DEFAULT_SEARCH_TILE_PREF =
@@ -64,7 +61,6 @@ const TOP_SITE_SEARCH_SHORTCUTS_PREF =
 const TOP_SITES_ROWS_PREF = "browser.newtabpage.activity-stream.topSitesRows";
 
 // Search experiment stuff
-const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
 const SEARCH_FILTERS = [
   "google",
   "search.yahoo",
@@ -143,6 +139,10 @@ class _TopSites {
     Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    Services.prefs.addObserver(NO_DEFAULT_SEARCH_TILE_PREF, this);
+    Services.prefs.addObserver(SEARCH_SHORTCUTS_ENGINES, this);
+    Services.prefs.addObserver(TOP_SITES_ROWS_PREF, this);
+    Services.prefs.addObserver(TOP_SITE_SEARCH_SHORTCUTS_PREF, this);
     lazy.PlacesUtils.observers.addListener(
       ["bookmark-added", "bookmark-removed", "history-cleared", "page-removed"],
       this.handlePlacesEvents
@@ -156,6 +156,10 @@ class _TopSites {
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    Services.prefs.removeObserver(NO_DEFAULT_SEARCH_TILE_PREF, this);
+    Services.prefs.removeObserver(SEARCH_SHORTCUTS_ENGINES, this);
+    Services.prefs.removeObserver(TOP_SITES_ROWS_PREF, this);
+    Services.prefs.removeObserver(TOP_SITE_SEARCH_SHORTCUTS_PREF, this);
     lazy.PlacesUtils.observers.removeListener(
       ["bookmark-added", "bookmark-removed", "history-cleared", "page-removed"],
       this.handlePlacesEvents
@@ -194,12 +198,31 @@ class _TopSites {
         this.refresh();
         break;
       case "nsPref:changed":
-        if (
-          data === REMOTE_SETTING_DEFAULTS_PREF ||
-          data === DEFAULT_SITES_OVERRIDE_PREF ||
-          data.startsWith(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH)
-        ) {
-          this._readDefaults();
+        switch (data) {
+          case DEFAULT_SITES_OVERRIDE_PREF:
+          case REMOTE_SETTING_DEFAULTS_PREF:
+            this._readDefaults();
+            break;
+          case NO_DEFAULT_SEARCH_TILE_PREF:
+            this.refresh();
+            break;
+          case TOP_SITES_ROWS_PREF:
+          case SEARCH_SHORTCUTS_ENGINES:
+            this.refresh();
+            break;
+          case TOP_SITE_SEARCH_SHORTCUTS_PREF:
+            if (Services.prefs.getBoolPref(TOP_SITE_SEARCH_SHORTCUTS_PREF)) {
+              this.updateCustomSearchShortcuts();
+            } else {
+              this.unpinAllSearchShortcuts();
+            }
+            this.refresh();
+            break;
+          default:
+            if (data.startsWith(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH)) {
+              this._readDefaults();
+            }
+            break;
         }
         break;
     }
@@ -1104,27 +1127,6 @@ class _TopSites {
     switch (action.type) {
       case at.SYSTEM_TICK:
         this.refresh();
-        break;
-      case at.PREF_CHANGED:
-        switch (action.data.name) {
-          case DEFAULT_SITES_PREF:
-            if (!this._useRemoteSetting) {
-              this.refreshDefaults(action.data.value);
-            }
-            break;
-          case ROWS_PREF:
-          case FILTER_DEFAULT_SEARCH_PREF:
-          case SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF:
-            this.refresh();
-            break;
-          case SEARCH_SHORTCUTS_EXPERIMENT:
-            if (action.data.value) {
-              this.updateCustomSearchShortcuts();
-            } else {
-              this.unpinAllSearchShortcuts();
-            }
-            this.refresh();
-        }
         break;
       case at.PREFS_INITIAL_VALUES:
         if (!this._useRemoteSetting) {
