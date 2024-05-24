@@ -135,6 +135,7 @@ class TurnClient : public MtransportTest {
 
   void TearDown() {
     test_utils_->SyncDispatchToSTS(WrapRunnable(this, &TurnClient::TearDown_s));
+    MtransportTest::TearDown();
   }
 
   void Allocate_s() {

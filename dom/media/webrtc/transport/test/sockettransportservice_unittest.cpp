@@ -52,10 +52,10 @@ class SocketTransportServiceTest : public MtransportTest {
  private:
   nsCOMPtr<nsISocketTransportService> stservice_;
   nsCOMPtr<nsIEventTarget> target_;
-  size_t received_;
+  std::atomic<size_t> received_;
   PRFileDesc* readpipe_;
   PRFileDesc* writepipe_;
-  bool registered_;
+  std::atomic<bool> registered_;
 };
 
 // Received an event.

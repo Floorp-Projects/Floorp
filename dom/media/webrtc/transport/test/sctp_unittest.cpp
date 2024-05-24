@@ -120,8 +120,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     usrsctp_deregister_address(static_cast<void*>(this));
 
     test_utils_->SyncDispatchToSTS(
-        WrapRunnable(this, &TransportTestPeer::Disconnect_s));
-
+        WrapRunnable(this, &TransportTestPeer::DeleteFlow_s));
     std::cerr << "~TransportTestPeer() completed" << std::endl;
   }
 
@@ -153,14 +152,21 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_GE(0, r);
   }
 
-  void Disconnect_s() {
-    disconnect_all();
+  void DeleteFlow_s() {
     if (flow_) {
       flow_ = nullptr;
     }
   }
 
-  void Disconnect() { loopback_->Disconnect(); }
+  void Disconnect_s() {
+    loopback_->Disconnect();
+    disconnect_all();
+  }
+
+  void Disconnect() {
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TransportTestPeer::Disconnect_s));
+  }
 
   void StartTransfer(size_t to_send) {
     periodic_ = new SendPeriodic(this, to_send);
@@ -193,7 +199,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   bool connected() const { return connected_; }
 
   static TransportResult SendPacket_s(UniquePtr<MediaPacket> packet,
-                                      const RefPtr<TransportFlow>& flow,
+                                      RefPtr<TransportFlow> flow,
                                       TransportLayer* layer) {
     return layer->SendPacket(*packet);
   }
@@ -278,9 +284,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
  private:
   std::string name_;
-  bool connected_;
-  size_t sent_;
-  size_t received_;
+  std::atomic<bool> connected_;
+  std::atomic<size_t> sent_;
+  std::atomic<size_t> received_;
   // Owns the TransportLayerLoopback, but basically does nothing else.
   RefPtr<TransportFlow> flow_;
   TransportLayerLoopback* loopback_;

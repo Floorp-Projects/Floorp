@@ -301,8 +301,11 @@ class TestNrSocketIceUnitTest : public ::testing::Test {
     test_utils_ = new MtransportTestUtils();
     test_utils2_ = new MtransportTestUtils();
 
-    NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TestNrSocketIceUnitTest::SetUp_s));
   }
+
+  void SetUp_s() { NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig()); }
 
   void TearDown() override {
     delete test_utils_;

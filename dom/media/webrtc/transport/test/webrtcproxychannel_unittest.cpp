@@ -282,7 +282,9 @@ class WebrtcTCPSocketTestInputStream : public nsIAsyncInputStream,
   NS_DECL_NSIINPUTSTREAM
 
   WebrtcTCPSocketTestInputStream()
-      : mMaxReadSize(1024 * 1024), mAllowCallbacks(false) {}
+      : mMaxReadSize(1024 * 1024),
+        mMutex("WebrtcTCPSocketTestInputStream::mMutex"),
+        mAllowCallbacks(false) {}
 
   void DoCallback();
   void CallCallback(const nsCOMPtr<nsIInputStreamCallback>& aCallback);
@@ -294,6 +296,7 @@ class WebrtcTCPSocketTestInputStream : public nsIAsyncInputStream,
   virtual ~WebrtcTCPSocketTestInputStream() = default;
 
  private:
+  mutable Mutex mMutex;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
 
@@ -308,8 +311,11 @@ nsresult WebrtcTCPSocketTestInputStream::AsyncWait(
     uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
   MOZ_ASSERT(!aEventTarget, "no event target should be set");
 
-  mCallback = aCallback;
-  mCallbackTarget = NS_GetCurrentThread();
+  {
+    MutexAutoLock lock(mMutex);
+    mCallback = aCallback;
+    mCallbackTarget = NS_GetCurrentThread();
+  }
 
   if (mAllowCallbacks && DataLength() > 0) {
     DoCallback();
@@ -362,6 +368,7 @@ void WebrtcTCPSocketTestInputStream::CallCallback(
 }
 
 void WebrtcTCPSocketTestInputStream::DoCallback() {
+  MutexAutoLock lock(mMutex);
   if (mCallback) {
     mCallbackTarget->Dispatch(
         NewRunnableMethod<const nsCOMPtr<nsIInputStreamCallback>&>(
@@ -380,7 +387,9 @@ class WebrtcTCPSocketTestOutputStream : public nsIAsyncOutputStream,
   NS_DECL_NSIASYNCOUTPUTSTREAM
   NS_DECL_NSIOUTPUTSTREAM
 
-  WebrtcTCPSocketTestOutputStream() : mMaxWriteSize(1024 * 1024) {}
+  WebrtcTCPSocketTestOutputStream()
+      : mMaxWriteSize(1024 * 1024),
+        mMutex("WebrtcTCPSocketTestOutputStream::mMutex") {}
 
   void DoCallback();
   void CallCallback(const nsCOMPtr<nsIOutputStreamCallback>& aCallback);
@@ -393,6 +402,7 @@ class WebrtcTCPSocketTestOutputStream : public nsIAsyncOutputStream,
   virtual ~WebrtcTCPSocketTestOutputStream() = default;
 
  private:
+  mutable Mutex mMutex;
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
 };
@@ -405,8 +415,11 @@ nsresult WebrtcTCPSocketTestOutputStream::AsyncWait(
     uint32_t aRequestedCount, nsIEventTarget* aEventTarget) {
   MOZ_ASSERT(!aEventTarget, "no event target should be set");
 
-  mCallback = aCallback;
-  mCallbackTarget = NS_GetCurrentThread();
+  {
+    MutexAutoLock lock(mMutex);
+    mCallback = aCallback;
+    mCallbackTarget = NS_GetCurrentThread();
+  }
 
   return NS_OK;
 }
@@ -459,6 +472,7 @@ void WebrtcTCPSocketTestOutputStream::CallCallback(
 }
 
 void WebrtcTCPSocketTestOutputStream::DoCallback() {
+  MutexAutoLock lock(mMutex);
   if (mCallback) {
     mCallbackTarget->Dispatch(
         NewRunnableMethod<const nsCOMPtr<nsIOutputStreamCallback>&>(
@@ -520,6 +534,13 @@ class WebrtcTCPSocketTest : public MtransportTest {
 
   void SetUp() override;
   void TearDown() override;
+  size_t CountUnwrittenBytes() {
+    size_t result;
+    test_utils_->SyncDispatchToSTS(WrapRunnableRet(
+        &result, this, &WebrtcTCPSocketTest::CountUnwrittenBytes_s));
+    return result;
+  }
+  size_t CountUnwrittenBytes_s() { return mChannel->CountUnwrittenBytes(); }
 
   void DoTransportAvailable();
 
@@ -534,8 +555,8 @@ class WebrtcTCPSocketTest : public MtransportTest {
   RefPtr<FakeWebrtcTCPSocket> mChannel;
   RefPtr<WebrtcTCPSocketTestCallback> mCallback;
 
-  bool mOnCloseCalled;
-  bool mOnConnectedCalled;
+  std::atomic<bool> mOnCloseCalled;
+  std::atomic<bool> mOnConnectedCalled;
 
   size_t ReadDataLength();
   template <typename T>
@@ -566,6 +587,8 @@ class WebrtcTCPSocketTestCallback : public WebrtcTCPSocketCallback {
 };
 
 void WebrtcTCPSocketTest::SetUp() {
+  MtransportTest::SetUp();
+
   nsresult rv;
   // WebrtcTCPSocket's threading model is the same as mtransport
   // all socket operations are done on the socket thread
@@ -580,7 +603,7 @@ void WebrtcTCPSocketTest::SetUp() {
   mChannel = new FakeWebrtcTCPSocket(mCallback.get());
 }
 
-void WebrtcTCPSocketTest::TearDown() {}
+void WebrtcTCPSocketTest::TearDown() { MtransportTest::TearDown(); }
 
 // WebrtcTCPSocketCallback
 void WebrtcTCPSocketTest::OnRead(nsTArray<uint8_t>&& aReadData) {
@@ -674,7 +697,7 @@ TEST_F(WebrtcTCPSocketTest, Write) {
   data.AppendElements(kReadData, kReadDataLength);
   mChannel->Write(std::move(data));
 
-  ASSERT_TRUE_WAIT(mChannel->CountUnwrittenBytes() == kReadDataLength,
+  ASSERT_TRUE_WAIT(CountUnwrittenBytes() == kReadDataLength,
                    kDefaultTestTimeout);
 
   mOutputStream->DoCallback();
@@ -703,7 +726,7 @@ TEST_F(WebrtcTCPSocketTest, WriteFail) {
   array.AppendElements(kReadData, kReadDataLength);
   mChannel->Write(std::move(array));
 
-  ASSERT_TRUE_WAIT(mChannel->CountUnwrittenBytes() == kReadDataLength,
+  ASSERT_TRUE_WAIT(CountUnwrittenBytes() == kReadDataLength,
                    kDefaultTestTimeout);
 
   mOutputStream->Fail();
@@ -742,8 +765,7 @@ TEST_F(WebrtcTCPSocketTest, WriteLarge) {
     mChannel->Write(std::move(array));
   }
 
-  ASSERT_TRUE_WAIT(mChannel->CountUnwrittenBytes() == data.length(),
-                   kDefaultTestTimeout);
+  ASSERT_TRUE_WAIT(CountUnwrittenBytes() == data.length(), kDefaultTestTimeout);
 
   // make sure writing loops more than once per write request
   mOutputStream->mMaxWriteSize = 1024;
