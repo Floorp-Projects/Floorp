@@ -21,7 +21,7 @@ const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 // Functions that accept an angle argument.
-const ANGLE_TAKING_FUNCTIONS = new Set([
+const ANGLE_TAKING_FUNCTIONS = [
   "linear-gradient",
   "-moz-linear-gradient",
   "repeating-linear-gradient",
@@ -37,17 +37,17 @@ const ANGLE_TAKING_FUNCTIONS = new Set([
   "skewX",
   "skewY",
   "hue-rotate",
-]);
+];
 // All cubic-bezier CSS timing-function names.
-const BEZIER_KEYWORDS = new Set([
+const BEZIER_KEYWORDS = [
   "linear",
   "ease-in-out",
   "ease-in",
   "ease-out",
   "ease",
-]);
+];
 // Functions that accept a color argument.
-const COLOR_TAKING_FUNCTIONS = new Set([
+const COLOR_TAKING_FUNCTIONS = [
   "linear-gradient",
   "-moz-linear-gradient",
   "repeating-linear-gradient",
@@ -60,14 +60,9 @@ const COLOR_TAKING_FUNCTIONS = new Set([
   "repeating-conic-gradient",
   "drop-shadow",
   "color-mix",
-]);
+];
 // Functions that accept a shape argument.
-const BASIC_SHAPE_FUNCTIONS = new Set([
-  "polygon",
-  "circle",
-  "ellipse",
-  "inset",
-]);
+const BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
 
 const BACKDROP_FILTER_ENABLED = Services.prefs.getBoolPref(
   "layout.css.backdrop-filter.enabled"
