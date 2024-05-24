@@ -54,8 +54,10 @@ class CustomTabToolbarMenu(
     /** Gets the current custom tab session */
     @VisibleForTesting
     internal val session: CustomTabSessionState? get() = sessionId?.let { store.state.findCustomTab(it) }
+
     private val appName = context.getString(R.string.app_name)
-    private val shouldShowMenuToolbar = !IncompleteRedesignToolbarFeature(context.settings()).isEnabled
+    private val isNavBarEnabled = IncompleteRedesignToolbarFeature(context.settings()).isEnabled
+    private val shouldShowMenuToolbar = !isNavBarEnabled
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
@@ -127,7 +129,7 @@ class CustomTabToolbarMenu(
             desktopMode,
             findInPage,
             openInApp.apply { visible = ::shouldShowOpenInApp },
-            openInFenix.apply { visible = { !isSandboxCustomTab } },
+            openInFenix.apply { visible = { !isSandboxCustomTab && !isNavBarEnabled } },
             BrowserMenuDivider(),
             if (shouldShowMenuToolbar) menuToolbar else null,
         )
