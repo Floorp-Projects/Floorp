@@ -27,6 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
@@ -110,6 +111,7 @@ class _TopSites {
       [...CACHED_LINK_PROPS_TO_MIGRATE, ...PINNED_FAVICON_PROPS_TO_MIGRATE]
     );
     this.faviconFeed = new lazy.FaviconFeed();
+    this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
   }
 
   async init() {
@@ -118,12 +120,7 @@ class _TopSites {
     }
     this.#inited = true;
     lazy.log.debug("Initializing TopSites.");
-    // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
-    Services.obs.addObserver(this, "browser-search-engine-modified");
-    Services.obs.addObserver(this, "browser-region-updated");
-    Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
-    Services.prefs.addObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
-    Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    this.#addObservers();
     await this._readDefaults({ isStartup: true });
   }
 
@@ -132,14 +129,37 @@ class _TopSites {
       return;
     }
     lazy.log.debug("Un-initializing TopSites.");
-    Services.obs.removeObserver(this, "browser-search-engine-modified");
-    Services.obs.removeObserver(this, "browser-region-updated");
-    Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
-    Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
-    Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    this.#removeObservers();
     this.#searchShortcuts = [];
     this.#sites = [];
     this.#inited = false;
+  }
+
+  #addObservers() {
+    // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
+    Services.obs.addObserver(this, "browser-search-engine-modified");
+    Services.obs.addObserver(this, "browser-region-updated");
+    Services.obs.addObserver(this, "newtab-linkBlocked");
+    Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
+    Services.prefs.addObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
+    Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    lazy.PlacesUtils.observers.addListener(
+      ["bookmark-added", "bookmark-removed", "history-cleared", "page-removed"],
+      this.handlePlacesEvents
+    );
+  }
+
+  #removeObservers() {
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
+    Services.obs.removeObserver(this, "browser-region-updated");
+    Services.obs.removeObserver(this, "newtab-linkBlocked");
+    Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
+    Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
+    Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
+    lazy.PlacesUtils.observers.removeListener(
+      ["bookmark-added", "bookmark-removed", "history-cleared", "page-removed"],
+      this.handlePlacesEvents
+    );
   }
 
   _reset() {
@@ -168,6 +188,11 @@ class _TopSites {
       case "browser-region-updated":
         this._readDefaults();
         break;
+      case "newtab-linkBlocked":
+        this.frecentCache.expire();
+        this.pinnedCache.expire();
+        this.refresh();
+        break;
       case "nsPref:changed":
         if (
           data === REMOTE_SETTING_DEFAULTS_PREF ||
@@ -177,6 +202,64 @@ class _TopSites {
           this._readDefaults();
         }
         break;
+    }
+  }
+
+  handlePlacesEvents(events) {
+    for (const {
+      itemType,
+      source,
+      url,
+      isRemovedFromStore,
+      isTagging,
+      type,
+    } of events) {
+      switch (type) {
+        case "history-cleared":
+          this.frecentCache.expire();
+          this.refresh();
+          break;
+        case "page-removed":
+          if (isRemovedFromStore) {
+            this.frecentCache.expire();
+            this.refresh();
+          }
+          break;
+        case "bookmark-added":
+          // Skips items that are not bookmarks (like folders), about:* pages or
+          // default bookmarks, added when the profile is created.
+          if (
+            isTagging ||
+            itemType !== lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK ||
+            source === lazy.PlacesUtils.bookmarks.SOURCES.IMPORT ||
+            source === lazy.PlacesUtils.bookmarks.SOURCES.RESTORE ||
+            source === lazy.PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP ||
+            source === lazy.PlacesUtils.bookmarks.SOURCES.SYNC ||
+            (!url.startsWith("http://") && !url.startsWith("https://"))
+          ) {
+            return;
+          }
+
+          // TODO: Add a timed delay in case many links are changed.
+          this.frecentCache.expire();
+          this.refresh();
+          break;
+        case "bookmark-removed":
+          if (
+            isTagging ||
+            (itemType === lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK &&
+              source !== lazy.PlacesUtils.bookmarks.SOURCES.IMPORT &&
+              source !== lazy.PlacesUtils.bookmarks.SOURCES.RESTORE &&
+              source !==
+                lazy.PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP &&
+              source !== lazy.PlacesUtils.bookmarks.SOURCES.SYNC)
+          ) {
+            // TODO: Add a timed delay in case many links are changed.
+            this.frecentCache.expire();
+            this.refresh();
+          }
+          break;
+      }
     }
   }
 
@@ -1014,21 +1097,6 @@ class _TopSites {
         this.updateCustomSearchShortcuts(true /* isStartup */);
         break;
       case at.SYSTEM_TICK:
-        this.refresh();
-        break;
-      // All these actions mean we need new top sites
-      case at.PLACES_HISTORY_CLEARED:
-      case at.PLACES_LINKS_DELETED:
-        this.frecentCache.expire();
-        this.refresh();
-        break;
-      case at.PLACES_LINKS_CHANGED:
-        this.frecentCache.expire();
-        this.refresh();
-        break;
-      case at.PLACES_LINK_BLOCKED:
-        this.frecentCache.expire();
-        this.pinnedCache.expire();
         this.refresh();
         break;
       case at.PREF_CHANGED:

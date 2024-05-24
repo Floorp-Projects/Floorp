@@ -17,6 +17,8 @@ ChromeUtils.defineESModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   shortURL: "resource://activity-stream/lib/ShortURL.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
   SearchService: "resource://gre/modules/SearchService.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
@@ -98,6 +100,9 @@ function assertLinks(actualLinks, expectedLinks) {
 }
 
 add_setup(async () => {
+  // Places requires a profile.
+  do_get_profile();
+
   let sandbox = sinon.createSandbox();
   sandbox.stub(SearchService.prototype, "defaultEngine").get(() => {
     return { identifier: "ddg", searchForm: "https://duckduckgo.com" };
@@ -1122,23 +1127,30 @@ add_task(async function test_onAction_part_2() {
   let sandbox = sinon.createSandbox();
 
   info(
-    "TopSites.onAction should call refresh without a target if we clear " +
-      "history with PLACES_HISTORY_CLEARED"
+    "TopSites.handlePlacesEvents should call refresh without a target " +
+      "if we clear history."
   );
 
   let cleanup = stubTopSites(sandbox);
   sandbox.stub(TopSites, "refresh");
-  TopSites.onAction({ type: at.PLACES_HISTORY_CLEARED });
-
+  TopSites.refresh.resetHistory();
+  await PlacesUtils.history.clear();
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
 
   TopSites.refresh.resetHistory();
 
   info(
-    "TopSites.onAction should call refresh without a target " +
+    "TopSites.handlePlacesEvents should call refresh without a target " +
       "if we remove a Topsite from history"
   );
-  TopSites.onAction({ type: at.PLACES_LINKS_DELETED });
+  let uri = Services.io.newURI("https://www.example.com/");
+  await PlacesTestUtils.addVisits({
+    uri,
+    transition: PlacesUtils.history.TRANSITION_TYPED,
+    visitDate: Date.now() * 1000,
+  });
+  Assert.ok(TopSites.refresh.notCalled, "TopSites.refresh not called");
+  await PlacesUtils.history.remove(uri);
 
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
 
@@ -1153,14 +1165,24 @@ add_task(async function test_onAction_part_2() {
   Assert.ok(TopSites.init.calledOnce, "TopSites.init called once");
   await TestUtils.topicObserved("topsites-updated-custom-search-shortcuts");
 
-  info("TopSites.onAction should call refresh on PLACES_LINK_BLOCKED action");
+  info("TopSites.handlePlacesEvents should call refresh on newtab-linkBlocked");
   TopSites.refresh.resetHistory();
-  await TopSites.onAction({ type: at.PLACES_LINK_BLOCKED });
+  // The event dispatched in NewTabUtils when a link is blocked;
+  TopSites.observe(null, "newtab-linkBlocked", null);
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
 
-  info("TopSites.onAction should call refresh on PLACES_LINKS_CHANGED action");
+  info("TopSites should call refresh on bookmark-added");
   TopSites.refresh.resetHistory();
-  await TopSites.onAction({ type: at.PLACES_LINKS_CHANGED });
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    url: "https://bookmark.example.com",
+    title: "Bookmark 1",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  });
+  Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
+
+  info("TopSites.onAction should call refresh on bookmark-removed");
+  TopSites.refresh.resetHistory();
+  await PlacesUtils.bookmarks.remove(bookmark);
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
 
   info(
@@ -1731,7 +1753,8 @@ add_task(async function test_integration() {
   await TestUtils.topicObserved("topsites-refreshed");
   let oldSites = await TopSites.getSites();
   NewTabUtils.pinnedLinks.links.pop();
-  TopSites.onAction({ type: at.PLACES_LINK_BLOCKED });
+  // The event dispatched in NewTabUtils when a link is blocked;
+  TopSites.observe(null, "newtab-linkBlocked", null);
   await TestUtils.topicObserved("topsites-refreshed");
   let newSites = await TopSites.getSites();
 
