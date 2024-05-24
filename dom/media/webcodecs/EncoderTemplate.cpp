@@ -337,8 +337,10 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
   // The EncoderType::MetadataType, VideoDecoderConfig, and VideoColorSpaceInit
   // below are rooted to work around the JS hazard issues.
   AutoJSAPI jsapi;
-  DebugOnly<bool> ok =
-      jsapi.Init(GetParentObject());  // TODO: check returned value?
+  if (!jsapi.Init(GetParentObject())) {
+    LOGE("%s %p AutoJSAPI init failed", VideoEncoderTraits::Name.get(), this);
+    return;
+  }
   JSContext* cx = jsapi.cx();
 
   RefPtr<EncodedVideoChunkOutputCallback> cb(mOutputCallback);
@@ -437,8 +439,10 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
   // The EncoderType::MetadataType, AudioDecoderConfig
   // below are rooted to work around the JS hazard issues.
   AutoJSAPI jsapi;
-  DebugOnly<bool> ok =
-      jsapi.Init(GetParentObject());  // TODO: check returned value?
+  if (!jsapi.Init(GetParentObject())) {
+    LOGE("%s %p AutoJSAPI init failed", AudioEncoderTraits::Name.get(), this);
+    return;
+  }
   JSContext* cx = jsapi.cx();
 
   RefPtr<EncodedAudioChunkOutputCallback> cb(mOutputCallback);
