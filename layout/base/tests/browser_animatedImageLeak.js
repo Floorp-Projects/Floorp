@@ -46,21 +46,35 @@ async function pushPrefs1() {
   });
 }
 
-async function openWindowsAndMinimize(taskToPerformBeforeMinimize) {
+// maximize = false then minimize all windows but the last one
+// this tests that minimized windows don't accumulate animated images frames
+// maximize = true then maximize the last window
+// this tests that occluded windows don't accumulate animated images frames
+async function openWindows(maximize, taskToPerformBeforeSizeChange) {
   let wins = [null, null, null, null];
   for (let i = 0; i < wins.length; i++) {
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await win.delayedStartupPromise;
-    await taskToPerformBeforeMinimize(win);
+    await taskToPerformBeforeSizeChange(win);
 
-    // Leave the last window un-minimized.
-    if (i < wins.length - 1) {
-      let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
-        win,
-        "sizemodechange"
-      );
-      win.minimize();
-      await promiseSizeModeChange;
+    if (
+      (!maximize && i < wins.length - 1) ||
+      (maximize && i == wins.length - 1)
+    ) {
+      // the window might be maximized already, but it won't be minimized, only wait for
+      // size change if the size is actually changing.
+      if (!maximize || (maximize && win.windowState != win.STATE_MAXIMIZED)) {
+        let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+          win,
+          "sizemodechange"
+        );
+        if (maximize) {
+          win.maximize();
+        } else {
+          win.minimize();
+        }
+        await promiseSizeModeChange;
+      }
     }
 
     wins[i] = win;
@@ -96,10 +110,10 @@ async function popPrefs() {
 }
 
 add_task(async () => {
-  async function runTest(theTestPath) {
+  async function runTest(theTestPath, maximize) {
     await pushPrefs1();
 
-    let wins = await openWindowsAndMinimize(async function (win) {
+    let wins = await openWindows(maximize, async function (win) {
       let tab = await BrowserTestUtils.openNewForegroundTab(
         win.gBrowser,
         theTestPath
@@ -124,9 +138,14 @@ add_task(async () => {
   }
 
   // This tests the image in content process case
-  await runTest(fileURL("helper_animatedImageLeak.html"));
+  let contentURL = fileURL("helper_animatedImageLeak.html");
+  await runTest(contentURL, /* maximize = */ true);
+  await runTest(contentURL, /* maximize = */ false);
+
   // This tests the image in chrome process case
-  await runTest(getRootDirectory(gTestPath) + "helper_animatedImageLeak.html");
+  let chromeURL = getRootDirectory(gTestPath) + "helper_animatedImageLeak.html";
+  await runTest(chromeURL, /* maximize = */ true);
+  await runTest(chromeURL, /* maximize = */ false);
 });
 
 // Now we test the image in a sidebar loaded via an extension case.
@@ -188,39 +207,47 @@ async function sendMessage(ext, msg, data = undefined) {
 }
 
 add_task(async function sidebar_initial_install() {
-  await pushPrefs1();
+  async function runTest(maximize) {
+    await pushPrefs1();
 
-  ok(
-    document.getElementById("sidebar-box").hidden,
-    "sidebar box is not visible"
-  );
+    ok(
+      document.getElementById("sidebar-box").hidden,
+      "sidebar box is not visible"
+    );
 
-  let extension = ExtensionTestUtils.loadExtension(getExtData());
-  await extension.startup();
-  await extension.awaitMessage("sidebar");
-
-  // Test sidebar is opened on install
-  ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible");
-
-  // the sidebar appears on all new windows automatically.
-  let wins = await openWindowsAndMinimize(async function (win) {
+    let extension = ExtensionTestUtils.loadExtension(getExtData());
+    await extension.startup();
     await extension.awaitMessage("sidebar");
-  });
 
-  await pushPrefs2();
+    // Test sidebar is opened on install
+    ok(
+      !document.getElementById("sidebar-box").hidden,
+      "sidebar box is visible"
+    );
 
-  await waitForEnoughFrames();
+    // the sidebar appears on all new windows automatically.
+    let wins = await openWindows(maximize, async function (win) {
+      await extension.awaitMessage("sidebar");
+    });
 
-  await extension.unload();
-  // Test that the sidebar was closed on unload.
-  ok(
-    document.getElementById("sidebar-box").hidden,
-    "sidebar box is not visible"
-  );
+    await pushPrefs2();
 
-  await closeWindows(wins);
+    await waitForEnoughFrames();
 
-  await popPrefs();
+    await extension.unload();
+    // Test that the sidebar was closed on unload.
+    ok(
+      document.getElementById("sidebar-box").hidden,
+      "sidebar box is not visible"
+    );
 
-  ok(true, "got here without assserting");
+    await closeWindows(wins);
+
+    await popPrefs();
+
+    ok(true, "got here without assserting");
+  }
+
+  await runTest(/* maximize = */ true);
+  await runTest(/* maximize = */ false);
 });
