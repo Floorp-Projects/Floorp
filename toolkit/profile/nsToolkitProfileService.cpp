@@ -1539,6 +1539,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       nsAutoCString buffer;
       rv = mProfileDB.GetString("BackgroundTasksProfiles", profilePrefix.get(),
                                 buffer);
+      bool exists = false;
+
       if (NS_SUCCEEDED(rv)) {
         // We have a record of one!  Use it.
         rv = rootDir->Clone(getter_AddRefs(file));
@@ -1546,7 +1548,17 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
         rv = file->AppendNative(buffer);
         NS_ENSURE_SUCCESS(rv, rv);
-      } else {
+
+        rv = file->Exists(&exists);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!exists) {
+          printf_stderr(
+              "Profile directory does not exist, create a new directory");
+        }
+      }
+
+      if (!exists) {
         nsCString saltedProfilePrefix = profilePrefix;
         SaltProfileName(saltedProfilePrefix);
 
