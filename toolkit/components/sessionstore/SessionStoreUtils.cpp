@@ -1317,14 +1317,13 @@ class FormDataParseContext : public txIParseContext {
   explicit FormDataParseContext(bool aCaseInsensitive)
       : mIsCaseInsensitive(aCaseInsensitive) {}
 
-  nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override {
+  int32_t resolveNamespacePrefix(nsAtom* aPrefix) override {
     if (aPrefix == nsGkAtoms::xul) {
-      aID = kNameSpaceID_XUL;
-    } else {
-      MOZ_ASSERT(nsDependentAtomString(aPrefix).EqualsLiteral("xhtml"));
-      aID = kNameSpaceID_XHTML;
+      return kNameSpaceID_XUL;
     }
-    return NS_OK;
+
+    MOZ_ASSERT(nsDependentAtomString(aPrefix).EqualsLiteral("xhtml"));
+    return kNameSpaceID_XHTML;
   }
 
   nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,

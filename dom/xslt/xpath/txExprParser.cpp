@@ -823,33 +823,25 @@ nsresult txExprParser::resolveQName(const nsAString& aQName, nsAtom** aPrefix,
                                     txIParseContext* aContext,
                                     nsAtom** aLocalName, int32_t& aNamespace,
                                     bool aIsNameTest) {
-  aNamespace = kNameSpaceID_None;
   int32_t idx = aQName.FindChar(':');
   if (idx > 0) {
-    *aPrefix = NS_Atomize(StringHead(aQName, (uint32_t)idx)).take();
-    if (!*aPrefix) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    *aLocalName = NS_Atomize(Substring(aQName, (uint32_t)idx + 1,
-                                       aQName.Length() - (idx + 1)))
+    *aPrefix = NS_AtomizeMainThread(StringHead(aQName, (uint32_t)idx)).take();
+    *aLocalName = NS_AtomizeMainThread(Substring(aQName, (uint32_t)idx + 1,
+                                                 aQName.Length() - (idx + 1)))
                       .take();
-    if (!*aLocalName) {
-      NS_RELEASE(*aPrefix);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return aContext->resolveNamespacePrefix(*aPrefix, aNamespace);
+    aNamespace = aContext->resolveNamespacePrefix(*aPrefix);
+    return aNamespace != kNameSpaceID_Unknown ? NS_OK
+                                              : NS_ERROR_DOM_NAMESPACE_ERR;
   }
+  aNamespace = kNameSpaceID_None;
   // the lexer dealt with idx == 0
   *aPrefix = 0;
   if (aIsNameTest && aContext->caseInsensitiveNameTests()) {
     nsAutoString lcname;
     nsContentUtils::ASCIIToLower(aQName, lcname);
-    *aLocalName = NS_Atomize(lcname).take();
+    *aLocalName = NS_AtomizeMainThread(lcname).take();
   } else {
-    *aLocalName = NS_Atomize(aQName).take();
-  }
-  if (!*aLocalName) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    *aLocalName = NS_AtomizeMainThread(aQName).take();
   }
   return NS_OK;
 }

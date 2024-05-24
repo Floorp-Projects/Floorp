@@ -330,9 +330,8 @@ class txXSLTParamContext : public txIParseContext, public txIEvalContext {
       : mResolver(aResolver), mContext(aContext), mRecycler(aRecycler) {}
 
   // txIParseContext
-  nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override {
-    aID = mResolver->lookupNamespace(aPrefix);
-    return aID == kNameSpaceID_Unknown ? NS_ERROR_DOM_NAMESPACE_ERR : NS_OK;
+  int32_t resolveNamespacePrefix(nsAtom* aPrefix) override {
+    return mResolver->lookupNamespace(aPrefix);
   }
   nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
                                FunctionCall** aFunction) override {

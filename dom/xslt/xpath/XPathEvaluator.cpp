@@ -43,7 +43,7 @@ class XPathEvaluatorParseContext : public txIParseContext {
 
   nsresult getError() { return mLastError; }
 
-  nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override;
+  int32_t resolveNamespacePrefix(nsAtom* aPrefix) override;
   nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
                                FunctionCall** aFunction) override;
   bool caseInsensitiveNameTests() override;
@@ -129,12 +129,9 @@ already_AddRefed<XPathResult> XPathEvaluator::Evaluate(
  * XPathNSResolver
  */
 
-nsresult XPathEvaluatorParseContext::resolveNamespacePrefix(nsAtom* aPrefix,
-                                                            int32_t& aID) {
-  aID = kNameSpaceID_Unknown;
-
+int32_t XPathEvaluatorParseContext::resolveNamespacePrefix(nsAtom* aPrefix) {
   if (!mResolver && !mResolverNode) {
-    return NS_ERROR_DOM_NAMESPACE_ERR;
+    return kNameSpaceID_Unknown;
   }
 
   nsAutoString prefix;
@@ -147,7 +144,8 @@ nsresult XPathEvaluatorParseContext::resolveNamespacePrefix(nsAtom* aPrefix,
     ErrorResult rv;
     mResolver->LookupNamespaceURI(prefix, ns, rv);
     if (rv.Failed()) {
-      return rv.StealNSResult();
+      rv.SuppressException();
+      return kNameSpaceID_Unknown;
     }
   } else {
     if (aPrefix == nsGkAtoms::xml) {
@@ -158,17 +156,19 @@ nsresult XPathEvaluatorParseContext::resolveNamespacePrefix(nsAtom* aPrefix,
   }
 
   if (DOMStringIsNull(ns)) {
-    return NS_ERROR_DOM_NAMESPACE_ERR;
+    return kNameSpaceID_Unknown;
   }
 
   if (ns.IsEmpty()) {
-    aID = kNameSpaceID_None;
-
-    return NS_OK;
+    return kNameSpaceID_None;
   }
 
   // get the namespaceID for the URI
-  return nsNameSpaceManager::GetInstance()->RegisterNameSpace(ns, aID);
+  int32_t id;
+  return NS_SUCCEEDED(
+             nsNameSpaceManager::GetInstance()->RegisterNameSpace(ns, id))
+             ? id
+             : kNameSpaceID_Unknown;
 }
 
 nsresult XPathEvaluatorParseContext::resolveFunctionCall(nsAtom* aName,
