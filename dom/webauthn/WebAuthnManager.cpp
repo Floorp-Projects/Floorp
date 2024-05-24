@@ -170,7 +170,7 @@ nsresult RelaxSameOrigin(nsPIDOMWindowInner* aParent,
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<Document> document = aParent->GetDoc();
-  if (!document || !document->IsHTMLDocument()) {
+  if (!document || !document->IsHTMLOrXHTML()) {
     return NS_ERROR_FAILURE;
   }
   nsHTMLDocument* html = document->AsHTMLDocument();

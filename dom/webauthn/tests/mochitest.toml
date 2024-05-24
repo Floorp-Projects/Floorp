@@ -66,6 +66,9 @@ skip-if = [
   "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
 ]
 
+["test_webauthn_in_xhtml.xhtml"]
+fail-if = ["xorigin"]
+
 ["test_webauthn_isplatformauthenticatoravailable.html"]
 
 ["test_webauthn_loopback.html"]
