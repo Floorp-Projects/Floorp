@@ -2082,14 +2082,14 @@ impl TileCacheInstance {
         // which will provide a local clip rect. This is useful for establishing things
         // like whether the backdrop rect supplied by Gecko can be considered opaque.
         if let Some(shared_clip_leaf_id) = self.shared_clip_leaf_id {
-            let map_local_to_surface = SpaceMapper::new(
+            let map_local_to_picture = SpaceMapper::new(
                 self.spatial_node_index,
                 pic_rect,
             );
 
             frame_state.clip_store.set_active_clips(
                 self.spatial_node_index,
-                map_local_to_surface.ref_spatial_node_index,
+                map_local_to_picture.ref_spatial_node_index,
                 shared_clip_leaf_id,
                 frame_context.spatial_tree,
                 &mut frame_state.data_stores.clip,
@@ -2098,7 +2098,7 @@ impl TileCacheInstance {
 
             let clip_chain_instance = frame_state.clip_store.build_clip_chain_instance(
                 pic_rect.cast_unit(),
-                &map_local_to_surface,
+                &map_local_to_picture,
                 &pic_to_world_mapper,
                 frame_context.spatial_tree,
                 frame_state.gpu_cache,
@@ -2654,7 +2654,7 @@ impl TileCacheInstance {
         is_opaque: bool,
         surface_kind: CompositorSurfaceKind,
     ) -> bool {
-        let map_local_to_surface = SpaceMapper::new_with_target(
+        let map_local_to_picture = SpaceMapper::new_with_target(
             self.spatial_node_index,
             prim_spatial_node_index,
             self.local_rect,
@@ -2662,7 +2662,7 @@ impl TileCacheInstance {
         );
 
         // Map the primitive local rect into picture space.
-        let prim_rect = match map_local_to_surface.map(&local_prim_rect) {
+        let prim_rect = match map_local_to_picture.map(&local_prim_rect) {
             Some(rect) => rect,
             None => return true,
         };
@@ -2891,14 +2891,14 @@ impl TileCacheInstance {
     ) {
         // Only need to evaluate sub-slice regions if we have compositor surfaces present
         if self.current_surface_traversal_depth == 0 && self.sub_slices.len() > 1 {
-            let map_local_to_surface = SpaceMapper::new_with_target(
+            let map_local_to_picture = SpaceMapper::new_with_target(
                 self.spatial_node_index,
                 surface_spatial_node_index,
                 self.local_rect,
                 spatial_tree,
             );
 
-            if let Some(pic_rect) = map_local_to_surface.map(&estimated_local_rect) {
+            if let Some(pic_rect) = map_local_to_picture.map(&estimated_local_rect) {
                 // Find the first sub-slice we can add this primitive to (we want to add
                 // prims to the primary surface if possible, so they get subpixel AA).
                 for sub_slice in &mut self.sub_slices {
@@ -2977,7 +2977,7 @@ impl TileCacheInstance {
                 let surface = &surfaces[surface_index.0];
                 let pic = &pictures[pic_index.0];
 
-                let map_local_to_surface = SpaceMapper::new_with_target(
+                let map_local_to_picture = SpaceMapper::new_with_target(
                     surface.surface_spatial_node_index,
                     current_spatial_node_index,
                     surface.unclipped_local_rect,
@@ -2987,7 +2987,7 @@ impl TileCacheInstance {
                 // Map the rect into the parent surface, and inflate if this surface requires
                 // it. If the rect can't be mapping (e.g. due to an invalid transform) then
                 // just bail out from the dependencies and cull this primitive.
-                current_pic_coverage_rect = match map_local_to_surface.map(&current_pic_coverage_rect) {
+                current_pic_coverage_rect = match map_local_to_picture.map(&current_pic_coverage_rect) {
                     Some(rect) => {
                         // TODO(gw): The casts here are a hack. We have some interface inconsistencies
                         //           between layout/picture rects which don't really work with the
@@ -3875,8 +3875,8 @@ pub struct SurfaceInfo {
     /// to reduce the size of render target allocation.
     pub clipping_rect: PictureRect,
     /// Helper structs for mapping local rects in different
-    /// coordinate systems into the surface coordinates.
-    pub map_local_to_surface: SpaceMapper<LayoutPixel, PicturePixel>,
+    /// coordinate systems into the picture coordinates.
+    pub map_local_to_picture: SpaceMapper<LayoutPixel, PicturePixel>,
     /// Defines the positioning node for the surface itself,
     /// and the rasterization root for this surface.
     pub raster_spatial_node_index: SpatialNodeIndex,
@@ -3916,7 +3916,7 @@ impl SurfaceInfo {
             .unmap(&map_surface_to_world.bounds)
             .unwrap_or_else(PictureRect::max_rect);
 
-        let map_local_to_surface = SpaceMapper::new(
+        let map_local_to_picture = SpaceMapper::new(
             surface_spatial_node_index,
             pic_bounds,
         );
@@ -3926,7 +3926,7 @@ impl SurfaceInfo {
             clipped_local_rect: PictureRect::zero(),
             is_opaque: false,
             clipping_rect: PictureRect::zero(),
-            map_local_to_surface,
+            map_local_to_picture,
             raster_spatial_node_index,
             surface_spatial_node_index,
             device_pixel_scale,
@@ -6737,7 +6737,7 @@ impl PicturePrimitive {
 
             // Map the cluster bounding rect into the space of the surface, and
             // include it in the surface bounding rect.
-            surface.map_local_to_surface.set_target_spatial_node(
+            surface.map_local_to_picture.set_target_spatial_node(
                 cluster.spatial_node_index,
                 frame_context.spatial_tree,
             );
@@ -6745,7 +6745,7 @@ impl PicturePrimitive {
             // Mark the cluster visible, since it passed the invertible and
             // backface checks.
             cluster.flags.insert(ClusterFlags::IS_VISIBLE);
-            if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect) {
+            if let Some(cluster_rect) = surface.map_local_to_picture.map(&cluster.bounding_rect) {
                 surface.unclipped_local_rect = surface.unclipped_local_rect.union(&cluster_rect);
             }
         }
@@ -6762,7 +6762,7 @@ impl PicturePrimitive {
                 );
 
                 let parent_surface = &mut surfaces[parent_surface_index.0];
-                parent_surface.map_local_to_surface.set_target_spatial_node(
+                parent_surface.map_local_to_picture.set_target_spatial_node(
                     self.spatial_node_index,
                     frame_context.spatial_tree,
                 );
@@ -6771,7 +6771,7 @@ impl PicturePrimitive {
                 // rect of any surfaces to be composited in parent surfaces correctly.
 
                 if let Some(parent_surface_rect) = parent_surface
-                    .map_local_to_surface
+                    .map_local_to_picture
                     .map(&surface_rect)
                 {
                     parent_surface.unclipped_local_rect =
@@ -7774,7 +7774,7 @@ fn test_large_surface_scale_1() {
     spatial_tree.apply_updates(cst.end_frame_and_get_pending_updates());
     spatial_tree.update_tree(&SceneProperties::new());
 
-    let map_local_to_surface = SpaceMapper::new_with_target(
+    let map_local_to_picture = SpaceMapper::new_with_target(
         root_reference_frame_index,
         root_reference_frame_index,
         PictureRect::max_rect(),
@@ -7787,7 +7787,7 @@ fn test_large_surface_scale_1() {
             clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_surface: map_local_to_surface.clone(),
+            map_local_to_picture: map_local_to_picture.clone(),
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(1.0),
@@ -7804,7 +7804,7 @@ fn test_large_surface_scale_1() {
             clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_surface,
+            map_local_to_picture,
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(43.82798767089844),
@@ -7843,7 +7843,7 @@ fn test_drop_filter_dirty_region_outside_prim() {
     spatial_tree.apply_updates(cst.end_frame_and_get_pending_updates());
     spatial_tree.update_tree(&SceneProperties::new());
 
-    let map_local_to_surface = SpaceMapper::new_with_target(
+    let map_local_to_picture = SpaceMapper::new_with_target(
         root_reference_frame_index,
         root_reference_frame_index,
         PictureRect::max_rect(),
@@ -7856,7 +7856,7 @@ fn test_drop_filter_dirty_region_outside_prim() {
             clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_surface: map_local_to_surface.clone(),
+            map_local_to_picture: map_local_to_picture.clone(),
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(1.0),
@@ -7876,7 +7876,7 @@ fn test_drop_filter_dirty_region_outside_prim() {
             ),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_surface,
+            map_local_to_picture,
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(1.0),
