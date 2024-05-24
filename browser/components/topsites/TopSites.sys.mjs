@@ -276,6 +276,11 @@ class _TopSites {
   async getSites() {
     if (!this.#inited) {
       await this.init();
+      // TopSites was initialized by the store calling the initialization
+      // function and then updating custom search shortcuts. Since
+      // initialization now happens upon the first get, we move the update
+      // custom search shortcuts here.
+      await this.updateCustomSearchShortcuts(true);
     }
     return structuredClone(this.#sites);
   }
@@ -283,6 +288,11 @@ class _TopSites {
   async getSearchShortcuts() {
     if (!this.#inited) {
       await this.init();
+      // TopSites was initialized by the store calling the initialization
+      // function and then updating custom search shortcuts. Since
+      // initialization now happens upon the first get, we move the update
+      // custom search shortcuts here.
+      await this.updateCustomSearchShortcuts(true);
     }
     return structuredClone(this.#searchShortcuts);
   }
@@ -1092,10 +1102,6 @@ class _TopSites {
 
   onAction(action) {
     switch (action.type) {
-      case at.INIT:
-        this.init();
-        this.updateCustomSearchShortcuts(true /* isStartup */);
-        break;
       case at.SYSTEM_TICK:
         this.refresh();
         break;
@@ -1124,9 +1130,6 @@ class _TopSites {
         if (!this._useRemoteSetting) {
           this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
         }
-        break;
-      case at.UNINIT:
-        this.uninit();
         break;
     }
   }
