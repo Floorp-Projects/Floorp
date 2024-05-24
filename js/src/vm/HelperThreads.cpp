@@ -1757,6 +1757,8 @@ void AutoHelperTaskQueue::queueTaskToDispatch(JS::HelperThreadTask* task,
                                               JS::DispatchReason reason) const {
   // This is marked const because it doesn't release the mutex.
 
+  task->onThreadPoolDispatch();
+
   AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!tasksToDispatch.append(task) || !dispatchReasons.append(reason)) {
     oomUnsafe.crash("AutoLockHelperThreadState::queueTaskToDispatch");

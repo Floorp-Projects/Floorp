@@ -81,19 +81,25 @@ bool ParallelMarker::markOneColor(MarkColor color, SliceBudget& sliceBudget) {
 
   AutoLockHelperThreadState lock;
 
-  // There should always be enough parallel tasks to run our marking work.
-  MOZ_RELEASE_ASSERT(gc->maxParallelThreads >= workerCount());
-
   MOZ_ASSERT(activeTasks == 0);
   for (size_t i = 0; i < workerCount(); i++) {
     ParallelMarkTask& task = *tasks[i];
     if (task.hasWork()) {
       incActiveTasks(&task, lock);
     }
-    gc->startTask(task, lock);
   }
 
-  for (size_t i = 0; i < workerCount(); i++) {
+  // There should always be enough parallel tasks to run our marking work.
+  MOZ_RELEASE_ASSERT(gc->maxParallelThreads >= workerCount());
+
+  // Run the parallel tasks, using the main thread for the first one.
+  for (size_t i = 1; i < workerCount(); i++) {
+    ParallelMarkTask& task = *tasks[i];
+    gc->startTask(task, lock);
+  }
+  tasks[0]->runFromMainThread(lock);
+  tasks[0]->recordDuration();  // Record stats as if it used a helper thread.
+  for (size_t i = 1; i < workerCount(); i++) {
     gc->joinTask(*tasks[i], lock);
   }
 

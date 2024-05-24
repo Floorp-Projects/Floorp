@@ -13,9 +13,11 @@
 
 namespace js {
 
+class AutoHelperTaskQueue;
 class AutoLockHelperThreadState;
 struct DelazifyTask;
 struct FreeDelazifyTask;
+class GlobalHelperThreadState;
 class SourceCompressionTask;
 
 namespace jit {
@@ -74,6 +76,11 @@ class HelperThreadTask {
     MOZ_ASSERT(this->is<T>());
     return static_cast<T*>(this);
   }
+
+ protected:
+  // Called when this task is dispatched to the thread pool.
+  virtual void onThreadPoolDispatch() {}
+  friend class js::AutoHelperTaskQueue;
 };
 
 }  // namespace JS
