@@ -66,7 +66,6 @@ async def setup_blocked_request(
         password="password",
         realm="test",
         navigate=False,
-        **kwargs,
     ):
         await setup_network_test(events=[f"network.{phase}"])
 
@@ -100,7 +99,7 @@ async def setup_blocked_request(
                 )
             )
         else:
-            asyncio.ensure_future(fetch(blocked_url, context=context, **kwargs))
+            asyncio.ensure_future(fetch(blocked_url, context=context))
 
         event = await wait_for_future_safe(network_event)
         request = event["request"]["request"]

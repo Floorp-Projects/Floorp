@@ -17,8 +17,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 // A minimal struct for onNetworkEvent handling
 class NetworkEventRecord {
-  addCacheDetails() {}
-  addRawHeaders() {}
   addRequestPostData() {}
   addResponseStart() {}
   addSecurityInfo() {}

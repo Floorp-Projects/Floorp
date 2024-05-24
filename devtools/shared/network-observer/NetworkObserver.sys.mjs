@@ -95,9 +95,6 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  *
  * @constructor
  * @param {Object} options
- * @param {boolean} options.earlyEvents
- *        Create network events before the transaction is committed and sent to
- *        the server.
  * @param {Function(nsIChannel): boolean} options.ignoreChannelFunction
  *        This function will be called for every detected channel to decide if it
  *        should be monitored or not.
@@ -139,20 +136,6 @@ export class NetworkObserver {
    * @type {boolean}
    */
   #authPromptListenerEnabled = false;
-  /**
-   * Whether network events should be created before being sent to the server or
-   * not. This is currently opt-in because it relies on an observer notification
-   * which is emitted too early (http-on-before-connect). Due to this, the event
-   * is initially missing some headers added only when the necko transaction is
-   * created.
-   * It also changes the order in which we detect flight and preflight CORS
-   * requests. When using early events, the order corresponds to the order in
-   * which the channels are created (first the flight request, then the
-   * preflight). When using the activity observer, the order corresponds to the
-   * order in which the requests are sent to the server (first preflight, then
-   * flight).
-   */
-  #createEarlyEvents = false;
   /**
    * See constructor argument of the same name.
    *
@@ -211,7 +194,7 @@ export class NetworkObserver {
   #throttler = null;
 
   constructor(options = {}) {
-    const { earlyEvents, ignoreChannelFunction, onNetworkEvent } = options;
+    const { ignoreChannelFunction, onNetworkEvent } = options;
     if (typeof ignoreChannelFunction !== "function") {
       throw new Error(
         `Expected "ignoreChannelFunction" to be a function, got ${ignoreChannelFunction} (${typeof ignoreChannelFunction})`
@@ -224,7 +207,6 @@ export class NetworkObserver {
       );
     }
 
-    this.#createEarlyEvents = earlyEvents;
     this.#ignoreChannelFunction = ignoreChannelFunction;
     this.#onNetworkEvent = onNetworkEvent;
 
@@ -249,14 +231,6 @@ export class NetworkObserver {
         this.#fileChannelExaminer,
         "file-channel-opened"
       );
-
-      if (this.#createEarlyEvents) {
-        Services.obs.addObserver(
-          this.#httpBeforeConnect,
-          "http-on-before-connect"
-        );
-      }
-
       Services.obs.addObserver(this.#httpStopRequest, "http-on-stop-request");
     } else {
       Services.obs.addObserver(
@@ -347,29 +321,6 @@ export class NetworkObserver {
     }
   );
 
-  #httpBeforeConnect = DevToolsInfaillibleUtils.makeInfallible(
-    (subject, topic) => {
-      if (
-        this.#isDestroyed ||
-        topic != "http-on-before-connect" ||
-        !(subject instanceof Ci.nsIHttpChannel)
-      ) {
-        return;
-      }
-
-      const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-      if (this.#ignoreChannelFunction(channel)) {
-        return;
-      }
-
-      // Here we create the network event from an early platform notification.
-      // Additional details about the event will be provided using the various
-      // callbacks on the network event owner.
-      const httpActivity = this.#createOrGetActivityObject(channel);
-      this.#createNetworkEvent(httpActivity);
-    }
-  );
-
   #httpStopRequest = DevToolsInfaillibleUtils.makeInfallible(
     (subject, topic) => {
       if (
@@ -404,17 +355,12 @@ export class NetworkObserver {
         // Do not pass any blocked reason, as this request is just fine.
         // Bug 1489217 - Prevent watching for this request response content,
         // as this request is already running, this is too late to watch for it.
-        this.#createNetworkEvent(httpActivity, {
-          inProgressRequest: true,
-        });
+        this.#createNetworkEvent(subject, { inProgressRequest: true });
       } else {
         // Handles any early blockings e.g by Web Extensions or by CORS
         const { blockingExtension, blockedReason } =
           lazy.NetworkUtils.getBlockedReason(channel, httpActivity.fromCache);
-        this.#createNetworkEvent(httpActivity, {
-          blockedReason,
-          blockingExtension,
-        });
+        this.#createNetworkEvent(subject, { blockedReason, blockingExtension });
       }
     }
   );
@@ -484,13 +430,48 @@ export class NetworkObserver {
 
       channel.QueryInterface(Ci.nsIHttpChannelInternal);
 
-      // Retrieve or create the http activity.
-      const httpActivity = this.#createOrGetActivityObject(channel);
-
+      let httpActivity = this.#createOrGetActivityObject(channel);
       if (topic === "http-on-examine-cached-response") {
-        this.#handleExamineCachedResponse(httpActivity);
+        // Service worker requests emits cached-response notification on non-e10s,
+        // and we fake one on e10s.
+        const fromServiceWorker = this.#interceptedChannels.has(channel);
+        this.#interceptedChannels.delete(channel);
+
+        // If this is a cached response (which are also emitted by service worker requests),
+        // there never was a request event so we need to construct one here
+        // so the frontend gets all the expected events.
+        if (!httpActivity.owner) {
+          httpActivity = this.#createNetworkEvent(channel, {
+            fromCache: !fromServiceWorker,
+            fromServiceWorker,
+          });
+        }
+
+        // We need to send the request body to the frontend for
+        // the faked (cached/service worker request) event.
+        this.#prepareRequestBody(httpActivity);
+        this.#sendRequestBody(httpActivity);
+
+        // There also is never any timing events, so we can fire this
+        // event with zeroed out values.
+        const timings = this.#setupHarTimings(httpActivity);
+        const serverTimings = this.#extractServerTimings(httpActivity.channel);
+        const serviceWorkerTimings =
+          this.#extractServiceWorkerTimings(httpActivity);
+
+        httpActivity.owner.addServerTimings(serverTimings);
+        httpActivity.owner.addServiceWorkerTimings(serviceWorkerTimings);
+        httpActivity.owner.addEventTimings(
+          timings.total,
+          timings.timings,
+          timings.offsets
+        );
       } else if (topic === "http-on-failed-opening-request") {
-        this.#handleFailedOpeningRequest(httpActivity);
+        const { blockedReason } = lazy.NetworkUtils.getBlockedReason(
+          channel,
+          httpActivity.fromCache
+        );
+        this.#createNetworkEvent(channel, { blockedReason });
       }
 
       if (httpActivity.owner) {
@@ -503,78 +484,6 @@ export class NetworkObserver {
       }
     }
   );
-
-  #handleExamineCachedResponse(httpActivity) {
-    const channel = httpActivity.channel;
-
-    const fromServiceWorker = this.#interceptedChannels.has(channel);
-    const fromCache = !fromServiceWorker;
-
-    // Set the cache flags on the httpActivity object, they will be used later
-    // on during the lifecycle of the channel.
-    httpActivity.fromCache = fromCache;
-    httpActivity.fromServiceWorker = fromServiceWorker;
-
-    // Service worker requests emits cached-response notification on non-e10s,
-    // and we fake one on e10s.
-    this.#interceptedChannels.delete(channel);
-
-    if (!httpActivity.owner) {
-      // If this is a cached response (which are also emitted by service worker requests),
-      // there never was a request event so we need to construct one here
-      // so the frontend gets all the expected events.
-      this.#createNetworkEvent(httpActivity);
-    } else if (this.#createEarlyEvents) {
-      // However if we already created an event because the NetworkObserver
-      // is using early events, simply forward the cache details to the
-      // event owner.
-      if (typeof httpActivity.owner.addCacheDetails == "function") {
-        httpActivity.owner.addCacheDetails({
-          fromCache: httpActivity.fromCache,
-          fromServiceWorker: httpActivity.fromServiceWorker,
-        });
-      } else {
-        console.error(
-          "NetworkObserver was created with earlyEvents:true, but " +
-            "network event owner does not implement 'addCacheDetails'."
-        );
-      }
-    } else {
-      // XXX: Find what kind of requests end up here.
-    }
-
-    // We need to send the request body to the frontend for
-    // the faked (cached/service worker request) event.
-    this.#prepareRequestBody(httpActivity);
-    this.#sendRequestBody(httpActivity);
-
-    // There also is never any timing events, so we can fire this
-    // event with zeroed out values.
-    const timings = this.#setupHarTimings(httpActivity);
-    const serverTimings = this.#extractServerTimings(httpActivity.channel);
-    const serviceWorkerTimings =
-      this.#extractServiceWorkerTimings(httpActivity);
-
-    httpActivity.owner.addServerTimings(serverTimings);
-    httpActivity.owner.addServiceWorkerTimings(serviceWorkerTimings);
-    httpActivity.owner.addEventTimings(
-      timings.total,
-      timings.timings,
-      timings.offsets
-    );
-  }
-
-  #handleFailedOpeningRequest(httpActivity) {
-    const channel = httpActivity.channel;
-    const { blockedReason } = lazy.NetworkUtils.getBlockedReason(
-      channel,
-      httpActivity.fromCache
-    );
-
-    this.#createNetworkEvent(httpActivity, {
-      blockedReason,
-    });
-  }
 
   /**
    * Observe notifications for the http-on-modify-request topic, coming from
@@ -628,14 +537,17 @@ export class NetworkObserver {
       logPlatformEvent(topic, channel);
 
       const fileActivity = this.#createOrGetActivityObject(channel);
-      fileActivity.owner = this.#onNetworkEvent({}, channel);
 
-      fileActivity.owner.addResponseStart({
-        channel: fileActivity.channel,
-        fromCache: fileActivity.fromCache || fileActivity.fromServiceWorker,
-        rawHeaders: fileActivity.responseRawHeaders,
-        proxyResponseRawHeaders: fileActivity.proxyResponseRawHeaders,
-      });
+      this.#createNetworkEvent(subject, {});
+
+      if (fileActivity.owner) {
+        fileActivity.owner.addResponseStart({
+          channel: fileActivity.channel,
+          fromCache: fileActivity.fromCache || fileActivity.fromServiceWorker,
+          rawHeaders: fileActivity.responseRawHeaders,
+          proxyResponseRawHeaders: fileActivity.proxyResponseRawHeaders,
+        });
+      }
     }
   );
 
@@ -665,6 +577,7 @@ export class NetworkObserver {
         };
       }
     }
+
     switch (activitySubtype) {
       case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
         this.#prepareRequestBody(httpActivity);
@@ -808,41 +721,78 @@ export class NetworkObserver {
    * - Register listener to record response content
    */
   #createNetworkEvent(
-    httpActivity,
-    { timestamp, blockedReason, blockingExtension, inProgressRequest } = {}
+    channel,
+    {
+      timestamp,
+      rawHeaders,
+      fromCache,
+      fromServiceWorker,
+      blockedReason,
+      blockingExtension,
+      inProgressRequest,
+    }
   ) {
-    if (
-      blockedReason === undefined &&
-      this.#shouldBlockChannel(httpActivity.channel)
-    ) {
+    if (channel instanceof Ci.nsIFileChannel) {
+      const fileActivity = this.#createOrGetActivityObject(channel);
+
+      if (timestamp) {
+        fileActivity.timings.REQUEST_HEADER = {
+          first: timestamp,
+          last: timestamp,
+        };
+      }
+
+      fileActivity.owner = this.#onNetworkEvent({}, channel);
+
+      return fileActivity;
+    }
+
+    const httpActivity = this.#createOrGetActivityObject(channel);
+
+    if (timestamp) {
+      httpActivity.timings.REQUEST_HEADER = {
+        first: timestamp,
+        last: timestamp,
+      };
+    }
+
+    if (blockedReason === undefined && this.#shouldBlockChannel(channel)) {
       // Check the request URL with ones manually blocked by the user in DevTools.
       // If it's meant to be blocked, we cancel the request and annotate the event.
-      httpActivity.channel.cancel(Cr.NS_BINDING_ABORTED);
+      channel.cancel(Cr.NS_BINDING_ABORTED);
       blockedReason = "devtools";
     }
 
     httpActivity.owner = this.#onNetworkEvent(
       {
         timestamp,
-        fromCache: httpActivity.fromCache,
-        fromServiceWorker: httpActivity.fromServiceWorker,
+        fromCache,
+        fromServiceWorker,
+        rawHeaders,
         blockedReason,
         blockingExtension,
         discardRequestBody: !this.#saveRequestAndResponseBodies,
         discardResponseBody: !this.#saveRequestAndResponseBodies,
       },
-      httpActivity.channel
+      channel
     );
+    httpActivity.fromCache = fromCache;
+    httpActivity.fromServiceWorker = fromServiceWorker;
 
     // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
     // as it can't be observed and would throw if we try.
     if (blockedReason === undefined && !inProgressRequest) {
-      this.#setupResponseListener(httpActivity);
+      this.#setupResponseListener(httpActivity, {
+        fromCache,
+        fromServiceWorker,
+      });
     }
 
     if (this.#authPromptListenerEnabled) {
       new lazy.NetworkAuthListener(httpActivity.channel, httpActivity.owner);
     }
+
+    return httpActivity;
   }
 
   /**
@@ -862,30 +812,8 @@ export class NetworkObserver {
       return;
     }
 
-    const httpActivity = this.#createOrGetActivityObject(channel);
-    if (timestamp) {
-      httpActivity.timings.REQUEST_HEADER = {
-        first: timestamp,
-        last: timestamp,
-      };
-    }
-
-    // TODO: In theory httpActivity.owner is missing only if #createEarlyEvents
-    // is false. However, there is a scenario in DevTools where this can still
-    // happen.
-    // If NetworkObserver clear() is called after the event was detected, the
-    // activity will be deletedld again have an ownerless notification here.
-    // Should be addressed in Bug 1756770.
-    if (!httpActivity.owner) {
-      // If we are not creating events using the early platform notification
-      // this should be the first time we are notified about this channel.
-      this.#createNetworkEvent(httpActivity, {
-        timestamp,
-      });
-    }
-
-    httpActivity.owner.addRawHeaders({
-      channel,
+    this.#createNetworkEvent(channel, {
+      timestamp,
       rawHeaders,
     });
   }
@@ -1044,11 +972,11 @@ export class NetworkObserver {
    * @param object httpActivity
    *        The HTTP activity object we are tracking.
    */
-  #setupResponseListener(httpActivity) {
+  #setupResponseListener(httpActivity, { fromCache, fromServiceWorker }) {
     const channel = httpActivity.channel;
     channel.QueryInterface(Ci.nsITraceableChannel);
 
-    if (!httpActivity.fromCache) {
+    if (!fromCache) {
       const throttler = this.#getThrottler();
       if (throttler) {
         httpActivity.downloadThrottle = throttler.manage(channel);
@@ -1069,7 +997,7 @@ export class NetworkObserver {
     const newListener = new lazy.NetworkResponseListener(
       httpActivity,
       this.#decodedCertificateCache,
-      httpActivity.fromServiceWorker
+      fromServiceWorker
     );
 
     // Remember the input stream, so it isn't released by GC.
@@ -1100,10 +1028,29 @@ export class NetworkObserver {
       return;
     }
 
-    const sentBody = lazy.NetworkHelper.readPostTextFromRequest(
+    let sentBody = lazy.NetworkHelper.readPostTextFromRequest(
       httpActivity.channel,
       httpActivity.charset
     );
+
+    if (
+      sentBody !== null &&
+      this.window &&
+      httpActivity.url == this.window.location.href
+    ) {
+      // If the request URL is the same as the current page URL, then
+      // we can try to get the posted text from the page directly.
+      // This check is necessary as otherwise the
+      //   lazy.NetworkHelper.readPostTextFromPageViaWebNav()
+      // function is called for image requests as well but these
+      // are not web pages and as such don't store the posted text
+      // in the cache of the webpage.
+      const webNav = this.window.docShell.QueryInterface(Ci.nsIWebNavigation);
+      sentBody = lazy.NetworkHelper.readPostTextFromPageViaWebNav(
+        webNav,
+        httpActivity.charset
+      );
+    }
 
     if (sentBody !== null) {
       httpActivity.sentBody = sentBody;
@@ -1567,12 +1514,6 @@ export class NetworkObserver {
         this.#httpStopRequest,
         "http-on-stop-request"
       );
-      if (this.#createEarlyEvents) {
-        Services.obs.removeObserver(
-          this.#httpBeforeConnect,
-          "http-on-before-connect"
-        );
-      }
     } else {
       Services.obs.removeObserver(
         this.#httpFailedOpening,

@@ -10,12 +10,11 @@ const GZIPPED_REQUEST_URL = URL_ROOT + `gzipped.sjs`;
 const OVERRIDE_FILENAME = "override.js";
 const OVERRIDE_HTML_FILENAME = "override.html";
 
-async function testLocalOverride({ earlyEvents }) {
+add_task(async function testLocalOverride() {
   await addTab(TEST_URL);
 
   let eventsCount = 0;
   const networkObserver = new NetworkObserver({
-    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== REQUEST_URL,
     onNetworkEvent: event => {
       info("received a network event");
@@ -74,16 +73,11 @@ async function testLocalOverride({ earlyEvents }) {
   await BrowserTestUtils.waitForCondition(() => eventsCount >= 1);
 
   networkObserver.destroy();
-}
-add_task(async function () {
-  await testLocalOverride({ earlyEvents: false });
-  await testLocalOverride({ earlyEvents: true });
 });
 
-async function testHtmlFileOverride({ earlyEvents }) {
+add_task(async function testHtmlFileOverride() {
   let eventsCount = 0;
   const networkObserver = new NetworkObserver({
-    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== TEST_URL,
     onNetworkEvent: event => {
       info("received a network event");
@@ -118,19 +112,14 @@ async function testHtmlFileOverride({ earlyEvents }) {
   );
   await BrowserTestUtils.waitForCondition(() => eventsCount >= 1);
   networkObserver.destroy();
-}
-add_task(async function () {
-  await testHtmlFileOverride({ earlyEvents: false });
-  await testHtmlFileOverride({ earlyEvents: true });
 });
 
 // Exact same test, but with a gzipped request, which requires very special treatment
-async function testLocalOverrideGzipped({ earlyEvents }) {
+add_task(async function testLocalOverrideGzipped() {
   await addTab(TEST_URL);
 
   let eventsCount = 0;
   const networkObserver = new NetworkObserver({
-    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== GZIPPED_REQUEST_URL,
     onNetworkEvent: event => {
       info("received a network event");
@@ -187,8 +176,4 @@ async function testLocalOverrideGzipped({ earlyEvents }) {
   await BrowserTestUtils.waitForCondition(() => eventsCount >= 1);
 
   networkObserver.destroy();
-}
-add_task(async function () {
-  await testLocalOverrideGzipped({ earlyEvents: false });
-  await testLocalOverrideGzipped({ earlyEvents: true });
 });
