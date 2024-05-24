@@ -425,9 +425,13 @@ fn parse_color_with_color_space<'i, 't>(
     let color_space = PredefinedColorSpace::parse(arguments)?;
     let component_parser = ComponentParser {
         context: component_parser.context,
-        origin_color: component_parser
-            .origin_color
-            .map(|c| c.to_color_space(ColorSpace::from(color_space))),
+        origin_color: component_parser.origin_color.map(|c| {
+            // If the origin color was in legacy srgb, converting it won't
+            // change it to modern syntax. So make sure it's in modern syntax.
+            let mut c = c.to_color_space(ColorSpace::from(color_space));
+            c.flags.remove(ColorFlags::IS_LEGACY_SRGB);
+            c
+        }),
     };
 
     let c1 = component_parser.parse_number_or_percentage(arguments, true)?;
