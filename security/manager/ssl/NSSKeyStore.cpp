@@ -6,6 +6,7 @@
 
 #include "NSSKeyStore.h"
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Logging.h"
@@ -146,9 +147,67 @@ nsresult NSSKeyStore::EncryptDecrypt(const nsACString& aLabel,
   return DoCipher(symKey, inBytes, outBytes, encrypt);
 }
 
-// Because NSSKeyStore overrides AbstractOSKeyStore's EncryptDecrypt and
-// SecretAvailable functions, this isn't necessary.
 nsresult NSSKeyStore::RetrieveSecret(const nsACString& aLabel,
                                      /* out */ nsACString& aSecret) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_STATE(mSlot);
+
+  UniquePK11SymKey symKey(PK11_ListFixedKeysInSlot(
+      mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()),
+      nullptr));
+  if (!symKey) {
+    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug,
+            ("Error finding key for given label"));
+    return NS_ERROR_FAILURE;
+  }
+
+  // Unfortunately we can't use PK11_ExtractKeyValue(symKey.get()) here because
+  // softoken marks all token objects of type CKO_SECRET_KEY as sensitive. So
+  // we have to wrap and unwrap symKey to obtain a non-sensitive copy of symKey
+  // as a session object.
+
+  const CK_MECHANISM_TYPE mechanism = CKM_AES_KEY_WRAP_KWP;
+
+  UniquePK11SymKey wrappingKey(
+      PK11_KeyGen(mSlot.get(), CKM_AES_KEY_GEN, nullptr, 16, nullptr));
+  if (!wrappingKey) {
+    return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
+  }
+
+  SECItem wrapLen = {siBuffer, nullptr, 0};
+  nsresult rv = MapSECStatus(PK11_WrapSymKey(
+      mechanism, nullptr, wrappingKey.get(), symKey.get(), &wrapLen));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (wrapLen.len > INT_MAX - 8) { /* PK11_UnwrapSymKey takes an int keySize */
+    return NS_ERROR_FAILURE;
+  }
+
+  // Allocate an extra 8 bytes for CKM_AES_KEY_WRAP_KWP overhead.
+  UniqueSECItem wrappedKey(
+      SECITEM_AllocItem(nullptr, nullptr, wrapLen.len + 8));
+  if (!wrappedKey) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = MapSECStatus(PK11_WrapSymKey(mechanism, nullptr, wrappingKey.get(),
+                                    symKey.get(), wrappedKey.get()));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UniquePK11SymKey unwrappedKey(PK11_UnwrapSymKey(
+      wrappingKey.get(), mechanism, nullptr, wrappedKey.get(), CKM_AES_GCM,
+      CKA_DECRYPT, static_cast<int>(wrapLen.len)));
+  if (!unwrappedKey) {
+    return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
+  }
+
+  rv = MapSECStatus(PK11_ExtractKeyValue(unwrappedKey.get()));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const SECItem* keyData = PK11_GetKeyData(unwrappedKey.get()); /* weak ref */
+  if (!keyData) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aSecret.Assign(reinterpret_cast<char*>(keyData->data), keyData->len);
+  return NS_OK;
 }
