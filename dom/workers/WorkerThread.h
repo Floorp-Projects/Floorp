@@ -72,6 +72,13 @@ class WorkerThread final : public nsThread {
   void SetWorker(const WorkerThreadFriendKey& aKey,
                  WorkerPrivate* aWorkerPrivate);
 
+  // This method is used to decouple the connection with the WorkerPrivate which
+  // is set in SetWorker(). And it also clears all pending runnables on this
+  // WorkerThread.
+  // After decoupling, WorkerThreadRunnable can not run on this WorkerThread
+  // anymore, since WorkerPrivate is invalid.
+  void ClearEventQueueAndWorker(const WorkerThreadFriendKey& aKey);
+
   nsresult DispatchPrimaryRunnable(const WorkerThreadFriendKey& aKey,
                                    already_AddRefed<nsIRunnable> aRunnable);
 
