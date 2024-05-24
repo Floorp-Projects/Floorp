@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<title>Bug 1897631</title>
+</head>
+<body>
+<script>
+function createFrame(width, height, timestamp) {
+  let duration = 33333; // 30fps
+  let cnv = new OffscreenCanvas(width, height);
+  let ctx = cnv.getContext("2d");
+  ctx.fillStyle = "#FF0000";
+  ctx.fillRect(0, 0, width, height);
+  return new VideoFrame(cnv, { timestamp, duration });
+}
+
+async function boom() {
+  const decoder = new VideoDecoder({
+    output: (frame) => { frame.close(); },
+    error: (e) => {},
+  });
+
+  const encoder = new VideoEncoder({
+    output: (chunk, metadata) => {
+      if (metadata.decoderConfig) {
+        decoder.configure(metadata.decoderConfig);
+      }
+      decoder.decode(chunk);
+    },
+    error: (e) => {}
+  });
+
+  encoder.configure({
+    codec: "vp8",
+    width: 640,
+    height: 480,
+    displayWidth: 640,
+    displayHeight: 480,
+  });
+
+  // Refresh the page after a delay of 10 milliseconds
+  setTimeout(() => {
+    window.onload = null;
+    location.reload();
+    document.documentElement.removeAttribute("class");
+  }, 10);
+
+  function keepEncoding() {
+    setTimeout(() => {
+      encoder.encode(createFrame(640, 480, 0));
+      keepEncoding();
+    }, 0);
+  }
+
+  keepEncoding();
+}
+
+window.onload = boom;
+</script>
+</body>
+</html>
