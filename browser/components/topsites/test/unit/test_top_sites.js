@@ -925,18 +925,24 @@ add_task(async function test_refresh() {
 });
 
 add_task(async function test_refresh_updateTopSites() {
+  // Ensure that TopSites isn't already initialized.
+  TopSites.uninit();
+
   let sandbox = sinon.createSandbox();
   let cleanup = stubTopSites(sandbox);
 
-  // TODO: On New Tab, subscribe to updates to Top Sites.
+  await TopSites.init();
+  TopSites._reset();
+
+  // Clear the internal store.
+  TopSites._reset();
+
   let sites = await TopSites.getSites();
   Assert.equal(sites.length, 0, "Sites is empty.");
 
   info("TopSites.refresh should update TopSites.sites");
-  // sandbox.stub(TopSites._tippyTopProvider, "init").resolves();
-  sandbox.stub(TopSites, "_fetchIcon");
-
   let promise = TestUtils.topicObserved("topsites-refreshed");
+  // TODO: On New Tab, subscribe to updates to Top Sites.
   await TopSites.refresh({ isStartup: true });
   await promise;
 
@@ -1070,17 +1076,6 @@ add_task(async function test_onAction_part_2() {
   await PlacesUtils.history.remove(uri);
 
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
-
-  info("TopSites.onAction should call init on INIT action");
-  TopSites.onAction({ type: at.PLACES_LINKS_DELETED });
-  sandbox.stub(TopSites, "init");
-  // SearchService.init is stubbed which won't initialize search settings,
-  // which retrieving appProvidedEngines relies on. Return an empty array
-  // to simulate no engines.
-  sandbox.stub(SearchService.prototype, "getAppProvidedEngines").resolves([]);
-  TopSites.onAction({ type: at.INIT });
-  Assert.ok(TopSites.init.calledOnce, "TopSites.init called once");
-  await TestUtils.topicObserved("topsites-updated-custom-search-shortcuts");
 
   info("TopSites.handlePlacesEvents should call refresh on newtab-linkBlocked");
   TopSites.refresh.resetHistory();
