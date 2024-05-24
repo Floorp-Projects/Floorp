@@ -26,13 +26,13 @@ using namespace js::gc;
 // site. This must be large enough to ensure we have enough information to infer
 // the lifetime and also large enough to avoid pretenuring low volume allocation
 // sites.
-static constexpr size_t NormalSiteAttentionThreshold = 500;
+static constexpr size_t NormalSiteAttentionThreshold = 200;
 static constexpr size_t UnknownSiteAttentionThreshold = 30000;
 
 // The maximum number of alloc sites to create between each minor
 // collection. Stop tracking allocation after this limit is reached. This
 // prevents unbounded time traversing the list during minor GC.
-static constexpr size_t MaxAllocSitesPerMinorGC = 500;
+static constexpr size_t MaxAllocSitesPerMinorGC = 600;
 
 // The maximum number of times to invalidate JIT code for a site. After this we
 // leave the site's state as Unknown and don't pretenure allocations.
