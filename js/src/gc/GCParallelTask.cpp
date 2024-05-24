@@ -51,6 +51,8 @@ void js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock) {
     maybeQueueTime_ = TimeStamp::Now();
   }
 
+  dispatchedToThreadPool = false;
+
   gc->dispatchOrQueueParallelTask(this, lock);
 }
 
@@ -106,7 +108,8 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
     AutoUnlockHelperThreadState unlock(lock);
   }
 
-  if (isNotYetRunning(lock) && deadline.isNothing()) {
+  if (isNotYetRunning(lock) && !dispatchedToThreadPool &&
+      deadline.isNothing()) {
     // If the task was dispatched but has not yet started then cancel the task
     // and run it from the main thread. This stops us from blocking here when
     // the helper threads are busy with other tasks.
@@ -153,15 +156,23 @@ void js::GCParallelTask::joinNonIdleTask(Maybe<TimeStamp> deadline,
   }
 }
 
-void js::GCParallelTask::runFromMainThread(AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
-  runTask(gc->rt->gcContext(), lock);
-  setIdle(lock);
-}
-
 void js::GCParallelTask::runFromMainThread() {
   AutoLockHelperThreadState lock;
   runFromMainThread(lock);
+}
+
+void js::GCParallelTask::runFromMainThread(AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT(isNotYetRunning(lock));
+  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
+
+  if (lock.hasQueuedTasks()) {
+    // Unlock to allow task dispatch without lock held, otherwise we can wait
+    // forever.
+    AutoUnlockHelperThreadState unlock(lock);
+  }
+
+  runTask(gc->rt->gcContext(), lock);
+  setIdle(lock);
 }
 
 class MOZ_RAII AutoGCContext {
@@ -214,6 +225,11 @@ void GCParallelTask::runTask(JS::GCContext* gcx,
 
   setFinished(lock);
   gc->onParallelTaskEnd(wasDispatched, lock);
+}
+
+void GCParallelTask::onThreadPoolDispatch() {
+  MOZ_ASSERT(!dispatchedToThreadPool);
+  dispatchedToThreadPool = true;
 }
 
 void GCRuntime::dispatchOrQueueParallelTask(
