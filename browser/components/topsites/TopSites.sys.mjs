@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { actionTypes as at } from "resource://activity-stream/common/Actions.mjs";
 import { TippyTopProvider } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
 import {
   insertPinned,
@@ -37,7 +36,6 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return new Logger("TopSites");
 });
 
-const DEFAULT_SITES_PREF = "default.sites";
 export const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
@@ -1121,16 +1119,6 @@ class _TopSites {
     });
 
     this._broadcastPinnedSitesUpdated();
-  }
-
-  onAction(action) {
-    switch (action.type) {
-      case at.PREFS_INITIAL_VALUES:
-        if (!this._useRemoteSetting) {
-          this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
-        }
-        break;
-    }
   }
 }
 

@@ -153,21 +153,6 @@ add_task(async function test_refreshDefaults() {
   // We have to init to subscribe to changes to the preferences.
   await TopSites.init();
 
-  info("refreshDefaults should add defaults on PREFS_INITIAL_VALUES");
-  TopSites.onAction({
-    type: at.PREFS_INITIAL_VALUES,
-    data: { "default.sites": "https://foo.com" },
-  });
-
-  Assert.equal(
-    DEFAULT_TOP_SITES.length,
-    1,
-    "Should have 1 DEFAULT_TOP_SITES now."
-  );
-
-  // Reset the DEFAULT_TOP_SITES;
-  DEFAULT_TOP_SITES.length = 0;
-
   info(
     "TopSites.refreshDefaults should add defaults on default.sites pref change."
   );
@@ -1824,10 +1809,10 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
     );
 
     sandbox.stub(TopSites, "_currentSearchHostname").get(() => "amazon");
-    TopSites.onAction({
-      type: at.PREFS_INITIAL_VALUES,
-      data: { "default.sites": "google.com,amazon.com" },
-    });
+    Services.prefs.setStringPref(
+      "browser.newtabpage.activity-stream.default.sites",
+      "https://google.com,https://amazon.com"
+    );
     gGetTopSitesStub.resolves([{ url: "https://foo.com" }]);
 
     let urlsReturned = (await TopSites.getLinksWithDefaults()).map(
@@ -1837,6 +1822,9 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
 
     Services.prefs.clearUserPref(
       "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
+    );
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.default.sites"
     );
     gGetTopSitesStub.resolves(FAKE_LINKS);
     await cleanup();
@@ -2064,10 +2052,6 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
       return site;
     });
     gGetTopSitesStub.resolves([{ url: "https://foo.com" }]);
-    TopSites.onAction({
-      type: at.PREFS_INITIAL_VALUES,
-      data: { "default.sites": "google.com,amazon.com" },
-    });
 
     let urlsReturned = await TopSites.getLinksWithDefaults();
 
