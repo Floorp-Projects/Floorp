@@ -137,7 +137,7 @@ bool InternalThreadPool::ensureThreadCount(size_t threadCount,
     threads(lock).infallibleEmplaceBack(std::move(thread));
   }
 
-  return true;
+  return tasks_.ref().reserve(threadCount);
 }
 
 size_t InternalThreadPool::threadCount(const AutoLockHelperThreadState& lock) {
@@ -174,6 +174,11 @@ inline const HelperThreadVector& InternalThreadPool::threads(
   return threads_.ref();
 }
 
+inline HelperTaskVector& InternalThreadPool::tasks(
+    const AutoLockHelperThreadState& lock) {
+  return tasks_.ref();
+}
+
 size_t InternalThreadPool::sizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf,
     const AutoLockHelperThreadState& lock) const {
@@ -182,21 +187,24 @@ size_t InternalThreadPool::sizeOfIncludingThis(
 }
 
 /* static */
-void InternalThreadPool::DispatchTask(JS::DispatchReason reason) {
-  Get().dispatchTask(reason);
+void InternalThreadPool::DispatchTask(HelperThreadTask* task,
+                                      JS::DispatchReason reason) {
+  Get().dispatchTask(task, reason);
 }
 
-void InternalThreadPool::dispatchTask(JS::DispatchReason reason) {
+void InternalThreadPool::dispatchTask(HelperThreadTask* task,
+                                      JS::DispatchReason reason) {
   // This could now use a separate mutex like TaskController, but continues to
   // use the helper thread state lock for convenience.
   AutoLockHelperThreadState lock;
 
-  queuedTasks++;
+  tasks_.ref().infallibleAppend(task);
+
   if (reason == JS::DispatchReason::NewTask) {
     wakeup.notify_one();
   } else {
     // We're called from a helper thread right before returning to
-    // HelperThread::threadLoop. There we will check queuedTasks so there's no
+    // HelperThread::threadLoop. There we will check tasks_ so there's no
     // need to wake up any threads.
     MOZ_ASSERT(reason == JS::DispatchReason::FinishedTask);
     MOZ_ASSERT(!TlsContext.get(), "we should be on a helper thread");
@@ -280,11 +288,16 @@ void HelperThread::threadLoop(InternalThreadPool* pool) {
   AutoLockHelperThreadState lock;
 
   while (!pool->terminating) {
-    if (pool->queuedTasks != 0) {
-      pool->queuedTasks--;
+    HelperTaskVector& tasks = pool->tasks(lock);
+    if (!tasks.empty()) {
+      // TODO: Add a test mode that introduces a delay before starting tasks or
+      // starts them in a different order.
+      HelperThreadTask** taskp = tasks.begin();
+      HelperThreadTask* task = *taskp;
+      tasks.erase(taskp);
 
       AutoUnlockHelperThreadState unlock(lock);
-      JS::RunHelperThreadTask();
+      JS::RunHelperThreadTask(task);
       continue;
     }
 
