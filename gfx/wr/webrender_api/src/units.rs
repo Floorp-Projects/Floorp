@@ -48,8 +48,7 @@ pub type FramebufferIntPoint = Point2D<i32, FramebufferPixel>;
 pub type FramebufferIntSize = Size2D<i32, FramebufferPixel>;
 pub type FramebufferIntRect = Box2D<i32, FramebufferPixel>;
 
-/// Geometry in the coordinate system of a Picture (intermediate
-/// surface) in physical pixels.
+/// Geometry in the coordinate system of a Picture.
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PicturePixel;
 
