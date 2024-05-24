@@ -76,7 +76,7 @@ class InputModule extends WindowGlobalBiDiModule {
       try {
         fileObjects.push(await File.createFromFileName(file));
       } catch (e) {
-        throw new lazy.error.InvalidArgumentError(
+        throw new lazy.error.UnsupportedOperationError(
           `Failed to add file ${file} (${e})`
         );
       }
