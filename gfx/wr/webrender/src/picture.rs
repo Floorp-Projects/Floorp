@@ -1829,12 +1829,12 @@ pub struct TileCacheInstance {
     frame_id: FrameId,
     /// Registered transform in CompositeState for this picture cache
     pub transform_index: CompositorTransformIndex,
-    /// Current transform mapping local picture space to compositor surface raster space
-    local_to_raster: ScaleOffset,
-    /// Current transform mapping compositor surface raster space to final device space
-    raster_to_device: ScaleOffset,
+    /// Current transform mapping local picture space to compositor surface space
+    local_to_surface: ScaleOffset,
     /// If true, we need to invalidate all tiles during `post_update`
     invalidate_all_tiles: bool,
+    /// Current transform mapping compositor surface space to final device space
+    surface_to_device: ScaleOffset,
     /// The current raster scale for tiles in this cache
     current_raster_scale: f32,
     /// Depth of off-screen surfaces that are currently pushed during dependency updates
@@ -1903,8 +1903,8 @@ impl TileCacheInstance {
             external_native_surface_cache: FastHashMap::default(),
             frame_id: FrameId::INVALID,
             transform_index: CompositorTransformIndex::INVALID,
-            raster_to_device: ScaleOffset::identity(),
-            local_to_raster: ScaleOffset::identity(),
+            surface_to_device: ScaleOffset::identity(),
+            local_to_surface: ScaleOffset::identity(),
             invalidate_all_tiles: true,
             current_raster_scale: 1.0,
             current_surface_traversal_depth: 0,
@@ -2082,14 +2082,14 @@ impl TileCacheInstance {
         // which will provide a local clip rect. This is useful for establishing things
         // like whether the backdrop rect supplied by Gecko can be considered opaque.
         if let Some(shared_clip_leaf_id) = self.shared_clip_leaf_id {
-            let map_local_to_picture = SpaceMapper::new(
+            let map_local_to_surface = SpaceMapper::new(
                 self.spatial_node_index,
                 pic_rect,
             );
 
             frame_state.clip_store.set_active_clips(
                 self.spatial_node_index,
-                map_local_to_picture.ref_spatial_node_index,
+                map_local_to_surface.ref_spatial_node_index,
                 shared_clip_leaf_id,
                 frame_context.spatial_tree,
                 &mut frame_state.data_stores.clip,
@@ -2098,7 +2098,7 @@ impl TileCacheInstance {
 
             let clip_chain_instance = frame_state.clip_store.build_clip_chain_instance(
                 pic_rect.cast_unit(),
-                &map_local_to_picture,
+                &map_local_to_surface,
                 &pic_to_world_mapper,
                 frame_context.spatial_tree,
                 frame_state.gpu_cache,
@@ -2189,29 +2189,29 @@ impl TileCacheInstance {
         );
 
         // Get the compositor transform, which depends on pinch-zoom mode
-        let mut raster_to_device = local_to_device;
+        let mut surface_to_device = local_to_device;
 
         if frame_context.config.low_quality_pinch_zoom {
-            raster_to_device.scale.x /= self.current_raster_scale;
-            raster_to_device.scale.y /= self.current_raster_scale;
+            surface_to_device.scale.x /= self.current_raster_scale;
+            surface_to_device.scale.y /= self.current_raster_scale;
         } else {
-            raster_to_device.scale.x = 1.0;
-            raster_to_device.scale.y = 1.0;
+            surface_to_device.scale.x = 1.0;
+            surface_to_device.scale.y = 1.0;
         }
 
         // Use that compositor transform to calculate a relative local to surface
-        let local_to_raster = local_to_device.accumulate(&raster_to_device.inverse());
+        let local_to_surface = local_to_device.accumulate(&surface_to_device.inverse());
 
         const EPSILON: f32 = 0.001;
         let compositor_translation_changed =
-            !raster_to_device.offset.x.approx_eq_eps(&self.raster_to_device.offset.x, &EPSILON) ||
-            !raster_to_device.offset.y.approx_eq_eps(&self.raster_to_device.offset.y, &EPSILON);
+            !surface_to_device.offset.x.approx_eq_eps(&self.surface_to_device.offset.x, &EPSILON) ||
+            !surface_to_device.offset.y.approx_eq_eps(&self.surface_to_device.offset.y, &EPSILON);
         let compositor_scale_changed =
-            !raster_to_device.scale.x.approx_eq_eps(&self.raster_to_device.scale.x, &EPSILON) ||
-            !raster_to_device.scale.y.approx_eq_eps(&self.raster_to_device.scale.y, &EPSILON);
+            !surface_to_device.scale.x.approx_eq_eps(&self.surface_to_device.scale.x, &EPSILON) ||
+            !surface_to_device.scale.y.approx_eq_eps(&self.surface_to_device.scale.y, &EPSILON);
         let surface_scale_changed =
-            !local_to_raster.scale.x.approx_eq_eps(&self.local_to_raster.scale.x, &EPSILON) ||
-            !local_to_raster.scale.y.approx_eq_eps(&self.local_to_raster.scale.y, &EPSILON);
+            !local_to_surface.scale.x.approx_eq_eps(&self.local_to_surface.scale.x, &EPSILON) ||
+            !local_to_surface.scale.y.approx_eq_eps(&self.local_to_surface.scale.y, &EPSILON);
 
         if compositor_translation_changed ||
            compositor_scale_changed ||
@@ -2220,8 +2220,8 @@ impl TileCacheInstance {
             frame_state.composite_state.dirty_rects_are_valid = false;
         }
 
-        self.raster_to_device = raster_to_device;
-        self.local_to_raster = local_to_raster;
+        self.surface_to_device = surface_to_device;
+        self.local_to_surface = local_to_surface;
         self.invalidate_all_tiles = surface_scale_changed || frame_context.config.force_invalidation;
 
         // Do a hacky diff of opacity binding values from the last frame. This is
@@ -2264,8 +2264,8 @@ impl TileCacheInstance {
         );
 
         self.tile_size = PictureSize::new(
-            world_tile_size.width / self.local_to_raster.scale.x,
-            world_tile_size.height / self.local_to_raster.scale.y,
+            world_tile_size.width / self.local_to_surface.scale.x,
+            world_tile_size.height / self.local_to_surface.scale.y,
         );
 
         // Inflate the needed rect a bit, so that we retain tiles that we have drawn
@@ -2654,7 +2654,7 @@ impl TileCacheInstance {
         is_opaque: bool,
         surface_kind: CompositorSurfaceKind,
     ) -> bool {
-        let map_local_to_picture = SpaceMapper::new_with_target(
+        let map_local_to_surface = SpaceMapper::new_with_target(
             self.spatial_node_index,
             prim_spatial_node_index,
             self.local_rect,
@@ -2662,7 +2662,7 @@ impl TileCacheInstance {
         );
 
         // Map the primitive local rect into picture space.
-        let prim_rect = match map_local_to_picture.map(&local_prim_rect) {
+        let prim_rect = match map_local_to_surface.map(&local_prim_rect) {
             Some(rect) => rect,
             None => return true,
         };
@@ -2698,8 +2698,8 @@ impl TileCacheInstance {
 
         let normalized_prim_to_device = prim_offset.accumulate(&local_prim_to_device);
 
-        let local_to_raster = ScaleOffset::identity();
-        let raster_to_device = normalized_prim_to_device;
+        let local_to_surface = ScaleOffset::identity();
+        let surface_to_device = normalized_prim_to_device;
 
         // If this primitive is an external image, and supports being used
         // directly by a native compositor, then lookup the external image id
@@ -2717,14 +2717,14 @@ impl TileCacheInstance {
         if let CompositorKind::Native { capabilities, .. } = composite_state.compositor_kind {
             if external_image_id.is_some() &&
                !capabilities.supports_external_compositor_surface_negative_scaling &&
-               (raster_to_device.scale.x < 0.0 || raster_to_device.scale.y < 0.0) {
+               (surface_to_device.scale.x < 0.0 || surface_to_device.scale.y < 0.0) {
                 external_image_id = None;
             }
         }
 
         let compositor_transform_index = composite_state.register_transform(
-            local_to_raster,
-            raster_to_device,
+            local_to_surface,
+            surface_to_device,
         );
 
         let surface_size = composite_state.get_surface_rect(
@@ -2891,14 +2891,14 @@ impl TileCacheInstance {
     ) {
         // Only need to evaluate sub-slice regions if we have compositor surfaces present
         if self.current_surface_traversal_depth == 0 && self.sub_slices.len() > 1 {
-            let map_local_to_picture = SpaceMapper::new_with_target(
+            let map_local_to_surface = SpaceMapper::new_with_target(
                 self.spatial_node_index,
                 surface_spatial_node_index,
                 self.local_rect,
                 spatial_tree,
             );
 
-            if let Some(pic_rect) = map_local_to_picture.map(&estimated_local_rect) {
+            if let Some(pic_rect) = map_local_to_surface.map(&estimated_local_rect) {
                 // Find the first sub-slice we can add this primitive to (we want to add
                 // prims to the primary surface if possible, so they get subpixel AA).
                 for sub_slice in &mut self.sub_slices {
@@ -2957,17 +2957,17 @@ impl TileCacheInstance {
 
         // If the primitive is directly drawn onto this picture cache surface, then
         // the pic_coverage_rect is in the same space. If not, we need to map it from
-        // the intermediate picture space into the picture cache space.
+        // the surface space into the picture cache space.
         let on_picture_surface = prim_surface_index == self.surface_index;
         let pic_coverage_rect = if on_picture_surface {
             prim_clip_chain.pic_coverage_rect
         } else {
-            // We want to get the rect in the tile cache picture space that this primitive
+            // We want to get the rect in the tile cache surface space that this primitive
             // occupies, in order to enable correct invalidation regions. Each surface
             // that exists in the chain between this primitive and the tile cache surface
             // may have an arbitrary inflation factor (for example, in the case of a series
             // of nested blur elements). To account for this, step through the current
-            // surface stack, mapping the primitive rect into each picture space, including
+            // surface stack, mapping the primitive rect into each surface space, including
             // the inflation factor from each intermediate surface.
             let mut current_pic_coverage_rect = prim_clip_chain.pic_coverage_rect;
             let mut current_spatial_node_index = surfaces[prim_surface_index.0]
@@ -2977,7 +2977,7 @@ impl TileCacheInstance {
                 let surface = &surfaces[surface_index.0];
                 let pic = &pictures[pic_index.0];
 
-                let map_local_to_parent = SpaceMapper::new_with_target(
+                let map_local_to_surface = SpaceMapper::new_with_target(
                     surface.surface_spatial_node_index,
                     current_spatial_node_index,
                     surface.unclipped_local_rect,
@@ -2987,7 +2987,7 @@ impl TileCacheInstance {
                 // Map the rect into the parent surface, and inflate if this surface requires
                 // it. If the rect can't be mapping (e.g. due to an invalid transform) then
                 // just bail out from the dependencies and cull this primitive.
-                current_pic_coverage_rect = match map_local_to_parent.map(&current_pic_coverage_rect) {
+                current_pic_coverage_rect = match map_local_to_surface.map(&current_pic_coverage_rect) {
                     Some(rect) => {
                         // TODO(gw): The casts here are a hack. We have some interface inconsistencies
                         //           between layout/picture rects which don't really work with the
@@ -3638,10 +3638,10 @@ impl TileCacheInstance {
         self.subpixel_mode = self.calculate_subpixel_mode();
 
         self.transform_index = frame_state.composite_state.register_transform(
-            self.local_to_raster,
+            self.local_to_surface,
             // TODO(gw): Once we support scaling of picture cache tiles during compositing,
             //           that transform gets plugged in here!
-            self.raster_to_device,
+            self.surface_to_device,
         );
 
         let map_pic_to_world = SpaceMapper::new_with_target(
@@ -3875,12 +3875,12 @@ pub struct SurfaceInfo {
     /// to reduce the size of render target allocation.
     pub clipping_rect: PictureRect,
     /// Helper structs for mapping local rects in different
-    /// coordinate systems into the picture coordinates.
-    pub map_local_to_picture: SpaceMapper<LayoutPixel, PicturePixel>,
-    /// The positioning node for the surface itself,
-    pub surface_spatial_node_index: SpatialNodeIndex,
-    /// The rasterization root for this surface.
+    /// coordinate systems into the surface coordinates.
+    pub map_local_to_surface: SpaceMapper<LayoutPixel, PicturePixel>,
+    /// Defines the positioning node for the surface itself,
+    /// and the rasterization root for this surface.
     pub raster_spatial_node_index: SpatialNodeIndex,
+    pub surface_spatial_node_index: SpatialNodeIndex,
     /// The device pixel ratio specific to this surface.
     pub device_pixel_scale: DevicePixelScale,
     /// The scale factors of the surface to world transform.
@@ -3916,7 +3916,7 @@ impl SurfaceInfo {
             .unmap(&map_surface_to_world.bounds)
             .unwrap_or_else(PictureRect::max_rect);
 
-        let map_local_to_picture = SpaceMapper::new(
+        let map_local_to_surface = SpaceMapper::new(
             surface_spatial_node_index,
             pic_bounds,
         );
@@ -3926,7 +3926,7 @@ impl SurfaceInfo {
             clipped_local_rect: PictureRect::zero(),
             is_opaque: false,
             clipping_rect: PictureRect::zero(),
-            map_local_to_picture,
+            map_local_to_surface,
             raster_spatial_node_index,
             surface_spatial_node_index,
             device_pixel_scale,
@@ -6737,7 +6737,7 @@ impl PicturePrimitive {
 
             // Map the cluster bounding rect into the space of the surface, and
             // include it in the surface bounding rect.
-            surface.map_local_to_picture.set_target_spatial_node(
+            surface.map_local_to_surface.set_target_spatial_node(
                 cluster.spatial_node_index,
                 frame_context.spatial_tree,
             );
@@ -6745,7 +6745,7 @@ impl PicturePrimitive {
             // Mark the cluster visible, since it passed the invertible and
             // backface checks.
             cluster.flags.insert(ClusterFlags::IS_VISIBLE);
-            if let Some(cluster_rect) = surface.map_local_to_picture.map(&cluster.bounding_rect) {
+            if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect) {
                 surface.unclipped_local_rect = surface.unclipped_local_rect.union(&cluster_rect);
             }
         }
@@ -6762,7 +6762,7 @@ impl PicturePrimitive {
                 );
 
                 let parent_surface = &mut surfaces[parent_surface_index.0];
-                parent_surface.map_local_to_picture.set_target_spatial_node(
+                parent_surface.map_local_to_surface.set_target_spatial_node(
                     self.spatial_node_index,
                     frame_context.spatial_tree,
                 );
@@ -6771,7 +6771,7 @@ impl PicturePrimitive {
                 // rect of any surfaces to be composited in parent surfaces correctly.
 
                 if let Some(parent_surface_rect) = parent_surface
-                    .map_local_to_picture
+                    .map_local_to_surface
                     .map(&surface_rect)
                 {
                     parent_surface.unclipped_local_rect =
@@ -7774,7 +7774,7 @@ fn test_large_surface_scale_1() {
     spatial_tree.apply_updates(cst.end_frame_and_get_pending_updates());
     spatial_tree.update_tree(&SceneProperties::new());
 
-    let map_local_to_picture = SpaceMapper::new_with_target(
+    let map_local_to_surface = SpaceMapper::new_with_target(
         root_reference_frame_index,
         root_reference_frame_index,
         PictureRect::max_rect(),
@@ -7787,7 +7787,7 @@ fn test_large_surface_scale_1() {
             clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_picture: map_local_to_picture.clone(),
+            map_local_to_surface: map_local_to_surface.clone(),
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(1.0),
@@ -7804,7 +7804,7 @@ fn test_large_surface_scale_1() {
             clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_picture,
+            map_local_to_surface,
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(43.82798767089844),
@@ -7843,7 +7843,7 @@ fn test_drop_filter_dirty_region_outside_prim() {
     spatial_tree.apply_updates(cst.end_frame_and_get_pending_updates());
     spatial_tree.update_tree(&SceneProperties::new());
 
-    let map_local_to_picture = SpaceMapper::new_with_target(
+    let map_local_to_surface = SpaceMapper::new_with_target(
         root_reference_frame_index,
         root_reference_frame_index,
         PictureRect::max_rect(),
@@ -7856,7 +7856,7 @@ fn test_drop_filter_dirty_region_outside_prim() {
             clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_picture: map_local_to_picture.clone(),
+            map_local_to_surface: map_local_to_surface.clone(),
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(1.0),
@@ -7876,7 +7876,7 @@ fn test_drop_filter_dirty_region_outside_prim() {
             ),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
-            map_local_to_picture,
+            map_local_to_surface,
             raster_spatial_node_index: root_reference_frame_index,
             surface_spatial_node_index: root_reference_frame_index,
             device_pixel_scale: DevicePixelScale::new(1.0),
