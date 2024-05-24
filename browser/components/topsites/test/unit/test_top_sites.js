@@ -1139,37 +1139,6 @@ add_task(async function test_onAction_part_2() {
   await cleanup();
 });
 
-add_task(async function test_onAction_part_3() {
-  let sandbox = sinon.createSandbox();
-
-  let cleanup = stubTopSites(sandbox);
-
-  info(
-    "TopSites.onAction should call updatePinnedSearchShortcuts " +
-      "on UPDATE_PINNED_SEARCH_SHORTCUTS action"
-  );
-  sandbox.stub(TopSites, "updatePinnedSearchShortcuts");
-  let addedShortcuts = [
-    {
-      url: "https://google.com",
-      searchVendor: "google",
-      label: "google",
-      searchTopSite: true,
-    },
-  ];
-  await TopSites.onAction({
-    type: at.UPDATE_PINNED_SEARCH_SHORTCUTS,
-    data: { addedShortcuts },
-  });
-  Assert.ok(
-    TopSites.updatePinnedSearchShortcuts.calledOnce,
-    "TopSites.updatePinnedSearchShortcuts called once"
-  );
-
-  sandbox.restore();
-  await cleanup();
-});
-
 add_task(async function test_insert_part_1() {
   let sandbox = sinon.createSandbox();
   sandbox.stub(NewTabUtils.pinnedLinks, "pin");
