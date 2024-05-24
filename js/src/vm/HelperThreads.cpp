@@ -986,34 +986,21 @@ void GlobalHelperThreadState::waitForAllTasksLocked(
 bool GlobalHelperThreadState::checkTaskThreadLimit(
     ThreadType threadType, size_t maxThreads, bool isMaster,
     const AutoLockHelperThreadState& lock) const {
-  MOZ_ASSERT(maxThreads > 0);
+  MOZ_ASSERT(maxThreads >= 1);
+  MOZ_ASSERT(maxThreads <= threadCount);
 
-  if (!isMaster && maxThreads >= threadCount) {
-    return true;
-  }
-
+  // Check thread limit for this task kind.
   size_t count = runningTaskCount[threadType];
   if (count >= maxThreads) {
     return false;
   }
 
+  // Check overall idle thread count taking into account master threads. A
+  // master thread must not use the last idle thread or it will deadlock itself.
   MOZ_ASSERT(threadCount >= totalCountRunningTasks);
-  size_t idle = threadCount - totalCountRunningTasks;
-
-  // It is possible for the number of idle threads to be zero here, because
-  // checkTaskThreadLimit() can be called from non-helper threads.  Notably,
-  // the compression task scheduler invokes it, and runs off a helper thread.
-  if (idle == 0) {
-    return false;
-  }
-
-  // A master thread that's the last available thread must not be allowed to
-  // run.
-  if (isMaster && idle == 1) {
-    return false;
-  }
-
-  return true;
+  size_t idleCount = threadCount - totalCountRunningTasks;
+  size_t idleRequired = isMaster ? 2 : 1;
+  return idleCount >= idleRequired;
 }
 
 static inline bool IsHelperThreadSimulatingOOM(js::ThreadType threadType) {
