@@ -76,12 +76,12 @@ pub fn push_quad(
     scratch: &mut PrimitiveScratchBuffer,
 
 ) {
-    let map_prim_to_surface = frame_context.spatial_tree.get_relative_transform(
+    let map_prim_to_raster = frame_context.spatial_tree.get_relative_transform(
         prim_spatial_node_index,
         pic_context.raster_spatial_node_index,
     );
-    let prim_is_2d_scale_translation = map_prim_to_surface.is_2d_scale_translation();
-    let prim_is_2d_axis_aligned = map_prim_to_surface.is_2d_axis_aligned();
+    let prim_is_2d_scale_translation = map_prim_to_raster.is_2d_scale_translation();
+    let prim_is_2d_axis_aligned = map_prim_to_raster.is_2d_axis_aligned();
 
     let strategy = get_prim_render_strategy(
         prim_spatial_node_index,
@@ -356,7 +356,7 @@ pub fn push_quad(
             let clip_coverage_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
 
-            let local_to_device = map_prim_to_surface.as_2d_scale_offset()
+            let local_to_device = map_prim_to_raster.as_2d_scale_offset()
                 .expect("bug: nine-patch segments should be axis-aligned only")
                 .scale(device_pixel_scale.0);
 
