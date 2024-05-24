@@ -74,7 +74,7 @@ bool EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
   // Web Authentication. See Bug 1244959 comment #8 for context on why we are
   // doing this instead of implementing the external-fetch FacetID logic.
   nsCOMPtr<Document> document = aParent->GetDoc();
-  if (!document || !document->IsHTMLDocument()) {
+  if (!document || !document->IsHTMLOrXHTML()) {
     return false;
   }
 

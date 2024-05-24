@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Tests for WebAuthn in XHTML document for W3C Web Authentication</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    add_task(async () => {
+      await addVirtualAuthenticator();
+      ok(true, "added virtual authenticator");
+
+      let cred = await navigator.credentials.create({
+        publicKey: {
+          rp: {id: document.domain, name: "none"},
+          user: {id: new Uint8Array(), name: "none", displayName: "none"},
+          challenge: crypto.getRandomValues(new Uint8Array(16)),
+          pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+        }
+      });
+      ok(true, "created credential");
+
+      await navigator.credentials.get({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(16)),
+          allowCredentials: [{type: "public-key", id: cred.rawId}],
+        }
+      });
+      ok(true, "asserted credential");
+    });
+  </script>
+</body>
+</html>
