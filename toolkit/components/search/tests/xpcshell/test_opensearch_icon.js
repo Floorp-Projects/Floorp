@@ -36,8 +36,8 @@ add_task(async function test_icon_types() {
       SearchUtils.MODIFIED_TYPE.ADDED,
       SearchUtils.TOPIC_ENGINE_MODIFIED
     );
-    let promiseEngineChanged = SearchTestUtils.promiseSearchNotification(
-      SearchUtils.MODIFIED_TYPE.CHANGED,
+    let promiseIconChanged = SearchTestUtils.promiseSearchNotification(
+      SearchUtils.MODIFIED_TYPE.ICON_CHANGED,
       SearchUtils.TOPIC_ENGINE_MODIFIED
     );
     const engineData = {
@@ -54,7 +54,7 @@ add_task(async function test_icon_types() {
     let engine = await promiseEngineAdded;
     // Ensure this is a nsISearchEngine.
     engine.QueryInterface(Ci.nsISearchEngine);
-    await promiseEngineChanged;
+    await promiseIconChanged;
 
     Assert.ok(await engine.getIconURL(), `${test.name} engine has an icon`);
     Assert.ok(

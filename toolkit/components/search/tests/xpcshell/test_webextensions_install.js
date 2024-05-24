@@ -201,8 +201,8 @@ add_task(async function test_load_favicon_invalid_redirect() {
 });
 
 add_task(async function test_load_favicon_redirect() {
-  let promiseEngineChanged = SearchTestUtils.promiseSearchNotification(
-    SearchUtils.MODIFIED_TYPE.CHANGED,
+  let promiseIconChanged = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.ICON_CHANGED,
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
 
@@ -216,7 +216,7 @@ add_task(async function test_load_favicon_redirect() {
 
   let engine = await Services.search.getEngineByName("Example");
 
-  await promiseEngineChanged;
+  await promiseIconChanged;
 
   Assert.ok(await engine.getIconURL(), "Should have set an iconURI");
   Assert.ok(

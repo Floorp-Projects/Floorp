@@ -131,6 +131,10 @@ class SearchUtils {
   /**
    * Gets the engine with a given alias.
    *
+   * Note: engines returned from this list may be updated at any time. If you
+   * are caching the icon or other fields for more than a single engagement of
+   * the urlbar, consider observing the SEARCH_ENGINE_TOPIC.
+   *
    * @param {string} alias
    *   A search engine alias.  The alias string comparison is case insensitive.
    * @param {string} [searchString]

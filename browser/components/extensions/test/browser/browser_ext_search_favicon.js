@@ -30,7 +30,7 @@ async function promiseEngineIconLoaded(engineName) {
     "browser-search-engine-modified",
     (engine, verb) => {
       engine.QueryInterface(Ci.nsISearchEngine);
-      return verb == "engine-changed" && engine.name == engineName;
+      return verb == "engine-icon-changed" && engine.name == engineName;
     }
   );
   Assert.ok(

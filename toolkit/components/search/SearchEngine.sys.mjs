@@ -798,7 +798,7 @@ export class SearchEngine {
           if (this._engineAddedToStore) {
             lazy.SearchUtils.notifyAction(
               this,
-              lazy.SearchUtils.MODIFIED_TYPE.CHANGED
+              lazy.SearchUtils.MODIFIED_TYPE.ICON_CHANGED
             );
           }
           this._hasPreferredIcon = isPreferred;
