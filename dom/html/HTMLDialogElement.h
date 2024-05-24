@@ -49,6 +49,11 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
 
   int32_t TabIndexDefault() override;
 
+  bool IsValidInvokeAction(InvokeAction aAction) const override;
+  MOZ_CAN_RUN_SCRIPT bool HandleInvokeInternal(Element* invoker,
+                                               InvokeAction aAction,
+                                               ErrorResult& aRv) override;
+
   nsString mReturnValue;
 
  protected:

@@ -192,6 +192,39 @@ void HTMLDialogElement::RunCancelDialogSteps() {
   }
 }
 
+bool HTMLDialogElement::IsValidInvokeAction(InvokeAction aAction) const {
+  return nsGenericHTMLElement::IsValidInvokeAction(aAction) ||
+         aAction == InvokeAction::ShowModal || aAction == InvokeAction::Close;
+}
+
+bool HTMLDialogElement::HandleInvokeInternal(Element* aInvoker,
+                                             InvokeAction aAction,
+                                             ErrorResult& aRv) {
+  if (nsGenericHTMLElement::HandleInvokeInternal(aInvoker, aAction, aRv)) {
+    return true;
+  }
+
+  MOZ_ASSERT(IsValidInvokeAction(aAction));
+
+  const bool actionMayClose =
+      aAction == InvokeAction::Auto || aAction == InvokeAction::Close;
+  const bool actionMayOpen =
+      aAction == InvokeAction::Auto || aAction == InvokeAction::ShowModal;
+
+  if (actionMayClose && Open()) {
+    Optional<nsAString> retValue;
+    Close(retValue);
+    return true;
+  }
+
+  if (IsInComposedDoc() && !Open() && actionMayOpen) {
+    ShowModal(aRv);
+    return true;
+  }
+
+  return false;
+}
+
 JSObject* HTMLDialogElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return HTMLDialogElement_Binding::Wrap(aCx, this, aGivenProto);
