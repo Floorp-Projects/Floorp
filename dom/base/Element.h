@@ -1131,20 +1131,8 @@ class Element : public FragmentOrElement {
   virtual bool IsValidInvokeAction(InvokeAction aAction) const {
     return aAction == InvokeAction::Auto;
   }
-
-  /**
-   * Elements can provide their own default behaviours for "Invoke" (see
-   * invoketarget/invokeaction attributes).
-   * If the action is not recognised, they can choose to ignore it and `return
-   * false`. If an action is recognised then they should `return true` to
-   * indicate to sub-classes that this has been handled and no further steps
-   * should be run.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual bool HandleInvokeInternal(Element* invoker,
-                                                       InvokeAction aAction,
-                                                       ErrorResult& aRv) {
-    return false;
-  }
+  MOZ_CAN_RUN_SCRIPT virtual void HandleInvokeInternal(InvokeAction aAction,
+                                                       ErrorResult& aRv) {}
 
  private:
   void DescribeAttribute(uint32_t index, nsAString& aOutDescription) const;
