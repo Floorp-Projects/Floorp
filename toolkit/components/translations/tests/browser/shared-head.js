@@ -522,6 +522,78 @@ async function createAndMockRemoteSettings({
   };
 }
 
+/**
+ * This class mocks the window's A11yUtils to count/capture arguments.
+ *
+ * This helps us ensure that the right calls are being made without
+ * needing to handle whether the accessibility service is enabled in CI,
+ * and also without needing to worry about if the call itself is broken
+ * in the accessibility engine, since this is sometimes OS dependent.
+ */
+class MockedA11yUtils {
+  /**
+   * Holds the parameters passed to any calls to announce.
+   *
+   * @type {Array<{ raw: string, id: string}>}
+   */
+  static announceCalls = [];
+
+  /**
+   * Mocks the A11yUtils object for the given window, replacing the real A11yUtils with the mock
+   * and returning a function that will restore the original A11yUtils when called.
+   *
+   * @param {object} window - The window for which to mock A11yUtils.
+   * @returns {Function} - A function to restore A11yUtils to the window.
+   */
+  static mockForWindow(window) {
+    const realA11yUtils = window.A11yUtils;
+    window.A11yUtils = MockedA11yUtils;
+
+    return () => {
+      // Restore everything back to normal for this window.
+      MockedA11yUtils.announceCalls = [];
+      window.A11yUtils = realA11yUtils;
+    };
+  }
+
+  /**
+   * A mocked call to A11yUtils.announce that captures the parameters.
+   *
+   * @param {{ raw: string, id: string }}
+   */
+  static announce({ id, raw }) {
+    MockedA11yUtils.announceCalls.push({ id, raw });
+  }
+
+  /**
+   * Asserts that the most recent A11yUtils announce call matches the expectations.
+   *
+   * @param {object} expectations
+   * @param {string} expectations.expectedCallNumber - The expected position in the announceCalls array.
+   * @param {object} expectations.expectedArgs - The expected arguments passed to the most recent announce call.
+   */
+  static assertMostRecentAnnounceCall({ expectedCallNumber, expectedArgs }) {
+    is(
+      MockedA11yUtils.announceCalls.length,
+      expectedCallNumber,
+      "The most recent A11yUtils announce should match the expected call number."
+    );
+    const { id, raw } = MockedA11yUtils.announceCalls.at(-1);
+    const { id: expectedId, raw: expectedRaw } = expectedArgs;
+
+    is(
+      id,
+      expectedId,
+      "A11yUtils announce arg id should match the expected arg id."
+    );
+    is(
+      raw,
+      expectedRaw,
+      "A11yUtils announce arg raw should match the expected arg raw."
+    );
+  }
+}
+
 async function loadTestPage({
   languagePairs,
   autoDownloadFromRemoteSettings = false,
@@ -538,6 +610,8 @@ async function loadTestPage({
 
   let remoteClients = null;
   let removeMocks = () => {};
+
+  const restoreA11yUtils = MockedA11yUtils.mockForWindow(win);
 
   if (isFirstTimeSetup) {
     // Ensure no engine is being carried over from a previous test.
@@ -638,6 +712,7 @@ async function loadTestPage({
       await loadBlankPage();
       await EngineProcess.destroyTranslationsEngine();
       await removeMocks();
+      restoreA11yUtils();
       Services.fog.testResetFOG();
       TranslationsParent.testAutomaticPopup = false;
       TranslationsParent.resetHostsOffered();
