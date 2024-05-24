@@ -32,7 +32,7 @@ class txIParseContext {
   /*
    * Return a namespaceID for a given prefix.
    */
-  virtual nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) = 0;
+  virtual int32_t resolveNamespacePrefix(nsAtom* aPrefix) = 0;
 
   /*
    * Create a FunctionCall, needed for extension function calls and

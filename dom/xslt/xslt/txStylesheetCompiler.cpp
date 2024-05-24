@@ -689,12 +689,10 @@ void txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
   mInScopeVariables.AppendElement(aName);
 }
 
-nsresult txStylesheetCompilerState::resolveNamespacePrefix(nsAtom* aPrefix,
-                                                           int32_t& aID) {
+int32_t txStylesheetCompilerState::resolveNamespacePrefix(nsAtom* aPrefix) {
   NS_ASSERTION(aPrefix && aPrefix != nsGkAtoms::_empty,
                "caller should handle default namespace ''");
-  aID = mElementContext->mMappings->lookupNamespace(aPrefix);
-  return (aID != kNameSpaceID_Unknown) ? NS_OK : NS_ERROR_FAILURE;
+  return mElementContext->mMappings->lookupNamespace(aPrefix);
 }
 
 /**

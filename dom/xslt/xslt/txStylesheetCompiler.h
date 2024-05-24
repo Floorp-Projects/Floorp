@@ -125,7 +125,7 @@ class txStylesheetCompilerState : public txIParseContext {
   void addVariable(const txExpandedName& aName);
 
   // txIParseContext
-  nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override;
+  int32_t resolveNamespacePrefix(nsAtom* aPrefix) override;
   nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
                                FunctionCall** aFunction) override;
   bool caseInsensitiveNameTests() override;
