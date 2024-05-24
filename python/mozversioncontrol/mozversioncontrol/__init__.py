@@ -988,7 +988,7 @@ class SrcRepository(Repository):
         pass
 
     def get_outgoing_files(self, diff_filter="ADM", upstream=None):
-        pass
+        raise MissingUpstreamRepo("Unknown Upstream")
 
     def add_remove_files(self, *paths: Union[str, Path]):
         pass
