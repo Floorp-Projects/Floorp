@@ -417,6 +417,13 @@ impl GpuCacheTexture {
         report.gpu_cache_textures +=
             self.texture.as_ref().map_or(0, |t| t.size_in_bytes());
     }
+
+    pub fn gpu_size_in_bytes(&self) -> usize {
+        match &self.texture {
+            Some(tex) => tex.size_in_bytes(),
+            None => 0,
+        }
+    }
 }
 
 impl super::Renderer {

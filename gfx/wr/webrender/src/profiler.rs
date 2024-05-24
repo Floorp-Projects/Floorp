@@ -89,8 +89,10 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
 
     // Misc:
 
-    (&"Memory", &"Image templates,Image templates mem,Font templates,Font templates mem,DisplayList mem,Picture tiles mem"),
-    (&"Interners", "Interned primitives,Interned clips,Interned pictures,Interned text runs,Interned normal borders,Interned image borders,Interned images,Interned YUV images,Interned line decorations,Interned linear gradients,Interned radial gradients,Interned conic gradients,Interned filter data,Interned backdrops"),
+    (&"GPU Memory", &"External image mem, Atlas textures mem, Standalone textures mem, Picture tiles mem, Render targets mem, Depth targets mem, Atlas items mem, GPU cache mem, GPU buffer mem, GPU total mem"),
+    (&"CPU Memory", &"Image templates, Image templates mem, Font templates,Font templates mem, DisplayList mem"),
+    (&"Memory", &"$CPU,CPU Memory, ,$GPU,GPU Memory"),
+    (&"Interners", "Interned primitives,Interned clips,Interned pictures,Interned text runs,Interned normal borders,Interned image borders,Interned images,Interned YUV images,Interned line decorations,Interned linear gradients,Interned radial gradients,Interned conic gradients,Interned filter data,Interned backdrop renders, Interned backdrop captures"),
     // Gpu sampler queries (need the pref gfx.webrender.debug.gpu-sampler-queries).
     (&"GPU samplers", &"Alpha targets samplers,Transparent pass samplers,Opaque pass samplers,Total samplers"),
 
@@ -267,7 +269,11 @@ pub const SLOW_DRAW_CALLS_COUNT: usize = 127;
 pub const SLOW_TARGETS_COUNT: usize = 128;
 pub const SLOW_BLOB_COUNT: usize = 129;
 
-pub const NUM_PROFILER_EVENTS: usize = 130;
+pub const GPU_CACHE_MEM: usize = 130;
+pub const GPU_BUFFER_MEM: usize = 131;
+pub const GPU_TOTAL_MEM: usize = 132;
+
+pub const NUM_PROFILER_EVENTS: usize = 133;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -470,6 +476,10 @@ impl Profiler {
             int("Slow: draw calls", "%", SLOW_DRAW_CALLS_COUNT, Expected::none()),
             int("Slow: targets", "%", SLOW_TARGETS_COUNT, Expected::none()),
             int("Slow: blobs", "%", SLOW_BLOB_COUNT, Expected::none()),
+
+            float("GPU cache mem", "MB", GPU_CACHE_MEM, Expected::none()),
+            float("GPU buffer mem", "MB", GPU_BUFFER_MEM, Expected::none()),
+            float("GPU total mem", "MB", GPU_TOTAL_MEM, Expected::none()),
         ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());
@@ -611,6 +621,8 @@ impl Profiler {
         self.counters[SLOW_TARGETS_COUNT].set(self.slow_targets_count as f64 * div);
         self.counters[SLOW_BLOB_COUNT].set(self.slow_blob_count as f64 * div);
 
+        self.update_total_gpu_mem();
+
         for counter in &mut self.counters {
             counter.update(update_avg);
         }
@@ -620,6 +632,26 @@ impl Profiler {
         if stats.gecko_display_list_time != 0.0 {
           self.frame_stats.push(stats.into());
         }
+    }
+
+    pub fn update_total_gpu_mem(&mut self) {
+        let mut total = 0.0;
+        for counter in [
+            EXTERNAL_IMAGE_BYTES,
+            ATLAS_TEXTURES_MEM,
+            STANDALONE_TEXTURES_MEM,
+            PICTURE_TILES_MEM,
+            RENDER_TARGET_MEM,
+            DEPTH_TARGETS_MEM,
+            ATLAS_ITEMS_MEM,
+            GPU_CACHE_MEM,
+            GPU_BUFFER_MEM,
+        ] {
+            if let Some(val) = self.counters[counter].get() {
+                total += val;
+            }
+        }
+        self.counters[GPU_TOTAL_MEM].set(total);
     }
 
     pub fn set_gpu_time_queries(&mut self, gpu_queries: Vec<GpuTimer>) {
@@ -682,6 +714,7 @@ impl Profiler {
             let name = name.trim();
             let is_graph = name.starts_with("#");
             let is_indicator = name.starts_with("*");
+            let is_string = name.starts_with("$");
             let name = if is_graph || is_indicator {
                 &name[1..]
             } else {
@@ -718,7 +751,9 @@ impl Profiler {
                     selection.push(Item::PaintPhaseGraph);
                 }
                 _ => {
-                    if let Some(idx) = self.index_of(name) {
+                    if is_string {
+                        selection.push(Item::Text(name[1..].into()));
+                    } else if let Some(idx) = self.index_of(name) {
                         if is_graph {
                             flush_counters(&mut counters, selection);
                             selection.push(Item::Graph(idx));
