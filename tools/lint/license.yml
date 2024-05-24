@@ -65,6 +65,14 @@ license:
         - toolkit/components/uniffi-bindgen-gecko-js/src/templates/js
         # By design
         - tools/lint/test/
+        # TODO: Bug 1713577 - Enable the linter on all tests.
+        - '**/test*'
+        - '**/gtest/'
+        - '**/crashtest*'
+        - '**/mochitest*'
+        - '**/reftest*'
+        - '**/androidTest/'
+        - '**/jit-test/'
     extensions:
         - .c
         - .cc

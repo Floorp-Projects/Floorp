@@ -229,10 +229,6 @@ def lint(paths, config, fix=None, **lintargs):
 
     licenses = load_valid_license()
     for f in files:
-        if is_test(f):
-            # For now, do not do anything with test (too many)
-            continue
-
         if not is_valid_license(licenses, f):
             if fix and fix_me(log, f):
                 fixed += 1
