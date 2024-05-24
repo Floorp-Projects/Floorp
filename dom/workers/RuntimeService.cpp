@@ -2067,21 +2067,24 @@ WorkerThreadPrimaryRunnable::Run() {
                                    url.get());
 
   using mozilla::ipc::BackgroundChild;
-
   {
+    bool runLoopRan = false;
     auto failureCleanup = MakeScopeExit([&]() {
-      // The creation of threadHelper above is the point at which a worker is
-      // considered to have run, because the `mPreStartRunnables` are all
-      // re-dispatched after `mThread` is set.  We need to let the WorkerPrivate
-      // know so it can clean up the various event loops and delete the worker.
-      mWorkerPrivate->RunLoopNeverRan();
+      // If Worker initialization fails, call WorkerPrivate::ScheduleDeletion()
+      // to release the WorkerPrivate in the parent thread.
+      mWorkerPrivate->ScheduleDeletion(WorkerPrivate::WorkerRan);
     });
 
     mWorkerPrivate->SetWorkerPrivateInWorkerThread(mThread.unsafeGetRawPtr());
 
     const auto threadCleanup = MakeScopeExit([&] {
-      // This must be called before ScheduleDeletion, which is either called
-      // from failureCleanup leaving scope, or from the outer scope.
+      // If Worker initialization fails, such as creating a BackgroundChild or
+      // the worker's JSContext initialization failing, call
+      // WorkerPrivate::RunLoopNeverRan() to set the Worker to the correct
+      // status, which means "Dead," to forbid WorkerThreadRunnable dispatching.
+      if (!runLoopRan) {
+        mWorkerPrivate->RunLoopNeverRan();
+      }
       mWorkerPrivate->ResetWorkerPrivateInWorkerThread();
     });
 
@@ -2118,6 +2121,7 @@ WorkerThreadPrimaryRunnable::Run() {
       }
 
       failureCleanup.release();
+      runLoopRan = true;
 
       {
         PROFILER_SET_JS_CONTEXT(cx);

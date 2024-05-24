@@ -3201,8 +3201,6 @@ void WorkerPrivate::RunLoopNeverRan() {
   // PerformanceStorageWorker which holds a WeakWorkerRef.
   // Notify WeakWorkerRefs with Dead status.
   NotifyWorkerRefs(Dead);
-
-  ScheduleDeletion(WorkerPrivate::WorkerRan);
 }
 
 void WorkerPrivate::UnrootGlobalScopes() {
@@ -5774,10 +5772,11 @@ void WorkerPrivate::ResetWorkerPrivateInWorkerThread() {
 
   // Release the mutex before doomedThread.
   MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mStatus == Dead);
 
   MOZ_ASSERT(mThread);
 
-  mThread->SetWorker(WorkerThreadFriendKey{}, nullptr);
+  mThread->ClearEventQueueAndWorker(WorkerThreadFriendKey{});
   mThread.swap(doomedThread);
 }
 
