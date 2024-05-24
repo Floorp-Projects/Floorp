@@ -102,16 +102,13 @@ class FirefoxSuggestTest : TestSetup() {
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348361
     // Known bug that might affect this UI test: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1898416")
     @SmokeTest
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsTest() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                // The Google related suggestions aren't always displayed on cold run
-                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
-                clickSearchSelectorButton()
-                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
@@ -128,15 +125,12 @@ class FirefoxSuggestTest : TestSetup() {
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348362
     // Known bug that might affect this UI test: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1898457")
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsWithPartialKeywordTest() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                // The Google related suggestions aren't always displayed on cold run
-                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
-                clickSearchSelectorButton()
-                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord.dropLast(1))
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
@@ -153,15 +147,12 @@ class FirefoxSuggestTest : TestSetup() {
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348363
     // Known bug that might affect this UI test: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1879011")
     @Test
-    fun openFirefoxSuggestSponsoredSearchResultsTest() {
+        fun openFirefoxSuggestSponsoredSearchResultsTest() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                // The Google related suggestions aren't always displayed on cold run
-                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
-                clickSearchSelectorButton()
-                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
@@ -181,15 +172,12 @@ class FirefoxSuggestTest : TestSetup() {
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348369
     // Known bug that might affect this UI test: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1898435")
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsWithEditedKeywordTest() {
         runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                // The Google related suggestions aren't always displayed on cold run
-                // Bugzilla ticket: https://bugzilla.mozilla.org/show_bug.cgi?id=1813587
-                clickSearchSelectorButton()
-                selectTemporarySearchMethod("DuckDuckGo")
                 typeSearch(searchTerm = sponsoredKeyWord)
                 deleteSearchKeywordCharacters(numberOfDeletionSteps = 1)
                 verifySearchEngineSuggestionResults(
