@@ -4534,6 +4534,22 @@ impl Renderer {
             TextureSampler::GpuBufferI,
         );
 
+        let bytes_to_mb = 1.0 / 1000000.0;
+        let gpu_buffer_bytes_f = gpu_buffer_texture_f
+            .as_ref()
+            .map(|tex| tex.size_in_bytes())
+            .unwrap_or(0);
+        let gpu_buffer_bytes_i = gpu_buffer_texture_i
+            .as_ref()
+            .map(|tex| tex.size_in_bytes())
+            .unwrap_or(0);
+        let gpu_buffer_mb = (gpu_buffer_bytes_f + gpu_buffer_bytes_i) as f32 * bytes_to_mb;
+        self.profile.set(profiler::GPU_BUFFER_MEM, gpu_buffer_mb);
+
+        let gpu_cache_bytes = self.gpu_cache_texture.gpu_size_in_bytes();
+        let gpu_cache_mb = gpu_cache_bytes as f32 * bytes_to_mb;
+        self.profile.set(profiler::GPU_CACHE_MEM, gpu_cache_mb);
+
         // Determine the present mode and dirty rects, if device_size
         // is Some(..). If it's None, no composite will occur and only
         // picture cache and texture cache targets will be updated.
