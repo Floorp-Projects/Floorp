@@ -83,27 +83,35 @@ add_task(function check_startup_pinned_telemetry() {
 add_task(function check_is_default_handler_telemetry() {
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
 
+  const handlers = [".pdf", "mailto"];
+
   // Check the appropriate telemetry is set or not reported by platform.
   switch (AppConstants.platform) {
-    case "win":
+    case "win": {
       // We should always set whether we're the default PDF handler.
       Assert.ok("os.environment.is_default_handler" in scalars);
-      Assert.deepEqual(
-        [".pdf"],
-        Object.keys(scalars["os.environment.is_default_handler"])
-      );
+
+      const keys = Object.keys(scalars["os.environment.is_default_handler"]);
+      handlers.every(x => {
+        Assert.ok(keys.includes(x), `${x} handler present in telemetry`);
+        return true;
+      });
 
       if (Cu.isInAutomation) {
         // But only in automation can we assume we're not the default handler.
-        TelemetryTestUtils.assertKeyedScalar(
-          scalars,
-          "os.environment.is_default_handler",
-          ".pdf",
-          false,
-          "Not default PDF handler on Windows"
-        );
+        handlers.every(x => {
+          TelemetryTestUtils.assertKeyedScalar(
+            scalars,
+            `os.environment.is_default_handler`,
+            x,
+            false,
+            `Not default ${x} handler on Windows`
+          );
+          return true;
+        });
       }
       break;
+    }
     default:
       TelemetryTestUtils.assertScalarUnset(
         scalars,

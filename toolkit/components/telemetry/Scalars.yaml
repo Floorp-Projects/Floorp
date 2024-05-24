@@ -2556,13 +2556,13 @@ os.environment:
     bug_numbers:
       - 1743914
       - 1781984
+      - 1842290
     description: >
       Records whether Firefox was the default handler for particular file types
       or protocols.  The result is split into keys which represent the file
-      extension: currently, a subset of the file types Firefox registers to
-      handle, namely ".pdf".  In the future, more file types may be recorded,
-      and/or a subset of the protocol schemes that Firefox registers to may be
-      recorded.
+      extension or scheme: currently, a subset of the file types Firefox
+      registers to handle, namely ".pdf" and "mailto" as protocol. In the
+      future, more file types may be recorded.
     keyed: true
     expires: never
     kind: boolean
