@@ -1125,12 +1125,6 @@ class _TopSites {
           this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
         }
         break;
-      case at.TOP_SITES_PIN:
-        this.pin(action);
-        break;
-      case at.TOP_SITES_UNPIN:
-        this.unpin(action);
-        break;
       case at.TOP_SITES_INSERT:
         this.insert(action);
         break;
