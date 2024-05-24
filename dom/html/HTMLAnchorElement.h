@@ -55,7 +55,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  void GetLinkTarget(nsAString& aTarget) override;
+  void GetLinkTargetImpl(nsAString& aTarget) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;
 
   void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,

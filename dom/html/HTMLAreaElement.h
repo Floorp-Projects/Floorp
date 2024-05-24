@@ -39,7 +39,7 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  void GetLinkTarget(nsAString& aTarget) override;
+  void GetLinkTargetImpl(nsAString& aTarget) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;

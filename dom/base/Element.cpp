@@ -3455,7 +3455,23 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
   return rv;
 }
 
-void Element::GetLinkTarget(nsAString& aTarget) { aTarget.Truncate(); }
+// static
+void Element::SanitizeLinkOrFormTarget(nsAString& aTarget) {
+  // <https://html.spec.whatwg.org/multipage/semantics.html#get-an-element's-target>
+  // 2. If target is not null, and contains an ASCII tab or newline and a U+003C
+  // (<), then set target to "_blank".
+  if (!aTarget.IsEmpty() && aTarget.FindCharInSet(u"\t\n\r") != kNotFound &&
+      aTarget.Contains('<')) {
+    aTarget.AssignLiteral("_blank");
+  }
+}
+
+void Element::GetLinkTarget(nsAString& aTarget) {
+  GetLinkTargetImpl(aTarget);
+  SanitizeLinkOrFormTarget(aTarget);
+}
+
+void Element::GetLinkTargetImpl(nsAString& aTarget) { aTarget.Truncate(); }
 
 nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
   nsresult rv = aDst->mAttrs.EnsureCapacityToClone(mAttrs);

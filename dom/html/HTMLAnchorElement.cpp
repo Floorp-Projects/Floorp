@@ -134,7 +134,7 @@ nsresult HTMLAnchorElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
 
-void HTMLAnchorElement::GetLinkTarget(nsAString& aTarget) {
+void HTMLAnchorElement::GetLinkTargetImpl(nsAString& aTarget) {
   GetAttr(nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
     GetBaseTarget(aTarget);

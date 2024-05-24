@@ -1671,6 +1671,22 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
   return rv;
 }
 
+void HTMLFormElement::GetSubmissionTarget(nsGenericHTMLElement* aSubmitter,
+                                          nsAString& aTarget) {
+  // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#form-submission-algorithm
+  // 19. If the submitter element is a submit button and it has a formtarget
+  // attribute, then set formTarget to the formtarget attribute value.
+  // 20. Let target be the result of getting an element's target given
+  // submitter's form owner and formTarget.
+  //
+  // Note: Falling back to the base target is part of "get an element's target".
+  if (!(aSubmitter && aSubmitter->GetAttr(nsGkAtoms::formtarget, aTarget)) &&
+      !GetAttr(nsGkAtoms::target, aTarget)) {
+    GetBaseTarget(aTarget);
+  }
+  SanitizeLinkOrFormTarget(aTarget);
+}
+
 nsGenericHTMLFormElement* HTMLFormElement::GetDefaultSubmitElement() const {
   MOZ_ASSERT(mDefaultSubmitElement == mFirstSubmitInElements ||
                  mDefaultSubmitElement == mFirstSubmitNotInElements,
