@@ -127,6 +127,8 @@ class _TopSites {
     this.#searchShortcuts = [];
     this.#sites = [];
     this.#inited = false;
+    this.frecentCache.expire();
+    this.pinnedCache.expire();
   }
 
   #addObservers() {

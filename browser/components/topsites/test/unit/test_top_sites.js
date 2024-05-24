@@ -885,6 +885,31 @@ add_task(async function test_init() {
   await cleanup();
 });
 
+add_task(async function test_uninit() {
+  info("Un-initing TopSites should expire caches.");
+  let sandbox = sinon.createSandbox();
+
+  let cleanup = stubTopSites(sandbox);
+  sandbox.stub(TopSites, "refresh");
+  await TopSites.init();
+
+  sandbox.stub(TopSites.pinnedCache, "expire");
+  sandbox.stub(TopSites.frecentCache, "expire");
+  TopSites.uninit();
+
+  Assert.ok(
+    TopSites.pinnedCache.expire.calledOnce,
+    "pinnedCache.expire called once"
+  );
+  Assert.ok(
+    TopSites.frecentCache.expire.calledOnce,
+    "frecentCache.expire called once"
+  );
+
+  sandbox.restore();
+  await cleanup();
+});
+
 add_task(async function test_refresh() {
   let sandbox = sinon.createSandbox();
 
