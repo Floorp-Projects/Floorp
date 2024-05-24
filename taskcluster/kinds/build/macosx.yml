@@ -409,9 +409,6 @@ macosx64-devedition/opt:
             - artifact: target.perftests.tests.tar.gz
               extract: false
               dest: ../artifacts
-            - artifact: target.update_framework_artifacts.zip
-              extract: false
-              dest: ../artifacts
             - artifact: target.xpt_artifacts.zip
               extract: false
               dest: ../artifacts
@@ -447,6 +444,8 @@ macosx64-devedition/opt:
               dest: x64/crashreporter-symbols
             - artifact: target.jsshell.zip
               dest: x64/jsshell
+            - artifact: target.update_framework_artifacts.zip
+              dest: x64/update_framework_artifacts
             - artifact: target.generated-files.tar.gz
               extract: false
               dest: ../artifacts
@@ -492,6 +491,8 @@ macosx64-devedition/opt:
               dest: aarch64/crashreporter-symbols
             - artifact: target.jsshell.zip
               dest: aarch64/jsshell
+            - artifact: target.update_framework_artifacts.zip
+              dest: aarch64/update_framework_artifacts
         toolchain:
             - linux64-cctools-port
 
@@ -834,9 +835,6 @@ macosx64-shippable/opt:
             - artifact: target.perftests.tests.tar.gz
               extract: false
               dest: ../artifacts
-            - artifact: target.update_framework_artifacts.zip
-              extract: false
-              dest: ../artifacts
             - artifact: target.xpt_artifacts.zip
               extract: false
               dest: ../artifacts
@@ -872,6 +870,8 @@ macosx64-shippable/opt:
               dest: x64/crashreporter-symbols
             - artifact: target.jsshell.zip
               dest: x64/jsshell
+            - artifact: target.update_framework_artifacts.zip
+              dest: x64/update_framework_artifacts
             - artifact: target.generated-files.tar.gz
               extract: false
               dest: ../artifacts
@@ -917,6 +917,8 @@ macosx64-shippable/opt:
               dest: aarch64/crashreporter-symbols
             - artifact: target.jsshell.zip
               dest: aarch64/jsshell
+            - artifact: target.update_framework_artifacts.zip
+              dest: aarch64/update_framework_artifacts
         toolchain:
             - linux64-cctools-port
 
