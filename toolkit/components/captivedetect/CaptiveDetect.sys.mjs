@@ -91,6 +91,19 @@ URLFetcher.prototype = {
       this._xhr.abort();
     }
   },
+  usedProxy() {
+    try {
+      if (
+        this._xhr &&
+        this._xhr.channel &&
+        this._xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).isProxyUsed
+      ) {
+        return true;
+      }
+    } catch (e) {}
+
+    return false;
+  },
 };
 
 function LoginObserver(captivePortalDetector) {
@@ -367,6 +380,11 @@ CaptivePortalDetector.prototype = {
     urlFetcher.ontimeout = mayRetry;
     urlFetcher.onerror = mayRetry;
     urlFetcher.onsuccess = function (content) {
+      if (urlFetcher.usedProxy()) {
+        // Don't trigger if channel used proxy.
+        self.executeCallback(true);
+        return;
+      }
       if (self.validateContent(content)) {
         self.executeCallback(true);
       } else {
@@ -375,6 +393,11 @@ CaptivePortalDetector.prototype = {
       }
     };
     urlFetcher.onredirectorerror = function (status) {
+      if (urlFetcher.usedProxy()) {
+        // Don't trigger if channel used proxy.
+        self.executeCallback(true);
+        return;
+      }
       if (status >= 300 && status <= 399) {
         // The canonical website has been redirected to an unknown location
         self._startLogin();
