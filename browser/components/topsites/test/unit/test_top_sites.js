@@ -1036,89 +1036,6 @@ add_task(async function test_onAction_part_1() {
 
   Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
 
-  info(
-    "TopSites.onAction should call with correct parameters on TOP_SITES_PIN"
-  );
-  sandbox.stub(NewTabUtils.pinnedLinks, "pin");
-  sandbox.spy(TopSites, "pin");
-
-  let pinAction = {
-    type: at.TOP_SITES_PIN,
-    data: { site: { url: "foo.com" }, index: 7 },
-  };
-  TopSites.onAction(pinAction);
-  Assert.ok(
-    NewTabUtils.pinnedLinks.pin.calledOnce,
-    "NewTabUtils.pinnedLinks.pin called once"
-  );
-  Assert.ok(
-    NewTabUtils.pinnedLinks.pin.calledWithExactly(
-      pinAction.data.site,
-      pinAction.data.index
-    )
-  );
-  Assert.ok(
-    TopSites.pin.calledOnce,
-    "TopSites.onAction should call pin on TOP_SITES_PIN"
-  );
-
-  info(
-    "TopSites.onAction should unblock a previously blocked top site if " +
-      "we are now adding it manually via 'Add a Top Site' option"
-  );
-  sandbox.stub(NewTabUtils.blockedLinks, "unblock");
-  pinAction = {
-    type: at.TOP_SITES_PIN,
-    data: { site: { url: "foo.com" }, index: -1 },
-  };
-  TopSites.onAction(pinAction);
-  Assert.ok(
-    NewTabUtils.blockedLinks.unblock.calledWith({
-      url: pinAction.data.site.url,
-    })
-  );
-
-  info("TopSites.onAction should call insert on TOP_SITES_INSERT");
-  sandbox.stub(TopSites, "insert");
-  let addAction = {
-    type: at.TOP_SITES_INSERT,
-    data: { site: { url: "foo.com" } },
-  };
-
-  TopSites.onAction(addAction);
-  Assert.ok(TopSites.insert.calledOnce, "TopSites.insert called once");
-
-  info(
-    "TopSites.onAction should call unpin with correct parameters " +
-      "on TOP_SITES_UNPIN"
-  );
-
-  sandbox
-    .stub(NewTabUtils.pinnedLinks, "links")
-    .get(() => [
-      null,
-      null,
-      { url: "foo.com" },
-      null,
-      null,
-      null,
-      null,
-      null,
-      FAKE_LINKS[0],
-    ]);
-  sandbox.stub(NewTabUtils.pinnedLinks, "unpin");
-
-  let unpinAction = {
-    type: at.TOP_SITES_UNPIN,
-    data: { site: { url: "foo.com" } },
-  };
-  TopSites.onAction(unpinAction);
-  Assert.ok(
-    NewTabUtils.pinnedLinks.unpin.calledOnce,
-    "NewTabUtils.pinnedLinks.unpin called once"
-  );
-  Assert.ok(NewTabUtils.pinnedLinks.unpin.calledWith(unpinAction.data.site));
-
   sandbox.restore();
   await cleanup();
 });
@@ -1733,6 +1650,95 @@ add_task(async function test_pin_part_3() {
   }
 
   sandbox.restore();
+});
+
+add_task(async function test_pin_part_4() {
+  let sandbox = sinon.createSandbox();
+  let cleanup = stubTopSites(sandbox);
+
+  info("TopSites.pin should call with correct parameters on TOP_SITES_PIN");
+  sandbox.stub(NewTabUtils.pinnedLinks, "pin");
+  sandbox.spy(TopSites, "pin");
+
+  let pinAction = {
+    type: at.TOP_SITES_PIN,
+    data: { site: { url: "foo.com" }, index: 7 },
+  };
+  await TopSites.pin(pinAction);
+  Assert.ok(
+    NewTabUtils.pinnedLinks.pin.calledOnce,
+    "NewTabUtils.pinnedLinks.pin called once"
+  );
+  Assert.ok(
+    NewTabUtils.pinnedLinks.pin.calledWithExactly(
+      pinAction.data.site,
+      pinAction.data.index
+    )
+  );
+  Assert.ok(
+    TopSites.pin.calledOnce,
+    "TopSites.pin should call pin on TOP_SITES_PIN"
+  );
+
+  info(
+    "TopSites.pin should unblock a previously blocked top site if " +
+      "we are now adding it manually via 'Add a Top Site' option"
+  );
+  sandbox.stub(NewTabUtils.blockedLinks, "unblock");
+  pinAction = {
+    type: at.TOP_SITES_PIN,
+    data: { site: { url: "foo.com" }, index: -1 },
+  };
+  await TopSites.pin(pinAction);
+  Assert.ok(
+    NewTabUtils.blockedLinks.unblock.calledWith({
+      url: pinAction.data.site.url,
+    })
+  );
+
+  info("TopSites.pin should call insert on TOP_SITES_INSERT");
+  sandbox.stub(TopSites, "insert");
+  let addAction = {
+    type: at.TOP_SITES_INSERT,
+    data: { site: { url: "foo.com" } },
+  };
+
+  await TopSites.pin(addAction);
+  Assert.ok(TopSites.insert.calledOnce, "TopSites.insert called once");
+
+  info(
+    "TopSites.unpin should call unpin with correct parameters " +
+      "on TOP_SITES_UNPIN"
+  );
+
+  sandbox
+    .stub(NewTabUtils.pinnedLinks, "links")
+    .get(() => [
+      null,
+      null,
+      { url: "foo.com" },
+      null,
+      null,
+      null,
+      null,
+      null,
+      FAKE_LINKS[0],
+    ]);
+  sandbox.stub(NewTabUtils.pinnedLinks, "unpin");
+
+  let unpinAction = {
+    type: at.TOP_SITES_UNPIN,
+    data: { site: { url: "foo.com" } },
+  };
+  await TopSites.unpin(unpinAction);
+  Assert.ok(
+    NewTabUtils.pinnedLinks.unpin.calledOnce,
+    "NewTabUtils.pinnedLinks.unpin called once"
+  );
+  Assert.ok(NewTabUtils.pinnedLinks.unpin.calledWith(unpinAction.data.site));
+
+  sandbox.restore();
+  await cleanup();
 });
 
 add_task(async function test_integration() {
