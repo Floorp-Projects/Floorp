@@ -331,6 +331,12 @@ void DecoderTemplate<DecoderType>::OutputDecodedData(
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
 
+  if (!GetParentObject()) {
+    LOGE("%s %p Canceling output callbacks since parent-object is gone",
+         DecoderType::Name.get(), this);
+    return;
+  }
+
   nsTArray<RefPtr<OutputType>> frames =
       DecodedDataToOutputType(GetParentObject(), std::move(aData), aConfig);
   RefPtr<OutputCallbackType> cb(mOutputCallback);
