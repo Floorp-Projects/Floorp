@@ -66,10 +66,9 @@ fun <S : State, A : Action, R> Store<S, A>.observeAsState(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     return produceState(initialValue = initialValue) {
-        val subscription = observe(lifecycleOwner) { browserState ->
+        observe(lifecycleOwner) { browserState ->
             value = map(browserState)
         }
-        awaitDispose { subscription?.unsubscribe() }
     }
 }
 
