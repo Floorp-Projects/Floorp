@@ -1712,6 +1712,12 @@ var SelectTranslationsPanel = new (class {
     this.#updateConditionalUIEnabledState();
     this.#indicateTranslatedTextArea({ overflow: "auto" });
     this.#maybeEnableTextAreaResizer();
+
+    const window =
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
+    window.A11yUtils.announce({
+      id: "select-translations-panel-translation-complete-announcement",
+    });
   }
 
   /**
