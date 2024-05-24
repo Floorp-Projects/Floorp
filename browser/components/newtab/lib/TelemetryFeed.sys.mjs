@@ -938,6 +938,12 @@ export class TelemetryFeed {
       case at.SET_PREF:
         this.handleSetPref(action);
         break;
+      case at.WEATHER_IMPRESSION:
+        this.handleWeatherUserEvent(action);
+        break;
+      case at.WEATHER_LOAD_ERROR:
+        this.handleWeatherUserEvent(action);
+        break;
       case at.WEATHER_OPEN_PROVIDER_URL:
         this.handleWeatherUserEvent(action);
         break;
@@ -969,9 +975,18 @@ export class TelemetryFeed {
       return;
     }
 
-    // Note: This switch case is unnessary right now, but any other
     // Weather specific telemtry events can be added and parsed here.
     switch (action.type) {
+      case "WEATHER_IMPRESSION":
+        Glean.newtab.weatherImpression.record({
+          newtab_visit_id: session.session_id,
+        });
+        break;
+      case "WEATHER_LOAD_ERROR":
+        Glean.newtab.weatherLoadError.record({
+          newtab_visit_id: session.session_id,
+        });
+        break;
       case "WEATHER_OPEN_PROVIDER_URL":
         Glean.newtab.weatherOpenProviderUrl.record({
           newtab_visit_id: session.session_id,
