@@ -183,7 +183,7 @@ pub fn update_prim_visibility(
 
     let surface = &surfaces[surface_index.0 as usize];
     let device_pixel_scale = surface.device_pixel_scale;
-    let mut map_local_to_surface = surface.map_local_to_surface.clone();
+    let mut map_local_to_picture = surface.map_local_to_picture.clone();
     let map_surface_to_world = SpaceMapper::new_with_target(
         frame_context.root_spatial_node_index,
         surface.surface_spatial_node_index,
@@ -215,7 +215,7 @@ pub fn update_prim_visibility(
             continue;
         }
 
-        map_local_to_surface.set_target_spatial_node(
+        map_local_to_picture.set_target_spatial_node(
             cluster.spatial_node_index,
             frame_context.spatial_tree,
         );
@@ -279,7 +279,7 @@ pub fn update_prim_visibility(
 
             frame_state.clip_store.set_active_clips(
                 cluster.spatial_node_index,
-                map_local_to_surface.ref_spatial_node_index,
+                map_local_to_picture.ref_spatial_node_index,
                 prim_instance.clip_leaf_id,
                 &frame_context.spatial_tree,
                 &frame_state.data_stores.clip,
@@ -290,7 +290,7 @@ pub fn update_prim_visibility(
                 .clip_store
                 .build_clip_chain_instance(
                     local_coverage_rect,
-                    &map_local_to_surface,
+                    &map_local_to_picture,
                     &map_surface_to_world,
                     &frame_context.spatial_tree,
                     frame_state.gpu_cache,
