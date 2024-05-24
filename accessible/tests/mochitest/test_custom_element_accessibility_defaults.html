@@ -213,6 +213,13 @@ async function runTest() {
   await attributeChanged;
   testAttrs("default-sort", {"sort": "descending"}, true);
 
+  info("Changing ElementInternals ariaValueText");
+  let valueTextChanged = waitForEvent(EVENT_TEXT_VALUE_CHANGE, "default-value");
+  let valueElement = document.getElementById("default-value");
+  valueElement.internals.ariaValueText = null;
+  await valueTextChanged;
+  testValue("default-value", "5", 5, 1, 10, 0);
+
   SimpleTest.finish();
 }
 

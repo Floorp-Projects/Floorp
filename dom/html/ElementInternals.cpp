@@ -451,9 +451,17 @@ nsresult ElementInternals::SetAttr(nsAtom* aName, const nsAString& aValue) {
   MutationObservers::NotifyARIAAttributeDefaultWillChange(mTarget, aName,
                                                           modType);
 
-  bool attrHadValue;
   nsAttrValue attrValue(aValue);
-  nsresult rs = mAttrs.SetAndSwapAttr(aName, attrValue, &attrHadValue);
+  nsresult rs = NS_OK;
+  if (DOMStringIsNull(aValue)) {
+    auto attrPos = mAttrs.IndexOfAttr(aName);
+    if (attrPos >= 0) {
+      rs = mAttrs.RemoveAttrAt(attrPos, attrValue);
+    }
+  } else {
+    bool attrHadValue = false;
+    rs = mAttrs.SetAndSwapAttr(aName, attrValue, &attrHadValue);
+  }
   nsMutationGuard::DidMutate();
 
   MutationObservers::NotifyARIAAttributeDefaultChanged(mTarget, aName, modType);
