@@ -210,7 +210,7 @@ already_AddRefed<nsIURI> SVGAElement::GetHrefURI() const {
   return nullptr;
 }
 
-void SVGAElement::GetLinkTarget(nsAString& aTarget) {
+void SVGAElement::GetLinkTargetImpl(nsAString& aTarget) {
   mStringAttributes[TARGET].GetAnimValue(aTarget, this);
   if (aTarget.IsEmpty()) {
     static Element::AttrValuesArray sShowVals[] = {nsGkAtoms::_new,

@@ -2122,17 +2122,29 @@ class Element : public FragmentOrElement {
    */
   virtual already_AddRefed<nsIURI> GetHrefURI() const { return nullptr; }
 
+  // Step 2. of
+  // <https://html.spec.whatwg.org/multipage/semantics.html#get-an-element's-target>
+  //
+  // Sanitize targets that look like they contain dangling markup.
+  static void SanitizeLinkOrFormTarget(nsAString& aTarget);
+
   /**
+   * <https://html.spec.whatwg.org/multipage/semantics.html#get-an-element's-target>
+   * (Excluding <form>)
+   *
    * Get the target of this link element. Consumers should established that
    * this element is a link (probably using IsLink) before calling this
-   * function (or else why call it?)
+   * function (or else why call it?). This method neuters probably markup
+   * injection attempts.
    *
    * Note: for HTML this gets the value of the 'target' attribute; for XLink
    * this gets the value of the xlink:_moz_target attribute, or failing that,
    * the value of xlink:show, converted to a suitably equivalent named target
    * (e.g. _blank).
    */
-  virtual void GetLinkTarget(nsAString& aTarget);
+  void GetLinkTarget(nsAString& aTarget);
+
+  virtual void GetLinkTargetImpl(nsAString& aTarget);
 
   virtual bool Translate() const;
 

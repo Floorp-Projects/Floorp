@@ -1050,9 +1050,8 @@ bool nsImageFrame::ShouldCreateImageFrameForContentProperty(
 // Check if we want to use an image frame or just let the frame constructor make
 // us into an inline, and if so, which kind of image frame should we create.
 /* static */
-auto nsImageFrame::ImageFrameTypeFor(const Element& aElement,
-                                     const ComputedStyle& aStyle)
-    -> ImageFrameType {
+auto nsImageFrame::ImageFrameTypeFor(
+    const Element& aElement, const ComputedStyle& aStyle) -> ImageFrameType {
   if (ShouldCreateImageFrameForContentProperty(aElement, aStyle)) {
     // Prefer the content property, for compat reasons, see bug 1484928.
     return ImageFrameType::ForContentProperty;
@@ -2617,7 +2616,7 @@ bool nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
     }
 
     if (auto* anchor = HTMLAnchorElement::FromNode(content)) {
-      anchor->GetTarget(aTarget);
+      anchor->GetLinkTarget(aTarget);
     }
     NS_ADDREF(*aNode = content);
     return *aHref != nullptr;

@@ -49,7 +49,7 @@ nsresult HTMLAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
 
-void HTMLAreaElement::GetLinkTarget(nsAString& aTarget) {
+void HTMLAreaElement::GetLinkTargetImpl(nsAString& aTarget) {
   GetAttr(nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
     GetBaseTarget(aTarget);

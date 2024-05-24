@@ -481,6 +481,11 @@ class HTMLFormElement final : public nsGenericHTMLElement {
    */
   nsresult GetActionURL(nsIURI** aActionURL, Element* aOriginatingElement);
 
+  // Get the target to submit to. This is either the submitter's |formtarget| or
+  // the form's |target| (Including <base>).
+  void GetSubmissionTarget(nsGenericHTMLElement* aSubmitter,
+                           nsAString& aTarget);
+
   // Returns a number for this form that is unique within its owner document.
   // This is used by nsContentUtils::GenerateStateKey to identify form controls
   // that are inserted into the document by the parser.

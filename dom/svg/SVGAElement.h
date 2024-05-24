@@ -52,7 +52,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   int32_t TabIndexDefault() override;
   Focusable IsFocusableWithoutStyle(IsFocusableFlags) override;
 
-  void GetLinkTarget(nsAString& aTarget) override;
+  void GetLinkTargetImpl(nsAString& aTarget) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;
   bool HasHref() const;
 
