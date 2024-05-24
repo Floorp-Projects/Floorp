@@ -108,8 +108,7 @@ static HWND GetMostRecentNavigatorHWND() {
   }
 
   nsCOMPtr<mozIDOMWindowProxy> navWin;
-  rv = winMediator->GetMostRecentWindow(u"navigator:browser",
-                                        getter_AddRefs(navWin));
+  rv = winMediator->GetMostRecentBrowserWindow(getter_AddRefs(navWin));
   if (NS_FAILED(rv) || !navWin) {
     return nullptr;
   }

@@ -647,8 +647,7 @@ void ToastNotification::SignalComNotificationHandled(
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if (winMediator) {
     nsCOMPtr<mozIDOMWindowProxy> navWin;
-    winMediator->GetMostRecentWindow(u"navigator:browser",
-                                     getter_AddRefs(navWin));
+    winMediator->GetMostRecentBrowserWindow(getter_AddRefs(navWin));
     if (navWin) {
       nsCOMPtr<nsIWidget> widget =
           WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(navWin));
