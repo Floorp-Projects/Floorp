@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 module.exports = {
-  plugins: ["react", "mozilla", "import", "file-header"],
+  plugins: ["react", "mozilla", "import"],
   globals: {
     atob: true,
     btoa: true,
@@ -332,17 +332,6 @@ module.exports = {
     // require assignment operator shorthand where possible or prohibit it
     // entirely
     "operator-assignment": 0,
-
-    "file-header/file-header": [
-      "error",
-      [
-        "This Source Code Form is subject to the terms of the Mozilla Public",
-        "License, v. 2.0. If a copy of the MPL was not distributed with this",
-        "file, You can obtain one at <http://mozilla.org/MPL/2.0/>.",
-      ],
-      "block",
-      ["-\\*-(.*)-\\*-", "eslint(.*)", "vim(.*)"],
-    ],
   },
   settings: {
     jest: {
