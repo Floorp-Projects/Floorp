@@ -371,6 +371,71 @@ add_task(async function dragTests() {
 });
 
 /**
+ * Other open context menus should prevent tab preview from opening
+ */
+add_task(async function panelSuppressionOnContextMenuTests() {
+  const tabUrl =
+    "data:text/html,<html><head><title>First New Tab</title></head><body>Hello</body></html>";
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
+  const previewComponent = gBrowser.tabContainer.previewPanel;
+
+  sinon.spy(previewComponent, "activate");
+
+  const otherMenu = document.getElementById("new-tab-button-popup");
+  otherMenu.openPopup();
+
+  EventUtils.synthesizeMouseAtCenter(tab, { type: "mouseover" }, window);
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return previewComponent.activate.called;
+  });
+  Assert.equal(previewComponent._panel.state, "closed", "");
+
+  otherMenu.hidePopup();
+  BrowserTestUtils.removeTab(tab);
+  sinon.restore();
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
+});
+
+/**
+ * Other open panels should prevent tab preview from opening
+ */
+add_task(async function panelSuppressionOnPanelTests() {
+  const tabUrl =
+    "data:text/html,<html><head><title>First New Tab</title></head><body>Hello</body></html>";
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
+  const previewComponent = gBrowser.tabContainer.previewPanel;
+
+  sinon.spy(previewComponent, "activate");
+
+  // The `openPopup` API appears to not be working for this panel,
+  // but it can be triggered by firing a click event on the associated button.
+  const appMenuButton = document.getElementById("PanelUI-menu-button");
+  const appMenuPopup = document.getElementById("appMenu-popup");
+  appMenuButton.click();
+
+  EventUtils.synthesizeMouseAtCenter(tab, { type: "mouseover" }, window);
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return previewComponent.activate.called;
+  });
+  Assert.equal(previewComponent._panel.state, "closed", "");
+
+  appMenuPopup.hidePopup();
+  BrowserTestUtils.removeTab(tab);
+  sinon.restore();
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
+});
+
+/**
  * Wheel events at the document-level of the window should hide the preview.
  */
 add_task(async function wheelTests() {
