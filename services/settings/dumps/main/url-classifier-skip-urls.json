@@ -1,20 +1,6 @@
 {
   "data": [
     {
-      "schema": 1715693354885,
-      "feature": "socialtracking-protection",
-      "pattern": "*.twimg.com",
-      "id": "ec687420-adbd-4b94-91bc-7ee7066d5b7f",
-      "last_modified": 1715937780178
-    },
-    {
-      "schema": 1715936462459,
-      "feature": "tracking-protection",
-      "pattern": "*.twimg.com",
-      "id": "e10d58ee-6b3d-4e85-883b-b020db6c3cab",
-      "last_modified": 1715937780175
-    },
-    {
       "schema": 1700179207170,
       "feature": "fingerprinting-protection",
       "pattern": "*.geetest.com",
@@ -30,5 +16,5 @@
       "last_modified": 1701090424139
     }
   ],
-  "timestamp": 1715937780178
+  "timestamp": 1716288373828
 }
