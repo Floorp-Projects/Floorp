@@ -225,7 +225,6 @@ var SidebarController = {
     if (!enumerator.hasMoreElements()) {
       let xulStore = Services.xulStore;
 
-      xulStore.persist(this._box, "style");
       xulStore.persist(this._title, "value");
     }
 
@@ -413,20 +412,20 @@ var SidebarController = {
     // If the opener had a sidebar, open the same sidebar in our window.
     // The opener can be the hidden window too, if we're coming from the state
     // where no windows are open, and the hidden window has no sidebar box.
-    let sourceUI = sourceWindow.SidebarController;
-    if (!sourceUI || !sourceUI._box) {
+    let sourceController = sourceWindow.SidebarController;
+    if (!sourceController || !sourceController._box) {
       // no source UI or no _box means we also can't adopt the state.
       return false;
     }
 
     // Set sidebar command even if hidden, so that we keep the same sidebar
     // even if it's currently closed.
-    let commandID = sourceUI._box.getAttribute("sidebarcommand");
+    let commandID = sourceController._box.getAttribute("sidebarcommand");
     if (commandID) {
       this._box.setAttribute("sidebarcommand", commandID);
     }
 
-    if (sourceUI._box.hidden) {
+    if (sourceController._box.hidden) {
       // just hidden means we have adopted the hidden state.
       return true;
     }
@@ -437,7 +436,8 @@ var SidebarController = {
       return true;
     }
 
-    this._box.style.width = sourceUI._box.getBoundingClientRect().width + "px";
+    this._box.style.width =
+      sourceController._box.getBoundingClientRect().width + "px";
     this.showInitially(commandID);
 
     return true;
