@@ -476,16 +476,22 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
         // candidate certificate is a third-party certificate, above.
         SECItem candidateCertDERSECItem =
             UnsafeMapInputToSECItem(candidateCertDER);
+
+    // This metric can be evaluated as many as 600 times during a cnn.com
+    // load so we avoid measuring it on Android because of the high
+    // cost of serializing the db everytime we measure.
+#ifndef MOZ_WIDGET_ANDROID
         auto timerId =
             mozilla::glean::cert_verifier::cert_trust_evaluation_time.Start();
-
+#endif
         UniqueCERTCertificate candidateCert(CERT_NewTempCertificate(
             CERT_GetDefaultCertDB(), &candidateCertDERSECItem, nullptr, false,
             true));
 
+#ifndef MOZ_WIDGET_ANDROID
         mozilla::glean::cert_verifier::cert_trust_evaluation_time
             .StopAndAccumulate(std::move(timerId));
-
+#endif
         if (!candidateCert) {
           result = MapPRErrorCodeToResult(PR_GetError());
           return;
