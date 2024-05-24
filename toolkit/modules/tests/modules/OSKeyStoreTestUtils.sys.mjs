@@ -54,4 +54,13 @@ export var OSKeyStoreTestUtils = {
 
     Services.prefs.setStringPref(this.TEST_ONLY_REAUTH, prevValue);
   },
+
+  base64ToUint8Array(base64) {
+    let binaryString = atob(base64);
+    let bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  },
 };

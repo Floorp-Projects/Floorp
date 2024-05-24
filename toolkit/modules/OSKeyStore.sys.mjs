@@ -342,6 +342,23 @@ export var OSKeyStore = {
   },
 
   /**
+   * Exports the recovery phrase within the native OSKeyStore if authenticated
+   * as a byte string.
+   *
+   * @returns {Promise<string>}
+   */
+  async exportRecoveryPhrase() {
+    if (!(await this.ensureLoggedIn()).authenticated) {
+      throw Components.Exception(
+        "User canceled OS unlock entry",
+        Cr.NS_ERROR_ABORT
+      );
+    }
+
+    return await lazy.nativeOSKeyStore.asyncGetRecoveryPhrase(this.STORE_LABEL);
+  },
+
+  /**
    * Resolve when the login dialogs are closed, immediately if none are open.
    *
    * An existing MP dialog will be focused and will request attention.
