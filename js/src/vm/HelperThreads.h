@@ -74,14 +74,12 @@ class AutoHelperTaskQueue {
  public:
   ~AutoHelperTaskQueue() { dispatchQueuedTasks(); }
   bool hasQueuedTasks() const { return !tasksToDispatch.empty(); }
-  void queueTaskToDispatch(JS::HelperThreadTask* task,
-                           JS::DispatchReason reason) const;
+  void queueTaskToDispatch(JS::HelperThreadTask* task) const;
   void dispatchQueuedTasks();
 
  private:
   // TODO: Convert this to use a linked list.
   mutable Vector<JS::HelperThreadTask*, 1, SystemAllocPolicy> tasksToDispatch;
-  mutable Vector<JS::DispatchReason, 1, SystemAllocPolicy> dispatchReasons;
 };
 
 // A lock guard for data protected by the helper thread lock.
