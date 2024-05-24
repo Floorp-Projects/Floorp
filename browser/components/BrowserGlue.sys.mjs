@@ -2803,17 +2803,20 @@ BrowserGlue.prototype = {
         },
       },
 
-      // Report whether Firefox is the default handler for various files types,
-      // in particular, ".pdf".
+      // Report whether Firefox is the default handler for various files types
+      // and protocols, in particular, ".pdf" and "mailto"
       {
-        name: "IsDefaultHandlerForPDF",
+        name: "IsDefaultHandler",
         condition: AppConstants.platform == "win",
         task: () => {
-          Services.telemetry.keyedScalarSet(
-            "os.environment.is_default_handler",
-            ".pdf",
-            lazy.ShellService.isDefaultHandlerFor(".pdf")
-          );
+          [".pdf", "mailto"].every(x => {
+            Services.telemetry.keyedScalarSet(
+              "os.environment.is_default_handler",
+              x,
+              lazy.ShellService.isDefaultHandlerFor(x)
+            );
+            return true;
+          });
         },
       },
 
