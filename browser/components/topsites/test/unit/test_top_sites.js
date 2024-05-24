@@ -37,7 +37,6 @@ const FAKE_LINKS = new Array(2 * TOP_SITES_MAX_SITES_PER_ROW)
     url: `http://www.site${i}.com`,
   }));
 const FAKE_SCREENSHOT = "data123";
-const SEARCH_SHORTCUTS_EXPERIMENT_PREF = "improvesearch.topSiteSearchShortcuts";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -151,6 +150,9 @@ add_task(async function test_refreshDefaults() {
     "Should have 0 DEFAULT_TOP_SITES initially."
   );
 
+  // We have to init to subscribe to changes to the preferences.
+  await TopSites.init();
+
   info("refreshDefaults should add defaults on PREFS_INITIAL_VALUES");
   TopSites.onAction({
     type: at.PREFS_INITIAL_VALUES,
@@ -166,11 +168,13 @@ add_task(async function test_refreshDefaults() {
   // Reset the DEFAULT_TOP_SITES;
   DEFAULT_TOP_SITES.length = 0;
 
-  info("refreshDefaults should add defaults on default.sites PREF_CHANGED");
-  TopSites.onAction({
-    type: at.PREF_CHANGED,
-    data: { name: "default.sites", value: "https://foo.com" },
-  });
+  info(
+    "TopSites.refreshDefaults should add defaults on default.sites pref change."
+  );
+  Services.prefs.setStringPref(
+    "browser.newtabpage.activity-stream.default.sites",
+    "https://foo.com"
+  );
 
   Assert.equal(
     DEFAULT_TOP_SITES.length,
@@ -183,7 +187,10 @@ add_task(async function test_refreshDefaults() {
 
   info("refreshDefaults should refresh on topSiteRows PREF_CHANGED");
   let refreshStub = sandbox.stub(TopSites, "refresh");
-  TopSites.onAction({ type: at.PREF_CHANGED, data: { name: "topSitesRows" } });
+  Services.prefs.setIntPref(
+    "browser.newtabpage.activity-stream.topSitesRows",
+    1
+  );
   Assert.ok(TopSites.refresh.calledOnce, "refresh called");
   refreshStub.restore();
 
@@ -240,6 +247,13 @@ add_task(async function test_refreshDefaults() {
     "Should have 0 DEFAULT_TOP_SITES now."
   );
 
+  Services.prefs.clearUserPref(
+    "browser.newtabpage.activity-stream.default.sites"
+  );
+  Services.prefs.clearUserPref(
+    "browser.newtabpage.activity-stream.topSitesRows"
+  );
+  TopSites.uninit();
   sandbox.restore();
   await cleanup();
 });
@@ -1877,7 +1891,6 @@ add_task(async function test_improvesearch_noDefaultSearchTile_experiment() {
 add_task(
   async function test_improvesearch_noDefaultSearchTile_experiment_part_2() {
     let sandbox = sinon.createSandbox();
-    const NO_DEFAULT_SEARCH_TILE_PREF = "improvesearch.noDefaultSearchTile";
 
     sandbox.stub(SearchService.prototype, "getDefault").resolves({
       identifier: "google",
@@ -1904,7 +1917,10 @@ add_task(
         "engine-default"
       );
       Assert.equal(TopSites._currentSearchHostname, "duckduckgo");
-      Assert.ok(TopSites.refresh.calledOnce, "TopSites.refresh called once");
+      // Refresh is called twice:
+      // 1) For the change of `noDefaultSearchTile`
+      // 2) Default search engine changed "browser-search-engine-modified"
+      Assert.ok(TopSites.refresh.calledTwice, "TopSites.refresh called twice");
 
       Services.prefs.clearUserPref(
         "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile"
@@ -1924,20 +1940,15 @@ add_task(
         "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
         true
       );
-
-      TopSites.onAction({
-        type: at.PREF_CHANGED,
-        data: { name: NO_DEFAULT_SEARCH_TILE_PREF, value: true },
-      });
       Assert.ok(
         TopSites.refresh.calledOnce,
         "TopSites.refresh was called once"
       );
 
-      TopSites.onAction({
-        type: at.PREF_CHANGED,
-        data: { name: NO_DEFAULT_SEARCH_TILE_PREF, value: false },
-      });
+      Services.prefs.setBoolPref(
+        "browser.newtabpage.activity-stream.improvesearch.noDefaultSearchTile",
+        false
+      );
       Assert.ok(
         TopSites.refresh.calledTwice,
         "TopSites.refresh was called twice"
@@ -1995,14 +2006,17 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
     sandbox.spy(TopSites, "updateCustomSearchShortcuts");
 
     // turn the experiment on
-    TopSites.onAction({
-      type: at.PREF_CHANGED,
-      data: { name: SEARCH_SHORTCUTS_EXPERIMENT_PREF, value: true },
-    });
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+      true
+    );
 
     Assert.ok(
       TopSites.updateCustomSearchShortcuts.calledOnce,
       "TopSites.updateCustomSearchShortcuts called once"
+    );
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts"
     );
     TopSites.updateCustomSearchShortcuts.restore();
     await cleanup();
@@ -2117,6 +2131,42 @@ add_task(async function test_improvesearch_topSitesSearchShortcuts() {
           "chrome://activity-stream/content/data/content/tippytop/images/amazon@2x.png",
       },
     ]);
+    await cleanup();
+  }
+
+  {
+    info(
+      "TopSites should refresh when top sites search shortcut feature gate pref changes."
+    );
+    let cleanup = stubTopSites(sandbox);
+    prepTopSites();
+
+    let promise = TestUtils.topicObserved("topsites-refreshed");
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+      false
+    );
+    await promise;
+
+    let sites = await TopSites.getSites();
+    let searchTopSiteCount = sites.reduce(
+      (acc, current) => (current.searchTopSite ? 1 : 0 + acc),
+      0
+    );
+    Assert.equal(searchTopSiteCount, 0, "Number of search top sites.");
+
+    promise = TestUtils.topicObserved("topsites-refreshed");
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+      true
+    );
+    await promise;
+    sites = await TopSites.getSites();
+    searchTopSiteCount = sites.reduce(
+      (acc, current) => acc + (current.searchTopSite ? 1 : 0),
+      0
+    );
+    Assert.equal(searchTopSiteCount, 2, "Number of search top sites.");
     await cleanup();
   }
 
