@@ -6,12 +6,10 @@
 
 #include "FeaturePolicy.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Feature.h"
 #include "mozilla/dom/FeaturePolicyBinding.h"
 #include "mozilla/dom/FeaturePolicyParser.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
-#include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
@@ -69,30 +67,6 @@ void FeaturePolicy::InheritPolicy(FeaturePolicy* aParentPolicy) {
       dest->SetInheritedDeniedFeature(featureName);
     }
   });
-}
-
-void FeaturePolicy::InheritPolicy(
-    const FeaturePolicyInfo& aContainerFeaturePolicyInfo) {
-  // We create a temporary FeaturePolicy from the FeaturePolicyInfo to be able
-  // to re-use the inheriting functionality from FeaturePolicy.
-  RefPtr<dom::FeaturePolicy> featurePolicy = new dom::FeaturePolicy(nullptr);
-  featurePolicy->SetDefaultOrigin(aContainerFeaturePolicyInfo.mDefaultOrigin);
-  featurePolicy->SetInheritedDeniedFeatureNames(
-      aContainerFeaturePolicyInfo.mInheritedDeniedFeatureNames);
-
-  const auto& declaredString = aContainerFeaturePolicyInfo.mDeclaredString;
-  if (aContainerFeaturePolicyInfo.mSelfOrigin && !declaredString.IsEmpty()) {
-    featurePolicy->SetDeclaredPolicy(nullptr, declaredString,
-                                     aContainerFeaturePolicyInfo.mSelfOrigin,
-                                     aContainerFeaturePolicyInfo.mSrcOrigin);
-  }
-
-  for (const auto& featureName :
-       aContainerFeaturePolicyInfo.mAttributeEnabledFeatureNames) {
-    featurePolicy->MaybeSetAllowedPolicy(featureName);
-  }
-
-  InheritPolicy(featurePolicy);
 }
 
 void FeaturePolicy::SetInheritedDeniedFeature(const nsAString& aFeatureName) {
@@ -355,15 +329,6 @@ void FeaturePolicy::MaybeSetAllowedPolicy(const nsAString& aFeatureName) {
 
   mFeatures.AppendElement(feature);
   mAttributeEnabledFeatureNames.AppendElement(aFeatureName);
-}
-
-FeaturePolicyInfo FeaturePolicy::ToFeaturePolicyInfo() const {
-  return {mInheritedDeniedFeatureNames.Clone(),
-          mAttributeEnabledFeatureNames.Clone(),
-          mDeclaredString,
-          mDefaultOrigin,
-          mSelfOrigin,
-          mSrcOrigin};
 }
 
 }  // namespace mozilla::dom

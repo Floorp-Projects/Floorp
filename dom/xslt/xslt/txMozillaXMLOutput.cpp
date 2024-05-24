@@ -6,7 +6,6 @@
 #include "txMozillaXMLOutput.h"
 
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/FeaturePolicy.h"
 #include "nsIDocShell.h"
 #include "nsIScriptElement.h"
 #include "nsCharsetSource.h"

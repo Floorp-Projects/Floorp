@@ -639,9 +639,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   OriginAttributes attrs;
   loadingContext->GetOriginAttributes(attrs);
 
-  aLoadInfo->SetContinerFeaturePolicy(
-      loadingContext->GetContainerFeaturePolicy());
-
   mLoadIdentifier = aLoadState->GetLoadIdentifier();
   // See description of  mFileName in nsDocShellLoadState.h
   mIsDownload = !aLoadState->FileName().IsVoid();

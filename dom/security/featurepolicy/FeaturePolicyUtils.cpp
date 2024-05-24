@@ -7,9 +7,8 @@
 #include "FeaturePolicyUtils.h"
 #include "nsIOService.h"
 
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
-#include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/FeaturePolicyViolationReportBody.h"
 #include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -249,46 +248,66 @@ void FeaturePolicyUtils::ReportViolation(Document* aDocument,
 }  // namespace dom
 
 namespace ipc {
+void IPDLParamTraits<dom::FeaturePolicy*>::Write(IPC::MessageWriter* aWriter,
+                                                 IProtocol* aActor,
+                                                 dom::FeaturePolicy* aParam) {
+  if (!aParam) {
+    WriteIPDLParam(aWriter, aActor, false);
+    return;
+  }
 
-void IPDLParamTraits<dom::FeaturePolicyInfo>::Write(
-    IPC::MessageWriter* aWriter, IProtocol* aActor,
-    const dom::FeaturePolicyInfo& aParam) {
-  WriteIPDLParam(aWriter, aActor, aParam.mInheritedDeniedFeatureNames);
-  WriteIPDLParam(aWriter, aActor, aParam.mAttributeEnabledFeatureNames);
-  WriteIPDLParam(aWriter, aActor, aParam.mDeclaredString);
-  WriteIPDLParam(aWriter, aActor, aParam.mDefaultOrigin);
-  WriteIPDLParam(aWriter, aActor, aParam.mSelfOrigin);
-  WriteIPDLParam(aWriter, aActor, aParam.mSrcOrigin);
+  WriteIPDLParam(aWriter, aActor, true);
+
+  dom::FeaturePolicyInfo info;
+  info.defaultOrigin() = aParam->DefaultOrigin();
+  info.selfOrigin() = aParam->GetSelfOrigin();
+  info.srcOrigin() = aParam->GetSrcOrigin();
+
+  info.declaredString() = aParam->DeclaredString();
+  info.inheritedDeniedFeatureNames() =
+      aParam->InheritedDeniedFeatureNames().Clone();
+  info.attributeEnabledFeatureNames() =
+      aParam->AttributeEnabledFeatureNames().Clone();
+
+  WriteIPDLParam(aWriter, aActor, info);
 }
 
-bool IPDLParamTraits<dom::FeaturePolicyInfo>::Read(
+bool IPDLParamTraits<dom::FeaturePolicy*>::Read(
     IPC::MessageReader* aReader, IProtocol* aActor,
-    dom::FeaturePolicyInfo* aResult) {
-  if (!ReadIPDLParam(aReader, aActor, &aResult->mInheritedDeniedFeatureNames)) {
+    RefPtr<dom::FeaturePolicy>* aResult) {
+  *aResult = nullptr;
+  bool notnull = false;
+  if (!ReadIPDLParam(aReader, aActor, &notnull)) {
     return false;
   }
 
-  if (!ReadIPDLParam(aReader, aActor,
-                     &aResult->mAttributeEnabledFeatureNames)) {
+  if (!notnull) {
+    return true;
+  }
+
+  dom::FeaturePolicyInfo info;
+  if (!ReadIPDLParam(aReader, aActor, &info)) {
     return false;
   }
 
-  if (!ReadIPDLParam(aReader, aActor, &aResult->mDeclaredString)) {
-    return false;
+  // Note that we only do IPC for feature policy to inherit policy from parent
+  // to child document. That does not need to bind feature policy with a node.
+  RefPtr<dom::FeaturePolicy> featurePolicy = new dom::FeaturePolicy(nullptr);
+  featurePolicy->SetDefaultOrigin(info.defaultOrigin());
+  featurePolicy->SetInheritedDeniedFeatureNames(
+      info.inheritedDeniedFeatureNames());
+
+  const auto& declaredString = info.declaredString();
+  if (info.selfOrigin() && !declaredString.IsEmpty()) {
+    featurePolicy->SetDeclaredPolicy(nullptr, declaredString, info.selfOrigin(),
+                                     info.srcOrigin());
   }
 
-  if (!ReadIPDLParam(aReader, aActor, &aResult->mDefaultOrigin)) {
-    return false;
+  for (auto& featureName : info.attributeEnabledFeatureNames()) {
+    featurePolicy->MaybeSetAllowedPolicy(featureName);
   }
 
-  if (!ReadIPDLParam(aReader, aActor, &aResult->mSelfOrigin)) {
-    return false;
-  }
-
-  if (!ReadIPDLParam(aReader, aActor, &aResult->mSrcOrigin)) {
-    return false;
-  }
-
+  *aResult = std::move(featurePolicy);
   return true;
 }
 }  // namespace ipc
