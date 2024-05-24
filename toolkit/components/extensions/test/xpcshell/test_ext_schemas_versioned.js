@@ -224,6 +224,50 @@ let json = [
         type: "function",
         parameters: [{ name: "arg1", $ref: "no_valid_choices" }],
       },
+      {
+        name: "fun_mixed_with_fallback",
+        type: "function",
+        max_manifest_version: 2,
+        parameters: [
+          {
+            name: "arg1",
+            type: "integer",
+          },
+          {
+            name: "arg2_mv2",
+            type: "boolean",
+          },
+          {
+            name: "arg3",
+            type: "string",
+            optional: true,
+            default: "hello",
+          },
+        ],
+      },
+      {
+        name: "fun_mixed_with_fallback",
+        type: "function",
+        min_manifest_version: 3,
+        parameters: [
+          {
+            name: "arg1",
+            type: "integer",
+          },
+          {
+            name: "arg2_mv3",
+            type: "integer",
+            optional: true,
+            default: 5,
+          },
+          {
+            name: "arg3",
+            type: "string",
+            optional: true,
+            default: "hello",
+          },
+        ],
+      },
     ],
     events: [
       {
@@ -239,6 +283,79 @@ let json = [
         name: "onEvent_mv3",
         min_manifest_version: 3,
         type: "function",
+      },
+      {
+        name: "onEvent_mixed_with_fallback",
+        type: "function",
+        max_manifest_version: 2,
+        parameters: [],
+        extraParameters: [
+          {
+            name: "extra_arg1_mv2",
+            type: "string",
+          },
+        ],
+      },
+      {
+        name: "onEvent_mixed_with_fallback",
+        type: "function",
+        min_manifest_version: 3,
+        parameters: [],
+        extraParameters: [
+          {
+            name: "extra_arg1_mv3",
+            type: "boolean",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    namespace: "multiple_fallbacks",
+    functions: [
+      {
+        name: "fun_with_multiple_fallbacks",
+        type: "function",
+        max_manifest_version: 3,
+        parameters: [
+          {
+            name: "arg1",
+            type: "integer",
+          },
+          {
+            name: "arg2_mv2",
+            type: "boolean",
+          },
+          {
+            name: "arg3",
+            type: "string",
+            optional: true,
+            default: "hello",
+          },
+        ],
+      },
+      {
+        name: "fun_with_multiple_fallbacks",
+        type: "function",
+        min_manifest_version: 3,
+        parameters: [
+          {
+            name: "arg1",
+            type: "integer",
+          },
+          {
+            name: "arg2_mv3",
+            type: "integer",
+            optional: true,
+            default: 5,
+          },
+          {
+            name: "arg3",
+            type: "string",
+            optional: true,
+            default: "hello",
+          },
+        ],
       },
     ],
   },
@@ -364,6 +481,36 @@ add_task(async function test_inject_V2() {
     () => root.mixed.fun_no_valid_param("anything"),
     /Incorrect argument types for mixed.fun_no_valid_param/,
     "fun_no_valid_param should throw for versioned type"
+  );
+
+  // Multiple function definitions with fallback. Provide all 3 MV2 parameters
+  root.mixed.fun_mixed_with_fallback(1, false, "good bye");
+  wrapper.verify("call", "mixed", "fun_mixed_with_fallback", [
+    1,
+    false,
+    "good bye",
+  ]);
+  // Leave out the optional 3rd parameter.
+  root.mixed.fun_mixed_with_fallback(2, true);
+  wrapper.verify("call", "mixed", "fun_mixed_with_fallback", [
+    2,
+    true,
+    "hello",
+  ]);
+  // In MV2 the second argument is not optional, should throw if left out.
+  Assert.throws(
+    () => root.mixed.fun_mixed_with_fallback(2, "good bye"),
+    /Error: Incorrect argument types for mixed.fun_mixed_with_fallback/,
+    "fun_mixed_with_fallback should throw"
+  );
+
+  // Multiple event definitions with fallback.
+  root.mixed.onEvent_mixed_with_fallback.addListener(() => {}, "hello");
+  // Use wrong types and check that it throws.
+  Assert.throws(
+    () => root.mixed.onEvent_mixed_with_fallback.addListener(() => {}, true),
+    /Error: Incorrect argument types for mixed.onEvent_mixed_with_fallback/,
+    "onEvent_mixed_with_fallback should throw"
   );
 });
 
@@ -578,6 +725,45 @@ add_task(async function test_inject_V3() {
     /TypeError: root.mixed.PROP_mv3.sub_no_match is not a function/,
     "sub_no_match should throw"
   );
+
+  // Multiple function definitions with fallback. Provide all 3 MV3 parameters.
+  root.mixed.fun_mixed_with_fallback(1, 3, "good bye");
+  wrapper.verify("call", "mixed", "fun_mixed_with_fallback", [
+    1,
+    3,
+    "good bye",
+  ]);
+  // Leave out the 3rd parameter.
+  root.mixed.fun_mixed_with_fallback(2, 3);
+  wrapper.verify("call", "mixed", "fun_mixed_with_fallback", [2, 3, "hello"]);
+  // Leave out the 2nd parameter, which is optional only in MV3.
+  root.mixed.fun_mixed_with_fallback(2, "good bye");
+  wrapper.verify("call", "mixed", "fun_mixed_with_fallback", [
+    2,
+    5,
+    "good bye",
+  ]);
+  // Leave out 2nd and 3rd parameter.
+  root.mixed.fun_mixed_with_fallback(3);
+  wrapper.verify("call", "mixed", "fun_mixed_with_fallback", [3, 5, "hello"]);
+
+  // Multiple event definitions with fallback.
+  root.mixed.onEvent_mixed_with_fallback.addListener(() => {}, true);
+  // Use wrong types and check that it throws.
+  Assert.throws(
+    () => root.mixed.onEvent_mixed_with_fallback.addListener(() => {}, "hello"),
+    /Error: Incorrect argument types for mixed.onEvent_mixed_with_fallback/,
+    "onEvent_mixed_with_fallback should throw"
+  );
+
+  // A namespace with multiple fallbacks should fail to inject in DEBUG builds.
+  if (AppConstants.DEBUG) {
+    Assert.throws(
+      () => root.multiple_fallbacks.fun_with_multiple_fallbacks(3),
+      /Namespace multiple_fallbacks has multiple definitions for fun_with_multiple_fallbacks for manifest version 3/,
+      "fun_with_multiple_fallbacks should throw"
+    );
+  }
 });
 
 add_task(async function test_normalize_V3() {
