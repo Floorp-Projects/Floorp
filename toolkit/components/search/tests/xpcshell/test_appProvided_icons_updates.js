@@ -234,8 +234,8 @@ add_task(async function test_icon_added_existing_engine() {
   });
   await client.db.update(mock.record, Date.now());
 
-  let promiseEngineUpdated = SearchTestUtils.promiseSearchNotification(
-    SearchUtils.MODIFIED_TYPE.CHANGED,
+  let promiseIconChanged = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.ICON_CHANGED,
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
 
@@ -250,7 +250,7 @@ add_task(async function test_icon_added_existing_engine() {
 
   SearchTestUtils.idleService._fireObservers("idle");
 
-  await promiseEngineUpdated;
+  await promiseIconChanged;
   await assertEngineIcon("engine_no_initial_icon name", "bigIcon.ico");
 });
 
@@ -270,8 +270,8 @@ add_task(async function test_icon_updated() {
   });
   await client.db.update(mock.record, Date.now());
 
-  let promiseEngineUpdated = SearchTestUtils.promiseSearchNotification(
-    SearchUtils.MODIFIED_TYPE.CHANGED,
+  let promiseIconChanged = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.ICON_CHANGED,
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
 
@@ -285,7 +285,7 @@ add_task(async function test_icon_updated() {
   });
   SearchTestUtils.idleService._fireObservers("idle");
 
-  await promiseEngineUpdated;
+  await promiseIconChanged;
   await assertEngineIcon("engine_icon_updates name", "bigIcon.ico");
 });
 
@@ -296,12 +296,12 @@ add_task(async function test_icon_not_local() {
   await assertEngineIcon("engine_icon_not_local name", null);
 
   // A download should have been queued, so fire idle to trigger it.
-  let promiseEngineUpdated = SearchTestUtils.promiseSearchNotification(
-    SearchUtils.MODIFIED_TYPE.CHANGED,
+  let promiseIconChanged = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.ICON_CHANGED,
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
   SearchTestUtils.idleService._fireObservers("idle");
-  await promiseEngineUpdated;
+  await promiseIconChanged;
 
   await assertEngineIcon("engine_icon_not_local name", "bigIcon.ico");
 });
@@ -313,12 +313,12 @@ add_task(async function test_icon_out_of_date() {
   await assertEngineIcon("engine_icon_out_of_date name", "remoteIcon.ico");
 
   // A download should have been queued, so fire idle to trigger it.
-  let promiseEngineUpdated = SearchTestUtils.promiseSearchNotification(
-    SearchUtils.MODIFIED_TYPE.CHANGED,
+  let promiseIconChanged = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.ICON_CHANGED,
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
   SearchTestUtils.idleService._fireObservers("idle");
-  await promiseEngineUpdated;
+  await promiseIconChanged;
 
   await assertEngineIcon("engine_icon_out_of_date name", "bigIcon.ico");
 });

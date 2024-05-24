@@ -749,6 +749,7 @@ class EngineStore {
         this.notifyRowCountChanged(gEngineView.lastEngineIndex, 1);
         break;
       case "engine-changed":
+      case "engine-icon-changed":
         this.updateEngine(engine);
         this.notifyRebuildViews();
         break;

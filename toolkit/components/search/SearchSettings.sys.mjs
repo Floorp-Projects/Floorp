@@ -5,6 +5,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AppProvidedSearchEngine:
+    "resource://gre/modules/AppProvidedSearchEngine.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
@@ -500,6 +502,15 @@ export class SearchSettings {
           case lazy.SearchUtils.MODIFIED_TYPE.CHANGED:
           case lazy.SearchUtils.MODIFIED_TYPE.REMOVED:
             this._delayedWrite();
+            break;
+          case lazy.SearchUtils.MODIFIED_TYPE.ICON_CHANGED:
+            // Application Provided Search Engines have their icons stored in
+            // Remote Settings, so we don't need to update the saved settings.
+            if (
+              !(engine?.wrappedJSObject instanceof lazy.AppProvidedSearchEngine)
+            ) {
+              this._delayedWrite();
+            }
             break;
         }
         break;
