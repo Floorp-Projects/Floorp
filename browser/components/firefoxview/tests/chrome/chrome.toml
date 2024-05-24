@@ -2,4 +2,10 @@
 
 ["test_card_container.html"]
 
+["test_fxview_search_textbox.html"]
+skip-if = [
+  "os == 'win' && debug",
+  "os == 'linux' && debug",
+]
+
 ["test_fxview_tab_list.html"]
