@@ -95,6 +95,15 @@ pub enum BlurDirection {
     Vertical,
 }
 
+impl BlurDirection {
+    pub fn as_int(self) -> i32 {
+        match self {
+            BlurDirection::Horizontal => 0,
+            BlurDirection::Vertical => 1,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -102,7 +111,7 @@ pub enum BlurDirection {
 pub struct BlurInstance {
     pub task_address: RenderTaskAddress,
     pub src_task_address: RenderTaskAddress,
-    pub blur_direction: BlurDirection,
+    pub blur_direction: i32,
 }
 
 #[derive(Clone, Debug)]
@@ -580,6 +589,15 @@ pub enum ClipSpace {
     Primitive = 1,
 }
 
+impl ClipSpace {
+    pub fn as_int(self) -> u32 {
+        match self {
+            ClipSpace::Raster => 0,
+            ClipSpace::Primitive => 1,
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -588,7 +606,7 @@ pub struct MaskInstance {
     pub prim: PrimitiveInstanceData,
     pub clip_transform_id: TransformPaletteId,
     pub clip_address: i32,
-    pub clip_space: ClipSpace,
+    pub clip_space: u32,
     pub unused: i32,
 }
 
