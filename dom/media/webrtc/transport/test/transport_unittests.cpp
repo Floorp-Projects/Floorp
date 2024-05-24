@@ -651,31 +651,30 @@ class TransportTestPeer : public sigslot::has_slots<> {
   // Gathering complete, so send our candidates and start
   // connecting on the other peer.
   void GatheringComplete() {
-    nsresult res;
-
     // Don't send to the other side
     if (!peer_) {
       gathering_complete_ = true;
       return;
     }
 
-    // First send attributes
     test_utils_->SyncDispatchToSTS(
-        WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::ParseGlobalAttributes,
-                        ice_ctx_->GetGlobalAttributes()));
+        WrapRunnable(this, &TransportTestPeer::GatheringComplete_s));
+  }
+
+  void GatheringComplete_s() {
+    // First send attributes
+    nsresult res =
+        peer_->ice_ctx_->ParseGlobalAttributes(ice_ctx_->GetGlobalAttributes());
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
     for (size_t i = 0; i < streams_.size(); ++i) {
-      test_utils_->SyncDispatchToSTS(WrapRunnableRet(
-          &res, peer_->streams_[i], &NrIceMediaStream::ConnectToPeer, "ufrag",
-          "pass", streams_[i]->GetAttributes()));
-
+      res = peer_->streams_[i]->ConnectToPeer("ufrag", "pass",
+                                              streams_[i]->GetAttributes());
       ASSERT_TRUE(NS_SUCCEEDED(res));
     }
 
     // Start checks on the other peer.
-    test_utils_->SyncDispatchToSTS(
-        WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::StartChecks));
+    res = peer_->ice_ctx_->StartChecks();
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
@@ -778,8 +777,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   std::string name_;
   bool offerer_;
   nsCOMPtr<nsIEventTarget> target_;
-  size_t received_packets_;
-  size_t received_bytes_;
+  std::atomic<size_t> received_packets_;
+  std::atomic<size_t> received_bytes_;
   RefPtr<TransportFlow> flow_;
   TransportLayerLoopback* loopback_;
   TransportLayerLogging* logging_;

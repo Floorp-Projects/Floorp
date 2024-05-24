@@ -95,7 +95,7 @@ class TimerTest : public MtransportTest {
 
  protected:
   void* handle_;
-  bool fired_;
+  std::atomic<bool> fired_;
 };
 }  // namespace
 
