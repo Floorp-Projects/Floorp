@@ -35,6 +35,7 @@ function countGCs(allocCount) {
   for (let i = 0; i < allocCount - 1 ; i++) {
     a.push({x: i});
   }
+  finishgc();
 
   return {
     minor: gcparam("minorGCNumber") - init.minor,
