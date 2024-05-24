@@ -81,6 +81,8 @@ class OSKeyStore final : public nsIOSKeyStore {
   nsresult RecoverSecret(const nsACString& aLabel,
                          const nsACString& aRecoveryPhrase);
   nsresult DeleteSecret(const nsACString& aLabel);
+  nsresult RetrieveRecoveryPhrase(const nsACString& aLabel,
+                                  /* out */ nsACString& aRecoveryPhrase);
   nsresult EncryptBytes(const nsACString& aLabel,
                         const std::vector<uint8_t>& aInBytes,
                         /*out*/ nsACString& aEncryptedBase64Text);

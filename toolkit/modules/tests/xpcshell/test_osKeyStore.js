@@ -100,3 +100,93 @@ add_task(async function test_decryption_failure() {
     Assert.notEqual(ex.result, Cr.NS_ERROR_ABORT);
   }
 });
+
+add_task(async function test_exportRecoveryPhrase() {
+  // First, we need to get the original recovery phrase returned by generating
+  // the secret key for the native key store the first time. We'll do this by
+  // first destroying the secret, then generating it again, both with the
+  // underlying native OSKeyStore mechanism.
+  let nativeOSKeyStore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
+
+  // Just to make sure we're not about to blow away any _real_ secrets
+  // associated with the OSKeyStore, we'll check that the OSKeyStoreTestUtils
+  // has written the original store label to ORIGINAL_STORE_LABEL, and that
+  // this doesn't match OSKeyStore.STORE_LABEL.
+  Assert.ok(
+    OSKeyStoreTestUtils.ORIGINAL_STORE_LABEL.length,
+    "OSKeyStoreTestUtils.ORIGINAL_STORE_LABEL must have some length"
+  );
+  Assert.notEqual(
+    OSKeyStoreTestUtils.ORIGINAL_STORE_LABEL,
+    OSKeyStore.STORE_LABEL
+  );
+
+  // If we got this far, we can destroy the secret key, since it's just the
+  // one used in tests.
+  await nativeOSKeyStore.asyncDeleteSecret(OSKeyStore.STORE_LABEL);
+  const expectedRecoveryPhrase = await nativeOSKeyStore.asyncGenerateSecret(
+    OSKeyStore.STORE_LABEL
+  );
+
+  const ORIGINAL_STRING = "I'm a string that will be encrypted.";
+  let encryptedString = await OSKeyStore.encrypt(ORIGINAL_STRING);
+
+  let recoveryPhrase = await OSKeyStore.exportRecoveryPhrase();
+  Assert.ok(recoveryPhrase, "Got a recovery phrase back");
+  Assert.equal(
+    recoveryPhrase,
+    expectedRecoveryPhrase,
+    "The recovery phrase matches the one initially returned when " +
+      "generating the secret"
+  );
+
+  // Now delete the secret key (again)...
+  await nativeOSKeyStore.asyncDeleteSecret(OSKeyStore.STORE_LABEL);
+
+  // Now try to regenerate the secret using the recovery phrase.
+  await nativeOSKeyStore.asyncRecoverSecret(
+    OSKeyStore.STORE_LABEL,
+    recoveryPhrase
+  );
+
+  let decryptedString = await OSKeyStore.decrypt(encryptedString);
+
+  Assert.equal(
+    decryptedString,
+    ORIGINAL_STRING,
+    "Decrypted string matches the original string"
+  );
+});
+
+/**
+ * Tests the behaviour of exporting the recovery phrase when there is no
+ * store secret.
+ */
+add_task(async function test_exportRecoveryPhrase_no_secret() {
+  let nativeOSKeyStore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
+
+  // Just to make sure we're not about to blow away any _real_ secrets
+  // associated with the OSKeyStore, we'll check that the OSKeyStoreTestUtils
+  // has written the original store label to ORIGINAL_STORE_LABEL, and that
+  // this doesn't match OSKeyStore.STORE_LABEL.
+  Assert.ok(
+    OSKeyStoreTestUtils.ORIGINAL_STORE_LABEL.length,
+    "OSKeyStoreTestUtils.ORIGINAL_STORE_LABEL must have some length"
+  );
+  Assert.notEqual(
+    OSKeyStoreTestUtils.ORIGINAL_STORE_LABEL,
+    OSKeyStore.STORE_LABEL
+  );
+
+  // If we got this far, we can destroy the secret key.
+  await nativeOSKeyStore.asyncDeleteSecret(OSKeyStore.STORE_LABEL);
+
+  // This should cause a new secret key to be automatically generated and
+  // then returned.
+  let recoveryPhrase = await OSKeyStore.exportRecoveryPhrase();
+  Assert.ok(recoveryPhrase, "Got a recovery phrase back");
+});

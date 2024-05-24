@@ -126,6 +126,26 @@ nsresult OSKeyStore::DeleteSecret(const nsACString& aLabel) {
   return mKs->DeleteSecret(aLabel);
 }
 
+nsresult OSKeyStore::RetrieveRecoveryPhrase(
+    const nsACString& aLabel,
+    /* out */ nsACString& aRecoveryPhrase) {
+  NS_ENSURE_STATE(mKs);
+  nsAutoCString secretString;
+  nsresult rv = mKs->RetrieveSecret(aLabel, secretString);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCString recoveryPhrase;
+  rv = Base64Encode(secretString, recoveryPhrase);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  aRecoveryPhrase = std::move(recoveryPhrase);
+  return NS_OK;
+}
+
 enum Cipher { Encrypt = true, Decrypt = false };
 
 nsresult OSKeyStore::EncryptBytes(const nsACString& aLabel,
@@ -488,6 +508,55 @@ OSKeyStore::AsyncDecryptBytes(const nsACString& aLabel,
        aLabel = nsAutoCString(aLabel)]() mutable {
         BackgroundDecryptBytes(aLabel, aEncryptedBase64Text, promiseHandle,
                                self);
+      }));
+
+  promiseHandle.forget(promiseOut);
+  return NS_DispatchBackgroundTask(runnable.forget(),
+                                   NS_DISPATCH_EVENT_MAY_BLOCK);
+}
+
+void BackgroundGetRecoveryPhrase(const nsACString& aLabel,
+                                 RefPtr<Promise>& aPromise,
+                                 const RefPtr<OSKeyStore>& self) {
+  nsAutoCString recoveryPhrase;
+  nsresult rv = self->RetrieveRecoveryPhrase(aLabel, recoveryPhrase);
+  nsAutoString exportedRecoveryPhrase;
+  if (NS_SUCCEEDED(rv)) {
+    CopyUTF8toUTF16(recoveryPhrase, exportedRecoveryPhrase);
+  }
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+      "BackgroundRetrieveRecoveryPhraseResolve",
+      [rv, aPromise = std::move(aPromise), exportedRecoveryPhrase]() {
+        if (NS_FAILED(rv)) {
+          aPromise->MaybeReject(rv);
+        } else {
+          aPromise->MaybeResolve(exportedRecoveryPhrase);
+        }
+      }));
+  NS_DispatchToMainThread(runnable.forget());
+}
+
+NS_IMETHODIMP
+OSKeyStore::AsyncGetRecoveryPhrase(const nsACString& aLabel, JSContext* aCx,
+                                   Promise** promiseOut) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  NS_ENSURE_ARG_POINTER(aCx);
+
+  RefPtr<Promise> promiseHandle;
+  nsresult rv = GetPromise(aCx, promiseHandle);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  RefPtr<OSKeyStore> self = this;
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+      "BackgroundGetRecoveryPhrase",
+      [promiseHandle, self, aLabel = nsAutoCString(aLabel)]() mutable {
+        BackgroundGetRecoveryPhrase(aLabel, promiseHandle, self);
       }));
 
   promiseHandle.forget(promiseOut);
