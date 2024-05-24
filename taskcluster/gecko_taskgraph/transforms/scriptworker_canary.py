@@ -32,7 +32,8 @@ def build_command(config, jobs):
         command = ["release", "push-scriptworker-canary"]
         for scriptworker in scriptworkers:
             command.extend(["--scriptworker", scriptworker])
-        for address in job.pop("addresses"):
+        addresses = job.pop("addresses")
+        for address in addresses:
             command.extend(["--address", address])
         if "ssh-key-secret" in job:
             ssh_key_secret = job.pop("ssh-key-secret")
@@ -41,5 +42,8 @@ def build_command(config, jobs):
 
         job.setdefault("run", {}).update(
             {"using": "mach", "mach": " ".join(map(shell_quote, command))}
+        )
+        job.setdefault("routes", []).extend(
+            [f"notify.email.{address}.on-failed" for address in addresses]
         )
         yield job
