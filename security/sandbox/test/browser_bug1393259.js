@@ -17,7 +17,10 @@ const kPageURL =
   "http://example.com/browser/security/sandbox/test/bug1393259.html";
 
 // Parameters for running the python script that registers/unregisters fonts.
-const kPythonPath = "/usr/bin/python";
+let kPythonPath = "/usr/bin/python";
+if (AppConstants.isPlatformAndVersionAtLeast("macosx", 23.0)) {
+  kPythonPath = "/usr/local/bin/python3";
+}
 const kFontInstallerPath = "browser/security/sandbox/test/mac_register_font.py";
 const kUninstallFlag = "-u";
 const kVerboseFlag = "-v";
