@@ -21,6 +21,9 @@ export default class TabHoverPreviewPanel {
     this._win = panel.ownerGlobal;
     this._tab = null;
     this._thumbnailElement = null;
+
+    this._setExternalPopupListeners();
+
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_prefDisableAutohide",
@@ -80,6 +83,10 @@ export default class TabHoverPreviewPanel {
   }
 
   activate(tab) {
+    if (this._isDisabled()) {
+      return;
+    }
+
     this._tab = tab;
     this._thumbnailElement = null;
     this._maybeRequestThumbnail();
@@ -180,6 +187,38 @@ export default class TabHoverPreviewPanel {
         POPUP_OPTIONS.y
       );
     }
+  }
+
+  /**
+   * Listen for any panels or menupopups that open or close anywhere else in the DOM tree
+   * and maintain a list of the ones that are currently open.
+   * This is used to disable tab previews until such time as the other panels are closed.
+   */
+  _setExternalPopupListeners() {
+    // Since the tab preview panel is lazy loaded, there is a possibility that panels could
+    // already be open on init. Therefore we need to initialize _openPopups with existing panels
+    // the first time.
+    const initialPopups = this._win.document.querySelectorAll(
+      "panel[panelopen=true]:not(#tab-preview-panel), menupopup[open=true]"
+    );
+    this._openPopups = new Set(initialPopups);
+
+    const handleExternalPopupEvent = (eventName, setMethod) => {
+      this._win.addEventListener(eventName, ev => {
+        if (
+          ev.target !== this._panel &&
+          (ev.target.nodeName == "panel" || ev.target.nodeName == "menupopup")
+        ) {
+          this._openPopups[setMethod](ev.target);
+        }
+      });
+    };
+    handleExternalPopupEvent("popupshowing", "add");
+    handleExternalPopupEvent("popuphidden", "delete");
+  }
+
+  _isDisabled() {
+    return Boolean(this._openPopups.size);
   }
 
   get _displayTitle() {
