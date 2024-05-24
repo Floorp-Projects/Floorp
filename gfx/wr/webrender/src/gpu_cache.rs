@@ -159,6 +159,7 @@ impl GpuCacheHandle {
 // A unique address in the GPU cache. These are uploaded
 // as part of the primitive instances, to allow the vertex
 // shader to fetch the specific data.
+#[repr(C)]
 #[derive(Copy, Debug, Clone, MallocSizeOf, Eq, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

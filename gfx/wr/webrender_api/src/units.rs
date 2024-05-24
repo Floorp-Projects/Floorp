@@ -156,6 +156,7 @@ pub type BlobToDeviceTranslation = Translation2D<i32, LayoutPixel, DevicePixel>;
 /// the UVs in the vertex shader means nothing needs to be
 /// updated on the CPU when the texture size changes.
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[repr(C)]
 pub struct TexelRect {
     pub uv0: DevicePoint,
     pub uv1: DevicePoint,
