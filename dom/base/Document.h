@@ -1503,8 +1503,7 @@ class Document : public nsINode,
 
   void DoNotifyPossibleTitleChange();
 
-  void InitFeaturePolicy(const Variant<Nothing, FeaturePolicyInfo, Element*>&
-                             aContainerFeaturePolicy);
+  void InitFeaturePolicy();
   nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
   void EnsureNotEnteringAndExitFullscreen();

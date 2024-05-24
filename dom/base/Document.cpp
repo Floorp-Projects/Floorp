@@ -180,7 +180,6 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/HTMLDialogElement.h"
-#include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
@@ -188,7 +187,6 @@
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMetaElement.h"
-#include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/ImageTracker.h"
@@ -3879,68 +3877,74 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   return NS_OK;
 }
 
-static FeaturePolicy* GetFeaturePolicyFromElement(Element* aElement) {
-  if (auto* iframe = HTMLIFrameElement::FromNodeOrNull(aElement)) {
-    return iframe->FeaturePolicy();
-  }
-
-  if (!HTMLObjectElement::FromNodeOrNull(aElement) &&
-      !HTMLEmbedElement::FromNodeOrNull(aElement)) {
+static Document* GetInProcessParentDocumentFrom(BrowsingContext* aContext) {
+  BrowsingContext* parentContext = aContext->GetParent();
+  if (!parentContext) {
     return nullptr;
   }
 
-  return aElement->OwnerDoc()->FeaturePolicy();
+  WindowContext* windowContext = parentContext->GetCurrentWindowContext();
+  if (!windowContext) {
+    return nullptr;
+  }
+
+  return windowContext->GetDocument();
 }
 
-void Document::InitFeaturePolicy(
-    const Variant<Nothing, FeaturePolicyInfo, Element*>&
-        aContainerFeaturePolicy) {
+already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
+  BrowsingContext* browsingContext = GetBrowsingContext();
+  if (!browsingContext) {
+    return nullptr;
+  }
+  if (!browsingContext->IsContentSubframe()) {
+    return nullptr;
+  }
+
+  HTMLIFrameElement* iframe =
+      HTMLIFrameElement::FromNodeOrNull(browsingContext->GetEmbedderElement());
+  if (iframe) {
+    return do_AddRef(iframe->FeaturePolicy());
+  }
+
+  if (XRE_IsParentProcess()) {
+    return do_AddRef(browsingContext->Canonical()->GetContainerFeaturePolicy());
+  }
+
+  if (Document* parentDocument =
+          GetInProcessParentDocumentFrom(browsingContext)) {
+    return do_AddRef(parentDocument->FeaturePolicy());
+  }
+
+  WindowContext* windowContext = browsingContext->GetCurrentWindowContext();
+  if (!windowContext) {
+    return nullptr;
+  }
+
+  WindowGlobalChild* child = windowContext->GetWindowGlobalChild();
+  if (!child) {
+    return nullptr;
+  }
+
+  return do_AddRef(child->GetContainerFeaturePolicy());
+}
+
+void Document::InitFeaturePolicy() {
   MOZ_ASSERT(mFeaturePolicy, "we should have FeaturePolicy created");
 
   mFeaturePolicy->ResetDeclaredPolicy();
 
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
 
-  aContainerFeaturePolicy.match(
-      [](const Nothing&) {},
-      [this](const FeaturePolicyInfo& aContainerFeaturePolicy) {
-        // Let's inherit the policy from the possibly cross-origin container.
-        mFeaturePolicy->InheritPolicy(aContainerFeaturePolicy);
-        mFeaturePolicy->SetSrcOrigin(aContainerFeaturePolicy.mSrcOrigin);
-      },
-      [this](Element* aContainer) {
-        // Let's inherit the policy from the parent container element if it
-        // exists.
-        if (RefPtr<dom::FeaturePolicy> containerFeaturePolicy =
-                GetFeaturePolicyFromElement(aContainer)) {
-          mFeaturePolicy->InheritPolicy(containerFeaturePolicy);
-          mFeaturePolicy->SetSrcOrigin(containerFeaturePolicy->GetSrcOrigin());
-        }
-      });
-}
-
-Element* GetEmbedderElementFrom(BrowsingContext* aBrowsingContext) {
-  if (!aBrowsingContext) {
-    return nullptr;
+  RefPtr<mozilla::dom::FeaturePolicy> parentPolicy = GetParentFeaturePolicy();
+  if (parentPolicy) {
+    // Let's inherit the policy from the parent HTMLIFrameElement if it exists.
+    mFeaturePolicy->InheritPolicy(parentPolicy);
+    mFeaturePolicy->SetSrcOrigin(parentPolicy->GetSrcOrigin());
   }
-  if (!aBrowsingContext->IsContentSubframe()) {
-    return nullptr;
-  }
-
-  return aBrowsingContext->GetEmbedderElement();
 }
 
 nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (Maybe<FeaturePolicyInfo> featurePolicyContainer =
-          loadInfo->GetContainerFeaturePolicyInfo()) {
-    InitFeaturePolicy(AsVariant(*featurePolicyContainer));
-  } else if (Element* embedderElement =
-                 GetEmbedderElementFrom(GetBrowsingContext())) {
-    InitFeaturePolicy(AsVariant(embedderElement));
-  } else {
-    InitFeaturePolicy(AsVariant(Nothing{}));
-  }
+  InitFeaturePolicy();
 
   // We don't want to parse the http Feature-Policy header if this pref is off.
   if (!StaticPrefs::dom_security_featurePolicy_header_enabled()) {

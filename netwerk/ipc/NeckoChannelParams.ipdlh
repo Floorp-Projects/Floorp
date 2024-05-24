@@ -15,7 +15,6 @@ include DOMTypes;
 include ProtocolTypes;
 
 include "mozilla/dom/FetchIPCTypes.h";
-include "mozilla/dom/FeaturePolicyUtils.h";
 include "mozilla/dom/PropertyBagUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
@@ -38,7 +37,6 @@ using nsILoadInfo::StoragePermissionState from "nsILoadInfo.h";
 using struct mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 using mozilla::dom::RequestMode from "mozilla/dom/RequestBinding.h";
 using mozilla::net::LinkHeader from "nsNetUtil.h";
-using mozilla::dom::FeaturePolicyInfo from "mozilla/dom/FeaturePolicy.h";
 
 namespace mozilla {
 namespace net {
@@ -259,8 +257,6 @@ struct ParentLoadInfoForwarderArgs
   bool allowListFutureDocumentsCreatedFromThisRedirectChain;
 
   CookieJarSettingsArgs? cookieJarSettings;
-
-  FeaturePolicyInfo? containerFeaturePolicyInfo;
 
   uint32_t requestBlockingReason;
 
