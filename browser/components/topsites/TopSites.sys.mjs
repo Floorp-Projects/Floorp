@@ -1125,9 +1125,6 @@ class _TopSites {
           this.refreshDefaults(action.data[DEFAULT_SITES_PREF]);
         }
         break;
-      case at.TOP_SITES_INSERT:
-        this.insert(action);
-        break;
       case at.UPDATE_PINNED_SEARCH_SHORTCUTS:
         this.updatePinnedSearchShortcuts(action.data);
         break;

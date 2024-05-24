@@ -1112,7 +1112,7 @@ add_task(async function test_onAction_part_2() {
     type: at.TOP_SITES_INSERT,
     data: { site: { url: "foo.bar", label: "foo" } },
   };
-  TopSites.onAction(addAction);
+  TopSites.insert(addAction);
   Assert.ok(
     NewTabUtils.pinnedLinks.pin.calledOnce,
     "NewTabUtils.pinnedLinks.pin called once"
@@ -1128,7 +1128,7 @@ add_task(async function test_onAction_part_2() {
     type: at.TOP_SITES_INSERT,
     data: { site: { url: "foo.bar", label: "foo" }, index: 3 },
   };
-  TopSites.onAction(dropAction);
+  TopSites.insert(dropAction);
   Assert.ok(
     NewTabUtils.pinnedLinks.pin.calledOnce,
     "NewTabUtils.pinnedLinks.pin called once"
@@ -1755,7 +1755,7 @@ add_task(async function test_integration() {
     NewTabUtils.pinnedLinks.links.push(link);
   });
 
-  TopSites.onAction({ type: at.TOP_SITES_INSERT, data: { site: { url } } });
+  await TopSites.insert({ type: at.TOP_SITES_INSERT, data: { site: { url } } });
   await TestUtils.topicObserved("topsites-refreshed");
   let oldSites = await TopSites.getSites();
   NewTabUtils.pinnedLinks.links.pop();
