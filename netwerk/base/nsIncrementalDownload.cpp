@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/UniquePtr.h"
 
@@ -18,8 +17,6 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIStreamListener.h"
-#include "nsIThreadRetargetableRequest.h"
-#include "nsIThreadRetargetableStreamListener.h"
 #include "nsIFile.h"
 #include "nsIHttpChannel.h"
 #include "nsITimer.h"
@@ -94,19 +91,18 @@ static void MakeRangeSpec(const int64_t& size, const int64_t& maxSize,
 //-----------------------------------------------------------------------------
 
 class nsIncrementalDownload final : public nsIIncrementalDownload,
-                                    public nsIThreadRetargetableStreamListener,
+                                    public nsIStreamListener,
                                     public nsIObserver,
                                     public nsIInterfaceRequestor,
                                     public nsIChannelEventSink,
                                     public nsSupportsWeakReference,
                                     public nsIAsyncVerifyRedirectCallback {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSIINCREMENTALDOWNLOAD
   NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
@@ -307,11 +303,11 @@ nsresult nsIncrementalDownload::ReadCurrentSize() {
 }
 
 // nsISupports
+
 NS_IMPL_ISUPPORTS(nsIncrementalDownload, nsIIncrementalDownload, nsIRequest,
-                  nsIStreamListener, nsIThreadRetargetableStreamListener,
-                  nsIRequestObserver, nsIObserver, nsIInterfaceRequestor,
-                  nsIChannelEventSink, nsISupportsWeakReference,
-                  nsIAsyncVerifyRedirectCallback)
+                  nsIStreamListener, nsIRequestObserver, nsIObserver,
+                  nsIInterfaceRequestor, nsIChannelEventSink,
+                  nsISupportsWeakReference, nsIAsyncVerifyRedirectCallback)
 
 // nsIRequest
 
@@ -497,10 +493,10 @@ nsIncrementalDownload::Start(nsIRequestObserver* observer,
 // nsIRequestObserver
 
 NS_IMETHODIMP
-nsIncrementalDownload::OnStartRequest(nsIRequest* aRequest) {
+nsIncrementalDownload::OnStartRequest(nsIRequest* request) {
   nsresult rv;
 
-  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest, &rv);
+  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(request, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // Ensure that we are receiving a 206 response.
@@ -667,22 +663,8 @@ nsIncrementalDownload::OnStartRequest(nsIRequest* aRequest) {
   mChunk = mozilla::MakeUniqueFallible<char[]>(mChunkSize);
   if (!mChunk) rv = NS_ERROR_OUT_OF_MEMORY;
 
-  if (nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(aRequest)) {
-    nsCOMPtr<nsIEventTarget> sts =
-        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    RefPtr queue =
-        TaskQueue::Create(sts.forget(), "nsIncrementalDownload Delivery Queue");
-    LOG(
-        ("nsIncrementalDownload::OnStartRequest\n"
-         "    Retarget to stream transport service\n"));
-    rr->RetargetDeliveryTo(queue);
-  }
-
   return rv;
 }
-
-NS_IMETHODIMP
-nsIncrementalDownload::CheckListenerChain() { return NS_OK; }
 
 NS_IMETHODIMP
 nsIncrementalDownload::OnStopRequest(nsIRequest* request, nsresult status) {
@@ -715,6 +697,7 @@ nsIncrementalDownload::OnStopRequest(nsIRequest* request, nsresult status) {
 }
 
 // nsIStreamListener
+
 NS_IMETHODIMP
 nsIncrementalDownload::OnDataAvailable(nsIRequest* request,
                                        nsIInputStream* input, uint64_t offset,
@@ -737,19 +720,11 @@ nsIncrementalDownload::OnDataAvailable(nsIRequest* request,
   }
 
   if (PR_Now() > mLastProgressUpdate + UPDATE_PROGRESS_INTERVAL) {
-    if (NS_IsMainThread()) {
-      UpdateProgress();
-    } else {
-      NS_DispatchToMainThread(
-          NewRunnableMethod("nsIncrementalDownload::UpdateProgress", this,
-                            &nsIncrementalDownload::UpdateProgress));
-    }
+    UpdateProgress();
   }
+
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsIncrementalDownload::OnDataFinished(nsresult aStatus) { return NS_OK; }
 
 // nsIObserver
 
