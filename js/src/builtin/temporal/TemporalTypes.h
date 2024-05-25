@@ -252,7 +252,7 @@ struct SecondsAndNanoseconds {
   /**
    * Create from a nanoseconds value.
    */
-  static constexpr Derived fromNanoseconds(const Int128& nanoseconds) {
+  static Derived fromNanoseconds(const Int128& nanoseconds) {
     auto div = nanoseconds.divrem(Int128{1'000'000'000});
     int64_t seconds = int64_t(div.first);
     int32_t nanos = int32_t(div.second);
