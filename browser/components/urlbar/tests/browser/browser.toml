@@ -175,8 +175,6 @@ support-files = [
 
 ["browser_closePanelOnClick.js"]
 
-["browser_close_other_panels.js"]
-
 ["browser_content_opener.js"]
 
 ["browser_contextualsearch.js"]
