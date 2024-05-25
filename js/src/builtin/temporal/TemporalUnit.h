@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 
+#include "builtin/temporal/Crash.h"
+
 namespace js::temporal {
 enum class TemporalUnit {
   Auto,
@@ -49,7 +51,7 @@ constexpr int64_t ToNanoseconds(TemporalUnit unit) {
     case TemporalUnit::Week:
       break;
   }
-  MOZ_CRASH("Unexpected temporal unit");
+  JS_CONSTEXPR_CRASH("Unexpected temporal unit");
 }
 
 constexpr int64_t ToMicroseconds(TemporalUnit unit) {
@@ -74,7 +76,7 @@ constexpr int64_t ToMicroseconds(TemporalUnit unit) {
     case TemporalUnit::Nanosecond:
       break;
   }
-  MOZ_CRASH("Unexpected temporal unit");
+  JS_CONSTEXPR_CRASH("Unexpected temporal unit");
 }
 
 constexpr int64_t ToMilliseconds(TemporalUnit unit) {
@@ -98,7 +100,7 @@ constexpr int64_t ToMilliseconds(TemporalUnit unit) {
     case TemporalUnit::Nanosecond:
       break;
   }
-  MOZ_CRASH("Unexpected temporal unit");
+  JS_CONSTEXPR_CRASH("Unexpected temporal unit");
 }
 
 constexpr int64_t ToSeconds(TemporalUnit unit) {
@@ -121,7 +123,7 @@ constexpr int64_t ToSeconds(TemporalUnit unit) {
     case TemporalUnit::Nanosecond:
       break;
   }
-  MOZ_CRASH("Unexpected temporal unit");
+  JS_CONSTEXPR_CRASH("Unexpected temporal unit");
 }
 
 constexpr int64_t UnitsPerDay(TemporalUnit unit) {
@@ -147,7 +149,7 @@ constexpr int64_t UnitsPerDay(TemporalUnit unit) {
     case TemporalUnit::Week:
       break;
   }
-  MOZ_CRASH("Unexpected temporal unit");
+  JS_CONSTEXPR_CRASH("Unexpected temporal unit");
 }
 
 constexpr const char* TemporalUnitToString(TemporalUnit unit) {
@@ -175,7 +177,7 @@ constexpr const char* TemporalUnitToString(TemporalUnit unit) {
     case TemporalUnit::Nanosecond:
       return "nanosecond";
   }
-  MOZ_CRASH("Unexpected temporal unit");
+  JS_CONSTEXPR_CRASH("Unexpected temporal unit");
 }
 
 } /* namespace js::temporal */
