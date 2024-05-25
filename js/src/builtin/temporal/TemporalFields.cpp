@@ -128,6 +128,20 @@ static const char* ToCString(TemporalField field) {
   MOZ_CRASH("invalid temporal field name");
 }
 
+static const char* ToCString(CalendarField field) {
+  switch (field) {
+    case CalendarField::Year:
+      return "year";
+    case CalendarField::Month:
+      return "month";
+    case CalendarField::MonthCode:
+      return "monthCode";
+    case CalendarField::Day:
+      return "day";
+  }
+  MOZ_CRASH("invalid calendar field name");
+}
+
 static JS::UniqueChars QuoteString(JSContext* cx, const char* str) {
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
@@ -285,6 +299,15 @@ static int32_t ComparePropertyKey(PropertyKey x, PropertyKey y) {
 
 #ifdef DEBUG
 static bool IsSorted(std::initializer_list<TemporalField> fieldNames) {
+  return std::is_sorted(fieldNames.begin(), fieldNames.end(),
+                        [](auto x, auto y) {
+                          auto* a = ToCString(x);
+                          auto* b = ToCString(y);
+                          return std::strcmp(a, b) < 0;
+                        });
+}
+
+static bool IsSorted(std::initializer_list<CalendarField> fieldNames) {
   return std::is_sorted(fieldNames.begin(), fieldNames.end(),
                         [](auto x, auto y) {
                           auto* a = ToCString(x);
@@ -758,6 +781,178 @@ PlainObject* js::temporal::PreparePartialTemporalFields(
 
   // Step 8.
   return result;
+}
+
+/**
+ * PrepareCalendarFieldsAndFieldNames ( calendarRec, fields, calendarFieldNames
+ * [ , nonCalendarFieldNames [ , requiredFieldNames ] ] )
+ */
+static bool PrepareCalendarFieldsAndFieldNames(
+    JSContext* cx, Handle<CalendarRecord> calendar, Handle<JSObject*> fields,
+    std::initializer_list<CalendarField> calendarFieldNames,
+    std::initializer_list<TemporalField> nonCalendarFieldNames,
+    std::initializer_list<TemporalField> requiredFieldNames,
+    MutableHandle<PlainObject*> resultFields,
+    MutableHandle<TemporalFieldNames> resultFieldNames) {
+  // Step 1.
+  MOZ_ASSERT(IsSorted(calendarFieldNames));
+  MOZ_ASSERT(std::adjacent_find(calendarFieldNames.begin(),
+                                calendarFieldNames.end()) ==
+             calendarFieldNames.end());
+
+  // Step 2. (Not applicable in our implementation.)
+
+  // Steps 3-4.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar, calendarFieldNames, &fieldNames)) {
+    return false;
+  }
+
+  // Step 5.
+  if (nonCalendarFieldNames.size() != 0) {
+    if (!AppendSorted(cx, fieldNames.get(), nonCalendarFieldNames)) {
+      return false;
+    }
+  }
+
+  // Step 6.
+  PlainObject* flds;
+  if (requiredFieldNames.size() == 0) {
+    flds = PrepareTemporalFields(cx, fields, fieldNames);
+  } else {
+    flds = PrepareTemporalFields(cx, fields, fieldNames, requiredFieldNames);
+  }
+  if (!flds) {
+    return false;
+  }
+
+  // Step 7.
+  resultFields.set(flds);
+  resultFieldNames.set(std::move(fieldNames.get()));
+  return true;
+}
+
+/**
+ * PrepareCalendarFieldsAndFieldNames ( calendarRec, fields, calendarFieldNames
+ * [ , nonCalendarFieldNames [ , requiredFieldNames ] ] )
+ */
+bool js::temporal::PrepareCalendarFieldsAndFieldNames(
+    JSContext* cx, Handle<CalendarRecord> calendar, Handle<JSObject*> fields,
+    std::initializer_list<CalendarField> calendarFieldNames,
+    MutableHandle<PlainObject*> resultFields,
+    MutableHandle<TemporalFieldNames> resultFieldNames) {
+  return ::PrepareCalendarFieldsAndFieldNames(cx, calendar, fields,
+                                              calendarFieldNames, {}, {},
+                                              resultFields, resultFieldNames);
+}
+
+#ifdef DEBUG
+static CalendarField ToCalendarField(TemporalField field) {
+  switch (field) {
+    case TemporalField::Year:
+      return CalendarField::Year;
+    case TemporalField::Month:
+      return CalendarField::Month;
+    case TemporalField::MonthCode:
+      return CalendarField::MonthCode;
+    case TemporalField::Day:
+      return CalendarField::Day;
+    case TemporalField::Era:
+    case TemporalField::EraYear:
+    case TemporalField::Hour:
+    case TemporalField::Minute:
+    case TemporalField::Second:
+    case TemporalField::Millisecond:
+    case TemporalField::Microsecond:
+    case TemporalField::Nanosecond:
+    case TemporalField::Offset:
+    case TemporalField::TimeZone:
+      break;
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
+static bool IsNonCalendarFieldName(TemporalField field) {
+  switch (field) {
+    case TemporalField::Year:
+    case TemporalField::Month:
+    case TemporalField::MonthCode:
+    case TemporalField::Day:
+    case TemporalField::Era:
+    case TemporalField::EraYear:
+      return false;
+    case TemporalField::Hour:
+    case TemporalField::Minute:
+    case TemporalField::Second:
+    case TemporalField::Millisecond:
+    case TemporalField::Microsecond:
+    case TemporalField::Nanosecond:
+    case TemporalField::Offset:
+    case TemporalField::TimeZone:
+      return true;
+  }
+  MOZ_CRASH("invalid temporal field name");
+}
+
+template <class C, typename V>
+static bool Includes(const C& c, const V& v) {
+  return std::find(c.begin(), c.end(), v) != c.end();
+}
+
+static bool IsSubset(
+    std::initializer_list<TemporalField> requiredFieldNames,
+    std::initializer_list<CalendarField> calendarFieldNames,
+    std::initializer_list<TemporalField> nonCalendarFieldNames) {
+  return std::all_of(
+      requiredFieldNames.begin(), requiredFieldNames.end(), [&](auto field) {
+        if (IsNonCalendarFieldName(field)) {
+          return Includes(nonCalendarFieldNames, field);
+        }
+        return Includes(calendarFieldNames, ToCalendarField(field));
+      });
+}
+#endif
+
+/**
+ * PrepareCalendarFields ( calendarRec, fields, calendarFieldNames,
+ * nonCalendarFieldNames, requiredFieldNames )
+ */
+PlainObject* js::temporal::PrepareCalendarFields(
+    JSContext* cx, Handle<CalendarRecord> calendar, Handle<JSObject*> fields,
+    std::initializer_list<CalendarField> calendarFieldNames,
+    std::initializer_list<TemporalField> nonCalendarFieldNames,
+    std::initializer_list<TemporalField> requiredFieldNames) {
+  // Step 1.
+  MOZ_ASSERT(IsSorted(calendarFieldNames));
+  MOZ_ASSERT(std::adjacent_find(calendarFieldNames.begin(),
+                                calendarFieldNames.end()) ==
+             calendarFieldNames.end());
+
+  // Step 2.
+  MOZ_ASSERT(IsSorted(nonCalendarFieldNames));
+  MOZ_ASSERT(std::adjacent_find(nonCalendarFieldNames.begin(),
+                                nonCalendarFieldNames.end()) ==
+             nonCalendarFieldNames.end());
+  MOZ_ASSERT(std::all_of(nonCalendarFieldNames.begin(),
+                         nonCalendarFieldNames.end(), IsNonCalendarFieldName));
+
+  // Step 3.
+  MOZ_ASSERT(IsSorted(requiredFieldNames));
+  MOZ_ASSERT(std::adjacent_find(requiredFieldNames.begin(),
+                                requiredFieldNames.end()) ==
+             requiredFieldNames.end());
+  MOZ_ASSERT(
+      IsSubset(requiredFieldNames, calendarFieldNames, nonCalendarFieldNames));
+
+  // Steps 4-5.
+  Rooted<PlainObject*> resultFields(cx);
+  JS::RootedVector<PropertyKey> resultFieldNames(cx);
+  if (!::PrepareCalendarFieldsAndFieldNames(
+          cx, calendar, fields, calendarFieldNames, nonCalendarFieldNames,
+          requiredFieldNames, &resultFields, &resultFieldNames)) {
+    return nullptr;
+  }
+  return resultFields;
 }
 
 /**

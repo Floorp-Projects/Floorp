@@ -14,6 +14,7 @@
 
 #include "jstypes.h"
 
+#include "builtin/temporal/Calendar.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -175,6 +176,28 @@ PlainObject* PrepareTemporalFields(
 PlainObject* PreparePartialTemporalFields(
     JSContext* cx, JS::Handle<JSObject*> fields,
     JS::Handle<TemporalFieldNames> fieldNames);
+
+/**
+ * PrepareCalendarFieldsAndFieldNames ( calendarRec, fields, calendarFieldNames
+ * [ , nonCalendarFieldNames [ , requiredFieldNames ] ] )
+ */
+bool PrepareCalendarFieldsAndFieldNames(
+    JSContext* cx, JS::Handle<CalendarRecord> calendar,
+    JS::Handle<JSObject*> fields,
+    std::initializer_list<CalendarField> calendarFieldNames,
+    JS::MutableHandle<PlainObject*> resultFields,
+    JS::MutableHandle<TemporalFieldNames> resultFieldNames);
+
+/**
+ * PrepareCalendarFields ( calendarRec, fields, calendarFieldNames,
+ * nonCalendarFieldNames, requiredFieldNames )
+ */
+PlainObject* PrepareCalendarFields(
+    JSContext* cx, JS::Handle<CalendarRecord> calendar,
+    JS::Handle<JSObject*> fields,
+    std::initializer_list<CalendarField> calendarFieldNames,
+    std::initializer_list<TemporalField> nonCalendarFieldNames = {},
+    std::initializer_list<TemporalField> requiredFieldNames = {});
 
 [[nodiscard]] bool ConcatTemporalFieldNames(
     const TemporalFieldNames& receiverFieldNames,
