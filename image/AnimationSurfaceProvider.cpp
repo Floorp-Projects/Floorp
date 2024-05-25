@@ -245,8 +245,7 @@ void AnimationSurfaceProvider::Run() {
       // release the thread as soon as possible. The animation may advance even
       // during shutdown, which keeps us decoding, and thus blocking the decode
       // pool during teardown.
-      if (!mDecoder || !continueDecoding ||
-          DecodePool::Singleton()->IsShuttingDown()) {
+      if (!mDecoder || !continueDecoding || DecodePool::IsShuttingDown()) {
         return;
       }
 
@@ -282,8 +281,7 @@ void AnimationSurfaceProvider::Run() {
     // animation may advance even during shutdown, which keeps us decoding, and
     // thus blocking the decode pool during teardown.
     MOZ_ASSERT(result == LexerResult(Yield::OUTPUT_AVAILABLE));
-    if (!checkForNewFrameAtYieldResult ||
-        DecodePool::Singleton()->IsShuttingDown()) {
+    if (!checkForNewFrameAtYieldResult || DecodePool::IsShuttingDown()) {
       return;
     }
   }

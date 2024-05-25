@@ -56,7 +56,7 @@ class DecodePool final : public nsIObserver {
 
   /// True if the DecodePool is being shutdown. This may only be called by
   /// threads from the pool to check if they should keep working or not.
-  bool IsShuttingDown() const;
+  static bool IsShuttingDown();
 
   /// Ask the DecodePool to run @aTask asynchronously and return immediately.
   void AsyncRun(IDecodingTask* aTask);
