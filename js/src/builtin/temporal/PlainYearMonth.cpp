@@ -138,7 +138,8 @@ static PlainYearMonthObject* CreateTemporalYearMonth(
                     Int32Value(int32_t(isoMonth)));
 
   // Step 7.
-  obj->setFixedSlot(PlainYearMonthObject::CALENDAR_SLOT, calendar.toValue());
+  obj->setFixedSlot(PlainYearMonthObject::CALENDAR_SLOT,
+                    calendar.toSlotValue());
 
   // Step 8.
   obj->setFixedSlot(PlainYearMonthObject::ISO_DAY_SLOT,
@@ -184,7 +185,8 @@ PlainYearMonthObject* js::temporal::CreateTemporalYearMonth(
   obj->setFixedSlot(PlainYearMonthObject::ISO_MONTH_SLOT, Int32Value(isoMonth));
 
   // Step 7.
-  obj->setFixedSlot(PlainYearMonthObject::CALENDAR_SLOT, calendar.toValue());
+  obj->setFixedSlot(PlainYearMonthObject::CALENDAR_SLOT,
+                    calendar.toSlotValue());
 
   // Step 8.
   obj->setFixedSlot(PlainYearMonthObject::ISO_DAY_SLOT, Int32Value(isoDay));
@@ -272,7 +274,7 @@ static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
   }
 
   // Steps 6-9.
-  Rooted<CalendarValue> calendarValue(cx, CalendarValue(cx->names().iso8601));
+  Rooted<CalendarValue> calendarValue(cx, CalendarValue(CalendarId::ISO8601));
   if (calendarString) {
     if (!ToBuiltinCalendar(cx, calendarString, &calendarValue)) {
       return nullptr;
@@ -1505,13 +1507,17 @@ static bool PlainYearMonth_toPlainDate(JSContext* cx, unsigned argc,
 static bool PlainYearMonth_getISOFields(JSContext* cx, const CallArgs& args) {
   Rooted<PlainYearMonthObject*> yearMonth(
       cx, &args.thisv().toObject().as<PlainYearMonthObject>());
+  auto calendar = yearMonth->calendar();
 
   // Step 3.
   Rooted<IdValueVector> fields(cx, IdValueVector(cx));
 
   // Step 4.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar),
-                          yearMonth->calendar().toValue())) {
+  Rooted<Value> cal(cx);
+  if (!ToTemporalCalendar(cx, calendar, &cal)) {
+    return false;
+  }
+  if (!fields.emplaceBack(NameToId(cx->names().calendar), cal)) {
     return false;
   }
 

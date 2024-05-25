@@ -326,7 +326,7 @@ static PlainDateTimeObject* CreateTemporalDateTime(
 
   // Step 15.
   dateTime->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT,
-                         calendar.toValue());
+                         calendar.toSlotValue());
 
   // Step 16.
   return dateTime;
@@ -396,7 +396,8 @@ PlainDateTimeObject* js::temporal::CreateTemporalDateTime(
                        Int32Value(nanosecond));
 
   // Step 15.
-  object->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT, calendar.toValue());
+  object->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT,
+                       calendar.toSlotValue());
 
   // Step 16.
   return object;
@@ -644,7 +645,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
         return nullptr;
       }
     } else {
-      calendar.set(CalendarValue(cx->names().iso8601));
+      calendar.set(CalendarValue(CalendarId::ISO8601));
     }
 
     // Step 4.i.
@@ -2420,7 +2421,11 @@ static bool PlainDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
   Rooted<IdValueVector> fields(cx, IdValueVector(cx));
 
   // Step 4.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar), calendar.toValue())) {
+  Rooted<Value> cal(cx);
+  if (!ToTemporalCalendar(cx, calendar, &cal)) {
+    return false;
+  }
+  if (!fields.emplaceBack(NameToId(cx->names().calendar), cal)) {
     return false;
   }
 

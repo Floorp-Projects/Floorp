@@ -104,7 +104,7 @@ static PlainMonthDayObject* CreateTemporalMonthDay(
                     Int32Value(int32_t(isoDay)));
 
   // Step 7.
-  obj->setFixedSlot(PlainMonthDayObject::CALENDAR_SLOT, calendar.toValue());
+  obj->setFixedSlot(PlainMonthDayObject::CALENDAR_SLOT, calendar.toSlotValue());
 
   // Step 8.
   obj->setFixedSlot(PlainMonthDayObject::ISO_YEAR_SLOT,
@@ -147,7 +147,7 @@ PlainMonthDayObject* js::temporal::CreateTemporalMonthDay(
   obj->setFixedSlot(PlainMonthDayObject::ISO_DAY_SLOT, Int32Value(isoDay));
 
   // Step 7.
-  obj->setFixedSlot(PlainMonthDayObject::CALENDAR_SLOT, calendar.toValue());
+  obj->setFixedSlot(PlainMonthDayObject::CALENDAR_SLOT, calendar.toSlotValue());
 
   // Step 8.
   obj->setFixedSlot(PlainMonthDayObject::ISO_YEAR_SLOT, Int32Value(isoYear));
@@ -271,7 +271,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
   }
 
   // Steps 6-9.
-  Rooted<CalendarValue> calendarValue(cx, CalendarValue(cx->names().iso8601));
+  Rooted<CalendarValue> calendarValue(cx, CalendarValue(CalendarId::ISO8601));
   if (calendarString) {
     if (!ToBuiltinCalendar(cx, calendarString, &calendarValue)) {
       return nullptr;
@@ -290,7 +290,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
   if (!hasYear) {
     // Step 11.a.
     MOZ_ASSERT(calendarValue.isString() &&
-               EqualStrings(calendarValue.toString(), cx->names().iso8601));
+               calendarValue.toString() == CalendarId::ISO8601);
 
     // Step 11.b.
     constexpr int32_t referenceISOYear = 1972;
@@ -851,13 +851,17 @@ static bool PlainMonthDay_toPlainDate(JSContext* cx, unsigned argc, Value* vp) {
 static bool PlainMonthDay_getISOFields(JSContext* cx, const CallArgs& args) {
   Rooted<PlainMonthDayObject*> monthDay(
       cx, &args.thisv().toObject().as<PlainMonthDayObject>());
+  auto calendar = monthDay->calendar();
 
   // Step 3.
   Rooted<IdValueVector> fields(cx, IdValueVector(cx));
 
   // Step 4.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar),
-                          monthDay->calendar().toValue())) {
+  Rooted<Value> cal(cx);
+  if (!ToTemporalCalendar(cx, calendar, &cal)) {
+    return false;
+  }
+  if (!fields.emplaceBack(NameToId(cx->names().calendar), cal)) {
     return false;
   }
 
