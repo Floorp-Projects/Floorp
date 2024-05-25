@@ -122,13 +122,15 @@ static constexpr auto NanosecondsMaxInstant() {
   }
 }
 
+// Can't be defined in IsValidEpochNanoseconds when compiling with GCC 8.
+static constexpr auto EpochLimitBigIntDigits = NanosecondsMaxInstant();
+
 /**
  * IsValidEpochNanoseconds ( epochNanoseconds )
  */
 bool js::temporal::IsValidEpochNanoseconds(const BigInt* epochNanoseconds) {
   // Steps 1-3.
-  static constexpr auto epochLimit = NanosecondsMaxInstant();
-  return AbsoluteValueIsLessOrEqual<epochLimit>(epochNanoseconds);
+  return AbsoluteValueIsLessOrEqual<EpochLimitBigIntDigits>(epochNanoseconds);
 }
 
 static bool IsValidEpochMicroseconds(const BigInt* epochMicroseconds) {
