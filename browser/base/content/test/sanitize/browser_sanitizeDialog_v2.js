@@ -904,7 +904,7 @@ add_task(async function testClearHistoryCheckboxStatesAfterMigration() {
       ["privacy.cpd.cache", true],
       // Set cookiesAndStorage to verify that the pref is flipped in the test
       ["privacy.clearHistory.cookiesAndStorage", false],
-      ["privacy.sanitize.cpd.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.cpd.hasMigratedToNewPrefs2", false],
     ],
   });
 
@@ -923,7 +923,7 @@ add_task(async function testClearHistoryCheckboxStatesAfterMigration() {
   await dh.promiseClosed;
 
   is(
-    Services.prefs.getBoolPref("privacy.sanitize.cpd.hasMigratedToNewPrefs"),
+    Services.prefs.getBoolPref("privacy.sanitize.cpd.hasMigratedToNewPrefs2"),
     true,
     "Migration is complete for cpd branch"
   );

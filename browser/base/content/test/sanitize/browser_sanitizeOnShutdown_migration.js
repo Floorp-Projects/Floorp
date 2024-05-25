@@ -12,10 +12,11 @@ add_setup(async function () {
 
 // Test checking "clear cookies and site data when firefox shuts down" does a migration
 // before making any pref changes (Bug 1894933)
-add_task(async function () {
+add_task(async function testMigrationForDeleteOnClose() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
+      ["privacy.sanitize.sanitizeOnShutdown", false],
       ["privacy.clearOnShutdown_v2.cookiesAndStorage", true],
       ["privacy.clearOnShutdown_v2.historyFormDataAndDownloads", true],
       ["privacy.clearOnShutdown_v2.siteSettings", false],
@@ -79,6 +80,79 @@ add_task(async function () {
   await dh.promiseClosed;
 });
 
+// Test removal of the old pref privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs
+add_task(async function testOldPrefRemoval() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.clearOnShutdown.history", true],
+      ["privacy.clearOnShutdown_v2.historyFormDataAndDownloads", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
+      ["privacy.sanitize.cpd.hasMigratedToNewPrefs2", false],
+    ],
+  });
+
+  // Add the old pref to indicate that a migration was done before
+  Services.prefs.setBoolPref(
+    "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs",
+    true
+  );
+  Services.prefs.setBoolPref(
+    "privacy.sanitize.cpd.hasMigratedToNewPrefs",
+    true
+  );
+
+  is(
+    Services.prefs.getPrefType(
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+    ),
+    Services.prefs.PREF_BOOL,
+    "Old migration pref should exist"
+  );
+
+  is(
+    Services.prefs.getPrefType("privacy.sanitize.cpd.hasMigratedToNewPrefs"),
+    Services.prefs.PREF_BOOL,
+    "Old migration pref should exist"
+  );
+
+  Sanitizer.maybeMigratePrefs("clearOnShutdown");
+
+  is(
+    Services.prefs.getPrefType(
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+    ),
+    Services.prefs.PREF_INVALID,
+    "Old clearonshutdown migration pref should not exist anymore"
+  );
+
+  ok(
+    Services.prefs.getBoolPref(
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2"
+    ),
+    "Migration should be reflected on new clearonshutdown pref"
+  );
+
+  ok(
+    Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+    ),
+    "History should be flipped to true after migrating"
+  );
+
+  Sanitizer.maybeMigratePrefs("cpd");
+
+  is(
+    Services.prefs.getPrefType("privacy.sanitize.cpd.hasMigratedToNewPrefs"),
+    Services.prefs.PREF_INVALID,
+    "old cpd migration pref should not exist anymore"
+  );
+
+  ok(
+    Services.prefs.getBoolPref("privacy.sanitize.cpd.hasMigratedToNewPrefs2"),
+    "Migration should be reflected on new cpd pref"
+  );
+});
+
 add_task(async function testMigrationOfCacheAndSiteSettings() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -86,38 +160,33 @@ add_task(async function testMigrationOfCacheAndSiteSettings() {
       ["privacy.clearOnShutdown.siteSettings", true],
       ["privacy.clearOnShutdown_v2.cache", false],
       ["privacy.clearOnShutdown_v2.siteSettings", false],
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
     ],
   });
 
   Sanitizer.runSanitizeOnShutdown();
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cache"),
-    true,
     "Cache should be set to true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.siteSettings"),
-    true,
     "siteSettings should be set to true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.cache"),
-    true,
     "old cache should remain true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.siteSettings"),
-    true,
     "old siteSettings should remain true"
   );
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref(
-      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2"
     ),
-    true,
     "migration pref has been flipped"
   );
 });
@@ -128,35 +197,31 @@ add_task(async function testHistoryAndFormData_historyTrue() {
       ["privacy.clearOnShutdown.history", true],
       ["privacy.clearOnShutdown.formdata", false],
       ["privacy.clearOnShutdown_v2.historyFormDataAndDownloads", false],
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
     ],
   });
 
   Sanitizer.runSanitizeOnShutdown();
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref(
       "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
     ),
-    true,
     "historyFormDataAndDownloads should be set to true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.history"),
-    true,
     "old history pref should remain true"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.formdata"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.formdata"),
     "old formdata pref should remain false"
   );
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref(
-      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2"
     ),
-    true,
     "migration pref has been flipped"
   );
 });
@@ -167,35 +232,31 @@ add_task(async function testHistoryAndFormData_historyFalse() {
       ["privacy.clearOnShutdown.history", false],
       ["privacy.clearOnShutdown.formdata", true],
       ["privacy.clearOnShutdown_v2.historyFormDataAndDownloads", true],
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
     ],
   });
 
   Sanitizer.runSanitizeOnShutdown();
 
-  Assert.equal(
-    Services.prefs.getBoolPref(
+  ok(
+    !Services.prefs.getBoolPref(
       "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
     ),
-    false,
     "historyFormDataAndDownloads should be set to true"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.history"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.history"),
     "old history pref should remain false"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.formdata"),
-    true,
     "old formdata pref should remain true"
   );
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref(
-      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2"
     ),
-    true,
     "migration pref has been flipped"
   );
 });
@@ -207,39 +268,34 @@ add_task(async function testCookiesAndStorage_cookiesFalse() {
       ["privacy.clearOnShutdown.offlineApps", true],
       ["privacy.clearOnShutdown.sessions", true],
       ["privacy.clearOnShutdown_v2.cookiesAndStorage", true],
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
     ],
   });
 
   // Simulate clearing on shutdown.
   Sanitizer.runSanitizeOnShutdown();
 
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
     "cookiesAndStorage should be set to false"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
     "old cookies pref should remain false"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    true,
     "old offlineApps pref should remain true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
-    true,
     "old sessions pref should remain true"
   );
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref(
-      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2"
     ),
-    true,
     "migration pref has been flipped"
   );
 });
@@ -251,38 +307,33 @@ add_task(async function testCookiesAndStorage_cookiesTrue() {
       ["privacy.clearOnShutdown.offlineApps", false],
       ["privacy.clearOnShutdown.sessions", false],
       ["privacy.clearOnShutdown_v2.cookiesAndStorage", false],
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
     ],
   });
 
   Sanitizer.runSanitizeOnShutdown();
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
-    true,
     "cookiesAndStorage should be set to true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
-    true,
     "old cookies pref should remain true"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
     "old offlineApps pref should remain false"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
     "old sessions pref should remain false"
   );
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref(
-      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2"
     ),
-    true,
     "migration pref has been flipped"
   );
 });
@@ -294,39 +345,34 @@ add_task(async function testMigrationDoesNotRepeat() {
       ["privacy.clearOnShutdown.offlineApps", false],
       ["privacy.clearOnShutdown.sessions", false],
       ["privacy.clearOnShutdown_v2.cookiesAndStorage", false],
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", true],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", true],
     ],
   });
 
   // Simulate clearing on shutdown.
   Sanitizer.runSanitizeOnShutdown();
 
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
     "cookiesAndStorage should remain false"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
-    true,
     "old cookies pref should remain true"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
     "old offlineApps pref should remain false"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
     "old sessions pref should remain false"
   );
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref(
-      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs"
+      "privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2"
     ),
-    true,
     "migration pref has been flipped"
   );
 });
@@ -342,40 +388,34 @@ add_task(async function ensureNoOldPrefsAreEffectedByMigration() {
       ["privacy.clearOnShutdown.siteSettings", true],
       ["privacy.clearOnShutdown.cache", true],
       ["privacy.clearOnShutdown_v2.cookiesAndStorage", false],
-      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2", false],
     ],
   });
 
   Sanitizer.runSanitizeOnShutdown();
 
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
-    true,
     "cookiesAndStorage should become true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
-    true,
     "old cookies pref should remain true"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
     "old offlineApps pref should remain false"
   );
-  Assert.equal(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
-    false,
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
     "old sessions pref should remain false"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.history"),
-    true,
     "old history pref should remain true"
   );
-  Assert.equal(
+  ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.formdata"),
-    true,
     "old formdata pref should remain true"
   );
 });
