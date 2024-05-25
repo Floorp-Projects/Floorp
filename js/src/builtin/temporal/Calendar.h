@@ -30,6 +30,10 @@ class PlainObject;
 
 namespace js::temporal {
 
+enum class CalendarId : int32_t {
+  ISO8601,
+};
+
 class CalendarObject : public NativeObject {
  public:
   static const JSClass class_;
@@ -38,8 +42,8 @@ class CalendarObject : public NativeObject {
   static constexpr uint32_t IDENTIFIER_SLOT = 0;
   static constexpr uint32_t SLOT_COUNT = 1;
 
-  JSLinearString* identifier() const {
-    return &getFixedSlot(IDENTIFIER_SLOT).toString()->asLinear();
+  CalendarId identifier() const {
+    return static_cast<CalendarId>(getFixedSlot(IDENTIFIER_SLOT).toInt32());
   }
 
  private:
@@ -63,15 +67,14 @@ class MOZ_STACK_CLASS CalendarValue final {
    * Default initialize this CalendarValue.
    */
   explicit CalendarValue(const JS::Value& value) : value_(value) {
-    MOZ_ASSERT(value.isString() || value.isObject());
-    MOZ_ASSERT_IF(value.isString(), value.toString()->isLinear());
+    MOZ_ASSERT(value.isInt32() || value.isObject());
   }
 
   /**
    * Initialize this CalendarValue with a canonical calendar identifier.
    */
-  explicit CalendarValue(JSLinearString* calendarId)
-      : value_(JS::StringValue(calendarId)) {}
+  explicit CalendarValue(CalendarId calendarId)
+      : value_(JS::Int32Value(static_cast<int32_t>(calendarId))) {}
 
   /**
    * Initialize this CalendarValue with a calendar object.
@@ -86,14 +89,14 @@ class MOZ_STACK_CLASS CalendarValue final {
   explicit operator bool() const { return !value_.isUndefined(); }
 
   /**
-   * Return this CalendarValue as a JS::Value.
+   * Return the slot Value representation of this CalendarValue.
    */
-  JS::Value toValue() const { return value_; }
+  JS::Value toSlotValue() const { return value_; }
 
   /**
    * Return true if this CalendarValue is a string.
    */
-  bool isString() const { return value_.isString(); }
+  bool isString() const { return value_.isInt32(); }
 
   /**
    * Return true if this CalendarValue is an object.
@@ -103,7 +106,9 @@ class MOZ_STACK_CLASS CalendarValue final {
   /**
    * Return the calendar identifier.
    */
-  JSLinearString* toString() const { return &value_.toString()->asLinear(); }
+  CalendarId toString() const {
+    return static_cast<CalendarId>(value_.toInt32());
+  }
 
   /**
    * Return the calendar object.
@@ -278,6 +283,9 @@ JSLinearString* ToTemporalCalendarIdentifier(
  */
 JSObject* ToTemporalCalendarObject(JSContext* cx,
                                    JS::Handle<CalendarValue> calendar);
+
+bool ToTemporalCalendar(JSContext* cx, const CalendarValue& calendar,
+                        JS::MutableHandle<JS::Value> result);
 
 enum class CalendarField {
   Year,
@@ -911,7 +919,13 @@ class WrappedPtrOperations<temporal::CalendarValue, Wrapper> {
  public:
   explicit operator bool() const { return bool(container()); }
 
-  JS::Handle<JS::Value> toValue() const {
+  JS::Handle<JS::Value> toSlotValue() const {
+    return JS::Handle<JS::Value>::fromMarkedLocation(
+        container().valueDoNotUse());
+  }
+
+  JS::Handle<JS::Value> toObjectValue() const {
+    MOZ_ASSERT(isObject());
     return JS::Handle<JS::Value>::fromMarkedLocation(
         container().valueDoNotUse());
   }
@@ -920,7 +934,7 @@ class WrappedPtrOperations<temporal::CalendarValue, Wrapper> {
 
   bool isObject() const { return container().isObject(); }
 
-  JSLinearString* toString() const { return container().toString(); }
+  temporal::CalendarId toString() const { return container().toString(); }
 
   JSObject* toObject() const { return container().toObject(); }
 };

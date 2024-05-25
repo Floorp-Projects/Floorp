@@ -1701,7 +1701,7 @@ static bool BalanceTimeDurationRelative(
     }
 
     // Steps 4.b-c.
-    Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
+    Rooted<CalendarValue> isoCalendar(cx, CalendarValue(CalendarId::ISO8601));
     if (!AddDaysToZonedDateTime(cx, startInstant, *precalculatedPlainDateTime,
                                 timeZone, isoCalendar, duration.date.days,
                                 &intermediateNs)) {
@@ -3013,7 +3013,7 @@ static bool GetTemporalRelativeToOption(
         return false;
       }
     } else {
-      calendar.set(CalendarValue(cx->names().iso8601));
+      calendar.set(CalendarValue(CalendarId::ISO8601));
     }
 
     // Steps 8-9.
@@ -5428,7 +5428,7 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
       startDateTime = mozilla::Some(dateTime);
 
       // Step 18.f.ii.
-      Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
+      Rooted<CalendarValue> isoCalendar(cx, CalendarValue(CalendarId::ISO8601));
       Instant addResult;
       if (!AddDaysToZonedDateTime(cx, startInstant, dateTime, timeZone,
                                   isoCalendar, unbalancedDays, &addResult)) {

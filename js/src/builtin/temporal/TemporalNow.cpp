@@ -308,7 +308,7 @@ static bool Temporal_Now_plainDateTimeISO(JSContext* cx, unsigned argc,
   }
 
   // SystemDateTime, step 3.
-  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
+  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
 
   // SystemDateTime, steps 4-5.
   PlainDateTime dateTime;
@@ -378,7 +378,7 @@ static bool Temporal_Now_zonedDateTimeISO(JSContext* cx, unsigned argc,
   }
 
   // SystemZonedDateTime, step 3.
-  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
+  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
 
   // SystemZonedDateTime, step 4.
   Instant instant;
@@ -447,7 +447,7 @@ static bool Temporal_Now_plainDateISO(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // SystemDateTime, step 3.
-  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
+  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
 
   // SystemDateTime, steps 4-5.
   PlainDateTime dateTime;
