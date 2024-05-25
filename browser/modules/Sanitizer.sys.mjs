@@ -400,20 +400,28 @@ export var Sanitizer = {
   /**
    * Migrate old sanitize prefs to the new prefs for the new
    * clear history dialog. Does nothing if the migration was completed before
-   * based on the pref privacy.sanitize.cpd.hasMigratedToNewPrefs or
-   * privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs
+   * based on the pref privacy.sanitize.cpd.hasMigratedToNewPrefs2 or
+   * privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs2
    *
    * @param {string} context - one of "clearOnShutdown" or "cpd", which indicates which
    *      pref branch to migrate prefs from based on the dialog context
    */
   maybeMigratePrefs(context) {
+    // We are going to be migrating once more due to a backout in Bug 1894933
+    // The new migration prefs have a 2 appended to the context
     if (
       Services.prefs.getBoolPref(
-        `privacy.sanitize.${context}.hasMigratedToNewPrefs`
+        `privacy.sanitize.${context}.hasMigratedToNewPrefs2`
       )
     ) {
       return;
     }
+
+    // We have to remove the old privacy.sanitize.${context}.hasMigratedToNewPrefs pref
+    // if the user has it on their system
+    Services.prefs.clearUserPref(
+      `privacy.sanitize.${context}.hasMigratedToNewPrefs`
+    );
 
     let cookies = Services.prefs.getBoolPref(`privacy.${context}.cookies`);
     let history = Services.prefs.getBoolPref(`privacy.${context}.history`);
@@ -450,7 +458,7 @@ export var Sanitizer = {
     );
 
     Services.prefs.setBoolPref(
-      `privacy.sanitize.${context}.hasMigratedToNewPrefs`,
+      `privacy.sanitize.${context}.hasMigratedToNewPrefs2`,
       true
     );
   },
