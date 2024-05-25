@@ -616,8 +616,12 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
              : tm;
 }
 
-gfx::Matrix SVGContentUtils::GetCTM(SVGElement* aElement, bool aScreenCTM) {
-  return GetCTMInternal(aElement, aScreenCTM, false);
+gfx::Matrix SVGContentUtils::GetCTM(SVGElement* aElement) {
+  return GetCTMInternal(aElement, false, false);
+}
+
+gfx::Matrix SVGContentUtils::GetScreenCTM(SVGElement* aElement) {
+  return GetCTMInternal(aElement, true, false);
 }
 
 void SVGContentUtils::RectilinearGetStrokeBounds(

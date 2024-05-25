@@ -195,7 +195,9 @@ class SVGContentUtils {
                                   const char* aWarning,
                                   const nsTArray<nsString>& aParams);
 
-  static Matrix GetCTM(dom::SVGElement* aElement, bool aScreenCTM);
+  static Matrix GetCTM(dom::SVGElement* aElement);
+
+  static Matrix GetScreenCTM(dom::SVGElement* aElement);
 
   /**
    * Gets the tight bounds-space stroke bounds of the non-scaling-stroked rect
