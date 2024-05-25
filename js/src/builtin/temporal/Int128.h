@@ -301,9 +301,12 @@ class alignas(16) Uint128 final {
       uint64_t y1 = low << (shift - 64);
       return Uint128{y0, y1};
     }
-    uint64_t y0 = low << shift;
-    uint64_t y1 = (high << shift) | (low >> (64 - shift));
-    return Uint128{y0, y1};
+    if (shift > 0) {
+      uint64_t y0 = low << shift;
+      uint64_t y1 = high << shift | low >> (64 - shift);
+      return Uint128{y0, y1};
+    }
+    return *this;
   }
 
   constexpr Uint128 operator>>(int shift) const {
@@ -318,9 +321,12 @@ class alignas(16) Uint128 final {
       uint64_t y1 = 0;
       return Uint128{y0, y1};
     }
-    uint64_t y0 = low >> shift | high << (64 - shift);
-    uint64_t y1 = high >> shift;
-    return Uint128{y0, y1};
+    if (shift > 0) {
+      uint64_t y0 = low >> shift | high << (64 - shift);
+      uint64_t y1 = high >> shift;
+      return Uint128{y0, y1};
+    }
+    return *this;
   }
 
   constexpr Uint128 operator&(const Uint128& other) const {
@@ -550,9 +556,12 @@ class alignas(16) Int128 final {
       uint64_t y1 = uint64_t(int64_t(high) >> 63);
       return Int128{y0, y1};
     }
-    uint64_t y0 = low >> shift | high << (64 - shift);
-    uint64_t y1 = uint64_t(int64_t(high) >> shift);
-    return Int128{y0, y1};
+    if (shift > 0) {
+      uint64_t y0 = low >> shift | high << (64 - shift);
+      uint64_t y1 = uint64_t(int64_t(high) >> shift);
+      return Int128{y0, y1};
+    }
+    return *this;
   }
 
   constexpr Int128 operator&(const Int128& other) const {
