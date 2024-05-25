@@ -848,18 +848,18 @@ var SessionStoreInternal = {
           }
 
           // Floorp injections
-          if (state.windows[0] == undefined) {
+          if (typeof state.windows[0] === "undefined") {
             let lastSessionWindows = state._closedWindows;
             let closedTime = lastSessionWindows[0].closedAt;
-            for (let i = 0; i < lastSessionWindows.length; i++) {
-              let closedWindow = state._closedWindows[i];
+            for (let closedWindow of state._closedWindows) {
               let closedWindowTime = closedWindow.closedAt;
-              // If the last closed window is closed in +-1000, we will restore it
+              // If the last closed window is closed in +-2000, we will restore it
               if (
-                closedWindowTime > closedTime - 2000 &&
-                closedWindowTime < closedTime + 2000
+                closedWindowTime >= closedTime - 5000 &&
+                closedWindowTime <= closedTime + 5000
               ) {
                 state.windows.push(closedWindow);
+                console.log("Restored last closed window");
               }
             }
           }
@@ -876,9 +876,7 @@ var SessionStoreInternal = {
             // win.windowUuid is Workspace window id
             // Create existing window id set for remove needless Workspaces data
             const savedWindowIds = new Set();
-            const storedWindowsData = state.windows.concat(
-              state._closedWindows
-            );
+            const storedWindowsData = state.windows.concat(state._closedWindows);
             for (const win of storedWindowsData) {
               if (win.windowUuid) {
                 savedWindowIds.add(win.windowUuid);
