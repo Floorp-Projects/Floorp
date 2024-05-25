@@ -38,7 +38,7 @@ JSString* TemporalInstantToString(JSContext* cx,
  */
 JSString* TemporalDateToString(JSContext* cx,
                                JS::Handle<PlainDateObject*> temporalDate,
-                               CalendarOption showCalendar);
+                               ShowCalendar showCalendar);
 
 /**
  * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
@@ -47,7 +47,7 @@ JSString* TemporalDateToString(JSContext* cx,
 JSString* TemporalDateTimeToString(JSContext* cx, const PlainDateTime& dateTime,
                                    JS::Handle<CalendarValue> calendar,
                                    Precision precision,
-                                   CalendarOption showCalendar);
+                                   ShowCalendar showCalendar);
 
 /**
  * TemporalTimeToString ( hour, minute, second, millisecond, microsecond,
@@ -61,14 +61,14 @@ JSString* TemporalTimeToString(JSContext* cx, const PlainTime& time,
  */
 JSString* TemporalMonthDayToString(JSContext* cx,
                                    JS::Handle<PlainMonthDayObject*> monthDay,
-                                   CalendarOption showCalendar);
+                                   ShowCalendar showCalendar);
 
 /**
  * TemporalYearMonthToString ( yearMonth, showCalendar )
  */
 JSString* TemporalYearMonthToString(JSContext* cx,
                                     JS::Handle<PlainYearMonthObject*> yearMonth,
-                                    CalendarOption showCalendar);
+                                    ShowCalendar showCalendar);
 
 /**
  * TemporalZonedDateTimeToString ( zonedDateTime, precision, showCalendar,
@@ -76,8 +76,8 @@ JSString* TemporalYearMonthToString(JSContext* cx,
  */
 JSString* TemporalZonedDateTimeToString(
     JSContext* cx, JS::Handle<ZonedDateTime> zonedDateTime, Precision precision,
-    CalendarOption showCalendar, TimeZoneNameOption showTimeZone,
-    ShowOffsetOption showOffset, Increment increment = Increment{1},
+    ShowCalendar showCalendar, ShowTimeZoneName showTimeZone,
+    ShowOffset showOffset, Increment increment = Increment{1},
     TemporalUnit unit = TemporalUnit::Nanosecond,
     TemporalRoundingMode roundingMode = TemporalRoundingMode::Trunc);
 

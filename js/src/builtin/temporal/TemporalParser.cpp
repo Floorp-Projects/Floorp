@@ -3434,8 +3434,8 @@ bool js::temporal::ParseTemporalRelativeToString(
       *timeZoneOffset = 0;
     }
   } else {
-    // ToRelativeTemporalObject ignores any other time zone information when no
-    // bracketed time zone annotation is present.
+    // GetTemporalRelativeToOption ignores any other time zone information when
+    // no bracketed time zone annotation is present.
 
     *isUTC = false;
     *hasOffset = false;

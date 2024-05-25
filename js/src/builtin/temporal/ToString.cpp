@@ -296,24 +296,24 @@ static void FormatDateTimeUTCOffsetRounded(TemporalStringBuilder& result,
  */
 static bool FormatCalendarAnnotation(TemporalStringBuilder& result,
                                      JSLinearString* id,
-                                     CalendarOption showCalendar) {
+                                     ShowCalendar showCalendar) {
   switch (showCalendar) {
-    case CalendarOption::Never:
+    case ShowCalendar::Never:
       return true;
 
-    case CalendarOption::Auto: {
+    case ShowCalendar::Auto: {
       if (StringEqualsLiteral(id, "iso8601")) {
         return true;
       }
       [[fallthrough]];
     }
 
-    case CalendarOption::Always: {
+    case ShowCalendar::Always: {
       auto& sb = result.builder();
       return sb.append("[u-ca=") && sb.append(id) && sb.append(']');
     }
 
-    case CalendarOption::Critical: {
+    case ShowCalendar::Critical: {
       auto& sb = result.builder();
       return sb.append("[!u-ca=") && sb.append(id) && sb.append(']');
     }
@@ -327,9 +327,9 @@ static bool FormatCalendarAnnotation(TemporalStringBuilder& result,
 static bool MaybeFormatCalendarAnnotation(JSContext* cx,
                                           TemporalStringBuilder& result,
                                           Handle<CalendarValue> calendar,
-                                          CalendarOption showCalendar) {
+                                          ShowCalendar showCalendar) {
   // Step 1.
-  if (showCalendar == CalendarOption::Never) {
+  if (showCalendar == ShowCalendar::Never) {
     return true;
   }
 
@@ -350,17 +350,17 @@ static bool MaybeFormatCalendarAnnotation(JSContext* cx,
 
 static bool FormatTimeZoneAnnotation(TemporalStringBuilder& result,
                                      JSLinearString* id,
-                                     TimeZoneNameOption showTimeZone) {
+                                     ShowTimeZoneName showTimeZone) {
   switch (showTimeZone) {
-    case TimeZoneNameOption::Never:
+    case ShowTimeZoneName::Never:
       return true;
 
-    case TimeZoneNameOption::Auto: {
+    case ShowTimeZoneName::Auto: {
       auto& sb = result.builder();
       return sb.append("[") && sb.append(id) && sb.append(']');
     }
 
-    case TimeZoneNameOption::Critical: {
+    case ShowTimeZoneName::Critical: {
       auto& sb = result.builder();
       return sb.append("[!") && sb.append(id) && sb.append(']');
     }
@@ -371,8 +371,8 @@ static bool FormatTimeZoneAnnotation(TemporalStringBuilder& result,
 static bool MaybeFormatTimeZoneAnnotation(JSContext* cx,
                                           TemporalStringBuilder& result,
                                           Handle<TimeZoneValue> timeZone,
-                                          TimeZoneNameOption showTimeZone) {
-  if (showTimeZone == TimeZoneNameOption::Never) {
+                                          ShowTimeZoneName showTimeZone) {
+  if (showTimeZone == ShowTimeZoneName::Never) {
     return true;
   }
 
@@ -440,7 +440,7 @@ JSString* js::temporal::TemporalInstantToString(JSContext* cx,
  */
 JSString* js::temporal::TemporalDateToString(
     JSContext* cx, Handle<PlainDateObject*> temporalDate,
-    CalendarOption showCalendar) {
+    ShowCalendar showCalendar) {
   auto date = ToPlainDate(temporalDate);
 
   // Steps 1-2. (Not applicable in our implementation.)
@@ -471,7 +471,7 @@ JSString* js::temporal::TemporalDateTimeToString(JSContext* cx,
                                                  const PlainDateTime& dateTime,
                                                  Handle<CalendarValue> calendar,
                                                  Precision precision,
-                                                 CalendarOption showCalendar) {
+                                                 ShowCalendar showCalendar) {
   TemporalStringBuilder result(cx, TemporalStringFormat::DateTime);
   if (!result.reserve()) {
     return nullptr;
@@ -516,7 +516,7 @@ JSString* js::temporal::TemporalTimeToString(JSContext* cx,
  */
 JSString* js::temporal::TemporalMonthDayToString(
     JSContext* cx, Handle<PlainMonthDayObject*> monthDay,
-    CalendarOption showCalendar) {
+    ShowCalendar showCalendar) {
   // Steps 1-2. (Not applicable in our implementation.)
 
   TemporalStringBuilder result(cx, TemporalStringFormat::MonthDay);
@@ -538,8 +538,8 @@ JSString* js::temporal::TemporalMonthDayToString(
 
   // Steps 3-5 and 7.
   auto date = ToPlainDate(monthDay);
-  if (showCalendar == CalendarOption::Always ||
-      showCalendar == CalendarOption::Critical ||
+  if (showCalendar == ShowCalendar::Always ||
+      showCalendar == ShowCalendar::Critical ||
       !StringEqualsLiteral(calendarIdentifier, "iso8601")) {
     // FIXME: spec issue - don't print "year" part when showCalendar is "never".
     //
@@ -570,7 +570,7 @@ JSString* js::temporal::TemporalMonthDayToString(
  */
 JSString* js::temporal::TemporalYearMonthToString(
     JSContext* cx, Handle<PlainYearMonthObject*> yearMonth,
-    CalendarOption showCalendar) {
+    ShowCalendar showCalendar) {
   // Steps 1-2. (Not applicable in our implementation.)
 
   TemporalStringBuilder result(cx, TemporalStringFormat::YearMonth);
@@ -592,8 +592,8 @@ JSString* js::temporal::TemporalYearMonthToString(
 
   // Steps 3-5 and 7.
   auto date = ToPlainDate(yearMonth);
-  if (showCalendar == CalendarOption::Always ||
-      showCalendar == CalendarOption::Critical ||
+  if (showCalendar == ShowCalendar::Always ||
+      showCalendar == ShowCalendar::Critical ||
       !StringEqualsLiteral(calendarIdentifier, "iso8601")) {
     // FIXME: spec issue - don't print "day" part when showCalendar is "never".
     //
@@ -625,8 +625,8 @@ JSString* js::temporal::TemporalYearMonthToString(
  */
 JSString* js::temporal::TemporalZonedDateTimeToString(
     JSContext* cx, Handle<ZonedDateTime> zonedDateTime, Precision precision,
-    CalendarOption showCalendar, TimeZoneNameOption showTimeZone,
-    ShowOffsetOption showOffset, Increment increment, TemporalUnit unit,
+    ShowCalendar showCalendar, ShowTimeZoneName showTimeZone,
+    ShowOffset showOffset, Increment increment, TemporalUnit unit,
     TemporalRoundingMode roundingMode) {
   TemporalStringBuilder result(cx, TemporalStringFormat::ZonedDateTime);
   if (!result.reserve()) {
@@ -656,7 +656,7 @@ JSString* js::temporal::TemporalZonedDateTimeToString(
   FormatDateTimeString(result, temporalDateTime, precision);
 
   // Steps 11-12.
-  if (showOffset != ShowOffsetOption::Never) {
+  if (showOffset != ShowOffset::Never) {
     FormatDateTimeUTCOffsetRounded(result, offsetNanoseconds);
   }
 

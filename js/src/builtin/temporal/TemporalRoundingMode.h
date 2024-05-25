@@ -52,9 +52,9 @@ enum class TemporalRoundingMode {
 };
 
 /**
- * NegateTemporalRoundingMode ( roundingMode )
+ * NegateRoundingMode ( roundingMode )
  */
-constexpr auto NegateTemporalRoundingMode(TemporalRoundingMode roundingMode) {
+constexpr auto NegateRoundingMode(TemporalRoundingMode roundingMode) {
   // Steps 1-5.
   switch (roundingMode) {
     case TemporalRoundingMode::Ceil:

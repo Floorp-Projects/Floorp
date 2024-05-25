@@ -2653,7 +2653,7 @@ static PlainDateObject* BuiltinCalendarDateFromFields(
   // Step 7.
   auto overflow = TemporalOverflow::Constrain;
   if (maybeOptions) {
-    if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+    if (!GetTemporalOverflowOption(cx, maybeOptions, &overflow)) {
       return nullptr;
     }
   }
@@ -2836,7 +2836,7 @@ static PlainYearMonthObject* BuiltinCalendarYearMonthFromFields(
   // Step 7.
   auto overflow = TemporalOverflow::Constrain;
   if (maybeOptions) {
-    if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+    if (!GetTemporalOverflowOption(cx, maybeOptions, &overflow)) {
       return nullptr;
     }
   }
@@ -2987,7 +2987,7 @@ static PlainMonthDayObject* BuiltinCalendarMonthDayFromFields(
   // Step 7.
   auto overflow = TemporalOverflow::Constrain;
   if (maybeOptions) {
-    if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+    if (!GetTemporalOverflowOption(cx, maybeOptions, &overflow)) {
       return nullptr;
     }
   }
@@ -3322,7 +3322,7 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
   // Step 7.
   auto overflow = TemporalOverflow::Constrain;
   if (options) {
-    if (!ToTemporalOverflow(cx, options, &overflow)) {
+    if (!GetTemporalOverflowOption(cx, options, &overflow)) {
       return false;
     }
   }
@@ -4380,8 +4380,8 @@ static bool Calendar_dateUntil(JSContext* cx, const CallArgs& args) {
     }
 
     // Steps 7-8.
-    if (!GetTemporalUnit(cx, options, TemporalUnitKey::LargestUnit,
-                         TemporalUnitGroup::Date, &largestUnit)) {
+    if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::LargestUnit,
+                                     TemporalUnitGroup::Date, &largestUnit)) {
       return false;
     }
   }

@@ -2395,7 +2395,7 @@ static bool TimeZone_getInstantFor(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 5.
-    if (!ToTemporalDisambiguation(cx, options, &disambiguation)) {
+    if (!GetTemporalDisambiguationOption(cx, options, &disambiguation)) {
       return false;
     }
   }

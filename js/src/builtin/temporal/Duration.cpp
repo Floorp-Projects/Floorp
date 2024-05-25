@@ -2764,9 +2764,9 @@ static JSString* TemporalDurationToString(JSContext* cx,
 }
 
 /**
- * ToRelativeTemporalObject ( options )
+ * GetTemporalRelativeToOption ( options )
  */
-static bool ToRelativeTemporalObject(
+static bool GetTemporalRelativeToOption(
     JSContext* cx, Handle<JSObject*> options,
     MutableHandle<Wrapped<PlainDateObject*>> plainRelativeTo,
     MutableHandle<ZonedDateTime> zonedRelativeTo,
@@ -4220,8 +4220,8 @@ static bool AddDurationToOrSubtractDurationFromDuration(
     }
 
     // Steps 4-7.
-    if (!ToRelativeTemporalObject(cx, options, &plainRelativeTo,
-                                  &zonedRelativeTo, &timeZone)) {
+    if (!GetTemporalRelativeToOption(cx, options, &plainRelativeTo,
+                                     &zonedRelativeTo, &timeZone)) {
       return false;
     }
     MOZ_ASSERT(!plainRelativeTo || !zonedRelativeTo);
@@ -4435,8 +4435,8 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<ZonedDateTime> zonedRelativeTo(cx);
   Rooted<TimeZoneRecord> timeZone(cx);
   if (options) {
-    if (!ToRelativeTemporalObject(cx, options, &plainRelativeTo,
-                                  &zonedRelativeTo, &timeZone)) {
+    if (!GetTemporalRelativeToOption(cx, options, &plainRelativeTo,
+                                     &zonedRelativeTo, &timeZone)) {
       return false;
     }
     MOZ_ASSERT(!plainRelativeTo || !zonedRelativeTo);
@@ -4947,8 +4947,9 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
 
     // Step 16.
     Rooted<JSString*> paramString(cx, args[0].toString());
-    if (!GetTemporalUnit(cx, paramString, TemporalUnitKey::SmallestUnit,
-                         TemporalUnitGroup::DateTime, &smallestUnit)) {
+    if (!GetTemporalUnitValuedOption(
+            cx, paramString, TemporalUnitKey::SmallestUnit,
+            TemporalUnitGroup::DateTime, &smallestUnit)) {
       return false;
     }
 
@@ -4983,8 +4984,8 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
 
     // Steps 8-9.
     //
-    // Inlined GetTemporalUnit and GetOption so we can more easily detect an
-    // absent "largestUnit" value.
+    // Inlined GetTemporalUnitValuedOption and GetOption so we can more easily
+    // detect an absent "largestUnit" value.
     Rooted<Value> largestUnitValue(cx);
     if (!GetProperty(cx, options, options, cx->names().largestUnit,
                      &largestUnitValue)) {
@@ -4998,33 +4999,35 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
       }
 
       largestUnit = TemporalUnit::Auto;
-      if (!GetTemporalUnit(cx, largestUnitStr, TemporalUnitKey::LargestUnit,
-                           TemporalUnitGroup::DateTime, &largestUnit)) {
+      if (!GetTemporalUnitValuedOption(
+              cx, largestUnitStr, TemporalUnitKey::LargestUnit,
+              TemporalUnitGroup::DateTime, &largestUnit)) {
         return false;
       }
     }
 
     // Steps 10-13.
-    if (!ToRelativeTemporalObject(cx, options, &plainRelativeTo,
-                                  &zonedRelativeTo, &timeZone)) {
+    if (!GetTemporalRelativeToOption(cx, options, &plainRelativeTo,
+                                     &zonedRelativeTo, &timeZone)) {
       return false;
     }
     MOZ_ASSERT(!plainRelativeTo || !zonedRelativeTo);
     MOZ_ASSERT_IF(zonedRelativeTo, timeZone.receiver());
 
     // Step 14.
-    if (!ToTemporalRoundingIncrement(cx, options, &roundingIncrement)) {
+    if (!GetRoundingIncrementOption(cx, options, &roundingIncrement)) {
       return false;
     }
 
     // Step 15.
-    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+    if (!GetRoundingModeOption(cx, options, &roundingMode)) {
       return false;
     }
 
     // Step 16.
-    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
-                         TemporalUnitGroup::DateTime, &smallestUnit)) {
+    if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
+                                     TemporalUnitGroup::DateTime,
+                                     &smallestUnit)) {
       return false;
     }
 
@@ -5296,8 +5299,8 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
 
     // Step 11.
     Rooted<JSString*> paramString(cx, args[0].toString());
-    if (!GetTemporalUnit(cx, paramString, TemporalUnitKey::Unit,
-                         TemporalUnitGroup::DateTime, &unit)) {
+    if (!GetTemporalUnitValuedOption(cx, paramString, TemporalUnitKey::Unit,
+                                     TemporalUnitGroup::DateTime, &unit)) {
       return false;
     }
   } else {
@@ -5309,16 +5312,16 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
     }
 
     // Steps 6-10.
-    if (!ToRelativeTemporalObject(cx, totalOf, &plainRelativeTo,
-                                  &zonedRelativeTo, &timeZone)) {
+    if (!GetTemporalRelativeToOption(cx, totalOf, &plainRelativeTo,
+                                     &zonedRelativeTo, &timeZone)) {
       return false;
     }
     MOZ_ASSERT(!plainRelativeTo || !zonedRelativeTo);
     MOZ_ASSERT_IF(zonedRelativeTo, timeZone.receiver());
 
     // Step 11.
-    if (!GetTemporalUnit(cx, totalOf, TemporalUnitKey::Unit,
-                         TemporalUnitGroup::DateTime, &unit)) {
+    if (!GetTemporalUnitValuedOption(cx, totalOf, TemporalUnitKey::Unit,
+                                     TemporalUnitGroup::DateTime, &unit)) {
       return false;
     }
 
@@ -5559,19 +5562,19 @@ static bool Duration_toString(JSContext* cx, const CallArgs& args) {
 
     // Steps 4-5.
     auto digits = Precision::Auto();
-    if (!ToFractionalSecondDigits(cx, options, &digits)) {
+    if (!GetTemporalFractionalSecondDigitsOption(cx, options, &digits)) {
       return false;
     }
 
     // Step 6.
-    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+    if (!GetRoundingModeOption(cx, options, &roundingMode)) {
       return false;
     }
 
     // Step 7.
     auto smallestUnit = TemporalUnit::Auto;
-    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
-                         TemporalUnitGroup::Time, &smallestUnit)) {
+    if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
+                                     TemporalUnitGroup::Time, &smallestUnit)) {
       return false;
     }
 
