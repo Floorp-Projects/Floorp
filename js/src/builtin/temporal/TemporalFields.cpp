@@ -307,6 +307,61 @@ static constexpr bool IsSorted(const std::array<T, N>& arr) {
 
 static_assert(IsSorted(js::temporal::detail::sortedTemporalFields));
 
+static void AssignFromFallback(TemporalField fieldName,
+                               MutableHandle<TemporalFields> result) {
+  // `const` can be changed to `constexpr` when we switch to C++20.
+  //
+  // Hazard analysis complains when |FallbackValues| is directly contained in
+  // loop body of |PrepareTemporalFields|. As a workaround the code was moved
+  // into the separate |AssignFromFallback| function.
+  const TemporalFields FallbackValues{};
+
+  switch (fieldName) {
+    case TemporalField::Year:
+      result.year() = FallbackValues.year;
+      break;
+    case TemporalField::Month:
+      result.month() = FallbackValues.month;
+      break;
+    case TemporalField::MonthCode:
+      result.monthCode().set(FallbackValues.monthCode);
+      break;
+    case TemporalField::Day:
+      result.day() = FallbackValues.day;
+      break;
+    case TemporalField::Hour:
+      result.hour() = FallbackValues.hour;
+      break;
+    case TemporalField::Minute:
+      result.minute() = FallbackValues.minute;
+      break;
+    case TemporalField::Second:
+      result.second() = FallbackValues.second;
+      break;
+    case TemporalField::Millisecond:
+      result.millisecond() = FallbackValues.millisecond;
+      break;
+    case TemporalField::Microsecond:
+      result.microsecond() = FallbackValues.microsecond;
+      break;
+    case TemporalField::Nanosecond:
+      result.nanosecond() = FallbackValues.nanosecond;
+      break;
+    case TemporalField::Offset:
+      result.offset().set(FallbackValues.offset);
+      break;
+    case TemporalField::Era:
+      result.era().set(FallbackValues.era);
+      break;
+    case TemporalField::EraYear:
+      result.eraYear() = FallbackValues.eraYear;
+      break;
+    case TemporalField::TimeZone:
+      result.timeZone().set(FallbackValues.timeZone);
+      break;
+  }
+}
+
 // clang-format off
 //
 // TODO: |fields| is often a built-in Temporal type, so we likely want to
@@ -469,54 +524,8 @@ bool js::temporal::PrepareTemporalFields(
         return false;
       }
 
-      // `const` can be changed to `constexpr` when we switch to C++20.
-      const TemporalFields FallbackValues{};
-
       // Steps 6.b.iii.2-3.
-      switch (fieldName) {
-        case TemporalField::Year:
-          result.year() = FallbackValues.year;
-          break;
-        case TemporalField::Month:
-          result.month() = FallbackValues.month;
-          break;
-        case TemporalField::MonthCode:
-          result.monthCode().set(FallbackValues.monthCode);
-          break;
-        case TemporalField::Day:
-          result.day() = FallbackValues.day;
-          break;
-        case TemporalField::Hour:
-          result.hour() = FallbackValues.hour;
-          break;
-        case TemporalField::Minute:
-          result.minute() = FallbackValues.minute;
-          break;
-        case TemporalField::Second:
-          result.second() = FallbackValues.second;
-          break;
-        case TemporalField::Millisecond:
-          result.millisecond() = FallbackValues.millisecond;
-          break;
-        case TemporalField::Microsecond:
-          result.microsecond() = FallbackValues.microsecond;
-          break;
-        case TemporalField::Nanosecond:
-          result.nanosecond() = FallbackValues.nanosecond;
-          break;
-        case TemporalField::Offset:
-          result.offset().set(FallbackValues.offset);
-          break;
-        case TemporalField::Era:
-          result.era().set(FallbackValues.era);
-          break;
-        case TemporalField::EraYear:
-          result.eraYear() = FallbackValues.eraYear;
-          break;
-        case TemporalField::TimeZone:
-          result.timeZone().set(FallbackValues.timeZone);
-          break;
-      }
+      AssignFromFallback(fieldName, result);
     }
 
     // Steps 6.c-d. (Not applicable in our implementation.)
