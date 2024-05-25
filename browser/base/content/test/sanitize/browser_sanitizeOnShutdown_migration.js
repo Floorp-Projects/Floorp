@@ -10,6 +10,75 @@ add_setup(async function () {
   });
 });
 
+// Test checking "clear cookies and site data when firefox shuts down" does a migration
+// before making any pref changes (Bug 1894933)
+add_task(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false],
+      ["privacy.clearOnShutdown_v2.cookiesAndStorage", true],
+      ["privacy.clearOnShutdown_v2.historyFormDataAndDownloads", true],
+      ["privacy.clearOnShutdown_v2.siteSettings", false],
+      ["privacy.clearOnShutdown_v2.cache", false],
+    ],
+  });
+
+  // open privacy settings
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
+
+  let document = gBrowser.contentDocument;
+  let deleteOnCloseBox = document.getElementById("deleteOnClose");
+  ok(!deleteOnCloseBox.checked, "DeleteOnClose initial state is deselected");
+
+  let alwaysClearBox = document.getElementById("alwaysClear");
+  ok(!alwaysClearBox.checked, "AlwaysClear initial state is deselected");
+
+  deleteOnCloseBox.click();
+
+  ok(deleteOnCloseBox.checked, "DeleteOnClose is selected");
+  is(
+    deleteOnCloseBox.checked,
+    alwaysClearBox.checked,
+    "DeleteOnClose sets alwaysClear in the same state, selected"
+  );
+  // We are done changing settings in about:preferences, remove the tab
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // Open the clear on shutdown preferences dialog
+  let dh = new ClearHistoryDialogHelper({ mode: "clearOnShutdown" });
+  dh.onload = function () {
+    is(
+      Services.prefs.getBoolPref(
+        "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+      ),
+      false,
+      "History pref should flip to false"
+    );
+    is(
+      Services.prefs.getBoolPref(
+        "privacy.clearOnShutdown_v2.cookiesAndStorage"
+      ),
+      true,
+      "Cookies pref should remain true"
+    );
+    is(
+      Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cache"),
+      true,
+      "Cache pref should flip to true"
+    );
+    is(
+      Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.siteSettings"),
+      false,
+      "Site settings should remain false"
+    );
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+});
+
 add_task(async function testMigrationOfCacheAndSiteSettings() {
   await SpecialPowers.pushPrefEnv({
     set: [
