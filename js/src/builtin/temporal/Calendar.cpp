@@ -1033,62 +1033,62 @@ static bool ToCalendarField(JSContext* cx, JSLinearString* linear,
   return false;
 }
 
-static PropertyName* ToPropertyName(JSContext* cx, CalendarField field) {
-  switch (field) {
-    case CalendarField::Year:
-      return cx->names().year;
-    case CalendarField::Month:
-      return cx->names().month;
-    case CalendarField::MonthCode:
-      return cx->names().monthCode;
-    case CalendarField::Day:
-      return cx->names().day;
-  }
-  MOZ_CRASH("invalid calendar field name");
-}
+static constexpr auto sortedCalendarFields = std::array{
+    CalendarField::Day,
+    CalendarField::Month,
+    CalendarField::MonthCode,
+    CalendarField::Year,
+};
 
-#ifdef DEBUG
-static const char* ToCString(CalendarField field) {
+// TODO: Consider reordering CalendarField so we don't need this. Probably best
+// to decide after <https://github.com/tc39/proposal-temporal/issues/2826> has
+// landed.
+using SortedCalendarFields = SortedEnumSet<CalendarField, sortedCalendarFields>;
+
+static TemporalField ToTemporalField(CalendarField field) {
   switch (field) {
     case CalendarField::Year:
-      return "year";
+      return TemporalField::Year;
     case CalendarField::Month:
-      return "month";
+      return TemporalField::Month;
     case CalendarField::MonthCode:
-      return "monthCode";
+      return TemporalField::MonthCode;
     case CalendarField::Day:
-      return "day";
+      return TemporalField::Day;
   }
   MOZ_CRASH("invalid calendar field name");
 }
-#endif
 
 /**
  * Temporal.Calendar.prototype.fields ( fields )
  */
-static bool BuiltinCalendarFields(
-    JSContext* cx, std::initializer_list<CalendarField> fieldNames,
-    CalendarFieldNames& result) {
+static bool BuiltinCalendarFields(JSContext* cx,
+                                  mozilla::EnumSet<CalendarField> fieldNames,
+                                  CalendarFieldNames& result) {
   MOZ_ASSERT(result.empty());
 
   // Steps 1-4. (Not applicable.)
 
-  // Reserve space for the append operation.
-  if (!result.reserve(fieldNames.size())) {
-    return false;
-  }
-
   // Steps 5-6.
+  mozilla::EnumSet<TemporalField> temporalFields{};
   for (auto fieldName : fieldNames) {
-    auto* name = ToPropertyName(cx, fieldName);
-
     // Steps 6.a and 6.b.i-iii. (Not applicable)
 
     // Step 6.b.iv.
+    temporalFields += ToTemporalField(fieldName);
+  }
+
+  // Reserve space for the append operation.
+  if (!result.reserve(temporalFields.size())) {
+    return false;
+  }
+
+  // Append all fields, sorted.
+  for (auto field : SortedTemporalFields{temporalFields}) {
+    auto* name = ToPropertyName(cx, field);
     result.infallibleAppend(NameToId(name));
   }
 
-  // Steps 7-9.
   return true;
 }
 
@@ -1175,31 +1175,17 @@ static bool BuiltinCalendarFields(JSContext* cx, Handle<Value> fields,
   return true;
 }
 
-#ifdef DEBUG
-static bool IsSorted(std::initializer_list<CalendarField> fieldNames) {
-  return std::is_sorted(fieldNames.begin(), fieldNames.end(),
-                        [](auto x, auto y) {
-                          auto* a = ToCString(x);
-                          auto* b = ToCString(y);
-                          return std::strcmp(a, b) < 0;
-                        });
-}
-#endif
-
 /**
  * CalendarFields ( calendarRec, fieldNames )
  */
-bool js::temporal::CalendarFields(
-    JSContext* cx, Handle<CalendarRecord> calendar,
-    std::initializer_list<CalendarField> fieldNames,
-    MutableHandle<CalendarFieldNames> result) {
+bool js::temporal::CalendarFields(JSContext* cx,
+                                  Handle<CalendarRecord> calendar,
+                                  mozilla::EnumSet<CalendarField> fieldNames,
+                                  MutableHandle<CalendarFieldNames> result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::Fields));
 
-  // Step 1.
-  MOZ_ASSERT(IsSorted(fieldNames));
-  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
-             fieldNames.end());
+  // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
   auto fields = calendar.fields();
@@ -1231,10 +1217,12 @@ bool js::temporal::CalendarFields(
   }
   array->setDenseInitializedLength(fieldNames.size());
 
-  for (size_t i = 0; i < fieldNames.size(); i++) {
-    auto* name = ToPropertyName(cx, fieldNames.begin()[i]);
-    array->initDenseElement(i, StringValue(name));
+  size_t index = 0;
+  for (auto calendarField : SortedCalendarFields{fieldNames}) {
+    auto* name = ToPropertyName(cx, ::ToTemporalField(calendarField));
+    array->initDenseElement(index++, StringValue(name));
   }
+  MOZ_ASSERT(index == fieldNames.size());
 
   Rooted<Value> fieldsArray(cx, ObjectValue(*array));
   Rooted<Value> calendarFieldNames(cx);
@@ -2673,19 +2661,21 @@ static bool ISODateFromFields(JSContext* cx, Handle<TemporalFields> fields,
  */
 static PlainDateObject* BuiltinCalendarDateFromFields(
     JSContext* cx, Handle<JSObject*> fields, Handle<JSObject*> maybeOptions) {
-  // Steps 1-5. (Not applicable)
+  // Steps 1-4. (Not applicable)
 
-  // Step 6.
+  // Step 5.
+  auto relevantFieldNames = {TemporalField::Day, TemporalField::Month,
+                             TemporalField::MonthCode, TemporalField::Year};
+
+  // Steps 6-7.
   Rooted<TemporalFields> dateFields(cx);
-  if (!PrepareTemporalFields(cx, fields,
-                             {TemporalField::Day, TemporalField::Month,
-                              TemporalField::MonthCode, TemporalField::Year},
+  if (!PrepareTemporalFields(cx, fields, relevantFieldNames,
                              {TemporalField::Day, TemporalField::Year},
                              &dateFields)) {
     return nullptr;
   }
 
-  // Step 7.
+  // Step 8.
   auto overflow = TemporalOverflow::Constrain;
   if (maybeOptions) {
     if (!GetTemporalOverflowOption(cx, maybeOptions, &overflow)) {
@@ -2693,19 +2683,19 @@ static PlainDateObject* BuiltinCalendarDateFromFields(
     }
   }
 
-  // Step 8.
+  // Step 9.a.
   if (!ISOResolveMonth(cx, &dateFields)) {
     return nullptr;
   }
 
-  // Step 9.
+  // Step 9.b.
   PlainDate result;
   if (!ISODateFromFields(cx, dateFields, overflow, &result)) {
     return nullptr;
   }
 
-  // Step 10.
   Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
+  // Step 11.
   return CreateTemporalDate(cx, result, calendar);
 }
 
@@ -2857,18 +2847,20 @@ static bool ISOYearMonthFromFields(JSContext* cx, Handle<TemporalFields> fields,
  */
 static PlainYearMonthObject* BuiltinCalendarYearMonthFromFields(
     JSContext* cx, Handle<JSObject*> fields, Handle<JSObject*> maybeOptions) {
-  // Steps 1-5. (Not applicable)
+  // Steps 1-4. (Not applicable)
 
-  // Step 6.
+  // Step 5.
+  auto relevantFieldNames = {TemporalField::Month, TemporalField::MonthCode,
+                             TemporalField::Year};
+
+  // Steps 6-7.
   Rooted<TemporalFields> dateFields(cx);
-  if (!PrepareTemporalFields(
-          cx, fields,
-          {TemporalField::Month, TemporalField::MonthCode, TemporalField::Year},
-          {TemporalField::Year}, &dateFields)) {
+  if (!PrepareTemporalFields(cx, fields, relevantFieldNames,
+                             {TemporalField::Year}, &dateFields)) {
     return nullptr;
   }
 
-  // Step 7.
+  // Step 8.
   auto overflow = TemporalOverflow::Constrain;
   if (maybeOptions) {
     if (!GetTemporalOverflowOption(cx, maybeOptions, &overflow)) {
@@ -2876,12 +2868,12 @@ static PlainYearMonthObject* BuiltinCalendarYearMonthFromFields(
     }
   }
 
-  // Step 8.
+  // Step 9.a.
   if (!ISOResolveMonth(cx, &dateFields)) {
     return nullptr;
   }
 
-  // Step 9.
+  // Step 9.b.
   PlainDate result;
   if (!ISOYearMonthFromFields(cx, dateFields, overflow, &result)) {
     return nullptr;
@@ -3008,18 +3000,20 @@ static bool ISOMonthDayFromFields(JSContext* cx, Handle<TemporalFields> fields,
  */
 static PlainMonthDayObject* BuiltinCalendarMonthDayFromFields(
     JSContext* cx, Handle<JSObject*> fields, Handle<JSObject*> maybeOptions) {
-  // Steps 1-5. (Not applicable)
+  // Steps 1-4. (Not applicable)
 
-  // Step 6.
+  // Step 5.
+  auto relevantFieldNames = {TemporalField::Day, TemporalField::Month,
+                             TemporalField::MonthCode, TemporalField::Year};
+
+  // Steps 6-7.
   Rooted<TemporalFields> dateFields(cx);
-  if (!PrepareTemporalFields(cx, fields,
-                             {TemporalField::Day, TemporalField::Month,
-                              TemporalField::MonthCode, TemporalField::Year},
+  if (!PrepareTemporalFields(cx, fields, relevantFieldNames,
                              {TemporalField::Day}, &dateFields)) {
     return nullptr;
   }
 
-  // Step 7.
+  // Step 8.
   auto overflow = TemporalOverflow::Constrain;
   if (maybeOptions) {
     if (!GetTemporalOverflowOption(cx, maybeOptions, &overflow)) {
@@ -3027,12 +3021,12 @@ static PlainMonthDayObject* BuiltinCalendarMonthDayFromFields(
     }
   }
 
-  // Step 8.
+  // Step 9.a.
   if (!ISOResolveMonth(cx, &dateFields)) {
     return nullptr;
   }
 
-  // Step 9.
+  // Step 9.b.
   PlainDate result;
   if (!ISOMonthDayFromFields(cx, dateFields, overflow, &result)) {
     return nullptr;
@@ -3122,182 +3116,51 @@ Wrapped<PlainMonthDayObject*> js::temporal::CalendarMonthDayFromFields(
 using PropertyHashSet = JS::GCHashSet<JS::PropertyKey>;
 using PropertyVector = JS::StackGCVector<JS::PropertyKey>;
 
-/**
- * ISOFieldKeysToIgnore ( keys )
- */
-static bool ISOFieldKeysToIgnore(JSContext* cx, const PropertyVector& keys,
-                                 PropertyHashSet& ignoredKeys) {
-  MOZ_ASSERT(ignoredKeys.empty(), "expected an empty output hashset");
+static bool SetFromList(JSContext* cx, const PropertyVector& keys,
+                        PropertyHashSet& keysSet) {
+  MOZ_ASSERT(keysSet.empty(), "expected an empty output hashset");
 
-  // Step 1. (Not applicable in our implementation.)
-
-  if (!ignoredKeys.reserve(keys.length())) {
+  if (!keysSet.reserve(keys.length())) {
     return false;
   }
 
-  // Step 2.
-  bool seenMonthOrMonthCode = false;
   for (const auto& key : keys) {
-    // Reorder the substeps in order to use |putNew| instead of |put|, because
-    // the former is slightly faster.
-
-    // Steps 2.a-c.
-    if (key.isAtom(cx->names().month) || key.isAtom(cx->names().monthCode)) {
-      // Steps 2.b-c.
-      if (!seenMonthOrMonthCode) {
-        seenMonthOrMonthCode = true;
-
-        // Add both keys at once.
-        if (!ignoredKeys.putNew(NameToId(cx->names().month)) ||
-            !ignoredKeys.putNew(NameToId(cx->names().monthCode))) {
-          return false;
-        }
-      }
-    } else {
-      // Step 2.a.
-      if (!ignoredKeys.putNew(key)) {
-        return false;
-      }
+    if (!keysSet.putNew(key)) {
+      return false;
     }
   }
-
-  // Steps 3-4.
   return true;
 }
 
 /**
- * Temporal.Calendar.prototype.mergeFields ( fields, additionalFields )
+ * ISOFieldKeysToIgnore ( keys )
  */
-static PlainObject* BuiltinCalendarMergeFields(
-    JSContext* cx, Handle<JSObject*> fields,
-    Handle<JSObject*> additionalFields) {
-  // NOTE: This function is only called from CalendarMergeFields and its
-  // result is always passed to PrepareTemporalFields. PrepareTemporalFields
-  // sorts the incoming property keys, so it doesn't matter in which order the
-  // properties are created in this function. This allows to reorder the steps
-  // to process |additionalFields| first.
+static auto ISOFieldKeysToIgnore(mozilla::EnumSet<TemporalField> keys) {
+  // Steps 1 and 2.a.
+  auto ignoredKeys = keys;
 
-  // TODO: Consider additionally passing the fieldNames from the succeeding
-  // PrepareTemporalFields call, so we don't have to process unnecessary keys.
-
-  // Steps 1-2. (Not applicable in our implementation.)
-
-  // Step 13.
-  Rooted<PlainObject*> merged(cx, NewPlainObjectWithProto(cx, nullptr));
-  if (!merged) {
-    return nullptr;
+  // Step 2.b.
+  if (keys.contains(TemporalField::Month)) {
+    ignoredKeys += TemporalField::MonthCode;
   }
 
-  // Contrary to the spec, add the properties from |additionalFields| first.
-
-  // Step 6. (Not applicable in our implementation.)
-
-  // Steps 7-8.
-  //
-  // PrepareTemporalFields ignores symbol property keys, so we don't need to
-  // pass JSITER_SYMBOLS. |additionalFields| contains no non-enumerable
-  // properties, therefore JSITER_HIDDEN isn't needed, too.
-  JS::RootedVector<PropertyKey> keys(cx);
-  if (!GetPropertyKeys(cx, additionalFields, JSITER_OWNONLY, &keys)) {
-    return nullptr;
+  // Step 2.c.
+  else if (keys.contains(TemporalField::MonthCode)) {
+    ignoredKeys += TemporalField::Month;
   }
 
-  // Steps 9-11. (Not applicable in our implementation.)
-
-  // Step 12.
-  Rooted<PropertyHashSet> ignoredKeys(cx, PropertyHashSet(cx));
-  if (!ignoredKeys.reserve(keys.length())) {
-    return nullptr;
-  }
-
-  // Steps 7-8, 12, and 15.
-  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
-  Rooted<Value> propValue(cx);
-  bool seenMonthOrMonthCode = false;
-  for (size_t i = 0; i < keys.length(); i++) {
-    Handle<PropertyKey> key = keys[i];
-
-    if (!GetOwnPropertyDescriptor(cx, additionalFields, key, &desc)) {
-      return nullptr;
-    }
-
-    propValue.set(desc->value());
-
-    // Skip |undefined| properties per step 8.
-    if (propValue.isUndefined()) {
-      continue;
-    }
-
-    // Step 15.
-    if (!DefineDataProperty(cx, merged, key, propValue)) {
-      return nullptr;
-    }
-
-    // Step 12. (Inlined ISOFieldKeysToIgnore)
-    if (key.isAtom(cx->names().month) || key.isAtom(cx->names().monthCode)) {
-      // ISOFieldKeysToIgnore, steps 2.b-c.
-      if (!seenMonthOrMonthCode) {
-        seenMonthOrMonthCode = true;
-
-        if (!ignoredKeys.putNew(NameToId(cx->names().month)) ||
-            !ignoredKeys.putNew(NameToId(cx->names().monthCode))) {
-          return nullptr;
-        }
-      }
-    } else {
-      // ISOFieldKeysToIgnore, step 2.a.
-      if (!ignoredKeys.putNew(key)) {
-        return nullptr;
-      }
-    }
-  }
-
-  // Now add the properties from |field|.
-
-  // Step 3. (Not applicable in our implementation.)
-
-  // Reuse |keys| to avoid extra allocations.
-  keys.clear();
-
-  // Steps 4-5.
-  //
-  // See above why neither JSITER_SYMBOLS nor JSITER_HIDDEN is needed.
-  if (!GetPropertyKeys(cx, fields, JSITER_OWNONLY, &keys)) {
-    return nullptr;
-  }
-
-  // Steps 4-5 and 14.
-  for (size_t i = 0; i < keys.length(); i++) {
-    Handle<PropertyKey> key = keys[i];
-
-    // Skip ignored keys per step 14.
-    if (ignoredKeys.has(key)) {
-      continue;
-    }
-
-    if (!GetOwnPropertyDescriptor(cx, fields, key, &desc)) {
-      return nullptr;
-    }
-
-    propValue.set(desc->value());
-
-    // Skip |undefined| properties per step 5.
-    if (propValue.isUndefined()) {
-      continue;
-    }
-
-    // Step 14.
-    if (!DefineDataProperty(cx, merged, key, propValue)) {
-      return nullptr;
-    }
-  }
-
-  // Step 16.
-  return merged;
+  // Steps 3-4.
+  return ignoredKeys;
 }
 
 #ifdef DEBUG
 static bool IsPlainDataObject(PlainObject* obj) {
+  // [[Prototype]] is null.
+  if (obj->staticPrototype() != nullptr) {
+    return false;
+  }
+
+  // All properties are simple data properties.
   for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
     if (iter->flags() != PropertyFlags::defaultDataPropFlags) {
       return false;
@@ -3308,6 +3171,101 @@ static bool IsPlainDataObject(PlainObject* obj) {
 #endif
 
 /**
+ * Temporal.Calendar.prototype.mergeFields ( fields, additionalFields )
+ */
+static PlainObject* BuiltinCalendarMergeFields(
+    JSContext* cx, Handle<PlainObject*> fields,
+    Handle<PlainObject*> additionalFields) {
+  MOZ_ASSERT(IsPlainDataObject(fields));
+  MOZ_ASSERT(IsPlainDataObject(additionalFields));
+
+  // Steps 1-4. (Not applicable in our implementation.)
+
+  // Steps 5-6.
+  //
+  // |additionalFields| contains no non-enumerable properties, so we don't need
+  // to pass JSITER_HIDDEN.
+  JS::RootedVector<PropertyKey> additionalKeys(cx);
+  if (!GetPropertyKeys(cx, additionalFields, JSITER_OWNONLY | JSITER_SYMBOLS,
+                       &additionalKeys)) {
+    return nullptr;
+  }
+
+  // Steps 7-8.
+  mozilla::EnumSet<TemporalField> additionalFieldKeys;
+  for (const auto& additionalKey : additionalKeys) {
+    auto field = ToTemporalField(cx, additionalKey);
+    if (field) {
+      additionalFieldKeys += *field;
+    }
+  }
+
+  auto toIgnore = ISOFieldKeysToIgnore(additionalFieldKeys);
+  MOZ_ASSERT(toIgnore.contains(additionalFieldKeys));
+
+  Rooted<PropertyHashSet> overriddenKeys(cx, PropertyHashSet(cx));
+  if (!SetFromList(cx, additionalKeys.get(), overriddenKeys.get())) {
+    return nullptr;
+  }
+
+  auto additionalFieldsToIgnore = toIgnore - additionalFieldKeys;
+  for (auto field : additionalFieldsToIgnore) {
+    auto* fieldName = ToPropertyName(cx, field);
+    if (!overriddenKeys.put(NameToId(fieldName))) {
+      return nullptr;
+    }
+  }
+
+  // Step 9.
+  Rooted<PlainObject*> merged(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!merged) {
+    return nullptr;
+  }
+
+  // Steps 10-11.
+  //
+  // See above why JSITER_HIDDEN isn't needed.
+  JS::RootedVector<PropertyKey> fieldsKeys(cx);
+  if (!GetPropertyKeys(cx, fields, JSITER_OWNONLY | JSITER_SYMBOLS,
+                       &fieldsKeys)) {
+    return nullptr;
+  }
+
+  // Step 12.
+  Rooted<Value> propValue(cx);
+  for (size_t i = 0; i < fieldsKeys.length(); i++) {
+    Handle<PropertyKey> key = fieldsKeys[i];
+
+    // Steps 12.a-b.
+    if (overriddenKeys.has(key)) {
+      if (!GetProperty(cx, additionalFields, additionalFields, key,
+                       &propValue)) {
+        return nullptr;
+      }
+    } else {
+      if (!GetProperty(cx, fields, fields, key, &propValue)) {
+        return nullptr;
+      }
+    }
+
+    // Step 12.c.
+    if (!propValue.isUndefined()) {
+      if (!DefineDataProperty(cx, merged, key, propValue)) {
+        return nullptr;
+      }
+    }
+  }
+
+  // Step 13.
+  if (!CopyDataProperties(cx, merged, additionalFields)) {
+    return nullptr;
+  }
+
+  // Step 14.
+  return merged;
+}
+
+/**
  * CalendarMergeFields ( calendarRec, fields, additionalFields )
  */
 JSObject* js::temporal::CalendarMergeFields(
@@ -3315,9 +3273,6 @@ JSObject* js::temporal::CalendarMergeFields(
     Handle<PlainObject*> additionalFields) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::MergeFields));
-
-  MOZ_ASSERT(IsPlainDataObject(fields));
-  MOZ_ASSERT(IsPlainDataObject(additionalFields));
 
   // Step 2. (Reordered)
   auto mergeFields = calendar.mergeFields();
@@ -4832,75 +4787,10 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Steps 5-6.
-  //
-  // JSITER_HIDDEN doesn't need to be passed, because CopyDataProperties creates
-  // all properties as enumerable.
-  JS::RootedVector<PropertyKey> additionalKeys(cx);
-  if (!GetPropertyKeys(cx, additionalFieldsCopy,
-                       JSITER_OWNONLY | JSITER_SYMBOLS, &additionalKeys)) {
-    return false;
-  }
-
-  // Steps 7-8.
-  Rooted<PropertyHashSet> overriddenKeys(cx, PropertyHashSet(cx));
-  if (!ISOFieldKeysToIgnore(cx, additionalKeys, overriddenKeys.get())) {
-    return false;
-  }
-
-  // Step 9.
-  Rooted<PlainObject*> merged(cx, NewPlainObjectWithProto(cx, nullptr));
+  // Steps 5-13.
+  auto* merged =
+      BuiltinCalendarMergeFields(cx, fieldsCopy, additionalFieldsCopy);
   if (!merged) {
-    return false;
-  }
-
-  // Steps 10-11.
-  //
-  // JSITER_HIDDEN doesn't need to be passed, because CopyDataProperties creates
-  // all properties as enumerable.
-  JS::RootedVector<PropertyKey> fieldsKeys(cx);
-  if (!GetPropertyKeys(cx, fieldsCopy, JSITER_OWNONLY | JSITER_SYMBOLS,
-                       &fieldsKeys)) {
-    return false;
-  }
-
-  // Step 12.
-  Rooted<Value> propValue(cx);
-  for (size_t i = 0; i < fieldsKeys.length(); i++) {
-    Handle<PropertyKey> key = fieldsKeys[i];
-
-    // Steps 12.a-b.
-    if (overriddenKeys.has(key)) {
-      if (!GetProperty(cx, additionalFieldsCopy, additionalFieldsCopy, key,
-                       &propValue)) {
-        return false;
-      }
-
-      // Step 12.c. (Reordered)
-      if (propValue.isUndefined()) {
-        // The property can be undefined if the key is "month" or "monthCode".
-        MOZ_ASSERT(key.isAtom(cx->names().month) ||
-                   key.isAtom(cx->names().monthCode));
-
-        continue;
-      }
-    } else {
-      if (!GetProperty(cx, fieldsCopy, fieldsCopy, key, &propValue)) {
-        return false;
-      }
-
-      // All properties of |fieldsCopy| have a non-undefined value.
-      MOZ_ASSERT(!propValue.isUndefined());
-    }
-
-    // Step 12.c.
-    if (!DefineDataProperty(cx, merged, key, propValue)) {
-      return false;
-    }
-  }
-
-  // Step 13.
-  if (!CopyDataProperties(cx, merged, additionalFieldsCopy)) {
     return false;
   }
 

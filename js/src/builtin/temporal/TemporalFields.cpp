@@ -16,6 +16,7 @@
 #include <cstring>
 #include <iterator>
 #include <stdint.h>
+#include <type_traits>
 #include <utility>
 
 #include "jsnum.h"
@@ -60,7 +61,7 @@ void TemporalFields::trace(JSTracer* trc) {
   TraceRoot(trc, &timeZone, "TemporalFields::timeZone");
 }
 
-static PropertyName* ToPropertyName(JSContext* cx, TemporalField field) {
+PropertyName* js::temporal::ToPropertyName(JSContext* cx, TemporalField field) {
   switch (field) {
     case TemporalField::Year:
       return cx->names().year;
@@ -94,7 +95,7 @@ static PropertyName* ToPropertyName(JSContext* cx, TemporalField field) {
   MOZ_CRASH("invalid temporal field name");
 }
 
-static const char* ToCString(TemporalField field) {
+static constexpr const char* ToCString(TemporalField field) {
   switch (field) {
     case TemporalField::Year:
       return "year";
@@ -128,20 +129,6 @@ static const char* ToCString(TemporalField field) {
   MOZ_CRASH("invalid temporal field name");
 }
 
-static const char* ToCString(CalendarField field) {
-  switch (field) {
-    case CalendarField::Year:
-      return "year";
-    case CalendarField::Month:
-      return "month";
-    case CalendarField::MonthCode:
-      return "monthCode";
-    case CalendarField::Day:
-      return "day";
-  }
-  MOZ_CRASH("invalid calendar field name");
-}
-
 static JS::UniqueChars QuoteString(JSContext* cx, const char* str) {
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
@@ -169,8 +156,8 @@ static JS::UniqueChars QuoteString(JSContext* cx, PropertyKey key) {
   return QuoteString(cx, key.toSymbol()->description());
 }
 
-static mozilla::Maybe<TemporalField> ToTemporalField(JSContext* cx,
-                                                     PropertyKey property) {
+mozilla::Maybe<TemporalField> js::temporal::ToTemporalField(
+    JSContext* cx, PropertyKey property) {
   static constexpr TemporalField fieldNames[] = {
       TemporalField::Year,        TemporalField::Month,
       TemporalField::MonthCode,   TemporalField::Day,
@@ -298,30 +285,26 @@ static int32_t ComparePropertyKey(PropertyKey x, PropertyKey y) {
 }
 
 #ifdef DEBUG
-static bool IsSorted(std::initializer_list<TemporalField> fieldNames) {
-  return std::is_sorted(fieldNames.begin(), fieldNames.end(),
-                        [](auto x, auto y) {
-                          auto* a = ToCString(x);
-                          auto* b = ToCString(y);
-                          return std::strcmp(a, b) < 0;
-                        });
-}
-
-static bool IsSorted(std::initializer_list<CalendarField> fieldNames) {
-  return std::is_sorted(fieldNames.begin(), fieldNames.end(),
-                        [](auto x, auto y) {
-                          auto* a = ToCString(x);
-                          auto* b = ToCString(y);
-                          return std::strcmp(a, b) < 0;
-                        });
-}
-
 static bool IsSorted(const TemporalFieldNames& fieldNames) {
   return std::is_sorted(
       fieldNames.begin(), fieldNames.end(),
       [](auto x, auto y) { return ComparePropertyKey(x, y) < 0; });
 }
 #endif
+
+template <typename T, size_t N>
+static constexpr bool IsSorted(const std::array<T, N>& arr) {
+  for (size_t i = 1; i < arr.size(); i++) {
+    auto a = std::string_view{ToCString(arr[i - 1])};
+    auto b = std::string_view{ToCString(arr[i])};
+    if (a.compare(b) >= 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static_assert(IsSorted(js::temporal::detail::sortedTemporalFields));
 
 // clang-format off
 //
@@ -367,26 +350,14 @@ static bool IsSorted(const TemporalFieldNames& fieldNames) {
  */
 bool js::temporal::PrepareTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
-    std::initializer_list<TemporalField> fieldNames,
-    std::initializer_list<TemporalField> requiredFields,
+    mozilla::EnumSet<TemporalField> fieldNames,
+    mozilla::EnumSet<TemporalField> requiredFields,
     MutableHandle<TemporalFields> result) {
-  // Steps 1-3. (Not applicable in our implementation.)
-
-  // Step 4. (|fieldNames| is sorted in our implementation.)
-  MOZ_ASSERT(IsSorted(fieldNames));
-
-  // Step 5. (The list doesn't contain duplicates in our implementation.)
-  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
-             fieldNames.end());
-
-  // |requiredFields| is sorted and doesn't contain any duplicate elements.
-  MOZ_ASSERT(IsSorted(requiredFields));
-  MOZ_ASSERT(std::adjacent_find(requiredFields.begin(), requiredFields.end()) ==
-             requiredFields.end());
+  // Steps 1-5. (Not applicable in our implementation.)
 
   // Step 6.
   Rooted<Value> value(cx);
-  for (auto fieldName : fieldNames) {
+  for (auto fieldName : SortedTemporalFields{fieldNames}) {
     auto* property = ToPropertyName(cx, fieldName);
     const auto* cstr = ToCString(fieldName);
 
@@ -488,8 +459,7 @@ bool js::temporal::PrepareTemporalFields(
       }
     } else {
       // Step 6.b.iii.1.
-      if (std::find(requiredFields.begin(), requiredFields.end(), fieldName) !=
-          requiredFields.end()) {
+      if (requiredFields.contains(fieldName)) {
         if (auto chars = QuoteString(cx, cstr)) {
           JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                     JSMSG_TEMPORAL_MISSING_PROPERTY,
@@ -633,7 +603,7 @@ PlainObject* js::temporal::PrepareTemporalFields(
 PlainObject* js::temporal::PrepareTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
     Handle<TemporalFieldNames> fieldNames,
-    std::initializer_list<TemporalField> requiredFields) {
+    mozilla::EnumSet<TemporalField> requiredFields) {
   // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
@@ -650,11 +620,6 @@ PlainObject* js::temporal::PrepareTemporalFields(
   // Step 5. (The list doesn't contain duplicates in our implementation.)
   MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
              fieldNames.end());
-
-  // |requiredFields| is sorted and doesn't include any duplicate elements.
-  MOZ_ASSERT(IsSorted(requiredFields));
-  MOZ_ASSERT(std::adjacent_find(requiredFields.begin(), requiredFields.end()) ==
-             requiredFields.end());
 
   // Step 6.
   Rooted<Value> value(cx);
@@ -681,8 +646,7 @@ PlainObject* js::temporal::PrepareTemporalFields(
         }
       } else {
         // Step 6.b.iii.1.
-        if (std::find(requiredFields.begin(), requiredFields.end(),
-                      *fieldName) != requiredFields.end()) {
+        if (requiredFields.contains(*fieldName)) {
           if (auto chars = QuoteString(cx, property.toString())) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_TEMPORAL_MISSING_PROPERTY,
@@ -789,18 +753,12 @@ PlainObject* js::temporal::PreparePartialTemporalFields(
  */
 static bool PrepareCalendarFieldsAndFieldNames(
     JSContext* cx, Handle<CalendarRecord> calendar, Handle<JSObject*> fields,
-    std::initializer_list<CalendarField> calendarFieldNames,
-    std::initializer_list<TemporalField> nonCalendarFieldNames,
-    std::initializer_list<TemporalField> requiredFieldNames,
+    mozilla::EnumSet<CalendarField> calendarFieldNames,
+    mozilla::EnumSet<TemporalField> nonCalendarFieldNames,
+    mozilla::EnumSet<TemporalField> requiredFieldNames,
     MutableHandle<PlainObject*> resultFields,
     MutableHandle<TemporalFieldNames> resultFieldNames) {
-  // Step 1.
-  MOZ_ASSERT(IsSorted(calendarFieldNames));
-  MOZ_ASSERT(std::adjacent_find(calendarFieldNames.begin(),
-                                calendarFieldNames.end()) ==
-             calendarFieldNames.end());
-
-  // Step 2. (Not applicable in our implementation.)
+  // Steps 1-2. (Not applicable in our implementation.)
 
   // Steps 3-4.
   JS::RootedVector<PropertyKey> fieldNames(cx);
@@ -838,7 +796,7 @@ static bool PrepareCalendarFieldsAndFieldNames(
  */
 bool js::temporal::PrepareCalendarFieldsAndFieldNames(
     JSContext* cx, Handle<CalendarRecord> calendar, Handle<JSObject*> fields,
-    std::initializer_list<CalendarField> calendarFieldNames,
+    mozilla::EnumSet<CalendarField> calendarFieldNames,
     MutableHandle<PlainObject*> resultFields,
     MutableHandle<TemporalFieldNames> resultFieldNames) {
   return ::PrepareCalendarFieldsAndFieldNames(cx, calendar, fields,
@@ -847,70 +805,30 @@ bool js::temporal::PrepareCalendarFieldsAndFieldNames(
 }
 
 #ifdef DEBUG
-static CalendarField ToCalendarField(TemporalField field) {
-  switch (field) {
-    case TemporalField::Year:
-      return CalendarField::Year;
-    case TemporalField::Month:
-      return CalendarField::Month;
-    case TemporalField::MonthCode:
-      return CalendarField::MonthCode;
-    case TemporalField::Day:
-      return CalendarField::Day;
-    case TemporalField::Era:
-    case TemporalField::EraYear:
-    case TemporalField::Hour:
-    case TemporalField::Minute:
-    case TemporalField::Second:
-    case TemporalField::Millisecond:
-    case TemporalField::Microsecond:
-    case TemporalField::Nanosecond:
-    case TemporalField::Offset:
-    case TemporalField::TimeZone:
-      break;
-  }
-  MOZ_CRASH("invalid temporal field name");
+static auto AsTemporalFieldSet(mozilla::EnumSet<CalendarField> values) {
+  using T = std::underlying_type_t<TemporalField>;
+  static_assert(std::is_same_v<T, std::underlying_type_t<CalendarField>>);
+
+  static_assert(static_cast<T>(TemporalField::Year) ==
+                static_cast<T>(CalendarField::Year));
+  static_assert(static_cast<T>(TemporalField::Month) ==
+                static_cast<T>(CalendarField::Month));
+  static_assert(static_cast<T>(TemporalField::MonthCode) ==
+                static_cast<T>(CalendarField::MonthCode));
+  static_assert(static_cast<T>(TemporalField::Day) ==
+                static_cast<T>(CalendarField::Day));
+
+  auto result = mozilla::EnumSet<TemporalField>{};
+  result.deserialize(values.serialize());
+  return result;
 }
 
-static bool IsNonCalendarFieldName(TemporalField field) {
-  switch (field) {
-    case TemporalField::Year:
-    case TemporalField::Month:
-    case TemporalField::MonthCode:
-    case TemporalField::Day:
-    case TemporalField::Era:
-    case TemporalField::EraYear:
-      return false;
-    case TemporalField::Hour:
-    case TemporalField::Minute:
-    case TemporalField::Second:
-    case TemporalField::Millisecond:
-    case TemporalField::Microsecond:
-    case TemporalField::Nanosecond:
-    case TemporalField::Offset:
-    case TemporalField::TimeZone:
-      return true;
-  }
-  MOZ_CRASH("invalid temporal field name");
-}
-
-template <class C, typename V>
-static bool Includes(const C& c, const V& v) {
-  return std::find(c.begin(), c.end(), v) != c.end();
-}
-
-static bool IsSubset(
-    std::initializer_list<TemporalField> requiredFieldNames,
-    std::initializer_list<CalendarField> calendarFieldNames,
-    std::initializer_list<TemporalField> nonCalendarFieldNames) {
-  return std::all_of(
-      requiredFieldNames.begin(), requiredFieldNames.end(), [&](auto field) {
-        if (IsNonCalendarFieldName(field)) {
-          return Includes(nonCalendarFieldNames, field);
-        }
-        return Includes(calendarFieldNames, ToCalendarField(field));
-      });
-}
+static constexpr mozilla::EnumSet<TemporalField> NonCalendarFieldNames = {
+    TemporalField::Hour,        TemporalField::Minute,
+    TemporalField::Second,      TemporalField::Millisecond,
+    TemporalField::Microsecond, TemporalField::Nanosecond,
+    TemporalField::Offset,      TemporalField::TimeZone,
+};
 #endif
 
 /**
@@ -919,30 +837,21 @@ static bool IsSubset(
  */
 PlainObject* js::temporal::PrepareCalendarFields(
     JSContext* cx, Handle<CalendarRecord> calendar, Handle<JSObject*> fields,
-    std::initializer_list<CalendarField> calendarFieldNames,
-    std::initializer_list<TemporalField> nonCalendarFieldNames,
-    std::initializer_list<TemporalField> requiredFieldNames) {
-  // Step 1.
-  MOZ_ASSERT(IsSorted(calendarFieldNames));
-  MOZ_ASSERT(std::adjacent_find(calendarFieldNames.begin(),
-                                calendarFieldNames.end()) ==
-             calendarFieldNames.end());
+    mozilla::EnumSet<CalendarField> calendarFieldNames,
+    mozilla::EnumSet<TemporalField> nonCalendarFieldNames,
+    mozilla::EnumSet<TemporalField> requiredFieldNames) {
+  // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
-  MOZ_ASSERT(IsSorted(nonCalendarFieldNames));
-  MOZ_ASSERT(std::adjacent_find(nonCalendarFieldNames.begin(),
-                                nonCalendarFieldNames.end()) ==
-             nonCalendarFieldNames.end());
-  MOZ_ASSERT(std::all_of(nonCalendarFieldNames.begin(),
-                         nonCalendarFieldNames.end(), IsNonCalendarFieldName));
+  //
+  // Ensure `nonCalendarFieldNames ⊆ NonCalendarFieldNames`.
+  MOZ_ASSERT(NonCalendarFieldNames.contains(nonCalendarFieldNames));
 
   // Step 3.
-  MOZ_ASSERT(IsSorted(requiredFieldNames));
-  MOZ_ASSERT(std::adjacent_find(requiredFieldNames.begin(),
-                                requiredFieldNames.end()) ==
-             requiredFieldNames.end());
-  MOZ_ASSERT(
-      IsSubset(requiredFieldNames, calendarFieldNames, nonCalendarFieldNames));
+  //
+  // Ensure `requiredFieldNames ⊆ (calendarFieldNames ∪ nonCalendarFieldNames)`.
+  MOZ_ASSERT((AsTemporalFieldSet(calendarFieldNames) + nonCalendarFieldNames)
+                 .contains(requiredFieldNames));
 
   // Steps 4-5.
   Rooted<PlainObject*> resultFields(cx);
@@ -1014,30 +923,29 @@ bool js::temporal::ConcatTemporalFieldNames(
 
 bool js::temporal::AppendSorted(
     JSContext* cx, TemporalFieldNames& fieldNames,
-    std::initializer_list<TemporalField> additionalNames) {
+    mozilla::EnumSet<TemporalField> additionalNames) {
   // |fieldNames| is sorted and doesn't include any duplicates
   MOZ_ASSERT(IsSorted(fieldNames));
   MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
              fieldNames.end());
 
-  // |additionalNames| is non-empty, sorted, and doesn't include any duplicates.
+  // |additionalNames| is non-empty.
   MOZ_ASSERT(additionalNames.size() > 0);
-  MOZ_ASSERT(IsSorted(additionalNames));
-  MOZ_ASSERT(
-      std::adjacent_find(additionalNames.begin(), additionalNames.end()) ==
-      additionalNames.end());
 
   // Allocate space for entries from |additionalNames|.
   if (!fieldNames.growBy(additionalNames.size())) {
     return false;
   }
 
+  auto sortedAdditionalNames = SortedTemporalFields{additionalNames};
+  const auto sortedAdditionalNamesBegin = sortedAdditionalNames.begin();
+
   const auto* left = std::prev(fieldNames.end(), additionalNames.size());
-  const auto* right = additionalNames.end();
+  auto right = sortedAdditionalNames.end();
   auto* out = fieldNames.end();
 
   // Write backwards into the newly allocated space.
-  while (left != fieldNames.begin() && right != additionalNames.begin()) {
+  while (left != fieldNames.begin() && right != sortedAdditionalNamesBegin) {
     MOZ_ASSERT(out != fieldNames.begin());
     auto x = *std::prev(left);
     auto y = NameToId(ToPropertyName(cx, *std::prev(right)));
@@ -1068,7 +976,7 @@ bool js::temporal::AppendSorted(
 
   // Avoid unnecessary copying if possible.
   if (left == out) {
-    MOZ_ASSERT(right == additionalNames.begin());
+    MOZ_ASSERT(right == sortedAdditionalNamesBegin);
     return true;
   }
 
@@ -1079,7 +987,7 @@ bool js::temporal::AppendSorted(
   }
 
   // Prepend the remaining names from |additionalNames|.
-  while (right != additionalNames.begin()) {
+  while (right != sortedAdditionalNamesBegin) {
     MOZ_ASSERT(out != fieldNames.begin());
     *--out = NameToId(ToPropertyName(cx, *--right));
   }
