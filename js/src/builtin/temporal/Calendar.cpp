@@ -2634,24 +2634,22 @@ static bool RegulateISOYearMonth(JSContext* cx, double year, double month,
 static bool ISOYearMonthFromFields(JSContext* cx, Handle<TemporalFields> fields,
                                    TemporalOverflow overflow,
                                    PlainDate* result) {
-  // Steps 1-2. (Not applicable in our implementation.)
-
-  // Step 3.
+  // Step 1.
   double year = fields.year();
 
-  // Step 4.
+  // Step 2.
   double month = fields.month();
 
-  // Step 5.
+  // Step 3.
   MOZ_ASSERT(!std::isnan(year) && !std::isnan(month));
 
-  // Step 6.
+  // Step 4.
   RegulatedISOYearMonth regulated;
   if (!RegulateISOYearMonth(cx, year, month, overflow, &regulated)) {
     return false;
   }
 
-  // Step 7.
+  // Step 5.
 
   // The result is used to create a new PlainYearMonthObject, so it's okay to
   // directly throw an error for invalid years. That way we don't have to worry
@@ -2791,32 +2789,30 @@ Wrapped<PlainYearMonthObject*> js::temporal::CalendarYearMonthFromFields(
 static bool ISOMonthDayFromFields(JSContext* cx, Handle<TemporalFields> fields,
                                   TemporalOverflow overflow,
                                   PlainDate* result) {
-  // Steps 1-2. (Not applicable in our implementation.)
-
-  // Step 3.
+  // Step 1.
   double month = fields.month();
 
-  // Step 4.
+  // Step 2.
   double day = fields.day();
 
-  // Step 5.
+  // Step 3.
   MOZ_ASSERT(!std::isnan(month));
   MOZ_ASSERT(!std::isnan(day));
 
-  // Step 6.
+  // Step 4.
   double year = fields.year();
 
-  // Step 7.
+  // Step 5.
   int32_t referenceISOYear = 1972;
 
-  // Steps 8-9.
+  // Steps 6-7.
   double y = std::isnan(year) ? referenceISOYear : year;
   RegulatedISODate regulated;
   if (!RegulateISODate(cx, y, month, day, overflow, &regulated)) {
     return false;
   }
 
-  // Step 10.
+  // Step 8.
   *result = {referenceISOYear, regulated.month, regulated.day};
   return true;
 }

@@ -3184,12 +3184,12 @@ NormalizedTimeDuration js::temporal::RoundDuration(
 
   // Steps 1-12. (Not applicable)
 
-  // Steps 13-18.
+  // Step 13.
   auto rounded = RoundNormalizedTimeDurationToIncrement(
       duration, unit, increment, roundingMode);
   MOZ_ASSERT(IsValidNormalizedTimeDuration(rounded));
 
-  // Step 19.
+  // Step 14.
   return rounded;
 }
 
@@ -3208,7 +3208,7 @@ bool js::temporal::RoundDuration(JSContext* cx,
 
   // Steps 1-12. (Not applicable)
 
-  // Steps 13-19.
+  // Steps 13-14.
   return RoundNormalizedTimeDurationToIncrement(cx, duration, unit, increment,
                                                 roundingMode, result);
 }
@@ -3623,7 +3623,7 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
   // Step 9.ac.
   constexpr auto time = NormalizedTimeDuration{};
 
-  // Step 19.
+  // Step 14.
   if (numYears.abs() >= (Uint128{1} << 32)) {
     return ThrowInvalidDurationPart(cx, double(numYears), "years",
                                     JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
@@ -3760,7 +3760,7 @@ static bool RoundDurationMonth(JSContext* cx,
   // Step 10.ac.
   constexpr auto time = NormalizedTimeDuration{};
 
-  // Step 19.
+  // Step 14.
   if (numMonths.abs() >= (Uint128{1} << 32)) {
     return ThrowInvalidDurationPart(cx, double(numMonths), "months",
                                     JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
@@ -3865,7 +3865,7 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
   // Step 11.u.
   constexpr auto time = NormalizedTimeDuration{};
 
-  // Step 19.
+  // Step 14.
   if (numWeeks.abs() >= (Uint128{1} << 32)) {
     return ThrowInvalidDurationPart(cx, double(numWeeks), "weeks",
                                     JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
@@ -3901,7 +3901,7 @@ static bool RoundDurationDay(JSContext* cx, const NormalizedDuration& duration,
   // Step 12.c.
   constexpr auto time = NormalizedTimeDuration{};
 
-  // Step 19.
+  // Step 14.
   auto resultDuration = DateDuration{years, months, weeks, int64_t(numDays)};
   if (!ThrowIfInvalidDuration(cx, resultDuration)) {
     return false;
@@ -3969,7 +3969,7 @@ static bool RoundDuration(JSContext* cx, const NormalizedDuration& duration,
 
   MOZ_ASSERT(TemporalUnit::Hour <= unit && unit <= TemporalUnit::Nanosecond);
 
-  // Steps 13-18.
+  // Step 13.
   auto time = duration.time;
   double total = 0;
   if (computeRemainder == ComputeRemainder::No) {
@@ -3985,7 +3985,7 @@ static bool RoundDuration(JSContext* cx, const NormalizedDuration& duration,
   }
   MOZ_ASSERT(IsValidNormalizedTimeDuration(time));
 
-  // Step 19.
+  // Step 14.
   MOZ_ASSERT(IsValidDuration(duration.date));
   *result = {{duration.date, time}, total};
   return true;
@@ -4055,7 +4055,7 @@ static bool RoundDuration(
     case TemporalUnit::Millisecond:
     case TemporalUnit::Microsecond:
     case TemporalUnit::Nanosecond:
-      // Steps 7-9 and 13-21.
+      // Steps 7-9 and 13-14.
       return ::RoundDuration(cx, duration, increment, unit, roundingMode,
                              computeRemainder, result);
     case TemporalUnit::Auto:
@@ -4095,32 +4095,32 @@ static bool RoundDuration(
 
   // Step 8. (Not applicable)
 
-  // Steps 9-19.
+  // Steps 9-14.
   switch (unit) {
-    // Steps 9 and 19.
+    // Steps 9 and 14.
     case TemporalUnit::Year:
       return RoundDurationYear(cx, duration, fractionalDays, increment,
                                roundingMode, plainRelativeTo, calendar,
                                computeRemainder, result);
 
-    // Steps 10 and 19.
+    // Steps 10 and 14.
     case TemporalUnit::Month:
       return RoundDurationMonth(cx, duration, fractionalDays, increment,
                                 roundingMode, plainRelativeTo, calendar,
                                 computeRemainder, result);
 
-    // Steps 11 and 19.
+    // Steps 11 and 14.
     case TemporalUnit::Week:
       return RoundDurationWeek(cx, duration, fractionalDays, increment,
                                roundingMode, plainRelativeTo, calendar,
                                computeRemainder, result);
 
-    // Steps 12 and 19.
+    // Steps 12 and 14.
     case TemporalUnit::Day:
       return RoundDurationDay(cx, duration, fractionalDays, increment,
                               roundingMode, computeRemainder, result);
 
-    // Steps 13-18. (Handled elsewhere)
+    // Steps 13-14. (Handled elsewhere)
     case TemporalUnit::Auto:
     case TemporalUnit::Hour:
     case TemporalUnit::Minute:

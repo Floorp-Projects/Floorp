@@ -183,6 +183,12 @@ Int128 RoundNumberToIncrement(const Int128& numerator,
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
+int64_t RoundNumberToIncrement(int64_t x, int64_t increment,
+                               TemporalRoundingMode roundingMode);
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
 Int128 RoundNumberToIncrement(const Int128& x, const Int128& increment,
                               TemporalRoundingMode roundingMode);
 

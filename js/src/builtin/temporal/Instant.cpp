@@ -628,17 +628,20 @@ Instant js::temporal::RoundTemporalInstant(const Instant& ns,
   MOZ_ASSERT(IsValidEpochInstant(ns));
   MOZ_ASSERT(increment >= Increment::min());
   MOZ_ASSERT(uint64_t(increment.value()) <= ToNanoseconds(TemporalUnit::Day));
+
+  // Step 1.
   MOZ_ASSERT(unit > TemporalUnit::Day);
 
-  // Steps 1-6.
-  int64_t toNanoseconds = ToNanoseconds(unit);
-  MOZ_ASSERT(
-      (increment.value() * toNanoseconds) <= ToNanoseconds(TemporalUnit::Day),
-      "increment * toNanoseconds shouldn't overflow instant resolution");
+  // Step 2.
+  int64_t unitLength = ToNanoseconds(unit);
 
-  // Step 7.
-  return RoundNumberToIncrementAsIfPositive(
-      ns, increment.value() * toNanoseconds, roundingMode);
+  // Step 3.
+  int64_t incrementNs = increment.value() * unitLength;
+  MOZ_ASSERT(incrementNs <= ToNanoseconds(TemporalUnit::Day),
+             "incrementNs doesn't overflow instant resolution");
+
+  // Step 4.
+  return RoundNumberToIncrementAsIfPositive(ns, incrementNs, roundingMode);
 }
 
 /**
