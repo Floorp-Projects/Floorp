@@ -129,7 +129,7 @@ already_AddRefed<SVGMatrix> SVGGraphicsElement::GetCTM() {
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(FlushType::Layout);
   }
-  gfx::Matrix m = SVGContentUtils::GetCTM(this, false);
+  gfx::Matrix m = SVGContentUtils::GetCTM(this);
   RefPtr<SVGMatrix> mat =
       m.IsSingular() ? nullptr : new SVGMatrix(ThebesMatrix(m));
   return mat.forget();
@@ -140,7 +140,7 @@ already_AddRefed<SVGMatrix> SVGGraphicsElement::GetScreenCTM() {
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(FlushType::Layout);
   }
-  gfx::Matrix m = SVGContentUtils::GetCTM(this, true);
+  gfx::Matrix m = SVGContentUtils::GetScreenCTM(this);
   RefPtr<SVGMatrix> mat =
       m.IsSingular() ? nullptr : new SVGMatrix(ThebesMatrix(m));
   return mat.forget();
