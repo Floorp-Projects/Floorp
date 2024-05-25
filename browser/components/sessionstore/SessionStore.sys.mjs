@@ -890,13 +890,11 @@ var SessionStoreInternal = {
             // Remove needless Workspaces data from JSON
             WorkspacesWindowIdUtils.getAllWindowAndWorkspacesData().then(
               async json => {
-                const workspacesWindowIds = Object.keys(json.windows);
-                workspacesWindowIds.forEach(windowId => {
+                for (const windowId in json.windows) {
                   if (!savedWindowIds.has(windowId)) {
                     delete json.windows[windowId];
                   }
-                });
-
+                }
                 // Update Workspaces data
                 await IOUtils.writeJSON(
                   WorkspacesWindowIdUtils._workspacesStoreFile,
