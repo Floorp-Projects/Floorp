@@ -667,7 +667,7 @@ static double FractionToDoubleSlow(const T& numerator, const T& denominator) {
   if (ignoredBits != 0) {
     //        significand
     //  ___________|__________
-    // /                      \
+    // /                      |
     // [xxx················yyy|
     //  \_/                \_/
     //   |                  |
