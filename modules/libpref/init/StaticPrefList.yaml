@@ -14217,12 +14217,22 @@
   value: 1000
   mirror: always
 
+- name: privacy.sanitize.useOldClearHistoryDialog
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: privacy.sanitize.sanitizeOnShutdown
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
 - name: privacy.clearOnShutdown.cache
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: privacy.clearOnShutdown_v2.cache
   type: RelaxedAtomicBool
   value: false
   mirror: always
