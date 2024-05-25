@@ -814,7 +814,7 @@ bool js::temporal::GetTemporalCalendarWithISODefault(
 /**
  * ToTemporalCalendarIdentifier ( calendarSlotValue )
  */
-JSString* js::temporal::ToTemporalCalendarIdentifier(
+JSLinearString* js::temporal::ToTemporalCalendarIdentifier(
     JSContext* cx, Handle<CalendarValue> calendar) {
   // Step 1.
   if (calendar.isString()) {
@@ -840,7 +840,7 @@ JSString* js::temporal::ToTemporalCalendarIdentifier(
   }
 
   // Step 4.
-  return identifier.toString();
+  return identifier.toString()->ensureLinear(cx);
 }
 
 /**
@@ -3964,19 +3964,21 @@ bool js::temporal::CalendarEquals(JSContext* cx, Handle<CalendarValue> one,
   }
 
   // Step 2.
-  Rooted<JSString*> calendarOne(cx, ToTemporalCalendarIdentifier(cx, one));
+  Rooted<JSLinearString*> calendarOne(cx,
+                                      ToTemporalCalendarIdentifier(cx, one));
   if (!calendarOne) {
     return false;
   }
 
   // Step 3.
-  JSString* calendarTwo = ToTemporalCalendarIdentifier(cx, two);
+  JSLinearString* calendarTwo = ToTemporalCalendarIdentifier(cx, two);
   if (!calendarTwo) {
     return false;
   }
 
   // Steps 4-5.
-  return EqualStrings(cx, calendarOne, calendarTwo, equals);
+  *equals = EqualStrings(calendarOne, calendarTwo);
+  return true;
 }
 
 /**
@@ -3991,23 +3993,20 @@ bool js::temporal::CalendarEqualsOrThrow(JSContext* cx,
   }
 
   // Step 2.
-  Rooted<JSString*> calendarOne(cx, ToTemporalCalendarIdentifier(cx, one));
+  Rooted<JSLinearString*> calendarOne(cx,
+                                      ToTemporalCalendarIdentifier(cx, one));
   if (!calendarOne) {
     return false;
   }
 
   // Step 3.
-  JSString* calendarTwo = ToTemporalCalendarIdentifier(cx, two);
+  JSLinearString* calendarTwo = ToTemporalCalendarIdentifier(cx, two);
   if (!calendarTwo) {
     return false;
   }
 
   // Steps 4-5.
-  bool equals;
-  if (!EqualStrings(cx, calendarOne, calendarTwo, &equals)) {
-    return false;
-  }
-  if (equals) {
+  if (EqualStrings(calendarOne, calendarTwo)) {
     return true;
   }
 
@@ -4037,43 +4036,33 @@ bool js::temporal::ConsolidateCalendars(JSContext* cx,
   }
 
   // Step 2.
-  Rooted<JSString*> calendarOne(cx, ToTemporalCalendarIdentifier(cx, one));
+  Rooted<JSLinearString*> calendarOne(cx,
+                                      ToTemporalCalendarIdentifier(cx, one));
   if (!calendarOne) {
     return false;
   }
 
   // Step 3.
-  Rooted<JSString*> calendarTwo(cx, ToTemporalCalendarIdentifier(cx, two));
+  Rooted<JSLinearString*> calendarTwo(cx,
+                                      ToTemporalCalendarIdentifier(cx, two));
   if (!calendarTwo) {
     return false;
   }
 
   // Step 4.
-  bool equals;
-  if (!EqualStrings(cx, calendarOne, calendarTwo, &equals)) {
-    return false;
-  }
-  if (equals) {
+  if (EqualStrings(calendarOne, calendarTwo)) {
     result.set(two);
     return true;
   }
 
   // Step 5.
-  bool isoCalendarOne;
-  if (!IsISO8601Calendar(cx, calendarOne, &isoCalendarOne)) {
-    return false;
-  }
-  if (isoCalendarOne) {
+  if (StringEqualsLiteral(calendarOne, "iso8601")) {
     result.set(two);
     return true;
   }
 
   // Step 6.
-  bool isoCalendarTwo;
-  if (!IsISO8601Calendar(cx, calendarTwo, &isoCalendarTwo)) {
-    return false;
-  }
-  if (isoCalendarTwo) {
+  if (StringEqualsLiteral(calendarTwo, "iso8601")) {
     result.set(one);
     return true;
   }

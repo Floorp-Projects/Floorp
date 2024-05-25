@@ -334,18 +334,14 @@ static bool MaybeFormatCalendarAnnotation(JSContext* cx,
   }
 
   // Step 2.
-  JSString* calendarIdentifier = ToTemporalCalendarIdentifier(cx, calendar);
+  JSLinearString* calendarIdentifier =
+      ToTemporalCalendarIdentifier(cx, calendar);
   if (!calendarIdentifier) {
     return false;
   }
 
-  JSLinearString* linearCalendarId = calendarIdentifier->ensureLinear(cx);
-  if (!linearCalendarId) {
-    return false;
-  }
-
   // Step 3.
-  return FormatCalendarAnnotation(result, linearCalendarId, showCalendar);
+  return FormatCalendarAnnotation(result, calendarIdentifier, showCalendar);
 }
 
 static bool FormatTimeZoneAnnotation(TemporalStringBuilder& result,
