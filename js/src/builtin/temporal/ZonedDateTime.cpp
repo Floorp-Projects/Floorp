@@ -2313,7 +2313,7 @@ static bool ZonedDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 7.
+  // Steps 7-9.
   return CalendarWeekOfYear(cx, zonedDateTime.calendar(), dateTime,
                             args.rval());
 }
@@ -2342,7 +2342,7 @@ static bool ZonedDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 7.
+  // Steps 7-9.
   return CalendarYearOfWeek(cx, zonedDateTime.calendar(), dateTime,
                             args.rval());
 }
