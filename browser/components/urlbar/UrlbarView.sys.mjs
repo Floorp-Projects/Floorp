@@ -1095,13 +1095,6 @@ export class UrlbarView {
     this.window.addEventListener("blur", this);
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_OPEN);
-
-    if (lazy.UrlbarPrefs.get("closeOtherPanelsOnOpen")) {
-      this.window.docShell.treeOwner
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIAppWindow)
-        .rollupAllPopups();
-    }
   }
 
   #shouldShowHeuristic(result) {
