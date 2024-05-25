@@ -2878,74 +2878,67 @@ static bool ToRelativeTemporalObject(
     }
 
     // Step 5.f.
-    JS::RootedVector<PropertyKey> fieldNames(cx);
-    if (!CalendarFields(cx, calendarRec,
-                        {CalendarField::Day, CalendarField::Month,
-                         CalendarField::MonthCode, CalendarField::Year},
-                        &fieldNames)) {
-      return false;
-    }
-
-    // Step 5.g.
-    if (!AppendSorted(cx, fieldNames.get(),
-                      {
-                          TemporalField::Hour,
-                          TemporalField::Microsecond,
-                          TemporalField::Millisecond,
-                          TemporalField::Minute,
-                          TemporalField::Nanosecond,
-                          TemporalField::Offset,
-                          TemporalField::Second,
-                          TemporalField::TimeZone,
-                      })) {
-      return false;
-    }
-
-    // Step 5.h.
-    Rooted<PlainObject*> fields(cx, PrepareTemporalFields(cx, obj, fieldNames));
+    Rooted<PlainObject*> fields(
+        cx, PrepareCalendarFields(cx, calendarRec, obj,
+                                  {
+                                      CalendarField::Day,
+                                      CalendarField::Month,
+                                      CalendarField::MonthCode,
+                                      CalendarField::Year,
+                                  },
+                                  {
+                                      TemporalField::Hour,
+                                      TemporalField::Microsecond,
+                                      TemporalField::Millisecond,
+                                      TemporalField::Minute,
+                                      TemporalField::Nanosecond,
+                                      TemporalField::Offset,
+                                      TemporalField::Second,
+                                      TemporalField::TimeZone,
+                                  }));
     if (!fields) {
       return false;
     }
 
-    // Step 5.i.
+    // Step 5.g.
     Rooted<PlainObject*> dateOptions(cx, NewPlainObjectWithProto(cx, nullptr));
     if (!dateOptions) {
       return false;
     }
 
-    // Step 5.j.
+    // Step 5.h.
     Rooted<Value> overflow(cx, StringValue(cx->names().constrain));
     if (!DefineDataProperty(cx, dateOptions, cx->names().overflow, overflow)) {
       return false;
     }
 
-    // Step 5.k.
+    // Step 5.i.
     if (!InterpretTemporalDateTimeFields(cx, calendarRec, fields, dateOptions,
                                          &dateTime)) {
       return false;
     }
 
-    // Step 5.l.
+    // Step 5.j.
     Rooted<Value> offset(cx);
     if (!GetProperty(cx, fields, fields, cx->names().offset, &offset)) {
       return false;
     }
 
-    // Step 5.m.
+    // Step 5.k.
     Rooted<Value> timeZoneValue(cx);
     if (!GetProperty(cx, fields, fields, cx->names().timeZone,
                      &timeZoneValue)) {
       return false;
     }
 
-    // Step 5.n.
+    // Step 5.l.
     if (!timeZoneValue.isUndefined()) {
       if (!ToTemporalTimeZone(cx, timeZoneValue, &timeZone)) {
         return false;
       }
     }
 
-    // Step 5.o.
+    // Step 5.m.
     if (offset.isUndefined()) {
       offsetBehaviour = OffsetBehaviour::Wall;
     }
