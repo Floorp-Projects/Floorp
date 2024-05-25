@@ -4,10 +4,12 @@
 
 #ifdef JS_HAS_TEMPORAL_API
 
+#  include "mozilla/Compiler.h"
 #  include "mozilla/TextUtils.h"
 
 #  include <array>
 #  include <climits>
+#  include <cstdlib>
 #  include <limits>
 #  include <optional>
 #  include <stdint.h>
@@ -15,6 +17,18 @@
 
 #  include "builtin/temporal/Int128.h"
 #  include "jsapi-tests/tests.h"
+
+// Use static_assert in compilers which support CWG2518. In all other cases
+// fall back to std::abort().
+//
+// https://cplusplus.github.io/CWG/issues/2518.html
+#  if defined(__clang__) && (__clang_major__ >= 17)
+#    define UINT128_PARSE_ERROR(...) static_assert(false, __VA_ARGS__)
+#  elif MOZ_IS_GCC && MOZ_GCC_VERSION_AT_LEAST(13, 1, 0)
+#    define UINT128_PARSE_ERROR(...) static_assert(false, __VA_ARGS__)
+#  else
+#    define UINT128_PARSE_ERROR(...) std::abort()
+#  endif
 
 using Int128 = js::temporal::Int128;
 using Uint128 = js::temporal::Uint128;
@@ -26,34 +40,38 @@ constexpr Uint128 operator""_u128() {
 
   constexpr auto digits = std::array{DIGITS...};
 
-  constexpr auto isBinaryDigit = [](auto c) {
+  // Add [[maybe_unused]] everywhere to please GCC <10.
+
+  [[maybe_unused]] constexpr auto isBinaryDigit = [](auto c) {
     return (c >= '0' && c <= '1') || c == '\'';
   };
 
-  constexpr auto isOctalDigit = [](auto c) {
+  [[maybe_unused]] constexpr auto isOctalDigit = [](auto c) {
     return (c >= '0' && c <= '7') || c == '\'';
   };
 
-  constexpr auto isDigit = [](auto c) {
+  [[maybe_unused]] constexpr auto isDigit = [](auto c) {
     return mozilla::IsAsciiDigit(c) || c == '\'';
   };
 
-  constexpr auto isHexDigit = [](auto c) {
+  [[maybe_unused]] constexpr auto isHexDigit = [](auto c) {
     return mozilla::IsAsciiHexDigit(c) || c == '\'';
   };
 
-  constexpr auto isBinary = [isBinaryDigit](auto zero, auto prefix,
-                                            auto... rest) {
-    return zero == '0' && (prefix == 'b' || prefix == 'B') &&
-           (isBinaryDigit(rest) && ...);
-  };
+  [[maybe_unused]] constexpr auto isBinary =
+      [isBinaryDigit](auto zero, auto prefix, auto... rest) {
+        return zero == '0' && (prefix == 'b' || prefix == 'B') &&
+               (isBinaryDigit(rest) && ...);
+      };
 
-  constexpr auto isHex = [isHexDigit](auto zero, auto prefix, auto... rest) {
+  [[maybe_unused]] constexpr auto isHex = [isHexDigit](auto zero, auto prefix,
+                                                       auto... rest) {
     return zero == '0' && (prefix == 'x' || prefix == 'X') &&
            (isHexDigit(rest) && ...);
   };
 
-  constexpr auto binary = [digits]() -> std::optional<Uint128> {
+  [[maybe_unused]] constexpr auto binary =
+      [digits]() -> std::optional<Uint128> {
     auto value = Uint128{};
     for (size_t i = 2; i < digits.size(); ++i) {
       auto digit = digits[i];
@@ -70,7 +88,7 @@ constexpr Uint128 operator""_u128() {
     return value;
   };
 
-  constexpr auto octal = [digits]() -> std::optional<Uint128> {
+  [[maybe_unused]] constexpr auto octal = [digits]() -> std::optional<Uint128> {
     auto value = Uint128{};
     for (size_t i = 1; i < digits.size(); ++i) {
       auto digit = digits[i];
@@ -87,7 +105,8 @@ constexpr Uint128 operator""_u128() {
     return value;
   };
 
-  constexpr auto decimal = [digits]() -> std::optional<Uint128> {
+  [[maybe_unused]] constexpr auto decimal =
+      [digits]() -> std::optional<Uint128> {
     auto value = Uint128{};
     for (size_t i = 0; i < digits.size(); ++i) {
       auto digit = digits[i];
@@ -101,7 +120,8 @@ constexpr Uint128 operator""_u128() {
     return value;
   };
 
-  constexpr auto hexadecimal = [digits]() -> std::optional<Uint128> {
+  [[maybe_unused]] constexpr auto hexadecimal =
+      [digits]() -> std::optional<Uint128> {
     auto value = Uint128{};
     for (size_t i = 2; i < digits.size(); ++i) {
       auto digit = digits[i];
@@ -127,53 +147,41 @@ constexpr Uint128 operator""_u128() {
       if constexpr (constexpr auto value = binary()) {
         return *value;
       } else {
-        static_assert(false, "binary literal too large");
+        UINT128_PARSE_ERROR("binary literal too large");
       }
     } else if constexpr (isHex(DIGITS...)) {
       if constexpr (constexpr auto value = hexadecimal()) {
         return *value;
       } else {
-        static_assert(false, "hexadecimal literal too large");
+        UINT128_PARSE_ERROR("hexadecimal literal too large");
       }
     } else {
-      static_assert(false, "invalid prefix literal");
+      UINT128_PARSE_ERROR("invalid prefix literal");
     }
   } else if constexpr (digits.size() > 1 && digits[0] == '0') {
     if constexpr ((isOctalDigit(DIGITS) && ...)) {
       if constexpr (constexpr auto value = octal()) {
         return *value;
       } else {
-        static_assert(false, "octal literal too large");
+        UINT128_PARSE_ERROR("octal literal too large");
       }
     } else {
-      static_assert(false, "invalid octal literal");
+      UINT128_PARSE_ERROR("invalid octal literal");
     }
   } else if constexpr ((isDigit(DIGITS) && ...)) {
     if constexpr (constexpr auto value = decimal()) {
       return *value;
     } else {
-      static_assert(false, "decimal literal too large");
+      UINT128_PARSE_ERROR("decimal literal too large");
     }
   } else {
-    static_assert(false, "invalid literal");
+    UINT128_PARSE_ERROR("invalid literal");
   }
 }
 
 template <char... DIGITS>
 constexpr Int128 operator""_i128() {
   return Int128{operator""_u128 < DIGITS... > ()};
-}
-
-template <typename T, size_t N, size_t... ISeq>
-static constexpr auto to_array_impl(const T (&elements)[N],
-                                    std::index_sequence<ISeq...>) {
-  return std::array<T, N>{{elements[ISeq]...}};
-}
-
-// No std::to_array because we don't yet compile with C++20.
-template <typename T, size_t N>
-static constexpr auto to_array(const T (&elements)[N]) {
-  return to_array_impl(elements, std::make_index_sequence<N>{});
 }
 
 class ConversionFixture : public JSAPIRuntimeTest {
@@ -209,21 +217,21 @@ bool ConversionFixture::testConversion(const std::array<U, N>& values) {
 }
 
 BEGIN_FIXTURE_TEST(ConversionFixture, testInt128_conversion) {
-  auto values = to_array<int64_t>({
+  auto values = std::array{
       INT64_MIN,
       INT64_MIN + 1,
       int64_t(INT32_MIN) - 1,
-      INT32_MIN,
-      INT32_MIN + 1,
-      -1,
-      0,
-      1,
-      INT32_MAX - 1,
-      INT32_MAX,
+      int64_t(INT32_MIN),
+      int64_t(INT32_MIN) + 1,
+      int64_t(-1),
+      int64_t(0),
+      int64_t(1),
+      int64_t(INT32_MAX) - 1,
+      int64_t(INT32_MAX),
       int64_t(INT32_MAX) + 1,
       INT64_MAX - 1,
       INT64_MAX,
-  });
+  };
 
   CHECK(testConversion<Int128>(values));
 
@@ -232,15 +240,15 @@ BEGIN_FIXTURE_TEST(ConversionFixture, testInt128_conversion) {
 END_FIXTURE_TEST(ConversionFixture, testInt128_conversion)
 
 BEGIN_FIXTURE_TEST(ConversionFixture, testUint128_conversion) {
-  auto values = to_array<uint64_t>({
-      0,
-      1,
-      UINT32_MAX - 1,
-      UINT32_MAX,
+  auto values = std::array{
+      uint64_t(0),
+      uint64_t(1),
+      uint64_t(UINT32_MAX) - 1,
+      uint64_t(UINT32_MAX),
       uint64_t(UINT32_MAX) + 1,
       UINT64_MAX - 1,
       UINT64_MAX,
-  });
+  };
 
   CHECK(testConversion<Uint128>(values));
 
@@ -372,16 +380,10 @@ bool OperatorFixture::testOperator(const std::array<U, N>& values) {
 }
 
 BEGIN_FIXTURE_TEST(OperatorFixture, testInt128_operator) {
-  auto values = to_array<int64_t>({
-      -3,
-      -2,
-      -1,
-      0,
-      1,
-      2,
-      3,
-      63,
-  });
+  auto values = std::array{
+      int64_t(-3), int64_t(-2), int64_t(-1), int64_t(0),
+      int64_t(1),  int64_t(2),  int64_t(3),  int64_t(63),
+  };
 
   CHECK(testOperator<Int128>(values));
 
@@ -412,14 +414,10 @@ BEGIN_FIXTURE_TEST(OperatorFixture, testInt128_operator) {
 END_FIXTURE_TEST(OperatorFixture, testInt128_operator)
 
 BEGIN_FIXTURE_TEST(OperatorFixture, testUint128_operator) {
-  auto values = to_array<uint64_t>({
-      0,
-      1,
-      2,
-      3,
-      5,
-      63,
-  });
+  auto values = std::array{
+      uint64_t(0), uint64_t(1), uint64_t(2),
+      uint64_t(3), uint64_t(5), uint64_t(63),
+  };
 
   CHECK(testOperator<Uint128>(values));
 
