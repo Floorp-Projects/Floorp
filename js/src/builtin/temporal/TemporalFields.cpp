@@ -23,6 +23,7 @@
 #include "jspubtd.h"
 #include "NamespaceImports.h"
 
+#include "builtin/temporal/Crash.h"
 #include "builtin/temporal/Temporal.h"
 #include "ds/Sort.h"
 #include "gc/Barrier.h"
@@ -126,7 +127,7 @@ static constexpr const char* ToCString(TemporalField field) {
     case TemporalField::TimeZone:
       return "timeZone";
   }
-  MOZ_CRASH("invalid temporal field name");
+  JS_CONSTEXPR_CRASH("invalid temporal field name");
 }
 
 static JS::UniqueChars QuoteString(JSContext* cx, const char* str) {
