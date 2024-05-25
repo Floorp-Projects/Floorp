@@ -1588,7 +1588,7 @@ static bool PlainDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
-  // Step 4.
+  // Steps 4-6.
   return CalendarWeekOfYear(cx, calendar, dateTime, args.rval());
 }
 
@@ -1611,7 +1611,7 @@ static bool PlainDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
-  // Step 4.
+  // Steps 4-6.
   return CalendarYearOfWeek(cx, calendar, dateTime, args.rval());
 }
 
