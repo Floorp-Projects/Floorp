@@ -436,11 +436,23 @@
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus_2">Gant ar rebuzadurioù e c’hallit chom suroc\'h gant Firefox</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Kas ivinelloù etre ho trevnadoù ha dizoloit keweriusterioù prevezded all Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Gweredekaat ar rebuzadurioù</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
 
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Esaeit widjet klask Firefox</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Gant Firefox war ho skramm degemer e c’halloc’h digeriñ ar merdeer a lak ho puhez prevez da gentañ hag a stank an heulierien etre al lec’hiennoù.</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Ouzhpennañ ur widjet FIrefox</string>
     <!-- Text for the button to dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
 
@@ -477,6 +489,8 @@
     <string name="preferences_search_engines">Luskerioù klask</string>
     <!-- Preference for settings related to Search engines suggestions-->
     <string name="preferences_search_engines_suggestions">Kinnigoù al luskerioù enklask</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Gwellvezioù ar varrenn chomlec’h</string>
     <!-- Preference Category for settings to Firefox Suggest -->
     <string name="preference_search_address_bar_fx_suggest">Barrenn chomlec\'hioù - Alioù Firefox</string>
     <!-- Preference link to Learn more about Firefox Suggest -->
@@ -507,6 +521,10 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Mod HTTPS-hepken</string>
 
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">Stanker banniel an toupinoù</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">Stanker banniel an toupinoù er merdeiñ prevez</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Diweredekaet evit al lec’hienn-mañ</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -523,8 +541,21 @@
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Goulenn skor kaset</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">N’eo ket skoret al lec’hienn-mañ c’hoazh</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Gweredekaat stanker banniel an toupinoù evit %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Diweredekaat stanker banniel an toupinoù evit %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s n’hall ket nac’hañ ar goulennoù toupinoù war al lec’hienn-mañ. Gallout a rit goulenn e vefe skoret al lec’hienn-mañ en dazont.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Diweredekaat ha skarzhet e vo an toupinoù hag adkarget al lec’hienn gant %1$s. Digennaskañ a raio ac’hanoc’h ha goullonderiñ a raio ho paner.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Gweredekaat ha %1$s a glasko nac’hañ bannieloù an toupinoù ent emgefreek war al lec’hienn-mañ.</string>
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s en deus nac’het toupinoù evidoc’h</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Nebeutoc’h a draoù diezhomm, nebeutoc’h a doupinoù ho’ch heuliañ ac’hanoc’h war al lec’hienn-mañ.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Klask kennaskañ ent emgefreek gant ar c’homenad HTTPS evit muioc’h a surentez.</string>
@@ -552,6 +583,8 @@
     <string name="preferences_override_account_server">Dafariad kont Mozilla personelaet</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Dafariad Sync personelaet</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Kemmet eo bet an dafariad kontoù Mozilla/Sync. Serriñ a raio an arload evit kemer ar c\'hemmoù e kont…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Kont</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -602,9 +635,14 @@
     <string name="preferences_enable_autocomplete_urls">Leuniañ an ereoù ent emgefreek</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
     <string name="preferences_show_sponsored_suggestions">Kinnigoù paeroniet</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Harpit %1$s gant kuzulioù kevelet diskouezet ur wech an amzer</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">Alioù %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Kaout alioù eus ar web hervez ho klaskoù</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Digeriñ ereoù en arloadoù</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -628,6 +666,8 @@
     <string name="preferences_extensions">Askouezhioù</string>
     <!-- Preference for installing a local add-on -->
     <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Staliañ un askouezh diouzh ar restr</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Staliañ an askouezh adalek ur restr</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Rebuzadurioù</string>
 
