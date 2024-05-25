@@ -534,6 +534,21 @@ Int128 js::temporal::RoundNumberToIncrement(const Int128& numerator,
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
+int64_t js::temporal::RoundNumberToIncrement(
+    int64_t x, int64_t increment, TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(increment > 0);
+
+  // Steps 1-8.
+  int64_t rounded = Divide(x, increment, roundingMode);
+
+  // Step 9.
+  MOZ_ASSERT(IsValidMul(rounded, increment), "unsupported overflow");
+  return rounded * increment;
+}
+
+/**
+ * RoundNumberToIncrement ( x, increment, roundingMode )
+ */
 Int128 js::temporal::RoundNumberToIncrement(const Int128& x,
                                             const Int128& increment,
                                             TemporalRoundingMode roundingMode) {

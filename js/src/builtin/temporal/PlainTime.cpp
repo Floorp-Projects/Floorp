@@ -783,7 +783,7 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
   // Take the same approach as used in RoundDuration() to perform exact
   // mathematical operations without possible loss of precision.
 
-  // Steps 1-8.
+  // Steps 1-6.
   PlainTime quantity;
   int32_t* result;
   switch (unit) {
@@ -838,23 +838,29 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
       MOZ_CRASH("unexpected temporal unit");
   }
 
-  // Step 9.
-  int64_t nanos = TimeToNanos(quantity);
-  MOZ_ASSERT(0 <= nanos && nanos < ToNanoseconds(TemporalUnit::Day));
+  int64_t quantityNs = TimeToNanos(quantity);
+  MOZ_ASSERT(0 <= quantityNs && quantityNs < ToNanoseconds(TemporalUnit::Day));
 
-  auto r = RoundNumberToIncrement(nanos, ToNanoseconds(unit), increment,
-                                  roundingMode);
-  MOZ_ASSERT(r == Int128{int32_t(r)},
+  // Step 7.
+  int64_t unitLength = ToNanoseconds(unit);
+  int64_t incrementNs = increment.value() * unitLength;
+  MOZ_ASSERT(incrementNs <= ToNanoseconds(TemporalUnit::Day),
+             "incrementNs doesn't overflow time resolution");
+
+  // Step 8.
+  int64_t r = RoundNumberToIncrement(quantityNs, incrementNs, roundingMode) /
+              unitLength;
+  MOZ_ASSERT(r == int64_t(int32_t(r)),
              "can't overflow when inputs are all in range");
 
   *result = int32_t(r);
 
-  // Step 10.
+  // Step 9.
   if (unit == TemporalUnit::Day) {
     return {int64_t(days), {0, 0, 0, 0, 0, 0}};
   }
 
-  // Steps 11-17.
+  // Steps 10-16.
   auto balanced =
       ::BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
   return {int64_t(balanced.days), balanced.time};
