@@ -824,7 +824,9 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
         if (aCodec.Equals(KeySystemConfig::EME_CODEC_HEVC)) {
           return "hev1"_ns;
         }
-        // TODO : support AV1?
+        if (aCodec.Equals(KeySystemConfig::EME_CODEC_AV1)) {
+          return "av01"_ns;
+        }
         if (aCodec.Equals(KeySystemConfig::EME_CODEC_AAC)) {
           return "mp4a"_ns;
         }
@@ -841,13 +843,10 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
         return "none"_ns;
       };
 
-  // TODO : add AV1
-  static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs({
-      KeySystemConfig::EME_CODEC_H264,
-      KeySystemConfig::EME_CODEC_VP8,
-      KeySystemConfig::EME_CODEC_VP9,
-      KeySystemConfig::EME_CODEC_HEVC,
-  });
+  static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs(
+      {KeySystemConfig::EME_CODEC_H264, KeySystemConfig::EME_CODEC_VP8,
+       KeySystemConfig::EME_CODEC_VP9, KeySystemConfig::EME_CODEC_HEVC,
+       KeySystemConfig::EME_CODEC_AV1});
 
   // Remember supported video codecs.
   // It will be used when collecting audio codec and encryption scheme
