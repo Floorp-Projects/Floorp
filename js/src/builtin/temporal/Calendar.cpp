@@ -1007,6 +1007,13 @@ bool js::temporal::CreateCalendarMethodsRecord(
   return true;
 }
 
+static CalendarId BuiltinCalendarId(const CalendarValue& calendar) {
+  if (calendar.isString()) {
+    return calendar.toString();
+  }
+  return calendar.toObject()->as<CalendarObject>().identifier();
+}
+
 static bool ToCalendarField(JSContext* cx, JSLinearString* linear,
                             CalendarField* result) {
   if (StringEqualsLiteral(linear, "year")) {
@@ -1062,7 +1069,7 @@ static TemporalField ToTemporalField(CalendarField field) {
 /**
  * Temporal.Calendar.prototype.fields ( fields )
  */
-static bool BuiltinCalendarFields(JSContext* cx,
+static bool BuiltinCalendarFields(JSContext* cx, CalendarId calendarId,
                                   mozilla::EnumSet<CalendarField> fieldNames,
                                   CalendarFieldNames& result) {
   MOZ_ASSERT(result.empty());
@@ -1095,7 +1102,8 @@ static bool BuiltinCalendarFields(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.fields ( fields )
  */
-static bool BuiltinCalendarFields(JSContext* cx, Handle<Value> fields,
+static bool BuiltinCalendarFields(JSContext* cx, CalendarId calendarId,
+                                  Handle<Value> fields,
                                   MutableHandle<Value> result) {
   // Step 3.
   JS::ForOfIterator iterator(cx);
@@ -1202,8 +1210,10 @@ bool js::temporal::CalendarFields(JSContext* cx,
     }
 
     if (arrayIterationSane) {
+      auto calendarId = BuiltinCalendarId(calendar.receiver());
+
       // Steps 2.a-b.
-      return BuiltinCalendarFields(cx, fieldNames, result.get());
+      return BuiltinCalendarFields(cx, calendarId, fieldNames, result.get());
 
       // Steps 2.c-e. (Not applicable in our implementation.)
     }
@@ -1233,7 +1243,10 @@ bool js::temporal::CalendarFields(JSContext* cx,
       return false;
     }
   } else {
-    if (!BuiltinCalendarFields(cx, fieldsArray, &calendarFieldNames)) {
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+
+    if (!BuiltinCalendarFields(cx, calendarId, fieldsArray,
+                               &calendarFieldNames)) {
       return false;
     }
   }
@@ -1356,8 +1369,8 @@ static bool RequireBoolean(JSContext* cx, Handle<Value> value,
   return false;
 }
 
-using BuiltinCalendarMethod = bool (*)(JSContext* cx, const PlainDate&,
-                                       MutableHandle<Value>);
+using BuiltinCalendarMethod = bool (*)(JSContext* cx, CalendarId,
+                                       const PlainDate&, MutableHandle<Value>);
 
 using CalendarConversion = bool (*)(JSContext*, Handle<Value>,
                                     Handle<PropertyName*>,
@@ -1371,7 +1384,8 @@ static bool CallCalendarMethod(JSContext* cx, Handle<PropertyName*> name,
                                MutableHandle<Value> result) {
   // Step 1.
   if (calendar.isString()) {
-    return builtin(cx, date, result);
+    auto calendarId = BuiltinCalendarId(calendar);
+    return builtin(cx, calendarId, date, result);
   }
 
   // Step 2.
@@ -1383,7 +1397,8 @@ static bool CallCalendarMethod(JSContext* cx, Handle<PropertyName*> name,
 
   // Fast-path for the default implementation.
   if (calendarObj->is<CalendarObject>() && IsNativeFunction(fn, native)) {
-    return builtin(cx, date, result);
+    auto calendarId = BuiltinCalendarId(calendar);
+    return builtin(cx, calendarId, date, result);
   }
 
   Rooted<JS::Value> fnVal(cx, ObjectValue(*fn));
@@ -1399,7 +1414,8 @@ static bool CallCalendarMethod(JSContext* cx, Handle<PropertyName*> name,
 /**
  * Temporal.Calendar.prototype.era ( temporalDateLike )
  */
-static bool BuiltinCalendarEra(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarEra(JSContext* cx, CalendarId calendarId,
+                               const PlainDate& date,
                                MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -1466,7 +1482,8 @@ bool js::temporal::CalendarEra(JSContext* cx, Handle<CalendarValue> calendar,
 /**
  * Temporal.Calendar.prototype.eraYear ( temporalDateLike )
  */
-static bool BuiltinCalendarEraYear(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarEraYear(JSContext* cx, CalendarId calendarId,
+                                   const PlainDate& date,
                                    MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -1539,7 +1556,8 @@ bool js::temporal::CalendarEraYear(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.year ( temporalDateLike )
  */
-static bool BuiltinCalendarYear(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarYear(JSContext* cx, CalendarId calendarId,
+                                const PlainDate& date,
                                 MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -1606,7 +1624,8 @@ bool js::temporal::CalendarYear(JSContext* cx, Handle<CalendarValue> calendar,
 /**
  * Temporal.Calendar.prototype.month ( temporalDateLike )
  */
-static bool BuiltinCalendarMonth(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarMonth(JSContext* cx, CalendarId calendarId,
+                                 const PlainDate& date,
                                  MutableHandle<Value> result) {
   // Steps 1-4. (Not applicable.)
 
@@ -1674,7 +1693,8 @@ bool js::temporal::CalendarMonth(JSContext* cx, Handle<CalendarValue> calendar,
 /**
  * Temporal.Calendar.prototype.monthCode ( temporalDateLike )
  */
-static bool BuiltinCalendarMonthCode(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarMonthCode(JSContext* cx, CalendarId calendarId,
+                                     const PlainDate& date,
                                      MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -1765,7 +1785,8 @@ bool js::temporal::CalendarMonthCode(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.day ( temporalDateLike )
  */
-static bool BuiltinCalendarDay(const PlainDate& date,
+static bool BuiltinCalendarDay(JSContext* cx, CalendarId calendarId,
+                               const PlainDate& date,
                                MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -1785,7 +1806,8 @@ static bool CalendarDay(JSContext* cx, Handle<CalendarRecord> calendar,
   // Step 2. (Reordered)
   auto day = calendar.day();
   if (!day) {
-    return BuiltinCalendarDay(date, result);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarDay(cx, calendarId, date, result);
   }
 
   // Step 1. (Inlined call to CalendarMethodsRecordCall.)
@@ -1887,7 +1909,8 @@ bool js::temporal::CalendarDay(JSContext* cx, Handle<CalendarRecord> calendar,
 /**
  * Temporal.Calendar.prototype.dayOfWeek ( temporalDateLike )
  */
-static bool BuiltinCalendarDayOfWeek(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarDayOfWeek(JSContext* cx, CalendarId calendarId,
+                                     const PlainDate& date,
                                      MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -1952,7 +1975,8 @@ bool js::temporal::CalendarDayOfWeek(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.dayOfYear ( temporalDateLike )
  */
-static bool BuiltinCalendarDayOfYear(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarDayOfYear(JSContext* cx, CalendarId calendarId,
+                                     const PlainDate& date,
                                      MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2017,7 +2041,8 @@ bool js::temporal::CalendarDayOfYear(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.weekOfYear ( temporalDateLike )
  */
-static bool BuiltinCalendarWeekOfYear(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarWeekOfYear(JSContext* cx, CalendarId calendarId,
+                                      const PlainDate& date,
                                       MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2083,7 +2108,8 @@ bool js::temporal::CalendarWeekOfYear(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.yearOfWeek ( temporalDateLike )
  */
-static bool BuiltinCalendarYearOfWeek(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarYearOfWeek(JSContext* cx, CalendarId calendarId,
+                                      const PlainDate& date,
                                       MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2149,7 +2175,8 @@ bool js::temporal::CalendarYearOfWeek(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.daysInWeek ( temporalDateLike )
  */
-static bool BuiltinCalendarDaysInWeek(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarDaysInWeek(JSContext* cx, CalendarId calendarId,
+                                      const PlainDate& date,
                                       MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2215,7 +2242,8 @@ bool js::temporal::CalendarDaysInWeek(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.daysInMonth ( temporalDateLike )
  */
-static bool BuiltinCalendarDaysInMonth(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarDaysInMonth(JSContext* cx, CalendarId calendarId,
+                                       const PlainDate& date,
                                        MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2292,7 +2320,8 @@ bool js::temporal::CalendarDaysInMonth(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.daysInYear ( temporalDateLike )
  */
-static bool BuiltinCalendarDaysInYear(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarDaysInYear(JSContext* cx, CalendarId calendarId,
+                                      const PlainDate& date,
                                       MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2369,7 +2398,8 @@ bool js::temporal::CalendarDaysInYear(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.monthsInYear ( temporalDateLike )
  */
-static bool BuiltinCalendarMonthsInYear(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarMonthsInYear(JSContext* cx, CalendarId calendarId,
+                                        const PlainDate& date,
                                         MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2446,7 +2476,8 @@ bool js::temporal::CalendarMonthsInYear(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.inLeapYear ( temporalDateLike )
  */
-static bool BuiltinCalendarInLeapYear(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarInLeapYear(JSContext* cx, CalendarId calendarId,
+                                      const PlainDate& date,
                                       MutableHandle<Value> result) {
   // Steps 1-3. (Not applicable.)
 
@@ -2660,7 +2691,8 @@ static bool ISODateFromFields(JSContext* cx, Handle<TemporalFields> fields,
  * Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] )
  */
 static PlainDateObject* BuiltinCalendarDateFromFields(
-    JSContext* cx, Handle<JSObject*> fields, Handle<JSObject*> maybeOptions) {
+    JSContext* cx, CalendarId calendarId, Handle<JSObject*> fields,
+    Handle<JSObject*> maybeOptions) {
   // Steps 1-4. (Not applicable)
 
   // Step 5.
@@ -2694,8 +2726,8 @@ static PlainDateObject* BuiltinCalendarDateFromFields(
     return nullptr;
   }
 
-  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
   // Step 11.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(calendarId));
   return CreateTemporalDate(cx, result, calendar);
 }
 
@@ -2713,7 +2745,8 @@ static Wrapped<PlainDateObject*> CalendarDateFromFields(
   // Step 3. (Reordered)
   auto dateFromFields = calendar.dateFromFields();
   if (!dateFromFields) {
-    return BuiltinCalendarDateFromFields(cx, fields, maybeOptions);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarDateFromFields(cx, calendarId, fields, maybeOptions);
   }
 
   // Step 2. (Inlined call to CalendarMethodsRecordCall.)
@@ -2846,7 +2879,8 @@ static bool ISOYearMonthFromFields(JSContext* cx, Handle<TemporalFields> fields,
  * Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] )
  */
 static PlainYearMonthObject* BuiltinCalendarYearMonthFromFields(
-    JSContext* cx, Handle<JSObject*> fields, Handle<JSObject*> maybeOptions) {
+    JSContext* cx, CalendarId calendarId, Handle<JSObject*> fields,
+    Handle<JSObject*> maybeOptions) {
   // Steps 1-4. (Not applicable)
 
   // Step 5.
@@ -2879,8 +2913,8 @@ static PlainYearMonthObject* BuiltinCalendarYearMonthFromFields(
     return nullptr;
   }
 
-  // Step 10.
-  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
+  // Step 11.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(calendarId));
   return CreateTemporalYearMonth(cx, result, calendar);
 }
 
@@ -2898,7 +2932,9 @@ static Wrapped<PlainYearMonthObject*> CalendarYearMonthFromFields(
   // Step 3. (Reordered)
   auto yearMonthFromFields = calendar.yearMonthFromFields();
   if (!yearMonthFromFields) {
-    return BuiltinCalendarYearMonthFromFields(cx, fields, maybeOptions);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarYearMonthFromFields(cx, calendarId, fields,
+                                              maybeOptions);
   }
 
   // Step 2. (Inlined call to CalendarMethodsRecordCall.)
@@ -2999,7 +3035,8 @@ static bool ISOMonthDayFromFields(JSContext* cx, Handle<TemporalFields> fields,
  * Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] )
  */
 static PlainMonthDayObject* BuiltinCalendarMonthDayFromFields(
-    JSContext* cx, Handle<JSObject*> fields, Handle<JSObject*> maybeOptions) {
+    JSContext* cx, CalendarId calendarId, Handle<JSObject*> fields,
+    Handle<JSObject*> maybeOptions) {
   // Steps 1-4. (Not applicable)
 
   // Step 5.
@@ -3032,8 +3069,8 @@ static PlainMonthDayObject* BuiltinCalendarMonthDayFromFields(
     return nullptr;
   }
 
-  // Step 10.
-  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
+  // Step 11.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(calendarId));
   return CreateTemporalMonthDay(cx, result, calendar);
 }
 
@@ -3051,7 +3088,9 @@ static Wrapped<PlainMonthDayObject*> CalendarMonthDayFromFields(
   // Step 3. (Reordered)
   auto monthDayFromFields = calendar.monthDayFromFields();
   if (!monthDayFromFields) {
-    return BuiltinCalendarMonthDayFromFields(cx, fields, maybeOptions);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarMonthDayFromFields(cx, calendarId, fields,
+                                             maybeOptions);
   }
 
   // Step 2. (Inlined call to CalendarMethodsRecordCall.)
@@ -3174,7 +3213,7 @@ static bool IsPlainDataObject(PlainObject* obj) {
  * Temporal.Calendar.prototype.mergeFields ( fields, additionalFields )
  */
 static PlainObject* BuiltinCalendarMergeFields(
-    JSContext* cx, Handle<PlainObject*> fields,
+    JSContext* cx, CalendarId calendarId, Handle<PlainObject*> fields,
     Handle<PlainObject*> additionalFields) {
   MOZ_ASSERT(IsPlainDataObject(fields));
   MOZ_ASSERT(IsPlainDataObject(additionalFields));
@@ -3277,7 +3316,8 @@ JSObject* js::temporal::CalendarMergeFields(
   // Step 2. (Reordered)
   auto mergeFields = calendar.mergeFields();
   if (!mergeFields) {
-    return BuiltinCalendarMergeFields(cx, fields, additionalFields);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarMergeFields(cx, calendarId, fields, additionalFields);
   }
 
   // Step 1. (Inlined call to CalendarMethodsRecordCall.)
@@ -3301,15 +3341,16 @@ JSObject* js::temporal::CalendarMergeFields(
 /**
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
-static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarAdd(JSContext* cx, CalendarId calendarId,
+                               const PlainDate& date,
                                const NormalizedDuration& duration,
                                Handle<JSObject*> options, PlainDate* result) {
   MOZ_ASSERT(IsValidISODate(date));
   MOZ_ASSERT(IsValidDuration(duration));
 
-  // Steps 1-6. (Not applicable)
+  // Steps 1-5. (Not applicable)
 
-  // Step 7.
+  // Step 6.
   auto overflow = TemporalOverflow::Constrain;
   if (options) {
     if (!GetTemporalOverflowOption(cx, options, &overflow)) {
@@ -3317,13 +3358,12 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
     }
   }
 
-  // Step 8.
+  // Step 7.
   const auto& timeDuration = duration.time;
 
-  // Step 9.
+  // Step 8.
   auto balanceResult = BalanceTimeDuration(timeDuration, TemporalUnit::Day);
 
-  // Step 10.
   auto addDuration = DateDuration{
       duration.date.years,
       duration.date.months,
@@ -3336,54 +3376,57 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
 /**
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
-static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+static bool BuiltinCalendarAdd(JSContext* cx, CalendarId calendarId,
+                               const PlainDate& date,
                                const DateDuration& duration,
                                Handle<JSObject*> options, PlainDate* result) {
-  // Steps 1-6. (Not applicable)
+  // Steps 1-5. (Not applicable)
 
-  // Step 8. (Reordered)
+  // Step 7. (Reordered)
   auto normalized = CreateNormalizedDurationRecord(duration, {});
 
-  // Steps 7-10.
-  return BuiltinCalendarAdd(cx, date, normalized, options, result);
+  // Steps 6 and 8-10.
+  return BuiltinCalendarAdd(cx, calendarId, date, normalized, options, result);
 }
 
 /**
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
-static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, CalendarId calendarId,
+                                           const PlainDate& date,
                                            const DateDuration& duration,
                                            Handle<JSObject*> options) {
   // Steps 1-10.
   PlainDate result;
-  if (!BuiltinCalendarAdd(cx, date, duration, options, &result)) {
+  if (!BuiltinCalendarAdd(cx, calendarId, date, duration, options, &result)) {
     return nullptr;
   }
 
   // Step 11.
-  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
+  Rooted<CalendarValue> calendar(cx, CalendarValue(calendarId));
   return CreateTemporalDate(cx, result, calendar);
 }
 
 /**
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
-static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, CalendarId calendarId,
+                                           const PlainDate& date,
                                            const Duration& duration,
                                            Handle<JSObject*> options) {
-  // Steps 1-6. (Not applicable)
+  // Steps 1-5. (Not applicable)
 
-  // Step 8. (Reordered)
+  // Step 7. (Reordered)
   auto normalized = CreateNormalizedDurationRecord(duration);
 
-  // Steps 7-10.
+  // Steps 6 and 8-10.
   PlainDate result;
-  if (!BuiltinCalendarAdd(cx, date, normalized, options, &result)) {
+  if (!BuiltinCalendarAdd(cx, calendarId, date, normalized, options, &result)) {
     return nullptr;
   }
 
   // Step 11.
-  Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
+  Rooted<CalendarValue> calendar(cx, CalendarValue(calendarId));
   return CreateTemporalDate(cx, result, calendar);
 }
 
@@ -3447,13 +3490,15 @@ static Wrapped<PlainDateObject*> CalendarDateAdd(
 
   // Step 3. (Reordered)
   if (!calendar.dateAdd()) {
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+
     auto* unwrappedDate = date.unwrap(cx);
     if (!unwrappedDate) {
       return nullptr;
     }
     auto date = ToPlainDate(unwrappedDate);
 
-    return BuiltinCalendarAdd(cx, date, duration, options);
+    return BuiltinCalendarAdd(cx, calendarId, date, duration, options);
   }
 
   // Steps 2 and 4-5.
@@ -3478,13 +3523,15 @@ static Wrapped<PlainDateObject*> CalendarDateAdd(
 
   // Step 3. (Reordered)
   if (!calendar.dateAdd()) {
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+
     auto* unwrappedDate = date.unwrap(cx);
     if (!unwrappedDate) {
       return nullptr;
     }
     auto date = ToPlainDate(unwrappedDate);
 
-    return BuiltinCalendarAdd(cx, date, duration, options);
+    return BuiltinCalendarAdd(cx, calendarId, date, duration, options);
   }
 
   // Steps 2 and 4-5.
@@ -3510,6 +3557,8 @@ static Wrapped<PlainDateObject*> CalendarDateAdd(
 
   // Step 3. (Reordered)
   if (!calendar.dateAdd()) {
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+
     auto* unwrappedDate = date.unwrap(cx);
     if (!unwrappedDate) {
       return nullptr;
@@ -3522,7 +3571,7 @@ static Wrapped<PlainDateObject*> CalendarDateAdd(
     }
     auto duration = ToDuration(unwrappedDuration);
 
-    return BuiltinCalendarAdd(cx, date, duration, options);
+    return BuiltinCalendarAdd(cx, calendarId, date, duration, options);
   }
 
   // Steps 2 and 4-5.
@@ -3543,13 +3592,15 @@ static bool CalendarDateAdd(JSContext* cx, Handle<CalendarRecord> calendar,
 
   // Step 3. (Reordered)
   if (!calendar.dateAdd()) {
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+
     auto* unwrappedDate = date.unwrap(cx);
     if (!unwrappedDate) {
       return false;
     }
     auto date = ToPlainDate(unwrappedDate);
 
-    return BuiltinCalendarAdd(cx, date, duration, options, result);
+    return BuiltinCalendarAdd(cx, calendarId, date, duration, options, result);
   }
 
   // Steps 2 and 4-5.
@@ -3582,7 +3633,8 @@ static bool CalendarDateAdd(JSContext* cx, Handle<CalendarRecord> calendar,
 
   // Step 3. (Reordered)
   if (!calendar.dateAdd()) {
-    return BuiltinCalendarAdd(cx, date, duration, options, result);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarAdd(cx, calendarId, date, duration, options, result);
   }
 
   // Steps 2 and 4-5.
@@ -3709,21 +3761,21 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
  */
-static DateDuration BuiltinCalendarDateUntil(const PlainDate& one,
-                                             const PlainDate& two,
-                                             TemporalUnit largestUnit) {
-  // Steps 1-3. (Not applicable)
+static bool BuiltinCalendarDateUntil(JSContext* cx, CalendarId calendarId,
+                                     const PlainDate& one, const PlainDate& two,
+                                     TemporalUnit largestUnit,
+                                     DateDuration* result) {
+  // Steps 1-7. (Not applicable)
 
-  // Steps 4-8. (Not applicable)
-
-  // Steps 9-10.
-  return DifferenceISODate(one, two, largestUnit);
+  // Step 8.
+  *result = DifferenceISODate(one, two, largestUnit);
+  return true;
 }
 
 /**
  * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
  */
-static bool BuiltinCalendarDateUntil(JSContext* cx,
+static bool BuiltinCalendarDateUntil(JSContext* cx, CalendarId calendarId,
                                      Handle<Wrapped<PlainDateObject*>> one,
                                      Handle<Wrapped<PlainDateObject*>> two,
                                      TemporalUnit largestUnit,
@@ -3742,9 +3794,9 @@ static bool BuiltinCalendarDateUntil(JSContext* cx,
   }
   auto dateTwo = ToPlainDate(unwrappedTwo);
 
-  // Steps 1-10.
-  *result = BuiltinCalendarDateUntil(dateOne, dateTwo, largestUnit);
-  return true;
+  // Steps 1-9.
+  return BuiltinCalendarDateUntil(cx, calendarId, dateOne, dateTwo, largestUnit,
+                                  result);
 }
 
 static bool CalendarDateUntilSlow(JSContext* cx,
@@ -3838,8 +3890,9 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
 
   // Step 2. (Reordered)
   if (!calendar.dateUntil()) {
-    *result = BuiltinCalendarDateUntil(one, two, largestUnit);
-    return true;
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarDateUntil(cx, calendarId, one, two, largestUnit,
+                                    result);
   }
 
   // Steps 1 and 3-4.
@@ -3874,8 +3927,9 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
 
   // Step 2. (Reordered)
   if (!calendar.dateUntil()) {
-    *result = BuiltinCalendarDateUntil(one, two, largestUnit);
-    return true;
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarDateUntil(cx, calendarId, one, two, largestUnit,
+                                    result);
   }
 
   // Steps 1 and 3-4.
@@ -3898,7 +3952,9 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
 
   // Step 2. (Reordered)
   if (!calendar.dateUntil()) {
-    return BuiltinCalendarDateUntil(cx, one, two, largestUnit, result);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarDateUntil(cx, calendarId, one, two, largestUnit,
+                                    result);
   }
 
   // Steps 1 and 3-4.
@@ -3934,7 +3990,9 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
 
   // Step 2. (Reordered)
   if (!calendar.dateUntil()) {
-    return BuiltinCalendarDateUntil(cx, one, two, largestUnit, result);
+    auto calendarId = BuiltinCalendarId(calendar.receiver());
+    return BuiltinCalendarDateUntil(cx, calendarId, one, two, largestUnit,
+                                    result);
   }
 
   // Steps 1 and 3-4.
@@ -4162,6 +4220,9 @@ static bool Calendar_id(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] )
  */
 static bool Calendar_dateFromFields(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   Rooted<JSObject*> fields(
       cx, RequireObjectArg(cx, "fields", "dateFromFields", args.get(0)));
@@ -4179,7 +4240,7 @@ static bool Calendar_dateFromFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 5-11.
-  auto* obj = BuiltinCalendarDateFromFields(cx, fields, options);
+  auto* obj = BuiltinCalendarDateFromFields(cx, calendarId, fields, options);
   if (!obj) {
     return false;
   }
@@ -4201,6 +4262,9 @@ static bool Calendar_dateFromFields(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] )
  */
 static bool Calendar_yearMonthFromFields(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   Rooted<JSObject*> fields(
       cx, RequireObjectArg(cx, "fields", "yearMonthFromFields", args.get(0)));
@@ -4218,7 +4282,8 @@ static bool Calendar_yearMonthFromFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 5-11.
-  auto* obj = BuiltinCalendarYearMonthFromFields(cx, fields, options);
+  auto* obj =
+      BuiltinCalendarYearMonthFromFields(cx, calendarId, fields, options);
   if (!obj) {
     return false;
   }
@@ -4242,6 +4307,9 @@ static bool Calendar_yearMonthFromFields(JSContext* cx, unsigned argc,
  * Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] )
  */
 static bool Calendar_monthDayFromFields(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   Rooted<JSObject*> fields(
       cx, RequireObjectArg(cx, "fields", "monthDayFromFields", args.get(0)));
@@ -4259,7 +4327,8 @@ static bool Calendar_monthDayFromFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 5-11.
-  auto* obj = BuiltinCalendarMonthDayFromFields(cx, fields, options);
+  auto* obj =
+      BuiltinCalendarMonthDayFromFields(cx, calendarId, fields, options);
   if (!obj) {
     return false;
   }
@@ -4283,6 +4352,9 @@ static bool Calendar_monthDayFromFields(JSContext* cx, unsigned argc,
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
 static bool Calendar_dateAdd(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToTemporalDate(cx, args.get(0), &date)) {
@@ -4305,7 +4377,7 @@ static bool Calendar_dateAdd(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 6-11.
-  auto* obj = BuiltinCalendarAdd(cx, date, duration, options);
+  auto* obj = BuiltinCalendarAdd(cx, calendarId, date, duration, options);
   if (!obj) {
     return false;
   }
@@ -4327,6 +4399,9 @@ static bool Calendar_dateAdd(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
  */
 static bool Calendar_dateUntil(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate one;
   if (!ToTemporalDate(cx, args.get(0), &one)) {
@@ -4357,7 +4432,11 @@ static bool Calendar_dateUntil(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 8-9.
-  auto duration = BuiltinCalendarDateUntil(one, two, largestUnit);
+  DateDuration duration;
+  if (!BuiltinCalendarDateUntil(cx, calendarId, one, two, largestUnit,
+                                &duration)) {
+    return false;
+  }
 
   // Step 10.
   auto* obj = CreateTemporalDuration(cx, duration.toDuration());
@@ -4382,6 +4461,9 @@ static bool Calendar_dateUntil(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.era ( temporalDateLike )
  */
 static bool Calendar_era(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
@@ -4390,7 +4472,7 @@ static bool Calendar_era(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-5.
-  return BuiltinCalendarEra(cx, date, args.rval());
+  return BuiltinCalendarEra(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4406,6 +4488,9 @@ static bool Calendar_era(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.eraYear ( temporalDateLike )
  */
 static bool Calendar_eraYear(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
@@ -4414,7 +4499,7 @@ static bool Calendar_eraYear(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-7.
-  return BuiltinCalendarEraYear(cx, date, args.rval());
+  return BuiltinCalendarEraYear(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4430,6 +4515,9 @@ static bool Calendar_eraYear(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.year ( temporalDateLike )
  */
 static bool Calendar_year(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
@@ -4438,7 +4526,7 @@ static bool Calendar_year(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarYear(cx, date, args.rval());
+  return BuiltinCalendarYear(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4454,6 +4542,9 @@ static bool Calendar_year(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.month ( temporalDateLike )
  */
 static bool Calendar_month(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   Handle<Value> temporalDateLike = args.get(0);
   if (temporalDateLike.isObject() &&
@@ -4471,7 +4562,7 @@ static bool Calendar_month(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 5-7.
-  return BuiltinCalendarMonth(cx, date, args.rval());
+  return BuiltinCalendarMonth(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4487,6 +4578,9 @@ static bool Calendar_month(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.monthCode ( temporalDateLike )
  */
 static bool Calendar_monthCode(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainMonthDayObject,
@@ -4495,7 +4589,7 @@ static bool Calendar_monthCode(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarMonthCode(cx, date, args.rval());
+  return BuiltinCalendarMonthCode(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4511,6 +4605,9 @@ static bool Calendar_monthCode(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.day ( temporalDateLike )
  */
 static bool Calendar_day(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainMonthDayObject>(
@@ -4519,7 +4616,7 @@ static bool Calendar_day(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarDay(date, args.rval());
+  return BuiltinCalendarDay(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4535,6 +4632,9 @@ static bool Calendar_day(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.dayOfWeek ( temporalDateLike )
  */
 static bool Calendar_dayOfWeek(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToTemporalDate(cx, args.get(0), &date)) {
@@ -4542,7 +4642,7 @@ static bool Calendar_dayOfWeek(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarDayOfWeek(cx, date, args.rval());
+  return BuiltinCalendarDayOfWeek(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4558,6 +4658,9 @@ static bool Calendar_dayOfWeek(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.dayOfYear ( temporalDateLike )
  */
 static bool Calendar_dayOfYear(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToTemporalDate(cx, args.get(0), &date)) {
@@ -4565,7 +4668,7 @@ static bool Calendar_dayOfYear(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarDayOfYear(cx, date, args.rval());
+  return BuiltinCalendarDayOfYear(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4581,6 +4684,9 @@ static bool Calendar_dayOfYear(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.weekOfYear ( temporalDateLike )
  */
 static bool Calendar_weekOfYear(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToTemporalDate(cx, args.get(0), &date)) {
@@ -4588,7 +4694,7 @@ static bool Calendar_weekOfYear(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarWeekOfYear(cx, date, args.rval());
+  return BuiltinCalendarWeekOfYear(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4604,6 +4710,9 @@ static bool Calendar_weekOfYear(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.yearOfWeek ( temporalDateLike )
  */
 static bool Calendar_yearOfWeek(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToTemporalDate(cx, args.get(0), &date)) {
@@ -4611,7 +4720,7 @@ static bool Calendar_yearOfWeek(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarYearOfWeek(cx, date, args.rval());
+  return BuiltinCalendarYearOfWeek(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4627,6 +4736,9 @@ static bool Calendar_yearOfWeek(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.daysInWeek ( temporalDateLike )
  */
 static bool Calendar_daysInWeek(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToTemporalDate(cx, args.get(0), &date)) {
@@ -4634,7 +4746,7 @@ static bool Calendar_daysInWeek(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarDaysInWeek(cx, date, args.rval());
+  return BuiltinCalendarDaysInWeek(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4650,6 +4762,9 @@ static bool Calendar_daysInWeek(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.daysInMonth ( temporalDateLike )
  */
 static bool Calendar_daysInMonth(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
@@ -4658,7 +4773,7 @@ static bool Calendar_daysInMonth(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarDaysInMonth(cx, date, args.rval());
+  return BuiltinCalendarDaysInMonth(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4674,6 +4789,9 @@ static bool Calendar_daysInMonth(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.daysInYear ( temporalDateLike )
  */
 static bool Calendar_daysInYear(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
@@ -4682,7 +4800,7 @@ static bool Calendar_daysInYear(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarDaysInYear(cx, date, args.rval());
+  return BuiltinCalendarDaysInYear(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4698,6 +4816,9 @@ static bool Calendar_daysInYear(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.monthsInYear ( temporalDateLike )
  */
 static bool Calendar_monthsInYear(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
@@ -4706,7 +4827,7 @@ static bool Calendar_monthsInYear(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarMonthsInYear(cx, date, args.rval());
+  return BuiltinCalendarMonthsInYear(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4722,6 +4843,9 @@ static bool Calendar_monthsInYear(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.inLeapYear ( temporalDateLike )
  */
 static bool Calendar_inLeapYear(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   PlainDate date;
   if (!ToPlainDate<PlainDateObject, PlainDateTimeObject, PlainYearMonthObject>(
@@ -4730,7 +4854,7 @@ static bool Calendar_inLeapYear(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-6.
-  return BuiltinCalendarInLeapYear(cx, date, args.rval());
+  return BuiltinCalendarInLeapYear(cx, calendarId, date, args.rval());
 }
 
 /**
@@ -4746,8 +4870,11 @@ static bool Calendar_inLeapYear(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.fields ( fields )
  */
 static bool Calendar_fields(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Steps 3-9.
-  return BuiltinCalendarFields(cx, args.get(0), args.rval());
+  return BuiltinCalendarFields(cx, calendarId, args.get(0), args.rval());
 }
 
 /**
@@ -4763,6 +4890,9 @@ static bool Calendar_fields(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.mergeFields ( fields, additionalFields )
  */
 static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
+  auto* calendar = &args.thisv().toObject().as<CalendarObject>();
+  auto calendarId = calendar->identifier();
+
   // Step 3.
   Rooted<JSObject*> fields(cx, JS::ToObject(cx, args.get(0)));
   if (!fields) {
@@ -4788,8 +4918,8 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 5-13.
-  auto* merged =
-      BuiltinCalendarMergeFields(cx, fieldsCopy, additionalFieldsCopy);
+  auto* merged = BuiltinCalendarMergeFields(cx, calendarId, fieldsCopy,
+                                            additionalFieldsCopy);
   if (!merged) {
     return false;
   }
