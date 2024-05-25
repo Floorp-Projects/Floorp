@@ -52,7 +52,7 @@ double Uint128::toDouble(const Uint128& x, bool negative) {
     }
 
     const uint8_t msdLeadingZeroes = mozilla::CountLeadingZeroes64(msd);
-    MOZ_ASSERT(0 <= msdLeadingZeroes && msdLeadingZeroes <= 10,
+    MOZ_ASSERT(msdLeadingZeroes <= 10,
                "leading zeroes is at most 10 when the fast path isn't taken");
 
     exponent = 64 - msdLeadingZeroes - 1;
