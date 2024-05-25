@@ -1328,6 +1328,50 @@ static bool PlainDateTime_calendarId(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * get Temporal.PlainDateTime.prototype.era
+ */
+static bool PlainDateTime_era(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
+  Rooted<CalendarValue> calendar(cx, dateTime->calendar());
+
+  // Step 4.
+  return CalendarEra(cx, calendar, dateTime, args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.era
+ */
+static bool PlainDateTime_era(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_era>(cx, args);
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.eraYear
+ */
+static bool PlainDateTime_eraYear(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
+  Rooted<CalendarValue> calendar(cx, dateTime->calendar());
+
+  // Steps 4-6.
+  return CalendarEraYear(cx, calendar, dateTime, args.rval());
+}
+
+/**
+ * get Temporal.PlainDateTime.prototype.eraYear
+ */
+static bool PlainDateTime_eraYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_eraYear>(cx, args);
+}
+
+/**
  * get Temporal.PlainDateTime.prototype.year
  */
 static bool PlainDateTime_year(JSContext* cx, const CallArgs& args) {
@@ -2733,6 +2777,8 @@ static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
 
 static const JSPropertySpec PlainDateTime_prototype_properties[] = {
     JS_PSG("calendarId", PlainDateTime_calendarId, 0),
+    JS_PSG("era", PlainDateTime_era, 0),
+    JS_PSG("eraYear", PlainDateTime_eraYear, 0),
     JS_PSG("year", PlainDateTime_year, 0),
     JS_PSG("month", PlainDateTime_month, 0),
     JS_PSG("monthCode", PlainDateTime_monthCode, 0),

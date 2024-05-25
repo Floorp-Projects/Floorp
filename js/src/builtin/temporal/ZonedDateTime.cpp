@@ -1842,6 +1842,60 @@ static bool ZonedDateTime_timeZoneId(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * get Temporal.ZonedDateTime.prototype.era
+ */
+static bool ZonedDateTime_era(JSContext* cx, const CallArgs& args) {
+  Rooted<ZonedDateTime> zonedDateTime(
+      cx, ZonedDateTime{&args.thisv().toObject().as<ZonedDateTimeObject>()});
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, zonedDateTime.timeZone(),
+                           zonedDateTime.instant(), &dateTime)) {
+    return false;
+  }
+
+  // Step 7.
+  return CalendarEra(cx, zonedDateTime.calendar(), dateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.era
+ */
+static bool ZonedDateTime_era(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_era>(cx, args);
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.eraYear
+ */
+static bool ZonedDateTime_eraYear(JSContext* cx, const CallArgs& args) {
+  Rooted<ZonedDateTime> zonedDateTime(
+      cx, ZonedDateTime{&args.thisv().toObject().as<ZonedDateTimeObject>()});
+
+  // Steps 3-6.
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, zonedDateTime.timeZone(),
+                           zonedDateTime.instant(), &dateTime)) {
+    return false;
+  }
+
+  // Steps 7-9.
+  return CalendarEraYear(cx, zonedDateTime.calendar(), dateTime, args.rval());
+}
+
+/**
+ * get Temporal.ZonedDateTime.prototype.eraYear
+ */
+static bool ZonedDateTime_eraYear(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_eraYear>(cx, args);
+}
+
+/**
  * get Temporal.ZonedDateTime.prototype.year
  */
 static bool ZonedDateTime_year(JSContext* cx, const CallArgs& args) {
@@ -4117,6 +4171,8 @@ static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
 static const JSPropertySpec ZonedDateTime_prototype_properties[] = {
     JS_PSG("calendarId", ZonedDateTime_calendarId, 0),
     JS_PSG("timeZoneId", ZonedDateTime_timeZoneId, 0),
+    JS_PSG("era", ZonedDateTime_era, 0),
+    JS_PSG("eraYear", ZonedDateTime_eraYear, 0),
     JS_PSG("year", ZonedDateTime_year, 0),
     JS_PSG("month", ZonedDateTime_month, 0),
     JS_PSG("monthCode", ZonedDateTime_monthCode, 0),

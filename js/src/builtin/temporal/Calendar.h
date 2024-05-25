@@ -389,6 +389,62 @@ bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarRecord> calendar,
                        JS::Handle<PlainObject*> options, DateDuration* result);
 
 /**
+ * CalendarEra ( calendar, dateLike )
+ */
+bool CalendarEra(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                 JS::Handle<PlainDateObject*> dateLike,
+                 JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarEra ( calendar, dateLike )
+ */
+bool CalendarEra(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                 JS::Handle<PlainDateTimeObject*> dateLike,
+                 JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarEra ( calendar, dateLike )
+ */
+bool CalendarEra(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                 JS::Handle<PlainYearMonthObject*> dateLike,
+                 JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarEra ( calendar, dateLike )
+ */
+bool CalendarEra(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                 const PlainDateTime& dateTime,
+                 JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarEraYear ( calendar, dateLike )
+ */
+bool CalendarEraYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                     JS::Handle<PlainDateObject*> dateLike,
+                     JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarEraYear ( calendar, dateLike )
+ */
+bool CalendarEraYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                     JS::Handle<PlainDateTimeObject*> dateLike,
+                     JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarEraYear ( calendar, dateLike )
+ */
+bool CalendarEraYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                     JS::Handle<PlainYearMonthObject*> dateLike,
+                     JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarEraYear ( calendar, dateLike )
+ */
+bool CalendarEraYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                     const PlainDateTime& dateTime,
+                     JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarYear ( calendar, dateLike )
  */
 bool CalendarYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
