@@ -200,7 +200,7 @@ class PlainDateObject;
 class PlainDateTimeObject;
 class PlainMonthDayObject;
 class PlainYearMonthObject;
-enum class CalendarOption;
+enum class ShowCalendar;
 enum class TemporalOverflow;
 enum class TemporalUnit;
 

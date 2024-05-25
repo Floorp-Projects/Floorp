@@ -136,11 +136,11 @@ static bool GetNumberOption(JSContext* cx, Handle<JSObject*> options,
 }
 
 /**
- * ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive )
+ * GetRoundingIncrementOption ( normalizedOptions, dividend, inclusive )
  */
-bool js::temporal::ToTemporalRoundingIncrement(JSContext* cx,
-                                               Handle<JSObject*> options,
-                                               Increment* increment) {
+bool js::temporal::GetRoundingIncrementOption(JSContext* cx,
+                                              Handle<JSObject*> options,
+                                              Increment* increment) {
   // Steps 1-3.
   double number = 1;
   if (!GetNumberOption(cx, options, cx->names().roundingIncrement, &number)) {
@@ -328,13 +328,14 @@ static std::pair<TemporalUnit, TemporalUnit> AllowedValues(
 }
 
 /**
- * GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues
- * ] )
+ * GetTemporalUnitValuedOption ( normalizedOptions, key, unitGroup, default [ ,
+ * extraValues ] )
  */
-bool js::temporal::GetTemporalUnit(JSContext* cx, Handle<JSObject*> options,
-                                   TemporalUnitKey key,
-                                   TemporalUnitGroup unitGroup,
-                                   TemporalUnit* unit) {
+bool js::temporal::GetTemporalUnitValuedOption(JSContext* cx,
+                                               Handle<JSObject*> options,
+                                               TemporalUnitKey key,
+                                               TemporalUnitGroup unitGroup,
+                                               TemporalUnit* unit) {
   // Steps 1-8. (Not applicable in our implementation.)
 
   // Step 9.
@@ -348,17 +349,18 @@ bool js::temporal::GetTemporalUnit(JSContext* cx, Handle<JSObject*> options,
     return true;
   }
 
-  return GetTemporalUnit(cx, value, key, unitGroup, unit);
+  return GetTemporalUnitValuedOption(cx, value, key, unitGroup, unit);
 }
 
 /**
- * GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues
- * ] )
+ * GetTemporalUnitValuedOption ( normalizedOptions, key, unitGroup, default [ ,
+ * extraValues ] )
  */
-bool js::temporal::GetTemporalUnit(JSContext* cx, Handle<JSString*> value,
-                                   TemporalUnitKey key,
-                                   TemporalUnitGroup unitGroup,
-                                   TemporalUnit* unit) {
+bool js::temporal::GetTemporalUnitValuedOption(JSContext* cx,
+                                               Handle<JSString*> value,
+                                               TemporalUnitKey key,
+                                               TemporalUnitGroup unitGroup,
+                                               TemporalUnit* unit) {
   // Steps 1-9. (Not applicable in our implementation.)
 
   // Step 10. (Handled in caller.)
@@ -394,11 +396,11 @@ bool js::temporal::GetTemporalUnit(JSContext* cx, Handle<JSString*> value,
 }
 
 /**
- * ToTemporalRoundingMode ( normalizedOptions, fallback )
+ * GetRoundingModeOption ( normalizedOptions, fallback )
  */
-bool js::temporal::ToTemporalRoundingMode(JSContext* cx,
-                                          Handle<JSObject*> options,
-                                          TemporalRoundingMode* mode) {
+bool js::temporal::GetRoundingModeOption(JSContext* cx,
+                                         Handle<JSObject*> options,
+                                         TemporalRoundingMode* mode) {
   // Steps 1-2.
   Rooted<JSString*> string(cx);
   if (!GetStringOption(cx, options, cx->names().roundingMode, &string)) {
@@ -795,11 +797,11 @@ double js::temporal::FractionToDouble(const Int128& numerator,
 }
 
 /**
- * ToCalendarNameOption ( normalizedOptions )
+ * GetTemporalShowCalendarNameOption ( normalizedOptions )
  */
-bool js::temporal::ToCalendarNameOption(JSContext* cx,
-                                        Handle<JSObject*> options,
-                                        CalendarOption* result) {
+bool js::temporal::GetTemporalShowCalendarNameOption(JSContext* cx,
+                                                     Handle<JSObject*> options,
+                                                     ShowCalendar* result) {
   // Step 1.
   Rooted<JSString*> calendarName(cx);
   if (!GetStringOption(cx, options, cx->names().calendarName, &calendarName)) {
@@ -817,13 +819,13 @@ bool js::temporal::ToCalendarNameOption(JSContext* cx,
   }
 
   if (StringEqualsLiteral(linear, "auto")) {
-    *result = CalendarOption::Auto;
+    *result = ShowCalendar::Auto;
   } else if (StringEqualsLiteral(linear, "always")) {
-    *result = CalendarOption::Always;
+    *result = ShowCalendar::Always;
   } else if (StringEqualsLiteral(linear, "never")) {
-    *result = CalendarOption::Never;
+    *result = ShowCalendar::Never;
   } else if (StringEqualsLiteral(linear, "critical")) {
-    *result = CalendarOption::Critical;
+    *result = ShowCalendar::Critical;
   } else {
     if (auto chars = QuoteString(cx, linear, '"')) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -836,11 +838,10 @@ bool js::temporal::ToCalendarNameOption(JSContext* cx,
 }
 
 /**
- * ToFractionalSecondDigits ( normalizedOptions )
+ * GetTemporalFractionalSecondDigitsOption ( normalizedOptions )
  */
-bool js::temporal::ToFractionalSecondDigits(JSContext* cx,
-                                            Handle<JSObject*> options,
-                                            Precision* precision) {
+bool js::temporal::GetTemporalFractionalSecondDigitsOption(
+    JSContext* cx, Handle<JSObject*> options, Precision* precision) {
   // Step 1.
   Rooted<Value> digitsValue(cx);
   if (!GetProperty(cx, options, options, cx->names().fractionalSecondDigits,
@@ -996,10 +997,11 @@ SecondsStringPrecision js::temporal::ToSecondsStringPrecision(
 }
 
 /**
- * ToTemporalOverflow ( normalizedOptions )
+ * GetTemporalOverflowOption ( normalizedOptions )
  */
-bool js::temporal::ToTemporalOverflow(JSContext* cx, Handle<JSObject*> options,
-                                      TemporalOverflow* result) {
+bool js::temporal::GetTemporalOverflowOption(JSContext* cx,
+                                             Handle<JSObject*> options,
+                                             TemporalOverflow* result) {
   // Step 1.
   Rooted<JSString*> overflow(cx);
   if (!GetStringOption(cx, options, cx->names().overflow, &overflow)) {
@@ -1032,9 +1034,9 @@ bool js::temporal::ToTemporalOverflow(JSContext* cx, Handle<JSObject*> options,
 }
 
 /**
- * ToTemporalDisambiguation ( options )
+ * GetTemporalDisambiguationOption ( options )
  */
-bool js::temporal::ToTemporalDisambiguation(
+bool js::temporal::GetTemporalDisambiguationOption(
     JSContext* cx, Handle<JSObject*> options,
     TemporalDisambiguation* disambiguation) {
   // Step 1. (Not applicable)
@@ -1075,10 +1077,11 @@ bool js::temporal::ToTemporalDisambiguation(
 }
 
 /**
- * ToTemporalOffset ( options, fallback )
+ * GetTemporalOffsetOption ( options, fallback )
  */
-bool js::temporal::ToTemporalOffset(JSContext* cx, Handle<JSObject*> options,
-                                    TemporalOffset* offset) {
+bool js::temporal::GetTemporalOffsetOption(JSContext* cx,
+                                           Handle<JSObject*> options,
+                                           TemporalOffset* offset) {
   // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
@@ -1117,11 +1120,11 @@ bool js::temporal::ToTemporalOffset(JSContext* cx, Handle<JSObject*> options,
 }
 
 /**
- * ToTimeZoneNameOption ( normalizedOptions )
+ * GetTemporalShowTimeZoneNameOption ( normalizedOptions )
  */
-bool js::temporal::ToTimeZoneNameOption(JSContext* cx,
-                                        Handle<JSObject*> options,
-                                        TimeZoneNameOption* result) {
+bool js::temporal::GetTemporalShowTimeZoneNameOption(JSContext* cx,
+                                                     Handle<JSObject*> options,
+                                                     ShowTimeZoneName* result) {
   // Step 1.
   Rooted<JSString*> timeZoneName(cx);
   if (!GetStringOption(cx, options, cx->names().timeZoneName, &timeZoneName)) {
@@ -1139,11 +1142,11 @@ bool js::temporal::ToTimeZoneNameOption(JSContext* cx,
   }
 
   if (StringEqualsLiteral(linear, "auto")) {
-    *result = TimeZoneNameOption::Auto;
+    *result = ShowTimeZoneName::Auto;
   } else if (StringEqualsLiteral(linear, "never")) {
-    *result = TimeZoneNameOption::Never;
+    *result = ShowTimeZoneName::Never;
   } else if (StringEqualsLiteral(linear, "critical")) {
-    *result = TimeZoneNameOption::Critical;
+    *result = ShowTimeZoneName::Critical;
   } else {
     if (auto chars = QuoteString(cx, linear, '"')) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -1156,15 +1159,11 @@ bool js::temporal::ToTimeZoneNameOption(JSContext* cx,
 }
 
 /**
- * ToShowOffsetOption ( normalizedOptions )
+ * GetTemporalShowOffsetOption ( normalizedOptions )
  */
-bool js::temporal::ToShowOffsetOption(JSContext* cx, Handle<JSObject*> options,
-                                      ShowOffsetOption* result) {
-  // FIXME: spec issue - should be renamed to ToOffsetOption to match the other
-  // operations ToCalendarNameOption and ToTimeZoneNameOption.
-  //
-  // https://github.com/tc39/proposal-temporal/issues/2441
-
+bool js::temporal::GetTemporalShowOffsetOption(JSContext* cx,
+                                               Handle<JSObject*> options,
+                                               ShowOffset* result) {
   // Step 1.
   Rooted<JSString*> offset(cx);
   if (!GetStringOption(cx, options, cx->names().offset, &offset)) {
@@ -1182,9 +1181,9 @@ bool js::temporal::ToShowOffsetOption(JSContext* cx, Handle<JSObject*> options,
   }
 
   if (StringEqualsLiteral(linear, "auto")) {
-    *result = ShowOffsetOption::Auto;
+    *result = ShowOffset::Auto;
   } else if (StringEqualsLiteral(linear, "never")) {
-    *result = ShowOffsetOption::Never;
+    *result = ShowOffset::Never;
   } else {
     if (auto chars = QuoteString(cx, linear, '"')) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -1501,8 +1500,8 @@ bool js::temporal::GetDifferenceSettings(
     DifferenceSettings* result) {
   // Steps 1-2.
   auto largestUnit = TemporalUnit::Auto;
-  if (!GetTemporalUnit(cx, options, TemporalUnitKey::LargestUnit, unitGroup,
-                       &largestUnit)) {
+  if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::LargestUnit,
+                                   unitGroup, &largestUnit)) {
     return false;
   }
 
@@ -1516,25 +1515,25 @@ bool js::temporal::GetDifferenceSettings(
 
   // Step 4.
   auto roundingIncrement = Increment{1};
-  if (!ToTemporalRoundingIncrement(cx, options, &roundingIncrement)) {
+  if (!GetRoundingIncrementOption(cx, options, &roundingIncrement)) {
     return false;
   }
 
   // Step 5.
   auto roundingMode = TemporalRoundingMode::Trunc;
-  if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+  if (!GetRoundingModeOption(cx, options, &roundingMode)) {
     return false;
   }
 
   // Step 6.
   if (operation == TemporalDifference::Since) {
-    roundingMode = NegateTemporalRoundingMode(roundingMode);
+    roundingMode = NegateRoundingMode(roundingMode);
   }
 
   // Step 7.
   auto smallestUnit = fallbackSmallestUnit;
-  if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit, unitGroup,
-                       &smallestUnit)) {
+  if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
+                                   unitGroup, &smallestUnit)) {
     return false;
   }
 

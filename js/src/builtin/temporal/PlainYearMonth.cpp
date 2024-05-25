@@ -282,7 +282,7 @@ static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
   // Step 10.
   if (maybeResolvedOptions) {
     TemporalOverflow ignored;
-    if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
+    if (!GetTemporalOverflowOption(cx, maybeResolvedOptions, &ignored)) {
       return nullptr;
     }
   }
@@ -807,7 +807,7 @@ static bool PlainYearMonth_from(JSContext* cx, unsigned argc, Value* vp) {
       if (options) {
         // Step 2.a.
         TemporalOverflow ignored;
-        if (!ToTemporalOverflow(cx, options, &ignored)) {
+        if (!GetTemporalOverflowOption(cx, options, &ignored)) {
           return false;
         }
       }
@@ -1305,7 +1305,7 @@ static bool PlainYearMonth_toString(JSContext* cx, const CallArgs& args) {
   Rooted<PlainYearMonthObject*> yearMonth(
       cx, &args.thisv().toObject().as<PlainYearMonthObject>());
 
-  auto showCalendar = CalendarOption::Auto;
+  auto showCalendar = ShowCalendar::Auto;
   if (args.hasDefined(0)) {
     // Step 3.
     Rooted<JSObject*> options(
@@ -1315,7 +1315,7 @@ static bool PlainYearMonth_toString(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 4.
-    if (!ToCalendarNameOption(cx, options, &showCalendar)) {
+    if (!GetTemporalShowCalendarNameOption(cx, options, &showCalendar)) {
       return false;
     }
   }
@@ -1349,8 +1349,7 @@ static bool PlainYearMonth_toLocaleString(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<PlainYearMonthObject>());
 
   // Step 3.
-  JSString* str =
-      TemporalYearMonthToString(cx, yearMonth, CalendarOption::Auto);
+  JSString* str = TemporalYearMonthToString(cx, yearMonth, ShowCalendar::Auto);
   if (!str) {
     return false;
   }
@@ -1379,8 +1378,7 @@ static bool PlainYearMonth_toJSON(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<PlainYearMonthObject>());
 
   // Step 3.
-  JSString* str =
-      TemporalYearMonthToString(cx, yearMonth, CalendarOption::Auto);
+  JSString* str = TemporalYearMonthToString(cx, yearMonth, ShowCalendar::Auto);
   if (!str) {
     return false;
   }

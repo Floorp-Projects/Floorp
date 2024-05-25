@@ -417,7 +417,7 @@ static Wrapped<PlainDateObject*> ToTemporalDate(
     // Step 3.b.i.
     if (maybeOptions) {
       TemporalOverflow ignored;
-      if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
+      if (!GetTemporalOverflowOption(cx, maybeOptions, &ignored)) {
         return nullptr;
       }
     }
@@ -443,7 +443,7 @@ static Wrapped<PlainDateObject*> ToTemporalDate(
     // Step 3.c.i.
     if (maybeOptions) {
       TemporalOverflow ignored;
-      if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
+      if (!GetTemporalOverflowOption(cx, maybeOptions, &ignored)) {
         return nullptr;
       }
     }
@@ -540,7 +540,7 @@ static Wrapped<PlainDateObject*> ToTemporalDate(
   // Step 11.
   if (maybeResolvedOptions) {
     TemporalOverflow ignored;
-    if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
+    if (!GetTemporalOverflowOption(cx, maybeResolvedOptions, &ignored)) {
       return nullptr;
     }
   }
@@ -994,7 +994,7 @@ static Wrapped<PlainDateObject*> AddDate(JSContext* cx,
 
   // Step 4.
   auto overflow = TemporalOverflow::Constrain;
-  if (!ToTemporalOverflow(cx, options, &overflow)) {
+  if (!GetTemporalOverflowOption(cx, options, &overflow)) {
     return nullptr;
   }
 
@@ -1080,7 +1080,7 @@ static Wrapped<PlainDateObject*> AddDate(
 
   // Step 4.
   auto overflow = TemporalOverflow::Constrain;
-  if (!ToTemporalOverflow(cx, options, &overflow)) {
+  if (!GetTemporalOverflowOption(cx, options, &overflow)) {
     return nullptr;
   }
 
@@ -1117,7 +1117,7 @@ bool js::temporal::AddDate(JSContext* cx, Handle<CalendarRecord> calendar,
 
   // Step 4.
   auto overflow = TemporalOverflow::Constrain;
-  if (!ToTemporalOverflow(cx, options, &overflow)) {
+  if (!GetTemporalOverflowOption(cx, options, &overflow)) {
     return false;
   }
 
@@ -1768,7 +1768,7 @@ static bool PlainDate_from(JSContext* cx, unsigned argc, Value* vp) {
       if (options) {
         // Step 2.a.
         TemporalOverflow ignored;
-        if (!ToTemporalOverflow(cx, options, &ignored)) {
+        if (!GetTemporalOverflowOption(cx, options, &ignored)) {
           return false;
         }
       }
@@ -2850,7 +2850,7 @@ static bool PlainDate_toString(JSContext* cx, const CallArgs& args) {
   Rooted<PlainDateObject*> temporalDate(
       cx, &args.thisv().toObject().as<PlainDateObject>());
 
-  auto showCalendar = CalendarOption::Auto;
+  auto showCalendar = ShowCalendar::Auto;
   if (args.hasDefined(0)) {
     // Step 3.
     Rooted<JSObject*> options(
@@ -2860,7 +2860,7 @@ static bool PlainDate_toString(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 4.
-    if (!ToCalendarNameOption(cx, options, &showCalendar)) {
+    if (!GetTemporalShowCalendarNameOption(cx, options, &showCalendar)) {
       return false;
     }
   }
@@ -2892,7 +2892,7 @@ static bool PlainDate_toLocaleString(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<PlainDateObject>());
 
   // Step 3.
-  JSString* str = TemporalDateToString(cx, temporalDate, CalendarOption::Auto);
+  JSString* str = TemporalDateToString(cx, temporalDate, ShowCalendar::Auto);
   if (!str) {
     return false;
   }
@@ -2918,7 +2918,7 @@ static bool PlainDate_toJSON(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<PlainDateObject>());
 
   // Step 3.
-  JSString* str = TemporalDateToString(cx, temporalDate, CalendarOption::Auto);
+  JSString* str = TemporalDateToString(cx, temporalDate, ShowCalendar::Auto);
   if (!str) {
     return false;
   }

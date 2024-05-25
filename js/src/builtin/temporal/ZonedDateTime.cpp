@@ -358,13 +358,13 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
 
     if (maybeResolvedOptions) {
       // Steps 5.j-k.
-      if (!ToTemporalDisambiguation(cx, maybeResolvedOptions,
-                                    &disambiguation)) {
+      if (!GetTemporalDisambiguationOption(cx, maybeResolvedOptions,
+                                           &disambiguation)) {
         return false;
       }
 
       // Step 5.l.
-      if (!ToTemporalOffset(cx, maybeResolvedOptions, &offsetOption)) {
+      if (!GetTemporalOffsetOption(cx, maybeResolvedOptions, &offsetOption)) {
         return false;
       }
 
@@ -462,19 +462,19 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
 
     if (maybeResolvedOptions) {
       // Step 6.n.
-      if (!ToTemporalDisambiguation(cx, maybeResolvedOptions,
-                                    &disambiguation)) {
+      if (!GetTemporalDisambiguationOption(cx, maybeResolvedOptions,
+                                           &disambiguation)) {
         return false;
       }
 
       // Step 6.o.
-      if (!ToTemporalOffset(cx, maybeResolvedOptions, &offsetOption)) {
+      if (!GetTemporalOffsetOption(cx, maybeResolvedOptions, &offsetOption)) {
         return false;
       }
 
       // Step 6.p.
       TemporalOverflow ignored;
-      if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
+      if (!GetTemporalOverflowOption(cx, maybeResolvedOptions, &ignored)) {
         return false;
       }
     }
@@ -740,7 +740,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
     // Step 10.a.
     auto overflow = TemporalOverflow::Constrain;
     if (maybeOptions) {
-      if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+      if (!GetTemporalOverflowOption(cx, maybeOptions, &overflow)) {
         return false;
       }
     }
@@ -1723,19 +1723,20 @@ static bool ZonedDateTime_from(JSContext* cx, unsigned argc, Value* vp) {
       if (options) {
         // Steps 2.a-b.
         TemporalDisambiguation ignoredDisambiguation;
-        if (!ToTemporalDisambiguation(cx, options, &ignoredDisambiguation)) {
+        if (!GetTemporalDisambiguationOption(cx, options,
+                                             &ignoredDisambiguation)) {
           return false;
         }
 
         // Step 2.c.
         TemporalOffset ignoredOffset;
-        if (!ToTemporalOffset(cx, options, &ignoredOffset)) {
+        if (!GetTemporalOffsetOption(cx, options, &ignoredOffset)) {
           return false;
         }
 
         // Step 2.d.
         TemporalOverflow ignoredOverflow;
-        if (!ToTemporalOverflow(cx, options, &ignoredOverflow)) {
+        if (!GetTemporalOverflowOption(cx, options, &ignoredOverflow)) {
           return false;
         }
       }
@@ -2869,13 +2870,13 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
 
   // Step 22-23.
   auto disambiguation = TemporalDisambiguation::Compatible;
-  if (!ToTemporalDisambiguation(cx, resolvedOptions, &disambiguation)) {
+  if (!GetTemporalDisambiguationOption(cx, resolvedOptions, &disambiguation)) {
     return false;
   }
 
   // Step 24.
   auto offset = TemporalOffset::Prefer;
-  if (!ToTemporalOffset(cx, resolvedOptions, &offset)) {
+  if (!GetTemporalOffsetOption(cx, resolvedOptions, &offset)) {
     return false;
   }
 
@@ -3236,8 +3237,9 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
 
     // Step 9.
     Rooted<JSString*> paramString(cx, args[0].toString());
-    if (!GetTemporalUnit(cx, paramString, TemporalUnitKey::SmallestUnit,
-                         TemporalUnitGroup::DayTime, &smallestUnit)) {
+    if (!GetTemporalUnitValuedOption(
+            cx, paramString, TemporalUnitKey::SmallestUnit,
+            TemporalUnitGroup::DayTime, &smallestUnit)) {
       return false;
     }
 
@@ -3251,18 +3253,19 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
     }
 
     // Steps 6-7.
-    if (!ToTemporalRoundingIncrement(cx, roundTo, &roundingIncrement)) {
+    if (!GetRoundingIncrementOption(cx, roundTo, &roundingIncrement)) {
       return false;
     }
 
     // Step 8.
-    if (!ToTemporalRoundingMode(cx, roundTo, &roundingMode)) {
+    if (!GetRoundingModeOption(cx, roundTo, &roundingMode)) {
       return false;
     }
 
     // Step 9.
-    if (!GetTemporalUnit(cx, roundTo, TemporalUnitKey::SmallestUnit,
-                         TemporalUnitGroup::DayTime, &smallestUnit)) {
+    if (!GetTemporalUnitValuedOption(cx, roundTo, TemporalUnitKey::SmallestUnit,
+                                     TemporalUnitGroup::DayTime,
+                                     &smallestUnit)) {
       return false;
     }
 
@@ -3493,9 +3496,9 @@ static bool ZonedDateTime_toString(JSContext* cx, const CallArgs& args) {
   SecondsStringPrecision precision = {Precision::Auto(),
                                       TemporalUnit::Nanosecond, Increment{1}};
   auto roundingMode = TemporalRoundingMode::Trunc;
-  auto showCalendar = CalendarOption::Auto;
-  auto showTimeZone = TimeZoneNameOption::Auto;
-  auto showOffset = ShowOffsetOption::Auto;
+  auto showCalendar = ShowCalendar::Auto;
+  auto showTimeZone = ShowTimeZoneName::Auto;
+  auto showOffset = ShowOffset::Auto;
   if (args.hasDefined(0)) {
     // Step 3.
     Rooted<JSObject*> options(
@@ -3505,30 +3508,30 @@ static bool ZonedDateTime_toString(JSContext* cx, const CallArgs& args) {
     }
 
     // Steps 4-5.
-    if (!ToCalendarNameOption(cx, options, &showCalendar)) {
+    if (!GetTemporalShowCalendarNameOption(cx, options, &showCalendar)) {
       return false;
     }
 
     // Step 6.
     auto digits = Precision::Auto();
-    if (!ToFractionalSecondDigits(cx, options, &digits)) {
+    if (!GetTemporalFractionalSecondDigitsOption(cx, options, &digits)) {
       return false;
     }
 
     // Step 7.
-    if (!ToShowOffsetOption(cx, options, &showOffset)) {
+    if (!GetTemporalShowOffsetOption(cx, options, &showOffset)) {
       return false;
     }
 
     // Step 8.
-    if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+    if (!GetRoundingModeOption(cx, options, &roundingMode)) {
       return false;
     }
 
     // Step 9.
     auto smallestUnit = TemporalUnit::Auto;
-    if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit,
-                         TemporalUnitGroup::Time, &smallestUnit)) {
+    if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
+                                     TemporalUnitGroup::Time, &smallestUnit)) {
       return false;
     }
 
@@ -3541,7 +3544,7 @@ static bool ZonedDateTime_toString(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 11.
-    if (!ToTimeZoneNameOption(cx, options, &showTimeZone)) {
+    if (!GetTemporalShowTimeZoneNameOption(cx, options, &showTimeZone)) {
       return false;
     }
 
@@ -3580,8 +3583,8 @@ static bool ZonedDateTime_toLocaleString(JSContext* cx, const CallArgs& args) {
 
   // Step 3.
   JSString* str = TemporalZonedDateTimeToString(
-      cx, zonedDateTime, Precision::Auto(), CalendarOption::Auto,
-      TimeZoneNameOption::Auto, ShowOffsetOption::Auto);
+      cx, zonedDateTime, Precision::Auto(), ShowCalendar::Auto,
+      ShowTimeZoneName::Auto, ShowOffset::Auto);
   if (!str) {
     return false;
   }
@@ -3610,8 +3613,8 @@ static bool ZonedDateTime_toJSON(JSContext* cx, const CallArgs& args) {
 
   // Step 3.
   JSString* str = TemporalZonedDateTimeToString(
-      cx, zonedDateTime, Precision::Auto(), CalendarOption::Auto,
-      TimeZoneNameOption::Auto, ShowOffsetOption::Auto);
+      cx, zonedDateTime, Precision::Auto(), ShowCalendar::Auto,
+      ShowTimeZoneName::Auto, ShowOffset::Auto);
   if (!str) {
     return false;
   }
