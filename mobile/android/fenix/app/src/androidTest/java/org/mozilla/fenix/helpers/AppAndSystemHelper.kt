@@ -46,6 +46,7 @@ import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.helpers.Constants.PackageName.PIXEL_LAUNCHER
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.Constants.TAG
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -584,6 +585,15 @@ object AppAndSystemHelper {
         } catch (e: Exception) {
             Log.i(TAG, "runWithLauncherIntent: Exception caught while running the test block: ${e.message}")
             e.printStackTrace()
+        }
+    }
+
+    fun dismissSetAsDefaultBrowserOnboardingDialog() {
+        Log.i(TAG, "dismissSetAsDefaultBrowserOnboardingDialog: Detected API ${Build.VERSION.SDK_INT}")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Log.i(TAG, "dismissSetAsDefaulltBrowserOnboardingDialog: Trying to click the \"Cancel\" dialog button.")
+            itemWithResIdContainingText("android:id/button2", "Cancel").click()
+            Log.i(TAG, "dismissSetAsDefaulltBrowserOnboardingDialog: Clicked the \"Cancel\" dialog button.")
         }
     }
 }
