@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/TaskController.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/AppShutdown.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsThreadManager.h"
@@ -132,7 +133,13 @@ DecodePool::Observe(nsISupports*, const char* aTopic, const char16_t*) {
   return NS_OK;
 }
 
-bool DecodePool::IsShuttingDown() const { return mShuttingDown; }
+/* static */ bool DecodePool::IsShuttingDown() {
+  if (MOZ_UNLIKELY(!sSingleton)) {
+    return AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads);
+  }
+
+  return sSingleton->mShuttingDown;
+}
 
 class DecodingTask final : public Task {
  public:
