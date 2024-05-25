@@ -848,19 +848,62 @@ var SessionStoreInternal = {
           }
 
           // Floorp injections
-          if (
-            state.windows[0] == undefined
-          ) {
+          if (state.windows[0] == undefined) {
             let lastSessionWindows = state._closedWindows;
             let closedTime = lastSessionWindows[0].closedAt;
             for (let i = 0; i < lastSessionWindows.length; i++) {
               let closedWindow = state._closedWindows[i];
               let closedWindowTime = closedWindow.closedAt;
               // If the last closed window is closed in +-1000, we will restore it
-              if (closedWindowTime > closedTime - 2000 && closedWindowTime < closedTime + 2000) {
+              if (
+                closedWindowTime > closedTime - 2000 &&
+                closedWindowTime < closedTime + 2000
+              ) {
                 state.windows.push(closedWindow);
               }
             }
+          }
+
+          // Remove needless Workspaces data from JSON
+          const { FloorpAppConstants } = ChromeUtils.importESModule(
+            "resource://floorp/FloorpAppConstants.sys.mjs"
+          );
+
+          if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
+            const { WorkspacesWindowIdUtils } = ChromeUtils.importESModule(
+              "resource://floorp/WorkspacesWindowIdUtils.mjs"
+            );
+            // win.windowUuid is Workspace window id
+            // Create existing window id set for remove needless Workspaces data
+            const savedWindowIds = new Set();
+            const storedWindowsData = state.windows.concat(
+              state._closedWindows
+            );
+            for (const win of storedWindowsData) {
+              if (win.windowUuid) {
+                savedWindowIds.add(win.windowUuid);
+              }
+            }
+
+            // async function cannnot used in this initialization function
+            // We need to use then() to wait for the result
+            // Remove needless Workspaces data from JSON
+            WorkspacesWindowIdUtils.getAllWindowAndWorkspacesData().then(
+              async json => {
+                const workspacesWindowIds = Object.keys(json.windows);
+                workspacesWindowIds.forEach(windowId => {
+                  if (!savedWindowIds.has(windowId)) {
+                    delete json.windows[windowId];
+                  }
+                });
+
+                // Update Workspaces data
+                await IOUtils.writeJSON(
+                  WorkspacesWindowIdUtils._workspacesStoreFile,
+                  json
+                );
+              }
+            );
           }
           // End of floorp injections
 
@@ -1758,7 +1801,8 @@ var SessionStoreInternal = {
     // Floorp Injections
     if (
       aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") ==
-      "true" || aWindow.floorpWebPanelWindow
+        "true" ||
+      aWindow.floorpWebPanelWindow
     ) {
       return completionPromise;
     }
@@ -3897,7 +3941,6 @@ var SessionStoreInternal = {
       }
     }
 
-
     let floorpWebPanelWindow = aWindow.floorpWebPanelWindow;
     winData.floorpWebPanelWindow = !!floorpWebPanelWindow;
 
@@ -5109,7 +5152,8 @@ var SessionStoreInternal = {
         if (aWindowId) {
           aWindow.workspacesWindowId = aWindowId;
         } else {
-          aWindow.workspacesWindowId = WorkspacesWindowUuidService.getGeneratedUuid();
+          aWindow.workspacesWindowId =
+            WorkspacesWindowUuidService.getGeneratedUuid();
         }
       }
 
