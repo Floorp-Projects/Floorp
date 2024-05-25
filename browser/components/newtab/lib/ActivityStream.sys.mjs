@@ -58,11 +58,14 @@ function showSpocs({ geo }) {
   return spocsGeo.includes(geo);
 }
 
-function showWeather() {
-  return (
-    lazy.NimbusFeatures.pocketNewtab.getVariable("newtabWeatherEnabled") ||
-    false
-  );
+function showWeather({ geo }) {
+  const weatherGeoString =
+    lazy.NimbusFeatures.pocketNewtab.getVariable("regionWeatherConfig") || "";
+  const weatherGeo = weatherGeoString
+    .split(",")
+    .map(s => s.trim())
+    .filter(item => item);
+  return weatherGeo.includes(geo);
 }
 
 // Configure default Activity Stream prefs with a plain `value` or a `getValue`
