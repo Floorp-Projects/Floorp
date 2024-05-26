@@ -270,6 +270,9 @@ skip-if = [
 ["browser_sessionStoreContainer.js"]
 
 ["browser_should_restore_tab.js"]
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && debug", #Bug 1848488
+]
 
 ["browser_sizemodeBeforeMinimized.js"]
 
