@@ -45,12 +45,21 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">ᱱᱤᱛ ᱥᱟᱺᱪᱟᱣᱟᱜ</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">ᱱᱤᱛ ᱥᱟᱺᱪᱟᱣᱟᱜ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">ᱡᱷᱚᱛᱚ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">ᱚᱪᱚᱜᱽ ᱢᱮ</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">ᱚᱪᱚᱜᱽ ᱢᱮ</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">ᱡᱷᱚᱛᱚ ᱵᱩᱠᱢᱟᱨᱠᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">ᱚᱪᱚᱜᱽ ᱢᱮ</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ᱛᱮᱭᱟᱨ ᱦᱩᱭ ᱠᱟᱱᱟ ᱢᱳᱡᱤᱞᱟ ᱫᱟᱨᱟᱭᱛᱮ ᱾</string>
@@ -144,8 +153,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ᱱᱟᱶᱟ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱥᱚᱴᱠᱚᱴ</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱥᱚᱴᱠᱚᱴ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -190,6 +201,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">ᱮᱠᱥᱴᱮᱱᱥᱚᱱᱠᱚ</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">ᱮᱠᱮᱴᱮᱱᱮᱚᱱ ᱠᱚ ᱢᱮᱱᱟᱡᱽ ᱢᱮ</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">ᱟᱨᱦᱚᱸ ᱰᱷᱮᱨ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱯᱟᱱᱛᱮ ᱢᱮ</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">ᱠᱷᱟᱛᱟ ᱵᱤᱵᱨᱚᱬ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -208,18 +223,26 @@
     <string name="browser_menu_open_in_regular_tab">ᱱᱟᱶᱟ ᱴᱮᱵᱽ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">ᱵᱚᱦᱟᱞ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ᱨᱤᱥᱭᱝᱠ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ᱥᱟᱦᱴᱟ ᱨᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">ᱥᱟᱦᱴᱟ ᱨᱮ ᱯᱟᱱᱛᱮ ᱢᱮ…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">ᱥᱟᱦᱴᱟ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱢᱮ…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">ᱦᱟᱹᱴᱤᱧ</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">ᱦᱟᱹᱴᱤᱧ ᱢᱮ…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
@@ -247,9 +270,46 @@
     <string name="browser_menu_customize_home_1">ᱚᱲᱟᱜᱥᱟᱦᱴᱟ ᱠᱩᱥᱤᱛᱮ ᱫᱚᱦᱚᱭ ᱢᱮ</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
-    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ, ᱴᱮᱵᱽ ᱟᱨ ᱟᱨᱦᱚᱸ ᱟᱭᱢᱟ ᱡᱤᱱᱤᱥᱠᱚ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ</string>
+    <string name="browser_menu_sign_in">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ, ᱴᱮᱵᱽ ᱟᱨ ᱟᱨᱦᱚᱸ ᱟᱭᱢᱟ ᱡᱤᱱᱤᱥᱠᱚ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ</string>
+
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱛᱷᱩᱢ ᱠᱟᱱᱟ</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">ᱱᱟᱶᱟ ᱱᱤᱡᱮᱨᱟᱠ ᱴᱮᱵᱽ</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">%1$s ᱨᱮ ᱱᱟᱶᱟ</string>
+
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">ᱰᱮᱥᱠᱴᱚᱯ ᱥᱟᱭᱤᱴ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">ᱦᱟᱹᱛᱤᱭᱟᱹᱨ ᱠᱚ</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">ᱱᱚᱶᱟ ᱥᱟᱦᱴᱟ ᱵᱩᱩᱠᱢᱟᱨᱠ ᱢᱮ</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">ᱵᱩᱠᱢᱟᱨᱠ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">PDF ᱞᱮᱠᱷᱟ ᱥᱟᱺᱪᱟᱣ ᱢᱮ…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">ᱯᱟᱲᱦᱟᱣ ᱧᱮᱞᱡᱚᱝ ᱞᱮᱠᱷᱟ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">ᱯᱟᱲᱦᱟᱣ ᱧᱮᱞᱡᱚᱝ ᱞᱮᱠᱷᱟ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">ᱥᱟᱦᱴᱟ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">%1$s ᱛᱮ ᱛᱚᱨᱡᱚᱢᱟ ᱠᱟᱱᱟ</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">ᱪᱷᱟᱯᱟ…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -347,8 +407,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">ᱯᱷᱚᱭᱟᱨᱯᱷᱚᱠᱥ ᱡᱟᱹᱯᱛᱤ ᱠᱷᱚᱵᱚᱨ ᱾</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">ᱟᱞᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ ᱠᱷᱚᱵᱚᱨ ᱨᱮ ᱰᱷᱮᱨ ᱡᱤᱱᱤᱥ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">ᱟᱢ ᱴᱷᱤᱠ ᱨᱮ ᱫᱚᱦᱚᱢᱮᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱠᱩᱥᱤᱭᱟᱜᱼᱟ ᱞᱮ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -556,6 +614,10 @@
     <string name="preferences_account_sync_error">ᱥᱭᱝᱠ ᱠᱚ ᱪᱟᱹᱞᱩ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱫᱩᱦᱲᱟᱹ ᱡᱩᱰᱟᱹᱣ</string>
     <!-- Preference for language -->
     <string name="preferences_language">ᱯᱟᱹᱨᱥᱤ</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">ᱛᱚᱨᱡᱚᱢᱟ</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">ᱛᱚᱨᱡᱚᱢᱟᱠᱚ</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">ᱥᱟᱹᱠᱷᱤᱭᱟᱹᱛ ᱠᱩᱥᱤᱭᱟᱜ ᱠᱚ</string>
     <!-- Preference for data collection -->
@@ -623,6 +685,16 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">ᱢᱟᱱᱟ ᱜᱮᱭᱟ</string>
 
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">ᱞᱟᱹᱠᱛᱤ</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">ᱢᱚᱱᱮᱛᱮᱭᱟᱜ</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱮᱢᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">ᱟᱢ ᱡᱩᱫᱤ ᱱᱚᱶᱟ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱪᱮᱛᱟᱱ ᱨᱮ ᱵᱷᱚᱨᱥᱟ ᱮᱫ ᱠᱷᱟᱱ, ᱟᱢ ᱫᱚ ᱡᱷᱚᱛᱚ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱨᱮ ᱦᱚᱠᱮᱢ ᱮᱢ ᱫᱟᱲᱮ ᱟᱭᱟ ᱾</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ᱠᱟᱹᱥᱴᱚᱢ ᱮᱰᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ</string>
@@ -646,7 +718,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">ᱦᱮᱡ ᱨᱩᱣᱟᱹᱲᱚᱜ ᱢᱮ</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">ᱵᱩᱠᱢᱟᱨᱠᱠᱚ</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
@@ -741,8 +815,6 @@
     <string name="preferences_sync_history">ᱱᱟᱜᱟᱢ</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱠᱚ</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
     <!-- Preference for syncing tabs -->
@@ -768,8 +840,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s on %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">ᱜᱚᱱᱚᱝ ᱦᱚᱨᱟᱠᱚ</string>
     <!-- Preference for syncing addresses -->
@@ -785,6 +855,14 @@
     <string name="fxa_tab_received_notification_name">ᱴᱮᱵᱽ ᱧᱟᱢᱮᱱᱟ</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">%s ᱠᱷᱚᱱ ᱴᱮᱵᱽ</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">%1$s ᱴᱮᱵᱽᱠᱚ ᱵᱚᱸᱫ ᱠᱟᱱᱟ : %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵᱽ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -1719,11 +1797,7 @@
     <string name="add_to_homescreen_description_2">ᱟᱢ ᱞᱚᱜᱚᱱ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱟᱨ ᱮᱯ ᱞᱮᱠᱷᱟᱱ ᱢᱟᱨᱠᱷᱤ ᱤᱫᱤ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱫᱚ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1740,46 +1814,27 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱯᱩᱨᱟᱹᱣ ᱢᱮ ᱾</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱠᱚ ᱥᱭᱝᱠ ᱢᱮ</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽᱠᱚ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ ᱵᱚᱞᱚ ᱠᱚ ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">ᱡᱷᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱠᱚ</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱚᱠᱟ %s ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱥᱭᱝᱠ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱚᱱᱟ ᱠᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">ᱟᱢ %s ᱨᱮ ᱚᱞ ᱟᱠᱟᱱ ᱥᱮ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱟᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱱᱚᱸᱰᱮ ᱞᱤᱥᱴᱤ ᱟ ᱾ ᱟᱢ ᱡᱟᱦᱟᱸᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱮᱢ ᱥᱟᱧᱪᱟᱣ ᱟ ᱚᱱᱟ ᱠᱚᱫᱚ ᱫᱟᱱᱟᱝᱟᱜᱼᱟ ᱾</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱭᱝᱠ ᱵᱟᱵᱚᱛ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">ᱥᱭᱝᱠ ᱵᱟᱵᱚᱛ ᱰᱷᱮᱨ ᱵᱟᱰᱟᱭ ᱢᱮ</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ᱪᱷᱟᱰᱟ ᱠᱚ</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱡᱟ ᱵᱟᱝ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱᱟ ᱚᱱᱟᱠᱩ ᱱᱚᱰᱮ ᱩᱫᱩᱜᱚᱣᱟ ᱾</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s ᱫᱚ ᱱᱚᱰᱮ ᱞᱤᱥᱴᱤ ᱠᱟᱱ ᱥᱟᱭᱤᱴᱠᱚᱨᱮ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱭ ᱥᱟᱧᱪᱟᱣ ᱟ ᱾</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱᱥ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱫᱚ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱝ ᱥᱟᱺᱪᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s ᱫᱚ ᱱᱚᱰᱮ ᱢᱮᱱᱟᱜ ᱞᱤᱥᱴᱤ ᱠᱟᱱ ᱥᱟᱭᱤᱴᱠᱚᱨᱮ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱭ ᱥᱟᱧᱪᱟᱣ ᱟ ᱾</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ᱡᱷᱚᱛᱚ ᱪᱷᱟᱰᱟᱠᱚ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- The header for the site that a login is for -->
@@ -1808,16 +1863,10 @@
     <string name="saved_login_reveal_password">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱫᱮᱠᱷᱟᱣ</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱩᱠᱩ</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣᱠᱟᱱ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">ᱥᱟᱧᱪᱟᱣᱟᱠᱟᱱ ᱠᱟᱰ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱞᱚᱜᱤᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱡᱟᱯᱛᱤ ᱢᱮ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">ᱟᱢᱟᱜ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱞᱟᱜᱟᱣᱢᱮ ᱟᱢᱟᱜ ᱥᱟᱺᱪᱟᱣ ᱞᱚᱜᱤᱱ ᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱟᱢᱟᱜ ᱥᱟᱧᱪᱟᱣ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ  ᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1835,8 +1884,6 @@
 
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">ᱢᱟᱲᱟᱝ ᱵᱮᱵᱷᱟᱨᱟᱜ</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱢᱮᱱᱭᱩ ᱥᱟᱞᱟᱭ ᱢᱮ</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱢᱮᱱᱩ ᱥᱮᱴ ᱢᱮ</string>
@@ -1846,17 +1893,11 @@
     <string name="preferences_autofill">ᱟᱡ ᱛᱮ ᱯᱩᱨᱟᱹᱣ</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">ᱴᱷᱤᱠᱬᱟᱤᱭᱟᱹ</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ</string>
 
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">ᱜᱚᱱᱚᱝ ᱦᱚᱨᱟᱠᱚ</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱠᱟᱰ ᱠᱚ ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡᱽ ᱢᱮ</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">ᱯᱮᱢᱮᱱᱴ ᱦᱚᱨᱟ ᱥᱟᱧᱪᱟᱣ ᱢᱮ ᱟᱨ ᱯᱮᱨᱮᱪ ᱢᱮ</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱰᱟᱴᱟ ᱫᱚ ᱮᱱᱠᱨᱤᱯᱴᱮᱰ ᱠᱟᱱᱟ</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s ᱫᱚ ᱟᱢ ᱡᱟᱦᱟᱸ ᱥᱟᱧᱪᱟᱣ ᱮᱫ ᱡᱷᱚᱛᱚ ᱛᱚᱨᱠᱟᱠᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱟ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1864,25 +1905,16 @@
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">ᱠᱟᱰ ᱥᱭᱝᱠ ᱢᱮ</string>
 
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
-
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">ᱠᱟᱰ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">ᱴᱷᱤᱠᱬᱟᱹ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">ᱴᱷᱤᱠᱬᱟᱹᱤᱭᱟᱹ ᱡᱚᱛᱚᱱ ᱮᱢ</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱴᱷᱤᱬᱟᱹᱤᱭᱟᱹ ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡ ᱢᱮ</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">ᱴᱷᱤᱬᱟᱹᱤᱭᱟᱹ ᱥᱟᱧᱪᱟᱣ ᱟᱨ ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡ ᱢᱮ</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱮᱞ, ᱤᱢᱮᱞ ᱟᱨ ᱵᱷᱮᱡᱟ ᱴᱷᱤᱠᱬᱟᱹ ᱞᱮᱠᱷᱟ ᱵᱤᱵᱨᱚᱬ ᱢᱮᱥᱟᱭ ᱢᱮ</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">ᱯᱷᱚᱱ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱤᱼᱢᱮᱞ ᱴᱷᱤᱠᱬᱟᱹ ᱥᱮᱞᱮᱫ ᱢᱮᱱᱟᱜᱼᱟ</string>
@@ -1907,8 +1939,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱛ ᱛᱮ?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">ᱠᱟᱰ ᱢᱮᱴᱟᱣᱟᱢ ᱥᱮ ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
@@ -1920,44 +1950,34 @@
     <string name="credit_cards_cancel_button">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱠᱟᱰ</string>
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱴᱷᱤᱠ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱮᱞ ᱟᱫᱮᱨ ᱢᱮ</string>
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">ᱢᱤᱫᱴᱟᱝ ᱴᱷᱤᱠ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱮᱞ ᱟᱫᱮᱨ ᱢᱮ</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱡᱟᱭᱜᱟ ᱯᱮᱨᱮᱡᱽ ᱢᱮ</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">ᱧᱩᱛᱩᱢ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">ᱥᱟᱺᱪᱟᱣᱟᱠᱟᱱ ᱠᱟᱰ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">ᱟᱢᱟᱜ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱜᱚᱱᱚᱝ ᱛᱚᱨᱠᱟᱠᱚ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱟᱢᱟᱜ ᱥᱟᱺᱪᱟᱣ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
+    <string name="credit_cards_warning_dialog_message_3">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱟᱢᱟᱜ ᱥᱟᱧᱪᱟᱣ ᱜᱚᱱᱚᱝ ᱛᱚᱨᱠᱟᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">ᱱᱤᱛᱚᱜ ᱥᱟᱡᱟᱣ ᱢᱮ</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">ᱛᱟᱭᱚᱢ ᱛᱮ</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱫᱚᱦᱚ ᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱵᱤᱵᱨᱚᱬ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2">ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱜᱚᱱᱚᱝ ᱛᱚᱨᱠᱟ ᱵᱮᱵᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱤᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">ᱴᱷᱤᱠᱬᱟᱹ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- Title of the "Edit address" screen -->
     <string name="addresses_edit_address">ᱴᱷᱤᱠᱬᱟᱹ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">ᱴᱷᱤᱠᱬᱟᱹᱤᱭᱟᱹ ᱡᱚᱛᱚᱱ ᱮᱢ</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">ᱯᱩᱭᱞᱩ ᱧᱩᱛᱩᱢ</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">ᱛᱟᱞᱟ ᱧᱩᱛᱩᱢ</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">ᱢᱩᱪᱟᱹᱫ ᱧᱩᱛᱩᱢ</string>
 
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">ᱧᱩᱛᱩᱢ</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">ᱥᱚᱰᱚᱠ ᱴᱷᱤᱠᱬᱟᱹ</string>
     <!-- The header for the city of an address -->
@@ -1982,7 +2002,7 @@
     <string name="addressess_delete_address_button">ᱴᱷᱤᱠᱬᱟᱹ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱴᱷᱤᱠᱬᱟᱹ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱛ ᱛᱮ?</string>
+    <string name="addressess_confirm_dialog_message_2">ᱱᱚᱶᱟ ᱴᱷᱤᱠᱬᱟᱹ ᱢᱮᱴᱟᱣᱟ ᱥᱮ ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2080,30 +2100,14 @@
     <string name="login_menu_delete_button">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">ᱥᱟᱯᱲᱟᱣ</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱫ ᱛᱮ?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱛ ᱛᱮ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ᱵᱟᱹᱰᱨᱟᱹ</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱮᱴᱟᱜᱟᱜ ᱠᱚ ᱞᱚᱜᱤᱱ</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱣᱤᱵ ᱴᱷᱤᱠᱬᱟᱹ ᱞᱚᱜᱤᱱ ᱵᱚᱞᱚ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱯᱲᱟᱣ ᱚᱞ ᱡᱟᱭᱜᱟ ᱾</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱞᱚᱜᱤᱱ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱯᱲᱟᱣ ᱚᱞ ᱡᱟᱭᱜᱟ ᱾</string>
-    <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱞᱚᱜᱤᱱ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱯᱲᱟᱣ ᱚᱞ ᱡᱟᱭᱜᱟ ᱾</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱵᱚᱫᱚᱞ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱢᱮ ᱾</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱯᱲᱟᱣ</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱵᱚᱞᱚ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱨᱮᱭᱟᱜ ᱫᱚᱨᱠᱟᱨ ᱢᱮᱱᱟᱜ-ᱟ</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱧᱩᱛᱩᱢ ᱫᱚᱨᱠᱟᱨ</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱨᱮᱭᱟᱜ ᱵᱟᱪᱷᱟᱣ ᱠᱚ</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">ᱦᱚᱥᱴᱧᱩᱛᱩᱢ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ</string>
     <!-- Voice search button content description  -->
@@ -2277,4 +2281,7 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">ᱵᱟᱝ ᱠᱟᱹᱢᱤ ᱴᱮᱵᱽᱠᱚᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
-</resources>
+
+    <!-- Micro survey -->
+
+    </resources>
