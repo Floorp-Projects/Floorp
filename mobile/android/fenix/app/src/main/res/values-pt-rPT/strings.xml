@@ -2685,13 +2685,13 @@
     <!-- The error message of the text field in the tab creation tool when the text field is empty -->
     <string name="debug_drawer_tab_tools_tab_quantity_empty_error">O campo de texto está vazio</string>
     <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
-    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Por favor introduza apenas inteiros positivose</string>
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Introduza apenas inteiros positivos</string>
     <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
-    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Por favor introduza um número maior que zero</string>
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Introduza um número maior que zero</string>
     <!-- The error message of the text field in the tab creation tool when the text field is a
         quantity greater than the max tabs. The first parameter is the maximum number of tabs
         that can be generated in one operation.-->
-    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Excedido o número máximo de separadores (%1$s) que podem ser gerados numa operação</string>
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Excedido o número máximo de (%1$s) separadores que podem ser gerados numa operação</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Adicionar aos separadores ativos</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->

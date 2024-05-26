@@ -2108,8 +2108,26 @@
     <string name="dialog_delete_negative">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱨᱮᱭᱟᱜ ᱵᱟᱪᱷᱟᱣ ᱠᱚ</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3">ᱣᱤᱵᱽ ᱴᱷᱤᱠᱬᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱯᱲᱟᱣ ᱚᱞ ᱡᱟᱭᱜᱟ ᱾</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3">ᱵᱤᱵᱷᱟᱨᱤᱭᱟᱹᱧᱩᱛᱩᱢ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱯᱲᱟᱣ ᱚᱞ ᱡᱟᱭᱜᱟ ᱾</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱯᱲᱟᱣ ᱚᱞ ᱡᱟᱭᱜᱟ ᱾</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2">ᱵᱚᱫᱚᱞ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱢᱮ ᱾</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2">ᱢᱤᱫᱴᱟᱹᱝ ᱥᱟᱵᱟᱫ ᱟᱫᱮᱨ ᱢᱮ</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2">ᱢᱤᱫᱴᱟᱹᱝ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱧᱩᱛᱩᱢ ᱟᱫᱮᱨ ᱢᱮ</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">ᱦᱚᱥᱴᱧᱩᱛᱩᱢ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">ᱢᱤᱫᱴᱟᱹᱝ ᱣᱮᱵᱽ ᱴᱷᱤᱠᱬᱟᱹ ᱟᱫᱮᱨ ᱢᱮ</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">ᱨᱚᱲ ᱥᱮᱸᱫᱽᱨᱟ</string>
 
@@ -2204,6 +2222,9 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">%s ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
 
+    <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">ᱟᱢᱟᱜ ᱢᱩᱞ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱛᱮ ᱩᱪᱟᱹᱲᱚᱜ ᱢᱮ</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Firefox ᱟᱡ ᱛᱮ ᱠᱷᱩᱞᱟᱹ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ, ᱤᱢᱮᱞ, ᱟᱨ ᱢᱮᱥᱮᱡᱽ ᱨᱮᱭᱟᱜ ᱞᱤᱝᱠ ᱥᱮᱴ ᱢᱮ ᱾ </string>
 
@@ -2241,6 +2262,9 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ᱥᱟᱡᱟᱣ ᱴᱷᱮᱱ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
 
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
     <string name="review_quality_check_highlights_show_less">ᱠᱚᱢ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->

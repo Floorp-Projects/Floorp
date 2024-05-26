@@ -55,6 +55,9 @@
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">ہٹاؤ</string>
 
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">نشانیاں</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="home_bookmarks_menu_item_remove">ہٹاؤ</string>
 
@@ -371,8 +374,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">فائرفوکس رازداری نوٹس</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">ساݙے رازداری نوٹس وچ ٻیا سکھو</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">اَساکوں تُہاکوں محفوظ رکّھݨ بھان٘دا ہِے</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -581,7 +582,7 @@
     <string name="preferences_language">زبان</string>
 
     <!-- Preference for translation -->
-    <string name="preferences_translation">ترجمہ</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">ترجمہ</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">ڈیٹا چوائس</string>
     <!-- Preference for data collection -->
@@ -654,10 +655,6 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">ضروری ہے</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">آپشنل</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">ویب سائٹ ڈیٹا پڑھو تے تبدیلی کرو</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">ویب سائٹ مٹاؤ</string>
 
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">ساریاں سائٹاں کیتے اجازت ݙیوو</string>
@@ -789,8 +786,6 @@
     <string name="preferences_sync_bookmarks">نشانیاں</string>
 
 
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان آں</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">پاس ورڈز</string>
     <!-- Preference for syncing tabs -->
@@ -815,8 +810,6 @@
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
     <string name="default_device_name_2">%3$s %2$s تے %1$s</string>
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">کریڈٹ کارڈز</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">ادائیگی طریقے</string>
     <!-- Preference for syncing addresses -->
@@ -1773,11 +1766,7 @@
     <string name="add_to_homescreen_description_2">تساں ایں ویب سائٹ کوں آسانی نال آپݨی ڈیوائس دی ہوم سکرین وچ شامل کر سڳدے ہو  تاں جو  فوری رسائی حاصل تھیوے تے  ایپ جیہے تجربے نال  تیزی نال براؤز کرو۔</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان تے پاس ورڈ</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">پاس ورڈز</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان تے پاس ورڈ محفوظ کرو</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">پاس ورڈ محفوظ کرو</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1792,46 +1781,28 @@
     <string name="preferences_android_autofill">ٻیاں ایپاں وچ آٹوفل کرو</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">آپݨی ڈیوائس تے موجود ٻیاں ایپاں وچ ورتݨ ناں تے پاس ورڈ بھرو۔</string>
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان  شامل کرو</string>
 
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">پاس ورڈ شامل کرو</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ اناں کوں ہم وقت کرو</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">پاس ورڈ ہم وقت کرو</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">ڈیوائساں دے مابین لاگ ان ہم وقت کرو</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">ڈیوائساں دے وِچالے پاس ورڈز کوں ہم وقت کرو</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">محفوظ تھئے لاگ ان</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">محفوظ تھئے پاس ورڈ</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">تساں جہڑے لاگ ان محفوظ کریندے ہو یا %s نال ہم وقت کریندے ہو او اِتھاں ݙکھائے ویسن۔</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">تُساں جہڑے پاس ورڈز محفوظ کرین٘دے ہِیوے یا %s نال ہم وقت کرین٘دے ہِیوے اُوہ اِتّھاں درج ہوسِن۔ تُہاݙے محفوظ کِیتا ڳئے سبّھے پاس ورڈز کوں انکرپٹ کِیتا ڳِیا ہِے۔</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">ہم وقت کرݨ بارے ٻیا سِکھو۔</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">ہم وقت کرݨ بارے ٻیا سِکھو۔</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">استثنیات</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">جہڑے لاگ ان تے پاس ورڈ محفوظ کائنی کیتے ڳئے او اِتھ ݙکھائے ویسن۔</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s اِتّھاں درج سائٹاں دے پاس ورڈز محفوظ نہ کریسی۔</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">انہاں سائٹاں کیتے لاگ تے پاس ورڈ محفوظ کائناں تھیسن۔</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s اِنّھاں سائٹاں دے پاس ورڈز محفوظ نہ کریسی۔</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">سارے استثناء مٹاؤ</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان ڳولو</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">پاس ورڈز ڳولو</string>
     <!-- The header for the site that a login is for -->
@@ -1862,16 +1833,10 @@
 
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">پاس ورڈ لکاؤ</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">آپݨے محفوظ کیتے لاگ اناں کوں ݙیکھݨ کیتے اݨ لاک کرو</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">آپݨے محفوظ تھئے پاس ورڈاں کوں ݙیکھݨ کیتے اݨ لاک کرو</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان تے پاس ورڈ دی محفوظ بݨاؤ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">آپݨے محفوظ تھئے ہوئے پاس ورڈز کوں محفوظ بݨاؤ</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">جے تہاݙے کول کوئی ٻئی ڈیوائس ہے تاں آپݨے محفوظ کیتے لاگ ان تے پاس ورڈ تائیں پہنچ کنوں بچݨ سانگے ڈیوائس لاگ ان پیٹرن، پن پاس ورڈ قائم کرو۔</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">ڄیکر تُہاݙی ڈیوائس کہیں ٻئے کول ہِے تاں آپݨے محفوظ کِیتے ڳئے پاس ورڈز تئیں پہنچ کنوں بچاوݨ کِیتے ڈیوائس لاک پیٹرن، PIN، یا پاس ورڈ مُرتّب کرو۔</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1889,8 +1854,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">ناں(A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">چھیکڑی ورتاوا</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان مینیو کوں ترتیب ݙیوو</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">پاس ورڈز مینیو کوں مُرتّب کرو</string>
@@ -1900,40 +1863,26 @@
     <string name="preferences_autofill">خودبخود بھرݨ</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">پتے</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">کریڈٹ کارڈز</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">ادائیگی طریقے</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">کارڈ محفوظ کرو تے آپݨے آپ بھرو</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">ادائیگی دے طریقے محفوظ اَتے پُر کرو</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ڈیٹا مخفی  ہے۔</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%sتُہاݙے محفوظ کِیتے ڳئے ادائیگی دے سبّھے طریقیاں کوں انکرپٹ کرین٘دا ہِے</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ڈیوائساں دے مابین کارڈ ہم وقت کرو</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">کارڈ ہم وقت کرو</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">کریڈٹ کارڈ شامل کرو</string>
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">کارڈ شامل کرو</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">محفوظ تھئے کارڈ منیج کرو</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">کارڈز منیج کرو</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">پتہ شامل کرو</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">پتے منیج کرو</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">محفوظ کرو تے پتے خودبخود بھرو</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">محفوظ کرو تے پتے پُر کرو</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">معلومات شامل کرو، مثلاً تعداد، ای میل تے شپنگ پتے</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">فون لمبرز اَتے ای میل پتے شامل ہِن</string>
@@ -1957,8 +1906,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">کارڈ مٹاؤ</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">بھلا تہاکوں پک ہے جو تساں ایہ کریڈٹ کارڈ مٹاوݨ چاہندے ہو؟</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">کارڈ مٹاؤں؟</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">مٹاؤ</string>
@@ -1970,22 +1917,14 @@
     <string name="credit_cards_cancel_button">منسوخ کرو</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">محفوظ تھئے کارڈ</string>
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">سوہݨا، ٹھیک کریڈٹ کارڈ نمبر درج کرو</string>
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">ہک درست کارڈ نمبر درج کرو۔</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">سوہݨا، ایہ خانہ پُر کرو</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">ناں شامل کرو</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">آپݨے محفوظ تھئے کارڈاں کوں ݙیکھݨ کیتے اݨ لاک کرو</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">آپݨے کریڈٹ کارڈاں کوں محفوظ بݨاؤ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">آپݨے محفوظ کِیتے ڳئے ادائیگی دے طریقیاں کوں محفوظ بݨاؤ</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">جے تہاݙے کول کوئی ٻئی ڈیوائس ہے تاں آپݨے محفوظ کیتے کریڈٹ کارڈ تائیں پہنچ کنوں بچݨ سانگے ڈیوائس لاگ ان پیٹرن، پن پاس ورڈ قائم کرو۔</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">ڄیکر تُہاݙی ڈیوائس کہیں ٻئے کول ہِے تاں آپݨے محفوظ کِیتے ڳئے ادائیگی دے طریقیاں تئیں پہنچ کنوں بچاوݨ کِیتے ڈیوائس لاک پیٹرن، PIN، یا پاس ورڈ مُرتّب کرو۔</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1994,8 +1933,6 @@
     <string name="credit_cards_warning_dialog_later">بعد وچ</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">آپݨی ڈیوائس اݨ لاک کرو</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ذخیرہ تھئی کریڈٹ کارڈ ڄاݨکاری کوں ورتݨ کیتے اݨ لاک کرو</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">محفوظ کِیتے ڳئے ادائیگی دے طریقے استعمال کرݨ کِیتے غیر مقفّل کرو</string>
     <!-- Title of the "Add address" screen -->
@@ -2004,12 +1941,6 @@
     <string name="addresses_edit_address">پتے وچ تبدیلی کرو</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">پتے منیج کرو</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">پہلا ناں</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">وچلا ناں</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">چھیکڑی ناں</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">ناں</string>
     <!-- The header for the street address of an address -->
@@ -2037,8 +1968,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">پتہ مٹاؤ</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">بھلا تہاکوں پک ہے جو تساں ایہ پتہ مٹاوݨ چاہندے ہو؟</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">ایہ پتہ مٹاؤں؟</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2141,48 +2070,28 @@
     <string name="login_menu_delete_button">مٹاؤ</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">تبدیلی کرو</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">بھلا تہاکوں پک ہے جو تساں ایہ لاگ ان مٹاوݨ چاہندے ہو؟</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">بَھلا تُہاکُوں پَک ہِے جو تُساں اِیں پاس ورڈ کوں مٹاوݨ چاہن٘دے ہِیوے؟</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">مٹاؤ</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">منسوخ کرو</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان آپشناں</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">پاس ورڈ آپشناں</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان دے ویب پتے کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">ویب سائٹ ایڈریس کِیتے قابلِ تدوین ٹیکسٹ فیلڈ۔</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان دے ورتݨ ناں کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">صارف ناں کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان دے پاس ورڈ کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">پاس ورڈ کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">لاگ ان وچ تبدیلیاں محفوظ کرو۔</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">تبدیلیاں محفوظ کرو۔</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">تبدیلی کرو</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">پاس ورڈ وچ تبدیلی کرو</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">نواں لاگ ان شامل کرو</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">پاس ورڈ شامل کرو</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">پاس ورڈ ضروری ہے</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">پاس ورڈ درج کرو</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ورتݨ ناں ضروری ہے</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">ورتݨ ناں درج کرو</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2718,7 +2627,7 @@
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">ٹیب شمار</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">فعال</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">فعال</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">غیر فعال</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2745,11 +2654,11 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">رازداری نوٹس</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">جمع کرواؤ</string>
+    <string name="micro_survey_submit_button_label">جمع کرواؤ</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">بند کرو</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">بند کرو</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">تہاݙے فیڈبیک تے تھورائت ہیں!</string>
+    <string name="micro_survey_feedback_confirmation">تہاݙے فیڈبیک تے تھورائت ہیں!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">ݙاڈھا تسلی بخش</string>
     <!-- Option for likert scale -->
