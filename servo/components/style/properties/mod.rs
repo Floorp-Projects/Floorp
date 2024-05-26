@@ -66,8 +66,6 @@ bitflags! {
 
         /// This property can be animated on the compositor.
         const CAN_ANIMATE_ON_COMPOSITOR = 0;
-        /// This shorthand property is accessible from getComputedStyle.
-        const SHORTHAND_IN_GETCS = 0;
         /// See data.py's documentation about the affects_flags.
         const AFFECTS_LAYOUT = 0;
         #[allow(missing_docs)]

@@ -134,8 +134,6 @@ def flags(prop):
             result.append(v)
     if exposed_on_getcs(prop):
         result.append("ExposedOnGetCS")
-        if prop.type() == "shorthand" and "SHORTHAND_IN_GETCS" in prop.flags:
-            result.append("ShorthandUnconditionallyExposedOnGetCS")
         if serialized_by_servo(prop):
             result.append("SerializedByServo")
     if prop.type() == "longhand" and prop.logical:
