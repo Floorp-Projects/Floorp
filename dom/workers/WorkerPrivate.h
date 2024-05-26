@@ -1383,7 +1383,8 @@ class WorkerPrivate final
   WorkerDebugger* mDebugger;
 
   workerinternals::Queue<WorkerRunnable*, 4> mControlQueue;
-  workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
+  workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue
+      MOZ_GUARDED_BY(mMutex);
 
   // Touched on multiple threads, protected with mMutex. Only modified on the
   // worker thread
