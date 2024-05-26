@@ -416,8 +416,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox 개인정보처리방침</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">개인정보 보호정책에서 자세히 알아보기</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">우리는 사용자를 안전하게 지키는 것을 좋아합니다</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -705,10 +703,6 @@
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">선택 사항</string>
 
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">웹 사이트 데이터 읽기 및 변경</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">웹 사이트 삭제</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">모든 사이트에 허용</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -835,8 +829,6 @@
     <string name="preferences_sync_history">기록</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">북마크</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">비밀번호</string>
     <!-- Preference for syncing tabs -->
@@ -863,8 +855,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$s의 %1$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">신용 카드</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">결제 방법</string>
     <!-- Preference for syncing addresses -->
@@ -1851,11 +1841,7 @@
     <string name="add_to_homescreen_description_2">이 웹 사이트를 기기의 홈 화면에 쉽게 추가하여 앱과 같은 경험을 통해 즉시 액세스하고 더 빠르게 탐색 할 수 있습니다.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인과 비밀번호</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">비밀번호</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인과 비밀번호 저장</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">비밀번호 저장</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1872,46 +1858,27 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">기기의 다른 앱에서 사용자 이름과 비밀번호를 채웁니다.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인 추가</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">비밀번호 추가</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sync 로그인</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">비밀번호 동기화</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">기기 간에 로그인 동기화</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">기기 간에 비밀번호 동기화</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">저장된 로그인</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">저장된 비밀번호</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">%s에 저장하거나 동기화한 로그인이 여기에 표시됩니다.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">%s에 저장하거나 동기화한 비밀번호는 여기에 나열됩니다. 저장한 모든 비밀번호는 암호화됩니다.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Sync에 대해 더 알아보기.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">동기화에 대해 더 알아보기</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">예외 목록</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">저장되지 않은 로그인과 비밀번호가 여기에 표시됩니다.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s는 여기에 나열된 사이트의 비밀번호를 저장하지 않습니다.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">이 사이트에 대한 로그인과 비밀번호는 저장되지 않습니다.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s는 이 사이트의 비밀번호를 저장하지 않습니다.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">모든 예외 삭제</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인 검색</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">비밀번호 검색</string>
     <!-- The header for the site that a login is for -->
@@ -1940,16 +1907,10 @@
     <string name="saved_login_reveal_password">비밀번호 보이기</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">비밀번호 숨기기</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">저장된 로그인을 보려면 잠금 해제하세요</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">저장된 비밀번호를 보려면 잠금 해제하세요</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인과 비밀번호 보안</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">저장된 비밀번호를 보호하세요</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">다른 사람이 내 기기를 가지고 있는 경우, 저장된 로그인과 비밀번호에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">다른 사람이 내 기기를 가지고 있는 경우, 저장된 비밀번호에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1968,8 +1929,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">이름 (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">마지막 사용</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인 정렬 메뉴</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">비밀번호 정렬 메뉴</string>
@@ -1979,42 +1938,28 @@
     <string name="preferences_autofill">자동 채우기</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">주소</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">신용 카드</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">결제 방법</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">카드 저장 및 자동 채우기</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">결제 방법 저장 및 채우기</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">데이터가 암호화됨</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s는 저장한 모든 결제 방법을 암호화합니다</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">기기 간에 카드 동기화</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">카드 동기화</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">신용 카드 추가</string>
 
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">카드 추가</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">저장된 카드 관리</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">카드 관리</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">주소 추가</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">주소 관리</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">주소 저장 및 자동 채우기</string>
 
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">주소 저장 및 채우기</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">숫자, 이메일 및 배송 주소와 같은 정보 포함</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">전화번호와 이메일 주소가 포함됩니다</string>
@@ -2039,8 +1984,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">카드 삭제</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">이 신용 카드를 삭제하시겠습니까?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">카드를 삭제하시겠습니까?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">삭제</string>
@@ -2054,23 +1997,14 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">저장된 카드</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">유효한 신용 카드 번호를 입력해 주세요</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">유효한 카드 번호를 입력하세요</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">이 항목을 입력하세요.</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">이름 추가</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">저장된 카드를 보려면 잠금 해제하세요</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">신용 카드 보안</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">저장된 결제 방법을 보호하세요</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">다른 사람이 내 기기를 가지고 있는 경우, 저장된 신용 카드에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">다른 사람이 내 기기를 가지고 있는 경우, 저장된 결제 방법에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2080,9 +2014,6 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">기기 잠금 해제</string>
 
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">저장된 신용 카드 정보를 사용하려면 잠금 해제하세요</string>
-
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">저장된 결제 방법을 사용하려면 잠금 해제하세요</string>
     <!-- Title of the "Add address" screen -->
@@ -2091,12 +2022,6 @@
     <string name="addresses_edit_address">주소 편집</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">주소 관리</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">이름</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">중간 이름</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">성</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">이름</string>
     <!-- The header for the street address of an address -->
@@ -2122,8 +2047,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">주소 삭제</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">이 주소를 삭제하시겠습니까?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">이 주소를 삭제하시겠습니까?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2223,48 +2146,28 @@
     <string name="login_menu_delete_button">삭제</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">편집</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">이 로그인을 삭제하시겠습니까?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">이 비밀번호를 삭제하시겠습니까?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">삭제</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">취소</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인 옵션</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">비밀번호 옵션</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인 웹 주소의 편집 가능한 텍스트 필드입니다.</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">웹 사이트 주소에 대한 편집 가능한 텍스트 필드입니다.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인 사용자 이름의 편집 가능한 텍스트 필드입니다.</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">사용자 이름에 대한 편집 가능한 텍스트 필드입니다.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">로그인 비밀번호의 편집 가능한 텍스트 필드입니다.</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">비밀번호에 대한 편집 가능한 텍스트 필드입니다.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">변경 내용을 로그인에 저장.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">변경 내용 저장.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">편집</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">비밀번호 수정</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">새 로그인 추가</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">비밀번호 추가</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">비밀번호 필요</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">비밀번호 입력</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">사용자 이름은 필수입니다</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">사용자 이름 입력</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2674,6 +2577,9 @@
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">번역 시트 닫기</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">일부 설정을 일시적으로 사용할 수 없습니다.</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">번역</string>
@@ -2696,6 +2602,9 @@
 
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">”항상 번역“ 및 ”번역 안 함“ 설정을 관리할 언어를 선택하세요</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">언어를 로드할 수 없습니다. 나중에 다시 확인해 주세요.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2720,6 +2629,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">%1$s 제거</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">사이트를 로드할 수 없습니다. 나중에 다시 확인해 주세요.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">%1$s 사이트를 삭제하시겠습니까?</string>
@@ -2821,6 +2732,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">탭 생성 도구</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">생성할 탭 수량</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">텍스트 필드가 비어 있음</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">양의 정수만 입력하세요</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">0보다 큰 숫자를 입력하세요</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">한 번의 작업으로 생성할 수 있는 최대 탭 수(%1$s)를 초과했음</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">활성 탭에 추가</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2837,12 +2758,12 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">개인정보처리방침</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">보내기</string>
+    <string name="micro_survey_submit_button_label">보내기</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">닫기</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">닫기</string>
 
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">의견을 보내 주셔서 감사합니다!</string>
+    <string name="micro_survey_feedback_confirmation">의견을 보내 주셔서 감사합니다!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">매우 만족</string>
     <!-- Option for likert scale -->
@@ -2853,6 +2774,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">불만족</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">매우 불만족</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">설문조사 열기</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">설문조사 닫기</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">닫기</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
