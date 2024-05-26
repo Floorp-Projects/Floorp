@@ -33,7 +33,9 @@ declare module "solid-js" {
     interface XULMenuitemElement extends XULElementBase {
       label?: string;
       accesskey?: string;
-      oncommand?: string;
+      type?: "checkbox";
+      checked?: boolean;
+      onCommand?: () => void;
     }
 
     interface XULRichListItem extends XULElementBase {
@@ -52,7 +54,19 @@ declare module "solid-js" {
       "xul:panel": XULElementBase;
       "xul:menupopup": XULElementBase;
       "xul:vbox": XULElementBase;
+      "xul:hbox": XULElementBase;
       "xul:box": XULElementBase;
+      "xul:toolbar": {
+        id?: string;
+        toolbarname?: string;
+        customizable?: string;
+        mode?: string;
+        context?: string;
+        accesskey?: string;
+        style?: string;
+        class?: string;
+        children: Element;
+      };
       "xul:toolbarbutton": XULElementBase;
       "xul:spacer": XULElementBase;
       "xul:splitter": XULElementBase;

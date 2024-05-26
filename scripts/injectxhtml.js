@@ -4,11 +4,10 @@ import { DOMParser } from "linkedom";
 export async function injectXHTML() {
   const path_browserxhtml =
     "dist/bin/browser/chrome/browser/content/browser/browser.xhtml";
-
   {
     const document = new DOMParser().parseFromString(
       (await fs.readFile(path_browserxhtml)).toString(),
-      "text/xml",
+      "text/xml"
     );
 
     for (const elem of document.querySelectorAll("[data-geckomixin]")) {
@@ -29,7 +28,7 @@ export async function injectXHTML() {
   {
     const document = new DOMParser().parseFromString(
       (await fs.readFile(path_preferencesxhtml)).toString(),
-      "text/xml",
+      "text/xml"
     );
 
     for (const elem of document.querySelectorAll("[data-geckomixin]")) {
