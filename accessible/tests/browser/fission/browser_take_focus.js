@@ -71,3 +71,51 @@ addAccessibleTask(
   },
   { topLevel: false, iframe: true, remoteIframe: true }
 );
+
+function focusURLBar() {
+  info("Focusing the URL bar");
+  const focused = waitForEvent(
+    EVENT_FOCUS,
+    event => event.accessible.role == ROLE_ENTRY
+  );
+  gURLBar.focus();
+  return focused;
+}
+
+/**
+ * Test takeFocus on web content when focus is in the browser UI.
+ */
+addAccessibleTask(
+  `
+<button id="outerButton">outerButton</button>
+<iframe src="data:text/html,<body id='innerDoc'><button id='innerButton'>innerButton</button>"></iframe>
+  `,
+  async function testFocusContentWhileUiFocused(browser, docAcc) {
+    await focusURLBar();
+    info("Focusing docAcc");
+    let focused = waitForEvent(EVENT_FOCUS, docAcc);
+    docAcc.takeFocus();
+    await focused;
+
+    await focusURLBar();
+    info("Focusing outerButton");
+    const outerButton = findAccessibleChildByID(docAcc, "outerButton");
+    focused = waitForEvent(EVENT_FOCUS, outerButton);
+    outerButton.takeFocus();
+    await focused;
+
+    await focusURLBar();
+    info("Focusing innerButton");
+    const innerButton = findAccessibleChildByID(docAcc, "outerButton");
+    focused = waitForEvent(EVENT_FOCUS, innerButton);
+    innerButton.takeFocus();
+    await focused;
+
+    await focusURLBar();
+    info("Focusing outerButton");
+    focused = waitForEvent(EVENT_FOCUS, outerButton);
+    outerButton.takeFocus();
+    await focused;
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);

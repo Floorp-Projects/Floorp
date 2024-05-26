@@ -19,6 +19,7 @@
 #include "nsAccessibilityService.h"
 #include "mozilla/Unused.h"
 #include "nsAccUtils.h"
+#include "nsFocusManager.h"
 #include "nsTextEquivUtils.h"
 #include "Pivot.h"
 #include "Relation.h"
@@ -1874,7 +1875,47 @@ bool RemoteAccessible::HasPrimaryAction() const {
   return mCachedFields && mCachedFields->HasAttribute(CacheKey::PrimaryAction);
 }
 
-void RemoteAccessible::TakeFocus() const { Unused << mDoc->SendTakeFocus(mID); }
+void RemoteAccessible::TakeFocus() const {
+  Unused << mDoc->SendTakeFocus(mID);
+  if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+    auto* bp = static_cast<dom::BrowserParent*>(mDoc->Manager());
+    MOZ_ASSERT(bp);
+    dom::Element* owner = bp->GetOwnerElement();
+    if (fm->GetFocusedElement() == owner) {
+      // This remote document tree is already focused. We don't need to do
+      // anything else.
+      return;
+    }
+  }
+  // Otherwise, we need to focus the <browser> or <iframe> element embedding the
+  // remote document in the parent process. If `this` is in an OOP iframe, we
+  // first need to focus the embedder iframe (and any ancestor OOP iframes). If
+  // the parent process embedder element were already focused, that would happen
+  // automatically, but it isn't. We can't simply focus the parent process
+  // embedder element before calling mDoc->SendTakeFocus because that would
+  // cause the remote document to restore focus to the last focused element,
+  // which we don't want.
+  DocAccessibleParent* embeddedDoc = mDoc;
+  Accessible* embedder = mDoc->Parent();
+  while (embedder) {
+    MOZ_ASSERT(embedder->IsOuterDoc());
+    RemoteAccessible* embedderRemote = embedder->AsRemote();
+    if (!embedderRemote) {
+      // This is the element in the parent process which embeds the remote
+      // document.
+      embedder->TakeFocus();
+      break;
+    }
+    // This is a remote <iframe>.
+    if (embeddedDoc->IsTopLevelInContentProcess()) {
+      // We only need to focus OOP iframes because these are where we cross
+      // process boundaries.
+      Unused << embedderRemote->mDoc->SendTakeFocus(embedderRemote->mID);
+    }
+    embeddedDoc = embedderRemote->mDoc;
+    embedder = embeddedDoc->Parent();
+  }
+}
 
 void RemoteAccessible::ScrollTo(uint32_t aHow) const {
   Unused << mDoc->SendScrollTo(mID, aHow);
