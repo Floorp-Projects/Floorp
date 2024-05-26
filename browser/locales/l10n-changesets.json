@@ -1713,7 +1713,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "85fbc2b9fc9e5c8ed3e70e9f31b472bdc431516a"
+        "revision": "9a11ba5f5a2f51e198fd881693979f675e485d9e"
     },
     "sl": {
         "pin": false,
