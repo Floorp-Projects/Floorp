@@ -859,7 +859,6 @@ var SessionStoreInternal = {
                 closedWindowTime <= closedTime + 5000
               ) {
                 state.windows.push(closedWindow);
-                console.log("Restored last closed window");
               }
             }
           }
@@ -876,7 +875,9 @@ var SessionStoreInternal = {
             // win.windowUuid is Workspace window id
             // Create existing window id set for remove needless Workspaces data
             const savedWindowIds = new Set();
-            const storedWindowsData = state.windows.concat(state._closedWindows);
+            const storedWindowsData = state.windows.concat(
+              state._closedWindows
+            );
             for (const win of storedWindowsData) {
               if (win.windowUuid) {
                 savedWindowIds.add(win.windowUuid);
