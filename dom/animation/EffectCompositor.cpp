@@ -83,6 +83,10 @@ bool EffectCompositor::AllowCompositorAnimationsOnFrame(
       aWarning = AnimationPerformanceWarning::Type::HasRenderingObserver;
       return false;
     }
+    const auto* frame = content->GetPrimaryFrame();
+    if (frame && frame->IsRenderingObserverContainer()) {
+      break;
+    }
     content = content->GetParent();
   }
 

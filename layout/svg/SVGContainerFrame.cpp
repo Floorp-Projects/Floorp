@@ -29,7 +29,8 @@ nsIFrame* NS_NewSVGContainerFrame(mozilla::PresShell* aPresShell,
   // If we were called directly, then the frame is for a <defs> or
   // an unknown element type. In both cases we prevent the content
   // from displaying directly.
-  frame->AddStateBits(NS_FRAME_IS_NONDISPLAY);
+  frame->AddStateBits(NS_FRAME_IS_NONDISPLAY |
+                      NS_STATE_SVG_RENDERING_OBSERVER_CONTAINER);
   return frame;
 }
 
