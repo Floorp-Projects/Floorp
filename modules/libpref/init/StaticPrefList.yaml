@@ -8574,12 +8574,6 @@
   mirror: always
   rust: true
 
-# Whether we should expose all shorthands in getComputedStyle().
-- name: layout.css.computed-style.shorthands
-  type: bool
-  value: true
-  mirror: always
-
 # Are implicit tracks in computed grid templates serialized?
 - name: layout.css.serialize-grid-implicit-tracks
   type: RelaxedAtomicBool

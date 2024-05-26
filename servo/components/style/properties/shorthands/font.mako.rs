@@ -323,7 +323,6 @@
 <%helpers:shorthand name="font-variant"
                     engines="gecko servo"
                     servo_pref="layout.legacy_layout",
-                    flags="SHORTHAND_IN_GETCS"
                     sub_properties="font-variant-caps
                                     ${'font-variant-alternates' if engine == 'gecko' else ''}
                                     ${'font-variant-east-asian' if engine == 'gecko' else ''}
@@ -463,7 +462,6 @@
 
 <%helpers:shorthand name="font-synthesis"
                     engines="gecko"
-                    flags="SHORTHAND_IN_GETCS"
                     sub_properties="font-synthesis-weight font-synthesis-style font-synthesis-small-caps font-synthesis-position"
                     derive_value_info="False"
                     spec="https://drafts.csswg.org/css-fonts-3/#propdef-font-variant">

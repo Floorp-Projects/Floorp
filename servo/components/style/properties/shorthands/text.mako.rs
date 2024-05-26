@@ -6,7 +6,6 @@
 
 <%helpers:shorthand name="text-decoration"
                     engines="gecko servo"
-                    flags="SHORTHAND_IN_GETCS"
                     sub_properties="text-decoration-line
                     ${' text-decoration-style text-decoration-color text-decoration-thickness' if engine == 'gecko' else ''}"
                     spec="https://drafts.csswg.org/css-text-decor/#propdef-text-decoration">

@@ -199,16 +199,8 @@ struct ComputedStyleMap {
     }
 
     bool IsEnabled() const {
-      if (!mCanBeExposed ||
-          !nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent)) {
-        return false;
-      }
-      if (nsCSSProps::IsShorthand(mProperty) &&
-          !StaticPrefs::layout_css_computed_style_shorthands()) {
-        return nsCSSProps::PropHasFlags(
-            mProperty, CSSPropFlags::ShorthandUnconditionallyExposedOnGetCS);
-      }
-      return true;
+      return mCanBeExposed &&
+             nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent);
     }
   };
 
@@ -2398,9 +2390,6 @@ void nsComputedDOMStyle::RegisterPrefChangeCallbacks() {
       prefs.InsertElementSorted(p->mPref);
     }
   }
-
-  prefs.AppendElement(
-      StaticPrefs::GetPrefName_layout_css_computed_style_shorthands());
 
   prefs.AppendElement(nullptr);
 

@@ -9,7 +9,6 @@ ${helpers.two_properties_shorthand(
     "overflow-x",
     "overflow-y",
     engines="gecko servo",
-    flags="SHORTHAND_IN_GETCS",
     spec="https://drafts.csswg.org/css-overflow/#propdef-overflow",
 )}
 
@@ -74,7 +73,7 @@ ${helpers.two_properties_shorthand(
 <%helpers:shorthand
     engines="gecko"
     name="page-break-before"
-    flags="SHORTHAND_IN_GETCS IS_LEGACY_SHORTHAND"
+    flags="IS_LEGACY_SHORTHAND"
     sub_properties="break-before"
     spec="https://drafts.csswg.org/css-break-3/#page-break-properties"
 >
@@ -98,7 +97,7 @@ ${helpers.two_properties_shorthand(
 <%helpers:shorthand
     engines="gecko"
     name="page-break-after"
-    flags="SHORTHAND_IN_GETCS IS_LEGACY_SHORTHAND"
+    flags="IS_LEGACY_SHORTHAND"
     sub_properties="break-after"
     spec="https://drafts.csswg.org/css-break-3/#page-break-properties"
 >
@@ -122,7 +121,7 @@ ${helpers.two_properties_shorthand(
 <%helpers:shorthand
     engines="gecko"
     name="page-break-inside"
-    flags="SHORTHAND_IN_GETCS IS_LEGACY_SHORTHAND"
+    flags="IS_LEGACY_SHORTHAND"
     sub_properties="break-inside"
     spec="https://drafts.csswg.org/css-break-3/#page-break-properties"
 >

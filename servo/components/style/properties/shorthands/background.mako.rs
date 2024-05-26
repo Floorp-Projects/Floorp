@@ -231,7 +231,6 @@
 
 <%helpers:shorthand name="background-position"
                     engines="gecko servo"
-                    flags="SHORTHAND_IN_GETCS"
                     sub_properties="background-position-x background-position-y"
                     spec="https://drafts.csswg.org/css-backgrounds-4/#the-background-position">
     use crate::properties::longhands::{background_position_x, background_position_y};
