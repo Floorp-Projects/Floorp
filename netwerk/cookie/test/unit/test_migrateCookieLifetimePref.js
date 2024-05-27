@@ -19,6 +19,17 @@ add_task(async function migrateSanitizationPrefsClearCleaningPrefs() {
   Services.prefs.setBoolPref("privacy.clearOnShutdown.downloads", true);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.sessions", true);
 
+  // Set the new clear on shutdown prefs
+  Services.prefs.setBoolPref(
+    "privacy.clearOnShutdown_v2.cookiesAndStorage",
+    false
+  );
+  Services.prefs.setBoolPref("privacy.clearOnShutdown_v2.cache", false);
+  Services.prefs.setBoolPref(
+    "privacy.clearOnShutdown_v2.historyFormDataAndDownloads",
+    true
+  );
+
   // The migration code is called in cookieService::Init
   Services.cookies;
 
@@ -46,14 +57,32 @@ add_task(async function migrateSanitizationPrefsClearCleaningPrefs() {
   );
 
   Assert.ok(
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cache"),
+    "Clearing cache on shutdown (v2) is still selected"
+  );
+
+  Assert.ok(
     Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
     "Clearing offline apps on shutdown is selected"
+  );
+
+  Assert.ok(
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
+    "Clearing cookies and storage (v2) on shutdown is selected"
   );
 
   Assert.ok(
     !Services.prefs.getBoolPref("privacy.clearOnShutdown.downloads"),
     "Clearing downloads on shutdown is not set anymore"
   );
+
+  Assert.ok(
+    !Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+    ),
+    "Clearing history, form data and downloads (v2) on shutdown is not set anymore"
+  );
+
   Assert.ok(
     !Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions"),
     "Clearing active logins on shutdown is not set anymore"
