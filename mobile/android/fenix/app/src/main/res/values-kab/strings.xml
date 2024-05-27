@@ -383,8 +383,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Tasertit tabaḍnit n Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Issin ugar deg tsertit-nneɣ n tbaḍnit</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Nḥemmel ad teqqimeḍ d aɣellsan</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -575,6 +573,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_account_sync_error">Ales tuqqna akken ad ikemmel umtawi</string>
     <!-- Preference for language -->
     <string name="preferences_language">Tutlayt</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Tasuqilt</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Tisuqilin</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Afran n yisefka</string>
     <!-- Preference for data collection -->
@@ -629,6 +631,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for add_ons -->
     <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Izegrar</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Isiɣzaf</string>
     <!-- Preference for installing a local add-on -->
     <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Sebded azegrir seg ufaylu</string>
     <!-- Preference for installing a local extension -->
@@ -646,10 +650,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Yettawsra</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Afrayan</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Γeṛ syen tesnefleḍ isefka n usmel web</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Kkes asmel web</string>
+
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Sireg  meṛṛa ismal</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -671,6 +674,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="customize_toggle_jump_back_in">Uɣal ɣer deffir</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Ticraḍ n yisebtar n melmi kan</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Ticraḍ n yisebtar</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Yemmẓer melmi kan</string>
@@ -727,13 +732,20 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Button text of the Nimbus message for add-ons general availability. -->
     <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Snirem izegrar</string>
 
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Snirem isiɣzaf</string>
+
     <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
     <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Azegrir yensa i kra n wakud</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Isiɣzaf nsan i kra n wakud</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Yiwen neɣ ugar n yizegrar ḥebsen, rran anagraw-ik d arurkid. %1$s ur yessaweḍ ara ad yales asenker n uzegrir(yizegrar).\n\nIzegrar ugin ad alsen tanekra ɣef teɣzi n tiɣimit-a.\n\Kkes neɣ sens izegrar-a, ahat ad yefru wugur-a.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Ɛreḍ asenker n uzegrir</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Ԑreḍ allus n usenker n yisiɣzaf</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Kemml s uzegrir yensa</string>
 
@@ -750,8 +762,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_sync_history">Azray</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Ticraḍ n yisebtar</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Inekcam</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Awalen uffiren</string>
     <!-- Preference for syncing tabs -->
@@ -779,8 +789,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s deg %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Tikarḍiwin n usmad</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Tarrayin n uxelleṣ</string>
     <!-- Preference for syncing addresses -->
@@ -1734,11 +1742,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="add_to_homescreen_description_2">Tzemreḍ s sshal ad ternuḍ asmel-a web ɣer ugdil agejdan n yibenk-inek·inem i wakken ad tesɛuḍ anekcum askudan d tunigin taruradt s termt i icuban asnas.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Inekcam d wawalen uffiren</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Awalen uffiren</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sekles inekcam d wawalen uffiren</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Sekles awalen uffiren</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1755,38 +1759,19 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Ččar ismawen n useqdac d wawalen uffiren deg yisnasen-nniḍen ɣef yibenk-ik·im.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Rnu anekcum</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Rnu awal uffir</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Mtawi inekcam</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Mtawi awalen uffiren</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Mtawi inekcam gqr yibenkan</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Inekcam yettwakelsen</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Awalen uffiren yettwakelsen</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Anekcum i tḥerzeḍ ɣer %s ad d-ittwasken da.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Issin ugar ɣef umtawi.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Issin ugar ɣef umtawi</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Tisuraf</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Inekcam akked wawalen uffiren ur yettwaskelsen ara ad ttwaseknen dagi.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Inekcam akked wawalen uffiren ur ttwaseklasen ara i yismal-a.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Kkes akk tisuraf</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Nadi inekcam</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Nadi awalen uffiren</string>
     <!-- The header for the site that a login is for -->
@@ -1815,14 +1800,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="saved_login_reveal_password">Sken awal uffir</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Ffer awal uffir</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Serreḥ akken ad tsekneḍ inekcam-ik yettwaskelsen</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Mmesten inekcam d wawalen uffiren</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Seɣles awalen-ik·im uffiren i yettwaskelsen</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Sbadu azenziɣ n usekkeṛ, tangal PIN, neɣ awal uffir akken ad temmesteneḍ inekcam-ik akked wawlen-ik uffiren yettwaskelsen ticki yella win ikecmen ɣer yibenk-ik.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Ticki</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1840,44 +1819,27 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Aseqdec aneggaru</string>
 
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Umuɣ n usemyizwer n yinekcam</string>
-
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Taččart tawurmant</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Tansiwin</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Tikarḍiwin n usmad</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Tarrayin n uxelleṣ</string>
-    <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Asekles d taččart tawurmant n tkarḍiwin</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Isefka ttwawgelhen</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Mtawi tikarḍiwin gar yibenkan</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Mtawi tikarḍiwin</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Rnu takarḍa n usmad</string>
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Rnu takarḍa</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Sefrek tikerḍiwin yettwaskelsen</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Sefrek tikarḍiwin</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Rnu tansa</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Sefrek tansiwin</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Asekles d taččart tawurmant n tansiwin</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Sekles; teččareḍ tansiwin</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Seddu talɣut am wuṭṭunen, imayl akked tansiwin n usiweḍ</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Seddu ula uṭṭunen n tiliɣri d tansiwin n yimayl</string>
@@ -1901,8 +1863,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kkes takarḍa</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Tebɣiḍ s tidet ad tekkseḍ takarḍa-a n usmad?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Kkes takarḍa?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Kkes</string>
@@ -1915,29 +1875,18 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Tikerḍiwin yettwasekles</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ma ulac aɣilif sekcem uṭṭun ameɣtu n tkarḍa n usmad</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Sekcem uṭṭun n tkarḍa ameɣtu</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ttxil-k·m ččar urti-a</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Rnu isem</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Kkes asekkeṛ i wakken ad twaliḍ tikerḍiwin-ik·im yettwaskelsen</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Seɣles tikerḍiwin-ik·im n usmad</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Sbadu taneɣruft n usekkeṛ n yibenk, tangalt PIN neq awal uffir i ummesten n tkerḍiwin-ik·im n usmad yettwaskelsen ticki yella win ikecmen ɣer yibenk-inek·inem.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Sbadu tura</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">Ticki</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Serreḥ i ibenk-inek·inem</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Kkes asekkeṛ i wakken ad tesqedceḍ talɣut n tkarḍa n usmad</string>
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Rnu tansa</string>
@@ -1945,12 +1894,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="addresses_edit_address">Ẓreg tansa</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Sefrek tansiwin</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Aɣara</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Isem alemmas</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Isem</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Isem</string>
     <!-- The header for the street address of an address -->
@@ -1976,8 +1919,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Kkes tansa</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">D tidet tebɣiḍ ad tekkseḍ tansa-a?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Kkes tansa-a?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2078,40 +2019,20 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="login_menu_delete_button">Kkes</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Ẓreg</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Tebɣiḍ ad tekseḍ anekcum-agi?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Kkes</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Sefsex</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Iɣewwaren n unekcum</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Tixtiṛiyin n wawal uffir</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Urti n uḍris yettusenfal i tansa n unekcum n web.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Urti n uḍris yettusenfal i yisem n useqdac n unekcum.</string>
-    <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Urti n uḍris yettusenfal i wawal uffir n unekcum.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Sekles isenfaln unekcum.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Sekles isenfal.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Ẓreg</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Ẓreg awal uffir</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Rnu anekcum amaynut</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Rnu awal uffir</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Awal uffir yettusra</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Sekcem awal uffir</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Isem n useqdac yettwasra</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Sekcem isem n useqdac</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2535,7 +2456,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Amḍan n waccaren</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Urmid</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Urmid</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Insa</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->

@@ -2521,6 +2521,9 @@
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">Loka þýðingarblaði</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">Sumar stillingar eru ekki aðgengilegar eins og stendur.</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">Þýðingar</string>
@@ -2542,6 +2545,9 @@
     <string name="automatic_translation_toolbar_title_preference">Sjálfvirk þýðing</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">Veldu tungumál til að stjórna stillingum á „alltaf þýða“ og „aldrei þýða“.</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">Ekki tókst að hlaða tungumálum. Athugaðu aftur síðar.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2566,6 +2572,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Fjarlægja %1$s</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">Ekki tókst að hlaðið inn vefsvæðum. Athugaðu aftur síðar.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Eyða %1$s?</string>
@@ -2665,6 +2673,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">Verkfæri til að búa til flipa</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Fjöldi flipa sem á að búa til</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Textareiturinn er tómur</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Settu aðeins inn jákvæðar heiltölur</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Settu inn tölu sem er stærri en núll</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Farið yfir hámarksfjölda flipa (%1$s) sem hægt er að búa til í einni aðgerð</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Bæta við virka flipa</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2685,7 +2703,7 @@
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Loka</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Takk fyrir álit þitt!</string>
+    <string name="micro_survey_feedback_confirmation">Takk fyrir álit þitt!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Mjög ánægð/ur</string>
     <!-- Option for likert scale -->
@@ -2696,6 +2714,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">Óánægð/ur</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Mjög óánægð/ur</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Opna könnun</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Loka könnun</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Loka</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->

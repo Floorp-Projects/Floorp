@@ -241,7 +241,7 @@
       <ul>
         <li>Kan objektet ha bytt namn, tagits bort eller flyttat?</li>
         <li>Finns det stavfel, stor bokstav eller annat typografiskt fel i adressen?</li>
-        <li>Har du tillräckliga åtkomstbehörigheter till den begärda objektet?</li>
+        <li>Har du tillräckliga åtkomstbehörigheter till det begärda objektet?</li>
       </ul>
     ]]></string>
 
