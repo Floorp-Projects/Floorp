@@ -17,6 +17,11 @@
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __APPLE__
+#include <sys/utsname.h>
+#endif
+
+#include "mozilla/gtest/MozHelpers.h"
 
 // #define ENABLE_NORMAL_LOG
 // #define ENABLE_VERBOSE_LOG
@@ -207,6 +212,8 @@ TEST(cubeb, duplex_collection_change_no_unregister)
   cubeb * ctx;
   int r;
 
+  mozilla::gtest::DisableCrashReporter();
+
   r = common_init(&ctx, "Cubeb duplex example with collection change");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
 
@@ -294,6 +301,17 @@ TEST(cubeb, one_duplex_one_input)
   int r;
   user_state_duplex duplex_stream_state;
   uint32_t latency_frames = 0;
+
+  // Disabled on 10.15, see bug 1867183
+#ifdef __APPLE__
+  struct utsname uts;
+  uname(&uts);
+  // 10.15 correspond to Darwin 19
+  if (strncmp(uts.release, "19", 2) == 0) {
+    printf("Test disabled on macOS 10.15, exiting.\n");
+    return;
+  }
+#endif
 
   r = common_init(&ctx, "Cubeb duplex example");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
