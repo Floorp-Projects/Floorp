@@ -719,6 +719,7 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
     // check that the 2231/5987 result decodes properly given the
     // specified character set
     if (!IsValidOctetSequenceForCharset(charsetB, caseBResult)) {
+      free(caseBResult);
       caseBResult = nullptr;
     }
   }
@@ -727,6 +728,7 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
     // check that the 2231/5987 result decodes properly given the
     // specified character set
     if (!IsValidOctetSequenceForCharset(charsetCD, caseCDResult)) {
+      free(caseCDResult);
       caseCDResult = nullptr;
     }
   }
