@@ -8198,13 +8198,13 @@ IPCResult ContentParent::RecvFOGData(ByteBuf&& buf) {
 
 mozilla::ipc::IPCResult ContentParent::RecvSetContainerFeaturePolicy(
     const MaybeDiscardedBrowsingContext& aContainerContext,
-    MaybeFeaturePolicyInfo&& aContainerFeaturePolicyInfo) {
+    FeaturePolicy* aContainerFeaturePolicy) {
   if (aContainerContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
 
   auto* context = aContainerContext.get_canonical();
-  context->SetContainerFeaturePolicy(std::move(aContainerFeaturePolicyInfo));
+  context->SetContainerFeaturePolicy(aContainerFeaturePolicy);
 
   return IPC_OK();
 }
