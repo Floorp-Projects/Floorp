@@ -10,7 +10,8 @@ var { loader, require } = ChromeUtils.importESModule(
 
 var { useDistinctSystemPrincipalLoader, releaseDistinctSystemPrincipalLoader } =
   ChromeUtils.importESModule(
-    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
+    { global: "shared" }
   );
 
 // Require this module to setup core modules

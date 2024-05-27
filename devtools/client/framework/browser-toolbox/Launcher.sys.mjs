@@ -12,13 +12,16 @@ const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { require } from "resource://devtools/shared/loader/Loader.sys.mjs";
-import {
-  useDistinctSystemPrincipalLoader,
-  releaseDistinctSystemPrincipalLoader,
-} from "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs";
 import { Subprocess } from "resource://gre/modules/Subprocess.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+const {
+  useDistinctSystemPrincipalLoader,
+  releaseDistinctSystemPrincipalLoader,
+} = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
+  { global: "shared" }
+);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
