@@ -9587,7 +9587,10 @@ mozilla::ipc::IPCResult Database::RecvBlocked() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mClosed)) {
-    return IPC_FAIL(this, "Database already closed!");
+    // Even though the sender checks the DB for not being closed, too,
+    // there is a potential race with an ongoing origin clearing which
+    // might have invalidated the DB in the meantime. Just ignore.
+    return IPC_OK();
   }
 
   DatabaseActorInfo* info;
