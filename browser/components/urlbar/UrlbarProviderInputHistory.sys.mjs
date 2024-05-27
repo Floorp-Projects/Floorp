@@ -153,7 +153,9 @@ class ProviderInputHistory extends UrlbarProvider {
             userContextId: row.getResultByName("userContextId") || 0,
           }
         );
-        if (lazy.UrlbarPrefs.get("secondaryActions.featureGate")) {
+        if (
+          lazy.UrlbarPrefs.getScotchBonnetPref("secondaryActions.featureGate")
+        ) {
           payload[0].action = {
             key: "tabswitch",
             l10nId: "urlbar-result-action-switch-tab",

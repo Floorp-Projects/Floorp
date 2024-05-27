@@ -22,11 +22,7 @@ let loadURI = async (browser, uri) => {
 
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.quickactions.enabled", true],
-      ["browser.urlbar.secondaryActions.featureGate", true],
-      ["browser.urlbar.contextualSearch.enabled", true],
-    ],
+    set: [["browser.urlbar.scotchBonnet.enableOverride", true]],
   });
 
   ActionsProviderQuickActions.addAction("testaction", {

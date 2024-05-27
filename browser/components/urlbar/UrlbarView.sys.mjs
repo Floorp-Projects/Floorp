@@ -1860,7 +1860,9 @@ export class UrlbarView {
     switch (result.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         // Hide chichlet when showing secondaryActions.
-        if (lazy.UrlbarPrefs.get("secondaryActions.featureGate")) {
+        if (
+          lazy.UrlbarPrefs.getScotchBonnetPref("secondaryActions.featureGate")
+        ) {
           break;
         }
         actionSetter = () => {

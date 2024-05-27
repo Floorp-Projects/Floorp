@@ -29,7 +29,7 @@ class ProviderQuickActions extends ActionsProvider {
 
   isActive(queryContext) {
     return (
-      lazy.UrlbarPrefs.get(ENABLED_PREF) &&
+      lazy.UrlbarPrefs.getScotchBonnetPref(ENABLED_PREF) &&
       !queryContext.searchMode &&
       queryContext.trimmedSearchString.length < 50 &&
       queryContext.trimmedSearchString.length >
