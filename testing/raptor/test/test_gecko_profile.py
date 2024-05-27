@@ -7,6 +7,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+from unittest.mock import patch
 
 import mozunit
 
@@ -19,7 +20,9 @@ sys.path.insert(0, raptor_dir)
 from gecko_profile import GeckoProfile
 
 
-def test_browsertime_profiling():
+@patch("logger.logger.RaptorLogger.info")
+@patch("logger.logger.RaptorLogger.critical")
+def test_browsertime_profiling(mock_log_info, mock_log_critical):
     result_dir = tempfile.mkdtemp()
     # untar geckoProfile.tar
     with tarfile.open(os.path.join(here, "geckoProfileTest.tar")) as f:

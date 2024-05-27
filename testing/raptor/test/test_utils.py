@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+from unittest.mock import patch
 
 import mozunit
 import pytest
@@ -40,7 +41,8 @@ def test_transform_platform_processor(processor):
         assert "_x64" in transformed
 
 
-def test_write_yml_file():
+@patch("logger.logger.RaptorLogger.info")
+def test_write_yml_file(mock_info):
     yml_file = os.path.join(tempfile.mkdtemp(), "utils.yaml")
 
     yml_data = dict(args=["--a", "apple", "--b", "banana"], env=dict(LOG_VERBOSE=1))
