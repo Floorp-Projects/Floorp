@@ -530,8 +530,7 @@ renaming_overrides_prefixing = true
 """
 
 "TextTransform" = """
-  static inline StyleTextTransform None();
-  inline bool IsNone() const;
+  bool IsNone() const { return *this == NONE; }
 """
 
 "TextUnderlinePosition" = """

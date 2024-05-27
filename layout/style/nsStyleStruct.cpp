@@ -2800,7 +2800,7 @@ static StyleAbsoluteColor DefaultColor(const Document& aDocument) {
 nsStyleText::nsStyleText(const Document& aDocument)
     : mColor(DefaultColor(aDocument)),
       mForcedColorAdjust(StyleForcedColorAdjust::Auto),
-      mTextTransform(StyleTextTransform::None()),
+      mTextTransform(StyleTextTransform::NONE),
       mTextAlign(StyleTextAlign::Start),
       mTextAlignLast(StyleTextAlignLast::Auto),
       mTextJustify(StyleTextJustify::Auto),

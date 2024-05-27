@@ -528,7 +528,7 @@ void MathMLTextRunFactory::RebuildTextRun(
 
     if (singleCharMI && mathVar == StyleMathVariant::None &&
         (!StaticPrefs::mathml_legacy_mathvariant_attribute_disabled() ||
-         styles[i]->mTextTransform.case_ == StyleTextTransformCase::MathAuto)) {
+         styles[i]->mTextTransform & StyleTextTransform::MATH_AUTO)) {
       mathVar = StyleMathVariant::Italic;
     }
 

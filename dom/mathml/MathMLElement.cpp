@@ -395,7 +395,7 @@ void MathMLElement::MapMiAttributesInto(MappedDeclarationsBuilder& aBuilder) {
       str.CompressWhitespace();
       if (value->GetStringValue().LowerCaseEqualsASCII("normal")) {
         aBuilder.SetKeywordValue(eCSSProperty_text_transform,
-                                 StyleTextTransformCase::None);
+                                 StyleTextTransform::NONE._0);
       }
     }
   }

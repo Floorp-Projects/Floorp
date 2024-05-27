@@ -12,9 +12,8 @@ use crate::values::generics::text::InitialLetter as GenericInitialLetter;
 use crate::values::generics::text::{GenericTextDecorationLength, GenericTextIndent, Spacing};
 use crate::values::specified::length::{Length, LengthPercentage};
 use crate::values::specified::{AllowQuirks, Integer, Number};
-use cssparser::{Parser, Token};
+use cssparser::Parser;
 use icu_segmenter::GraphemeClusterSegmenter;
-use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
 use style_traits::values::SequenceWriter;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
@@ -262,119 +261,6 @@ impl TextDecorationLine {
     PartialEq,
     SpecifiedValueInfo,
     ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[repr(C)]
-/// Specified value of the text-transform property, stored in two parts:
-/// the case-related transforms (mutually exclusive, only one may be in effect), and others (non-exclusive).
-pub struct TextTransform {
-    /// Case transform, if any.
-    pub case_: TextTransformCase,
-    /// Non-case transforms.
-    pub other_: TextTransformOther,
-}
-
-impl TextTransform {
-    #[inline]
-    /// Returns the initial value of text-transform
-    pub fn none() -> Self {
-        TextTransform {
-            case_: TextTransformCase::None,
-            other_: TextTransformOther::empty(),
-        }
-    }
-    #[inline]
-    /// Returns whether the value is 'none'
-    pub fn is_none(&self) -> bool {
-        self.case_ == TextTransformCase::None && self.other_.is_empty()
-    }
-}
-
-// TODO: This can be simplified by deriving it.
-impl Parse for TextTransform {
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        let mut result = TextTransform::none();
-
-        // Case keywords are mutually exclusive; other transforms may co-occur.
-        loop {
-            let location = input.current_source_location();
-            let ident = match input.next() {
-                Ok(&Token::Ident(ref ident)) => ident,
-                Ok(other) => return Err(location.new_unexpected_token_error(other.clone())),
-                Err(..) => break,
-            };
-
-            match_ignore_ascii_case! { ident,
-                "none" if result.is_none() => {
-                    return Ok(result);
-                },
-                "uppercase" if result.case_ == TextTransformCase::None => {
-                    result.case_ = TextTransformCase::Uppercase
-                },
-                "lowercase" if result.case_ == TextTransformCase::None => {
-                    result.case_ = TextTransformCase::Lowercase
-                },
-                "capitalize" if result.case_ == TextTransformCase::None => {
-                    result.case_ = TextTransformCase::Capitalize
-                },
-                "math-auto" if result.case_ == TextTransformCase::None &&
-                    result.other_.is_empty() => {
-                    result.case_ = TextTransformCase::MathAuto;
-                    return Ok(result);
-                },
-                "full-width" if !result.other_.intersects(TextTransformOther::FULL_WIDTH) => {
-                    result.other_.insert(TextTransformOther::FULL_WIDTH)
-                },
-                "full-size-kana" if !result.other_.intersects(TextTransformOther::FULL_SIZE_KANA) => {
-                    result.other_.insert(TextTransformOther::FULL_SIZE_KANA)
-                },
-                _ => return Err(location.new_custom_error(
-                    SelectorParseErrorKind::UnexpectedIdent(ident.clone())
-                )),
-            }
-        }
-
-        if result.is_none() {
-            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
-        } else {
-            Ok(result)
-        }
-    }
-}
-
-impl ToCss for TextTransform {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        if self.is_none() {
-            return dest.write_str("none");
-        }
-
-        if self.case_ != TextTransformCase::None {
-            self.case_.to_css(dest)?;
-            if !self.other_.is_empty() {
-                dest.write_char(' ')?;
-            }
-        }
-
-        self.other_.to_css(dest)
-    }
-}
-
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
     ToCss,
     ToResolvedValue,
     ToShmem,
@@ -409,16 +295,57 @@ pub enum TextTransformCase {
     ToResolvedValue,
     ToShmem,
 )]
-#[css(bitflags(mixed = "full-width,full-size-kana"))]
+#[css(bitflags(
+    single = "none,math-auto",
+    mixed = "uppercase,lowercase,capitalize,full-width,full-size-kana",
+    validate_mixed = "Self::validate_mixed_flags",
+))]
 #[repr(C)]
-/// Specified keyword values for non-case transforms in the text-transform property. (Non-exclusive.)
-pub struct TextTransformOther(u8);
+/// Specified value for the text-transform property.
+/// (The spec grammar gives
+/// `none | math-auto | [capitalize | uppercase | lowercase] || full-width || full-size-kana`.)
+/// https://drafts.csswg.org/css-text-4/#text-transform-property
+pub struct TextTransform(u8);
 bitflags! {
-    impl TextTransformOther: u8 {
+    impl TextTransform: u8 {
+        /// none
+        const NONE = 0;
+        /// All uppercase.
+        const UPPERCASE = 1 << 0;
+        /// All lowercase.
+        const LOWERCASE = 1 << 1;
+        /// Capitalize each word.
+        const CAPITALIZE = 1 << 2;
+        /// Automatic italicization of math variables.
+        const MATH_AUTO = 1 << 3;
+
+        /// All the case transforms, which are exclusive with each other.
+        const CASE_TRANSFORMS = Self::UPPERCASE.0 | Self::LOWERCASE.0 | Self::CAPITALIZE.0 | Self::MATH_AUTO.0;
+
         /// full-width
-        const FULL_WIDTH = 1 << 0;
+        const FULL_WIDTH = 1 << 4;
         /// full-size-kana
-        const FULL_SIZE_KANA = 1 << 1;
+        const FULL_SIZE_KANA = 1 << 5;
+    }
+}
+
+impl TextTransform {
+    /// Returns the initial value of text-transform
+    #[inline]
+    pub fn none() -> Self {
+        Self::NONE
+    }
+
+    /// Returns whether the value is 'none'
+    #[inline]
+    pub fn is_none(self) -> bool {
+        self == Self::NONE
+    }
+
+    fn validate_mixed_flags(&self) -> bool {
+        let case = self.intersection(Self::CASE_TRANSFORMS);
+        // Case bits are exclusive with each other.
+        case.is_empty() || case.bits().is_power_of_two()
     }
 }
 

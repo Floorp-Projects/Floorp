@@ -5364,8 +5364,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
         BorderBottomStyle => get_from_computed::<BorderStyle>(value),
         BorderLeftStyle => get_from_computed::<BorderStyle>(value),
         TextTransform => {
-            debug_assert_eq!(value, structs::StyleTextTransformCase_None as u32);
-            TextTransform::none()
+            debug_assert_eq!(value, 0);
+            TextTransform::NONE
         },
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {

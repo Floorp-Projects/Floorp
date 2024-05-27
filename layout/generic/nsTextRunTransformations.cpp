@@ -319,8 +319,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
   uint32_t sigmaIndex = uint32_t(-1);
   nsUGenCategory cat;
 
-  StyleTextTransform style =
-      aGlobalTransform.valueOr(StyleTextTransform::None());
+  StyleTextTransform style = aGlobalTransform.valueOr(StyleTextTransform::NONE);
   bool forceNonFullWidth = false;
   const nsAtom* lang = aLanguage;
 
@@ -376,11 +375,10 @@ bool nsCaseTransformTextRunFactory::TransformString(
 
     // Skip case transform if we're masking current character.
     if (!maskPassword) {
-      switch (style.case_) {
-        case StyleTextTransformCase::None:
+      switch ((style & StyleTextTransform::CASE_TRANSFORMS)._0) {
+        case StyleTextTransform::NONE._0:
           break;
-
-        case StyleTextTransformCase::Lowercase:
+        case StyleTextTransform::LOWERCASE._0:
           if (languageSpecificCasing == eLSCB_Turkish) {
             if (ch == 'I') {
               ch = LATIN_SMALL_LETTER_DOTLESS_I;
@@ -545,7 +543,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
           ch = ToLowerCase(ch);
           break;
 
-        case StyleTextTransformCase::Uppercase:
+        case StyleTextTransform::UPPERCASE._0:
           if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
             ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
             break;
@@ -688,7 +686,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
           }
           break;
 
-        case StyleTextTransformCase::Capitalize:
+        case StyleTextTransform::CAPITALIZE._0:
           if (aTextRun) {
             if (capitalizeDutchIJ && ch == 'j') {
               ch = 'J';
@@ -744,7 +742,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
           }
           break;
 
-        case StyleTextTransformCase::MathAuto:
+        case StyleTextTransform::MATH_AUTO._0:
           // text-transform: math-auto is used for automatic italicization of
           // single-char <mi> elements. However, some legacy cases (italic style
           // fallback and <mi> with leading/trailing whitespace) are still
@@ -768,19 +766,17 @@ bool nsCaseTransformTextRunFactory::TransformString(
             }
           }
           break;
-
         default:
           MOZ_ASSERT_UNREACHABLE("all cases should be handled");
           break;
       }
 
       if (!aCaseTransformsOnly) {
-        if (!forceNonFullWidth &&
-            (style.other_ & StyleTextTransformOther::FULL_WIDTH)) {
+        if (!forceNonFullWidth && (style & StyleTextTransform::FULL_WIDTH)) {
           ch = mozilla::unicode::GetFullWidth(ch);
         }
 
-        if (style.other_ & StyleTextTransformOther::FULL_SIZE_KANA) {
+        if (style & StyleTextTransform::FULL_SIZE_KANA) {
           // clang-format off
           static const uint32_t kSmallKanas[] = {
               // ぁ   ぃ      ぅ      ぇ      ぉ      っ      ゃ      ゅ      ょ
@@ -899,9 +895,7 @@ void nsCaseTransformTextRunFactory::RebuildTextRun(
   AutoTArray<RefPtr<nsTransformedCharStyle>, 50> styleArray;
 
   auto globalTransform =
-      mAllUppercase
-          ? Some(StyleTextTransform{StyleTextTransformCase::Uppercase, {}})
-          : Nothing();
+      mAllUppercase ? Some(StyleTextTransform::UPPERCASE) : Nothing();
   bool mergeNeeded = TransformString(
       aTextRun->mString, convertedString, globalTransform, mMaskChar,
       /* aCaseTransformsOnly = */ false, nullptr, charsToMergeArray,
