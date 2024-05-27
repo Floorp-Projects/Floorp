@@ -283,7 +283,25 @@ impl PingType {
                     ping.name
                 );
 
-                if !ping.schedules_pings.is_empty() {
+                if ping.schedules_pings.is_empty() {
+                    let ping_schedule = glean
+                        .ping_schedule
+                        .get(ping.name)
+                        .map(|v| &v[..])
+                        .unwrap_or(&[]);
+
+                    if !ping_schedule.is_empty() {
+                        log::info!(
+                            "The ping '{}' is being used to schedule other pings: {:?}",
+                            ping.name,
+                            ping_schedule
+                        );
+
+                        for scheduled_ping_name in ping_schedule {
+                            glean.submit_ping_by_name(scheduled_ping_name, reason);
+                        }
+                    }
+                } else {
                     log::info!(
                         "The ping '{}' is being used to schedule other pings: {:?}",
                         ping.name,

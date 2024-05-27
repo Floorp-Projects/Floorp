@@ -137,6 +137,10 @@ pub struct InternalConfiguration {
     pub experimentation_id: Option<String>,
     /// Whether to enable internal pings. Default: true
     pub enable_internal_pings: bool,
+    /// A ping schedule map.
+    /// Maps a ping name to a list of pings to schedule along with it.
+    /// Only used if the ping's own ping schedule list is empty.
+    pub ping_schedule: HashMap<String, Vec<String>>,
 }
 
 /// How to specify the rate at which pings may be uploaded before they are throttled.

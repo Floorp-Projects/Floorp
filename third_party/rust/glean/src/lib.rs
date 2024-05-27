@@ -123,6 +123,7 @@ fn initialize_internal(cfg: Configuration, client_info: ClientInfoMetrics) -> Op
         enable_event_timestamps: cfg.enable_event_timestamps,
         experimentation_id: cfg.experimentation_id,
         enable_internal_pings: cfg.enable_internal_pings,
+        ping_schedule: cfg.ping_schedule,
     };
 
     glean_core::glean_initialize(core_cfg, client_info.into(), callbacks);

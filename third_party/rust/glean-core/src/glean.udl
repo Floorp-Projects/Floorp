@@ -91,6 +91,7 @@ dictionary InternalConfiguration {
     boolean enable_event_timestamps;
     string? experimentation_id;
     boolean enable_internal_pings;
+    record<string, sequence<string>> ping_schedule;
 };
 
 // How to specify the rate pings may be uploaded before they are throttled.

@@ -1423,3 +1423,51 @@ fn configure_ping_throttling() {
     // `seconds_per_interval` before running the next test, since shutting down
     // will wait for the queue to clear.
 }
+
+#[test]
+fn pings_ride_along_builtin_pings() {
+    let _lock = lock_test();
+
+    // Define a fake uploader that reports back the submission headers
+    // using a crossbeam channel.
+    let (s, r) = crossbeam_channel::bounded::<String>(3);
+
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(&self, upload_request: net::PingUploadRequest) -> net::UploadResult {
+            self.sender.send(upload_request.url).unwrap();
+            net::UploadResult::http_status(200)
+        }
+    }
+
+    let _ride_along_ping =
+        private::PingType::new("ride-along", true, true, true, true, true, vec![], vec![]);
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().to_path_buf();
+
+    let ping_schedule = HashMap::from([("baseline".to_string(), vec!["ride-along".to_string()])]);
+
+    let cfg = ConfigurationBuilder::new(true, tmpname, GLOBAL_APPLICATION_ID)
+        .with_server_endpoint("invalid-test-host")
+        .with_uploader(FakeUploader { sender: s })
+        .with_ping_schedule(ping_schedule)
+        .build();
+
+    let _t = new_glean(Some(cfg), true);
+
+    // Simulate becoming active.
+    handle_client_active();
+
+    // We expect a baseline ping to be generated here (reason: 'active').
+    let url = r.recv().unwrap();
+    assert!(url.contains("baseline"));
+
+    // We expect a ride-along ping to ride along.
+    let url = r.recv().unwrap();
+    assert!(url.contains("ride-along"));
+}
