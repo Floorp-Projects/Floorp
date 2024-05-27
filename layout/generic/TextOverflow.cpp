@@ -249,7 +249,7 @@ void nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
   } else {
     RefPtr<nsFontMetrics> fm =
         nsLayoutUtils::GetInflatedFontMetricsForFrame(mFrame);
-    NS_ConvertUTF8toUTF16 str16{mStyle.AsString().AsString()};
+    nsDependentAtomString str16(mStyle.AsString().AsAtom());
     nsLayoutUtils::DrawString(mFrame, *fm, aCtx, str16.get(), str16.Length(),
                               pt);
   }
@@ -925,7 +925,7 @@ void TextOverflow::Marker::SetupString(nsIFrame* aFrame) {
     RefPtr<nsFontMetrics> fm =
         nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
     mISize = nsLayoutUtils::AppUnitWidthOfStringBidi(
-        NS_ConvertUTF8toUTF16(mStyle->AsString().AsString()), aFrame, *fm, *rc);
+        nsDependentAtomString(mStyle->AsString().AsAtom()), aFrame, *fm, *rc);
   }
   mIntrinsicISize = mISize;
   mInitialized = true;
