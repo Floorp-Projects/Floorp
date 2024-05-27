@@ -904,7 +904,8 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     }
     case IntID::MenusCanOverlapOSBar:
-      aResult = 0;
+      // we want XUL popups to be able to overlap the task bar.
+      aResult = 1;
       break;
     case IntID::SkipNavigatingDisabledMenuItem:
       aResult = 1;
