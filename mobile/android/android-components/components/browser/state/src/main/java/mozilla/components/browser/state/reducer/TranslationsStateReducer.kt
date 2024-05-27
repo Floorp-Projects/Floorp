@@ -88,6 +88,7 @@ internal object TranslationsStateReducer {
                         isOfferTranslate = isOfferTranslate,
                         isExpectedTranslate = isExpectedTranslate,
                         isTranslated = true,
+                        isTranslateProcessing = false,
                         translationError = null,
                         translationEngineState = action.translationEngineState,
                     )
@@ -114,7 +115,6 @@ internal object TranslationsStateReducer {
                     // The isTranslated state will be identified on a translation state change.
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            isTranslateProcessing = false,
                             translationError = null,
                         )
                     }
