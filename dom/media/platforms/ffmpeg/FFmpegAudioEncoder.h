@@ -24,6 +24,8 @@ class FFmpegAudioEncoder : public MediaDataEncoder {};
 template <>
 class FFmpegAudioEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FFmpegAudioEncoder, final);
+
   FFmpegAudioEncoder(const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
                      const RefPtr<TaskQueue>& aTaskQueue,
                      const EncoderConfig& aConfig);
@@ -31,6 +33,7 @@ class FFmpegAudioEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
   nsCString GetDescriptionName() const override;
 
  protected:
+  virtual ~FFmpegAudioEncoder() = default;
   // Methods only called on mTaskQueue.
   virtual nsresult InitSpecific() override;
 #if LIBAVCODEC_VERSION_MAJOR >= 58

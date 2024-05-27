@@ -20,6 +20,8 @@ class Image;
 
 class AppleVTEncoder final : public MediaDataEncoder {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AppleVTEncoder, final);
+
   AppleVTEncoder(const EncoderConfig& aConfig,
                  const RefPtr<TaskQueue>& aTaskQueue)
       : mConfig(aConfig),
