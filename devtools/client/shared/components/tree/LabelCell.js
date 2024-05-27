@@ -17,7 +17,6 @@ define(function (require, exports, module) {
     // to the 'member' object.
     static get propTypes() {
       return {
-        id: PropTypes.string.isRequired,
         title: PropTypes.string,
         member: PropTypes.object.isRequired,
         renderSuffix: PropTypes.func,
@@ -25,7 +24,6 @@ define(function (require, exports, module) {
     }
 
     render() {
-      const id = this.props.id;
       const title = this.props.title;
       const member = this.props.member;
       const level = member.level || 0;
@@ -61,7 +59,6 @@ define(function (require, exports, module) {
           {
             className: "treeLabel " + member.type + "Label",
             title,
-            "aria-labelledby": id,
             "data-level": level,
           },
           member.name

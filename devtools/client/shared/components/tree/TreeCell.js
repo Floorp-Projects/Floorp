@@ -112,7 +112,6 @@ define(function (require, exports, module) {
         cellElement = span(
           {
             onClick: type !== "object" ? this.updateInputEnabled : null,
-            "aria-labelledby": id,
           },
           renderValue(props)
         );
