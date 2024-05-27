@@ -1,13 +1,23 @@
+from __future__ import annotations
+
 import collections
 import os
 import sys
 import tempfile
-from subprocess import check_call  # nosec
+from subprocess import run  # nosec
+from typing import Deque, Iterable, Mapping, ValuesView
 
-from pip._internal.commands.freeze import DEV_PKGS
+import click
+from pip._internal.models.direct_url import ArchiveInfo
+from pip._internal.req import InstallRequirement
 from pip._internal.utils.compat import stdlib_pkgs
+from pip._internal.utils.direct_url_helpers import (
+    direct_url_as_pep440_direct_reference,
+    direct_url_from_link,
+)
+from pip._vendor.packaging.utils import canonicalize_name
 
-from . import click
+from ._compat import Distribution, get_dev_pkgs
 from .exceptions import IncompatibleRequirements
 from .logging import log
 from .utils import (
@@ -19,14 +29,20 @@ from .utils import (
     key_from_req,
 )
 
-PACKAGES_TO_IGNORE = (
-    ["-markerlib", "pip", "pip-tools", "pip-review", "pkg-resources"]
-    + list(stdlib_pkgs)
-    + list(DEV_PKGS)
-)
+PACKAGES_TO_IGNORE = [
+    "-markerlib",
+    "pip",
+    "pip-tools",
+    "pip-review",
+    "pkg-resources",
+    *stdlib_pkgs,
+    *get_dev_pkgs(),
+]
 
 
-def dependency_tree(installed_keys, root_key):
+def dependency_tree(
+    installed_keys: Mapping[str, Distribution], root_key: str
+) -> set[str]:
     """
     Calculate the dependency tree for the package `root_key` and return
     a collection of all its dependencies.  Uses a DFS traversal algorithm.
@@ -36,7 +52,7 @@ def dependency_tree(installed_keys, root_key):
     `root_key` should be the key to return the dependency tree for.
     """
     dependencies = set()
-    queue = collections.deque()
+    queue: Deque[Distribution] = collections.deque()
 
     if root_key in installed_keys:
         dep = installed_keys[root_key]
@@ -44,13 +60,13 @@ def dependency_tree(installed_keys, root_key):
 
     while queue:
         v = queue.popleft()
-        key = key_from_req(v)
+        key = str(canonicalize_name(v.key))
         if key in dependencies:
             continue
 
         dependencies.add(key)
 
-        for dep_specifier in v.requires():
+        for dep_specifier in v.requires:
             dep_name = key_from_req(dep_specifier)
             if dep_name in installed_keys:
                 dep = installed_keys[dep_name]
@@ -61,7 +77,7 @@ def dependency_tree(installed_keys, root_key):
     return dependencies
 
 
-def get_dists_to_ignore(installed):
+def get_dists_to_ignore(installed: Iterable[Distribution]) -> list[str]:
     """
     Returns a collection of package names to ignore when performing pip-sync,
     based on the currently installed environment.  For example, when pip-tools
@@ -70,14 +86,16 @@ def get_dists_to_ignore(installed):
     locally, click should also be installed/uninstalled depending on the given
     requirements.
     """
-    installed_keys = {key_from_req(r): r for r in installed}
+    installed_keys = {str(canonicalize_name(r.key)): r for r in installed}
     return list(
         flat_map(lambda req: dependency_tree(installed_keys, req), PACKAGES_TO_IGNORE)
     )
 
 
-def merge(requirements, ignore_conflicts):
-    by_key = {}
+def merge(
+    requirements: Iterable[InstallRequirement], ignore_conflicts: bool
+) -> ValuesView[InstallRequirement]:
+    by_key: dict[str, InstallRequirement] = {}
 
     for ireq in requirements:
         # Limitation: URL requirements are merged by precise string match, so
@@ -91,7 +109,11 @@ def merge(requirements, ignore_conflicts):
                 if existing_ireq:
                     # NOTE: We check equality here since we can assume that the
                     # requirements are all pinned
-                    if ireq.specifier != existing_ireq.specifier:
+                    if (
+                        ireq.req
+                        and existing_ireq.req
+                        and ireq.specifier != existing_ireq.specifier
+                    ):
                         raise IncompatibleRequirements(ireq, existing_ireq)
 
             # TODO: Always pick the largest specifier in case of a conflict
@@ -99,27 +121,44 @@ def merge(requirements, ignore_conflicts):
     return by_key.values()
 
 
-def diff_key_from_ireq(ireq):
+def diff_key_from_ireq(ireq: InstallRequirement) -> str:
     """
     Calculate a key for comparing a compiled requirement with installed modules.
     For URL requirements, only provide a useful key if the url includes
-    #egg=name==version, which will set ireq.req.name and ireq.specifier.
+    a hash, e.g. #sha1=..., in any of the supported hash algorithms.
     Otherwise return ireq.link so the key will not match and the package will
     reinstall. Reinstall is necessary to ensure that packages will reinstall
-    if the URL is changed but the version is not.
+    if the contents at the URL have changed but the version has not.
     """
     if is_url_requirement(ireq):
-        if (
-            ireq.req
-            and (getattr(ireq.req, "key", None) or getattr(ireq.req, "name", None))
-            and ireq.specifier
-        ):
-            return key_from_ireq(ireq)
+        if getattr(ireq.req, "name", None) and ireq.link.has_hash:
+            return str(
+                direct_url_as_pep440_direct_reference(
+                    direct_url_from_link(ireq.link), ireq.req.name
+                )
+            )
+        # TODO: Also support VCS and editable installs.
         return str(ireq.link)
     return key_from_ireq(ireq)
 
 
-def diff(compiled_requirements, installed_dists):
+def diff_key_from_req(req: Distribution) -> str:
+    """Get a unique key for the requirement."""
+    key = str(canonicalize_name(req.key))
+    if (
+        req.direct_url
+        and isinstance(req.direct_url.info, ArchiveInfo)
+        and req.direct_url.info.hash
+    ):
+        key = direct_url_as_pep440_direct_reference(req.direct_url, key)
+    # TODO: Also support VCS and editable installs.
+    return key
+
+
+def diff(
+    compiled_requirements: Iterable[InstallRequirement],
+    installed_dists: Iterable[Distribution],
+) -> tuple[set[InstallRequirement], set[str]]:
     """
     Calculate which packages should be installed or uninstalled, given a set
     of compiled requirements and a list of currently installed modules.
@@ -132,7 +171,7 @@ def diff(compiled_requirements, installed_dists):
 
     pkgs_to_ignore = get_dists_to_ignore(installed_dists)
     for dist in installed_dists:
-        key = key_from_req(dist)
+        key = diff_key_from_req(dist)
         if key not in requirements_lut or not requirements_lut[key].match_markers():
             to_uninstall.add(key)
         elif requirements_lut[key].specifier.contains(dist.version):
@@ -148,11 +187,20 @@ def diff(compiled_requirements, installed_dists):
     return (to_install, to_uninstall)
 
 
-def sync(to_install, to_uninstall, dry_run=False, install_flags=None, ask=False):
+def sync(
+    to_install: Iterable[InstallRequirement],
+    to_uninstall: Iterable[InstallRequirement],
+    dry_run: bool = False,
+    install_flags: list[str] | None = None,
+    ask: bool = False,
+    python_executable: str | None = None,
+) -> int:
     """
     Install and uninstalls the given sets of modules.
     """
     exit_code = 0
+
+    python_executable = python_executable or sys.executable
 
     if not to_uninstall and not to_install:
         log.info("Everything up-to-date", err=False)
@@ -169,12 +217,12 @@ def sync(to_install, to_uninstall, dry_run=False, install_flags=None, ask=False)
         if to_uninstall:
             click.echo("Would uninstall:")
             for pkg in sorted(to_uninstall):
-                click.echo("  {}".format(pkg))
+                click.echo(f"  {pkg}")
 
         if to_install:
             click.echo("Would install:")
             for ireq in sorted(to_install, key=key_from_ireq):
-                click.echo("  {}".format(format_requirement(ireq)))
+                click.echo(f"  {format_requirement(ireq)}")
 
         exit_code = 1
 
@@ -184,10 +232,17 @@ def sync(to_install, to_uninstall, dry_run=False, install_flags=None, ask=False)
 
     if not dry_run:
         if to_uninstall:
-            check_call(  # nosec
-                [sys.executable, "-m", "pip", "uninstall", "-y"]
-                + pip_flags
-                + sorted(to_uninstall)
+            run(  # nosec
+                [
+                    python_executable,
+                    "-m",
+                    "pip",
+                    "uninstall",
+                    "-y",
+                    *pip_flags,
+                    *sorted(to_uninstall),
+                ],
+                check=True,
             )
 
         if to_install:
@@ -205,10 +260,18 @@ def sync(to_install, to_uninstall, dry_run=False, install_flags=None, ask=False)
             tmp_req_file.close()
 
             try:
-                check_call(  # nosec
-                    [sys.executable, "-m", "pip", "install", "-r", tmp_req_file.name]
-                    + pip_flags
-                    + install_flags
+                run(  # nosec
+                    [
+                        python_executable,
+                        "-m",
+                        "pip",
+                        "install",
+                        "-r",
+                        tmp_req_file.name,
+                        *pip_flags,
+                        *install_flags,
+                    ],
+                    check=True,
                 )
             finally:
                 os.unlink(tmp_req_file.name)

@@ -59,6 +59,7 @@ vendored:third_party/python/MarkupSafe/src
 vendored:third_party/python/ansicon
 vendored:third_party/python/attrs
 vendored:third_party/python/blessed
+vendored:third_party/python/build
 vendored:third_party/python/certifi
 vendored:third_party/python/chardet
 vendored:third_party/python/charset_normalizer
@@ -77,6 +78,7 @@ vendored:third_party/python/packaging
 vendored:third_party/python/pip
 vendored:third_party/python/pip_tools
 vendored:third_party/python/pkgutil_resolve_name
+vendored:third_party/python/pyproject_hooks
 vendored:third_party/python/pyrsistent
 vendored:third_party/python/python-hglib
 vendored:third_party/python/requests
@@ -84,6 +86,7 @@ vendored:third_party/python/sentry_sdk
 vendored:third_party/python/setuptools
 vendored:third_party/python/six
 vendored:third_party/python/toml
+vendored:third_party/python/tomli
 vendored:third_party/python/tomlkit
 vendored:third_party/python/tqdm
 vendored:third_party/python/typing_extensions
