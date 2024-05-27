@@ -90,8 +90,14 @@ add_task(async function () {
     "http://"
   );
 
+  await runPrefTest(
+    "http://invalid.example.com",
+    "Should downgrade non-reachable site.",
+    "http://"
+  );
+
   info("Checking expected telemetry");
-  is(Glean.httpsfirst.upgraded.testGetValue(), 5);
+  is(Glean.httpsfirst.upgraded.testGetValue(), 1);
   is(Glean.httpsfirst.upgradedSchemeless.testGetValue(), null);
   is(Glean.httpsfirst.downgraded.testGetValue(), 3);
   is(Glean.httpsfirst.downgradedSchemeless.testGetValue(), null);

@@ -24,6 +24,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Telemetry.h"
@@ -165,6 +166,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mPartitionedPrincipalToInherit(aOther.mPartitionedPrincipalToInherit),
       mForceAllowDataURI(aOther.mForceAllowDataURI),
       mIsExemptFromHTTPSFirstMode(aOther.mIsExemptFromHTTPSFirstMode),
+      mHttpsFirstDowngradeData(aOther.GetHttpsFirstDowngradeData()),
       mOriginalFrameSrc(aOther.mOriginalFrameSrc),
       mIsFormSubmission(aOther.mIsFormSubmission),
       mLoadType(aOther.mLoadType),
@@ -630,6 +632,16 @@ bool nsDocShellLoadState::IsExemptFromHTTPSFirstMode() const {
 void nsDocShellLoadState::SetIsExemptFromHTTPSFirstMode(
     bool aIsExemptFromHTTPSFirstMode) {
   mIsExemptFromHTTPSFirstMode = aIsExemptFromHTTPSFirstMode;
+}
+
+RefPtr<HTTPSFirstDowngradeData>
+nsDocShellLoadState::GetHttpsFirstDowngradeData() const {
+  return mHttpsFirstDowngradeData;
+}
+
+void nsDocShellLoadState::SetHttpsFirstDowngradeData(
+    RefPtr<HTTPSFirstDowngradeData> const& aHttpsFirstTelemetryData) {
+  mHttpsFirstDowngradeData = aHttpsFirstTelemetryData;
 }
 
 bool nsDocShellLoadState::OriginalFrameSrc() const { return mOriginalFrameSrc; }
