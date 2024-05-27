@@ -64,6 +64,9 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
    *   True to enable, false to disable.
    */
   enable(enable) {
+    if (lazy.UrlbarPrefs.getScotchBonnetPref("scotchBonnet.disableOneOffs")) {
+      enable = false;
+    }
     if (enable) {
       this.telemetryOrigin = "urlbar";
       this.style.display = "";

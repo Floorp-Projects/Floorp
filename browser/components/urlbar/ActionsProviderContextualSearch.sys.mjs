@@ -38,7 +38,7 @@ class ProviderContextualSearch extends ActionsProvider {
   isActive(queryContext) {
     return (
       queryContext.trimmedSearchString &&
-      lazy.UrlbarPrefs.get(ENABLED_PREF) &&
+      lazy.UrlbarPrefs.getScotchBonnetPref(ENABLED_PREF) &&
       !queryContext.searchMode
     );
   }

@@ -337,7 +337,9 @@ function makeUrlbarResult(tokens, info) {
           icon: info.icon,
           userContextId: info.userContextId,
         });
-        if (lazy.UrlbarPrefs.get("secondaryActions.featureGate")) {
+        if (
+          lazy.UrlbarPrefs.getScotchBonnetPref("secondaryActions.featureGate")
+        ) {
           payload[0].action = {
             key: "tabswitch",
             l10nId: "urlbar-result-action-switch-tab",

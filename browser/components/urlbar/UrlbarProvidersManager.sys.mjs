@@ -321,7 +321,9 @@ class ProvidersManager {
 
     // All current global actions are currently memory lookups so it is safe to
     // wait on them.
-    this.#globalAction = lazy.UrlbarPrefs.get("secondaryActions.featureGate")
+    this.#globalAction = lazy.UrlbarPrefs.getScotchBonnetPref(
+      "secondaryActions.featureGate"
+    )
       ? await this.pickGlobalAction(queryContext, controller)
       : null;
 

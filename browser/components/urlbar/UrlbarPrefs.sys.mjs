@@ -319,6 +319,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // If true, we show tail suggestions when available.
   ["richSuggestions.tail", true],
 
+  // Disable the urlbar OneOff panel from being shown.
+  ["scotchBonnet.disableOneOffs", false],
+
+  // A short-circuit pref to enable all the features that are part of a
+  // grouped release.
+  ["scotchBonnet.enableOverride", false],
+
   // Hidden pref. Disables checks that prevent search tips being shown, thus
   // showing them every time the newtab page or the default search engine
   // homepage is opened.
@@ -786,6 +793,19 @@ class Preferences {
    */
   makeResultGroups(options) {
     return makeResultGroups(options);
+  }
+
+  /**
+   * Gets a pref but allows the `scotchBonnet.enableOverride` pref to
+   * short circuit them so one pref can be used to enable multiple
+   * features.
+   *
+   * @param {string} pref
+   *        The name of the preference to clear.
+   * @returns {*} The preference value.
+   */
+  getScotchBonnetPref(pref) {
+    return this.get("scotchBonnet.enableOverride") || this.get(pref);
   }
 
   get resultGroups() {
