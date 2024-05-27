@@ -7,7 +7,6 @@
 use crate::parser::{Parse, ParserContext};
 use crate::properties::longhands::writing_mode::computed_value::T as SpecifiedWritingMode;
 use crate::values::computed::text::TextEmphasisStyle as ComputedTextEmphasisStyle;
-use crate::values::computed::text::TextOverflow as ComputedTextOverflow;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::text::InitialLetter as GenericInitialLetter;
 use crate::values::generics::text::{GenericTextDecorationLength, GenericTextIndent, Spacing};
@@ -113,16 +112,36 @@ pub enum TextOverflowSide {
     /// Render ellipsis to represent clipped inline content.
     Ellipsis,
     /// Render a given string to represent clipped inline content.
-    String(crate::OwnedStr),
+    String(crate::values::AtomString),
 }
 
-#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]
-/// text-overflow. Specifies rendering when inline content overflows its line box edge.
+#[derive(
+    Clone,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C)]
+/// text-overflow.
+/// When the specified value only has one side, that's the "second"
+/// side, and the sides are logical, so "second" means "end".  The
+/// start side is Clip in that case.
+///
+/// When the specified value has two sides, those are our "first"
+/// and "second" sides, and they are physical sides ("left" and
+/// "right").
 pub struct TextOverflow {
-    /// First value. Applies to end line box edge if no second is supplied; line-left edge otherwise.
+    /// First side
     pub first: TextOverflowSide,
-    /// Second value. Applies to the line-right edge if supplied.
-    pub second: Option<TextOverflowSide>,
+    /// Second side
+    pub second: TextOverflowSide,
+    /// True if the specified value only has one side.
+    pub sides_are_logical: bool,
 }
 
 impl Parse for TextOverflow {
@@ -131,47 +150,49 @@ impl Parse for TextOverflow {
         input: &mut Parser<'i, 't>,
     ) -> Result<TextOverflow, ParseError<'i>> {
         let first = TextOverflowSide::parse(context, input)?;
-        let second = input
-            .try_parse(|input| TextOverflowSide::parse(context, input))
-            .ok();
-        Ok(TextOverflow { first, second })
+        Ok(
+            if let Ok(second) = input.try_parse(|input| TextOverflowSide::parse(context, input)) {
+                Self {
+                    first,
+                    second,
+                    sides_are_logical: false,
+                }
+            } else {
+                Self {
+                    first: TextOverflowSide::Clip,
+                    second: first,
+                    sides_are_logical: true,
+                }
+            },
+        )
     }
 }
 
-impl ToComputedValue for TextOverflow {
-    type ComputedValue = ComputedTextOverflow;
-
-    #[inline]
-    fn to_computed_value(&self, _context: &Context) -> Self::ComputedValue {
-        if let Some(ref second) = self.second {
-            Self::ComputedValue {
-                first: self.first.clone(),
-                second: second.clone(),
-                sides_are_logical: false,
-            }
-        } else {
-            Self::ComputedValue {
-                first: TextOverflowSide::Clip,
-                second: self.first.clone(),
-                sides_are_logical: true,
-            }
+impl TextOverflow {
+    /// Returns the initial `text-overflow` value
+    pub fn get_initial_value() -> TextOverflow {
+        TextOverflow {
+            first: TextOverflowSide::Clip,
+            second: TextOverflowSide::Clip,
+            sides_are_logical: true,
         }
     }
+}
 
-    #[inline]
-    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
-        if computed.sides_are_logical {
-            assert_eq!(computed.first, TextOverflowSide::Clip);
-            TextOverflow {
-                first: computed.second.clone(),
-                second: None,
-            }
+impl ToCss for TextOverflow {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        if self.sides_are_logical {
+            debug_assert_eq!(self.first, TextOverflowSide::Clip);
+            self.second.to_css(dest)?;
         } else {
-            TextOverflow {
-                first: computed.first.clone(),
-                second: Some(computed.second.clone()),
-            }
+            self.first.to_css(dest)?;
+            dest.write_char(' ')?;
+            self.second.to_css(dest)?;
         }
+        Ok(())
     }
 }
 
@@ -667,7 +688,10 @@ impl ToComputedValue for TextEmphasisStyle {
                 // time operation. This is observable from getComputedStyle().
                 //
                 // Note that the first grapheme cluster boundary should always be the start of the string.
-                let first_grapheme_end = GraphemeClusterSegmenter::new().segment_str(s).nth(1).unwrap_or(0);
+                let first_grapheme_end = GraphemeClusterSegmenter::new()
+                    .segment_str(s)
+                    .nth(1)
+                    .unwrap_or(0);
                 ComputedTextEmphasisStyle::String(s[0..first_grapheme_end].to_string().into())
             },
         }

@@ -168,6 +168,12 @@ impl AsRef<str> for AtomString {
     }
 }
 
+impl Parse for AtomString {
+    fn parse<'i>(_: &ParserContext, input: &mut Parser<'i, '_>) -> Result<Self, ParseError<'i>> {
+        Ok(Self(Atom::from(input.expect_string()?.as_ref())))
+    }
+}
+
 impl cssparser::ToCss for AtomString {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
     where
