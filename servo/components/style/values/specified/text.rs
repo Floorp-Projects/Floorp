@@ -1040,13 +1040,18 @@ impl TextDecorationLength {
     Debug,
     Eq,
     MallocSizeOf,
+    Parse,
     PartialEq,
     SpecifiedValueInfo,
     ToComputedValue,
     ToResolvedValue,
     ToShmem,
 )]
-#[value_info(other_values = "auto,from-font,under,left,right")]
+#[css(bitflags(
+    single = "auto",
+    mixed = "from-font,under,left,right",
+    validate_mixed = "Self::validate_mixed_flags",
+))]
 #[repr(C)]
 /// Specified keyword values for the text-underline-position property.
 /// (Non-exclusive, but not all combinations are allowed: the spec grammar gives
@@ -1068,53 +1073,17 @@ bitflags! {
     }
 }
 
-// TODO: This can be derived with some care.
-impl Parse for TextUnderlinePosition {
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<TextUnderlinePosition, ParseError<'i>> {
-        let mut result = TextUnderlinePosition::empty();
-
-        loop {
-            let location = input.current_source_location();
-            let ident = match input.next() {
-                Ok(&Token::Ident(ref ident)) => ident,
-                Ok(other) => return Err(location.new_unexpected_token_error(other.clone())),
-                Err(..) => break,
-            };
-
-            match_ignore_ascii_case! { ident,
-                "auto" if result.is_empty() => {
-                    return Ok(result);
-                },
-                "from-font" if !result.intersects(TextUnderlinePosition::FROM_FONT |
-                                                  TextUnderlinePosition::UNDER) => {
-                    result.insert(TextUnderlinePosition::FROM_FONT);
-                },
-                "under" if !result.intersects(TextUnderlinePosition::FROM_FONT |
-                                              TextUnderlinePosition::UNDER) => {
-                    result.insert(TextUnderlinePosition::UNDER);
-                },
-                "left" if !result.intersects(TextUnderlinePosition::LEFT |
-                                             TextUnderlinePosition::RIGHT) => {
-                    result.insert(TextUnderlinePosition::LEFT);
-                },
-                "right" if !result.intersects(TextUnderlinePosition::LEFT |
-                                              TextUnderlinePosition::RIGHT) => {
-                    result.insert(TextUnderlinePosition::RIGHT);
-                },
-                _ => return Err(location.new_custom_error(
-                    SelectorParseErrorKind::UnexpectedIdent(ident.clone())
-                )),
-            }
+impl TextUnderlinePosition {
+    fn validate_mixed_flags(&self) -> bool {
+        if self.contains(Self::LEFT | Self::RIGHT) {
+            // left and right can't be mixed together.
+            return false;
         }
-
-        if !result.is_empty() {
-            Ok(result)
-        } else {
-            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+        if self.contains(Self::FROM_FONT | Self::UNDER) {
+            // from-font and under can't be mixed together either.
+            return false;
         }
+        true
     }
 }
 
