@@ -100,7 +100,7 @@ describe("Filtering", () => {
       expect(messages.length).toEqual(numUnfilterableMessages + 5);
     });
 
-    it("filters css messages", () => {
+    it("filters css messages", async () => {
       const message = stubPreparedMessages.get(
         "Unknown property ‘such-unknown-property’.  Declaration dropped."
       );
@@ -109,7 +109,7 @@ describe("Filtering", () => {
       let messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages);
 
-      store.dispatch(actions.filterToggle("css"));
+      await store.dispatch(actions.filterToggle("css"));
       messages = getVisibleMessages(store.getState());
       expect(messages.length).toEqual(numUnfilterableMessages + 1);
     });
@@ -251,12 +251,12 @@ describe("Filtering", () => {
 });
 
 describe("Clear filters", () => {
-  it("clears all filters", () => {
+  it("clears all filters", async () => {
     const store = setupStore();
 
     // Setup test case
     store.dispatch(actions.filterToggle(FILTERS.ERROR));
-    store.dispatch(actions.filterToggle(FILTERS.CSS));
+    await store.dispatch(actions.filterToggle(FILTERS.CSS));
     store.dispatch(actions.filterToggle(FILTERS.NET));
     store.dispatch(actions.filterToggle(FILTERS.NETXHR));
     store.dispatch(actions.filterTextSet("foobar"));
