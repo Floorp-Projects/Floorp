@@ -1090,13 +1090,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
 
 namespace mozilla {
 
-inline StyleTextTransform StyleTextTransform::None() {
-  return StyleTextTransform{StyleTextTransformCase::None,
-                            StyleTextTransformOther()};
-}
-
-inline bool StyleTextTransform::IsNone() const { return *this == None(); }
-
 // Note that IsAuto() does not exclude the possibility that `left` or `right`
 // is set; it refers only to behavior in horizontal typographic mode.
 inline bool StyleTextUnderlinePosition::IsAuto() const {

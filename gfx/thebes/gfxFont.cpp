@@ -3892,8 +3892,7 @@ bool gfxFont::InitFakeSmallCapsRun(
           AutoTArray<bool, 50> charsToMergeArray;
           AutoTArray<bool, 50> deletedCharsArray;
 
-          StyleTextTransform globalTransform{StyleTextTransformCase::Uppercase,
-                                             {}};
+          const auto globalTransform = StyleTextTransform::UPPERCASE;
           // No mask needed; we're doing case conversion, not password-hiding.
           const char16_t maskChar = 0;
           bool mergeNeeded = nsCaseTransformTextRunFactory::TransformString(
