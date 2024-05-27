@@ -56,6 +56,26 @@ struct ParamTraits<GMPLogLevel>
                                                kGMPLogInvalid> {};
 
 template <>
+struct ParamTraits<GMPLevel>
+    : public ContiguousEnumSerializerInclusive<GMPLevel, kGMPH264LevelUnknown,
+                                               kGMPH264Level5_2> {};
+
+template <>
+struct ParamTraits<GMPProfile>
+    : public ContiguousEnumSerializerInclusive<
+          GMPProfile, kGMPH264ProfileUnknown, kGMPH264ProfileScalableHigh> {};
+
+template <>
+struct ParamTraits<GMPRateControlMode>
+    : public ContiguousEnumSerializerInclusive<
+          GMPRateControlMode, kGMPRateControlUnknown, kGMPRateControlOff> {};
+
+template <>
+struct ParamTraits<GMPSliceMode>
+    : public ContiguousEnumSerializerInclusive<GMPSliceMode, kGMPSliceUnknown,
+                                               kGMPSliceSizeLimited> {};
+
+template <>
 struct ParamTraits<GMPBufferType>
     : public ContiguousEnumSerializer<GMPBufferType, GMP_BufferSingle,
                                       GMP_BufferInvalid> {};
@@ -126,13 +146,19 @@ struct ParamTraits<GMPVideoCodec> {
     WriteParam(aWriter, aParam.mMode);
     WriteParam(aWriter, aParam.mUseThreadedDecode);
     WriteParam(aWriter, aParam.mLogLevel);
+    WriteParam(aWriter, aParam.mLevel);
+    WriteParam(aWriter, aParam.mProfile);
+    WriteParam(aWriter, aParam.mRateControlMode);
+    WriteParam(aWriter, aParam.mSliceMode);
+    WriteParam(aWriter, aParam.mUseThreadedEncode);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     // NOTE: make sure this matches any versions supported
     if (!ReadParam(aReader, &(aResult->mGMPApiVersion)) ||
         (aResult->mGMPApiVersion != kGMPVersion33 &&
-         aResult->mGMPApiVersion != kGMPVersion34)) {
+         aResult->mGMPApiVersion != kGMPVersion34 &&
+         aResult->mGMPApiVersion != kGMPVersion35)) {
       return false;
     }
     if (!ReadParam(aReader, &(aResult->mCodecType))) {
@@ -177,7 +203,12 @@ struct ParamTraits<GMPVideoCodec> {
 
     if (!ReadParam(aReader, &(aResult->mMode)) ||
         !ReadParam(aReader, &(aResult->mUseThreadedDecode)) ||
-        !ReadParam(aReader, &(aResult->mLogLevel))) {
+        !ReadParam(aReader, &(aResult->mLogLevel)) ||
+        !ReadParam(aReader, &(aResult->mLevel)) ||
+        !ReadParam(aReader, &(aResult->mProfile)) ||
+        !ReadParam(aReader, &(aResult->mRateControlMode)) ||
+        !ReadParam(aReader, &(aResult->mSliceMode)) ||
+        !ReadParam(aReader, &(aResult->mUseThreadedEncode))) {
       return false;
     }
 

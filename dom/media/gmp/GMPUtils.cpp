@@ -191,6 +191,17 @@ bool HaveGMPFor(const nsACString& aAPI, const nsTArray<nsCString>& aTags) {
   return hasPlugin;
 }
 
+bool IsOnGMPThread() {
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+      do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  MOZ_ASSERT(mps);
+
+  nsCOMPtr<nsIThread> gmpThread;
+  nsresult rv = mps->GetThread(getter_AddRefs(gmpThread));
+  MOZ_ASSERT(gmpThread);
+  return NS_SUCCEEDED(rv) && gmpThread && gmpThread->IsOnCurrentThread();
+}
+
 void LogToConsole(const nsAString& aMsg) {
   nsCOMPtr<nsIConsoleService> console(
       do_GetService("@mozilla.org/consoleservice;1"));

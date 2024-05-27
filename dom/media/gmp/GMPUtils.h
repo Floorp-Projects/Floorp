@@ -72,6 +72,8 @@ bool ReadIntoString(nsIFile* aFile, nsCString& aOutDst, size_t aMaxLength);
 
 bool HaveGMPFor(const nsACString& aAPI, const nsTArray<nsCString>& aTags);
 
+bool IsOnGMPThread();
+
 void LogToConsole(const nsAString& aMsg);
 
 already_AddRefed<nsISerialEventTarget> GetGMPThread();
