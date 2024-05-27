@@ -331,6 +331,17 @@ ${helpers.predefined_type(
     )}
 % endfor
 
+${helpers.predefined_type(
+    "position-anchor",
+    "PositionAnchor",
+    "computed::PositionAnchor::auto()",
+    engines="gecko",
+    animation_value_type="discrete",
+    gecko_pref="layout.css.anchor-positioning.enabled",
+    spec="https://drafts.csswg.org/css-anchor-position-1/#propdef-position-anchor",
+    affects="layout",
+)}
+
 ${helpers.single_keyword(
     "box-sizing",
     "content-box border-box",
