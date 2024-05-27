@@ -60,5 +60,5 @@ tomlkit==0.12.3
 tqdm==4.62.3
 urllib3==1.26.17
 voluptuous==0.12.1
-wheel==0.37.0
+wheel==0.43.0
 yamllint==1.23
