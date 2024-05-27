@@ -472,7 +472,7 @@ class VirtualenvMixin(object):
                 / "python"
                 / "_venv"
                 / "wheels"
-                / "pip-23.0.1-py3-none-any.whl"
+                / "pip-24.0-py3-none-any.whl"
             )
             setuptools_wheel_path = (
                 src_dir
@@ -480,13 +480,24 @@ class VirtualenvMixin(object):
                 / "python"
                 / "_venv"
                 / "wheels"
-                / "setuptools-51.2.0-py3-none-any.whl"
+                / "setuptools-70.0.0-py3-none-any.whl"
+            )
+            wheel_wheel_path = (
+                src_dir
+                / "third_party"
+                / "python"
+                / "_venv"
+                / "wheels"
+                / "wheel-0.43.0-py3-none-any.whl"
             )
 
-            if all(path.exists() for path in (pip_wheel_path, setuptools_wheel_path)):
+            if all(
+                path.exists()
+                for path in (pip_wheel_path, setuptools_wheel_path, wheel_wheel_path)
+            ):
                 break
         else:
-            self.fatal("Can't find 'pip' and 'setuptools' wheels")
+            self.fatal("Can't find all of 'pip', 'setuptools', and 'wheel' wheels")
 
         venv_python_bin = Path(self.query_python_path())
 
@@ -559,6 +570,7 @@ class VirtualenvMixin(object):
                     "--disable-pip-version-check",
                     str(pip_wheel_path),
                     str(setuptools_wheel_path),
+                    str(wheel_wheel_path),
                 ],
                 cwd=dirs["abs_work_dir"],
                 error_list=VirtualenvErrorList,
