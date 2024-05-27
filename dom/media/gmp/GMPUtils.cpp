@@ -225,4 +225,18 @@ size_t I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight) {
   return ySize + (ySize / 4) * 2;
 }
 
+MediaResult ToMediaResult(GMPErr aErr, const nsACString& aMessage) {
+  nsPrintfCString msg("%s (GMPErr:%x)", aMessage.Data(), aErr);
+  switch (aErr) {
+    case GMPDecodeErr:
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, msg);
+    case GMPNotImplementedErr:
+      return MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR, msg);
+    case GMPAbortedErr:
+      return MediaResult(NS_ERROR_DOM_MEDIA_ABORT_ERR, msg);
+    default:
+      return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, msg);
+  }
+}
+
 }  // namespace mozilla

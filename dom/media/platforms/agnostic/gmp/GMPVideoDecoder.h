@@ -16,6 +16,7 @@
 #  include "PlatformDecoderModule.h"
 #  include "ReorderQueue.h"
 #  include "mozIGeckoMediaPluginService.h"
+#  include "mozilla/StaticString.h"
 #  include "nsClassHashtable.h"
 
 namespace mozilla {
@@ -90,6 +91,7 @@ class GMPVideoDecoder final : public MediaDataDecoder,
     RefPtr<GMPVideoDecoder> mDecoder;
   };
   void GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost);
+  void Teardown(const MediaResult& aResult, StaticString aCallSite);
 
   const VideoInfo mConfig;
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;

@@ -6,6 +6,8 @@
 #ifndef GMPUtils_h_
 #define GMPUtils_h_
 
+#include "gmp-errors.h"
+#include "MediaResult.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -77,6 +79,8 @@ already_AddRefed<nsISerialEventTarget> GetGMPThread();
 // Returns the number of bytes required to store an aWidth x aHeight image in
 // I420 format, padded so that the width and height are multiples of 16.
 size_t I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight);
+
+MediaResult ToMediaResult(GMPErr aErr, const nsACString& aMessage);
 
 }  // namespace mozilla
 
