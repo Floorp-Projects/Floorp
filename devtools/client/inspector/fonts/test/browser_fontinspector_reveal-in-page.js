@@ -23,9 +23,7 @@ async function testFontHighlighting(view) {
   // The number of window selection change events we expect to get as we hover over each
   // font in the list. Waiting for those events is how we know that text-runs were
   // highlighted in the page.
-  // The reason why these numbers vary is because the highlighter may create more than
-  // 1 selection range object, depending on the number of text-runs found.
-  const expectedSelectionChangeEvents = [2, 2, 2, 1, 1];
+  const expectedSelectionChangeEvents = [1, 1, 1, 1, 1];
 
   const viewDoc = view.document;
 

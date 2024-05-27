@@ -164,8 +164,10 @@ enum : uint32_t {
 
   NODE_MAY_HAVE_ELEMENT_CHILDREN = NODE_FLAG_BIT(12),
 
+  NODE_HAS_SCHEDULED_SELECTION_CHANGE_EVENT = NODE_FLAG_BIT(13),
+
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 13
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 14
 };
 
 // Flags for selectors that persist to the DOM node.
@@ -1641,6 +1643,18 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   MOZ_CAN_RUN_SCRIPT nsIContent* GetSelectionRootContent(
       mozilla::PresShell* aPresShell, bool aAllowCrossShadowBoundary = false);
+
+  bool HasScheduledSelectionChangeEvent() {
+    return HasFlag(NODE_HAS_SCHEDULED_SELECTION_CHANGE_EVENT);
+  }
+
+  void SetHasScheduledSelectionChangeEvent() {
+    SetFlags(NODE_HAS_SCHEDULED_SELECTION_CHANGE_EVENT);
+  }
+
+  void ClearHasScheduledSelectionChangeEvent() {
+    UnsetFlags(NODE_HAS_SCHEDULED_SELECTION_CHANGE_EVENT);
+  }
 
   nsINodeList* ChildNodes();
 
