@@ -62,7 +62,6 @@ var store_data = function (status, entry) {
     );
   }
   os.close();
-  entry.close();
   store_idx++;
   executeSoon(store_entries);
 };
@@ -103,7 +102,6 @@ var check_data = function (status, entry) {
     Assert.equal(status, Cr.NS_OK);
     var is = entry.openInputStream(0);
     pumpReadStream(is, function (read) {
-      entry.close();
       Assert.equal(read, entries[check_idx][1]);
       cont();
     });

@@ -32,7 +32,6 @@ function write_datafile(status, entry) {
   write_and_check(os, data, data.length);
 
   os.close();
-  entry.close();
 
   // open, doom, append, read
   asyncOpenCacheEntry(
@@ -59,7 +58,6 @@ function test_read_after_doom(status, entry) {
     Assert.equal(read.length, 2 * 1024 * 1024);
     is.close();
 
-    entry.close();
     do_test_finished();
   });
 }

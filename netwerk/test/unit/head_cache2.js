@@ -198,7 +198,6 @@ OpenCallback.prototype = {
             entry.setValid();
           }
 
-          entry.close();
           if (self.behavior & WAITFORWRITE) {
             self.goon(entry);
           }
@@ -234,8 +233,6 @@ OpenCallback.prototype = {
           if (self.behavior & WAITFORWRITE) {
             self.goon(entry);
           }
-
-          entry.close();
         });
       });
     } else {
@@ -255,7 +252,6 @@ OpenCallback.prototype = {
         self.onDataCheckPassed = true;
         LOG_C2(self, "entry read done");
         self.goon(entry);
-        entry.close();
       });
     }
   },

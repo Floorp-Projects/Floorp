@@ -49,7 +49,7 @@ TestAppend.prototype = {
     var os = entry.openOutputStream(0, 5);
     write_and_check(os, "12345", 5);
     os.close();
-    entry.close();
+
     asyncOpenCacheEntry(
       "http://data/",
       "disk",
@@ -64,7 +64,6 @@ TestAppend.prototype = {
     var os = entry.openOutputStream(entry.storageDataSize, 5);
     write_and_check(os, "abcde", 5);
     os.close();
-    entry.close();
 
     asyncOpenCacheEntry(
       "http://data/",
@@ -81,7 +80,6 @@ TestAppend.prototype = {
     pumpReadStream(entry.openInputStream(0), function (str) {
       Assert.equal(str.length, 10);
       Assert.equal(str, "12345abcde");
-      entry.close();
 
       executeSoon(self._callback);
     });

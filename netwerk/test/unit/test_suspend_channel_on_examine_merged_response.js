@@ -106,7 +106,6 @@ function storeCache(aCacheEntry, aResponseHeads, aContent) {
     );
   }
   oStream.close();
-  aCacheEntry.close();
 }
 
 function test_partial() {
