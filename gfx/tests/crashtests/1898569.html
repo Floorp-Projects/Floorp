@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<style>
+    *,
+    *:invalid {
+        padding-inline-end: 28643262.415086553rem;
+        scale: 52% 227 15%;
+    }
+
+    HTML {
+        writing-mode: sideways-lr;
+    }
+
+    *,
+    HTML {
+        background-color: lch(none none 2305);
+    }
+</style>
+<script>
+  async function timeout (cmd) {
+    const timer = new Promise((resolve, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id)
+        reject(new Error('Promise timed out!'))
+      }, 750)
+    })
+    return Promise.race([cmd, timer])
+  }
+
+  window.addEventListener('load', async () => {
+    const video = document.createElementNS('http://www.w3.org/1999/xhtml', 'video')
+    document.documentElement.appendChild(video)
+    for (let i = 0; i < 23; i++) {
+      await timeout(video.requestFullscreen())
+    }
+  })
+</script>
+
