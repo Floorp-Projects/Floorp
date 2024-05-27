@@ -229,6 +229,13 @@ export class WorkerTargetWatcherClass {
     workerInfo.workerTargetForm = workerTargetForm;
     workerInfo.transport = transport;
 
+    // Bail out and cleanup the actor by closing the transport,
+    // if we stopped listening for workers while waiting for onConnectToWorker resolution.
+    if (!watcherDataObject.workers.includes(workerInfo)) {
+      transport.close();
+      return;
+    }
+
     const { forwardingPrefix } = watcherDataObject;
     // Immediately queue a message for the parent process, before applying any SessionData
     // as it may start emitting RDP events on the target actor and be lost if the client
@@ -273,23 +280,11 @@ export class WorkerTargetWatcherClass {
 
   destroyTargetsForWatcher(watcherDataObject) {
     // Notify to all worker threads to destroy their target actor running in them
-    for (const {
-      dbg,
-      workerThreadServerForwardingPrefix,
-      transport,
-    } of watcherDataObject.workers) {
-      if (isWorkerDebuggerAlive(dbg)) {
-        try {
-          dbg.postMessage(
-            JSON.stringify({
-              type: "disconnect",
-              forwardingPrefix: workerThreadServerForwardingPrefix,
-            })
-          );
-        } catch (e) {}
-      }
-      // Also cleanup the DevToolsTransport created in the main thread to bridge RDP to the worker thread
+    for (const { transport } of watcherDataObject.workers) {
+      // The transport may not be set if the worker is still being connected to from createWorkerTargetActor.
       if (transport) {
+        // Clean the DevToolsTransport created in the main thread to bridge RDP to the worker thread.
+        // This will also send a last message to the worker to clean things up in the other thread.
         transport.close();
       }
     }
