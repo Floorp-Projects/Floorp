@@ -663,6 +663,8 @@
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Allow for all sites</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
     <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">If you trust this extension, you can give it permission on every website.</string>
+    <!-- The text shown when an add-on does not require permissions -->
+    <string name="addons_does_not_require_permissions">This extension doesn’t require any permissions.</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->

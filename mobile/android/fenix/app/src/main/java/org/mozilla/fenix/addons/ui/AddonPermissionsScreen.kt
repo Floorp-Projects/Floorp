@@ -53,18 +53,39 @@ fun AddonPermissionsScreen(
     onLearnMoreClick: (String) -> Unit,
 ) {
     LazyColumn(modifier = Modifier.padding(vertical = 8.dp)) {
-        // Required Permissions Header
-        item {
-            SectionHeader(
-                label = stringResource(R.string.addons_permissions_heading_required),
-            )
+        if (permissions.isNotEmpty()) {
+            // Required Permissions Header
+            item {
+                SectionHeader(
+                    label = stringResource(R.string.addons_permissions_heading_required),
+                )
+            }
+
+            // Required Permissions
+            items(items = permissions) { permission ->
+                TextListItem(
+                    label = permission,
+                )
+            }
         }
 
-        // Required Permissions
-        items(items = permissions) { permission ->
-            TextListItem(
-                label = permission,
-            )
+        if (permissions.isEmpty() && (optionalPermissions.isEmpty() && originPermissions.isEmpty())) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, start = 16.dp, bottom = 32.dp, end = 16.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.addons_does_not_require_permissions),
+                        color = FirefoxTheme.colors.textPrimary,
+                        style = FirefoxTheme.typography.headline8,
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { heading() },
+                    )
+                }
+            }
         }
 
         // Optional Section
@@ -284,6 +305,27 @@ private fun AddonPermissionsScreenPreview() {
                 permissions = permissions,
                 optionalPermissions = optionalPermissions,
                 originPermissions = originPermissions,
+                isAllSitesSwitchVisible = true,
+                isAllSitesEnabled = false,
+                onAddOptionalPermissions = { _ -> },
+                onRemoveOptionalPermissions = { _ -> },
+                onAddAllSitesPermissions = {},
+                onRemoveAllSitesPermissions = {},
+                onLearnMoreClick = { _ -> },
+            )
+        }
+    }
+}
+
+@Composable
+@LightDarkPreview
+private fun AddonPermissionsScreenWithPermissionsPreview() {
+    FirefoxTheme {
+        Column(modifier = Modifier.background(FirefoxTheme.colors.layer1)) {
+            AddonPermissionsScreen(
+                permissions = emptyList(),
+                optionalPermissions = emptyList(),
+                originPermissions = emptyList(),
                 isAllSitesSwitchVisible = true,
                 isAllSitesEnabled = false,
                 onAddOptionalPermissions = { _ -> },
