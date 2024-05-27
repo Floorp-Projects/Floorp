@@ -193,6 +193,10 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
 nsresult ModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
+  if (aRequest->IsTextSource()) {
+    ScriptLoader::CalculateBytecodeCacheFlag(aRequest);
+  }
+
   if (aRequest->GetScriptLoadContext()->mWasCompiledOMT) {
     JS::InstantiationStorage storage;
     RefPtr<JS::Stencil> stencil =
@@ -209,7 +213,7 @@ nsresult ModuleLoader::CompileFetchedModule(
     }
 
     if (aRequest->IsTextSource() &&
-        ScriptLoader::ShouldCacheBytecode(aRequest)) {
+        aRequest->PassedConditionForBytecodeEncoding()) {
       if (!JS::StartIncrementalEncoding(aCx, std::move(stencil))) {
         return NS_ERROR_FAILURE;
       }
@@ -257,7 +261,8 @@ nsresult ModuleLoader::CompileFetchedModule(
     return NS_ERROR_FAILURE;
   }
 
-  if (aRequest->IsTextSource() && ScriptLoader::ShouldCacheBytecode(aRequest)) {
+  if (aRequest->IsTextSource() &&
+      aRequest->PassedConditionForBytecodeEncoding()) {
     if (!JS::StartIncrementalEncoding(aCx, std::move(stencil))) {
       return NS_ERROR_FAILURE;
     }
