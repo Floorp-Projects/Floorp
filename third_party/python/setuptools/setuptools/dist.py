@@ -1,231 +1,42 @@
 __all__ = ['Distribution']
 
+
 import io
-import sys
-import re
-import os
-import numbers
-import distutils.log
-import distutils.core
-import distutils.cmd
-import distutils.dist
-import distutils.command
-from distutils.util import strtobool
-from distutils.debug import DEBUG
-from distutils.fancy_getopt import translate_longopt
-from glob import iglob
 import itertools
-import textwrap
+import numbers
+import os
+import re
+import sys
 from contextlib import suppress
-from typing import List, Optional, Set, TYPE_CHECKING
+from glob import iglob
 from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List, MutableMapping, Optional, Set, Tuple
 
-from collections import defaultdict
-from email import message_from_file
-
+import distutils.cmd
+import distutils.command
+import distutils.core
+import distutils.dist
+import distutils.log
+from distutils.debug import DEBUG
 from distutils.errors import DistutilsOptionError, DistutilsSetupError
-from distutils.util import rfc822_escape
+from distutils.fancy_getopt import translate_longopt
+from distutils.util import strtobool
 
-from setuptools.extern import packaging
-from setuptools.extern import ordered_set
-from setuptools.extern.more_itertools import unique_everseen, partition
+from .extern.more_itertools import partition, unique_everseen
+from .extern.ordered_set import OrderedSet
+from .extern.packaging.markers import InvalidMarker, Marker
+from .extern.packaging.specifiers import InvalidSpecifier, SpecifierSet
+from .extern.packaging.version import Version
 
-import setuptools
-import setuptools.command
-from setuptools import windows_support
-from setuptools.monkey import get_unpatched
-from setuptools.config import setupcfg, pyprojecttoml
-from setuptools.discovery import ConfigDiscovery
-
-from setuptools.extern.packaging import version
-from . import _reqs
 from . import _entry_points
 from . import _normalization
+from . import _reqs
+from . import command as _  # noqa  -- imported for side-effects
 from ._importlib import metadata
+from .config import setupcfg, pyprojecttoml
+from .discovery import ConfigDiscovery
+from .monkey import get_unpatched
 from .warnings import InformationOnly, SetuptoolsDeprecationWarning
-
-if TYPE_CHECKING:
-    from email.message import Message
-
-__import__('setuptools.extern.packaging.specifiers')
-__import__('setuptools.extern.packaging.version')
-
-
-def get_metadata_version(self):
-    mv = getattr(self, 'metadata_version', None)
-    if mv is None:
-        mv = version.Version('2.1')
-        self.metadata_version = mv
-    return mv
-
-
-def rfc822_unescape(content: str) -> str:
-    """Reverse RFC-822 escaping by removing leading whitespaces from content."""
-    lines = content.splitlines()
-    if len(lines) == 1:
-        return lines[0].lstrip()
-    return '\n'.join((lines[0].lstrip(), textwrap.dedent('\n'.join(lines[1:]))))
-
-
-def _read_field_from_msg(msg: "Message", field: str) -> Optional[str]:
-    """Read Message header field."""
-    value = msg[field]
-    if value == 'UNKNOWN':
-        return None
-    return value
-
-
-def _read_field_unescaped_from_msg(msg: "Message", field: str) -> Optional[str]:
-    """Read Message header field and apply rfc822_unescape."""
-    value = _read_field_from_msg(msg, field)
-    if value is None:
-        return value
-    return rfc822_unescape(value)
-
-
-def _read_list_from_msg(msg: "Message", field: str) -> Optional[List[str]]:
-    """Read Message header field and return all results as list."""
-    values = msg.get_all(field, None)
-    if values == []:
-        return None
-    return values
-
-
-def _read_payload_from_msg(msg: "Message") -> Optional[str]:
-    value = msg.get_payload().strip()
-    if value == 'UNKNOWN' or not value:
-        return None
-    return value
-
-
-def read_pkg_file(self, file):
-    """Reads the metadata values from a file object."""
-    msg = message_from_file(file)
-
-    self.metadata_version = version.Version(msg['metadata-version'])
-    self.name = _read_field_from_msg(msg, 'name')
-    self.version = _read_field_from_msg(msg, 'version')
-    self.description = _read_field_from_msg(msg, 'summary')
-    # we are filling author only.
-    self.author = _read_field_from_msg(msg, 'author')
-    self.maintainer = None
-    self.author_email = _read_field_from_msg(msg, 'author-email')
-    self.maintainer_email = None
-    self.url = _read_field_from_msg(msg, 'home-page')
-    self.download_url = _read_field_from_msg(msg, 'download-url')
-    self.license = _read_field_unescaped_from_msg(msg, 'license')
-
-    self.long_description = _read_field_unescaped_from_msg(msg, 'description')
-    if (
-        self.long_description is None and
-        self.metadata_version >= version.Version('2.1')
-    ):
-        self.long_description = _read_payload_from_msg(msg)
-    self.description = _read_field_from_msg(msg, 'summary')
-
-    if 'keywords' in msg:
-        self.keywords = _read_field_from_msg(msg, 'keywords').split(',')
-
-    self.platforms = _read_list_from_msg(msg, 'platform')
-    self.classifiers = _read_list_from_msg(msg, 'classifier')
-
-    # PEP 314 - these fields only exist in 1.1
-    if self.metadata_version == version.Version('1.1'):
-        self.requires = _read_list_from_msg(msg, 'requires')
-        self.provides = _read_list_from_msg(msg, 'provides')
-        self.obsoletes = _read_list_from_msg(msg, 'obsoletes')
-    else:
-        self.requires = None
-        self.provides = None
-        self.obsoletes = None
-
-    self.license_files = _read_list_from_msg(msg, 'license-file')
-
-
-def single_line(val):
-    """
-    Quick and dirty validation for Summary pypa/setuptools#1390.
-    """
-    if '\n' in val:
-        # TODO: Replace with `raise ValueError("newlines not allowed")`
-        # after reviewing #2893.
-        msg = "newlines are not allowed in `summary` and will break in the future"
-        SetuptoolsDeprecationWarning.emit("Invalid config.", msg)
-        # due_date is undefined. Controversial change, there was a lot of push back.
-        val = val.strip().split('\n')[0]
-    return val
-
-
-# Based on Python 3.5 version
-def write_pkg_file(self, file):  # noqa: C901  # is too complex (14)  # FIXME
-    """Write the PKG-INFO format data to a file object."""
-    version = self.get_metadata_version()
-
-    def write_field(key, value):
-        file.write("%s: %s\n" % (key, value))
-
-    write_field('Metadata-Version', str(version))
-    write_field('Name', self.get_name())
-    write_field('Version', self.get_version())
-
-    summary = self.get_description()
-    if summary:
-        write_field('Summary', single_line(summary))
-
-    optional_fields = (
-        ('Home-page', 'url'),
-        ('Download-URL', 'download_url'),
-        ('Author', 'author'),
-        ('Author-email', 'author_email'),
-        ('Maintainer', 'maintainer'),
-        ('Maintainer-email', 'maintainer_email'),
-    )
-
-    for field, attr in optional_fields:
-        attr_val = getattr(self, attr, None)
-        if attr_val is not None:
-            write_field(field, attr_val)
-
-    license = self.get_license()
-    if license:
-        write_field('License', rfc822_escape(license))
-
-    for project_url in self.project_urls.items():
-        write_field('Project-URL', '%s, %s' % project_url)
-
-    keywords = ','.join(self.get_keywords())
-    if keywords:
-        write_field('Keywords', keywords)
-
-    platforms = self.get_platforms() or []
-    for platform in platforms:
-        write_field('Platform', platform)
-
-    self._write_list(file, 'Classifier', self.get_classifiers())
-
-    # PEP 314
-    self._write_list(file, 'Requires', self.get_requires())
-    self._write_list(file, 'Provides', self.get_provides())
-    self._write_list(file, 'Obsoletes', self.get_obsoletes())
-
-    # Setuptools specific for PEP 345
-    if hasattr(self, 'python_requires'):
-        write_field('Requires-Python', self.python_requires)
-
-    # PEP 566
-    if self.long_description_content_type:
-        write_field('Description-Content-Type', self.long_description_content_type)
-    if self.provides_extras:
-        for extra in self.provides_extras:
-            write_field('Provides-Extra', extra)
-
-    self._write_list(file, 'License-File', self.license_files or [])
-
-    long_description = self.get_long_description()
-    if long_description:
-        file.write("\n%s" % long_description)
-        if not long_description.endswith("\n"):
-            file.write("\n")
 
 
 sequence = tuple, list
@@ -276,7 +87,7 @@ def check_nsp(dist, attr, value):
         SetuptoolsDeprecationWarning.emit(
             "The namespace_packages parameter is deprecated.",
             "Please replace its usage with implicit namespaces (PEP 420).",
-            see_docs="references/keywords.html#keyword-namespace-packages"
+            see_docs="references/keywords.html#keyword-namespace-packages",
             # TODO: define due_date, it may break old packages that are no longer
             # maintained (e.g. sphinxcontrib extensions) when installed from source.
             # Warning officially introduced in May 2022, however the deprecation
@@ -300,7 +111,7 @@ def _check_extra(extra, reqs):
     name, sep, marker = extra.partition(':')
     try:
         _check_marker(marker)
-    except packaging.markers.InvalidMarker:
+    except InvalidMarker:
         msg = f"Invalid environment marker: {marker} ({extra!r})"
         raise DistutilsSetupError(msg) from None
     list(_reqs.parse(reqs))
@@ -309,7 +120,7 @@ def _check_extra(extra, reqs):
 def _check_marker(marker):
     if not marker:
         return
-    m = packaging.markers.Marker(marker)
+    m = Marker(marker)
     m.evaluate()
 
 
@@ -345,8 +156,8 @@ def check_requirements(dist, attr, value):
 def check_specifier(dist, attr, value):
     """Verify that value is a valid version specifier"""
     try:
-        packaging.specifiers.SpecifierSet(value)
-    except (packaging.specifiers.InvalidSpecifier, AttributeError) as error:
+        SpecifierSet(value)
+    except (InvalidSpecifier, AttributeError) as error:
         tmpl = (
             "{attr!r} must be a string " "containing valid version specifiers; {error}"
         )
@@ -391,7 +202,11 @@ def check_packages(dist, attr, value):
             )
 
 
-_Distribution = get_unpatched(distutils.core.Distribution)
+if TYPE_CHECKING:
+    # Work around a mypy issue where type[T] can't be used as a base: https://github.com/python/mypy/issues/10962
+    _Distribution = distutils.core.Distribution
+else:
+    _Distribution = get_unpatched(distutils.core.Distribution)
 
 
 class Distribution(_Distribution):
@@ -449,9 +264,11 @@ class Distribution(_Distribution):
     _DISTUTILS_UNSUPPORTED_METADATA = {
         'long_description_content_type': lambda: None,
         'project_urls': dict,
-        'provides_extras': ordered_set.OrderedSet,
+        'provides_extras': OrderedSet,
         'license_file': lambda: None,
         'license_files': lambda: None,
+        'install_requires': list,
+        'extras_require': dict,
     }
 
     _patched_dist = None
@@ -470,12 +287,12 @@ class Distribution(_Distribution):
                 dist._version = _normalization.safe_version(str(attrs['version']))
                 self._patched_dist = dist
 
-    def __init__(self, attrs=None):
+    def __init__(self, attrs: Optional[MutableMapping] = None) -> None:
         have_package_data = hasattr(self, "package_data")
         if not have_package_data:
-            self.package_data = {}
+            self.package_data: Dict[str, List[str]] = {}
         attrs = attrs or {}
-        self.dist_files = []
+        self.dist_files: List[Tuple[str, str, str]] = []
         # Filter-out setuptools' specific options.
         self.src_root = attrs.pop("src_root", None)
         self.patch_missing_pkg_info(attrs)
@@ -483,32 +300,22 @@ class Distribution(_Distribution):
         self.setup_requires = attrs.pop('setup_requires', [])
         for ep in metadata.entry_points(group='distutils.setup_keywords'):
             vars(self).setdefault(ep.name, None)
-        _Distribution.__init__(
-            self,
-            {
-                k: v
-                for k, v in attrs.items()
-                if k not in self._DISTUTILS_UNSUPPORTED_METADATA
-            },
-        )
+
+        metadata_only = set(self._DISTUTILS_UNSUPPORTED_METADATA)
+        metadata_only -= {"install_requires", "extras_require"}
+        dist_attrs = {k: v for k, v in attrs.items() if k not in metadata_only}
+        _Distribution.__init__(self, dist_attrs)
 
         # Private API (setuptools-use only, not restricted to Distribution)
         # Stores files that are referenced by the configuration and need to be in the
         # sdist (e.g. `version = file: VERSION.txt`)
         self._referenced_files: Set[str] = set()
 
-        # Save the original dependencies before they are processed into the egg format
-        self._orig_extras_require = {}
-        self._orig_install_requires = []
-        self._tmp_extras_require = defaultdict(ordered_set.OrderedSet)
-
         self.set_defaults = ConfigDiscovery(self)
 
         self._set_metadata_defaults(attrs)
 
-        self.metadata.version = self._normalize_version(
-            self._validate_version(self.metadata.version)
-        )
+        self.metadata.version = self._normalize_version(self.metadata.version)
         self._finalize_requires()
 
     def _validate_metadata(self):
@@ -536,38 +343,18 @@ class Distribution(_Distribution):
 
     @staticmethod
     def _normalize_version(version):
-        if isinstance(version, setuptools.sic) or version is None:
-            return version
+        from . import sic
 
-        normalized = str(packaging.version.Version(version))
-        if version != normalized:
-            InformationOnly.emit(f"Normalizing '{version}' to '{normalized}'")
-            return normalized
-        return version
-
-    @staticmethod
-    def _validate_version(version):
         if isinstance(version, numbers.Number):
             # Some people apparently take "version number" too literally :)
             version = str(version)
+        elif isinstance(version, sic) or version is None:
+            return version
 
-        if version is not None:
-            try:
-                packaging.version.Version(version)
-            except (packaging.version.InvalidVersion, TypeError):
-                SetuptoolsDeprecationWarning.emit(
-                    f"Invalid version: {version!r}.",
-                    """
-                    The version specified is not a valid version according to PEP 440.
-                    This may not work as expected with newer versions of
-                    setuptools, pip, and PyPI.
-                    """,
-                    see_url="https://peps.python.org/pep-0440/",
-                    due_date=(2023, 9, 26),
-                    # Warning initially introduced in 26 Sept 2014
-                    # pypa/packaging already removed legacy versions.
-                )
-                return setuptools.sic(version)
+        normalized = str(Version(version))
+        if version != normalized:
+            InformationOnly.emit(f"Normalizing '{version}' to '{normalized}'")
+            return normalized
         return version
 
     def _finalize_requires(self):
@@ -578,83 +365,27 @@ class Distribution(_Distribution):
         if getattr(self, 'python_requires', None):
             self.metadata.python_requires = self.python_requires
 
-        if getattr(self, 'extras_require', None):
-            # Save original before it is messed by _convert_extras_requirements
-            self._orig_extras_require = self._orig_extras_require or self.extras_require
+        self._normalize_requires()
+        self.metadata.install_requires = self.install_requires
+        self.metadata.extras_require = self.extras_require
+
+        if self.extras_require:
             for extra in self.extras_require.keys():
-                # Since this gets called multiple times at points where the
-                # keys have become 'converted' extras, ensure that we are only
-                # truly adding extras we haven't seen before here.
+                # Setuptools allows a weird "<name>:<env markers> syntax for extras
                 extra = extra.split(':')[0]
                 if extra:
                     self.metadata.provides_extras.add(extra)
 
-        if getattr(self, 'install_requires', None) and not self._orig_install_requires:
-            # Save original before it is messed by _move_install_requirements_markers
-            self._orig_install_requires = self.install_requires
+    def _normalize_requires(self):
+        """Make sure requirement-related attributes exist and are normalized"""
+        install_requires = getattr(self, "install_requires", None) or []
+        extras_require = getattr(self, "extras_require", None) or {}
+        self.install_requires = list(map(str, _reqs.parse(install_requires)))
+        self.extras_require = {
+            k: list(map(str, _reqs.parse(v or []))) for k, v in extras_require.items()
+        }
 
-        self._convert_extras_requirements()
-        self._move_install_requirements_markers()
-
-    def _convert_extras_requirements(self):
-        """
-        Convert requirements in `extras_require` of the form
-        `"extra": ["barbazquux; {marker}"]` to
-        `"extra:{marker}": ["barbazquux"]`.
-        """
-        spec_ext_reqs = getattr(self, 'extras_require', None) or {}
-        tmp = defaultdict(ordered_set.OrderedSet)
-        self._tmp_extras_require = getattr(self, '_tmp_extras_require', tmp)
-        for section, v in spec_ext_reqs.items():
-            # Do not strip empty sections.
-            self._tmp_extras_require[section]
-            for r in _reqs.parse(v):
-                suffix = self._suffix_for(r)
-                self._tmp_extras_require[section + suffix].append(r)
-
-    @staticmethod
-    def _suffix_for(req):
-        """
-        For a requirement, return the 'extras_require' suffix for
-        that requirement.
-        """
-        return ':' + str(req.marker) if req.marker else ''
-
-    def _move_install_requirements_markers(self):
-        """
-        Move requirements in `install_requires` that are using environment
-        markers `extras_require`.
-        """
-
-        # divide the install_requires into two sets, simple ones still
-        # handled by install_requires and more complex ones handled
-        # by extras_require.
-
-        def is_simple_req(req):
-            return not req.marker
-
-        spec_inst_reqs = getattr(self, 'install_requires', None) or ()
-        inst_reqs = list(_reqs.parse(spec_inst_reqs))
-        simple_reqs = filter(is_simple_req, inst_reqs)
-        complex_reqs = itertools.filterfalse(is_simple_req, inst_reqs)
-        self.install_requires = list(map(str, simple_reqs))
-
-        for r in complex_reqs:
-            self._tmp_extras_require[':' + str(r.marker)].append(r)
-        self.extras_require = dict(
-            # list(dict.fromkeys(...))  ensures a list of unique strings
-            (k, list(dict.fromkeys(str(r) for r in map(self._clean_req, v))))
-            for k, v in self._tmp_extras_require.items()
-        )
-
-    def _clean_req(self, req):
-        """
-        Given a Requirement, remove environment markers and return it.
-        """
-        req.marker = None
-        return req
-
-    def _finalize_license_files(self):
+    def _finalize_license_files(self) -> None:
         """Compute names of all license files which should be included."""
         license_files: Optional[List[str]] = self.metadata.license_files
         patterns: List[str] = license_files if license_files else []
@@ -667,7 +398,7 @@ class Distribution(_Distribution):
             # Default patterns match the ones wheel uses
             # See https://wheel.readthedocs.io/en/stable/user_guide.html
             # -> 'Including license files in the generated wheel file'
-            patterns = ('LICEN[CS]E*', 'COPYING*', 'NOTICE*', 'AUTHORS*')
+            patterns = ['LICEN[CS]E*', 'COPYING*', 'NOTICE*', 'AUTHORS*']
 
         self.metadata.license_files = list(
             unique_everseen(self._expand_patterns(patterns))
@@ -729,7 +460,7 @@ class Distribution(_Distribution):
         parser = ConfigParser()
         parser.optionxform = str
         for filename in filenames:
-            with io.open(filename, encoding='utf-8') as reader:
+            with open(filename, encoding='utf-8') as reader:
                 if DEBUG:
                     self.announce("  reading {filename}".format(**locals()))
                 parser.read_file(reader)
@@ -756,7 +487,7 @@ class Distribution(_Distribution):
         # If there was a "global" section in the config file, use it
         # to set Distribution options.
 
-        for (opt, (src, val)) in self.command_options['global'].items():
+        for opt, (src, val) in self.command_options['global'].items():
             alias = self.negative_opt.get(opt)
             if alias:
                 val = not strtobool(val)
@@ -776,10 +507,12 @@ class Distribution(_Distribution):
             return opt
 
         underscore_opt = opt.replace('-', '_')
-        commands = list(itertools.chain(
-            distutils.command.__all__,
-            self._setuptools_commands(),
-        ))
+        commands = list(
+            itertools.chain(
+                distutils.command.__all__,
+                self._setuptools_commands(),
+            )
+        )
         if (
             not section.startswith('options')
             and section != 'metadata'
@@ -795,14 +528,15 @@ class Distribution(_Distribution):
                 versions. Please use the underscore name {underscore_opt!r} instead.
                 """,
                 see_docs="userguide/declarative_config.html",
-                due_date=(2023, 9, 26),
+                due_date=(2024, 9, 26),
                 # Warning initially introduced in 3 Mar 2021
             )
         return underscore_opt
 
     def _setuptools_commands(self):
         try:
-            return metadata.distribution('setuptools').entry_points.names
+            entry_points = metadata.distribution('setuptools').entry_points
+            return {ep.name for ep in entry_points}  # Avoid newer API for compatibility
         except metadata.PackageNotFoundError:
             # during bootstrapping, distribution doesn't exist
             return []
@@ -819,7 +553,7 @@ class Distribution(_Distribution):
             future versions. Please use lowercase {lowercase_opt!r} instead.
             """,
             see_docs="userguide/declarative_config.html",
-            due_date=(2023, 9, 26),
+            due_date=(2024, 9, 26),
             # Warning initially introduced in 6 Mar 2021
         )
         return lowercase_opt
@@ -843,7 +577,7 @@ class Distribution(_Distribution):
 
         if DEBUG:
             self.announce("  setting options for '%s' command:" % command_name)
-        for (option, (source, value)) in option_dict.items():
+        for option, (source, value) in option_dict.items():
             if DEBUG:
                 self.announce("    %s = %s (from %s)" % (option, value, source))
             try:
@@ -902,7 +636,7 @@ class Distribution(_Distribution):
 
     def fetch_build_eggs(self, requires):
         """Resolve pre-setup requirements"""
-        from setuptools.installer import _fetch_build_eggs
+        from .installer import _fetch_build_eggs
 
         return _fetch_build_eggs(self, requires)
 
@@ -945,12 +679,14 @@ class Distribution(_Distribution):
                 ep.load()(self, ep.name, value)
 
     def get_egg_cache_dir(self):
+        from . import windows_support
+
         egg_cache_dir = os.path.join(os.curdir, '.eggs')
         if not os.path.exists(egg_cache_dir):
             os.mkdir(egg_cache_dir)
             windows_support.hide_file(egg_cache_dir)
             readme_txt_filename = os.path.join(egg_cache_dir, 'README.txt')
-            with open(readme_txt_filename, 'w') as f:
+            with open(readme_txt_filename, 'w', encoding="utf-8") as f:
                 f.write(
                     'This directory contains eggs that were downloaded '
                     'by setuptools to build, test, and run plug-ins.\n\n'
@@ -965,7 +701,7 @@ class Distribution(_Distribution):
 
     def fetch_build_egg(self, req):
         """Fetch an egg needed for building"""
-        from setuptools.installer import fetch_build_egg
+        from .installer import fetch_build_egg
 
         return fetch_build_egg(self, req)
 
@@ -1046,6 +782,8 @@ class Distribution(_Distribution):
         for p in self.iter_distribution_names():
             if p == package or p.startswith(pfx):
                 return True
+
+        return False
 
     def _exclude_misc(self, name, value):
         """Handle 'exclude()' for list/tuple attrs without a special handler"""
@@ -1153,9 +891,7 @@ class Distribution(_Distribution):
         d = {}
 
         for cmd, opts in self.command_options.items():
-
             for opt, (src, val) in opts.items():
-
                 if src != "command line":
                     continue
 
@@ -1183,11 +919,9 @@ class Distribution(_Distribution):
     def iter_distribution_names(self):
         """Yield all packages, modules, and extension names in distribution"""
 
-        for pkg in self.packages or ():
-            yield pkg
+        yield from self.packages or ()
 
-        for module in self.py_modules or ():
-            yield module
+        yield from self.py_modules or ()
 
         for ext in self.ext_modules or ():
             if isinstance(ext, tuple):

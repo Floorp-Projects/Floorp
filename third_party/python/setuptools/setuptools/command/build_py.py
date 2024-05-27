@@ -5,7 +5,6 @@ import distutils.command.build_py as orig
 import os
 import fnmatch
 import textwrap
-import io
 import distutils.errors
 import itertools
 import stat
@@ -14,6 +13,9 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
 from ..extern.more_itertools import unique_everseen
 from ..warnings import SetuptoolsDeprecationWarning
+
+
+_IMPLICIT_DATA_FILES = ('*.pyi', 'py.typed')
 
 
 def make_writable(target):
@@ -29,6 +31,7 @@ class build_py(orig.build_py):
     Also, this version of the 'build_py' command allows you to specify both
     'py_modules' and 'packages' in the same setup operation.
     """
+
     editable_mode: bool = False
     existing_egg_info_dir: Optional[str] = None  #: Private API, internal use only.
 
@@ -40,14 +43,16 @@ class build_py(orig.build_py):
             del self.__dict__['data_files']
         self.__updated_files = []
 
-    def copy_file(self, infile, outfile, preserve_mode=1, preserve_times=1,
-                  link=None, level=1):
+    def copy_file(
+        self, infile, outfile, preserve_mode=1, preserve_times=1, link=None, level=1
+    ):
         # Overwrite base class to allow using links
         if link:
             infile = str(Path(infile).resolve())
             outfile = str(Path(outfile).resolve())
-        return super().copy_file(infile, outfile, preserve_mode, preserve_times,
-                                 link, level)
+        return super().copy_file(
+            infile, outfile, preserve_mode, preserve_times, link, level
+        )
 
     def run(self):
         """Build modules, packages, and copy data files to build directory"""
@@ -113,6 +118,7 @@ class build_py(orig.build_py):
             self.package_data,
             package,
             src_dir,
+            extra_patterns=_IMPLICIT_DATA_FILES,
         )
         globs_expanded = map(partial(glob, recursive=True), patterns)
         # flatten the expanded globs into an iterable of matches
@@ -140,7 +146,7 @@ class build_py(orig.build_py):
 
     def _get_module_mapping(self) -> Iterator[Tuple[str, str]]:
         """Iterate over all modules producing (dest, src) pairs."""
-        for (package, module, module_file) in self.find_all_modules():
+        for package, module, module_file in self.find_all_modules():
             package = package.split('.')
             filename = self.get_module_outfile(self.build_lib, package, module)
             yield (filename, module_file)
@@ -242,7 +248,7 @@ class build_py(orig.build_py):
         else:
             return init_py
 
-        with io.open(init_py, 'rb') as f:
+        with open(init_py, 'rb') as f:
             contents = f.read()
         if b'declare_namespace' not in contents:
             raise distutils.errors.DistutilsError(
@@ -282,7 +288,7 @@ class build_py(orig.build_py):
         return list(unique_everseen(keepers))
 
     @staticmethod
-    def _get_platform_patterns(spec, package, src_dir):
+    def _get_platform_patterns(spec, package, src_dir, extra_patterns=()):
         """
         yield platform-specific path patterns (suitable for glob
         or fn_match) from a glob-based spec (such as
@@ -290,6 +296,7 @@ class build_py(orig.build_py):
         matching package in src_dir.
         """
         raw_patterns = itertools.chain(
+            extra_patterns,
             spec.get('', []),
             spec.get(package, []),
         )
@@ -371,7 +378,7 @@ class _IncludePackageDataAbuse:
         self._already_warned = set()
 
     def is_module(self, file):
-        return file.endswith(".py") and file[:-len(".py")].isidentifier()
+        return file.endswith(".py") and file[: -len(".py")].isidentifier()
 
     def importable_subpackage(self, parent, file):
         pkg = Path(file).parent

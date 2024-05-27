@@ -49,7 +49,7 @@ requests-unixsocket==0.2.0
 responses==0.10.6
 rsa==3.1.4
 sentry-sdk==0.14.3
-setuptools==68.0.0
+setuptools==70.0.0
 six==1.16.0
 slugid==2.0.0
 taskcluster==44.2.2

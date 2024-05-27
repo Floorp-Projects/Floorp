@@ -2,7 +2,7 @@
 
 Previously, when a user or a command line tool (let's call it a "frontend")
 needed to make a request of setuptools to take a certain action, for
-example, generating a list of installation requirements, the frontend would
+example, generating a list of installation requirements, the frontend
 would call "setup.py egg_info" or "setup.py bdist_wheel" on the command line.
 
 PEP 517 defines a different method of interfacing with setuptools. Rather
@@ -47,16 +47,18 @@ from .warnings import SetuptoolsDeprecationWarning
 from distutils.util import strtobool
 
 
-__all__ = ['get_requires_for_build_sdist',
-           'get_requires_for_build_wheel',
-           'prepare_metadata_for_build_wheel',
-           'build_wheel',
-           'build_sdist',
-           'get_requires_for_build_editable',
-           'prepare_metadata_for_build_editable',
-           'build_editable',
-           '__legacy__',
-           'SetupRequirementsError']
+__all__ = [
+    'get_requires_for_build_sdist',
+    'get_requires_for_build_wheel',
+    'prepare_metadata_for_build_wheel',
+    'build_wheel',
+    'build_sdist',
+    'get_requires_for_build_editable',
+    'prepare_metadata_for_build_editable',
+    'build_editable',
+    '__legacy__',
+    'SetupRequirementsError',
+]
 
 SETUPTOOLS_ENABLE_FEATURES = os.getenv("SETUPTOOLS_ENABLE_FEATURES", "").lower()
 LEGACY_EDITABLE = "legacy-editable" in SETUPTOOLS_ENABLE_FEATURES.replace("_", "-")
@@ -106,30 +108,29 @@ def no_install_setup_requires():
 
 
 def _get_immediate_subdirectories(a_dir):
-    return [name for name in os.listdir(a_dir)
-            if os.path.isdir(os.path.join(a_dir, name))]
+    return [
+        name for name in os.listdir(a_dir) if os.path.isdir(os.path.join(a_dir, name))
+    ]
 
 
 def _file_with_extension(directory, extension):
-    matching = (
-        f for f in os.listdir(directory)
-        if f.endswith(extension)
-    )
+    matching = (f for f in os.listdir(directory) if f.endswith(extension))
     try:
-        file, = matching
+        (file,) = matching
     except ValueError:
         raise ValueError(
             'No distribution was found. Ensure that `setup.py` '
-            'is not empty and that it calls `setup()`.')
+            'is not empty and that it calls `setup()`.'
+        ) from None
     return file
 
 
 def _open_setup_script(setup_script):
     if not os.path.exists(setup_script):
         # Supply a default setup.py
-        return io.StringIO(u"from setuptools import setup; setup()")
+        return io.StringIO("from setuptools import setup; setup()")
 
-    return getattr(tokenize, 'open', open)(setup_script)
+    return tokenize.open(setup_script)
 
 
 @contextlib.contextmanager
@@ -159,6 +160,7 @@ class _ConfigSettingsTranslator:
     """Translate ``config_settings`` into distutils-style command arguments.
     Only a limited number of options is currently supported.
     """
+
     # See pypa/setuptools#1928 pypa/setuptools#2491
 
     def _get_config(self, key: str, config_settings: _ConfigSettings) -> List[str]:
@@ -182,11 +184,6 @@ class _ConfigSettingsTranslator:
         cfg = config_settings or {}
         opts = cfg.get(key) or []
         return shlex.split(opts) if isinstance(opts, str) else opts
-
-    def _valid_global_options(self):
-        """Global options accepted by setuptools (e.g. quiet or verbose)."""
-        options = (opt[:2] for opt in setuptools.dist.Distribution.global_options)
-        return {flag for long_and_short in options for flag in long_and_short if flag}
 
     def _global_args(self, config_settings: _ConfigSettings) -> Iterator[str]:
         """
@@ -218,9 +215,7 @@ class _ConfigSettingsTranslator:
             level = str(cfg.get("quiet") or cfg.get("--quiet") or "1")
             yield ("-v" if level.lower() in falsey else "-q")
 
-        valid = self._valid_global_options()
-        args = self._get_config("--global-option", config_settings)
-        yield from (arg for arg in args if arg.strip("-") in valid)
+        yield from self._get_config("--global-option", config_settings)
 
     def __dist_info_args(self, config_settings: _ConfigSettings) -> Iterator[str]:
         """
@@ -228,7 +223,7 @@ class _ConfigSettingsTranslator:
 
         .. warning::
            We cannot use this yet as it requires the ``sdist`` and ``bdist_wheel``
-           commands run in ``build_sdist`` and ``build_wheel`` to re-use the egg-info
+           commands run in ``build_sdist`` and ``build_wheel`` to reuse the egg-info
            directory created in ``prepare_metadata_for_build_wheel``.
 
         >>> fn = _ConfigSettingsTranslator()._ConfigSettingsTranslator__dist_info_args
@@ -282,32 +277,10 @@ class _ConfigSettingsTranslator:
         ['foo']
         >>> list(fn({'--build-option': 'foo bar'}))
         ['foo', 'bar']
-        >>> warnings.simplefilter('error', SetuptoolsDeprecationWarning)
-        >>> list(fn({'--global-option': 'foo'}))  # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-        SetuptoolsDeprecationWarning: ...arguments given via `--global-option`...
+        >>> list(fn({'--global-option': 'foo'}))
+        []
         """
-        args = self._get_config("--global-option", config_settings)
-        global_opts = self._valid_global_options()
-        bad_args = []
-
-        for arg in args:
-            if arg.strip("-") not in global_opts:
-                bad_args.append(arg)
-                yield arg
-
         yield from self._get_config("--build-option", config_settings)
-
-        if bad_args:
-            SetuptoolsDeprecationWarning.emit(
-                "Incompatible `config_settings` passed to build backend.",
-                f"""
-                The arguments {bad_args!r} were given via `--global-option`.
-                Please use `--build-option` instead,
-                `--global-option` is reserved for flags like `--verbose` or `--quiet`.
-                """,
-                due_date=(2023, 9, 26),  # Warning introduced in v64.0.1, 11/Aug/2022.
-            )
 
 
 class _BuildMetaBackend(_ConfigSettingsTranslator):
@@ -316,7 +289,6 @@ class _BuildMetaBackend(_ConfigSettingsTranslator):
             *sys.argv[:1],
             *self._global_args(config_settings),
             "egg_info",
-            *self._arbitrary_args(config_settings),
         ]
         try:
             with Distribution.patch():
@@ -335,7 +307,19 @@ class _BuildMetaBackend(_ConfigSettingsTranslator):
         with _open_setup_script(__file__) as f:
             code = f.read().replace(r'\r\n', r'\n')
 
-        exec(code, locals())
+        try:
+            exec(code, locals())
+        except SystemExit as e:
+            if e.code:
+                raise
+            # We ignore exit code indicating success
+            SetuptoolsDeprecationWarning.emit(
+                "Running `setup.py` directly as CLI tool is deprecated.",
+                "Please avoid using `sys.exit(0)` or similar statements "
+                "that don't fit in the paradigm of a configuration file.",
+                see_url="https://blog.ganssle.io/articles/2021/10/"
+                "setup-py-deprecated.html",
+            )
 
     def get_requires_for_build_wheel(self, config_settings=None):
         return self._get_build_requires(config_settings, requirements=['wheel'])
@@ -367,13 +351,15 @@ class _BuildMetaBackend(_ConfigSettingsTranslator):
         msg = f"No {suffix} directory found in {metadata_directory}"
         raise errors.InternalError(msg)
 
-    def prepare_metadata_for_build_wheel(self, metadata_directory,
-                                         config_settings=None):
+    def prepare_metadata_for_build_wheel(
+        self, metadata_directory, config_settings=None
+    ):
         sys.argv = [
             *sys.argv[:1],
             *self._global_args(config_settings),
             "dist_info",
-            "--output-dir", metadata_directory,
+            "--output-dir",
+            metadata_directory,
             "--keep-egg-info",
         ]
         with no_install_setup_requires():
@@ -382,26 +368,33 @@ class _BuildMetaBackend(_ConfigSettingsTranslator):
         self._bubble_up_info_directory(metadata_directory, ".egg-info")
         return self._bubble_up_info_directory(metadata_directory, ".dist-info")
 
-    def _build_with_temp_dir(self, setup_command, result_extension,
-                             result_directory, config_settings):
+    def _build_with_temp_dir(
+        self,
+        setup_command,
+        result_extension,
+        result_directory,
+        config_settings,
+        arbitrary_args=(),
+    ):
         result_directory = os.path.abspath(result_directory)
 
         # Build in a temporary directory, then copy to the target.
         os.makedirs(result_directory, exist_ok=True)
         temp_opts = {"prefix": ".tmp-", "dir": result_directory}
+
         with tempfile.TemporaryDirectory(**temp_opts) as tmp_dist_dir:
             sys.argv = [
                 *sys.argv[:1],
                 *self._global_args(config_settings),
                 *setup_command,
-                "--dist-dir", tmp_dist_dir,
-                *self._arbitrary_args(config_settings),
+                "--dist-dir",
+                tmp_dist_dir,
+                *arbitrary_args,
             ]
             with no_install_setup_requires():
                 self.run_setup()
 
-            result_basename = _file_with_extension(
-                tmp_dist_dir, result_extension)
+            result_basename = _file_with_extension(tmp_dist_dir, result_extension)
             result_path = os.path.join(result_directory, result_basename)
             if os.path.exists(result_path):
                 # os.rename will fail overwriting on non-Unix.
@@ -410,16 +403,22 @@ class _BuildMetaBackend(_ConfigSettingsTranslator):
 
         return result_basename
 
-    def build_wheel(self, wheel_directory, config_settings=None,
-                    metadata_directory=None):
+    def build_wheel(
+        self, wheel_directory, config_settings=None, metadata_directory=None
+    ):
         with suppress_known_deprecation():
-            return self._build_with_temp_dir(['bdist_wheel'], '.whl',
-                                             wheel_directory, config_settings)
+            return self._build_with_temp_dir(
+                ['bdist_wheel'],
+                '.whl',
+                wheel_directory,
+                config_settings,
+                self._arbitrary_args(config_settings),
+            )
 
     def build_sdist(self, sdist_directory, config_settings=None):
-        return self._build_with_temp_dir(['sdist', '--formats', 'gztar'],
-                                         '.tar.gz', sdist_directory,
-                                         config_settings)
+        return self._build_with_temp_dir(
+            ['sdist', '--formats', 'gztar'], '.tar.gz', sdist_directory, config_settings
+        )
 
     def _get_dist_info_dir(self, metadata_directory: Optional[str]) -> Optional[str]:
         if not metadata_directory:
@@ -429,7 +428,6 @@ class _BuildMetaBackend(_ConfigSettingsTranslator):
         return str(dist_info_candidates[0]) if dist_info_candidates else None
 
     if not LEGACY_EDITABLE:
-
         # PEP660 hooks:
         # build_editable
         # get_requires_for_build_editable
@@ -449,8 +447,9 @@ class _BuildMetaBackend(_ConfigSettingsTranslator):
         def get_requires_for_build_editable(self, config_settings=None):
             return self.get_requires_for_build_wheel(config_settings)
 
-        def prepare_metadata_for_build_editable(self, metadata_directory,
-                                                config_settings=None):
+        def prepare_metadata_for_build_editable(
+            self, metadata_directory, config_settings=None
+        ):
             return self.prepare_metadata_for_build_wheel(
                 metadata_directory, config_settings
             )
@@ -467,11 +466,12 @@ class _BuildMetaLegacyBackend(_BuildMetaBackend):
     packaging mechanism,
     and will eventually be removed.
     """
+
     def run_setup(self, setup_script='setup.py'):
         # In order to maintain compatibility with scripts assuming that
         # the setup.py script is in a directory on the PYTHONPATH, inject
         # '' into sys.path. (pypa/setuptools#1642)
-        sys_path = list(sys.path)           # Save the original path
+        sys_path = list(sys.path)  # Save the original path
 
         script_dir = os.path.dirname(os.path.abspath(setup_script))
         if script_dir not in sys.path:
@@ -484,8 +484,7 @@ class _BuildMetaLegacyBackend(_BuildMetaBackend):
         sys.argv[0] = setup_script
 
         try:
-            super(_BuildMetaLegacyBackend,
-                  self).run_setup(setup_script=setup_script)
+            super().run_setup(setup_script=setup_script)
         finally:
             # While PEP 517 frontends should be calling each hook in a fresh
             # subprocess according to the standard (and thus it should not be

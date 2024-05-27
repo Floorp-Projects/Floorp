@@ -3,9 +3,11 @@ import inspect
 import glob
 import platform
 import distutils.command.install as orig
+from typing import cast
 
 import setuptools
 from ..warnings import SetuptoolsDeprecationWarning, SetuptoolsWarning
+from .bdist_egg import bdist_egg as bdist_egg_cls
 
 # Prior to numpy 1.9, NumPy relies on the '_install' name, so provide it for
 # now. See https://github.com/pypa/setuptools/issues/199/
@@ -17,11 +19,15 @@ class install(orig.install):
 
     user_options = orig.install.user_options + [
         ('old-and-unmanageable', None, "Try not to use this!"),
-        ('single-version-externally-managed', None,
-         "used by system package builders to create 'flat' eggs"),
+        (
+            'single-version-externally-managed',
+            None,
+            "used by system package builders to create 'flat' eggs",
+        ),
     ]
     boolean_options = orig.install.boolean_options + [
-        'old-and-unmanageable', 'single-version-externally-managed',
+        'old-and-unmanageable',
+        'single-version-externally-managed',
     ]
     new_commands = [
         ('install_egg_info', lambda self: True),
@@ -43,12 +49,12 @@ class install(orig.install):
             #       and then add a due_date to this warning.
         )
 
-        orig.install.initialize_options(self)
+        super().initialize_options()
         self.old_and_unmanageable = None
         self.single_version_externally_managed = None
 
     def finalize_options(self):
-        orig.install.finalize_options(self)
+        super().finalize_options()
         if self.root:
             self.single_version_externally_managed = True
         elif self.single_version_externally_managed:
@@ -67,17 +73,20 @@ class install(orig.install):
         # command without --root or --single-version-externally-managed
         self.path_file = None
         self.extra_dirs = ''
+        return None
 
     def run(self):
         # Explicit request for old-style install?  Just do it
         if self.old_and_unmanageable or self.single_version_externally_managed:
-            return orig.install.run(self)
+            return super().run()
 
         if not self._called_from_setup(inspect.currentframe()):
             # Run in backward-compatibility mode to support bdist_* commands.
-            orig.install.run(self)
+            super().run()
         else:
             self.do_egg_install()
+
+        return None
 
     @staticmethod
     def _called_from_setup(run_frame):
@@ -100,7 +109,7 @@ class install(orig.install):
 
         frames = inspect.getouterframes(run_frame)
         for frame in frames[2:4]:
-            caller, = frame[:1]
+            (caller,) = frame[:1]
             info = inspect.getframeinfo(caller)
             caller_module = caller.f_globals.get('__name__', '')
 
@@ -108,17 +117,18 @@ class install(orig.install):
                 # Starting from v61.0.0 setuptools overwrites dist.run_command
                 continue
 
-            return (
-                caller_module == 'distutils.dist'
-                and info.function == 'run_commands'
-            )
+            return caller_module == 'distutils.dist' and info.function == 'run_commands'
+
+        return False
 
     def do_egg_install(self):
-
         easy_install = self.distribution.get_command_class('easy_install')
 
         cmd = easy_install(
-            self.distribution, args="x", root=self.root, record=self.record,
+            self.distribution,
+            args="x",
+            root=self.root,
+            record=self.record,
         )
         cmd.ensure_finalized()  # finalize before bdist_egg munges install cmd
         cmd.always_copy_from = '.'  # make sure local-dir eggs get installed
@@ -127,7 +137,8 @@ class install(orig.install):
         cmd.package_index.scan(glob.glob('*.egg'))
 
         self.run_command('bdist_egg')
-        args = [self.distribution.get_command_obj('bdist_egg').egg_output]
+        bdist_egg = cast(bdist_egg_cls, self.distribution.get_command_obj('bdist_egg'))
+        args = [bdist_egg.egg_output]
 
         if setuptools.bootstrap_install_from:
             # Bootstrap self-installation of setuptools
@@ -139,7 +150,6 @@ class install(orig.install):
 
 
 # XXX Python 3.1 doesn't see _nc if this is inside the class
-install.sub_commands = (
-    [cmd for cmd in orig.install.sub_commands if cmd[0] not in install._nc] +
-    install.new_commands
-)
+install.sub_commands = [
+    cmd for cmd in orig.install.sub_commands if cmd[0] not in install._nc
+] + install.new_commands
