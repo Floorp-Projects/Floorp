@@ -91,5 +91,5 @@ object FeatureFlags {
     /**
      * Enables microsurveys.
      */
-    const val microsurveysEnabled = false
+    val microsurveysEnabled = Config.channel.isDebug
 }

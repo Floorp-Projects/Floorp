@@ -1378,6 +1378,23 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Close private tabs</string>
 
+    <!-- Microsuverys -->
+    <!-- Text shown in prompt for printing microsurvey. -->
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Help make printing in Firefox better. It only takes a sec</string>
+    <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> -->
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">How satisfied are you with printing in Firefox?</string>
+    <!-- Text for option one, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">Neutral</string>
+    <!-- Text for option two, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">Very Dissatisfied</string>
+    <!-- Text for option three, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">Dissatisfied</string>
+    <!-- Text for option four, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_3" tools:ignore="UnusedResources">Satisfied</string>
+    <!-- Text for option five, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">Very Satisfied</string>
+
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">Close private tabs?</string>
     <string name="notification_erase_text_android_14">Tap or swipe this notification to close private tabs.</string>

@@ -35,7 +35,6 @@ import:
                   - I_AM_DEFAULT_BROWSER
                 style: PERSISTENT
                 button-label: preferences_set_as_default_browser
-
             triggers:
               USER_ESTABLISHED_INSTALL: "number_of_app_launches >=4"
 
@@ -53,3 +52,29 @@ import:
                 exclude-if-any:
                   - I_AM_DEFAULT_BROWSER
                 action: MAKE_DEFAULT_BROWSER
+
+        - channel: developer
+          # This message displays as a microsurvey prompt, after the user tap on the `Print` menu.
+          # It will be only available in debug builds.
+          value:
+            messages:
+              microsurvey-printing-example:
+                title: microsurvey_prompt_printing_title
+                text: microsurvey_survey_printing_title
+                surface: microsurvey
+                trigger-if-all:
+                  - RECENTLY_PRINTED
+                style: MICRO_SURVEY
+                microsurvey-config:
+                  icon: ic_print
+                  options:
+                    - text: microsurvey_survey_5_point_option_0
+                      scale-value: 0
+                    - text: microsurvey_survey_5_point_option_1
+                      scale-value: 1
+                    - text: microsurvey_survey_5_point_option_2
+                      scale-value: 2
+                    - text: microsurvey_survey_5_point_option_3
+                      scale-value: 3
+                    - text: microsurvey_survey_5_point_option_4
+                      scale-value: 4
