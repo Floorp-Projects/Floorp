@@ -6,6 +6,7 @@ use log::LevelFilter;
 
 use crate::net::PingUploader;
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 /// The default server pings are sent to.
@@ -48,6 +49,10 @@ pub struct Configuration {
     pub experimentation_id: Option<String>,
     /// Whether to enable internal pings. Default: true
     pub enable_internal_pings: bool,
+    /// A ping schedule map.
+    /// Maps a ping name to a list of pings to schedule along with it.
+    /// Only used if the ping's own ping schedule list is empty.
+    pub ping_schedule: HashMap<String, Vec<String>>,
 }
 
 /// Configuration builder.
@@ -96,6 +101,10 @@ pub struct Builder {
     pub experimentation_id: Option<String>,
     /// Whether to enable internal pings. Default: true
     pub enable_internal_pings: bool,
+    /// A ping schedule map.
+    /// Maps a ping name to a list of pings to schedule along with it.
+    /// Only used if the ping's own ping schedule list is empty.
+    pub ping_schedule: HashMap<String, Vec<String>>,
 }
 
 impl Builder {
@@ -120,6 +129,7 @@ impl Builder {
             enable_event_timestamps: true,
             experimentation_id: None,
             enable_internal_pings: true,
+            ping_schedule: HashMap::new(),
         }
     }
 
@@ -140,6 +150,7 @@ impl Builder {
             enable_event_timestamps: self.enable_event_timestamps,
             experimentation_id: self.experimentation_id,
             enable_internal_pings: self.enable_internal_pings,
+            ping_schedule: self.ping_schedule,
         }
     }
 
@@ -194,6 +205,12 @@ impl Builder {
     /// Set whether to enable internal pings.
     pub fn with_internal_pings(mut self, value: bool) -> Self {
         self.enable_internal_pings = value;
+        self
+    }
+
+    /// Set the ping schedule map.
+    pub fn with_ping_schedule(mut self, value: HashMap<String, Vec<String>>) -> Self {
+        self.ping_schedule = value;
         self
     }
 }

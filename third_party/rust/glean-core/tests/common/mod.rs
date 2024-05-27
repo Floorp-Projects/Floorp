@@ -64,6 +64,7 @@ pub fn new_glean(tempdir: Option<tempfile::TempDir>) -> (Glean, tempfile::TempDi
         enable_event_timestamps: false,
         experimentation_id: None,
         enable_internal_pings: true,
+        ping_schedule: Default::default(),
     };
     let glean = Glean::new(cfg).unwrap();
 
