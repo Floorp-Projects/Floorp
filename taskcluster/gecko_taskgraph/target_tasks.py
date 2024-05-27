@@ -837,6 +837,8 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         elif accept_raptor_android_build(platform):
             if "hw-s21" in platform and "speedometer3" not in try_name:
                 return False
+            if "chrome-m" in try_name and "essential" in try_name:
+                return True
             if "chrome-m" in try_name and (
                 ("ebay" in try_name and "live" not in try_name)
                 or (
