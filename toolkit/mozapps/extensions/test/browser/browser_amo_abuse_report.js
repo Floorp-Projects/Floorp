@@ -64,3 +64,22 @@ add_task(async function test_report_action_hidden_on_langpack_addons() {
   );
   await closeAboutAddons();
 });
+
+add_task(async function test_report_action_hidden_on_system_addons() {
+  await openAboutAddons("extension");
+  await AbuseReportTestUtils.assertReportActionHidden(
+    gManagerWindow,
+    EXT_SYSTEM_ADDON_ID
+  );
+  await closeAboutAddons();
+});
+
+add_task(async function test_report_action_hidden_on_builtin_addons() {
+  const DEFAULT_BUILTIN_THEME_ID = "default-theme@mozilla.org";
+  await openAboutAddons("theme");
+  await AbuseReportTestUtils.assertReportActionHidden(
+    gManagerWindow,
+    DEFAULT_BUILTIN_THEME_ID
+  );
+  await closeAboutAddons();
+});

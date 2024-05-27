@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { AbuseReporter } = ChromeUtils.importESModule(
+const { AbuseReporter, AbuseReportError } = ChromeUtils.importESModule(
   "resource://gre/modules/AbuseReporter.sys.mjs"
 );
 
@@ -16,6 +16,10 @@ const ADDON_ID = "test-addon@tests.mozilla.org";
 const FAKE_INSTALL_INFO = {
   source: "fake-Install:Source",
   method: "fake:install method",
+};
+const EXPECTED_API_RESPONSE = {
+  id: ADDON_ID,
+  some: "other-props",
 };
 
 async function installTestExtension(overrideOptions = {}) {
@@ -96,9 +100,57 @@ async function assertBaseReportData({ reportData, addon }) {
   );
 }
 
+async function assertRejectsAbuseReportError(promise, errorType, errorInfo) {
+  let error;
+
+  await Assert.rejects(
+    promise,
+    err => {
+      error = err;
+      return err instanceof AbuseReportError;
+    },
+    `Got an AbuseReportError`
+  );
+
+  equal(error.errorType, errorType, "Got the expected errorType");
+  equal(error.errorInfo, errorInfo, "Got the expected errorInfo");
+  ok(
+    error.message.includes(errorType),
+    "errorType should be included in the error message"
+  );
+  if (errorInfo) {
+    ok(
+      error.message.includes(errorInfo),
+      "errorInfo should be included in the error message"
+    );
+  }
+}
+
+function handleSubmitRequest({ request, response }) {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/json", false);
+  response.write(JSON.stringify(EXPECTED_API_RESPONSE));
+}
+
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
 
+const server = createHttpServer({ hosts: ["test.addons.org"] });
+
+// Mock abuse report API endpoint.
+let apiRequestHandler;
+server.registerPathHandler("/api/abuse/report/addon/", (request, response) => {
+  const stream = request.bodyInputStream;
+  const buffer = NetUtil.readInputStream(stream, stream.available());
+  const data = new TextDecoder().decode(buffer);
+  apiRequestHandler({ data, request, response });
+});
+
 add_setup(async () => {
+  Services.prefs.setCharPref(
+    "extensions.addonAbuseReport.url",
+    "http://test.addons.org/api/abuse/report/addon/"
+  );
+
   await promiseStartupManager();
 });
 
@@ -220,4 +272,241 @@ add_task(async function test_normalized_addon_install_source_and_method() {
   for (const { expect, test } of TEST_CASES) {
     await assertAddonInstallMethod(test, expect);
   }
+});
+
+add_task(async function test_sendAbuseReport() {
+  const { addon, extension } = await installTestExtension();
+  // Data passed by the caller.
+  const formData = { "some-data-from-the-caller": true };
+  // Metadata stored by Gecko, only passed when the add-on is installed, which
+  // is what this test case verifies.
+  //
+  // NOTE: We JSON stringify + parse to get rid of the undefined values, which
+  // we do not send to the server.
+  const metadata = JSON.parse(
+    JSON.stringify(await AbuseReporter.getReportData(addon))
+  );
+  // Register a request handler to (1) access the data submitted and (2) return
+  // a 200 response.
+  let dataSubmitted;
+  apiRequestHandler = ({ data, request, response }) => {
+    Assert.equal(
+      request.getHeader("content-type"),
+      "application/json",
+      "expected content-type header"
+    );
+    Assert.ok(
+      !request.hasHeader("authorization"),
+      "expected no authorization header"
+    );
+
+    dataSubmitted = JSON.parse(data);
+    handleSubmitRequest({ request, response });
+  };
+
+  const response = await AbuseReporter.sendAbuseReport(ADDON_ID, formData);
+
+  Assert.deepEqual(
+    response,
+    EXPECTED_API_RESPONSE,
+    "expected successful response"
+  );
+  Assert.deepEqual(
+    dataSubmitted,
+    {
+      ...formData,
+      ...metadata,
+      // The add-on ID is unconditionally passed as `addon` on purpose. See:
+      // https://mozilla.github.io/addons-server/topics/api/abuse.html#submitting-an-add-on-abuse-report
+      addon: ADDON_ID,
+    },
+    "expected the right data to be sent to the server"
+  );
+
+  await extension.unload();
+});
+
+add_task(async function test_sendAbuseReport_addon_not_installed() {
+  const formData = { "some-data-from-the-caller": true };
+  // Register a request handler to (1) access the data submitted and (2) return
+  // a 200 response.
+  let dataSubmitted;
+  apiRequestHandler = ({ data, request, response }) => {
+    Assert.equal(
+      request.getHeader("content-type"),
+      "application/json",
+      "expected content-type header"
+    );
+    Assert.ok(
+      !request.hasHeader("authorization"),
+      "expected no authorization header"
+    );
+
+    dataSubmitted = JSON.parse(data);
+    handleSubmitRequest({ request, response });
+  };
+
+  const response = await AbuseReporter.sendAbuseReport(ADDON_ID, formData);
+
+  Assert.deepEqual(
+    response,
+    EXPECTED_API_RESPONSE,
+    "expected successful response"
+  );
+  Assert.deepEqual(
+    dataSubmitted,
+    {
+      ...formData,
+      // The add-on ID is unconditionally passed as `addon` on purpose. See:
+      // https://mozilla.github.io/addons-server/topics/api/abuse.html#submitting-an-add-on-abuse-report
+      addon: ADDON_ID,
+    },
+    "expected the right data to be sent to the server"
+  );
+});
+
+add_task(async function test_sendAbuseReport_with_authorization() {
+  const { addon, extension } = await installTestExtension();
+  // Data passed by the caller.
+  const formData = { "some-data-from-the-caller": true };
+  // Metadata stored by Gecko, only passed when the add-on is installed, which
+  // is what this test case verifies.
+  //
+  // NOTE: We JSON stringify + parse to get rid of the undefined values, which
+  // we do not send to the server.
+  const metadata = JSON.parse(
+    JSON.stringify(await AbuseReporter.getReportData(addon))
+  );
+  const authorization = "some authorization header";
+  // Register a request handler to (1) access the data submitted and (2) return
+  // a 200 response.
+  let dataSubmitted;
+  apiRequestHandler = ({ data, request, response }) => {
+    Assert.equal(
+      request.getHeader("content-type"),
+      "application/json",
+      "expected content-type header"
+    );
+    Assert.equal(
+      request.getHeader("authorization"),
+      authorization,
+      "expected authorization header"
+    );
+
+    dataSubmitted = JSON.parse(data);
+    handleSubmitRequest({ request, response });
+  };
+
+  const response = await AbuseReporter.sendAbuseReport(ADDON_ID, formData, {
+    authorization,
+  });
+
+  Assert.deepEqual(
+    response,
+    EXPECTED_API_RESPONSE,
+    "expected successful response"
+  );
+  Assert.deepEqual(
+    dataSubmitted,
+    {
+      ...formData,
+      ...metadata,
+      // The add-on ID is unconditionally passed as `addon` on purpose. See:
+      // https://mozilla.github.io/addons-server/topics/api/abuse.html#submitting-an-add-on-abuse-report
+      addon: ADDON_ID,
+    },
+    "expected the right data to be sent to the server"
+  );
+
+  await extension.unload();
+});
+
+add_task(async function test_sendAbuseReport_errors() {
+  const { extension } = await installTestExtension();
+
+  async function testErrorCode({
+    responseStatus,
+    responseText = "",
+    expectedErrorType,
+    expectedErrorInfo,
+    expectRequest = true,
+  }) {
+    info(
+      `Test expected AbuseReportError on response status "${responseStatus}"`
+    );
+
+    let requestReceived = false;
+    apiRequestHandler = ({ request, response }) => {
+      requestReceived = true;
+      response.setStatusLine(request.httpVersion, responseStatus, "Error");
+      response.write(responseText);
+    };
+
+    const promise = AbuseReporter.sendAbuseReport(ADDON_ID, {});
+    if (typeof expectedErrorType === "string") {
+      // Assert a specific AbuseReportError errorType.
+      await assertRejectsAbuseReportError(
+        promise,
+        expectedErrorType,
+        expectedErrorInfo
+      );
+    } else {
+      // Assert on a given Error class.
+      await Assert.rejects(
+        promise,
+        expectedErrorType,
+        "expected correct Error class"
+      );
+    }
+    equal(
+      requestReceived,
+      expectRequest,
+      `${expectRequest ? "" : "Not "}received a request as expected`
+    );
+  }
+
+  await testErrorCode({
+    responseStatus: 500,
+    responseText: "A server error",
+    expectedErrorType: "ERROR_SERVER",
+    expectedErrorInfo: JSON.stringify({
+      status: 500,
+      responseText: "A server error",
+    }),
+  });
+  await testErrorCode({
+    responseStatus: 404,
+    responseText: "Not found error",
+    expectedErrorType: "ERROR_CLIENT",
+    expectedErrorInfo: JSON.stringify({
+      status: 404,
+      responseText: "Not found error",
+    }),
+  });
+  // Test response with unexpected status code.
+  await testErrorCode({
+    responseStatus: 604,
+    responseText: "An unexpected status code",
+    expectedErrorType: "ERROR_UNKNOWN",
+    expectedErrorInfo: JSON.stringify({
+      status: 604,
+      responseText: "An unexpected status code",
+    }),
+  });
+  // Test response status 200 with invalid json data.
+  await testErrorCode({
+    responseStatus: 200,
+    expectedErrorType: /SyntaxError: JSON.parse/,
+  });
+  // Test on invalid url.
+  Services.prefs.setCharPref(
+    "extensions.addonAbuseReport.url",
+    "invalid-protocol://abuse-report"
+  );
+  await testErrorCode({
+    expectedErrorType: "ERROR_NETWORK",
+    expectRequest: false,
+  });
+
+  await extension.unload();
 });

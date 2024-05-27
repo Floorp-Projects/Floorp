@@ -1859,6 +1859,7 @@ pref("services.common.uptake.sampleRate", 1);   // 1%
 pref("extensions.abuseReport.enabled", false);
 // Whether Firefox integrated abuse reporting feature should be opening the new abuse report form hosted on AMO.
 pref("extensions.abuseReport.amoFormURL", "https://addons.mozilla.org/%LOCALE%/%APP%/feedback/addon/%addonID%/");
+pref("extensions.addonAbuseReport.url", "https://services.addons.mozilla.org/api/v5/abuse/report/addon/");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);

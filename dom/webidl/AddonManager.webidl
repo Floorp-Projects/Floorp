@@ -56,6 +56,11 @@ dictionary addonInstallOptions {
   DOMString? hash = null;
 };
 
+dictionary sendAbuseReportOptions {
+  // This should be an Authorization HTTP header value.
+  DOMString? authorization = null;
+};
+
 [HeaderFile="mozilla/AddonManagerWebAPI.h",
  Func="mozilla::AddonManagerWebAPI::IsAPIEnabled",
  JSImplementation="@mozilla.org/addon-web-api/manager;1",
@@ -79,6 +84,30 @@ interface AddonManager : EventTarget {
    * @return A promise that resolves to an instance of AddonInstall.
    */
   Promise<AddonInstall> createInstall(optional addonInstallOptions options = {});
+
+  /**
+   * Sends an abuse report to the AMO API.
+   *
+   * NOTE: The type for `data` and for the return value are loose because both
+   * the AMO API might change its response and the caller (AMO frontend) might
+   * also want to pass slightly different data in the future.
+   *
+   * @param addonId
+   *        The ID of the add-on to report.
+   * @param data
+   *        The caller passes the data to be sent to the AMO API.
+   * @param options
+   *        Optional - A set of options. It currently only supports
+   *        `authorization`, which is expected to be the value of an
+   *        Authorization HTTP header when provided.
+   * @return A promise that resolves to the AMO API response, or an error when
+   *         something went wrong.
+   */
+  [NewObject] Promise<any> sendAbuseReport(
+    DOMString addonId,
+    record<DOMString, DOMString?> data,
+    optional sendAbuseReportOptions options = {}
+  );
 };
 
 [ChromeOnly,Exposed=Window,HeaderFile="mozilla/AddonManagerWebAPI.h"]

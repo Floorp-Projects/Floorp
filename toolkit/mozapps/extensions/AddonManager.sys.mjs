@@ -80,6 +80,7 @@ var AsyncShutdown = realAsyncShutdown;
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -3551,6 +3552,10 @@ var AddonManagerInternal = {
         this.copyProps(install, result);
         return result;
       });
+    },
+
+    async sendAbuseReport(target, addonId, data, options) {
+      return lazy.AbuseReporter.sendAbuseReport(addonId, data, options);
     },
 
     async addonUninstall(target, id) {

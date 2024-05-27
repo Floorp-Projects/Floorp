@@ -15,10 +15,7 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 
 const EXT_DICTIONARY_ADDON_ID = "fake-dictionary@mochi.test";
 const EXT_LANGPACK_ADDON_ID = "fake-langpack@mochi.test";
-const EXT_WITH_PRIVILEGED_URL_ID = "ext-with-privileged-url@mochi.test";
 const EXT_SYSTEM_ADDON_ID = "test-system-addon@mochi.test";
-const EXT_UNSUPPORTED_TYPE_ADDON_ID = "report-unsupported-type@mochi.test";
-const THEME_NO_UNINSTALL_ID = "theme-without-perm-can-uninstall@mochi.test";
 
 let gManagerWindow;
 
@@ -37,11 +34,6 @@ async function closeAboutAddons() {
 
 const AbuseReportTestUtils = {
   _mockProvider: null,
-  _mockServer: null,
-  _abuseRequestHandlers: [],
-
-  // Mock addon details API endpoint.
-  amoAddonDetailsMap: new Map(),
 
   // Setup the test environment by setting the expected prefs and initializing
   // MockProvider.
@@ -88,33 +80,12 @@ const AbuseReportTestUtils = {
     this._mockProvider = new MockProvider();
     this._mockProvider.createAddons([
       {
-        id: THEME_NO_UNINSTALL_ID,
-        name: "This theme cannot be uninstalled",
-        version: "1.1",
-        creator: { name: "Theme creator", url: "http://example.com/creator" },
-        type: "theme",
-        permissions: 0,
-      },
-      {
-        id: EXT_WITH_PRIVILEGED_URL_ID,
-        name: "This extension has an unexpected privileged creator URL",
-        version: "1.1",
-        creator: { name: "creator", url: "about:config" },
-        type: "extension",
-      },
-      {
         id: EXT_SYSTEM_ADDON_ID,
         name: "This is a system addon",
         version: "1.1",
         creator: { name: "creator", url: "http://example.com/creator" },
         type: "extension",
         isSystem: true,
-      },
-      {
-        id: EXT_UNSUPPORTED_TYPE_ADDON_ID,
-        name: "This is a fake unsupported addon type",
-        version: "1.1",
-        type: "unsupported_addon_type",
       },
       {
         id: EXT_LANGPACK_ADDON_ID,
