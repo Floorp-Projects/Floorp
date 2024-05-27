@@ -36,7 +36,6 @@ const REASON_GATHER_SUBSESSION_PAYLOAD = "gather-subsession-payload";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserUsageTelemetry: "resource://gre/modules/BrowserUsageTelemetry.sys.mjs",
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   CoveragePing: "resource://gre/modules/CoveragePing.sys.mjs",
   TelemetryArchive: "resource://gre/modules/TelemetryArchive.sys.mjs",
@@ -1236,17 +1235,6 @@ var Impl = {
       NEWPROFILE_PING_DEFAULT_DELAY
     );
 
-    try {
-      // This is asynchronous, but we aren't going to await on it now. Just
-      // kick it off.
-      lazy.BrowserUsageTelemetry.reportInstallationTelemetry();
-    } catch (ex) {
-      this._log.warn(
-        "scheduleNewProfilePing - reportInstallationTelemetry failed",
-        ex
-      );
-    }
-
     this._delayedNewPingTask = new DeferredTask(async () => {
       try {
         await this.sendNewProfilePing();
@@ -1265,25 +1253,6 @@ var Impl = {
     this._log.trace(
       "sendNewProfilePing - shutting down: " + this._shuttingDown
     );
-
-    try {
-      await lazy.BrowserUsageTelemetry.reportInstallationTelemetry();
-    } catch (ex) {
-      this._log.warn(
-        "sendNewProfilePing - reportInstallationTelemetry failed",
-        ex
-      );
-      // No dataPathOverride here so we can check the default location
-      // for installation_telemetry.json
-      let dataPath = Services.dirsvc.get("GreD", Ci.nsIFile);
-      dataPath.append("installation_telemetry.json");
-      let fileExists = await IOUtils.exists(dataPath.path);
-      if (!fileExists) {
-        Glean.installationFirstSeen.failureReason.set("NotFoundError");
-      } else {
-        Glean.installationFirstSeen.failureReason.set(ex.name);
-      }
-    }
 
     const scalars = Services.telemetry.getSnapshotForScalars(
       "new-profile",
