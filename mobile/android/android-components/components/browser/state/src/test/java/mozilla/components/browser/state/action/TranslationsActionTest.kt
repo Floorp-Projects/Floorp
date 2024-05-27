@@ -93,6 +93,12 @@ class TranslationsActionTest {
         assertNull(tabState().translationsState.translationEngineState)
         assertFalse(tabState().translationsState.isTranslated)
         assertFalse(tabState().translationsState.isExpectedTranslate)
+        assertFalse(tabState().translationsState.isTranslateProcessing)
+
+        // Set an initial state for is translate processing via a translation request:
+        store.dispatch(TranslationsAction.TranslateAction(tabId = tab.id, "en", "es", null))
+            .joinBlocking()
+        assertTrue(tabState().translationsState.isTranslateProcessing)
 
         val translatedEngineState = TranslationEngineState(
             detectedLanguages = DetectedLanguages(documentLangTag = "es", supportedDocumentLang = true, userPreferredLangTag = "en"),
@@ -109,6 +115,7 @@ class TranslationsActionTest {
         assertEquals(translatedEngineState, tabState().translationsState.translationEngineState)
         assertTrue(tabState().translationsState.isTranslated)
         assertFalse(tabState().translationsState.isExpectedTranslate)
+        assertFalse(tabState().translationsState.isTranslateProcessing)
 
         val nonTranslatedEngineState = TranslationEngineState(
             detectedLanguages = DetectedLanguages(documentLangTag = "es", supportedDocumentLang = true, userPreferredLangTag = "en"),
@@ -269,7 +276,6 @@ class TranslationsActionTest {
         // Action success
         store.dispatch(TranslationsAction.TranslateSuccessAction(tabId = tab.id, operation = TranslationOperation.TRANSLATE))
             .joinBlocking()
-        assertEquals(false, tabState().translationsState.isTranslateProcessing)
         assertEquals(null, tabState().translationsState.translationError)
     }
 
@@ -393,6 +399,12 @@ class TranslationsActionTest {
     fun `WHEN a TranslateExceptionAction is dispatched due to an error THEN update the error condition according to the operation`() {
         // Initial state
         assertEquals(null, tabState().translationsState.translationError)
+        assertFalse(tabState().translationsState.isTranslateProcessing)
+
+        // Set an initial state for is translate processing via a translation request:
+        store.dispatch(TranslationsAction.TranslateAction(tabId = tab.id, "en", "es", null))
+            .joinBlocking()
+        assertTrue(tabState().translationsState.isTranslateProcessing)
 
         // TRANSLATE usage
         val translateError = TranslationError.CouldNotLoadLanguagesError(null)
@@ -404,6 +416,8 @@ class TranslationsActionTest {
             ),
         ).joinBlocking()
         assertEquals(translateError, tabState().translationsState.translationError)
+        // A translate error should clear this state
+        assertFalse(tabState().translationsState.isTranslateProcessing)
 
         // RESTORE usage
         val restoreError = TranslationError.CouldNotRestoreError(null)
