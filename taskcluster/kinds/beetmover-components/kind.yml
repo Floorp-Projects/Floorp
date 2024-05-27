@@ -14,7 +14,7 @@ transforms:
 kind-dependencies:
     - signing
     - build-components
-    - post-signing
+    - post-signing-dummy
 
 jobs:
     push-to-maven:

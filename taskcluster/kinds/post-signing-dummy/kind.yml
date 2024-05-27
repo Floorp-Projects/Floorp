@@ -14,7 +14,7 @@ kind-dependencies:
     - signing
 
 jobs:
-    post-signing:
+    post-signing-dummy:
         description: Dummy task to wait on all builds before publishing them
         from-deps:
             group-by: build-type
@@ -23,14 +23,3 @@ jobs:
         attributes:
             component: all
         worker-type: succeed
-        worker: {}
-        treeherder:
-            kind: build
-            platform: AC-android-all/opt
-            symbol:
-                by-build-type:
-                    release: post-signing-release
-                    beta: post-signing-beta
-                    nightly: post-signing-nightly
-                    default: post-signing
-            tier: 1
