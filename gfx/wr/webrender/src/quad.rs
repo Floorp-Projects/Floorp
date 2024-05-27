@@ -194,6 +194,7 @@ pub fn push_quad(
         QuadRenderStrategy::Tiled { x_tiles, y_tiles } => {
             let clip_coverage_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
+            let clipped_surface_rect = clipped_surface_rect.to_f32();
 
             surface.map_local_to_picture.set_target_spatial_node(
                 prim_spatial_node_index,
@@ -204,7 +205,7 @@ pub fn push_quad(
 
             let unclipped_surface_rect = surface.map_to_device_rect(
                 &pic_rect, frame_context.spatial_tree
-            ).round_out().to_i32();
+            ).round_out();
 
             // Set up the tile classifier for the params of this quad
             scratch.quad_tile_classifier.reset(
@@ -236,7 +237,6 @@ pub fn push_quad(
             scratch.quad_direct_segments.clear();
             scratch.quad_indirect_segments.clear();
 
-
             let mut x_coords = vec![unclipped_surface_rect.min.x];
             let mut y_coords = vec![unclipped_surface_rect.min.y];
 
@@ -244,10 +244,10 @@ pub fn push_quad(
             let dy = (unclipped_surface_rect.max.y - unclipped_surface_rect.min.y) as f32 / y_tiles as f32;
 
             for x in 1 .. (x_tiles as i32) {
-                x_coords.push((unclipped_surface_rect.min.x as f32 + x as f32 * dx).round() as i32);
+                x_coords.push((unclipped_surface_rect.min.x as f32 + x as f32 * dx).round());
             }
             for y in 1 .. (y_tiles as i32) {
-                y_coords.push((unclipped_surface_rect.min.y as f32 + y as f32 * dy).round() as i32);
+                y_coords.push((unclipped_surface_rect.min.y as f32 + y as f32 * dy).round());
             }
 
             x_coords.push(unclipped_surface_rect.max.x);
@@ -284,7 +284,7 @@ pub fn push_quad(
                         }
                     };
 
-                    let int_rect = DeviceIntRect {
+                    let int_rect = DeviceRect {
                         min: point2(x0, y0),
                         max: point2(x1, y1),
                     };
@@ -301,7 +301,7 @@ pub fn push_quad(
                     } else {
                         let task_id = add_render_task_with_mask(
                             pattern,
-                            int_rect.size(),
+                            int_rect.round().to_i32().size(),
                             rect.min,
                             clip_chain,
                             prim_spatial_node_index,
