@@ -439,6 +439,8 @@ export let URICountListener = {
   ]),
 };
 
+let gInstallationTelemetryPromise = null;
+
 export let BrowserUsageTelemetry = {
   /**
    * This is a policy object used to override behavior for testing.
@@ -1309,23 +1311,23 @@ export let BrowserUsageTelemetry = {
 
   /**
    * Check if this is the first run of this profile since installation,
-   * if so then send installation telemetry.
+   * if so then collect installation telemetry.
    *
    * @param {nsIFile} [dataPathOverride] Optional, full data file path, for tests.
    * @param {Array<string>} [msixPackagePrefixes] Optional, list of prefixes to
             consider "existing" installs when looking at installed MSIX packages.
             Defaults to prefixes for builds produced in Firefox automation.
-   * @return {Promise}
+   * @return {Promise<Object>} A JSON object containing install telemetry.
    * @resolves When the event has been recorded, or if the data file was not found.
    * @rejects JavaScript exception on any failure.
    */
-  async reportInstallationTelemetry(
+  async collectInstallationTelemetry(
     dataPathOverride,
     msixPackagePrefixes = ["Mozilla.Firefox", "Mozilla.MozillaFirefox"]
   ) {
     if (AppConstants.platform != "win") {
       // This is a windows-only feature.
-      return;
+      return {};
     }
 
     const TIMESTAMP_PREF = "app.installation.timestamp";
@@ -1368,7 +1370,7 @@ export let BrowserUsageTelemetry = {
     if (pfn) {
       if (lastInstallTime != null) {
         // We've already seen this install
-        return;
+        return {};
       }
 
       // First time seeing this install, record the timestamp.
@@ -1411,7 +1413,7 @@ export let BrowserUsageTelemetry = {
         if (ex.name == "NotFoundError") {
           // Many systems will not have the data file, return silently if not found as
           // there is nothing to record.
-          return;
+          return {};
         }
         throw ex;
       }
@@ -1420,7 +1422,7 @@ export let BrowserUsageTelemetry = {
 
       if (lastInstallTime && data.install_timestamp == lastInstallTime) {
         // We've already seen this install
-        return;
+        return {};
       }
 
       // First time seeing this install, record the timestamp.
@@ -1448,15 +1450,69 @@ export let BrowserUsageTelemetry = {
         extra.default_path = data.default_path.toString();
       }
     }
-    // Record the event
-    Services.telemetry.setEventRecordingEnabled("installation", true);
-    Services.telemetry.recordEvent(
-      "installation",
-      "first_seen",
-      installer_type,
-      null,
-      extra
-    );
+    return { installer_type, extra };
+  },
+
+  async reportInstallationTelemetry(
+    dataPathOverride,
+    msixPackagePrefixes = ["Mozilla.Firefox", "Mozilla.MozillaFirefox"]
+  ) {
+    // The optional dataPathOverride is only used for testing purposes.
+    // Use this as a proxy for whether we're in a testing environment.
+    // If we're in a testing environment we don't want to return the
+    // same data even if we call this function multiple times in the
+    // same instance.
+    if (gInstallationTelemetryPromise && !dataPathOverride) {
+      return gInstallationTelemetryPromise;
+    }
+
+    gInstallationTelemetryPromise = (async () => {
+      let data = await BrowserUsageTelemetry.collectInstallationTelemetry(
+        dataPathOverride,
+        msixPackagePrefixes
+      );
+
+      if (data?.installer_type) {
+        let { installer_type, extra } = data;
+
+        // Record the event
+        Services.telemetry.setEventRecordingEnabled("installation", true);
+        Services.telemetry.recordEvent(
+          "installation",
+          "first_seen",
+          installer_type,
+          null,
+          extra
+        );
+
+        // Scalars for the new-profile ping. We don't need to collect the build version
+        // These are mirrored to legacy telemetry using GIFFT
+        Glean.installationFirstSeen.installerType.set(installer_type);
+        Glean.installationFirstSeen.version.set(extra.version);
+        // Convert "true" or "false" strings back into booleans
+        Glean.installationFirstSeen.adminUser.set(extra.admin_user === "true");
+        Glean.installationFirstSeen.installExisted.set(
+          extra.install_existed === "true"
+        );
+        Glean.installationFirstSeen.profdirExisted.set(
+          extra.profdir_existed === "true"
+        );
+        Glean.installationFirstSeen.otherInst.set(extra.other_inst === "true");
+        Glean.installationFirstSeen.otherMsixInst.set(
+          extra.other_msix_inst === "true"
+        );
+        if (installer_type == "full") {
+          Glean.installationFirstSeen.silent.set(extra.silent === "true");
+          Glean.installationFirstSeen.fromMsi.set(extra.from_msi === "true");
+          Glean.installationFirstSeen.defaultPath.set(
+            extra.default_path === "true"
+          );
+        }
+      }
+      return data;
+    })();
+
+    return gInstallationTelemetryPromise;
   },
 };
 

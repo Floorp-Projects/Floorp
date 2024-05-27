@@ -732,6 +732,25 @@ add_task(async function test_sendNewProfile() {
     "The new-profile ping generated after startup must have processes.parent data"
   );
 
+  Assert.ok(
+    "scalars" in ping.payload.processes.parent,
+    "The new-profile ping should have a field for scalars"
+  );
+
+  Assert.ok(
+    "installation.firstSeen.failure_reason" in
+      ping.payload.processes.parent.scalars,
+    "The new-profile ping should have an installation.firstSeen.failure_reason scalar"
+  );
+
+  Assert.equal(
+    ping.payload.processes.parent.scalars[
+      "installation.firstSeen.failure_reason"
+    ],
+    "NotFoundError",
+    "The new-profile ping should return NotFoundError as we don't have a telemetry state file"
+  );
+
   // Check that is not sent with the pingsender during startup.
   Assert.throws(
     () => req.getHeader("X-PingSender-Version"),
@@ -758,6 +777,25 @@ add_task(async function test_sendNewProfile() {
   Assert.ok(
     "parent" in ping.payload.processes,
     "The new-profile ping generated at shutdown must have processes.parent data"
+  );
+
+  Assert.ok(
+    "scalars" in ping.payload.processes.parent,
+    "The new-profile ping should have a field for scalars"
+  );
+
+  Assert.ok(
+    "installation.firstSeen.failure_reason" in
+      ping.payload.processes.parent.scalars,
+    "The new-profile ping should have an installation.firstSeen.failure_reason scalar"
+  );
+
+  Assert.equal(
+    ping.payload.processes.parent.scalars[
+      "installation.firstSeen.failure_reason"
+    ],
+    "NotFoundError",
+    "The new-profile ping should return NotFoundError as we don't have a telemetry state file"
   );
 
   // Check that the new-profile ping is sent at shutdown using the pingsender.
