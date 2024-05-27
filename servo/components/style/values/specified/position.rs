@@ -523,20 +523,22 @@ impl Side for VerticalPositionKeyword {
 }
 
 /// Controls how the auto-placement algorithm works specifying exactly how auto-placed items
-/// get flowed into the grid.
+/// get flowed into the grid: [ row | column ] || dense
+/// https://drafts.csswg.org/css-grid-2/#grid-auto-flow-property
 #[derive(
     Clone,
     Copy,
     Debug,
     Eq,
     MallocSizeOf,
+    Parse,
     PartialEq,
     SpecifiedValueInfo,
     ToComputedValue,
     ToResolvedValue,
     ToShmem,
 )]
-#[value_info(other_values = "row,column,dense")]
+#[css(bitflags(mixed = "row,column,dense", validate_mixed = "Self::validate_and_simplify"))]
 #[repr(C)]
 pub struct GridAutoFlow(u8);
 bitflags! {
@@ -547,6 +549,43 @@ bitflags! {
         const COLUMN = 1 << 1;
         /// 'dense'
         const DENSE = 1 << 2;
+    }
+}
+
+impl GridAutoFlow {
+    /// [ row | column ] || dense
+    fn validate_and_simplify(&mut self) -> bool {
+        if self.contains(Self::ROW | Self::COLUMN) {
+            // row and column are mutually exclusive.
+            return false;
+        }
+        if *self == Self::DENSE {
+            // If there's no column, default to row.
+            self.insert(Self::ROW);
+        }
+        true
+    }
+}
+
+impl ToCss for GridAutoFlow {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        let dense = self.intersects(Self::DENSE);
+        if self.intersects(Self::ROW) {
+            return if dense {
+                dest.write_str("dense")
+            } else {
+                dest.write_str("row")
+            };
+        }
+        debug_assert!(self.intersects(Self::COLUMN));
+        if dense {
+            dest.write_str("column dense")
+        } else {
+            dest.write_str("column")
+        }
     }
 }
 
@@ -684,74 +723,6 @@ impl Parse for MasonryAutoFlow {
         } else {
             Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
         }
-    }
-}
-
-// TODO: Can be derived with some care.
-impl Parse for GridAutoFlow {
-    /// [ row | column ] || dense
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<GridAutoFlow, ParseError<'i>> {
-        let mut track = None;
-        let mut dense = GridAutoFlow::empty();
-
-        while !input.is_exhausted() {
-            let location = input.current_source_location();
-            let ident = input.expect_ident()?;
-            let success = match_ignore_ascii_case! { &ident,
-                "row" if track.is_none() => {
-                    track = Some(GridAutoFlow::ROW);
-                    true
-                },
-                "column" if track.is_none() => {
-                    track = Some(GridAutoFlow::COLUMN);
-                    true
-                },
-                "dense" if dense.is_empty() => {
-                    dense = GridAutoFlow::DENSE;
-                    true
-                },
-                _ => false,
-            };
-            if !success {
-                return Err(location
-                    .new_custom_error(SelectorParseErrorKind::UnexpectedIdent(ident.clone())));
-            }
-        }
-
-        if track.is_some() || !dense.is_empty() {
-            Ok(track.unwrap_or(GridAutoFlow::ROW) | dense)
-        } else {
-            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
-        }
-    }
-}
-
-impl ToCss for GridAutoFlow {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        if *self == GridAutoFlow::ROW {
-            return dest.write_str("row");
-        }
-
-        if *self == GridAutoFlow::COLUMN {
-            return dest.write_str("column");
-        }
-
-        if *self == GridAutoFlow::ROW | GridAutoFlow::DENSE {
-            return dest.write_str("dense");
-        }
-
-        if *self == GridAutoFlow::COLUMN | GridAutoFlow::DENSE {
-            return dest.write_str("column dense");
-        }
-
-        debug_assert!(false, "Unknown or invalid grid-autoflow value");
-        Ok(())
     }
 }
 
