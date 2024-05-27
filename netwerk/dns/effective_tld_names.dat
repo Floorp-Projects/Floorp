@@ -11387,9 +11387,9 @@ auth-fips.us-west-2.amazoncognito.com
 // Amazon EC2
 // Submitted by Luke Wells <psl-maintainers@amazon.com>
 // Reference: 4c38fa71-58ac-4768-99e5-689c1767e537
+*.compute.amazonaws.com.cn
 *.compute.amazonaws.com
 *.compute-1.amazonaws.com
-*.compute.amazonaws.com.cn
 us-east-1.amazonaws.com
 
 // Amazon EMR
@@ -12288,26 +12288,26 @@ ju.mp
 
 // CentralNic : http://www.centralnic.com/names/domains
 // Submitted by registry <gavin.brown@centralnic.com>
-ae.org
+za.bz
 br.com
 cn.com
-com.de
-com.se
 de.com
 eu.com
-gb.net
-hu.net
-jp.net
 jpn.com
 mex.com
 ru.com
 sa.com
-se.net
 uk.com
-uk.net
 us.com
-za.bz
 za.com
+com.de
+gb.net
+hu.net
+jp.net
+se.net
+uk.net
+ae.org
+com.se
 
 // No longer operated by CentralNic, these entries should be adopted and/or removed by current operators
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
@@ -12328,8 +12328,8 @@ gr.com
 
 // Radix FZC : http://domains.in.net
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
-in.net
 web.in
+in.net
 
 // US REGISTRY LLC : http://us.org
 // Submitted by Gavin Brown <gavin.brown@centralnic.com>
@@ -12401,8 +12401,8 @@ cloudaccess.net
 
 // cloudControl : https://www.cloudcontrol.com/
 // Submitted by Tobias Wilken <tw@cloudcontrol.com>
-cloudcontrolled.com
 cloudcontrolapp.com
+cloudcontrolled.com
 
 // Cloudera, Inc. : https://www.cloudera.com/
 // Submitted by Kedarnath Waikar <security@cloudera.com>
@@ -12442,11 +12442,11 @@ co.cz
 // Submitted by Jan Krpes <jan.krpes@cdn77.com>
 cdn77-storage.com
 rsc.contentproxy9.cz
-cdn77-ssl.net
 r.cdn77.net
-ssl.origin.cdn77-secure.org
+cdn77-ssl.net
 c.cdn77.org
 rsc.cdn77.org
+ssl.origin.cdn77-secure.org
 
 // Cloud DNS Ltd : http://www.cloudns.net
 // Submitted by Aleksander Hristov <noc@cloudns.net> & Boyan Peychev <boyan@cloudns.net>
@@ -12509,8 +12509,8 @@ test.ru
 // COSIMO GmbH : http://www.cosimo.de
 // Submitted by Rene Marticke <rmarticke@cosimo.de>
 dyn.cosidns.de
-dynamisches-dns.de
 dnsupdater.de
+dynamisches-dns.de
 internet-dns.de
 l-o-g-i-n.de
 dynamic-dns.info
@@ -12564,9 +12564,9 @@ cyon.site
 
 // Danger Science Group: https://dangerscience.com/
 // Submitted by Skylar MacDonald <skylar@dangerscience.com>
+platform0.app
 fnwk.site
 folionetwork.site
-platform0.app
 
 // Daplie, Inc : https://daplie.com
 // Submitted by AJ ONeal <aj@daplie.com>
@@ -12696,6 +12696,26 @@ dy.fi
 tunk.org
 
 // DynDNS.com : http://www.dyndns.com/services/dns/dyndns/
+dyndns.biz
+for-better.biz
+for-more.biz
+for-some.biz
+for-the.biz
+selfip.biz
+webhop.biz
+ftpaccess.cc
+game-server.cc
+myphotos.cc
+scrapping.cc
+blogdns.com
+cechire.com
+dnsalias.com
+dnsdojo.com
+doesntexist.com
+dontexist.com
+doomdns.com
+dyn-o-saur.com
+dynalias.com
 dyndns-at-home.com
 dyndns-at-work.com
 dyndns-blog.com
@@ -12710,64 +12730,14 @@ dyndns-server.com
 dyndns-web.com
 dyndns-wiki.com
 dyndns-work.com
-dyndns.biz
-dyndns.info
-dyndns.org
-dyndns.tv
-at-band-camp.net
-ath.cx
-barrel-of-knowledge.info
-barrell-of-knowledge.info
-better-than.tv
-blogdns.com
-blogdns.net
-blogdns.org
-blogsite.org
-boldlygoingnowhere.org
-broke-it.net
-buyshouses.net
-cechire.com
-dnsalias.com
-dnsalias.net
-dnsalias.org
-dnsdojo.com
-dnsdojo.net
-dnsdojo.org
-does-it.net
-doesntexist.com
-doesntexist.org
-dontexist.com
-dontexist.net
-dontexist.org
-doomdns.com
-doomdns.org
-dvrdns.org
-dyn-o-saur.com
-dynalias.com
-dynalias.net
-dynalias.org
-dynathome.net
-dyndns.ws
-endofinternet.net
-endofinternet.org
-endoftheinternet.org
 est-a-la-maison.com
 est-a-la-masion.com
 est-le-patron.com
 est-mon-blogueur.com
-for-better.biz
-for-more.biz
-for-our.info
-for-some.biz
-for-the.biz
-forgot.her.name
-forgot.his.name
 from-ak.com
 from-al.com
 from-ar.com
-from-az.net
 from-ca.com
-from-co.net
 from-ct.com
 from-dc.com
 from-de.com
@@ -12780,10 +12750,8 @@ from-il.com
 from-in.com
 from-ks.com
 from-ky.com
-from-la.net
 from-ma.com
 from-md.com
-from-me.org
 from-mi.com
 from-mn.com
 from-mo.com
@@ -12796,7 +12764,6 @@ from-nh.com
 from-nj.com
 from-nm.com
 from-nv.com
-from-ny.net
 from-oh.com
 from-ok.com
 from-or.com
@@ -12814,45 +12781,18 @@ from-wa.com
 from-wi.com
 from-wv.com
 from-wy.com
-ftpaccess.cc
-fuettertdasnetz.de
-game-host.org
-game-server.cc
 getmyip.com
-gets-it.net
-go.dyndns.org
 gotdns.com
-gotdns.org
-groks-the.info
-groks-this.info
-ham-radio-op.net
-here-for-more.info
 hobby-site.com
-hobby-site.org
-home.dyndns.org
-homedns.org
-homeftp.net
-homeftp.org
-homeip.net
 homelinux.com
-homelinux.net
-homelinux.org
 homeunix.com
-homeunix.net
-homeunix.org
 iamallama.com
-in-the-band.net
 is-a-anarchist.com
 is-a-blogger.com
 is-a-bookkeeper.com
-is-a-bruinsfan.org
 is-a-bulls-fan.com
-is-a-candidate.org
 is-a-caterer.com
-is-a-celticsfan.org
 is-a-chef.com
-is-a-chef.net
-is-a-chef.org
 is-a-conservative.com
 is-a-cpa.com
 is-a-cubicle-slave.com
@@ -12861,31 +12801,25 @@ is-a-designer.com
 is-a-doctor.com
 is-a-financialadvisor.com
 is-a-geek.com
-is-a-geek.net
-is-a-geek.org
 is-a-green.com
 is-a-guru.com
 is-a-hard-worker.com
 is-a-hunter.com
-is-a-knight.org
 is-a-landscaper.com
 is-a-lawyer.com
 is-a-liberal.com
 is-a-libertarian.com
-is-a-linux-user.org
 is-a-llama.com
 is-a-musician.com
 is-a-nascarfan.com
 is-a-nurse.com
 is-a-painter.com
-is-a-patsfan.org
 is-a-personaltrainer.com
 is-a-photographer.com
 is-a-player.com
 is-a-republican.com
 is-a-rockstar.com
 is-a-socialist.com
-is-a-soxfan.org
 is-a-student.com
 is-a-teacher.com
 is-a-techie.com
@@ -12897,92 +12831,158 @@ is-an-anarchist.com
 is-an-artist.com
 is-an-engineer.com
 is-an-entertainer.com
-is-by.us
 is-certified.com
-is-found.org
 is-gone.com
 is-into-anime.com
 is-into-cars.com
 is-into-cartoons.com
 is-into-games.com
 is-leet.com
-is-lost.org
 is-not-certified.com
-is-saved.org
 is-slick.com
 is-uberleet.com
+is-with-theband.com
+isa-geek.com
+isa-hockeynut.com
+issmarterthanyou.com
+likes-pie.com
+likescandy.com
+neat-url.com
+saves-the-whales.com
+selfip.com
+sells-for-less.com
+sells-for-u.com
+servebbs.com
+simple-url.com
+space-to-rent.com
+teaches-yoga.com
+writesthisblog.com
+ath.cx
+fuettertdasnetz.de
+isteingeek.de
+istmein.de
+lebtimnetz.de
+leitungsen.de
+traeumtgerade.de
+barrel-of-knowledge.info
+barrell-of-knowledge.info
+dyndns.info
+for-our.info
+groks-the.info
+groks-this.info
+here-for-more.info
+knowsitall.info
+selfip.info
+webhop.info
+forgot.her.name
+forgot.his.name
+at-band-camp.net
+blogdns.net
+broke-it.net
+buyshouses.net
+dnsalias.net
+dnsdojo.net
+does-it.net
+dontexist.net
+dynalias.net
+dynathome.net
+endofinternet.net
+from-az.net
+from-co.net
+from-la.net
+from-ny.net
+gets-it.net
+ham-radio-op.net
+homeftp.net
+homeip.net
+homelinux.net
+homeunix.net
+in-the-band.net
+is-a-chef.net
+is-a-geek.net
+isa-geek.net
+kicks-ass.net
+office-on-the.net
+podzone.net
+scrapper-site.net
+selfip.net
+sells-it.net
+servebbs.net
+serveftp.net
+thruhere.net
+webhop.net
+merseine.nu
+mine.nu
+shacknet.nu
+blogdns.org
+blogsite.org
+boldlygoingnowhere.org
+dnsalias.org
+dnsdojo.org
+doesntexist.org
+dontexist.org
+doomdns.org
+dvrdns.org
+dynalias.org
+dyndns.org
+go.dyndns.org
+home.dyndns.org
+endofinternet.org
+endoftheinternet.org
+from-me.org
+game-host.org
+gotdns.org
+hobby-site.org
+homedns.org
+homeftp.org
+homelinux.org
+homeunix.org
+is-a-bruinsfan.org
+is-a-candidate.org
+is-a-celticsfan.org
+is-a-chef.org
+is-a-geek.org
+is-a-knight.org
+is-a-linux-user.org
+is-a-patsfan.org
+is-a-soxfan.org
+is-found.org
+is-lost.org
+is-saved.org
 is-very-bad.org
 is-very-evil.org
 is-very-good.org
 is-very-nice.org
 is-very-sweet.org
-is-with-theband.com
-isa-geek.com
-isa-geek.net
 isa-geek.org
-isa-hockeynut.com
-issmarterthanyou.com
-isteingeek.de
-istmein.de
-kicks-ass.net
 kicks-ass.org
-knowsitall.info
-land-4-sale.us
-lebtimnetz.de
-leitungsen.de
-likes-pie.com
-likescandy.com
-merseine.nu
-mine.nu
 misconfused.org
-mypets.ws
-myphotos.cc
-neat-url.com
-office-on-the.net
-on-the-web.tv
-podzone.net
 podzone.org
 readmyblog.org
-saves-the-whales.com
-scrapper-site.net
-scrapping.cc
-selfip.biz
-selfip.com
-selfip.info
-selfip.net
 selfip.org
-sells-for-less.com
-sells-for-u.com
-sells-it.net
 sellsyourhome.org
-servebbs.com
-servebbs.net
 servebbs.org
-serveftp.net
 serveftp.org
 servegame.org
-shacknet.nu
-simple-url.com
-space-to-rent.com
 stuff-4-sale.org
-stuff-4-sale.us
-teaches-yoga.com
-thruhere.net
-traeumtgerade.de
-webhop.biz
-webhop.info
-webhop.net
 webhop.org
+better-than.tv
+dyndns.tv
+on-the-web.tv
 worse-than.tv
-writesthisblog.com
+is-by.us
+land-4-sale.us
+stuff-4-sale.us
+dyndns.ws
+mypets.ws
 
 // ddnss.de : https://www.ddnss.de/
 // Submitted by Robert Niedziela <webmaster@ddnss.de>
 ddnss.de
 dyn.ddnss.de
 dyndns.ddnss.de
-dyndns1.de
 dyn-ip24.de
+dyndns1.de
 home-webserver.de
 dyn.home-webserver.de
 myhome-server.de
@@ -12990,8 +12990,8 @@ ddnss.org
 
 // Definima : http://www.definima.com/
 // Submitted by Maxence Bitterli <maxence@definima.com>
-definima.net
 definima.io
+definima.net
 
 // DigitalOcean App Platform : https://www.digitalocean.com/products/app-platform/
 // Submitted by Braxton Huggins <psl-maintainers@digitalocean.com>
@@ -13259,8 +13259,6 @@ u.channelsdvr.net
 edgecompute.app
 fastly-edge.com
 fastly-terrarium.com
-fastlylb.net
-map.fastlylb.net
 freetls.fastly.net
 map.fastly.net
 a.prod.fastly.net
@@ -13268,6 +13266,8 @@ global.prod.fastly.net
 a.ssl.fastly.net
 b.ssl.fastly.net
 global.ssl.fastly.net
+fastlylb.net
+map.fastlylb.net
 
 // Fastmail : https://www.fastmail.com/
 // Submitted by Marc Bradshaw <marc@fastmailteam.com>
@@ -13337,8 +13337,8 @@ flutterflow.app
 // fly.io: https://fly.io
 // Submitted by Kurt Mackey <kurt@fly.io>
 fly.dev
-edgeapp.net
 shw.io
+edgeapp.net
 
 // Flynn : https://flynn.io
 // Submitted by Jonathan Rudenberg <jonathan@flynn.io>
@@ -13427,6 +13427,8 @@ aliases121.com
 
 // GDS : https://www.gov.uk/service-manual/technology/managing-domain-names
 // Submitted by Stephen Ford <hostmaster@digital.cabinet-office.gov.uk>
+campaign.gov.uk
+service.gov.uk
 independent-commission.uk
 independent-inquest.uk
 independent-inquiry.uk
@@ -13434,8 +13436,6 @@ independent-panel.uk
 independent-review.uk
 public-inquiry.uk
 royal-commission.uk
-campaign.gov.uk
-service.gov.uk
 
 // CDDO : https://www.gov.uk/guidance/get-an-api-domain-on-govuk
 // Submitted by Jamie Tanna <jamie.tanna@digital.cabinet-office.gov.uk>
@@ -13624,12 +13624,30 @@ goip.de
 
 // Google, Inc.
 // Submitted by Shannon McCabe <public-suffix-editors@google.com>
+blogspot.ae
+blogspot.al
+blogspot.am
 *.hosted.app
 *.run.app
 web.app
+blogspot.com.ar
+blogspot.co.at
+blogspot.com.au
+blogspot.ba
+blogspot.be
+blogspot.bg
+blogspot.bj
+blogspot.com.br
+blogspot.com.by
+blogspot.ca
+blogspot.cf
+blogspot.ch
+blogspot.cl
+blogspot.com.co
 *.0emm.com
 appspot.com
 *.r.appspot.com
+blogspot.com
 codespot.com
 googleapis.com
 googlecode.com
@@ -13637,58 +13655,32 @@ pagespeedmobilizer.com
 publishproxy.com
 withgoogle.com
 withyoutube.com
-*.gateway.dev
-cloud.goog
-translate.goog
-*.usercontent.goog
-cloudfunctions.net
-blogspot.ae
-blogspot.al
-blogspot.am
-blogspot.ba
-blogspot.be
-blogspot.bg
-blogspot.bj
-blogspot.ca
-blogspot.cf
-blogspot.ch
-blogspot.cl
-blogspot.co.at
-blogspot.co.id
-blogspot.co.il
-blogspot.co.ke
-blogspot.co.nz
-blogspot.co.uk
-blogspot.co.za
-blogspot.com
-blogspot.com.ar
-blogspot.com.au
-blogspot.com.br
-blogspot.com.by
-blogspot.com.co
+blogspot.cv
 blogspot.com.cy
+blogspot.cz
+blogspot.de
+*.gateway.dev
+blogspot.dk
 blogspot.com.ee
 blogspot.com.eg
 blogspot.com.es
-blogspot.com.mt
-blogspot.com.ng
-blogspot.com.tr
-blogspot.com.uy
-blogspot.cv
-blogspot.cz
-blogspot.de
-blogspot.dk
 blogspot.fi
 blogspot.fr
+cloud.goog
+translate.goog
+*.usercontent.goog
 blogspot.gr
 blogspot.hk
 blogspot.hr
 blogspot.hu
+blogspot.co.id
 blogspot.ie
+blogspot.co.il
 blogspot.in
 blogspot.is
 blogspot.it
 blogspot.jp
+blogspot.co.ke
 blogspot.kr
 blogspot.li
 blogspot.lt
@@ -13696,10 +13688,14 @@ blogspot.lu
 blogspot.md
 blogspot.mk
 blogspot.mr
+blogspot.com.mt
 blogspot.mx
 blogspot.my
+cloudfunctions.net
+blogspot.com.ng
 blogspot.nl
 blogspot.no
+blogspot.co.nz
 blogspot.pe
 blogspot.pt
 blogspot.qa
@@ -13713,9 +13709,13 @@ blogspot.si
 blogspot.sk
 blogspot.sn
 blogspot.td
+blogspot.com.tr
 blogspot.tw
 blogspot.ug
+blogspot.co.uk
+blogspot.com.uy
 blogspot.vn
+blogspot.co.za
 
 // Goupile : https://goupile.fr
 // Submitted by Niels Martignene <hello@goupile.fr>
@@ -13748,8 +13748,8 @@ conf.se
 
 // Handshake : https://handshake.org
 // Submitted by Mike Damm <md@md.vc>
-hs.zone
 hs.run
+hs.zone
 
 // Hashbang : https://hashbang.sh
 hashbang.sh
@@ -13842,8 +13842,8 @@ iliadboxos.it
 
 // Impertrix Solutions : <https://impertrixcdn.com>
 // Submitted by Zhixiang Zhao <csuite@impertrix.com>
-impertrixcdn.com
 impertrix.com
+impertrixcdn.com
 
 // Incsub, LLC: https://incsub.com/
 // Submitted by Aaron Edwards <sysadmins@incsub.com>
@@ -13860,10 +13860,10 @@ in-berlin.de
 in-brb.de
 in-butter.de
 in-dsl.de
-in-dsl.net
-in-dsl.org
 in-vpn.de
+in-dsl.net
 in-vpn.net
+in-dsl.org
 in-vpn.org
 
 // info.at : http://www.info.at/
@@ -14038,13 +14038,13 @@ jotelulu.cloud
 
 // JouwWeb B.V. : https://www.jouwweb.nl
 // Submitted by Camilo Sperberg <tech@webador.com>
-jouwweb.site
 webadorsite.com
+jouwweb.site
 
 // Joyent : https://www.joyent.com/
 // Submitted by Brian Bennett <brian.bennett@joyent.com>
-*.triton.zone
 *.cns.joyent.com
+*.triton.zone
 
 // JS.ORG : http://dns.js.org
 // Submitted by Stefan Keim <admin@js.org>
@@ -14086,8 +14086,8 @@ oya.to
 
 // Katholieke Universiteit Leuven: https://www.kuleuven.be
 // Submitted by Abuse KU Leuven <abuse@kuleuven.be>
-kuleuven.cloud
 ezproxy.kuleuven.be
+kuleuven.cloud
 
 // .KRD : http://nic.krd/data/krd/Registration%20Policy.pdf
 co.krd
@@ -14095,8 +14095,8 @@ edu.krd
 
 // Krellian Ltd. : https://krellian.com
 // Submitted by Ben Francis <ben@krellian.com>
-krellian.net
 webthings.io
+krellian.net
 
 // LCube - Professional hosting e.K. : https://www.lcube-webhosting.de
 // Submitted by Lars Laehn <info@lcube.de>
@@ -14130,8 +14130,8 @@ co.technology
 
 // linkyard ldt: https://www.linkyard.ch/
 // Submitted by Mario Siegenthaler <mario.siegenthaler@linkyard.ch>
-linkyard.cloud
 linkyard-cloud.ch
+linkyard.cloud
 
 // Linode : https://linode.com
 // Submitted by <security@linode.com>
@@ -14186,11 +14186,9 @@ lugs.org.uk
 // Lukanet Ltd : https://lukanet.com
 // Submitted by Anton Avramov <register@lukanet.com>
 barsy.bg
-barsy.co.uk
-barsyonline.co.uk
+barsy.club
 barsycenter.com
 barsyonline.com
-barsy.club
 barsy.de
 barsy.eu
 barsy.in
@@ -14209,6 +14207,8 @@ barsy.shop
 barsy.site
 barsy.support
 barsy.uk
+barsy.co.uk
+barsyonline.co.uk
 
 // Magento Commerce
 // Submitted by Damien Tournoud <dtournoud@magento.cloud>
@@ -14239,8 +14239,8 @@ mcpe.me
 // Submitted by Evgeniy Subbotin <e.subbotin@mchost.ru>
 mcdir.me
 mcdir.ru
-mcpre.ru
 vps.mcdir.ru
+mcpre.ru
 
 // Mediatech : https://mediatech.by
 // Submitted by Evgeniy Kozhuhovskiy <ugenk@mediatech.by>
@@ -14289,10 +14289,9 @@ co.pl
 // Microsoft Azure : https://home.azure
 *.azurecontainer.io
 azure-api.net
+azure-mobile.net
 azureedge.net
 azurefd.net
-azurewebsites.net
-azure-mobile.net
 azurestaticapps.net
 1.azurestaticapps.net
 2.azurestaticapps.net
@@ -14306,6 +14305,7 @@ eastasia.azurestaticapps.net
 eastus2.azurestaticapps.net
 westeurope.azurestaticapps.net
 westus2.azurestaticapps.net
+azurewebsites.net
 cloudapp.net
 trafficmanager.net
 blob.core.windows.net
@@ -14344,8 +14344,8 @@ pp.ru
 // Mythic Beasts : https://www.mythic-beasts.com
 // Submitted by Paul Cammish <kelduum@mythic-beasts.com>
 hostedpi.com
-customer.mythic-beasts.com
 caracal.mythic-beasts.com
+customer.mythic-beasts.com
 fentiger.mythic-beasts.com
 lynx.mythic-beasts.com
 ocelot.mythic-beasts.com
@@ -14466,91 +14466,91 @@ nerdpol.ovh
 
 // No-IP.com : https://noip.com/
 // Submitted by Deven Reza <publicsuffixlist@noip.com>
-blogsyte.com
-brasilia.me
-cable-modem.org
-ciscofreak.com
-collegefan.org
-couchpotatofries.org
-damnserver.com
-ddns.me
-ditchyourip.com
-dnsfor.me
-dnsiskinky.com
-dvrcam.info
-dynns.com
-eating-organic.net
+mmafan.biz
+myftp.biz
+no-ip.biz
+no-ip.ca
 fantasyleague.cc
+gotdns.ch
+3utilities.com
+blogsyte.com
+ciscofreak.com
+damnserver.com
+ddnsking.com
+ditchyourip.com
+dnsiskinky.com
+dynns.com
 geekgalaxy.com
-golffan.us
 health-carereform.com
 homesecuritymac.com
 homesecuritypc.com
-hopto.me
-ilovecollege.info
-loginto.me
-mlbfan.org
-mmafan.biz
 myactivedirectory.com
-mydissent.net
-myeffect.net
-mymediapc.net
-mypsx.net
 mysecuritycamera.com
-mysecuritycamera.net
-mysecuritycamera.org
-net-freaks.com
-nflfan.org
-nhlfan.net
-no-ip.ca
-no-ip.co.uk
-no-ip.net
-noip.us
-onthewifi.com
-pgafan.net
-point2this.com
-pointto.us
-privatizehealthinsurance.net
-quicksytes.com
-read-books.org
-securitytactics.com
-serveexchange.com
-servehumour.com
-servep2p.com
-servesarcasm.com
-stufftoread.com
-ufcfan.org
-unusualperson.com
-workisboring.com
-3utilities.com
-bounceme.net
-ddns.net
-ddnsking.com
-gotdns.ch
-hopto.org
-myftp.biz
-myftp.org
 myvnc.com
-no-ip.biz
-no-ip.info
-no-ip.org
-noip.me
-redirectme.net
+net-freaks.com
+onthewifi.com
+point2this.com
+quicksytes.com
+securitytactics.com
 servebeer.com
-serveblog.net
 servecounterstrike.com
+serveexchange.com
 serveftp.com
 servegame.com
 servehalflife.com
 servehttp.com
+servehumour.com
 serveirc.com
-serveminecraft.net
 servemp3.com
+servep2p.com
 servepics.com
 servequake.com
-sytes.net
+servesarcasm.com
+stufftoread.com
+unusualperson.com
+workisboring.com
+dvrcam.info
+ilovecollege.info
+no-ip.info
+brasilia.me
+ddns.me
+dnsfor.me
+hopto.me
+loginto.me
+noip.me
 webhop.me
+bounceme.net
+ddns.net
+eating-organic.net
+mydissent.net
+myeffect.net
+mymediapc.net
+mypsx.net
+mysecuritycamera.net
+nhlfan.net
+no-ip.net
+pgafan.net
+privatizehealthinsurance.net
+redirectme.net
+serveblog.net
+serveminecraft.net
+sytes.net
+cable-modem.org
+collegefan.org
+couchpotatofries.org
+hopto.org
+mlbfan.org
+myftp.org
+mysecuritycamera.org
+nflfan.org
+no-ip.org
+read-books.org
+ufcfan.org
 zapto.org
+no-ip.co.uk
+golffan.us
+noip.us
+pointto.us
 
 // NodeArt : https://nodeart.io
 // Submitted by Konstantin Nosov <Nosov@nodeart.io>
@@ -14591,25 +14591,25 @@ omniwe.site
 
 // One.com: https://www.one.com/
 // Submitted by Jacob Bunk Nielsen <jbn@one.com>
-123hjemmeside.dk
-123hjemmeside.no
-123homepage.it
-123kotisivu.fi
-123minsida.se
-123miweb.es
-123paginaweb.pt
-123siteweb.fr
 123webseite.at
-123webseite.de
 123website.be
+simplesite.com.br
 123website.ch
+simplesite.com
+123webseite.de
+123hjemmeside.dk
+123miweb.es
+123kotisivu.fi
+123siteweb.fr
+simplesite.gr
+123homepage.it
 123website.lu
 123website.nl
+123hjemmeside.no
 service.one
-simplesite.com
-simplesite.com.br
-simplesite.gr
 simplesite.pl
+123paginaweb.pt
+123minsida.se
 
 // One Fold Media : http://www.onefoldmedia.com/
 // Submitted by Eddie Jones <eddie@onefoldmedia.com>
@@ -14659,8 +14659,8 @@ outsystemscloud.com
 
 // OVHcloud: https://ovhcloud.com
 // Submitted by Vincent Cassé <vincent.casse@ovhcloud.com>
-*.webpaas.ovh.net
 *.hosting.ovh.net
+*.webpaas.ovh.net
 
 // OwnProvider GmbH: http://www.ownprovider.com
 // Submitted by Jan Moennich <jan.moennich@ownprovider.com>
@@ -14713,8 +14713,8 @@ zakopane.pl
 
 // Pantheon Systems, Inc. : https://pantheon.io/
 // Submitted by Gary Dylina <gary@pantheon.io>
-pantheonsite.io
 gotpantheon.com
+pantheonsite.io
 
 // Peplink | Pepwave : http://peplink.com/
 // Submitted by Steve Leung <steveleung@peplink.com>
@@ -14750,9 +14750,9 @@ platterp.us
 
 // Plesk : https://www.plesk.com/
 // Submitted by Anton Akhtyamov <program-managers@plesk.com>
+pleskns.com
 pdns.page
 plesk.page
-pleskns.com
 
 // Pley AB : https://www.pley.com/
 // Submitted by Henning Pohl <infra@pley.com>
@@ -14883,8 +14883,8 @@ g.vbrplsbx.io
 
 // Rancher Labs, Inc : https://rancher.com
 // Submitted by Vincent Fiduccia <domains@rancher.com>
-*.on-k3s.io
 *.on-rancher.cloud
+*.on-k3s.io
 *.on-rio.io
 
 // Read The Docs, Inc : https://www.readthedocs.org
@@ -14897,8 +14897,8 @@ rhcloud.com
 
 // Render : https://render.com
 // Submitted by Anurag Goel <dev@render.com>
-app.render.com
 onrender.com
+app.render.com
 
 // Repl.it : https://repl.it
 // Submitted by Lincoln Bergeson <psl@repl.it>
@@ -15043,8 +15043,8 @@ sandcats.io
 
 // SBE network solutions GmbH : https://www.sbe.de/
 // Submitted by Norman Meilick <nm@sbe.de>
-logoip.de
 logoip.com
+logoip.de
 
 // Scaleway : https://www.scaleway.com/
 // Submitted by Rémy Léone <rleone@scaleway.com>
@@ -15241,8 +15241,8 @@ stackit.zone
 
 // Staclar : https://staclar.com
 // Submitted by Q Misell <q@staclar.com>
-musician.io
 // Submitted by Matthias Merkel <matthias.merkel@staclar.com>
+musician.io
 novecore.site
 
 // staticland : https://static.land
@@ -15354,8 +15354,8 @@ su.paba.se
 
 // Symfony, SAS : https://symfony.com/
 // Submitted by Fabien Potencier <fabien@symfony.com>
-*.s5y.io
 *.sensiosite.cloud
+*.s5y.io
 
 // Syncloud : https://syncloud.org
 // Submitted by Boris Rybalkin <syncloud@syncloud.it>
@@ -15377,14 +15377,14 @@ dsmynas.net
 familyds.net
 dsmynas.org
 familyds.org
-vpnplus.to
 direct.quickconnect.to
+vpnplus.to
 
 // Tabit Technologies Ltd. : https://tabit.cloud/
 // Submitted by Oren Agiv <oren@tabit.cloud>
-tabitorder.co.il
-mytabit.co.il
 mytabit.com
+mytabit.co.il
+tabitorder.co.il
 
 // TAIFUN Software AG : http://taifun-software.de
 // Submitted by Bjoern Henke <dev-server@taifun-software.de>
@@ -15425,11 +15425,11 @@ telebit.io
 reservd.com
 thingdustdata.com
 cust.dev.thingdust.io
+reservd.dev.thingdust.io
 cust.disrec.thingdust.io
+reservd.disrec.thingdust.io
 cust.prod.thingdust.io
 cust.testing.thingdust.io
-reservd.dev.thingdust.io
-reservd.disrec.thingdust.io
 reservd.testing.thingdust.io
 
 // ticket i/O GmbH : https://ticket.io
@@ -15491,8 +15491,6 @@ tuxfamily.org
 // TwoDNS : https://www.twodns.de/
 // Submitted by TwoDNS-Support <support@two-dns.de>
 dd-dns.de
-diskstation.eu
-diskstation.org
 dray-dns.de
 draydns.de
 dyn-vpn.de
@@ -15503,6 +15501,8 @@ my-wan.de
 syno-ds.de
 synology-diskstation.de
 synology-ds.de
+diskstation.eu
+diskstation.org
 
 // Typedream : https://typedream.com
 // Submitted by Putri Karunia <putri@typedream.com>
@@ -15514,15 +15514,15 @@ pro.typeform.com
 
 // Uberspace : https://uberspace.de
 // Submitted by Moritz Werner <mwerner@jonaspasche.com>
-uber.space
 *.uberspace.de
+uber.space
 
 // UDR Limited : http://www.udr.hk.com
 // Submitted by registry <hostmaster@udr.hk.com>
 hk.com
-hk.org
-ltd.hk
 inc.hk
+ltd.hk
+hk.org
 
 // UK Intis Telecom LTD : https://it.com
 // Submitted by ITComdomains <to@it.com>
@@ -15543,8 +15543,8 @@ org.yt
 
 // United Gameserver GmbH : https://united-gameserver.de
 // Submitted by Stefan Schwarz <sysadm@united-gameserver.de>
-virtualuser.de
 virtual-user.de
+virtualuser.de
 
 // Upli : https://upli.io
 // Submitted by Lenny Bakkalian <lenny.bakkalian@gmail.com>
@@ -15609,10 +15609,10 @@ webflowtest.io
 
 // WebHotelier Technologies Ltd: https://www.webhotelier.net/
 // Submitted by Apostolos Tsakpinis <apostolos.tsakpinis@gmail.com>
-reserve-online.net
-reserve-online.com
 bookonline.app
 hotelwithflight.com
+reserve-online.com
+reserve-online.net
 
 // WebWaddle Ltd: https://webwaddle.com/
 // Submitted by Merlin Glander <hostmaster@webwaddle.com>
@@ -15638,9 +15638,9 @@ pages.wiardweb.com
 
 // Wikimedia Labs : https://wikitech.wikimedia.org
 // Submitted by Arturo Borrero Gonzalez <aborrero@wikimedia.org>
-wmflabs.org
 toolforge.org
 wmcloud.org
+wmflabs.org
 
 // WISP : https://wisp.gg
 // Submitted by Stepan Fedotov <stepan@wisp.gg>
