@@ -19,6 +19,7 @@
 #define CHROMIUM_CDM_API_BACKWARD_COMPAT "chromium-cdm9-host4"
 #define CHROMIUM_CDM_API "chromium-cdm10-host4"
 
+class GMPVideoEncodedFrame;
 class nsIFile;
 class nsIDirectoryEnumerator;
 
@@ -81,6 +82,8 @@ already_AddRefed<nsISerialEventTarget> GetGMPThread();
 // Returns the number of bytes required to store an aWidth x aHeight image in
 // I420 format, padded so that the width and height are multiples of 16.
 size_t I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight);
+
+bool AdjustOpenH264NALUSequence(GMPVideoEncodedFrame* aEncodedFrame);
 
 MediaResult ToMediaResult(GMPErr aErr, const nsACString& aMessage);
 

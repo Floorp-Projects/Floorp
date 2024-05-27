@@ -6,10 +6,13 @@
 
 #include "GMPUtils.h"
 
+#include "GMPLog.h"
 #include "GMPService.h"
+#include "gmp-video-frame-encoded.h"
 #include "VideoLimits.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Base64.h"
+#include "mozilla/EndianUtils.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
 #include "nsDirectoryServiceDefs.h"
@@ -234,6 +237,116 @@ size_t I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight) {
 
   size_t ySize = Align16(aWidth) * Align16(aHeight);
   return ySize + (ySize / 4) * 2;
+}
+
+static int SizeNumBytes(GMPBufferType aBufferType) {
+  switch (aBufferType) {
+    case GMP_BufferSingle:
+      return 0;
+    case GMP_BufferLength8:
+      return 1;
+    case GMP_BufferLength16:
+      return 2;
+    case GMP_BufferLength24:
+      return 3;
+    case GMP_BufferLength32:
+      return 4;
+    default:
+      MOZ_CRASH("Unexpected buffer type");
+  }
+}
+
+bool AdjustOpenH264NALUSequence(GMPVideoEncodedFrame* aEncodedFrame) {
+  MOZ_ASSERT(aEncodedFrame);
+  MOZ_ASSERT(IsOnGMPThread());
+
+  uint8_t* encodedBuffer = aEncodedFrame->Buffer();
+  uint32_t encodedSize = aEncodedFrame->Size();
+  GMPBufferType encodedType = aEncodedFrame->BufferType();
+
+  if (NS_WARN_IF(!encodedBuffer)) {
+    GMP_LOG_ERROR("GMP plugin returned null buffer");
+    return false;
+  }
+
+  // Libwebrtc's RtpPacketizerH264 expects a 3- or 4-byte NALU start sequence
+  // before the start of the NALU payload. {0,0,1} or {0,0,0,1}. We set this
+  // in-place. Any other length of the length field we reject.
+
+  const int sizeNumBytes = SizeNumBytes(encodedType);
+  uint32_t unitOffset = 0;
+  uint32_t unitSize = 0;
+  // Make sure we don't read past the end of the buffer getting the size
+  while (unitOffset + sizeNumBytes < encodedSize) {
+    uint8_t* unitBuffer = encodedBuffer + unitOffset;
+    switch (encodedType) {
+      case GMP_BufferLength24: {
+#if MOZ_LITTLE_ENDIAN()
+        unitSize = (static_cast<uint32_t>(*unitBuffer)) |
+                   (static_cast<uint32_t>(*(unitBuffer + 1)) << 8) |
+                   (static_cast<uint32_t>(*(unitBuffer + 2)) << 16);
+#else
+        unitSize = (static_cast<uint32_t>(*unitBuffer) << 16) |
+                   (static_cast<uint32_t>(*(unitBuffer + 1)) << 8) |
+                   (static_cast<uint32_t>(*(unitBuffer + 2)));
+#endif
+        const uint8_t startSequence[] = {0, 0, 1};
+        if (memcmp(unitBuffer, startSequence, 3) == 0) {
+          // This is a bug in OpenH264 where it misses to convert the NALU start
+          // sequence to the NALU size per the GMP protocol. We mitigate this by
+          // letting it through as this is what libwebrtc already expects and
+          // scans for.
+          unitSize = encodedSize - 3;
+          break;
+        }
+        memcpy(unitBuffer, startSequence, 3);
+        break;
+      }
+      case GMP_BufferLength32: {
+#if MOZ_LITTLE_ENDIAN()
+        unitSize = LittleEndian::readUint32(unitBuffer);
+#else
+        unitSize = BigEndian::readUint32(unitBuffer);
+#endif
+        const uint8_t startSequence[] = {0, 0, 0, 1};
+        if (memcmp(unitBuffer, startSequence, 4) == 0) {
+          // This is a bug in OpenH264 where it misses to convert the NALU start
+          // sequence to the NALU size per the GMP protocol. We mitigate this by
+          // letting it through as this is what libwebrtc already expects and
+          // scans for.
+          unitSize = encodedSize - 4;
+          break;
+        }
+        memcpy(unitBuffer, startSequence, 4);
+        break;
+      }
+      default:
+        GMP_LOG_ERROR("GMP plugin returned type we cannot handle (%d)",
+                      encodedType);
+        return false;
+    }
+
+    MOZ_ASSERT(unitSize != 0);
+    MOZ_ASSERT(unitOffset + sizeNumBytes + unitSize <= encodedSize);
+    if (unitSize == 0 || unitOffset + sizeNumBytes + unitSize > encodedSize) {
+      // XXX Should we kill the plugin for returning extra bytes? Probably
+      GMP_LOG_ERROR(
+          "GMP plugin returned badly formatted encoded data: "
+          "unitOffset=%u, sizeNumBytes=%d, unitSize=%u, size=%u",
+          unitOffset, sizeNumBytes, unitSize, encodedSize);
+      return false;
+    }
+
+    unitOffset += sizeNumBytes + unitSize;
+  }
+
+  if (unitOffset != encodedSize) {
+    // At most 3 bytes can be left over, depending on buffertype
+    GMP_LOG_DEBUG("GMP plugin returned %u extra bytes",
+                  encodedSize - unitOffset);
+  }
+
+  return true;
 }
 
 MediaResult ToMediaResult(GMPErr aErr, const nsACString& aMessage) {
