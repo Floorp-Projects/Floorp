@@ -18,7 +18,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/XREAppData.h"
 #include "nsXULAppAPI.h"
 #include "nsIXULAppInfo.h"
 #include "nsIOutputStream.h"
@@ -411,17 +410,12 @@ void MPRISServiceHandler::InitIdentity() {
   nsresult rv;
   nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1", &rv);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   rv = appInfo->GetVendor(mIdentity);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  if (gAppData) {
-    mDesktopEntry = gAppData->remotingName;
-  } else {
-    rv = appInfo->GetName(mDesktopEntry);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
+  rv = appInfo->GetName(mDesktopEntry);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   mIdentity.Append(' ');
   mIdentity.Append(mDesktopEntry);
