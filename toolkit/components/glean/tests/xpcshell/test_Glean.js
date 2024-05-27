@@ -630,8 +630,7 @@ add_task(async function test_fog_complex_object_works() {
 });
 
 add_task(
-  // FIXME(1897219): Should be re-enabled along with the newer implementation.
-  // ride-along pings are not handled correctly in artifact builds.
+  // FIXME(1898464): ride-along pings are not handled correctly in artifact builds.
   {
     skip_if: () =>
       Services.prefs.getBoolPref("telemetry.fog.artifact_build", false),
