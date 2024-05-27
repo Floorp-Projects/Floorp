@@ -166,6 +166,17 @@ class nsHTTPSOnlyUtils {
                                            nsILoadInfo* aLoadInfo);
 
   /**
+   * Will add a special temporary HTTPS-Only exception that only applies to
+   * HTTPS-First, and is not exposed in the UI.
+   * @param aURI      The URL for whose HTTP principal the exception should be
+   *                  added
+   * @param aLoadInfo The loadinfo of the request triggering this exception to
+   *                  be added (needs to match aURI)
+   */
+  static nsresult AddHTTPSFirstExceptionForSession(
+      nsCOMPtr<nsIURI> aURI, nsILoadInfo* const aLoadInfo);
+
+  /**
    * Determines which HTTPS-Only status flags should get propagated to
    * sub-resources or sub-documents. As sub-resources and sub-documents are
    * exempt when the top-level document is exempt, we need to copy the "exempt"

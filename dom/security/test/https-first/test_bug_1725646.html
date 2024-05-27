@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<!--
+  Description:
+
+  1. We visit http://example.com/A
+  2. HTTPS-First upgrades to https://example.com/A
+  3. https://example.com/A redirects us to http://example.com/B, because we
+     visit it via https
+  4. HTTPS-First fails to upgrade to https://example.com/B as it gets redirected
+     back to http, which means we set an HTTPS-Only/First exception for
+     "http://example.com"
+  5. http://example.com/B sends HTML informing the user that HTTPS is not
+     supported, and redirecting the user back to http://example.com/A via
+     window.location = "...".
+  6. The load to http://example.com/A will not be upgraded again
+  7. Subsequent visits of http://example.com/A will also not be upgraded
+-->
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>HTTPS-First-Mode - Simulate site similar to bom.gov.au</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script class="testbody" type="text/javascript">
+      "use strict";
+      /* eslint-disable @microsoft/sdl/no-insecure-url */
+
+      const URL_A =
+        "http://example.com/tests/dom/security/test/https-first/file_bug_1725646_a.sjs";
+      const URL_B =
+        "http://example.com/tests/dom/security/test/https-first/file_bug_1725646_b.sjs";
+
+      SimpleTest.waitForExplicitFinish();
+
+      let testWin;
+      let messageNumber = 0;
+
+      async function receiveMessage(event) {
+        switch (messageNumber) {
+          case 0:
+            is(
+              event.data.location,
+              URL_B,
+              "We should land on page B after being HTTP redirected"
+            );
+            break;
+
+          case 1:
+            is(
+              event.data.location,
+              URL_A,
+              "We should land on page B after being redirected back through JS and not upgraded again"
+            );
+            ok(
+              await SpecialPowers.testPermission(
+                "https-only-load-insecure",
+                SpecialPowers.Ci.nsIHttpsOnlyModePermission
+                  .HTTPSFIRST_LOAD_INSECURE_ALLOW_SESSION,
+                URL_A
+              ),
+              "A temporary HTTPS-First exception should have been added for the site"
+            );
+            testWin.close();
+            testWin = window.open(URL_A);
+            break;
+
+          case 2:
+            is(event.data.location, URL_A, "We should directly land on page A");
+            testWin.close();
+            window.removeEventListener("message", this);
+            await SpecialPowers.removePermission(
+              "https-only-load-insecure",
+              URL_A
+            );
+            SimpleTest.finish();
+            break;
+
+          default:
+            throw Error("Received too many messages");
+        }
+        messageNumber++;
+      }
+
+      window.addEventListener("message", receiveMessage);
+
+      SpecialPowers.pushPrefEnv({
+        set: [["dom.security.https_first", true]],
+      }).then(() => {
+        testWin = window.open(URL_A);
+      });
+    </script>
+  </body>
+</html>
