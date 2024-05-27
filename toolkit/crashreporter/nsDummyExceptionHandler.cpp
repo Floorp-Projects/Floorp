@@ -118,7 +118,7 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data) {
 
 bool GetAnnotation(const nsACString& key, nsACString& data) { return false; }
 
-void GetAnnotation(uint32_t childPid, Annotation annotation,
+void GetAnnotation(ProcessId childPid, Annotation annotation,
                    nsACString& outStr) {
   return;
 }
@@ -221,12 +221,12 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
 
 bool SetRemoteExceptionHandler(const char* aCrashPipe) { return false; }
 
-bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
+bool TakeMinidumpForChild(ProcessId childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations) {
   return false;
 }
 
-bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
+bool FinalizeOrphanedMinidump(ProcessId aChildPid, GeckoProcessType aType,
                               nsString* aDumpId) {
   return false;
 }

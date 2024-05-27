@@ -3560,7 +3560,7 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe) {
   return gExceptionHandler->IsOutOfProcess();
 }
 
-void GetAnnotation(uint32_t childPid, Annotation annotation,
+void GetAnnotation(ProcessId childPid, Annotation annotation,
                    nsACString& outStr) {
   if (!GetEnabled()) {
     return;
@@ -3576,7 +3576,7 @@ void GetAnnotation(uint32_t childPid, Annotation annotation,
   outStr = (*pd->annotations)[annotation];
 }
 
-bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
+bool TakeMinidumpForChild(ProcessId childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations) {
   if (!GetEnabled()) return false;
 
@@ -3593,7 +3593,7 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   return !!*dump;
 }
 
-bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
+bool FinalizeOrphanedMinidump(ProcessId aChildPid, GeckoProcessType aType,
                               nsString* aDumpId) {
   AnnotationTable annotations;
   nsCOMPtr<nsIFile> minidump;
