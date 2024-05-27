@@ -816,6 +816,10 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         # Desktop selection
         if accept_raptor_desktop_build(platform):
             # Select some browsertime tasks as desktop smoke-tests
+            if "responsiveness" in try_name and "chrome" in try_name:
+                # Disabled chrome responsiveness tests temporarily in bug 1898351
+                # due to frequent failures
+                return False
             if "browsertime" in try_name:
                 if "chrome" in try_name:
                     if "tp6" in try_name and "essential" not in try_name:
