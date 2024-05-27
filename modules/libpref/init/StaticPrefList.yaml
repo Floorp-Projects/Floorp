@@ -5080,6 +5080,14 @@
   value: false
   mirror: always
 
+# When true, content scripts of MV2 extensions can run in blob:-documents without
+# requiring match_origin_as_fallback to be set, to revert bug 1897113.
+# TODO bug 1899134: Remove this pref.
+- name: extensions.script_blob_without_match_origin_as_fallback
+  type: bool
+  value: false
+  mirror: always
+
 # Legacy behavior on filterResponse calls on intercepted sw script requests.
 - name: extensions.filterResponseServiceWorkerScript.disabled
   type: bool

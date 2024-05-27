@@ -836,9 +836,19 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
     // with a precursor may result in a match with the specific pattern.
   }
 
-  if (!mMatchOriginAsFallback && aDoc.Principal() &&
-      aDoc.Principal()->GetIsNullPrincipal() && !aDoc.URL().IsNonOpaqueURL()) {
-    return false;
+  if (!mMatchOriginAsFallback && aDoc.RequiresMatchOriginAsFallback()) {
+    // TODO bug 1899134: We should unconditionally return false here. But we
+    // had accidental support for matching blob:-URLs (by the content
+    // principal's URL) for a long time, so we have a temporary pref to fall
+    // back to the original behavior if needed.
+    if (aDoc.URL().Scheme() != nsGkAtoms::blob || !mExtension ||
+        mExtension->ManifestVersion() != 2 ||
+        !StaticPrefs::
+            extensions_script_blob_without_match_origin_as_fallback()) {
+      return false;
+    }
+    // Fall-through implies that we have a MV2 extension and a blob:-URL, with
+    // extensions.script_blob_without_match_origin_as_fallback set to true.
   }
 
   if (mRestricted && WebExtensionPolicy::IsRestrictedDoc(aDoc)) {
@@ -1167,6 +1177,18 @@ const URLInfo& DocInfo::PrincipalURL() const {
   }
 
   return mPrincipalURL.ref();
+}
+
+bool DocInfo::RequiresMatchOriginAsFallback() const {
+  if (mRequiresMatchOriginAsFallback.isNothing()) {
+    mRequiresMatchOriginAsFallback.emplace(
+        // Special-case blob:-URLs because their principal is indistinguishable
+        // from the principals that created them.
+        URL().Scheme() == nsGkAtoms::blob ||
+        (Principal() && Principal()->GetIsNullPrincipal() &&
+         !URL().IsNonOpaqueURL()));
+  }
+  return mRequiresMatchOriginAsFallback.ref();
 }
 
 }  // namespace extensions

@@ -15,7 +15,7 @@
 // Tests that match_about_blank matches at the expected URLs:
 // - about:blank and about:srcdoc (as documented)
 // - javascript:-URL (loaded in about:blank document)
-// - blob: (not documented, not supported by Chrome, historical behavior)
+// - blob: (not documented, not supported by Chrome, legacy behavior)
 add_task(async function test_contentscript_about_blank() {
   const manifest = {
     content_scripts: [
@@ -154,19 +154,21 @@ add_task(async function test_contentscript_about_blank() {
   info(`Opening blob:-URL: ${blobUrl} from ${win.document.URL}`);
 
   let blobWin = window.open(blobUrl);
+  // blob:-URLs should not have content scripts because
+  // match_origin_as_fallback is not set.
   await Promise.all([
-    extension.awaitMessage("all:" + blobUrl),
     extension.awaitMessage("all:about:blank"),
     extension.awaitMessage("all:about:srcdoc"),
-    extension.awaitMessage("mochi_without:" + blobUrl),
-    extension.awaitMessage("mochi_with:" + blobUrl),
     extension.awaitMessage("mochi_with:about:blank"),
     extension.awaitMessage("mochi_with:about:srcdoc"),
   ]);
-  is(count, 7, "exactly 7 more scripts ran for blob:-URL");
+  is(count, 4, "exactly 4 more scripts ran for blob:-URL");
+  count = 0;
+
+  // Test coverage for execution on blob:-URLs is at
+  // toolkit/components/extensions/test/mochitest/test_ext_contentscript_blob.html
 
   blobWin.close();
-
   win.close();
 
   await extension.unload();
