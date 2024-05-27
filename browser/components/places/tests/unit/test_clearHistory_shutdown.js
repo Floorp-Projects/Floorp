@@ -147,7 +147,6 @@ function storeCache(aURL, aContent) {
           );
         }
         os.close();
-        entry.close();
         resolve();
       },
     };
