@@ -72,10 +72,24 @@ void MigrateCookieLifetimePrefs() {
     mozilla::Preferences::SetBool("privacy.clearOnShutdown.sessions", false);
     mozilla::Preferences::SetBool("privacy.clearOnShutdown.siteSettings",
                                   false);
+
+    // We will migrate the new clear on shutdown prefs to align both sets of
+    // prefs incase the user has not migrated yet. We don't have a new sessions
+    // prefs, as it was merged into cookiesAndStorage as part of the effort for
+    // the clear data revamp Bug 1853996
+    mozilla::Preferences::SetBool(
+        "privacy.clearOnShutdown_v2.historyFormDataAndDownloads", false);
+    mozilla::Preferences::SetBool("privacy.clearOnShutdown_v2.siteSettings",
+                                  false);
   }
   mozilla::Preferences::SetBool("privacy.clearOnShutdown.cookies", true);
   mozilla::Preferences::SetBool("privacy.clearOnShutdown.cache", true);
   mozilla::Preferences::SetBool("privacy.clearOnShutdown.offlineApps", true);
+
+  // Migrate the new clear on shutdown prefs
+  mozilla::Preferences::SetBool("privacy.clearOnShutdown_v2.cookiesAndStorage",
+                                true);
+  mozilla::Preferences::SetBool("privacy.clearOnShutdown_v2.cache", true);
   mozilla::Preferences::ClearUser("network.cookie.lifetimePolicy");
 }
 
