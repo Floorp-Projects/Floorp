@@ -83,8 +83,11 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
 
     // Handle overlay events here
     if (
-      ScreenshotsComponentChild.OVERLAY_EVENTS.includes(event.type) ||
-      ScreenshotsComponentChild.PREVENTABLE_EVENTS.includes(event.type)
+      [
+        ...ScreenshotsComponentChild.OVERLAY_EVENTS,
+        ...ScreenshotsComponentChild.PREVENTABLE_EVENTS,
+        "selectionchange",
+      ].includes(event.type)
     ) {
       if (!this.overlay?.initialized) {
         return;

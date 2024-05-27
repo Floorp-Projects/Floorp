@@ -27,6 +27,15 @@ add_task(async function test_textSelectedDuringScreenshot() {
 
       await helper.clickTestPageElement("selection");
 
+      // The selection doesn't get cleared in the tests so just manually
+      // remove the selection here.
+      // In real scenarios, the selection is cleared when the page is
+      // interacted with.
+      await ContentTask.spawn(browser, [], async () => {
+        let selection = content.window.getSelection();
+        selection.removeAllRanges();
+      });
+
       let clipboardChanged = helper.waitForRawClipboardChange(
         Math.round(rect.width),
         Math.round(rect.height),
