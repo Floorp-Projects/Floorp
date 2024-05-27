@@ -56,11 +56,13 @@ import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.utils.Settings
 import java.time.LocalDate
@@ -117,6 +119,17 @@ class BrowserRobot {
 
     fun verifyRateOnGooglePlayURL() {
         verifyUrl("play.google.com/store/apps/details?id=org.mozilla.fenix")
+    }
+
+    fun verifyETPLearnMoreURL() {
+        try {
+            verifyUrl("support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-android")
+        } catch (e: AssertionError) {
+            Log.i(TAG, "verifyETPURL: AssertionError caught, executing fallback methods")
+            verifyUrl(
+                SupportUtils.getSumoURLForTopic(appContext, SupportUtils.SumoTopic.TOTAL_COOKIE_PROTECTION).replace("https://", ""),
+            )
+        }
     }
 
     /* Asserts that the text within DOM element with ID="testContent" has the given text, i.e.
