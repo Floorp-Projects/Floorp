@@ -88,6 +88,16 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
   }
 
   if (!IsDirty()) {
+    const auto context = mData.GetContext();
+    if (!context) {
+      return;
+    }
+    const auto& forwarder = GetForwarder();
+    RefPtr<FwdTransactionTracker> tracker =
+        context->UseCompositableForwarder(forwarder);
+    if (forwarder && tracker) {
+      forwarder->TrackFwdTransaction(tracker);
+    }
     return;
   }
   ResetDirty();
