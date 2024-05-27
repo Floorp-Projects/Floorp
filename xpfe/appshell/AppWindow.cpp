@@ -533,6 +533,13 @@ NS_IMETHODIMP AppWindow::ShowModal() {
   return mModalStatus;
 }
 
+NS_IMETHODIMP AppWindow::RollupAllPopups() {
+  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+    pm->Rollup({});
+  }
+  return NS_OK;
+}
+
 //*****************************************************************************
 // AppWindow::nsIBaseWindow
 //*****************************************************************************

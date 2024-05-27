@@ -60,7 +60,8 @@ async function testContextMenu() {
     info("waiting for fullscreen");
     await onFullscreen;
     // make sure the toolbox is visible if it's autohidden
-    document.getElementById("Browser:OpenLocation").doCommand();
+    FullScreen.showNavToolbox();
+
     info("trigger the context menu");
     let contextMenu2 = await openContextMenu(panelUIMenuButton);
     info("context menu should be open, verify its menu items");
