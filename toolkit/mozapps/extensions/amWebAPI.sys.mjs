@@ -244,6 +244,18 @@ export class WebAPI extends APIObject {
     });
   }
 
+  sendAbuseReport(addonId, data, options) {
+    return this._apiTask(
+      "sendAbuseReport",
+      [addonId, data, options],
+      result => {
+        // The result below is a JS object coming from the expected AMO API
+        // endpoint response in JSON format.
+        return Cu.cloneInto(result, this.window);
+      }
+    );
+  }
+
   eventListenerAdded() {
     if (this.listenerCount == 0) {
       this.broker.setAddonListener(data => {

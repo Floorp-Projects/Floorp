@@ -175,6 +175,8 @@ https_first_disabled = true
 
 ["browser_webapi_install_disabled.js"]
 
+["browser_webapi_sendAbuseReport.js"]
+
 ["browser_webapi_theme.js"]
 
 ["browser_webapi_uninstall.js"]
