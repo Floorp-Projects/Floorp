@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+
 /**
- * An interface to test for cookie permissions
+ * HTTPS-Only/First permission types
  */
 [scriptable, uuid(73f4f039-d6ff-41a7-9eb3-00db57b0b7f4)]
 interface nsIHttpsOnlyModePermission : nsISupports
@@ -23,4 +24,12 @@ interface nsIHttpsOnlyModePermission : nsISupports
    * any methods on this interface.
    */
   const uint32_t LOAD_INSECURE_ALLOW_SESSION = 9;
+  /**
+    * While LOAD_INSECURE_ALLOW and LOAD_INSECURE_ALLOW_SESSION apply to both
+    * HTTPS-Only and HTTPS-First, the following two values work analogous, but
+    * only apply to HTTPS-First. Permissions with these values set will not be
+    * displayed in the UI.
+   */
+  const uint32_t HTTPSFIRST_LOAD_INSECURE_ALLOW = 10;
+  const uint32_t HTTPSFIRST_LOAD_INSECURE_ALLOW_SESSION = 11;
 };
