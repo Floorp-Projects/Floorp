@@ -7,6 +7,9 @@ skip-if = [
 ["test_bad_cert.html"]
 support-files = ["file_bad_cert.sjs"]
 
+["test_bug_1725646.html"]
+support-files = ["file_bug_1725646_a.sjs", "file_bug_1725646_b.sjs"]
+
 ["test_break_endless_upgrade_downgrade_loop.html"]
 support-files = [
   "file_break_endless_upgrade_downgrade_loop.sjs",
