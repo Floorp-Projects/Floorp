@@ -247,13 +247,7 @@ class DefaultSessionControlController(
     ) {
         Collections.tabRemoved.record(NoExtras())
 
-        // collection tabs hold a reference to the initial collection that could have changed since
-        val updatedCollection =
-            tabCollectionStorage.cachedTabCollections.firstOrNull {
-                it.id == collection.id
-            }
-
-        if (updatedCollection?.tabs?.size == 1) {
+        if (collection.tabs.size == 1) {
             removeCollectionWithUndo(collection)
         } else {
             viewLifecycleScope.launch {
