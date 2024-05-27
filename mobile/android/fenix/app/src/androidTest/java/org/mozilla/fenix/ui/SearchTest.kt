@@ -44,6 +44,8 @@ import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
 import java.util.Locale
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
+
 
 /**
  *  Tests for verifying the search fragment
@@ -70,6 +72,7 @@ class SearchTest : TestSetup() {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
+            isLocationPermissionEnabled = SitePermissionsRules.Action.BLOCKED,
         ),
     ) { it.activity }
 
