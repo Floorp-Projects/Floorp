@@ -109,10 +109,11 @@ class TabDrawerRobot(private val composeTestRule: HomeActivityComposeTestRule) {
         )
     }
 
+    @OptIn(ExperimentalTestApi::class)
     fun verifyExistingOpenTabs(vararg titles: String) {
         titles.forEach { title ->
             Log.i(TAG, "verifyExistingOpenTabs: Waiting for $waitingTime ms for tab with title: $title to exist")
-            itemContainingText(title).waitForExists(waitingTime)
+            composeTestRule.waitUntilAtLeastOneExists(hasText(title), waitingTime)
             Log.i(TAG, "verifyExistingOpenTabs: Waited for $waitingTime ms for tab with title: $title to exist")
             Log.i(TAG, "verifyExistingOpenTabs: Trying to verify that the open tab with title: $title exists")
             composeTestRule.tabItem(title).assertExists()
