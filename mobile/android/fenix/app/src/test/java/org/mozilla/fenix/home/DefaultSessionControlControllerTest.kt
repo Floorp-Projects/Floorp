@@ -303,22 +303,15 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun `handleCollectionRemoveTab one tab`() {
+        val tab = mockk<ComponentTab> ()
+
         val expectedCollection = mockk<TabCollection> {
-            every { tabs } returns listOf(mockk())
-            every { title } returns "Collection"
+            every { id } returns 123L
+            every { tabs } returns listOf(tab)
         }
-        val tab = mockk<ComponentTab>()
-        every {
-            activity.resources.getString(
-                R.string.delete_tab_and_collection_dialog_title,
-                "Collection",
-            )
-        } returns "Delete Collection?"
-        every {
-            activity.resources.getString(R.string.delete_tab_and_collection_dialog_message)
-        } returns "Deleting this tab will delete everything."
 
         var actualCollection: TabCollection? = null
+        every { tabCollectionStorage.cachedTabCollections } returns listOf(expectedCollection)
 
         createController(
             removeCollectionWithUndo = { collection ->
