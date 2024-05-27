@@ -256,6 +256,29 @@ function testParseCssProperty(doc, parser) {
       ]
     ),
 
+    makeColorTest("color", "light-dark(red, blue)", [
+      "light-dark(",
+      { name: "red", colorFunction: "light-dark" },
+      ", ",
+      { name: "blue", colorFunction: "light-dark" },
+      ")",
+    ]),
+
+    makeColorTest(
+      "background-image",
+      "linear-gradient(to top, light-dark(#008000, rgba(255, 255, 0, 0.9)), blue)",
+      [
+        "linear-gradient(to top, ",
+        "light-dark(",
+        { name: "#008000", colorFunction: "light-dark" },
+        ", ",
+        { name: "rgba(255, 255, 0, 0.9)", colorFunction: "light-dark" },
+        "), ",
+        { name: "blue", colorFunction: "linear-gradient" },
+        ")",
+      ]
+    ),
+
     makeColorTest("color", "rgb(from gold r g b)", [
       { name: "rgb(from gold r g b)" },
     ]),
@@ -668,6 +691,28 @@ function testParseVariable(doc, parser) {
           `<span class="test-class" style="background-color:purple" tabindex="0" role="button" data-color-function="color-mix">` +
           `</span>` +
           `<span>purple</span>` +
+        `</span>` +
+        `)`,
+      parserExtraOptions: {
+        colorSwatchClass: COLOR_TEST_CLASS,
+      },
+    },
+    {
+      text: "light-dark(var(--light), var(--dark))",
+      variables: { "--light": "yellow", "--dark": "gold" },
+      expected:
+        // prettier-ignore
+        `light-dark(` +
+        `<span data-color="yellow">` +
+          `<span class="test-class" style="background-color:yellow" tabindex="0" role="button" data-color-function="light-dark">` +
+          `</span>` +
+          `<span>var(<span data-variable="--light = yellow">--light</span>)</span>` +
+        `</span>` +
+        `, ` +
+        `<span data-color="gold">` +
+          `<span class="test-class" style="background-color:gold" tabindex="0" role="button" data-color-function="light-dark">` +
+          `</span>` +
+          `<span>var(<span data-variable="--dark = gold">--dark</span>)</span>` +
         `</span>` +
         `)`,
       parserExtraOptions: {
