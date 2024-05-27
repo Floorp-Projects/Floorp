@@ -201,7 +201,10 @@ async function loadPagesAndUseBackButton() {
       info("Clicking back button");
       let backButton = document.getElementById("back-button");
       backButton.click();
-      await BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.waitForLocationChange(
+        gBrowser,
+        `${TEST_PATH_HTTP}file_beforeunload_permit_http.html`
+      );
       is(true, true, `Got back successful`);
     }
   );

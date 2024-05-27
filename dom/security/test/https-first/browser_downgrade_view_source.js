@@ -27,6 +27,11 @@ async function runTest(desc, url, expectedURI, excpectedContent) {
         is(loadedContent, excpectedContent, desc);
       }
     );
+
+    await SpecialPowers.removePermission(
+      "https-only-load-insecure",
+      "http://example.com"
+    );
   });
 }
 

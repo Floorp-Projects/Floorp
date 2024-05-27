@@ -1,13 +1,5 @@
 "use strict";
 
-// Create a uri for an http site
-//(in that case a site without cert such that https-first isn't upgrading it)
-const insecureTestPath = getRootDirectory(gTestPath).replace(
-  "chrome://mochitests/content",
-  "http://nocert.example.com"
-);
-const insecureTestURI = insecureTestPath + "file_download_attribute.html";
-
 function promisePanelOpened() {
   if (DownloadsPanel.panel && DownloadsPanel.panel.state == "open") {
     return Promise.resolve();
@@ -20,7 +12,7 @@ const CONSOLE_ERROR_MESSAGE = "Downgrading to “http” again";
 const DOWNLOAD_PAGE_URL =
   "nocert.example.com/browser/dom/security/test/https-first/file_download_attribute.html";
 const DOWNLOAD_LINK_URL =
-  "nocert.example.com/browser/dom/security/test/https-first/file_download_attribute.sjs";
+  "nocert.example.org/browser/dom/security/test/https-first/file_download_attribute.sjs";
 
 // Verifys that https-first tried to upgrade the download
 // - and that the upgrade attempt failed.
@@ -88,7 +80,7 @@ add_task(async function test_with_downloads_pref_enabled() {
   let downloadsPanelPromise = promisePanelOpened();
   let downloadsPromise = Downloads.getList(Downloads.PUBLIC);
 
-  BrowserTestUtils.startLoadingURIString(gBrowser, insecureTestURI);
+  BrowserTestUtils.startLoadingURIString(gBrowser, DOWNLOAD_PAGE_URL);
   // wait for downloadsPanel to open before continuing with test
   await downloadsPanelPromise;
   let downloadList = await downloadsPromise;
@@ -105,7 +97,7 @@ add_task(async function test_with_downloads_pref_enabled() {
   // ensure https-first didn't upgrade the scheme.
   is(
     download.source.url,
-    insecureTestPath + "file_download_attribute.sjs",
+    "http://" + DOWNLOAD_LINK_URL,
     "Scheme should be http."
   );
 

@@ -1,4 +1,5 @@
 [DEFAULT]
+support-files = ["head.js"]
 
 ["browser_beforeunload_permit_http.js"]
 support-files = ["file_beforeunload_permit_http.html"]

@@ -41,6 +41,10 @@ async function receiveMessage(event) {
   ok(data.result === "downgraded", "Redirected successful to 'http' for " + currentQuery);
   is(data.scheme, "http:", "scheme is 'http' for " + currentQuery );
   testWin.close();
+  await SpecialPowers.removePermission(
+    "https-only-load-insecure",
+    REQUEST_URL
+  );
   if (++currentTest < redirectQueries.length) {
     runTest();
     return;

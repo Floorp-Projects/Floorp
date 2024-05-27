@@ -34,6 +34,10 @@ Test that same origin redirect does not cause endless loop with https-first enab
        "same-origin redirect results in 'http' for " + currentRedirectCode
     );
     testWin.close();
+    await SpecialPowers.removePermission(
+      "https-only-load-insecure",
+      "http://example.com"
+    );
     if (++currentTest < redirectCodes.length) {
       startTest();
       return;

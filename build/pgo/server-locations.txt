@@ -363,6 +363,7 @@ https://no-suggestion-example.com:443       privileged,cert=badCertDomain
 
 # testing HTTPS-First doesn't show warning page for bad cert
 http://nocert.example.com:80                    privileged
+http://nocert.example.org:80                    privileged
 http://self-signed.example.com:80               privileged
 http://untrusted.example.com:80                 privileged
 http://untrusted-expired.example.com:80         privileged

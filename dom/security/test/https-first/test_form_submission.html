@@ -90,6 +90,10 @@ async function receiveMessage(event){
   if (sameOrigin) {
     counter++;
   }
+  await SpecialPowers.removePermission(
+    "https-only-load-insecure",
+    origin
+  );
   // Check if we have test left, if not finish the testing
   if (counter >= Tests.length) {
     window.removeEventListener("message", receiveMessage);

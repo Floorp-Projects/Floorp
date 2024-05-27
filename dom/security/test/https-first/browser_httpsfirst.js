@@ -24,6 +24,8 @@ async function runPrefTest(aURI, aDesc, aAssertURLStartsWith) {
         );
       }
     );
+
+    await SpecialPowers.removePermission("https-only-load-insecure", aURI);
   });
 }
 

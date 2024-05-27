@@ -6,7 +6,12 @@
  */
 
 add_task(async function () {
-  SpecialPowers.pushPrefEnv({ set: [["browser.urlbar.trimHttps", false]] });
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trimHttps", false],
+      ["dom.security.https_first_schemeless", false],
+    ],
+  });
   await PlacesUtils.history.clear();
 
   await PlacesTestUtils.addVisits([
