@@ -44,18 +44,19 @@ using namespace mozilla;
 #  define MOZ_STACKWALK_SUPPORTS_MACOSX 0
 #endif
 
-#if (defined(linux) &&                                            \
-     ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
-      defined(HAVE__UNWIND_BACKTRACE)))
-#  define MOZ_STACKWALK_SUPPORTS_LINUX 1
-#else
-#  define MOZ_STACKWALK_SUPPORTS_LINUX 0
-#endif
-
 #if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
 #  define HAVE___LIBC_STACK_END 1
 #else
 #  define HAVE___LIBC_STACK_END 0
+#endif
+
+#if (defined(linux) &&                                            \
+     ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
+      defined(HAVE__UNWIND_BACKTRACE)) &&                         \
+     (HAVE___LIBC_STACK_END || ANDROID))
+#  define MOZ_STACKWALK_SUPPORTS_LINUX 1
+#else
+#  define MOZ_STACKWALK_SUPPORTS_LINUX 0
 #endif
 
 #if HAVE___LIBC_STACK_END
