@@ -117,7 +117,7 @@ class SettingsSubMenuAboutRobot {
         onView(withText("What’s new in $firefox")).perform(click())
         Log.i(TAG, "verifyWhatIsNewInFirefoxLink: Clicked the \"What’s new in $firefox\" link")
     }
-    fun verifySupportLink() {
+    fun verifySupport() {
         Log.i(TAG, "verifySupport: Trying to perform ${LISTS_MAXSWIPES}x a scroll action to the end of the about list")
         aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
         Log.i(TAG, "verifySupport: Performed ${LISTS_MAXSWIPES}x a scroll action to the end of the about list")
@@ -128,9 +128,11 @@ class SettingsSubMenuAboutRobot {
         onView(withText("Support")).perform(click())
         Log.i(TAG, "verifySupport: Clicked the \"Support\" link")
 
-        browserScreen {
-            verifyUrl("support.mozilla.org")
-        }
+        TestHelper.verifyUrl(
+            "support.mozilla.org",
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
     }
 
     fun verifyCrashesLink() {
@@ -168,9 +170,11 @@ class SettingsSubMenuAboutRobot {
         onView(withText("Privacy notice")).perform(click())
         Log.i(TAG, "verifyPrivacyNoticeLink: Clicked the \"Privacy notice\" link")
 
-        browserScreen {
-            verifyUrl("/privacy/firefox")
-        }
+        TestHelper.verifyUrl(
+            "/privacy/firefox",
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
     }
 
     fun verifyKnowYourRightsLink() {
@@ -184,9 +188,11 @@ class SettingsSubMenuAboutRobot {
         onView(withText("Know your rights")).perform(click())
         Log.i(TAG, "verifyKnowYourRightsLink: Clicked the \"Know your rights\" link")
 
-        browserScreen {
-            verifyUrl(SupportUtils.SumoTopic.YOUR_RIGHTS.topicStr)
-        }
+        TestHelper.verifyUrl(
+            SupportUtils.SumoTopic.YOUR_RIGHTS.topicStr,
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
     }
 
     fun verifyLicensingInformationLink() {
@@ -200,9 +206,11 @@ class SettingsSubMenuAboutRobot {
         onView(withText("Licensing information")).perform(click())
         Log.i(TAG, "verifyLicensingInformationLink: Clicked the \"Licensing information\" link")
 
-        browserScreen {
-            verifyUrl("about:license")
-        }
+        TestHelper.verifyUrl(
+            "about:license",
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
     }
 
     fun verifyLibrariesUsedLink() {
@@ -227,7 +235,7 @@ class SettingsSubMenuAboutRobot {
         verifyAboutToolbar()
         verifyWhatIsNewInFirefoxLink()
         navigateBackToAboutPage()
-        verifySupportLink()
+        verifySupport()
         verifyCrashesLink()
         navigateBackToAboutPage()
         verifyPrivacyNoticeLink()
