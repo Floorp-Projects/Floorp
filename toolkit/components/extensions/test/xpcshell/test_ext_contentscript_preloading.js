@@ -408,10 +408,14 @@ add_task(async function test_no_preload_at_blob_url_iframe() {
     manifest: {
       content_scripts: [
         {
+          // Note: match_origin_as_fallback is supposed to only work when
+          // "matches" has a wildcard path. In our implementation, blob:-URLs
+          // have a principal URL that may include a path rather than just the
+          // origin, so we can match blob:-URLs created from specific paths.
+          // This behavior is NOT documented, but relied upon for convenience
+          // here.
           matches: ["*://example.com/dummy?with_blob_url"],
-          // Note: we currently match at blob:-URLs even without
-          // match_origin_as_fallback (or even match_about_blank). In Chrome,
-          // blob:-URLs can only be matched with match_origin_as_fallback:true.
+          match_origin_as_fallback: true,
           all_frames: true,
           js: ["done.js"],
           run_at: "document_end",

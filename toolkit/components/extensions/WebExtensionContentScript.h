@@ -57,6 +57,10 @@ class MOZ_STACK_CLASS DocInfo final {
   // In all other cases, URL() is returned.
   const URLInfo& PrincipalURL() const;
 
+  // Whether match_origin_as_fallback must be set in order for PrincipalURL()
+  // to be eligible for matching the document.
+  bool RequiresMatchOriginAsFallback() const;
+
   bool IsTopLevel() const;
   bool IsSameOriginWithTop() const;
   bool ShouldMatchActiveTabPermission() const;
@@ -94,6 +98,7 @@ class MOZ_STACK_CLASS DocInfo final {
 
   const URLInfo mURL;
   mutable Maybe<const URLInfo> mPrincipalURL;
+  mutable Maybe<bool> mRequiresMatchOriginAsFallback;
 
   mutable Maybe<bool> mIsTopLevel;
 

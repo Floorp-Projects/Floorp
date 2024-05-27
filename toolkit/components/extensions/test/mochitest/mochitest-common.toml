@@ -180,6 +180,8 @@ skip-if = [
   "http2",
 ]
 
+["test_ext_contentscript_blob.html"]
+
 ["test_ext_contentscript_cache.html"]
 skip-if = [
   "os == 'linux' && debug",

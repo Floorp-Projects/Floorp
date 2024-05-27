@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test content scripts at blob:-URLs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function loadTestExtension({ manifest_version }) {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "MV" + manifest_version,
+      manifest_version,
+      content_scripts: [
+        {
+          matches: ["*://mochi.test/*"],
+          // match_origin_as_fallback: false, // false by default
+          js: ["moaf_false.js"],
+          all_frames: true,
+          run_at: "document_start",
+        },
+        {
+          matches: ["*://mochi.test/*"],
+          match_origin_as_fallback: true,
+          js: ["moaf_true.js"],
+          all_frames: true,
+          run_at: "document_start",
+        },
+      ],
+    },
+    files: {
+      "moaf_false.js": () => {
+        if (location.protocol == "blob:") {
+          const { name } = browser.runtime.getManifest();
+          browser.test.log(`moaf_false.js: Ran ${name} at ${document.URL}`);
+          browser.test.sendMessage(name + ":moaf_false:" + document.URL);
+        }
+      },
+      "moaf_true.js": () => {
+        if (location.protocol == "blob:") {
+          const { name } = browser.runtime.getManifest();
+          browser.test.log(`moaf_true.js: Ran ${name} at ${document.URL}`);
+          browser.test.sendMessage(name + ":moaf_true:" + document.URL);
+        }
+      },
+    },
+  });
+}
+
+function createBlobURL() {
+  function blobScript() {
+    window.onload = () => {
+      console.log(`Web page ${document.URL} loaded at origin ${origin}`);
+      parent.postMessage(document.URL, "*");
+    };
+  }
+  const html = `<!DOCTYPE html><script>(${blobScript})()<\/script>`;
+  return URL.createObjectURL(new Blob([html], { type: "text/html" }));
+}
+
+async function createFrameAndAwaitLoad(blobUrl, sandboxed) {
+  let { promise, resolve } = Promise.withResolvers();
+  let f = document.createElement("iframe");
+  f.src = blobUrl;
+  if (sandboxed) {
+    f.sandbox = "allow-scripts";
+  }
+
+  function onmessage(event) {
+    if (event.source === f.contentWindow) {
+      is(event.data, blobUrl, "Got message from frame");
+      is(event.origin, sandboxed ? "null" : origin, "Frame has correct origin");
+      resolve();
+    }
+  }
+  window.addEventListener("message", onmessage);
+  document.body.append(f);
+  await promise;
+  window.removeEventListener("message", onmessage);
+  f.remove();
+}
+
+async function test_contentscript_at_blob(legacy) {
+  // TODO bug 1899134: Drop the pref and legacy=true case.
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.script_blob_without_match_origin_as_fallback", legacy]],
+  });
+
+  const extension2 = loadTestExtension({ manifest_version: 2 });
+  const extension3 = loadTestExtension({ manifest_version: 3 });
+
+  await extension2.startup();
+  await extension3.startup();
+
+  const blobUrlSameOrigin = createBlobURL();
+  info(`Expecting content scripts at blobUrlSameOrigin:${blobUrlSameOrigin}`);
+  await createFrameAndAwaitLoad(blobUrlSameOrigin, /* sandboxed */ false);
+  await Promise.all([
+    await extension2.awaitMessage("MV2:moaf_true:" + blobUrlSameOrigin),
+    await extension3.awaitMessage("MV3:moaf_true:" + blobUrlSameOrigin),
+  ]);
+  if (legacy) {
+    await extension2.awaitMessage("MV2:moaf_false:" + blobUrlSameOrigin);
+  }
+  // MV3:moaf_false should never be observed because match_origin_as_fallback
+  // is required in order to execute content scripts in blob:-URLs.
+
+  const blobUrlNullOrigin = createBlobURL();
+  info(`Expecting content scripts at blobUrlNullOrigin:${blobUrlNullOrigin}`);
+  await createFrameAndAwaitLoad(blobUrlNullOrigin, /* sandboxed */ true);
+  await Promise.all([
+    await extension2.awaitMessage("MV2:moaf_true:" + blobUrlNullOrigin),
+    await extension3.awaitMessage("MV3:moaf_true:" + blobUrlNullOrigin),
+  ]);
+  if (legacy) {
+    await extension2.awaitMessage("MV2:moaf_false:" + blobUrlNullOrigin);
+  }
+
+  await extension2.unload();
+  await extension3.unload();
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function test_contentscript_at_blob_default() {
+  await test_contentscript_at_blob(/* legacy */ false);
+});
+
+// Exactly the same as test_contentscript_at_blob_default, except
+// manifest_version 2 also run at blob: when match_origin_as_fallback is false.
+add_task(async function test_contentscript_at_blob_legacy_behavior() {
+  await test_contentscript_at_blob(/* legacy */ true);
+});
+
+</script>
+
+</body>
+</html>

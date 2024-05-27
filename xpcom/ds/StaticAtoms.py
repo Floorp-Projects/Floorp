@@ -2007,6 +2007,7 @@ STATIC_ATOMS = [
     Atom("tabs", "tabs"),
     Atom("webRequestBlocking", "webRequestBlocking"),
     Atom("webRequestFilterResponse_serviceWorkerScript", "webRequestFilterResponse.serviceWorkerScript"),
+    Atom("blob", "blob"),
     Atom("http", "http"),
     Atom("https", "https"),
     Atom("view_source", "view-source"),
