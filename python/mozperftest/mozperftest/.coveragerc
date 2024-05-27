@@ -1,8 +1,10 @@
 [run]
 omit =
     python/mozperftest/mozperftest/tests/*
+    testing/raptor/test/*
 include =
     python/mozperftest/*
+    testing/raptor/*
 
 [report]
 sort = Cover
