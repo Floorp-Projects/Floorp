@@ -47,6 +47,26 @@ namespace CrashReporter {
 using mozilla::Maybe;
 using mozilla::Nothing;
 
+#if defined(XP_WIN)
+typedef HANDLE ProcessHandle;
+typedef DWORD ProcessId;
+typedef DWORD ThreadId;
+typedef HANDLE FileHandle;
+const FileHandle kInvalidFileHandle = INVALID_HANDLE_VALUE;
+#elif defined(XP_MACOSX)
+typedef task_t ProcessHandle;
+typedef pid_t ProcessId;
+typedef mach_port_t ThreadId;
+typedef int FileHandle;
+const FileHandle kInvalidFileHandle = -1;
+#else
+typedef int ProcessHandle;
+typedef pid_t ProcessId;
+typedef int ThreadId;
+typedef int FileHandle;
+const FileHandle kInvalidFileHandle = -1;
+#endif
+
 /**
  * Returns true if the crash reporter is using the dummy implementation.
  */
@@ -151,7 +171,7 @@ nsresult UnregisterAppMemory(void* ptr);
 // Include heap regions of the crash context.
 void SetIncludeContextHeap(bool aValue);
 
-void GetAnnotation(uint32_t childPid, Annotation annotation,
+void GetAnnotation(ProcessId childPid, Annotation annotation,
                    nsACString& outStr);
 
 // Functions for working with minidumps and .extras
@@ -210,7 +230,7 @@ void OOPInit();
 // path in |dump|.  The caller owns the last reference to |dump| if it
 // is non-nullptr. The annotations for the crash will be stored in
 // |aAnnotations|.
-bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
+bool TakeMinidumpForChild(ProcessId childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations);
 
 /**
@@ -224,29 +244,9 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
  * @param aType The type of the crashed process
  * @param aDumpId A string that will be filled with the dump ID
  */
-[[nodiscard]] bool FinalizeOrphanedMinidump(uint32_t aChildPid,
+[[nodiscard]] bool FinalizeOrphanedMinidump(ProcessId aChildPid,
                                             GeckoProcessType aType,
                                             nsString* aDumpId = nullptr);
-
-#if defined(XP_WIN)
-typedef HANDLE ProcessHandle;
-typedef DWORD ProcessId;
-typedef DWORD ThreadId;
-typedef HANDLE FileHandle;
-const FileHandle kInvalidFileHandle = INVALID_HANDLE_VALUE;
-#elif defined(XP_MACOSX)
-typedef task_t ProcessHandle;
-typedef pid_t ProcessId;
-typedef mach_port_t ThreadId;
-typedef int FileHandle;
-const FileHandle kInvalidFileHandle = -1;
-#else
-typedef int ProcessHandle;
-typedef pid_t ProcessId;
-typedef int ThreadId;
-typedef int FileHandle;
-const FileHandle kInvalidFileHandle = -1;
-#endif
 
 // Return the current thread's ID.
 //
