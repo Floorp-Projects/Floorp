@@ -28,6 +28,6 @@ const char* GetPingName(ping_entry_t aEntry);
  */
 Maybe<uint32_t> PingByNameLookup(const nsACString&);
 
-extern const ping_entry_t sPingByNameLookupEntries[5];
+extern const ping_entry_t sPingByNameLookupEntries[6];
 }  // namespace mozilla::glean
 #endif  // mozilla_GleanJSPingsLookup_h

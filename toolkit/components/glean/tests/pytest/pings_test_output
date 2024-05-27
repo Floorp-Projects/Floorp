@@ -99,6 +99,21 @@ pub static not_ohttp: Lazy<Ping> = Lazy::new(|| {
     )
 });
 
+#[allow(non_upper_case_globals)]
+/// A fake ping to test ride-along
+pub static ridealong_test: Lazy<Ping> = Lazy::new(|| {
+    Ping::new(
+        "ridealong-test",
+        false,
+        true,
+        true,
+        true,
+        true,
+        vec![],
+        vec![],
+    )
+});
+
 
 /// Instantiate custom pings once to trigger registration.
 ///
@@ -115,25 +130,21 @@ pub fn register_pings(application_id: Option<&str>) {
             let _ = &*not_events;
             let _ = &*not_metrics;
             let _ = &*not_ohttp;
+            let _ = &*ridealong_test;
         }
     }
 }
 
-/// Schedule pings alongside a parent ping.
+/// Map from pings to the pings scheduled along with them.
 ///
-/// Should be called in `submit` of the parent ping
-/// to also submit pings that should ride along.
-///
-/// # Arguments
-///
-/// `submitted_ping`: The parent ping that is submitted
-/// `reason`: The original reason for the submitted ping.
-///           Will be used for the ride-along ping too.
 #[doc(hidden)]
-pub fn schedule_pings(submitted_ping: &str, reason: Option<&str>) {
-    // Ignore arguments.
-    _ = submitted_ping;
-    _ = reason;
+pub fn ping_schedule() -> std::collections::HashMap<String, Vec<String>> {
+  std::collections::HashMap::from([
+      (
+        "baseline".into(),
+        vec!["ridealong-test".into()]
+      ),
+  ])
 }
 
 #[cfg(feature = "with_gecko")]
@@ -156,6 +167,7 @@ pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
         3 => not_events.submit(reason),
         4 => not_metrics.submit(reason),
         5 => not_ohttp.submit(reason),
+        6 => ridealong_test.submit(reason),
         _ => {
             // TODO: instrument this error.
             log::error!("Cannot submit unknown ping {} by id.", id);

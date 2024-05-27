@@ -63,6 +63,13 @@ constexpr glean::impl::Ping NotMetrics(4);
  */
 constexpr glean::impl::Ping NotOhttp(5);
 
+/*
+ * Generated from ridealong-test.
+ *
+ * A fake ping to test ride-along
+ */
+constexpr glean::impl::Ping RidealongTest(6);
+
 
 }  // namespace mozilla::glean_pings
 

@@ -54,35 +54,18 @@ pub fn register_pings(application_id: Option<&str>) {
     }
 }
 
-/// Schedule pings alongside a parent ping.
+/// Map from pings to the pings scheduled along with them.
 ///
-/// Should be called in `submit` of the parent ping
-/// to also submit pings that should ride along.
-///
-/// # Arguments
-///
-/// `submitted_ping`: The parent ping that is submitted
-/// `reason`: The original reason for the submitted ping.
-///           Will be used for the ride-along ping too.
 #[doc(hidden)]
-pub fn schedule_pings(submitted_ping: &str, reason: Option<&str>) {
-    {% if ping_schedule_reverse_map|length %}
-    match submitted_ping {
-        {% for ping, schedule in ping_schedule_reverse_map.items() %}
-        "{{ping}}" => {
-            log::info!("Submitting pings {{ schedule|join(', ') }} along with {{ping}}");
-            {% for ping_name in schedule %}
-            let _ = {{ ping_name|snake_case }}.submit(reason);
-            {% endfor %}
-        },
-        {% endfor %}
-        _ => {},
-    }
-    {% else %}
-    // Ignore arguments.
-    _ = submitted_ping;
-    _ = reason;
-    {% endif %}
+pub fn ping_schedule() -> std::collections::HashMap<String, Vec<String>> {
+  std::collections::HashMap::from([
+      {% for ping, schedule in ping_schedule_reverse_map.items() %}
+      (
+        {{ ping|rust }},
+        {{ schedule|rust }}
+      ),
+      {% endfor %}
+  ])
 }
 
 #[cfg(feature = "with_gecko")]
