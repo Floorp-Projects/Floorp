@@ -94,7 +94,11 @@ class InstalledAddonDetailsFragment : Fragment() {
                     runIfFragmentIsAttached {
                         addons.find { addon.id == it.id }.let {
                             if (it == null) {
-                                throw AddonManagerException(Exception("Addon ${addon.id} not found"))
+                                throw AddonManagerException(
+                                    Exception(
+                                        "Addon ${addon.id} not found, isInstalled: ${addon.isInstalled()}",
+                                    ),
+                                )
                             } else {
                                 addon = it
                                 bindUI()
