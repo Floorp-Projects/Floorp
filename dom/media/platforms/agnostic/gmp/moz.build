@@ -11,11 +11,13 @@ LOCAL_INCLUDES += [
 EXPORTS += [
     "GMPDecoderModule.h",
     "GMPVideoDecoder.h",
+    "GMPVideoEncoder.h",
 ]
 
 UNIFIED_SOURCES += [
     "GMPDecoderModule.cpp",
     "GMPVideoDecoder.cpp",
+    "GMPVideoEncoder.cpp",
 ]
 
 # GMPVideoEncodedFrameImpl.h needs IPC
