@@ -10,6 +10,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 set_default_logger(StructuredLogger("test_playback"))
 
+
 from mozproxy import get_playback
 from mozproxy.backends.mitm.desktop import MitmproxyDesktop
 
@@ -35,7 +36,7 @@ def test_get_playback(get_binary):
             "raptor",
             "tooltool-manifests",
             "playback",
-            "mitm7-linux-firefox-amazon.manifest",
+            "mitm8-linux-firefox-amazon.manifest",
         )
     ]
     config["binary"] = get_binary("firefox")

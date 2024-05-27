@@ -7,6 +7,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+from unittest.mock import patch
 
 import mozunit
 
@@ -19,7 +20,9 @@ sys.path.insert(0, raptor_dir)
 from chrome_trace import ChromeTrace
 
 
-def test_browsertime_trace_collection():
+@patch("logger.logger.RaptorLogger.info")
+@patch("logger.logger.RaptorLogger.critical")
+def test_browsertime_trace_collection(mock_log_info, mock_log_critical):
     """Test the ability to collect existing trace files into a zip archive
     for viewing in the firefox profiler
     """
