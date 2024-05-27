@@ -4,20 +4,16 @@
 
 package org.mozilla.fenix.ui
 
-import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestSetup
-import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
@@ -30,9 +26,7 @@ import org.mozilla.fenix.ui.robots.shareOverlay
 
 class TextSelectionTest : TestSetup() {
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule(
-        isLocationPermissionEnabled = SitePermissionsRules.Action.BLOCKED,
-    )
+    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
@@ -107,8 +101,8 @@ class TextSelectionTest : TestSetup() {
             longClickPageObject(itemContainingText("content"))
             clickContextMenuItem("Search")
             mDevice.waitForIdle()
-            verifyUrl("content")
             verifyTabCounter("2")
+            verifyUrl("content")
         }
     }
 
@@ -206,8 +200,8 @@ class TextSelectionTest : TestSetup() {
             clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Search")
-            verifyUrl("Crossing")
             verifyTabCounter("2")
+            verifyUrl("Crossing")
         }
     }
 
@@ -225,8 +219,8 @@ class TextSelectionTest : TestSetup() {
             clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Private Search")
-            verifyUrl("Crossing")
             verifyTabCounter("2")
+            verifyUrl("Crossing")
         }
     }
 

@@ -145,6 +145,16 @@ object TestHelper {
 
     fun verifySnackBarText(expectedText: String) = assertUIObjectExists(itemContainingText(expectedText))
 
+    fun verifyUrl(urlSubstring: String, resourceName: String, resId: Int) {
+        waitUntilObjectIsFound(resourceName)
+        Log.i(TAG, "verifyUrl: Waiting for $waitingTime ms for url substring: $urlSubstring to exist")
+        mDevice.findObject(UiSelector().text(urlSubstring)).waitForExists(waitingTime)
+        Log.i(TAG, "verifyUrl: Waited for $waitingTime ms for url substring: $urlSubstring to exist")
+        Log.i(TAG, "verifyUrl: Trying to verify that item with $resId contains url substring: $urlSubstring")
+        onView(withId(resId)).check(ViewAssertions.matches(withText(CoreMatchers.containsString(urlSubstring))))
+        Log.i(TAG, "verifyUrl: Verified that item with $resId contains url substring: $urlSubstring")
+    }
+
     // exit from Menus to home screen or browser
     fun exitMenu() {
         val menuToolbar =
