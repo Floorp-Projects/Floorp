@@ -414,6 +414,7 @@ void RecordPowerMetrics() {
 
 #ifdef HAS_PROCESS_ENERGY
   if (newProcessEnergy) {
+    power::energy_per_process_type.Get(type).Add(newProcessEnergy);
     PROFILER_MARKER("Process Energy", OTHER, {}, ProcessEnergyMarker,
                     newProcessEnergy, type);
     previousProcessEnergy += newProcessEnergy;
