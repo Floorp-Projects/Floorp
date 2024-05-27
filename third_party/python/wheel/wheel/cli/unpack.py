@@ -1,12 +1,11 @@
-from __future__ import print_function
+from __future__ import annotations
 
-import os.path
-import sys
+from pathlib import Path
 
 from ..wheelfile import WheelFile
 
 
-def unpack(path, dest='.'):
+def unpack(path: str, dest: str = ".") -> None:
     """Unpack a wheel.
 
     Wheel content will be unpacked to {dest}/{name}-{ver}, where {name}
@@ -16,10 +15,16 @@ def unpack(path, dest='.'):
     :param dest: Destination directory (default to current directory).
     """
     with WheelFile(path) as wf:
-        namever = wf.parsed_filename.group('namever')
-        destination = os.path.join(dest, namever)
-        print("Unpacking to: {}...".format(destination), end='')
-        sys.stdout.flush()
-        wf.extractall(destination)
+        namever = wf.parsed_filename.group("namever")
+        destination = Path(dest) / namever
+        print(f"Unpacking to: {destination}...", end="", flush=True)
+        for zinfo in wf.filelist:
+            wf.extract(zinfo, destination)
 
-    print('OK')
+            # Set permissions to the same values as they were set in the archive
+            # We have to do this manually due to
+            # https://github.com/python/cpython/issues/59999
+            permissions = zinfo.external_attr >> 16 & 0o777
+            destination.joinpath(zinfo.filename).chmod(permissions)
+
+    print("OK")

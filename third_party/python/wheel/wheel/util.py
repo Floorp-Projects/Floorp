@@ -1,46 +1,26 @@
+from __future__ import annotations
+
 import base64
-import io
-import sys
+import logging
+
+log = logging.getLogger("wheel")
+
+# ensure Python logging is configured
+try:
+    __import__("setuptools.logging")
+except ImportError:
+    # setuptools < ??
+    from . import _setuptools_logging
+
+    _setuptools_logging.configure()
 
 
-if sys.version_info[0] < 3:
-    text_type = unicode  # noqa: F821
-
-    StringIO = io.BytesIO
-
-    def native(s, encoding='utf-8'):
-        if isinstance(s, unicode):  # noqa: F821
-            return s.encode(encoding)
-        return s
-else:
-    text_type = str
-
-    StringIO = io.StringIO
-
-    def native(s, encoding='utf-8'):
-        if isinstance(s, bytes):
-            return s.decode(encoding)
-        return s
-
-
-def urlsafe_b64encode(data):
+def urlsafe_b64encode(data: bytes) -> bytes:
     """urlsafe_b64encode without padding"""
-    return base64.urlsafe_b64encode(data).rstrip(b'=')
+    return base64.urlsafe_b64encode(data).rstrip(b"=")
 
 
-def urlsafe_b64decode(data):
+def urlsafe_b64decode(data: bytes) -> bytes:
     """urlsafe_b64decode without padding"""
-    pad = b'=' * (4 - (len(data) & 3))
+    pad = b"=" * (4 - (len(data) & 3))
     return base64.urlsafe_b64decode(data + pad)
-
-
-def as_unicode(s):
-    if isinstance(s, bytes):
-        return s.decode('utf-8')
-    return s
-
-
-def as_bytes(s):
-    if isinstance(s, text_type):
-        return s.encode('utf-8')
-    return s
