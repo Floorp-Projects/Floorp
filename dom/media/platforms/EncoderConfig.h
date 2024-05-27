@@ -125,6 +125,7 @@ class EncoderConfig final {
                 const Usage aUsage, const PixelFormat aPixelFormat,
                 const PixelFormat aSourcePixelFormat, const uint8_t aFramerate,
                 const size_t aKeyframeInterval, const uint32_t aBitrate,
+                const uint32_t aMinBitrate, const uint32_t aMaxBitrate,
                 const BitrateMode aBitrateMode,
                 const HardwarePreference aHardwarePreference,
                 const ScalabilityMode aScalabilityMode,
@@ -133,6 +134,8 @@ class EncoderConfig final {
         mSize(aSize),
         mBitrateMode(aBitrateMode),
         mBitrate(aBitrate),
+        mMinBitrate(aMinBitrate),
+        mMaxBitrate(aMaxBitrate),
         mUsage(aUsage),
         mHardwarePreference(aHardwarePreference),
         mPixelFormat(aPixelFormat),
@@ -173,6 +176,8 @@ class EncoderConfig final {
   gfx::IntSize mSize{};
   BitrateMode mBitrateMode{};
   uint32_t mBitrate{};
+  uint32_t mMinBitrate{};
+  uint32_t mMaxBitrate{};
   Usage mUsage{};
   // Video-only
   HardwarePreference mHardwarePreference{};
