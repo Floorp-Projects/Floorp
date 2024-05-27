@@ -1,6 +1,8 @@
-pypi:poetry==1.4
+pypi:poetry==1.8.3
 # Pin poetry-core so that the same one is used between Python versions.
 # Otherwise, different versions of poetry-core output different "requirements.txt" contents
-pypi:poetry-core==1.5.1
+pypi:poetry-core==1.9
+# explicitly install this since it will no longer be bundled in a future version of poetry
+pypi:poetry-plugin-export==1.8.0
 vendored:third_party/python/toml
 vendored:third_party/python/voluptuous
