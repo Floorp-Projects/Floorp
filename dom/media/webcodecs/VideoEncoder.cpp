@@ -276,7 +276,7 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
   return EncoderConfig(codecType, {mWidth, mHeight}, usage,
                        ImageBitmapFormat::RGBA32, ImageBitmapFormat::RGBA32,
                        AssertedCast<uint8_t>(mFramerate.refOr(0.f)), 0,
-                       mBitrate.refOr(0),
+                       mBitrate.refOr(0), 0, 0,
                        mBitrateMode == VideoEncoderBitrateMode::Constant
                            ? mozilla::BitrateMode::Constant
                            : mozilla::BitrateMode::Variable,
