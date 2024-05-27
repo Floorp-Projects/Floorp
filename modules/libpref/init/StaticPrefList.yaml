@@ -10656,8 +10656,20 @@
   value: true
   mirror: always
 
+# True if we allow use of any encoders found in GMP plugins.
+- name: media.gmp.encoder.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # True if we want to request the multithreaded GMP encoder.
 - name: media.gmp.encoder.multithreaded
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# True if we want to try using the GMP plugin encoders first.
+- name: media.gmp.encoder.preferred
   type: RelaxedAtomicBool
   value: false
   mirror: always
