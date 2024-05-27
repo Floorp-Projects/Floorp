@@ -686,7 +686,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   // Returns wether we should save the bytecode of this script after the
   // execution of the script.
-  static bool ShouldCacheBytecode(ScriptLoadRequest* aRequest);
+  static void CalculateBytecodeCacheFlag(ScriptLoadRequest* aRequest);
 
   void RunScriptWhenSafe(ScriptLoadRequest* aRequest);
 

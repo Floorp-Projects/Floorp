@@ -2368,7 +2368,7 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
 }
 
 /* static */
-bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
+void ScriptLoader::CalculateBytecodeCacheFlag(ScriptLoadRequest* aRequest) {
   using mozilla::TimeDuration;
   using mozilla::TimeStamp;
 
@@ -2378,7 +2378,8 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
   if (!aRequest->mCacheInfo) {
     LOG(("ScriptLoadRequest (%p): Cannot cache anything (cacheInfo = %p)",
          aRequest, aRequest->mCacheInfo.get()));
-    return false;
+    aRequest->MarkSkippedBytecodeEncoding();
+    return;
   }
 
   // Look at the preference to know which strategy (parameters) should be used
@@ -2398,7 +2399,8 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
       // Reader mode, keep requesting alternate data but no longer save it.
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Encoding disabled.",
            aRequest));
-      return false;
+      aRequest->MarkSkippedBytecodeEncoding();
+      return;
     }
     case -1: {
       // Eager mode, skip heuristics!
@@ -2430,7 +2432,8 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
     if (sourceLength < minLength) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Script is too small.",
            aRequest));
-      return false;
+      aRequest->MarkSkippedBytecodeEncoding();
+      return;
     }
   }
 
@@ -2442,17 +2445,19 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
     if (NS_FAILED(aRequest->mCacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Cannot get fetchCount.",
            aRequest));
-      return false;
+      aRequest->MarkSkippedBytecodeEncoding();
+      return;
     }
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: fetchCount = %d.", aRequest,
          fetchCount));
     if (fetchCount < fetchCountMin) {
-      return false;
+      aRequest->MarkSkippedBytecodeEncoding();
+      return;
     }
   }
 
   LOG(("ScriptLoadRequest (%p): Bytecode-cache: Trigger encoding.", aRequest));
-  return true;
+  aRequest->MarkPassedConditionForBytecodeEncoding();
 }
 
 class MOZ_RAII AutoSetProcessingScriptTag {
@@ -2580,8 +2585,8 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
   }
 
   MOZ_ASSERT(aRequest->IsSource());
-  bool encodeBytecode = ShouldCacheBytecode(aRequest);
-  aExec.SetEncodeBytecode(encodeBytecode);
+  CalculateBytecodeCacheFlag(aRequest);
+  aExec.SetEncodeBytecode(aRequest->PassedConditionForBytecodeEncoding());
 
   if (aRequest->GetScriptLoadContext()->mCompileOrDecodeTask) {
     // Off-main-thread parsing.
@@ -2624,11 +2629,11 @@ nsCString& ScriptLoader::BytecodeMimeTypeFor(ScriptLoadRequest* aRequest) {
 
 void ScriptLoader::MaybePrepareForBytecodeEncodingBeforeExecute(
     ScriptLoadRequest* aRequest, JS::Handle<JSScript*> aScript) {
-  if (!ShouldCacheBytecode(aRequest)) {
+  if (!aRequest->PassedConditionForBytecodeEncoding()) {
     return;
   }
 
-  aRequest->MarkForBytecodeEncoding(aScript);
+  aRequest->MarkScriptForBytecodeEncoding(aScript);
 }
 
 nsresult ScriptLoader::MaybePrepareForBytecodeEncodingAfterExecute(
@@ -2674,7 +2679,7 @@ void ScriptLoader::MaybePrepareModuleForBytecodeEncodingBeforeExecute(
       return;
     }
 
-    if (ShouldCacheBytecode(aRequest)) {
+    if (aRequest->PassedConditionForBytecodeEncoding()) {
       aRequest->MarkModuleForBytecodeEncoding();
     }
   }
