@@ -1017,8 +1017,8 @@ option(
     help="Enable experimental and unstable profile groups",
 )
 
+
 set_define("MOZ_SELECTABLE_PROFILES", True, when="MOZ_SELECTABLE_PROFILES")
-set_config("MOZ_SELECTABLE_PROFILES", True, when="MOZ_SELECTABLE_PROFILES")
 
 project_flag(
     "MOZ_DEDICATED_PROFILES",
