@@ -376,6 +376,7 @@ mapping:
             by-locale:
                 en-US:
                     - ${year}/${month}/${upload_date}-${branch}
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
                     - latest-${branch}
                     - latest-${branch}-l10n
                 default:
