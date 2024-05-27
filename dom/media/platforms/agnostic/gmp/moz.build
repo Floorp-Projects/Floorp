@@ -10,12 +10,14 @@ LOCAL_INCLUDES += [
 
 EXPORTS += [
     "GMPDecoderModule.h",
+    "GMPEncoderModule.h",
     "GMPVideoDecoder.h",
     "GMPVideoEncoder.h",
 ]
 
 UNIFIED_SOURCES += [
     "GMPDecoderModule.cpp",
+    "GMPEncoderModule.cpp",
     "GMPVideoDecoder.cpp",
     "GMPVideoEncoder.cpp",
 ]

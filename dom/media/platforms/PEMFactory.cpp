@@ -26,6 +26,8 @@
 
 #include "FFVPXRuntimeLinker.h"
 
+#include "GMPEncoderModule.h"
+
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
 
@@ -71,6 +73,15 @@ PEMFactory::PEMFactory() {
     }
   }
 #endif
+
+  if (StaticPrefs::media_gmp_encoder_enabled()) {
+    auto pem = MakeRefPtr<GMPEncoderModule>();
+    if (StaticPrefs::media_gmp_encoder_preferred()) {
+      mCurrentPEMs.InsertElementAt(0, std::move(pem));
+    } else {
+      mCurrentPEMs.AppendElement(std::move(pem));
+    }
+  }
 }
 
 already_AddRefed<MediaDataEncoder> PEMFactory::CreateEncoder(
