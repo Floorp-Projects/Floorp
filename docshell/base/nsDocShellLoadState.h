@@ -24,6 +24,7 @@ class nsIURI;
 class nsIDocShell;
 class nsIChannel;
 class nsIReferrerInfo;
+struct HTTPSFirstDowngradeData;
 namespace mozilla {
 class OriginAttributes;
 template <typename, class>
@@ -147,6 +148,11 @@ class nsDocShellLoadState final {
   bool IsExemptFromHTTPSFirstMode() const;
 
   void SetIsExemptFromHTTPSFirstMode(bool aIsExemptFromHTTPSFirstMode);
+
+  RefPtr<HTTPSFirstDowngradeData> GetHttpsFirstDowngradeData() const;
+
+  void SetHttpsFirstDowngradeData(
+      RefPtr<HTTPSFirstDowngradeData> const& aHttpsFirstTelemetryData);
 
   bool OriginalFrameSrc() const;
 
@@ -483,6 +489,10 @@ class nsDocShellLoadState final {
   // If this attribute is true, then the top-level navigaion
   // will be exempt from HTTPS-Only-Mode upgrades.
   bool mIsExemptFromHTTPSFirstMode;
+
+  // If set, this load is a HTTPS-First downgrade, and the downgrade data will
+  // be submitted to telemetry later if the load succeeds.
+  RefPtr<HTTPSFirstDowngradeData> mHttpsFirstDowngradeData;
 
   // If this attribute is true, this load corresponds to a frame
   // element loading its original src (or srcdoc) attribute.

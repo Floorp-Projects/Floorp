@@ -176,6 +176,31 @@ class nsHTTPSOnlyUtils {
    */
   static uint32_t GetStatusForSubresourceLoad(uint32_t aHttpsOnlyStatus);
 
+  /**
+   * When a downgrade is happening because of HTTPS-First, this function will
+   * update the load state for the new load accordingly. This includes
+   * information about the downgrade for later telemetry use.
+   * @param aDocumentLoadListener The calling document load listener.
+   * @param aLoadState The load state to be updated
+   */
+  static void UpdateLoadStateAfterHTTPSFirstDowngrade(
+      mozilla::net::DocumentLoadListener* aDocumentLoadListener,
+      nsDocShellLoadState* aLoadState);
+
+  /**
+   * When a load is successful, this should be called by the document load
+   * listener. In two cases, telemetry is then recorded:
+   * a) If downgrade data has been passed, the passed load is a successful
+   *    downgrade, which means telemetry based on the downgrade data will be
+   *    submitted.
+   * b) If the passed load info indicates that this load has been upgraded by
+   *    HTTPS-First, this means the upgrade was successful, which will be
+   *    recorded to telemetry.
+   */
+  static void SubmitHTTPSFirstTelemetry(
+      nsCOMPtr<nsILoadInfo> const& aLoadInfo,
+      RefPtr<HTTPSFirstDowngradeData> const& aHttpsFirstDowngradeData);
+
  private:
   /**
    * Checks if it can be ruled out that the error has something
@@ -255,6 +280,19 @@ class TestHTTPAnswerRunnable final : public mozilla::Runnable,
   // through redirects)
   RefPtr<mozilla::net::DocumentLoadListener> mDocumentLoadListener;
   RefPtr<nsITimer> mTimer;
+};
+
+/**
+ * Data about a HTTPS-First downgrade used for Telemetry. We need to store this
+ * instead of directly submitting it when deciding to downgrade, because it is
+ * only interesting for us if the downgraded load is actually succesful.
+ */
+struct HTTPSFirstDowngradeData
+    : public mozilla::RefCounted<HTTPSFirstDowngradeData> {
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(HTTPSFirstDowngradeData)
+  mozilla::TimeDuration downgradeTime;
+  bool isOnTimer = false;
+  bool isSchemeless = false;
 };
 
 #endif /* nsHTTPSOnlyUtils_h___ */

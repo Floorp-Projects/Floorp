@@ -318,6 +318,7 @@ https://mismatch.badcertdomain.example.com:443                    privileged,cer
 # Hosts for HTTPS-First upgrades/downgrades
 http://httpsfirst.com:80                                          privileged
 https://httpsfirst.com:443                                        privileged,nocert
+https://invalid.example.com:443                                   privileged,nocert
 
 # Hosts for sha1 console warning tests
 https://sha1ee.example.com:443                                    privileged,cert=sha1_end_entity

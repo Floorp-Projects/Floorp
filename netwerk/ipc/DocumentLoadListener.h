@@ -617,6 +617,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   bool mOpenPromiseResolved = false;
 
   const bool mIsDocumentLoad;
+
+  RefPtr<HTTPSFirstDowngradeData> mHTTPSFirstDowngradeData;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentLoadListener, DOCUMENT_LOAD_LISTENER_IID)
