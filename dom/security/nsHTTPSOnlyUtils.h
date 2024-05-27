@@ -132,7 +132,8 @@ class nsHTTPSOnlyUtils {
    * @param  aPrincipal The principal for whom the exception should be checked
    * @return            True if exempt
    */
-  static bool TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal);
+  static bool TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal,
+                                      bool aCheckForHTTPSFirst = false);
 
   /**
    * Tests if the HTTPS-Only Mode upgrade exception is set for channel result

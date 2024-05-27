@@ -691,7 +691,8 @@ bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
 }
 
 /* static */
-bool nsHTTPSOnlyUtils::TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal) {
+bool nsHTTPSOnlyUtils::TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal,
+                                               bool aCheckForHTTPSFirst) {
   static nsCOMPtr<nsIPermissionManager> sPermMgr;
   if (!sPermMgr) {
     sPermMgr = mozilla::components::PermissionManager::Service();
@@ -705,7 +706,11 @@ bool nsHTTPSOnlyUtils::TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal) {
   NS_ENSURE_SUCCESS(rv, false);
 
   return perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW ||
-         perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW_SESSION;
+         perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW_SESSION ||
+         (aCheckForHTTPSFirst &&
+          (perm == nsIHttpsOnlyModePermission::HTTPSFIRST_LOAD_INSECURE_ALLOW ||
+           perm == nsIHttpsOnlyModePermission::
+                       HTTPSFIRST_LOAD_INSECURE_ALLOW_SESSION));
 }
 
 /* static */
@@ -744,7 +749,8 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
   NS_ENSURE_SUCCESS_VOID(rv);
 
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-  bool isPrincipalExempt = TestIfPrincipalIsExempt(principal);
+  bool isPrincipalExempt = TestIfPrincipalIsExempt(
+      principal, isHttpsFirst || isSchemelessHttpsFirst);
   if (isPrincipalExempt) {
     httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
   } else {
