@@ -22,10 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936340
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, runNextTest);
 
-SimpleTest.registerCleanupFunction(async () => {
-    return fetch("http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs?clear");
-});
-
 function getBeaconServerStatus(callback) {
     var request = new XMLHttpRequest();
     request.open("GET", "http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs?getLastBeacon", true);
@@ -62,14 +58,13 @@ function beaconSent(result) {
     var c = document.getElementById("content");
     c.removeChild(frame);
 
-    getBeaconServerStatus(async function(response) {
+    getBeaconServerStatus( function(response) {
       console.log(response);
         var result = JSON.parse(response);
         
         is(result.data, data, "Beacon status should match expected.  is: " + result.data + " should be: " + data);
         is(result.mimetype, mimetype, "Beacon mimetype should match expected.  is: " + result.mimetype + " should be: " + mimetype);
 
-        await fetch("http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs?clear");
         runNextTest();
     });
 }

@@ -25,10 +25,6 @@ const Ci = SpecialPowers.Ci;
 // not enabled by default yet.
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.registerCleanupFunction(async () => {
-    return fetch("http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs?clear")
-});
-
 var policy;
 
 SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
