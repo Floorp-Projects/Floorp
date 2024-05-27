@@ -336,7 +336,7 @@ function testPopupMovement()
   var marginTop = parseFloat(getComputedStyle(popup).marginTop);
 
   var panelIsTop = SpecialPowers.getBoolPref("ui.panel.default_level_parent");
-  var overlapOSChrome = canOverlapOSChrome() && (!isPanelTest || panelIsTop);
+  var overlapOSChrome = !platformIsMac() && (!isPanelTest || panelIsTop);
   popup.moveTo(1, 1);
   [screenX, screenY] = getScreenXY(popup);
 
@@ -396,11 +396,6 @@ function testPopupMovement()
 function platformIsMac()
 {
   return navigator.platform.indexOf("Mac") > -1;
-}
-
-function canOverlapOSChrome()
-{
-  return navigator.platform.startsWith("Win");
 }
 
 window.arguments[0].SimpleTest.waitForFocus(runTests, window);
