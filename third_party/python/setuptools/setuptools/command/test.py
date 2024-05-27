@@ -95,7 +95,6 @@ class test(Command):
         self.test_runner = None
 
     def finalize_options(self):
-
         if self.test_suite and self.test_module:
             msg = "You may specify a module or a suite, but not both"
             raise DistutilsOptionError(msg)
@@ -133,7 +132,7 @@ class test(Command):
             func()
 
     @contextlib.contextmanager
-    def project_on_sys_path(self, include_dists=[]):
+    def project_on_sys_path(self, include_dists=()):
         self.run_command('egg_info')
 
         # Build extensions in-place

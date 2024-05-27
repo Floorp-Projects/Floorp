@@ -5,7 +5,8 @@ import distutils
 import os
 import configparser
 
-from setuptools import Command
+from .. import Command
+from ..unicode_utils import _cfg_read_utf8_with_fallback
 
 __all__ = ['config_file', 'edit_config', 'option_base', 'setopt']
 
@@ -18,15 +19,11 @@ def config_file(kind="local"):
     if kind == 'local':
         return 'setup.cfg'
     if kind == 'global':
-        return os.path.join(
-            os.path.dirname(distutils.__file__), 'distutils.cfg'
-        )
+        return os.path.join(os.path.dirname(distutils.__file__), 'distutils.cfg')
     if kind == 'user':
         dot = os.name == 'posix' and '.' or ''
         return os.path.expanduser(convert_path("~/%spydistutils.cfg" % dot))
-    raise ValueError(
-        "config_file() type must be 'local', 'global', or 'user'", kind
-    )
+    raise ValueError("config_file() type must be 'local', 'global', or 'user'", kind)
 
 
 def edit_config(filename, settings, dry_run=False):
@@ -40,7 +37,8 @@ def edit_config(filename, settings, dry_run=False):
     log.debug("Reading configuration from %s", filename)
     opts = configparser.RawConfigParser()
     opts.optionxform = lambda x: x
-    opts.read([filename])
+    _cfg_read_utf8_with_fallback(opts, filename)
+
     for section, options in settings.items():
         if options is None:
             log.info("Deleting section [%s] from %s", section, filename)
@@ -51,25 +49,22 @@ def edit_config(filename, settings, dry_run=False):
                 opts.add_section(section)
             for option, value in options.items():
                 if value is None:
-                    log.debug(
-                        "Deleting %s.%s from %s",
-                        section, option, filename
-                    )
+                    log.debug("Deleting %s.%s from %s", section, option, filename)
                     opts.remove_option(section, option)
                     if not opts.options(section):
-                        log.info("Deleting empty [%s] section from %s",
-                                 section, filename)
+                        log.info(
+                            "Deleting empty [%s] section from %s", section, filename
+                        )
                         opts.remove_section(section)
                 else:
                     log.debug(
-                        "Setting %s.%s to %r in %s",
-                        section, option, value, filename
+                        "Setting %s.%s to %r in %s", section, option, value, filename
                     )
                     opts.set(section, option, value)
 
     log.info("Writing %s", filename)
     if not dry_run:
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding="utf-8") as f:
             opts.write(f)
 
 
@@ -77,16 +72,14 @@ class option_base(Command):
     """Abstract base class for commands that mess with config files"""
 
     user_options = [
-        ('global-config', 'g',
-         "save options to the site-wide distutils.cfg file"),
-        ('user-config', 'u',
-         "save options to the current user's pydistutils.cfg file"),
-        ('filename=', 'f',
-         "configuration file to use (default=setup.cfg)"),
+        ('global-config', 'g', "save options to the site-wide distutils.cfg file"),
+        ('user-config', 'u', "save options to the current user's pydistutils.cfg file"),
+        ('filename=', 'f', "configuration file to use (default=setup.cfg)"),
     ]
 
     boolean_options = [
-        'global-config', 'user-config',
+        'global-config',
+        'user-config',
     ]
 
     def initialize_options(self):
@@ -106,10 +99,9 @@ class option_base(Command):
             filenames.append(config_file('local'))
         if len(filenames) > 1:
             raise DistutilsOptionError(
-                "Must specify only one configuration file option",
-                filenames
+                "Must specify only one configuration file option", filenames
             )
-        self.filename, = filenames
+        (self.filename,) = filenames
 
 
 class setopt(option_base):
@@ -142,8 +134,7 @@ class setopt(option_base):
 
     def run(self):
         edit_config(
-            self.filename, {
-                self.command: {self.option.replace('-', '_'): self.set_value}
-            },
-            self.dry_run
+            self.filename,
+            {self.command: {self.option.replace('-', '_'): self.set_value}},
+            self.dry_run,
         )

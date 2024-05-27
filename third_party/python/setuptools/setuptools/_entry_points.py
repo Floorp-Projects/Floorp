@@ -17,7 +17,8 @@ def ensure_valid(ep):
     """
     try:
         ep.extras
-    except AttributeError as ex:
+    except (AttributeError, AssertionError) as ex:
+        # Why both? See https://github.com/python/importlib_metadata/issues/488
         msg = (
             f"Problems to parse {ep}.\nPlease ensure entry-point follows the spec: "
             "https://packaging.python.org/en/latest/specifications/entry-points/"
@@ -54,8 +55,8 @@ def load(eps):
     Given a Distribution.entry_points, produce EntryPoints.
     """
     groups = itertools.chain.from_iterable(
-        load_group(value, group)
-        for group, value in eps.items())
+        load_group(value, group) for group, value in eps.items()
+    )
     return validate(metadata.EntryPoints(groups))
 
 
@@ -81,14 +82,8 @@ def render(eps: metadata.EntryPoints):
     by_group = operator.attrgetter('group')
     groups = itertools.groupby(sorted(eps, key=by_group), by_group)
 
-    return '\n'.join(
-        f'[{group}]\n{render_items(items)}\n'
-        for group, items in groups
-    )
+    return '\n'.join(f'[{group}]\n{render_items(items)}\n' for group, items in groups)
 
 
 def render_items(eps):
-    return '\n'.join(
-        f'{ep.name} = {ep.value}'
-        for ep in sorted(eps)
-    )
+    return '\n'.join(f'{ep.name} = {ep.value}' for ep in sorted(eps))

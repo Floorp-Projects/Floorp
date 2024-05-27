@@ -1,16 +1,5 @@
-import sys
-from typing import TYPE_CHECKING, List, Dict
+from typing import Dict, List, Protocol
 from distutils.command.build import build as _build
-
-from ..warnings import SetuptoolsDeprecationWarning
-
-if sys.version_info >= (3, 8):
-    from typing import Protocol
-elif TYPE_CHECKING:
-    from typing_extensions import Protocol
-else:
-    from abc import ABC as Protocol
-
 
 _ORIGINAL_SUBCOMMANDS = {"build_py", "build_clib", "build_ext", "build_scripts"}
 
@@ -18,22 +7,6 @@ _ORIGINAL_SUBCOMMANDS = {"build_py", "build_clib", "build_ext", "build_scripts"}
 class build(_build):
     # copy to avoid sharing the object with parent class
     sub_commands = _build.sub_commands[:]
-
-    def get_sub_commands(self):
-        subcommands = {cmd[0] for cmd in _build.sub_commands}
-        if subcommands - _ORIGINAL_SUBCOMMANDS:
-            SetuptoolsDeprecationWarning.emit(
-                "Direct usage of `distutils` commands",
-                """
-                It seems that you are using `distutils.command.build` to add
-                new subcommands. Using `distutils` directly is considered deprecated,
-                please use `setuptools.command.build`.
-                """,
-                due_date=(2023, 12, 13),  # Warning introduced in 13 Jun 2022.
-                see_url="https://peps.python.org/pep-0632/",
-            )
-            self.sub_commands = _build.sub_commands
-        return super().get_sub_commands()
 
 
 class SubCommand(Protocol):

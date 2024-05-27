@@ -12,12 +12,12 @@ import functools
 import os
 import re
 import sys
-import io
 import time
 import collections
 
 from .._importlib import metadata
 from .. import _entry_points, _normalization
+from . import _requirestxt
 
 from setuptools import Command
 from setuptools.command.sdist import sdist
@@ -28,7 +28,6 @@ import setuptools.unicode_utils as unicode_utils
 from setuptools.glob import glob
 
 from setuptools.extern import packaging
-from setuptools.extern.jaraco.text import yield_lines
 from ..warnings import SetuptoolsDeprecationWarning
 
 
@@ -93,7 +92,7 @@ def translate_pattern(glob):  # noqa: C901  # is too complex (14)  # FIXME
                     pat += re.escape(char)
                 else:
                     # Grab the insides of the [brackets]
-                    inner = chunk[i + 1:inner_i]
+                    inner = chunk[i + 1 : inner_i]
                     char_class = ''
 
                     # Class negation
@@ -128,7 +127,7 @@ class InfoCommon:
 
     def tagged_version(self):
         tagged = self._maybe_tag(self.distribution.get_version())
-        return _normalization.best_effort_version(tagged)
+        return _normalization.safe_version(tagged)
 
     def _maybe_tag(self, version):
         """
@@ -136,7 +135,8 @@ class InfoCommon:
         in which case the version string already contains all tags.
         """
         return (
-            version if self.vtags and self._already_tagged(version)
+            version
+            if self.vtags and self._already_tagged(version)
             else version + self.vtags
         )
 
@@ -148,7 +148,10 @@ class InfoCommon:
     def _safe_tags(self) -> str:
         # To implement this we can rely on `safe_version` pretending to be version 0
         # followed by tags. Then we simply discard the starting 0 (fake version number)
-        return _normalization.best_effort_version(f"0{self.vtags}")[1:]
+        try:
+            return _normalization.safe_version(f"0{self.vtags}")[1:]
+        except packaging.version.InvalidVersion:
+            return _normalization.safe_name(self.vtags.replace(' ', '.'))
 
     def tags(self) -> str:
         version = ''
@@ -157,6 +160,7 @@ class InfoCommon:
         if self.tag_date:
             version += time.strftime("%Y%m%d")
         return version
+
     vtags = property(tags)
 
 
@@ -164,8 +168,12 @@ class egg_info(InfoCommon, Command):
     description = "create a distribution's .egg-info directory"
 
     user_options = [
-        ('egg-base=', 'e', "directory containing .egg-info directories"
-                           " (default: top of the source tree)"),
+        (
+            'egg-base=',
+            'e',
+            "directory containing .egg-info directories"
+            " (default: top of the source tree)",
+        ),
         ('tag-date', 'd', "Add date stamp (e.g. 20050528) to version number"),
         ('tag-build=', 'b', "Specify explicit tag to add to version number"),
         ('no-date', 'D', "Don't include date stamp [default]"),
@@ -193,6 +201,7 @@ class egg_info(InfoCommon, Command):
     @tag_svn_revision.setter
     def tag_svn_revision(self, value):
         pass
+
     ####################################
 
     def save_version_info(self, filename):
@@ -223,8 +232,8 @@ class egg_info(InfoCommon, Command):
             packaging.requirements.Requirement(spec % (self.egg_name, self.egg_version))
         except ValueError as e:
             raise distutils.errors.DistutilsOptionError(
-                "Invalid distribution name or version syntax: %s-%s" %
-                (self.egg_name, self.egg_version)
+                "Invalid distribution name or version syntax: %s-%s"
+                % (self.egg_name, self.egg_version)
             ) from e
 
         if self.egg_base is None:
@@ -269,9 +278,7 @@ class egg_info(InfoCommon, Command):
             self.write_file(what, filename, data)
         elif os.path.exists(filename):
             if data is None and not force:
-                log.warn(
-                    "%s not set in setup(), but %s exists", what, filename
-                )
+                log.warn("%s not set in setup(), but %s exists", what, filename)
                 return
             else:
                 self.delete_file(filename)
@@ -344,31 +351,28 @@ class FileList(_FileList):
             'global-include': self.global_include,
             'global-exclude': self.global_exclude,
             'recursive-include': functools.partial(
-                self.recursive_include, dir,
+                self.recursive_include,
+                dir,
             ),
             'recursive-exclude': functools.partial(
-                self.recursive_exclude, dir,
+                self.recursive_exclude,
+                dir,
             ),
             'graft': self.graft,
             'prune': self.prune,
         }
         log_map = {
             'include': "warning: no files found matching '%s'",
-            'exclude': (
-                "warning: no previously-included files found "
-                "matching '%s'"
-            ),
+            'exclude': ("warning: no previously-included files found " "matching '%s'"),
             'global-include': (
-                "warning: no files found matching '%s' "
-                "anywhere in distribution"
+                "warning: no files found matching '%s' " "anywhere in distribution"
             ),
             'global-exclude': (
                 "warning: no previously-included files matching "
                 "'%s' found anywhere in distribution"
             ),
             'recursive-include': (
-                "warning: no files found matching '%s' "
-                "under directory '%s'"
+                "warning: no files found matching '%s' " "under directory '%s'"
             ),
             'recursive-exclude': (
                 "warning: no previously-included files matching "
@@ -381,10 +385,8 @@ class FileList(_FileList):
         try:
             process_action = action_map[action]
         except KeyError:
-            raise DistutilsInternalError(
-                "this cannot happen: invalid action '{action!s}'".
-                format(action=action),
-            )
+            msg = f"Invalid MANIFEST.in: unknown action {action!r} in {line!r}"
+            raise DistutilsInternalError(msg) from None
 
         # OK, now we know that the action is valid and we have the
         # right number of words on the line for that action -- so we
@@ -393,14 +395,12 @@ class FileList(_FileList):
         action_is_recursive = action.startswith('recursive-')
         if action in {'graft', 'prune'}:
             patterns = [dir_pattern]
-        extra_log_args = (dir, ) if action_is_recursive else ()
+        extra_log_args = (dir,) if action_is_recursive else ()
         log_tmpl = log_map[action]
 
         self.debug_print(
             ' '.join(
-                [action] +
-                ([dir] if action_is_recursive else []) +
-                patterns,
+                [action] + ([dir] if action_is_recursive else []) + patterns,
             )
         )
         for pattern in patterns:
@@ -436,8 +436,7 @@ class FileList(_FileList):
         Include all files anywhere in 'dir/' that match the pattern.
         """
         full_pattern = os.path.join(dir, '**', pattern)
-        found = [f for f in glob(full_pattern, recursive=True)
-                 if not os.path.isdir(f)]
+        found = [f for f in glob(full_pattern, recursive=True) if not os.path.isdir(f)]
         self.extend(found)
         return bool(found)
 
@@ -623,8 +622,9 @@ class manifest_maker(sdist):
         self.filelist.prune(build.build_base)
         self.filelist.prune(base_dir)
         sep = re.escape(os.sep)
-        self.filelist.exclude_pattern(r'(^|' + sep + r')(RCS|CVS|\.svn)' + sep,
-                                      is_regex=1)
+        self.filelist.exclude_pattern(
+            r'(^|' + sep + r')(RCS|CVS|\.svn)' + sep, is_regex=1
+        )
 
     def _safe_data_files(self, build_py):
         """
@@ -693,39 +693,15 @@ def warn_depends_obsolete(cmd, basename, filename):
     """
 
 
-def _write_requirements(stream, reqs):
-    lines = yield_lines(reqs or ())
-
-    def append_cr(line):
-        return line + '\n'
-    lines = map(append_cr, lines)
-    stream.writelines(lines)
-
-
-def write_requirements(cmd, basename, filename):
-    dist = cmd.distribution
-    data = io.StringIO()
-    _write_requirements(data, dist.install_requires)
-    extras_require = dist.extras_require or {}
-    for extra in sorted(extras_require):
-        data.write('\n[{extra}]\n'.format(**vars()))
-        _write_requirements(data, extras_require[extra])
-    cmd.write_or_delete_file("requirements", filename, data.getvalue())
-
-
-def write_setup_requirements(cmd, basename, filename):
-    data = io.StringIO()
-    _write_requirements(data, cmd.distribution.setup_requires)
-    cmd.write_or_delete_file("setup-requirements", filename, data.getvalue())
+# Export API used in entry_points
+write_requirements = _requirestxt.write_requirements
+write_setup_requirements = _requirestxt.write_setup_requirements
 
 
 def write_toplevel_names(cmd, basename, filename):
-    pkgs = dict.fromkeys(
-        [
-            k.split('.', 1)[0]
-            for k in cmd.distribution.iter_distribution_names()
-        ]
-    )
+    pkgs = dict.fromkeys([
+        k.split('.', 1)[0] for k in cmd.distribution.iter_distribution_names()
+    ])
     cmd.write_file("top-level names", filename, '\n'.join(sorted(pkgs)) + '\n')
 
 
