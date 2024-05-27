@@ -192,8 +192,9 @@ StaticMutex PDMInitializer::sMonitor;
 /* static */
 void PDMInitializer::InitPDMs() {
   StaticMutexAutoLock mon(sMonitor);
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!sHasInitializedPDMs);
+  if (sHasInitializedPDMs) {
+    return;
+  }
   if (XRE_IsGPUProcess()) {
     PDM_INIT_LOG("Init PDMs in GPU process");
     InitGpuPDMs();
@@ -306,26 +307,26 @@ void PDMFactory::EnsureInit() {
   if (PDMInitializer::HasInitializedPDMs()) {
     return;
   }
-  auto initalization = []() {
+  auto initalizationGfxVarsAndPreferences = []() {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
-    if (!PDMInitializer::HasInitializedPDMs()) {
-      // Ensure that all system variables are initialized.
-      gfx::gfxVars::Initialize();
-      // Prime the preferences system from the main thread.
-      Unused << BrowserTabsRemoteAutostart();
-      PDMInitializer::InitPDMs();
-    }
+    // Ensure that all system variables are initialized.
+    gfx::gfxVars::Initialize();
+    // Prime the preferences system from the main thread.
+    Unused << BrowserTabsRemoteAutostart();
   };
-  // If on the main thread, then initialize PDMs. Otherwise, do a sync-dispatch
-  // to main thread.
-  if (NS_IsMainThread()) {
-    initalization();
-    return;
+  // There are some initialization needed to be done on the main thread.
+  if (!gfx::gfxVars::IsInitialized()) {
+    if (NS_IsMainThread()) {
+      initalizationGfxVarsAndPreferences();
+    } else {
+      nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
+      nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableFunction("PDMFactory::EnsureInit",
+                                 std::move(initalizationGfxVarsAndPreferences));
+      SyncRunnable::DispatchToThread(mainTarget, runnable);
+    }
   }
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
-  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-      "PDMFactory::EnsureInit", std::move(initalization));
-  SyncRunnable::DispatchToThread(mainTarget, runnable);
+  PDMInitializer::InitPDMs();
 }
 
 RefPtr<PlatformDecoderModule::CreateDecoderPromise> PDMFactory::CreateDecoder(
