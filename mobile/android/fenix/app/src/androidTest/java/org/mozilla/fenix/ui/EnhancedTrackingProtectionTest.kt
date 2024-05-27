@@ -175,7 +175,10 @@ class EnhancedTrackingProtectionTest : TestSetup() {
         }.openEnhancedTrackingProtectionSheet {
         }.toggleEnhancedTrackingProtectionFromSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
-        }.openProtectionSettings {
+        }.closeEnhancedTrackingProtectionSheet {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openEnhancedTrackingProtectionSubMenu {
         }.openExceptions {
             verifySiteExceptionExists(trackingPage.url.host.toString(), false)
         }
