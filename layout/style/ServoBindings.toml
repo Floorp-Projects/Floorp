@@ -622,6 +622,7 @@ cbindgen-types = [
     { gecko = "StyleAu", servo = "app_units::Au" },
     { gecko = "StyleAnchorName", servo = "crate::values::computed::position::AnchorName" },
     { gecko = "StyleAnchorScope", servo = "crate::values::computed::position::AnchorScope" },
+    { gecko = "StylePositionAnchor", servo = "crate::values::computed::position::PositionAnchor" },
 ]
 
 mapped-generic-types = [

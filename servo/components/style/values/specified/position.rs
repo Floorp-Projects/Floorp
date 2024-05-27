@@ -456,6 +456,39 @@ impl Parse for AnchorScope {
     }
 }
 
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-position-anchor
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum PositionAnchor {
+    /// `auto`
+    Auto,
+    /// `<dashed-ident>`
+    Ident(DashedIdent),
+}
+
+impl PositionAnchor {
+    /// Return the `auto` value.
+    pub fn auto() -> Self {
+        Self::Auto
+    }
+
+    /// Returns whether this is the `auto` value.
+    pub fn is_auto(&self) -> bool {
+        *self == Self::Auto
+    }
+}
+
 /// Represents a side, either horizontal or vertical, of a CSS position.
 pub trait Side {
     /// Returns the start side.
