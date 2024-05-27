@@ -855,8 +855,8 @@ android-startup-test
 --------------------
 Startup test for android.
 
-post-signing
-------------
+post-signing-dummy
+------------------
 Gating kind to wait for all android signing tasks.
 
 beetmover-components

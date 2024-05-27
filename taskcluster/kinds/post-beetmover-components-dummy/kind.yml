@@ -23,13 +23,3 @@ jobs:
         attributes:
             component: all
         worker-type: succeed
-        treeherder:
-            kind: build
-            platform: AC-android-all/opt
-            symbol:
-                by-build-type:
-                    release: post-beetmover-release
-                    beta: post-beetmover-beta
-                    nightly: post-beetmover-nightly
-                    default: post-beetmover
-            tier: 1
