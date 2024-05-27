@@ -174,14 +174,14 @@ class CompositableForwarder : public KnowsCompositor {
 
   void AssertInForwarderThread() { MOZ_ASSERT(InForwarderThread()); }
 
- protected:
-  virtual FwdTransactionCounter& GetFwdTransactionCounter() = 0;
-
   void TrackFwdTransaction(const RefPtr<FwdTransactionTracker>& aTracker) {
     if (aTracker) {
       aTracker->Use(GetFwdTransactionCounter());
     }
   }
+
+ protected:
+  virtual FwdTransactionCounter& GetFwdTransactionCounter() = 0;
 
   nsTArray<RefPtr<TextureClient>> mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
