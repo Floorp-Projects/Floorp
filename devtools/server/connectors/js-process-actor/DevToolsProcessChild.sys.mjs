@@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(
       "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
     ServiceWorkerTargetWatcher:
       "resource://devtools/server/connectors/js-process-actor/target-watchers/service_worker.sys.mjs",
+    SharedWorkerTargetWatcher:
+      "resource://devtools/server/connectors/js-process-actor/target-watchers/shared_worker.sys.mjs",
     WorkerTargetWatcher:
       "resource://devtools/server/connectors/js-process-actor/target-watchers/worker.sys.mjs",
     WindowGlobalTargetWatcher:
@@ -75,6 +77,13 @@ export class DevToolsProcessChild extends JSProcessActorChild {
       activeListener: 0,
       get watcher() {
         return lazy.ServiceWorkerTargetWatcher;
+      },
+    },
+
+    shared_worker: {
+      activeListener: 0,
+      get watcher() {
+        return lazy.SharedWorkerTargetWatcher;
       },
     },
   };
@@ -417,6 +426,14 @@ export class DevToolsProcessChild extends JSProcessActorChild {
     }
     if (watchingTargetTypes.includes("service_worker")) {
       await this.#watchers.service_worker.watcher.addOrSetSessionDataEntry(
+        watcherDataObject,
+        type,
+        entries,
+        updateType
+      );
+    }
+    if (watchingTargetTypes.includes("shared_worker")) {
+      await this.#watchers.shared_worker.watcher.addOrSetSessionDataEntry(
         watcherDataObject,
         type,
         entries,
