@@ -179,6 +179,10 @@ class ResourceCommand {
       }
     }
 
+    // Copy the array in order to avoid the callsite to modify the list of watched resources by mutating the array.
+    // You have to call (un)watchResources to update the list of resources being watched!
+    resources = [...resources];
+
     // Pending watchers are used in unwatchResources to remove watchers which
     // are not fully registered yet. Store `onAvailable` which is the unique key
     // for a watcher, as well as the resources array, so that unwatchResources
