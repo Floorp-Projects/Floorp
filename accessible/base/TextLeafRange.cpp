@@ -189,6 +189,56 @@ static nsIFrame* GetFrameInBlock(const LocalAccessible* aAcc) {
   return aAcc->GetFrame();
 }
 
+/**
+ * Returns true if the given frames are on different lines.
+ */
+static bool AreFramesOnDifferentLines(nsIFrame* aFrame1, nsIFrame* aFrame2) {
+  MOZ_ASSERT(aFrame1 && aFrame2);
+  if (aFrame1 == aFrame2) {
+    // This can happen if two Accessibles share the same frame; e.g. image maps.
+    return false;
+  }
+  auto [block1, lineFrame1] = aFrame1->GetContainingBlockForLine(
+      /* aLockScroll */ false);
+  if (!block1) {
+    // Error; play it safe.
+    return true;
+  }
+  auto [block2, lineFrame2] = aFrame2->GetContainingBlockForLine(
+      /* aLockScroll */ false);
+  if (lineFrame1 == lineFrame2) {
+    return false;
+  }
+  if (block1 != block2) {
+    // These frames are in different blocks, so they're on different lines.
+    return true;
+  }
+  if (nsBlockFrame* block = do_QueryFrame(block1)) {
+    // If we have a block frame, it's faster for us to use
+    // BlockInFlowLineIterator because it uses the line cursor.
+    bool found = false;
+    block->SetupLineCursorForQuery();
+    nsBlockInFlowLineIterator it1(block, lineFrame1, &found);
+    if (!found) {
+      // Error; play it safe.
+      return true;
+    }
+    found = false;
+    nsBlockInFlowLineIterator it2(block, lineFrame2, &found);
+    return !found || it1.GetLine() != it2.GetLine();
+  }
+  AutoAssertNoDomMutations guard;
+  nsILineIterator* it = block1->GetLineIterator();
+  MOZ_ASSERT(it, "GetLineIterator impl in line-container blocks is infallible");
+  int32_t line1 = it->FindLineContaining(lineFrame1);
+  if (line1 < 0) {
+    // Error; play it safe.
+    return true;
+  }
+  int32_t line2 = it->FindLineContaining(lineFrame2, line1);
+  return line1 != line2;
+}
+
 static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
   if (aAcc->NativeRole() == roles::LISTITEM_MARKER) {
     // A bullet always starts a line.
@@ -232,52 +282,12 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
     return false;
   }
 
-  auto [thisBlock, thisLineFrame] = thisFrame->GetContainingBlockForLine(
-      /* aLockScroll */ false);
-  if (!thisBlock) {
-    // We couldn't get the containing block for this frame. In that case, we
-    // play it safe and assume this is the beginning of a new line.
-    return true;
-  }
-
   // The previous leaf might cross lines. We want to compare against the last
   // line.
   prevFrame = prevFrame->LastContinuation();
-  auto [prevBlock, prevLineFrame] = prevFrame->GetContainingBlockForLine(
-      /* aLockScroll */ false);
-  if (thisBlock != prevBlock) {
-    // If the blocks are different, that means there's nothing before us on the
-    // same line, so we're at the start.
-    return true;
-  }
-  if (nsBlockFrame* block = do_QueryFrame(thisBlock)) {
-    // If we have a block frame, it's faster for us to use
-    // BlockInFlowLineIterator because it uses the line cursor.
-    bool found = false;
-    block->SetupLineCursorForQuery();
-    nsBlockInFlowLineIterator prevIt(block, prevLineFrame, &found);
-    if (!found) {
-      // Error; play it safe.
-      return true;
-    }
-    found = false;
-    nsBlockInFlowLineIterator thisIt(block, thisLineFrame, &found);
-    // if the lines are different, that means there's nothing before us on the
-    // same line, so we're at the start.
-    return !found || prevIt.GetLine() != thisIt.GetLine();
-  }
-  AutoAssertNoDomMutations guard;
-  nsILineIterator* it = prevBlock->GetLineIterator();
-  MOZ_ASSERT(it, "GetLineIterator impl in line-container blocks is infallible");
-  int32_t prevLineNum = it->FindLineContaining(prevLineFrame);
-  if (prevLineNum < 0) {
-    // Error; play it safe.
-    return true;
-  }
-  int32_t thisLineNum = it->FindLineContaining(thisLineFrame, prevLineNum);
-  // if the blocks and line numbers are different, that means there's nothing
-  // before us on the same line, so we're at the start.
-  return thisLineNum != prevLineNum;
+  // if the lines are different, that means there's nothing before us on the
+  // same line, so we're at the start.
+  return AreFramesOnDifferentLines(thisFrame, prevFrame);
 }
 
 /**
