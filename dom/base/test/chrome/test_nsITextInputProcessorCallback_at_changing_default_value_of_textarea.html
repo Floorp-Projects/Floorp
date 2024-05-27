@@ -13,6 +13,8 @@ SimpleTest.waitForFocus(async () => {
   const textarea = document.createElement("textarea");
   document.body.appendChild(textarea);
   textarea.focus();
+  // Wait for initializing the <textarea>, its anonymous content and its frame.
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
   function stringifyTextChangeNotification(aNotification) {
     if (!aNotification) {
