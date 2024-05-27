@@ -43,6 +43,10 @@ Test that bad cert sites won't get upgraded by https-first
     ok(data.result === "downgraded", "Downgraded request " + currentBadCert);
     ok(data.scheme === "http:", "Received 'http' for " + currentBadCert);
     testWin.close();
+    await SpecialPowers.removePermission(
+      "https-only-load-insecure",
+      `http://${currentBadCert}.example.com`
+    );
     if (++currentTest < badCertificates.length) {
       startTest();
       return;

@@ -15,7 +15,7 @@
  * The request https://redirect-example.com doesn't receive an answer (timeout), so we send a background
  * request.
  * The background request receives an answer. So the request https://redirect-example.com gets downgraded
- * to http://redirect-example.com by the exempt flag.
+ * to http://redirect-example.com by the exempt flag on the loadinfo.
  * The request http://redirect-example.com gets redirected to http://wwww.redirect-example.com. At that stage
  * HTTPS-First should clear the exempt flag and upgrade the redirection to https://wwww.redirect-example.com.
  *
@@ -36,6 +36,10 @@ async function receiveMessage(event) {
   is(data.scheme,"https:", "scheme is 'https' for subdomain");
   testWin.close();
   window.removeEventListener("message", receiveMessage);
+  await SpecialPowers.removePermission(
+    "https-only-load-insecure",
+    REQUEST_URL
+  );
   SimpleTest.finish();
 }
 

@@ -71,6 +71,10 @@ async function receiveMessage(event) {
     is(data.cookie.includes(currentQuery +  "=" + currentRun), true, "Cookie successfully arrived for " + currentQuery + " " + ALL_COOKIE_COMB[currentRun]);
   }
   testWin.close();
+  await SpecialPowers.removePermission(
+    "https-only-load-insecure",
+    sameOriginRequest ? SAME_ORIGIN : CROSS_ORIGIN
+  );
   currentRun++;
   if (currentTest >= redirectQueries.length -1  && currentRun === ALL_COOKIE_COMB.length && !sameOriginRequest) {
     window.removeEventListener("message", receiveMessage);

@@ -229,6 +229,7 @@ async function runTest() {
 
 SpecialPowers.pushPrefEnv({ set: [
     ["dom.security.https_first", true],
+    ["dom.security.https_first_add_exception_on_failiure", false],
     ["network.http.referer.disallowCrossSiteRelaxingDefault", false],
   ]}, runTest);
 

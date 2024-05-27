@@ -57,6 +57,10 @@ Test multiple redirects using https-first and ensure the entire redirect chain i
        "redirect results in " + test.name
     );
     testWin.close();
+    await SpecialPowers.removePermission(
+      "https-only-load-insecure",
+      "http://example.com"
+    );
     if (++currentTest < testCase.length) {
       startTest();
       return;
