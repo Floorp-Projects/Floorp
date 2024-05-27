@@ -8,6 +8,7 @@
 #include "GMPDecoderModule.h"
 #include "GMPVideoHost.h"
 #include "GMPLog.h"
+#include "GMPUtils.h"
 #include "MediaData.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -188,18 +189,15 @@ void GMPVideoDecoder::ResetComplete() {
 void GMPVideoDecoder::Error(GMPErr aErr) {
   GMP_LOG_DEBUG("GMPVideoDecoder::Error");
   MOZ_ASSERT(IsOnGMPThread());
-  auto error = MediaResult(aErr == GMPDecodeErr ? NS_ERROR_DOM_MEDIA_DECODE_ERR
-                                                : NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                           RESULT_DETAIL("GMPErr:%x", aErr));
-  mDecodePromise.RejectIfExists(error, __func__);
-  mDrainPromise.RejectIfExists(error, __func__);
-  mFlushPromise.RejectIfExists(error, __func__);
+  Teardown(ToMediaResult(aErr, "Error GMP callback"_ns), __func__);
 }
 
 void GMPVideoDecoder::Terminated() {
   GMP_LOG_DEBUG("GMPVideoDecoder::Terminated");
   MOZ_ASSERT(IsOnGMPThread());
-  Error(GMPErr::GMPAbortedErr);
+  Teardown(
+      MediaResult(NS_ERROR_DOM_MEDIA_ABORT_ERR, "Terminated GMP callback"_ns),
+      __func__);
 }
 
 void GMPVideoDecoder::ProcessReorderQueue(
@@ -473,18 +471,31 @@ RefPtr<MediaDataDecoder::DecodePromise> GMPVideoDecoder::Drain() {
   return p;
 }
 
-RefPtr<ShutdownPromise> GMPVideoDecoder::Shutdown() {
-  mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  mFlushPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+void GMPVideoDecoder::Teardown(const MediaResult& aResult,
+                               StaticString aCallSite) {
+  MOZ_ASSERT(IsOnGMPThread());
 
-  // Note that this *may* be called from the proxy thread also.
-  // TODO: If that's the case, then this code is racy.
-  if (!mGMP) {
-    return ShutdownPromise::CreateAndResolve(true, __func__);
+  // Ensure we are kept alive at least until we return.
+  RefPtr<GMPVideoDecoder> self(this);
+
+  mInitPromise.RejectIfExists(aResult, aCallSite);
+  mDecodePromise.RejectIfExists(aResult, aCallSite);
+
+  if (mGMP) {
+    // Note this unblocks flush and drain operations waiting for callbacks.
+    mGMP->Close();
+    mGMP = nullptr;
+  } else {
+    mFlushPromise.RejectIfExists(aResult, aCallSite);
+    mDrainPromise.RejectIfExists(aResult, aCallSite);
   }
-  // Note this unblocks flush and drain operations waiting for callbacks.
-  mGMP->Close();
-  mGMP = nullptr;
+
+  mHost = nullptr;
+}
+
+RefPtr<ShutdownPromise> GMPVideoDecoder::Shutdown() {
+  MOZ_ASSERT(IsOnGMPThread());
+  Teardown(MediaResult(NS_ERROR_DOM_MEDIA_CANCELED, "Shutdown"_ns), __func__);
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
