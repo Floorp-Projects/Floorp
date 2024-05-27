@@ -17,13 +17,14 @@ namespace mozilla {
 
 class AndroidDataEncoder final : public MediaDataEncoder {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AndroidDataEncoder, final);
+
   AndroidDataEncoder(const EncoderConfig& aConfig,
                      const RefPtr<TaskQueue>& aTaskQueue)
       : mConfig(aConfig), mTaskQueue(aTaskQueue) {
     MOZ_ASSERT(mConfig.mSize.width > 0 && mConfig.mSize.height > 0);
     MOZ_ASSERT(mTaskQueue);
   }
-  ~AndroidDataEncoder() { MOZ_ASSERT(!mJavaEncoder); }
 
   RefPtr<InitPromise> Init() override;
   RefPtr<EncodePromise> Encode(const MediaData* aSample) override;
@@ -66,6 +67,8 @@ class AndroidDataEncoder final : public MediaDataEncoder {
     AndroidDataEncoder* mEncoder MOZ_GUARDED_BY(mMutex);
   };
   friend class CallbacksSupport;
+
+  ~AndroidDataEncoder() override { MOZ_ASSERT(!mJavaEncoder); }
 
   // Methods only called on mTaskQueue.
   RefPtr<InitPromise> ProcessInit();

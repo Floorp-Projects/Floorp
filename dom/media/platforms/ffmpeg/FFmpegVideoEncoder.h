@@ -25,6 +25,8 @@ class FFmpegVideoEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
   using DurationMap = SimpleMap<int64_t, int64_t, ThreadSafePolicy>;
 
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FFmpegVideoEncoder, final);
+
   FFmpegVideoEncoder(const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
                      const RefPtr<TaskQueue>& aTaskQueue,
                      const EncoderConfig& aConfig);
@@ -32,6 +34,7 @@ class FFmpegVideoEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
   nsCString GetDescriptionName() const override;
 
  protected:
+  virtual ~FFmpegVideoEncoder() = default;
   // Methods only called on mTaskQueue.
   virtual nsresult InitSpecific() override;
 #if LIBAVCODEC_VERSION_MAJOR >= 58

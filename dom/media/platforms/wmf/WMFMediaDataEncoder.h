@@ -18,6 +18,8 @@ namespace mozilla {
 
 class WMFMediaDataEncoder final : public MediaDataEncoder {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WMFMediaDataEncoder, final);
+
   WMFMediaDataEncoder(const EncoderConfig& aConfig,
                       const RefPtr<TaskQueue>& aTaskQueue);
 
@@ -33,6 +35,8 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
   nsCString GetDescriptionName() const override;
 
  private:
+  ~WMFMediaDataEncoder() = default;
+
   // Automatically lock/unlock IMFMediaBuffer.
   class LockBuffer final {
    public:
