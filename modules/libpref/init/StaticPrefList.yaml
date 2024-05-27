@@ -10656,6 +10656,12 @@
   value: true
   mirror: always
 
+# True if we want to request the multithreaded GMP encoder.
+- name: media.gmp.encoder.multithreaded
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to suspend decoding of videos in background tabs.
 - name: media.suspend-background-video.enabled
   type: RelaxedAtomicBool
