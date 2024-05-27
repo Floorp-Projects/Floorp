@@ -24,6 +24,7 @@ ef gh</pre>
 <p id="linksBreaking">a<a href="https://example.com/">b<br>c</a>d</p>
 <p id="p">a<br role="presentation">b</p>
 <p id="leafThenWrap" style="font-family: monospace; width: 2ch; word-break: break-word;"><span>a</span>bc</p>
+<p id="bidi" style="font-family: monospace; width: 3ch; word-break: break-word">אb גד eו זח טj</p>
   `,
   async function (browser, docAcc) {
     for (const id of ["br", "pre"]) {
@@ -119,6 +120,14 @@ ef gh</pre>
     testTextAtOffset(leafThenWrap, BOUNDARY_LINE_START, [
       [0, 1, "ab", 0, 2],
       [2, 3, "c", 2, 3],
+    ]);
+    const bidi = findAccessibleChildByID(docAcc, "bidi");
+    testTextAtOffset(bidi, BOUNDARY_LINE_START, [
+      [0, 2, "אb ", 0, 3],
+      [3, 5, "גד ", 3, 6],
+      [6, 8, "eו ", 6, 9],
+      [9, 11, "זח ", 9, 12],
+      [12, 14, "טj", 12, 14],
     ]);
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }

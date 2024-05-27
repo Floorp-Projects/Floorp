@@ -552,6 +552,30 @@ std::pair<nsIContent*, int32_t> TextLeafPoint::ToDOMPoint(
   return {content, RenderedToContentOffset(mAcc->AsLocal(), mOffset)};
 }
 
+static bool IsLineBreakContinuation(nsTextFrame* aContinuation) {
+  // A fluid continuation always means a new line.
+  if (aContinuation->HasAnyStateBits(NS_FRAME_IS_FLUID_CONTINUATION)) {
+    return true;
+  }
+  // If both this continuation and the previous continuation are bidi
+  // continuations, this continuation might be both a bidi split and on a new
+  // line.
+  if (!aContinuation->HasAnyStateBits(NS_FRAME_IS_BIDI)) {
+    return true;
+  }
+  nsTextFrame* prev = aContinuation->GetPrevContinuation();
+  if (!prev) {
+    // aContinuation is the primary frame. We can't be sure if this starts a new
+    // line, as there might be other nodes before it. That is handled by
+    // IsLocalAccAtLineStart.
+    return false;
+  }
+  if (!prev->HasAnyStateBits(NS_FRAME_IS_BIDI)) {
+    return true;
+  }
+  return AreFramesOnDifferentLines(aContinuation, prev);
+}
+
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
@@ -670,14 +694,25 @@ TextLeafPoint TextLeafPoint::FindPrevLineStartSameLocalAcc(
       origOffset, true, &unusedOffsetInContinuation, (nsIFrame**)&continuation);
   MOZ_ASSERT(continuation);
   int32_t lineStart = continuation->GetContentOffset();
-  if (!aIncludeOrigin && lineStart > 0 && lineStart == origOffset) {
-    // A line starts at the origin, but the caller doesn't want this included.
-    // Go back one more.
-    continuation = continuation->GetPrevContinuation();
+  if (lineStart > 0 && (
+                           // A line starts at the origin, but the caller
+                           // doesn't want this included.
+                           (!aIncludeOrigin && lineStart == origOffset) ||
+                           !IsLineBreakContinuation(continuation))) {
+    // Go back one more, skipping continuations that aren't line breaks or the
+    // primary frame.
+    for (nsTextFrame* prev = continuation->GetPrevContinuation(); prev;
+         prev = prev->GetPrevContinuation()) {
+      continuation = prev;
+      if (IsLineBreakContinuation(continuation)) {
+        break;
+      }
+    }
     MOZ_ASSERT(continuation);
     lineStart = continuation->GetContentOffset();
   }
   MOZ_ASSERT(lineStart >= 0);
+  MOZ_ASSERT(lineStart == 0 || IsLineBreakContinuation(continuation));
   if (lineStart == 0 && !IsLocalAccAtLineStart(acc)) {
     // This is the first line of this text node, but there is something else
     // on the same line before this text node, so don't return this as a line
@@ -717,13 +752,19 @@ TextLeafPoint TextLeafPoint::FindNextLineStartSameLocalAcc(
   if (
       // A line starts at the origin and the caller wants this included.
       aIncludeOrigin && continuation->GetContentOffset() == origOffset &&
+      IsLineBreakContinuation(continuation) &&
       // If this is the first line of this text node (offset 0), don't treat it
       // as a line start if there's something else on the line before this text
       // node.
       !(origOffset == 0 && !IsLocalAccAtLineStart(acc))) {
     return *this;
   }
-  continuation = continuation->GetNextContinuation();
+  // Get the next continuation, skipping continuations that aren't line breaks.
+  while ((continuation = continuation->GetNextContinuation())) {
+    if (IsLineBreakContinuation(continuation)) {
+      break;
+    }
+  }
   if (!continuation) {
     return TextLeafPoint();
   }
@@ -1785,6 +1826,8 @@ bool TextLeafPoint::ContainsPoint(int32_t aX, int32_t aY) {
 
   return CharBounds().Contains(aX, aY);
 }
+
+/*** TextLeafRange ***/
 
 bool TextLeafRange::Crop(Accessible* aContainer) {
   TextLeafPoint containerStart(aContainer, 0);
