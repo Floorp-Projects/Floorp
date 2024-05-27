@@ -152,4 +152,11 @@ interface nsIAppWindow : nsISupports
    * Since readback of Windows DirectComposition is very slow.
    */
   void needFastSnaphot();
+
+  /**
+   * Ask the PopupManager to rollup all popups.
+   * Can be used by popup-like elements to close other popups when shown.
+   * Note that tooltips and noautohide popups won't be closed.
+   */
+  void rollupAllPopups();
 };

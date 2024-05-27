@@ -67,6 +67,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for clipboard suggestions in the urlbar.
   ["clipboard.featureGate", false],
 
+  // Whether to close other panels when the urlbar panel opens.
+  // This feature gate exists just as an emergency rollback in case of
+  // unexpected issues in Release. We normally want this behavior.
+  ["closeOtherPanelsOnOpen", true],
+
   // Whether to show a link for using the search functionality provided by the
   // active view if the the view utilizes OpenSearch.
   ["contextualSearch.enabled", true],
