@@ -29,10 +29,34 @@
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+:root,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: clip;
+}
+
 :root {
   user-select: none;
   color-scheme: light dark;
   accent-color: var(--button-primary-bgcolor);
+  text-rendering: optimizeLegibility;
+  min-height: 95px;
+  min-width: 95px;
+
+  &:-moz-locale-dir(rtl) {
+    direction: rtl;
+  }
+
+  &:not([chromehidden~="toolbar"]) {
+    min-width: 450px;
+    min-height: 120px;
+  }
+
+  /* z-indices that fight on the browser stack */
+  --browser-stack-z-index-devtools-splitter: 1;
+  --browser-stack-z-index-dialog-stack: 2;
+  --browser-stack-z-index-rdm-toolbar: 3;
 
   --toolbox-non-lwt-bgcolor: -moz-headerbar;
   --toolbox-non-lwt-textcolor: -moz-headerbartext;
@@ -144,6 +168,13 @@
   }
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin: 0;
+}
+
 #navigator-toolbox {
   appearance: none;
 
@@ -159,6 +190,10 @@
   &:-moz-window-inactive {
     background-color: var(--toolbox-non-lwt-bgcolor-inactive);
     color: var(--toolbox-non-lwt-textcolor-inactive);
+  }
+
+  &[fullscreenShouldAnimate] {
+    transition: 0.8s margin-top ease-out;
   }
 
   :root[customizing] & {
@@ -198,19 +233,34 @@
   }
 }
 
-:root[tabsintitlebar] #titlebar {
-  will-change: opacity;
-  transition: opacity var(--inactive-window-transition);
+#titlebar {
+  -moz-window-dragging: drag;
 
-  &:-moz-window-inactive {
-    opacity: var(--inactive-titlebar-opacity);
+  :root[tabsintitlebar] & {
+    will-change: opacity;
+    transition: opacity var(--inactive-window-transition);
+
+    &:-moz-window-inactive {
+      opacity: var(--inactive-titlebar-opacity);
+    }
   }
 }
 
-/* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
-#nav-bar-customization-target > :is(toolbarbutton, toolbaritem):first-child,
-#nav-bar-customization-target > toolbarpaletteitem:first-child > :is(toolbarbutton, toolbaritem) {
-  padding-inline-start: var(--toolbar-start-end-padding);
+#toolbar-menubar {
+  &[autohide="true"] {
+    overflow: hidden;
+
+    &[inactive]:not([customizing]) {
+      min-height: 0 !important;
+      height: 0 !important;
+      padding: 0 !important;
+      appearance: none !important;
+    }
+  }
+
+  &:not([autohide]) {
+    visibility: collapse;
+  }
 }
 
 #nav-bar {
@@ -225,6 +275,19 @@
 
   :root[sessionrestored][lwtheme] & {
     transition: var(--ext-theme-background-transition);
+  }
+}
+
+#nav-bar-customization-target {
+  /* Don't grow if potentially-user-sized elements (like the searchbar or the
+   * bookmarks toolbar item list) are too wide. This forces them to flex to the
+   * available space as much as possible, see bug 1795260. */
+  min-width: 0;
+
+  /* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
+  > :is(toolbarbutton, toolbaritem):first-child,
+  > toolbarpaletteitem:first-child > :is(toolbarbutton, toolbaritem) {
+    padding-inline-start: var(--toolbar-start-end-padding);
   }
 }
 

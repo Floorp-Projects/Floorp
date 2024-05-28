@@ -4,60 +4,6 @@
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-:root,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow: clip;
-}
-
-:root {
-  text-rendering: optimizeLegibility;
-  min-height: 95px;
-  min-width: 95px;
-
-  /* z-indices that fight on the browser stack */
-  --browser-stack-z-index-devtools-splitter: 1;
-  --browser-stack-z-index-dialog-stack: 2;
-  --browser-stack-z-index-rdm-toolbar: 3;
-}
-
-:root:-moz-locale-dir(rtl) {
-  direction: rtl;
-}
-
-:root:not([chromehidden~="toolbar"]) {
-  min-width: 450px;
-  min-height: 120px;
-}
-
-body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-#titlebar {
-  -moz-window-dragging: drag;
-}
-
-#toolbar-menubar[autohide="true"] {
-  overflow: hidden;
-}
-
-#toolbar-menubar[autohide="true"][inactive="true"]:not([customizing="true"]) {
-  min-height: 0 !important;
-  height: 0 !important;
-  padding: 0 !important;
-  appearance: none !important;
-}
-
-#toolbar-menubar:not([autohide]) {
-  visibility: collapse;
-}
-
 panelmultiview {
   align-items: flex-start;
   min-width: 0;
@@ -98,13 +44,6 @@ panelview:not([visible]) {
 .panel-viewstack {
   overflow: visible;
   transition: height var(--panelui-subview-transition-duration);
-}
-
-#nav-bar-customization-target {
-  /* Don't grow if potentially-user-sized elements (like the searchbar or the
-   * bookmarks toolbar item list) are too wide. This forces them to flex to the
-   * available space as much as possible, see bug 1795260. */
-  min-width: 0;
 }
 
 /* The address bar needs to be able to render outside of the toolbar, but as
@@ -235,10 +174,6 @@ toolbarpaletteitem {
 :root[inFullscreen]:not([macOSNativeFullscreen]) toolbar:not([fullscreentoolbar=true]),
 :root[inFullscreen] .global-notificationbox {
   visibility: collapse;
-}
-
-#navigator-toolbox[fullscreenShouldAnimate] {
-  transition: 0.8s margin-top ease-out;
 }
 
 /* Rules to help integrate WebExtension buttons */
