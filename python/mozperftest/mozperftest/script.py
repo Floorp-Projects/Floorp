@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import io
+import json
+import os
 import re
 import textwrap
 import traceback
@@ -82,6 +84,7 @@ class ScriptType(Enum):
     xpcshell = 1
     browsertime = 2
     mochitest = 3
+    custom = 4
 
 
 class HTMLScriptParser(HTMLParser):
@@ -103,6 +106,8 @@ class ScriptInfo(defaultdict):
             self.script = Path(path).resolve()
             if self.script.suffix == ".html":
                 self._parse_html_file()
+            elif self.script.suffix == ".sh":
+                self._parse_shell_script()
             else:
                 self._parse_js_file()
         except Exception as e:
@@ -208,6 +213,32 @@ class ScriptInfo(defaultdict):
         # Mochitest gets detected as xpcshell during parsing
         # since they use similar methods to run tests
         self.script_type = ScriptType.mochitest
+
+    def _parse_shell_script(self):
+        self._set_script_content()
+
+        for line in self.script_content.split(os.linesep):
+            if not line.startswith("#"):
+                continue
+
+            stripped_line = line[1:].strip()
+            if stripped_line.lower().startswith("name:"):
+                self._parse_shell_property("name", stripped_line)
+            elif stripped_line.lower().startswith("owner:"):
+                self._parse_shell_property("owner", stripped_line)
+            elif stripped_line.lower().startswith("description:"):
+                self._parse_shell_property("description", stripped_line)
+            elif stripped_line.lower().startswith("options:"):
+                self._parse_shell_property(
+                    "options", stripped_line.replace("#noqa", "")
+                )
+                self["options"] = json.loads(self["options"])
+
+        self["test"] = "custom-script"
+        self.script_type = ScriptType.custom
+
+    def _parse_shell_property(self, prop, line):
+        self[prop] = line[len(prop) + 1 :].strip()
 
     def parse_value(self, value):
         if value.type == "Identifier":
@@ -330,5 +361,7 @@ class ScriptInfo(defaultdict):
             result["flavor"] = "xpcshell"
         if self.script_type == ScriptType.mochitest:
             result["flavor"] = "mochitest"
+        if self.script_type == ScriptType.custom:
+            result["flavor"] = "custom-script"
 
         return result

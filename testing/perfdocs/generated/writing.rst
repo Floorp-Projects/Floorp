@@ -103,6 +103,28 @@ If everything is setup correctly, running a performance test locally will be as 
     ./mach perftest <path/to/my/mochitest-test.html>
 
 
+Custom Script
+-------------
+
+Custom Script tests use a custom/adhoc script to execute a test. Currently, only shell scripts are supported through the ScriptShellRunner. In the future, other types of scripts may be supported through the addition of new test layers. These types of scripts support both Mobile, and Desktop testing within the ``custom-script`` flavor.
+
+Custom Shell Scripts
+^^^^^^^^^^^^^^^^^^^^
+
+A shell script test must contain the following fields as comments somewhere in the code::
+
+  # Name: name-of-test
+  # Owner: Name/team that owns the test
+  # Description: Description of the test
+
+Optionally, it can also contain a line that starts with ``Options:`` to denote any default options. These options are similar to other test layers. For these custom script tests, a valid JSON string is expected in this field.
+
+These scripts have a `BROWSER_BINARY` defined for them which will point to the binary (or package name on mobile) that is being tested. By default, this is Firefox. If a different binary is required, ``--binary`` can be used to specify it, or ``--app`` if the application is known and can be found automatically (not guaranteed).
+
+Once everything is setup for your shell script test, you can run it with the following::
+
+  ./mach perftest <path/to/custom-script.sh>
+
 Browsertime
 -----------
 

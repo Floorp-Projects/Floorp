@@ -15,6 +15,7 @@ from mozperftest.script import (
 from mozperftest.tests.support import (
     EXAMPLE_MOCHITEST_TEST,
     EXAMPLE_MOCHITEST_TEST2,
+    EXAMPLE_SHELL_TEST,
     EXAMPLE_TEST,
     EXAMPLE_XPCSHELL_TEST,
     EXAMPLE_XPCSHELL_TEST2,
@@ -79,6 +80,22 @@ def test_scriptinfo_xpcshell(script):
     assert "The description of the example test." in display
     assert info.script_type == ScriptType.xpcshell
     check_options(info)
+
+
+def test_scriptinfo_custom():
+    info = ScriptInfo(EXAMPLE_SHELL_TEST)
+    assert info["author"] == "N/A"
+
+    display = str(info)
+    assert "custom-script-test" in display
+    assert "Perftest Team" in display
+    assert "Runs a sample custom script test." in display
+
+    assert info.script_type == ScriptType.custom
+    assert info["options"]["default"]["perfherder"]
+    assert info["options"]["default"]["perfherder_metrics"] == [
+        {"name": "Registration", "unit": "ms"}
+    ]
 
 
 def test_scriptinfo_failure():
