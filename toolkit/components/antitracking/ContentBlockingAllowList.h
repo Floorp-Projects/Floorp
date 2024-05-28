@@ -31,7 +31,7 @@ class OriginAttributes;
  *        this is not what you want. For regular allow-list checks by principal
  *        please use ContentBlockingAllowList.
  */
-class ContentBlockingAllowListCache final {
+class ContentBlockingAllowListCache {
  public:
   /**
    * @brief Checks if a given base domain is allow-listed. This method considers
@@ -58,6 +58,33 @@ class ContentBlockingAllowListCache final {
   nsresult CheckForBaseDomain(const nsACString& aBaseDomain,
                               const OriginAttributes& aOriginAttributes,
                               bool& aIsAllowListed);
+
+ protected:
+  // The following methods may be overridden by subclasses for adding custom
+  // allow-list permissions.
+
+  /**
+   * @brief Returns the list of permission types that are used to check if a
+   *        site is allow-listed.
+   *
+   * @return An array of permission types.
+   */
+  virtual nsTArray<nsCString> GetAllowListPermissionTypes();
+
+  /**
+   * @brief Checks if a permission has an allow-list state by inspecting its
+   * fields e.g. capability. Permission type is not checked here, it is assumed
+   * that the permission type is one of the types returned by
+   * GetAllowListPermissionTypes.
+   *
+   * @param aPermission The permission to check.
+   * @param aResult [out] Set to true if the permission is an allow-list
+   * permission, false otherwise.
+   *
+   * @return NS_OK if the check is successful, or an error code otherwise.
+   */
+  virtual nsresult IsAllowListPermission(nsIPermission* aPermission,
+                                         bool* aResult);
 
  private:
   bool mIsInitialized = false;
