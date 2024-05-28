@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>moz-checkbox tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="chrome://global/content/elements/moz-checkbox.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="max-width: fit-content;color: black;">
+  <moz-checkbox id="moz-checkbox-1" label="test label 1"></moz-checkbox>
+  <moz-checkbox id="moz-checkbox-2" label="test label 2" checked=""></moz-checkbox>
+</div>
+<pre id="test">
+  <script class="testbody" type="application/javascript">
+    const { TestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/TestUtils.sys.mjs");
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
+
+    add_task(async function testMozCheckboxDisplay() {
+      // Ensure moz-checkbox rendered correctly
+      const mozCheckbox1 = document.getElementById("moz-checkbox-1");
+      const mozCheckbox2 = document.getElementById("moz-checkbox-2");
+      ok(mozCheckbox1, "moz-checkbox-1 is rendered");
+      ok(mozCheckbox2, "moz-checkbox-2 is rendered");
+
+      // Ensure label is set on moz-checkbox and inner label
+      is(
+        mozCheckbox1.labelEl.innerText,
+        "test label 1",
+        "inner label of moz-checkbox-1 is correct"
+      );
+      is(
+        mozCheckbox2.labelEl.innerText,
+        "test label 2",
+        "inner label of moz-checkbox-2 is correct"
+      );
+
+      // Ensure checked attribute is set on moz-checkbox and inner checkbox
+      ok(
+        !mozCheckbox1.checked,
+        "moz-checkbox-1 should not be checked on initial render"
+      );
+      ok(
+        mozCheckbox2.checked,
+        "moz-checkbox-2 should be checked on initial render"
+      );
+      ok(
+        !mozCheckbox1.checkboxEl.checked,
+        "inner checkbox of moz-checkbox-1 should not be checked on initial render");
+      ok(
+        mozCheckbox2.checkboxEl.checked,
+        "inner checkbox of moz-checkbox-2 should be checked on initial render");
+    });
+
+    add_task(async function testCheckboxEvents() {
+      const mozCheckbox1 = document.getElementById("moz-checkbox-1");
+      const mozCheckbox2 = document.getElementById("moz-checkbox-2");
+      let checkboxes = [mozCheckbox1, mozCheckbox2];
+
+      mozCheckbox1.checked = false;
+      mozCheckbox2.checked = true;
+      await TestUtils.waitForTick();
+
+      let seenEvents = [];
+      function trackEvent(event) {
+        seenEvents.push({
+          type: event.type,
+          checked: event.target.checked,
+          localName: event.currentTarget.localName,
+        });
+      }
+
+      function verifyEvents(expectedEvents) {
+        is(
+          seenEvents.length,
+          expectedEvents.length,
+          "moz-checkbox elements emit the expected number of events."
+        );
+        expectedEvents.forEach((eventInfo, index) => {
+          let seenEventInfo = seenEvents[index];
+          is(seenEventInfo.type, eventInfo.type, "Event type is correct.");
+          is(
+            seenEventInfo.localName,
+            eventInfo.localName,
+            "Event is emitted from the correct element"
+          );
+          is(
+            seenEventInfo.checked,
+            eventInfo.checked,
+            "Event checked state is correct."
+          );
+        });
+      }
+
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener("click", trackEvent);
+        checkbox.addEventListener("input", trackEvent);
+        checkbox.addEventListener("change", trackEvent);
+      })
+
+      // Ensure that clicking the inner checkbox element emits the expected
+      // events in the correct order.
+      synthesizeMouseAtCenter(mozCheckbox1.checkboxEl, {});
+      await TestUtils.waitForTick();
+
+      verifyEvents([
+        { type: "click", localName: "moz-checkbox", checked: true },
+        { type: "input", localName: "moz-checkbox", checked: true },
+        { type: "change", localName: "moz-checkbox", checked: true },
+      ]);
+
+      ok(
+        mozCheckbox1.checked,
+        "Clicking the inner checkbox should toggle the checked attribute"
+      );
+
+      // Reset seen events.
+      seenEvents = [];
+
+      // Ensure that clicking the inner label element emits the
+      // expected events in the correct order.
+      synthesizeMouseAtCenter(mozCheckbox1.labelEl, {});
+      await TestUtils.waitForTick();
+
+      // Since we click the label element, there is an additional
+      // click event compared to the checkbox element, and this
+      // first click doesn't update the checked value
+
+      verifyEvents([
+        { type: "click", localName: "moz-checkbox", checked: true },
+        { type: "click", localName: "moz-checkbox", checked: false },
+        { type: "input", localName: "moz-checkbox", checked: false },
+        { type: "change", localName: "moz-checkbox", checked: false },
+      ]);
+
+      ok(
+        !mozCheckbox1.checked,
+        "Clicking the checkbox should toggle the checked attribute"
+      );
+
+      // Reset seen events.
+      seenEvents = [];
+
+      // Ensure that using the keyboard to activate the inner checkbox
+      // emits the expected events in the correct order.
+
+      mozCheckbox1.focus();
+      synthesizeKey(" ", {});
+      await TestUtils.waitForTick();
+
+      verifyEvents([
+        { type: "click", localName: "moz-checkbox", checked: true },
+        { type: "input", localName: "moz-checkbox", checked: true },
+        { type: "change", localName: "moz-checkbox", checked: true },
+      ]);
+
+      ok(
+        mozCheckbox1.checked,
+        "Activating the Space key on the inner checkbox should toggle the checked attribute"
+      );
+    });
+  </script>
+</pre>
+</body>
+</html>
