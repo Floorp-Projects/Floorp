@@ -10,6 +10,7 @@
 #include "gfxUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
@@ -23,7 +24,6 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsHTMLParts.h"
@@ -590,7 +590,7 @@ int32_t nsTableCellFrame::GetColSpan() {
   return colSpan;
 }
 
-nsIScrollableFrame* nsTableCellFrame::GetScrollTargetFrame() const {
+ScrollContainerFrame* nsTableCellFrame::GetScrollTargetFrame() const {
   return do_QueryFrame(mFrames.FirstChild());
 }
 

@@ -3695,10 +3695,10 @@ static Subgrid* SubgridComputeMarginBorderPadding(
 
   bool scroller = false;
   nsIFrame* outerFrame = [&]() -> nsIFrame* {
-    if (ScrollContainerFrame* scrollFrame =
-            do_QueryFrame(aGridItem.mFrame->GetScrollTargetFrame())) {
+    if (ScrollContainerFrame* scrollContainerFrame =
+            aGridItem.mFrame->GetScrollTargetFrame()) {
       scroller = true;
-      return scrollFrame;
+      return scrollContainerFrame;
     }
     if (nsHTMLButtonControlFrame* f = do_QueryFrame(aGridItem.mFrame)) {
       return f;

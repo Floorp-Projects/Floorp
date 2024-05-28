@@ -161,7 +161,7 @@ class ScrollContainerFrame : public nsContainerFrame,
 
   void Destroy(DestroyContext&) override;
 
-  nsIScrollableFrame* GetScrollTargetFrame() const final {
+  ScrollContainerFrame* GetScrollTargetFrame() const final {
     return const_cast<ScrollContainerFrame*>(this);
   }
 

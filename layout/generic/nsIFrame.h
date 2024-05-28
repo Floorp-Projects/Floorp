@@ -108,7 +108,6 @@ class nsAtom;
 class nsView;
 class nsFrameSelection;
 class nsIWidget;
-class nsIScrollableFrame;
 class nsISelectionController;
 class nsILineIterator;
 class gfxSkipChars;
@@ -132,15 +131,15 @@ enum class PeekOffsetOption : uint16_t;
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
 
+class EffectSet;
+class LazyLogModule;
 class nsDisplayItem;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
-
-class ServoRestyleState;
-class EffectSet;
-class LazyLogModule;
 class PresShell;
+class ScrollContainerFrame;
+class ServoRestyleState;
 class WidgetGUIEvent;
 class WidgetMouseEvent;
 
@@ -813,13 +812,14 @@ class nsIFrame : public nsQueryFrame {
   virtual bool DrainSelfOverflowList() { return false; }
 
   /**
-   * Get the frame that should be scrolled if the content associated
-   * with this frame is targeted for scrolling. For frames implementing
-   * nsIScrollableFrame this will return the frame itself. For frames
-   * like nsTextControlFrame that contain a scrollframe, will return
-   * that scrollframe.
+   * Get the frame that should be scrolled if the content associated with this
+   * frame is targeted for scrolling. For a scroll container frame, this will
+   * just return the frame itself. For frames like nsTextControlFrame that
+   * contain a scroll container frame, will return that scroll container frame.
    */
-  virtual nsIScrollableFrame* GetScrollTargetFrame() const { return nullptr; }
+  virtual mozilla::ScrollContainerFrame* GetScrollTargetFrame() const {
+    return nullptr;
+  }
 
   /**
    * Get the offsets of the frame. most will be 0,0

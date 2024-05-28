@@ -1693,12 +1693,13 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
   // expected behavior for PageMove is to scroll AND move the caret
   // and remain relative position of the caret in view. see Bug 4302.
 
-  // Get the scrollable frame.  If aFrame is not scrollable, this is nullptr.
-  nsIScrollableFrame* scrollableFrame = aFrame->GetScrollTargetFrame();
+  // Get the scroll container frame.  If aFrame is not scrollable, this is
+  // nullptr.
+  ScrollContainerFrame* scrollContainerFrame = aFrame->GetScrollTargetFrame();
   // Get the scrolled frame.  If aFrame is not scrollable, this is aFrame
   // itself.
   nsIFrame* scrolledFrame =
-      scrollableFrame ? scrollableFrame->GetScrolledFrame() : aFrame;
+      scrollContainerFrame ? scrollContainerFrame->GetScrolledFrame() : aFrame;
   if (!scrolledFrame) {
     return NS_OK;
   }
@@ -1727,7 +1728,7 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
     }
   }
 
-  if (scrollableFrame) {
+  if (scrollContainerFrame) {
     // If there is a scrollable frame, adjust pseudo-click position with page
     // scroll amount.
     // XXX This may scroll more than one page if ScrollSelectionIntoView is
@@ -1736,9 +1737,9 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
     //     the frame, ScrollSelectionIntoView additionally scrolls to show
     //     the caret entirely.
     if (aForward) {
-      caretPos.y += scrollableFrame->GetPageScrollAmount().height;
+      caretPos.y += scrollContainerFrame->GetPageScrollAmount().height;
     } else {
-      caretPos.y -= scrollableFrame->GetPageScrollAmount().height;
+      caretPos.y -= scrollContainerFrame->GetPageScrollAmount().height;
     }
   } else {
     // Otherwise, adjust pseudo-click position with the frame size.
@@ -1788,10 +1789,10 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
       aSelectionIntoView == SelectionIntoView::IfChanged && !selectionChanged);
 
   // Then, scroll the given frame one page.
-  if (scrollableFrame) {
+  if (scrollContainerFrame) {
     // If we'll call ScrollSelectionIntoView later and selection wasn't
     // changed and we scroll outside of selection limiter, we shouldn't use
-    // smooth scroll here because nsIScrollableFrame uses normal runnable,
+    // smooth scroll here because ScrollContainerFrame uses normal runnable,
     // but ScrollSelectionIntoView uses early runner and it cancels the
     // pending smooth scroll.  Therefore, if we used smooth scroll in such
     // case, ScrollSelectionIntoView would scroll to show caret instead of
@@ -1800,8 +1801,8 @@ nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
                                     scrolledFrame != frameToClick
                                 ? ScrollMode::Instant
                                 : ScrollMode::Smooth;
-    scrollableFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                              ScrollUnit::PAGES, scrollMode);
+    scrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                                   ScrollUnit::PAGES, scrollMode);
   }
 
   // Finally, scroll selection into view if requested.
