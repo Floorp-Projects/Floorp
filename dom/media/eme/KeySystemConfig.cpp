@@ -79,9 +79,6 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
   config->mPersistentState = Requirement::Optional;
   config->mDistinctiveIdentifier = Requirement::NotAllowed;
   config->mSessionTypes.AppendElement(SessionType::Temporary);
-  config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
   if (StaticPrefs::media_clearkey_persistent_license_enabled()) {
     config->mSessionTypes.AppendElement(SessionType::PersistentLicense);
   }
@@ -137,9 +134,6 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
   config->mAudioRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
   config->mVideoRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
   config->mVideoRobustness.AppendElement(u"SW_SECURE_DECODE"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
 
 #if defined(MOZ_WIDGET_ANDROID)
   // MediaDrm.isCryptoSchemeSupported only allows passing
@@ -368,14 +362,6 @@ nsString KeySystemConfig::GetDebugInfo() const {
       debugInfo.AppendLiteral(",");
     }
   }
-  debugInfo.AppendLiteral(" scheme=[");
-  for (size_t idx = 0; idx < mEncryptionSchemes.Length(); idx++) {
-    debugInfo.Append(mEncryptionSchemes[idx]);
-    if (idx + 1 < mEncryptionSchemes.Length()) {
-      debugInfo.AppendLiteral(",");
-    }
-  }
-  debugInfo.AppendLiteral("]");
   debugInfo.AppendLiteral(" MP4={");
   debugInfo.Append(NS_ConvertUTF8toUTF16(mMP4.GetDebugInfo()));
   debugInfo.AppendLiteral("}");

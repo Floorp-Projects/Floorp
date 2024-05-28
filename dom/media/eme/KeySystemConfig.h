@@ -207,7 +207,6 @@ struct KeySystemConfig {
     mSessionTypes = aOther.mSessionTypes.Clone();
     mVideoRobustness = aOther.mVideoRobustness.Clone();
     mAudioRobustness = aOther.mAudioRobustness.Clone();
-    mEncryptionSchemes = aOther.mEncryptionSchemes.Clone();
     mMP4 = aOther.mMP4;
     mWebM = aOther.mWebM;
   }
@@ -222,7 +221,6 @@ struct KeySystemConfig {
     mSessionTypes = aOther.mSessionTypes.Clone();
     mVideoRobustness = aOther.mVideoRobustness.Clone();
     mAudioRobustness = aOther.mAudioRobustness.Clone();
-    mEncryptionSchemes = aOther.mEncryptionSchemes.Clone();
     mMP4 = aOther.mMP4;
     mWebM = aOther.mWebM;
     return *this;
@@ -239,7 +237,6 @@ struct KeySystemConfig {
   nsTArray<SessionType> mSessionTypes;
   nsTArray<nsString> mVideoRobustness;
   nsTArray<nsString> mAudioRobustness;
-  nsTArray<nsString> mEncryptionSchemes;
   ContainerSupport mMP4;
   ContainerSupport mWebM;
   bool mIsHDCP22Compatible = false;
