@@ -7701,6 +7701,20 @@
     mirror: always
     set_spidermonkey_pref: startup
 
+  # Experimental support for resizable ArrayBuffers in JavaScript.
+-   name: javascript.options.experimental.arraybuffer_resizable
+    type: bool
+    value: true
+    mirror: always
+    set_spidermonkey_pref: startup
+
+  # Experimental support for growable SharedArrayBuffers in JavaScript.
+-   name: javascript.options.experimental.sharedarraybuffer_growable
+    type: bool
+    value: true
+    mirror: always
+    set_spidermonkey_pref: startup
+
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.iterator_helpers
@@ -7718,20 +7732,6 @@
 
   # Experimental support for Symbols as WeakMap keys in JavaScript.
 -   name: javascript.options.experimental.symbols_as_weakmap_keys
-    type: bool
-    value: false
-    mirror: always
-    set_spidermonkey_pref: startup
-
-  # Experimental support for resizable ArrayBuffers in JavaScript.
--   name: javascript.options.experimental.arraybuffer_resizable
-    type: bool
-    value: false
-    mirror: always
-    set_spidermonkey_pref: startup
-
-  # Experimental support for growable SharedArrayBuffers in JavaScript.
--   name: javascript.options.experimental.sharedarraybuffer_growable
     type: bool
     value: false
     mirror: always
