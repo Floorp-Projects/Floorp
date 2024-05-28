@@ -1677,7 +1677,6 @@ a11y::AccType ScrollContainerFrame::AccessibleType() {
 
 NS_QUERYFRAME_HEAD(ScrollContainerFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
   NS_QUERYFRAME_ENTRY(ScrollContainerFrame)
@@ -7237,7 +7236,7 @@ void ScrollContainerFrame::FireScrolledAreaEvent() {
   }
 }
 
-ScrollDirections nsIScrollableFrame::GetAvailableScrollingDirections() const {
+ScrollDirections ScrollContainerFrame::GetAvailableScrollingDirections() const {
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
   ScrollDirections directions;
@@ -7681,7 +7680,7 @@ void ScrollContainerFrame::PostPendingResnap() {
   PresShell()->PostPendingScrollResnap(this);
 }
 
-nsIScrollableFrame::PhysicalScrollSnapAlign
+ScrollContainerFrame::PhysicalScrollSnapAlign
 ScrollContainerFrame::GetScrollSnapAlignFor(const nsIFrame* aFrame) const {
   StyleScrollSnapAlignKeyword alignForY = StyleScrollSnapAlignKeyword::None;
   StyleScrollSnapAlignKeyword alignForX = StyleScrollSnapAlignKeyword::None;
