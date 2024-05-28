@@ -474,7 +474,7 @@ export function gradient(ln) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                61, // geometry:uniffi_uniffi_geometry_fn_func_gradient
+                68, // geometry:uniffi_uniffi_geometry_fn_func_gradient
                 FfiConverterTypeLine.lower(ln),
             )
         }
@@ -507,7 +507,7 @@ export function intersection(ln1,ln2) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                62, // geometry:uniffi_uniffi_geometry_fn_func_intersection
+                69, // geometry:uniffi_uniffi_geometry_fn_func_intersection
                 FfiConverterTypeLine.lower(ln1),
                 FfiConverterTypeLine.lower(ln2),
             )
