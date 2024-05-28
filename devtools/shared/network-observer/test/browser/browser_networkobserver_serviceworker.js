@@ -5,7 +5,7 @@
 
 // Tests that all the expected service worker requests are received
 // by the network observer.
-add_task(async function testServiceWorkerSuccessRequests() {
+async function testServiceWorkerSuccessRequests({ earlyEvents }) {
   await addTab(URL_ROOT + "doc_network-observer.html");
 
   const REQUEST_URL =
@@ -21,7 +21,7 @@ add_task(async function testServiceWorkerSuccessRequests() {
     REQUEST_URL + "json",
   ];
 
-  const onNetworkEvents = waitForNetworkEvents(null, 4);
+  const onNetworkEvents = waitForNetworkEvents(null, 4, earlyEvents);
 
   info("Register the service worker and send requests...");
   await SpecialPowers.spawn(
@@ -65,10 +65,14 @@ add_task(async function testServiceWorkerSuccessRequests() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     await content.wrappedJSObject.unregisterServiceWorker();
   });
+}
+add_task(async function () {
+  await testServiceWorkerSuccessRequests({ earlyEvents: false });
+  await testServiceWorkerSuccessRequests({ earlyEvents: true });
 });
 
 // Tests that the expected failed service worker request is received by the network observer.
-add_task(async function testServiceWorkerFailedRequests() {
+async function testServiceWorkerFailedRequests({ earlyEvents }) {
   await addTab(URL_ROOT + "doc_network-observer-missing-service-worker.html");
 
   const REQUEST_URL =
@@ -81,7 +85,7 @@ add_task(async function testServiceWorkerFailedRequests() {
     "https://example.com/browser/devtools/shared/network-observer/test/browser/sjs_network-observer-test-server.sjs?sts=200&fmt=js",
   ];
 
-  const onNetworkEvents = waitForNetworkEvents(null, 2);
+  const onNetworkEvents = waitForNetworkEvents(null, 2, earlyEvents);
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [REQUEST_URL],
@@ -110,4 +114,8 @@ add_task(async function testServiceWorkerFailedRequests() {
       `The request for ${channel.URI.spec} is not from the service worker\n`
     );
   }
+}
+add_task(async function () {
+  await testServiceWorkerFailedRequests({ earlyEvents: false });
+  await testServiceWorkerFailedRequests({ earlyEvents: true });
 });
