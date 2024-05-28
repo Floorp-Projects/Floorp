@@ -650,8 +650,7 @@ export class FormAutofillChild extends JSWindowActorChild {
     const isCreditCardField =
       lazy.FormAutofillUtils.isCreditCardField(fieldName);
     const isInputAutofilled =
-      this.activeHandler.getFilledStateByElement(input) ==
-      lazy.FormAutofillUtils.FIELD_STATES.AUTO_FILLED;
+      input.autofillState == lazy.FormAutofillUtils.FIELD_STATES.AUTO_FILLED;
     const filledRecordGUID = this.activeSection.filledRecordGUID;
     if (
       !isInputAutofilled &&
@@ -702,8 +701,7 @@ export class FormAutofillChild extends JSWindowActorChild {
       this.activeHandler.form
     );
     const isInputAutofilled =
-      this.activeHandler.getFilledStateByElement(input) ==
-      lazy.FormAutofillUtils.FIELD_STATES.AUTO_FILLED;
+      input.autofillState == lazy.FormAutofillUtils.FIELD_STATES.AUTO_FILLED;
     const allFieldNames = this.activeSection.allFieldNames;
 
     const AutocompleteResult = lazy.FormAutofillUtils.isAddressField(

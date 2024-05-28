@@ -167,7 +167,6 @@ export class GeckoViewAutoFillChild extends GeckoViewActorChild {
       debug`Performing auto-fill ${Object.keys(responses)}`;
 
       const AUTOFILL_STATE = "autofill";
-      const winUtils = window.windowUtils;
 
       for (const uuid in responses) {
         const entry =
@@ -181,14 +180,14 @@ export class GeckoViewAutoFillChild extends GeckoViewActorChild {
           element.parentElement
         ) {
           element.setUserInput(value);
-          if (winUtils && element.value === value) {
+          if (element.value === value) {
             // Add highlighting for autofilled fields.
-            winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
+            element.autofillState = AUTOFILL_STATE;
 
             // Remove highlighting when the field is changed.
             element.addEventListener(
               "input",
-              _ => winUtils.removeManuallyManagedState(element, AUTOFILL_STATE),
+              _ => (element.autofillState = ""),
               { mozSystemGroup: true, once: true }
             );
           }
