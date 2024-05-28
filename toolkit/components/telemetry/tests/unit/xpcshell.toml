@@ -184,3 +184,6 @@ run-if = ["os == 'win'"]
 
 ["test_failover_retry.js"]
 skip-if = ["os == 'android'"] # Android doesn't support telemetry though some tests manage to pass with xpcshell
+
+["test_new_profile.js"]
+run-if = ["os == 'win'"]
