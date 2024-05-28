@@ -8,8 +8,7 @@ use crate::parser::{Parse, ParserContext};
 use crate::properties::longhands::writing_mode::computed_value::T as SpecifiedWritingMode;
 use crate::values::computed::text::TextEmphasisStyle as ComputedTextEmphasisStyle;
 use crate::values::computed::{Context, ToComputedValue};
-use crate::values::generics::text::InitialLetter as GenericInitialLetter;
-use crate::values::generics::text::{GenericTextDecorationLength, GenericTextIndent, Spacing};
+use crate::values::generics::text::{GenericInitialLetter, GenericTextDecorationLength, GenericTextIndent, Spacing};
 use crate::values::specified::length::{Length, LengthPercentage};
 use crate::values::specified::{AllowQuirks, Integer, Number};
 use cssparser::Parser;
@@ -58,13 +57,13 @@ impl Parse for InitialLetter {
             .try_parse(|i| i.expect_ident_matching("normal"))
             .is_ok()
         {
-            return Ok(GenericInitialLetter::Normal);
+            return Ok(Self::normal());
         }
         let size = Number::parse_at_least_one(context, input)?;
         let sink = input
             .try_parse(|i| Integer::parse_positive(context, i))
-            .ok();
-        Ok(GenericInitialLetter::Specified(size, sink))
+            .unwrap_or_else(|_| crate::Zero::zero());
+        Ok(Self { size, sink })
     }
 }
 

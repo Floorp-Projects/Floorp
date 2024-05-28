@@ -2739,8 +2739,7 @@ nsStyleTextReset::nsStyleTextReset()
     : mTextDecorationLine(StyleTextDecorationLine::NONE),
       mTextDecorationStyle(StyleTextDecorationStyle::Solid),
       mUnicodeBidi(StyleUnicodeBidi::Normal),
-      mInitialLetterSink(0),
-      mInitialLetterSize(0.0f),
+      mInitialLetter{0, 0},
       mTextDecorationColor(StyleColor::CurrentColor()),
       mTextDecorationThickness(StyleTextDecorationLength::Auto()) {
   MOZ_COUNT_CTOR(nsStyleTextReset);
@@ -2751,8 +2750,7 @@ nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
       mTextDecorationLine(aSource.mTextDecorationLine),
       mTextDecorationStyle(aSource.mTextDecorationStyle),
       mUnicodeBidi(aSource.mUnicodeBidi),
-      mInitialLetterSink(aSource.mInitialLetterSink),
-      mInitialLetterSize(aSource.mInitialLetterSize),
+      mInitialLetter(aSource.mInitialLetter),
       mTextDecorationColor(aSource.mTextDecorationColor),
       mTextDecorationThickness(aSource.mTextDecorationThickness) {
   MOZ_COUNT_CTOR(nsStyleTextReset);
@@ -2761,8 +2759,7 @@ nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
 nsChangeHint nsStyleTextReset::CalcDifference(
     const nsStyleTextReset& aNewData) const {
   if (mUnicodeBidi != aNewData.mUnicodeBidi ||
-      mInitialLetterSink != aNewData.mInitialLetterSink ||
-      mInitialLetterSize != aNewData.mInitialLetterSize) {
+      mInitialLetter != aNewData.mInitialLetter) {
     return NS_STYLE_HINT_REFLOW;
   }
 
@@ -2776,12 +2773,9 @@ nsChangeHint nsStyleTextReset::CalcDifference(
            nsChangeHint_SchedulePaint;
   }
 
-  // Repaint for decoration color changes
-  if (mTextDecorationColor != aNewData.mTextDecorationColor) {
-    return nsChangeHint_RepaintFrame;
-  }
-
-  if (mTextOverflow != aNewData.mTextOverflow) {
+  // Repaint for decoration color changes or text-overflow.
+  if (mTextDecorationColor != aNewData.mTextDecorationColor ||
+      mTextOverflow != aNewData.mTextOverflow) {
     return nsChangeHint_RepaintFrame;
   }
 

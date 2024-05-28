@@ -296,7 +296,7 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
     aMetrics.ISize(lineWM) = ll->EndSpan(this) + bp.IStartEnd(wm);
     ll->SetInFirstLetter(false);
 
-    if (mComputedStyle->StyleTextReset()->mInitialLetterSize != 0.0f) {
+    if (mComputedStyle->StyleTextReset()->mInitialLetter.size != 0.0f) {
       aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
                                    bp.BStart(wm));
       aMetrics.BSize(lineWM) = kidMetrics.BSize(lineWM) + bp.BStartEnd(wm);

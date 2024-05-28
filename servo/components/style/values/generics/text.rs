@@ -7,7 +7,8 @@
 use crate::parser::ParserContext;
 use crate::Zero;
 use cssparser::Parser;
-use style_traits::ParseError;
+use std::fmt::{self, Write};
+use style_traits::{CssWriter, ParseError, ToCss};
 
 /// A generic value for the `initial-letter` property.
 #[derive(
@@ -18,22 +19,43 @@ use style_traits::ParseError;
     PartialEq,
     SpecifiedValueInfo,
     ToComputedValue,
-    ToCss,
     ToResolvedValue,
     ToShmem,
 )]
-pub enum InitialLetter<Number, Integer> {
-    /// `normal`
-    Normal,
-    /// `<number> <integer>?`
-    Specified(Number, Option<Integer>),
+#[repr(C)]
+pub struct GenericInitialLetter<Number, Integer> {
+    /// The size, >=1, or 0 if `normal`.
+    pub size: Number,
+    /// The sink, >=1, if specified, 0 otherwise.
+    pub sink: Integer,
 }
 
-impl<N, I> InitialLetter<N, I> {
+pub use self::GenericInitialLetter as InitialLetter;
+impl<N: Zero, I: Zero> InitialLetter<N, I> {
     /// Returns `normal`.
     #[inline]
     pub fn normal() -> Self {
-        InitialLetter::Normal
+        InitialLetter {
+            size: N::zero(),
+            sink: I::zero(),
+        }
+    }
+}
+
+impl<N: ToCss + Zero, I: ToCss + Zero> ToCss for InitialLetter<N, I> {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        if self.size.is_zero() {
+            return dest.write_str("normal");
+        }
+        self.size.to_css(dest)?;
+        if !self.sink.is_zero() {
+            dest.write_char(' ')?;
+            self.sink.to_css(dest)?;
+        }
+        Ok(())
     }
 }
 

@@ -628,6 +628,7 @@ cbindgen-types = [
     { gecko = "StyleFontVariantEastAsian", servo = "crate::values::computed::font::FontVariantEastAsian" },
     { gecko = "StyleFontVariantLigatures", servo = "crate::values::computed::font::FontVariantLigatures" },
     { gecko = "StyleFontVariantNumeric", servo = "crate::values::computed::font::FontVariantNumeric" },
+    { gecko = "StyleInitialLetter", servo = "crate::values::computed::text::InitialLetter" },
 ]
 
 mapped-generic-types = [

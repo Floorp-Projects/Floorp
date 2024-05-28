@@ -9363,7 +9363,7 @@ bool nsTextFrame::IsFloatingFirstLetterChild() const {
 
 bool nsTextFrame::IsInitialLetterChild() const {
   nsIFrame* frame = GetParent();
-  return frame && frame->StyleTextReset()->mInitialLetterSize != 0.0f &&
+  return frame && frame->StyleTextReset()->mInitialLetter.size != 0.0f &&
          frame->IsLetterFrame();
 }
 
