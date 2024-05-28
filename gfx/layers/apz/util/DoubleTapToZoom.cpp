@@ -9,6 +9,7 @@
 #include <algorithm>  // for std::min, std::max
 
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EffectsInfo.h"
@@ -18,7 +19,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
@@ -103,11 +103,11 @@ static dom::Element* GetNearbyTableCell(
 static CSSRect GetBoundingContentRect(
     const dom::Element* aElement,
     const RefPtr<dom::Document>& aInProcessRootContentDocument,
-    const nsIScrollableFrame* aRootScrollFrame,
+    const ScrollContainerFrame* aRootScrollContainerFrame,
     const DoubleTapToZoomMetrics& aMetrics,
     mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr) {
   CSSRect result = nsLayoutUtils::GetBoundingContentRect(
-      aElement, aRootScrollFrame, aOutNearestScrollClip);
+      aElement, aRootScrollContainerFrame, aOutNearestScrollClip);
   if (aInProcessRootContentDocument->IsTopLevelContentDocument()) {
     return result;
   }
@@ -117,7 +117,7 @@ static CSSRect GetBoundingContentRect(
     return CSSRect();
   }
 
-  // If the nearest scroll frame is |aRootScrollFrame|,
+  // If the nearest scroll container frame is |aRootScrollContainerFrame|,
   // nsLayoutUtils::GetBoundingContentRect doesn't set |aOutNearestScrollClip|,
   // thus in the cases of OOP iframs, we need to use the visible rect of the
   // iframe as the nearest scroll clip.
@@ -146,7 +146,7 @@ static CSSRect GetBoundingContentRect(
 static bool ShouldZoomToElement(
     const nsCOMPtr<dom::Element>& aElement,
     const RefPtr<dom::Document>& aInProcessRootContentDocument,
-    nsIScrollableFrame* aRootScrollFrame,
+    ScrollContainerFrame* aRootScrollContainerFrame,
     const DoubleTapToZoomMetrics& aMetrics) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
     if (frame->StyleDisplay()->IsInlineFlow() &&
@@ -174,8 +174,9 @@ static bool ShouldZoomToElement(
   // don't want to zoom to them. This heuristic is quite naive and leaves a lot
   // to be desired.
   if (dom::Element* tableCell = GetNearbyTableCell(aElement)) {
-    CSSRect rect = GetBoundingContentRect(
-        tableCell, aInProcessRootContentDocument, aRootScrollFrame, aMetrics);
+    CSSRect rect =
+        GetBoundingContentRect(tableCell, aInProcessRootContentDocument,
+                               aRootScrollContainerFrame, aMetrics);
     if (rect.width < 0.3 * aMetrics.mRootScrollableRect.width) {
       return false;
     }
@@ -269,9 +270,9 @@ ZoomTarget CalculateRectToZoomTo(
     return ZoomTarget{zoomOut, CantZoomOutBehavior::ZoomIn};
   }
 
-  nsIScrollableFrame* rootScrollFrame =
-      presShell->GetRootScrollFrameAsScrollable();
-  if (!rootScrollFrame) {
+  ScrollContainerFrame* rootScrollContainerFrame =
+      presShell->GetRootScrollContainerFrame();
+  if (!rootScrollContainerFrame) {
     return ZoomTarget{zoomOut, CantZoomOutBehavior::ZoomIn};
   }
 
@@ -279,7 +280,8 @@ ZoomTarget CalculateRectToZoomTo(
       aInProcessRootContentDocument->IsTopLevelContentDocument()
           ? CSSPoint::FromAppUnits(ViewportUtils::VisualToLayout(
                 CSSPoint::ToAppUnits(aPoint), presShell)) +
-                CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition())
+                CSSPoint::FromAppUnits(
+                    rootScrollContainerFrame->GetScrollPosition())
           : aMetrics.mTransformMatrix.TransformPoint(aPoint);
 
   nsCOMPtr<dom::Element> element = ElementFromPoint(presShell, aPoint);
@@ -294,7 +296,7 @@ ZoomTarget CalculateRectToZoomTo(
           : CantZoomOutBehavior::ZoomIn;
 
   while (element && !ShouldZoomToElement(element, aInProcessRootContentDocument,
-                                         rootScrollFrame, aMetrics)) {
+                                         rootScrollContainerFrame, aMetrics)) {
     element = element->GetFlattenedTreeParentElement();
   }
 
@@ -304,16 +306,17 @@ ZoomTarget CalculateRectToZoomTo(
   }
 
   Maybe<CSSRect> nearestScrollClip;
-  CSSRect rect =
-      GetBoundingContentRect(element, aInProcessRootContentDocument,
-                             rootScrollFrame, aMetrics, &nearestScrollClip);
+  CSSRect rect = GetBoundingContentRect(element, aInProcessRootContentDocument,
+                                        rootScrollContainerFrame, aMetrics,
+                                        &nearestScrollClip);
 
   // In some cases, like overflow: visible and overflowing content, the bounding
   // client rect of the targeted element won't contain the point the user double
   // tapped on. In that case we use the scrollable overflow rect if it contains
   // the user point.
   if (!rect.Contains(documentRelativePoint)) {
-    if (nsIFrame* scrolledFrame = rootScrollFrame->GetScrolledFrame()) {
+    if (nsIFrame* scrolledFrame =
+            rootScrollContainerFrame->GetScrolledFrame()) {
       if (nsIFrame* f = element->GetPrimaryFrame()) {
         nsRect overflowRect = f->ScrollableOverflowRect();
         nsLayoutUtils::TransformResult res =
@@ -326,8 +329,8 @@ ZoomTarget CalculateRectToZoomTo(
           // In the case of OOP iframes, above |overflowRectCSS| in the iframe
           // documents coords, we need to convert it into the top level coords.
           if (!aInProcessRootContentDocument->IsTopLevelContentDocument()) {
-            overflowRectCSS.MoveBy(
-                CSSPoint::FromAppUnits(-rootScrollFrame->GetScrollPosition()));
+            overflowRectCSS.MoveBy(CSSPoint::FromAppUnits(
+                -rootScrollContainerFrame->GetScrollPosition()));
             overflowRectCSS =
                 aMetrics.mTransformMatrix.TransformBounds(overflowRectCSS);
           }

@@ -22,6 +22,7 @@ namespace mozilla {
 
 class nsDisplayListBuilder;
 class PresShell;
+class ScrollContainerFrame;
 
 // For GetDisplayPort
 enum class DisplayportRelativeTo { ScrollPort, ScrollFrame };
@@ -77,12 +78,13 @@ struct DisplayPortMargins {
                                     const CSSPoint& aVisualOffset,
                                     const CSSPoint& aLayoutOffset);
 
-  // Create displayport port margins for the given scroll frame.
+  // Create displayport port margins for the given scroll container frame.
   // This is for use in cases where we don't have async scroll information from
   // APZ to use to adjust the margins. The visual and layout offset are set
   // based on the main thread's view of them.
-  static DisplayPortMargins ForScrollFrame(nsIScrollableFrame* aScrollFrame,
-                                           const ScreenMargin& aMargins);
+  static DisplayPortMargins ForScrollContainerFrame(
+      ScrollContainerFrame* aScrollContainerFrame,
+      const ScreenMargin& aMargins);
 
   // Convenience version of the above that takes a content element.
   static DisplayPortMargins ForContent(nsIContent* aContent,
@@ -258,11 +260,11 @@ class DisplayPortUtils {
    * @return true iff the call to SetDisplayPortMargins returned true.
    */
   static bool CalculateAndSetDisplayPortMargins(
-      nsIScrollableFrame* aScrollFrame, RepaintMode aRepaintMode);
+      ScrollContainerFrame* aScrollContainerFrame, RepaintMode aRepaintMode);
 
   /**
-   * If |aScrollFrame| WantsAsyncScroll() and we don't have a scrollable
-   * displayport yet (as tracked by |aBuilder|), calculate and set a
+   * If |aScrollContainerFrame| WantsAsyncScroll() and we don't have a
+   * scrollable displayport yet (as tracked by |aBuilder|), calculate and set a
    * displayport.
    *
    * If this is called during display list building pass DoNotRepaint in
@@ -272,8 +274,8 @@ class DisplayPortUtils {
    * after this call, either because one was just added or it already existed.
    */
   static bool MaybeCreateDisplayPort(
-      nsDisplayListBuilder* aBuilder, nsIFrame* aScrollFrame,
-      nsIScrollableFrame* aScrollFrameAsScrollable, RepaintMode aRepaintMode);
+      nsDisplayListBuilder* aBuilder,
+      ScrollContainerFrame* aScrollContainerFrame, RepaintMode aRepaintMode);
 
   /**
    * Sets a zero margin display port on all proper ancestors of aFrame that
