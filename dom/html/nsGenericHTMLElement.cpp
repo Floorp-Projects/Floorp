@@ -2804,6 +2804,29 @@ nsresult nsGenericHTMLFormControlElement::SubmitDirnameDir(
   return NS_OK;
 }
 
+void nsGenericHTMLFormControlElement::GetFormAutofillState(
+    nsAString& aState) const {
+  if (State().HasState(ElementState::AUTOFILL_PREVIEW)) {
+    aState.AssignLiteral("preview");
+  } else if (State().HasState(ElementState::AUTOFILL)) {
+    aState.AssignLiteral("autofill");
+  } else {
+    aState.Truncate();
+  }
+}
+
+void nsGenericHTMLFormControlElement::SetFormAutofillState(
+    const nsAString& aState) {
+  if (aState.EqualsLiteral("autofill")) {
+    RemoveStates(ElementState::AUTOFILL_PREVIEW);
+    AddStates(ElementState::AUTOFILL);
+  } else if (aState.EqualsLiteral("preview")) {
+    AddStates(ElementState::AUTOFILL | ElementState::AUTOFILL_PREVIEW);
+  } else {
+    RemoveStates(ElementState::AUTOFILL | ElementState::AUTOFILL_PREVIEW);
+  }
+}
+
 //----------------------------------------------------------------------
 
 static const nsAttrValue::EnumTable kPopoverTargetActionTable[] = {

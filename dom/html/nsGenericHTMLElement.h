@@ -1225,6 +1225,9 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
 
   nsresult SubmitDirnameDir(mozilla::dom::FormData* aFormData);
 
+  void GetFormAutofillState(nsAString& aState) const;
+  void SetFormAutofillState(const nsAString& aState);
+
   /** The form that contains this control */
   mozilla::dom::HTMLFormElement* mForm;
 

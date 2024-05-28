@@ -1595,6 +1595,11 @@ void HTMLSelectElement::OnSelectionChanged() {
   if (!mDefaultSelectionSet) {
     return;
   }
+
+  if (State().HasState(ElementState::AUTOFILL)) {
+    RemoveStates(ElementState::AUTOFILL | ElementState::AUTOFILL_PREVIEW);
+  }
+
   UpdateSelectedOptions();
 }
 

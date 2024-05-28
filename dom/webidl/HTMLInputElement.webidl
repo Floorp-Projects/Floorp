@@ -191,6 +191,11 @@ partial interface HTMLInputElement {
   [ChromeOnly]
   attribute DOMString previewValue;
 
+  // A string indicating that the value of the element has been autofilled:
+  // either "filled", "preview" or "".
+  [ChromeOnly]
+  attribute DOMString autofillState;
+
   // Last value entered by the user, not by a script.
   // NOTE(emilio): As of right now some execCommand triggered changes might be
   // considered interactive.
