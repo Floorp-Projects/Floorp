@@ -182,6 +182,7 @@ include = [
   "BorderSpacing",
   "BorderRadius",
   "ColorScheme",
+  "ColumnCount",
   "NonNegativeLengthOrNumberRect",
   "Perspective",
   "ZIndex",

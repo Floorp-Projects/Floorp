@@ -5,7 +5,7 @@
 //! Computed types for the column properties.
 
 use crate::values::computed::PositiveInteger;
-use crate::values::generics::column::ColumnCount as GenericColumnCount;
+use crate::values::generics::column::GenericColumnCount;
 
 /// A computed type for `column-count` values.
 pub type ColumnCount = GenericColumnCount<PositiveInteger>;

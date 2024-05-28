@@ -22,7 +22,8 @@
     ToResolvedValue,
     ToShmem,
 )]
-pub enum ColumnCount<PositiveInteger> {
+#[repr(u8)]
+pub enum GenericColumnCount<PositiveInteger> {
     /// A positive integer.
     Integer(PositiveInteger),
     /// The keyword `auto`.
@@ -30,13 +31,8 @@ pub enum ColumnCount<PositiveInteger> {
     Auto,
 }
 
+pub use self::GenericColumnCount as ColumnCount;
 impl<I> ColumnCount<I> {
-    /// Returns `auto`.
-    #[inline]
-    pub fn auto() -> Self {
-        ColumnCount::Auto
-    }
-
     /// Returns whether this value is `auto`.
     #[inline]
     pub fn is_auto(self) -> bool {

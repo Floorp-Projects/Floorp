@@ -33,11 +33,10 @@ use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::PseudoElement;
 use servo_arc::{Arc, UniqueArc};
 use std::mem::{forget, MaybeUninit, ManuallyDrop};
-use std::{cmp, ops, ptr};
+use std::{ops, ptr};
 use crate::values;
 use crate::values::computed::{BorderStyle, Time, Zoom};
 use crate::values::computed::font::FontSize;
-use crate::values::generics::column::ColumnCount;
 
 
 pub mod style_structs {
@@ -1386,33 +1385,7 @@ mask-mode mask-repeat mask-clip mask-origin mask-composite mask-position-x mask-
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Column"
-                  skip_longhands="column-count column-rule-width column-rule-style">
-
-    #[allow(unused_unsafe)]
-    pub fn set_column_count(&mut self, v: longhands::column_count::computed_value::T) {
-        use crate::gecko_bindings::structs::{nsStyleColumn_kColumnCountAuto, nsStyleColumn_kMaxColumnCount};
-
-        self.mColumnCount = match v {
-            ColumnCount::Integer(integer) => {
-                cmp::min(integer.0 as u32, unsafe { nsStyleColumn_kMaxColumnCount })
-            },
-            ColumnCount::Auto => nsStyleColumn_kColumnCountAuto
-        };
-    }
-
-    ${impl_simple_copy('column_count', 'mColumnCount')}
-
-    pub fn clone_column_count(&self) -> longhands::column_count::computed_value::T {
-        use crate::gecko_bindings::structs::{nsStyleColumn_kColumnCountAuto, nsStyleColumn_kMaxColumnCount};
-        if self.mColumnCount != nsStyleColumn_kColumnCountAuto {
-            debug_assert!(self.mColumnCount >= 1 &&
-                          self.mColumnCount <= nsStyleColumn_kMaxColumnCount);
-            ColumnCount::Integer((self.mColumnCount as i32).into())
-        } else {
-            ColumnCount::Auto
-        }
-    }
-
+                  skip_longhands="column-rule-width column-rule-style">
     pub fn set_column_rule_style(&mut self, v: longhands::column_rule_style::computed_value::T) {
         self.mColumnRuleStyle = v;
         // NB: This is needed to correctly handling the initial value of

@@ -1814,25 +1814,18 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   STYLE_STRUCT(nsStyleColumn)
   nsStyleColumn();
 
-  // This is the maximum number of columns we can process. It's used in
-  // nsColumnSetFrame.
-  static const uint32_t kMaxColumnCount = 1000;
-
-  // This represents the value of column-count: auto.
-  static const uint32_t kColumnCountAuto = 0;
-
-  uint32_t mColumnCount = kColumnCountAuto;
+  mozilla::StyleColumnCount mColumnCount = mozilla::StyleColumnCount::Auto();
   mozilla::NonNegativeLengthOrAuto mColumnWidth;
 
   mozilla::StyleColor mColumnRuleColor;
-  mozilla::StyleBorderStyle mColumnRuleStyle;  // StyleborderStyle::*
+  mozilla::StyleBorderStyle mColumnRuleStyle;
   mozilla::StyleColumnFill mColumnFill = mozilla::StyleColumnFill::Balance;
   mozilla::StyleColumnSpan mColumnSpan = mozilla::StyleColumnSpan::None;
 
   nscoord GetColumnRuleWidth() const { return mActualColumnRuleWidth; }
 
   bool IsColumnContainerStyle() const {
-    return mColumnCount != kColumnCountAuto || !mColumnWidth.IsAuto();
+    return !mColumnCount.IsAuto() || !mColumnWidth.IsAuto();
   }
 
   bool IsColumnSpanStyle() const {

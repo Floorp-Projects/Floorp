@@ -4,7 +4,7 @@
 
 //! Specified types for the column properties.
 
-use crate::values::generics::column::ColumnCount as GenericColumnCount;
+use crate::values::generics::column::GenericColumnCount;
 use crate::values::specified::PositiveInteger;
 
 /// A specified type for `column-count` values.

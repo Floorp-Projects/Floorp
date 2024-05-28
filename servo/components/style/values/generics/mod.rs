@@ -97,6 +97,7 @@ impl<T: Zero> Zero for NonNegative<T> {
     ToResolvedValue,
     ToShmem,
 )]
+#[repr(transparent)]
 pub struct GreaterThanOrEqualToOne<T>(pub T);
 
 /// A wrapper of values between zero and one.
