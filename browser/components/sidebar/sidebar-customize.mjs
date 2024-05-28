@@ -2,20 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  html,
-  styleMap,
-  when,
-} from "chrome://global/content/vendor/lit.all.mjs";
+import { html, when } from "chrome://global/content/vendor/lit.all.mjs";
 
 import { SidebarPage } from "./sidebar-page.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-button.mjs";
 
 const l10nMap = new Map([
-  ["viewHistorySidebar", "sidebar-customize-history"],
-  ["viewTabsSidebar", "sidebar-customize-synced-tabs"],
-  ["viewBookmarksSidebar", "sidebar-customize-bookmarks"],
+  ["viewHistorySidebar", "sidebar-menu-history-label"],
+  ["viewTabsSidebar", "sidebar-menu-synced-tabs-label"],
+  ["viewBookmarksSidebar", "sidebar-menu-bookmarks-label"],
 ]);
 
 export class SidebarCustomize extends SidebarPage {
@@ -88,13 +84,10 @@ export class SidebarCustomize extends SidebarPage {
         @change=${this.onToggleInput}
         ?checked=${!tool.disabled}
       />
-      <label for=${tool.view}
-        ><span class="icon ghost-icon" style=${styleMap({
-          "--tool-icon": tool.icon,
-        })} role="presentation"/></span><span
-          data-l10n-id=${this.getInputL10nId(tool.view)}
-        ></span
-      ></label>
+      <label for=${tool.view}>
+        <img src=${tool.iconUrl} class="icon" role="presentation" />
+        <span data-l10n-id=${this.getInputL10nId(tool.view)} />
+      </label>
     </div>`;
   }
 
@@ -131,20 +124,23 @@ export class SidebarCustomize extends SidebarPage {
   }
 
   extensionTemplate(extension, index) {
-    return html`
-    <div class="extension-item">
-      <span class="icon ghost-icon" style=${styleMap({
-        "--extension-icon": extension.icon,
-      })} role="presentation"/>
-      </span>
-      <div class="extension-link" extensionId=${
-        extension.extensionId
-      } tabindex=${
-      index === this.activeExtIndex ? 0 : -1
-    } role="list-item" @click=${() =>
-      this.manageAddon(extension.extensionId)} @keydown=${this.handleKeydown}>
-          <a href="about:addons" tabindex="-1" target="_blank" @click=${e =>
-            e.preventDefault()}>${extension.tooltiptext}</a>
+    return html` <div class="extension-item">
+      <img src=${extension.iconUrl} class="icon" role="presentation" />
+      <div
+        class="extension-link"
+        extensionId=${extension.extensionId}
+        tabindex=${index === this.activeExtIndex ? 0 : -1}
+        role="list-item"
+        @click=${() => this.manageAddon(extension.extensionId)}
+        @keydown=${this.handleKeydown}
+      >
+        <a
+          href="about:addons"
+          tabindex="-1"
+          target="_blank"
+          @click=${e => e.preventDefault()}
+          >${extension.tooltiptext}
+        </a>
       </div>
     </div>`;
   }
@@ -156,7 +152,7 @@ export class SidebarCustomize extends SidebarPage {
       <link rel="stylesheet" href="chrome://browser/content/sidebar/sidebar-customize.css"></link>
       <div class="container">
         <div class="customize-header">
-          <h2 data-l10n-id="sidebar-customize-header"></h2>
+          <h2 data-l10n-id="sidebar-menu-customize-label"></h2>
           <moz-button
             class="customize-close-button"
             @click=${this.closeCustomizeView}

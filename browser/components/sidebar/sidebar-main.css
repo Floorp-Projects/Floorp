@@ -24,6 +24,12 @@
   gap: var(--space-xsmall);
 }
 
-.icon-button::part(button) {
-  background-image: var(--action-icon);
+.expanded-button {
+  width: 100%;
+
+  &::part(button) {
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight);
+    justify-content: flex-start;
+  }
 }

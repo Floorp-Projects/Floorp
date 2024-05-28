@@ -1,6 +1,8 @@
 [DEFAULT]
 support-files = ["head.js"]
 
+["browser_a11y_sidebar.js"]
+
 ["browser_customize_sidebar.js"]
 
 ["browser_extensions_sidebar.js"]
