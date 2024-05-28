@@ -602,7 +602,7 @@ def get_raptor_test_list(args, oskey):
             and next_test.get("type") == "pageload"
         ):
             next_test["measure"] = (
-                "fnbpaint, fcp, dcf, loadtime, "
+                "fnbpaint, fcp, loadtime, "
                 "ContentfulSpeedIndex, PerceptualSpeedIndex, "
                 "SpeedIndex, FirstVisualChange, LastVisualChange, "
                 "largestContentfulPaint"
