@@ -132,9 +132,9 @@ bool InternalThreadPool::Initialize(size_t threadCount,
 bool InternalThreadPool::ensureThreadCount(size_t threadCount,
                                            AutoLockHelperThreadState& lock) {
   // Ensure space in freeThreadSet.
-  MOZ_RELEASE_ASSERT(threadCount <= sizeof(uint32_t) * CHAR_BIT);
+  threadCount = std::min(threadCount, sizeof(uint32_t) * CHAR_BIT);
 
-  MOZ_ASSERT(threads(lock).length() < threadCount);
+  MOZ_ASSERT(threads(lock).length() <= threadCount);
 
   if (!threads(lock).reserve(threadCount)) {
     return false;
