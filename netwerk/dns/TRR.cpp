@@ -629,7 +629,7 @@ TRR::OnStartRequest(nsIRequest* aRequest) {
 
   if (NS_FAILED(status)) {
     if (NS_IsOffline()) {
-      RecordReason(TRRSkippedReason::TRR_IS_OFFLINE);
+      RecordReason(TRRSkippedReason::TRR_BROWSER_IS_OFFLINE);
     }
 
     switch (status) {
@@ -637,7 +637,7 @@ TRR::OnStartRequest(nsIRequest* aRequest) {
         RecordReason(TRRSkippedReason::TRR_CHANNEL_DNS_FAIL);
         break;
       case NS_ERROR_OFFLINE:
-        RecordReason(TRRSkippedReason::TRR_IS_OFFLINE);
+        RecordReason(TRRSkippedReason::TRR_BROWSER_IS_OFFLINE);
         break;
       case NS_ERROR_NET_RESET:
         RecordReason(TRRSkippedReason::TRR_NET_RESET);

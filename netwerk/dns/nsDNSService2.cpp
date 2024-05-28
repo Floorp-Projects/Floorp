@@ -1603,7 +1603,7 @@ nsresult GetTRRSkipReasonName(TRRSkippedReason aReason, nsACString& aName) {
   static_assert(TRRSkippedReason::TRR_DISABLED_FLAG == 10);
   static_assert(TRRSkippedReason::TRR_TIMEOUT == 11);
   static_assert(TRRSkippedReason::TRR_CHANNEL_DNS_FAIL == 12);
-  static_assert(TRRSkippedReason::TRR_IS_OFFLINE == 13);
+  static_assert(TRRSkippedReason::TRR_BROWSER_IS_OFFLINE == 13);
   static_assert(TRRSkippedReason::TRR_NOT_CONFIRMED == 14);
   static_assert(TRRSkippedReason::TRR_DID_NOT_MAKE_QUERY == 15);
   static_assert(TRRSkippedReason::TRR_UNKNOWN_CHANNEL_FAILURE == 16);
@@ -1685,8 +1685,8 @@ nsresult GetTRRSkipReasonName(TRRSkippedReason aReason, nsACString& aName) {
     case TRRSkippedReason::TRR_CHANNEL_DNS_FAIL:
       aName = "TRR_CHANNEL_DNS_FAIL"_ns;
       break;
-    case TRRSkippedReason::TRR_IS_OFFLINE:
-      aName = "TRR_IS_OFFLINE"_ns;
+    case TRRSkippedReason::TRR_BROWSER_IS_OFFLINE:
+      aName = "TRR_BROWSER_IS_OFFLINE"_ns;
       break;
     case TRRSkippedReason::TRR_NOT_CONFIRMED:
       aName = "TRR_NOT_CONFIRMED"_ns;

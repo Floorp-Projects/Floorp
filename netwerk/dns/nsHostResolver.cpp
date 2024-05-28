@@ -912,7 +912,7 @@ bool nsHostResolver::TRRServiceEnabledForRecord(nsHostRecord* aRec) {
   if (NS_IsOffline()) {
     // If we are in the NOT_CONFIRMED state _because_ we lack connectivity,
     // then we should report that the browser is offline instead.
-    aRec->RecordReason(TRRSkippedReason::TRR_IS_OFFLINE);
+    aRec->RecordReason(TRRSkippedReason::TRR_BROWSER_IS_OFFLINE);
     return false;
   }
 
