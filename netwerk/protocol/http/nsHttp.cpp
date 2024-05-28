@@ -1158,5 +1158,11 @@ ConnectionCloseReason ToCloseReason(nsresult aErrorCode) {
   return ConnectionCloseReason::OTHER_NET_ERROR;
 }
 
+void DisallowHTTPSRR(uint32_t& aCaps) {
+  // NS_HTTP_DISALLOW_HTTPS_RR should take precedence than
+  // NS_HTTP_FORCE_WAIT_HTTP_RR.
+  aCaps = (aCaps | NS_HTTP_DISALLOW_HTTPS_RR) & ~NS_HTTP_FORCE_WAIT_HTTP_RR;
+}
+
 }  // namespace net
 }  // namespace mozilla

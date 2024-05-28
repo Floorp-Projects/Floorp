@@ -641,7 +641,7 @@ nsresult nsHttpChannel::OnBeforeConnect() {
 // that HTTPS records can be resolved on this network - false otherwise.
 // When TRR is enabled, we always return true, as resolving HTTPS
 // records don't depend on the network.
-static bool canUseHTTPSRRonNetwork() {
+static bool canUseHTTPSRRonNetwork(bool* aTRREnabled = nullptr) {
   if (nsCOMPtr<nsIDNSService> dns = mozilla::components::DNS::Service()) {
     nsIDNSService::ResolverMode mode;
     // If the browser is currently using TRR/DoH, then it can
@@ -649,6 +649,9 @@ static bool canUseHTTPSRRonNetwork() {
     if (NS_SUCCEEDED(dns->GetCurrentTrrMode(&mode)) &&
         (mode == nsIDNSService::MODE_TRRFIRST ||
          mode == nsIDNSService::MODE_TRRONLY)) {
+      if (aTRREnabled) {
+        *aTRREnabled = true;
+      }
       return true;
     }
   }
@@ -686,7 +689,13 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
     // If the network connectivity checker indicates the network is
     // blocking HTTPS requests, then we should skip them so we don't
     // needlessly wait for a timeout.
-    if (!canUseHTTPSRRonNetwork()) {
+    bool trrEnabled = false;
+    if (!canUseHTTPSRRonNetwork(&trrEnabled)) {
+      return true;
+    }
+
+    // Don't block the channel when TRR is not used.
+    if (!trrEnabled) {
       return true;
     }
 
@@ -717,7 +726,7 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
     // If the website does not want to use HTTPS RR, we should set
     // NS_HTTP_DISALLOW_HTTPS_RR. This is for avoiding HTTPS RR being used by
     // the transaction.
-    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
+    DisallowHTTPSRR(mCaps);
     return ContinueOnBeforeConnect(aShouldUpgrade, aStatus);
   }
 
@@ -806,12 +815,12 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
     mCaps |= NS_HTTP_DISALLOW_HTTP3;
     // Because NS_HTTP_STICKY_CONNECTION breaks HTTPS RR fallabck mecnahism, we
     // can not use HTTPS RR for upgrade requests.
-    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
+    DisallowHTTPSRR(mCaps);
   }
 
   if (LoadIsTRRServiceChannel()) {
     mCaps |= NS_HTTP_LARGE_KEEPALIVE;
-    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
+    DisallowHTTPSRR(mCaps);
   }
 
   if (mTransactionSticky) {
@@ -6588,14 +6597,19 @@ nsresult nsHttpChannel::BeginConnect() {
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
   }
 
+  bool trrEnabled = false;
   bool httpsRRAllowed =
       !LoadBeConservative() && !(mCaps & NS_HTTP_BE_CONSERVATIVE) &&
       !(mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
         mLoadInfo->GetExternalContentPolicyType() !=
             ExtContentPolicy::TYPE_DOCUMENT) &&
-      !mConnectionInfo->UsingConnect() && canUseHTTPSRRonNetwork();
+      !mConnectionInfo->UsingConnect() && canUseHTTPSRRonNetwork(&trrEnabled);
   if (!httpsRRAllowed) {
-    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
+    DisallowHTTPSRR(mCaps);
+  } else if (trrEnabled) {
+    if (nsIRequest::GetTRRMode() != nsIRequest::TRR_DISABLED_MODE) {
+      mCaps |= NS_HTTP_FORCE_WAIT_HTTP_RR;
+    }
   }
   // No need to lookup HTTPSSVC record if mHTTPSSVCRecord already contains a
   // value.
