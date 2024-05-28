@@ -42,21 +42,14 @@
       gap: var(--space-small);
       font-size: 0.9em;
     }
-
-    .icon {
-      background-image: var(--tool-icon);
-    }
   }
 }
 
 .icon {
   -moz-context-properties: fill;
   fill: currentColor;
-  background-size: var(--icon-size-default);
   width: var(--icon-size-default);
   height: var(--icon-size-default);
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .customize-extensions {
@@ -71,9 +64,5 @@
     gap: var(--space-medium);
     align-items: center;
     font-size: 0.9em;
-
-    .icon {
-      background-image: var(--extension-icon);
-    }
   }
 }

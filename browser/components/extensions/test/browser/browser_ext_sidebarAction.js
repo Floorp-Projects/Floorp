@@ -7,7 +7,10 @@ requestLongerTimeout(2);
 let extData = {
   manifest: {
     sidebar_action: {
-      default_icon: "default.png",
+      default_icon: {
+        16: "icon.png",
+        32: "icon@2x.png",
+      },
       default_panel: "sidebar.html",
     },
   },
@@ -31,8 +34,9 @@ let extData = {
       };
     },
 
-    "default.png": imageBuffer,
-    "1.png": imageBuffer,
+    "icon.png": imageBuffer,
+    "icon@2x.png": imageBuffer,
+    "updated-icon.png": imageBuffer,
   },
 
   background: function () {
@@ -70,6 +74,13 @@ async function sendMessage(ext, msg, data = undefined) {
   ext.sendMessage({ msg, data });
   await ext.awaitMessage("done");
 }
+
+add_setup(() =>
+  SpecialPowers.pushPrefEnv({
+    set: [["layout.css.devPixelsPerPx", 1]],
+  })
+);
+registerCleanupFunction(() => SpecialPowers.popPrefEnv());
 
 add_task(async function sidebar_initial_install() {
   ok(
@@ -325,10 +336,11 @@ add_task(async function sidebar_switcher_panel_icon_update() {
   const item = SidebarController._switcherPanel.querySelector(
     ".webextension-menuitem"
   );
-  let iconUrl = `moz-extension://${extension.uuid}/default.png`;
+  let iconUrl = `moz-extension://${extension.uuid}/icon.png`;
+  let icon2xUrl = `moz-extension://${extension.uuid}/icon@2x.png`;
   is(
     item.style.getPropertyValue("--webextension-menuitem-image"),
-    `image-set(url("${iconUrl}"), url("${iconUrl}") 2x)`,
+    `image-set(url("${iconUrl}"), url("${icon2xUrl}") 2x)`,
     "Extension has the correct icon."
   );
   SidebarController.hide();
@@ -346,4 +358,32 @@ add_task(async function sidebar_switcher_panel_icon_update() {
   );
 
   await extension.unload();
+});
+
+add_task(async function sidebar_switcher_panel_hidpi_icon() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.devPixelsPerPx", 2]],
+  });
+
+  info("Load extension");
+  const extension = ExtensionTestUtils.loadExtension(getExtData());
+  await extension.startup();
+
+  info("Test extension's sidebar is opened on install");
+  await extension.awaitMessage("sidebar");
+  await sendMessage(extension, "isOpen", { result: true });
+
+  const item = SidebarController._switcherPanel.querySelector(
+    ".webextension-menuitem"
+  );
+  let iconUrl = `moz-extension://${extension.uuid}/icon.png`;
+  let icon2xUrl = `moz-extension://${extension.uuid}/icon@2x.png`;
+  is(
+    item.style.getPropertyValue("--webextension-menuitem-image"),
+    `image-set(url("${iconUrl}"), url("${icon2xUrl}") 2x)`,
+    "Extension has the correct icon for HiDPI displays."
+  );
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });

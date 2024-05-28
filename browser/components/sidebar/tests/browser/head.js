@@ -18,7 +18,10 @@ function imageBufferFromDataURI(encodedImageData) {
 const extData = {
   manifest: {
     sidebar_action: {
-      default_icon: "default.png",
+      default_icon: {
+        16: "icon.png",
+        32: "icon@2x.png",
+      },
       default_panel: "default.html",
       default_title: "Default Title",
     },
@@ -49,8 +52,9 @@ const extData = {
           A Test Sidebar
           </body></html>
         `,
-    "default.png": imageBuffer,
-    "1.png": imageBuffer,
+    "icon.png": imageBuffer,
+    "icon@2x.png": imageBuffer,
+    "updated-icon.png": imageBuffer,
   },
 
   background() {

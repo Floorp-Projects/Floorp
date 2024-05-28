@@ -122,9 +122,9 @@ this.sidebarAction = class extends ExtensionAPI {
       return;
     }
     this.panel = details.panel;
-    let { SidebarController } = window;
+    let { SidebarController, devicePixelRatio } = window;
     SidebarController.registerExtension(this.id, {
-      icon: this.getMenuIcon(details),
+      ...this.getMenuIcon(details, devicePixelRatio),
       menuId: this.menuId,
       title: details.title,
       extensionId: this.extension.id,
@@ -137,13 +137,28 @@ this.sidebarAction = class extends ExtensionAPI {
     });
   }
 
-  getMenuIcon(details) {
+  /**
+   * Retrieve the icon to be rendered in sidebar menus.
+   *
+   * @param {object} details
+   * @param {object} details.icon
+   *   Extension icons.
+   * @param {number} scale
+   *   Scaling factor of the icon's size.
+   * @returns {{ icon: string; iconUrl: string }}
+   */
+  getMenuIcon({ icon }, scale) {
     let getIcon = size =>
       IconDetails.escapeUrl(
-        IconDetails.getPreferredIcon(details.icon, this.extension, size).icon
+        IconDetails.getPreferredIcon(icon, this.extension, size).icon
       );
 
-    return `image-set(url("${getIcon(16)}"), url("${getIcon(32)}") 2x)`;
+    const iconUrl = getIcon(16 * scale);
+    // TODO Bug 1898257 - Only return iconUrl here, remove usages of icon.
+    return {
+      icon: `image-set(url("${getIcon(16)}"), url("${getIcon(32)}") 2x)`,
+      iconUrl,
+    };
   }
 
   /**
@@ -155,7 +170,7 @@ this.sidebarAction = class extends ExtensionAPI {
    *        Tab specific sidebar configuration.
    */
   updateButton(window, tabData) {
-    let { document, SidebarController } = window;
+    let { document, SidebarController, devicePixelRatio } = window;
     let title = tabData.title || this.extension.name;
     if (!document.getElementById(this.menuId)) {
       // Menu items are added when new windows are opened, or from onReady (when
@@ -170,7 +185,7 @@ this.sidebarAction = class extends ExtensionAPI {
     SidebarController.setExtensionAttributes(
       this.id,
       {
-        icon: this.getMenuIcon(tabData),
+        ...this.getMenuIcon(tabData, devicePixelRatio),
         label: title,
       },
       urlChanged

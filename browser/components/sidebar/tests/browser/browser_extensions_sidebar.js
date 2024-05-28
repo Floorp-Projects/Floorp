@@ -3,19 +3,17 @@
 
 "use strict";
 
-add_setup(() => SpecialPowers.pushPrefEnv({ set: [["sidebar.revamp", true]] }));
+add_setup(() =>
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["sidebar.revamp", true],
+      ["layout.css.devPixelsPerPx", 1],
+    ],
+  })
+);
 registerCleanupFunction(() => SpecialPowers.popPrefEnv());
 
-const extData2 = {
-  manifest: {
-    sidebar_action: {
-      default_icon: "default.png",
-      default_panel: "default.html",
-      default_title: "Another Title",
-    },
-  },
-  ...extData,
-};
+const extData2 = { ...extData };
 
 async function sendMessage(extension, msg, data) {
   extension.sendMessage({ msg, data });
@@ -38,29 +36,29 @@ add_task(async function test_extension_sidebar_actions() {
   is(sidebar.extensionButtons.length, 1, "Extension is shown in the sidebar.");
 
   // Default icon and title matches.
-  const button = sidebar.extensionButtons[0];
-  let iconUrl = `moz-extension://${extension.uuid}/default.png`;
-  is(
-    button.style.getPropertyValue("--action-icon"),
-    `image-set(url("${iconUrl}"), url("${iconUrl}") 2x)`,
-    "Extension has the correct icon."
-  );
+  let button = sidebar.extensionButtons[0];
+  let iconUrl = `moz-extension://${extension.uuid}/icon.png`;
+  is(button.iconSrc, iconUrl, "Extension has the correct icon.");
   is(button.title, "Default Title", "Extension has the correct title.");
 
   // Icon can be updated.
-  await sendMessage(extension, "set-icon", "1.png");
+  await sendMessage(extension, "set-icon", "updated-icon.png");
   await sidebar.updateComplete;
-  iconUrl = `moz-extension://${extension.uuid}/1.png`;
-  is(
-    button.style.getPropertyValue("--action-icon"),
-    `image-set(url("${iconUrl}"), url("${iconUrl}") 2x)`,
-    "Extension has updated icon."
-  );
+  iconUrl = `moz-extension://${extension.uuid}/updated-icon.png`;
+  is(button.iconSrc, iconUrl, "Extension has updated icon.");
 
   // Title can be updated.
   await sendMessage(extension, "set-title", "Updated Title");
   await sidebar.updateComplete;
   is(button.title, "Updated Title", "Extension has updated title.");
+
+  sidebar.expanded = true;
+  await sidebar.updateComplete;
+  ok(button.hasVisibleLabel, "Title is visible when sidebar is expanded.");
+
+  sidebar.expanded = false;
+  await sidebar.updateComplete;
+  ok(!button.hasVisibleLabel, "Title is hidden when sidebar is collapsed.");
 
   // Panel can be updated.
   await sendMessage(extension, "set-panel", "1.html");
@@ -83,14 +81,14 @@ add_task(async function test_extension_sidebar_actions() {
 });
 
 add_task(async function test_open_new_window_after_install() {
+  const extension = ExtensionTestUtils.loadExtension({ ...extData });
+  await extension.startup();
+  await extension.awaitMessage("sidebar");
+
   const win = await BrowserTestUtils.openNewBrowserWindow();
   const { document } = win;
   const sidebar = document.querySelector("sidebar-main");
   ok(sidebar, "Sidebar is shown.");
-
-  const extension = ExtensionTestUtils.loadExtension({ ...extData });
-  await extension.startup();
-  await extension.awaitMessage("sidebar");
   await extension.awaitMessage("sidebar");
 
   is(
@@ -195,13 +193,9 @@ add_task(async function test_customize_sidebar_extensions() {
 
   // Default icon and title matches.
   const extensionLink = customizeComponent.extensionLinks[0];
-  let iconUrl = `moz-extension://${extension.uuid}/default.png`;
+  let iconUrl = `moz-extension://${extension.uuid}/icon.png`;
   let iconEl = extensionLink.closest(".extension-item").querySelector(".icon");
-  is(
-    iconEl.style.getPropertyValue("--extension-icon"),
-    `image-set(url("${iconUrl}"), url("${iconUrl}") 2x)`,
-    "Extension has the correct icon."
-  );
+  is(iconEl.src, iconUrl, "Extension has the correct icon.");
   is(
     extensionLink.textContent.trim(),
     "Default Title",
@@ -295,5 +289,32 @@ add_task(async function test_extensions_keyboard_navigation() {
     0,
     "Extensions are removed from the sidebar."
   );
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_extension_sidebar_hidpi_icon() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.devPixelsPerPx", 2]],
+  });
+
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const { document } = win;
+  const sidebar = document.querySelector("sidebar-main");
+  ok(sidebar, "Sidebar is shown.");
+
+  const extension = ExtensionTestUtils.loadExtension({ ...extData });
+  await extension.startup();
+  await extension.awaitMessage("sidebar");
+  await extension.awaitMessage("sidebar");
+
+  const { iconSrc } = sidebar.extensionButtons[0];
+  is(
+    iconSrc,
+    `moz-extension://${extension.uuid}/icon@2x.png`,
+    "Extension has the correct icon for HiDPI displays."
+  );
+
+  await SpecialPowers.popPrefEnv();
+  await extension.unload();
   await BrowserTestUtils.closeWindow(win);
 });
