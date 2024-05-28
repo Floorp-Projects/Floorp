@@ -10,6 +10,7 @@ with Files("**"):
 DIRS += [
     "style",
     "base",
+    "build",
     "generic",
     "forms",
     "tables",
@@ -37,8 +38,6 @@ if CONFIG["NS_PRINTING"]:
 TEST_DIRS += [
     "tools/reftest",
 ]
-
-DIRS += ["build", "media"]
 
 if CONFIG["MOZ_LAYOUT_DEBUGGER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     DIRS += ["tools/layout-debug"]

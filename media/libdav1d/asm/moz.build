@@ -243,7 +243,7 @@ if CONFIG['TARGET_CPU'] in ('x86', 'x86_64'):
 elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
     USE_INTEGRATED_CLANGCL_AS = True
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'xul'
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()

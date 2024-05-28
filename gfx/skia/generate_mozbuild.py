@@ -36,7 +36,7 @@ footer = """
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     'skia',
 ]
