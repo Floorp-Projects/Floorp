@@ -9,6 +9,7 @@ from mozperftest.system.macos import MacosDevice
 from mozperftest.system.pingserver import PingServer
 from mozperftest.system.profile import Profile
 from mozperftest.system.proxy import ProxyRunner
+from mozperftest.system.versionproducer import VersionProducer
 
 
 def get_layers():
@@ -22,9 +23,15 @@ def pick_system(env, flavor, mach_cmd):
         MacosDevice,
         Profile,
         ProxyRunner,
+        VersionProducer,
     ]
     mobile_layers = [
-        Profile, ProxyRunner, BinarySetup, AndroidDevice, AndroidStartUp,
+        Profile,
+        ProxyRunner,
+        BinarySetup,
+        AndroidDevice,
+        VersionProducer,
+        AndroidStartUp,
     ]
 
     if flavor in ("desktop-browser", "xpcshell", "mochitest"):
