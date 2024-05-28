@@ -36,10 +36,10 @@ use crate::std::sync::Arc;
 use anyhow::Context;
 use config::Config;
 
-// A few macros are defined here to allow use in all submodules via textual scope lookup.
-
 /// cc is short for Clone Capture, a shorthand way to clone a bunch of values before an expression
 /// (particularly useful for closures).
+///
+/// It is defined here to allow it to be used in all submodules (textual scope lookup).
 macro_rules! cc {
     ( ($($c:ident),*) $e:expr ) => {
         {
@@ -47,15 +47,6 @@ macro_rules! cc {
             $e
         }
     }
-}
-
-/// Create a string literal to be used as an environment variable name.
-///
-/// This adds the application prefix `MOZ_CRASHREPORTER_`.
-macro_rules! ekey {
-    ( $name:literal ) => {
-        concat!("MOZ_CRASHREPORTER_", $name)
-    };
 }
 
 mod async_task;
