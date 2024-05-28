@@ -13,6 +13,7 @@
 <div id="content" style="max-width: fit-content;color: black;">
   <moz-checkbox id="moz-checkbox-1" label="test label 1"></moz-checkbox>
   <moz-checkbox id="moz-checkbox-2" label="test label 2" checked=""></moz-checkbox>
+  <moz-checkbox id="moz-checkbox-3" label="test label 3" disabled></moz-checkbox>
 </div>
 <pre id="test">
   <script class="testbody" type="application/javascript">
@@ -26,8 +27,10 @@
       // Ensure moz-checkbox rendered correctly
       const mozCheckbox1 = document.getElementById("moz-checkbox-1");
       const mozCheckbox2 = document.getElementById("moz-checkbox-2");
+      const mozCheckbox3 = document.getElementById("moz-checkbox-3");
       ok(mozCheckbox1, "moz-checkbox-1 is rendered");
       ok(mozCheckbox2, "moz-checkbox-2 is rendered");
+      ok(mozCheckbox3, "moz-checkbox-3 is rendered");
 
       // Ensure label is set on moz-checkbox and inner label
       is(
@@ -40,6 +43,7 @@
         "test label 2",
         "inner label of moz-checkbox-2 is correct"
       );
+      is(mozCheckbox3.labelEl.innerText, "test label 3", "inner label of moz-checkbox-3 is correct");
 
       // Ensure checked attribute is set on moz-checkbox and inner checkbox
       ok(
@@ -56,15 +60,51 @@
       ok(
         mozCheckbox2.checkboxEl.checked,
         "inner checkbox of moz-checkbox-2 should be checked on initial render");
+      ok(
+        !mozCheckbox3.checked,
+        "moz-checkbox-3 should not be checked on initial render"
+      );
+      ok(
+        !mozCheckbox3.checkboxEl.checked,
+        "inner checkbox of moz-checkbox-3 should not be checked on initial render"
+      );
+
+      // Ensure disabled attribute is set on moz-checkbox and inner checkbox
+      ok(
+        !mozCheckbox1.disabled,
+        "moz-checkbox-1 should not be disabled on initial render"
+      );
+      ok(
+        !mozCheckbox2.disabled,
+        "moz-checkbox-2 should not be disabled on initial render"
+      );
+      ok(
+        mozCheckbox3.disabled,
+        "moz-checkbox-3 should be disabled on initial render"
+      );
+      ok(
+        !mozCheckbox1.checkboxEl.disabled,
+        "inner checkbox of moz-checkbox-1 should not be disabled on initial render"
+      );
+      ok(
+        !mozCheckbox2.checkboxEl.disabled,
+        "inner checkbox of moz-checkbox-2 should not be disabled on initial render"
+      );
+      ok(
+        mozCheckbox3.checkboxEl.disabled,
+        "inner checkbox of moz-checkbox-3 should be disabled on initial render"
+      );
     });
 
     add_task(async function testCheckboxEvents() {
       const mozCheckbox1 = document.getElementById("moz-checkbox-1");
       const mozCheckbox2 = document.getElementById("moz-checkbox-2");
-      let checkboxes = [mozCheckbox1, mozCheckbox2];
+      const mozCheckbox3 = document.getElementById("moz-checkbox-3");
+      let checkboxes = [mozCheckbox1, mozCheckbox2, mozCheckbox3];
 
       mozCheckbox1.checked = false;
       mozCheckbox2.checked = true;
+      mozCheckbox3.disabled = true;
       await TestUtils.waitForTick();
 
       let seenEvents = [];
@@ -164,6 +204,17 @@
         mozCheckbox1.checked,
         "Activating the Space key on the inner checkbox should toggle the checked attribute"
       );
+
+      // Reset seen events.
+      seenEvents = [];
+
+      // Ensure clicking on a disabled moz-checkbox does not send
+      // any events.
+
+      synthesizeMouseAtCenter(mozCheckbox3.checkboxEl, {});
+      await TestUtils.waitForTick();
+
+      verifyEvents([]);
     });
   </script>
 </pre>
