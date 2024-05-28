@@ -1460,6 +1460,8 @@ void StencilIncrementalEncoderPtr::reset() {
 bool StencilIncrementalEncoderPtr::setInitial(
     JSContext* cx,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
+  MOZ_ASSERT(!merger_);
+
   AutoReportFrontendContext fc(cx);
   merger_ = fc.getAllocator()->new_<frontend::CompilationStencilMerger>();
   if (!merger_) {
