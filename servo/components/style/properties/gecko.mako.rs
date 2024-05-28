@@ -35,7 +35,7 @@ use servo_arc::{Arc, UniqueArc};
 use std::mem::{forget, MaybeUninit, ManuallyDrop};
 use std::{cmp, ops, ptr};
 use crate::values;
-use crate::values::computed::{BorderStyle, Percentage, Time, Zoom};
+use crate::values::computed::{BorderStyle, Time, Zoom};
 use crate::values::computed::font::FontSize;
 use crate::values::generics::column::ColumnCount;
 
@@ -942,33 +942,11 @@ fn static_assert() {
     }
 
 
+    ${impl_simple("_moz_min_font_size_ratio", "mMinFontSizeRatio")}
     ${impl_simple("font_language_override", "mFont.languageOverride")}
     ${impl_simple("font_variant_ligatures", "mFont.variantLigatures")}
     ${impl_simple("font_variant_east_asian", "mFont.variantEastAsian")}
     ${impl_simple("font_variant_numeric", "mFont.variantNumeric")}
-
-    #[allow(non_snake_case)]
-    pub fn clone__moz_min_font_size_ratio(
-        &self,
-    ) -> longhands::_moz_min_font_size_ratio::computed_value::T {
-        Percentage(self.mMinFontSizeRatio as f32 / 100.)
-    }
-
-    #[allow(non_snake_case)]
-    pub fn set__moz_min_font_size_ratio(&mut self, v: longhands::_moz_min_font_size_ratio::computed_value::T) {
-        let scaled = v.0 * 100.;
-        let percentage = if scaled > 255. {
-            255.
-        } else if scaled < 0. {
-            0.
-        } else {
-            scaled
-        };
-
-        self.mMinFontSizeRatio = percentage as u8;
-    }
-
-    ${impl_simple_copy('_moz_min_font_size_ratio', 'mMinFontSizeRatio')}
 </%self:impl_trait>
 
 <%def name="impl_coordinated_property_copy(type, ident, gecko_ffi_name)">
