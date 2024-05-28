@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import static org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_PRINT_DELEGATE;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
@@ -1086,9 +1087,19 @@ public class GeckoSession {
             return;
           }
           if ("GeckoView:AndroidPermission".equals(event)) {
+            List<String> permsList = Arrays.asList(message.getStringArray("perms"));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+              if (permsList.contains(Manifest.permission.ACCESS_FINE_LOCATION)
+                  && !permsList.contains(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                // If we are requesting ACCESS_FINE_LOCATION we should also be
+                // requesting ACCESS_COARSE_LOCATION. See bug 1790467
+                permsList = new ArrayList<String>(permsList);
+                permsList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+              }
+            }
             delegate.onAndroidPermissionsRequest(
                 GeckoSession.this,
-                message.getStringArray("perms"),
+                permsList.toArray(new String[0]),
                 new PermissionCallback("android", callback));
           } else if ("GeckoView:ContentPermission".equals(event)) {
             final GeckoResult<Integer> res =

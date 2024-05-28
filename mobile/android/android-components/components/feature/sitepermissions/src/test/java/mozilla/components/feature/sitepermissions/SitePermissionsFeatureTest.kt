@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.fragment.app.FragmentManager
@@ -231,6 +233,74 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(mockAppPermissionRequest).grant()
+        verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN an appPermissionRequest for both fine and coarse location WHEN either permission is granted THEN permission request is granted`() {
+        // given
+        doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
+            .findRequestedAppPermission(any())
+
+        // when
+        sitePermissionFeature.onPermissionsResult(
+            arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION),
+            arrayOf(PERMISSION_DENIED, PERMISSION_GRANTED).toIntArray(),
+        )
+
+        // then
+        verify(mockAppPermissionRequest).grant()
+        verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN an appPermissionRequest for fine and coarse location and another permission WHEN either location permission is granted and the third is denied THEN permission request is not granted`() {
+        // given
+        doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
+            .findRequestedAppPermission(any())
+
+        // when
+        sitePermissionFeature.onPermissionsResult(
+            arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, "random permission"),
+            arrayOf(PERMISSION_DENIED, PERMISSION_GRANTED, PERMISSION_DENIED).toIntArray(),
+        )
+
+        // then
+        verify(mockAppPermissionRequest).reject()
+        verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN an appPermissionRequest for fine and coarse location and another permission WHEN either location permission is granted and the third is granted THEN permission request is granted`() {
+        // given
+        doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
+            .findRequestedAppPermission(any())
+
+        // when
+        sitePermissionFeature.onPermissionsResult(
+            arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, "random permission"),
+            arrayOf(PERMISSION_DENIED, PERMISSION_GRANTED, PERMISSION_GRANTED).toIntArray(),
+        )
+
+        // then
+        verify(mockAppPermissionRequest).grant()
+        verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
+    }
+
+    @Test
+    fun `GIVEN an appPermissionRequest for two other permissions WHEN either permission is granted THEN permission request is not granted`() {
+        // given
+        doReturn(mockAppPermissionRequest).`when`(sitePermissionFeature)
+            .findRequestedAppPermission(any())
+
+        // when
+        sitePermissionFeature.onPermissionsResult(
+            arrayOf("random permission 1", "random permission 2"),
+            arrayOf(PERMISSION_DENIED, PERMISSION_GRANTED).toIntArray(),
+        )
+
+        // then
+        verify(mockAppPermissionRequest).reject()
         verify(sitePermissionFeature).consumeAppPermissionRequest(mockAppPermissionRequest)
     }
 

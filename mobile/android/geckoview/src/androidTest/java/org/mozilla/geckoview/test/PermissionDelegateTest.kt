@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.json.JSONArray
@@ -231,11 +232,25 @@ class PermissionDelegateTest : BaseSessionTest() {
                 callback: PermissionDelegate.Callback,
             ) {
                 assertThat(
-                    "Permissions list should be correct",
+                    "Permissions list should include ACCESS_FINE_LOCATION",
                     listOf(*permissions!!),
                     hasItems(Manifest.permission.ACCESS_FINE_LOCATION),
                 )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    checkCoarseLocation(permissions)
+                }
                 callback.grant()
+            }
+
+            @SdkSuppress(minSdkVersion = Build.VERSION_CODES.S)
+            fun checkCoarseLocation(
+                permissions: Array<out String>?,
+            ) {
+                assertThat(
+                    "Permissions list should include ACCESS_COARSE_LOCATION on Android S and above",
+                    listOf(*permissions!!),
+                    hasItems(Manifest.permission.ACCESS_COARSE_LOCATION),
+                )
             }
         })
 
