@@ -2751,9 +2751,8 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
         if (false) {
           ;
         }
-#define TEST_SLOT_MATCHES_PROTOTYPE(name, clasp) \
-  else if ((JSProto_##name) == slot) {           \
-    slotname = #name;                            \
+#define TEST_SLOT_MATCHES_PROTOTYPE(name, clasp)       \
+  else if ((JSProto_##name) == slot){slotname = #name; \
   }
         JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
 #undef TEST_SLOT_MATCHES_PROTOTYPE

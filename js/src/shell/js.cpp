@@ -363,11 +363,9 @@ void counters_dump(int) { __gcov_dump(); }
 
 void counters_reset(int) { __gcov_reset(); }
 #  else
-void counters_dump(int) { /* Do nothing */
-}
+void counters_dump(int) { /* Do nothing */ }
 
-void counters_reset(int) { /* Do nothing */
-}
+void counters_reset(int) { /* Do nothing */ }
 #  endif
 
 static void InstallCoverageSignalHandlers() {
