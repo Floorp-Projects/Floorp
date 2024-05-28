@@ -9,25 +9,31 @@ const REQUEST_URL =
 
 // Check that the NetworkObserver can detect basic requests and calls the
 // onNetworkEvent callback when expected.
-add_task(async function testSingleRequest() {
+async function testSingleRequest({ earlyEvents }) {
   await addTab(TEST_URL);
 
-  const onNetworkEvents = waitForNetworkEvents(REQUEST_URL, 1);
+  const onNetworkEvents = waitForNetworkEvents(REQUEST_URL, 1, earlyEvents);
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [REQUEST_URL], _url => {
     content.wrappedJSObject.fetch(_url);
   });
 
   const events = await onNetworkEvents;
   is(events.length, 1, "Received the expected number of network events");
+}
+
+add_task(async function () {
+  await testSingleRequest({ earlyEvents: false });
+  await testSingleRequest({ earlyEvents: true });
 });
 
-add_task(async function testMultipleRequests() {
+async function testMultipleRequests({ earlyEvents }) {
   await addTab(TEST_URL);
   const EXPECTED_REQUESTS_COUNT = 5;
 
   const onNetworkEvents = waitForNetworkEvents(
     REQUEST_URL,
-    EXPECTED_REQUESTS_COUNT
+    EXPECTED_REQUESTS_COUNT,
+    earlyEvents
   );
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -45,13 +51,18 @@ add_task(async function testMultipleRequests() {
     EXPECTED_REQUESTS_COUNT,
     "Received the expected number of network events"
   );
+}
+add_task(async function () {
+  await testMultipleRequests({ earlyEvents: false });
+  await testMultipleRequests({ earlyEvents: true });
 });
 
-add_task(async function testOnNetworkEventArguments() {
+async function testOnNetworkEventArguments({ earlyEvents }) {
   await addTab(TEST_URL);
 
   const onNetworkEvent = new Promise(resolve => {
     const networkObserver = new NetworkObserver({
+      earlyEvents,
       ignoreChannelFunction: () => false,
       onNetworkEvent: (...args) => {
         resolve(args);
@@ -69,4 +80,8 @@ add_task(async function testOnNetworkEventArguments() {
   is(args.length, 2, "Received two arguments");
   is(typeof args[0], "object", "First argument is an object");
   ok(args[1] instanceof Ci.nsIChannel, "Second argument is a channel");
+}
+add_task(async function () {
+  await testOnNetworkEventArguments({ earlyEvents: false });
+  await testOnNetworkEventArguments({ earlyEvents: true });
 });

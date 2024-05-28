@@ -50,15 +50,23 @@ async function addTab(url) {
  * keeping track of which callbacks have been called.
  */
 class NetworkEventOwner {
+  hasCacheDetails = false;
   hasEventTimings = false;
+  hasRawHeaders = false;
   hasResponseCache = false;
   hasResponseContent = false;
   hasResponseStart = false;
   hasSecurityInfo = false;
   hasServerTimings = false;
 
+  addCacheDetails() {
+    this.hasCacheDetails = true;
+  }
   addEventTimings() {
     this.hasEventTimings = true;
+  }
+  addRawHeaders() {
+    this.hasRawHeaders = true;
   }
   addResponseCache() {
     this.hasResponseCache = true;
@@ -101,9 +109,14 @@ function createNetworkEventOwner() {
  *     A promise which will resolve with an array of network event owners, when
  *     the expected event count is reached.
  */
-async function waitForNetworkEvents(expectedUrl = null, expectedRequestsCount) {
+async function waitForNetworkEvents(
+  expectedUrl = null,
+  expectedRequestsCount,
+  earlyEvents = false
+) {
   const events = [];
   const networkObserver = new NetworkObserver({
+    earlyEvents,
     ignoreChannelFunction: channel =>
       expectedUrl ? channel.URI.spec !== expectedUrl : false,
     onNetworkEvent: () => {

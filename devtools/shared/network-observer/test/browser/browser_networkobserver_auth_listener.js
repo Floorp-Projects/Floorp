@@ -64,12 +64,13 @@ class AuthCredentialsProvidingOwner extends NetworkEventOwner {
   }
 }
 
-add_task(async function testAuthRequestWithoutListener() {
+async function testAuthRequestWithoutListener({ earlyEvents }) {
   cleanupAuthManager();
   const tab = await addTab(TEST_URL);
 
   const events = [];
   const networkObserver = new NetworkObserver({
+    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== AUTH_URL,
     onNetworkEvent: () => {
       const owner = new AuthForwardingOwner();
@@ -106,14 +107,19 @@ add_task(async function testAuthRequestWithoutListener() {
 
   networkObserver.destroy();
   gBrowser.removeTab(tab);
+}
+add_task(async function () {
+  await testAuthRequestWithoutListener({ earlyEvents: false });
+  await testAuthRequestWithoutListener({ earlyEvents: true });
 });
 
-add_task(async function testAuthRequestWithForwardingListener() {
+async function testAuthRequestWithForwardingListener({ earlyEvents }) {
   cleanupAuthManager();
   const tab = await addTab(TEST_URL);
 
   const events = [];
   const networkObserver = new NetworkObserver({
+    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== AUTH_URL,
     onNetworkEvent: () => {
       info("waitForNetworkEvents received a new event");
@@ -158,14 +164,19 @@ add_task(async function testAuthRequestWithForwardingListener() {
 
   networkObserver.destroy();
   gBrowser.removeTab(tab);
+}
+add_task(async function () {
+  await testAuthRequestWithForwardingListener({ earlyEvents: false });
+  await testAuthRequestWithForwardingListener({ earlyEvents: true });
 });
 
-add_task(async function testAuthRequestWithCancellingListener() {
+async function testAuthRequestWithCancellingListener({ earlyEvents }) {
   cleanupAuthManager();
   const tab = await addTab(TEST_URL);
 
   const events = [];
   const networkObserver = new NetworkObserver({
+    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== AUTH_URL,
     onNetworkEvent: () => {
       const owner = new AuthCancellingOwner();
@@ -208,14 +219,19 @@ add_task(async function testAuthRequestWithCancellingListener() {
 
   networkObserver.destroy();
   gBrowser.removeTab(tab);
+}
+add_task(async function () {
+  await testAuthRequestWithCancellingListener({ earlyEvents: false });
+  await testAuthRequestWithCancellingListener({ earlyEvents: true });
 });
 
-add_task(async function testAuthRequestWithWrongCredentialsListener() {
+async function testAuthRequestWithWrongCredentialsListener({ earlyEvents }) {
   cleanupAuthManager();
   const tab = await addTab(TEST_URL);
 
   const events = [];
   const networkObserver = new NetworkObserver({
+    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== AUTH_URL,
     onNetworkEvent: (event, channel) => {
       const owner = new AuthCredentialsProvidingOwner(
@@ -259,14 +275,19 @@ add_task(async function testAuthRequestWithWrongCredentialsListener() {
 
   networkObserver.destroy();
   gBrowser.removeTab(tab);
+}
+add_task(async function () {
+  await testAuthRequestWithWrongCredentialsListener({ earlyEvents: false });
+  await testAuthRequestWithWrongCredentialsListener({ earlyEvents: true });
 });
 
-add_task(async function testAuthRequestWithCredentialsListener() {
+async function testAuthRequestWithCredentialsListener({ earlyEvents }) {
   cleanupAuthManager();
   const tab = await addTab(TEST_URL);
 
   const events = [];
   const networkObserver = new NetworkObserver({
+    earlyEvents,
     ignoreChannelFunction: channel => channel.URI.spec !== AUTH_URL,
     onNetworkEvent: (event, channel) => {
       const owner = new AuthCredentialsProvidingOwner(
@@ -321,6 +342,10 @@ add_task(async function testAuthRequestWithCredentialsListener() {
 
   networkObserver.destroy();
   gBrowser.removeTab(tab);
+}
+add_task(async function () {
+  await testAuthRequestWithCredentialsListener({ earlyEvents: false });
+  await testAuthRequestWithCredentialsListener({ earlyEvents: true });
 });
 
 function assertEventOwner(event, expectedFlags) {
