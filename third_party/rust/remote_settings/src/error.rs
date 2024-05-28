@@ -8,10 +8,10 @@ pub enum RemoteSettingsError {
     JSONError(#[from] serde_json::Error),
     #[error("Error writing downloaded attachment: {0}")]
     FileError(#[from] std::io::Error),
-    /// An error has occured while sending a request.
+    /// An error has occurred while sending a request.
     #[error("Error sending request: {0}")]
     RequestError(#[from] viaduct::Error),
-    /// An error has occured while parsing an URL.
+    /// An error has occurred while parsing an URL.
     #[error("Error parsing URL: {0}")]
     UrlParsingError(#[from] url::ParseError),
     /// The server has asked the client to backoff.

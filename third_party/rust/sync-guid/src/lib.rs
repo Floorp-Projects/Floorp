@@ -90,7 +90,7 @@ impl FastGuid {
 
     #[inline]
     fn as_str(&self) -> &str {
-        // Note: we only use debug_assert! to enusre valid utf8-ness, so this need
+        // Note: we only use debug_assert! to ensure valid utf8-ness, so this need
         str::from_utf8(self.bytes()).expect("Invalid fast guid bytes!")
     }
 

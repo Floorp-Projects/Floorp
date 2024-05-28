@@ -33,10 +33,10 @@
 
 use std::{borrow::Cow, fmt};
 
-use remote_settings::{GetItemsOptions, RemoteSettingsResponse};
+use remote_settings::{Attachment, GetItemsOptions, RemoteSettingsRecord, RsJsonObject, SortOrder};
 use serde::{Deserialize, Deserializer};
 
-use crate::{provider::SuggestionProvider, Result};
+use crate::{error::Error, provider::SuggestionProvider, Result};
 
 /// The Suggest Remote Settings collection name.
 pub(crate) const REMOTE_SETTINGS_COLLECTION: &str = "quicksuggest";
@@ -64,28 +64,94 @@ pub(crate) const DEFAULT_RECORDS_TYPES: [SuggestRecordType; 9] = [
 /// A trait for a client that downloads suggestions from Remote Settings.
 ///
 /// This trait lets tests use a mock client.
-pub(crate) trait SuggestRemoteSettingsClient {
-    /// Fetches records from the Suggest Remote Settings collection.
-    fn get_records_with_options(&self, options: &GetItemsOptions)
-        -> Result<RemoteSettingsResponse>;
-
-    /// Fetches a record's attachment from the Suggest Remote Settings
-    /// collection.
-    fn get_attachment(&self, location: &str) -> Result<Vec<u8>>;
+pub(crate) trait Client {
+    /// Fetch a list of records and attachment data
+    fn get_records(&self, request: RecordRequest) -> Result<Vec<Record>>;
 }
 
-impl SuggestRemoteSettingsClient for remote_settings::Client {
-    fn get_records_with_options(
-        &self,
-        options: &GetItemsOptions,
-    ) -> Result<RemoteSettingsResponse> {
-        Ok(remote_settings::Client::get_records_with_options(
-            self, options,
-        )?)
+impl Client for remote_settings::Client {
+    fn get_records(&self, request: RecordRequest) -> Result<Vec<Record>> {
+        let options = request.into();
+        self.get_records_with_options(&options)?
+            .records
+            .into_iter()
+            .map(|record| {
+                let attachment_data = record
+                    .attachment
+                    .as_ref()
+                    .map(|a| self.get_attachment(&a.location))
+                    .transpose()?;
+                Ok(Record::new(record, attachment_data))
+            })
+            .collect()
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct RecordRequest {
+    pub record_type: Option<String>,
+    pub last_modified: Option<u64>,
+    pub limit: Option<u64>,
+}
+
+impl From<RecordRequest> for GetItemsOptions {
+    fn from(value: RecordRequest) -> Self {
+        let mut options = GetItemsOptions::new();
+
+        // Remote Settings returns records in descending modification order
+        // (newest first), but we want them in ascending order (oldest first),
+        // so that we can eventually resume downloading where we left off.
+        options.sort("last_modified", SortOrder::Ascending);
+
+        if let Some(record_type) = value.record_type {
+            options.filter_eq("type", record_type);
+        }
+
+        if let Some(last_modified) = value.last_modified {
+            options.filter_gt("last_modified", last_modified.to_string());
+        }
+
+        if let Some(limit) = value.limit {
+            // Each record's attachment has 200 suggestions, so download enough
+            // records to cover the requested maximum.
+            options.limit((limit.saturating_sub(1) / SUGGESTIONS_PER_ATTACHMENT) + 1);
+        }
+        options
+    }
+}
+
+/// Remote settings record for suggest.
+///
+/// This is `remote_settings::RemoteSettingsRecord`, plus the downloaded attachment data.
+#[derive(Clone, Debug, Default)]
+pub struct Record {
+    pub id: String,
+    pub last_modified: u64,
+    pub deleted: bool,
+    pub attachment: Option<Attachment>,
+    pub fields: RsJsonObject,
+    pub attachment_data: Option<Vec<u8>>,
+}
+
+impl Record {
+    pub fn new(record: RemoteSettingsRecord, attachment_data: Option<Vec<u8>>) -> Self {
+        Self {
+            id: record.id,
+            deleted: record.deleted,
+            fields: record.fields,
+            last_modified: record.last_modified,
+            attachment: record.attachment,
+            attachment_data,
+        }
     }
 
-    fn get_attachment(&self, location: &str) -> Result<Vec<u8>> {
-        Ok(remote_settings::Client::get_attachment(self, location)?)
+    /// Get the attachment data for this record, returning an error if it's not present.
+    ///
+    /// This is indented to be used in cases where the attachment data is required.
+    pub fn require_attachment_data(&self) -> Result<&[u8]> {
+        self.attachment_data
+            .as_deref()
+            .ok_or_else(|| Error::MissingAttachment(self.id.clone()))
     }
 }
 
@@ -557,5 +623,38 @@ mod test {
                 },
             ],
         );
+    }
+
+    #[test]
+    fn test_remote_settings_limits() {
+        fn check_limit(suggestion_limit: Option<u64>, expected_record_limit: Option<&str>) {
+            let request = RecordRequest {
+                limit: suggestion_limit,
+                ..RecordRequest::default()
+            };
+            let options: GetItemsOptions = request.into();
+            let actual_record_limit = options
+                .iter_query_pairs()
+                .find_map(|(name, value)| (name == "_limit").then(|| value.to_string()));
+            assert_eq!(
+                actual_record_limit.as_deref(),
+                expected_record_limit,
+                "expected record limit = {:?} for suggestion limit {:?}; actual = {:?}",
+                expected_record_limit,
+                suggestion_limit,
+                actual_record_limit
+            );
+        }
+
+        check_limit(None, None);
+        // 200 suggestions per record, so test with numbers around that
+        // boundary.
+        check_limit(Some(0), Some("1"));
+        check_limit(Some(199), Some("1"));
+        check_limit(Some(200), Some("1"));
+        check_limit(Some(201), Some("2"));
+        check_limit(Some(300), Some("2"));
+        check_limit(Some(400), Some("2"));
+        check_limit(Some(401), Some("3"));
     }
 }

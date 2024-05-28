@@ -7,16 +7,13 @@
 // syncChangeCounter/syncStatus nor a mirror etc.
 
 use rusqlite::{Connection, Transaction};
-use sql_support::{
-    open_database::{
-        ConnectionInitializer as MigrationLogic, Error as MigrationError, Result as MigrationResult,
-    },
-    ConnExt,
+use sql_support::open_database::{
+    ConnectionInitializer as MigrationLogic, Error as MigrationError, Result as MigrationResult,
 };
 
 // The record is the TabsRecord struct in json and this module doesn't need to deserialize, so we just
 // store each client as its own row.
-const CREATE_SCHEMA_SQL: &str = "
+const CREATE_TABS_TABLE_SQL: &str = "
     CREATE TABLE IF NOT EXISTS tabs (
         guid            TEXT NOT NULL PRIMARY KEY,
         record          TEXT NOT NULL,
@@ -31,6 +28,19 @@ const CREATE_META_TABLE_SQL: &str = "
     )
 ";
 
+const CREATE_PENDING_REMOTE_DELETE_TABLE_SQL: &str = "
+    CREATE TABLE IF NOT EXISTS remote_tab_commands (
+        id                      INTEGER PRIMARY KEY,
+        device_id               TEXT NOT NULL,
+        command                 INTEGER NOT NULL, -- a CommandKind value
+        url                     TEXT,
+        time_requested          INTEGER NOT NULL, -- local timestamp when this was initially written.
+        time_sent               INTEGER -- local timestamp, non-null == no longer pending.
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS remote_tab_commands_index ON remote_tab_commands(device_id, command, url);
+";
+
 pub(crate) static LAST_SYNC_META_KEY: &str = "last_sync_time";
 pub(crate) static GLOBAL_SYNCID_META_KEY: &str = "global_sync_id";
 pub(crate) static COLLECTION_SYNCID_META_KEY: &str = "tabs_sync_id";
@@ -39,11 +49,18 @@ pub(crate) static COLLECTION_SYNCID_META_KEY: &str = "tabs_sync_id";
 // so we store it so we can translate from the tabs sync record ID to the FxA device id for the client
 pub(crate) static REMOTE_CLIENTS_KEY: &str = "remote_clients";
 
+fn init_schema(db: &Connection) -> rusqlite::Result<()> {
+    db.execute_batch(CREATE_TABS_TABLE_SQL)?;
+    db.execute_batch(CREATE_META_TABLE_SQL)?;
+    db.execute_batch(CREATE_PENDING_REMOTE_DELETE_TABLE_SQL)?;
+    Ok(())
+}
+
 pub struct TabsMigrationLogic;
 
 impl MigrationLogic for TabsMigrationLogic {
     const NAME: &'static str = "tabs storage db";
-    const END_VERSION: u32 = 2;
+    const END_VERSION: u32 = 5;
 
     fn prepare(&self, conn: &Connection, _db_empty: bool) -> MigrationResult<()> {
         let initial_pragmas = "
@@ -62,24 +79,40 @@ impl MigrationLogic for TabsMigrationLogic {
 
     fn init(&self, db: &Transaction<'_>) -> MigrationResult<()> {
         log::debug!("Creating schemas");
-        db.execute_all(&[CREATE_SCHEMA_SQL, CREATE_META_TABLE_SQL])?;
+        init_schema(db)?;
         Ok(())
     }
 
     fn upgrade_from(&self, db: &Transaction<'_>, version: u32) -> MigrationResult<()> {
         match version {
+            3 | 4 => upgrade_simple_commands_drop(db),
+            2 => upgrade_from_v2(db),
             1 => upgrade_from_v1(db),
             _ => Err(MigrationError::IncompatibleVersion(version)),
         }
     }
 }
 
+// while we can get away with this, we should :)
+fn upgrade_simple_commands_drop(db: &Connection) -> MigrationResult<()> {
+    // v3 changed the table schema. v5 changed the name.
+    db.execute_batch("DROP TABLE IF EXISTS pending_remote_tab_closures;")?;
+    db.execute_batch("DROP TABLE IF EXISTS remote_tab_commands;")?;
+    db.execute_batch(CREATE_PENDING_REMOTE_DELETE_TABLE_SQL)?;
+    Ok(())
+}
+
+fn upgrade_from_v2(db: &Connection) -> MigrationResult<()> {
+    db.execute_batch(CREATE_PENDING_REMOTE_DELETE_TABLE_SQL)?;
+    Ok(())
+}
+
 fn upgrade_from_v1(db: &Connection) -> MigrationResult<()> {
     // The previous version stored the entire payload in one row
     // and cleared on each sync -- it's fine to just drop it
     db.execute_batch("DROP TABLE tabs;")?;
-    // Recreate the world
-    db.execute_all(&[CREATE_SCHEMA_SQL, CREATE_META_TABLE_SQL])?;
+    db.execute_batch(CREATE_TABS_TABLE_SQL)?;
+    db.execute_batch(CREATE_META_TABLE_SQL)?;
     Ok(())
 }
 
@@ -102,8 +135,8 @@ mod tests {
     fn test_create_schema_twice() {
         let mut db = TabsStorage::new_with_mem_path("test");
         let conn = db.open_or_create().unwrap();
-        conn.execute_batch(CREATE_SCHEMA_SQL)
-            .expect("should allow running twice");
+        init_schema(conn).expect("should allow running twice");
+        init_schema(conn).expect("should allow running thrice");
     }
 
     #[test]
@@ -146,5 +179,25 @@ mod tests {
             .unwrap();
         // Verify we can query for a valid guid now
         assert_eq!(row.unwrap(), "my-device");
+    }
+
+    #[test]
+    fn test_commands_unique() {
+        let mut db = TabsStorage::new_with_mem_path("test_commands_unique");
+        let conn = db.open_or_create().unwrap();
+        conn.execute(
+            "INSERT INTO remote_tab_commands
+                (device_id, command, url, time_requested, time_sent)
+                VALUES ('d', 'close', 'url', 1, null)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO remote_tab_commands
+                (device_id, command, url, time_requested, time_sent)
+                VALUES ('d', 'close', 'url', 1, null)",
+            [],
+        )
+        .expect_err("identical command should fail");
     }
 }

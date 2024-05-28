@@ -43,6 +43,13 @@ impl RelevancyStore {
         self.db.interrupt()
     }
 
+    /// Download the interest data from remote settings if needed
+    #[handle_error(Error)]
+    pub fn ensure_interest_data_populated(&self) -> ApiResult<()> {
+        ingest::ensure_interest_data_populated(&self.db)?;
+        Ok(())
+    }
+
     /// Ingest top URLs to build the user's interest vector.
     ///
     /// Consumer should pass a list of the user's top URLs by frecency to this method.  It will
@@ -66,6 +73,7 @@ impl RelevancyStore {
         let mut interest_vector = InterestVector::default();
         for url in top_urls_by_frecency {
             let interest_count = self.db.read(|dao| dao.get_url_interest_vector(&url))?;
+            log::trace!("classified: {url} {}", interest_count.summary());
             interest_vector = interest_vector + interest_count;
         }
 

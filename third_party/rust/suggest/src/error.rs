@@ -10,7 +10,7 @@ use remote_settings::RemoteSettingsError;
 /// type for private and crate-internal methods, and is never returned to the
 /// application.
 #[derive(Debug, thiserror::Error)]
-pub(crate) enum Error {
+pub enum Error {
     #[error("Error opening database: {0}")]
     OpenDatabase(#[from] sql_support::open_database::Error),
 
@@ -22,6 +22,9 @@ pub(crate) enum Error {
 
     #[error("Error from Remote Settings: {0}")]
     RemoteSettings(#[from] RemoteSettingsError),
+
+    #[error("Remote settings record is missing an attachment (id: u64)")]
+    MissingAttachment(String),
 
     #[error("Operation interrupted")]
     Interrupted(#[from] interrupt_support::Interrupted),

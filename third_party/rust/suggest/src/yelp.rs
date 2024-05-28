@@ -38,7 +38,7 @@ impl ToSql for Modifier {
 /// However, "Best Best Ramen" and "Ramen Best" is out of the above appearance order rule,
 /// parsing will be failed. Also, every words except Location needs to be registered in DB.
 /// Please refer to the query test in store.rs for all of combination.
-/// Currently, the maximum query length is determined while refering to having word lengths in DB
+/// Currently, the maximum query length is determined while referring to having word lengths in DB
 /// and location names.
 /// max subject: 50 + pre-modifier: 10 + post-modifier: 10 + location-sign: 7 + location: 50 = 127 = 150.
 const MAX_QUERY_LENGTH: usize = 150;
@@ -363,7 +363,7 @@ impl<'a> SuggestDao<'a> {
     /// It returns the Option. If it is not none, it contains the tuple as follows:
     /// (
     ///   String: Subject.
-    ///   bool: Whether the subject matched exactly with the paramter.
+    ///   bool: Whether the subject matched exactly with the parameter.
     /// )
     fn find_subject(&self, candidate: &str) -> Result<Option<(String, bool)>> {
         if candidate.is_empty() {

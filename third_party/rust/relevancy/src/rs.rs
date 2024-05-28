@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use crate::Result;
+use crate::{Error, Result};
 use remote_settings::RemoteSettingsResponse;
 use serde::Deserialize;
 /// The Remote Settings collection name.
@@ -57,4 +57,24 @@ pub struct CategoryToDomains {
 #[derive(Clone, Debug, Deserialize)]
 pub struct RelevancyAttachmentData {
     pub domain: String,
+}
+
+/// Deserialize one of these types from a JSON value
+pub fn from_json<T: serde::de::DeserializeOwned>(value: serde_json::Value) -> Result<T> {
+    serde_path_to_error::deserialize(value).map_err(|e| Error::RemoteSettingsParseError {
+        type_name: std::any::type_name::<T>().to_owned(),
+        path: e.path().to_string(),
+        error: e.into_inner(),
+    })
+}
+
+/// Deserialize one of these types from a slice of JSON data
+pub fn from_json_slice<T: serde::de::DeserializeOwned>(value: &[u8]) -> Result<T> {
+    let json_value =
+        serde_json::from_slice(value).map_err(|e| Error::RemoteSettingsParseError {
+            type_name: std::any::type_name::<T>().to_owned(),
+            path: "<while parsing JSON>".to_owned(),
+            error: e,
+        })?;
+    from_json(json_value)
 }

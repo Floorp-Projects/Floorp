@@ -127,6 +127,12 @@ interface SuggestProviderConfig {
     );
 };
 
+enum InterruptKind {
+    "Read",
+    "Write",
+    "ReadWrite",
+};
+
 interface SuggestStore {
     [Throws=SuggestApiError]
     constructor([ByRef] string path, optional RemoteSettingsConfig? settings_config = null);
@@ -140,7 +146,11 @@ interface SuggestStore {
     [Throws=SuggestApiError]
     void clear_dismissed_suggestions();
 
-    void interrupt();
+    // Interrupt operations
+    //
+    // This is optional for backwards compatibility, but this is deprecated.  Consumers should
+    // update their code to pass in a InterruptKind value.
+    void interrupt(optional InterruptKind? kind = null);
 
     [Throws=SuggestApiError]
     void ingest(SuggestIngestionConstraints constraints);

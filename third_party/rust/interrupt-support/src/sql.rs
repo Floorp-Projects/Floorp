@@ -27,7 +27,7 @@ pub struct SqlInterruptHandle {
     db_handle: InterruptHandle,
     // Counter that we increment on each interrupt() call.
     // We use Ordering::Relaxed to read/write to this variable.  This is safe because we're
-    // basically using it as a flag and don't need stronger synchronization guarentees.
+    // basically using it as a flag and don't need stronger synchronization guarantees.
     interrupt_counter: Arc<AtomicUsize>,
 }
 

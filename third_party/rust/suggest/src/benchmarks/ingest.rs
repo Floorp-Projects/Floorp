@@ -97,10 +97,15 @@ pub fn print_debug_ingestion_sizes() {
     let table_row_counts = store.table_row_counts();
     let client = store.into_settings_client();
     let total_attachment_size: usize = client
-        .get_attachment_responses
+        .get_records_responses
         .lock()
         .values()
-        .map(|data| data.len())
+        .flat_map(|records| {
+            records.iter().map(|r| match &r.attachment_data {
+                Some(d) => d.len(),
+                None => 0,
+            })
+        })
         .sum();
 
     println!(

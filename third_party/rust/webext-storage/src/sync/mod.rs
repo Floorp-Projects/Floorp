@@ -34,7 +34,7 @@ pub struct WebextRecord {
     data: String,
 }
 
-// Perform a 2-way or 3-way merge, where the incoming value wins on confict.
+// Perform a 2-way or 3-way merge, where the incoming value wins on conflict.
 fn merge(
     ext_id: String,
     mut other: JsonMap,

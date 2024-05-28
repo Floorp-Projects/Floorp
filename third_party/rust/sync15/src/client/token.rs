@@ -255,7 +255,7 @@ impl<TF: TokenFetcher> TokenProviderImpl<TF> {
         }
     }
 
-    // Uses our fetcher to grab a new token and if successfull, derives other
+    // Uses our fetcher to grab a new token and if successful, derives other
     // info from that token into a usable TokenContext.
     fn fetch_context(&self) -> Result<TokenContext> {
         let result = self.fetcher.fetch_token()?;

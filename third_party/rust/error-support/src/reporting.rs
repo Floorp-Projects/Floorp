@@ -15,7 +15,7 @@ static BREADCRUMB_COUNTER: AtomicU32 = AtomicU32::new(0);
 fn get_breadcrumb_counter_value() -> u32 {
     // Notes:
     //   - fetch_add is specified to wrap around in case of overflow, which seems okay.
-    //   - By itself, this does not guarentee that breadcrumb logs will be ordered the same way as
+    //   - By itself, this does not guarantee that breadcrumb logs will be ordered the same way as
     //     the counter values.  If two threads are running at the same time, it's very possible
     //     that thread A gets the lower breadcrumb value, but thread B wins the race to report its
     //     breadcrumb. However, if we expect operations to be synchronized, like with places DB,

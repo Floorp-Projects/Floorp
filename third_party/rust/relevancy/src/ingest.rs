@@ -4,8 +4,8 @@
 
 use crate::db::RelevancyDao;
 use crate::rs::{
-    RelevancyAttachmentData, RelevancyRecord, RelevancyRemoteSettingsClient,
-    REMOTE_SETTINGS_COLLECTION,
+    from_json, from_json_slice, RelevancyAttachmentData, RelevancyRecord,
+    RelevancyRemoteSettingsClient, REMOTE_SETTINGS_COLLECTION,
 };
 use crate::url_hash::UrlHash;
 use crate::{Error, Interest, RelevancyDb, Result};
@@ -64,8 +64,7 @@ fn fetch_interest_data_inner(
 fn get_hash_urls(attachment_data: Vec<u8>) -> Result<Vec<UrlHash>> {
     let mut hash_urls = vec![];
 
-    let parsed_attachment_data =
-        serde_json::from_slice::<Vec<RelevancyAttachmentData>>(&attachment_data)?;
+    let parsed_attachment_data: Vec<RelevancyAttachmentData> = from_json_slice(&attachment_data)?;
 
     for attachment_data in parsed_attachment_data {
         let hash_url = STANDARD
@@ -82,7 +81,7 @@ fn get_hash_urls(attachment_data: Vec<u8>) -> Result<Vec<UrlHash>> {
 /// Extract Interest from the record info
 fn get_interest(record: &RemoteSettingsRecord) -> Result<Interest> {
     let record_fields: RelevancyRecord =
-        serde_json::from_value(serde_json::Value::Object(record.fields.clone()))?;
+        from_json(serde_json::Value::Object(record.fields.clone()))?;
     let custom_details = record_fields.record_custom_details;
     let category_code = custom_details.category_to_domains.category_code;
     Interest::try_from(category_code as u32)

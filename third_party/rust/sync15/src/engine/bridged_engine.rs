@@ -51,7 +51,7 @@ pub trait BridgedEngine: Send + Sync {
     /// sync.
     fn ensure_current_sync_id(&self, new_sync_id: &str) -> Result<String>;
 
-    /// Tells the tabs engine about recent FxA devices. A bit of a leaky abstration as it only
+    /// Tells the tabs engine about recent FxA devices. A bit of a leaky abstraction as it only
     /// makes sense for tabs.
     /// The arg is a json serialized `ClientData` struct.
     fn prepare_for_sync(&self, _client_data: &str) -> Result<()> {

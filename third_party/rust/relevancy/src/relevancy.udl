@@ -64,7 +64,7 @@ enum Interest {
 // the cosine similarity when comparing the user's interest against various interest vectors that
 // consumers may use.
 //
-// Cosine similary was chosen because it seems easy to calculate.  This was then matched against
+// Cosine similarly was chosen because it seems easy to calculate.  This was then matched against
 // some semi-plausible real-world interest vectors that consumers might use.  This is all up for
 // debate and we may decide to switch to some other metrics.
 //

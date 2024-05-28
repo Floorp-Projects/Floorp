@@ -50,7 +50,7 @@ into an application on your target platform:
 ### Core Concepts
 
 * We assume each WebExtension is uniquely identified by an immutable **extension id**.
-* A **WebExtenstion Store** is a database that maps extension ids to key-value JSON maps, one per extension.
+* A **WebExtension Store** is a database that maps extension ids to key-value JSON maps, one per extension.
   It exposes methods that mirror those of the [`chrome.storage` spec](https://developer.chrome.com/extensions/storage)
   (e.g. `get`, `set`, and `delete`) and which take an extension id as their first argument.
 

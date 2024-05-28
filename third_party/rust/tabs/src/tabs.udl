@@ -1,6 +1,10 @@
 [Custom]
 typedef string TabsGuid;
 
+// a local timestamp, a custom type to avoid using the int directly.
+[Custom]
+typedef i64 Timestamp;
+
 [External="sync15"]
 typedef extern DeviceType;
 
@@ -22,6 +26,9 @@ interface TabsStore {
     sequence<ClientRemoteTabs> get_all();
 
     void set_local_tabs(sequence<RemoteTabRecord> remote_tabs);
+
+    [Self=ByArc]
+    RemoteCommandStore new_remote_command_store();
 
     [Self=ByArc]
     void register_with_sync_manager();
@@ -47,6 +54,44 @@ dictionary ClientRemoteTabs {
     // Number of ms since the unix epoch (as reported by the server's clock)
     i64 last_modified;
     sequence<RemoteTabRecord> remote_tabs;
+};
+
+/// A command which should be sent to a remote device.
+[Enum]
+interface RemoteCommand {
+    CloseTab(string url);
+    // CloseInactive(); ??
+};
+
+interface RemoteCommandStore {
+    /// Add a new command, after which it will be pending. Returns false if the command is already active.
+    [Throws=TabsApiError]
+    boolean add_remote_command([ByRef] string device_id, [ByRef] RemoteCommand command);
+
+    /// Add a new command with an explicit timestamp. Primarily used by tests.
+    [Throws=TabsApiError]
+    boolean add_remote_command_at([ByRef] string device_id, [ByRef] RemoteCommand command, Timestamp when);
+
+    /// Removes the remote command. Typically used to implement "undo" but may also be used by the queue
+    /// processor when it gives up trying to send a command.
+    [Throws=TabsApiError]
+    boolean remove_remote_command([ByRef] string device_id, [ByRef] RemoteCommand command);
+
+    /// Return all unsent commands. This is for the code sending the commands, result is sorted by time_requested.
+    [Throws=TabsApiError]
+    sequence<PendingCommand> get_unsent_commands();
+
+    /// Flag a command as sent.
+    [Throws=TabsApiError]
+    boolean set_pending_command_sent([ByRef]PendingCommand command);
+};
+
+/// Represents a "pending" command.
+dictionary PendingCommand {
+    string device_id;
+    RemoteCommand command;
+    Timestamp time_requested;
+    Timestamp? time_sent;
 };
 
 // Note the canonical docs for this are in https://searchfox.org/mozilla-central/source/services/interfaces/mozIBridgedSyncEngine.idl

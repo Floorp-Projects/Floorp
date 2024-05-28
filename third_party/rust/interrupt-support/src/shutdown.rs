@@ -31,7 +31,7 @@ use std::sync::Weak;
 use crate::SqlInterruptHandle;
 
 // Bool that tracks if we're in shutdown mode or not.  We use Ordering::Relaxed to read/write to
-// variable.  It's just a flag so we don't need stronger synchronization guarentees.
+// variable.  It's just a flag so we don't need stronger synchronization guarantees.
 static IN_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
 // `SqlInterruptHandle` instances to interrupt when we shutdown
