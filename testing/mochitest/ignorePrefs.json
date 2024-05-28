@@ -20,7 +20,7 @@
   "media.gmp-manager.buildID",
   "media.gmp-manager.lastCheck",
   "media.gmp-manager.lastEmptyCheck",
-  "security.webauth.softtoken_counter",
+  "security.webauthn.show_ms_settings_link",
   "toolkit.startup.last_success",
   "toolkit.telemetry.cachedClientID",
   "ui.osk.debug.keyboardDisplayReason"
