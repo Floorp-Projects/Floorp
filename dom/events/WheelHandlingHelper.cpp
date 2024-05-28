@@ -169,9 +169,10 @@ void WheelTransaction::BeginTransaction(nsIFrame* aScrollTargetFrame,
 /* static */
 bool WheelTransaction::UpdateTransaction(const WidgetWheelEvent* aEvent) {
   nsIFrame* scrollToFrame = GetScrollTargetFrame();
-  nsIScrollableFrame* scrollableFrame = scrollToFrame->GetScrollTargetFrame();
-  if (scrollableFrame) {
-    scrollToFrame = do_QueryFrame(scrollableFrame);
+  ScrollContainerFrame* scrollContainerFrame =
+      scrollToFrame->GetScrollTargetFrame();
+  if (scrollContainerFrame) {
+    scrollToFrame = scrollContainerFrame;
   }
 
   if (!WheelHandlingUtils::CanScrollOn(scrollToFrame, aEvent->mDeltaX,
@@ -485,17 +486,13 @@ void ScrollbarsForWheel::PrepareToScrollText(EventStateManager* aESM,
 
 /* static */
 void ScrollbarsForWheel::SetActiveScrollTarget(
-    nsIScrollableFrame* aScrollTarget) {
+    ScrollContainerFrame* aScrollTarget) {
   if (!sHadWheelStart) {
     return;
   }
-  nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(aScrollTarget);
-  if (!scrollbarMediator) {
-    return;
-  }
   sHadWheelStart = false;
-  sActiveOwner = do_QueryFrame(aScrollTarget);
-  scrollbarMediator->ScrollbarActivityStarted();
+  sActiveOwner = aScrollTarget;
+  aScrollTarget->ScrollbarActivityStarted();
 }
 
 /* static */
@@ -547,14 +544,12 @@ void ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
     const DeltaValues* dir = &directions[i];
     AutoWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
     MOZ_ASSERT(!*scrollTarget, "scroll target still temporarily activated!");
-    nsIScrollableFrame* target = do_QueryFrame(aESM->ComputeScrollTarget(
+    ScrollContainerFrame* target = aESM->ComputeScrollTarget(
         aTargetFrame, dir->deltaX, dir->deltaY, aEvent,
-        EventStateManager::COMPUTE_DEFAULT_ACTION_TARGET));
-    nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(target);
-    if (scrollbarMediator) {
-      nsIFrame* targetFrame = do_QueryFrame(target);
-      *scrollTarget = targetFrame;
-      scrollbarMediator->ScrollbarActivityStarted();
+        EventStateManager::COMPUTE_DEFAULT_ACTION_TARGET);
+    if (target) {
+      *scrollTarget = target;
+      target->ScrollbarActivityStarted();
     }
   }
 }

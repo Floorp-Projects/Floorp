@@ -14,7 +14,6 @@
 #include "nsPoint.h"
 
 class nsIFrame;
-class nsIScrollableFrame;
 class nsITimer;
 
 namespace mozilla {
@@ -84,7 +83,7 @@ class ScrollbarsForWheel {
   static void PrepareToScrollText(EventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
                                   WidgetWheelEvent* aEvent);
-  static void SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget);
+  static void SetActiveScrollTarget(ScrollContainerFrame* aScrollTarget);
   // Hide all scrollbars (both mActiveOwner's and mActivatedScrollTargets')
   static void MayInactivate();
   static void Inactivate();
@@ -402,7 +401,7 @@ class MOZ_STACK_CLASS ESMAutoDirWheelDeltaAdjuster final
   virtual bool CanScrollRightwards() const override;
   virtual bool IsHorizontalContentRightToLeft() const override;
 
-  nsIScrollableFrame* mScrollTargetFrame;
+  ScrollContainerFrame* mScrollTargetFrame;
   bool mIsHorizontalContentRightToLeft;
 
   int32_t& mLineOrPageDeltaX;

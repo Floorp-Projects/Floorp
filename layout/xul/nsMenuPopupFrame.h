@@ -24,6 +24,7 @@
 
 #include "Units.h"
 
+class nsIScrollableFrame;
 class nsIWidget;
 
 namespace mozilla {
