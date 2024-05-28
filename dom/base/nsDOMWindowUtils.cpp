@@ -1723,7 +1723,7 @@ static nsresult getScrollXYAppUnits(const nsWeakPtr& aWindow, bool aFlushLayout,
   }
 
   if (PresShell* presShell = doc->GetPresShell()) {
-    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+    ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
     if (sf) {
       aScrollPos = sf->GetScrollPosition();
     }
@@ -2014,10 +2014,10 @@ nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
   PresShell* presShell = doc->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
-  nsIScrollableFrame* scrollFrame = presShell->GetRootScrollFrameAsScrollable();
-  NS_ENSURE_TRUE(scrollFrame, NS_OK);
+  ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
+  NS_ENSURE_TRUE(sf, NS_OK);
 
-  nsMargin sizes = scrollFrame->GetActualScrollbarSizes();
+  nsMargin sizes = sf->GetActualScrollbarSizes();
   *aWidth = nsPresContext::AppUnitsToIntCSSPixels(sizes.LeftRight());
   *aHeight = nsPresContext::AppUnitsToIntCSSPixels(sizes.TopBottom());
 
@@ -2093,7 +2093,7 @@ nsDOMWindowUtils::GetRootBounds(DOMRect** aResult) {
   nsRect bounds(0, 0, 0, 0);
   PresShell* presShell = doc->GetPresShell();
   if (presShell) {
-    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+    ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
     if (sf) {
       bounds = sf->GetScrollRange();
       bounds.SetWidth(bounds.Width() + sf->GetScrollPortRect().Width());

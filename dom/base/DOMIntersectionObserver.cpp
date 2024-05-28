@@ -504,9 +504,9 @@ static Maybe<OopIframeMetrics> GetOopIframeMetrics(
   }
 
   nsRect inProcessRootRect;
-  if (nsIScrollableFrame* scrollFrame =
-          rootPresShell->GetRootScrollFrameAsScrollable()) {
-    inProcessRootRect = scrollFrame->GetScrollPortRect();
+  if (ScrollContainerFrame* rootScrollContainerFrame =
+          rootPresShell->GetRootScrollContainerFrame()) {
+    inProcessRootRect = rootScrollContainerFrame->GetScrollPortRect();
   }
 
   Maybe<LayoutDeviceRect> remoteDocumentVisibleRect =
@@ -576,11 +576,11 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
       // handle the OOP iframe positions.
       if (PresShell* presShell = rootDocument->GetPresShell()) {
         rootFrame = presShell->GetRootFrame();
-        // We use the root scrollable frame's scroll port to account the
+        // We use the root scroll container frame's scroll port to account the
         // scrollbars in rootRect, if needed.
-        if (nsIScrollableFrame* scrollFrame =
-                presShell->GetRootScrollFrameAsScrollable()) {
-          rootRect = scrollFrame->GetScrollPortRect();
+        if (ScrollContainerFrame* rootScrollContainerFrame =
+                presShell->GetRootScrollContainerFrame()) {
+          rootRect = rootScrollContainerFrame->GetScrollPortRect();
         } else if (rootFrame) {
           rootRect = rootFrame->GetRectRelativeToSelf();
         }

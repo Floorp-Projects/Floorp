@@ -436,11 +436,6 @@ class PresShell final : public nsStubDocumentObserver,
    */
   ScrollContainerFrame* GetRootScrollContainerFrame() const;
 
-  /*
-   * The same as GetRootScrollFrame, but returns an nsIScrollableFrame
-   */
-  nsIScrollableFrame* GetRootScrollFrameAsScrollable() const;
-
   /**
    * Get the current focused content or DOM selection that should be the
    * target for scrolling.

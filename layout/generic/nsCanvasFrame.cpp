@@ -17,6 +17,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsContainerFrame.h"
@@ -27,7 +28,6 @@
 #include "nsFrameManager.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 
 using namespace mozilla;
@@ -196,8 +196,7 @@ void nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 }
 
 void nsCanvasFrame::Destroy(DestroyContext& aContext) {
-  nsIScrollableFrame* sf = PresShell()->GetRootScrollFrameAsScrollable();
-  if (sf) {
+  if (ScrollContainerFrame* sf = PresShell()->GetRootScrollContainerFrame()) {
     sf->RemoveScrollPositionListener(this);
   }
 
@@ -222,8 +221,8 @@ nsCanvasFrame::SetHasFocus(bool aHasFocus) {
     PresShell()->GetRootFrame()->InvalidateFrameSubtree();
 
     if (!mAddedScrollPositionListener) {
-      nsIScrollableFrame* sf = PresShell()->GetRootScrollFrameAsScrollable();
-      if (sf) {
+      if (ScrollContainerFrame* sf =
+              PresShell()->GetRootScrollContainerFrame()) {
         sf->AddScrollPositionListener(this);
         mAddedScrollPositionListener = true;
       }
