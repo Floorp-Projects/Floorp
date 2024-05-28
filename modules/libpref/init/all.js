@@ -3925,6 +3925,10 @@ pref("devtools.errorconsole.deprecation_warnings", true);
 // Disable service worker debugging on all channels (see Bug 1651605).
 pref("devtools.debugger.features.windowless-service-workers", false);
 
+// Bug 1824726 replaced client side throttling with server side throttling.
+// Use a preference in order to rollback in case of trouble.
+pref("devtools.client-side-throttling.enable", false);
+
 // Disable remote debugging protocol logging.
 pref("devtools.debugger.log", false);
 pref("devtools.debugger.log.verbose", false);

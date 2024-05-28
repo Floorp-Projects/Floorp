@@ -35,6 +35,19 @@ add_task(async () => {
     `await fetch("${EXAMPLE_DOMAIN}/request2.html", { method: "GET" });`,
   ]);
 
+  info("Wait for initial message resources");
+  await waitFor(
+    () =>
+      resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE)
+        .length == 3
+  );
+  info("Wait for initial network resources");
+  await waitFor(
+    () =>
+      resourceCommand.getAllResources(resourceCommand.TYPES.NETWORK_EVENT)
+        .length == 2
+  );
+
   assertNoOfResources(resourceCommand, 3, 2);
 
   info("Clear the network event resources");

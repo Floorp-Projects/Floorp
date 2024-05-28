@@ -357,6 +357,15 @@ async function watchResources(rootOrWatcherOrTargetActor, resourceTypes) {
     watchers.set(rootOrWatcherOrTargetActor, watcher);
   }
   await Promise.all(promises);
+
+  // Force sending resources to the client before we resolve.
+  // So that resources are received by the client
+  // before WatcherActor.watchResources resolves.
+  // This is important when ResourceCommand.watchResources's `ignoreExistingResources` flag is set to false (default behavior).
+  // The client code expects all resources to be emitted when this server method resolves.
+  if (rootOrWatcherOrTargetActor.emitResources) {
+    rootOrWatcherOrTargetActor.emitResources();
+  }
 }
 exports.watchResources = watchResources;
 
