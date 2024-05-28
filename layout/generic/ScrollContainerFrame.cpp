@@ -96,6 +96,7 @@
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/Unused.h"
 #include "MobileViewportManager.h"
+#include "TextOverflow.h"
 #include "VisualViewport.h"
 #include "WindowRenderer.h"
 #include <algorithm>
