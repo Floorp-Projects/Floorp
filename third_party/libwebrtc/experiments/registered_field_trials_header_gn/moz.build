@@ -9,7 +9,7 @@
 COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
-FINAL_LIBRARY = "webrtc"
+FINAL_LIBRARY = "xul"
 
 
 GeneratedFile(
