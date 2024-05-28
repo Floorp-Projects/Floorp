@@ -434,64 +434,6 @@ def set_gecko_property(ffi_name, expr):
     }
 </%def>
 
-<%def name="impl_split_style_coord(ident, gecko_ffi_name, index)">
-    #[allow(non_snake_case)]
-    pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
-        self.${gecko_ffi_name}.${index} = v;
-    }
-    #[allow(non_snake_case)]
-    pub fn copy_${ident}_from(&mut self, other: &Self) {
-        self.${gecko_ffi_name}.${index} =
-            other.${gecko_ffi_name}.${index}.clone();
-    }
-    #[allow(non_snake_case)]
-    pub fn reset_${ident}(&mut self, other: &Self) {
-        self.copy_${ident}_from(other)
-    }
-
-    #[allow(non_snake_case)]
-    pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
-        self.${gecko_ffi_name}.${index}.clone()
-    }
-</%def>
-
-<%def name="copy_sides_style_coord(ident)">
-    <% gecko_ffi_name = "m" + to_camel_case(ident) %>
-    #[allow(non_snake_case)]
-    pub fn copy_${ident}_from(&mut self, other: &Self) {
-        % for side in SIDES:
-            self.${gecko_ffi_name}.data_at_mut(${side.index})
-                .copy_from(&other.${gecko_ffi_name}.data_at(${side.index}));
-        % endfor
-        ${ caller.body() }
-    }
-
-    #[allow(non_snake_case)]
-    pub fn reset_${ident}(&mut self, other: &Self) {
-        self.copy_${ident}_from(other)
-    }
-</%def>
-
-<%def name="impl_corner_style_coord(ident, gecko_ffi_name, corner)">
-    #[allow(non_snake_case)]
-    pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
-        self.${gecko_ffi_name}.${corner} = v;
-    }
-    #[allow(non_snake_case)]
-    pub fn copy_${ident}_from(&mut self, other: &Self) {
-        self.${gecko_ffi_name}.${corner} =
-            other.${gecko_ffi_name}.${corner}.clone();
-    }
-    #[allow(non_snake_case)]
-    pub fn reset_${ident}(&mut self, other: &Self) {
-        self.copy_${ident}_from(other)
-    }
-    #[allow(non_snake_case)]
-    pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
-        self.${gecko_ffi_name}.${corner}.clone()
-    }
-</%def>
-
 <%def name="impl_style_struct(style_struct)">
 /// A wrapper for ${style_struct.gecko_ffi_name}, to be able to manually construct / destruct /
 /// clone it.
@@ -715,9 +657,7 @@ fn static_assert() {
     % endfor
 
     % for corner in CORNERS:
-    <% impl_corner_style_coord("border_%s_radius" % corner,
-                               "mBorderRadius",
-                               corner) %>
+    ${impl_simple("border_%s_radius" % corner, "mBorderRadius.%s" % corner)}
     % endfor
 
     <%
@@ -767,12 +707,8 @@ fn static_assert() {
                   skip_longhands="${skip_margin_longhands}
                                   ${skip_scroll_margin_longhands}">
     % for side in SIDES:
-    <% impl_split_style_coord("margin_%s" % side.ident,
-                              "mMargin",
-                              side.index) %>
-    <% impl_split_style_coord("scroll_margin_%s" % side.ident,
-                              "mScrollMargin",
-                              side.index) %>
+    ${impl_simple("margin_%s" % side.ident, "mMargin.%s" % side.index)}
+    ${impl_simple("scroll_margin_%s" % side.ident, "mScrollMargin.%s" % side.index)}
     % endfor
 </%self:impl_trait>
 
@@ -783,10 +719,8 @@ fn static_assert() {
                                   ${skip_scroll_padding_longhands}">
 
     % for side in SIDES:
-    <% impl_split_style_coord("padding_%s" % side.ident,
-                              "mPadding",
-                              side.index) %>
-    <% impl_split_style_coord("scroll_padding_%s" % side.ident, "mScrollPadding", side.index) %>
+    ${impl_simple("padding_%s" % side.ident, "mPadding.%s" % side.index)}
+    ${impl_simple("scroll_padding_%s" % side.ident, "mScrollPadding.%s" % side.index)}
     % endfor
 </%self:impl_trait>
 
@@ -797,7 +731,7 @@ fn static_assert() {
 <%self:impl_trait style_struct_name="Position"
                   skip_longhands="${skip_position_longhands}">
     % for side in SIDES:
-    <% impl_split_style_coord(side.ident, "mOffset", side.index) %>
+    ${impl_simple(side.ident, "mOffset.%s" % side.index)}
     % endfor
     pub fn set_computed_justify_items(&mut self, v: values::specified::JustifyItems) {
         debug_assert_ne!(v.0, crate::values::specified::align::AlignFlags::LEGACY);
