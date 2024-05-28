@@ -56,7 +56,6 @@ struct MFCDMCapabilitiesIPDL {
   MFCDMMediaCapability[] audioCapabilities;
   MFCDMMediaCapability[] videoCapabilities;
   SessionType[] sessionTypes;
-  CryptoScheme[] encryptionSchemes;
   Requirement distinctiveID;
   Requirement persistentState;
   bool? isHDCP22Compatible;

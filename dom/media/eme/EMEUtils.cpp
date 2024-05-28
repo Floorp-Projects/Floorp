@@ -192,10 +192,6 @@ void MFCDMCapabilitiesIPDLToKeySystemConfig(
   }
   aKeySystemConfig.mPersistentState = aCDMConfig.persistentState();
   aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
-  for (const auto& scheme : aCDMConfig.encryptionSchemes()) {
-    aKeySystemConfig.mEncryptionSchemes.AppendElement(
-        NS_ConvertUTF8toUTF16(CryptoSchemeToString(scheme)));
-  }
   aKeySystemConfig.mIsHDCP22Compatible = aCDMConfig.isHDCP22Compatible()
                                              ? *aCDMConfig.isHDCP22Compatible()
                                              : false;
