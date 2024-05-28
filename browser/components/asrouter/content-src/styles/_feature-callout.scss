@@ -313,7 +313,7 @@
           padding: var(--callout-padding, 24px);
           width: 25em;
           gap: 16px;
-          background-color: var(--fc-background);
+          background: var(--fc-background);
 
           .main-content-inner {
             gap: 12px;
@@ -566,7 +566,7 @@
 
   // the 'filled' arrow
   .background-arrow {
-    background-color: var(--fc-background);
+    background: var(--fc-background);
     clip-path: var(--fc-arrow-clip-path);
   }
 
@@ -757,25 +757,5 @@
 
   @at-root panel#{&}[arrow-position='inline-start-bottom'] {
     margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
-  }
-
-  // focus outline for the callout itself
-  &:focus-visible {
-    .screen {
-      &[pos='callout'] {
-        .section-main .main-content {
-          outline: 2px solid var(--fc-accent-color);
-          border-color: transparent;
-
-          @media (prefers-contrast) {
-            border-color: var(--fc-background);
-          }
-        }
-      }
-    }
-
-    .shadow-arrow {
-      outline: 2px solid var(--fc-accent-color);
-    }
   }
 }
