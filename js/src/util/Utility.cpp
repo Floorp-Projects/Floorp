@@ -93,14 +93,6 @@ void InitLargeAllocLimit() {
 }  // namespace js
 #endif
 
-#if defined(JS_GC_ALLOW_EXTRA_POISONING)
-#  if defined(DEBUG)
-bool js::gExtraPoisoningEnabled = true;
-#  else
-bool js::gExtraPoisoningEnabled = false;
-#  endif
-#endif
-
 JS_PUBLIC_DATA arena_id_t js::MallocArena;
 JS_PUBLIC_DATA arena_id_t js::ArrayBufferContentsArena;
 JS_PUBLIC_DATA arena_id_t js::StringBufferArena;
