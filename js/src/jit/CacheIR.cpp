@@ -1146,6 +1146,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
     case NativeGetPropKind::ScriptedGetter:
     case NativeGetPropKind::NativeGetter: {
       auto* nobj = &obj->as<NativeObject>();
+      MOZ_ASSERT(!IsWindow(nobj));
 
       maybeEmitIdGuard(id);
 
