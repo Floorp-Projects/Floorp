@@ -199,6 +199,7 @@ OS_LIBS += [
     "ktmw32",
     "rpcrt4",
     "urlmon",
+    "winmm",
 ]
 
 # mingw is missing Windows toast notification definitions.
