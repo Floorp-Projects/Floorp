@@ -248,6 +248,7 @@ hw-a51-perfstats-gv:
             cd $GECKO_PATH &&
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
+            --app geckoview
             --android
             --android-app-name org.mozilla.geckoview_example
             --android-activity org.mozilla.geckoview_example.GeckoViewActivity
@@ -257,7 +258,6 @@ hw-a51-perfstats-gv:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
             --perfherder
-            --perfherder-app geckoview
             --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
             --browsertime-iterations 10
             --hooks testing/performance/hooks_perfstats.py
@@ -277,6 +277,7 @@ hw-a51-aarch64-perfstats-gv:
             cd $GECKO_PATH &&
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
+            --app geckoview
             --android
             --android-app-name org.mozilla.geckoview_example
             --android-activity org.mozilla.geckoview_example.GeckoViewActivity
@@ -286,7 +287,6 @@ hw-a51-aarch64-perfstats-gv:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
             --perfherder
-            --perfherder-app geckoview
             --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
             --browsertime-iterations 10
             --hooks testing/performance/hooks_perfstats.py
@@ -306,6 +306,7 @@ hw-a51-perfstats-fenix:
             cd $GECKO_PATH &&
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
+            --app fenix
             --android
             --android-app-name org.mozilla.fenix
             --android-activity org.mozilla.fenix.IntentReceiverActivity
@@ -315,7 +316,6 @@ hw-a51-perfstats-fenix:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
             --perfherder
-            --perfherder-app fenix
             --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
             --browsertime-iterations 10
             --hooks testing/performance/hooks_perfstats.py
@@ -335,6 +335,7 @@ hw-a51-aarch64-perfstats-fenix:
             cd $GECKO_PATH &&
             python3 python/mozperftest/mozperftest/runner.py
             --flavor mobile-browser
+            --app fenix
             --android
             --android-app-name org.mozilla.fenix
             --android-activity org.mozilla.fenix.IntentReceiverActivity
@@ -344,7 +345,6 @@ hw-a51-aarch64-perfstats-fenix:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
             --perfherder
-            --perfherder-app fenix
             --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
             --browsertime-iterations 10
             --hooks testing/performance/hooks_perfstats.py

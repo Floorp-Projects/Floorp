@@ -157,7 +157,7 @@ class Mochitest(Layer):
         args.topobjdir = self.topobjdir
         args.topsrcdir = self.topsrcdir
         args.flavor = manifest_flavor
-        args.app = self.get_arg("binary")
+        args.app = self.get_arg("mochitest_binary")
 
         fetch_dir = os.getenv("MOZ_FETCHES_DIR")
         args.utilityPath = str(Path(fetch_dir, "bin"))

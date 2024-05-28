@@ -298,7 +298,7 @@ class BrowsertimeRunner(NodeRunner):
         extra_args.extend(["--viewPort", self.get_arg("viewport-size")])
 
         if not matches(args, "--android"):
-            binary = self.get_arg("binary")
+            binary = self.get_arg("browsertime_binary")
             if binary is not None:
                 extra_args.extend(("--firefox.binaryPath", binary))
             else:

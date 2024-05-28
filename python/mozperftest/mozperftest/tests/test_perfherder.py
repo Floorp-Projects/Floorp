@@ -541,9 +541,9 @@ def test_perfherder_exlude_stats():
 
 def test_perfherder_app_name():
     options = {
+        "app": "fenix",
         "perfherder": True,
         "perfherder-prefix": "",
-        "perfherder-app": "fenix",
         "perfherder-metrics": [metric_fields("firstPaint")],
     }
 
@@ -564,9 +564,9 @@ def test_perfherder_app_name():
 
 def test_perfherder_split_by():
     options = {
+        "app": "fenix",
         "perfherder": True,
         "perfherder-prefix": "",
-        "perfherder-app": "fenix",
         "perfherder-metrics": [metric_fields("firstPaint")],
         "perfherder-split-by": "browserScripts.pageinfo.url",
     }
@@ -599,9 +599,9 @@ def test_perfherder_split_by():
 
 def test_perfherder_bad_app_name():
     options = {
+        "app": "this is not an app",
         "perfherder": True,
         "perfherder-prefix": "",
-        "perfherder-app": "this is not an app",
         "perfherder-metrics": [metric_fields("firstPaint")],
     }
 

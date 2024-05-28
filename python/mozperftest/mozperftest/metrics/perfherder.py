@@ -31,24 +31,6 @@ class Perfherder(Layer):
     arguments = COMMON_ARGS
     arguments.update(
         {
-            "app": {
-                "type": str,
-                "default": "firefox",
-                "choices": [
-                    "firefox",
-                    "chrome-m",
-                    "chrome",
-                    "chromium",
-                    "fennec",
-                    "geckoview",
-                    "fenix",
-                    "refbrow",
-                ],
-                "help": (
-                    "Shorthand name of application that is "
-                    "being tested (used in perfherder data)."
-                ),
-            },
             "stats": {
                 "action": "store_true",
                 "default": False,
@@ -108,8 +90,9 @@ class Perfherder(Layer):
             self.warning("No results left after filtering")
             return metadata
 
-        # XXX Add version info into this data
         app_info = {"name": self.get_arg("app", default="firefox")}
+        if metadata.binary_version:
+            app_info["version"] = metadata.binary_version
 
         # converting the metrics list into a mapping where
         # keys are the metrics nane
@@ -128,11 +111,15 @@ class Perfherder(Layer):
             # XXX Instead of just passing replicates here, we should build
             # up a partial perfherder data blob (with options) and subtest
             # overall values.
-            subtests = {}
+            subtests = []
             for r in res:
+                subtest = {}
                 vals = [v["value"] for v in r["data"] if is_number(v["value"])]
                 if vals:
-                    subtests[r["subtest"]] = vals
+                    subtest["name"] = r["subtest"]
+                    subtest["replicates"] = vals
+                    subtest["result"] = r
+                    subtests.append(subtest)
 
             perfherder_data = self._build_blob(
                 subtests,
@@ -303,8 +290,10 @@ class Perfherder(Layer):
 
         allvals = []
         alert_thresholds = []
-        for measurement in subtests:
-            reps = subtests[measurement]
+        for subtest_res in subtests:
+            measurement = subtest_res["name"]
+            reps = subtest_res["replicates"]
+            extra_info = subtest_res["result"]
             allvals.extend(reps)
 
             if len(reps) == 0:
@@ -336,10 +325,14 @@ class Perfherder(Layer):
             subtest = {
                 "name": measurement,
                 "replicates": reps,
-                "lowerIsBetter": subtest_lower_is_better,
+                "lowerIsBetter": extra_info.get(
+                    "lowerIsBetter", subtest_lower_is_better
+                ),
                 "value": None,
-                "unit": subtest_unit,
-                "shouldAlert": should_alert or measurement in subtest_should_alert,
+                "unit": extra_info.get("unit", subtest_unit),
+                "shouldAlert": extra_info.get(
+                    "shouldAlert", should_alert or measurement in subtest_should_alert
+                ),
             }
 
             if has_callable_method(transformer_obj, "subtest_summary"):
