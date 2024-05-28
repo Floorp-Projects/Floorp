@@ -280,6 +280,34 @@ nsresult ContentBlockingAllowListCache::CheckForBaseDomain(
   return NS_OK;
 }
 
+nsTArray<nsCString>
+ContentBlockingAllowListCache::GetAllowListPermissionTypes() {
+  nsTArray<nsCString> types;
+  types.AppendElement("trackingprotection");
+  types.AppendElement("trackingprotection-pb");
+  return types;
+}
+
+nsresult ContentBlockingAllowListCache::IsAllowListPermission(
+    nsIPermission* aPermission, bool* aResult) {
+  NS_ENSURE_ARG_POINTER(aPermission);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  // Assert that the permission type matches the types returned by
+  // GetAllowListPermissionTypes.
+#ifdef DEBUG
+  nsAutoCString type;
+  nsresult rv = aPermission->GetType(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(type.EqualsLiteral("trackingprotection") ||
+             type.EqualsLiteral("trackingprotection-pb"));
+#endif
+
+  *aResult = true;
+  return NS_OK;
+}
+
 nsresult ContentBlockingAllowListCache::EnsureInit() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -292,9 +320,7 @@ nsresult ContentBlockingAllowListCache::EnsureInit() {
   PermissionManager* permManager = PermissionManager::GetInstance();
   NS_ENSURE_TRUE(permManager, NS_ERROR_FAILURE);
 
-  nsTArray<nsCString> types;
-  types.AppendElement("trackingprotection");
-  types.AppendElement("trackingprotection-pb");
+  nsTArray<nsCString> types = GetAllowListPermissionTypes();
 
   nsTArray<RefPtr<nsIPermission>> permissions;
   nsresult rv = permManager->GetAllByTypes(types, permissions);
@@ -305,6 +331,16 @@ nsresult ContentBlockingAllowListCache::EnsureInit() {
   for (auto& permission : permissions) {
     MOZ_ASSERT(permission);
 
+    // Check if the permission is a suitable allow-list permission.
+    bool result = false;
+    nsresult rv = IsAllowListPermission(permission, &result);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!result) {
+      continue;
+    }
+
+    // Permission is suitable, extract base domain from permission principal.
     nsCOMPtr<nsIPrincipal> principal;
     rv = permission->GetPrincipal(getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);

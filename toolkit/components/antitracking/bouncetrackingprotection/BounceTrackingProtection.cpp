@@ -4,6 +4,7 @@
 
 #include "BounceTrackingProtection.h"
 
+#include "BounceTrackingAllowList.h"
 #include "BounceTrackingProtectionStorage.h"
 #include "BounceTrackingState.h"
 #include "BounceTrackingRecord.h"
@@ -13,7 +14,6 @@
 #include "ErrorList.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Services.h"
@@ -505,9 +505,9 @@ BounceTrackingProtection::PurgeBounceTrackers() {
   }
   mPurgeInProgress = true;
 
-  // Obtain a cache of ContentBlockingAllowList permissions so we only need to
+  // Obtain a cache of allow-list permissions so we only need to
   // fetch permissions once even when we do multiple base domain lookups.
-  ContentBlockingAllowListCache contentBlockingAllowListCache;
+  BounceTrackingAllowList bounceTrackingAllowList;
 
   // Collect promises for all clearing operations to later await on.
   nsTArray<RefPtr<ClearDataMozPromise>> clearPromises;
@@ -527,7 +527,7 @@ BounceTrackingProtection::PurgeBounceTrackers() {
     }
 
     nsresult rv = PurgeBounceTrackersForStateGlobal(
-        stateGlobal, contentBlockingAllowListCache, clearPromises);
+        stateGlobal, bounceTrackingAllowList, clearPromises);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return PurgeBounceTrackersMozPromise::CreateAndReject(rv, __func__);
     }
@@ -568,7 +568,7 @@ BounceTrackingProtection::PurgeBounceTrackers() {
 
 nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
     BounceTrackingStateGlobal* aStateGlobal,
-    ContentBlockingAllowListCache& aContentBlockingAllowList,
+    BounceTrackingAllowList& aBounceTrackingAllowList,
     nsTArray<RefPtr<ClearDataMozPromise>>& aClearPromises) {
   MOZ_ASSERT(aStateGlobal);
   MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
@@ -632,7 +632,7 @@ nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
     // Gecko specific: If the host is on the content blocking allow-list,
     // continue.
     bool isAllowListed = false;
-    rv = aContentBlockingAllowList.CheckForBaseDomain(
+    rv = aBounceTrackingAllowList.CheckForBaseDomain(
         host, aStateGlobal->OriginAttributesRef(), isAllowListed);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
