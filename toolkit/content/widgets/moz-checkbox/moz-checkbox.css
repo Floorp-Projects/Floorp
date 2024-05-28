@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxsmall);
+
+}
+
+label {
+  display: flex;
+  gap: var(--space-small);
+  align-items: start;
+}
+
+input {
+  margin: calc((1lh - var(--checkbox-size)) / 2) 0;
+  min-width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  accent-color: var(--color-accent-primary);
+  font-size: inherit;
+}
