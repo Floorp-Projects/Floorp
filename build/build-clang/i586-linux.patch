@@ -1,0 +1,14 @@
+Temporary workaround for https://github.com/llvm/llvm-project/issues/93502
+
+diff --git a/clang/lib/Driver/ToolChains/Gnu.cpp b/clang/lib/Driver/ToolChains/Gnu.cpp
+index c0100fed1513..2694c3cb6ebf 100644
+--- a/clang/lib/Driver/ToolChains/Gnu.cpp
++++ b/clang/lib/Driver/ToolChains/Gnu.cpp
+@@ -2496,6 +2496,7 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
+   static const char *const X32LibDirs[] = {"/libx32", "/lib"};
+   static const char *const X86LibDirs[] = {"/lib32", "/lib"};
+   static const char *const X86Triples[] = {
++      "i586-linux-gnu",
+       "i686-linux-gnu",        "i686-pc-linux-gnu", "i386-redhat-linux6E",
+       "i686-redhat-linux",     "i386-redhat-linux", "i586-suse-linux",
+       "i686-montavista-linux",
