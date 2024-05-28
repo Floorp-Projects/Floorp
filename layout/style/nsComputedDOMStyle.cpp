@@ -1775,8 +1775,10 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderSpacing() {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
   const nsStyleTableBorder* border = StyleTableBorder();
-  valueList->AppendCSSValue(AppUnitsToCSSValue(border->mBorderSpacingCol));
-  valueList->AppendCSSValue(AppUnitsToCSSValue(border->mBorderSpacingRow));
+  valueList->AppendCSSValue(
+      PixelsToCSSValue(border->mBorderSpacing.width.ToCSSPixels()));
+  valueList->AppendCSSValue(
+      PixelsToCSSValue(border->mBorderSpacing.height.ToCSSPixels()));
 
   return valueList.forget();
 }

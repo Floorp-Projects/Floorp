@@ -1378,8 +1378,7 @@ nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aNewData) const {
 // nsStyleTableBorder
 
 nsStyleTableBorder::nsStyleTableBorder()
-    : mBorderSpacingCol(0),
-      mBorderSpacingRow(0),
+    : mBorderSpacing{Length::Zero(), Length::Zero()},
       mBorderCollapse(StyleBorderCollapse::Separate),
       mCaptionSide(StyleCaptionSide::Top),
       mEmptyCells(StyleEmptyCells::Show) {
@@ -1387,8 +1386,7 @@ nsStyleTableBorder::nsStyleTableBorder()
 }
 
 nsStyleTableBorder::nsStyleTableBorder(const nsStyleTableBorder& aSource)
-    : mBorderSpacingCol(aSource.mBorderSpacingCol),
-      mBorderSpacingRow(aSource.mBorderSpacingRow),
+    : mBorderSpacing(aSource.mBorderSpacing),
       mBorderCollapse(aSource.mBorderCollapse),
       mCaptionSide(aSource.mCaptionSide),
       mEmptyCells(aSource.mEmptyCells) {
@@ -1404,16 +1402,14 @@ nsChangeHint nsStyleTableBorder::CalcDifference(
   if (mBorderCollapse != aNewData.mBorderCollapse) {
     return nsChangeHint_ReconstructFrame;
   }
-
-  if (mCaptionSide == aNewData.mCaptionSide &&
-      mBorderSpacingCol == aNewData.mBorderSpacingCol &&
-      mBorderSpacingRow == aNewData.mBorderSpacingRow) {
-    if (mEmptyCells == aNewData.mEmptyCells) {
-      return nsChangeHint(0);
-    }
+  if (mCaptionSide != aNewData.mCaptionSide ||
+      mBorderSpacing != aNewData.mBorderSpacing) {
+    return NS_STYLE_HINT_REFLOW;
+  }
+  if (mEmptyCells != aNewData.mEmptyCells) {
     return NS_STYLE_HINT_VISUAL;
   }
-  return NS_STYLE_HINT_REFLOW;
+  return nsChangeHint(0);
 }
 
 template <typename T>
