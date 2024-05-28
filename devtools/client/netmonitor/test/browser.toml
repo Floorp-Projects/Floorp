@@ -182,6 +182,7 @@ skip-if = [
 ["browser_net_columns_showhide.js"]
 
 ["browser_net_columns_time.js"]
+https_first_disabled = true # Bug 1898241
 skip-if = [
   "win11_2009", # Bug 1797751
 ]
