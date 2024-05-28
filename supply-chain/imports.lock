@@ -226,15 +226,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "60.2.0"
-when = "2024-05-23"
+version = "60.1.0"
+when = "2024-05-06"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "60.2.0"
-when = "2024-05-23"
+version = "60.1.0"
+when = "2024-05-06"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -350,6 +350,13 @@ when = "2024-03-01"
 user-id = 72814
 user-login = "gabrielesvelto"
 user-name = "Gabriele Svelto"
+
+[[publisher.mio]]
+version = "0.6.21"
+when = "2019-11-27"
+user-id = 10
+user-login = "carllerche"
+user-name = "Carl Lerche"
 
 [[publisher.nss-gk-api]]
 version = "0.3.0"
@@ -700,14 +707,32 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasm-encoder]]
+version = "0.201.0"
+when = "2024-02-27"
+user-id = 73222
+user-login = "wasmtime-publish"
+
+[[publisher.wasm-encoder]]
 version = "0.205.0"
 when = "2024-04-18"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasm-smith]]
+version = "0.201.0"
+when = "2024-02-27"
+user-id = 73222
+user-login = "wasmtime-publish"
+
+[[publisher.wasm-smith]]
 version = "0.205.0"
 when = "2024-04-18"
+user-id = 73222
+user-login = "wasmtime-publish"
+
+[[publisher.wast]]
+version = "201.0.0"
+when = "2024-02-27"
 user-id = 73222
 user-login = "wasmtime-publish"
 
@@ -1025,6 +1050,12 @@ who = "Pat Hickey <phickey@fastly.com>"
 criteria = "safe-to-deploy"
 version = "0.4.6"
 notes = "provides a datastructure implemented using std's Vec. all uses of unsafe are just delegating to the underlying unsafe Vec methods."
+
+[[audits.bytecode-alliance.audits.socket2]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.4.7 -> 0.4.9"
+notes = "Minor OS compat updates but otherwise nothing major here."
 
 [[audits.bytecode-alliance.audits.tempfile]]
 who = "Pat Hickey <phickey@fastly.com>"

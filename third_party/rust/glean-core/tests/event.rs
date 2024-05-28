@@ -486,7 +486,6 @@ fn with_event_timestamps() {
         enable_event_timestamps: true,
         experimentation_id: None, // Enabling event timestamps
         enable_internal_pings: true,
-        ping_schedule: Default::default(),
     };
     let glean = Glean::new(cfg).unwrap();
 
