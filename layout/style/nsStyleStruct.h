@@ -151,7 +151,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   // math-style support (used for MathML displaystyle)
   mozilla::StyleMathStyle mMathStyle;
 
-
   // Was mLanguage set based on a lang attribute in the document?
   bool mExplicitLanguage = false;
 
