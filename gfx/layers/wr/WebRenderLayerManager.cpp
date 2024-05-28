@@ -366,7 +366,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
         *mDLBuilder, resourceUpdates, aDisplayList, aDisplayListBuilder,
         mScrollData, std::move(aFilters));
 
-    aDisplayListBuilder->NotifyAndClearScrollFrames();
+    aDisplayListBuilder->NotifyAndClearScrollContainerFrames();
 
     builderDumpIndex = mWebRenderCommandBuilder.GetBuilderDumpIndex();
     containsSVGGroup = mWebRenderCommandBuilder.GetContainsSVGGroup();

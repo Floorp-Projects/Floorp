@@ -2184,15 +2184,15 @@ void nsCSSRendering::GetImageLayerClip(
     // like the content. (See below.)
     // Therefore, only 'content-box' makes a difference here.
     if (layerClip == StyleGeometryBox::ContentBox) {
-      nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
+      ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(aForFrame);
       // Clip at a rectangle attached to the scrolled content.
       aClipState->mHasAdditionalBGClipArea = true;
       aClipState->mAdditionalBGClipArea =
           nsRect(aClipState->mBGClipArea.TopLeft() +
-                     scrollableFrame->GetScrolledFrame()->GetPosition()
+                     scrollContainerFrame->GetScrolledFrame()->GetPosition()
                      // For the dir=rtl case:
-                     + scrollableFrame->GetScrollRange().TopLeft(),
-                 scrollableFrame->GetScrolledRect().Size());
+                     + scrollContainerFrame->GetScrollRange().TopLeft(),
+                 scrollContainerFrame->GetScrolledRect().Size());
       nsMargin padding = aForFrame->GetUsedPadding();
       // padding-bottom is ignored on scrollable frames:
       // https://bugzilla.mozilla.org/show_bug.cgi?id=748518
@@ -2771,11 +2771,12 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
   nsIFrame* geometryFrame = aForFrame;
   if (MOZ_UNLIKELY(frameType == LayoutFrameType::ScrollContainer &&
                    StyleImageLayerAttachment::Local == aLayer.mAttachment)) {
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
-    positionArea = nsRect(scrollableFrame->GetScrolledFrame()->GetPosition()
-                              // For the dir=rtl case:
-                              + scrollableFrame->GetScrollRange().TopLeft(),
-                          scrollableFrame->GetScrolledRect().Size());
+    ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(aForFrame);
+    positionArea =
+        nsRect(scrollContainerFrame->GetScrolledFrame()->GetPosition()
+                   // For the dir=rtl case:
+                   + scrollContainerFrame->GetScrollRange().TopLeft(),
+               scrollContainerFrame->GetScrolledRect().Size());
     // The ScrolledRect’s size does not include the borders or scrollbars,
     // reverse the handling of background-origin
     // compared to the common case below.
@@ -2783,7 +2784,7 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
       nsMargin border = geometryFrame->GetUsedBorder();
       border.ApplySkipSides(geometryFrame->GetSkipSides());
       positionArea.Inflate(border);
-      positionArea.Inflate(scrollableFrame->GetActualScrollbarSizes());
+      positionArea.Inflate(scrollContainerFrame->GetActualScrollbarSizes());
     } else if (layerOrigin != StyleGeometryBox::PaddingBox) {
       nsMargin padding = geometryFrame->GetUsedPadding();
       padding.ApplySkipSides(geometryFrame->GetSkipSides());

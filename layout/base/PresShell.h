@@ -68,7 +68,6 @@ class nsIFrame;
 class nsILayoutHistoryState;
 class nsINode;
 class nsIReflowCallback;
-class nsIScrollableFrame;
 class nsITimer;
 class nsPageSequenceFrame;
 class nsPIDOMWindowOuter;
@@ -485,7 +484,7 @@ class PresShell final : public nsStubDocumentObserver,
   void PostPendingScrollAnchorAdjustment(
       layout::ScrollAnchorContainer* aContainer);
 
-  void PostPendingScrollResnap(nsIScrollableFrame* aScrollableFrame);
+  void PostPendingScrollResnap(ScrollContainerFrame* aScrollContainerFrame);
   void FlushPendingScrollResnap();
 
   void CancelAllPendingReflows();
@@ -1198,7 +1197,7 @@ class PresShell final : public nsStubDocumentObserver,
   // content (such as via window.scrollTo() should scroll the layout viewport
   // only).
   // If scrolling "far away", i.e. not just within the existing layout
-  // viewport, it's recommended to use both nsIScrollableFrame.ScrollTo*()
+  // viewport, it's recommended to use both ScrollContainerFrame.ScrollTo*()
   // (via window.scrollTo if calling from JS) *and* this function; otherwise,
   // temporary checkerboarding may result. If doing this:
   //   * Be sure to call ScrollTo*() first, as a subsequent layout scroll
@@ -1286,7 +1285,7 @@ class PresShell final : public nsStubDocumentObserver,
    * |aOrigin| specifies who originated the resolution change. For changes
    * sent by APZ, pass ResolutionChangeOrigin::Apz. For changes sent by
    * the main thread, pass ResolutionChangeOrigin::MainThreadAdjustment (similar
-   * to the |aOrigin| parameter of nsIScrollableFrame::ScrollToCSSPixels()).
+   * to the |aOrigin| parameter of ScrollContainerFrame::ScrollToCSSPixels()).
    */
   nsresult SetResolutionAndScaleTo(float aResolution,
                                    ResolutionChangeOrigin aOrigin);
@@ -1642,14 +1641,14 @@ class PresShell final : public nsStubDocumentObserver,
    *                      iframe or the like.  If ScrollFlags::ScrollSmooth
    *                      is set and CSSOM-VIEW scroll-behavior is enabled,
    *                      we will scroll smoothly using
-   *                      nsIScrollableFrame::ScrollMode::SMOOTH_MSD;
-   *                      otherwise, nsIScrollableFrame::ScrollMode::INSTANT
+   *                      ScrollContainerFrame::ScrollMode::SMOOTH_MSD;
+   *                      otherwise, ScrollContainerFrame::ScrollMode::INSTANT
    *                      will be used.  If ScrollFlags::ScrollSmoothAuto is
    *                      set, the CSSOM-View scroll-behavior attribute is
    *                      set to 'smooth' on the scroll frame, and CSSOM-VIEW
    *                      scroll-behavior is enabled, we will scroll smoothly
-   *                      using nsIScrollableFrame::ScrollMode::SMOOTH_MSD;
-   *                      otherwise, nsIScrollableFrame::ScrollMode::INSTANT
+   *                      using ScrollContainerFrame::ScrollMode::SMOOTH_MSD;
+   *                      otherwise, ScrollContainerFrame::ScrollMode::INSTANT
    *                      will be used.
    */
   MOZ_CAN_RUN_SCRIPT
@@ -3014,9 +3013,9 @@ class PresShell final : public nsStubDocumentObserver,
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.
   nsTHashSet<nsIFrame*> mFramesToDirty;
-  nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorSelection;
-  nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorAdjustment;
-  nsTHashSet<nsIScrollableFrame*> mPendingScrollResnap;
+  nsTHashSet<ScrollContainerFrame*> mPendingScrollAnchorSelection;
+  nsTHashSet<ScrollContainerFrame*> mPendingScrollAnchorAdjustment;
+  nsTHashSet<ScrollContainerFrame*> mPendingScrollResnap;
 
   nsTHashSet<nsIContent*> mHiddenContentInForcedLayout;
 

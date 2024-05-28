@@ -973,7 +973,7 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
 
     // Check whether the current frame is a scrollable frame with display port.
     nsRect displayPort;
-    nsIScrollableFrame* sf = do_QueryFrame(currentFrame);
+    ScrollContainerFrame* sf = do_QueryFrame(currentFrame);
     nsIContent* content = sf ? currentFrame->GetContent() : nullptr;
 
     if (content && DisplayPortUtils::GetDisplayPort(content, &displayPort)) {

@@ -74,7 +74,8 @@ void WebRenderLayerScrollData::Initialize(
       Maybe<ScrollMetadata> metadata =
           asr->mScrollContainerFrame->ComputeScrollMetadata(
               aOwner.GetManager(), aItem->Frame(), aItem->ToReferenceFrame());
-      aOwner.GetBuilder()->AddScrollFrameToNotify(asr->mScrollContainerFrame);
+      aOwner.GetBuilder()->AddScrollContainerFrameToNotify(
+          asr->mScrollContainerFrame);
       if (metadata) {
         MOZ_ASSERT(metadata->GetMetrics().GetScrollId() == scrollId);
         mScrollIds.AppendElement(aOwner.AddMetadata(metadata.ref()));

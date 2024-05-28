@@ -905,16 +905,16 @@ bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
   return false;
 }
 
-void nsDisplayListBuilder::AddScrollFrameToNotify(
-    nsIScrollableFrame* aScrollFrame) {
-  mScrollFramesToNotify.insert(aScrollFrame);
+void nsDisplayListBuilder::AddScrollContainerFrameToNotify(
+    ScrollContainerFrame* aScrollContainerFrame) {
+  mScrollContainerFramesToNotify.insert(aScrollContainerFrame);
 }
 
-void nsDisplayListBuilder::NotifyAndClearScrollFrames() {
-  for (const auto& it : mScrollFramesToNotify) {
+void nsDisplayListBuilder::NotifyAndClearScrollContainerFrames() {
+  for (const auto& it : mScrollContainerFramesToNotify) {
     it->NotifyApzTransaction();
   }
-  mScrollFramesToNotify.clear();
+  mScrollContainerFramesToNotify.clear();
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(
@@ -1614,8 +1614,8 @@ static bool IsStickyFrameActive(nsDisplayListBuilder* aBuilder,
 
   StickyScrollContainer* stickyScrollContainer =
       StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
-  return stickyScrollContainer &&
-         stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled();
+  return stickyScrollContainer && stickyScrollContainer->ScrollContainer()
+                                      ->IsMaybeAsynchronouslyScrolled();
 }
 
 bool nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
@@ -1650,7 +1650,7 @@ bool nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
   }
 
   if (parent->IsScrollContainerOrSubclass()) {
-    nsIScrollableFrame* sf = do_QueryFrame(parent);
+    ScrollContainerFrame* sf = do_QueryFrame(parent);
     if (sf->GetScrolledFrame() == aFrame) {
       MOZ_ASSERT(!aFrame->IsTransformed());
       return sf->IsMaybeAsynchronouslyScrolled();
@@ -5575,9 +5575,9 @@ StickyScrollContainer* nsDisplayStickyPosition::GetStickyScrollContainer() {
     // will never be asynchronously scrolled. Instead we will always position
     // the sticky items correctly on the gecko side and WR will never need to
     // adjust their position itself.
-    MOZ_ASSERT(
-        stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled());
-    if (!stickyScrollContainer->ScrollFrame()
+    MOZ_ASSERT(stickyScrollContainer->ScrollContainer()
+                   ->IsMaybeAsynchronouslyScrolled());
+    if (!stickyScrollContainer->ScrollContainer()
              ->IsMaybeAsynchronouslyScrolled()) {
       stickyScrollContainer = nullptr;
     }
@@ -5611,14 +5611,14 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
     nsRectAbsolute inner;
     stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
 
-    nsIFrame* scrollFrame = do_QueryFrame(stickyScrollContainer->ScrollFrame());
     nsPoint offset =
-        scrollFrame->GetOffsetToCrossDoc(Frame()) + ToReferenceFrame();
+        stickyScrollContainer->ScrollContainer()->GetOffsetToCrossDoc(Frame()) +
+        ToReferenceFrame();
 
     // Adjust the scrollPort coordinates to be relative to the reference frame,
     // so that it is in the same space as everything else.
     nsRect scrollPort =
-        stickyScrollContainer->ScrollFrame()->GetScrollPortRect();
+        stickyScrollContainer->ScrollContainer()->GetScrollPortRect();
     scrollPort += offset;
 
     // The following computations make more sense upon understanding the
@@ -5814,10 +5814,10 @@ bool nsDisplayStickyPosition::UpdateScrollData(
           nsLayoutUtils::GetSideBitsForFixedPositionContent(mFrame);
       aLayerData->SetFixedPositionSides(sides);
 
-      ScrollableLayerGuid::ViewID scrollId =
-          nsLayoutUtils::FindOrCreateIDFor(stickyScrollContainer->ScrollFrame()
-                                               ->GetScrolledFrame()
-                                               ->GetContent());
+      ScrollableLayerGuid::ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(
+          stickyScrollContainer->ScrollContainer()
+              ->GetScrolledFrame()
+              ->GetContent());
       aLayerData->SetStickyPositionScrollContainerId(scrollId);
     }
 
@@ -5862,7 +5862,7 @@ UniquePtr<ScrollMetadata> nsDisplayScrollInfoLayer::ComputeScrollMetadata(
   ScrollContainerFrame* scrollContainerFrame =
       mScrollFrame->GetScrollTargetFrame();
   if (scrollContainerFrame) {
-    aBuilder->AddScrollFrameToNotify(scrollContainerFrame);
+    aBuilder->AddScrollContainerFrameToNotify(scrollContainerFrame);
   }
 
   return UniquePtr<ScrollMetadata>(new ScrollMetadata(metadata));
@@ -5953,9 +5953,10 @@ void nsDisplayAsyncZoom::HitTest(nsDisplayListBuilder* aBuilder,
                                  const nsRect& aRect, HitTestState* aState,
                                  nsTArray<nsIFrame*>* aOutFrames) {
 #ifdef DEBUG
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(mFrame);
-  MOZ_ASSERT(scrollFrame && ViewportUtils::IsZoomedContentRoot(
-                                scrollFrame->GetScrolledFrame()));
+  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(mFrame);
+  MOZ_ASSERT(scrollContainerFrame &&
+             ViewportUtils::IsZoomedContentRoot(
+                 scrollContainerFrame->GetScrolledFrame()));
 #endif
   nsRect rect = ViewportUtils::VisualToLayout(aRect, mFrame->PresShell());
   mList.HitTest(aBuilder, rect, aState, aOutFrames);

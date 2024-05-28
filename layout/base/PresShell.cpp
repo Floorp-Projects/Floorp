@@ -2200,11 +2200,10 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
 
     mFramesToDirty.Remove(aFrame);
 
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
-    if (scrollableFrame) {
-      mPendingScrollAnchorSelection.Remove(scrollableFrame);
-      mPendingScrollAnchorAdjustment.Remove(scrollableFrame);
-      mPendingScrollResnap.Remove(scrollableFrame);
+    if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(aFrame)) {
+      mPendingScrollAnchorSelection.Remove(scrollContainerFrame);
+      mPendingScrollAnchorAdjustment.Remove(scrollContainerFrame);
+      mPendingScrollResnap.Remove(scrollContainerFrame);
     }
   }
 }
@@ -2358,7 +2357,7 @@ PresShell::ScrollPage(bool aForward) {
     scrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                                    ScrollUnit::PAGES, scrollMode, nullptr,
                                    mozilla::ScrollOrigin::NotSpecified,
-                                   nsIScrollableFrame::NOT_MOMENTUM,
+                                   ScrollContainerFrame::NOT_MOMENTUM,
                                    ScrollSnapFlags::IntendedDirection |
                                        ScrollSnapFlags::IntendedEndPosition);
   }
@@ -2380,7 +2379,7 @@ PresShell::ScrollLine(bool aForward) {
     scrollContainerFrame->ScrollBy(
         nsIntPoint(0, aForward ? lineCount : -lineCount), ScrollUnit::LINES,
         scrollMode, nullptr, mozilla::ScrollOrigin::NotSpecified,
-        nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedDirection);
+        ScrollContainerFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedDirection);
   }
   return NS_OK;
 }
@@ -2394,7 +2393,7 @@ PresShell::ScrollCharacter(bool aRight) {
     int32_t h = StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
     scrollContainerFrame->ScrollBy(
         nsIntPoint(aRight ? h : -h, 0), ScrollUnit::LINES, scrollMode, nullptr,
-        mozilla::ScrollOrigin::NotSpecified, nsIScrollableFrame::NOT_MOMENTUM,
+        mozilla::ScrollOrigin::NotSpecified, ScrollContainerFrame::NOT_MOMENTUM,
         ScrollSnapFlags::IntendedDirection);
   }
   return NS_OK;
@@ -2406,10 +2405,11 @@ PresShell::CompleteScroll(bool aForward) {
       GetScrollContainerFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Other);
   if (scrollContainerFrame) {
-    scrollContainerFrame->ScrollBy(
-        nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, scrollMode,
-        nullptr, mozilla::ScrollOrigin::NotSpecified,
-        nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedEndPosition);
+    scrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                                   ScrollUnit::WHOLE, scrollMode, nullptr,
+                                   mozilla::ScrollOrigin::NotSpecified,
+                                   ScrollContainerFrame::NOT_MOMENTUM,
+                                   ScrollSnapFlags::IntendedEndPosition);
   }
   return NS_OK;
 }
@@ -2581,11 +2581,11 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
 
 void PresShell::PostPendingScrollAnchorSelection(
     mozilla::layout::ScrollAnchorContainer* aContainer) {
-  mPendingScrollAnchorSelection.Insert(aContainer->ScrollableFrame());
+  mPendingScrollAnchorSelection.Insert(aContainer->ScrollContainer());
 }
 
 void PresShell::FlushPendingScrollAnchorSelections() {
-  for (nsIScrollableFrame* scroll : mPendingScrollAnchorSelection) {
+  for (ScrollContainerFrame* scroll : mPendingScrollAnchorSelection) {
     scroll->Anchor()->SelectAnchor();
   }
   mPendingScrollAnchorSelection.Clear();
@@ -2593,23 +2593,24 @@ void PresShell::FlushPendingScrollAnchorSelections() {
 
 void PresShell::PostPendingScrollAnchorAdjustment(
     ScrollAnchorContainer* aContainer) {
-  mPendingScrollAnchorAdjustment.Insert(aContainer->ScrollableFrame());
+  mPendingScrollAnchorAdjustment.Insert(aContainer->ScrollContainer());
 }
 
 void PresShell::FlushPendingScrollAnchorAdjustments() {
-  for (nsIScrollableFrame* scroll : mPendingScrollAnchorAdjustment) {
+  for (ScrollContainerFrame* scroll : mPendingScrollAnchorAdjustment) {
     scroll->Anchor()->ApplyAdjustments();
   }
   mPendingScrollAnchorAdjustment.Clear();
 }
 
-void PresShell::PostPendingScrollResnap(nsIScrollableFrame* aScrollableFrame) {
-  mPendingScrollResnap.Insert(aScrollableFrame);
+void PresShell::PostPendingScrollResnap(
+    ScrollContainerFrame* aScrollContainerFrame) {
+  mPendingScrollResnap.Insert(aScrollContainerFrame);
 }
 
 void PresShell::FlushPendingScrollResnap() {
-  for (nsIScrollableFrame* scrollableFrame : mPendingScrollResnap) {
-    scrollableFrame->TryResnap();
+  for (ScrollContainerFrame* scrollContainerFrame : mPendingScrollResnap) {
+    scrollContainerFrame->TryResnap();
   }
   mPendingScrollResnap.Clear();
 }
@@ -3413,18 +3414,18 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
 }
 
 static WhereToScroll GetApplicableWhereToScroll(
-    const nsIScrollableFrame* aFrameAsScrollable,
+    const ScrollContainerFrame* aScrollContainerFrame,
     const nsIFrame* aScrollableFrame, const nsIFrame* aTarget,
     ScrollDirection aScrollDirection, WhereToScroll aOriginal) {
-  MOZ_ASSERT(do_QueryFrame(aFrameAsScrollable) == aScrollableFrame);
+  MOZ_ASSERT(do_QueryFrame(aScrollContainerFrame) == aScrollableFrame);
   if (aTarget == aScrollableFrame) {
     return aOriginal;
   }
 
   StyleScrollSnapAlignKeyword align =
       aScrollDirection == ScrollDirection::eHorizontal
-          ? aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).first
-          : aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).second;
+          ? aScrollContainerFrame->GetScrollSnapAlignFor(aTarget).first
+          : aScrollContainerFrame->GetScrollSnapAlignFor(aTarget).second;
 
   switch (align) {
     case StyleScrollSnapAlignKeyword::None:
@@ -3440,26 +3441,26 @@ static WhereToScroll GetApplicableWhereToScroll(
 }
 
 /**
- * This function takes a scrollable frame, a rect in the coordinate system
+ * This function takes a scroll container frame, a rect in the coordinate system
  * of the scrolled frame, and a desired percentage-based scroll
  * position and attempts to scroll the rect to that position in the
  * visual viewport.
  *
  * This needs to work even if aRect has a width or height of zero.
  */
-static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
+static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
                              const nsIFrame* aScrollableFrame,
                              const nsIFrame* aTarget, const nsRect& aRect,
                              const Sides aScrollPaddingSkipSides,
                              const nsMargin& aMargin, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
-  nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
+  nsPoint scrollPt = aScrollContainerFrame->GetVisualViewportOffset();
   const nsPoint originalScrollPt = scrollPt;
   const nsRect visibleRect(scrollPt,
-                           aFrameAsScrollable->GetVisualViewportSize());
+                           aScrollContainerFrame->GetVisualViewportSize());
 
   const nsMargin padding = [&] {
-    nsMargin p = aFrameAsScrollable->GetScrollPadding();
+    nsMargin p = aScrollContainerFrame->GetScrollPadding();
     p.ApplySkipSides(aScrollPaddingSkipSides);
     return p + aMargin;
   }();
@@ -3467,7 +3468,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   const nsRect rectToScrollIntoView = [&] {
     nsRect r(aRect);
     r.Inflate(padding);
-    return r.Intersect(aFrameAsScrollable->GetScrolledRect());
+    return r.Intersect(aScrollContainerFrame->GetScrolledRect());
   }();
 
   nsSize lineSize;
@@ -3478,12 +3479,12 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   // it would assert and possible give the wrong result.
   if (aVertical.mWhenToScroll == WhenToScroll::IfNotVisible ||
       aHorizontal.mWhenToScroll == WhenToScroll::IfNotVisible) {
-    lineSize = aFrameAsScrollable->GetLineScrollAmount();
+    lineSize = aScrollContainerFrame->GetLineScrollAmount();
   }
-  ScrollStyles ss = aFrameAsScrollable->GetScrollStyles();
+  ScrollStyles ss = aScrollContainerFrame->GetScrollStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
   ScrollDirections directions =
-      aFrameAsScrollable->GetAvailableScrollingDirections();
+      aScrollContainerFrame->GetAvailableScrollingDirections();
 
   if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
        ss.mVertical != StyleOverflow::Hidden) &&
@@ -3494,7 +3495,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                             visibleRect.YMost() - padding.bottom)) {
       // If the scroll-snap-align on the frame is valid, we need to respect it.
       WhereToScroll whereToScroll = GetApplicableWhereToScroll(
-          aFrameAsScrollable, aScrollableFrame, aTarget,
+          aScrollContainerFrame, aScrollableFrame, aTarget,
           ScrollDirection::eVertical, aVertical.mWhereToScroll);
 
       nscoord maxHeight;
@@ -3515,7 +3516,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                             visibleRect.XMost() - padding.right)) {
       // If the scroll-snap-align on the frame is valid, we need to respect it.
       WhereToScroll whereToScroll = GetApplicableWhereToScroll(
-          aFrameAsScrollable, aScrollableFrame, aTarget,
+          aScrollContainerFrame, aScrollableFrame, aTarget,
           ScrollDirection::eHorizontal, aHorizontal.mWhereToScroll);
 
       nscoord maxWidth;
@@ -3544,17 +3545,17 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   } else if (aScrollFlags & ScrollFlags::ScrollSmoothAuto) {
     behavior = ScrollBehavior::Auto;
   }
-  bool smoothScroll = aFrameAsScrollable->IsSmoothScroll(behavior);
+  bool smoothScroll = aScrollContainerFrame->IsSmoothScroll(behavior);
   if (smoothScroll) {
     scrollMode = ScrollMode::SmoothMsd;
   }
-  nsIFrame* frame = do_QueryFrame(aFrameAsScrollable);
+  nsIFrame* frame = do_QueryFrame(aScrollContainerFrame);
   AutoWeakFrame weakFrame(frame);
-  aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
-                               ScrollSnapFlags::IntendedEndPosition,
-                               aScrollFlags & ScrollFlags::TriggeredByScript
-                                   ? ScrollTriggeredByScript::Yes
-                                   : ScrollTriggeredByScript::No);
+  aScrollContainerFrame->ScrollTo(scrollPt, scrollMode, &allowedRange,
+                                  ScrollSnapFlags::IntendedEndPosition,
+                                  aScrollFlags & ScrollFlags::TriggeredByScript
+                                      ? ScrollTriggeredByScript::Yes
+                                      : ScrollTriggeredByScript::No);
   if (!weakFrame.IsAlive()) {
     return;
   }
@@ -3563,7 +3564,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   // scroll the rect into view visually, and that may require scrolling
   // the visual viewport in scenarios where there is not enough layout
   // scroll range.
-  if (aFrameAsScrollable->IsRootScrollFrameOfDocument() &&
+  if (aScrollContainerFrame->IsRootScrollFrameOfDocument() &&
       frame->PresContext()->IsRootContentDocumentCrossProcess()) {
     frame->PresShell()->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
                                        scrollMode);
@@ -3745,7 +3746,7 @@ bool PresShell::ScrollFrameIntoView(
     MaybeSkipPaddingSides(aTargetFrame);
     while (nsIFrame* parent = container->GetParent()) {
       container = parent;
-      if (static_cast<nsIScrollableFrame*>(do_QueryFrame(container))) {
+      if (container->IsScrollContainerOrSubclass()) {
         // We really just need a non-fragmented frame so that we can accumulate
         // the bounds of all our continuations relative to it. We shouldn't jump
         // out of our nearest scrollable frame, and that's an ok reference
@@ -3787,7 +3788,7 @@ bool PresShell::ScrollFrameIntoView(
   // Walk up the frame hierarchy scrolling the rect into view and
   // keeping rect relative to container
   do {
-    if (nsIScrollableFrame* sf = do_QueryFrame(container)) {
+    if (ScrollContainerFrame* sf = do_QueryFrame(container)) {
       nsPoint oldPosition = sf->GetScrollPosition();
       nsRect targetRect = rect;
       // Inflate the scrolled rect by the container's padding in each dimension,
@@ -6013,8 +6014,7 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
 
   nsRect rect = aRect;
 
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(aFrame);
-  if (scrollFrame) {
+  if (ScrollContainerFrame* scrollFrame = do_QueryFrame(aFrame)) {
     bool ignoreDisplayPort = false;
     if (DisplayPortUtils::IsMissingDisplayPortBaseRect(aFrame->GetContent())) {
       // We can properly set the base rect for root scroll frames on top level
@@ -8079,7 +8079,7 @@ PresShell::EventHandler::ComputeRootFrameToHandleEventWithCapturingContent(
 
   // scrollable frames should use the scrolling container as the root instead
   // of the document
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(captureFrame);
+  ScrollContainerFrame* scrollFrame = do_QueryFrame(captureFrame);
   return scrollFrame ? scrollFrame->GetScrolledFrame()
                      : aRootFrameToHandleEvent;
 }

@@ -15,7 +15,6 @@
 #include "mozilla/ScrollContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
 namespace mozilla {
@@ -23,13 +22,14 @@ namespace mozilla {
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(StickyScrollContainerProperty,
                                     StickyScrollContainer)
 
-StickyScrollContainer::StickyScrollContainer(nsIScrollableFrame* aScrollFrame)
-    : mScrollFrame(aScrollFrame) {
-  mScrollFrame->AddScrollPositionListener(this);
+StickyScrollContainer::StickyScrollContainer(
+    ScrollContainerFrame* aScrollContainerFrame)
+    : mScrollContainerFrame(aScrollContainerFrame) {
+  mScrollContainerFrame->AddScrollPositionListener(this);
 }
 
 StickyScrollContainer::~StickyScrollContainer() {
-  mScrollFrame->RemoveScrollPositionListener(this);
+  mScrollContainerFrame->RemoveScrollPositionListener(this);
 }
 
 // static
@@ -167,7 +167,7 @@ void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
     return;
   }
 
-  nsIFrame* scrolledFrame = mScrollFrame->GetScrolledFrame();
+  nsIFrame* scrolledFrame = mScrollContainerFrame->GetScrolledFrame();
   nsIFrame* cbFrame = aFrame->GetContainingBlock();
   NS_ASSERTION(cbFrame == scrolledFrame ||
                    nsLayoutUtils::IsProperAncestorFrame(scrolledFrame, cbFrame),
@@ -376,7 +376,7 @@ void StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
                                             nsIFrame* aSubtreeRoot) {
 #ifdef DEBUG
   {
-    nsIFrame* scrollFrameAsFrame = do_QueryFrame(mScrollFrame);
+    nsIFrame* scrollFrameAsFrame = do_QueryFrame(mScrollContainerFrame);
     NS_ASSERTION(!aSubtreeRoot || aSubtreeRoot == scrollFrameAsFrame,
                  "If reflowing, should be reflowing the scroll frame");
   }

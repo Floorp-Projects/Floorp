@@ -12,7 +12,6 @@
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
 #include "nsFontMetrics.h"
-#include "nsIScrollableFrame.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
