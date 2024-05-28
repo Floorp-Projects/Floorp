@@ -840,6 +840,7 @@ class BuildReader(object):
         self.finder = finder
 
         # Finder patterns to ignore when searching for moz.build files.
+        # Keep this logic in sync with `all_mozbuild_paths`
         ignores = {
             # Ignore fake moz.build files used for testing moz.build.
             "python/mozbuild/mozbuild/test",
@@ -922,8 +923,41 @@ class BuildReader(object):
         # In the future, we may traverse moz.build files by looking
         # for DIRS references in the AST, even if a directory is added behind
         # a conditional. For now, just walk the filesystem.
-        for path, f in self._relevant_mozbuild_finder.find("**/moz.build"):
-            yield path
+        #
+        # The implementation below replaces using
+        # `self._relevant_mozbuild_finder.find("**/moz.build")`, in addition to
+        # filtering out folders that contain a `config.status` file (see below).
+
+        base_dir = self._relevant_mozbuild_finder.base
+        # Share the ignores at the cost of a little bit of speed and readability
+        ignores = self._relevant_mozbuild_finder.ignore
+
+        def should_include_dir(relpath, d):
+            d = mozpath.join(relpath, d)
+            # faster than `any(match)`
+            return all(not mozpath.match(d, p) for p in ignores)
+
+        for full_path, dirs, files in os.walk(base_dir, topdown=True):
+            if "config.status" in files:
+                # Also ignore any other directories that could be objdirs,
+                # but don't necessarily start with the string 'obj'.
+                continue
+
+            # faster than `os.path.relpath` and we know the path is always
+            # relative to the root
+            relpath = full_path[len(base_dir) + len(os.path.sep) :]
+
+            dirs[:] = [
+                d
+                for d in dirs
+                # ignore hidden dirs
+                if d[0] != "."
+                # ignore specific dirs
+                and should_include_dir(relpath, d)
+            ]
+
+            if "moz.build" in files:
+                yield mozpath.join(relpath, "moz.build")
 
     def find_variables_from_ast(self, variables, path=None):
         """Finds all assignments to the specified variables by parsing
