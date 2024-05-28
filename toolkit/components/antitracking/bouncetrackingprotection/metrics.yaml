@@ -62,19 +62,3 @@ bounce.tracking.protection:
       - bvandersloot@mozilla.com
       - manuel@mozilla.com
     expires: never
-  purge_count_classified_tracker:
-    type: counter
-    description: >
-      Counts sites purged from BTP that are classified as trackers as part of the following lists:
-      [emailtracking-protection, fingerprinting-protection, socialtracking-protection, tracking-protection]
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1890580
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1890580
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - pbz@mozilla.com
-      - bvandersloot@mozilla.com
-      - manuel@mozilla.com
-    expires: 134
