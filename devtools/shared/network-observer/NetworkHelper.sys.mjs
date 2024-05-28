@@ -181,47 +181,6 @@ export var NetworkHelper = {
   },
 
   /**
-   * Reads the posted text from the page's cache.
-   *
-   * @param nsIDocShell docShell
-   * @param string charset
-   * @returns string or null
-   *          Returns the posted string if it was possible to read from
-   *          docShell otherwise null.
-   */
-  readPostTextFromPage(docShell, charset) {
-    const webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    return this.readPostTextFromPageViaWebNav(webNav, charset);
-  },
-
-  /**
-   * Reads the posted text from the page's cache, given an nsIWebNavigation
-   * object.
-   *
-   * @param nsIWebNavigation webNav
-   * @param string charset
-   * @returns string or null
-   *          Returns the posted string if it was possible to read from
-   *          webNav, otherwise null.
-   */
-  readPostTextFromPageViaWebNav(webNav, charset) {
-    if (webNav instanceof Ci.nsIWebPageDescriptor) {
-      const descriptor = webNav.currentDescriptor;
-
-      if (
-        descriptor instanceof Ci.nsISHEntry &&
-        descriptor.postData &&
-        descriptor instanceof Ci.nsISeekableStream
-      ) {
-        descriptor.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
-
-        return this.readAndConvertFromStream(descriptor, charset);
-      }
-    }
-    return null;
-  },
-
-  /**
    * Gets the topFrameElement that is associated with request. This
    * works in single-process and multiprocess contexts. It may cross
    * the content/chrome boundary.
@@ -286,23 +245,6 @@ export var NetworkHelper = {
     }
 
     return null;
-  },
-
-  /**
-   * Determines whether the request has been made for the top level document.
-   *
-   * @param nsIHttpChannel request
-   * @returns Boolean True if the request represents the top level document.
-   */
-  isTopLevelLoad(request) {
-    if (request instanceof Ci.nsIChannel) {
-      const loadInfo = request.loadInfo;
-      if (loadInfo?.isTopLevelLoad) {
-        return request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI;
-      }
-    }
-
-    return false;
   },
 
   /**
