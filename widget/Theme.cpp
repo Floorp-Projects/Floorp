@@ -189,8 +189,8 @@ void Theme::LookAndFeelChanged() {
   }
 }
 
-auto Theme::GetDPIRatio(nsPresContext* aPc, StyleAppearance aAppearance)
-    -> DPIRatio {
+auto Theme::GetDPIRatio(nsPresContext* aPc,
+                        StyleAppearance aAppearance) -> DPIRatio {
   // Widgets react to zoom, except scrollbars.
   if (IsWidgetScrollbarPart(aAppearance)) {
     return GetScrollbarDrawing().GetDPIRatioForScrollbarPart(aPc);
@@ -198,8 +198,8 @@ auto Theme::GetDPIRatio(nsPresContext* aPc, StyleAppearance aAppearance)
   return DPIRatio(float(AppUnitsPerCSSPixel()) / aPc->AppUnitsPerDevPixel());
 }
 
-auto Theme::GetDPIRatio(nsIFrame* aFrame, StyleAppearance aAppearance)
-    -> DPIRatio {
+auto Theme::GetDPIRatio(nsIFrame* aFrame,
+                        StyleAppearance aAppearance) -> DPIRatio {
   return GetDPIRatio(aFrame->PresContext(), aAppearance);
 }
 

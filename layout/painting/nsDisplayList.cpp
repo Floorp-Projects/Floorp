@@ -6353,8 +6353,8 @@ static bool ShouldUsePartialPrerender(const nsIFrame* aFrame) {
 
 /* static */
 auto nsDisplayTransform::ShouldPrerenderTransformedContent(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsRect* aDirtyRect)
-    -> PrerenderInfo {
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+    nsRect* aDirtyRect) -> PrerenderInfo {
   PrerenderInfo result;
   // If we are in a preserve-3d tree, and we've disallowed async animations, we
   // return No prerender decision directly.

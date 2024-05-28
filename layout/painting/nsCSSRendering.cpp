@@ -1151,10 +1151,9 @@ static nsIFrame* GetPageSequenceForCanvas(const nsIFrame* aCanvasFrame) {
   return ps;
 }
 
-auto nsCSSRendering::FindEffectiveBackgroundColor(nsIFrame* aFrame,
-                                                  bool aStopAtThemed,
-                                                  bool aPreferBodyToCanvas)
-    -> EffectiveBackgroundColor {
+auto nsCSSRendering::FindEffectiveBackgroundColor(
+    nsIFrame* aFrame, bool aStopAtThemed,
+    bool aPreferBodyToCanvas) -> EffectiveBackgroundColor {
   MOZ_ASSERT(aFrame);
   nsPresContext* pc = aFrame->PresContext();
   auto BgColorIfNotTransparent = [&](nsIFrame* aFrame) -> Maybe<nscolor> {
