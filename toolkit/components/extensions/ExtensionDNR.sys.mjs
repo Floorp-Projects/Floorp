@@ -1220,11 +1220,8 @@ class RuleValidator {
 }
 
 export class RuleQuotaCounter {
-  constructor(isStaticRulesets) {
-    this.isStaticRulesets = isStaticRulesets;
-    this.ruleLimitName = isStaticRulesets
-      ? "GUARANTEED_MINIMUM_STATIC_RULES"
-      : "MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES";
+  constructor(ruleLimitName) {
+    this.ruleLimitName = ruleLimitName;
     this.ruleLimitRemaining = lazy.ExtensionDNRLimits[this.ruleLimitName];
     this.regexRemaining = lazy.ExtensionDNRLimits.MAX_NUMBER_OF_REGEX_RULES;
   }
@@ -1250,7 +1247,7 @@ export class RuleQuotaCounter {
   }
 
   #throwQuotaError(rulesetId, what, limitName) {
-    if (this.isStaticRulesets) {
+    if (this.ruleLimitName === "GUARANTEED_MINIMUM_STATIC_RULES") {
       throw new ExtensionError(
         `Number of ${what} across all enabled static rulesets exceeds ${limitName} if ruleset "${rulesetId}" were to be enabled.`
       );

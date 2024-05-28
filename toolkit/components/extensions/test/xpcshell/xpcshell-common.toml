@@ -210,11 +210,13 @@ skip-if = [
 ["test_ext_dnr_allowAllRequests.js"]
 
 ["test_ext_dnr_api.js"]
+skip-if = ["condprof"] # Bug 1899260 expected failure hit due to cached schema data
 
 ["test_ext_dnr_download.js"]
 skip-if = ["os == 'android'"] # Android: downloads.download goes through the embedder app instead of Gecko, and cannot be intercepted.
 
 ["test_ext_dnr_dynamic_rules.js"]
+skip-if = ["condprof"] # Bug 1899260 expected failure hit due to cached schema data
 
 ["test_ext_dnr_modifyHeaders.js"]
 
@@ -227,6 +229,7 @@ skip-if = ["os == 'android'"] # Android: downloads.download goes through the emb
 ["test_ext_dnr_regexFilter_limits.js"]
 
 ["test_ext_dnr_session_rules.js"]
+skip-if = ["condprof"] # Bug 1899260 expected failure hit due to cached schema data
 
 ["test_ext_dnr_startup_cache.js"]
 

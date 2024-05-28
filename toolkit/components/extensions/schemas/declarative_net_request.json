@@ -857,7 +857,15 @@
       },
       "MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES": {
         "type": "number",
-        "description": "The maximum number of dynamic and session rules an extension can add. NOTE: in the Firefox we are enforcing this limit to the session and dynamic rules count separately, instead of enforcing it to the rules count for both combined as the Chrome implementation does."
+        "description": "Deprecated property returning the maximum number of dynamic and session rules an extension can add, replaced by MAX_NUMBER_OF_DYNAMIC_RULES/MAX_NUMBER_OF_SESSION_RULES."
+      },
+      "MAX_NUMBER_OF_DYNAMIC_RULES": {
+        "type": "number",
+        "description": "The maximum number of dynamic session rules an extension can add."
+      },
+      "MAX_NUMBER_OF_SESSION_RULES": {
+        "type": "number",
+        "description": "The maximum number of dynamic session rules an extension can add."
       },
       "MAX_NUMBER_OF_REGEX_RULES": {
         "type": "number",

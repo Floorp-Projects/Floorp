@@ -359,6 +359,8 @@ add_task(async function test_dnr_limits_namespace_properties() {
         MAX_NUMBER_OF_STATIC_RULESETS,
         MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
         MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+        MAX_NUMBER_OF_DYNAMIC_RULES,
+        MAX_NUMBER_OF_SESSION_RULES,
         MAX_NUMBER_OF_REGEX_RULES,
       } = browser.declarativeNetRequest;
       browser.test.sendMessage("dnr-namespace-properties", {
@@ -366,6 +368,8 @@ add_task(async function test_dnr_limits_namespace_properties() {
         MAX_NUMBER_OF_STATIC_RULESETS,
         MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
         MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+        MAX_NUMBER_OF_DYNAMIC_RULES,
+        MAX_NUMBER_OF_SESSION_RULES,
         MAX_NUMBER_OF_REGEX_RULES,
       });
     },
@@ -375,7 +379,16 @@ add_task(async function test_dnr_limits_namespace_properties() {
 
   Assert.deepEqual(
     await extension.awaitMessage("dnr-namespace-properties"),
-    ExtensionDNRLimits,
+    {
+      ...ExtensionDNRLimits,
+      // The following is a deprecated limit and so it is still available to the
+      // extensions as an API namespace property but it is not part of the limits
+      // exported by ExtensionDNRLimits and actually enforced internally.
+      MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES: Math.min(
+        ExtensionDNRLimits.MAX_NUMBER_OF_DYNAMIC_RULES,
+        ExtensionDNRLimits.MAX_NUMBER_OF_SESSION_RULES
+      ),
+    },
     "Got the expected limits values set on the dnr namespace"
   );
 

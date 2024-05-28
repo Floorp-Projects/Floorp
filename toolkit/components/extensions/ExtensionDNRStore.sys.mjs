@@ -892,7 +892,7 @@ class RulesetsStore {
 
     if (!isUpdateEnabledRulesets) {
       ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
-        /* isStaticRulesets */ true
+        "GUARANTEED_MINIMUM_STATIC_RULES"
       );
     }
 
@@ -1440,7 +1440,9 @@ class RulesetsStore {
         data.dynamicRuleset
       );
 
-      let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter();
+      let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+        "MAX_NUMBER_OF_DYNAMIC_RULES"
+      );
       try {
         ruleQuotaCounter.tryAddRules("_dynamic", validatedDynamicRules);
         data.dynamicRuleset = validatedDynamicRules;
@@ -1661,7 +1663,9 @@ class RulesetsStore {
     }
 
     const validatedRules = ruleValidator.getValidatedRules();
-    let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter();
+    let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+      "MAX_NUMBER_OF_DYNAMIC_RULES"
+    );
     ruleQuotaCounter.tryAddRules("_dynamic", validatedRules);
 
     this._data.get(extension.uuid).updateRulesets({
@@ -1797,7 +1801,7 @@ class RulesetsStore {
     // when previously-disabled rulesets are enabled, we need to count what we
     // already have.
     let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
-      /* isStaticRulesets */ true
+      "GUARANTEED_MINIMUM_STATIC_RULES"
     );
     for (let [rulesetId, ruleset] of updatedEnabledRulesets) {
       ruleQuotaCounter.tryAddRules(rulesetId, ruleset.rules);

@@ -36,12 +36,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 /**
  * NOTE: this limit may be increased in the future, see
- * https://github.com/w3c/webextensions/issues/319
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1894119
  */
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES",
-  "extensions.dnr.max_number_of_dynamic_and_session_rules",
+  "MAX_NUMBER_OF_DYNAMIC_RULES",
+  "extensions.dnr.max_number_of_dynamic_rules",
+  5000
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "MAX_NUMBER_OF_SESSION_RULES",
+  "extensions.dnr.max_number_of_session_rules",
   5000
 );
 
@@ -80,14 +87,17 @@ export const ExtensionDNRLimits = {
   },
 
   /**
-   * The maximum number of dynamic and session rules an extension can add.
-   *
-   * NOTE: in the Firefox we are enforcing this limit to the session and
-   * dynamic rules count separately, instead of enforcing it to the rules count
-   * for both combined as the Chrome implementation does.
+   * The maximum number of dynamic rules an extension can add.
    */
-  get MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES() {
-    return lazy.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES;
+  get MAX_NUMBER_OF_DYNAMIC_RULES() {
+    return lazy.MAX_NUMBER_OF_DYNAMIC_RULES;
+  },
+
+  /**
+   * The maximum number of session rules an extension can add.
+   */
+  get MAX_NUMBER_OF_SESSION_RULES() {
+    return lazy.MAX_NUMBER_OF_SESSION_RULES;
   },
 
   /**
