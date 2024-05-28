@@ -787,7 +787,6 @@ export class FeatureCallout {
         "aria-describedby",
         `#${CONTAINER_ID} .welcome-text`
       );
-      this._container.tabIndex = 0;
       if (arrow_width) {
         this._container.style.setProperty("--arrow-width", `${arrow_width}px`);
       } else {
@@ -1672,8 +1671,7 @@ export class FeatureCallout {
       this._container.querySelector("input:not(:disabled, [hidden])") ||
       this._container.querySelector(
         "button:not(:disabled, [hidden], .text-link, .cta-link)"
-      ) ||
-      this._container
+      )
     );
   }
 
@@ -1896,7 +1894,8 @@ export class FeatureCallout {
     // colors inherit from the user's theme through contentTheme.js.
     "themed-content": {
       all: {
-        background: "var(--newtab-background-color-secondary)",
+        background:
+          "var(--newtab-background-color, var(--in-content-page-background)) linear-gradient(var(--newtab-background-color-secondary), var(--newtab-background-color-secondary))",
         color: "var(--newtab-text-primary-color, var(--in-content-page-color))",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary) 80%, #000)",
@@ -2009,7 +2008,8 @@ export class FeatureCallout {
     },
     newtab: {
       all: {
-        background: "var(--newtab-background-color-secondary, #FFF)",
+        background:
+          "var(--newtab-background-color, #F9F9FB) linear-gradient(var(--newtab-background-color-secondary, #FFF), var(--newtab-background-color-secondary, #FFF))",
         color: "var(--newtab-text-primary-color, WindowText)",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary, #FFF) 80%, #000)",
@@ -2031,7 +2031,8 @@ export class FeatureCallout {
       },
       dark: {
         "accent-color": "rgb(0, 221, 255)",
-        background: "var(--newtab-background-color-secondary, #42414D)",
+        background:
+          "var(--newtab-background-color, #2B2A33) linear-gradient(var(--newtab-background-color-secondary, #42414D), var(--newtab-background-color-secondary, #42414D))",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary, #42414D) 80%, #FFF)",
         "button-background": "color-mix(in srgb, transparent 80%, #000)",
@@ -2068,7 +2069,12 @@ export class FeatureCallout {
     // stylesheets handle these variables' values.
     chrome: {
       all: {
-        background: "var(--arrowpanel-background)",
+        // Use a gradient because it's possible (due to custom themes) that the
+        // arrowpanel-background will be semi-transparent, causing the arrow to
+        // show through the callout background. Put the Menu color behind the
+        // arrowpanel-background.
+        background:
+          "Menu linear-gradient(var(--arrowpanel-background), var(--arrowpanel-background))",
         color: "var(--arrowpanel-color)",
         border: "var(--arrowpanel-border-color)",
         "accent-color": "var(--focus-outline-color)",
@@ -2096,6 +2102,9 @@ export class FeatureCallout {
         "link-color-hover": "LinkText",
         "link-color-active": "ActiveText",
         "link-color-visited": "VisitedText",
+      },
+      hcm: {
+        background: "var(--arrowpanel-background)",
       },
     },
   };

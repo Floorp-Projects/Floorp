@@ -401,7 +401,7 @@ div#feature-callout.hidden {
   padding: var(--callout-padding, 24px);
   width: 25em;
   gap: 16px;
-  background-color: var(--fc-background);
+  background: var(--fc-background);
 }
 #feature-callout .screen[pos=callout] .section-main .main-content .main-content-inner {
   gap: 12px;
@@ -597,7 +597,7 @@ panel#feature-callout::part(content) {
   pointer-events: none;
 }
 #feature-callout .background-arrow {
-  background-color: var(--fc-background);
+  background: var(--fc-background);
   clip-path: var(--fc-arrow-clip-path);
 }
 #feature-callout[arrow-position=top] .arrow-box {
@@ -754,19 +754,6 @@ panel#feature-callout[arrow-position=inline-start-bottom]::part(content) {
 
 panel#feature-callout[arrow-position=inline-start-bottom] {
   margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
-}
-
-#feature-callout:focus-visible .screen[pos=callout] .section-main .main-content {
-  outline: 2px solid var(--fc-accent-color);
-  border-color: transparent;
-}
-@media (prefers-contrast) {
-  #feature-callout:focus-visible .screen[pos=callout] .section-main .main-content {
-    border-color: var(--fc-background);
-  }
-}
-#feature-callout:focus-visible .shadow-arrow {
-  outline: 2px solid var(--fc-accent-color);
 }
 
 /* stylelint-disable max-nesting-depth */
