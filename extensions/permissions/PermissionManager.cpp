@@ -2195,6 +2195,10 @@ NS_IMETHODIMP
 PermissionManager::RemoveByType(const nsACString& aType) {
   ENSURE_NOT_CHILD_PROCESS;
 
+  // Need to make sure read is done before we get the type index. Type indexes
+  // are populated from DB.
+  EnsureReadCompleted();
+
   int32_t typeIndex = GetTypeIndex(aType, false);
   // If type == -1, the type isn't known,
   // so just return NS_OK
@@ -2212,6 +2216,10 @@ NS_IMETHODIMP
 PermissionManager::RemoveByTypeSince(const nsACString& aType,
                                      int64_t aModificationTime) {
   ENSURE_NOT_CHILD_PROCESS;
+
+  // Need to make sure read is done before we get the type index. Type indexes
+  // are populated from DB.
+  EnsureReadCompleted();
 
   int32_t typeIndex = GetTypeIndex(aType, false);
   // If type == -1, the type isn't known,
