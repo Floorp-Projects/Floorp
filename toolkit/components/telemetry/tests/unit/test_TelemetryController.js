@@ -704,7 +704,6 @@ add_task(async function test_sendNewProfile() {
     await TelemetryController.testShutdown();
     await TelemetryStorage.testClearPendingPings();
     PingServer.clearRequests();
-    await TelemetryController.testReset();
   };
   await resetTest();
 
@@ -722,12 +721,6 @@ add_task(async function test_sendNewProfile() {
   await TelemetryController.testReset();
   let req = await nextReq;
   let ping = decodeRequestPayload(req);
-  if (ping.type == "event") {
-    // We might have received an event ping if the new-profile ping was sent
-    // after the event ping. In that case, check again for the new-profile ping.
-    req = await PingServer.promiseNextRequest();
-    ping = decodeRequestPayload(req);
-  }
   checkPingFormat(ping, NEWPROFILE_PING_TYPE, true, true);
   Assert.equal(
     ping.payload.reason,
@@ -738,27 +731,6 @@ add_task(async function test_sendNewProfile() {
     "parent" in ping.payload.processes,
     "The new-profile ping generated after startup must have processes.parent data"
   );
-
-  if (AppConstants.platform == "win") {
-    Assert.ok(
-      "scalars" in ping.payload.processes.parent,
-      "The new-profile ping should have a field for scalars"
-    );
-
-    Assert.ok(
-      "installation.firstSeen.failure_reason" in
-        ping.payload.processes.parent.scalars,
-      "The new-profile ping should have an installation.firstSeen.failure_reason scalar"
-    );
-
-    Assert.equal(
-      ping.payload.processes.parent.scalars[
-        "installation.firstSeen.failure_reason"
-      ],
-      "NotFoundError",
-      "The new-profile ping should return NotFoundError as we don't have a telemetry state file"
-    );
-  }
 
   // Check that is not sent with the pingsender during startup.
   Assert.throws(
@@ -777,12 +749,6 @@ add_task(async function test_sendNewProfile() {
   await TelemetryController.testShutdown();
   req = await nextReq;
   ping = decodeRequestPayload(req);
-  if (ping.type == "event") {
-    // We might have received an event ping if the new-profile ping was sent
-    // after the event ping. In that case, check again for the new-profile ping.
-    req = await PingServer.promiseNextRequest();
-    ping = decodeRequestPayload(req);
-  }
   checkPingFormat(ping, NEWPROFILE_PING_TYPE, true, true);
   Assert.equal(
     ping.payload.reason,
@@ -793,27 +759,6 @@ add_task(async function test_sendNewProfile() {
     "parent" in ping.payload.processes,
     "The new-profile ping generated at shutdown must have processes.parent data"
   );
-
-  if (AppConstants.platform == "win") {
-    Assert.ok(
-      "scalars" in ping.payload.processes.parent,
-      "The new-profile ping should have a field for scalars"
-    );
-
-    Assert.ok(
-      "installation.firstSeen.failure_reason" in
-        ping.payload.processes.parent.scalars,
-      "The new-profile ping should have an installation.firstSeen.failure_reason scalar"
-    );
-
-    Assert.equal(
-      ping.payload.processes.parent.scalars[
-        "installation.firstSeen.failure_reason"
-      ],
-      "NotFoundError",
-      "The new-profile ping should return NotFoundError as we don't have a telemetry state file"
-    );
-  }
 
   // Check that the new-profile ping is sent at shutdown using the pingsender.
   Assert.equal(
