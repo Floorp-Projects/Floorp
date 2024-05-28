@@ -7,6 +7,7 @@
 #ifndef DOM_MEDIA_EME_KEYSYSTEMCONFIG_H_
 #define DOM_MEDIA_EME_KEYSYSTEMCONFIG_H_
 
+#include "MediaData.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/MozPromise.h"
@@ -80,38 +81,52 @@ struct KeySystemConfig {
       return !mCodecsDecoded.IsEmpty() || !mCodecsDecrypted.IsEmpty();
     }
 
-    // CDM decrypts and decodes using a DRM robust decoder, and passes decoded
-    // samples back to Gecko for rendering.
-    bool DecryptsAndDecodes(const EMECodecString& aCodec) const {
-      return mCodecsDecoded.Contains(aCodec);
+    // True if a codec and scheme pair can be decrypted and decoded
+    bool DecryptsAndDecodes(
+        const EMECodecString& aCodec,
+        const Maybe<CryptoScheme>& aScheme = Nothing()) const {
+      return CheckCodecAndSchemePair(mCodecsDecoded, aCodec, aScheme);
     }
 
-    // CDM decrypts and passes the decrypted samples back to Gecko for decoding.
-    bool Decrypts(const EMECodecString& aCodec) const {
-      return mCodecsDecrypted.Contains(aCodec);
+    // True if a codec and scheme pair can be decrypted
+    bool Decrypts(const EMECodecString& aCodec,
+                  const Maybe<CryptoScheme>& aScheme = Nothing()) const {
+      return CheckCodecAndSchemePair(mCodecsDecrypted, aCodec, aScheme);
     }
 
-    void SetCanDecryptAndDecode(const EMECodecString& aCodec) {
+    void SetCanDecryptAndDecode(
+        const EMECodecString& aCodec,
+        const Maybe<CryptoSchemeSet>& aSchemes = Nothing{}) {
       // Can't both decrypt and decrypt-and-decode a codec.
-      MOZ_ASSERT(!Decrypts(aCodec));
+      MOZ_ASSERT(!ContainsDecryptedOnlyCodec(aCodec));
       // Prevent duplicates.
-      MOZ_ASSERT(!DecryptsAndDecodes(aCodec));
-      mCodecsDecoded.AppendElement(aCodec);
+      MOZ_ASSERT(!ContainsDecryptedAndDecodedCodec(aCodec));
+
+      mCodecsDecoded.AppendElement(CodecSchemePair{aCodec, aSchemes});
     }
 
-    void SetCanDecrypt(const EMECodecString& aCodec) {
+    void SetCanDecrypt(const EMECodecString& aCodec,
+                       const Maybe<CryptoSchemeSet>& aSchemes = Nothing{}) {
       // Prevent duplicates.
-      MOZ_ASSERT(!Decrypts(aCodec));
+      MOZ_ASSERT(!ContainsDecryptedOnlyCodec(aCodec));
       // Can't both decrypt and decrypt-and-decode a codec.
-      MOZ_ASSERT(!DecryptsAndDecodes(aCodec));
-      mCodecsDecrypted.AppendElement(aCodec);
+      MOZ_ASSERT(!ContainsDecryptedAndDecodedCodec(aCodec));
+      mCodecsDecrypted.AppendElement(CodecSchemePair{aCodec, aSchemes});
     }
 
     EMECodecString GetDebugInfo() const {
       EMECodecString info;
       info.AppendLiteral("decoding-and-decrypting:[");
       for (size_t idx = 0; idx < mCodecsDecoded.Length(); idx++) {
-        info.Append(mCodecsDecoded[idx]);
+        const auto& cur = mCodecsDecoded[idx];
+        info.Append(cur.first);
+        if (cur.second) {
+          info.AppendLiteral("(");
+          info.Append(CryptoSchemeSetToString(*cur.second));
+          info.AppendLiteral(")");
+        } else {
+          info.AppendLiteral("(all)");
+        }
         if (idx + 1 < mCodecsDecoded.Length()) {
           info.AppendLiteral(",");
         }
@@ -119,7 +134,15 @@ struct KeySystemConfig {
       info.AppendLiteral("],");
       info.AppendLiteral("decrypting-only:[");
       for (size_t idx = 0; idx < mCodecsDecrypted.Length(); idx++) {
-        info.Append(mCodecsDecrypted[idx]);
+        const auto& cur = mCodecsDecrypted[idx];
+        info.Append(cur.first);
+        if (cur.second) {
+          info.AppendLiteral("(");
+          info.Append(CryptoSchemeSetToString(*cur.second));
+          info.AppendLiteral(")");
+        } else {
+          info.AppendLiteral("(all)");
+        }
         if (idx + 1 < mCodecsDecrypted.Length()) {
           info.AppendLiteral(",");
         }
@@ -129,8 +152,38 @@ struct KeySystemConfig {
     }
 
    private:
-    nsTArray<EMECodecString> mCodecsDecoded;
-    nsTArray<EMECodecString> mCodecsDecrypted;
+    using CodecSchemePair = std::pair<EMECodecString, Maybe<CryptoSchemeSet>>;
+    // These two arrays are exclusive, the codec in one array can't appear on
+    // another array. If CryptoSchemeSet is nothing, that means the codec has
+    // support for all schemes, which is our default. Setting CryptoSchemeSet
+    // explicitly can restrict avaiable schemes for a codec.
+    nsTArray<CodecSchemePair> mCodecsDecoded;
+    nsTArray<CodecSchemePair> mCodecsDecrypted;
+
+    bool ContainsDecryptedOnlyCodec(const EMECodecString& aCodec) const {
+      return std::any_of(
+          mCodecsDecrypted.begin(), mCodecsDecrypted.end(),
+          [&](const auto& aPair) { return aPair.first.Equals(aCodec); });
+    }
+    bool ContainsDecryptedAndDecodedCodec(const EMECodecString& aCodec) const {
+      return std::any_of(
+          mCodecsDecoded.begin(), mCodecsDecoded.end(),
+          [&](const auto& aPair) { return aPair.first.Equals(aCodec); });
+    }
+    bool CheckCodecAndSchemePair(const nsTArray<CodecSchemePair>& aArray,
+                                 const EMECodecString& aCodec,
+                                 const Maybe<CryptoScheme>& aScheme) const {
+      return std::any_of(aArray.begin(), aArray.end(), [&](const auto& aPair) {
+        if (!aPair.first.Equals(aCodec)) {
+          return false;
+        }
+        // No scheme is specified, which means accepting all schemes.
+        if (!aPair.second || !aScheme) {
+          return true;
+        }
+        return aPair.second->contains(*aScheme);
+      });
+    }
   };
 
   // Return true if given key system is supported on the current device.
