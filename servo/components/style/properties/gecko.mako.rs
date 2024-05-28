@@ -1425,31 +1425,8 @@ fn static_assert() {
 <%self:impl_trait style_struct_name="InheritedBox">
 </%self:impl_trait>
 
-<%self:impl_trait style_struct_name="InheritedTable"
-                  skip_longhands="border-spacing">
-
-    pub fn set_border_spacing(&mut self, v: longhands::border_spacing::computed_value::T) {
-        self.mBorderSpacingCol = v.horizontal().0;
-        self.mBorderSpacingRow = v.vertical().0;
-    }
-
-    pub fn copy_border_spacing_from(&mut self, other: &Self) {
-        self.mBorderSpacingCol = other.mBorderSpacingCol;
-        self.mBorderSpacingRow = other.mBorderSpacingRow;
-    }
-
-    pub fn reset_border_spacing(&mut self, other: &Self) {
-        self.copy_border_spacing_from(other)
-    }
-
-    pub fn clone_border_spacing(&self) -> longhands::border_spacing::computed_value::T {
-        longhands::border_spacing::computed_value::T::new(
-            Au(self.mBorderSpacingCol).into(),
-            Au(self.mBorderSpacingRow).into()
-        )
-    }
+<%self:impl_trait style_struct_name="InheritedTable">
 </%self:impl_trait>
-
 
 <%self:impl_trait style_struct_name="InheritedText">
 </%self:impl_trait>

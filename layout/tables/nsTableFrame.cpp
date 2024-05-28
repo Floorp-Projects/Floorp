@@ -3361,9 +3361,10 @@ nscoord nsTableFrame::GetColumnISizeFromFirstInFlow(int32_t aColIndex) {
 }
 
 nscoord nsTableFrame::GetColSpacing() {
-  if (IsBorderCollapse()) return 0;
-
-  return StyleTableBorder()->mBorderSpacingCol;
+  if (IsBorderCollapse()) {
+    return 0;
+  }
+  return StyleTableBorder()->mBorderSpacing.width.ToAppUnits();
 }
 
 // XXX: could cache this.  But be sure to check style changes if you do!
@@ -3390,9 +3391,10 @@ nscoord nsTableFrame::GetColSpacing(int32_t aStartColIndex,
 }
 
 nscoord nsTableFrame::GetRowSpacing() {
-  if (IsBorderCollapse()) return 0;
-
-  return StyleTableBorder()->mBorderSpacingRow;
+  if (IsBorderCollapse()) {
+    return 0;
+  }
+  return StyleTableBorder()->mBorderSpacing.height.ToAppUnits();
 }
 
 // XXX: could cache this. But be sure to check style changes if you do!

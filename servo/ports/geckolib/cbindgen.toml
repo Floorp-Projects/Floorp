@@ -95,6 +95,7 @@ include = [
   "BreakBetween",
   "BreakWithin",
   "BorderStyle",
+  "BorderSpacing",
   "BoolInteger",
   "OutlineStyle",
   "CaptionSide",

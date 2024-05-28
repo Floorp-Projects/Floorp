@@ -462,6 +462,7 @@ cbindgen-types = [
     { gecko = "StyleBackgroundSize", servo = "crate::values::computed::BackgroundSize" },
     { gecko = "StyleGenericBackgroundSize", servo = "crate::values::generics::background::BackgroundSize" },
     { gecko = "StyleBorderImageSlice", servo = "crate::values::computed::BorderImageSlice" },
+    { gecko = "StyleBorderSpacing", servo = "crate::values::computed::BorderSpacing" },
     { gecko = "StyleGenericLengthOrNumber", servo = "crate::values::generics::length::LengthOrNumber" },
     { gecko = "StyleCSSPixelLength", servo = "crate::values::computed::length::CSSPixelLength" },
     { gecko = "StyleNonNegativeLength", servo = "crate::values::computed::NonNegativeLength" },

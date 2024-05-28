@@ -136,12 +136,13 @@ impl<L: Zero> Zero for BorderCornerRadius<L> {
     ToShmem,
 )]
 #[repr(transparent)]
-pub struct BorderSpacing<L>(
+pub struct GenericBorderSpacing<L>(
     #[css(field_bound)]
     #[shmem(field_bound)]
     pub Size2D<L>,
 );
 
+pub use self::GenericBorderSpacing as BorderSpacing;
 impl<L> BorderSpacing<L> {
     /// Trivially create a `BorderCornerRadius`.
     pub fn new(w: L, h: L) -> Self {
