@@ -486,8 +486,7 @@ void nsHttpChannel::HandleContinueCancellingByURLClassifier(
 }
 
 void nsHttpChannel::SetPriorityHeader() {
-  uint8_t urgency =
-      nsHttpHandler::UrgencyFromCoSFlags(mClassOfService.Flags(), mPriority);
+  uint8_t urgency = nsHttpHandler::UrgencyFromCoSFlags(mClassOfService.Flags());
   bool incremental = mClassOfService.Incremental();
 
   nsPrintfCString value(

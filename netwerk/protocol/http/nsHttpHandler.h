@@ -428,8 +428,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
                                                  int32_t port,
                                                  nsACString& hostLine);
 
-  static uint8_t UrgencyFromCoSFlags(uint32_t cos,
-                                     int32_t aSupportsPriority = 0);
+  static uint8_t UrgencyFromCoSFlags(uint32_t cos);
 
   SpdyInformation* SpdyInfo() { return &mSpdyInfo; }
   bool IsH2MandatorySuiteEnabled() { return mH2MandatorySuiteEnabled; }
