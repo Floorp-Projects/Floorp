@@ -18,7 +18,8 @@ class ErrorResult;
 
 namespace dom {
 
-class CrossShadowBoundaryRange final : public StaticRange {
+class CrossShadowBoundaryRange final : public StaticRange,
+                                       public nsStubMutationObserver {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHODIMP_(void) DeleteCycleCollectable(void) override;
@@ -31,7 +32,7 @@ class CrossShadowBoundaryRange final : public StaticRange {
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   static already_AddRefed<CrossShadowBoundaryRange> Create(
       const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
-      const RangeBoundaryBase<EPT, ERT>& aEndBoundary);
+      const RangeBoundaryBase<EPT, ERT>& aEndBoundary, nsRange* aOwner);
 
   void NotifyNodeBecomesShadowHost(nsINode* aNode) {
     if (aNode == mStart.Container()) {
@@ -55,8 +56,11 @@ class CrossShadowBoundaryRange final : public StaticRange {
     return StaticRange::SetStartAndEnd(aStartBoundary, aEndBoundary);
   }
 
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+
  private:
-  explicit CrossShadowBoundaryRange(nsINode* aNode) : StaticRange(aNode) {}
+  explicit CrossShadowBoundaryRange(nsINode* aNode, nsRange* aOwner)
+      : StaticRange(aNode), mOwner(aOwner) {}
   virtual ~CrossShadowBoundaryRange() = default;
 
   /**
@@ -68,11 +72,12 @@ class CrossShadowBoundaryRange final : public StaticRange {
    * @param aEndBoundary    Computed end point.
    * @param aRootNode       The root node of aStartBoundary or aEndBoundary.
    *                        It's useless to CrossShadowBoundaryRange.
+   * @param aOwner          The nsRange that owns this CrossShadowBoundaryRange.
    */
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   void DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
                   const RangeBoundaryBase<EPT, ERT>& aEndBoundary,
-                  nsINode* aRootNode);
+                  nsINode* aRootNode, nsRange* aOwner);
 
   // This is either NULL if this CrossShadowBoundaryRange has been
   // reset by Release() or the closest common shadow-including ancestor
@@ -82,6 +87,10 @@ class CrossShadowBoundaryRange final : public StaticRange {
   static nsTArray<RefPtr<CrossShadowBoundaryRange>>* sCachedRanges;
 
   friend class AbstractRange;
+
+  // nsRange owns CrossShadowBoundaryRange; it always outlives
+  // CrossShadowBoundaryRange, so it's safe to use raw pointer here.
+  nsRange* mOwner;
 };
 }  // namespace dom
 }  // namespace mozilla
