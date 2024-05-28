@@ -28,6 +28,7 @@ EXPORTS.mozilla += [
     "BounceTrackingState.h",
     "BounceTrackingStateGlobal.h",
     "BounceTrackingStorageObserver.h",
+    "ClearDataCallback.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -39,6 +40,7 @@ UNIFIED_SOURCES += [
     "BounceTrackingState.cpp",
     "BounceTrackingStateGlobal.cpp",
     "BounceTrackingStorageObserver.cpp",
+    "ClearDataCallback.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
