@@ -1626,6 +1626,11 @@ export class StyleEditorUI extends EventEmitter {
   };
 
   #onResourceUpdated = async updates => {
+    // The editors are instantiated asynchronously from onResourceAvailable,
+    // but we may receive updates right after due to throttling.
+    // Ensure waiting for this async work before trying to update the related editors.
+    await this.#waitForLoadingStyleSheets();
+
     for (const { resource, update } of updates) {
       if (
         update.resourceType === this.#toolbox.resourceCommand.TYPES.STYLESHEET

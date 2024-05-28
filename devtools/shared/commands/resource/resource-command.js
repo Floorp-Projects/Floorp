@@ -64,8 +64,23 @@ class ResourceCommand {
     // we don't have listeners registered twice.
     this._offTargetFrontListeners = new Map();
 
+    // @backward-compat { version 124 } The server started throttling ressource emission
+    // Once 124 is released, we can always throttle to 0.
+    // We might also remove the throttle usage entirely as it may not have a significant impact anymore.
+    const throttleDelay =
+      commands.client.mainRoot.traits.throttledResources &&
+      !Services.prefs.getBoolPref(
+        "devtools.client-side-throttling.enable",
+        false
+      )
+        ? 0
+        : 100;
+
     this._notifyWatchers = this._notifyWatchers.bind(this);
-    this._throttledNotifyWatchers = throttle(this._notifyWatchers, 100);
+    this._throttledNotifyWatchers = throttle(
+      this._notifyWatchers,
+      throttleDelay
+    );
   }
 
   get watcherFront() {
