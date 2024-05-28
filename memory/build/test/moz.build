@@ -17,5 +17,5 @@ CppUnitTests(
 )
 # The gtests won't work in a SpiderMonkey-only build or a build without
 # jemalloc.
-if CONFIG["MOZ_PHC"]:
+if CONFIG["MOZ_PHC"] and CONFIG["MOZ_BUILD_APP"] != "memory":
     TEST_DIRS += ["gtest"]
