@@ -111,14 +111,6 @@ StaticMonitor CompositorBridgeParent::sIndirectLayerTreesLock;
 CompositorBridgeParent::LayerTreeMap CompositorBridgeParent::sIndirectLayerTrees
     MOZ_GUARDED_BY(CompositorBridgeParent::sIndirectLayerTreesLock);
 
-/// Equivalent to asserting CompositorThreadHolder::IsInCompositorThread with
-/// the addition that it doesn't assert if the compositor thread holder is
-/// already gone during late shutdown.
-static void AssertIsInCompositorThread() {
-  MOZ_RELEASE_ASSERT(!CompositorThread() ||
-                     CompositorThreadHolder::IsInCompositorThread());
-}
-
 CompositorBridgeParentBase::CompositorBridgeParentBase(
     CompositorManagerParent* aManager)
     : mCanSend(true), mCompositorManager(aManager) {}
@@ -202,29 +194,8 @@ inline void CompositorBridgeParent::ForEachWebRenderBridgeParent(
   }
 }
 
-/**
- * A global map referencing each compositor by ID.
- *
- * This map is used by the ImageBridge protocol to trigger
- * compositions without having to keep references to the
- * compositor
- */
-typedef std::map<uint64_t, CompositorBridgeParent*> CompositorMap;
-static StaticAutoPtr<CompositorMap> sCompositorMap;
-
-void CompositorBridgeParent::Setup() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!sCompositorMap);
-  sCompositorMap = new CompositorMap;
-}
-
 void CompositorBridgeParent::FinishShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (sCompositorMap) {
-    MOZ_ASSERT(sCompositorMap->empty());
-    sCompositorMap = nullptr;
-  }
 
   // TODO: this should be empty by now...
   StaticMonitorAutoLock lock(sIndirectLayerTreesLock);
@@ -246,7 +217,6 @@ CompositorBridgeParent::CompositorBridgeParent(
       mUseExternalSurfaceSize(aUseExternalSurfaceSize),
       mEGLSurfaceSize(aSurfaceSize),
       mOptions(aOptions),
-      mCompositorBridgeID(0),
       mRootLayerTreeID{0},
       mInnerWindowId(aInnerWindowId),
       mCompositorScheduler(nullptr),
@@ -308,14 +278,6 @@ void CompositorBridgeParent::Initialize() {
   mOMTASampler = new OMTASampler(animationStorage, mRootLayerTreeID);
 
   mPaused = mOptions.InitiallyPaused();
-
-  mCompositorBridgeID = 0;
-  // FIXME: This holds on the the fact that right now the only thing that
-  // can destroy this instance is initialized on the compositor thread after
-  // this task has been processed.
-  MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(NewRunnableFunction(
-      "AddCompositorRunnable", &AddCompositor, this, &mCompositorBridgeID));
 
   {  // scope lock
     StaticMonitorAutoLock lock(sIndirectLayerTreesLock);
@@ -523,8 +485,6 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
   mCanSend = false;
 
   StopAndClearResources();
-
-  RemoveCompositor(mCompositorBridgeID);
 
   {  // scope lock
     StaticMonitorAutoLock lock(sIndirectLayerTreesLock);
@@ -872,29 +832,6 @@ void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,
   }
 
   ScheduleComposition(wr::RenderReasons::RESIZE);
-}
-
-void CompositorBridgeParent::AddCompositor(CompositorBridgeParent* compositor,
-                                           uint64_t* outID) {
-  AssertIsInCompositorThread();
-
-  static uint64_t sNextID = 1;
-
-  ++sNextID;
-  (*sCompositorMap)[sNextID] = compositor;
-  *outID = sNextID;
-}
-
-CompositorBridgeParent* CompositorBridgeParent::RemoveCompositor(uint64_t id) {
-  AssertIsInCompositorThread();
-
-  CompositorMap::iterator it = sCompositorMap->find(id);
-  if (it == sCompositorMap->end()) {
-    return nullptr;
-  }
-  CompositorBridgeParent* retval = it->second;
-  sCompositorMap->erase(it);
-  return retval;
 }
 
 void CompositorBridgeParent::NotifyVsync(const VsyncEvent& aVsync,
