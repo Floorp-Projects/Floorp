@@ -417,8 +417,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Уведомление о конфиденциальности Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Узнайте больше в нашем уведомлении о конфиденциальности</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Нам нравится обеспечивать вашу безопасность</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -703,11 +701,7 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Обязательно</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Необязательно</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Чтение и изменение данных веб-сайтов</string>
 
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Удалить веб-сайт</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Разрешить для всех сайтов</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -833,8 +827,6 @@
     <string name="preferences_sync_history">Историю</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Закладки</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Пароли</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Пароли</string>
     <!-- Preference for syncing tabs -->
@@ -861,8 +853,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s на %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Банковские карты</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Способы оплаты</string>
     <!-- Preference for syncing addresses -->
@@ -1834,11 +1824,7 @@
     <string name="add_to_homescreen_description_2">Вы можете легко добавить этот сайт на домашний экран вашего устройства, чтобы иметь к нему мгновенный доступ.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Пароли</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Пароли</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Сохранение паролей</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Сохранять пароли</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1854,47 +1840,28 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Заполнять имена пользователей и пароли в других приложениях на вашем устройстве.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Добавить логин</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Добавить пароль</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Синхронизация логинов</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Синхронизировать пароли</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Синхронизировать логины между устройствами</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">Синхронизировать пароли между устройствами</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Сохранённые пароли</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Сохранённые пароли</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Пароли, которые вы сохраняете или синхронизируете в %s, появятся тут.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">Пароли, которые вы сохраните или синхронизируете в %s, будут показаны здесь. Все сохраняемые вами пароли зашифрованы.
 </string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Узнайте больше о синхронизации.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Узнайте больше о синхронизации</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Исключения</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Здесь будут показаны не сохраняемые логины и пароли.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s не будет сохранять пароли для перечисленных здесь сайтов.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Логины и пароли для этих сайтов сохраняться не будут.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s не будет сохранять пароли для этих сайтов.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Удалить все исключения</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Поиск логинов</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Поиск паролей</string>
     <!-- The header for the site that a login is for -->
@@ -1923,16 +1890,10 @@
     <string name="saved_login_reveal_password">Показать пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Скрыть пароль</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Разблокируйте, чтобы просмотреть сохранённые пароли</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">Разблокируйте, чтобы просмотреть сохранённые пароли</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Защитите свои логины и пароли</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Защитите сохранённые пароли</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Настройте графический ключ, Пин-код или пароль для блокировки устройства, чтобы защитить сохранённые пароли, если кто-либо ещё получит доступ к вашему устройству.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">Настройте графический ключ, пин-код или пароль для разблокировки устройства, чтобы защитить сохранённые пароли на случай, если кто-либо ещё получит доступ к вашему устройству.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1950,8 +1911,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">По имени (А-Я)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">По последнему использованию</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Меню сортировки логинов</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Меню сортировки паролей</string>
@@ -1961,41 +1920,27 @@
     <string name="preferences_autofill">Автозаполнение</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Адреса</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Банковские карты</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Способы оплаты</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Сохранять и автоматически заполнять данные карт</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Сохранить и заполнять способы оплаты</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Данные зашифрованы</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s шифрует все сохраняемые вами способы оплаты</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Синхронизировать карты между различными устройствами</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Синхронизировать карты</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Добавить банковскую карту</string>
 
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Добавить карту</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Управление сохранёнными картами</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Управление картами</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Добавить адрес</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Управление адресами</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Сохранять и автоматически заполнять адреса</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Сохранять и заполнять адреса</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Включая такие сведения, как номера, адреса эл. почты и доставок</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Включает номера телефонов и адреса электронной почты</string>
@@ -2019,8 +1964,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Удалить карту</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Вы уверены, что хотите удалить эту банковскую карту?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Удалить карту?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Удалить</string>
@@ -2033,23 +1976,14 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Сохранённые карты</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Пожалуйста, введите правильный номер карты</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Введите корректный номер карты</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Пожалуйста, заполните это поле</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Добавьте имя</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Разблокируйте, чтобы просмотреть сохранённые карты</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Защитите свои банковские карты</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">Защитите сохранённые способы оплаты</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Настройте графический ключ, Пин-код или пароль для блокировки устройства, чтобы защитить сохранённые банковские карты, если кто-либо ещё получит доступ к вашему устройству.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">Настройте графический ключ, Пин-код или пароль для разблокировки устройства, чтобы защитить сохранённые способы оплаты, на случай, если кто-либо ещё получит доступ к вашему устройству.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2058,8 +1992,6 @@
     <string name="credit_cards_warning_dialog_later">Позже</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Разблокируйте своё устройство</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Разблокируйте, чтобы использовать сохранённые данные банковской карты</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">Разблокируйте, чтобы использовать сохранённые способы оплаты</string>
@@ -2069,12 +2001,6 @@
     <string name="addresses_edit_address">Изменить адрес</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Управление адресами</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Имя</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Отчество</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Фамилия</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Название</string>
     <!-- The header for the street address of an address -->
@@ -2099,8 +2025,6 @@
     <string name="addresses_cancel_button">Отмена</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Удалить адрес</string>
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Вы уверены, что хотите удалить этот адрес?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Удалить этот адрес?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2199,48 +2123,28 @@
     <string name="login_menu_delete_button">Удалить</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Править</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Вы уверены, что хотите удалить этот пароль?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">Вы уверены, что хотите удалить этот пароль?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Удалить</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Отмена</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Настройки логина</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Настройки пароля</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Редактируемое текстовое поле для веб-адреса логина.</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">Редактируемое текстовое поле для адреса веб-сайта.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Редактируемое текстовое поле для имени пользователя логина.</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">Редактируемое текстовое поле для имени пользователя.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Редактируемое текстовое поле для пароля логина.</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">Редактируемое текстовое поле для пароля.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Сохранить изменения в логине.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Сохранить изменения.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Правка</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Изменить пароль</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Добавить новый логин</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Добавить пароль</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Требуется пароль</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Введите пароль</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Требуется имя пользователя</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Введите имя пользователя</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2649,6 +2553,9 @@
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">Закрыть область переводов</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">Некоторые настройки временно недоступны.</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">Переводы</string>
@@ -2670,6 +2577,9 @@
     <string name="automatic_translation_toolbar_title_preference">Автоматический перевод</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">Выберите язык для управления настройками «всегда переводить» и «никогда не переводить».</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">Не удалось загрузить языки. Пожалуйста, проверьте позже.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2693,6 +2603,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Удалить %1$s</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">Не удалось загрузить сайты. Пожалуйста, проверьте позже.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Удалить %1$s?</string>
@@ -2792,6 +2704,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">Инструмент создания вкладок</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Количество вкладок для создания</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Текстовое поле пусто</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Пожалуйста, введите только положительные целые числа</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Пожалуйста, введите число больше нуля</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Превышено максимальное число вкладок (%1$s), которое может быть сгенерировано за одну операцию</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Добавить в активные вкладки</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2808,11 +2730,11 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Уведомление о конфиденциальности</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Отправить</string>
+    <string name="micro_survey_submit_button_label">Отправить</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">Закрыть</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Закрыть</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Спасибо за ваш отзыв!</string>
+    <string name="micro_survey_feedback_confirmation">Спасибо за ваш отзыв!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Полностью удовлетворяет</string>
     <!-- Option for likert scale -->
@@ -2823,6 +2745,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">Недоволен</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Совсем не удовлетворяет</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Открыть опрос</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Закрыть опрос</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Закрыть</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
