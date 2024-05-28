@@ -135,8 +135,6 @@ class RootActor extends Actor {
             "dom.worker.console.dispatch_events_to_main_thread"
           )
         : true,
-      // @backward-compat { version 126 } The server started throttling ressource emission
-      throttledResources: true,
     };
   }
 

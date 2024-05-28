@@ -4,9 +4,6 @@
 
 "use strict";
 
-// setImmediate is only defined when running in the worker thread
-/* globals setImmediate */
-
 /**
  * From underscore's `_.throttle`
  * http://underscorejs.org
@@ -42,32 +39,20 @@ function throttle(func, wait, scope) {
     const remaining = wait - (now - previous);
     args = arguments;
     if (remaining <= 0) {
-      if (!isWorker) {
-        clearTimeout(timeout);
-      }
+      clearTimeout(timeout);
       timeout = null;
       previous = now;
       result = func.apply(scope, args);
       args = null;
     } else if (!timeout) {
-      // On worker thread, we don't have access to privileged setTimeout/clearTimeout
-      // API which wouldn't be frozen when the worker is paused. So rely on the privileged
-      // setImmediate function which executes on the next event loop.
-      if (isWorker) {
-        setImmediate(later);
-        timeout = true;
-      } else {
-        timeout = setTimeout(later, remaining);
-      }
+      timeout = setTimeout(later, remaining);
     }
     return result;
   };
 
   function cancel() {
     if (timeout) {
-      if (!isWorker) {
-        clearTimeout(timeout);
-      }
+      clearTimeout(timeout);
       timeout = null;
     }
     previous = 0;
