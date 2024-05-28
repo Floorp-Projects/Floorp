@@ -577,6 +577,20 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
  protected:
   /**
+   * Add a compositor to the global compositor map.
+   */
+  static void AddCompositor(CompositorBridgeParent* compositor, uint64_t* id);
+  /**
+   * Remove a compositor from the global compositor map.
+   */
+  static CompositorBridgeParent* RemoveCompositor(uint64_t id);
+
+  /**
+   * Creates the global compositor map.
+   */
+  static void Setup();
+
+  /**
    * Remaning cleanups after the compositore thread is gone.
    */
   static void FinishShutdown();
@@ -610,6 +624,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   CompositorOptions mOptions;
 
+  uint64_t mCompositorBridgeID;
   LayersId mRootLayerTreeID;
 
   RefPtr<APZCTreeManager> mApzcTreeManager;
