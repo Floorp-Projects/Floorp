@@ -53,7 +53,7 @@ class ElementAnimationData {
     // This is different from |mScrollTimelines|. We use this to schedule all
     // scroll-driven animations (which use anonymous/named scroll timelines or
     // anonymous/name view timelines) for a specific scroll source (which is the
-    // element with nsIScrollableFrame).
+    // element with ScrollContainerFrame).
     //
     // TimelineCollection owns and manages the named progress timeline generated
     // by specifying scroll-timeline-name property and view-timeline-name
