@@ -537,9 +537,10 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * @return widget which is the nearest widget from the event target frame.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIWidget>
-  DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
-                              EventMessage aMessage, nsIContent* aTargetContent,
-                              nsIContent* aRelatedContent);
+  DispatchMouseOrPointerBoundaryEvent(WidgetMouseEvent* aMouseEvent,
+                                      EventMessage aMessage,
+                                      nsIContent* aTargetContent,
+                                      nsIContent* aRelatedContent);
   /**
    * Synthesize DOM pointerover and pointerout events
    */
