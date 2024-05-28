@@ -51,9 +51,6 @@ autofill-add-address-title = Add address
 autofill-edit-address-title = Edit address
 
 autofill-address-name = Name
-autofill-address-given-name = First Name
-autofill-address-additional-name = Middle Name
-autofill-address-family-name = Last Name
 autofill-address-organization = Organization
 autofill-address-street-address = Street Address
 
