@@ -447,6 +447,56 @@ TEST(TestDynamicResampler, BigRangeInRates_Float)
   }
 }
 
+TEST(TestDynamicResampler, DownsamplingToCopying)
+{
+  uint32_t channel_count = 1;
+  // Start with downsampling
+  uint32_t in_rate = 48001;
+  uint32_t out_rate = 48000;
+
+  DynamicResampler dr(in_rate, out_rate);
+  dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
+  dr.UpdateResampler(in_rate, channel_count);
+
+  const uint32_t in_frame_count = 100;
+  float in_frames[in_frame_count];
+  float increment = 1.f / in_frame_count;
+  for (uint32_t i = 0; i < in_frame_count; ++i) {
+    in_frames[i] = static_cast<float>(i) * increment;
+  }
+  const float* in_channels[] = {in_frames};
+  dr.AppendInput(in_channels, in_frame_count);
+
+  const uint32_t block_size = 30;
+  const uint32_t out_frame_count = 2 * block_size;
+  float out_frames[out_frame_count];
+  bool hasUnderrun = dr.Resample(out_frames, block_size, 0);
+  EXPECT_FALSE(hasUnderrun);
+  // Use out_rate for the input rate so that the DynamicResampler switches
+  // from resampling to copying of frames.
+  dr.UpdateResampler(out_rate, channel_count);
+  hasUnderrun = dr.Resample(out_frames + block_size, block_size, 0);
+  EXPECT_FALSE(hasUnderrun);
+
+  // The abrupt change in slope from zero to increment is resampled to some
+  // oscillations around the point of change.
+  constexpr float tolerance = 0.1f;
+  bool latencyHasPassed = false;
+  EXPECT_NEAR(out_frames[0], 0.f, tolerance);
+  for (uint32_t i = 1; i < out_frame_count; ++i) {
+    if (!latencyHasPassed) {
+      // Before the latency passes, samples may be approximately zero.
+      EXPECT_GT(out_frames[i], -tolerance) << "for i=" << i;
+      if (out_frames[i] > tolerance) {
+        latencyHasPassed = true;
+        EXPECT_LT(out_frames[i], increment + tolerance) << "for i=" << i;
+      }
+      continue;
+    }
+    EXPECT_NEAR(out_frames[i], out_frames[i - 1] + increment, tolerance);
+  }
+}
+
 TEST(TestDynamicResampler, BigRangeInRates_Short)
 {
   uint32_t in_frames = 10;

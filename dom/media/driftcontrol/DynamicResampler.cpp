@@ -164,6 +164,7 @@ void DynamicResampler::UpdateResampler(uint32_t aInRate, uint32_t aChannels) {
     MOZ_ASSERT(mResampler);
     mChannels = aChannels;
     mInRate = aInRate;
+    mResamplerIsBypassed &= aInRate == mOutRate;
     // Between mono and stereo changes, keep always allocated 2 channels to
     // avoid reallocations in the most common case.
     if ((mChannels == STEREO || mChannels == 1) &&
@@ -203,7 +204,8 @@ void DynamicResampler::UpdateResampler(uint32_t aInRate, uint32_t aChannels) {
 
   if (mInRate != aInRate) {
     // If the rates was the same the resampler was not being used so warm up.
-    if (mOutRate == mInRate) {
+    if (mResamplerIsBypassed) {
+      mResamplerIsBypassed = false;
       WarmUpResampler(true);
     }
 

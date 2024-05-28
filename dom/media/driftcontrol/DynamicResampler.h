@@ -147,59 +147,88 @@ class DynamicResampler final {
     MOZ_ASSERT(aChannelIndex < mInternalInBuffer.Length());
     MOZ_ASSERT(aOutFrames);
 
+    uint32_t outFramesNeeded = aOutFrames;
+    T* nextOutFrame = aOutBuffer;
     if (mInRate == mOutRate) {
+      if (!mResamplerIsBypassed) {
+        uint32_t latency = speex_resampler_get_input_latency(mResampler);
+        mInternalInBuffer[aChannelIndex].ReadNoCopy(
+            [&](const Span<const T>& aInBuffer) -> uint32_t {
+              // Although unlikely with the sample rates used with this class,
+              // the resampler input latency may temporarily be higher than
+              // indicated, after a change in resampling rate that reduces the
+              // indicated latency. The resampler's "magic" samples cause
+              // this. All frames in the resampler are extracted when
+              // `latency` output frames have been extracted.
+              uint32_t outFramesResampled = std::min(outFramesNeeded, latency);
+              uint32_t inFrames = aInBuffer.Length();
+              ResampleInternal(aInBuffer.Elements(), &inFrames, nextOutFrame,
+                               &outFramesResampled, aChannelIndex);
+              nextOutFrame += outFramesResampled;
+              outFramesNeeded -= outFramesResampled;
+              if (outFramesResampled == latency) {
+                mResamplerIsBypassed = true;
+                // The last `latency` frames of input to the resampler will not
+                // be extracted from the resampler. Leave them in
+                // mInternalInBuffer to be copied directly to nextOutFrame.
+                MOZ_ASSERT(inFrames >= latency);
+                return inFrames - latency;
+              }
+              return inFrames;
+            });
+      }
       bool underrun = false;
       if (uint32_t buffered = mInternalInBuffer[aChannelIndex].AvailableRead();
-          buffered < aOutFrames) {
+          buffered < outFramesNeeded) {
         underrun = true;
         mIsPreBufferSet = false;
-        mInternalInBuffer[aChannelIndex].WriteSilence(aOutFrames - buffered);
+        mInternalInBuffer[aChannelIndex].WriteSilence(outFramesNeeded -
+                                                      buffered);
       }
-      DebugOnly<uint32_t> numFramesRead =
-          mInternalInBuffer[aChannelIndex].Read(Span(aOutBuffer, aOutFrames));
-      MOZ_ASSERT(numFramesRead == aOutFrames);
+      DebugOnly<uint32_t> numFramesRead = mInternalInBuffer[aChannelIndex].Read(
+          Span(nextOutFrame, outFramesNeeded));
+      MOZ_ASSERT(numFramesRead == outFramesNeeded);
       // Workaround to avoid discontinuity when the speex resampler operates
       // again. Feed it with the last 20 frames to warm up the internal memory
       // of the resampler and then skip memory equals to resampler's input
       // latency.
       mInputTail[aChannelIndex].StoreTail<T>(aOutBuffer, aOutFrames);
       if (aChannelIndex == 0 && !mIsWarmingUp) {
-        mInputStreamFile.Write(aOutBuffer, aOutFrames);
-        mOutputStreamFile.Write(aOutBuffer, aOutFrames);
+        mInputStreamFile.Write(nextOutFrame, outFramesNeeded);
+        mOutputStreamFile.Write(nextOutFrame, outFramesNeeded);
       }
       return underrun;
     }
 
-    uint32_t totalOutFramesNeeded = aOutFrames;
     auto resample = [&](const T* aInBuffer, uint32_t aInLength) -> uint32_t {
-      uint32_t outFramesResampled = totalOutFramesNeeded;
+      uint32_t outFramesResampled = outFramesNeeded;
       uint32_t inFrames = aInLength;
-      ResampleInternal(aInBuffer, &inFrames, aOutBuffer, &outFramesResampled,
+      ResampleInternal(aInBuffer, &inFrames, nextOutFrame, &outFramesResampled,
                        aChannelIndex);
-      aOutBuffer += outFramesResampled;
-      totalOutFramesNeeded -= outFramesResampled;
+      nextOutFrame += outFramesResampled;
+      outFramesNeeded -= outFramesResampled;
       mInputTail[aChannelIndex].StoreTail<T>(aInBuffer, inFrames);
       return inFrames;
     };
 
+    MOZ_ASSERT(!mResamplerIsBypassed);
     mInternalInBuffer[aChannelIndex].ReadNoCopy(
         [&](const Span<const T>& aInBuffer) -> uint32_t {
-          if (!totalOutFramesNeeded) {
+          if (!outFramesNeeded) {
             return 0;
           }
           return resample(aInBuffer.Elements(), aInBuffer.Length());
         });
 
-    if (totalOutFramesNeeded == 0) {
+    if (outFramesNeeded == 0) {
       return false;
     }
 
-    while (totalOutFramesNeeded > 0) {
+    while (outFramesNeeded > 0) {
       MOZ_ASSERT(mInternalInBuffer[aChannelIndex].AvailableRead() == 0);
       // Round up.
       uint32_t totalInFramesNeeded =
-          ((CheckedUint32(totalOutFramesNeeded) * mInRate + mOutRate - 1) /
-           mOutRate)
+          ((CheckedUint32(outFramesNeeded) * mInRate + mOutRate - 1) / mOutRate)
               .value();
       resample(nullptr, totalInFramesNeeded);
     }
@@ -288,6 +317,10 @@ class DynamicResampler final {
  private:
   bool mIsPreBufferSet = false;
   bool mIsWarmingUp = false;
+  // The resampler can be bypassed when the input and output rates match and
+  // any frames buffered in the resampler have been extracted.  This initial
+  // value is reset on construction by UpdateResampler() if the rates differ.
+  bool mResamplerIsBypassed = true;
   uint32_t mInputPreBufferFrameCount;
   uint32_t mChannels = 0;
   uint32_t mInRate;
