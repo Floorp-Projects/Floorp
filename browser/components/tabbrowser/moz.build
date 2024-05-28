@@ -16,5 +16,6 @@ EXTRA_JS_MODULES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
+    "test/statuspanel/browser.toml",
     "test/tabs/browser.toml",
 ]

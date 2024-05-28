@@ -51,7 +51,6 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/siteIdentity/browser.toml",
     "content/test/startup/browser.toml",
     "content/test/static/browser.toml",
-    "content/test/statuspanel/browser.toml",
     "content/test/sync/browser.toml",
     "content/test/tabcrashed/browser.toml",
     "content/test/tabcrashed/browser_aboutRestartRequired.toml",
