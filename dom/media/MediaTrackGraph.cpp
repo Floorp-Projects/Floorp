@@ -1474,6 +1474,10 @@ void MediaTrackGraphImpl::SelectOutputDeviceForAEC() {
 void MediaTrackGraphImpl::Process(MixerCallbackReceiver* aMixerReceiver) {
   TRACE("MTG::Process");
   MOZ_ASSERT(OnGraphThread());
+  if (mStateComputedTime == mProcessedTime) {  // No frames to render.
+    return;
+  }
+
   // Play track contents.
   bool allBlockedForever = true;
   // True when we've done ProcessInput for all processed tracks.
@@ -1608,10 +1612,9 @@ bool MediaTrackGraphImpl::UpdateMainThreadState() {
   return false;
 }
 
-auto MediaTrackGraphImpl::OneIteration(GraphTime aStateTime,
-                                       GraphTime aIterationEnd,
-                                       MixerCallbackReceiver* aMixerReceiver)
-    -> IterationResult {
+auto MediaTrackGraphImpl::OneIteration(
+    GraphTime aStateTime, GraphTime aIterationEnd,
+    MixerCallbackReceiver* aMixerReceiver) -> IterationResult {
   if (mGraphRunner) {
     return mGraphRunner->OneIteration(aStateTime, aIterationEnd,
                                       aMixerReceiver);
