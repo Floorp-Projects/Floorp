@@ -1,0 +1,174 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+:root {
+  /* --tabpanel-background-color matches $in-content-page-background in newtab
+     (browser/components/newtab/content-src/styles/_variables.scss) */
+  --tabpanel-background-color: #F9F9FB;
+  @media (-moz-content-prefers-color-scheme: dark) {
+    --tabpanel-background-color: #2B2A33;
+  }
+  &[privatebrowsingmode=temporary] {
+    /* Value for --in-content-page-background in aboutPrivateBrowsing.css.
+       !important overrides the direct setting of this variable in
+       ThemeVariableMap.sys.mjs when the user has a theme that defines
+       ntp_background. */
+    --tabpanel-background-color: #25003e !important;
+
+    /* stylelint-disable-next-line media-query-no-invalid */
+    @media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
+      --tabpanel-background-color: linear-gradient(45deg, #722291 0%, #45278D 50%, #393473 100%) !important;
+    }
+  }
+}
+
+#appcontent,
+#browser,
+#tabbrowser-tabbox,
+#tabbrowser-tabpanels,
+.browserSidebarContainer {
+  /* Allow devtools with large specified width/height to shrink */
+  min-width: 0;
+  min-height: 0;
+}
+
+/* We set large flex on both containers to allow the devtools toolbox to
+ * set a flex value itself. We don't want the toolbox to actually take up free
+ * space, but we do want it to collapse when the window shrinks, and with
+ * flex: 0 it can't.
+ *
+ * When the toolbox is on the bottom it's a sibling of browserStack, and when
+ * it's on the side it's a sibling of browserContainer.
+ */
+.browserContainer {
+  flex: 10000 10000;
+  /* To contain the status panel */
+  position: relative;
+
+  /* .browserContainer only contains the devtools when docked horizontally */
+  min-height: 0;
+}
+
+.browserStack {
+  flex: 10000 10000;
+  /* Prevent shrinking the page content to 0 height and width */
+  min-height: 25px;
+  min-width: 25px;
+}
+
+#tabbrowser-tabpanels {
+  appearance: none;
+  padding: 0;
+  color-scheme: unset;
+  background: var(--tabpanel-background-color);
+
+  &[pendingpaint] {
+    background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 30px;
+  }
+
+  browser:is([blank], [pendingpaint]) {
+    opacity: 0;
+  }
+
+  browser[type=content] {
+    color-scheme: env(-moz-content-preferred-color-scheme);
+  }
+}
+
+/* Status panel */
+
+#statuspanel {
+  &:not([hidden]) {
+    max-width: calc(100% - 5px);
+    pointer-events: none;
+
+    /* Take a bit more space vertically for the mouse tracker to hit us more
+     * easily */
+    padding-top: 2em;
+
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+
+  &:not([mirror]):-moz-locale-dir(rtl),
+  &[mirror]:-moz-locale-dir(ltr) {
+    left: auto;
+    right: 0;
+  }
+
+  &[sizelimit] {
+    max-width: 50%;
+  }
+
+  &[type=status] {
+    min-width: min(23em, 33%);
+  }
+
+  &[type=overLink] {
+    transition: opacity 120ms ease-out, visibility 120ms;
+  }
+
+  &:is([type=overLink], [inactive][previoustype=overLink]) {
+    direction: ltr;
+  }
+
+  &[inactive],
+  :root[inDOMFullscreen] &:not([type=overLink]) {
+    transition: none;
+    opacity: 0;
+    visibility: hidden;
+
+    &[previoustype=overLink] {
+      transition: opacity 200ms ease-out, visibility 200ms;
+    }
+  }
+
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media (-moz-bool-pref: "browser.tabs.hideStatusPanel") {
+    visibility: hidden;
+  }
+}
+
+#statuspanel-label {
+  color-scheme: env(-moz-content-preferred-color-scheme);
+  margin: 0;
+  padding: 2px 4px;
+  background-color: -moz-dialog;
+  border: 1px none ThreeDShadow;
+  border-top-style: solid;
+  color: -moz-dialogText;
+  text-shadow: none;
+
+  @media (not (prefers-contrast)) and (not (-moz-platform: linux)) {
+    background-color: light-dark(#f9f9fa, hsl(240,1%,20%));
+    border-color: light-dark(#ddd, hsl(240,1%,40%));
+    color: light-dark(#444, rgb(249,249,250));
+  }
+
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
+  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
+    border-right-style: solid;
+    /* disabled on Windows for triggering grayscale AA (bug 659213): */
+  	@media not (-moz-platform: windows) {
+      border-top-right-radius: .3em;
+    }
+    margin-right: 1em;
+  }
+
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
+  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
+    border-left-style: solid;
+    /* disabled on Windows for triggering grayscale AA (bug 659213): */
+  	@media not (-moz-platform: windows) {
+      border-top-left-radius: .3em;
+    }
+    margin-left: 1em;
+  }
+}

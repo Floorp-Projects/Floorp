@@ -27,47 +27,6 @@
   &[lwt-tab-selected="dark"] {
     --tab-selected-color-scheme: dark;
   }
-
-  /* --tabpanel-background-color matches $in-content-page-background in newtab
-     (browser/components/newtab/content-src/styles/_variables.scss) */
-  --tabpanel-background-color: #F9F9FB;
-  @media (-moz-content-prefers-color-scheme: dark) {
-    --tabpanel-background-color: #2B2A33;
-  }
-  &[privatebrowsingmode=temporary] {
-    /* Value for --in-content-page-background in aboutPrivateBrowsing.css.
-       !important overrides the direct setting of this variable in
-       ThemeVariableMap.sys.mjs when the user has a theme that defines
-       ntp_background. */
-    --tabpanel-background-color: #25003e !important;
-
-    /* stylelint-disable-next-line media-query-no-invalid */
-    @media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
-      --tabpanel-background-color: linear-gradient(45deg, #722291 0%, #45278D 50%, #393473 100%) !important;
-    }
-  }
-}
-
-#tabbrowser-tabpanels {
-  appearance: none;
-  padding: 0;
-  color-scheme: unset;
-  background: var(--tabpanel-background-color);
-
-  &[pendingpaint] {
-    background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: 30px;
-  }
-
-  browser:is([blank], [pendingpaint]) {
-    opacity: 0;
-  }
-
-  browser[type=content] {
-    color-scheme: env(-moz-content-preferred-color-scheme);
-  }
 }
 
 #tabbrowser-tabs {

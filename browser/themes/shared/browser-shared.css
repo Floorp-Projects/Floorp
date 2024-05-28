@@ -5,6 +5,7 @@
 @import url("chrome://browser/skin/addons/extension-controlled.css");
 @import url("chrome://browser/skin/addons/unified-extensions.css");
 @import url("chrome://browser/skin/downloads/indicator.css");
+@import url("chrome://browser/skin/tabbrowser/content-area.css");
 @import url("chrome://browser/skin/tabbrowser/ctrlTab.css");
 @import url("chrome://browser/skin/tabbrowser/tabs.css");
 @import url("chrome://browser/skin/tabbrowser/tab-hover-preview.css");
@@ -375,98 +376,6 @@ menupopup::part(drop-indicator) {
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/forward.svg") !important;
-}
-
-/* Status panel */
-
-#statuspanel {
-  &:not([hidden]) {
-    max-width: calc(100% - 5px);
-    pointer-events: none;
-
-    /* Take a bit more space vertically for the mouse tracker to hit us more
-     * easily */
-    padding-top: 2em;
-
-    position: absolute;
-    bottom: 0;
-    left: 0;
-  }
-
-  &:not([mirror]):-moz-locale-dir(rtl),
-  &[mirror]:-moz-locale-dir(ltr) {
-    left: auto;
-    right: 0;
-  }
-
-  &[sizelimit] {
-    max-width: 50%;
-  }
-
-  &[type=status] {
-    min-width: min(23em, 33%);
-  }
-
-  &[type=overLink] {
-    transition: opacity 120ms ease-out, visibility 120ms;
-  }
-
-  &:is([type=overLink], [inactive][previoustype=overLink]) {
-    direction: ltr;
-  }
-
-  &[inactive],
-  :root[inDOMFullscreen] &:not([type=overLink]) {
-    transition: none;
-    opacity: 0;
-    visibility: hidden;
-
-    &[previoustype=overLink] {
-      transition: opacity 200ms ease-out, visibility 200ms;
-    }
-  }
-
-  /* stylelint-disable-next-line media-query-no-invalid */
-  @media (-moz-bool-pref: "browser.tabs.hideStatusPanel") {
-    visibility: hidden;
-  }
-}
-
-#statuspanel-label {
-  color-scheme: env(-moz-content-preferred-color-scheme);
-  margin: 0;
-  padding: 2px 4px;
-  background-color: -moz-dialog;
-  border: 1px none ThreeDShadow;
-  border-top-style: solid;
-  color: -moz-dialogText;
-  text-shadow: none;
-
-  @media (not (prefers-contrast)) and (not (-moz-platform: linux)) {
-    background-color: light-dark(#f9f9fa, hsl(240,1%,20%));
-    border-color: light-dark(#ddd, hsl(240,1%,40%));
-    color: light-dark(#444, rgb(249,249,250));
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
-  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
-    border-right-style: solid;
-    /* disabled on Windows for triggering grayscale AA (bug 659213): */
-  	@media not (-moz-platform: windows) {
-      border-top-right-radius: .3em;
-    }
-    margin-right: 1em;
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
-  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
-    border-left-style: solid;
-    /* disabled on Windows for triggering grayscale AA (bug 659213): */
-  	@media not (-moz-platform: windows) {
-      border-top-left-radius: .3em;
-    }
-    margin-left: 1em;
-  }
 }
 
 /* Find bar */
