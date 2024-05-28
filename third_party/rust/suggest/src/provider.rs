@@ -35,6 +35,19 @@ impl FromSql for SuggestionProvider {
 }
 
 impl SuggestionProvider {
+    pub fn all() -> [Self; 8] {
+        [
+            Self::Amp,
+            Self::Wikipedia,
+            Self::Amo,
+            Self::Pocket,
+            Self::Yelp,
+            Self::Mdn,
+            Self::Weather,
+            Self::AmpMobile,
+        ]
+    }
+
     #[inline]
     pub(crate) fn from_u8(v: u8) -> Option<Self> {
         match v {

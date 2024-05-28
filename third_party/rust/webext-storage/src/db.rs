@@ -104,7 +104,7 @@ pub struct ThreadSafeStorageDb {
     db: Mutex<StorageDb>,
     // This "outer" interrupt_handle not protected by the mutex means
     // consumers can interrupt us when the mutex is held - which it always will
-    // be if we are doing anything interruptable!
+    // be if we are doing anything interruptible!
     interrupt_handle: Arc<SqlInterruptHandle>,
 }
 

@@ -47,7 +47,7 @@ Some notes:
 - This "request flow" is entirely synchronous, simplifying the implementation
   considerably.
 
-- Cookies are explicitely not supported at the moment, adding them would
+- Cookies are explicitly not supported at the moment, adding them would
   require a separate security review.
 
 - Generally, this is the way the FFI backend is expected to work on any

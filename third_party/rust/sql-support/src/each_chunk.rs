@@ -51,7 +51,7 @@ where
 }
 
 /// A version of `each_chunk` for the case when the conversion to `to_sql` requires an custom
-/// intermediate step. For example, you might want to grab a property off of an arrray of records
+/// intermediate step. For example, you might want to grab a property off of an array of records
 pub fn each_chunk_mapped<'a, T, U, E, Mapper, DoChunk>(
     items: &'a [T],
     to_sql: Mapper,

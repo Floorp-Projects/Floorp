@@ -136,6 +136,59 @@ pub struct InterestVector {
     pub travel: u32,
 }
 
+impl InterestVector {
+    pub fn as_vec(&self) -> Vec<(Interest, u32)> {
+        vec![
+            (Interest::Inconclusive, self.inconclusive),
+            (Interest::Animals, self.animals),
+            (Interest::Arts, self.arts),
+            (Interest::Autos, self.autos),
+            (Interest::Business, self.business),
+            (Interest::Career, self.career),
+            (Interest::Education, self.education),
+            (Interest::Fashion, self.fashion),
+            (Interest::Finance, self.finance),
+            (Interest::Food, self.food),
+            (Interest::Government, self.government),
+            //(Interest::Health, self.health),
+            (Interest::Hobbies, self.hobbies),
+            (Interest::Home, self.home),
+            (Interest::News, self.news),
+            (Interest::RealEstate, self.real_estate),
+            (Interest::Society, self.society),
+            (Interest::Sports, self.sports),
+            (Interest::Tech, self.tech),
+            (Interest::Travel, self.travel),
+        ]
+    }
+
+    pub fn summary(&self) -> String {
+        let mut interests: Vec<_> = self
+            .as_vec()
+            .into_iter()
+            .filter(|(_, count)| *count > 0)
+            .collect();
+        if interests.is_empty() {
+            return "<inconclusive>".to_string();
+        }
+        interests.sort_by(|a, b| b.1.cmp(&a.1));
+        let counts = interests
+            .into_iter()
+            .map(|(interest, count)| format!("{interest:?}: {count}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("<interests: {counts}>")
+    }
+
+    pub fn print_all_counts(&self) {
+        let mut counts = self.as_vec();
+        counts.sort_by(|a, b| b.1.cmp(&a.1));
+        for (interest, count) in counts {
+            println!("{interest:?}: {count}")
+        }
+    }
+}
+
 impl std::ops::Add for InterestVector {
     type Output = Self;
 

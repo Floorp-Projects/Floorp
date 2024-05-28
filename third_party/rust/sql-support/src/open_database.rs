@@ -358,7 +358,7 @@ pub mod test_utils {
         }
     }
 
-    // Database file that we can programatically run upgrades on
+    // Database file that we can programmatically run upgrades on
     //
     // We purposefully don't keep a connection to the database around to force upgrades to always
     // run against a newly opened DB, like they would in the real world.  See #4106 for

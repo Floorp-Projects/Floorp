@@ -718,7 +718,7 @@ mod test {
             )).unwrap();
             serde_json::to_string(&val).unwrap().len()
         };
-        // There's some subtlety in how we calulate this having to do with the fact that
+        // There's some subtlety in how we calculate this having to do with the fact that
         // the quotes in the payload are escaped but the escape chars count to the request len
         // and *not* to the payload len (the payload len check happens after json parsing the
         // top level object).

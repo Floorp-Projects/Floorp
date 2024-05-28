@@ -10,7 +10,7 @@ directory.
 ### ingest-[provider-type]
 
 Time it takes to ingest all suggestions for a provider type on an empty database.
-The bechmark downloads network resources in advance in order to exclude the network request time
+The benchmark downloads network resources in advance in order to exclude the network request time
 from these measurements.
 
 ### Benchmarks it would be nice to have

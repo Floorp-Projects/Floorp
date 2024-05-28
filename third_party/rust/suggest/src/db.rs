@@ -6,8 +6,7 @@
 use std::{collections::HashSet, path::Path, sync::Arc};
 
 use interrupt_support::{SqlInterruptHandle, SqlInterruptScope};
-use parking_lot::Mutex;
-use remote_settings::RemoteSettingsRecord;
+use parking_lot::{Mutex, MutexGuard};
 use rusqlite::{
     named_params,
     types::{FromSql, ToSql},
@@ -23,20 +22,13 @@ use crate::{
     rs::{
         DownloadedAmoSuggestion, DownloadedAmpSuggestion, DownloadedAmpWikipediaSuggestion,
         DownloadedMdnSuggestion, DownloadedPocketSuggestion, DownloadedWeatherData,
-        DownloadedWikipediaSuggestion, SuggestRecordId,
+        DownloadedWikipediaSuggestion, Record, SuggestRecordId,
     },
-    schema::{clear_database, SuggestConnectionInitializer, VERSION},
-    store::{UnparsableRecord, UnparsableRecords},
+    schema::{clear_database, SuggestConnectionInitializer},
     suggestion::{cook_raw_suggestion_url, AmpSuggestionType, Suggestion},
     Result, SuggestionQuery,
 };
 
-/// The metadata key prefix for the last ingested unparsable record. These are
-/// records that were not parsed properly, or were not of the "approved" types.
-pub const LAST_INGEST_META_UNPARSABLE: &str = "last_quicksuggest_ingest_unparsable";
-/// The metadata key whose value keeps track of records of suggestions
-/// that aren't parsable and which schema version it was first seen in.
-pub const UNPARSABLE_RECORDS_META_KEY: &str = "unparsable_records";
 /// The metadata key whose value is a JSON string encoding a
 /// `SuggestGlobalConfig`, which contains global Suggest configuration data.
 pub const GLOBAL_CONFIG_META_KEY: &str = "global_config";
@@ -106,7 +98,7 @@ impl SuggestDb {
     pub fn read<T>(&self, op: impl FnOnce(&SuggestDao) -> Result<T>) -> Result<T> {
         let conn = self.conn.lock();
         let scope = self.interrupt_handle.begin_interrupt_scope()?;
-        let dao = SuggestDao::new(&conn, scope);
+        let dao = SuggestDao::new(&conn, &scope);
         op(&dao)
     }
 
@@ -115,10 +107,44 @@ impl SuggestDb {
         let mut conn = self.conn.lock();
         let scope = self.interrupt_handle.begin_interrupt_scope()?;
         let tx = conn.transaction()?;
-        let mut dao = SuggestDao::new(&tx, scope);
+        let mut dao = SuggestDao::new(&tx, &scope);
         let result = op(&mut dao)?;
         tx.commit()?;
         Ok(result)
+    }
+
+    /// Create a new write scope.
+    ///
+    /// This enables performing multiple `write()` calls with the same shared interrupt scope.
+    /// This is important for things like ingestion, where you want the operation to be interrupted
+    /// if [Self::interrupt_handle::interrupt] is called after the operation starts.  Calling
+    /// [Self::write] multiple times during the operation risks missing a call that happens after
+    /// between those calls.
+    pub fn write_scope(&self) -> Result<WriteScope> {
+        Ok(WriteScope {
+            conn: self.conn.lock(),
+            scope: self.interrupt_handle.begin_interrupt_scope()?,
+        })
+    }
+}
+
+pub(crate) struct WriteScope<'a> {
+    pub conn: MutexGuard<'a, Connection>,
+    pub scope: SqlInterruptScope,
+}
+
+impl WriteScope<'_> {
+    /// Accesses the Suggest database in a transaction for reading and writing.
+    pub fn write<T>(&mut self, op: impl FnOnce(&mut SuggestDao) -> Result<T>) -> Result<T> {
+        let tx = self.conn.transaction()?;
+        let mut dao = SuggestDao::new(&tx, &self.scope);
+        let result = op(&mut dao)?;
+        tx.commit()?;
+        Ok(result)
+    }
+
+    pub fn err_if_interrupted(&self) -> Result<()> {
+        Ok(self.scope.err_if_interrupted()?)
     }
 }
 
@@ -130,11 +156,11 @@ impl SuggestDb {
 /// reference (`&mut self`).
 pub(crate) struct SuggestDao<'a> {
     pub conn: &'a Connection,
-    pub scope: SqlInterruptScope,
+    pub scope: &'a SqlInterruptScope,
 }
 
 impl<'a> SuggestDao<'a> {
-    fn new(conn: &'a Connection, scope: SqlInterruptScope) -> Self {
+    fn new(conn: &'a Connection, scope: &'a SqlInterruptScope) -> Self {
         Self { conn, scope }
     }
 
@@ -142,43 +168,19 @@ impl<'a> SuggestDao<'a> {
     //
     //  These methods combine several low-level calls into one logical operation.
 
-    pub fn handle_unparsable_record(&mut self, record: &RemoteSettingsRecord) -> Result<()> {
-        let record_id = SuggestRecordId::from(&record.id);
-        // Remember this record's ID so that we will try again later
-        self.put_unparsable_record_id(&record_id)?;
-        // Advance the last fetch time, so that we can resume
-        // fetching after this record if we're interrupted.
-        self.put_last_ingest_if_newer(LAST_INGEST_META_UNPARSABLE, record.last_modified)
-    }
-
-    pub fn handle_ingested_record(
-        &mut self,
-        last_ingest_key: &str,
-        record: &RemoteSettingsRecord,
-    ) -> Result<()> {
-        let record_id = SuggestRecordId::from(&record.id);
-        // Remove this record's ID from the list of unparsable
-        // records, since we understand it now.
-        self.drop_unparsable_record_id(&record_id)?;
+    pub fn handle_ingested_record(&mut self, last_ingest_key: &str, record: &Record) -> Result<()> {
         // Advance the last fetch time, so that we can resume
         // fetching after this record if we're interrupted.
         self.put_last_ingest_if_newer(last_ingest_key, record.last_modified)
     }
 
-    pub fn handle_deleted_record(
-        &mut self,
-        last_ingest_key: &str,
-        record: &RemoteSettingsRecord,
-    ) -> Result<()> {
+    pub fn handle_deleted_record(&mut self, last_ingest_key: &str, record: &Record) -> Result<()> {
         let record_id = SuggestRecordId::from(&record.id);
         // Drop either the icon or suggestions, records only contain one or the other
         match record_id.as_icon_id() {
             Some(icon_id) => self.drop_icon(icon_id)?,
             None => self.drop_suggestions(&record_id)?,
         };
-        // Remove this record's ID from the list of unparsable
-        // records, since we understand it now.
-        self.drop_unparsable_record_id(&record_id)?;
         // Advance the last fetch time, so that we can resume
         // fetching after this record if we're interrupted.
         self.put_last_ingest_if_newer(last_ingest_key, record.last_modified)
@@ -1092,43 +1094,6 @@ impl<'a> SuggestDao<'a> {
         }
 
         Ok(())
-    }
-
-    /// Adds an entry for a Suggest Remote Settings record to the list of
-    /// unparsable records.
-    ///
-    /// This is used to note records that we don't understand how to parse and
-    /// ingest yet.
-    pub fn put_unparsable_record_id(&mut self, record_id: &SuggestRecordId) -> Result<()> {
-        let mut unparsable_records = self
-            .get_meta::<UnparsableRecords>(UNPARSABLE_RECORDS_META_KEY)?
-            .unwrap_or_default();
-        unparsable_records.0.insert(
-            record_id.as_str().to_string(),
-            UnparsableRecord {
-                schema_version: VERSION,
-            },
-        );
-        self.put_meta(UNPARSABLE_RECORDS_META_KEY, unparsable_records)?;
-        Ok(())
-    }
-
-    /// Removes an entry for a Suggest Remote Settings record from the list of
-    /// unparsable records. Does nothing if the record was not previously marked
-    /// as unparsable.
-    ///
-    /// This indicates that we now understand how to parse and ingest the
-    /// record, or that the record was deleted.
-    pub fn drop_unparsable_record_id(&mut self, record_id: &SuggestRecordId) -> Result<()> {
-        let Some(mut unparsable_records) =
-            self.get_meta::<UnparsableRecords>(UNPARSABLE_RECORDS_META_KEY)?
-        else {
-            return Ok(());
-        };
-        if unparsable_records.0.remove(record_id.as_str()).is_none() {
-            return Ok(());
-        };
-        self.put_meta(UNPARSABLE_RECORDS_META_KEY, unparsable_records)
     }
 
     /// Stores global Suggest configuration data.
