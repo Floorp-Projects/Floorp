@@ -7987,6 +7987,19 @@
   do_not_use_directly: true
   set_spidermonkey_pref: startup
 
+#if defined(DEBUG) || defined(NIGHTLY_BUILD) || defined(JS_GC_ZEAL)
+# Enable extra poisoning of GC memory.
+- name: javascript.options.extra_gc_poisoning
+  type: bool
+#ifdef DEBUG
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+  set_spidermonkey_pref: startup
+#endif
+
 #if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64) && !defined(JS_CODEGEN_LOONG64)
   # Spectre security vulnerability mitigations for the JS JITs.
   #

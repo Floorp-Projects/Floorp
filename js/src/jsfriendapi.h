@@ -150,9 +150,9 @@ extern JS_PUBLIC_API bool ForceLexicalInitialization(JSContext* cx,
 /**
  * Whether we are poisoning unused/released data for error detection. Governed
  * by the JS_GC_ALLOW_EXTRA_POISONING #ifdef as well as the
- * $JSGC_EXTRA_POISONING environment variable.
+ * javascript.options.extra_gc_poisoning pref.
  */
-extern JS_PUBLIC_API int IsGCPoisoning();
+extern JS_PUBLIC_API bool IsGCPoisoning();
 
 extern JS_PUBLIC_API JSPrincipals* GetRealmPrincipals(JS::Realm* realm);
 
@@ -194,14 +194,11 @@ struct JSFunctionSpecWithHelp {
 };
 
 #define JS_FN_HELP(name, call, nargs, flags, usage, help) \
-  { name, call, nargs, (flags) | JSPROP_ENUMERATE, nullptr, usage, help }
+  {name, call, nargs, (flags) | JSPROP_ENUMERATE, nullptr, usage, help}
 #define JS_INLINABLE_FN_HELP(name, call, nargs, flags, native, usage, help)    \
-  {                                                                            \
-    name, call, nargs, (flags) | JSPROP_ENUMERATE, &js::jit::JitInfo_##native, \
-        usage, help                                                            \
-  }
-#define JS_FS_HELP_END \
-  { nullptr, nullptr, 0, 0, nullptr, nullptr }
+  {name,  call, nargs, (flags) | JSPROP_ENUMERATE, &js::jit::JitInfo_##native, \
+   usage, help}
+#define JS_FS_HELP_END {nullptr, nullptr, 0, 0, nullptr, nullptr}
 
 extern JS_PUBLIC_API bool JS_DefineFunctionsWithHelp(
     JSContext* cx, JS::HandleObject obj, const JSFunctionSpecWithHelp* fs);

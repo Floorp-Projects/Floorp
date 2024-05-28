@@ -642,9 +642,9 @@ extern JS_PUBLIC_API bool JS::ForceLexicalInitialization(JSContext* cx,
   return initializedAny;
 }
 
-extern JS_PUBLIC_API int JS::IsGCPoisoning() {
+extern JS_PUBLIC_API bool JS::IsGCPoisoning() {
 #ifdef JS_GC_ALLOW_EXTRA_POISONING
-  return js::gExtraPoisoningEnabled;
+  return JS::Prefs::extra_gc_poisoning();
 #else
   return false;
 #endif
