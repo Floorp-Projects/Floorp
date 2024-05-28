@@ -8,10 +8,7 @@ PartitionedStorageHelper.runTestInNormalAndPrivateMode(
       .fetch("cookies.sjs")
       .then(r => r.text())
       .then(text => {
-        // We test if the cookie string includes the third-party cookie because
-        // the cookie string can contain both partitioned and unpartitioned
-        // cookies if CHIPS is enabled.
-        ok(text.includes("foopy=3rd"), "3rd party cookie set");
+        is(text, "cookie:foopy=3rd", "3rd party cookie set");
       });
 
     await win1stParty.fetch("cookies.sjs?first").then(r => r.text());
@@ -27,11 +24,9 @@ PartitionedStorageHelper.runTestInNormalAndPrivateMode(
       .then(r => r.text())
       .then(text => {
         if (allowed) {
-          // We test if the cookie string includes the third-party cookie
-          // because the cookie string can contain both partitioned and
-          // unpartitioned cookies if CHIPS is enabled.
-          ok(
-            text.includes("foopy=first"),
+          is(
+            text,
+            "cookie:foopy=first",
             "3rd party has the first party cookie set"
           );
         } else {
@@ -57,20 +52,15 @@ PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "DOM Cookies",
   async (win3rdParty, win1stParty, allowed) => {
     win3rdParty.document.cookie = "foo=3rd;Partitioned;Secure";
-    // We test if the cookie string includes the third-party cookie because the
-    // cookie string can contain both partitioned and unpartitioned cookies if
-    // CHIPS is enabled.
-    ok(win3rdParty.document.cookie.includes("foo=3rd"), "3rd party cookie set");
+    is(win3rdParty.document.cookie, "foo=3rd", "3rd party cookie set");
 
     win1stParty.document.cookie = "foo=first";
     is(win1stParty.document.cookie, "foo=first", "First party cookie set");
 
     if (allowed) {
-      // We test if the cookie string includes the third-party cookie because
-      // the cookie string can contain both partitioned and unpartitioned
-      // cookies if CHIPS is enabled.
-      ok(
-        win3rdParty.document.cookie.includes("foo=first"),
+      is(
+        win3rdParty.document.cookie,
+        "foo=first",
         "3rd party has the first party cookie set"
       );
     } else {
