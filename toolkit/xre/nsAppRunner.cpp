@@ -5171,6 +5171,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   // the command line regardless of whether this is a downgrade or not.
   if (!CheckArg("allow-downgrade") && isDowngrade &&
       !EnvHasValue("MOZ_ALLOW_DOWNGRADE")) {
+#  ifdef XP_MACOSX
+    InitializeMacApp();
+#  endif
     rv = CheckDowngrade(mProfD, mNativeApp, mProfileSvc, lastVersion);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
       *aExitFlag = true;
