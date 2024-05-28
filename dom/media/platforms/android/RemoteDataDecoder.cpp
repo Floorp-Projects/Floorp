@@ -967,7 +967,9 @@ static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
   }
 
   static bool supportsCBCS = java::CodecProxy::SupportsCBCS();
-  if (cryptoObj.mCryptoScheme == CryptoScheme::Cbcs && !supportsCBCS) {
+  if ((cryptoObj.mCryptoScheme == CryptoScheme::Cbcs ||
+       cryptoObj.mCryptoScheme == CryptoScheme::Cbcs_1_9) &&
+      !supportsCBCS) {
     return CryptoInfoResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
   }
 
@@ -1014,6 +1016,7 @@ static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
       tempIV.AppendElements(cryptoObj.mIV);
       break;
     case CryptoScheme::Cbcs:
+    case CryptoScheme::Cbcs_1_9:
       mode = java::sdk::MediaCodec::CRYPTO_MODE_AES_CBC;
       MOZ_ASSERT(cryptoObj.mConstantIV.Length() <= kExpectedIVLength);
       tempIV.AppendElements(cryptoObj.mConstantIV);

@@ -602,6 +602,8 @@ const char* CryptoSchemeToString(const CryptoScheme& aScheme) {
       return "cenc";
     case CryptoScheme::Cbcs:
       return "cbcs";
+    case CryptoScheme::Cbcs_1_9:
+      return "cbcs-1-9";
     default:
       MOZ_ASSERT_UNREACHABLE("not supported scheme!");
       return "not supported scheme!";
@@ -615,7 +617,9 @@ CryptoScheme StringToCryptoScheme(const nsAString& aString) {
   if (aString.EqualsLiteral("cbcs")) {
     return CryptoScheme::Cbcs;
   }
-  // TODO : support cbcs-1-9?
+  if (aString.EqualsLiteral("cbcs-1-9")) {
+    return CryptoScheme::Cbcs_1_9;
+  }
   return CryptoScheme::None;
 }
 
