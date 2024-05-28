@@ -165,19 +165,17 @@ var BrowserCommands = {
     gIdentityHandler.hidePopup();
     gPermissionPanel.hidePopup();
 
+    const handlingUserInput = document.hasValidTransientUserGestureActivation;
+
     for (const tab of unchangedRemoteness) {
       if (tab.linkedPanel) {
-        tab.linkedBrowser.browsingContext.reload(reloadFlags);
+        sendReloadMessage(tab);
       } else {
         // Shift to fully loaded browser and make
         // sure load handler is instantiated.
-        tab.addEventListener(
-          "SSTabRestoring",
-          () => tab.linkedBrowser.browsingContext.reload(reloadFlags),
-          {
-            once: true,
-          }
-        );
+        tab.addEventListener("SSTabRestoring", () => sendReloadMessage(tab), {
+          once: true,
+        });
         gBrowser._insertBrowser(tab);
       }
     }
@@ -187,6 +185,14 @@ var BrowserCommands = {
         flags: reloadFlags,
         triggeringPrincipal: principal,
       });
+    }
+
+    function sendReloadMessage(tab) {
+      tab.linkedBrowser.sendMessageToActor(
+        "Browser:Reload",
+        { flags: reloadFlags, handlingUserInput },
+        "BrowserTab"
+      );
     }
   },
 
