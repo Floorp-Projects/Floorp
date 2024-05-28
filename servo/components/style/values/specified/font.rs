@@ -26,7 +26,6 @@ use cssparser::{Parser, Token};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps, MallocUnconditionalSizeOf};
 use std::fmt::{self, Write};
-use style_traits::values::SequenceWriter;
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 
@@ -1249,453 +1248,148 @@ impl Parse for FontVariantAlternates {
     }
 }
 
-macro_rules! impl_variant_east_asian {
-    {
-        $(
-            $(#[$($meta:tt)+])*
-            $ident:ident / $css:expr => $gecko:ident = $value:expr,
-        )+
-    } => {
-        #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
-        /// Variants for east asian variant
-        pub struct FontVariantEastAsian(u16);
-        bitflags! {
-            impl FontVariantEastAsian: u16 {
-                /// None of the features
-                const NORMAL = 0;
-                $(
-                    $(#[$($meta)+])*
-                    const $ident = $value;
-                )+
-            }
-        }
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[css(bitflags(
+    single = "normal",
+    mixed="jis78,jis83,jis90,jis04,simplified,traditional,full-width,proportional-width,ruby",
+    validate_mixed = "Self::validate_mixed_flags",
+))]
+#[repr(C)]
+/// Variants for east asian variant
+pub struct FontVariantEastAsian(u16);
+bitflags! {
+    impl FontVariantEastAsian: u16 {
+        /// None of the features
+        const NORMAL = 0;
+        /// Enables rendering of JIS78 forms (OpenType feature: jp78)
+        const JIS78  = 1 << 0;
+        /// Enables rendering of JIS83 forms (OpenType feature: jp83).
+        const JIS83 = 1 << 1;
+        /// Enables rendering of JIS90 forms (OpenType feature: jp90).
+        const JIS90 = 1 << 2;
+        /// Enables rendering of JIS2004 forms (OpenType feature: jp04).
+        const JIS04 = 1 << 3;
+        /// Enables rendering of simplified forms (OpenType feature: smpl).
+        const SIMPLIFIED = 1 << 4;
+        /// Enables rendering of traditional forms (OpenType feature: trad).
+        const TRADITIONAL = 1 << 5;
 
-        impl ToCss for FontVariantEastAsian {
-            fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-            where
-                W: Write,
-            {
-                if self.is_empty() {
-                    return dest.write_str("normal");
-                }
+        /// These values are exclusive with each other.
+        const JIS_GROUP = Self::JIS78.0 | Self::JIS83.0 | Self::JIS90.0 | Self::JIS04.0 | Self::SIMPLIFIED.0 | Self::TRADITIONAL.0;
 
-                let mut writer = SequenceWriter::new(dest, " ");
-                $(
-                    if self.intersects(Self::$ident) {
-                        writer.raw_item($css)?;
-                    }
-                )+
-                Ok(())
-            }
-        }
-
-        /// Asserts that all variant-east-asian matches its NS_FONT_VARIANT_EAST_ASIAN_* value.
-        #[cfg(feature = "gecko")]
-        #[inline]
-        pub fn assert_variant_east_asian_matches() {
-            use crate::gecko_bindings::structs;
-            $(
-                debug_assert_eq!(structs::$gecko as u16, FontVariantEastAsian::$ident.bits());
-            )+
-        }
-
-        impl SpecifiedValueInfo for FontVariantEastAsian {
-            fn collect_completion_keywords(f: KeywordsCollectFn) {
-                f(&["normal", $($css,)+]);
-            }
-        }
+        /// Enables rendering of full-width variants (OpenType feature: fwid).
+        const FULL_WIDTH = 1 << 6;
+        /// Enables rendering of proportionally-spaced variants (OpenType feature: pwid).
+        const PROPORTIONAL_WIDTH = 1 << 7;
+        /// Enables display of ruby variant glyphs (OpenType feature: ruby).
+        const RUBY = 1 << 8;
     }
 }
 
-impl_variant_east_asian! {
-    /// Enables rendering of JIS78 forms (OpenType feature: jp78)
-    JIS78 / "jis78" => NS_FONT_VARIANT_EAST_ASIAN_JIS78 = 0x01,
-    /// Enables rendering of JIS83 forms (OpenType feature: jp83).
-    JIS83 / "jis83" => NS_FONT_VARIANT_EAST_ASIAN_JIS83 = 0x02,
-    /// Enables rendering of JIS90 forms (OpenType feature: jp90).
-    JIS90 / "jis90" => NS_FONT_VARIANT_EAST_ASIAN_JIS90 = 0x04,
-    /// Enables rendering of JIS2004 forms (OpenType feature: jp04).
-    JIS04 / "jis04" => NS_FONT_VARIANT_EAST_ASIAN_JIS04 = 0x08,
-    /// Enables rendering of simplified forms (OpenType feature: smpl).
-    SIMPLIFIED / "simplified" => NS_FONT_VARIANT_EAST_ASIAN_SIMPLIFIED = 0x10,
-    /// Enables rendering of traditional forms (OpenType feature: trad).
-    TRADITIONAL / "traditional" => NS_FONT_VARIANT_EAST_ASIAN_TRADITIONAL = 0x20,
-    /// Enables rendering of full-width variants (OpenType feature: fwid).
-    FULL_WIDTH / "full-width" => NS_FONT_VARIANT_EAST_ASIAN_FULL_WIDTH = 0x40,
-    /// Enables rendering of proportionally-spaced variants (OpenType feature: pwid).
-    PROPORTIONAL_WIDTH / "proportional-width" => NS_FONT_VARIANT_EAST_ASIAN_PROP_WIDTH = 0x80,
-    /// Enables display of ruby variant glyphs (OpenType feature: ruby).
-    RUBY / "ruby" => NS_FONT_VARIANT_EAST_ASIAN_RUBY = 0x100,
-}
-
-#[cfg(feature = "gecko")]
 impl FontVariantEastAsian {
-    /// Obtain a specified value from a Gecko keyword value
-    ///
-    /// Intended for use with presentation attributes, not style structs
-    pub fn from_gecko_keyword(kw: u16) -> Self {
-        Self::from_bits_truncate(kw)
-    }
+    /// The number of variants.
+    pub const COUNT: usize = 9;
 
-    /// Transform into gecko keyword
-    pub fn to_gecko_keyword(self) -> u16 {
-        self.bits()
-    }
-}
-
-#[cfg(feature = "gecko")]
-impl_gecko_keyword_conversions!(FontVariantEastAsian, u16);
-
-impl Parse for FontVariantEastAsian {
-    /// normal | [ <east-asian-variant-values> || <east-asian-width-values> || ruby ]
-    /// <east-asian-variant-values> = [ jis78 | jis83 | jis90 | jis04 | simplified | traditional ]
-    /// <east-asian-width-values>   = [ full-width | proportional-width ]
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        let mut result = Self::empty();
-
-        if input
-            .try_parse(|input| input.expect_ident_matching("normal"))
-            .is_ok()
-        {
-            return Ok(result);
+    fn validate_mixed_flags(&self) -> bool {
+        if self.contains(Self::FULL_WIDTH | Self::PROPORTIONAL_WIDTH) {
+            // full-width and proportional-width are exclusive with each other.
+            return false;
         }
-
-        while let Ok(flag) = input.try_parse(|input| {
-            Ok(
-                match_ignore_ascii_case! { &input.expect_ident().map_err(|_| ())?,
-                    "jis78" =>
-                        exclusive_value!((result, Self::JIS78 | Self::JIS83 |
-                                                  Self::JIS90 | Self::JIS04 |
-                                                  Self::SIMPLIFIED | Self::TRADITIONAL
-                                        ) => Self::JIS78),
-                    "jis83" =>
-                        exclusive_value!((result, Self::JIS78 | Self::JIS83 |
-                                                  Self::JIS90 | Self::JIS04 |
-                                                  Self::SIMPLIFIED | Self::TRADITIONAL
-                                        ) => Self::JIS83),
-                    "jis90" =>
-                        exclusive_value!((result, Self::JIS78 | Self::JIS83 |
-                                                  Self::JIS90 | Self::JIS04 |
-                                                  Self::SIMPLIFIED | Self::TRADITIONAL
-                                        ) => Self::JIS90),
-                    "jis04" =>
-                        exclusive_value!((result, Self::JIS78 | Self::JIS83 |
-                                                  Self::JIS90 | Self::JIS04 |
-                                                  Self::SIMPLIFIED | Self::TRADITIONAL
-                                        ) => Self::JIS04),
-                    "simplified" =>
-                        exclusive_value!((result, Self::JIS78 | Self::JIS83 |
-                                                  Self::JIS90 | Self::JIS04 |
-                                                  Self::SIMPLIFIED | Self::TRADITIONAL
-                                        ) => Self::SIMPLIFIED),
-                    "traditional" =>
-                        exclusive_value!((result, Self::JIS78 | Self::JIS83 |
-                                                  Self::JIS90 | Self::JIS04 |
-                                                  Self::SIMPLIFIED | Self::TRADITIONAL
-                                        ) => Self::TRADITIONAL),
-                    "full-width" =>
-                        exclusive_value!((result, Self::FULL_WIDTH |
-                                                  Self::PROPORTIONAL_WIDTH
-                                        ) => Self::FULL_WIDTH),
-                    "proportional-width" =>
-                        exclusive_value!((result, Self::FULL_WIDTH |
-                                                  Self::PROPORTIONAL_WIDTH
-                                        ) => Self::PROPORTIONAL_WIDTH),
-                    "ruby" =>
-                        exclusive_value!((result, Self::RUBY) => Self::RUBY),
-                    _ => return Err(()),
-                },
-            )
-        }) {
-            result.insert(flag);
+        let jis = self.intersection(Self::JIS_GROUP);
+        if !jis.is_empty() && !jis.bits().is_power_of_two() {
+            return false;
         }
-
-        if !result.is_empty() {
-            Ok(result)
-        } else {
-            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
-        }
+        true
     }
 }
 
-macro_rules! impl_variant_ligatures {
-    {
-        $(
-            $(#[$($meta:tt)+])*
-            $ident:ident / $css:expr => $gecko:ident = $value:expr,
-        )+
-    } => {
-        #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
-        /// Variants of ligatures
-        pub struct FontVariantLigatures(u16);
-        bitflags! {
-            impl FontVariantLigatures: u16 {
-                /// Specifies that common default features are enabled
-                const NORMAL = 0;
-                $(
-                    $(#[$($meta)+])*
-                    const $ident = $value;
-                )+
-            }
-        }
-
-        impl ToCss for FontVariantLigatures {
-            fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-            where
-                W: Write,
-            {
-                if self.is_empty() {
-                    return dest.write_str("normal");
-                }
-                if self.contains(FontVariantLigatures::NONE) {
-                    return dest.write_str("none");
-                }
-
-                let mut writer = SequenceWriter::new(dest, " ");
-                $(
-                    if self.intersects(FontVariantLigatures::$ident) {
-                        writer.raw_item($css)?;
-                    }
-                )+
-                Ok(())
-            }
-        }
-
-        /// Asserts that all variant-east-asian matches its NS_FONT_VARIANT_EAST_ASIAN_* value.
-        #[cfg(feature = "gecko")]
-        #[inline]
-        pub fn assert_variant_ligatures_matches() {
-            use crate::gecko_bindings::structs;
-            $(
-                debug_assert_eq!(structs::$gecko as u16, FontVariantLigatures::$ident.bits());
-            )+
-        }
-
-        impl SpecifiedValueInfo for FontVariantLigatures {
-            fn collect_completion_keywords(f: KeywordsCollectFn) {
-                f(&["normal", $($css,)+]);
-            }
-        }
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[css(bitflags(
+    single = "normal,none",
+    mixed="common-ligatures,no-common-ligatures,discretionary-ligatures,no-discretionary-ligatures,historical-ligatures,no-historical-ligatures,contextual,no-contextual",
+    validate_mixed = "Self::validate_mixed_flags",
+))]
+#[repr(C)]
+/// Variants of ligatures
+pub struct FontVariantLigatures(u16);
+bitflags! {
+    impl FontVariantLigatures: u16 {
+        /// Specifies that common default features are enabled
+        const NORMAL = 0;
+        /// Specifies that no features are enabled;
+        const NONE = 1;
+        /// Enables display of common ligatures
+        const COMMON_LIGATURES  = 1 << 1;
+        /// Disables display of common ligatures
+        const NO_COMMON_LIGATURES  = 1 << 2;
+        /// Enables display of discretionary ligatures
+        const DISCRETIONARY_LIGATURES = 1 << 3;
+        /// Disables display of discretionary ligatures
+        const NO_DISCRETIONARY_LIGATURES = 1 << 4;
+        /// Enables display of historical ligatures
+        const HISTORICAL_LIGATURES = 1 << 5;
+        /// Disables display of historical ligatures
+        const NO_HISTORICAL_LIGATURES = 1 << 6;
+        /// Enables display of contextual alternates
+        const CONTEXTUAL = 1 << 7;
+        /// Disables display of contextual alternates
+        const NO_CONTEXTUAL = 1 << 8;
     }
 }
 
-impl_variant_ligatures! {
-    /// Specifies that all types of ligatures and contextual forms
-    /// covered by this property are explicitly disabled
-    NONE / "none" => NS_FONT_VARIANT_LIGATURES_NONE = 0x01,
-    /// Enables display of common ligatures
-    COMMON_LIGATURES / "common-ligatures" => NS_FONT_VARIANT_LIGATURES_COMMON = 0x02,
-    /// Disables display of common ligatures
-    NO_COMMON_LIGATURES / "no-common-ligatures" => NS_FONT_VARIANT_LIGATURES_NO_COMMON = 0x04,
-    /// Enables display of discretionary ligatures
-    DISCRETIONARY_LIGATURES / "discretionary-ligatures" => NS_FONT_VARIANT_LIGATURES_DISCRETIONARY = 0x08,
-    /// Disables display of discretionary ligatures
-    NO_DISCRETIONARY_LIGATURES / "no-discretionary-ligatures" => NS_FONT_VARIANT_LIGATURES_NO_DISCRETIONARY = 0x10,
-    /// Enables display of historical ligatures
-    HISTORICAL_LIGATURES / "historical-ligatures" => NS_FONT_VARIANT_LIGATURES_HISTORICAL = 0x20,
-    /// Disables display of historical ligatures
-    NO_HISTORICAL_LIGATURES / "no-historical-ligatures" => NS_FONT_VARIANT_LIGATURES_NO_HISTORICAL = 0x40,
-    /// Enables display of contextual alternates
-    CONTEXTUAL / "contextual" => NS_FONT_VARIANT_LIGATURES_CONTEXTUAL = 0x80,
-    /// Disables display of contextual alternates
-    NO_CONTEXTUAL / "no-contextual" => NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL = 0x100,
-}
-
-#[cfg(feature = "gecko")]
 impl FontVariantLigatures {
-    /// Obtain a specified value from a Gecko keyword value
-    ///
-    /// Intended for use with presentation attributes, not style structs
-    pub fn from_gecko_keyword(kw: u16) -> Self {
-        Self::from_bits_truncate(kw)
-    }
+    /// The number of variants.
+    pub const COUNT: usize = 9;
 
-    /// Transform into gecko keyword
-    pub fn to_gecko_keyword(self) -> u16 {
-        self.bits()
-    }
-}
-
-#[cfg(feature = "gecko")]
-impl_gecko_keyword_conversions!(FontVariantLigatures, u16);
-
-impl Parse for FontVariantLigatures {
-    /// normal | none |
-    /// [ <common-lig-values> ||
-    ///   <discretionary-lig-values> ||
-    ///   <historical-lig-values> ||
-    ///   <contextual-alt-values> ]
-    /// <common-lig-values>        = [ common-ligatures | no-common-ligatures ]
-    /// <discretionary-lig-values> = [ discretionary-ligatures | no-discretionary-ligatures ]
-    /// <historical-lig-values>    = [ historical-ligatures | no-historical-ligatures ]
-    /// <contextual-alt-values>    = [ contextual | no-contextual ]
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        let mut result = Self::empty();
-        if input
-            .try_parse(|input| input.expect_ident_matching("normal"))
-            .is_ok()
+    fn validate_mixed_flags(&self) -> bool {
+        // Mixing a value and its disabling value is forbidden.
+        if self.contains(Self::COMMON_LIGATURES | Self::NO_COMMON_LIGATURES) ||
+            self.contains(Self::DISCRETIONARY_LIGATURES | Self::NO_DISCRETIONARY_LIGATURES) ||
+            self.contains(Self::HISTORICAL_LIGATURES | Self::NO_HISTORICAL_LIGATURES) ||
+            self.contains(Self::CONTEXTUAL | Self::NO_CONTEXTUAL)
         {
-            return Ok(result);
+            return false;
         }
-        if input
-            .try_parse(|input| input.expect_ident_matching("none"))
-            .is_ok()
-        {
-            return Ok(Self::NONE);
-        }
-
-        while let Ok(flag) = input.try_parse(|input| {
-            Ok(
-                match_ignore_ascii_case! { &input.expect_ident().map_err(|_| ())?,
-                    "common-ligatures" =>
-                        exclusive_value!((result, Self::COMMON_LIGATURES |
-                                                  Self::NO_COMMON_LIGATURES
-                                        ) => Self::COMMON_LIGATURES),
-                    "no-common-ligatures" =>
-                        exclusive_value!((result, Self::COMMON_LIGATURES |
-                                                  Self::NO_COMMON_LIGATURES
-                                        ) => Self::NO_COMMON_LIGATURES),
-                    "discretionary-ligatures" =>
-                        exclusive_value!((result, Self::DISCRETIONARY_LIGATURES |
-                                                  Self::NO_DISCRETIONARY_LIGATURES
-                                        ) => Self::DISCRETIONARY_LIGATURES),
-                    "no-discretionary-ligatures" =>
-                        exclusive_value!((result, Self::DISCRETIONARY_LIGATURES |
-                                                  Self::NO_DISCRETIONARY_LIGATURES
-                                        ) => Self::NO_DISCRETIONARY_LIGATURES),
-                    "historical-ligatures" =>
-                        exclusive_value!((result, Self::HISTORICAL_LIGATURES |
-                                                  Self::NO_HISTORICAL_LIGATURES
-                                        ) => Self::HISTORICAL_LIGATURES),
-                    "no-historical-ligatures" =>
-                        exclusive_value!((result, Self::HISTORICAL_LIGATURES |
-                                                  Self::NO_HISTORICAL_LIGATURES
-                                        ) => Self::NO_HISTORICAL_LIGATURES),
-                    "contextual" =>
-                        exclusive_value!((result, Self::CONTEXTUAL |
-                                                  Self::NO_CONTEXTUAL
-                                        ) => Self::CONTEXTUAL),
-                    "no-contextual" =>
-                        exclusive_value!((result, Self::CONTEXTUAL |
-                                                  Self::NO_CONTEXTUAL
-                                        ) => Self::NO_CONTEXTUAL),
-                    _ => return Err(()),
-                },
-            )
-        }) {
-            result.insert(flag);
-        }
-
-        if !result.is_empty() {
-            Ok(result)
-        } else {
-            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
-        }
+        true
     }
 }
 
-macro_rules! impl_variant_numeric {
-    {
-        $(
-            $(#[$($meta:tt)+])*
-            $ident:ident / $css:expr => $gecko:ident = $value:expr,
-        )+
-    } => {
-        #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
-        /// Variants of numeric values
-        pub struct FontVariantNumeric(u8);
-        bitflags! {
-            impl FontVariantNumeric: u8 {
-                /// None of other variants are enabled.
-                const NORMAL = 0;
-                $(
-                    $(#[$($meta)+])*
-                    const $ident = $value;
-                )+
-            }
-        }
-
-        impl ToCss for FontVariantNumeric {
-            fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-            where
-                W: Write,
-            {
-                if self.is_empty() {
-                    return dest.write_str("normal");
-                }
-
-                let mut writer = SequenceWriter::new(dest, " ");
-                $(
-                    if self.intersects(FontVariantNumeric::$ident) {
-                        writer.raw_item($css)?;
-                    }
-                )+
-                Ok(())
-            }
-        }
-
-        /// Asserts that all variant-east-asian matches its NS_FONT_VARIANT_EAST_ASIAN_* value.
-        #[cfg(feature = "gecko")]
-        #[inline]
-        pub fn assert_variant_numeric_matches() {
-            use crate::gecko_bindings::structs;
-            $(
-                debug_assert_eq!(structs::$gecko as u8, FontVariantNumeric::$ident.bits());
-            )+
-        }
-
-        impl SpecifiedValueInfo for FontVariantNumeric {
-            fn collect_completion_keywords(f: KeywordsCollectFn) {
-                f(&["normal", $($css,)+]);
-            }
-        }
+/// Variants of numeric values
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[css(bitflags(
+    single = "normal",
+    mixed="lining-nums,oldstyle-nums,proportional-nums,tabular-nums,diagonal-fractions,stacked-fractions,ordinal,slashed-zero",
+    validate_mixed = "Self::validate_mixed_flags",
+))]
+#[repr(C)]
+pub struct FontVariantNumeric(u8);
+bitflags! {
+    impl FontVariantNumeric : u8 {
+        /// Specifies that common default features are enabled
+        const NORMAL = 0;
+        /// Enables display of lining numerals.
+        const LINING_NUMS = 1 << 0;
+        /// Enables display of old-style numerals.
+        const OLDSTYLE_NUMS = 1 << 1;
+        /// Enables display of proportional numerals.
+        const PROPORTIONAL_NUMS = 1 << 2;
+        /// Enables display of tabular numerals.
+        const TABULAR_NUMS = 1 << 3;
+        /// Enables display of lining diagonal fractions.
+        const DIAGONAL_FRACTIONS = 1 << 4;
+        /// Enables display of lining stacked fractions.
+        const STACKED_FRACTIONS = 1 << 5;
+        /// Enables display of slashed zeros.
+        const SLASHED_ZERO = 1 << 6;
+        /// Enables display of letter forms used with ordinal numbers.
+        const ORDINAL = 1 << 7;
     }
 }
 
-impl_variant_numeric! {
-    /// Enables display of lining numerals.
-    LINING_NUMS / "lining-nums" => NS_FONT_VARIANT_NUMERIC_LINING = 0x01,
-    /// Enables display of old-style numerals.
-    OLDSTYLE_NUMS / "oldstyle-nums" => NS_FONT_VARIANT_NUMERIC_OLDSTYLE = 0x02,
-    /// Enables display of proportional numerals.
-    PROPORTIONAL_NUMS / "proportional-nums" => NS_FONT_VARIANT_NUMERIC_PROPORTIONAL = 0x04,
-    /// Enables display of tabular numerals.
-    TABULAR_NUMS / "tabular-nums" => NS_FONT_VARIANT_NUMERIC_TABULAR = 0x08,
-    /// Enables display of lining diagonal fractions.
-    DIAGONAL_FRACTIONS / "diagonal-fractions" => NS_FONT_VARIANT_NUMERIC_DIAGONAL_FRACTIONS = 0x10,
-    /// Enables display of lining stacked fractions.
-    STACKED_FRACTIONS / "stacked-fractions" => NS_FONT_VARIANT_NUMERIC_STACKED_FRACTIONS = 0x20,
-    /// Enables display of letter forms used with ordinal numbers.
-    ORDINAL / "ordinal" => NS_FONT_VARIANT_NUMERIC_ORDINAL = 0x80,
-    /// Enables display of slashed zeros.
-    SLASHED_ZERO / "slashed-zero" => NS_FONT_VARIANT_NUMERIC_SLASHZERO = 0x40,
-}
-
-#[cfg(feature = "gecko")]
 impl FontVariantNumeric {
-    /// Obtain a specified value from a Gecko keyword value
-    ///
-    /// Intended for use with presentation attributes, not style structs
-    pub fn from_gecko_keyword(kw: u8) -> Self {
-        Self::from_bits_truncate(kw)
-    }
+    /// The number of variants.
+    pub const COUNT: usize = 8;
 
-    /// Transform into gecko keyword
-    pub fn to_gecko_keyword(self) -> u8 {
-        self.bits()
-    }
-}
-
-#[cfg(feature = "gecko")]
-impl_gecko_keyword_conversions!(FontVariantNumeric, u8);
-
-impl Parse for FontVariantNumeric {
     /// normal |
     ///  [ <numeric-figure-values>   ||
     ///    <numeric-spacing-values>  ||
@@ -1705,62 +1399,14 @@ impl Parse for FontVariantNumeric {
     /// <numeric-figure-values>   = [ lining-nums | oldstyle-nums ]
     /// <numeric-spacing-values>  = [ proportional-nums | tabular-nums ]
     /// <numeric-fraction-values> = [ diagonal-fractions | stacked-fractions ]
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        let mut result = Self::empty();
-
-        if input
-            .try_parse(|input| input.expect_ident_matching("normal"))
-            .is_ok()
+    fn validate_mixed_flags(&self) -> bool {
+        if self.contains(Self::LINING_NUMS | Self::OLDSTYLE_NUMS) ||
+            self.contains(Self::PROPORTIONAL_NUMS | Self::TABULAR_NUMS) ||
+            self.contains(Self::DIAGONAL_FRACTIONS | Self::STACKED_FRACTIONS)
         {
-            return Ok(result);
+            return false;
         }
-
-        while let Ok(flag) = input.try_parse(|input| {
-            Ok(
-                match_ignore_ascii_case! { &input.expect_ident().map_err(|_| ())?,
-                    "ordinal" =>
-                        exclusive_value!((result, Self::ORDINAL) => Self::ORDINAL),
-                    "slashed-zero" =>
-                        exclusive_value!((result, Self::SLASHED_ZERO) => Self::SLASHED_ZERO),
-                    "lining-nums" =>
-                        exclusive_value!((result, Self::LINING_NUMS |
-                                                  Self::OLDSTYLE_NUMS
-                                        ) => Self::LINING_NUMS),
-                    "oldstyle-nums" =>
-                        exclusive_value!((result, Self::LINING_NUMS |
-                                                  Self::OLDSTYLE_NUMS
-                                        ) => Self::OLDSTYLE_NUMS),
-                    "proportional-nums" =>
-                        exclusive_value!((result, Self::PROPORTIONAL_NUMS |
-                                                  Self::TABULAR_NUMS
-                                        ) => Self::PROPORTIONAL_NUMS),
-                    "tabular-nums" =>
-                        exclusive_value!((result, Self::PROPORTIONAL_NUMS |
-                                                  Self::TABULAR_NUMS
-                                        ) => Self::TABULAR_NUMS),
-                    "diagonal-fractions" =>
-                        exclusive_value!((result, Self::DIAGONAL_FRACTIONS |
-                                                  Self::STACKED_FRACTIONS
-                                        ) => Self::DIAGONAL_FRACTIONS),
-                    "stacked-fractions" =>
-                        exclusive_value!((result, Self::DIAGONAL_FRACTIONS |
-                                                  Self::STACKED_FRACTIONS
-                                        ) => Self::STACKED_FRACTIONS),
-                    _ => return Err(()),
-                },
-            )
-        }) {
-            result.insert(flag);
-        }
-
-        if !result.is_empty() {
-            Ok(result)
-        } else {
-            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
-        }
+        true
     }
 }
 

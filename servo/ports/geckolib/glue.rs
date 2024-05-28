@@ -208,8 +208,6 @@ pub unsafe extern "C" fn Servo_Initialize(
     // Perform some debug-only runtime assertions.
     origin_flags::assert_flags_match();
     traversal_flags::assert_traversal_flags_match();
-    specified::font::assert_variant_east_asian_matches();
-    specified::font::assert_variant_ligatures_matches();
 
     DUMMY_URL_DATA = dummy_url_data;
     DUMMY_CHROME_URL_DATA = dummy_chrome_url_data;

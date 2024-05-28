@@ -624,6 +624,9 @@ cbindgen-types = [
     { gecko = "StyleAnchorScope", servo = "crate::values::computed::position::AnchorScope" },
     { gecko = "StylePositionAnchor", servo = "crate::values::computed::position::PositionAnchor" },
     { gecko = "StylePositionVisibility", servo = "crate::values::computed::position::PositionVisibility" },
+    { gecko = "StyleFontVariantEastAsian", servo = "crate::values::computed::font::FontVariantEastAsian" },
+    { gecko = "StyleFontVariantLigatures", servo = "crate::values::computed::font::FontVariantLigatures" },
+    { gecko = "StyleFontVariantNumeric", servo = "crate::values::computed::font::FontVariantNumeric" },
 ]
 
 mapped-generic-types = [
