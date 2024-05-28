@@ -1223,8 +1223,7 @@ Length Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
     return {0};
   }
 
-  minFontSize.ScaleBy(aFont->mMinFontSizeRatio);
-  minFontSize.ScaleBy(1.0f / 100.0f);
+  minFontSize.ScaleBy(aFont->mMinFontSizeRatio._0);
   return minFontSize;
 }
 

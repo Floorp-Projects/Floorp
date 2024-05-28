@@ -141,17 +141,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   mozilla::Length mFontSizeOffset;
   mozilla::StyleFontSizeKeyword mFontSizeKeyword;
   mozilla::StyleFontPalette mFontPalette;
-
   // math-depth support (used for MathML scriptlevel)
   int8_t mMathDepth;
   mozilla::StyleLineHeight mLineHeight;
+  // allow different min font-size for certain cases
+  mozilla::StylePercentage mMinFontSizeRatio{1.0f};
   // MathML  mathvariant support
   mozilla::StyleMathVariant mMathVariant;
   // math-style support (used for MathML displaystyle)
   mozilla::StyleMathStyle mMathStyle;
 
-  // allow different min font-size for certain cases
-  uint8_t mMinFontSizeRatio = 100;  // percent * 100
 
   // Was mLanguage set based on a lang attribute in the document?
   bool mExplicitLanguage = false;
