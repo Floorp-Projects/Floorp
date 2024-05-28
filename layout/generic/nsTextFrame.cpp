@@ -8759,11 +8759,93 @@ bool nsTextFrame::IsCurrentFontInflation(float aInflation) const {
   return fabsf(aInflation - GetFontSizeInflation()) < 1e-6;
 }
 
+void nsTextFrame::MaybeSplitFramesForFirstLetter() {
+  if (GetParent()->IsFloating() && GetContentLength() > 0) {
+    // We've already claimed our first-letter content, don't try again.
+    return;
+  }
+  if (GetPrevContinuation()) {
+    // This isn't the first part of the first-letter.
+    return;
+  }
+
+  // Find the length of the first-letter. We need a textrun for this; just bail
+  // out if we fail to create it.
+  // But in the floating first-letter case, the text is initially all in our
+  // next-in-flow, and the float itself is empty. So we need to look at that
+  // textrun instead of our own during FindFirstLetterRange.
+  nsTextFrame* f = GetParent()->IsFloating() ? GetNextInFlow() : this;
+  gfxSkipCharsIterator iter = f->EnsureTextRun(nsTextFrame::eInflated);
+  gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
+
+  const nsTextFragment* frag = TextFragment();
+  int32_t length = GetInFlowContentLength();
+  int32_t offset = GetContentOffset();
+  int32_t firstLetterLength = length;
+  NewlineProperty* cachedNewlineOffset = nullptr;
+  int32_t newLineOffset = -1;  // this will be -1 or a content offset
+  // This will just return -1 if newlines are not significant.
+  int32_t contentNewLineOffset =
+      GetContentNewLineOffset(offset, cachedNewlineOffset);
+  if (contentNewLineOffset < offset + length) {
+    // The new line offset could be outside this frame if the frame has been
+    // split by bidi resolution. In that case we won't use it in this reflow
+    // (newLineOffset will remain -1), but we will still cache it in mContent
+    newLineOffset = contentNewLineOffset;
+    if (newLineOffset >= 0) {
+      firstLetterLength = newLineOffset - offset;
+    }
+  }
+
+  if (contentNewLineOffset >= 0 && contentNewLineOffset < offset) {
+    // We're in a first-letter frame's first in flow, so if there
+    // was a first-letter, we'd be it. However, for one reason
+    // or another (e.g., preformatted line break before this text),
+    // we're not actually supposed to have first-letter style. So
+    // just make a zero-length first-letter.
+    firstLetterLength = 0;
+  } else {
+    // We only pass a language code to FindFirstLetterRange if it was
+    // explicit in the content.
+    const nsStyleFont* styleFont = StyleFont();
+    const nsAtom* lang =
+        styleFont->mExplicitLanguage ? styleFont->mLanguage.get() : nullptr;
+    FindFirstLetterRange(frag, lang, textRun, offset, iter, &firstLetterLength);
+    if (newLineOffset >= 0) {
+      // Don't allow a preformatted newline to be part of a first-letter.
+      firstLetterLength = std::min(firstLetterLength, length - 1);
+    }
+  }
+  length = firstLetterLength;
+  if (length) {
+    AddStateBits(TEXT_FIRST_LETTER);
+  }
+  // Change this frame's length to the first-letter length right now
+  // so that when we rebuild the textrun it will be built with the
+  // right first-letter boundary.
+  SetLength(offset + length - GetContentOffset(), nullptr,
+            ALLOW_FRAME_CREATION_AND_DESTRUCTION);
+  // Ensure that the textrun will be rebuilt.
+  ClearTextRuns();
+}
+
+static bool IsUnreflowedLetterFrame(nsIFrame* aFrame) {
+  return aFrame->IsLetterFrame() &&
+         aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
+}
+
 // XXX Need to do something here to avoid incremental reflow bugs due to
-// first-line and first-letter changing min-width
+// first-line changing min-width
 /* virtual */
 void nsTextFrame::AddInlineMinISize(gfxContext* aRenderingContext,
                                     nsIFrame::InlineMinISizeData* aData) {
+  // Check if this textframe belongs to a first-letter frame that has not yet
+  // been reflowed; if so, we need to deal with splitting off a continuation
+  // before we can measure the advance correctly.
+  if (IsUnreflowedLetterFrame(GetParent())) {
+    MaybeSplitFramesForFirstLetter();
+  }
+
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   TextRunType trtype = (inflation == 1.0f) ? eNotInflated : eInflated;
 
@@ -8805,6 +8887,10 @@ void nsTextFrame::AddInlineMinISize(gfxContext* aRenderingContext,
 void nsTextFrame::AddInlinePrefISizeForFlow(
     gfxContext* aRenderingContext, nsIFrame::InlinePrefISizeData* aData,
     TextRunType aTextRunType) {
+  if (IsUnreflowedLetterFrame(GetParent())) {
+    MaybeSplitFramesForFirstLetter();
+  }
+
   uint32_t flowEndInTextRun;
   gfxSkipCharsIterator iter =
       EnsureTextRun(aTextRunType, aRenderingContext->GetDrawTarget(),
