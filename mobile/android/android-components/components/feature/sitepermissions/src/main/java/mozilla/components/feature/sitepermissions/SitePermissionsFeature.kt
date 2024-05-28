@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
 import android.content.Context
@@ -249,32 +251,64 @@ class SitePermissionsFeature(
      */
     @Suppress("NestedBlockDepth")
     override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
-        val currentContentSate = getCurrentContentState()
+        val currentContentState = getCurrentContentState()
         val appPermissionRequest = findRequestedAppPermission(permissions)
 
-        if (appPermissionRequest != null && currentContentSate != null) {
-            val allPermissionWereGranted = grantResults.all { grantResult ->
-                grantResult == PackageManager.PERMISSION_GRANTED
-            }
-
-            if (grantResults.isNotEmpty() && allPermissionWereGranted) {
-                appPermissionRequest.grant()
-            } else {
-                appPermissionRequest.reject()
-                permissions.forEach { systemPermission ->
-                    if (!onShouldShowRequestPermissionRationale(systemPermission)) {
-                        // The system permission is denied permanently
-                        storeSitePermissions(
-                            currentContentSate,
-                            appPermissionRequest,
-                            status = BLOCKED,
-                        )
-                    }
+        if (appPermissionRequest == null || currentContentState == null) {
+            return
+        }
+        if (grantResults.isNotEmpty() && areAllPermissionsGranted(permissions, grantResults)) {
+            appPermissionRequest.grant()
+        } else {
+            appPermissionRequest.reject()
+            permissions.forEach { systemPermission ->
+                if (!onShouldShowRequestPermissionRationale(systemPermission)) {
+                    // The system permission is denied permanently
+                    storeSitePermissions(
+                        currentContentState,
+                        appPermissionRequest,
+                        status = BLOCKED,
+                    )
                 }
             }
-            consumeAppPermissionRequest(appPermissionRequest)
         }
+        consumeAppPermissionRequest(appPermissionRequest)
     }
+
+    /**
+     *  If caller is asking for fine and coarse location, say the call succeeded
+     *  as long as the app was granted either permission.
+     *  (practically speaking this means the user only granted access to approximate location)
+     *
+     *  @param permissions the requested permissions
+     *  @param grantResults the grant results for the corresponding permissions
+     *
+     *  @return true if all the requested permissions were granted
+     */
+    private fun areAllPermissionsGranted(
+        permissions: Array<String>,
+        grantResults: IntArray,
+    ): Boolean =
+        permissions.mapIndexed { index, permission ->
+            permission to (grantResults[index] == PackageManager.PERMISSION_GRANTED)
+        }
+            .toMap()
+            .let { grantedPermissionsMap ->
+                if (grantedPermissionsMap.containsKey(ACCESS_FINE_LOCATION) &&
+                    grantedPermissionsMap.containsKey(ACCESS_COARSE_LOCATION)
+                ) {
+                    val locationPermissions = arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)
+                    val isAnyLocationPermissionGranted = grantedPermissionsMap.any {
+                        it.key in locationPermissions && it.value
+                    }
+                    val areAllNonLocationPermissionsGranted = grantedPermissionsMap
+                        .filterKeys { it !in locationPermissions }
+                        .all { it.value }
+                    isAnyLocationPermissionGranted && areAllNonLocationPermissionsGranted
+                } else {
+                    grantedPermissionsMap.all { it.value }
+                }
+            }
 
     @VisibleForTesting
     internal fun getCurrentContentState() = getCurrentTabState()?.content
