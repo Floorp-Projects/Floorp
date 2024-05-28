@@ -13346,6 +13346,20 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
     other_values: ["--foo"],
     invalid_values: ["none", "--foo, auto", "auto, --bar", "foo"],
   };
+
+  gCSSProperties["position-visibility"] = {
+    domProp: "positionVisibility",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["always"],
+    other_values: ["anchors-valid", "anchors-visible", "no-overflow"],
+    invalid_values: [
+      "none",
+      "auto",
+      "always anchors-valid",
+      "anchors-visible always",
+    ],
+  };
 }
 
 if (false) {

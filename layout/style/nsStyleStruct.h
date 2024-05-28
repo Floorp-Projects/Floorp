@@ -748,6 +748,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   // 'auto' or a `<dashed-ident>` referencing an anchor positioning anchor
   // element.
   mozilla::StylePositionAnchor mPositionAnchor;
+  mozilla::StylePositionVisibility mPositionVisibility;
 
   mozilla::StyleFlexBasis mFlexBasis;
   StyleImplicitGridTracks mGridAutoColumns;

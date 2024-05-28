@@ -591,6 +591,7 @@ class Longhand(Property):
                 "OverscrollBehavior",
                 "PageOrientation",
                 "Percentage",
+                "PositionVisibility",
                 "PrintColorAdjust",
                 "ForcedColorAdjust",
                 "Resize",
