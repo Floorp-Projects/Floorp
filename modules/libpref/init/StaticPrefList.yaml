@@ -6942,7 +6942,7 @@
 
 - name: gfx.remote-texture.wait-owner-at-image-host
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
 #---------------------------------------------------------------------------
