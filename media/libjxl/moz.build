@@ -114,7 +114,7 @@ EXPORTS.jxl += [
 DEFINES["JPEGXL_ENABLE_BOXES"] = "0"
 DEFINES["JPEGXL_ENABLE_TRANSCODE_JPEG"] = "0"
 
-FINAL_LIBRARY = "gkmedias"
+FINAL_LIBRARY = "xul"
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()

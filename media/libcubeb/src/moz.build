@@ -102,7 +102,7 @@ if CONFIG['MOZ_OPENSL']:
     SOURCES += ['cubeb_opensl.cpp']
     DEFINES['USE_OPENSL'] = True
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_ALSA']:
     CFLAGS += CONFIG['MOZ_ALSA_CFLAGS']

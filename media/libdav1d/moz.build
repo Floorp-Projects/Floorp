@@ -210,7 +210,7 @@ if CONFIG['CC_TYPE'] == 'gcc':
     LOCAL_INCLUDES += ['../../third_party/dav1d/include/compat/gcc/']
     EXPORTS.dav1d += ['../../third_party/dav1d/include/compat/gcc/stdatomic.h']
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'xul'
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()

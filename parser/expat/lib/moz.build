@@ -18,7 +18,7 @@ if CONFIG["MOZ_WASM_SANDBOXING_EXPAT"]:
 else:
     SOURCES += expat_sources
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'xul'
 
 for k, v in expat_defines:
     DEFINES[k] = v
