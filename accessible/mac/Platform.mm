@@ -14,6 +14,7 @@
 #include "DocAccessibleParent.h"
 #include "mozTableAccessible.h"
 #include "mozTextAccessible.h"
+#include "MOXOuterDoc.h"
 #include "MOXWebAreaAccessible.h"
 #include "nsAccUtils.h"
 #include "TextRange.h"
@@ -65,6 +66,8 @@ void ProxyCreated(RemoteAccessible* aProxy) {
     type = [mozTableCellAccessible class];
   } else if (aProxy->IsDoc()) {
     type = [MOXWebAreaAccessible class];
+  } else if (aProxy->IsOuterDoc()) {
+    type = [MOXOuterDoc class];
   } else {
     type = GetTypeFromRole(aProxy->Role());
   }

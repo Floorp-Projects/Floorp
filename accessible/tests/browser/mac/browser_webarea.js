@@ -75,3 +75,34 @@ addAccessibleTask(`<title>webarea test</title>`, async browser => {
     "iframe document has finished loading"
   );
 });
+
+// Test AXContents in outer doc (AXScrollArea)
+addAccessibleTask(
+  `<p id="p">Hello</p>`,
+  async (browser, accDoc) => {
+    const doc = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+
+    const outerDoc = doc.getAttributeValue("AXParent");
+    const p = getNativeInterface(accDoc, "p");
+
+    let contents = outerDoc.getAttributeValue("AXContents");
+    is(contents.length, 1, "outer doc has single AXContents member");
+    is(
+      contents[0].getAttributeValue("AXRole"),
+      "AXWebArea",
+      "AXContents member is a web area"
+    );
+
+    ok(
+      !doc.attributeNames.includes("AXContents"),
+      "Web area does not have XContents"
+    );
+    ok(
+      !p.attributeNames.includes("AXContents"),
+      "Web content does not hace XContents"
+    );
+  },
+  { iframe: true, remoteIframe: true }
+);

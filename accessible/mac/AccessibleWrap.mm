@@ -18,6 +18,7 @@
 
 #import "MOXLandmarkAccessibles.h"
 #import "MOXMathAccessibles.h"
+#import "MOXOuterDoc.h"
 #import "MOXTextMarkerDelegate.h"
 #import "MOXWebAreaAccessible.h"
 #import "mozAccessible.h"
@@ -116,6 +117,10 @@ Class AccessibleWrap::GetNativeType() {
 
   if (IsDoc()) {
     return [MOXWebAreaAccessible class];
+  }
+
+  if (IsOuterDoc()) {
+    return [MOXOuterDoc class];
   }
 
   return GetTypeFromRole(Role());
