@@ -1053,7 +1053,7 @@ networking:
     notification_emails:
       - necko@mozilla.com
       - manuel@mozilla.com
-    expires: 129
+    expires: 135
     labels:
       - http
       - https
