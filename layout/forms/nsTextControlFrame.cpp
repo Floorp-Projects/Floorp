@@ -19,7 +19,6 @@
 #include "nsNameSpaceManager.h"
 
 #include "nsIContent.h"
-#include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
@@ -35,6 +34,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresState.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/TextEditor.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/Selection.h"
@@ -120,7 +120,7 @@ nsTextControlFrame::nsTextControlFrame(ComputedStyle* aStyle,
 
 nsTextControlFrame::~nsTextControlFrame() = default;
 
-nsIScrollableFrame* nsTextControlFrame::GetScrollTargetFrame() const {
+ScrollContainerFrame* nsTextControlFrame::GetScrollTargetFrame() const {
   if (!mRootNode) {
     return nullptr;
   }
@@ -1147,8 +1147,7 @@ nsTextControlFrame::GetOwnedSelectionController(
 }
 
 UniquePtr<PresState> nsTextControlFrame::SaveState() {
-  if (nsIStatefulFrame* scrollStateFrame =
-          do_QueryFrame(GetScrollTargetFrame())) {
+  if (nsIStatefulFrame* scrollStateFrame = GetScrollTargetFrame()) {
     return scrollStateFrame->SaveState();
   }
 
@@ -1159,9 +1158,7 @@ NS_IMETHODIMP
 nsTextControlFrame::RestoreState(PresState* aState) {
   NS_ENSURE_ARG_POINTER(aState);
 
-  // Query the nsIStatefulFrame from the ScrollContainerFrame
-  if (nsIStatefulFrame* scrollStateFrame =
-          do_QueryFrame(GetScrollTargetFrame())) {
+  if (nsIStatefulFrame* scrollStateFrame = GetScrollTargetFrame()) {
     return scrollStateFrame->RestoreState(aState);
   }
 

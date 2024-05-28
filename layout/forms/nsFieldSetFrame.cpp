@@ -15,6 +15,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
@@ -22,7 +23,6 @@
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 
@@ -856,7 +856,7 @@ Maybe<nscoord> nsFieldSetFrame::GetNaturalBaselineBOffset(
   return Some(*result + BSize(aWM) - (innerBStart + inner->BSize(aWM)));
 }
 
-nsIScrollableFrame* nsFieldSetFrame::GetScrollTargetFrame() const {
+ScrollContainerFrame* nsFieldSetFrame::GetScrollTargetFrame() const {
   return do_QueryFrame(GetInner());
 }
 

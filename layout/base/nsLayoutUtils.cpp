@@ -8326,11 +8326,12 @@ nsMargin nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
   if (presContext->UseOverlayScrollbars()) {
     return nsMargin();
   }
-  nsIScrollableFrame* scrollableFrame = aScrollFrame->GetScrollTargetFrame();
-  if (!scrollableFrame) {
+  ScrollContainerFrame* scrollContainerFrame =
+      aScrollFrame->GetScrollTargetFrame();
+  if (!scrollContainerFrame) {
     return nsMargin();
   }
-  return scrollableFrame->GetActualScrollbarSizes(
+  return scrollContainerFrame->GetActualScrollbarSizes(
       nsIScrollableFrame::ScrollbarSizesOptions::
           INCLUDE_VISUAL_VIEWPORT_SCROLLBARS);
 }
@@ -8340,12 +8341,12 @@ nsSize nsLayoutUtils::CalculateCompositionSizeForFrame(
     nsIFrame* aFrame, bool aSubtractScrollbars,
     const nsSize* aOverrideScrollPortSize,
     IncludeDynamicToolbar aIncludeDynamicToolbar) {
-  // If we have a scrollable frame, restrict the composition bounds to its
+  // If we have a scroll container frame, restrict the composition bounds to its
   // scroll port. The scroll port excludes the frame borders and the scroll
   // bars, which we don't want to be part of the composition bounds.
-  nsIScrollableFrame* scrollableFrame = aFrame->GetScrollTargetFrame();
-  nsRect rect = scrollableFrame ? scrollableFrame->GetScrollPortRect()
-                                : aFrame->GetRect();
+  ScrollContainerFrame* scrollContainerFrame = aFrame->GetScrollTargetFrame();
+  nsRect rect = scrollContainerFrame ? scrollContainerFrame->GetScrollPortRect()
+                                     : aFrame->GetRect();
   nsSize size =
       aOverrideScrollPortSize ? *aOverrideScrollPortSize : rect.Size();
 
@@ -8778,16 +8779,16 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         aContent->GetProperty(nsGkAtoms::MinimalDisplayPort));
   }
 
-  nsIScrollableFrame* scrollableFrame = nullptr;
-  if (aScrollFrame) scrollableFrame = aScrollFrame->GetScrollTargetFrame();
+  ScrollContainerFrame* scrollContainerFrame =
+      aScrollFrame ? aScrollFrame->GetScrollTargetFrame() : nullptr;
 
   metrics.SetScrollableRect(
       CSSRect::FromAppUnits(nsLayoutUtils::CalculateScrollableRectForFrame(
-          scrollableFrame, aForFrame)));
+          scrollContainerFrame, aForFrame)));
 
-  if (scrollableFrame) {
+  if (scrollContainerFrame) {
     CSSPoint layoutScrollOffset =
-        CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
+        CSSPoint::FromAppUnits(scrollContainerFrame->GetScrollPosition());
     CSSPoint visualScrollOffset =
         aIsRootContent
             ? CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset())
@@ -8808,7 +8809,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       }
     }
 
-    if (scrollableFrame->IsRootScrollFrameOfDocument()) {
+    if (scrollContainerFrame->IsRootScrollFrameOfDocument()) {
       if (const Maybe<PresShell::VisualScrollUpdate>& visualUpdate =
               presShell->GetPendingVisualScrollUpdate()) {
         metrics.SetVisualDestination(
@@ -8848,19 +8849,20 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       }
     }
 
-    metrics.SetScrollGeneration(scrollableFrame->CurrentScrollGeneration());
+    metrics.SetScrollGeneration(
+        scrollContainerFrame->CurrentScrollGeneration());
 
     CSSRect viewport = metrics.GetLayoutViewport();
     viewport.MoveTo(layoutScrollOffset);
     metrics.SetLayoutViewport(viewport);
 
-    nsSize lineScrollAmount = scrollableFrame->GetLineScrollAmount();
+    nsSize lineScrollAmount = scrollContainerFrame->GetLineScrollAmount();
     LayoutDeviceIntSize lineScrollAmountInDevPixels =
         LayoutDeviceIntSize::FromAppUnitsRounded(
             lineScrollAmount, presContext->AppUnitsPerDevPixel());
     metadata.SetLineScrollAmount(lineScrollAmountInDevPixels);
 
-    nsSize pageScrollAmount = scrollableFrame->GetPageScrollAmount();
+    nsSize pageScrollAmount = scrollContainerFrame->GetPageScrollAmount();
     LayoutDeviceIntSize pageScrollAmountInDevPixels =
         LayoutDeviceIntSize::FromAppUnitsRounded(
             pageScrollAmount, presContext->AppUnitsPerDevPixel());
@@ -8872,10 +8874,10 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
               aScrollFrame->GetParent()));
     }
 
-    metadata.SetSnapInfo(scrollableFrame->GetScrollSnapInfo());
+    metadata.SetSnapInfo(scrollContainerFrame->GetScrollSnapInfo());
     metadata.SetOverscrollBehavior(
-        scrollableFrame->GetOverscrollBehaviorInfo());
-    metadata.SetScrollUpdates(scrollableFrame->GetScrollUpdates());
+        scrollContainerFrame->GetOverscrollBehaviorInfo());
+    metadata.SetScrollUpdates(scrollContainerFrame->GetScrollUpdates());
   }
 
   // If we have the scrollparent being the same as the scroll id, the
@@ -8967,11 +8969,11 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aItemFrame) +
           aOffsetToReferenceFrame,
       frameForCompositionBoundsCalculation->GetSize());
-  if (scrollableFrame) {
+  if (scrollContainerFrame) {
     // If we have a scrollable frame, restrict the composition bounds to its
     // scroll port. The scroll port excludes the frame borders and the scroll
     // bars, which we don't want to be part of the composition bounds.
-    nsRect scrollPort = scrollableFrame->GetScrollPortRect();
+    nsRect scrollPort = scrollContainerFrame->GetScrollPortRect();
     compositionBounds = nsRect(
         compositionBounds.TopLeft() + scrollPort.TopLeft(), scrollPort.Size());
   }
