@@ -1538,8 +1538,8 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
   hb_buffer_set_script(mBuffer, scriptTag);
 
   hb_language_t language;
-  if (style->languageOverride) {
-    language = hb_ot_tag_to_language(style->languageOverride);
+  if (style->languageOverride._0) {
+    language = hb_ot_tag_to_language(style->languageOverride._0);
   } else if (entry->mLanguageOverride) {
     language = hb_ot_tag_to_language(entry->mLanguageOverride);
   } else if (aLanguage) {

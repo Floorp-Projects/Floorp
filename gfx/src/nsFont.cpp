@@ -68,9 +68,9 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
 // mapping from bitflag to font feature tag/value pair
 //
 // these need to be kept in sync with the constants listed
-// in gfxFontConstants.h (e.g. NS_FONT_VARIANT_EAST_ASIAN_JIS78)
+// in gfxFontConstants.h (e.g. StyleFontVariantEastAsian::JIS78)
 
-// NS_FONT_VARIANT_EAST_ASIAN_xxx values
+// StyleFontVariantEastAsian::xxx values
 const gfxFontFeature eastAsianDefaults[] = {
     {TRUETYPE_TAG('j', 'p', '7', '8'), 1},
     {TRUETYPE_TAG('j', 'p', '8', '3'), 1},
@@ -83,10 +83,10 @@ const gfxFontFeature eastAsianDefaults[] = {
     {TRUETYPE_TAG('r', 'u', 'b', 'y'), 1}};
 
 static_assert(MOZ_ARRAY_LENGTH(eastAsianDefaults) ==
-                  NS_FONT_VARIANT_EAST_ASIAN_COUNT,
+                  StyleFontVariantEastAsian::COUNT,
               "eastAsianDefaults[] should be correct");
 
-// NS_FONT_VARIANT_LIGATURES_xxx values
+// StyleFontVariantLigatures::xxx values
 const gfxFontFeature ligDefaults[] = {
     {TRUETYPE_TAG('l', 'i', 'g', 'a'), 0},  // none value means all off
     {TRUETYPE_TAG('l', 'i', 'g', 'a'), 1},
@@ -98,10 +98,10 @@ const gfxFontFeature ligDefaults[] = {
     {TRUETYPE_TAG('c', 'a', 'l', 't'), 1},
     {TRUETYPE_TAG('c', 'a', 'l', 't'), 0}};
 
-static_assert(MOZ_ARRAY_LENGTH(ligDefaults) == NS_FONT_VARIANT_LIGATURES_COUNT,
+static_assert(MOZ_ARRAY_LENGTH(ligDefaults) == StyleFontVariantLigatures::COUNT,
               "ligDefaults[] should be correct");
 
-// NS_FONT_VARIANT_NUMERIC_xxx values
+// StyleFontVariantNumeric::xxx values
 const gfxFontFeature numericDefaults[] = {
     {TRUETYPE_TAG('l', 'n', 'u', 'm'), 1},
     {TRUETYPE_TAG('o', 'n', 'u', 'm'), 1},
@@ -113,19 +113,17 @@ const gfxFontFeature numericDefaults[] = {
     {TRUETYPE_TAG('o', 'r', 'd', 'n'), 1}};
 
 static_assert(MOZ_ARRAY_LENGTH(numericDefaults) ==
-                  NS_FONT_VARIANT_NUMERIC_COUNT,
+                  StyleFontVariantNumeric::COUNT,
               "numericDefaults[] should be correct");
 
-static void AddFontFeaturesBitmask(uint32_t aValue, uint32_t aMin,
-                                   uint32_t aMax,
-                                   const gfxFontFeature aFeatureDefaults[],
+template <typename T>
+static void AddFontFeaturesBitmask(T aValue, T aMin, T aMax,
+                                   Span<const gfxFontFeature> aFeatureDefaults,
                                    nsTArray<gfxFontFeature>& aFeaturesOut)
 
 {
-  uint32_t i, m;
-
-  for (i = 0, m = aMin; m <= aMax; i++, m <<= 1) {
-    if (m & aValue) {
+  for (uint32_t i = 0, m = aMin._0; m <= aMax._0; i++, m <<= 1) {
+    if (m & aValue._0) {
       const gfxFontFeature& feature = aFeatureDefaults[i];
       aFeaturesOut.AppendElement(feature);
     }
@@ -192,28 +190,29 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle* aStyle,
 
   // -- east-asian
   if (variantEastAsian) {
-    AddFontFeaturesBitmask(variantEastAsian, NS_FONT_VARIANT_EAST_ASIAN_JIS78,
-                           NS_FONT_VARIANT_EAST_ASIAN_RUBY, eastAsianDefaults,
+    AddFontFeaturesBitmask(variantEastAsian, StyleFontVariantEastAsian::JIS78,
+                           StyleFontVariantEastAsian::RUBY, eastAsianDefaults,
                            aStyle->featureSettings);
   }
 
   // -- ligatures
   if (variantLigatures) {
-    AddFontFeaturesBitmask(variantLigatures, NS_FONT_VARIANT_LIGATURES_NONE,
-                           NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL, ligDefaults,
-                           aStyle->featureSettings);
+    AddFontFeaturesBitmask(variantLigatures, StyleFontVariantLigatures::NONE,
+                           StyleFontVariantLigatures::NO_CONTEXTUAL,
+                           ligDefaults, aStyle->featureSettings);
 
-    if (variantLigatures & NS_FONT_VARIANT_LIGATURES_COMMON) {
+    if (variantLigatures & StyleFontVariantLigatures::COMMON_LIGATURES) {
       // liga already enabled, need to enable clig also
       setting.mTag = TRUETYPE_TAG('c', 'l', 'i', 'g');
       setting.mValue = 1;
       aStyle->featureSettings.AppendElement(setting);
-    } else if (variantLigatures & NS_FONT_VARIANT_LIGATURES_NO_COMMON) {
+    } else if (variantLigatures &
+               StyleFontVariantLigatures::NO_COMMON_LIGATURES) {
       // liga already disabled, need to disable clig also
       setting.mTag = TRUETYPE_TAG('c', 'l', 'i', 'g');
       setting.mValue = 0;
       aStyle->featureSettings.AppendElement(setting);
-    } else if (variantLigatures & NS_FONT_VARIANT_LIGATURES_NONE) {
+    } else if (variantLigatures & StyleFontVariantLigatures::NONE) {
       // liga already disabled, need to disable dlig, hlig, calt, clig
       setting.mValue = 0;
       setting.mTag = TRUETYPE_TAG('d', 'l', 'i', 'g');
@@ -229,8 +228,8 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle* aStyle,
 
   // -- numeric
   if (variantNumeric) {
-    AddFontFeaturesBitmask(variantNumeric, NS_FONT_VARIANT_NUMERIC_LINING,
-                           NS_FONT_VARIANT_NUMERIC_ORDINAL, numericDefaults,
+    AddFontFeaturesBitmask(variantNumeric, StyleFontVariantNumeric::LINING_NUMS,
+                           StyleFontVariantNumeric::ORDINAL, numericDefaults,
                            aStyle->featureSettings);
   }
 

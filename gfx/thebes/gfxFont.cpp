@@ -4700,7 +4700,7 @@ gfxFontStyle::gfxFontStyle()
     : size(DEFAULT_PIXEL_FONT_SIZE),
       sizeAdjust(0.0f),
       baselineOffset(0.0f),
-      languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+      languageOverride{0},
       weight(FontWeight::NORMAL),
       stretch(FontStretch::NORMAL),
       style(FontSlantStyle::NORMAL),
@@ -4723,7 +4723,7 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
                            bool aAllowStyleSynthesis,
                            bool aAllowSmallCapsSynthesis,
                            bool aUsePositionSynthesis,
-                           uint32_t aLanguageOverride)
+                           StyleFontLanguageOverride aLanguageOverride)
     : size(aSize),
       baselineOffset(0.0f),
       languageOverride(aLanguageOverride),

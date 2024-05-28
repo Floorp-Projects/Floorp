@@ -188,8 +188,8 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
 
   gfxFontEntry* entry = mFont->GetFontEntry();
   uint32_t grLang = 0;
-  if (style->languageOverride) {
-    grLang = MakeGraphiteLangTag(style->languageOverride);
+  if (style->languageOverride._0) {
+    grLang = MakeGraphiteLangTag(style->languageOverride._0);
   } else if (entry->mLanguageOverride) {
     grLang = MakeGraphiteLangTag(entry->mLanguageOverride);
   } else if (aLanguage) {

@@ -564,20 +564,6 @@ impl Clone for ${style_struct.gecko_struct_name} {
 }
 </%def>
 
-<%def name="impl_simple_type_with_conversion(ident, gecko_ffi_name)">
-    #[allow(non_snake_case)]
-    pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
-        self.${gecko_ffi_name} = From::from(v)
-    }
-
-    <% impl_simple_copy(ident, gecko_ffi_name) %>
-
-    #[allow(non_snake_case)]
-    pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
-        From::from(self.${gecko_ffi_name})
-    }
-</%def>
-
 <%def name="impl_font_settings(ident, gecko_type, tag_type, value_type, gecko_value_type)">
     <% gecko_ffi_name = to_camel_case_lower(ident) %>
 
@@ -809,8 +795,7 @@ fn static_assert() {
 
 <% skip_position_longhands = " ".join(x.ident for x in SIDES) %>
 <%self:impl_trait style_struct_name="Position"
-                  skip_longhands="${skip_position_longhands}
-                                  masonry-auto-flow">
+                  skip_longhands="${skip_position_longhands}">
     % for side in SIDES:
     <% impl_split_style_coord(side.ident, "mOffset", side.index) %>
     % endfor
@@ -818,8 +803,6 @@ fn static_assert() {
         debug_assert_ne!(v.0, crate::values::specified::align::AlignFlags::LEGACY);
         self.mJustifyItems.computed = v;
     }
-
-    ${impl_simple_type_with_conversion("masonry_auto_flow", "mMasonryAutoFlow")}
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Outline"
@@ -959,10 +942,10 @@ fn static_assert() {
     }
 
 
-    ${impl_simple_type_with_conversion("font_language_override", "mFont.languageOverride")}
-    ${impl_simple_type_with_conversion("font_variant_ligatures", "mFont.variantLigatures")}
-    ${impl_simple_type_with_conversion("font_variant_east_asian", "mFont.variantEastAsian")}
-    ${impl_simple_type_with_conversion("font_variant_numeric", "mFont.variantNumeric")}
+    ${impl_simple("font_language_override", "mFont.languageOverride")}
+    ${impl_simple("font_variant_ligatures", "mFont.variantLigatures")}
+    ${impl_simple("font_variant_east_asian", "mFont.variantEastAsian")}
+    ${impl_simple("font_variant_numeric", "mFont.variantNumeric")}
 
     #[allow(non_snake_case)]
     pub fn clone__moz_min_font_size_ratio(
