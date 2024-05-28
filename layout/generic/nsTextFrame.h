@@ -1071,6 +1071,7 @@ class nsTextFrame : public nsIFrame {
                                   NewlineProperty*& aCachedNewlineOffset);
 
   void MaybeSplitFramesForFirstLetter();
+  void SetFirstLetterLength(int32_t aLength);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrame::TrimmedOffsetFlags)

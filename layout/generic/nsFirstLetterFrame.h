@@ -74,6 +74,12 @@ class nsFirstLetterFrame : public nsContainerFrame {
                                            nsIFrame** aContinuation,
                                            bool aIsFluid);
 
+  // Create a new continuation for the first-letter frame (to hold text that
+  // is not part of the first-letter range), and move any frames after aFrame
+  // to it; if there are none, create a new text continuation there instead.
+  // Returns the first text frame of the new continuation.
+  nsTextFrame* CreateContinuationForFramesAfter(nsTextFrame* aFrame);
+
   // Whether to use tight glyph bounds for a floating first-letter frame,
   // or "loose" bounds based on font metrics rather than individual glyphs.
   bool UseTightBounds() const;

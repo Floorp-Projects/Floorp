@@ -368,13 +368,10 @@ void nsFirstLetterFrame::CreateContinuationForFloatingParent(
   // this frame's ComputedStyle's parent in the presence of ::first-line,
   // which we do want the continuation to inherit from.
   ComputedStyle* parentSC = parent->Style();
-  if (parentSC) {
-    RefPtr<ComputedStyle> newSC;
-    newSC =
-        presShell->StyleSet()->ResolveStyleForFirstLetterContinuation(parentSC);
-    continuation->SetComputedStyle(newSC);
-    nsLayoutUtils::MarkDescendantsDirty(continuation);
-  }
+  RefPtr<ComputedStyle> newSC =
+      presShell->StyleSet()->ResolveStyleForFirstLetterContinuation(parentSC);
+  continuation->SetComputedStyle(newSC);
+  nsLayoutUtils::MarkDescendantsDirty(continuation);
 
   // XXX Bidi may not be involved but we have to use the list name
   // FrameChildListID::NoReflowPrincipal because this is just like creating a
@@ -384,6 +381,47 @@ void nsFirstLetterFrame::CreateContinuationForFloatingParent(
                        nullptr, nsFrameList(continuation, continuation));
 
   *aContinuation = continuation;
+}
+
+nsTextFrame* nsFirstLetterFrame::CreateContinuationForFramesAfter(
+    nsTextFrame* aFrame) {
+  auto* presShell = PresShell();
+  auto* parent = GetParent();
+  auto* letterContinuation = static_cast<nsFirstLetterFrame*>(
+      presShell->FrameConstructor()->CreateContinuingFrame(this, parent, true));
+
+  parent->InsertFrames(FrameChildListID::NoReflowPrincipal, this, nullptr,
+                       nsFrameList(letterContinuation, letterContinuation));
+
+  nsTextFrame* next;
+  auto list = mFrames.TakeFramesAfter(aFrame);
+  if (list.NotEmpty()) {
+    // If we already have additional frames, just move them to the continuation.
+    next = static_cast<nsTextFrame*>(list.FirstChild());
+    for (auto* frame : list) {
+      frame->SetParent(letterContinuation);
+    }
+    letterContinuation->SetInitialChildList(FrameChildListID::Principal,
+                                            std::move(list));
+  } else {
+    // We don't have extra frames already, so create a new text continuation.
+    next = static_cast<nsTextFrame*>(
+        presShell->FrameConstructor()->CreateContinuingFrame(
+            aFrame, letterContinuation));
+    letterContinuation->SetInitialChildList(FrameChildListID::Principal,
+                                            nsFrameList(next, next));
+  }
+
+  // Update the computed style of the continuation text frame(s) that are
+  // no longer supposed to be first-letter style.
+  ComputedStyle* parentSC = letterContinuation->Style();
+  RefPtr<ComputedStyle> newSC =
+      presShell->StyleSet()->ResolveStyleForFirstLetterContinuation(parentSC);
+  for (auto* frame : letterContinuation->PrincipalChildList()) {
+    frame->SetComputedStyle(newSC);
+  }
+
+  return next;
 }
 
 void nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext) {
