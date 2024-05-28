@@ -186,7 +186,25 @@ Updating the changelog and API documentation
 
 If the patch that you want to submit changes the public API for
 GeckoView, you must ensure that the API documentation is kept up to
-date. To check whether your patch has altered the API, run the following
+date.
+
+GeckoView follows a deprecation policy you can learn more in this
+`design doc <https://firefox-source-docs.mozilla.org/mobile/android/geckoview/design/breaking-changes.html>`_.
+To deprecate an API, add the deprecation flags with an identifier for a
+deprecation notice, so that all notices with the same identifier will
+be removed at the same time. The version is the major version of when
+we expect to remove the deprecated member attached to the annotation.
+The GeckoView team instituted a deprecation policy which requires each
+backward-incompatible change to keep the old code for 3 releases,
+allowing downstream consumers, like Fenix, time to migrate asynchronously
+to the new code without breaking the build.
+
+::
+
+    @Deprecated
+    @DeprecationSchedule(id = "example-identifier", version = <Current Nightly + 3>)
+
+To check whether your patch has altered the API, run the following
 command.
 
 .. code:: bash
@@ -195,9 +213,7 @@ command.
 
 The output of this command will inform you if any changes you have made
 break the existing API. Review the changes and follow the instructions
-it provides.
-
-The first run of the command will tell you if there are API changes,
+it provides. The first run of the command will tell you if there are API changes,
 if there are changes and they are expected, then follow the next command,
 ``./mach gradle geckoview:apiLintWithGeckoBinariesDebug``. This command will generate an
 api.txt file for the changes. Next, run ``./mach lint --linter android-api-lint`` again to
@@ -221,6 +237,10 @@ number e.g.
 
 See the section below for more details on how to generate the javadoc locally to confirm links for
 the changelog.
+
+If an API is deprecated, file a follow-up bug or leave the bug open by
+adding the keyword `leave-open` to remove and clean up the deprecated
+API for the version it is to be removed on.
 
 A special situation is when a patch changing the API may need to be uplifted to an earlier
 branch of mozilla-central, for example, to the beta channel. To do this, follow the usual uplift
