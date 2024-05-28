@@ -13353,12 +13353,6 @@
   value: 50
   mirror: always
 
-# Whether to force a transaction to wait https rr.
-- name: network.dns.force_waiting_https_rr
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # The TTL for negative responses of TXT and HTTPS records.
 - name: network.dns.negative_ttl_for_type_record
   type: RelaxedAtomicUint32

@@ -521,6 +521,8 @@ uint8_t Http3ErrorToWebTransportError(uint64_t aErrorCode);
 
 bool PossibleZeroRTTRetryError(nsresult aReason);
 
+void DisallowHTTPSRR(uint32_t& aCaps);
+
 }  // namespace net
 }  // namespace mozilla
 
