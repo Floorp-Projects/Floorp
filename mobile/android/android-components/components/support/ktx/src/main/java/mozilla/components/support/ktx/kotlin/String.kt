@@ -315,7 +315,7 @@ fun String.sanitizeFileName(): String {
  * and is correctly displayed.
  */
 private fun String.replaceEscapedCharacters(): String {
-    val controlCharactersRegex = "[\\x00-\\x13]".toRegex()
+    val controlCharactersRegex = "[\\x00-\\x13/*\"?<>:|\\\\]".toRegex()
     return replace(controlCharactersRegex, "_")
 }
 
