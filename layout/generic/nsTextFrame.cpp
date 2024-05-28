@@ -9254,11 +9254,33 @@ bool nsTextFrame::IsInitialLetterChild() const {
          frame->IsLetterFrame();
 }
 
-struct NewlineProperty {
+struct nsTextFrame::NewlineProperty {
   int32_t mStartOffset;
   // The offset of the first \n after mStartOffset, or -1 if there is none
   int32_t mNewlineOffset;
 };
+
+int32_t nsTextFrame::GetContentNewLineOffset(
+    int32_t aOffset, NewlineProperty*& aCachedNewlineOffset) {
+  int32_t contentNewLineOffset = -1;  // this will be -1 or a content offset
+  if (StyleText()->NewlineIsSignificant(this)) {
+    // Pointer to the nsGkAtoms::newline set on this frame's element
+    aCachedNewlineOffset = mContent->HasFlag(NS_HAS_NEWLINE_PROPERTY)
+                               ? static_cast<NewlineProperty*>(
+                                     mContent->GetProperty(nsGkAtoms::newline))
+                               : nullptr;
+    if (aCachedNewlineOffset && aCachedNewlineOffset->mStartOffset <= aOffset &&
+        (aCachedNewlineOffset->mNewlineOffset == -1 ||
+         aCachedNewlineOffset->mNewlineOffset >= aOffset)) {
+      contentNewLineOffset = aCachedNewlineOffset->mNewlineOffset;
+    } else {
+      contentNewLineOffset = FindChar(
+          TextFragment(), aOffset, GetContent()->TextLength() - aOffset, '\n');
+    }
+  }
+
+  return contentNewLineOffset;
+}
 
 void nsTextFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                          const ReflowInput& aReflowInput,
@@ -9379,35 +9401,21 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   int32_t offset = GetContentOffset();
 
   // Restrict preformatted text to the nearest newline
-  int32_t newLineOffset = -1;  // this will be -1 or a content offset
-  int32_t contentNewLineOffset = -1;
-  // Pointer to the nsGkAtoms::newline set on this frame's element
   NewlineProperty* cachedNewlineOffset = nullptr;
-  if (textStyle->NewlineIsSignificant(this)) {
-    cachedNewlineOffset = mContent->HasFlag(NS_HAS_NEWLINE_PROPERTY)
-                              ? static_cast<NewlineProperty*>(
-                                    mContent->GetProperty(nsGkAtoms::newline))
-                              : nullptr;
-    if (cachedNewlineOffset && cachedNewlineOffset->mStartOffset <= offset &&
-        (cachedNewlineOffset->mNewlineOffset == -1 ||
-         cachedNewlineOffset->mNewlineOffset >= offset)) {
-      contentNewLineOffset = cachedNewlineOffset->mNewlineOffset;
-    } else {
-      contentNewLineOffset =
-          FindChar(frag, offset, GetContent()->TextLength() - offset, '\n');
-    }
-    if (contentNewLineOffset < offset + length) {
-      /*
-        The new line offset could be outside this frame if the frame has been
-        split by bidi resolution. In that case we won't use it in this reflow
-        (newLineOffset will remain -1), but we will still cache it in mContent
-      */
-      newLineOffset = contentNewLineOffset;
-    }
-    if (newLineOffset >= 0) {
-      length = newLineOffset + 1 - offset;
-    }
+  int32_t newLineOffset = -1;  // this will be -1 or a content offset
+  // This will just return -1 if newlines are not significant.
+  int32_t contentNewLineOffset =
+      GetContentNewLineOffset(offset, cachedNewlineOffset);
+  if (contentNewLineOffset < offset + length) {
+    // The new line offset could be outside this frame if the frame has been
+    // split by bidi resolution. In that case we won't use it in this reflow
+    // (newLineOffset will remain -1), but we will still cache it in mContent
+    newLineOffset = contentNewLineOffset;
   }
+  if (newLineOffset >= 0) {
+    length = newLineOffset + 1 - offset;
+  }
+
   if ((atStartOfLine && !textStyle->WhiteSpaceIsSignificant()) ||
       HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML)) {
     // Skip leading whitespace. Make sure we don't skip a 'pre-line'
