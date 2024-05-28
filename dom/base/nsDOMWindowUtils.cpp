@@ -30,6 +30,7 @@
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/StaticPrefs_test.h"
@@ -42,8 +43,6 @@
 #include "mozilla/media/MediaUtils.h"
 #include "nsQueryObject.h"
 #include "CubebDeviceEnumerator.h"
-
-#include "nsIScrollableFrame.h"
 
 #include "nsContentUtils.h"
 
@@ -603,14 +602,14 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetScrollbarSizes(Element* aElement,
                                     uint32_t* aOutVerticalScrollbarWidth,
                                     uint32_t* aOutHorizontalScrollbarHeight) {
-  nsIScrollableFrame* scrollFrame =
-      nsLayoutUtils::FindScrollableFrameFor(aElement);
-  if (!scrollFrame) {
+  ScrollContainerFrame* scrollContainerFrame =
+      nsLayoutUtils::FindScrollContainerFrameFor(aElement);
+  if (!scrollContainerFrame) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  CSSIntMargin scrollbarSizes =
-      RoundedToInt(CSSMargin::FromAppUnits(scrollFrame->GetActualScrollbarSizes(
+  CSSIntMargin scrollbarSizes = RoundedToInt(
+      CSSMargin::FromAppUnits(scrollContainerFrame->GetActualScrollbarSizes(
           nsIScrollableFrame::ScrollbarSizesOptions::
               INCLUDE_VISUAL_VIEWPORT_SCROLLBARS)));
   *aOutVerticalScrollbarWidth = scrollbarSizes.LeftRight();
@@ -2968,15 +2967,10 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult) {
 NS_IMETHODIMP
 nsDOMWindowUtils::DisableApzForElement(Element* aElement) {
   aElement->SetProperty(nsGkAtoms::apzDisabled, reinterpret_cast<void*>(true));
-  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aElement);
-  if (!sf) {
-    return NS_OK;
+  if (ScrollContainerFrame* sf =
+          nsLayoutUtils::FindScrollContainerFrameFor(aElement)) {
+    sf->SchedulePaint();
   }
-  nsIFrame* frame = do_QueryFrame(sf);
-  if (!frame) {
-    return NS_OK;
-  }
-  frame->SchedulePaint();
   return NS_OK;
 }
 
@@ -3070,15 +3064,16 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     flags |= layers::ONLY_ZOOM_TO_DEFAULT_SCALE;
   }
 
-  nsIScrollableFrame* rootScrollFrame =
-      presShell->GetRootScrollFrameAsScrollable();
-  if (!rootScrollFrame) {
+  ScrollContainerFrame* rootScrollContainerFrame =
+      presShell->GetRootScrollContainerFrame();
+  if (!rootScrollContainerFrame) {
     return NS_OK;
   }
 
   CSSRect bounds;
   if (element->IsHTMLElement(nsGkAtoms::input)) {
-    bounds = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame);
+    bounds = nsLayoutUtils::GetBoundingContentRect(element,
+                                                   rootScrollContainerFrame);
   } else {
     // When focused elment is content editable or <textarea> element,
     // focused element will have multi-line content.
@@ -3088,13 +3083,15 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
       if (caret && caret->IsVisible()) {
         nsRect rect;
         if (nsIFrame* frame = caret->GetGeometry(&rect)) {
-          bounds = nsLayoutUtils::GetBoundingFrameRect(frame, rootScrollFrame);
+          bounds = nsLayoutUtils::GetBoundingFrameRect(
+              frame, rootScrollContainerFrame);
         }
       }
     }
     if (bounds.IsEmpty()) {
       // Fallback if no caret frame.
-      bounds = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame);
+      bounds = nsLayoutUtils::GetBoundingContentRect(element,
+                                                     rootScrollContainerFrame);
     }
   }
 
@@ -3103,7 +3100,8 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     return NS_OK;
   }
 
-  bounds -= CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
+  bounds -=
+      CSSPoint::FromAppUnits(rootScrollContainerFrame->GetScrollPosition());
 
   bool waitForRefresh = false;
   for (nsIScrollableFrame* scrollAncestor :

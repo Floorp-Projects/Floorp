@@ -15,6 +15,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs_layout.h"
 
@@ -2248,17 +2249,18 @@ bool nsComputedDOMStyle::GetScrollFrameContentWidth(nscoord& aWidth) {
 
   AssertFlushedPendingReflows();
 
-  nsIScrollableFrame* scrollableFrame =
-      nsLayoutUtils::GetNearestScrollableFrame(
+  ScrollContainerFrame* scrollContainerFrame =
+      nsLayoutUtils::GetNearestScrollContainerFrame(
           mOuterFrame->GetParent(),
           nsLayoutUtils::SCROLLABLE_SAME_DOC |
               nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
-  if (!scrollableFrame) {
+  if (!scrollContainerFrame) {
     return false;
   }
-  aWidth =
-      scrollableFrame->GetScrolledFrame()->GetContentRectRelativeToSelf().width;
+  aWidth = scrollContainerFrame->GetScrolledFrame()
+               ->GetContentRectRelativeToSelf()
+               .width;
   return true;
 }
 
@@ -2269,16 +2271,16 @@ bool nsComputedDOMStyle::GetScrollFrameContentHeight(nscoord& aHeight) {
 
   AssertFlushedPendingReflows();
 
-  nsIScrollableFrame* scrollableFrame =
-      nsLayoutUtils::GetNearestScrollableFrame(
+  ScrollContainerFrame* scrollContainerFrame =
+      nsLayoutUtils::GetNearestScrollContainerFrame(
           mOuterFrame->GetParent(),
           nsLayoutUtils::SCROLLABLE_SAME_DOC |
               nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
-  if (!scrollableFrame) {
+  if (!scrollContainerFrame) {
     return false;
   }
-  aHeight = scrollableFrame->GetScrolledFrame()
+  aHeight = scrollContainerFrame->GetScrolledFrame()
                 ->GetContentRectRelativeToSelf()
                 .height;
   return true;

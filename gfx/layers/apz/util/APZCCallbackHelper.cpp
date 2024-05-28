@@ -23,6 +23,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ToString.h"
 #include "mozilla/ViewportUtils.h"
 #include "nsContainerFrame.h"
@@ -31,7 +32,6 @@
 #include "nsIDOMWindowUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPrintfCString.h"
 #include "nsPIDOMWindow.h"
@@ -154,8 +154,8 @@ static CSSPoint ScrollFrameTo(nsIScrollableFrame* aFrame,
 static DisplayPortMargins ScrollFrame(nsIContent* aContent,
                                       const RepaintRequest& aRequest) {
   // Scroll the window to the desired spot
-  nsIScrollableFrame* sf =
-      nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
+  ScrollContainerFrame* sf =
+      nsLayoutUtils::FindScrollContainerFrameFor(aRequest.GetScrollId());
   if (sf) {
     sf->ResetScrollInfoIfNeeded(aRequest.GetScrollGeneration(),
                                 aRequest.GetScrollGenerationOnApz(),
@@ -178,10 +178,10 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
   }
   // sf might have been destroyed by the call to SetVisualViewportOffset, so
   // re-get it.
-  sf = nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
+  sf = nsLayoutUtils::FindScrollContainerFrameFor(aRequest.GetScrollId());
   bool scrollUpdated = false;
-  auto displayPortMargins =
-      DisplayPortMargins::ForScrollFrame(sf, aRequest.GetDisplayPortMargins());
+  auto displayPortMargins = DisplayPortMargins::ForScrollContainerFrame(
+      sf, aRequest.GetDisplayPortMargins());
   CSSPoint apzScrollOffset = aRequest.GetVisualScrollOffset();
   CSSPoint actualScrollOffset = ScrollFrameTo(sf, aRequest, scrollUpdated);
   CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
@@ -222,7 +222,7 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
     // tile-align the recentered displayport because tile-alignment depends on
     // the scroll position, and the scroll position here is out of our control.
     // See bug 966507 comment 21 for a more detailed explanation.
-    displayPortMargins = DisplayPortMargins::ForScrollFrame(
+    displayPortMargins = DisplayPortMargins::ForScrollContainerFrame(
         sf, RecenterDisplayPort(aRequest.GetDisplayPortMargins()));
   }
 
@@ -385,8 +385,8 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     // is undesirable. Instead of having that happen as part of the post-reflow
     // code, we force it to happen here with ScrollOrigin::Apz so that it
     // doesn't trigger a scroll update to APZ.
-    nsIScrollableFrame* sf =
-        nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
+    ScrollContainerFrame* sf =
+        nsLayoutUtils::FindScrollContainerFrameFor(aRequest.GetScrollId());
     CSSPoint currentScrollPosition =
         CSSPoint::FromAppUnits(sf->GetScrollPosition());
     ScrollSnapTargetIds snapTargetIds = aRequest.GetLastSnapTargetIds();
@@ -628,9 +628,9 @@ static bool PrepareForSetTargetAPZCNotification(
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       aWidget, aRefPoint, relativeTo);
   nsIFrame* target = nsLayoutUtils::GetFrameForPoint(relativeTo, point);
-  nsIScrollableFrame* scrollAncestor =
+  ScrollContainerFrame* scrollAncestor =
       target ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
-             : aRootFrame->PresShell()->GetRootScrollFrameAsScrollable();
+             : aRootFrame->PresShell()->GetRootScrollContainerFrame();
 
   // Assuming that if there's no scrollAncestor, there's already a displayPort.
   nsCOMPtr<dom::Element> dpElement =
@@ -682,8 +682,8 @@ static bool PrepareForSetTargetAPZCNotification(
     return false;
   }
 
-  nsIFrame* frame = do_QueryFrame(scrollAncestor);
-  DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame);
+  DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+      scrollAncestor);
 
   return !DisplayPortUtils::HasPaintedDisplayPort(dpElement);
 }
@@ -839,9 +839,9 @@ void APZCCallbackHelper::NotifyAsyncScrollbarDragInitiated(
     uint64_t aDragBlockId, const ScrollableLayerGuid::ViewID& aScrollId,
     ScrollDirection aDirection) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (nsIScrollableFrame* scrollFrame =
-          nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
-    scrollFrame->AsyncScrollbarDragInitiated(aDragBlockId, aDirection);
+  if (ScrollContainerFrame* scrollContainerFrame =
+          nsLayoutUtils::FindScrollContainerFrameFor(aScrollId)) {
+    scrollContainerFrame->AsyncScrollbarDragInitiated(aDragBlockId, aDirection);
   }
 }
 
@@ -849,9 +849,9 @@ void APZCCallbackHelper::NotifyAsyncScrollbarDragInitiated(
 void APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(
     const ScrollableLayerGuid::ViewID& aScrollId) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (nsIScrollableFrame* scrollFrame =
-          nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
-    scrollFrame->AsyncScrollbarDragRejected();
+  if (ScrollContainerFrame* scrollContainerFrame =
+          nsLayoutUtils::FindScrollContainerFrameFor(aScrollId)) {
+    scrollContainerFrame->AsyncScrollbarDragRejected();
   }
 }
 
