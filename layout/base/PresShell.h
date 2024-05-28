@@ -454,22 +454,22 @@ class PresShell final : public nsStubDocumentObserver,
   already_AddRefed<nsIContent> GetSelectedContentForScrolling() const;
 
   /**
-   * Gets nearest scrollable frame from the specified content node. The frame
-   * is scrollable with overflow:scroll or overflow:auto in some direction when
-   * aDirection is eEither.  Otherwise, this returns a nearest frame that is
-   * scrollable in the specified direction.
+   * Gets nearest scroll container frame from the specified content node. The
+   * frame is scrollable with overflow:scroll or overflow:auto in some direction
+   * when aDirection is eEither. Otherwise, this returns a nearest scroll
+   * container frame that is scrollable in the specified direction.
    */
-  nsIScrollableFrame* GetScrollableFrameToScrollForContent(
+  ScrollContainerFrame* GetScrollContainerFrameToScrollForContent(
       nsIContent* aContent, layers::ScrollDirections aDirections);
 
   /**
-   * Gets nearest scrollable frame from current focused content or DOM
+   * Gets nearest scroll container frame from current focused content or DOM
    * selection if there is no focused content. The frame is scrollable with
    * overflow:scroll or overflow:auto in some direction when aDirection is
-   * eEither.  Otherwise, this returns a nearest frame that is scrollable in
-   * the specified direction.
+   * eEither. Otherwise, this returns a nearest scroll container frame that is
+   * scrollable in the specified direction.
    */
-  nsIScrollableFrame* GetScrollableFrameToScroll(
+  ScrollContainerFrame* GetScrollContainerFrameToScroll(
       layers::ScrollDirections aDirections);
 
   /**

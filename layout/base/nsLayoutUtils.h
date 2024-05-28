@@ -82,6 +82,7 @@ class WritingMode;
 class DisplayItemClip;
 class EffectSet;
 struct ActiveScrolledRoot;
+class ScrollContainerFrame;
 enum class ScrollOrigin : uint8_t;
 enum class StyleImageOrientation : uint8_t;
 enum class StyleSystemFont : uint8_t;
@@ -229,9 +230,10 @@ class nsLayoutUtils {
   static nsIFrame* GetScrollFrameFromContent(nsIContent* aContent);
 
   /**
-   * Find the ID for a given scrollable frame.
+   * Find the ID for a given scroll container frame.
    */
-  static ViewID FindIDForScrollableFrame(nsIScrollableFrame* aScrollable);
+  static ViewID FindIDForScrollContainerFrame(
+      mozilla::ScrollContainerFrame* aScrollContainerFrame);
 
   /**
    * Notify the scroll frame with the given scroll id that its scroll offset
@@ -536,9 +538,9 @@ class nsLayoutUtils {
    *
    * @param  aFrame the frame to start with
    * @param  aDirection Whether it's for horizontal or vertical scrolling.
-   * @return the nearest scrollable frame or nullptr if not found
+   * @return the nearest scroll container frame or nullptr if not found
    */
-  static nsIScrollableFrame* GetNearestScrollableFrameForDirection(
+  static mozilla::ScrollContainerFrame* GetNearestScrollableFrameForDirection(
       nsIFrame* aFrame, mozilla::layers::ScrollDirections aDirections);
 
   enum {
