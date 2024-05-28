@@ -653,27 +653,28 @@ static SideBits GetOverflowedSides(const nsRect& aOverflow,
 static std::pair<ParentLayerRect, gfx::Matrix4x4>
 GetClipRectAndTransformForPartialPrerender(
     const nsIFrame* aFrame, int32_t aDevPixelsToAppUnits,
-    const nsIFrame* aClipFrame, const nsIScrollableFrame* aScrollFrame) {
+    const nsIFrame* aClipFrame,
+    const ScrollContainerFrame* aScrollContainerFrame) {
   MOZ_ASSERT(aClipFrame);
 
   gfx::Matrix4x4 transformInClip =
       nsLayoutUtils::GetTransformToAncestor(RelativeTo{aFrame->GetParent()},
                                             RelativeTo{aClipFrame})
           .GetMatrix();
-  if (aScrollFrame) {
+  if (aScrollContainerFrame) {
     transformInClip.PostTranslate(
-        LayoutDevicePoint::FromAppUnits(aScrollFrame->GetScrollPosition(),
-                                        aDevPixelsToAppUnits)
+        LayoutDevicePoint::FromAppUnits(
+            aScrollContainerFrame->GetScrollPosition(), aDevPixelsToAppUnits)
             .ToUnknownPoint());
   }
 
   // We don't necessarily use nsLayoutUtils::CalculateCompositionSizeForFrame
   // since this is a case where we don't use APZ at all.
   return std::make_pair(
-      LayoutDeviceRect::FromAppUnits(aScrollFrame
-                                         ? aScrollFrame->GetScrollPortRect()
-                                         : aClipFrame->GetRectRelativeToSelf(),
-                                     aDevPixelsToAppUnits) *
+      LayoutDeviceRect::FromAppUnits(
+          aScrollContainerFrame ? aScrollContainerFrame->GetScrollPortRect()
+                                : aClipFrame->GetRectRelativeToSelf(),
+          aDevPixelsToAppUnits) *
           LayoutDeviceToLayerScale2D() * LayerToParentLayerScale(),
       transformInClip);
 }
@@ -708,12 +709,10 @@ static PartialPrerenderData GetPartialPrerenderData(
     const bool isInPositionFixed =
         nsLayoutUtils::IsInPositionFixedSubtree(aFrame);
     const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
-    const nsIFrame* asrScrollableFrame =
-        asr ? do_QueryFrame(asr->mScrollableFrame) : nullptr;
     if (!isInPositionFixed && asr &&
-        aFrame->PresContext() == asrScrollableFrame->PresContext()) {
+        aFrame->PresContext() == asr->mScrollContainerFrame->PresContext()) {
       scrollId = asr->GetViewId();
-      MOZ_ASSERT(clipFrame == asrScrollableFrame);
+      MOZ_ASSERT(clipFrame == asr->mScrollContainerFrame);
     } else {
       // Use the root scroll id in the same document if the target frame is in
       // position:fixed subtree or there is no ASR or the ASR is in a different
