@@ -264,7 +264,7 @@ class ScrollContainerFrame : public nsContainerFrame,
    * @note This method might destroy the frame, pres shell and other objects.
    */
   void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                nsIntPoint* aOverflow,
+                nsIntPoint* aOverflow = nullptr,
                 ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
                 nsIScrollableFrame::ScrollMomentum aMomentum =
                     nsIScrollableFrame::NOT_MOMENTUM,
@@ -280,6 +280,8 @@ class ScrollContainerFrame : public nsContainerFrame,
       // ScrollToCSSPixels.
       ScrollSnapFlags aSnapFlags = ScrollSnapFlags::IntendedDirection |
                                    ScrollSnapFlags::IntendedEndPosition);
+
+  void ScrollSnap() final { return ScrollSnap(ScrollMode::SmoothMsd); }
 
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -423,7 +425,8 @@ class ScrollContainerFrame : public nsContainerFrame,
       const nsPoint& aVisualViewportOffset,
       layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType) final;
 
-  bool IsSmoothScroll(dom::ScrollBehavior aBehavior) const final;
+  bool IsSmoothScroll(
+      dom::ScrollBehavior aBehavior = dom::ScrollBehavior::Auto) const final;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
@@ -578,7 +581,6 @@ class ScrollContainerFrame : public nsContainerFrame,
     }
     return pt;
   }
-  void ScrollSnap() final { return ScrollSnap(ScrollMode::SmoothMsd); }
   void ScrollSnap(ScrollMode aMode);
   void ScrollSnap(const nsPoint& aDestination,
                   ScrollMode aMode = ScrollMode::SmoothMsd);
