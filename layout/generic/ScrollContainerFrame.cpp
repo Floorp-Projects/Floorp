@@ -2680,7 +2680,8 @@ bool ScrollContainerFrame::IsAlwaysActive() const {
           styles.mVertical != StyleOverflow::Hidden);
 }
 
-static void RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure) {
+void ScrollContainerFrame::RemoveDisplayPortCallback(nsITimer* aTimer,
+                                                     void* aClosure) {
   ScrollContainerFrame* sf = static_cast<ScrollContainerFrame*>(aClosure);
 
   // This function only ever gets called from the expiry timer, so it must
@@ -6076,7 +6077,7 @@ void ScrollContainerFrame::FinishReflowForScrollbar(
   SetCoordAttribute(aElement, nsGkAtoms::increment, aIncrement);
 }
 
-class MOZ_RAII AutoMinimumScaleSizeChangeDetector final {
+class MOZ_RAII ScrollContainerFrame::AutoMinimumScaleSizeChangeDetector final {
  public:
   explicit AutoMinimumScaleSizeChangeDetector(
       ScrollContainerFrame* aScrollFrame)
