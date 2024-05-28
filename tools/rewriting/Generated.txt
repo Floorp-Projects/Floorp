@@ -18,6 +18,7 @@ browser/locales/l10n-onchange-changesets.json
 devtools/client/aboutdebugging/test/jest/node_modules/
 devtools/client/application/test/components/node_modules/
 devtools/client/debugger/node_modules/
+dom/base/use_counter_metrics.yaml
 dom/tests/ajax/jquery/
 dom/tests/ajax/mochikit/
 intl/components/src/UnicodeScriptCodes.h
