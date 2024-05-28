@@ -489,6 +489,52 @@ impl PositionAnchor {
     }
 }
 
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[css(bitflags(single = "always", mixed = "anchors-valid,anchors-visible,no-overflow"))]
+#[repr(C)]
+/// Specified keyword values for the position-visibility property.
+pub struct PositionVisibility(u8);
+bitflags! {
+    impl PositionVisibility: u8 {
+        /// Element is displayed without regard for its anchors or its overflowing status.
+        const ALWAYS = 0;
+        /// anchors-valid
+        const ANCHORS_VALID = 1 << 0;
+        /// anchors-visible
+        const ANCHORS_VISIBLE = 1 << 1;
+        /// no-overflow
+        const NO_OVERFLOW = 1 << 2;
+    }
+}
+
+impl Default for PositionVisibility {
+    fn default() -> Self {
+        Self::ALWAYS
+    }
+}
+
+impl PositionVisibility {
+    #[inline]
+    /// Returns the initial value of position-visibility
+    pub fn always() -> Self {
+        Self::ALWAYS
+    }
+}
+
 /// Represents a side, either horizontal or vertical, of a CSS position.
 pub trait Side {
     /// Returns the start side.

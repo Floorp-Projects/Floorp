@@ -112,6 +112,7 @@ include = [
   "DisplayMode",
   "Platform",
   "PositionAnchor",
+  "PositionVisibility",
   "GtkThemeFamily",
   "PrefersColorScheme",
   "PrefersContrast",
