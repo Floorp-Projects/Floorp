@@ -23,6 +23,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SVGImageContext.h"
 #include "gfxFont.h"
@@ -43,7 +44,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsIContent.h"
 #include "mozilla/dom/DocumentInlines.h"
-#include "nsIScrollableFrame.h"
 #include "imgIContainer.h"
 #include "ImageOps.h"
 #include "nsCSSColorUtils.h"
@@ -2860,10 +2860,9 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
 
       if (!pageContentFrame) {
         // Subtract the size of scrollbars.
-        nsIScrollableFrame* scrollableFrame =
-            aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
-        if (scrollableFrame) {
-          nsMargin scrollbars = scrollableFrame->GetActualScrollbarSizes();
+        if (ScrollContainerFrame* sf =
+                aPresContext->PresShell()->GetRootScrollContainerFrame()) {
+          nsMargin scrollbars = sf->GetActualScrollbarSizes();
           positionArea.Deflate(scrollbars);
         }
       }

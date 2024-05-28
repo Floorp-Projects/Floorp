@@ -3320,8 +3320,7 @@ nsSize EventStateManager::GetScrollAmount(
   const bool isPage = aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PAGE;
   if (!aScrollableFrame) {
     // If there is no scrollable frame, we should use root, see below.
-    aScrollableFrame =
-        aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
+    aScrollableFrame = aPresContext->PresShell()->GetRootScrollContainerFrame();
   }
 
   if (aScrollableFrame) {
