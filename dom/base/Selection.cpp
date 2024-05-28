@@ -2783,16 +2783,25 @@ AbstractRange* Selection::GetAbstractRangeAt(uint32_t aIndex) const {
   return mStyledRanges.mRanges.SafeElementAt(aIndex, empty).mRange;
 }
 
+// https://www.w3.org/TR/selection-api/#dom-selection-direction
 void Selection::GetDirection(nsAString& aDirection) const {
   if (mStyledRanges.mRanges.IsEmpty() ||
       (mFrameSelection && (mFrameSelection->IsDoubleClickSelection() ||
                            mFrameSelection->IsTripleClickSelection()))) {
     // Empty range and double/triple clicks result a directionless selection.
     aDirection.AssignLiteral("none");
-  } else if (mDirection == nsDirection::eDirPrevious) {
-    aDirection.AssignLiteral("backward");
-  } else {
+  } else if (mDirection == nsDirection::eDirNext) {
+    // This is the default direction. It could be that the direction
+    // is really "forward", or the direction is "none" if the selection
+    // is collapsed.
+    if (AreNormalAndCrossShadowBoundaryRangesCollapsed()) {
+      aDirection.AssignLiteral("none");
+      return;
+    }
     aDirection.AssignLiteral("forward");
+  } else {
+    MOZ_ASSERT(!AreNormalAndCrossShadowBoundaryRangesCollapsed());
+    aDirection.AssignLiteral("backward");
   }
 }
 
