@@ -15994,6 +15994,14 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
       MOZ_CRASH("unreachable");
   }
 
+  // Ensure other reg/slot collections on LSafepoint are empty.
+  MOZ_ASSERT(safepoint.gcRegs().empty() && safepoint.gcSlots().empty());
+#ifdef JS_NUNBOX32
+  MOZ_ASSERT(safepoint.nunboxParts().empty());
+#elif JS_PUNBOX64
+  MOZ_ASSERT(safepoint.valueRegs().empty() && safepoint.valueSlots().empty());
+#endif
+
   // BODY (GENERAL SPILL) AREA and FRAME and INCOMING ARGS
   // Deal with roots on the stack.
   const LSafepoint::SlotList& wasmAnyRefSlots = safepoint.wasmAnyRefSlots();
