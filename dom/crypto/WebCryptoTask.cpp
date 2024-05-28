@@ -2801,7 +2801,7 @@ class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
 
     if (mLength) {
       if (*mLength > mResult.Length()) {
-        return NS_ERROR_DOM_DATA_ERR;
+        return NS_ERROR_DOM_OPERATION_ERR;
       }
       if (!mResult.SetLength(*mLength, fallible)) {
         return NS_ERROR_DOM_UNKNOWN_ERR;
