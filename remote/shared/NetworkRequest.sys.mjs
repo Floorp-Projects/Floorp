@@ -104,6 +104,16 @@ export class NetworkRequest {
   }
 
   /**
+   * Add information about raw headers, collected from NetworkObserver events.
+   *
+   * @param {string} rawHeaders
+   *     The raw headers.
+   */
+  addRawHeaders(rawHeaders) {
+    this.#rawHeaders = rawHeaders || "";
+  }
+
+  /**
    * Retrieve the Fetch timings for the NetworkRequest.
    *
    * @returns {object}

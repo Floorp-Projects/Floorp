@@ -63,6 +63,7 @@ export class NetworkListener {
     }
 
     this.#devtoolsNetworkObserver = new lazy.NetworkObserver({
+      earlyEvents: true,
       ignoreChannelFunction: this.#ignoreChannelFunction,
       onNetworkEvent: this.#onNetworkEvent,
     });
