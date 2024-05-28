@@ -592,6 +592,7 @@ enum class CryptoScheme : uint8_t {
 using CryptoSchemeSet = EnumSet<CryptoScheme, uint8_t>;
 
 const char* CryptoSchemeToString(const CryptoScheme& aScheme);
+nsCString CryptoSchemeSetToString(const CryptoSchemeSet& aSchemes);
 CryptoScheme StringToCryptoScheme(const nsAString& aString);
 
 class CryptoTrack {
