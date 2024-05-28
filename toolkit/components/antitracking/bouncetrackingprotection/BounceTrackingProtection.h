@@ -42,7 +42,7 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   // Stores a user activation flag with a timestamp for the given principal. The
   // timestamp defaults to the current time, but can be overridden via
   // aActivationTime.
-  [[nodiscard]] nsresult RecordUserActivation(
+  [[nodiscard]] static nsresult RecordUserActivation(
       nsIPrincipal* aPrincipal, Maybe<PRTime> aActivationTime = Nothing());
 
   // Clears expired user interaction flags for the given state global. If
