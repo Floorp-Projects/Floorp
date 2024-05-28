@@ -875,10 +875,12 @@ impl<'le> GeckoElement<'le> {
         // function.
         if let Some(ref existing) = existing_transitions.get(&property_declaration_id.to_owned()) {
             let after_value =
-                AnimationValue::from_computed_values(property_declaration_id, after_change_style)
-                    .unwrap();
-
-            return ***existing != after_value;
+                AnimationValue::from_computed_values(property_declaration_id, after_change_style);
+            debug_assert!(
+                after_value.is_some() ||
+                    matches!(property_declaration_id, PropertyDeclarationId::Custom(..))
+            );
+            return after_value.is_none() || ***existing != after_value.unwrap();
         }
 
         if combined_duration_seconds <= 0.0f32 {
