@@ -130,30 +130,31 @@ function add_task_if_omta_enabled(test) {
   add_task(test);
 }
 
+async function estimateVsyncRate() {
+  await waitForNextFrame();
+
+  const timeAtStart = document.timeline.currentTime;
+  await waitForAnimationFrames(5);
+  return (document.timeline.currentTime - timeAtStart) / 5;
+}
+
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
-waitForAllPaints(() => {
-  add_task(async function () {
-    // Start vsync rate measurement in after a RAF callback.
-    await waitForNextFrame();
-
-    const timeAtStart = document.timeline.currentTime;
-    await waitForAnimationFrames(5);
-    const vsyncRate = (document.timeline.currentTime - timeAtStart) / 5;
-
-    // In this test we basically observe restyling counts in 5 frames, if it
-    // takes over 200ms during the 5 frames, this test will fail. So
-    // "200ms / 5 = 40ms" is a threshold whether the test works as expected or
-    // not. We'd take 5ms additional tolerance here.
-    // Note that the 200ms is a period we unthrottle throttled animations that
-    // at least one of the animating styles produces change hints causing
-    // overflow, the value is defined in
-    // KeyframeEffect::OverflowRegionRefreshInterval.
-    if (vsyncRate > 40 - 5) {
-      ok(true, `the vsync rate ${vsyncRate} on this machine is too slow to run this test`);
-      SimpleTest.finish();
-    }
-  });
+waitForAllPaints(async () => {
+  const vsyncRate = await estimateVsyncRate();
+  // In this test we basically observe restyling counts in 5 frames, if it
+  // takes over 200ms during the 5 frames, this test will fail. So
+  // "200ms / 5 = 40ms" is a threshold whether the test works as expected or
+  // not. We'd take 5ms additional tolerance here.
+  // Note that the 200ms is a period we unthrottle throttled animations that
+  // at least one of the animating styles produces change hints causing
+  // overflow, the value is defined in
+  // KeyframeEffect::OverflowRegionRefreshInterval.
+  if (vsyncRate > 40 - 5) {
+    ok(true, `the vsync rate ${vsyncRate} on this machine is too slow to run this test`);
+    SimpleTest.finish();
+    return;
+  }
 
   add_task(async function restyling_for_main_thread_animations() {
     const div = addDiv(null, { style: 'animation: on-main-thread 100s' });
