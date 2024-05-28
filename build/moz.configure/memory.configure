@@ -136,4 +136,41 @@ with only_when(depends(target.os)(lambda os: os != "WINNT")):
     set_define("HAVE_STRNDUP", check_symbol("strndup"))
     set_define("HAVE_POSIX_MEMALIGN", check_symbol("posix_memalign"))
     set_define("HAVE_MEMALIGN", check_symbol("memalign"))
-    set_define("HAVE_MALLOC_USABLE_SIZE", check_symbol("malloc_usable_size"))
+
+    have_malloc_usable_size = check_symbol("malloc_usable_size")
+    set_define("HAVE_MALLOC_USABLE_SIZE", have_malloc_usable_size)
+
+
+@template
+def check_malloc_header():
+    found_header = dependable(None)
+    malloc_headers = ("malloc.h", "malloc_np.h", "malloc/malloc.h", "sys/malloc.h")
+    for malloc_h in malloc_headers:
+        have_malloc_h = check_header(malloc_h, when=~found_header)
+        found_header = depends(have_malloc_h, found_header)(
+            lambda h, f: malloc_h if h else f
+        )
+    return found_header
+
+
+malloc_h = check_malloc_header()
+have_malloc_h = depends(malloc_h)(lambda h: h == "malloc.h")
+
+set_define("MALLOC_H", depends_if(malloc_h)(lambda h: f"<{h}>"))
+
+usable_size_constness = c_compiler.try_compile(
+    includes=depends(malloc_h)(lambda h: [h, "stddef.h"]),
+    body="""
+        extern size_t malloc_usable_size(const void *ptr);
+        return malloc_usable_size(0);
+        """,
+    check_msg="whether malloc_usable_size definition can use const argument",
+    when=have_malloc_usable_size,
+)
+
+set_define(
+    "MALLOC_USABLE_SIZE_CONST_PTR",
+    depends(usable_size_constness, have_malloc_h)(
+        lambda u, h: "const" if (u or not h) else ""
+    ),
+)

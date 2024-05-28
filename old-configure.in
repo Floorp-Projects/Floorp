@@ -490,10 +490,6 @@ AC_LANG_C
 
 fi # ! SKIP_COMPILER_CHECKS
 
-if test -n "${COMPILE_ENVIRONMENT}"; then
-  MOZ_CHECK_ALLOCATOR
-fi
-
 TARGET_XPCOM_ABI=
 if test -n "${TARGET_CPU}" -a -n "${TARGET_COMPILER_ABI}"; then
     TARGET_XPCOM_ABI="${TARGET_CPU}-${TARGET_COMPILER_ABI}"
@@ -504,8 +500,6 @@ dnl We can't run TRY_COMPILE tests on Windows, so hard-code some
 dnl features that Windows actually does support.
 
 if test -n "$SKIP_COMPILER_CHECKS"; then
-   dnl Windows has malloc.h
-   AC_DEFINE(MALLOC_H, [<malloc.h>])
    AC_DEFINE(HAVE_FORCEINLINE)
 fi # SKIP_COMPILER_CHECKS
 
