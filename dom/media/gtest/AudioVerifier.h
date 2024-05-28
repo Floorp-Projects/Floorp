@@ -107,8 +107,9 @@ class AudioVerifier {
   }
 
   void CountDiscontinuities(Sample aCurrentSample) {
-    const bool discontinuity = fabs(fabs(aCurrentSample) - fabs(mPrevious)) >
-                               3 * MaxMagnitudeDifference();
+    // The factor of 2 tolerates up to 1 skipped frame.
+    const bool haveDiscontinuity =
+        fabs(aCurrentSample - mPrevious) > 2 * MaxMagnitudeDifference();
 
     if (mCurrentDiscontinuityFrameCount > 0) {
       if (++mCurrentDiscontinuityFrameCount == 5) {
@@ -121,7 +122,7 @@ class AudioVerifier {
     }
 
     MOZ_RELEASE_ASSERT(mCurrentDiscontinuityFrameCount == 0);
-    if (!discontinuity) {
+    if (!haveDiscontinuity) {
       return;
     }
 
