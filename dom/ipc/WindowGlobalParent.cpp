@@ -11,7 +11,6 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BounceTrackingStorageObserver.h"
-#include "mozilla/BounceTrackingProtection.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/InProcessParent.h"
@@ -1711,24 +1710,6 @@ IPCResult WindowGlobalParent::RecvOnInitialStorageAccess() {
   DebugOnly<nsresult> rv =
       BounceTrackingStorageObserver::OnInitialStorageAccess(this);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to notify storage access");
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalParent::RecvRecordUserActivationForBTP() {
-  WindowGlobalParent* top = TopWindowContext();
-  if (!top) {
-    return IPC_OK();
-  }
-  nsIPrincipal* principal = top->DocumentPrincipal();
-  if (!principal) {
-    return IPC_OK();
-  }
-
-  DebugOnly<nsresult> rv =
-      BounceTrackingProtection::RecordUserActivation(principal, Some(PR_Now()));
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Failed to record BTP user activation.");
-
   return IPC_OK();
 }
 

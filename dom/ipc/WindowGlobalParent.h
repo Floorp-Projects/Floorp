@@ -331,8 +331,6 @@ class WindowGlobalParent final : public WindowContext,
 
   mozilla::ipc::IPCResult RecvOnInitialStorageAccess();
 
-  mozilla::ipc::IPCResult RecvRecordUserActivationForBTP();
-
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,
