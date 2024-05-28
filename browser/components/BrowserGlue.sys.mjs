@@ -3793,7 +3793,7 @@ BrowserGlue.prototype = {
   _migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 145;
+    const UI_VERSION = 147;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4456,33 +4456,53 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 146) {
+    // < 147 because 146 migration had a typo issue (was supposed to be 'creditCards' instead of 'creditcards'). This fixes that.
+    // 'creditCards' is now in AUTOFILL_CREDITCARDS_REAUTH_PREF.
+    if (currentUIVersion < 147) {
       // We're securing the boolean prefs for OS Authentication.
       // This is achieved by converting them into a string pref and encrypting the values
       // stored inside it.
 
       if (!AppConstants.NIGHTLY_BUILD) {
-        // We only perform pref migration for Beta and Release since for nightly we are
-        // enabling OSAuth (exiting functionality) for creditcards and passwords as defualt.
-        let ccReauthPrefValue = Services.prefs.getBoolPref(
-          "extensions.formautofill.reauth.enabled"
-        );
-        let pwdReauthPrefValue = Services.prefs.getBoolPref(
-          "signon.management.page.os-auth.enabled"
+        const savedmstone = Services.prefs.getCharPref(
+          "browser.startup.homepage_override.mstone",
+          ""
         );
 
-        lazy.FormAutofillUtils.setOSAuthEnabled(
-          lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-          ccReauthPrefValue
-        );
-
-        lazy.LoginHelper.setOSAuthEnabled(
-          lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,
-          pwdReauthPrefValue
-        );
+        if (savedmstone.startsWith("127.0b")) {
+          // If the saved milestone starts with "127.0b",  we know that the migration is happened.
+          // Hence, get value from typo pref and store it in the correct pref.
+          const ccPrevReauthPrefValue = lazy.FormAutofillUtils.getOSAuthEnabled(
+            "extensions.formautofill.creditcards.reauth.optout"
+          );
+          lazy.FormAutofillUtils.setOSAuthEnabled(
+            lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+            ccPrevReauthPrefValue
+          );
+        } else {
+          // In other case, migrations has not happened, get values from the old prefs and store in the new correct prefs.
+          const ccPrevReauthPrefValue = Services.prefs.getBoolPref(
+            "extensions.formautofill.reauth.enabled"
+          );
+          const passwordsPrevReauthPrefValue = Services.prefs.getBoolPref(
+            "signon.management.page.os-auth.enabled"
+          );
+          lazy.FormAutofillUtils.setOSAuthEnabled(
+            lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+            ccPrevReauthPrefValue
+          );
+          lazy.LoginHelper.setOSAuthEnabled(
+            lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,
+            passwordsPrevReauthPrefValue
+          );
+        }
       }
+
       Services.prefs.clearUserPref("extensions.formautofill.reauth.enabled");
       Services.prefs.clearUserPref("signon.management.page.os-auth.enabled");
+      Services.prefs.clearUserPref(
+        "extensions.formautofill.creditcards.reauth.optout"
+      );
     }
 
     // Update the migration version.
