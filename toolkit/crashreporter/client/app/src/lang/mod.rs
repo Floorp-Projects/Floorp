@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 pub fn load() -> anyhow::Result<LangStrings> {
     // TODO support langpacks, bug 1873210
     omnijar::read().unwrap_or_else(|e| {
-        log::warn!("failed to read localization data from the omnijar ({e}), falling back to bundled content");
+        log::warn!("failed to read localization data from the omnijar ({e:#}), falling back to bundled content");
         Default::default()
     }).load_strings()
 }
