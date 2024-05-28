@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -16,45 +14,21 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/webdriver/UserPromptHandler.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "debuggerAddress", () => {
-  return lazy.RemoteAgent.running && lazy.RemoteAgent.cdp
-    ? lazy.remoteAgent.debuggerAddress
-    : null;
-});
-
-ChromeUtils.defineLazyGetter(lazy, "isHeadless", () => {
-  return Cc["@mozilla.org/gfx/info;1"].createInstance(Ci.nsIGfxInfo).isHeadless;
-});
-
 ChromeUtils.defineLazyGetter(lazy, "remoteAgent", () => {
   return Cc["@mozilla.org/remote/agent;1"].createInstance(Ci.nsIRemoteAgent);
 });
 
-ChromeUtils.defineLazyGetter(lazy, "userAgent", () => {
-  return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
-    Ci.nsIHttpProtocolHandler
-  ).userAgent;
-});
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "shutdownTimeout",
-  "toolkit.asyncshutdown.crash_timeout"
-);
-
 // List of capabilities which are only relevant for Webdriver Classic.
 export const WEBDRIVER_CLASSIC_CAPABILITIES = [
   "pageLoadStrategy",
-  "strictFileInteractability",
   "timeouts",
+  "strictFileInteractability",
   "unhandledPromptBehavior",
   "webSocketUrl",
-
-  // Gecko specific capabilities
-  "moz:debuggerAddress",
-  "moz:firefoxOptions",
   "moz:useNonSpecCompliantPointerOrigin",
   "moz:webdriverClick",
+  "moz:debuggerAddress",
+  "moz:firefoxOptions",
 ];
 
 /** Representation of WebDriver session timeouts. */
@@ -116,7 +90,7 @@ export class Timeouts {
 
         default:
           throw new lazy.error.InvalidArgumentError(
-            `Unrecognized timeout: ${type}`
+            "Unrecognised timeout: " + type
           );
       }
     }
@@ -433,36 +407,51 @@ export class Proxy {
   }
 }
 
+/** WebDriver session capabilities representation. */
 export class Capabilities extends Map {
-  /**
-   * WebDriver session capabilities representation.
-   */
+  /** @class */
   constructor() {
-    // Default values for capabilities supported by both WebDriver protocols
     super([
+      // webdriver
       ["browserName", getWebDriverBrowserName()],
       ["browserVersion", lazy.AppInfo.version],
       ["platformName", getWebDriverPlatformName()],
       ["acceptInsecureCerts", false],
-      ["proxy", new Proxy()],
-      ["unhandledPromptBehavior", new lazy.UserPromptHandler()],
-      ["userAgent", lazy.userAgent],
-
-      // HTTP only capabilities
       ["pageLoadStrategy", PageLoadStrategy.Normal],
-      ["timeouts", new Timeouts()],
+      ["proxy", new Proxy()],
       ["setWindowRect", !lazy.AppInfo.isAndroid],
+      ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
+      ["unhandledPromptBehavior", new lazy.UserPromptHandler()],
+      [
+        "userAgent",
+        Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+          Ci.nsIHttpProtocolHandler
+        ).userAgent,
+      ],
+      ["webSocketUrl", null],
 
-      // Gecko specific capabilities
+      // proprietary
       ["moz:accessibilityChecks", false],
       ["moz:buildID", lazy.AppInfo.appBuildID],
-      ["moz:debuggerAddress", lazy.debuggerAddress],
-      ["moz:headless", lazy.isHeadless],
+      [
+        "moz:debuggerAddress",
+        // With bug 1715481 fixed always use the Remote Agent instance
+        lazy.RemoteAgent.running && lazy.RemoteAgent.cdp
+          ? lazy.remoteAgent.debuggerAddress
+          : null,
+      ],
+      [
+        "moz:headless",
+        Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless,
+      ],
       ["moz:platformVersion", Services.sysinfo.getProperty("version")],
       ["moz:processID", lazy.AppInfo.processID],
       ["moz:profile", maybeProfile()],
-      ["moz:shutdownTimeout", lazy.shutdownTimeout],
+      [
+        "moz:shutdownTimeout",
+        Services.prefs.getIntPref("toolkit.asyncshutdown.crash_timeout"),
+      ],
       ["moz:webdriverClick", true],
       ["moz:windowless", false],
     ]);
@@ -489,7 +478,7 @@ export class Capabilities extends Map {
   }
 
   /**
-   * JSON serialization of capabilities object.
+   * JSON serialisation of capabilities object.
    *
    * @returns {Object<string, ?>}
    */
@@ -512,13 +501,11 @@ export class Capabilities extends Map {
    *
    * @param {Object<string, *>=} json
    *     WebDriver capabilities.
-   * @param {boolean=} isHttp
-   *     Flag indicating that it is a WebDriver classic session. Defaults to false.
    *
    * @returns {Capabilities}
    *     Internal representation of WebDriver capabilities.
    */
-  static fromJSON(json, isHttp = false) {
+  static fromJSON(json) {
     if (typeof json == "undefined" || json === null) {
       json = {};
     }
@@ -531,11 +518,6 @@ export class Capabilities extends Map {
     // TODO: Bug 1823907. We can start using here spec compliant method `validate`,
     // as soon as `desiredCapabilities` and `requiredCapabilities` are not supported.
     for (let [k, v] of Object.entries(json)) {
-      if (!isHttp && WEBDRIVER_CLASSIC_CAPABILITIES.includes(k)) {
-        // Ignore any WebDriver classic capability for a WebDriver BiDi session.
-        continue;
-      }
-
       switch (k) {
         case "acceptInsecureCerts":
           lazy.assert.boolean(

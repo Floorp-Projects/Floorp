@@ -180,15 +180,13 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
       if (module === "session" && command === "new") {
         const processedCapabilities = lazy.processCapabilities(params);
 
-        const flags = new Set();
         result = await lazy.RemoteAgent.webDriverBiDi.createSession(
           processedCapabilities,
-          flags,
           this
         );
 
-        // The Capabilities class sets up default values also for capabilities
-        // which are not relevant for BiDi, we want to remove those from the payload.
+        // Since in Capabilities class we setup default values also for capabilities which are
+        // not relevant for bidi, we want to remove them from the payload before returning to a client.
         result.capabilities = Array.from(result.capabilities.entries()).reduce(
           (object, [key, value]) => {
             if (!lazy.WEBDRIVER_CLASSIC_CAPABILITIES.includes(key)) {

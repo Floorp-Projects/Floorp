@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Timeouts } = ChromeUtils.importESModule(
+const { Capabilities, Timeouts } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs"
 );
 const { getWebDriverSessionById, WebDriverSession } =
@@ -12,78 +12,25 @@ const { getWebDriverSessionById, WebDriverSession } =
     "chrome://remote/content/shared/webdriver/Session.sys.mjs"
   );
 
-function createSession(options = {}) {
-  const { capabilities = {}, connection, isHttp = false } = options;
-
-  const flags = new Set();
-  if (isHttp) {
-    flags.add("http");
-  }
-
-  return new WebDriverSession(capabilities, flags, connection);
-}
-
 add_task(function test_WebDriverSession_ctor() {
-  Assert.throws(() => new WebDriverSession({}), /TypeError/);
+  const session = new WebDriverSession();
 
-  // Session id and path
-  let session = createSession();
   equal(typeof session.id, "string");
-  equal(session.path, `/session/${session.id}`);
-
-  // Sets HTTP flag
-  session = createSession({ isHttp: true });
-  equal(session.http, true);
-  session = createSession({ isHttp: false });
-  equal(session.http, false);
-
-  // Sets capabilities based on session configuration flag.
-  const capabilities = {
-    acceptInsecureCerts: true,
-    unhandledPromptBehavior: "ignore",
-
-    // HTTP only
-    pageLoadStrategy: "eager",
-    strictFileInteractability: true,
-    timeouts: { script: 1000 },
-  };
-
-  // HTTP session
-  session = createSession({ isHttp: true, capabilities });
-  equal(session.acceptInsecureCerts, true);
-  equal(session.pageLoadStrategy, "eager");
-  equal(session.strictFileInteractability, true);
-  equal(session.timeouts.script, 1000);
-  equal(session.userPromptHandler.toJSON(), "ignore");
-
-  // BiDi session (uses default values for HTTP only capabilities)
-  session = createSession({ isHttp: false, capabilities });
-  equal(session.acceptInsecureCerts, true);
-  equal(session.pageLoadStrategy, "normal");
-  equal(session.strictFileInteractability, false);
-  equal(session.timeouts.script, 30000);
-  equal(session.userPromptHandler.toJSON(), "dismiss and notify");
+  ok(session.capabilities instanceof Capabilities);
 });
 
 add_task(function test_WebDriverSession_destroy() {
-  const session = createSession();
+  const session = new WebDriverSession();
 
-  session.destroy();
-
-  // Calling twice doesn't raise error.
   session.destroy();
 });
 
 add_task(function test_WebDriverSession_getters() {
-  const session = createSession();
+  const session = new WebDriverSession();
 
   equal(
     session.a11yChecks,
     session.capabilities.get("moz:accessibilityChecks")
-  );
-  equal(
-    session.acceptInsecureCerts,
-    session.capabilities.get("acceptInsecureCerts")
   );
   equal(session.pageLoadStrategy, session.capabilities.get("pageLoadStrategy"));
   equal(session.proxy, session.capabilities.get("proxy"));
@@ -99,7 +46,7 @@ add_task(function test_WebDriverSession_getters() {
 });
 
 add_task(function test_WebDriverSession_setters() {
-  const session = createSession();
+  const session = new WebDriverSession();
 
   const timeouts = new Timeouts();
   timeouts.pageLoad = 45;
@@ -109,8 +56,8 @@ add_task(function test_WebDriverSession_setters() {
 });
 
 add_task(function test_getWebDriverSessionById() {
-  const session1 = createSession();
-  const session2 = createSession();
+  const session1 = new WebDriverSession();
+  const session2 = new WebDriverSession();
 
   equal(getWebDriverSessionById(session1.id), session1);
   equal(getWebDriverSessionById(session2.id), session2);

@@ -69,8 +69,7 @@ export class WebDriverBiDi {
    * @param {Object<string, *>=} capabilities
    *     JSON Object containing any of the recognised capabilities as listed
    *     on the `WebDriverSession` class.
-   * @param {Set} flags
-   *     Session configuration flags.
+   *
    * @param {WebDriverBiDiConnection=} sessionlessConnection
    *     Optional connection that is not yet accociated with a WebDriver
    *     session, and has to be associated with the new WebDriver session.
@@ -81,7 +80,7 @@ export class WebDriverBiDi {
    * @throws {SessionNotCreatedError}
    *     If, for whatever reason, a session could not be created.
    */
-  async createSession(capabilities, flags, sessionlessConnection) {
+  async createSession(capabilities, sessionlessConnection) {
     if (this.session) {
       throw new lazy.error.SessionNotCreatedError(
         "Maximum number of active sessions"
@@ -90,7 +89,6 @@ export class WebDriverBiDi {
 
     const session = new lazy.WebDriverSession(
       capabilities,
-      flags,
       sessionlessConnection
     );
 

@@ -33,30 +33,9 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 const webDriverSessions = new Map();
 
 /**
- * @typedef {Set} SessionConfigurationFlags
- *     A set of flags defining the features of a WebDriver session. It can be
- *     empty or contain entries as listed below. External specifications may
- *     define additional flags, or create sessions without the HTTP flag.
- *
- *     <dl>
- *       <dt><code>"http"</code> (string)
- *       <dd>Flag indicating a WebDriver classic (HTTP) session.
- *     </dl>
- */
-
-/**
  * Representation of WebDriver session.
  */
 export class WebDriverSession {
-  #capabilities;
-  #connections;
-  #http;
-  #id;
-  #messageHandler;
-  #path;
-
-  static SESSION_FLAG_HTTP = "http";
-
   /**
    * Construct a new WebDriver session.
    *
@@ -73,22 +52,23 @@ export class WebDriverSession {
    *   are implicitly trusted on navigation for the duration of the session.
    *
    *  <dt><code>pageLoadStrategy</code> (string)
-   *  <dd>(HTTP only) The page load strategy to use for the current session.  Must be
+   *  <dd>The page load strategy to use for the current session.  Must be
    *   one of "<tt>none</tt>", "<tt>eager</tt>", and "<tt>normal</tt>".
    *
    *  <dt><code>proxy</code> (Proxy object)
    *  <dd>Defines the proxy configuration.
    *
    *  <dt><code>setWindowRect</code> (boolean)
-   *  <dd>(HTTP only) Indicates whether the remote end supports all of the resizing
+   *  <dd>Indicates whether the remote end supports all of the resizing
    *   and repositioning commands.
    *
    *  <dt><code>strictFileInteractability</code> (boolean)
-   *  <dd>(HTTP only) Defines the current session’s strict file interactability.
+   *  <dd>Defines the current session’s strict file interactability.
    *
    *  <dt><code>timeouts</code> (Timeouts object)
-   *  <dd>(HTTP only) Describes the timeouts imposed on certain session operations.
+   *  <dd>Describes the timeouts imposed on certian session operations.
    *
+   *  TODO: update for WebDriver BiDi type
    *  <dt><code>unhandledPromptBehavior</code> (string)
    *  <dd>Describes the current session’s user prompt handler.  Must be one of
    *   "<tt>accept</tt>", "<tt>accept and notify</tt>", "<tt>dismiss</tt>",
@@ -96,13 +76,13 @@ export class WebDriverSession {
    *   "<tt>dismiss and notify</tt>" state.
    *
    *  <dt><code>moz:accessibilityChecks</code> (boolean)
-   *  <dd>(HTTP only) Run a11y checks when clicking elements.
+   *  <dd>Run a11y checks when clicking elements.
    *
    *  <dt><code>moz:debuggerAddress</code> (boolean)
    *  <dd>Indicate that the Chrome DevTools Protocol (CDP) has to be enabled.
    *
    *  <dt><code>moz:webdriverClick</code> (boolean)
-   *  <dd>(HTTP only) Use a WebDriver conforming <i>WebDriver::ElementClick</i>.
+   *  <dd>Use a WebDriver conforming <i>WebDriver::ElementClick</i>.
    * </dl>
    *
    * <h4>WebAuthn</h4>
@@ -160,7 +140,7 @@ export class WebDriverSession {
    *   <code>proxyType</code> is "<tt>manual</tt>".
    *
    *  <dt><code>noProxy</code> (string)
-   *  <dd>Lists the address for which the proxy should be bypassed when
+   *  <dd>Lists the adress for which the proxy should be bypassed when
    *   the <code>proxyType</code> is "<tt>manual</tt>".  Must be a JSON
    *   List containing any number of any of domains, IPv4 addresses, or IPv6
    *   addresses.
@@ -188,10 +168,9 @@ export class WebDriverSession {
    * </code></pre>
    *
    * @param {Object<string, *>=} capabilities
-   *     JSON Object containing any of the recognized capabilities listed
+   *     JSON Object containing any of the recognised capabilities listed
    *     above.
-   * @param {SessionConfigurationFlags} flags
-   *     Session configuration flags.
+   *
    * @param {WebDriverBiDiConnection=} connection
    *     An optional existing WebDriver BiDi connection to associate with the
    *     new session.
@@ -199,20 +178,19 @@ export class WebDriverSession {
    * @throws {SessionNotCreatedError}
    *     If, for whatever reason, a session could not be created.
    */
-  constructor(capabilities, flags, connection) {
+  constructor(capabilities, connection) {
     // WebSocket connections that use this session. This also accounts for
     // possible disconnects due to network outages, which require clients
     // to reconnect.
-    this.#connections = new Set();
+    this._connections = new Set();
 
-    this.#id = lazy.generateUUID();
-    this.#http = flags.has(WebDriverSession.SESSION_FLAG_HTTP);
+    this.id = lazy.generateUUID();
 
     // Define the HTTP path to query this session via WebDriver BiDi
-    this.#path = `/session/${this.#id}`;
+    this.path = `/session/${this.id}`;
 
     try {
-      this.#capabilities = lazy.Capabilities.fromJSON(capabilities, this.#http);
+      this.capabilities = lazy.Capabilities.fromJSON(capabilities, this.path);
     } catch (e) {
       throw new lazy.error.SessionNotCreatedError(e);
     }
@@ -223,7 +201,7 @@ export class WebDriverSession {
       );
     }
 
-    if (this.acceptInsecureCerts) {
+    if (this.capabilities.get("acceptInsecureCerts")) {
       lazy.logger.warn(
         "TLS certificate errors will be ignored for this session"
       );
@@ -241,7 +219,7 @@ export class WebDriverSession {
     // immediately register the newly created session for it.
     if (connection) {
       connection.registerSession(this);
-      this.#connections.add(connection);
+      this._connections.add(connection);
     }
 
     // Maps a Navigable (browsing context or content browser for top-level
@@ -250,11 +228,11 @@ export class WebDriverSession {
 
     lazy.registerProcessDataActor();
 
-    webDriverSessions.set(this.#id, this);
+    webDriverSessions.set(this.id, this);
   }
 
   destroy() {
-    webDriverSessions.delete(this.#id);
+    webDriverSessions.delete(this.id);
 
     lazy.unregisterProcessDataActor();
 
@@ -263,20 +241,20 @@ export class WebDriverSession {
     lazy.allowAllCerts.disable();
 
     // Close all open connections which unregister themselves.
-    this.#connections.forEach(connection => connection.close());
-    if (this.#connections.size > 0) {
+    this._connections.forEach(connection => connection.close());
+    if (this._connections.size > 0) {
       lazy.logger.warn(
-        `Failed to close ${this.#connections.size} WebSocket connections`
+        `Failed to close ${this._connections.size} WebSocket connections`
       );
     }
 
     // Destroy the dedicated MessageHandler instance if we created one.
-    if (this.#messageHandler) {
-      this.#messageHandler.off(
+    if (this._messageHandler) {
+      this._messageHandler.off(
         "message-handler-protocol-event",
         this._onMessageHandlerProtocolEvent
       );
-      this.#messageHandler.destroy();
+      this._messageHandler.destroy();
     }
   }
 
@@ -304,66 +282,46 @@ export class WebDriverSession {
   }
 
   get a11yChecks() {
-    return this.#capabilities.get("moz:accessibilityChecks");
-  }
-
-  get acceptInsecureCerts() {
-    return this.#capabilities.get("acceptInsecureCerts");
-  }
-
-  get capabilities() {
-    return this.#capabilities;
-  }
-
-  get http() {
-    return this.#http;
-  }
-
-  get id() {
-    return this.#id;
+    return this.capabilities.get("moz:accessibilityChecks");
   }
 
   get messageHandler() {
-    if (!this.#messageHandler) {
-      this.#messageHandler =
-        lazy.RootMessageHandlerRegistry.getOrCreateMessageHandler(this.#id);
+    if (!this._messageHandler) {
+      this._messageHandler =
+        lazy.RootMessageHandlerRegistry.getOrCreateMessageHandler(this.id);
       this._onMessageHandlerProtocolEvent =
         this._onMessageHandlerProtocolEvent.bind(this);
-      this.#messageHandler.on(
+      this._messageHandler.on(
         "message-handler-protocol-event",
         this._onMessageHandlerProtocolEvent
       );
     }
 
-    return this.#messageHandler;
+    return this._messageHandler;
   }
 
   get pageLoadStrategy() {
-    return this.#capabilities.get("pageLoadStrategy");
-  }
-
-  get path() {
-    return this.#path;
+    return this.capabilities.get("pageLoadStrategy");
   }
 
   get proxy() {
-    return this.#capabilities.get("proxy");
+    return this.capabilities.get("proxy");
   }
 
   get strictFileInteractability() {
-    return this.#capabilities.get("strictFileInteractability");
+    return this.capabilities.get("strictFileInteractability");
   }
 
   get timeouts() {
-    return this.#capabilities.get("timeouts");
+    return this.capabilities.get("timeouts");
   }
 
   set timeouts(timeouts) {
-    this.#capabilities.set("timeouts", timeouts);
+    this.capabilities.set("timeouts", timeouts);
   }
 
   get userPromptHandler() {
-    return this.#capabilities.get("unhandledPromptBehavior");
+    return this.capabilities.get("unhandledPromptBehavior");
   }
 
   /**
@@ -372,15 +330,15 @@ export class WebDriverSession {
    * @param {WebDriverBiDiConnection} connection
    */
   removeConnection(connection) {
-    if (this.#connections.has(connection)) {
-      this.#connections.delete(connection);
+    if (this._connections.has(connection)) {
+      this._connections.delete(connection);
     } else {
       lazy.logger.warn("Trying to remove a connection that doesn't exist.");
     }
   }
 
   toString() {
-    return `[object ${this.constructor.name} ${this.#id}]`;
+    return `[object ${this.constructor.name} ${this.id}]`;
   }
 
   // nsIHttpRequestHandler
@@ -404,12 +362,12 @@ export class WebDriverSession {
       response._connection
     );
     conn.registerSession(this);
-    this.#connections.add(conn);
+    this._connections.add(conn);
   }
 
   _onMessageHandlerProtocolEvent(eventName, messageHandlerEvent) {
     const { name, data } = messageHandlerEvent;
-    this.#connections.forEach(connection => connection.sendEvent(name, data));
+    this._connections.forEach(connection => connection.sendEvent(name, data));
   }
 
   // XPCOM
