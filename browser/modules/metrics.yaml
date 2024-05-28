@@ -94,6 +94,189 @@ browser.engagement:
       - metrics
     expires: never
 
+installation.first_seen:
+  failure_reason:
+    type: string
+    description: >
+      Only sent if unable to collect firstSeen data. Can have
+      value "NotFoundError" if file not found or other values
+      depending on the failure reason.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_FAILURE_REASON
+
+  installer_type:
+    type: string
+    description: >
+      The type of installer used to install Firefox.
+      The value is one of "stub", "full", or "msix"
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_INSTALLER_TYPE
+
+  version:
+    type: string
+    description: >
+      The application version installed by the installer
+      (not necessarily the current version)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_VERSION
+
+  admin_user:
+    type: boolean
+    description: >
+      Whether the installer is running from an elevated admin user
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_ADMIN_USER
+
+  install_existed:
+    type: boolean
+    description: >
+      Whether there was already an install in this location
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_INSTALL_EXISTED
+
+  profdir_existed:
+    type: boolean
+    description: >
+      Whether the top-level profile directory existed
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_PROFDIR_EXISTED
+
+  other_inst:
+    type: boolean
+    description: >
+      Whether there was already any non-MSIX install on this system
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_OTHER_INST
+
+  other_msix_inst:
+    type: boolean
+    description: >
+      Whether there was already any MSIX install on this system
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_OTHER_MSIX_INST
+
+  silent:
+    type: boolean
+    description: >
+      (optional, present if installer_type is "full")
+      Whether this was a silent install
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_SILENT
+
+  from_msi:
+    type: boolean
+    description: >
+      (optional, present if installer_type is "full")
+      Whether this was an MSI install
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_FROM_MSI
+
+  default_path:
+    type: boolean
+    description: >
+      (optional, present if installer_type is "full")
+      Whether the default path was used
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1811374
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: INSTALLATION_FIRSTSEEN_DEFAULT_PATH
 
 performance.interaction:
   tab_switch_composite:

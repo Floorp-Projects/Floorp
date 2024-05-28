@@ -155,6 +155,223 @@ a11y:
     record_in_processes:
       - 'main'
 
+installation.firstSeen:
+  failure_reason:
+    bug_numbers:
+      - 1811374
+    description: >
+      Only sent if unable to collect firstSeen data. Can have
+      value "NotFoundError" if file not found or other values
+      depending on the failure reason.
+    keyed: false
+    expires: "134"
+    kind: string
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  installer_type:
+    bug_numbers:
+      - 1811374
+    description: >
+      The type of installer used to install Firefox.
+      The value is one of "stub", "full", or "msix"
+    keyed: false
+    expires: "134"
+    kind: string
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  version:
+    bug_numbers:
+      - 1811374
+    description: >
+      The application version installed by the installer
+      (not necessarily the current version)
+    keyed: false
+    expires: "134"
+    kind: string
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  admin_user:
+    bug_numbers:
+      - 1811374
+    description: >
+      Whether the installer is running from an elevated admin user
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  install_existed:
+    bug_numbers:
+      - 1811374
+    description: >
+      'Whether there was already an install in this location'
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  profdir_existed:
+    bug_numbers:
+      - 1811374
+    description: >
+      'Whether the top-level profile directory existed'
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  other_inst:
+    bug_numbers:
+      - 1811374
+    description: >
+      'Whether there was already any non-MSIX install on this system'
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  other_msix_inst:
+    bug_numbers:
+      - 1811374
+    description: >
+      'Whether there was already any MSIX install on this system'
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  silent:
+    bug_numbers:
+      - 1811374
+    description: >
+      (optional, present if installer_type is "full")
+      Whether this was a silent install
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  from_msi:
+    bug_numbers:
+      - 1811374
+    description: >
+      (optional, present if installer_type is "full")
+      Whether this was an MSI install
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
+  default_path:
+    bug_numbers:
+      - 1811374
+    description: >
+      (optional, present if installer_type is "full")
+      Whether the default path was used
+    keyed: false
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - rtestard@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    record_into_store:
+      - 'new-profile'
+
 browser.backup:
   prof_d_disk_space:
     bug_numbers:
