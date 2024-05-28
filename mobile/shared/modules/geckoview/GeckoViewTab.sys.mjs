@@ -200,7 +200,10 @@ export class GeckoViewTab extends GeckoViewModule {
       window.tab = new Tab(window);
     }
 
-    this.registerListener(["GeckoView:WebExtension:SetTabActive"]);
+    this.registerListener([
+      "GeckoView:WebExtension:SetTabActive",
+      "GeckoView:FlushSessionState",
+    ]);
   }
 
   onEvent(aEvent, aData) {
@@ -210,6 +213,14 @@ export class GeckoViewTab extends GeckoViewModule {
       case "GeckoView:WebExtension:SetTabActive": {
         const { active } = aData;
         lazy.mobileWindowTracker.setTabActive(this.window, active);
+        break;
+      }
+      case "GeckoView:FlushSessionState": {
+        if (Services.appinfo.sessionHistoryInParent) {
+          if (this.browser && this.browser.frameLoader) {
+            this.browser.frameLoader.requestTabStateFlush();
+          }
+        }
         break;
       }
     }
