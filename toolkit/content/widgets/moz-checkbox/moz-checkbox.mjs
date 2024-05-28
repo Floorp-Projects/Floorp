@@ -21,6 +21,7 @@ export default class MozCheckbox extends MozLitElement {
   static properties = {
     label: { type: String },
     checked: { type: Boolean, reflect: true },
+    disabled: { type: Boolean, reflect: true },
   };
 
   static get queries() {
@@ -33,6 +34,7 @@ export default class MozCheckbox extends MozLitElement {
   constructor() {
     super();
     this.checked = false;
+    this.disabled = false;
   }
 
   connectedCallback() {
@@ -79,6 +81,7 @@ export default class MozCheckbox extends MozLitElement {
           .checked=${this.checked}
           @click=${this.handleStateChange}
           @change=${this.redispatchEvent}
+          .disabled=${this.disabled}
         />
         ${this.label}
       </label>

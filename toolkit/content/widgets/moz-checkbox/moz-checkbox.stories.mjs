@@ -18,12 +18,13 @@ moz-checkbox-label =
   },
 };
 
-const Template = ({ l10nId, checked, label }) => html`
+const Template = ({ l10nId, checked, label, disabled }) => html`
   <moz-checkbox
     ?checked=${checked}
     .label=${label}
     data-l10n-id=${ifDefined(l10nId)}
     data-l10n-attrs="label"
+    ?disabled=${disabled}
   ></moz-checkbox>
 `;
 
@@ -32,10 +33,17 @@ Default.args = {
   l10nId: "moz-checkbox-label",
   checked: false,
   label: "",
+  disabled: false,
 };
 
 export const CheckedByDefault = Template.bind({});
 CheckedByDefault.args = {
   ...Default.args,
   checked: true,
+};
+
+export const Disabled = Template.bind({});
+Disabled.args = {
+  ...Default.args,
+  disabled: true,
 };
