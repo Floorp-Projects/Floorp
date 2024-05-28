@@ -25,6 +25,7 @@ Preferences.addAll([
   { id: "network.proxy.socks", type: "string" },
   { id: "network.proxy.socks_port", type: "int" },
   { id: "network.proxy.socks_version", type: "int" },
+  { id: "network.proxy.socks_remote_dns", type: "bool" },
   { id: "network.proxy.socks5_remote_dns", type: "bool" },
   { id: "network.proxy.no_proxies_on", type: "string" },
   { id: "network.proxy.share_proxy_settings", type: "bool" },
@@ -179,12 +180,18 @@ var gConnectionsDialog = {
 
   updateDNSPref() {
     var socksVersionPref = Preferences.get("network.proxy.socks_version");
-    var socksDNSPref = Preferences.get("network.proxy.socks5_remote_dns");
+    var socks4DNSPref = Preferences.get("network.proxy.socks_remote_dns");
+    var socks5DNSPref = Preferences.get("network.proxy.socks5_remote_dns");
     var proxyTypePref = Preferences.get("network.proxy.type");
     var isDefinitelySocks4 =
       proxyTypePref.value == 1 && socksVersionPref.value == 4;
-    socksDNSPref.updateControlDisabledState(
+    socks5DNSPref.updateControlDisabledState(
       isDefinitelySocks4 || proxyTypePref.value == 0
+    );
+    var isDefinitelySocks5 =
+      proxyTypePref.value == 1 && socksVersionPref.value == 5;
+    socks4DNSPref.updateControlDisabledState(
+      isDefinitelySocks5 || proxyTypePref.value == 0
     );
     return undefined;
   },
