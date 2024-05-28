@@ -493,3 +493,6 @@ TEST_F(FOGFixture, TestRustInGTest) { Rust_TestRustInGTest(); }
 
 extern "C" void Rust_TestJogfile();
 TEST_F(FOGFixture, TestJogfile) { Rust_TestJogfile(); }
+
+extern "C" void Rust_TestRideAlongPing();
+TEST_F(FOGFixture, TestRustRideAlongPing) { Rust_TestRideAlongPing(); }

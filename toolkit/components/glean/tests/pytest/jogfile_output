@@ -370,16 +370,6 @@
       true,
       [],
       []
-    ],
-    [
-      "ridealong-test",
-      false,
-      true,
-      true,
-      true,
-      true,
-      [],
-      []
     ]
   ]
 }
