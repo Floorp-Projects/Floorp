@@ -6276,11 +6276,6 @@ void HttpBaseChannel::MaybeFlushConsoleReports() {
 
 void HttpBaseChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {}
 
-NS_IMETHODIMP HttpBaseChannel::SetWaitForHTTPSSVCRecord() {
-  mCaps |= NS_HTTP_FORCE_WAIT_HTTP_RR;
-  return NS_OK;
-}
-
 bool HttpBaseChannel::Http3Allowed() const {
   bool isDirectOrNoProxy =
       mProxyInfo ? static_cast<nsProxyInfo*>(mProxyInfo.get())->IsDirect()

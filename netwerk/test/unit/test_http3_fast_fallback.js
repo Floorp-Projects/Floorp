@@ -86,8 +86,6 @@ function channelOpenPromise(chan, flags, delay) {
         false
       );
     }
-    let internal = chan.QueryInterface(Ci.nsIHttpChannelInternal);
-    internal.setWaitForHTTPSSVCRecord();
     certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
       true
     );

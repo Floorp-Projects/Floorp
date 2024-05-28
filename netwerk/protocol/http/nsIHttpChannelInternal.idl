@@ -467,12 +467,6 @@ interface nsIHttpChannelInternal : nsISupports
     void DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
 
     /**
-     * If this is called, this channel's transaction will not be dispatched
-     * until the HTTPSSVC record is available.
-     */
-    [must_use] void setWaitForHTTPSSVCRecord();
-
-    /**
      * This attribute indicates if the channel has support for HTTP3
      */
     [must_use] readonly attribute boolean supportsHTTP3;
