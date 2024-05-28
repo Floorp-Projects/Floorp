@@ -404,9 +404,7 @@ void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   TrackTime from = GraphTimeToTrackTime(aFrom);
   TrackTime to = GraphTimeToTrackTime(aTo);
-  if (from >= to) {
-    return;
-  }
+  MOZ_ASSERT(from < to);
 
   MOZ_ASSERT_IF(!mIsBufferingAppended, mPendingData.IsEmpty());
 
@@ -501,9 +499,7 @@ void NonNativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   TrackTime from = GraphTimeToTrackTime(aFrom);
   TrackTime to = GraphTimeToTrackTime(aTo);
-  if (from >= to) {
-    return;
-  }
+  MOZ_ASSERT(from < to);
 
   TrackTime delta = to - from;
   if (!mAudioSource) {

@@ -1251,15 +1251,12 @@ void AudioProcessingTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   TRACE_COMMENT("AudioProcessingTrack::ProcessInput", "AudioProcessingTrack %p",
                 this);
   MOZ_ASSERT(mInputProcessing);
+  MOZ_ASSERT(aFrom < aTo);
 
   LOG_FRAME(
       "(Graph %p, Driver %p) AudioProcessingTrack %p ProcessInput from %" PRId64
       " to %" PRId64 ", needs %" PRId64 " frames",
       mGraph, mGraph->CurrentDriver(), this, aFrom, aTo, aTo - aFrom);
-
-  if (aFrom >= aTo) {
-    return;
-  }
 
   if (!mInputProcessing->IsEnded()) {
     MOZ_ASSERT(TrackTimeToGraphTime(GetEnd()) == aFrom);

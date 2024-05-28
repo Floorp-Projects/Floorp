@@ -1004,7 +1004,7 @@ class ProcessedMediaTrack : public MediaTrack {
    * tracks (mBlocked is up to date up to mStateComputedTime).
    * Also, we've produced output for all tracks up to this one. If this track
    * is not in a cycle, then all its source tracks have produced data.
-   * Generate output from aFrom to aTo.
+   * Generate output from aFrom to aTo, where aFrom < aTo.
    * This will be called on tracks that have ended. Most track types should
    * just return immediately if they're ended, but some may wish to update
    * internal state (see AudioNodeTrack).
