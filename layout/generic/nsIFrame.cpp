@@ -1217,8 +1217,8 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       if (auto* container = ScrollAnchorContainer::FindFor(this)) {
         container->InvalidateAnchor();
       }
-      if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(this)) {
-        scrollableFrame->Anchor()->InvalidateAnchor();
+      if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(this)) {
+        scrollContainerFrame->Anchor()->InvalidateAnchor();
       }
     }
 
@@ -2185,8 +2185,7 @@ void nsIFrame::UpdateVisibilitySynchronously() {
   nsRect rect = GetRectRelativeToSelf();
   nsIFrame* rectFrame = this;
   while (f && visible) {
-    nsIScrollableFrame* sf = do_QueryFrame(f);
-    if (sf) {
+    if (ScrollContainerFrame* sf = do_QueryFrame(f)) {
       nsRect transformedRect =
           nsLayoutUtils::TransformFrameRectToAncestor(rectFrame, rect, f);
       if (!sf->IsRectNearlyVisible(transformedRect)) {
@@ -3785,8 +3784,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     StickyScrollContainer* stickyScrollContainer =
         StickyScrollContainer::GetStickyScrollContainerForFrame(this);
-    if (stickyScrollContainer &&
-        stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled()) {
+    if (stickyScrollContainer && stickyScrollContainer->ScrollContainer()
+                                     ->IsMaybeAsynchronouslyScrolled()) {
       shouldFlatten = false;
     }
 
@@ -10799,17 +10798,17 @@ bool nsIFrame::IsFocusableDueToScrollFrame() {
   // with the mouse, because the extra focus outlines are considered
   // unnecessarily ugly.  When clicked on, the selection position within the
   // element will be enough to make them keyboard scrollable.
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(this);
-  if (!scrollFrame) {
+  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(this);
+  if (!scrollContainerFrame) {
     return false;
   }
-  if (scrollFrame->IsForTextControlWithNoScrollbars()) {
+  if (scrollContainerFrame->IsForTextControlWithNoScrollbars()) {
     return false;
   }
-  if (scrollFrame->GetScrollStyles().IsHiddenInBothDirections()) {
+  if (scrollContainerFrame->GetScrollStyles().IsHiddenInBothDirections()) {
     return false;
   }
-  if (scrollFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
+  if (scrollContainerFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
     return false;
   }
   return true;
@@ -11174,8 +11173,8 @@ static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
   // subtree
   for (nsIFrame* f = const_cast<nsIFrame*>(aParent); f;
        f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
-    if (scrollableFrame) {
+    ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
+    if (scrollContainerFrame) {
       clipParent = f;
       break;
     }

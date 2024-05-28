@@ -18,12 +18,12 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/RelativeLuminanceUtils.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsScrollbarFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
@@ -1139,7 +1139,7 @@ static ScrollbarDrawing::ScrollbarKind ComputeScrollbarKind(
 
 static ScrollbarDrawing::ScrollbarKind ComputeScrollbarKindForScrollCorner(
     nsIFrame* aFrame) {
-  nsIScrollableFrame* sf = do_QueryFrame(aFrame->GetParent());
+  ScrollContainerFrame* sf = do_QueryFrame(aFrame->GetParent());
   if (!sf) {
     return ScrollbarDrawing::ScrollbarKind::VerticalRight;
   }

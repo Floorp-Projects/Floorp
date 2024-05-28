@@ -65,7 +65,6 @@
 
 class gfxContext;
 class nsIContent;
-class nsIScrollableFrame;
 class nsSubDocumentFrame;
 class nsCaret;
 struct WrFiltersHolder;
@@ -1643,8 +1642,9 @@ class nsDisplayListBuilder {
     }
   };
 
-  void AddScrollFrameToNotify(nsIScrollableFrame* aScrollFrame);
-  void NotifyAndClearScrollFrames();
+  void AddScrollContainerFrameToNotify(
+      ScrollContainerFrame* aScrollContainerFrame);
+  void NotifyAndClearScrollContainerFrames();
 
   // Helper class to find what link spec (if any) to associate with a frame,
   // recording it in the builder, and generate the corresponding DisplayItem.
@@ -1827,7 +1827,7 @@ class nsDisplayListBuilder {
   std::unordered_set<const DisplayItemClipChain*, DisplayItemClipChainHasher,
                      DisplayItemClipChainEqualer>
       mClipDeduplicator;
-  std::unordered_set<nsIScrollableFrame*> mScrollFramesToNotify;
+  std::unordered_set<ScrollContainerFrame*> mScrollContainerFramesToNotify;
 
   AutoTArray<nsIFrame*, 20> mFramesWithOOFData;
   AutoTArray<nsIFrame*, 40> mFramesMarkedForDisplayIfVisible;

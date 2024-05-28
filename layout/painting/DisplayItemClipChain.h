@@ -11,8 +11,6 @@
 #include "DisplayItemClip.h"
 #include "nsString.h"
 
-class nsIScrollableFrame;
-
 namespace mozilla {
 
 struct ActiveScrolledRoot;

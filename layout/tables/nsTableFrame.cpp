@@ -47,7 +47,6 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsDisplayList.h"
-#include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleChangeList.h"

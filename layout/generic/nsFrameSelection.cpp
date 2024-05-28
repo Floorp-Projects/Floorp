@@ -1662,16 +1662,16 @@ nsIFrame* nsFrameSelection::GetFrameToPageSelect() const {
     // parent under the root frame.
     for (nsIFrame* frame = contentToSelect->GetPrimaryFrame();
          frame && frame != rootFrameToSelect; frame = frame->GetParent()) {
-      nsIScrollableFrame* scrollableFrame = do_QueryFrame(frame);
-      if (!scrollableFrame) {
+      ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(frame);
+      if (!scrollContainerFrame) {
         continue;
       }
-      ScrollStyles scrollStyles = scrollableFrame->GetScrollStyles();
+      ScrollStyles scrollStyles = scrollContainerFrame->GetScrollStyles();
       if (scrollStyles.mVertical == StyleOverflow::Hidden) {
         continue;
       }
       layers::ScrollDirections directions =
-          scrollableFrame->GetAvailableScrollingDirections();
+          scrollContainerFrame->GetAvailableScrollingDirections();
       if (directions.contains(layers::ScrollDirection::eVertical)) {
         // If there is sub scrollable frame, let's use its page size to select.
         return frame;

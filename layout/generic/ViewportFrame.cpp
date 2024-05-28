@@ -15,8 +15,8 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "nsGkAtoms.h"
-#include "nsIScrollableFrame.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCanvasFrame.h"
 #include "nsLayoutUtils.h"
@@ -287,11 +287,11 @@ nsPoint ViewportFrame::AdjustReflowInputForScrollbars(
     ReflowInput* aReflowInput) const {
   // Get our prinicpal child frame and see if we're scrollable
   nsIFrame* kidFrame = mFrames.FirstChild();
-  nsIScrollableFrame* scrollingFrame = do_QueryFrame(kidFrame);
 
-  if (scrollingFrame) {
+  if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(kidFrame)) {
     WritingMode wm = aReflowInput->GetWritingMode();
-    LogicalMargin scrollbars(wm, scrollingFrame->GetActualScrollbarSizes());
+    LogicalMargin scrollbars(wm,
+                             scrollContainerFrame->GetActualScrollbarSizes());
     aReflowInput->SetComputedISize(
         aReflowInput->ComputedISize() - scrollbars.IStartEnd(wm),
         ReflowInput::ResetResizeFlags::No);

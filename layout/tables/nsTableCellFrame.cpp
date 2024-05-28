@@ -533,7 +533,7 @@ static bool CellHasVisibleContent(nsTableFrame* aTableFrame,
 
 nsIFrame* nsTableCellFrame::CellContentFrame() const {
   nsIFrame* inner = mFrames.FirstChild();
-  if (nsIScrollableFrame* sf = do_QueryFrame(inner)) {
+  if (ScrollContainerFrame* sf = do_QueryFrame(inner)) {
     return sf->GetScrolledFrame();
   }
   return inner;

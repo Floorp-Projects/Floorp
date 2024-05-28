@@ -11,7 +11,6 @@
 #include "nsContentUtils.h"
 #include "nsITimer.h"
 #include "nsQueryFrame.h"
-#include "nsIScrollableFrame.h"
 #include "PresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsScrollbarFrame.h"
@@ -20,6 +19,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/ScrollContainerFrame.h"
 
 namespace mozilla::layout {
 
@@ -100,12 +100,14 @@ ScrollbarActivity::HandleEvent(dom::Event* aEvent) {
     // of our scroll frame) and we don't want those to activate us.
     nsIFrame* scrollFrame = do_QueryFrame(mScrollableFrame);
     MOZ_ASSERT(scrollFrame);
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(mScrollableFrame);
+    ScrollContainerFrame* scrollContainerFrame =
+        do_QueryFrame(mScrollableFrame);
     nsCOMPtr<nsIContent> targetContent =
         do_QueryInterface(aEvent->GetOriginalTarget());
     nsIFrame* targetFrame =
         targetContent ? targetContent->GetPrimaryFrame() : nullptr;
-    if ((scrollableFrame && scrollableFrame->IsRootScrollFrameOfDocument()) ||
+    if ((scrollContainerFrame &&
+         scrollContainerFrame->IsRootScrollFrameOfDocument()) ||
         !targetFrame ||
         nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
             scrollFrame, targetFrame,

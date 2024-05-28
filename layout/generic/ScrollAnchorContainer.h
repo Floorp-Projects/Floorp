@@ -13,7 +13,6 @@
 
 class nsFrameList;
 class nsIFrame;
-class nsIScrollableFrame;
 
 namespace mozilla {
 class ScrollContainerFrame;
@@ -22,8 +21,8 @@ class ScrollContainerFrame;
 namespace mozilla::layout {
 
 /**
- * A scroll anchor container finds a descendent element of a scrollable frame
- * to be an anchor node. After every reflow, the scroll anchor will apply
+ * A scroll anchor container finds a descendent element of a scroll container
+ * frame to be an anchor node. After every reflow, the scroll anchor will apply
  * scroll adjustments to keep the anchor node in the same relative position.
  *
  * See: https://drafts.csswg.org/css-scroll-anchoring/
@@ -49,14 +48,15 @@ class ScrollAnchorContainer final {
   ScrollContainerFrame* Frame() const;
 
   /**
-   * Returns the frame that owns this scroll anchor container as a scrollable
-   * frame. This is always non-null.
+   * Returns the scroll container frame that owns this scroll anchor container.
+   * This is always non-null.
    */
-  nsIScrollableFrame* ScrollableFrame() const;
+  ScrollContainerFrame* ScrollContainer() const;
 
   /**
-   * Find a suitable anchor node among the descendants of the scrollable frame.
-   * This should only be called after the scroll anchor has been invalidated.
+   * Find a suitable anchor node among the descendants of the scroll container
+   * frame. This should only be called after the scroll anchor has been
+   * invalidated.
    */
   void SelectAnchor();
 
