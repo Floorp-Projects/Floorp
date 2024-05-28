@@ -95,7 +95,7 @@ Value: 12
 This reason is set when we fail to resolve the name of the DNS over HTTPS server.
 
 
-## TRR_IS_OFFLINE
+## TRR_BROWSER_IS_OFFLINE
 
 Value: 13
 

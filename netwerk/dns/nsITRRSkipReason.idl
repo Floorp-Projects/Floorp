@@ -25,7 +25,7 @@ interface nsITRRSkipReason: nsISupports
     TRR_DISABLED_FLAG = 10,           // the DISABLE_TRR flag was set
     TRR_TIMEOUT = 11,                 // the TRR channel timed out
     TRR_CHANNEL_DNS_FAIL = 12,        // DoH server name failed to resolve
-    TRR_IS_OFFLINE = 13,              // The browser is offline/no interfaces up
+    TRR_BROWSER_IS_OFFLINE = 13,      // The browser is offline/no interfaces up
     TRR_NOT_CONFIRMED = 14,           // TRR confirmation is not done yet
     TRR_DID_NOT_MAKE_QUERY = 15,  // TrrLookup exited without doing a TRR query
     TRR_UNKNOWN_CHANNEL_FAILURE = 16,  // unknown channel failure reason

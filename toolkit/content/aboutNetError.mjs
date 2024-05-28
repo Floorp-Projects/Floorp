@@ -540,7 +540,7 @@ function initPage() {
       } else if (skipReason == "TRR_TIMEOUT") {
         descriptionTag = "neterror-dns-not-found-trr-only-timeout";
       } else if (
-        skipReason == "TRR_IS_OFFLINE" ||
+        skipReason == "TRR_BROWSER_IS_OFFLINE" ||
         skipReason == "TRR_NO_CONNECTIVITY"
       ) {
         descriptionTag = "neterror-dns-not-found-trr-offline";
