@@ -110,8 +110,8 @@
       this.node = getNode(aNodeID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, this.nodeAcc.lastChild),
         new invokerChecker(EVENT_HIDE, this.nodeAcc.firstChild),
+        new invokerChecker(EVENT_HIDE, this.nodeAcc.lastChild),
         new invokerChecker(EVENT_REORDER, this.nodeAcc),
       ];
 

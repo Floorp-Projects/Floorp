@@ -207,7 +207,11 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
   // delete the property -- that's why we fetch the property again before
   // removing each frame rather than fetching it once and iterating the list.
   while (nsFrameList* frameList = GetProperty(aProp)) {
-    nsIFrame* frame = frameList->RemoveFirstChild();
+    // Note: Similar to nsFrameList::DestroyFrames(), we remove the frames in
+    // reverse order to avoid unnecessary updates to the first-continuation and
+    // first-in-flow cache. If we delete them from front to back, updating the
+    // cache has a O(n^2) time complexity.
+    nsIFrame* frame = frameList->RemoveLastChild();
     if (MOZ_LIKELY(frame)) {
       frame->Destroy(aContext);
     } else {

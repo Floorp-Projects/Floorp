@@ -350,25 +350,27 @@ void nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
                                nsFrameList* aFrames, DestroyContext& aContext) {
   PresShell* presShell = aPresContext->PresShell();
 
-  // Keep our line list and frame list up to date as we
-  // remove frames, in case something wants to traverse the
-  // frame tree while we're destroying.
+  // Keep our line list and frame list up to date as we remove frames, in case
+  // something wants to traverse the frame tree while we're destroying.
+  //
+  // Note: We delete the line list and the frames in each line in reverse order
+  // to avoid unnecessary updates to the first-continuation and first-in-flow
+  // cache. If we delete them from front to back, updating the cache has a
+  // O(n^2) time complexity.
   while (!aLines.empty()) {
-    nsLineBox* line = aLines.front();
+    nsLineBox* line = aLines.back();
     if (MOZ_UNLIKELY(line->mFlags.mHasHashedFrames)) {
       line->SwitchToCounter();  // Avoid expensive has table removals.
     }
     while (line->GetChildCount() > 0) {
-      nsIFrame* child = aFrames->RemoveFirstChild();
+      nsIFrame* child = aFrames->RemoveLastChild();
       MOZ_DIAGNOSTIC_ASSERT(child->PresContext() == aPresContext);
-      MOZ_DIAGNOSTIC_ASSERT(child == line->mFirstChild, "Lines out of sync");
-      line->mFirstChild = aFrames->FirstChild();
       line->NoteFrameRemoved(child);
       child->Destroy(aContext);
     }
-    MOZ_DIAGNOSTIC_ASSERT(line == aLines.front(),
+    MOZ_DIAGNOSTIC_ASSERT(line == aLines.back(),
                           "destroying child frames messed up our lines!");
-    aLines.pop_front();
+    aLines.pop_back();
     line->Destroy(presShell);
   }
 }
