@@ -3,9 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import sys
 
 from mozpack import path as mozpath
 from mozpack.files import FileFinder
+
+_is_windows = sys.platform == "cygwin" or (sys.platform == "win32" and os.sep == "\\")
 
 
 class FilterPath(object):
@@ -63,6 +66,13 @@ class FilterPath(object):
 
         if len(parts_a) > len(parts_b):
             return False
+
+        if _is_windows and parts_a:
+            # Normalize case of drive letters, without invoking the file system.
+            if parts_a[0].endswith(":"):
+                parts_a[0] = parts_a[0].upper()
+            if parts_b[0].endswith(":"):
+                parts_b[0] = parts_b[0].upper()
 
         for i, part in enumerate(parts_a):
             if part != parts_b[i]:
