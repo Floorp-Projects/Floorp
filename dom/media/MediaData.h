@@ -13,6 +13,7 @@
 #  include "SharedBuffer.h"
 #  include "TimeUnits.h"
 #  include "mozilla/CheckedInt.h"
+#  include "mozilla/EnumSet.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/PodOperations.h"
 #  include "mozilla/RefPtr.h"
@@ -586,8 +587,10 @@ enum class CryptoScheme : uint8_t {
   Cenc,
   Cbcs,
 };
+using CryptoSchemeSet = EnumSet<CryptoScheme, uint8_t>;
 
 const char* CryptoSchemeToString(const CryptoScheme& aScheme);
+CryptoScheme StringToCryptoScheme(const nsAString& aString);
 
 class CryptoTrack {
  public:
