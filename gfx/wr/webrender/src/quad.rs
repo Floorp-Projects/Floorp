@@ -323,7 +323,7 @@ pub fn push_quad(
             if !scratch.quad_direct_segments.is_empty() {
                 let local_to_device = map_prim_to_raster.as_2d_scale_offset()
                     .expect("bug: nine-patch segments should be axis-aligned only")
-                    .scale(device_pixel_scale.0);
+                    .then_scale(device_pixel_scale.0);
 
                 let device_prim_rect: DeviceRect = local_to_device.map_rect(&local_rect);
 
@@ -358,7 +358,7 @@ pub fn push_quad(
 
             let local_to_device = map_prim_to_raster.as_2d_scale_offset()
                 .expect("bug: nine-patch segments should be axis-aligned only")
-                .scale(device_pixel_scale.0);
+                .then_scale(device_pixel_scale.0);
 
             let device_prim_rect: DeviceRect = local_to_device.map_rect(&local_rect);
 

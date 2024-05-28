@@ -2200,7 +2200,8 @@ impl TileCacheInstance {
         }
 
         // Use that compositor transform to calculate a relative local to surface
-        let local_to_raster = local_to_device.accumulate(&raster_to_device.inverse());
+        // TODO(nical): this looks wrong. It should probably be `local_to_device.then(&raster_to_device.inverse())`.
+        let local_to_raster = local_to_device.pre_transform(&raster_to_device.inverse());
 
         const EPSILON: f32 = 0.001;
         let compositor_translation_changed =
@@ -2696,7 +2697,7 @@ impl TileCacheInstance {
             frame_context.spatial_tree,
         );
 
-        let normalized_prim_to_device = prim_offset.accumulate(&local_prim_to_device);
+        let normalized_prim_to_device = prim_offset.pre_transform(&local_prim_to_device);
 
         let local_to_raster = ScaleOffset::identity();
         let raster_to_device = normalized_prim_to_device;

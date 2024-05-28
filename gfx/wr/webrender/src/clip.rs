@@ -990,7 +990,7 @@ impl ClipSpaceConversion {
         } else if prim_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
             let scale_offset = prim_spatial_node.content_transform
                 .inverse()
-                .accumulate(&clip_spatial_node.content_transform);
+                .pre_transform(&clip_spatial_node.content_transform);
             ClipSpaceConversion::ScaleOffset(scale_offset)
         } else {
             ClipSpaceConversion::Transform(

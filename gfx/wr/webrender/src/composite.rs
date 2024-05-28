@@ -595,7 +595,8 @@ impl CompositeState {
     ) -> CompositorTransformIndex {
         let index = CompositorTransformIndex(self.transforms.len());
 
-        let local_to_device = local_to_raster.accumulate(&raster_to_device);
+        // TODO(nical): This looks wrong: should probably be `local_to_raster.then(&raster_to_device)`
+        let local_to_device = local_to_raster.pre_transform(&raster_to_device);
 
         self.transforms.push(CompositorTransform {
             local_to_raster,

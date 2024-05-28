@@ -1043,7 +1043,7 @@ impl SpatialTree {
         if child.coordinate_system_id == parent.coordinate_system_id {
             let scale_offset = parent.content_transform
                 .inverse()
-                .accumulate(&child.content_transform);
+                .pre_transform(&child.content_transform);
             return CoordinateSpaceMapping::ScaleOffset(scale_offset);
         }
 
@@ -1410,7 +1410,7 @@ fn calculate_snapping_transform(
                         Some(scale_offset) => {
                             let origin_offset = info.origin_in_parent_reference_frame;
                             ScaleOffset::from_offset(origin_offset.to_untyped())
-                                .accumulate(&scale_offset)
+                                .pre_transform(&scale_offset)
                         }
                         None => return None,
                     }
@@ -1428,7 +1428,7 @@ fn calculate_snapping_transform(
         _ => ScaleOffset::identity(),
     };
 
-    Some(parent_scale_offset.accumulate(&scale_offset))
+    Some(parent_scale_offset.pre_transform(&scale_offset))
 }
 
 #[cfg(test)]
