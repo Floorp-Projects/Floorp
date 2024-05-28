@@ -46,6 +46,7 @@ struct MFCDMKeyExpiration {
 // For GetCapabilities()
 struct MFCDMMediaCapability {
   nsString contentType;
+  CryptoScheme[] encryptionSchemes;
   nsString robustness;
 };
 
