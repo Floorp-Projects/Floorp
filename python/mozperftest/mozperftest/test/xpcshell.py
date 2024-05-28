@@ -94,7 +94,7 @@ class XPCShell(Layer):
         kwargs = {}
         kwargs["testPaths"] = test.name
         kwargs["verbose"] = verbose
-        binary = self.get_arg("binary")
+        binary = self.get_arg("xpcshell_binary")
         if binary is None:
             binary = self.mach_cmd.get_binary_path("xpcshell")
         kwargs["xpcshell"] = binary

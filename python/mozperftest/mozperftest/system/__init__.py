@@ -4,6 +4,7 @@
 from mozperftest.layers import Layers
 from mozperftest.system.android import AndroidDevice
 from mozperftest.system.android_startup import AndroidStartUp
+from mozperftest.system.binarysetup import BinarySetup
 from mozperftest.system.macos import MacosDevice
 from mozperftest.system.pingserver import PingServer
 from mozperftest.system.profile import Profile
@@ -15,21 +16,25 @@ def get_layers():
 
 
 def pick_system(env, flavor, mach_cmd):
+    desktop_layers = [
+        PingServer,  # needs to come before Profile
+        BinarySetup,  # needs to come before macos
+        MacosDevice,
+        Profile,
+        ProxyRunner,
+    ]
+    mobile_layers = [
+        Profile, ProxyRunner, BinarySetup, AndroidDevice, AndroidStartUp,
+    ]
+
     if flavor in ("desktop-browser", "xpcshell", "mochitest"):
         return Layers(
             env,
             mach_cmd,
-            (
-                PingServer,  # needs to come before Profile
-                MacosDevice,
-                Profile,
-                ProxyRunner,
-            ),
+            desktop_layers,
         )
     if flavor == "mobile-browser":
-        return Layers(
-            env, mach_cmd, (Profile, ProxyRunner, AndroidDevice, AndroidStartUp)
-        )
+        return Layers(env, mach_cmd, mobile_layers)
     if flavor == "webpagetest":
         return Layers(env, mach_cmd, (Profile,))
     raise NotImplementedError(flavor)

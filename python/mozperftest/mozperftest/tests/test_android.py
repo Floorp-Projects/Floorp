@@ -41,6 +41,13 @@ class FakeDevice:
         return True
 
 
+def get_android_device_layer(layers):
+    for layer in layers:
+        if layer.__class__.__name__ == "AndroidDevice":
+            return layer
+    return None
+
+
 @mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
 def test_android():
     args = {
@@ -243,7 +250,7 @@ def test_android_log_cat(device):
 
         mach_cmd, metadata, env = get_running_env(**args)
         system = env.layers[SYSTEM]
-        andro = system.layers[1]
+        andro = get_android_device_layer(system.layers)
 
         with system as layer, silence(system):
             andro.device = device
@@ -269,7 +276,7 @@ def test_android_custom_apk(mozperftest_android_path):
 
         mach_cmd, metadata, env = get_running_env(**args)
         system = env.layers[SYSTEM]
-        android = system.layers[1]
+        android = get_android_device_layer(system.layers)
 
         with system as _, silence(system):
             assert android._custom_apk_path is None
@@ -292,7 +299,7 @@ def test_android_custom_apk_nonexistent(path_exists):
 
     mach_cmd, metadata, env = get_running_env(**args)
     system = env.layers[SYSTEM]
-    android = system.layers[1]
+    android = get_android_device_layer(system.layers)
 
     with system as _, silence(system):
         assert android._custom_apk_path is None
@@ -316,7 +323,7 @@ def test_android_setup_custom_apk(mozperftest_android_path):
 
         mach_cmd, metadata, env = get_running_env(**args)
         system = env.layers[SYSTEM]
-        android = system.layers[1]
+        android = get_android_device_layer(system.layers)
 
         with system as _, silence(system):
             # The custom apk should be found immediately, and it
