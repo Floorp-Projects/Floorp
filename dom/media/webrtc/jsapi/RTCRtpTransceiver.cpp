@@ -914,7 +914,8 @@ void RTCRtpTransceiver::SetCodecPreferences(
   if (!aCodecs.IsEmpty()) {
     struct {
       bool Equals(const RTCRtpCodec& aA, const RTCRtpCodec& aB) const {
-        return ((aA.mMimeType == aB.mMimeType) &&
+        return ((aA.mMimeType.Equals(aB.mMimeType,
+                                     nsCaseInsensitiveStringComparator)) &&
                 (aA.mClockRate == aB.mClockRate) &&
                 (aA.mChannels == aB.mChannels) &&
                 (aA.mSdpFmtpLine == aB.mSdpFmtpLine));
