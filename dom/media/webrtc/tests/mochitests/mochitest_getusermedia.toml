@@ -54,7 +54,6 @@ skip-if = [
 ["test_getUserMedia_addtrack_removetrack_events.html"]
 
 ["test_getUserMedia_audioCapture.html"]
-skip-if = ["os == 'android'"] # android(Bug 1189784, timeouts on 4.3 emulator), android(Bug 1264333), aarch64 due to 1538359
 
 ["test_getUserMedia_audioConstraints.html"]
 skip-if = [
