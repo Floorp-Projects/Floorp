@@ -172,13 +172,13 @@ add_task(async function test_dynamic_rules_count_limits() {
         "Expect no session and no dynamic rules"
       );
 
-      const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = dnr;
+      const { MAX_NUMBER_OF_DYNAMIC_RULES } = dnr;
       const DUMMY_RULE = {
         action: { type: "block" },
         condition: { resourceTypes: ["main_frame"] },
       };
       const rules = [];
-      for (let i = 0; i < MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES; i++) {
+      for (let i = 0; i < MAX_NUMBER_OF_DYNAMIC_RULES; i++) {
         rules.push({ ...DUMMY_RULE, id: i + 1 });
       }
 
@@ -186,10 +186,10 @@ add_task(async function test_dynamic_rules_count_limits() {
         dnr.updateDynamicRules({
           addRules: [
             ...rules,
-            { ...DUMMY_RULE, id: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1 },
+            { ...DUMMY_RULE, id: MAX_NUMBER_OF_DYNAMIC_RULES + 1 },
           ],
         }),
-        `Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES.`,
+        `Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_RULES.`,
         "Got the expected rejection of exceeding the number of dynamic rules allowed"
       );
 
@@ -222,7 +222,7 @@ add_task(async function test_dynamic_rules_count_limits() {
             addRules: [
               {
                 ...DUMMY_RULE,
-                id: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1,
+                id: MAX_NUMBER_OF_DYNAMIC_RULES + 1,
               },
             ],
           }),
@@ -239,18 +239,18 @@ add_task(async function test_dynamic_rules_count_limits() {
         updateDynamicRulesTooMany?.status === "rejected"
           ? Promise.reject(updateDynamicRulesTooMany.reason)
           : Promise.resolve(),
-        `Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES.`,
+        `Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_RULES.`,
         "Got the expected rejection on the second call exceeding the number of dynamic rules allowed"
       );
 
       browser.test.assertDeepEq(
         (await dnr.getDynamicRules()).map(rule => rule.id),
-        [MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1],
+        [MAX_NUMBER_OF_DYNAMIC_RULES + 1],
         "Got the expected dynamic rules"
       );
 
       await dnr.updateDynamicRules({
-        removeRuleIds: [MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1],
+        removeRuleIds: [MAX_NUMBER_OF_DYNAMIC_RULES + 1],
       });
 
       const [updateSessionResult, updateDynamicResult] =
@@ -354,14 +354,14 @@ add_task(async function test_stored_dynamic_rules_exceeding_limits() {
     decompress: true,
   });
 
-  const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = ExtensionDNRLimits;
+  const { MAX_NUMBER_OF_DYNAMIC_RULES } = ExtensionDNRLimits;
 
   const expectedDynamicRules = [];
   const unexpectedDynamicRules = [];
 
-  for (let i = 0; i < MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 5; i++) {
+  for (let i = 0; i < MAX_NUMBER_OF_DYNAMIC_RULES + 5; i++) {
     const rule = getDNRRule({ id: i + 1 });
-    if (i < MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES) {
+    if (i < MAX_NUMBER_OF_DYNAMIC_RULES) {
       expectedDynamicRules.push(rule);
     } else {
       unexpectedDynamicRules.push(rule);
@@ -395,7 +395,7 @@ add_task(async function test_stored_dynamic_rules_exceeding_limits() {
     expected: [
       {
         message: new RegExp(
-          `Ignoring dynamic ruleset in extension "${extension.id}" because: Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES`
+          `Ignoring dynamic ruleset in extension "${extension.id}" because: Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_RULES`
         ),
       },
     ],
