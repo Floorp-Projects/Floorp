@@ -75,9 +75,13 @@ using namespace sandbox::bpf_dsl;
 #  define PR_SET_VMA_ANON_NAME 0
 #endif
 
-// The headers define O_LARGEFILE as 0 on x86_64, but we need the
+// The GNU libc headers define O_LARGEFILE as 0 on x86_64, but we need the
 // actual value because it shows up in file flags.
-#define O_LARGEFILE_REAL 00100000
+#if !defined(O_LARGEFILE) || O_LARGEFILE == 0
+#  define O_LARGEFILE_REAL 00100000
+#else
+#  define O_LARGEFILE_REAL O_LARGEFILE
+#endif
 
 // Not part of UAPI, but userspace sees it in F_GETFL; see bug 1650751.
 #define FMODE_NONOTIFY 0x4000000
