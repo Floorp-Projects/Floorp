@@ -79,4 +79,8 @@ partial interface HTMLSelectElement {
   AutocompleteInfo getAutocompleteInfo();
   [ChromeOnly]
   attribute DOMString previewValue;
+  // A string indicating that the value of the element has been autofilled:
+  // either "filled", "preview" or "".
+  [ChromeOnly]
+  attribute DOMString autofillState;
 };

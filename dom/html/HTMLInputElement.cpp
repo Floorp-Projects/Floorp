@@ -6975,6 +6975,10 @@ void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
   MOZ_ASSERT_IF(aKnownNewValue, aKnownNewValue->IsEmpty() == aNewValueEmpty);
   if (aKind != ValueChangeKind::Internal) {
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
+
+    if (State().HasState(ElementState::AUTOFILL)) {
+      RemoveStates(ElementState::AUTOFILL | ElementState::AUTOFILL_PREVIEW);
+    }
   }
 
   if (aNewValueEmpty != IsValueEmpty()) {

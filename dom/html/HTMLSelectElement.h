@@ -327,6 +327,11 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   void GetPreviewValue(nsAString& aValue) { aValue = mPreviewValue; }
   void SetPreviewValue(const nsAString& aValue);
 
+  void SetAutofillState(const nsAString& aState) {
+    SetFormAutofillState(aState);
+  }
+  void GetAutofillState(nsAString& aState) { GetFormAutofillState(aState); }
+
  protected:
   virtual ~HTMLSelectElement() = default;
 
