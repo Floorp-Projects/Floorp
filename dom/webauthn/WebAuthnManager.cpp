@@ -22,7 +22,6 @@
 #include "mozilla/dom/WebAuthnManager.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/WebAuthnUtil.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
@@ -802,16 +801,6 @@ void WebAuthnManager::FinishGetAssertion(
     if (ext.type() == WebAuthnExtensionResult::TWebAuthnExtensionResultAppId) {
       bool appid = ext.get_WebAuthnExtensionResultAppId().AppId();
       credential->SetClientExtensionResultAppId(appid);
-    }
-  }
-
-  // Treat successful assertion as user activation for BounceTrackingProtection.
-  nsIGlobalObject* global = mTransaction.ref().mPromise->GetGlobalObject();
-  if (global) {
-    nsPIDOMWindowInner* window = global->GetAsInnerWindow();
-    if (window) {
-      WindowGlobalChild* windowGlobalChild = window->GetWindowGlobalChild();
-      windowGlobalChild->SendRecordUserActivationForBTP();
     }
   }
 
