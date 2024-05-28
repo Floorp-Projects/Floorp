@@ -66,6 +66,8 @@ support-files = [
 
 ["test_get_all_style_sheets.html"]
 
+["test_isUsedColorSchemeDark.html"]
+
 ["test_is_element_themed.html"]
 skip-if = ["os == 'android'"]
 
