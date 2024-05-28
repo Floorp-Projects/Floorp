@@ -5,12 +5,20 @@ from mozperftest.layers import Layers
 from mozperftest.test.androidlog import AndroidLog
 from mozperftest.test.browsertime import BrowsertimeRunner
 from mozperftest.test.mochitest import Mochitest
+from mozperftest.test.shellscript import ShellScriptRunner
 from mozperftest.test.webpagetest import WebPageTest
 from mozperftest.test.xpcshell import XPCShell
 
 
 def get_layers():
-    return BrowsertimeRunner, AndroidLog, XPCShell, WebPageTest, Mochitest
+    return (
+        BrowsertimeRunner,
+        AndroidLog,
+        XPCShell,
+        WebPageTest,
+        Mochitest,
+        ShellScriptRunner,
+    )
 
 
 def pick_test(env, flavor, mach_cmd):
@@ -24,5 +32,7 @@ def pick_test(env, flavor, mach_cmd):
         return Layers(env, mach_cmd, (WebPageTest,))
     if flavor == "mochitest":
         return Layers(env, mach_cmd, (Mochitest,))
+    if flavor == "custom-script":
+        return Layers(env, mach_cmd, (ShellScriptRunner,))
 
     raise NotImplementedError(flavor)
