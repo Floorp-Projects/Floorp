@@ -475,8 +475,6 @@ dnl We can't run TRY_COMPILE tests on Windows, so hard-code some
 dnl features that Windows actually does support.
 
 if test -n "$SKIP_COMPILER_CHECKS"; then
-   dnl Windows has malloc.h
-   AC_DEFINE(MALLOC_H, [<malloc.h>])
    AC_DEFINE(HAVE_FORCEINLINE)
 fi # SKIP_COMPILER_CHECKS
 
@@ -660,8 +658,6 @@ fi
 dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================
-
-MOZ_CHECK_ALLOCATOR
 
 if test -n "$JS_STANDALONE"; then
 JS_LIBRARY_NAME="mozjs-$MOZILLA_SYMBOLVERSION"
