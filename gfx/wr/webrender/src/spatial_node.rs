@@ -474,7 +474,7 @@ impl SpatialNode {
                                 );
                             }
                             cs_scale_offset =
-                                state.coordinate_system_relative_scale_offset.accumulate(&maybe_snapped);
+                                state.coordinate_system_relative_scale_offset.pre_transform(&maybe_snapped);
                         }
                         None => reset_cs_id = true,
                     }
@@ -547,7 +547,7 @@ impl SpatialNode {
                 // provided by our own sticky positioning.
                 let accumulated_offset = state.parent_accumulated_scroll_offset + sticky_offset + animated_offset;
                 self.viewport_transform = state.coordinate_system_relative_scale_offset
-                    .offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
+                    .pre_offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
                 self.content_transform = self.viewport_transform;
 
                 info.current_offset = sticky_offset + animated_offset;
@@ -559,13 +559,13 @@ impl SpatialNode {
                 // transform, plus any accumulated scroll offset from our parents.
                 let accumulated_offset = state.parent_accumulated_scroll_offset;
                 self.viewport_transform = state.coordinate_system_relative_scale_offset
-                    .offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
+                    .pre_offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
 
                 // The transformation for any content inside of us is the viewport transformation, plus
                 // whatever scrolling offset we supply as well.
                 let added_offset = accumulated_offset + self.scroll_offset();
                 self.content_transform = state.coordinate_system_relative_scale_offset
-                    .offset(snap_offset(added_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
+                    .pre_offset(snap_offset(added_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
 
                 self.coordinate_system_id = state.current_coordinate_system_id;
           }

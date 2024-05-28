@@ -208,8 +208,8 @@ impl ScaleOffset {
         }
     }
 
-    pub fn offset(&self, offset: default::Vector2D<f32>) -> Self {
-        self.accumulate(
+    pub fn pre_offset(&self, offset: default::Vector2D<f32>) -> Self {
+        self.pre_transform(
             &ScaleOffset {
                 scale: Vector2D::new(1.0, 1.0),
                 offset,
@@ -217,19 +217,24 @@ impl ScaleOffset {
         )
     }
 
-    pub fn scale(&self, scale: f32) -> Self {
-        self.accumulate(
-            &ScaleOffset {
-                scale: Vector2D::new(scale, scale),
-                offset: Vector2D::zero(),
-            }
-        )
+    pub fn pre_scale(&self, scale: f32) -> Self {
+        ScaleOffset {
+            scale: self.scale * scale,
+            offset: self.offset,
+        }
+    }
+
+    pub fn then_scale(&self, scale: f32) -> Self {
+        ScaleOffset {
+            scale: self.scale * scale,
+            offset: self.offset * scale,
+        }
     }
 
     /// Produce a ScaleOffset that includes both self and other.
-    /// The 'self' ScaleOffset is applied after other.
+    /// The 'self' ScaleOffset is applied after `other`.
     /// This is equivalent to `Transform3D::pre_transform`.
-    pub fn accumulate(&self, other: &ScaleOffset) -> Self {
+    pub fn pre_transform(&self, other: &ScaleOffset) -> Self {
         ScaleOffset {
             scale: Vector2D::new(
                 self.scale.x * other.scale.x,
@@ -241,6 +246,24 @@ impl ScaleOffset {
             ),
         }
     }
+
+    /// Produce a ScaleOffset that includes both self and other.
+    /// The 'other' ScaleOffset is applied after `self`.
+    /// This is equivalent to `Transform3D::then`.
+    #[allow(unused)]
+    pub fn then(&self, other: &ScaleOffset) -> Self {
+        ScaleOffset {
+            scale: Vector2D::new(
+                self.scale.x * other.scale.x,
+                self.scale.y * other.scale.y,
+            ),
+            offset: Vector2D::new(
+                other.scale.x * self.offset.x + other.offset.x,
+                other.scale.y * self.offset.y + other.offset.y,
+            ),
+        }
+    }
+
 
     pub fn map_rect<F, T>(&self, rect: &Box2D<f32, F>) -> Box2D<f32, T> {
         // TODO(gw): The logic below can return an unexpected result if the supplied
@@ -776,7 +799,7 @@ pub mod test {
 
     fn validate_inverse(xref: &LayoutTransform) {
         let s0 = ScaleOffset::from_transform(xref).unwrap();
-        let s1 = s0.inverse().accumulate(&s0);
+        let s1 = s0.inverse().pre_transform(&s0);
         assert!((s1.scale.x - 1.0).abs() < NEARLY_ZERO &&
                 (s1.scale.y - 1.0).abs() < NEARLY_ZERO &&
                 s1.offset.x.abs() < NEARLY_ZERO &&
@@ -809,7 +832,7 @@ pub mod test {
         let s0 = ScaleOffset::from_transform(x0).unwrap();
         let s1 = ScaleOffset::from_transform(x1).unwrap();
 
-        let s = s0.accumulate(&s1).to_transform();
+        let s = s0.pre_transform(&s1).to_transform();
 
         assert!(x.approx_eq(&s), "{:?}\n{:?}", x, s);
     }
@@ -1591,4 +1614,14 @@ fn weak_table() {
         tbl.insert(Arc::downgrade(&Arc::new(vec![5])))
     }
     assert!(tbl.inner.capacity() <= 4);
+}
+
+#[test]
+fn scale_offset_pre_post() {
+    let a = ScaleOffset::new(1.0, 2.0, 3.0, 4.0);
+    let b = ScaleOffset::new(5.0, 6.0, 7.0, 8.0);
+
+    assert_eq!(a.then(&b), b.pre_transform(&a));
+    assert_eq!(a.then_scale(10.0), a.then(&ScaleOffset::from_scale(Vector2D::new(10.0, 10.0))));
+    assert_eq!(a.pre_scale(10.0), a.pre_transform(&ScaleOffset::from_scale(Vector2D::new(10.0, 10.0))));
 }
