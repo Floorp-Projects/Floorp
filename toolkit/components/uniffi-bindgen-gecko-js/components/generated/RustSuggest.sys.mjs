@@ -614,13 +614,22 @@ export class SuggestStore {
         }
     }
 
-    interrupt() {
+    interrupt(kind = null) {
         const liftResult = (result) => undefined;
         const liftError = null;
         const functionCall = () => {
+            try {
+                FfiConverterOptionalTypeInterruptKind.checkType(kind)
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("kind");
+                }
+                throw e;
+            }
             return UniFFIScaffolding.callSync(
                 20, // suggest:uniffi_suggest_fn_method_suggeststore_interrupt
                 FfiConverterTypeSuggestStore.lower(this),
+                FfiConverterOptionalTypeInterruptKind.lower(kind),
             )
         }
         return handleRustResult(functionCall(), liftResult, liftError);
@@ -1101,6 +1110,57 @@ export class FfiConverterTypeSuggestionQuery extends FfiConverterArrayBuffer {
         }
     }
 }
+
+
+export const InterruptKind = {
+    READ: 1,
+    WRITE: 2,
+    READ_WRITE: 3,
+};
+
+Object.freeze(InterruptKind);
+// Export the FFIConverter object to make external types work.
+export class FfiConverterTypeInterruptKind extends FfiConverterArrayBuffer {
+    static read(dataStream) {
+        switch (dataStream.readInt32()) {
+            case 1:
+                return InterruptKind.READ
+            case 2:
+                return InterruptKind.WRITE
+            case 3:
+                return InterruptKind.READ_WRITE
+            default:
+                throw new UniFFITypeError("Unknown InterruptKind variant");
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value === InterruptKind.READ) {
+            dataStream.writeInt32(1);
+            return;
+        }
+        if (value === InterruptKind.WRITE) {
+            dataStream.writeInt32(2);
+            return;
+        }
+        if (value === InterruptKind.READ_WRITE) {
+            dataStream.writeInt32(3);
+            return;
+        }
+        throw new UniFFITypeError("Unknown InterruptKind variant");
+    }
+
+    static computeSize(value) {
+        return 4;
+    }
+
+    static checkType(value) {
+      if (!Number.isInteger(value) || value < 1 || value > 3) {
+          throw new UniFFITypeError(`${value} is not a valid value for InterruptKind`);
+      }
+    }
+}
+
 
 
 
@@ -1833,6 +1893,43 @@ export class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
             return 1;
         }
         return 1 + FfiConverterString.computeSize(value)
+    }
+}
+
+// Export the FFIConverter object to make external types work.
+export class FfiConverterOptionalTypeInterruptKind extends FfiConverterArrayBuffer {
+    static checkType(value) {
+        if (value !== undefined && value !== null) {
+            FfiConverterTypeInterruptKind.checkType(value)
+        }
+    }
+
+    static read(dataStream) {
+        const code = dataStream.readUint8(0);
+        switch (code) {
+            case 0:
+                return null
+            case 1:
+                return FfiConverterTypeInterruptKind.read(dataStream)
+            default:
+                throw UniFFIError(`Unexpected code: ${code}`);
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value === null || value === undefined) {
+            dataStream.writeUint8(0);
+            return;
+        }
+        dataStream.writeUint8(1);
+        FfiConverterTypeInterruptKind.write(dataStream, value)
+    }
+
+    static computeSize(value) {
+        if (value === null || value === undefined) {
+            return 1;
+        }
+        return 1 + FfiConverterTypeInterruptKind.computeSize(value)
     }
 }
 
