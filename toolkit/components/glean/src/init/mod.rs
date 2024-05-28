@@ -189,7 +189,6 @@ fn build_configuration(
         enable_event_timestamps: true,
         experimentation_id: None,
         enable_internal_pings: true,
-        ping_schedule: pings::ping_schedule(),
     };
 
     Ok((configuration, client_info))
