@@ -15,6 +15,9 @@ ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 unset ENABLE_CLANG_PLUGIN
 
+# We don't have a native LLVM_SYMBOLIZER yet
+unset LLVM_SYMBOLIZER
+
 # Add the path to the clang_rt used, so it can be packaged with the build.
 if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
     CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/*/lib/linux && pwd)"
