@@ -740,8 +740,7 @@ export class LoginFormState {
   /** Remove login field highlight when its value is cleared or overwritten.
    */
   static #removeFillFieldHighlight(event) {
-    let winUtils = event.target.ownerGlobal.windowUtils;
-    winUtils.removeManuallyManagedState(event.target, AUTOFILL_STATE);
+    event.target.autofillState = "";
   }
 
   /**
@@ -749,9 +748,7 @@ export class LoginFormState {
    * @param {Node} element that needs highlighting.
    */
   static _highlightFilledField(element) {
-    let winUtils = element.ownerGlobal.windowUtils;
-
-    winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
+    element.autofillState = AUTOFILL_STATE;
     // Remove highlighting when the field is changed.
     element.addEventListener(
       "input",
