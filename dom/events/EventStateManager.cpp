@@ -1036,7 +1036,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // In some cases on e10s eMouseEnterIntoWidget
       // event was sent twice into child process of content.
       // (From specific widget code (sending is not permanent) and
-      // from ESM::DispatchMouseOrPointerEvent (sending is permanent)).
+      // from ESM::DispatchMouseOrPointerBoundaryEvent (sending is permanent)).
       // IsCrossProcessForwardingStopped() helps to suppress sending accidental
       // event from widget code.
       aEvent->StopCrossProcessForwarding();
@@ -4943,13 +4943,20 @@ static UniquePtr<WidgetMouseEvent> CreateMouseOrPointerWidgetEvent(
   return newEvent;
 }
 
-already_AddRefed<nsIWidget> EventStateManager::DispatchMouseOrPointerEvent(
+already_AddRefed<nsIWidget>
+EventStateManager::DispatchMouseOrPointerBoundaryEvent(
     WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
     nsIContent* aTargetContent, nsIContent* aRelatedContent) {
-  // http://dvcs.w3.org/hg/webevents/raw-file/default/mouse-lock.html#methods
-  // "[When the mouse is locked on an element...e]vents that require the concept
+  MOZ_ASSERT(aMessage == eMouseEnter || aMessage == ePointerEnter ||
+             aMessage == eMouseLeave || aMessage == ePointerLeave ||
+             aMessage == eMouseOver || aMessage == ePointerOver ||
+             aMessage == eMouseOut || aMessage == ePointerOut);
+
+  // https://w3c.github.io/pointerlock/#dom-element-requestpointerlock
+  // "[Once in the locked state...E]vents that require the concept
   // of a mouse cursor must not be dispatched (for example: mouseover,
-  // mouseout).
+  // mouseout...).
+  // XXXedgar should we also block pointer events?
   if (PointerLockManager::IsLocked() &&
       (aMessage == eMouseLeave || aMessage == eMouseEnter ||
        aMessage == eMouseOver || aMessage == eMouseOut)) {
@@ -5069,13 +5076,13 @@ class EnterLeaveDispatcher {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch() {
     if (mEventMessage == eMouseEnter || mEventMessage == ePointerEnter) {
       for (int32_t i = mTargets.Count() - 1; i >= 0; --i) {
-        nsCOMPtr<nsIWidget> widget = mESM->DispatchMouseOrPointerEvent(
+        nsCOMPtr<nsIWidget> widget = mESM->DispatchMouseOrPointerBoundaryEvent(
             mMouseEvent, mEventMessage, MOZ_KnownLive(mTargets[i]),
             mRelatedTarget);
       }
     } else {
       for (int32_t i = 0; i < mTargets.Count(); ++i) {
-        nsCOMPtr<nsIWidget> widget = mESM->DispatchMouseOrPointerEvent(
+        nsCOMPtr<nsIWidget> widget = mESM->DispatchMouseOrPointerBoundaryEvent(
             mMouseEvent, mEventMessage, MOZ_KnownLive(mTargets[i]),
             mRelatedTarget);
       }
@@ -5166,7 +5173,7 @@ void EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
              isPointer ? "ePointerOut" : "eMouseOut",
              outEventTarget ? ToString(*outEventTarget).c_str() : "nullptr",
              outEventTarget.get()));
-    nsCOMPtr<nsIWidget> widget = DispatchMouseOrPointerEvent(
+    nsCOMPtr<nsIWidget> widget = DispatchMouseOrPointerBoundaryEvent(
         aMouseEvent, isPointer ? ePointerOut : eMouseOut, outEventTarget,
         aMovingInto);
   }
@@ -5247,8 +5254,8 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   }
 
   // Remember the deepest leave event target as the related content for the
-  // DispatchMouseOrPointerEvent() call below, since NotifyMouseOut() resets it,
-  // bug 298477.
+  // DispatchMouseOrPointerBoundaryEvent() call below, since NotifyMouseOut()
+  // resets it, bug 298477.
   nsCOMPtr<nsIContent> deepestLeaveEventTarget =
       wrapper->GetDeepestLeaveEventTarget();
 
@@ -5271,7 +5278,7 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
           ("Dispatching %s event to %s (%p)",
            isPointer ? "ePointerOver" : "eMoustOver",
            aContent ? ToString(*aContent).c_str() : "nullptr", aContent));
-  nsCOMPtr<nsIWidget> targetWidget = DispatchMouseOrPointerEvent(
+  nsCOMPtr<nsIWidget> targetWidget = DispatchMouseOrPointerBoundaryEvent(
       aMouseEvent, isPointer ? ePointerOver : eMouseOver, aContent,
       deepestLeaveEventTarget);
 
