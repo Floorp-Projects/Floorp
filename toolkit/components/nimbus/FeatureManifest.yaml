@@ -1683,6 +1683,24 @@ networking:
       setPref:
         branch: default
         pref: "network.send_OnDataFinished.cssLoader"
+    httpMaxConnections:
+      description: The maximum number of http connections.
+      type: int
+      setPref:
+        branch: default
+        pref: "network.http.max-connections"
+    httpMaxPersistentConnectionsPerServer:
+      description: The maximum number of persistent connections to a server
+      type: int
+      setPref:
+        branch: default
+        pref: "network.http.max-persistent-connections-per-server"
+    speculativeConnectionLimit:
+      description: The maximum number of half-open sockets allowed for speculative connections
+      type: int
+      setPref:
+        branch: default
+        pref: "network.http.speculative-parallel-limit"
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
@@ -2230,18 +2248,6 @@ raceCacheWithNetwork:
       setPref:
         branch: default
         pref: "network.http.rcwn.enabled"
-
-httpSpeculativeParallelLimit:
-  description: Prefs to control the http speculative parallel limit.
-  owner: dpalmeiro@mozilla.com, acreskey@mozilla.com
-  hasExposure: false
-  variables:
-    speculative_parallel_limit:
-      description: Maximum number of parallel speculative connections.
-      type: int
-      setPref:
-        branch: default
-        pref: "network.http.speculative-parallel-limit"
 
 shopping2023:
   description: Prefs to control the 2023 shopping experiment.
