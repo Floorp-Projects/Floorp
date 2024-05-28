@@ -48,6 +48,7 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -81,7 +82,6 @@
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
 #include "nsComboboxControlFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsIDOMXULControlElement.h"
 #include "nsNameSpaceManager.h"
 #include "nsIBaseWindow.h"
@@ -2932,9 +2932,9 @@ static nsIFrame* GetParentFrameToScroll(nsIFrame* aFrame) {
   if (!aFrame) return nullptr;
 
   if (aFrame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-      nsLayoutUtils::IsReallyFixedPos(aFrame))
-    return aFrame->PresShell()->GetRootScrollFrame();
-
+      nsLayoutUtils::IsReallyFixedPos(aFrame)) {
+    return aFrame->PresShell()->GetRootScrollContainerFrame();
+  }
   return aFrame->GetParent();
 }
 
@@ -4106,7 +4106,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           nsIFrame* rootScrollFrame =
               !mCurrentTarget
                   ? nullptr
-                  : mCurrentTarget->PresShell()->GetRootScrollFrame();
+                  : mCurrentTarget->PresShell()->GetRootScrollContainerFrame();
           nsIScrollableFrame* rootScrollableFrame = nullptr;
           if (rootScrollFrame) {
             rootScrollableFrame = do_QueryFrame(rootScrollFrame);

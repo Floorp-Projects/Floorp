@@ -19,6 +19,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_bidi.h"
@@ -38,7 +39,6 @@
 #include "nsTArray.h"
 #include "nsTableWrapperFrame.h"
 #include "nsTableCellFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
 #include <algorithm>
@@ -1650,7 +1650,7 @@ nsIFrame* nsFrameSelection::GetFrameToPageSelect() const {
       return nullptr;
     }
   } else {
-    rootFrameToSelect = mPresShell->GetRootScrollFrame();
+    rootFrameToSelect = mPresShell->GetRootScrollContainerFrame();
     if (NS_WARN_IF(!rootFrameToSelect)) {
       return nullptr;
     }

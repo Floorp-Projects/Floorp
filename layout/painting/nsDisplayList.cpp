@@ -31,6 +31,7 @@
 #include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ShapeUtils.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -50,7 +51,6 @@
 #include "nsTransitionManager.h"
 #include "gfxMatrix.h"
 #include "nsLayoutUtils.h"
-#include "nsIScrollableFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsStyleConsts.h"
 #include "BorderConsts.h"
@@ -526,14 +526,15 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
       // But if we have a displayport, expand it to the displayport, so
       // that async-scrolling the visual viewport within the layout viewport
       // will not checkerboard.
-      if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
+      if (nsIFrame* rootScrollContainerFrame =
+              presShell->GetRootScrollContainerFrame()) {
         nsRect displayport;
         // Note that the displayport here is already in the right coordinate
         // space: it's relative to the scroll port (= layout viewport), but
         // covers the visual viewport with some margins around it, which is
         // exactly what we want.
         if (DisplayPortUtils::GetDisplayPort(
-                rootScrollFrame->GetContent(), &displayport,
+                rootScrollContainerFrame->GetContent(), &displayport,
                 DisplayPortOptions().With(ContentGeometryType::Fixed))) {
           dirtyRectRelativeToDirtyFrame = displayport;
         }
@@ -1117,7 +1118,7 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
 
   state->mPresShellIgnoreScrollFrame =
       state->mPresShell->IgnoringViewportScrolling()
-          ? state->mPresShell->GetRootScrollFrame()
+          ? state->mPresShell->GetRootScrollContainerFrame()
           : nullptr;
 
   nsPresContext* pc = aReferenceFrame->PresContext();
@@ -1330,7 +1331,7 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
   if (ViewportFrame* viewportFrame = do_QueryFrame(aDirtyFrame)) {
     if (IsForEventDelivery() && ShouldBuildAsyncZoomContainer() &&
         viewportFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
-      if (viewportFrame->PresShell()->GetRootScrollFrame()) {
+      if (viewportFrame->PresShell()->GetRootScrollContainerFrame()) {
 #ifdef DEBUG
         for (nsIFrame* f : aFrames) {
           MOZ_ASSERT(ViewportUtils::IsZoomedContentRoot(f));
