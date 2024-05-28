@@ -320,10 +320,10 @@ uint64_t LocalAccessible::VisibilityState() const {
     nsIFrame* parentFrame = curFrame->GetParent();
     // If contained by scrollable frame then check that at least 12 pixels
     // around the object is visible, otherwise the object is offscreen.
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(parentFrame);
     const nscoord kMinPixels = nsPresContext::CSSPixelsToAppUnits(12);
-    if (scrollableFrame) {
-      nsRect scrollPortRect = scrollableFrame->GetScrollPortRect();
+    if (ScrollContainerFrame* scrollContainerFrame =
+            do_QueryFrame(parentFrame)) {
+      nsRect scrollPortRect = scrollContainerFrame->GetScrollPortRect();
       nsRect frameRect = nsLayoutUtils::TransformFrameRectToAncestor(
           frame, frame->GetRectRelativeToSelf(), parentFrame);
       if (!scrollPortRect.Contains(frameRect)) {
@@ -2256,8 +2256,9 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (frame) {
         nsView* view = frame->GetView();
         if (view) {
-          nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-          if (scrollFrame || view->GetWidget() || !frame->GetParent()) {
+          ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(frame);
+          if (scrollContainerFrame || view->GetWidget() ||
+              !frame->GetParent()) {
             rel.AppendTarget(LocalParent());
           }
         }
