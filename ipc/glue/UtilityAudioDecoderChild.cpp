@@ -237,7 +237,7 @@ void UtilityAudioDecoderChild::GetKeySystemCapabilities(
           }
           for (const auto& e : capabilities.encryptionSchemes()) {
             EME_LOG("  capabilities: encryptionScheme=%s",
-                    EncryptionSchemeStr(e));
+                    CryptoSchemeToString(e));
           }
           auto* info = cdmInfo.AppendElement(fallible);
           if (!info) {
