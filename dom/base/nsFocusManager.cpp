@@ -404,11 +404,25 @@ nsresult nsFocusManager::SetFocusedWindowWithCallerType(
   NS_ENSURE_TRUE(windowToFocus, NS_ERROR_FAILURE);
 
   nsCOMPtr<Element> frameElement = windowToFocus->GetFrameElementInternal();
-  Maybe<uint64_t> actionIdFromSetFocusInner;
+  Maybe<uint64_t> existingActionId;
   if (frameElement) {
     // pass false for aFocusChanged so that the caret does not get updated
     // and scrolling does not occur.
-    actionIdFromSetFocusInner = SetFocusInner(frameElement, 0, false, true);
+    existingActionId = SetFocusInner(frameElement, 0, false, true);
+  } else if (auto* bc = windowToFocus->GetBrowsingContext();
+             bc && !bc->IsTop()) {
+    // No frameElement means windowToFocus is an OOP iframe, so
+    // the above SetFocusInner is not called. That means the focus
+    // of the currently focused BC is not going to be cleared. So
+    // we do that manually here.
+    if (RefPtr<BrowsingContext> focusedBC = GetFocusedBrowsingContext()) {
+      // If focusedBC is an ancestor of bc, blur will be handled
+      // correctly by nsFocusManager::AdjustWindowFocus.
+      if (!IsSameOrAncestor(focusedBC, bc)) {
+        existingActionId.emplace(sInstance->GenerateFocusActionId());
+        Blur(focusedBC, nullptr, true, true, false, existingActionId.value());
+      }
+    }
   } else {
     // this is a top-level window. If the window has a child frame focused,
     // clear the focus. Otherwise, focus should already be in this frame, or
@@ -422,8 +436,8 @@ nsresult nsFocusManager::SetFocusedWindowWithCallerType(
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> rootWindow = windowToFocus->GetPrivateRoot();
-  const uint64_t actionId = actionIdFromSetFocusInner.isSome()
-                                ? actionIdFromSetFocusInner.value()
+  const uint64_t actionId = existingActionId.isSome()
+                                ? existingActionId.value()
                                 : sInstance->GenerateFocusActionId();
   if (rootWindow) {
     RaiseWindow(rootWindow, aCallerType, actionId);
