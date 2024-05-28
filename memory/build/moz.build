@@ -16,6 +16,9 @@ EXPORTS += [
 LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True
 DEFINES["MOZ_MEMORY_IMPL"] = True
 
+if CONFIG["MOZ_BUILD_APP"] == "memory":
+    DEFINES["IMPL_MFBT"] = True
+
 if CONFIG["MOZ_REPLACE_MALLOC"]:
     EXPORTS += [
         "replace_malloc.h",
