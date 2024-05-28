@@ -210,6 +210,14 @@ class StringTest {
             "device\u0011control1" to "device_control1",
             "device\u0012control2" to "device_control2",
             "device\u0013control3" to "device_control3",
+            "less<than" to "less_than",
+            "greater>than" to "greater_than",
+            "asterisk*" to "asterisk_",
+            "quotation\"mark" to "quotation_mark",
+            "colon:" to "colon_",
+            "question?mark" to "question_mark",
+            "back\\slash" to "back_slash",
+            "vertical|bar" to "vertical_bar",
         )
 
         testCases.forEach { (raw, escaped) ->
