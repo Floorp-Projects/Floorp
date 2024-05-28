@@ -90,13 +90,8 @@ export class NetworkEventRecord {
    * Add network request POST data.
    *
    * Required API for a NetworkObserver event owner.
-   *
-   * @param {object} postData
-   *     The request POST data.
    */
-  addRequestPostData(postData) {
-    this.#request.setPostData(postData);
-  }
+  addRequestPostData() {}
 
   /**
    * Add the initial network response information.

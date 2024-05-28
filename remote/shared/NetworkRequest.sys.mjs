@@ -4,6 +4,8 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  NetworkHelper:
+    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 
@@ -22,7 +24,6 @@ export class NetworkRequest {
   #contextId;
   #navigationId;
   #navigationManager;
-  #postData;
   #rawHeaders;
   #redirectCount;
   #requestId;
@@ -84,7 +85,12 @@ export class NetworkRequest {
   }
 
   get postDataSize() {
-    return this.#postData ? this.#postData.size : 0;
+    const charset = lazy.NetworkUtils.getCharset(this.#channel);
+    const sentBody = lazy.NetworkHelper.readPostTextFromRequest(
+      this.#channel,
+      charset
+    );
+    return sentBody ? sentBody.length : 0;
   }
 
   get redirectCount() {
@@ -190,21 +196,6 @@ export class NetworkRequest {
     });
 
     return headers;
-  }
-
-  /**
-   * Update the postData for this NetworkRequest. This is currently forwarded
-   * by the DevTools' NetworkObserver.
-   *
-   * TODO: We should read this information dynamically from the channel so that
-   * we can get updated information in case it was modified via network
-   * interception.
-   *
-   * @param {object} postData
-   *     The request POST data.
-   */
-  setPostData(postData) {
-    this.#postData = postData;
   }
 
   /**
