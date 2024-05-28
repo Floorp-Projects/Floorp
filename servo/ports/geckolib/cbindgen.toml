@@ -169,6 +169,7 @@ include = [
   "TextDecorationLength",
   "Time",
   "Rect",
+  "InitialLetter",
   "IntersectionObserverRootMargin",
   "Size",
   "MaxSize",

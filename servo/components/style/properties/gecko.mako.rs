@@ -1431,45 +1431,7 @@ fn static_assert() {
 <%self:impl_trait style_struct_name="InheritedText">
 </%self:impl_trait>
 
-<%self:impl_trait style_struct_name="Text" skip_longhands="initial-letter">
-    pub fn set_initial_letter(&mut self, v: longhands::initial_letter::computed_value::T) {
-        use crate::values::generics::text::InitialLetter;
-        match v {
-            InitialLetter::Normal => {
-                self.mInitialLetterSize = 0.;
-                self.mInitialLetterSink = 0;
-            },
-            InitialLetter::Specified(size, sink) => {
-                self.mInitialLetterSize = size;
-                if let Some(sink) = sink {
-                    self.mInitialLetterSink = sink;
-                } else {
-                    self.mInitialLetterSink = size.floor() as i32;
-                }
-            }
-        }
-    }
-
-    pub fn copy_initial_letter_from(&mut self, other: &Self) {
-        self.mInitialLetterSize = other.mInitialLetterSize;
-        self.mInitialLetterSink = other.mInitialLetterSink;
-    }
-
-    pub fn reset_initial_letter(&mut self, other: &Self) {
-        self.copy_initial_letter_from(other)
-    }
-
-    pub fn clone_initial_letter(&self) -> longhands::initial_letter::computed_value::T {
-        use crate::values::generics::text::InitialLetter;
-
-        if self.mInitialLetterSize == 0. && self.mInitialLetterSink == 0 {
-            InitialLetter::Normal
-        } else if self.mInitialLetterSize.floor() as i32 == self.mInitialLetterSink {
-            InitialLetter::Specified(self.mInitialLetterSize, None)
-        } else {
-            InitialLetter::Specified(self.mInitialLetterSize, Some(self.mInitialLetterSink))
-        }
-    }
+<%self:impl_trait style_struct_name="Text">
 </%self:impl_trait>
 
 <% skip_svg_longhands = """
