@@ -62,6 +62,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsStyleUtil.h"
 #include "nsRubyFrame.h"
+#include "PresShellInlines.h"
 #include "TextDrawTarget.h"
 
 #include "nsTextFragment.h"
@@ -8776,11 +8777,11 @@ void nsTextFrame::MaybeSplitFramesForFirstLetter() {
   // textrun instead of our own during FindFirstLetterRange.
   nsTextFrame* f = GetParent()->IsFloating() ? GetNextInFlow() : this;
   gfxSkipCharsIterator iter = f->EnsureTextRun(nsTextFrame::eInflated);
-  gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
+  const gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
 
   const nsTextFragment* frag = TextFragment();
-  int32_t length = GetInFlowContentLength();
-  int32_t offset = GetContentOffset();
+  const int32_t length = GetInFlowContentLength();
+  const int32_t offset = GetContentOffset();
   int32_t firstLetterLength = length;
   NewlineProperty* cachedNewlineOffset = nullptr;
   int32_t newLineOffset = -1;  // this will be -1 or a content offset
@@ -8816,17 +8817,14 @@ void nsTextFrame::MaybeSplitFramesForFirstLetter() {
       firstLetterLength = std::min(firstLetterLength, length - 1);
     }
   }
-  length = firstLetterLength;
-  if (length) {
+  if (firstLetterLength) {
     AddStateBits(TEXT_FIRST_LETTER);
   }
+
   // Change this frame's length to the first-letter length right now
   // so that when we rebuild the textrun it will be built with the
   // right first-letter boundary.
-  SetLength(offset + length - GetContentOffset(), nullptr,
-            ALLOW_FRAME_CREATION_AND_DESTRUCTION);
-  // Ensure that the textrun will be rebuilt.
-  ClearTextRuns();
+  SetFirstLetterLength(firstLetterLength);
 }
 
 static bool IsUnreflowedLetterFrame(nsIFrame* aFrame) {
@@ -9327,6 +9325,35 @@ void nsTextFrame::SetLength(int32_t aLength, nsLineLayout* aLineLayout,
     ++iterations;
   }
 #endif
+}
+
+void nsTextFrame::SetFirstLetterLength(int32_t aLength) {
+  if (aLength == GetContentLength()) {
+    return;
+  }
+
+  mContentLengthHint = aLength;
+  nsTextFrame* next = static_cast<nsTextFrame*>(GetNextInFlow());
+  if (aLength > GetContentLength()) {
+    // Stealing some text from our next-in-flow; this happens with floating
+    // first-letter, which is initially given a zero-length range, with all
+    // the text being in its continuation.
+    if (!next) {
+      MOZ_ASSERT_UNREACHABLE("Expected a next-in-flow; first-letter broken?");
+      return;
+    }
+  } else {
+    // We need to create a continuation for the parent first-letter frame,
+    // and move any kids after this frame to the new one; if there are none,
+    // a new continuing text frame will be created there.
+    MOZ_ASSERT(GetParent()->IsLetterFrame());
+    auto* letterFrame = static_cast<nsFirstLetterFrame*>(GetParent());
+    next = letterFrame->CreateContinuationForFramesAfter(this);
+  }
+
+  next->mContentOffset = GetContentOffset() + aLength;
+
+  ClearTextRuns();
 }
 
 bool nsTextFrame::IsFloatingFirstLetterChild() const {
