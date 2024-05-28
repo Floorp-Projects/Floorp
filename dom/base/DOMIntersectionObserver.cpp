@@ -8,11 +8,11 @@
 #include "nsCSSPropertyID.h"
 #include "nsIFrame.h"
 #include "nsContainerFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ServoBindings.h"
@@ -428,9 +428,9 @@ static Maybe<nsRect> ComputeTheIntersection(
   // the viewport already (but it's in the same document).
   nsRect rect = intersectionRect.value();
   if (aTarget->PresContext() != aRoot->PresContext()) {
-    if (nsIFrame* rootScrollFrame =
-            aTarget->PresShell()->GetRootScrollFrame()) {
-      nsLayoutUtils::TransformRect(aRoot, rootScrollFrame, rect);
+    if (nsIFrame* rootScrollContainerFrame =
+            aTarget->PresShell()->GetRootScrollContainerFrame()) {
+      nsLayoutUtils::TransformRect(aRoot, rootScrollContainerFrame, rect);
     }
   }
 

@@ -15,6 +15,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
 #include "nsRefreshDriver.h"
@@ -719,7 +720,8 @@ static PartialPrerenderData GetPartialPrerenderData(
       // ancestor document.
       scrollId =
           nsLayoutUtils::ScrollIdForRootScrollFrame(aFrame->PresContext());
-      MOZ_ASSERT(clipFrame == aFrame->PresShell()->GetRootScrollFrame());
+      MOZ_ASSERT(clipFrame ==
+                 aFrame->PresShell()->GetRootScrollContainerFrame());
     }
   }
 

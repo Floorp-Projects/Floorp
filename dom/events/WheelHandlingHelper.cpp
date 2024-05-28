@@ -13,6 +13,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/TextControlElement.h"
@@ -23,7 +24,6 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"  // for Document and HTMLBodyElement
-#include "nsIScrollableFrame.h"
 #include "nsITimer.h"
 #include "nsPresContext.h"
 #include "prtime.h"
@@ -712,7 +712,7 @@ ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
 
     if (!honouredFrame) {
       // If there is no <body> frame, fall back to the real root frame.
-      honouredFrame = aScrollFrame.PresShell()->GetRootScrollFrame();
+      honouredFrame = aScrollFrame.PresShell()->GetRootScrollContainerFrame();
     }
 
     if (!honouredFrame) {

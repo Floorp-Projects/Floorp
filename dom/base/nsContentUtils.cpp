@@ -111,6 +111,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScrollbarPreferences.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ShutdownPhase.h"
 #include "mozilla/Span.h"
 #include "mozilla/StaticAnalysisFunctions.h"
@@ -10390,12 +10391,9 @@ void nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
 #endif
 
   if (PresShell* presShell = aDocument->GetPresShell()) {
-    if (nsIFrame* scrollFrame = presShell->GetRootScrollFrame()) {
-      nsIAnonymousContentCreator* creator = do_QueryFrame(scrollFrame);
-      MOZ_ASSERT(
-          creator,
-          "scroll frame should always implement nsIAnonymousContentCreator");
-      creator->AppendAnonymousContentTo(aElements, 0);
+    if (ScrollContainerFrame* rootScrollContainerFrame =
+            presShell->GetRootScrollContainerFrame()) {
+      rootScrollContainerFrame->AppendAnonymousContentTo(aElements, 0);
     }
     if (nsCanvasFrame* canvasFrame = presShell->GetCanvasFrame()) {
       canvasFrame->AppendAnonymousContentTo(aElements, 0);

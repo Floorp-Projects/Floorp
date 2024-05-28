@@ -6,6 +6,7 @@
 
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/VisualViewport.h"
@@ -14,7 +15,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
 #include "nsIObserverService.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
@@ -109,7 +109,7 @@ GeckoMVMContext::ScrollbarAreaToExcludeFromCompositionBounds() const {
   MOZ_ASSERT(mPresShell);
   return LayoutDeviceMargin::FromAppUnits(
       nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
-          mPresShell->GetRootScrollFrame()),
+          mPresShell->GetRootScrollContainerFrame()),
       mPresShell->GetPresContext()->AppUnitsPerDevPixel());
 }
 
@@ -169,7 +169,7 @@ void GeckoMVMContext::PostVisualViewportResizeEventByDynamicToolbar() {
 
 void GeckoMVMContext::UpdateDisplayPortMargins() {
   MOZ_ASSERT(mPresShell);
-  if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
+  if (nsIFrame* root = mPresShell->GetRootScrollContainerFrame()) {
     nsIContent* content = root->GetContent();
     bool hasDisplayPort = DisplayPortUtils::HasNonMinimalDisplayPort(content);
     bool hasResolution = mPresShell->GetResolution() != 1.0f;

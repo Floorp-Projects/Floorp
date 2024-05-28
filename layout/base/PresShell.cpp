@@ -90,6 +90,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollTimelineAnimationTracker.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoBindings.h"
@@ -156,7 +157,6 @@
 #include "nsIReflowCallback.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
-#include "nsIScrollableFrame.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsLayoutUtils.h"
@@ -2448,7 +2448,7 @@ PresShell::CompleteMove(bool aForward, bool aExtend) {
 
 // end implementations nsISelectionController
 
-nsIFrame* PresShell::GetRootScrollFrame() const {
+ScrollContainerFrame* PresShell::GetRootScrollContainerFrame() const {
   if (!mFrameConstructor) {
     return nullptr;
   }
@@ -2460,11 +2460,11 @@ nsIFrame* PresShell::GetRootScrollFrame() const {
   if (!theFrame || !theFrame->IsScrollContainerFrame()) {
     return nullptr;
   }
-  return theFrame;
+  return static_cast<ScrollContainerFrame*>(theFrame);
 }
 
 nsIScrollableFrame* PresShell::GetRootScrollFrameAsScrollable() const {
-  nsIFrame* frame = GetRootScrollFrame();
+  nsIFrame* frame = GetRootScrollContainerFrame();
   if (!frame) {
     return nullptr;
   }
@@ -4970,12 +4970,13 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
     }
 
     info->mResolution *= resolution;
-    nsIFrame* rootScrollFrame = shell->GetRootScrollFrame();
-    ViewID zoomedId =
-        nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent());
+    nsIFrame* rootScrollContainerFrame = shell->GetRootScrollContainerFrame();
+    ViewID zoomedId = nsLayoutUtils::FindOrCreateIDFor(
+        rootScrollContainerFrame->GetContent());
 
     nsDisplayList wrapped(&info->mBuilder);
-    wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder, rootScrollFrame,
+    wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder,
+                                               rootScrollContainerFrame,
                                                &info->mList, nullptr, zoomedId);
     info->mList.AppendToTop(&wrapped);
   }
@@ -11684,7 +11685,7 @@ void PresShell::SyncWindowProperties(bool aSync) {
   }
 
   AutoWeakFrame weak(rootFrame);
-  if (!GetRootScrollFrame()) {
+  if (!GetRootScrollContainerFrame()) {
     // Scrollframes use native widgets which don't work well with
     // translucent windows, at least in Windows XP. So if the document
     // has a root scrollrame it's useless to try to make it transparent,

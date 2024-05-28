@@ -16,7 +16,6 @@
 #include "nsScrollbarButtonFrame.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsGkAtoms.h"
-#include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
@@ -25,6 +24,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_apz.h"
 
 using namespace mozilla;
@@ -226,7 +226,7 @@ nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
   }
   sbm = do_QueryFrame(f);
   if (f && !sbm) {
-    f = f->PresShell()->GetRootScrollFrame();
+    f = f->PresShell()->GetRootScrollContainerFrame();
     if (f && f->GetContent() == mScrollbarMediator) {
       return do_QueryFrame(f);
     }
