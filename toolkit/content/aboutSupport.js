@@ -1169,6 +1169,7 @@ var snapshotFormatters = {
         capabilities.persistent = findElementInArray(array, "persistent");
         capabilities.distinctive = findElementInArray(array, "distinctive");
         capabilities.sessionType = findElementInArray(array, "sessionType");
+        capabilities.scheme = findElementInArray(array, "scheme");
         capabilities.codec = getSupportedCodecs(array);
         return JSON.stringify(capabilities);
       }

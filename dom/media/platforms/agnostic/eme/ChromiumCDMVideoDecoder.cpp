@@ -108,7 +108,6 @@ RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMVideoDecoder::Init() {
       config.mEncryptionScheme() = cdm::EncryptionScheme::kCenc;
       break;
     case CryptoScheme::Cbcs:
-    case CryptoScheme::Cbcs_1_9:
       config.mEncryptionScheme() = cdm::EncryptionScheme::kCbcs;
       break;
     default:

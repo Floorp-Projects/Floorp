@@ -92,6 +92,8 @@ bool IsHardwareDecryptionSupported(
     const dom::MediaKeySystemConfiguration& aConfig);
 bool IsHardwareDecryptionSupported(const KeySystemConfig& aConfig);
 
+const char* EncryptionSchemeStr(const CryptoScheme& aScheme);
+
 #ifdef MOZ_WMF_CDM
 void MFCDMCapabilitiesIPDLToKeySystemConfig(
     const MFCDMCapabilitiesIPDL& aCDMConfig, KeySystemConfig& aKeySystemConfig);

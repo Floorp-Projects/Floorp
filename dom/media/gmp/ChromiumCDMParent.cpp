@@ -341,7 +341,6 @@ bool ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
       encryptionScheme = cdm::EncryptionScheme::kCenc;
       break;
     case CryptoScheme::Cbcs:
-    case CryptoScheme::Cbcs_1_9:
       encryptionScheme = cdm::EncryptionScheme::kCbcs;
       break;
     default:
