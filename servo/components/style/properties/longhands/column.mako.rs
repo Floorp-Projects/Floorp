@@ -20,9 +20,9 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "column-count",
     "ColumnCount",
-    "computed::ColumnCount::auto()",
+    "computed::ColumnCount::Auto",
     engines="gecko servo",
-    initial_specified_value="specified::ColumnCount::auto()",
+    initial_specified_value="specified::ColumnCount::Auto",
     servo_pref="layout.columns.enabled",
     animation_value_type="AnimatedColumnCount",
     spec="https://drafts.csswg.org/css-multicol/#propdef-column-count",

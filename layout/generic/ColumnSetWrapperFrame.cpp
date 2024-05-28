@@ -172,14 +172,15 @@ nscoord ColumnSetWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
       // size, either. Just use 0 because we're size-contained.
       iSize = 0;
     } else {
-      MOZ_ASSERT(colStyle->mColumnCount != nsStyleColumn::kColumnCountAuto,
+      MOZ_ASSERT(!colStyle->mColumnCount.IsAuto(),
                  "column-count and column-width can't both be auto!");
       // As available inline size reduces to zero, we still have mColumnCount
       // columns, so compute our minimum intrinsic size based on N zero-width
       // columns, with specified gap size between them.
       const nscoord colGap =
           ColumnUtils::GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
-      iSize = ColumnUtils::IntrinsicISize(colStyle->mColumnCount, colGap, 0);
+      iSize = ColumnUtils::IntrinsicISize(colStyle->mColumnCount.AsInteger(),
+                                          colGap, 0);
     }
   } else {
     for (nsIFrame* f : PrincipalChildList()) {
@@ -205,16 +206,15 @@ nscoord ColumnSetWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
       colISize =
           ColumnUtils::ClampUsedColumnWidth(colStyle->mColumnWidth.AsLength());
     } else {
-      MOZ_ASSERT(colStyle->mColumnCount != nsStyleColumn::kColumnCountAuto,
+      MOZ_ASSERT(!colStyle->mColumnCount.IsAuto(),
                  "column-count and column-width can't both be auto!");
       colISize = 0;
     }
 
     // If column-count is auto, assume one column.
-    const uint32_t numColumns =
-        colStyle->mColumnCount == nsStyleColumn::kColumnCountAuto
-            ? 1
-            : colStyle->mColumnCount;
+    const uint32_t numColumns = colStyle->mColumnCount.IsAuto()
+                                    ? 1
+                                    : colStyle->mColumnCount.AsInteger();
     const nscoord colGap =
         ColumnUtils::GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
     iSize = ColumnUtils::IntrinsicISize(numColumns, colGap, colISize);

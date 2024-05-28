@@ -96,6 +96,9 @@ bool nsDisplayColumnRule::CreateWebRenderCommands(
   return true;
 }
 
+// The maximum number of columns we support.
+static constexpr int32_t kMaxColumnCount = 1000;
+
 /**
  * Tracking issues:
  *
@@ -271,7 +274,10 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   nscoord colBSize = aReflowInput.AvailableBSize();
   nscoord colGap =
       ColumnUtils::GetColumnGap(this, aReflowInput.ComputedISize());
-  int32_t numColumns = colStyle->mColumnCount;
+  int32_t numColumns =
+      colStyle->mColumnCount.IsAuto()
+          ? 0
+          : std::min(colStyle->mColumnCount.AsInteger(), kMaxColumnCount);
 
   // If column-fill is set to 'balance' or we have a column-span sibling, then
   // we want to balance the columns.
@@ -304,7 +310,7 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
       // This expression uses truncated rounding, which is what we
       // want
       int32_t maxColumns =
-          std::min(nscoord(nsStyleColumn::kMaxColumnCount),
+          std::min(nscoord(kMaxColumnCount),
                    (availContentISize + colGap) / (colGap + colISize));
       numColumns = std::max(1, std::min(numColumns, maxColumns));
     }
@@ -333,8 +339,7 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
       if (colGap + colISize > 0) {
         numColumns = (availContentISize + colGap) / (colGap + colISize);
         // The number of columns should never exceed kMaxColumnCount.
-        numColumns =
-            std::min(nscoord(nsStyleColumn::kMaxColumnCount), numColumns);
+        numColumns = std::min(kMaxColumnCount, numColumns);
       }
       if (numColumns <= 0) {
         numColumns = 1;
@@ -424,13 +429,14 @@ nscoord nsColumnSetFrame::GetMinISize(gfxContext* aRenderingContext) {
     // of the child's min-width with any specified column width.
     iSize = std::min(iSize, colISize);
   } else {
-    NS_ASSERTION(colStyle->mColumnCount > 0,
+    NS_ASSERTION(!colStyle->mColumnCount.IsAuto(),
                  "column-count and column-width can't both be auto");
     // As available width reduces to zero, we still have mColumnCount columns,
     // so compute our minimum size based on the number of columns and their gaps
     // and minimum per-column size.
     nscoord colGap = ColumnUtils::GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
-    iSize = ColumnUtils::IntrinsicISize(colStyle->mColumnCount, colGap, iSize);
+    iSize = ColumnUtils::IntrinsicISize(colStyle->mColumnCount.AsInteger(),
+                                        colGap, iSize);
   }
   // XXX count forced column breaks here? Maybe we should return the child's
   // min-width times the minimum number of columns.
@@ -459,9 +465,7 @@ nscoord nsColumnSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
   // If column-count is auto, assume one column.
   uint32_t numColumns =
-      colStyle->mColumnCount == nsStyleColumn::kColumnCountAuto
-          ? 1
-          : colStyle->mColumnCount;
+      colStyle->mColumnCount.IsAuto() ? 1 : colStyle->mColumnCount.AsInteger();
   nscoord colGap = ColumnUtils::GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
   return ColumnUtils::IntrinsicISize(numColumns, colGap, colISize);
 }
