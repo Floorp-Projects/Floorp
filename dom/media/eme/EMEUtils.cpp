@@ -152,6 +152,19 @@ bool IsHardwareDecryptionSupported(const KeySystemConfig& aConfig) {
   return false;
 }
 
+const char* EncryptionSchemeStr(const CryptoScheme& aScheme) {
+  switch (aScheme) {
+    case CryptoScheme::None:
+      return "none";
+    case CryptoScheme::Cenc:
+      return "cenc";
+    case CryptoScheme::Cbcs:
+      return "cbcs";
+    default:
+      return "not-defined!";
+  }
+}
+
 #ifdef MOZ_WMF_CDM
 void MFCDMCapabilitiesIPDLToKeySystemConfig(
     const MFCDMCapabilitiesIPDL& aCDMConfig,
@@ -171,27 +184,23 @@ void MFCDMCapabilitiesIPDLToKeySystemConfig(
         !aKeySystemConfig.mVideoRobustness.Contains(c.robustness())) {
       aKeySystemConfig.mVideoRobustness.AppendElement(c.robustness());
     }
-    CryptoSchemeSet schemes;
-    for (const auto& scheme : c.encryptionSchemes()) {
-      schemes += scheme;
-    }
     aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
-        NS_ConvertUTF16toUTF8(c.contentType()), Some(schemes));
+        NS_ConvertUTF16toUTF8(c.contentType()));
   }
   for (const auto& c : aCDMConfig.audioCapabilities()) {
     if (!c.robustness().IsEmpty() &&
         !aKeySystemConfig.mAudioRobustness.Contains(c.robustness())) {
       aKeySystemConfig.mAudioRobustness.AppendElement(c.robustness());
     }
-    CryptoSchemeSet schemes;
-    for (const auto& scheme : c.encryptionSchemes()) {
-      schemes += scheme;
-    }
     aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
-        NS_ConvertUTF16toUTF8(c.contentType()), Some(schemes));
+        NS_ConvertUTF16toUTF8(c.contentType()));
   }
   aKeySystemConfig.mPersistentState = aCDMConfig.persistentState();
   aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
+  for (const auto& scheme : aCDMConfig.encryptionSchemes()) {
+    aKeySystemConfig.mEncryptionSchemes.AppendElement(
+        NS_ConvertUTF8toUTF16(EncryptionSchemeStr(scheme)));
+  }
   aKeySystemConfig.mIsHDCP22Compatible = aCDMConfig.isHDCP22Compatible()
                                              ? *aCDMConfig.isHDCP22Compatible()
                                              : false;

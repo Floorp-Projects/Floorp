@@ -400,8 +400,7 @@ HRESULT MFMediaEngineStream::AddEncryptAttributes(
   if (aCryptoConfig.mCryptoScheme == CryptoScheme::Cenc) {
     protectionScheme = MFSampleEncryptionProtectionScheme::
         MF_SAMPLE_ENCRYPTION_PROTECTION_SCHEME_AES_CTR;
-  } else if (aCryptoConfig.mCryptoScheme == CryptoScheme::Cbcs ||
-             aCryptoConfig.mCryptoScheme == CryptoScheme::Cbcs_1_9) {
+  } else if (aCryptoConfig.mCryptoScheme == CryptoScheme::Cbcs) {
     protectionScheme = MFSampleEncryptionProtectionScheme::
         MF_SAMPLE_ENCRYPTION_PROTECTION_SCHEME_AES_CBC;
   } else {

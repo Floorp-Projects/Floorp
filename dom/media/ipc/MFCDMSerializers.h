@@ -29,9 +29,9 @@ struct ParamTraits<mozilla::KeySystemConfig::SessionType>
 
 template <>
 struct ParamTraits<mozilla::CryptoScheme>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::CryptoScheme, mozilla::CryptoScheme::None,
-          mozilla::CryptoScheme::Cbcs_1_9> {};
+    : public ContiguousEnumSerializerInclusive<mozilla::CryptoScheme,
+                                               mozilla::CryptoScheme::None,
+                                               mozilla::CryptoScheme::Cbcs> {};
 
 template <>
 struct ParamTraits<mozilla::dom::MediaKeyMessageType>
