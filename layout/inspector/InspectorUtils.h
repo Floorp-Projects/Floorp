@@ -214,26 +214,28 @@ class InspectorUtils {
    * Pseudo-elements which are only accepted in UA style sheets are
    * not included.
    */
-  static void GetCSSPseudoElementNames(GlobalObject& aGlobal,
+  static void GetCSSPseudoElementNames(GlobalObject&,
                                        nsTArray<nsString>& aResult);
 
   // pseudo-class style locking methods. aPseudoClass must be a valid
   // pseudo-class selector string, e.g. ":hover". ":any-link" and
   // non-event-state pseudo-classes are ignored. aEnabled sets whether the
   // psuedo-class should be locked to on or off.
-  static void AddPseudoClassLock(GlobalObject& aGlobal, Element& aElement,
+  static void AddPseudoClassLock(GlobalObject&, Element&,
                                  const nsAString& aPseudoClass, bool aEnabled);
-  static void RemovePseudoClassLock(GlobalObject& aGlobal, Element& aElement,
+  static void RemovePseudoClassLock(GlobalObject&, Element&,
                                     const nsAString& aPseudoClass);
-  static bool HasPseudoClassLock(GlobalObject& aGlobal, Element& aElement,
+  static bool HasPseudoClassLock(GlobalObject&, Element&,
                                  const nsAString& aPseudoClass);
-  static void ClearPseudoClassLocks(GlobalObject& aGlobal, Element& aElement);
+  static void ClearPseudoClassLocks(GlobalObject&, Element&);
 
-  static bool IsElementThemed(GlobalObject& aGlobal, Element& aElement);
+  static bool IsElementThemed(GlobalObject&, Element&);
+
+  static bool IsUsedColorSchemeDark(GlobalObject&, Element&);
 
   static Element* ContainingBlockOf(GlobalObject&, Element&);
 
-  static void GetBlockLineCounts(GlobalObject& aGlobal, Element& aElement,
+  static void GetBlockLineCounts(GlobalObject&, Element&,
                                  Nullable<nsTArray<uint32_t>>& aResult);
 
   MOZ_CAN_RUN_SCRIPT

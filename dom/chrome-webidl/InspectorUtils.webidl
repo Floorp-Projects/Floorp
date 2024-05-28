@@ -78,6 +78,8 @@ namespace InspectorUtils {
 
   boolean isElementThemed(Element element);
 
+  boolean isUsedColorSchemeDark(Element element);
+
   Element? containingBlockOf(Element element);
 
   // If the element is styled as display:block, returns an array of numbers giving

@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test InspectorUtils::isUsedColorSchemeDark</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<meta name="color-scheme" content="light dark">
+
+<div id="dark" style="color-scheme: dark"></div>
+<div id="light" style="color-scheme: light"></div>
+<div id="preferred" style="color-scheme: light dark"></div>
+<div id="default"></div>
+
+<script>
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+function testElement(id, dark) {
+  is(InspectorUtils.isUsedColorSchemeDark(document.getElementById(id)), dark, id + " should " + (dark ? "" : "not ") + "be dark");
+}
+
+const meta = document.querySelector('meta[name="color-scheme"]');
+
+function runTests() {
+  const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+  info(`testing with meta ${meta.content} and preference ${prefersDark ? "dark" : "light"}`);
+
+  testElement("dark", true);
+  testElement("light", false);
+  testElement("preferred", prefersDark);
+  testElement("default", meta.content.includes("dark") && (!meta.content.includes("light") || prefersDark));
+}
+
+function waitForColorSchemeToBe(scheme) {
+  return new Promise(resolve => {
+    let mq = matchMedia(`(prefers-color-scheme: ${scheme})`);
+    if (mq.matches) {
+      resolve();
+    } else {
+      mq.addEventListener("change", resolve, { once: true });
+    }
+  });
+}
+
+async function switchColorScheme(dark) {
+  await SpecialPowers.pushPrefEnv({ set: [["layout.css.prefers-color-scheme.content-override", dark ? 0 : 1]] });
+  await waitForColorSchemeToBe(dark ? "dark" : "light");
+}
+
+add_task(async function() {
+  runTests();
+
+  for (let dark of [false, true]) {
+    for (let metaValue of ["light", "dark", "light dark"]) {
+      meta.setAttribute("content", metaValue);
+      await switchColorScheme(dark);
+      runTests();
+    }
+  }
+});
+</script>

@@ -826,6 +826,11 @@ bool InspectorUtils::IsElementThemed(GlobalObject&, Element& aElement) {
   return frame && frame->IsThemed();
 }
 
+bool InspectorUtils::IsUsedColorSchemeDark(GlobalObject&, Element& aElement) {
+  nsIFrame* frame = aElement.GetPrimaryFrame(FlushType::Frames);
+  return frame && LookAndFeel::ColorSchemeForFrame(frame) == ColorScheme::Dark;
+}
+
 Element* InspectorUtils::ContainingBlockOf(GlobalObject&, Element& aElement) {
   nsIFrame* frame = aElement.GetPrimaryFrame(FlushType::Frames);
   if (!frame) {
