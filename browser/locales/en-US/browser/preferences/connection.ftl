@@ -79,6 +79,10 @@ connection-proxy-autologin-checkbox =
     .accesskey = i
     .tooltiptext = This option silently authenticates you to proxies when you have saved credentials for them. You will be prompted if authentication fails.
 
+connection-proxy-socks4-remote-dns =
+    .label = Proxy DNS when using SOCKS v4
+    .accesskey = 4
+
 connection-proxy-socks-remote-dns =
     .label = Proxy DNS when using SOCKS v5
     .accesskey = D
