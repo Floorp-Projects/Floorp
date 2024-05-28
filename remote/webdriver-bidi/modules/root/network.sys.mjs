@@ -433,19 +433,20 @@ class NetworkModule extends Module {
    * @param {object=} options
    * @param {string} options.request
    *     The id of the blocked request that should be continued.
-   * @param {BytesValue=} options.body [unsupported]
+   * @param {BytesValue=} options.body
    *     Optional BytesValue to replace the body of the request.
-   * @param {Array<CookieHeader>=} options.cookies [unsupported]
+   * @param {Array<CookieHeader>=} options.cookies
    *     Optional array of cookie header values to replace the cookie header of
    *     the request.
-   * @param {Array<Header>=} options.headers [unsupported]
+   * @param {Array<Header>=} options.headers
    *     Optional array of headers to replace the headers of the request.
    *     request.
-   * @param {string=} options.method [unsupported]
+   * @param {string=} options.method
    *     Optional string to replace the method of the request.
    * @param {string=} options.url [unsupported]
    *     Optional string to replace the url of the request. If the provided url
    *     is not a valid URL, an InvalidArgumentError will be thrown.
+   *     Support will be added in https://bugzilla.mozilla.org/show_bug.cgi?id=1898158
    *
    * @throws {InvalidArgumentError}
    *     Raised if an argument is of an invalid type or value.
@@ -473,10 +474,6 @@ class NetworkModule extends Module {
         body,
         `Expected "body" to be a network.BytesValue, got ${body}`
       );
-
-      throw new lazy.error.UnsupportedOperationError(
-        `"body" not supported yet in network.continueRequest`
-      );
     }
 
     if (cookies !== null) {
@@ -491,12 +488,9 @@ class NetworkModule extends Module {
           `Expected values in "cookies" to be network.CookieHeader, got ${cookie}`
         );
       }
-
-      throw new lazy.error.UnsupportedOperationError(
-        `"cookies" not supported yet in network.continueRequest`
-      );
     }
 
+    const deserializedHeaders = [];
     if (headers !== null) {
       lazy.assert.array(
         headers,
@@ -508,11 +502,19 @@ class NetworkModule extends Module {
           header,
           `Expected values in "headers" to be network.Header, got ${header}`
         );
-      }
 
-      throw new lazy.error.UnsupportedOperationError(
-        `"headers" not supported yet in network.continueRequest`
-      );
+        // Deserialize headers immediately to validate the value
+        const deserializedHeader = this.#deserializeHeader(header);
+        lazy.assert.that(
+          value => this.#isValidHttpToken(value),
+          `Expected "header" name to be a valid HTTP token, got ${deserializedHeader[0]}`
+        )(deserializedHeader[0]);
+        lazy.assert.that(
+          value => this.#isValidHeaderValue(value),
+          `Expected header value to be a valid header value, got ${deserializedHeader[1]}`
+        )(deserializedHeader[1]);
+        deserializedHeaders.push(deserializedHeader);
+      }
     }
 
     if (method !== null) {
@@ -520,10 +522,10 @@ class NetworkModule extends Module {
         method,
         `Expected "method" to be a string, got ${method}`
       );
-
-      throw new lazy.error.UnsupportedOperationError(
-        `"method" not supported yet in network.continueRequest`
-      );
+      lazy.assert.that(
+        value => this.#isValidHttpToken(value),
+        `Expected "method" to be a valid HTTP token, got ${method}`
+      )(method);
     }
 
     if (url !== null) {
@@ -547,6 +549,53 @@ class NetworkModule extends Module {
       throw new lazy.error.InvalidArgumentError(
         `Expected blocked request to be in "beforeRequestSent" phase, got ${phase}`
       );
+    }
+
+    if (method !== null) {
+      request.setRequestMethod(method);
+    }
+
+    if (headers !== null) {
+      // Delete all existing request headers not found in the headers parameter.
+      request.getHeadersList().forEach(([name]) => {
+        if (!headers.some(header => header.name == name)) {
+          request.setRequestHeader(name, "");
+        }
+      });
+
+      // Set all headers specified in the headers parameter.
+      for (const [name, value] of deserializedHeaders) {
+        request.setRequestHeader(name, value);
+      }
+    }
+
+    if (cookies !== null) {
+      let cookieHeader = "";
+      for (const cookie of cookies) {
+        if (cookieHeader != "") {
+          cookieHeader += ";";
+        }
+        cookieHeader += this.#serializeCookieHeader(cookie);
+      }
+
+      let foundCookieHeader = false;
+      const requestHeaders = request.getHeadersList();
+      for (const [name] of requestHeaders) {
+        if (name.toLowerCase() == "cookie") {
+          request.setRequestHeader(name, cookieHeader);
+          foundCookieHeader = true;
+          break;
+        }
+      }
+
+      if (!foundCookieHeader) {
+        request.setRequestHeader("Cookie", cookieHeader);
+      }
+    }
+
+    if (body !== null) {
+      const value = deserializeBytesValue(body);
+      request.setRequestBody(value);
     }
 
     request.wrappedChannel.resume();
@@ -1109,6 +1158,12 @@ class NetworkModule extends Module {
     }
   }
 
+  #deserializeHeader(protocolHeader) {
+    const name = protocolHeader.name;
+    const value = deserializeBytesValue(protocolHeader.value);
+    return [name, value];
+  }
+
   #extractChallenges(response) {
     let headerName;
 
@@ -1308,6 +1363,65 @@ class NetworkModule extends Module {
 
   #getSuspendMarkerText(requestData, phase) {
     return `Request (id: ${requestData.request}) suspended by WebDriver BiDi in ${phase} phase`;
+  }
+
+  #isValidHeaderValue(value) {
+    if (!value.length) {
+      return true;
+    }
+
+    // For non-empty strings check against:
+    // - leading or trailing tabs & spaces
+    // - new lines and null bytes
+    const chars = value.split("");
+    const tabOrSpace = [" ", "\t"];
+    const forbiddenChars = ["\r", "\n", "\0"];
+    return (
+      !tabOrSpace.includes(chars.at(0)) &&
+      !tabOrSpace.includes(chars.at(-1)) &&
+      forbiddenChars.every(c => !chars.includes(c))
+    );
+  }
+
+  /**
+   * This helper is adapted from a C++ validation helper in nsHttp.cpp.
+   *
+   * @see https://searchfox.org/mozilla-central/rev/445a6e86233c733c5557ef44e1d33444adaddefc/netwerk/protocol/http/nsHttp.cpp#169
+   */
+  #isValidHttpToken(token) {
+    // prettier-ignore
+    // This array corresponds to all char codes between 0 and 127, which is the
+    // range of supported char codes for HTTP tokens. Within this range,
+    // accepted char codes are marked with a 1, forbidden char codes with a 0.
+    const validTokenMap = [
+      0, 0, 0, 0, 0, 0, 0, 0,  //   0
+      0, 0, 0, 0, 0, 0, 0, 0,  //   8
+      0, 0, 0, 0, 0, 0, 0, 0,  //  16
+      0, 0, 0, 0, 0, 0, 0, 0,  //  24
+
+      0, 1, 0, 1, 1, 1, 1, 1,  //  32
+      0, 0, 1, 1, 0, 1, 1, 0,  //  40
+      1, 1, 1, 1, 1, 1, 1, 1,  //  48
+      1, 1, 0, 0, 0, 0, 0, 0,  //  56
+
+      0, 1, 1, 1, 1, 1, 1, 1,  //  64
+      1, 1, 1, 1, 1, 1, 1, 1,  //  72
+      1, 1, 1, 1, 1, 1, 1, 1,  //  80
+      1, 1, 1, 0, 0, 0, 1, 1,  //  88
+
+      1, 1, 1, 1, 1, 1, 1, 1,  //  96
+      1, 1, 1, 1, 1, 1, 1, 1,  // 104
+      1, 1, 1, 1, 1, 1, 1, 1,  // 112
+      1, 1, 1, 0, 1, 0, 1, 0   // 120
+    ];
+
+    if (!token.length) {
+      return false;
+    }
+    return token
+      .split("")
+      .map(s => s.charCodeAt(0))
+      .every(c => validTokenMap[c]);
   }
 
   #onAuthRequired = (name, data) => {
@@ -1625,6 +1739,12 @@ class NetworkModule extends Module {
     return params;
   }
 
+  #serializeCookieHeader(cookieHeader) {
+    const name = cookieHeader.name;
+    const value = deserializeBytesValue(cookieHeader.value);
+    return `${name}=${value}`;
+  }
+
   #serializeHeader(name, value) {
     return {
       name,
@@ -1717,6 +1837,25 @@ class NetworkModule extends Module {
       "network.responseStarted",
     ];
   }
+}
+
+/**
+ * Deserialize a network BytesValue.
+ *
+ * @param {BytesValue} bytesValue
+ *     The BytesValue to deserialize.
+ * @returns {string}
+ *     The deserialized value.
+ */
+export function deserializeBytesValue(bytesValue) {
+  const { type, value } = bytesValue;
+
+  if (type === BytesValueType.String) {
+    return value;
+  }
+
+  // For type === BytesValueType.Base64.
+  return atob(value);
 }
 
 export const network = NetworkModule;
