@@ -1240,3 +1240,79 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  pixel_depth:
+    type: quantity
+    unit: int
+    description: >
+      Screen pixel depth property
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898291
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=xxx
+    expires: never
+    data_sensitivity:
+      - technical
+
+  avail_height:
+    type: quantity
+    unit: int
+    description: >
+      Available height property
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898291
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=xxx
+    expires: never
+    data_sensitivity:
+      - technical
+
+  avail_width:
+    type: quantity
+    unit: int
+    description: >
+      Available width property
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898291
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=xxx
+    expires: never
+    data_sensitivity:
+      - technical
+
+  orientation_angle:
+    type: quantity
+    unit: int
+    description: >
+      Orientation angle of the screen
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898291
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=xxx
+    expires: never
+    data_sensitivity:
+      - technical

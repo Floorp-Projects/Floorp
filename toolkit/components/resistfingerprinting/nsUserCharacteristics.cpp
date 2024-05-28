@@ -157,6 +157,12 @@ void PopulateScreenProperties() {
   int32_t colorDepth;
   screen->GetColorDepth(&colorDepth);
   glean::characteristics::color_depth.Set(colorDepth);
+  glean::characteristics::pixel_depth.Set(screen->GetPixelDepth());
+
+  LayoutDeviceIntRect availRect = screen->GetAvailRect();
+  glean::characteristics::avail_height.Set(availRect.Height());
+  glean::characteristics::avail_width.Set(availRect.Width());
+  glean::characteristics::orientation_angle.Set(screen->GetOrientationAngle());
 
   glean::characteristics::color_gamut.Set((int)colorGamut);
   glean::characteristics::color_depth.Set(colorDepth);
