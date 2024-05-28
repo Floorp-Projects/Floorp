@@ -44,6 +44,8 @@ support-files = [
 
 ["browser_address_telemetry.js"]
 
+["browser_autofill_whenhidden.js"]
+
 ["browser_edit_address_doorhanger_display.js"]
 
 ["browser_edit_address_doorhanger_display_state.js"]
