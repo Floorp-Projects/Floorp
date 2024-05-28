@@ -296,7 +296,7 @@
     <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
     <string name="browser_menu_edit_bookmark">Édit markah</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
-    <string name="browser_menu_save_as_pdf">Simpen menangka PDF…</string>
+    <string name="browser_menu_save_as_pdf">Simpen minangka PDF…</string>
     <!-- Browser menu label for turning ON reader view of the current visited page -->
     <string name="browser_menu_turn_on_reader_view">Hurungkeun Pamintonan Pamaca</string>
     <!-- Browser menu label for turning OFF reader view of the current visited page -->
@@ -799,12 +799,19 @@
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Aya add-on anu mugen, matak teu stabil kana sistem. %1$s gagal nyobaan malikan deui add-onna.\n\nAdd-on moal dimimitian ulang dina rintakan anu ayeuna.\n\nMiceun atawa numpurkeun add-on bisa jadi menerkeun ieu masalah.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Coba balikan deui add-on</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Jalankeun deui éksténsi</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Tuluykeun bari add-on tumpur</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Tuluykeun bari add-on tumpur</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Kokolakeun akun</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Robah kecap aksés anjeun, atur pangumpulan data, atawa  pupus akun anjeun</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Singkronkeun ayeuna</string>
     <!-- Preference category for sync -->
@@ -1438,6 +1445,8 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">Tutup tab pribadi?</string>
 
+    <string name="notification_erase_text_android_14">Toél atawa golosorkeun bewara ieu pikeun nutup tab pribadi.</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Pamasaran</string>
 
@@ -1490,6 +1499,8 @@
     <string name="snackbar_private_tab_closed">Tab nyamuni ditutup</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Tab nyamuni ditutup</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">Data panyungsi dipupus</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">BEDO</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -1680,6 +1691,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Sakabéh réréméh (bakal ngabalukarkeun raramatloka jadi teu bener)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Kerem réréméh meuntas-loka</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Béjakeun situs wéb sangkan henteu ngabagi &amp; ngajual data</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Kontén palacak</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1798,6 +1811,10 @@
     <!-- Describes the add to homescreen functionality -->
     <string name="add_to_homescreen_description_2">Anjeun bisa kalawan gampang nambahkeun ieu raramatloka kana layar Tepas ponsél pikeun aksés instan sarta maluruh leuwih gancang kawas muka aplikasi.</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2">Kecap sandi</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2">Simpen kecap sandi</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Naros keur neundeun</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1812,11 +1829,26 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Eusian sandiasma jeung kecap sandi dina séjén aplikasi dina parabot anjeun.</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2">Tambahan sandi</string>
+
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Singkronkeun sandi</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2">Singkronkeun sandi dina sakabéh parabot</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2">Sandi nu disimpen</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Sandi anu anjeun simpen atawa disingkronkeun kana %s bakal didaptarkeun di dieu. Sakumna kecap sandi anu disimpen ku anjeun téh diénkripsi.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Lenyepan ngeunaan singkronisasi</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Iwal</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Hapus sadaya pengecualian</string>
 
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2">Téangan kecap sandi</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Loka</string>
     <!-- The header for the username for a login -->
@@ -1843,6 +1875,10 @@
     <string name="saved_login_reveal_password">Témbongkeun sandi</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Sumputkeun sandi</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2">Buka konci pikeun nempo sandi anu diteundeun</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2">Amankeun kecap sandi anjeun nu disimpen</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Engké</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1859,11 +1895,20 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Panungtun dipaké</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Nyortir ménu kecap sandi</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Eusi otomatis</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Alamat</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2">Cara mayar</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Simpen jeung eusian cara  mayar</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s énkripsi kabéh cara mayar anu disimpen ku anjeun</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Singkronkeun kartu di sakabeh parabot</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1929,6 +1974,8 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Buka konci paranti anjeun</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Buka konci pikeun maké cara mayar anu disimpen</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Tambah alamat</string>
     <!-- Title of the "Edit address" screen -->
@@ -2067,6 +2114,12 @@
     <string name="dialog_delete_negative">Bolay</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Pilihan sandi</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3">Widang téks éditeun pikeun alamat raramat login.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3">Widang téks éditeun pikeun sandiasma login.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2">Widang téks éditeun pikeun sandi kecap.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Simpen parobahan.</string>
     <!--  The page title for editing a saved password. -->
@@ -2220,6 +2273,10 @@
     <string name="review_quality_check_feature_name_2">Pamariksa repiu</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Repiu andelan</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">Campuran bahasan nu dipercaya jeung nu teu dipercaya</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">Repiu lain andelan</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Peunteun disaluyukeun</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
