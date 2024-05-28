@@ -103,6 +103,7 @@ CompositorThreadHolder::CreateCompositorThread() {
     return nullptr;
   }
 
+  CompositorBridgeParent::Setup();
   ImageBridgeParent::Setup();
 
   return compositorThread.forget();
