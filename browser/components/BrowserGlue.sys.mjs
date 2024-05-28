@@ -4472,12 +4472,12 @@ BrowserGlue.prototype = {
         );
 
         lazy.FormAutofillUtils.setOSAuthEnabled(
-          "extensions.formautofill.creditcards.reauth.optout",
+          lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
           ccReauthPrefValue
         );
 
         lazy.LoginHelper.setOSAuthEnabled(
-          "signon.management.page.os-auth.optout",
+          lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,
           pwdReauthPrefValue
         );
       }
