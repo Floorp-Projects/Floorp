@@ -2515,6 +2515,9 @@
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">تەرجىمە جەدۋىلىنى تاقا</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">بەزى تەڭشەكلەرنى ۋاقىتلىق ئىشلەتكىلى بولمايدۇ.</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">تەرجىمە</string>
@@ -2537,6 +2540,9 @@
 
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">«ھەمىشە تەرجىمە قىل» ۋە «ھەرگىز تەرجىمە قىلما» مايىللىقىدىن باشقۇرىدىغان تىل تاللىنىدۇ.</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">تىلنى يۈكلىيەلمەيدۇ. كېيىن قايتا تەكشۈرۈڭ.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2561,6 +2567,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">%1$s نى چىقىرىۋەت</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">تور بېكەتنى يۈكلىيەلمەيدۇ. كېيىن قايتا تەكشۈرۈڭ.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference"> %1$s نى ئۆچۈرەمدۇ؟</string>
@@ -2660,6 +2668,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">بەتكۈچ قۇرۇش قورالى</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">قۇرىدىغان بەتكۈچ سانى</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">تېكىست بۆلىكى بوش</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">پەقەت مۇسپەت پۈتۈن سان كىرگۈزۈڭ</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">نۆلدىن چوڭ سان كىرگۈزۈڭ</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">بىر مەشغۇلاتتا ھاسىللايدىغان ئەڭ كۆپ بەتكۈچ (%1$s) سانىدىن ئېشىپ كەتتى</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">ئاكتىپ بەتكۈچكە قوش</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2680,7 +2698,7 @@
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">تاقا</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">قايتۇرما ئىنكاسىڭىزغا رەھمەت!</string>
+    <string name="micro_survey_feedback_confirmation">قايتۇرما ئىنكاسىڭىزغا رەھمەت!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">بەك رازى</string>
     <!-- Option for likert scale -->
@@ -2692,6 +2710,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">نارازى</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">بەك نارازى</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">راي سىناشنى ئاچ</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">راي سىناشنى تاقا</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">تاقا</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->

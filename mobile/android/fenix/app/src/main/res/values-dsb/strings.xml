@@ -407,8 +407,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Powěźeńka priwatnosći Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Zgóńśo wěcej w našej powěźeńce priwatnosći</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Šćitamy was rad</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -691,10 +689,6 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Trjebny</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Na žycenje</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Websedłowe daty cytaś a změniś</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Websedło wulašowaś</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Za wšykne sedła dowóliś</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -820,8 +814,6 @@
     <string name="preferences_sync_history">Historija</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Cytańske znamjenja</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Gronidła</string>
     <!-- Preference for syncing tabs -->
@@ -848,8 +840,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s wót %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditowe kórty</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Płaśeńske metody</string>
     <!-- Preference for syncing addresses -->
@@ -1801,11 +1791,7 @@
     <string name="add_to_homescreen_description_2">Móžośo startowej wobrazowce swójogo rěda toś to websedło lažko pśidaś, aby direktny pśistup měł a malsnjej z dožywjenim nałoženja pśeglědował.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja a gronidła</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Gronidła</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja a gronidła składowaś</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Gronidła składowaś</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1821,46 +1807,27 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Wužywaŕske mjenja a gronidła w drugich nałoženjach na wašom rěźe zasajźiś.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenje pśidaś</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Gronidło pśidaś</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja synchronizěrowaś</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Gronidła synchronizěrowaś</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja mjazy rědami synchronizěrowaś</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">Gronidła pśez rědy synchronizěrowaś</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Skłaźone pśizjawjenja</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Skłaźone gronidła</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja, kótarež składujośo abo z %s synchronizěrujośo, se how pokažu.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">Gronidła, kótarež składujośo abo z %s synchronizěrujośo, se how nalicyju. Wšykne gronidła, kótarež składujośo, se koděruju.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Zgóńśo wěcej wó Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Zgóńśo wěcej wó sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Wuwześa</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja a gronidła, kótarež se njeskładuju, se how pokažu.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s gronidła za sedła njeskładujo, kótarež su how nalicone.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja a gronidła se za toś te sedła njeskładuju.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s gronidła za toś te sedła njeskładujo.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Wšykne wuwześa wulašowaś</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjenja pytaś</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Gronidła pśepytaś</string>
     <!-- The header for the site that a login is for -->
@@ -1890,16 +1857,10 @@
     <string name="saved_login_reveal_password">Gronidło pokazaś</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Gronidła schowaś</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Za zwobraznjowanje wašych skłaźonych pśizjawjenjow wótwóriś</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">Za zwobraznjowanje wašych skłaźonych kreditowych gronidłow wótwóriś</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Zawěsććo swóje pśizjawjenja a gronidła</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Zawěsććo swóje skłaźone gronidła</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym pśizjawjenjam a gronidłam zajźował, jolic něchten drugi ma waš rěd.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym gronidłam zajźował, jolic něchten drugi ma waš rěd.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1918,8 +1879,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">Mjenju (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Slědnem wužyśu</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Meni pśizjawjeńskich datow sortěrowaś</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Meni „Gronidła sortěrowaś“</string>
@@ -1929,41 +1888,27 @@
     <string name="preferences_autofill">Awtomatiski wupołniś</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adrese</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditowe kórty</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Płaśeńske metody</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kórty składowaś a awtomatiski wupołniś</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Płaśeńske metody składowaś a wupołniś</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Daty su skoděrowane</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s wšykne płaśeńske metody koděrujo, kótarež składujośo</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kórty pśez rědy synchronizěrowaś</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Kórty synchronizěrowaś</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditowu kórtu pśidaś</string>
 
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Kórtu pśidaś</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Skłaźone kórty zastojaś</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Kórty zastojaś</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Adresu pśidaś</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Adrese zastojaś</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Adrese składowaś a awtomatiski wupołniś</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Adrese składowaś a wupołniś</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Informacije ako licby, e-mailowe a rozpósłańske adrese zapśimjeś</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Wopśimujo telefonowe numery a e-mailowe adrese</string>
@@ -1987,8 +1932,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kórtu wulašowaś</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Cośo napšawdu toś tu kreditowu kórtu lašowaś?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Kórtu wulašowaś?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Lašowaś</string>
@@ -2002,23 +1945,14 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Skłaźone kórty</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Pšosym zapódajśo płaśiwy numer kreditoweje kórty</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Zapódajśo płaśiwy kórtowy numer</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Pšosym wupołńśo toś to pólo</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Pśidajśo mě</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Za zwobraznjowanje wašych skłaźonych kreditowych kórtow wótwóriś</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditowe kórty zawěsćiś</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">Zawěsććo swóje skłaźone płaśeńske metody</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym kreditowym kórtam zajźował, jolic něchten drugi ma waš rěd.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">Nastajśo rědowy zastajeński muster, PIN abo gronidło, aby pśistupoju k swójim skłaźonym płaśeńskim metodam zajźował, jolic něchten drugi ma waš rěd.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2028,9 +1962,6 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Wótwóŕśo swój rěd</string>
 
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Blokěrowanje wótpóraś, aby se skłaźone informacije kreditoweje kórty wužywali</string>
-
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">Wótwóriś, aby wy skłaźone płaśeńske metody wužywał</string>
     <!-- Title of the "Add address" screen -->
@@ -2039,12 +1970,6 @@
     <string name="addresses_edit_address">Adresu wobźěłaś</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Adrese zastojaś</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Pśedmě</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Druge pśedmě</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Familijowe mě</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Mě</string>
     <!-- The header for the street address of an address -->
@@ -2070,8 +1995,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Adresu lašowaś</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Cośo napšawdu toś tu adresu wulašowaś?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Toś tu adresu lašowaś?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2170,48 +2093,28 @@
     <string name="login_menu_delete_button">Lašowaś</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Wobźěłaś</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Cośo napšawdu toś to pśizjawjenje lašowaś?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">Cośo napšawdu toś to gronidło lašowaś?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Lašowaś</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Pśetergnuś</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Pśizjawjeńske nastajenja</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Gronidłowe nastajenja</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Wobźěłujobne tekstowe pólo za webadresu pśizjawjenja.</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">Wobźěłujobne tekstowe pólo za adresu websedła.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Wobźěłujobne tekstowe pólo za wužywaŕske mě pśizjawjenja.</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">Wobźěłujobne tekstowe pólo za wužywaŕske mě.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Wobźěłujobne tekstowe pólo za gronidło pśizjawjenja.</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">Wobźěłujobne tekstowe pólo za gronidło.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Změny pśizjawjenja składowaś</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Změny składowaś.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Wobźěłaś</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Gronidło wobźěłaś</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Nowe pśizjawjenje pśidaś</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Gronidło pśidaś</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Gronidło trěbne</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Gronidło zapódaś</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Wužywaŕske mě trěbne.</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Wužywaŕske mě zapódaś</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2621,6 +2524,9 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">Bok Pśełožki zacyniś</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">Někotare nastajenja njejsu nachylu k dispoziciji.</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">Pśełožki</string>
@@ -2642,6 +2548,9 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <string name="automatic_translation_toolbar_title_preference">Awtomatiske pśełožowanje</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">Wubjeŕśo rěc, aby nastajeni „pśecej pśełožyś“ a „nigda njepśełožyś“ zastojał.</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">Rěcy njejsu se dali zacytaś. Pšosym wopytajśo pózdźej hyšći raz.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2666,6 +2575,8 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">%1$s wótwónoźeś</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">Sedła njejsu se dali zacytaś. Pšosym wopytajśo pózdźej hyšći raz.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">%1$s lašowaś?</string>
@@ -2765,6 +2676,16 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">Rěd za napóranje rejtarikow</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Licba rejtarikow, kótarež se maju napóraś</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Tekstowe pólo jo prozne</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Pšosym zapódajśo jano pozitiwne cełe licby</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Pšosym zapódajśo licbu, kótaraž jo wětša ako nula</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Maksimalna licba rejtarikow (%1$s), kótarež daju se w jadnej operaciji generěrowaś, jo pśekšocona</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Aktiwnym rejtarikam pśidaś</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2781,11 +2702,11 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Powěźeńka priwatnosći</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Wótpósłaś</string>
+    <string name="micro_survey_submit_button_label">Wótpósłaś</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">Zacyniś</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Zacyniś</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Źěkujomy se za waš komentar!</string>
+    <string name="micro_survey_feedback_confirmation">Źěkujomy se za waš komentar!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Wjelgin spokojom</string>
     <!-- Option for likert scale -->
@@ -2796,6 +2717,14 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">Njespokojom</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Wjelgin njespokojom</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Napšašowanje wócyniś</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Napšašowanje zacyniś</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Zacyniś</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
