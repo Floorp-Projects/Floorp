@@ -597,15 +597,26 @@ void MediaRawDataWriter::PopFront(size_t aSize) {
 const char* CryptoSchemeToString(const CryptoScheme& aScheme) {
   switch (aScheme) {
     case CryptoScheme::None:
-      return "None";
+      return "none";
     case CryptoScheme::Cenc:
-      return "Cenc";
+      return "cenc";
     case CryptoScheme::Cbcs:
-      return "Cbcs";
+      return "cbcs";
     default:
       MOZ_ASSERT_UNREACHABLE();
       return "";
   }
+}
+
+CryptoScheme StringToCryptoScheme(const nsAString& aString) {
+  if (aString.EqualsLiteral("cenc")) {
+    return CryptoScheme::Cenc;
+  }
+  if (aString.EqualsLiteral("cbcs")) {
+    return CryptoScheme::Cbcs;
+  }
+  // TODO : support cbcs-1-9?
+  return CryptoScheme::None;
 }
 
 }  // namespace mozilla
