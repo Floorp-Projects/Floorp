@@ -1021,6 +1021,21 @@ void DocAccessible::ElementStateChanged(dom::Document* aDocument,
     RefPtr<AccEvent> event = new AccStateChangeEvent(accessible, states::MIXED);
     FireDelayedEvent(event);
   }
+
+  if (aStateMask.HasState(dom::ElementState::DISABLED) &&
+      !nsAccUtils::ARIAAttrValueIs(aElement, nsGkAtoms::aria_disabled,
+                                   nsGkAtoms::_true, eCaseMatters)) {
+    // The DOM disabled state has changed and there is no aria-disabled="true"
+    // taking precedence.
+    RefPtr<AccEvent> event =
+        new AccStateChangeEvent(accessible, states::UNAVAILABLE);
+    FireDelayedEvent(event);
+    event = new AccStateChangeEvent(accessible, states::ENABLED);
+    FireDelayedEvent(event);
+    // This likely changes focusability as well.
+    event = new AccStateChangeEvent(accessible, states::FOCUSABLE);
+    FireDelayedEvent(event);
+  }
 }
 
 void DocAccessible::CharacterDataWillChange(nsIContent* aContent,

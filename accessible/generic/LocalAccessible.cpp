@@ -1283,7 +1283,10 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
 
 bool LocalAccessible::AttributeChangesState(nsAtom* aAttribute) {
   return aAttribute == nsGkAtoms::aria_disabled ||
-         aAttribute == nsGkAtoms::disabled ||
+         // The HTML element disabled state gets handled in
+         // DocAccessible::ElementStateChanged. This matches
+         // LocalAccessible::NativelyUnavailable.
+         (aAttribute == nsGkAtoms::disabled && !mContent->IsHTMLElement()) ||
          aAttribute == nsGkAtoms::tabindex ||
          aAttribute == nsGkAtoms::aria_required ||
          aAttribute == nsGkAtoms::aria_invalid ||
