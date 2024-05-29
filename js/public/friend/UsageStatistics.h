@@ -84,10 +84,11 @@ using JSAccumulateTelemetryDataCallback = void (*)(JSMetric, uint32_t);
 extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
     JSContext* cx, JSAccumulateTelemetryDataCallback callback);
 
-#define FOR_EACH_JS_USE_COUNTER(_) \
-  _(ASMJS, AsmJS)                  \
-  _(WASM, Wasm)                    \
-  _(WASM_LEGACY_EXCEPTIONS, WasmLegacyExceptions)
+#define FOR_EACH_JS_USE_COUNTER(_)                \
+  _(ASMJS, AsmJS)                                 \
+  _(WASM, Wasm)                                   \
+  _(WASM_LEGACY_EXCEPTIONS, WasmLegacyExceptions) \
+  _(SUBCLASSING_ARRAY_TYPE_II, SubclassingArrayTypeII)
 
 /*
  * Use counter names passed to the accumulate use counter callback.
