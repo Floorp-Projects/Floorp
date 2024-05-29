@@ -201,6 +201,7 @@ macosx64-fuzzing/debug:
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
+            - macosx64-llvm-symbolizer
             - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
