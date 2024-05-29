@@ -290,7 +290,7 @@ REMAINING_STEPS=$"
 The rebase process is complete.  The following steps must be completed manually:
 $PATCH_STACK_FIXUP
   ./mach bootstrap --application=browser --no-system-changes && \\
-  ./mach build && \\
+  ./mach clobber && ./mach build && \\
   hg push -r tip --force && \\
   hg push -B $MOZ_BOOKMARK
 "
