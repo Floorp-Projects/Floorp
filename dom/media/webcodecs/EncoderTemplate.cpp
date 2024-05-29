@@ -307,22 +307,21 @@ void EncoderTemplate<EncoderType>::ReportError(const nsresult& aResult) {
 }
 
 template <typename EncoderType>
-template <typename T, typename U>
-void EncoderTemplate<EncoderType>::CopyExtradataToDescriptionIfNeeded(
-    nsIGlobalObject* aGlobal, const T& aConfigInternal, U& aConfig) {
-  if (aConfigInternal.mDescription &&
-      !aConfigInternal.mDescription->IsEmpty()) {
-    auto& abov = aConfig.mDescription.Construct();
-    AutoEntryScript aes(aGlobal, "EncoderConfigToaConfigConfig");
-    size_t lengthBytes = aConfigInternal.mDescription->Length();
-    UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
-    PodCopy(extradata.get(), aConfigInternal.mDescription->Elements(),
-            lengthBytes);
-    JS::Rooted<JSObject*> description(
-        aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
-                                                 std::move(extradata)));
-    JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
-    DebugOnly<bool> rv = abov.Init(aes.cx(), value);
+void EncoderTemplate<EncoderType>::CopyExtradataToDescription(
+    nsIGlobalObject* aGlobal, Span<const uint8_t>& aSrc,
+    OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest) {
+  MOZ_ASSERT(!aSrc.IsEmpty());
+
+  AutoEntryScript aes(aGlobal, "EncoderConfigToaConfigConfig");
+  size_t lengthBytes = aSrc.Length();
+  UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
+  PodCopy(extradata.get(), aSrc.Elements(), lengthBytes);
+  JS::Rooted<JSObject*> description(
+      aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
+                                               std::move(extradata)));
+  JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
+  if (!aDest.Init(aes.cx(), value)) {
+    LOGE("Failed to copy extra data");
   }
 }
 
@@ -385,8 +384,14 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
         decoderConfig.mColorSpace.Construct(std::move(colorSpace));
       }
 
-      CopyExtradataToDescriptionIfNeeded(GetParentObject(),
-                                         decoderConfigInternal, decoderConfig);
+      if (decoderConfigInternal.mDescription &&
+          !decoderConfigInternal.mDescription->IsEmpty()) {
+        Span<const uint8_t> description(
+            decoderConfigInternal.mDescription->Elements(),
+            decoderConfigInternal.mDescription->Length());
+        CopyExtradataToDescription(GetParentObject(), description,
+                                   decoderConfig.mDescription.Construct());
+      }
 
       if (decoderConfigInternal.mDisplayAspectHeight) {
         decoderConfig.mDisplayAspectHeight.Construct(
@@ -470,8 +475,14 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
       decoderConfig.mNumberOfChannels = decoderConfigInternal.mNumberOfChannels;
       decoderConfig.mSampleRate = decoderConfigInternal.mSampleRate;
 
-      CopyExtradataToDescriptionIfNeeded(GetParentObject(),
-                                         decoderConfigInternal, decoderConfig);
+      if (decoderConfigInternal.mDescription &&
+          !decoderConfigInternal.mDescription->IsEmpty()) {
+        Span<const uint8_t> description(
+            decoderConfigInternal.mDescription->Elements(),
+            decoderConfigInternal.mDescription->Length());
+        CopyExtradataToDescription(GetParentObject(), description,
+                                   decoderConfig.mDescription.Construct());
+      }
 
       metadata.mDecoderConfig.Construct(std::move(decoderConfig));
       mOutputNewDecoderConfig = false;
