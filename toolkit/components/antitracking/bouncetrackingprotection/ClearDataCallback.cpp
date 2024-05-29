@@ -84,8 +84,9 @@ NS_IMETHODIMP ClearDataCallback::OnDataDeleted(uint32_t aFailedFlags) {
     // Only record classifications on successful deletion.
     RecordURLClassifierTelemetry();
   }
-  // Always collect clear duration.
+  // Always collect clear duration and purge count.
   RecordClearDurationTelemetry();
+  RecordPurgeCountTelemetry(aFailedFlags != 0);
   return NS_OK;
 }
 
@@ -94,6 +95,17 @@ void ClearDataCallback::RecordClearDurationTelemetry() {
     glean::bounce_tracking_protection::purge_duration.StopAndAccumulate(
         std::move(mClearDurationTimer));
     mClearDurationTimer = 0;
+  }
+}
+
+void ClearDataCallback::RecordPurgeCountTelemetry(bool aFailed) {
+  if (StaticPrefs::privacy_bounceTrackingProtection_enableDryRunMode()) {
+    MOZ_ASSERT(aFailed == 0, "Dry-run purge can't fail");
+    glean::bounce_tracking_protection::purge_count.Get("dry"_ns).Add(1);
+  } else if (aFailed) {
+    glean::bounce_tracking_protection::purge_count.Get("failure"_ns).Add(1);
+  } else {
+    glean::bounce_tracking_protection::purge_count.Get("success"_ns).Add(1);
   }
 }
 
