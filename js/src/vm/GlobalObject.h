@@ -605,6 +605,14 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_RegExp);
   }
 
+  static JSObject* getOrCreateRegExpConstructor(JSContext* cx,
+                                                Handle<GlobalObject*> global) {
+    if (!ensureConstructor(cx, global, JSProto_RegExp)) {
+      return nullptr;
+    }
+    return &global->getConstructor(JSProto_RegExp);
+  }
+
   JSObject* maybeGetRegExpPrototype() {
     if (classIsInitialized(JSProto_RegExp)) {
       return &getPrototype(JSProto_RegExp);

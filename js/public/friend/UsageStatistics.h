@@ -95,7 +95,9 @@ extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
   _(SUBCLASSING_TYPEDARRAY_TYPE_II, SubclassingTypedArrayTypeII)     \
   _(SUBCLASSING_TYPEDARRAY_TYPE_III, SubclassingTypedArrayTypeIII)   \
   _(SUBCLASSING_ARRAYBUFFER_TYPE_III, SubclassingArrayBufferTypeIII) \
-  _(SUBCLASSING_SHAREDARRAYBUFFER_TYPE_III, SubclassingSharedArrayBufferTypeIII)
+  _(SUBCLASSING_SHAREDARRAYBUFFER_TYPE_III,                          \
+    SubclassingSharedArrayBufferTypeIII)                             \
+  _(SUBCLASSING_REGEXP_TYPE_III, SubclassingRegExpTypeIII)
 
 /*
  * Use counter names passed to the accumulate use counter callback.
