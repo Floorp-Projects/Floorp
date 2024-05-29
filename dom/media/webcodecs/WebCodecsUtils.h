@@ -94,6 +94,10 @@ Result<Ok, nsresult> CloneBuffer(
 Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
+bool CopyExtradataToDescription(
+    nsIGlobalObject* aGlobal, Span<const uint8_t>& aSrc,
+    OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest);
+
 /*
  * The following are utilities to convert between VideoColorSpace values to
  * gfx's values.

@@ -165,6 +165,22 @@ Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
   return data->Length() > 0 ? data : nullptr;
 }
 
+bool CopyExtradataToDescription(
+    nsIGlobalObject* aGlobal, Span<const uint8_t>& aSrc,
+    OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest) {
+  MOZ_ASSERT(!aSrc.IsEmpty());
+
+  AutoEntryScript aes(aGlobal, "EncoderConfigToaConfigConfig");
+  size_t lengthBytes = aSrc.Length();
+  UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
+  PodCopy(extradata.get(), aSrc.Elements(), lengthBytes);
+  JS::Rooted<JSObject*> description(
+      aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
+                                               std::move(extradata)));
+  JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
+  return aDest.Init(aes.cx(), value);
+}
+
 /*
  * The following are utilities to convert between VideoColorSpace values to
  * gfx's values.
