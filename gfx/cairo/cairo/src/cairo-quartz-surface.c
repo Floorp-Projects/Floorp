@@ -2223,18 +2223,18 @@ _cairo_quartz_surface_link (cairo_quartz_surface_t *surface,
            in the link attributes. */
         CFURLRef url = NULL;
         CFStringRef name = NULL;
-        if (link_attrs.uri && *link_attrs.uri)
-            url = CFURLCreateWithBytes (NULL,
-                                        (const UInt8 *) link_attrs.uri,
-                                        strlen (link_attrs.uri),
-                                        kCFStringEncodingUTF8,
-                                        NULL);
-        else if (link_attrs.dest && *link_attrs.dest)
+        if (link_attrs.dest && *link_attrs.dest)
             name = CFStringCreateWithBytes (kCFAllocatorDefault,
                                             (const UInt8 *) link_attrs.dest,
                                             strlen (link_attrs.dest),
                                             kCFStringEncodingUTF8,
                                             FALSE);
+        else if (link_attrs.uri && *link_attrs.uri)
+            url = CFURLCreateWithBytes (NULL,
+                                        (const UInt8 *) link_attrs.uri,
+                                        strlen (link_attrs.uri),
+                                        kCFStringEncodingUTF8,
+                                        NULL);
         else /* silently ignore link that doesn't have a usable target */
             goto cleanup;
 

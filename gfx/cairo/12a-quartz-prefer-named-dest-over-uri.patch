@@ -1,0 +1,37 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1716990004 -3600
+#      Wed May 29 14:40:04 2024 +0100
+# Node ID b1e3be6e99abd59d94a1eac4b117d6329282b229
+# Parent  5af7c937b615aa238ce6629d7ec46af5ca17ec5b
+Bug 1896076 - patch 3 - In cairo-quartz-surface, prefer to use link's DEST rather than URI if both are present.
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -2223,18 +2223,18 @@ static cairo_int_status_t
+            in the link attributes. */
+         CFURLRef url = NULL;
+         CFStringRef name = NULL;
+-        if (link_attrs.uri && *link_attrs.uri)
++        if (link_attrs.dest && *link_attrs.dest)
++            name = CFStringCreateWithBytes (kCFAllocatorDefault,
++                                            (const UInt8 *) link_attrs.dest,
++                                            strlen (link_attrs.dest),
++                                            kCFStringEncodingUTF8,
++                                            FALSE);
++        else if (link_attrs.uri && *link_attrs.uri)
+             url = CFURLCreateWithBytes (NULL,
+                                         (const UInt8 *) link_attrs.uri,
+                                         strlen (link_attrs.uri),
+                                         kCFStringEncodingUTF8,
+                                         NULL);
+-        else if (link_attrs.dest && *link_attrs.dest)
+-            name = CFStringCreateWithBytes (kCFAllocatorDefault,
+-                                            (const UInt8 *) link_attrs.dest,
+-                                            strlen (link_attrs.dest),
+-                                            kCFStringEncodingUTF8,
+-                                            FALSE);
+         else /* silently ignore link that doesn't have a usable target */
+             goto cleanup;
+ 
