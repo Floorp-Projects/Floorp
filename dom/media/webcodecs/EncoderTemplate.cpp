@@ -306,25 +306,6 @@ void EncoderTemplate<EncoderType>::ReportError(const nsresult& aResult) {
   cb->Call(*e);
 }
 
-template <typename EncoderType>
-void EncoderTemplate<EncoderType>::CopyExtradataToDescription(
-    nsIGlobalObject* aGlobal, Span<const uint8_t>& aSrc,
-    OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest) {
-  MOZ_ASSERT(!aSrc.IsEmpty());
-
-  AutoEntryScript aes(aGlobal, "EncoderConfigToaConfigConfig");
-  size_t lengthBytes = aSrc.Length();
-  UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
-  PodCopy(extradata.get(), aSrc.Elements(), lengthBytes);
-  JS::Rooted<JSObject*> description(
-      aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
-                                               std::move(extradata)));
-  JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
-  if (!aDest.Init(aes.cx(), value)) {
-    LOGE("Failed to copy extra data");
-  }
-}
-
 template <>
 void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
     const nsTArray<RefPtr<MediaRawData>>&& aData) {
@@ -389,8 +370,11 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
         Span<const uint8_t> description(
             decoderConfigInternal.mDescription->Elements(),
             decoderConfigInternal.mDescription->Length());
-        CopyExtradataToDescription(GetParentObject(), description,
-                                   decoderConfig.mDescription.Construct());
+        if (!CopyExtradataToDescription(
+                GetParentObject(), description,
+                decoderConfig.mDescription.Construct())) {
+          LOGE("Failed to copy extra data");
+        }
       }
 
       if (decoderConfigInternal.mDisplayAspectHeight) {
@@ -480,8 +464,11 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
         Span<const uint8_t> description(
             decoderConfigInternal.mDescription->Elements(),
             decoderConfigInternal.mDescription->Length());
-        CopyExtradataToDescription(GetParentObject(), description,
-                                   decoderConfig.mDescription.Construct());
+        if (!CopyExtradataToDescription(
+                GetParentObject(), description,
+                decoderConfig.mDescription.Construct())) {
+          LOGE("Failed to copy extra data");
+        }
       }
 
       metadata.mDecoderConfig.Construct(std::move(decoderConfig));
