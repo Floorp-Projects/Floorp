@@ -10,6 +10,7 @@
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/loader/LoadedScript.h"
 #include "js/loader/ScriptFetchOptions.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -86,6 +87,28 @@ static uint32_t MutationBitForEventType(EventMessage aEventType) {
       break;
   }
   return 0;
+}
+
+static DeprecatedOperations DeprecatedMutationOperation(EventMessage aMessage) {
+  switch (aMessage) {
+    case eLegacySubtreeModified:
+      return DeprecatedOperations::eDOMSubtreeModified;
+    case eLegacyNodeInserted:
+      return DeprecatedOperations::eDOMNodeInserted;
+    case eLegacyNodeRemoved:
+      return DeprecatedOperations::eDOMNodeRemoved;
+    case eLegacyNodeRemovedFromDocument:
+      return DeprecatedOperations::eDOMNodeRemovedFromDocument;
+    case eLegacyNodeInsertedIntoDocument:
+      return DeprecatedOperations::eDOMNodeInsertedIntoDocument;
+    case eLegacyAttrModified:
+      return DeprecatedOperations::eDOMAttrModified;
+    case eLegacyCharacterDataModified:
+      return DeprecatedOperations::eDOMCharacterDataModified;
+    default:
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+          "aMessage restricted by switch in AddEventListenerInternal");
+  }
 }
 
 class ListenerMapEntryComparator {
@@ -352,28 +375,27 @@ void EventListenerManager::AddEventListenerInternal(
       case eLegacyNodeRemovedFromDocument:
       case eLegacyNodeInsertedIntoDocument:
       case eLegacyAttrModified:
-      case eLegacyCharacterDataModified:
-#ifdef DEBUG
+      case eLegacyCharacterDataModified: {
         MOZ_ASSERT(!aFlags.mInSystemGroup,
                    "Legacy mutation events shouldn't be handled by ourselves");
         MOZ_ASSERT(listener->mListenerType != Listener::eNativeListener,
                    "Legacy mutation events shouldn't be handled in C++ code");
-        if (nsINode* targetNode = nsINode::FromEventTargetOrNull(mTarget)) {
-          MOZ_ASSERT(!nsContentUtils::IsChromeDoc(targetNode->OwnerDoc()),
-                     "Legacy mutation events shouldn't be handled in chrome "
-                     "documents");
-          MOZ_ASSERT(!targetNode->IsInNativeAnonymousSubtree(),
-                     "Legacy mutation events shouldn't listen to mutations in "
-                     "native anonymous subtrees");
-        }
-#endif  // #ifdef DEBUG
+        DebugOnly<nsINode*> targetNode =
+            nsINode::FromEventTargetOrNull(mTarget);
+        // Legacy mutation events shouldn't be handled in chrome documents.
+        MOZ_ASSERT_IF(targetNode,
+                      !nsContentUtils::IsChromeDoc(targetNode->OwnerDoc()));
+        // Legacy mutation events shouldn't listen to mutations in native
+        // anonymous subtrees.
+        MOZ_ASSERT_IF(targetNode, !targetNode->IsInNativeAnonymousSubtree());
         // For mutation listeners, we need to update the global bit on the DOM
         // window. Otherwise we won't actually fire the mutation event.
         mMayHaveMutationListeners = true;
         // Go from our target to the nearest enclosing DOM window.
         if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
           if (Document* doc = window->GetExtantDoc()) {
-            doc->WarnOnceAbout(DeprecatedOperations::eMutationEvent);
+            doc->WarnOnceAbout(
+                DeprecatedMutationOperation(resolvedEventMessage));
           }
           // If resolvedEventMessage is eLegacySubtreeModified, we need to
           // listen all mutations. nsContentUtils::HasMutationListeners relies
@@ -384,6 +406,7 @@ void EventListenerManager::AddEventListenerInternal(
                   : MutationBitForEventType(resolvedEventMessage));
         }
         break;
+      }
       case ePointerEnter:
       case ePointerLeave:
         mMayHavePointerEnterLeaveEventListener = true;
