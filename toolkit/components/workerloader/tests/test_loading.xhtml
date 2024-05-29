@@ -20,7 +20,7 @@ let main = this;
 function test() {
   info("Starting test " + document.uri);
 
-  worker = new ChromeWorker("worker_test_loading.js");
+  worker = new ChromeWorker("test_loading.worker.js");
   SimpleTest.waitForExplicitFinish();
   info("Chrome worker created");
   worker_handler(worker);

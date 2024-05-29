@@ -57,7 +57,7 @@ add_task(async function test_webRequest_chromeworker_events() {
   let extension = ExtensionTestUtils.loadExtension(testExtension);
   await extension.startup();
   await new Promise(resolve => {
-    let worker = new ChromeWorker("webrequest_chromeworker.js");
+    let worker = new ChromeWorker("webrequest_chrome.worker.js");
     worker.onmessage = () => {
       ok("chrome worker fetch finished");
       resolve();

@@ -77,7 +77,7 @@
       ok(dir.exists() && dir.isDirectory(), "Chrome test dir doesn't exist?!");
       setupLibs(dir);
 
-      var worker = new ChromeWorker("ctypes_worker.js");
+      var worker = new ChromeWorker("ctypes.worker.js");
       worker.onmessage = function(event) {
         is(event.data, "Done!", "Wrong message!");
         cleanupLibs(dir);

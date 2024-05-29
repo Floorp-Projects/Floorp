@@ -10,9 +10,9 @@ support-files = [
   "moduleH-module-dot-exports.js",
   "moduleI-depends.js",
   "moduleJ-dependency.js",
+  "test_loading.worker.js",
   "utils_mainthread.js",
   "utils_worker.js",
-  "worker_test_loading.js",
 ]
 
 ["test_loading.xhtml"]
