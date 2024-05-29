@@ -70,7 +70,8 @@ class DecoderTemplate : public DOMEventTargetHelper {
       : public ControlMessage,
         public MessageRequestHolder<DecoderAgent::ConfigurePromise> {
    public:
-    static ConfigureMessage* Create(UniquePtr<ConfigTypeInternal>&& aConfig);
+    static ConfigureMessage* Create(
+        already_AddRefed<ConfigTypeInternal> aConfig);
 
     ~ConfigureMessage() = default;
     virtual void Cancel() override { Disconnect(); }
@@ -78,13 +79,15 @@ class DecoderTemplate : public DOMEventTargetHelper {
     virtual nsCString ToString() const override;
     virtual ConfigureMessage* AsConfigureMessage() override { return this; }
     const ConfigTypeInternal& Config() { return *mConfig; }
-    UniquePtr<ConfigTypeInternal> TakeConfig() { return std::move(mConfig); }
+    already_AddRefed<ConfigTypeInternal> TakeConfig() {
+      return mConfig.forget();
+    }
 
    private:
     ConfigureMessage(WebCodecsId aConfigId,
-                     UniquePtr<ConfigTypeInternal>&& aConfig);
+                     already_AddRefed<ConfigTypeInternal> aConfig);
 
-    UniquePtr<ConfigTypeInternal> mConfig;
+    RefPtr<ConfigTypeInternal> mConfig;
     const nsCString mCodec;
   };
 
@@ -197,7 +200,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   // Returns true when mAgent can be created.
   bool CreateDecoderAgent(DecoderAgent::Id aId,
-                          UniquePtr<ConfigTypeInternal>&& aConfig,
+                          already_AddRefed<ConfigTypeInternal> aConfig,
                           UniquePtr<TrackInfo>&& aInfo);
   void DestroyDecoderAgentIfAny();
 
@@ -234,7 +237,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   // will be destroyed when "reset" or another "configure" is called (spec
   // allows calling two "configure" without a "reset" in between).
   RefPtr<DecoderAgent> mAgent;
-  UniquePtr<ConfigTypeInternal> mActiveConfig;
+  RefPtr<ConfigTypeInternal> mActiveConfig;
 
   // Used to add a nsIAsyncShutdownBlocker on main thread to block
   // xpcom-shutdown before the underlying MediaDataDecoder is created. The

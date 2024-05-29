@@ -44,8 +44,11 @@ struct VideoColorSpaceInternal {
 
 class VideoDecoderConfigInternal {
  public:
-  static UniquePtr<VideoDecoderConfigInternal> Create(
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderConfigInternal);
+
+  static RefPtr<VideoDecoderConfigInternal> Create(
       const VideoDecoderConfig& aConfig);
+
   VideoDecoderConfigInternal(const nsAString& aCodec,
                              Maybe<uint32_t>&& aCodedHeight,
                              Maybe<uint32_t>&& aCodedWidth,
@@ -55,7 +58,6 @@ class VideoDecoderConfigInternal {
                              Maybe<uint32_t>&& aDisplayAspectWidth,
                              const HardwareAcceleration& aHardwareAcceleration,
                              Maybe<bool>&& aOptimizeForLatency);
-  ~VideoDecoderConfigInternal() = default;
 
   nsCString ToString() const;
 
@@ -91,6 +93,9 @@ class VideoDecoderConfigInternal {
   Maybe<uint32_t> mDisplayAspectWidth;
   HardwareAcceleration mHardwareAcceleration;
   Maybe<bool> mOptimizeForLatency;
+
+ private:
+  ~VideoDecoderConfigInternal() = default;
 };
 
 class VideoDecoderTraits {
@@ -107,7 +112,7 @@ class VideoDecoderTraits {
   static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
       const ConfigTypeInternal& aConfig);
   static bool Validate(const ConfigType& aConfig, nsCString& aErrorMessage);
-  static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
+  static RefPtr<ConfigTypeInternal> CreateConfigInternal(
       const ConfigType& aConfig);
   static bool IsKeyChunk(const InputType& aInput);
   static UniquePtr<InputTypeInternal> CreateInputInternal(
@@ -116,12 +121,14 @@ class VideoDecoderTraits {
 
 class AudioDecoderConfigInternal {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioDecoderConfigInternal);
+
+  static RefPtr<AudioDecoderConfigInternal> Create(
+      const AudioDecoderConfig& aConfig);
+
   AudioDecoderConfigInternal(const nsAString& aCodec, uint32_t aSampleRate,
                              uint32_t aNumberOfChannels,
                              already_AddRefed<MediaByteBuffer> aDescription);
-  static UniquePtr<AudioDecoderConfigInternal> Create(
-      const AudioDecoderConfig& aConfig);
-  ~AudioDecoderConfigInternal() = default;
 
   bool Equals(const AudioDecoderConfigInternal& aOther) const {
     if (mDescription != aOther.mDescription) {
@@ -152,6 +159,9 @@ class AudioDecoderConfigInternal {
   HardwareAcceleration mHardwareAcceleration =
       HardwareAcceleration::No_preference;
   Maybe<bool> mOptimizeForLatency;
+
+ private:
+  ~AudioDecoderConfigInternal() = default;
 };
 
 class AudioDecoderTraits {
@@ -168,7 +178,7 @@ class AudioDecoderTraits {
   static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
       const ConfigTypeInternal& aConfig);
   static bool Validate(const ConfigType& aConfig, nsCString& aErrorMessage);
-  static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
+  static RefPtr<ConfigTypeInternal> CreateConfigInternal(
       const ConfigType& aConfig);
   static bool IsKeyChunk(const InputType& aInput);
   static UniquePtr<InputTypeInternal> CreateInputInternal(
