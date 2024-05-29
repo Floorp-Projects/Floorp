@@ -983,6 +983,11 @@ bool js::IsCrossRealmArrayConstructor(JSContext* cx, JSObject* obj,
   return true;
 }
 
+// Returns true iff we know for -sure- that it is definitely safe to use the
+// realm's array constructor.
+//
+// This function is conservative as it may return false for cases which
+// ultimately do use the array constructor.
 static MOZ_ALWAYS_INLINE bool IsArraySpecies(JSContext* cx,
                                              HandleObject origArray) {
   if (MOZ_UNLIKELY(origArray->is<ProxyObject>())) {
