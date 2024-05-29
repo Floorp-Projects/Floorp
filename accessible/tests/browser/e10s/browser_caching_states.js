@@ -742,3 +742,80 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test the unavailable state.
+ */
+addAccessibleTask(
+  `
+<input id="input" disabled>
+<fieldset id="fieldset" disabled>
+  <input id="fieldsetInput">
+</fieldset>
+<div id="ariaDisabled" aria-disabled="true" role="button">ariaDisabled</div>
+<input id="enabled">
+  `,
+  async function testUnavailable(browser, docAcc) {
+    const input = findAccessibleChildByID(docAcc, "input");
+    testStates(input, STATE_UNAVAILABLE, 0, STATE_FOCUSABLE);
+    info("Enabling input");
+    let changed = waitForEvents([
+      stateChangeEventArgs(input, STATE_UNAVAILABLE, false),
+      stateChangeEventArgs(input, STATE_FOCUSABLE, true),
+    ]);
+    await invokeSetAttribute(browser, "input", "disabled", null);
+    await changed;
+    testStates(input, STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+    info("Disabling input");
+    changed = waitForEvents([
+      stateChangeEventArgs(input, STATE_UNAVAILABLE, true),
+      stateChangeEventArgs(input, STATE_FOCUSABLE, false),
+    ]);
+    await invokeSetAttribute(browser, "input", "disabled", "true");
+    await changed;
+    testStates(input, STATE_UNAVAILABLE, 0, STATE_FOCUSABLE);
+
+    const fieldset = findAccessibleChildByID(docAcc, "fieldset");
+    testStates(fieldset, STATE_UNAVAILABLE);
+    const fieldsetInput = findAccessibleChildByID(docAcc, "fieldsetInput");
+    testStates(fieldsetInput, STATE_UNAVAILABLE, 0, STATE_FOCUSABLE);
+    info("Enabling fieldset");
+    changed = waitForEvents([
+      stateChangeEventArgs(fieldset, STATE_UNAVAILABLE, false),
+      stateChangeEventArgs(fieldsetInput, STATE_UNAVAILABLE, false),
+      stateChangeEventArgs(fieldsetInput, STATE_FOCUSABLE, true),
+    ]);
+    await invokeSetAttribute(browser, "fieldset", "disabled", null);
+    await changed;
+    testStates(fieldset, 0, 0, STATE_UNAVAILABLE);
+    testStates(fieldsetInput, STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+    info("Disabling fieldset");
+    changed = waitForEvents([
+      stateChangeEventArgs(fieldset, STATE_UNAVAILABLE, true),
+      stateChangeEventArgs(fieldsetInput, STATE_UNAVAILABLE, true),
+      stateChangeEventArgs(fieldsetInput, STATE_FOCUSABLE, false),
+    ]);
+    await invokeSetAttribute(browser, "fieldset", "disabled", "true");
+    await changed;
+    testStates(fieldset, STATE_UNAVAILABLE);
+    testStates(fieldsetInput, STATE_UNAVAILABLE, 0, STATE_FOCUSABLE);
+
+    const ariaDisabled = findAccessibleChildByID(docAcc, "ariaDisabled");
+    testStates(ariaDisabled, STATE_UNAVAILABLE);
+    info("Enabling ariaDisabled");
+    changed = waitForStateChange(ariaDisabled, STATE_UNAVAILABLE, false);
+    await invokeSetAttribute(browser, "ariaDisabled", "aria-disabled", null);
+    await changed;
+    testStates(ariaDisabled, 0, 0, STATE_UNAVAILABLE);
+    info("Disabling ariaDisabled");
+    changed = waitForStateChange(ariaDisabled, STATE_UNAVAILABLE, true);
+    await invokeSetAttribute(browser, "ariaDisabled", "aria-disabled", "true");
+    await changed;
+    testStates(ariaDisabled, STATE_UNAVAILABLE);
+
+    // Test a control that is initially enabled.
+    const enabled = findAccessibleChildByID(docAcc, "enabled");
+    testStates(enabled, 0, 0, STATE_UNAVAILABLE);
+  },
+  { chrome: true, topLevel: true }
+);
