@@ -22,8 +22,6 @@
 
 namespace mozilla::uniffi {
 
-class ScaffoldingConverterTagDefault {};
-
 // Handle converting types between JS and Rust
 //
 // Scaffolding conversions are done using a 2 step process:
@@ -37,7 +35,7 @@ class ScaffoldingConverterTagDefault {};
 // ownership so we shouldn't free the buffer in this case.
 //
 // For most other types, we just use the Rust type as the intermediate type.
-template <typename T, typename Tag = ScaffoldingConverterTagDefault>
+template <typename T>
 class ScaffoldingConverter {
  public:
   using RustType = T;

@@ -27,6 +27,7 @@ export class UniFFITypeError extends TypeError {
 
   addItemDescriptionPart(part) {
     this.itemDescriptionParts.push(part);
+    this.updateMessage();
   }
 
   itemDescription() {
@@ -35,7 +36,7 @@ export class UniFFITypeError extends TypeError {
     return itemDescriptionParts.join("");
   }
 
-  get message() {
-    return `${this.itemDescription()}: ${this.reason}`;
+  updateMessage() {
+    this.message = `${this.itemDescription()}: ${this.reason}`;
   }
 }
