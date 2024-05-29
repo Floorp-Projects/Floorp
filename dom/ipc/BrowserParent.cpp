@@ -4086,15 +4086,14 @@ static BrowserParent* GetTopLevelBrowserParent(BrowserParent* aBrowserParent) {
 
 mozilla::ipc::IPCResult BrowserParent::RecvRequestPointerLock(
     RequestPointerLockResolver&& aResolve) {
-  nsCString error;
   if (sTopLevelWebFocus != GetTopLevelBrowserParent(this)) {
-    error = "PointerLockDeniedNotFocused";
-  } else if (!PointerLockManager::SetLockedRemoteTarget(this)) {
-    error = "PointerLockDeniedInUse";
-  } else {
-    PointerEventHandler::ReleaseAllPointerCaptureRemoteTarget();
+    aResolve("PointerLockDeniedNotFocused"_ns);
+    return IPC_OK();
   }
-  aResolve(error);
+
+  nsCString error;
+  PointerLockManager::SetLockedRemoteTarget(this, error);
+  aResolve(std::move(error));
   return IPC_OK();
 }
 
