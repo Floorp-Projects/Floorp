@@ -145,7 +145,7 @@ constexpr auto SAMESITE_MDN_URL =
 
 namespace {
 
-void ComposeCookieString(nsTArray<Cookie*>& aCookieList,
+void ComposeCookieString(nsTArray<RefPtr<Cookie>>& aCookieList,
                          nsACString& aCookieString) {
   for (Cookie* cookie : aCookieList) {
     // check if we have anything to write
@@ -421,7 +421,7 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     principals.AppendElement(aDocument->PartitionedPrincipal());
   }
 
-  nsTArray<Cookie*> cookieList;
+  nsTArray<RefPtr<Cookie>> cookieList;
 
   for (auto& principal : principals) {
     if (!CookieCommons::IsSchemeSupported(principal)) {
@@ -580,7 +580,7 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
     MOZ_ASSERT(!partitionedOriginAttributes.mPartitionKey.IsEmpty());
   }
 
-  AutoTArray<Cookie*, 8> foundCookieList;
+  AutoTArray<RefPtr<Cookie>, 8> foundCookieList;
   GetCookiesForURI(
       aHostURI, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
@@ -1039,7 +1039,7 @@ void CookieService::GetCookiesForURI(
     bool aHadCrossSiteRedirects, bool aHttpBound,
     bool aAllowSecureCookiesToInsecureOrigin,
     const nsTArray<OriginAttributes>& aOriginAttrsList,
-    nsTArray<Cookie*>& aCookieList) {
+    nsTArray<RefPtr<Cookie>>& aCookieList) {
   NS_ASSERTION(aHostURI, "null host!");
 
   if (!CookieCommons::IsSchemeSupported(aHostURI)) {

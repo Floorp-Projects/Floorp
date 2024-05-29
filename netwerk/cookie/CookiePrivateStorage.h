@@ -17,7 +17,7 @@ class CookiePrivateStorage final : public CookieStorage {
  public:
   static already_AddRefed<CookiePrivateStorage> Create();
 
-  void StaleCookies(const nsTArray<Cookie*>& aCookieList,
+  void StaleCookies(const nsTArray<RefPtr<Cookie>>& aCookieList,
                     int64_t aCurrentTimeInUsec) override;
 
   void Close() override{};

@@ -130,7 +130,7 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
   static void CreateOrUpdatePurgeList(nsCOMPtr<nsIArray>& aPurgedList,
                                       nsICookie* aCookie);
 
-  virtual void StaleCookies(const nsTArray<Cookie*>& aCookieList,
+  virtual void StaleCookies(const nsTArray<RefPtr<Cookie>>& aCookieList,
                             int64_t aCurrentTimeInUsec) = 0;
 
   virtual void Close() = 0;
