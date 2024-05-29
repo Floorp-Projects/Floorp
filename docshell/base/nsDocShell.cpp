@@ -12683,8 +12683,6 @@ class OnLinkClickEvent : public Runnable {
                    bool aIsTrusted, nsIPrincipal* aTriggeringPrincipal);
 
   NS_IMETHOD Run() override {
-    AutoPopupStatePusher popupStatePusher(mPopupState);
-
     // We need to set up an AutoJSAPI here for the following reason: When we
     // do OnLinkClickSync we'll eventually end up in
     // nsGlobalWindow::OpenInternal which only does popup blocking if
@@ -12704,7 +12702,6 @@ class OnLinkClickEvent : public Runnable {
   nsCOMPtr<nsIContent> mContent;
   RefPtr<nsDocShellLoadState> mLoadState;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  PopupBlocker::PopupControlState mPopupState;
   bool mNoOpenerImplied;
   bool mIsTrusted;
 };
@@ -12718,7 +12715,6 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler, nsIContent* aContent,
       mContent(aContent),
       mLoadState(aLoadState),
       mTriggeringPrincipal(aTriggeringPrincipal),
-      mPopupState(PopupBlocker::GetPopupControlState()),
       mNoOpenerImplied(aNoOpenerImplied),
       mIsTrusted(aIsTrusted) {}
 
