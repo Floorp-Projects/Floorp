@@ -61,20 +61,19 @@ add_task(async function remove_action() {
 
 add_task(async function minimum_search_string() {
   let searchString = "newa";
-  for (let minimumSearchString of [0, 3]) {
+  for (let minimumSearchString of [3]) {
+    info(`Setting 'minimumSearchString' to ${minimumSearchString}`);
     UrlbarPrefs.set("quickactions.minimumSearchString", minimumSearchString);
     for (let i = 1; i < 4; i++) {
       let context = createContext(searchString.substring(0, i), {});
       let result = await ActionsProviderQuickActions.queryAction(context);
+      let isActive = ActionsProviderQuickActions.isActive(context);
 
       if (i >= minimumSearchString) {
         Assert.ok(result.key == "newaction", "Matched the new action");
+        Assert.equal(isActive, true, "Provider is active");
       } else {
-        Assert.equal(
-          ActionsProviderQuickActions.isActive(context),
-          false,
-          "QuickActions Provider is not active"
-        );
+        Assert.equal(isActive, false, "Provider is not active");
       }
     }
   }

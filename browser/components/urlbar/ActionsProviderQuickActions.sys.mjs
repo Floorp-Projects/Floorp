@@ -32,7 +32,7 @@ class ProviderQuickActions extends ActionsProvider {
       lazy.UrlbarPrefs.getScotchBonnetPref(ENABLED_PREF) &&
       !queryContext.searchMode &&
       queryContext.trimmedSearchString.length < 50 &&
-      queryContext.trimmedSearchString.length >
+      queryContext.trimmedSearchString.length >=
         lazy.UrlbarPrefs.get(MIN_SEARCH_PREF)
     );
   }
