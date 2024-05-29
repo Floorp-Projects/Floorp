@@ -156,6 +156,15 @@ Result<Ok, nsresult> CloneBuffer(
   return Ok();
 }
 
+Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
+  RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
+  if (!AppendTypedArrayDataTo(aBuffer, *data)) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
+  return data->Length() > 0 ? data : nullptr;
+}
+
 /*
  * The following are utilities to convert between VideoColorSpace values to
  * gfx's values.
@@ -575,15 +584,6 @@ nsCString ConfigToString(const VideoDecoderConfig& aConfig) {
   auto internal = VideoDecoderConfigInternal::Create(aConfig);
 
   return internal->ToString();
-}
-
-Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
-  if (!AppendTypedArrayDataTo(aBuffer, *data)) {
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
-  return data->Length() > 0 ? data : nullptr;
 }
 
 bool IsSupportedVideoCodec(const nsAString& aCodec) {
