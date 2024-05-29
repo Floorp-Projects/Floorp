@@ -173,9 +173,9 @@ class EncoderTemplate : public DOMEventTargetHelper {
   virtual OutputConfigType EncoderConfigToDecoderConfig(
       nsIGlobalObject* aGlobalObject, const RefPtr<MediaRawData>& aData,
       const ConfigTypeInternal& aOutputConfig) const = 0;
-  template <typename T, typename U>
-  void CopyExtradataToDescriptionIfNeeded(nsIGlobalObject* aGlobal,
-                                          const T& aConfigInternal, U& aConfig);
+  void CopyExtradataToDescription(
+      nsIGlobalObject* aGlobal, Span<const uint8_t>& aSrc,
+      OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest);
   /* Internal member variables and functions */
  protected:
   // EncoderTemplate can run on either main thread or worker thread.
