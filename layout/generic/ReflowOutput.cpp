@@ -8,6 +8,7 @@
 
 #include "mozilla/ReflowOutput.h"
 #include "mozilla/ReflowInput.h"
+#include "mozilla/WritingModes.h"
 
 namespace mozilla {
 
@@ -32,11 +33,11 @@ nsRect OverflowAreas::GetOverflowClipRect(const nsRect& aRectToClip,
   auto inflatedBounds = aBounds;
   inflatedBounds.Inflate(aOverflowMargin);
   auto clip = aRectToClip;
-  if (aClipAxes & PhysicalAxes::Vertical) {
+  if (aClipAxes.contains(PhysicalAxis::Vertical)) {
     clip.y = inflatedBounds.y;
     clip.height = inflatedBounds.height;
   }
-  if (aClipAxes & PhysicalAxes::Horizontal) {
+  if (aClipAxes.contains(PhysicalAxis::Horizontal)) {
     clip.x = inflatedBounds.x;
     clip.width = inflatedBounds.width;
   }
