@@ -27,8 +27,8 @@ INCLUDE_VERSION_REGEXES = {
     "nonbeta": r"'^\d+\.\d+(\.\d+)?$'",
     # Same as nonbeta, except for the esr suffix
     "esr": r"'^\d+\.\d+(\.\d+)?esr$'",
-    # Previous esr versions, for update testing before we update users to esr115
-    "esr115-next": r"'^(52|60|68|78|91|102)+\.\d+(\.\d+)?esr$'",
+    # Previous esr versions, for update testing before we update users to esr128
+    "esr128-next": r"'^(52|60|68|78|91|102|115)+\.\d+(\.\d+)?esr$'",
 }
 
 MAR_CHANNEL_ID_OVERRIDE_REGEXES = {

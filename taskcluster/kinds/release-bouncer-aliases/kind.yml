@@ -73,7 +73,8 @@ jobs:
                     firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
                     firefox-esr-langpack-latest-ssl: langpack
-                esrXXX:  # XXX - to change when we branch next ESR
+                esr128:
+                    # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
                     firefox-esr-next-msi-latest-ssl: msi
