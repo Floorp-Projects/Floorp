@@ -2695,12 +2695,10 @@ impl<'a> SceneBuilder<'a> {
         let spatial_node_index = self.get_space(spatial_id);
         let external_scroll_offset = self.current_external_scroll_offset(spatial_node_index);
 
-        let mut snapped_mask_rect = self.snap_rect(
-            &image_mask.rect,
+        let snapped_mask_rect = self.snap_rect(
+            &image_mask.rect.translate(external_scroll_offset),
             spatial_node_index,
         );
-        snapped_mask_rect = snapped_mask_rect.translate(external_scroll_offset);
-
         let points: Vec<LayoutPoint> = points_range.iter().collect();
 
         // If any points are provided, then intern a polygon with the points and fill rule.
@@ -2745,12 +2743,10 @@ impl<'a> SceneBuilder<'a> {
         let spatial_node_index = self.get_space(spatial_id);
         let external_scroll_offset = self.current_external_scroll_offset(spatial_node_index);
 
-        let mut snapped_clip_rect = self.snap_rect(
-            clip_rect,
+        let snapped_clip_rect = self.snap_rect(
+            &clip_rect.translate(external_scroll_offset),
             spatial_node_index,
         );
-
-        snapped_clip_rect = snapped_clip_rect.translate(external_scroll_offset);
 
         let item = ClipItemKey {
             kind: ClipItemKeyKind::rectangle(snapped_clip_rect, ClipMode::Clip),
@@ -2780,13 +2776,10 @@ impl<'a> SceneBuilder<'a> {
         let spatial_node_index = self.get_space(spatial_id);
         let external_scroll_offset = self.current_external_scroll_offset(spatial_node_index);
 
-        let mut snapped_region_rect = self.snap_rect(
+        let snapped_region_rect = self.snap_rect(
             &clip.rect.translate(external_scroll_offset),
             spatial_node_index,
         );
-
-        snapped_region_rect = snapped_region_rect.translate(external_scroll_offset);
-
         let item = ClipItemKey {
             kind: ClipItemKeyKind::rounded_rect(
                 snapped_region_rect,
