@@ -7,10 +7,15 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
-// The maximum length of a pathanme - calculated as MAX_PATH minus the null terminator character
-export const MAX_PATHNAME = AppConstants.platform == "win" ? 259 : 1023;
-export const MAX_LEAFNAME = MAX_PATHNAME - 32;
-export const FALLBACK_MAX_LEAFNAME = 64;
+// Windows has a total path length of 259 characters so we have to calculate
+// the max filename length by
+// MAX_PATH_LENGTH_WINDOWS - downloadDir length - null terminator character
+// in the function getMaxFilenameLength below.
+export const MAX_PATH_LENGTH_WINDOWS = 259;
+// macOS has a max filename length of 255 characters
+// Linux has a max filename length of 255 bytes
+export const MAX_FILENAME_LENGTH = 255;
+export const FALLBACK_MAX_FILENAME_LENGTH = 64;
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
@@ -19,6 +24,43 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
+
+/**
+ * macOS and Linux have a max filename of 255.
+ * Windows allows 259 as the total path length so we have to calculate the max
+ * filename length if the download directory exists. Otherwise we just return a
+ * fallback filename length.
+ *
+ * @param {string} downloadDir The current download directory or null
+ * @returns {number} The max filename length
+ */
+export function getMaxFilenameLength(downloadDir = null) {
+  if (AppConstants.platform !== "win") {
+    return MAX_FILENAME_LENGTH;
+  }
+
+  if (downloadDir) {
+    return MAX_PATH_LENGTH_WINDOWS - downloadDir.length - 1;
+  }
+
+  return FALLBACK_MAX_FILENAME_LENGTH;
+}
+
+/**
+ * Linux has a max length of bytes while macOS and Windows has a max length of
+ * characters so we have to check them differently.
+ *
+ * @param {string} filename The current clipped filename
+ * @param {string} maxFilenameLength The max length of the filename
+ * @returns {boolean} True if the filename is too long, otherwise false
+ */
+function checkFilenameLength(filename, maxFilenameLength) {
+  if (AppConstants.platform === "linux") {
+    return new Blob([filename]).size > maxFilenameLength;
+  }
+
+  return filename.length > maxFilenameLength;
+}
 
 /**
  * Gets the filename automatically or by a file picker depending on "browser.download.useDownloadDir"
@@ -36,12 +78,7 @@ export async function getFilename(filenameTitle, browser) {
   const knownDownloadsDir = await getDownloadDirectory();
   // if we know the download directory, we can subtract that plus the separator from MAX_PATHNAME to get a length limit
   // otherwise we just use a conservative length
-  const maxFilenameLength = Math.min(
-    knownDownloadsDir
-      ? MAX_PATHNAME - new Blob([knownDownloadsDir]).size - 1
-      : FALLBACK_MAX_LEAFNAME,
-    MAX_LEAFNAME
-  );
+  const maxFilenameLength = getMaxFilenameLength(knownDownloadsDir);
   /* eslint-disable no-control-regex */
   filenameTitle = filenameTitle
     .replace(/[\\/]/g, "_")
@@ -68,8 +105,8 @@ export async function getFilename(filenameTitle, browser) {
   // and crop at shorter and shorter points until we fit into
   // our max number of bytes.
   let suffix = "";
-  for (let cropSize = maxNameStemLength; cropSize >= 0; cropSize -= 32) {
-    if (new Blob([clipFilename]).size > maxNameStemLength) {
+  for (let cropSize = maxNameStemLength; cropSize >= 0; cropSize -= 1) {
+    if (checkFilenameLength(clipFilename, maxNameStemLength)) {
       clipFilename = clipFilename.substring(0, cropSize);
       suffix = "[...]";
     } else {
