@@ -672,7 +672,12 @@ class DisplayToolbar internal constructor(
      * Sets the horizontal padding.
      */
     fun setHorizontalPadding(horizontalPadding: Int) {
-        rootView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+        val background = views.background
+        (background.layoutParams as? ConstraintLayout.LayoutParams)?.apply {
+            marginStart = horizontalPadding
+            marginEnd = horizontalPadding
+            background.layoutParams = this
+        }
     }
 
     /**
