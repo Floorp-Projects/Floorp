@@ -68,6 +68,7 @@ class nsIFrame;
 class nsILayoutHistoryState;
 class nsINode;
 class nsIReflowCallback;
+class nsIScrollableFrame;
 class nsITimer;
 class nsPageSequenceFrame;
 class nsPIDOMWindowOuter;
@@ -96,7 +97,6 @@ class nsDisplayList;
 class nsDisplayListBuilder;
 class OverflowChangedTracker;
 class ProfileChunkedBuffer;
-class ScrollContainerFrame;
 class StyleSheet;
 
 #ifdef ACCESSIBILITY
@@ -431,9 +431,14 @@ class PresShell final : public nsStubDocumentObserver,
   nsIFrame* GetRootFrame() const { return mFrameConstructor->GetRootFrame(); }
 
   /**
-   * Get root scroll container frame from the frame constructor.
+   * Get root scroll frame from the frame constructor.
    */
-  ScrollContainerFrame* GetRootScrollContainerFrame() const;
+  nsIFrame* GetRootScrollFrame() const;
+
+  /*
+   * The same as GetRootScrollFrame, but returns an nsIScrollableFrame
+   */
+  nsIScrollableFrame* GetRootScrollFrameAsScrollable() const;
 
   /**
    * Get the current focused content or DOM selection that should be the
@@ -448,22 +453,22 @@ class PresShell final : public nsStubDocumentObserver,
   already_AddRefed<nsIContent> GetSelectedContentForScrolling() const;
 
   /**
-   * Gets nearest scroll container frame from the specified content node. The
-   * frame is scrollable with overflow:scroll or overflow:auto in some direction
-   * when aDirection is eEither. Otherwise, this returns a nearest scroll
-   * container frame that is scrollable in the specified direction.
+   * Gets nearest scrollable frame from the specified content node. The frame
+   * is scrollable with overflow:scroll or overflow:auto in some direction when
+   * aDirection is eEither.  Otherwise, this returns a nearest frame that is
+   * scrollable in the specified direction.
    */
-  ScrollContainerFrame* GetScrollContainerFrameToScrollForContent(
+  nsIScrollableFrame* GetScrollableFrameToScrollForContent(
       nsIContent* aContent, layers::ScrollDirections aDirections);
 
   /**
-   * Gets nearest scroll container frame from current focused content or DOM
+   * Gets nearest scrollable frame from current focused content or DOM
    * selection if there is no focused content. The frame is scrollable with
    * overflow:scroll or overflow:auto in some direction when aDirection is
-   * eEither. Otherwise, this returns a nearest scroll container frame that is
-   * scrollable in the specified direction.
+   * eEither.  Otherwise, this returns a nearest frame that is scrollable in
+   * the specified direction.
    */
-  ScrollContainerFrame* GetScrollContainerFrameToScroll(
+  nsIScrollableFrame* GetScrollableFrameToScroll(
       layers::ScrollDirections aDirections);
 
   /**
@@ -484,7 +489,7 @@ class PresShell final : public nsStubDocumentObserver,
   void PostPendingScrollAnchorAdjustment(
       layout::ScrollAnchorContainer* aContainer);
 
-  void PostPendingScrollResnap(ScrollContainerFrame* aScrollContainerFrame);
+  void PostPendingScrollResnap(nsIScrollableFrame* aScrollableFrame);
   void FlushPendingScrollResnap();
 
   void CancelAllPendingReflows();
@@ -1197,7 +1202,7 @@ class PresShell final : public nsStubDocumentObserver,
   // content (such as via window.scrollTo() should scroll the layout viewport
   // only).
   // If scrolling "far away", i.e. not just within the existing layout
-  // viewport, it's recommended to use both ScrollContainerFrame.ScrollTo*()
+  // viewport, it's recommended to use both nsIScrollableFrame.ScrollTo*()
   // (via window.scrollTo if calling from JS) *and* this function; otherwise,
   // temporary checkerboarding may result. If doing this:
   //   * Be sure to call ScrollTo*() first, as a subsequent layout scroll
@@ -1285,7 +1290,7 @@ class PresShell final : public nsStubDocumentObserver,
    * |aOrigin| specifies who originated the resolution change. For changes
    * sent by APZ, pass ResolutionChangeOrigin::Apz. For changes sent by
    * the main thread, pass ResolutionChangeOrigin::MainThreadAdjustment (similar
-   * to the |aOrigin| parameter of ScrollContainerFrame::ScrollToCSSPixels()).
+   * to the |aOrigin| parameter of nsIScrollableFrame::ScrollToCSSPixels()).
    */
   nsresult SetResolutionAndScaleTo(float aResolution,
                                    ResolutionChangeOrigin aOrigin);
@@ -1641,14 +1646,14 @@ class PresShell final : public nsStubDocumentObserver,
    *                      iframe or the like.  If ScrollFlags::ScrollSmooth
    *                      is set and CSSOM-VIEW scroll-behavior is enabled,
    *                      we will scroll smoothly using
-   *                      ScrollContainerFrame::ScrollMode::SMOOTH_MSD;
-   *                      otherwise, ScrollContainerFrame::ScrollMode::INSTANT
+   *                      nsIScrollableFrame::ScrollMode::SMOOTH_MSD;
+   *                      otherwise, nsIScrollableFrame::ScrollMode::INSTANT
    *                      will be used.  If ScrollFlags::ScrollSmoothAuto is
    *                      set, the CSSOM-View scroll-behavior attribute is
    *                      set to 'smooth' on the scroll frame, and CSSOM-VIEW
    *                      scroll-behavior is enabled, we will scroll smoothly
-   *                      using ScrollContainerFrame::ScrollMode::SMOOTH_MSD;
-   *                      otherwise, ScrollContainerFrame::ScrollMode::INSTANT
+   *                      using nsIScrollableFrame::ScrollMode::SMOOTH_MSD;
+   *                      otherwise, nsIScrollableFrame::ScrollMode::INSTANT
    *                      will be used.
    */
   MOZ_CAN_RUN_SCRIPT
@@ -3013,9 +3018,9 @@ class PresShell final : public nsStubDocumentObserver,
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.
   nsTHashSet<nsIFrame*> mFramesToDirty;
-  nsTHashSet<ScrollContainerFrame*> mPendingScrollAnchorSelection;
-  nsTHashSet<ScrollContainerFrame*> mPendingScrollAnchorAdjustment;
-  nsTHashSet<ScrollContainerFrame*> mPendingScrollResnap;
+  nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorSelection;
+  nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorAdjustment;
+  nsTHashSet<nsIScrollableFrame*> mPendingScrollResnap;
 
   nsTHashSet<nsIContent*> mHiddenContentInForcedLayout;
 

@@ -14,12 +14,12 @@
 #include "nsPoint.h"
 
 class nsIFrame;
+class nsIScrollableFrame;
 class nsITimer;
 
 namespace mozilla {
 
 class EventStateManager;
-class ScrollContainerFrame;
 
 /**
  * DeltaValues stores two delta values which are along X and Y axis.  This is
@@ -54,11 +54,11 @@ class WheelHandlingUtils {
   static bool CanScrollOn(nsIFrame* aFrame, double aDirectionX,
                           double aDirectionY);
   /**
-   * Returns true if the scroll container frame can be scrolled to either
-   * aDirectionX or aDirectionY along each axis.  Otherwise, false.
+   * Returns true if the scrollable frame can be scrolled to either aDirectionX
+   * or aDirectionY along each axis.  Otherwise, false.
    */
-  static bool CanScrollOn(ScrollContainerFrame* aScrollContainerFrame,
-                          double aDirectionX, double aDirectionY);
+  static bool CanScrollOn(nsIScrollableFrame* aScrollFrame, double aDirectionX,
+                          double aDirectionY);
 
   // For more details about the concept of a disregarded direction, refer to the
   // code in struct mozilla::layers::ScrollMetadata which defines
@@ -83,7 +83,7 @@ class ScrollbarsForWheel {
   static void PrepareToScrollText(EventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
                                   WidgetWheelEvent* aEvent);
-  static void SetActiveScrollTarget(ScrollContainerFrame* aScrollTarget);
+  static void SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget);
   // Hide all scrollbars (both mActiveOwner's and mActivatedScrollTargets')
   static void MayInactivate();
   static void Inactivate();
@@ -401,7 +401,7 @@ class MOZ_STACK_CLASS ESMAutoDirWheelDeltaAdjuster final
   virtual bool CanScrollRightwards() const override;
   virtual bool IsHorizontalContentRightToLeft() const override;
 
-  ScrollContainerFrame* mScrollTargetFrame;
+  nsIScrollableFrame* mScrollTargetFrame;
   bool mIsHorizontalContentRightToLeft;
 
   int32_t& mLineOrPageDeltaX;

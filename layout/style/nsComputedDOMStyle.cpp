@@ -15,7 +15,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs_layout.h"
 
@@ -23,6 +22,7 @@
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/ComputedStyle.h"
+#include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsIContent.h"
@@ -2013,9 +2013,9 @@ nscoord nsComputedDOMStyle::GetUsedAbsoluteOffset(mozilla::Side aSide) {
     // scrollbars.  We have to do some extra work.
     // the first child in the default frame list is what we want
     nsIFrame* scrollingChild = container->PrincipalChildList().FirstChild();
-    ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(scrollingChild);
-    if (scrollContainerFrame) {
-      scrollbarSizes = scrollContainerFrame->GetActualScrollbarSizes();
+    nsIScrollableFrame* scrollFrame = do_QueryFrame(scrollingChild);
+    if (scrollFrame) {
+      scrollbarSizes = scrollFrame->GetActualScrollbarSizes();
     }
 
     // The viewport size might have been expanded by the visual viewport or
@@ -2250,18 +2250,17 @@ bool nsComputedDOMStyle::GetScrollFrameContentWidth(nscoord& aWidth) {
 
   AssertFlushedPendingReflows();
 
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::GetNearestScrollContainerFrame(
+  nsIScrollableFrame* scrollableFrame =
+      nsLayoutUtils::GetNearestScrollableFrame(
           mOuterFrame->GetParent(),
           nsLayoutUtils::SCROLLABLE_SAME_DOC |
               nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
-  if (!scrollContainerFrame) {
+  if (!scrollableFrame) {
     return false;
   }
-  aWidth = scrollContainerFrame->GetScrolledFrame()
-               ->GetContentRectRelativeToSelf()
-               .width;
+  aWidth =
+      scrollableFrame->GetScrolledFrame()->GetContentRectRelativeToSelf().width;
   return true;
 }
 
@@ -2272,16 +2271,16 @@ bool nsComputedDOMStyle::GetScrollFrameContentHeight(nscoord& aHeight) {
 
   AssertFlushedPendingReflows();
 
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::GetNearestScrollContainerFrame(
+  nsIScrollableFrame* scrollableFrame =
+      nsLayoutUtils::GetNearestScrollableFrame(
           mOuterFrame->GetParent(),
           nsLayoutUtils::SCROLLABLE_SAME_DOC |
               nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
-  if (!scrollContainerFrame) {
+  if (!scrollableFrame) {
     return false;
   }
-  aHeight = scrollContainerFrame->GetScrolledFrame()
+  aHeight = scrollableFrame->GetScrolledFrame()
                 ->GetContentRectRelativeToSelf()
                 .height;
   return true;

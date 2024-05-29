@@ -106,6 +106,7 @@ EXPORTS += [
     "nsIFrameInlines.h",
     "nsILineIterator.h",
     "nsIntervalSet.h",
+    "nsIScrollableFrame.h",
     "nsIScrollPositionListener.h",
     "nsIStatefulFrame.h",
     "nsLineBox.h",
@@ -128,7 +129,6 @@ EXPORTS += [
     "ScrollAnimationPhysics.h",
     "ScrollbarActivity.h",
     "ScrollSnap.h",
-    "ScrollVelocityQueue.h",
     "TextDrawTarget.h",
     "Visibility.h",
 ]

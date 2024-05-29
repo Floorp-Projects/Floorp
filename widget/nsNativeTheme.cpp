@@ -8,6 +8,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsNumberControlFrame.h"
 #include "nsPresContext.h"
@@ -26,7 +27,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLProgressElement.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include <algorithm>
@@ -534,13 +534,13 @@ bool nsNativeTheme::IsDarkBackgroundForScrollbar(nsIFrame* aFrame) {
   // might be none.
   {
     nsIFrame* frame = aFrame;
-    ScrollContainerFrame* scrollContainerFrame = nullptr;
-    while (!scrollContainerFrame && frame) {
-      scrollContainerFrame = frame->GetScrollTargetFrame();
+    nsIScrollableFrame* scrollFrame = nullptr;
+    while (!scrollFrame && frame) {
+      scrollFrame = frame->GetScrollTargetFrame();
       frame = frame->GetParent();
     }
-    if (scrollContainerFrame) {
-      aFrame = scrollContainerFrame->GetScrolledFrame();
+    if (scrollFrame) {
+      aFrame = scrollFrame->GetScrolledFrame();
     } else {
       // Leave aFrame untouched.
     }

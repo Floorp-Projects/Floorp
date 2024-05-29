@@ -96,7 +96,6 @@
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/Unused.h"
 #include "MobileViewportManager.h"
-#include "TextOverflow.h"
 #include "VisualViewport.h"
 #include "WindowRenderer.h"
 #include <algorithm>
@@ -1677,6 +1676,7 @@ a11y::AccType ScrollContainerFrame::AccessibleType() {
 
 NS_QUERYFRAME_HEAD(ScrollContainerFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
   NS_QUERYFRAME_ENTRY(ScrollContainerFrame)
@@ -1728,7 +1728,7 @@ void ScrollContainerFrame::HandleScrollbarStyleSwitching() {
     mScrollbarActivity->Destroy();
     mScrollbarActivity = nullptr;
   } else if (!mScrollbarActivity && UsesOverlayScrollbars()) {
-    mScrollbarActivity = new ScrollbarActivity(this);
+    mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(this));
   }
 }
 
@@ -1876,7 +1876,7 @@ void ScrollContainerFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
 
   nsIntPoint overflow;
   ScrollBy(delta, ScrollUnit::LINES, ScrollMode::Smooth, &overflow,
-           ScrollOrigin::Other, NOT_MOMENTUM, aSnapFlags);
+           ScrollOrigin::Other, nsIScrollableFrame::NOT_MOMENTUM, aSnapFlags);
 }
 
 void ScrollContainerFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar) {
@@ -1931,8 +1931,8 @@ void ScrollContainerFrame::ScrollByUnit(nsScrollbarFrame* aScrollbar,
     delta.y = aDirection;
   }
   nsIntPoint overflow;
-  ScrollBy(delta, aUnit, aMode, &overflow, ScrollOrigin::Other, NOT_MOMENTUM,
-           aSnapFlags);
+  ScrollBy(delta, aUnit, aMode, &overflow, ScrollOrigin::Other,
+           nsIScrollableFrame::NOT_MOMENTUM, aSnapFlags);
 }
 
 //-------------------- Helper ----------------------
@@ -2679,8 +2679,7 @@ bool ScrollContainerFrame::IsAlwaysActive() const {
           styles.mVertical != StyleOverflow::Hidden);
 }
 
-void ScrollContainerFrame::RemoveDisplayPortCallback(nsITimer* aTimer,
-                                                     void* aClosure) {
+static void RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure) {
   ScrollContainerFrame* sf = static_cast<ScrollContainerFrame*>(aClosure);
 
   // This function only ever gets called from the expiry timer, so it must
@@ -4354,7 +4353,7 @@ nsRect ScrollContainerFrame::RestrictToRootDisplayPort(
     return aDisplayportBase;
   }
   const mozilla::PresShell* const rootPresShell = rootPresContext->PresShell();
-  nsIFrame* rootFrame = rootPresShell->GetRootScrollContainerFrame();
+  nsIFrame* rootFrame = rootPresShell->GetRootScrollFrame();
   if (!rootFrame) {
     rootFrame = rootPresShell->GetRootFrame();
   }
@@ -4395,7 +4394,7 @@ nsRect ScrollContainerFrame::RestrictToRootDisplayPort(
     // CalculateCompositionSizeForFrame did not take the document's
     // resolution into account, so we must.
     if (rootPresContext->IsRootContentDocumentCrossProcess() &&
-        rootFrame == rootPresShell->GetRootScrollContainerFrame()) {
+        rootFrame == rootPresShell->GetRootScrollFrame()) {
       MOZ_LOG(
           sDisplayportLog, LogLevel::Verbose,
           ("RestrictToRootDisplayPort: Removing resolution %f from root "
@@ -4805,21 +4804,20 @@ static void CalcRangeForScrollBy(int32_t aDelta, nscoord aPos,
                                   (aDelta > 0 ? aPosTolerance : aNegTolerance));
 }
 
-void ScrollContainerFrame::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
-                                    ScrollMode aMode, nsIntPoint* aOverflow,
-                                    ScrollOrigin aOrigin,
-                                    ScrollMomentum aMomentum,
-                                    ScrollSnapFlags aSnapFlags) {
+void ScrollContainerFrame::ScrollBy(
+    nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
+    nsIntPoint* aOverflow, ScrollOrigin aOrigin,
+    nsIScrollableFrame::ScrollMomentum aMomentum, ScrollSnapFlags aSnapFlags) {
   // When a smooth scroll is being processed on a frame, mouse wheel and
   // trackpad momentum scroll event updates must notcancel the SMOOTH or
   // SMOOTH_MSD scroll animations, enabling Javascript that depends on them to
   // be responsive without forcing the user to wait for the fling animations to
   // completely stop.
   switch (aMomentum) {
-    case NOT_MOMENTUM:
+    case nsIScrollableFrame::NOT_MOMENTUM:
       mIgnoreMomentumScroll = false;
       break;
-    case SYNTHESIZED_MOMENTUM_EVENT:
+    case nsIScrollableFrame::SYNTHESIZED_MOMENTUM_EVENT:
       if (mIgnoreMomentumScroll) {
         return;
       }
@@ -5343,18 +5341,19 @@ ScrollContainerFrame::LoadingState ScrollContainerFrame::GetPageLoadingState() {
              : LoadingState::Loading;
 }
 
-PhysicalAxes ScrollContainerFrame::GetOverflowAxes() const {
+ScrollContainerFrame::OverflowState ScrollContainerFrame::GetOverflowState()
+    const {
   nsSize scrollportSize = mScrollPort.Size();
   nsSize childSize = GetScrolledRect().Size();
 
-  PhysicalAxes result;
+  OverflowState result = OverflowState::None;
 
   if (childSize.height > scrollportSize.height) {
-    result += PhysicalAxis::Vertical;
+    result |= OverflowState::Vertical;
   }
 
   if (childSize.width > scrollportSize.width) {
-    result += PhysicalAxis::Horizontal;
+    result |= OverflowState::Horizontal;
   }
 
   return result;
@@ -5369,12 +5368,12 @@ nsresult ScrollContainerFrame::FireScrollPortEvent() {
   //
   // Should we remove this?
 
-  PhysicalAxes overflowAxes = GetOverflowAxes();
+  OverflowState overflowState = GetOverflowState();
 
-  bool newVerticalOverflow = overflowAxes.contains(PhysicalAxis::Vertical);
+  bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
 
-  bool newHorizontalOverflow = overflowAxes.contains(PhysicalAxis::Horizontal);
+  bool newHorizontalOverflow = !!(overflowState & OverflowState::Horizontal);
   bool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
 
   if (!vertChanged && !horizChanged) {
@@ -5981,12 +5980,12 @@ void ScrollContainerFrame::PostOverflowEvent() {
     return;
   }
 
-  PhysicalAxes overflowAxes = GetOverflowAxes();
+  OverflowState overflowState = GetOverflowState();
 
-  bool newVerticalOverflow = overflowAxes.contains(PhysicalAxis::Vertical);
+  bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
 
-  bool newHorizontalOverflow = overflowAxes.contains(PhysicalAxis::Horizontal);
+  bool newHorizontalOverflow = !!(overflowState & OverflowState::Horizontal);
   bool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
 
   if (!vertChanged && !horizChanged) {
@@ -6075,7 +6074,7 @@ void ScrollContainerFrame::FinishReflowForScrollbar(
   SetCoordAttribute(aElement, nsGkAtoms::increment, aIncrement);
 }
 
-class MOZ_RAII ScrollContainerFrame::AutoMinimumScaleSizeChangeDetector final {
+class MOZ_RAII AutoMinimumScaleSizeChangeDetector final {
  public:
   explicit AutoMinimumScaleSizeChangeDetector(
       ScrollContainerFrame* aScrollFrame)
@@ -6228,7 +6227,7 @@ bool ScrollContainerFrame::ReflowFinished() {
 
 #if defined(MOZ_WIDGET_ANDROID)
     const bool hasVerticalOverflow =
-        GetOverflowAxes().contains(PhysicalAxis::Vertical) &&
+        GetOverflowState() & OverflowState::Vertical &&
         GetScrollStyles().mVertical != StyleOverflow::Hidden;
     if (!mFirstReflow && mHasVerticalOverflowForDynamicToolbar &&
         !hasVerticalOverflow) {
@@ -6962,13 +6961,16 @@ nsRect ScrollContainerFrame::GetUnsnappedScrolledRectInternal(
 }
 
 nsMargin ScrollContainerFrame::GetActualScrollbarSizes(
-    ScrollbarSizesOptions aOptions /* = ScrollbarSizesOptions::NONE */) const {
+    nsIScrollableFrame::ScrollbarSizesOptions
+        aOptions /* = nsIScrollableFrame::ScrollbarSizesOptions::NONE */)
+    const {
   nsRect r = GetPaddingRectRelativeToSelf();
 
   nsMargin m(mScrollPort.y - r.y, r.XMost() - mScrollPort.XMost(),
              r.YMost() - mScrollPort.YMost(), mScrollPort.x - r.x);
 
-  if (aOptions == ScrollbarSizesOptions::INCLUDE_VISUAL_VIEWPORT_SCROLLBARS &&
+  if (aOptions == nsIScrollableFrame::ScrollbarSizesOptions::
+                      INCLUDE_VISUAL_VIEWPORT_SCROLLBARS &&
       !UsesOverlayScrollbars()) {
     // If we are using layout scrollbars and they only exist to scroll the
     // visual viewport then they do not take up any layout space (so the
@@ -7063,8 +7065,8 @@ bool ScrollContainerFrame::IsLastScrollUpdateTriggeredByScriptAnimating()
   return false;
 }
 
-EnumSet<ScrollContainerFrame::AnimationState>
-ScrollContainerFrame::ScrollAnimationState() const {
+using AnimationState = nsIScrollableFrame::AnimationState;
+EnumSet<AnimationState> ScrollContainerFrame::ScrollAnimationState() const {
   EnumSet<AnimationState> retval;
   if (IsApzAnimationInProgress()) {
     retval += AnimationState::APZInProgress;
@@ -7235,7 +7237,7 @@ void ScrollContainerFrame::FireScrolledAreaEvent() {
   }
 }
 
-ScrollDirections ScrollContainerFrame::GetAvailableScrollingDirections() const {
+ScrollDirections nsIScrollableFrame::GetAvailableScrollingDirections() const {
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
   ScrollDirections directions;
@@ -7468,7 +7470,7 @@ static void CollectScrollPositionsForSnap(
     ScrollContainerFrame::SnapTargetSet* aSnapTargets) {
   // Snap positions only affect the nearest ancestor scroll container on the
   // element's containing block chain.
-  ScrollContainerFrame* sf = do_QueryFrame(aFrame);
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
   if (sf) {
     return;
   }
@@ -7679,7 +7681,7 @@ void ScrollContainerFrame::PostPendingResnap() {
   PresShell()->PostPendingScrollResnap(this);
 }
 
-ScrollContainerFrame::PhysicalScrollSnapAlign
+nsIScrollableFrame::PhysicalScrollSnapAlign
 ScrollContainerFrame::GetScrollSnapAlignFor(const nsIFrame* aFrame) const {
   StyleScrollSnapAlignKeyword alignForY = StyleScrollSnapAlignKeyword::None;
   StyleScrollSnapAlignKeyword alignForX = StyleScrollSnapAlignKeyword::None;
@@ -8006,7 +8008,7 @@ void ScrollContainerFrame::AppendScrollUpdate(
 void ScrollContainerFrame::ScheduleScrollAnimations() {
   nsIContent* content = GetContent();
   MOZ_ASSERT(content && content->IsElement(),
-             "The ScrollContainerFrame should have the element.");
+             "The nsIScrollableFrame should have the element.");
 
   const Element* elementOrPseudo = content->AsElement();
   PseudoStyleType pseudo = elementOrPseudo->GetPseudoElementType();

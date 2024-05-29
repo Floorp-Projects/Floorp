@@ -31,7 +31,6 @@
 #include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ShapeUtils.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -51,6 +50,7 @@
 #include "nsTransitionManager.h"
 #include "gfxMatrix.h"
 #include "nsLayoutUtils.h"
+#include "nsIScrollableFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsStyleConsts.h"
 #include "BorderConsts.h"
@@ -169,11 +169,13 @@ void InitializeHitTestInfo(nsDisplayListBuilder* aBuilder,
 
 /* static */
 already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
-    const ActiveScrolledRoot* aParent,
-    ScrollContainerFrame* aScrollContainerFrame, bool aIsRetained) {
+    const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame,
+    bool aIsRetained) {
+  nsIFrame* f = do_QueryFrame(aScrollableFrame);
+
   RefPtr<ActiveScrolledRoot> asr;
   if (aIsRetained) {
-    asr = aScrollContainerFrame->GetProperty(ActiveScrolledRootCache());
+    asr = f->GetProperty(ActiveScrolledRootCache());
   }
 
   if (!asr) {
@@ -181,12 +183,11 @@ already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
 
     if (aIsRetained) {
       RefPtr<ActiveScrolledRoot> ref = asr;
-      aScrollContainerFrame->SetProperty(ActiveScrolledRootCache(),
-                                         ref.forget().take());
+      f->SetProperty(ActiveScrolledRootCache(), ref.forget().take());
     }
   }
   asr->mParent = aParent;
-  asr->mScrollContainerFrame = aScrollContainerFrame;
+  asr->mScrollableFrame = aScrollableFrame;
   asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
   asr->mRetained = aIsRetained;
 
@@ -225,7 +226,7 @@ nsCString ActiveScrolledRoot::ToString(
     const ActiveScrolledRoot* aActiveScrolledRoot) {
   nsAutoCString str;
   for (const auto* asr = aActiveScrolledRoot; asr; asr = asr->mParent) {
-    str.AppendPrintf("<0x%p>", asr->mScrollContainerFrame);
+    str.AppendPrintf("<0x%p>", asr->mScrollableFrame);
     if (asr->mParent) {
       str.AppendLiteral(", ");
     }
@@ -234,13 +235,14 @@ nsCString ActiveScrolledRoot::ToString(
 }
 
 ScrollableLayerGuid::ViewID ActiveScrolledRoot::ComputeViewId() const {
-  nsIContent* content = mScrollContainerFrame->GetScrolledFrame()->GetContent();
+  nsIContent* content = mScrollableFrame->GetScrolledFrame()->GetContent();
   return nsLayoutUtils::FindOrCreateIDFor(content);
 }
 
 ActiveScrolledRoot::~ActiveScrolledRoot() {
-  if (mScrollContainerFrame && mRetained) {
-    mScrollContainerFrame->RemoveProperty(ActiveScrolledRootCache());
+  if (mScrollableFrame && mRetained) {
+    nsIFrame* f = do_QueryFrame(mScrollableFrame);
+    f->RemoveProperty(ActiveScrolledRootCache());
   }
 }
 
@@ -453,7 +455,7 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
                                   aActiveScrolledRoot, mBuilder->mFilterASR)) {
     for (const ActiveScrolledRoot* asr = mBuilder->mFilterASR;
          asr && asr != aActiveScrolledRoot; asr = asr->mParent) {
-      asr->mScrollContainerFrame->SetHasOutOfFlowContentInsideFilter();
+      asr->mScrollableFrame->SetHasOutOfFlowContentInsideFilter();
     }
   }
 
@@ -461,12 +463,12 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
 }
 
 void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
-    InsertScrollFrame(ScrollContainerFrame* aScrollContainerFrame) {
+    InsertScrollFrame(nsIScrollableFrame* aScrollableFrame) {
   MOZ_ASSERT(!mUsed);
   size_t descendantsEndIndex = mBuilder->mActiveScrolledRoots.Length();
   const ActiveScrolledRoot* parentASR = mBuilder->mCurrentActiveScrolledRoot;
   const ActiveScrolledRoot* asr =
-      mBuilder->AllocateActiveScrolledRoot(parentASR, aScrollContainerFrame);
+      mBuilder->AllocateActiveScrolledRoot(parentASR, aScrollableFrame);
   mBuilder->mCurrentActiveScrolledRoot = asr;
 
   // All child ASRs of parentASR that were created while this
@@ -524,15 +526,14 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
       // But if we have a displayport, expand it to the displayport, so
       // that async-scrolling the visual viewport within the layout viewport
       // will not checkerboard.
-      if (nsIFrame* rootScrollContainerFrame =
-              presShell->GetRootScrollContainerFrame()) {
+      if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
         nsRect displayport;
         // Note that the displayport here is already in the right coordinate
         // space: it's relative to the scroll port (= layout viewport), but
         // covers the visual viewport with some margins around it, which is
         // exactly what we want.
         if (DisplayPortUtils::GetDisplayPort(
-                rootScrollContainerFrame->GetContent(), &displayport,
+                rootScrollFrame->GetContent(), &displayport,
                 DisplayPortOptions().With(ContentGeometryType::Fixed))) {
           dirtyRectRelativeToDirtyFrame = displayport;
         }
@@ -905,16 +906,16 @@ bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
   return false;
 }
 
-void nsDisplayListBuilder::AddScrollContainerFrameToNotify(
-    ScrollContainerFrame* aScrollContainerFrame) {
-  mScrollContainerFramesToNotify.insert(aScrollContainerFrame);
+void nsDisplayListBuilder::AddScrollFrameToNotify(
+    nsIScrollableFrame* aScrollFrame) {
+  mScrollFramesToNotify.insert(aScrollFrame);
 }
 
-void nsDisplayListBuilder::NotifyAndClearScrollContainerFrames() {
-  for (const auto& it : mScrollContainerFramesToNotify) {
+void nsDisplayListBuilder::NotifyAndClearScrollFrames() {
+  for (const auto& it : mScrollFramesToNotify) {
     it->NotifyApzTransaction();
   }
-  mScrollContainerFramesToNotify.clear();
+  mScrollFramesToNotify.clear();
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(
@@ -1075,7 +1076,7 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
   state->mFirstFrameWithOOFData = mFramesWithOOFData.Length();
 
-  ScrollContainerFrame* sf = state->mPresShell->GetRootScrollContainerFrame();
+  nsIScrollableFrame* sf = state->mPresShell->GetRootScrollFrameAsScrollable();
   if (sf && IsInSubdocument()) {
     // We are forcing a rebuild of nsDisplayCanvasBackgroundColor to make sure
     // that the canvas background color will be set correctly, and that only one
@@ -1116,7 +1117,7 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
 
   state->mPresShellIgnoreScrollFrame =
       state->mPresShell->IgnoringViewportScrolling()
-          ? state->mPresShell->GetRootScrollContainerFrame()
+          ? state->mPresShell->GetRootScrollFrame()
           : nullptr;
 
   nsPresContext* pc = aReferenceFrame->PresContext();
@@ -1329,7 +1330,7 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
   if (ViewportFrame* viewportFrame = do_QueryFrame(aDirtyFrame)) {
     if (IsForEventDelivery() && ShouldBuildAsyncZoomContainer() &&
         viewportFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
-      if (viewportFrame->PresShell()->GetRootScrollContainerFrame()) {
+      if (viewportFrame->PresShell()->GetRootScrollFrame()) {
 #ifdef DEBUG
         for (nsIFrame* f : aFrames) {
           MOZ_ASSERT(ViewportUtils::IsZoomedContentRoot(f));
@@ -1441,10 +1442,9 @@ void nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(
 }
 
 ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRoot(
-    const ActiveScrolledRoot* aParent,
-    ScrollContainerFrame* aScrollContainerFrame) {
+    const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame) {
   RefPtr<ActiveScrolledRoot> asr = ActiveScrolledRoot::CreateASRForFrame(
-      aParent, aScrollContainerFrame, IsRetainingDisplayList());
+      aParent, aScrollableFrame, IsRetainingDisplayList());
   mActiveScrolledRoots.AppendElement(asr);
   return asr;
 }
@@ -1614,8 +1614,8 @@ static bool IsStickyFrameActive(nsDisplayListBuilder* aBuilder,
 
   StickyScrollContainer* stickyScrollContainer =
       StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
-  return stickyScrollContainer && stickyScrollContainer->ScrollContainer()
-                                      ->IsMaybeAsynchronouslyScrolled();
+  return stickyScrollContainer &&
+         stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled();
 }
 
 bool nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
@@ -1650,7 +1650,7 @@ bool nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
   }
 
   if (parent->IsScrollContainerOrSubclass()) {
-    ScrollContainerFrame* sf = do_QueryFrame(parent);
+    nsIScrollableFrame* sf = do_QueryFrame(parent);
     if (sf->GetScrolledFrame() == aFrame) {
       MOZ_ASSERT(!aFrame->IsTransformed());
       return sf->IsMaybeAsynchronouslyScrolled();
@@ -5575,9 +5575,9 @@ StickyScrollContainer* nsDisplayStickyPosition::GetStickyScrollContainer() {
     // will never be asynchronously scrolled. Instead we will always position
     // the sticky items correctly on the gecko side and WR will never need to
     // adjust their position itself.
-    MOZ_ASSERT(stickyScrollContainer->ScrollContainer()
-                   ->IsMaybeAsynchronouslyScrolled());
-    if (!stickyScrollContainer->ScrollContainer()
+    MOZ_ASSERT(
+        stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled());
+    if (!stickyScrollContainer->ScrollFrame()
              ->IsMaybeAsynchronouslyScrolled()) {
       stickyScrollContainer = nullptr;
     }
@@ -5611,14 +5611,14 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
     nsRectAbsolute inner;
     stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
 
+    nsIFrame* scrollFrame = do_QueryFrame(stickyScrollContainer->ScrollFrame());
     nsPoint offset =
-        stickyScrollContainer->ScrollContainer()->GetOffsetToCrossDoc(Frame()) +
-        ToReferenceFrame();
+        scrollFrame->GetOffsetToCrossDoc(Frame()) + ToReferenceFrame();
 
     // Adjust the scrollPort coordinates to be relative to the reference frame,
     // so that it is in the same space as everything else.
     nsRect scrollPort =
-        stickyScrollContainer->ScrollContainer()->GetScrollPortRect();
+        stickyScrollContainer->ScrollFrame()->GetScrollPortRect();
     scrollPort += offset;
 
     // The following computations make more sense upon understanding the
@@ -5814,10 +5814,10 @@ bool nsDisplayStickyPosition::UpdateScrollData(
           nsLayoutUtils::GetSideBitsForFixedPositionContent(mFrame);
       aLayerData->SetFixedPositionSides(sides);
 
-      ScrollableLayerGuid::ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(
-          stickyScrollContainer->ScrollContainer()
-              ->GetScrolledFrame()
-              ->GetContent());
+      ScrollableLayerGuid::ViewID scrollId =
+          nsLayoutUtils::FindOrCreateIDFor(stickyScrollContainer->ScrollFrame()
+                                               ->GetScrolledFrame()
+                                               ->GetContent());
       aLayerData->SetStickyPositionScrollContainerId(scrollId);
     }
 
@@ -5859,10 +5859,9 @@ UniquePtr<ScrollMetadata> nsDisplayScrollInfoLayer::ComputeScrollMetadata(
       ToReferenceFrame(), aLayerManager, mScrollParentId,
       mScrollFrame->GetSize(), false);
   metadata.GetMetrics().SetIsScrollInfoLayer(true);
-  ScrollContainerFrame* scrollContainerFrame =
-      mScrollFrame->GetScrollTargetFrame();
-  if (scrollContainerFrame) {
-    aBuilder->AddScrollContainerFrameToNotify(scrollContainerFrame);
+  nsIScrollableFrame* scrollableFrame = mScrollFrame->GetScrollTargetFrame();
+  if (scrollableFrame) {
+    aBuilder->AddScrollFrameToNotify(scrollableFrame);
   }
 
   return UniquePtr<ScrollMetadata>(new ScrollMetadata(metadata));
@@ -5953,10 +5952,9 @@ void nsDisplayAsyncZoom::HitTest(nsDisplayListBuilder* aBuilder,
                                  const nsRect& aRect, HitTestState* aState,
                                  nsTArray<nsIFrame*>* aOutFrames) {
 #ifdef DEBUG
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(mFrame);
-  MOZ_ASSERT(scrollContainerFrame &&
-             ViewportUtils::IsZoomedContentRoot(
-                 scrollContainerFrame->GetScrolledFrame()));
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(mFrame);
+  MOZ_ASSERT(scrollFrame && ViewportUtils::IsZoomedContentRoot(
+                                scrollFrame->GetScrolledFrame()));
 #endif
   nsRect rect = ViewportUtils::VisualToLayout(aRect, mFrame->PresShell());
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
@@ -6353,8 +6351,8 @@ static bool ShouldUsePartialPrerender(const nsIFrame* aFrame) {
 
 /* static */
 auto nsDisplayTransform::ShouldPrerenderTransformedContent(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    nsRect* aDirtyRect) -> PrerenderInfo {
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsRect* aDirtyRect)
+    -> PrerenderInfo {
   PrerenderInfo result;
   // If we are in a preserve-3d tree, and we've disallowed async animations, we
   // return No prerender decision directly.
@@ -7436,7 +7434,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
     // document is always active, so using IsAncestorFrameCrossDocInProcess
     // should be fine here.
     if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
-            asr->mScrollContainerFrame->GetScrolledFrame(), perspectiveFrame)) {
+            asr->mScrollableFrame->GetScrolledFrame(), perspectiveFrame)) {
       scrollingRelativeTo.emplace(asr->GetViewId());
       break;
     }

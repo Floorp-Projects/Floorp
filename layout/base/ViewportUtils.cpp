@@ -10,9 +10,9 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
 #include "nsStyleStruct.h"
@@ -74,10 +74,9 @@ CSSToCSSMatrix4x4 GetVisualToLayoutTransform(PresShell* aContext) {
   ScrollableLayerGuid::ViewID targetScrollId =
       InputAPZContext::GetTargetLayerGuid().mScrollId;
   if (targetScrollId == ScrollableLayerGuid::NULL_SCROLL_ID) {
-    if (nsIFrame* rootScrollContainerFrame =
-            aContext->GetRootScrollContainerFrame()) {
-      targetScrollId = nsLayoutUtils::FindOrCreateIDFor(
-          rootScrollContainerFrame->GetContent());
+    if (nsIFrame* rootScrollFrame = aContext->GetRootScrollFrame()) {
+      targetScrollId =
+          nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent());
     }
   }
   return ViewportUtils::GetVisualToLayoutTransform(targetScrollId);
@@ -244,7 +243,7 @@ const nsIFrame* ViewportUtils::IsZoomedContentRoot(const nsIFrame* aFrame) {
   }
   if (aFrame->Type() == LayoutFrameType::Canvas ||
       aFrame->Type() == LayoutFrameType::PageSequence) {
-    ScrollContainerFrame* sf = do_QueryFrame(aFrame->GetParent());
+    nsIScrollableFrame* sf = do_QueryFrame(aFrame->GetParent());
     if (sf && sf->IsRootScrollFrameOfDocument() &&
         aFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
       return aFrame->GetParent();
@@ -253,7 +252,7 @@ const nsIFrame* ViewportUtils::IsZoomedContentRoot(const nsIFrame* aFrame) {
              StylePositionProperty::Fixed) {
     if (ViewportFrame* viewportFrame = do_QueryFrame(aFrame->GetParent())) {
       if (viewportFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
-        return viewportFrame->PresShell()->GetRootScrollContainerFrame();
+        return viewportFrame->PresShell()->GetRootScrollFrame();
       }
     }
   }

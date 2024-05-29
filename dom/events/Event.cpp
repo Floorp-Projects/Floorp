@@ -29,7 +29,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/SVGOuterSVGFrame.h"
@@ -41,6 +40,7 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
+#include "nsIScrollableFrame.h"
 #include "nsJSEnvironment.h"
 #include "nsLayoutUtils.h"
 #include "nsPIWindowRoot.h"
@@ -617,8 +617,11 @@ CSSIntPoint Event::GetPageCoords(nsPresContext* aPresContext,
   // If there is some scrolling, add scroll info to client point.
   if (aPresContext && aPresContext->GetPresShell()) {
     PresShell* presShell = aPresContext->PresShell();
-    if (ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame()) {
-      pagePoint += CSSIntPoint::FromAppUnitsRounded(sf->GetScrollPosition());
+    nsIScrollableFrame* scrollframe =
+        presShell->GetRootScrollFrameAsScrollable();
+    if (scrollframe) {
+      pagePoint +=
+          CSSIntPoint::FromAppUnitsRounded(scrollframe->GetScrollPosition());
     }
   }
 

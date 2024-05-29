@@ -108,6 +108,7 @@ class nsAtom;
 class nsView;
 class nsFrameSelection;
 class nsIWidget;
+class nsIScrollableFrame;
 class nsISelectionController;
 class nsILineIterator;
 class gfxSkipChars;
@@ -131,15 +132,15 @@ enum class PeekOffsetOption : uint16_t;
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
 
-class EffectSet;
-class LazyLogModule;
 class nsDisplayItem;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
-class PresShell;
-class ScrollContainerFrame;
+
 class ServoRestyleState;
+class EffectSet;
+class LazyLogModule;
+class PresShell;
 class WidgetGUIEvent;
 class WidgetMouseEvent;
 
@@ -812,14 +813,13 @@ class nsIFrame : public nsQueryFrame {
   virtual bool DrainSelfOverflowList() { return false; }
 
   /**
-   * Get the frame that should be scrolled if the content associated with this
-   * frame is targeted for scrolling. For a scroll container frame, this will
-   * just return the frame itself. For frames like nsTextControlFrame that
-   * contain a scroll container frame, will return that scroll container frame.
+   * Get the frame that should be scrolled if the content associated
+   * with this frame is targeted for scrolling. For frames implementing
+   * nsIScrollableFrame this will return the frame itself. For frames
+   * like nsTextControlFrame that contain a scrollframe, will return
+   * that scrollframe.
    */
-  virtual mozilla::ScrollContainerFrame* GetScrollTargetFrame() const {
-    return nullptr;
-  }
+  virtual nsIScrollableFrame* GetScrollTargetFrame() const { return nullptr; }
 
   /**
    * Get the offsets of the frame. most will be 0,0
@@ -3058,12 +3058,11 @@ class nsIFrame : public nsQueryFrame {
   virtual void UnionChildOverflow(mozilla::OverflowAreas& aOverflowAreas);
 
   // Returns the applicable overflow-clip-margin values.
-  nsSize OverflowClipMargin(mozilla::PhysicalAxes aClipAxes) const;
+  using PhysicalAxes = mozilla::PhysicalAxes;
 
+  nsSize OverflowClipMargin(PhysicalAxes aClipAxes) const;
   // Returns the axes on which this frame should apply overflow clipping.
-  mozilla::PhysicalAxes ShouldApplyOverflowClipping(
-      const nsStyleDisplay* aDisp) const;
-
+  PhysicalAxes ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const;
   // Returns whether this frame is a block that was supposed to be a
   // scrollframe, but that was suppressed for print.
   bool IsSuppressedScrollableBlockForPrint() const;

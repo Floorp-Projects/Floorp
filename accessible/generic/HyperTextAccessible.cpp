@@ -26,6 +26,7 @@
 #include "nsContainerFrame.h"
 #include "nsFrameSelection.h"
 #include "nsILineIterator.h"
+#include "nsIScrollableFrame.h"
 #include "nsIMathMLFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsRange.h"
@@ -34,7 +35,6 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/SelectionMovementUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -894,7 +894,8 @@ void HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
   bool initialScrolled = false;
   nsIFrame* parentFrame = frame;
   while ((parentFrame = parentFrame->GetParent())) {
-    if (parentFrame->IsScrollContainerOrSubclass()) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(parentFrame);
+    if (scrollableFrame) {
       if (!initialScrolled) {
         // Scroll substring to the given point. Turn the point into percents
         // relative scrollable area to use nsCoreUtils::ScrollSubstringTo.

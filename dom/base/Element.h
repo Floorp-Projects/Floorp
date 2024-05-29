@@ -92,6 +92,7 @@ class nsIFrame;
 class nsIHTMLCollection;
 class nsIPrincipal;
 class nsIScreen;
+class nsIScrollableFrame;
 class nsIURI;
 class nsObjectLoadingContent;
 class nsPresContext;
@@ -109,7 +110,6 @@ class MappedDeclarationsBuilder;
 class EditorBase;
 class ErrorResult;
 class OOMReporter;
-class ScrollContainerFrame;
 class SMILAttr;
 struct MutationClosureData;
 class TextEditor;
@@ -727,8 +727,8 @@ class Element : public FragmentOrElement {
 
  public:
   MOZ_CAN_RUN_SCRIPT
-  ScrollContainerFrame* GetScrollContainerFrame(
-      nsIFrame** aFrame = nullptr, FlushType aFlushType = FlushType::Layout);
+  nsIScrollableFrame* GetScrollFrame(nsIFrame** aFrame = nullptr,
+                                     FlushType aFlushType = FlushType::Layout);
 
  private:
   // Style state computed from element's state and style locks.

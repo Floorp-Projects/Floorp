@@ -29,6 +29,7 @@
 #include "nsCocoaFeatures.h"
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
+#include "nsIScrollableFrame.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Range.h"
 #include "mozilla/dom/Element.h"

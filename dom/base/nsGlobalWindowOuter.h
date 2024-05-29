@@ -57,6 +57,7 @@ class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
 class nsIDOMWindowUtils;
+class nsIScrollableFrame;
 class nsIControllers;
 class nsIPrintSettings;
 class nsIScriptContext;
@@ -82,7 +83,6 @@ class AbstractThread;
 class DOMEventTargetHelper;
 class ErrorResult;
 class ThrottledEventQueue;
-class ScrollContainerFrame;
 namespace dom {
 class BarProp;
 struct ChannelPixelLayout;
@@ -412,10 +412,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool IsChromeWindow() const { return mIsChrome; }
 
-  // GetScrollContainerFrame does not flush. Callers should do it themselves as
-  // needed, depending on which info they actually want off the scroll container
-  // frame.
-  mozilla::ScrollContainerFrame* GetScrollContainerFrame();
+  // GetScrollFrame does not flush.  Callers should do it themselves as needed,
+  // depending on which info they actually want off the scrollable frame.
+  nsIScrollableFrame* GetScrollFrame();
 
   // Outer windows only.
   void UnblockScriptedClosing();

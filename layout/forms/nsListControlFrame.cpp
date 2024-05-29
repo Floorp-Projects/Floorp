@@ -12,6 +12,7 @@
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
 #include "nsFontMetrics.h"
+#include "nsIScrollableFrame.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
@@ -665,10 +666,6 @@ void nsListControlFrame::SetInitialChildList(ChildListID aListID,
     }
   }
   ScrollContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
-}
-
-bool nsListControlFrame::GetMultiple() const {
-  return mContent->AsElement()->HasAttr(nsGkAtoms::multiple);
 }
 
 HTMLSelectElement& nsListControlFrame::Select() const {
