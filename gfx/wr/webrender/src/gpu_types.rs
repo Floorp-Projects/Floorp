@@ -252,17 +252,6 @@ pub struct CompositorTransform {
     pub ty: f32,
 }
 
-impl CompositorTransform {
-    pub fn identity() -> Self {
-        CompositorTransform {
-            sx: 1.0,
-            sy: 1.0,
-            tx: 0.0,
-            ty: 0.0,
-        }
-    }
-}
-
 impl From<ScaleOffset> for CompositorTransform {
     fn from(scale_offset: ScaleOffset) -> Self {
         CompositorTransform {
@@ -280,8 +269,8 @@ impl From<ScaleOffset> for CompositorTransform {
 #[derive(Clone, Debug)]
 #[repr(C)]
 pub struct CompositeInstance {
-    // Picture space destination rectangle of surface
-    rect: PictureRect,
+    // Device space destination rectangle of surface
+    rect: DeviceRect,
     // Device space destination clip rect for this surface
     clip_rect: DeviceRect,
     // Color for solid color tiles, white otherwise
@@ -297,16 +286,16 @@ pub struct CompositeInstance {
     // UV rectangles (pixel space) for color / yuv texture planes
     uv_rects: [TexelRect; 3],
 
-    // A 2d scale + offset transform for the rect
-    transform: CompositorTransform,
+    // Whether to flip the x and y axis respectively, where 0.0 is no-flip and 1.0 is flip.
+    flip: (f32, f32),
 }
 
 impl CompositeInstance {
     pub fn new(
-        rect: PictureRect,
+        rect: DeviceRect,
         clip_rect: DeviceRect,
         color: PremultipliedColorF,
-        transform: CompositorTransform,
+        flip: (bool, bool),
     ) -> Self {
         let uv = TexelRect::new(0.0, 0.0, 1.0, 1.0);
         CompositeInstance {
@@ -318,16 +307,16 @@ impl CompositeInstance {
             yuv_format: 0.0,
             yuv_channel_bit_depth: 0.0,
             uv_rects: [uv, uv, uv],
-            transform,
+            flip: (flip.0.into(), flip.1.into()),
         }
     }
 
     pub fn new_rgb(
-        rect: PictureRect,
+        rect: DeviceRect,
         clip_rect: DeviceRect,
         color: PremultipliedColorF,
         uv_rect: TexelRect,
-        transform: CompositorTransform,
+        flip: (bool, bool),
     ) -> Self {
         CompositeInstance {
             rect,
@@ -338,18 +327,18 @@ impl CompositeInstance {
             yuv_format: 0.0,
             yuv_channel_bit_depth: 0.0,
             uv_rects: [uv_rect, uv_rect, uv_rect],
-            transform,
+            flip: (flip.0.into(), flip.1.into()),
         }
     }
 
     pub fn new_yuv(
-        rect: PictureRect,
+        rect: DeviceRect,
         clip_rect: DeviceRect,
         yuv_color_space: YuvRangedColorSpace,
         yuv_format: YuvFormat,
         yuv_channel_bit_depth: u32,
         uv_rects: [TexelRect; 3],
-        transform: CompositorTransform,
+        flip: (bool, bool),
     ) -> Self {
         CompositeInstance {
             rect,
@@ -360,7 +349,7 @@ impl CompositeInstance {
             yuv_format: pack_as_float(yuv_format as u32),
             yuv_channel_bit_depth: pack_as_float(yuv_channel_bit_depth),
             uv_rects,
-            transform,
+            flip: (flip.0.into(), flip.1.into()),
         }
     }
 

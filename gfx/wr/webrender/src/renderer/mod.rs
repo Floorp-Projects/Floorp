@@ -70,7 +70,7 @@ use glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{ScalingInstance, SvgFilterInstance, SVGFEFilterInstance, CopyInstance, PrimitiveInstanceData};
-use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, CompositorTransform};
+use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance};
 use crate::internal_types::{TextureSource, TextureCacheCategory, FrameId};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
@@ -3043,7 +3043,7 @@ impl Renderer {
                     ];
 
                     let instance = CompositeInstance::new_yuv(
-                        surface_rect.cast_unit().to_f32(),
+                        surface_rect.to_f32(),
                         surface_rect.to_f32(),
                         // z-id is not relevant when updating a native compositor surface.
                         // TODO(gw): Support compositor surfaces without z-buffer, for memory / perf win here.
@@ -3051,7 +3051,7 @@ impl Renderer {
                         format,
                         channel_bit_depth,
                         uv_rects,
-                        CompositorTransform::identity(),
+                        (false, false),
                     );
 
                     ( textures, instance )
@@ -3074,11 +3074,11 @@ impl Renderer {
                     let textures = BatchTextures::composite_rgb(plane.texture);
                     let uv_rect = self.texture_resolver.get_uv_rect(&textures.input.colors[0], plane.uv_rect);
                     let instance = CompositeInstance::new_rgb(
-                        surface_rect.cast_unit().to_f32(),
+                        surface_rect.to_f32(),
                         surface_rect.to_f32(),
                         PremultipliedColorF::WHITE,
                         uv_rect,
-                        CompositorTransform::identity(),
+                        (false, false),
                     );
 
                     ( textures, instance )
@@ -3137,8 +3137,9 @@ impl Renderer {
             let tile = &composite_state.tiles[item.key];
 
             let clip_rect = item.rectangle;
-            let tile_rect = tile.local_rect;
-            let transform = composite_state.get_device_transform(tile.transform_index).into();
+            let transform = composite_state.get_device_transform(tile.transform_index);
+            let tile_rect = transform.map_rect(&tile.local_rect);
+            let flip = (transform.scale.x < 0.0, transform.scale.y < 0.0);
 
             // Work out the draw params based on the tile surface
             let (instance, textures, shader_params) = match tile.surface {
@@ -3149,7 +3150,7 @@ impl Renderer {
                         tile_rect,
                         clip_rect,
                         color.premultiplied(),
-                        transform,
+                        flip,
                     );
                     let features = instance.get_rgb_features();
                     (
@@ -3163,7 +3164,7 @@ impl Renderer {
                         tile_rect,
                         clip_rect,
                         PremultipliedColorF::WHITE,
-                        transform,
+                        flip,
                     );
                     let features = instance.get_rgb_features();
                     (
@@ -3207,7 +3208,7 @@ impl Renderer {
                                     format,
                                     channel_bit_depth,
                                     uv_rects,
-                                    transform,
+                                    flip,
                                 ),
                                 textures,
                                 (
@@ -3225,7 +3226,7 @@ impl Renderer {
                                 clip_rect,
                                 PremultipliedColorF::WHITE,
                                 uv_rect,
-                                transform,
+                                flip,
                             );
                             let features = instance.get_rgb_features();
                             (
@@ -3248,7 +3249,7 @@ impl Renderer {
                         tile_rect,
                         clip_rect,
                         PremultipliedColorF::BLACK,
-                        transform,
+                        flip,
                     );
                     let features = instance.get_rgb_features();
                     (
