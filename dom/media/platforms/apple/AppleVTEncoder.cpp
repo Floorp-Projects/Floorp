@@ -188,10 +188,10 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   }
 
   if (mConfig.mUsage == Usage::Realtime && !SetRealtime(mSession, true)) {
-    LOGE("fail to configurate realtime properties");
+    LOGE("fail to configure realtime properties");
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    "fail to configurate average bitrate"),
+                    "fail to configure real-time"),
         __func__);
   }
 
