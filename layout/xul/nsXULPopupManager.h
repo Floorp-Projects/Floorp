@@ -601,8 +601,10 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   /**
    * Return an array of all the open and visible popup frames for
    * menus, in order from top to bottom.
+   * XXX should we always include native menu?
    */
-  void GetVisiblePopups(nsTArray<nsMenuPopupFrame*>& aPopups);
+  void GetVisiblePopups(nsTArray<nsMenuPopupFrame*>& aPopups,
+                        bool aIncludeNativeMenu = false);
 
   /**
    * Get the node that last triggered a popup or tooltip in the document
