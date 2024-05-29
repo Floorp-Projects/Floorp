@@ -243,38 +243,28 @@ bool NodeIsVisibleTextNode(const nsINode& aNode) {
 enum class TextScanDirection { Left = -1, Right = 1 };
 
 /**
- * @brief Tests if there is whitespace at the given position and direction.
+ * @brief Tests if there is whitespace at the given position.
  *
  * This algorithm tests for whitespaces and `&nbsp;` at `aPos`.
- * It returns the size of the whitespace found at the position, i.e. 5/6 for
- * `&nbsp/;` and 1 otherwise.
+ * It returns true if whitespace was found.
  *
- * This function follows a subsection of this section of the spec, but has been
- * adapted to be able to scan in both directions:
- * https://wicg.github.io/scroll-to-text-fragment/#next-non-whitespace-position
+ * This function assumes the reading direction is "right". If trying to check
+ * for whitespace to the left, the caller must adjust the offset.
+ *
  */
-uint32_t IsWhitespaceAtPosition(nsString& aText, uint32_t aPos,
-                                TextScanDirection aDirection) {
-  if (aText.Length() == 0) {
+bool IsWhitespaceAtPosition(const Text* aText, uint32_t aPos) {
+  if (!aText || aText->Length() == 0 || aPos >= aText->Length()) {
     return 0;
   }
-  if (aDirection == TextScanDirection::Right) {
-    if (aText.Length() > (aPos + 5)) {
-      if (Substring(aText, aPos, 5).Equals(u"&nbsp")) {
-        return aText.Length() > (aPos + 6) && aText.CharAt(aPos + 6) == u';'
-                   ? 6
-                   : 5;
-      }
-    }
-  } else {
-    if (aPos > 6 && Substring(aText, aPos - 6, 6).Equals(u"&nbsp;")) {
-      return 6;
-    }
-    if (aPos > 5 && Substring(aText, aPos - 5, 5).Equals(u"&nbsp")) {
-      return 5;
-    }
+  const nsTextFragment& frag = aText->TextFragment();
+  const char NBSP_CHAR = char(0xA0);
+  if (frag.Is2b()) {
+    const char16_t* content = frag.Get2b();
+    return IsSpaceCharacter(content[aPos]) ||
+           content[aPos] == char16_t(NBSP_CHAR);
   }
-  return uint32_t(IsSpaceCharacter(aText.CharAt(aPos)));
+  const char* content = frag.Get1b();
+  return IsSpaceCharacter(content[aPos]) || content[aPos] == NBSP_CHAR;
 }
 
 /** Advances the start of `aRange` to the next non-whitespace position.
@@ -303,8 +293,7 @@ void AdvanceStartToNextNonWhitespacePosition(nsRange& aRange) {
       continue;
     }
     const Text* text = Text::FromNode(node);
-    nsAutoString textData;
-    text->GetData(textData);
+    MOZ_ASSERT(text);
     // These steps are moved to `IsWhitespaceAtPosition()`.
     // 1.4. If the substring data of node at offset offset and count 6 is equal
     // to the string "&nbsp;" then:
@@ -316,13 +305,11 @@ void AdvanceStartToNextNonWhitespacePosition(nsRange& aRange) {
     // 1.6.1 Let cp be the code point at the offset index in node’s data.
     // 1.6.2 If cp does not have the White_Space property set, return.
     // 1.6.3 Add 1 to range’s start offset.
-    const uint32_t whitespace =
-        IsWhitespaceAtPosition(textData, offset, TextScanDirection::Right);
-    if (whitespace == 0) {
+    if (!IsWhitespaceAtPosition(text, offset)) {
       return;
     }
 
-    aRange.SetStart(node, offset + whitespace);
+    aRange.SetStart(node, offset + 1);
   }
 }
 
@@ -347,16 +334,16 @@ RangeBoundary MoveRangeBoundaryOneWord(const RangeBoundary& aRangeBoundary,
   const int offsetIncrement = int(aDirection);
   // Get the text node of the start of the range and the offset.
   // This is the current position of the start of the range.
-  nsAutoString text;
+  nsAutoString textContent;
   if (NodeIsVisibleTextNode(*curNode)) {
     const Text* textNode = Text::FromNode(curNode);
-    textNode->GetData(text);
 
     // Assuming that the current position might not be at a word boundary,
     // advance to the word boundary at word begin/end.
-    if (!IsWhitespaceAtPosition(text, offset, aDirection)) {
+    if (!IsWhitespaceAtPosition(textNode, offset)) {
+      textNode->GetData(textContent);
       const intl::WordRange wordRange =
-          intl::WordBreaker::FindWord(text, offset);
+          intl::WordBreaker::FindWord(textContent, offset);
       if (aDirection == TextScanDirection::Right &&
           offset != wordRange.mBegin) {
         offset = wordRange.mEnd;
@@ -380,21 +367,20 @@ RangeBoundary MoveRangeBoundaryOneWord(const RangeBoundary& aRangeBoundary,
       }
       offset =
           aDirection == TextScanDirection::Left ? curNode->Length() - 1 : 0;
-      if (const Text* textNode = Text::FromNode(curNode)) {
-        textNode->GetData(text);
-      }
       continue;
     }
-    if (const uint32_t whitespace =
-            IsWhitespaceAtPosition(text, offset, aDirection)) {
-      offset += offsetIncrement * whitespace;
+    const Text* textNode = Text::FromNode(curNode);
+    if (IsWhitespaceAtPosition(textNode, offset)) {
+      offset += offsetIncrement;
       continue;
     }
 
     // At this point, the caret has been moved to the next non-whitespace
     // position.
     // find word boundaries at the current position
-    const intl::WordRange wordRange = intl::WordBreaker::FindWord(text, offset);
+    textNode->GetData(textContent);
+    const intl::WordRange wordRange =
+        intl::WordBreaker::FindWord(textContent, offset);
     offset = aDirection == TextScanDirection::Left ? wordRange.mBegin
                                                    : wordRange.mEnd;
 
