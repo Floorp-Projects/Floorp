@@ -27,12 +27,11 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "/security",
     ]
 
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += [
-        "/toolkit/library/gtest/rust",
-    ]
-
 if not CONFIG["MOZ_OVERRIDE_GKRUST"]:
+    if CONFIG["ENABLE_TESTS"]:
+        DIRS += [
+            "/toolkit/library/gtest/rust",
+        ]
     DIRS += [
         "/toolkit/library/rust",
     ]
