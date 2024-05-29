@@ -142,7 +142,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIWidget.h"
 #include "nsListControlFrame.h"
-#include "nsMenuPopupFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
@@ -1638,10 +1637,10 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
   if (!pm) {
     return nullptr;
   }
-  nsTArray<nsMenuPopupFrame*> popups;
+  nsTArray<nsIFrame*> popups;
   pm->GetVisiblePopups(popups);
   // Search from top to bottom
-  for (nsMenuPopupFrame* popup : popups) {
+  for (nsIFrame* popup : popups) {
     if (popup->PresContext()->GetRootPresContext() != aRootPresContext) {
       continue;
     }

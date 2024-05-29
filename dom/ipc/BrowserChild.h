@@ -673,8 +673,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvReleaseAllPointerCapture();
 
-  mozilla::ipc::IPCResult RecvReleasePointerLock();
-
  private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid,
