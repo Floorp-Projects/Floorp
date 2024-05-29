@@ -1802,6 +1802,9 @@ CreatePromiseObjectWithoutResolutionFunctions(JSContext* cx) {
     return true;
   }
 
+  // At this point this is effectively subclassing;
+  ReportUsageCounter(cx, C, SUBCLASSING_PROMISE, SUBCLASSING_TYPE_II);
+
   // Step 4. Let executorClosure be a new Abstract Closure with parameters
   //         (resolve, reject) that captures promiseCapability and performs the
   //         following steps when called:
@@ -2789,6 +2792,12 @@ static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp) {
     return cx->compartment()->wrap(cx, args.rval());
   }
   return true;
+}
+
+bool js::IsPromiseConstructor(const JSObject* obj) {
+  // Note: this also returns true for cross-realm Promise constructors in the
+  // same compartment.
+  return IsNativeFunction(obj, PromiseConstructor);
 }
 
 /**
