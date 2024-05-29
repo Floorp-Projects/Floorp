@@ -70,6 +70,13 @@ impl Sql {
                     Some(format!("Unsupported value \"{value:?}\"")),
                 ));
             }
+            #[cfg(feature = "functions")]
+            ToSqlOutput::Arg(_) => {
+                return Err(Error::SqliteFailure(
+                    ffi::Error::new(ffi::SQLITE_MISUSE),
+                    Some(format!("Unsupported value \"{value:?}\"")),
+                ));
+            }
             #[cfg(feature = "array")]
             ToSqlOutput::Array(_) => {
                 return Err(Error::SqliteFailure(

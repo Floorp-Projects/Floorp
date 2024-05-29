@@ -41,7 +41,7 @@ use sealed::Sealed;
 /// - Using the [`rusqlite::params!`](crate::params!) macro, e.g.
 ///   `thing.query(rusqlite::params![1, "foo", bar])`. This is mostly useful for
 ///   heterogeneous lists where the number of parameters greater than 16, or
-///   homogenous lists of parameters where the number of parameters exceeds 32.
+///   homogeneous lists of parameters where the number of parameters exceeds 32.
 ///
 /// - For small homogeneous lists of parameters, they can either be passed as:
 ///
@@ -194,7 +194,7 @@ pub trait Params: Sealed {
 //
 // This sadly prevents `impl<T: ToSql, const N: usize> Params for [T; N]`, which
 // forces people to use `params![...]` or `rusqlite::params_from_iter` for long
-// homogenous lists of parameters. This is not that big of a deal, but is
+// homogeneous lists of parameters. This is not that big of a deal, but is
 // unfortunate, especially because I mostly did it because I wanted a simple
 // syntax for no-params that didnt require importing -- the empty tuple fits
 // that nicely, but I didn't think of it until much later.

@@ -1,3 +1,24 @@
+## [0.9.1]
+- Bugfix: `LruCache::contains_key` should take `&self` and not move the entry as
+  though it is accessed.
+- Add basic `CursorMut` API to `HashMap` (thanks @olebedev!)
+- Bump `hashbrown` dependency to depend on a version of `hashbrown` past a
+  downstream `zerocopy` dependency.
+- Don't depend on default features of `hashbrown`, removes `allocator-api2`
+  dependency.
+
+## [0.9.0]
+- API incompatible change: Don't panic in `reserve` and `try_reserve` in cases
+  where a rehash is needed. Previously would panic, adds the proper bounds on
+  reserve methods to do a rehash (previously bounds were missing, and reserve
+  would result in panics). (Thank you @cuviper!)
+
+## [0.8.4]
+- Now builds with `#![no_std]`.
+
+## [0.8.3]
+- bump hashbrown to 0.14
+
 ## [0.8.2]
 - bump hashbrown to 0.13
 

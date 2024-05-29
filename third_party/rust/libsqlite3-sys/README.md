@@ -92,6 +92,7 @@ features](https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-s
 
 * [`load_extension`](https://docs.rs/rusqlite/~0/rusqlite/struct.LoadExtensionGuard.html)
   allows loading dynamic library-based SQLite extensions.
+* `loadable_extension` to program [loadable extension](https://sqlite.org/loadext.html) in Rust.
 * [`backup`](https://docs.rs/rusqlite/~0/rusqlite/backup/index.html)
   allows use of SQLite's online backup API. Note: This feature requires SQLite 3.6.11 or later.
 * [`functions`](https://docs.rs/rusqlite/~0/rusqlite/functions/index.html)
@@ -136,7 +137,7 @@ features](https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-s
 * `extra_check` fail when a query passed to execute is readonly or has a column count > 0.
 * `column_decltype` provides `columns()` method for Statements and Rows; omit if linking to a version of SQLite/SQLCipher compiled with `-DSQLITE_OMIT_DECLTYPE`.
 * `collation` exposes [`sqlite3_create_collation_v2`](https://sqlite.org/c3ref/create_collation.html).
-* `winsqlite3` allows linking against the SQLite present in newer versions of Windows
+* `serialize` exposes [`sqlite3_serialize`](http://sqlite.org/c3ref/serialize.html) (3.23.0).
 
 ## Notes on building rusqlite and libsqlite3-sys
 

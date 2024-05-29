@@ -111,7 +111,7 @@ pub struct Null;
 
 /// SQLite data types.
 /// See [Fundamental Datatypes](https://sqlite.org/c3ref/c_blob.html).
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Type {
     /// NULL
     Null,

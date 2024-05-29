@@ -8,7 +8,7 @@ use rusqlite::{to_sqlite_error, Connection, Result};
 
 /// # build
 /// ```sh
-/// cargo build --example loadable_extension --features "loadable_extension modern_sqlite functions vtab trace"
+/// cargo build --example loadable_extension --features "loadable_extension functions trace"
 /// ```
 /// # test
 /// ```sh

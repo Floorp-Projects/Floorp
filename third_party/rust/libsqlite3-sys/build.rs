@@ -114,6 +114,7 @@ mod build_bundled {
         {
             super::copy_bindings(lib_name, "bindgen_bundled_version", out_path);
         }
+        println!("cargo:include={}/{lib_name}", env!("CARGO_MANIFEST_DIR"));
         println!("cargo:rerun-if-changed={lib_name}/sqlite3.c");
         println!("cargo:rerun-if-changed=sqlite3/wasm32-wasi-vfs.c");
         let mut cfg = cc::Build::new();
@@ -246,11 +247,16 @@ mod build_bundled {
         if !win_target() {
             cfg.flag("-DHAVE_LOCALTIME_R");
         }
-        // Target wasm32-wasi can't compile the default VFS
         if env::var("TARGET").map_or(false, |v| v == "wasm32-wasi") {
-            cfg.flag("-DSQLITE_OS_OTHER")
+            cfg.flag("-USQLITE_THREADSAFE")
+                .flag("-DSQLITE_THREADSAFE=0")
                 // https://github.com/rust-lang/rust/issues/74393
-                .flag("-DLONGDOUBLE_TYPE=double");
+                .flag("-DLONGDOUBLE_TYPE=double")
+                .flag("-D_WASI_EMULATED_MMAN")
+                .flag("-D_WASI_EMULATED_GETPID")
+                .flag("-D_WASI_EMULATED_SIGNAL")
+                .flag("-D_WASI_EMULATED_PROCESS_CLOCKS");
+
             if cfg!(feature = "wasm32-wasi-vfs") {
                 cfg.file("sqlite3/wasm32-wasi-vfs.c");
             }
@@ -326,8 +332,6 @@ fn env_prefix() -> &'static str {
 fn lib_name() -> &'static str {
     if cfg!(any(feature = "sqlcipher", feature = "bundled-sqlcipher")) {
         "sqlcipher"
-    } else if cfg!(all(windows, feature = "winsqlite3")) {
-        "winsqlite3"
     } else {
         "sqlite3"
     }
@@ -345,10 +349,7 @@ impl From<HeaderLocation> for String {
             HeaderLocation::FromEnvironment => {
                 let prefix = env_prefix();
                 let mut header = env::var(format!("{prefix}_INCLUDE_DIR")).unwrap_or_else(|_| {
-                    panic!(
-                        "{}_INCLUDE_DIR must be set if {}_LIB_DIR is set",
-                        prefix, prefix
-                    )
+                    panic!("{prefix}_INCLUDE_DIR must be set if {prefix}_LIB_DIR is set")
                 });
                 header.push_str(if cfg!(feature = "loadable_extension") {
                     "/sqlite3ext.h"
@@ -431,12 +432,6 @@ mod build_linked {
         #[cfg(not(feature = "loadable_extension"))]
         println!("cargo:link-target={link_lib}");
 
-        if win_target() && cfg!(feature = "winsqlite3") {
-            #[cfg(not(feature = "loadable_extension"))]
-            println!("cargo:rustc-link-lib=dylib={link_lib}");
-            return HeaderLocation::Wrapper;
-        }
-
         // Allow users to specify where to find SQLite.
         if let Ok(dir) = env::var(format!("{}_LIB_DIR", env_prefix())) {
             // Try to use pkg-config to determine link commands
@@ -512,9 +507,6 @@ mod bindings {
     use bindgen::callbacks::{IntKind, ParseCallbacks};
 
     use std::path::Path;
-
-    use super::win_target;
-
     #[derive(Debug)]
     struct SqliteTypeChooser;
 
@@ -596,36 +588,6 @@ mod bindings {
         }
         if cfg!(feature = "session") {
             bindings = bindings.clang_arg("-DSQLITE_ENABLE_SESSION");
-        }
-        if win_target() && cfg!(feature = "winsqlite3") {
-            bindings = bindings
-                .clang_arg("-DBINDGEN_USE_WINSQLITE3")
-                .blocklist_item("NTDDI_.+")
-                .blocklist_item("WINAPI_FAMILY.*")
-                .blocklist_item("_WIN32_.+")
-                .blocklist_item("_VCRT_COMPILER_PREPROCESSOR")
-                .blocklist_item("_SAL_VERSION")
-                .blocklist_item("__SAL_H_VERSION")
-                .blocklist_item("_USE_DECLSPECS_FOR_SAL")
-                .blocklist_item("_USE_ATTRIBUTES_FOR_SAL")
-                .blocklist_item("_CRT_PACKING")
-                .blocklist_item("_HAS_EXCEPTIONS")
-                .blocklist_item("_STL_LANG")
-                .blocklist_item("_HAS_CXX17")
-                .blocklist_item("_HAS_CXX20")
-                .blocklist_item("_HAS_NODISCARD")
-                .blocklist_item("WDK_NTDDI_VERSION")
-                .blocklist_item("OSVERSION_MASK")
-                .blocklist_item("SPVERSION_MASK")
-                .blocklist_item("SUBVERSION_MASK")
-                .blocklist_item("WINVER")
-                .blocklist_item("__security_cookie")
-                .blocklist_type("size_t")
-                .blocklist_type("__vcrt_bool")
-                .blocklist_type("wchar_t")
-                .blocklist_function("__security_init_cookie")
-                .blocklist_function("__report_gsfailure")
-                .blocklist_function("__va_start");
         }
 
         // When cross compiling unless effort is taken to fix the issue, bindgen

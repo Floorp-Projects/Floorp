@@ -23,7 +23,7 @@ parking_lot = ">=0.11,<=0.12"
 uniffi = "0.27.1"
 
 [dependencies.rusqlite]
-version = "0.30.0"
+version = "0.31.0"
 features = [
     "functions",
     "limits",

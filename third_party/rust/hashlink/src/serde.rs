@@ -1,4 +1,4 @@
-use std::{
+use core::{
     fmt::{self, Formatter},
     hash::{BuildHasher, Hash},
     marker::PhantomData,

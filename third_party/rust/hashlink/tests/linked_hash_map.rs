@@ -542,6 +542,20 @@ fn test_replace() {
 }
 
 #[test]
+fn test_reserve() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(1, 1);
+    map.insert(2, 2);
+    map.insert(3, 3);
+    map.insert(4, 4);
+
+    assert!(map.capacity() - map.len() < 100);
+    map.reserve(100);
+    assert!(map.capacity() - map.len() >= 100);
+}
+
+#[test]
 fn test_shrink_to_fit_resize() {
     let mut map = LinkedHashMap::new();
     map.shrink_to_fit();
@@ -560,4 +574,249 @@ fn test_shrink_to_fit_resize() {
     for i in 50..100 {
         assert_eq!(map.get(&i).unwrap(), &i);
     }
+}
+
+#[test]
+fn test_cursor_mut_current() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(3, 3);
+
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        let mut cursor = entry.cursor_mut();
+        let value = cursor.current().unwrap();
+        assert_eq!(value, (&3, &mut 3));
+        *value.1 = 5;
+        let value = cursor.current().unwrap();
+        assert_eq!(value, (&3, &mut 5));
+    }
+}
+
+#[test]
+fn test_cursor_mut_move_next() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(3, 3);
+    map.insert(4, 4);
+    map.insert(5, 5);
+    map.insert(6, 6);
+
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        let mut cursor = entry.cursor_mut();
+        let value = cursor.current();
+        assert!(&value.is_some());
+        assert_eq!(value.unwrap().1, &mut 3);
+        cursor.move_next();
+        let value = cursor.current();
+        assert!(&value.is_some());
+        assert_eq!(value.unwrap().1, &mut 4);
+        cursor.move_next();
+        let value = cursor.current();
+        assert!(&value.is_some());
+        assert_eq!(value.unwrap().1, &mut 5);
+        cursor.move_next();
+        let value = cursor.current();
+        assert!(&value.is_some());
+        assert_eq!(value.unwrap().1, &mut 6);
+        cursor.move_next();
+        let value = cursor.current();
+        assert!(value.is_none());
+        cursor.move_next();
+        let value = cursor.current();
+        assert!(value.is_some());
+        assert_eq!(value.unwrap().1, &mut 3);
+        cursor.move_next();
+        let value = cursor.current();
+        assert!(&value.is_some());
+        assert_eq!(value.unwrap().1, &mut 4);
+    }
+}
+
+#[test]
+fn test_cursor_mut_move_prev() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(3, 3);
+
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        let mut cursor = entry.cursor_mut();
+        cursor.move_prev();
+        let value = cursor.current();
+        assert!(value.is_none());
+        cursor.move_prev();
+        let value = cursor.current();
+        assert!(&value.is_some());
+        assert_eq!(value.unwrap().1, &mut 3);
+    }
+}
+
+#[test]
+fn test_cursor_mut_pick_next() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(3, 3);
+    map.insert(4, 4);
+
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        let mut cursor = entry.cursor_mut();
+        let next = cursor.peek_next();
+        assert!(&next.is_some());
+        assert_eq!(next.unwrap().1, &mut 4);
+        cursor.move_next();
+        let next = cursor.peek_next();
+        assert!(&next.is_none());
+        cursor.move_next();
+        let next = cursor.peek_next();
+        assert!(&next.is_some());
+        let value = next.as_ref().unwrap().to_owned();
+        assert_eq!(*value.1, 3);
+        *next.unwrap().1 = 5;
+        let next = cursor.peek_next();
+        assert!(&next.is_some());
+        assert_eq!(next.unwrap().1, &mut 5);
+    }
+}
+
+#[test]
+fn test_cursor_mut_pick_prev() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(3, 3);
+    map.insert(4, 4);
+
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        let mut cursor = entry.cursor_mut();
+        let next = cursor.peek_prev();
+        assert!(&next.is_none());
+        cursor.move_prev();
+        let next = cursor.peek_prev();
+        assert!(&next.is_some());
+        assert_eq!(next.unwrap(), (&4, &mut 4));
+    }
+}
+
+#[test]
+fn test_cursor_mut_insert_before() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(3, 3);
+    map.insert(4, 4);
+
+    // Insert new element in the middle
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(4) {
+        entry.cursor_mut().insert_before(5, 5);
+        assert!(map
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .eq([(3, 3), (5, 5), (4, 4)].iter().copied()));
+    }
+
+    // Insert new element at the very end of the list
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        let mut cursor = entry.cursor_mut();
+        cursor.move_prev();
+        cursor.insert_before(6, 6);
+        assert!(map
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .eq([(3, 3), (5, 5), (4, 4), (6, 6)].iter().copied()));
+    }
+
+    // Relocate element and override value
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(5) {
+        entry.cursor_mut().insert_before(4, 42);
+        assert!(map
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .eq([(3, 3), (4, 42), (5, 5), (6, 6)].iter().copied()));
+    }
+}
+
+#[test]
+fn test_cursor_mut_insert_after() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(3, 3);
+    map.insert(4, 4);
+
+    // Insert new element in the middle.
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        entry.cursor_mut().insert_after(5, 5);
+        assert!(map
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .eq([(3, 3), (5, 5), (4, 4)].iter().copied()));
+    }
+
+    // Insert new element as the first one.
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(4) {
+        let mut cursor = entry.cursor_mut();
+        cursor.move_next();
+        cursor.insert_after(6, 6);
+        assert!(map
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .eq([(6, 6), (3, 3), (5, 5), (4, 4)].iter().copied()));
+    }
+}
+
+#[test]
+fn test_cursor_mut_insert_before_itself() {
+    let mut map = LinkedHashMap::new();
+
+    map.insert(2, 2);
+    map.insert(3, 3);
+    map.insert(4, 4);
+
+    // Insert a new value before its key. This is a corner case that needs to be
+    // handled explicitly.
+    if let linked_hash_map::Entry::Occupied(entry) = map.entry(3) {
+        entry.cursor_mut().insert_before(3, 5);
+        assert!(map
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .eq([(2, 2), (3, 5), (4, 4)].iter().copied()));
+    }
+}
+
+#[test]
+fn test_cursor_front_mut() {
+    let mut map: LinkedHashMap<i32, i32> = LinkedHashMap::new();
+    // The `CursorMut`` in an empty LinkedHashMap will always return `None` as its
+    // current element, regardless of any move in any direction.
+    let mut cursor = map.cursor_front_mut();
+    assert!(cursor.current().is_none());
+    cursor.move_next();
+    assert!(cursor.current().is_none());
+    cursor.insert_after(1, 1);
+    cursor.move_next();
+    assert!(cursor.current().is_some());
+    assert_eq!(cursor.current().unwrap().1, &mut 1);
+    cursor.move_next();
+    assert!(cursor.current().is_none());
+
+    assert!(map
+        .iter()
+        .map(|(k, v)| (*k, *v))
+        .eq([(1, 1)].iter().copied()));
+
+    map.insert(2, 2);
+    map.insert(3, 3);
+
+    let mut cursor = map.cursor_front_mut();
+    assert!(cursor.current().is_some());
+    assert_eq!(cursor.current().unwrap().1, &mut 1);
+}
+
+#[test]
+fn test_cursor_back_mut() {
+    let mut map: LinkedHashMap<i32, i32> = LinkedHashMap::new();
+
+    map.insert(1, 1);
+    map.insert(2, 2);
+    map.insert(3, 3);
+
+    let mut cursor = map.cursor_back_mut();
+    assert!(cursor.current().is_some());
+    assert_eq!(cursor.current().unwrap().1, &mut 3);
 }

@@ -66,7 +66,7 @@ use crate::ffi::sqlite3_context;
 use crate::ffi::sqlite3_value;
 
 use crate::context::set_result;
-use crate::types::{FromSql, FromSqlError, ToSql, ValueRef};
+use crate::types::{FromSql, FromSqlError, ToSql, ToSqlOutput, ValueRef};
 
 use crate::{str_to_cstring, Connection, Error, InnerConnection, Result};
 
@@ -147,6 +147,15 @@ impl Context<'_> {
     pub fn get_raw(&self, idx: usize) -> ValueRef<'_> {
         let arg = self.args[idx];
         unsafe { ValueRef::from_value(arg) }
+    }
+
+    /// Returns the `idx`th argument as a `SqlFnArg`.
+    /// To be used when the SQL function result is one of its arguments.
+    #[inline]
+    #[must_use]
+    pub fn get_arg(&self, idx: usize) -> SqlFnArg {
+        assert!(idx < self.len());
+        SqlFnArg { idx }
     }
 
     /// Returns the subtype of `idx`th argument.
@@ -232,11 +241,6 @@ impl Context<'_> {
             phantom: PhantomData,
         })
     }
-
-    /// Set the Subtype of an SQL function
-    pub fn set_result_subtype(&self, sub_type: std::os::raw::c_uint) {
-        unsafe { ffi::sqlite3_result_subtype(self.ctx, sub_type) };
-    }
 }
 
 /// A reference to a connection handle with a lifetime bound to something.
@@ -258,6 +262,57 @@ impl Deref for ConnectionRef<'_> {
 
 type AuxInner = Arc<dyn Any + Send + Sync + 'static>;
 
+/// Subtype of an SQL function
+pub type SubType = Option<std::os::raw::c_uint>;
+
+/// Result of an SQL function
+pub trait SqlFnOutput {
+    /// Converts Rust value to SQLite value with an optional sub-type
+    fn to_sql(&self) -> Result<(ToSqlOutput<'_>, SubType)>;
+}
+
+impl<T: ToSql> SqlFnOutput for T {
+    #[inline]
+    fn to_sql(&self) -> Result<(ToSqlOutput<'_>, SubType)> {
+        ToSql::to_sql(self).map(|o| (o, None))
+    }
+}
+
+impl<T: ToSql> SqlFnOutput for (T, SubType) {
+    fn to_sql(&self) -> Result<(ToSqlOutput<'_>, SubType)> {
+        ToSql::to_sql(&self.0).map(|o| (o, self.1))
+    }
+}
+
+/// n-th arg of an SQL scalar function
+pub struct SqlFnArg {
+    idx: usize,
+}
+impl ToSql for SqlFnArg {
+    fn to_sql(&self) -> Result<ToSqlOutput<'_>> {
+        Ok(ToSqlOutput::Arg(self.idx))
+    }
+}
+
+unsafe fn sql_result<T: SqlFnOutput>(
+    ctx: *mut sqlite3_context,
+    args: &[*mut sqlite3_value],
+    r: Result<T>,
+) {
+    let t = r.as_ref().map(SqlFnOutput::to_sql);
+
+    match t {
+        Ok(Ok((ref value, sub_type))) => {
+            set_result(ctx, args, value);
+            if let Some(sub_type) = sub_type {
+                ffi::sqlite3_result_subtype(ctx, sub_type);
+            }
+        }
+        Ok(Err(err)) => report_error(ctx, &err),
+        Err(err) => report_error(ctx, err),
+    };
+}
+
 /// Aggregate is the callback interface for user-defined
 /// aggregate function.
 ///
@@ -266,7 +321,7 @@ type AuxInner = Arc<dyn Any + Send + Sync + 'static>;
 pub trait Aggregate<A, T>
 where
     A: RefUnwindSafe + UnwindSafe,
-    T: ToSql,
+    T: SqlFnOutput,
 {
     /// Initializes the aggregation context. Will be called prior to the first
     /// call to [`step()`](Aggregate::step) to set up the context for an
@@ -297,7 +352,7 @@ where
 pub trait WindowAggregate<A, T>: Aggregate<A, T>
 where
     A: RefUnwindSafe + UnwindSafe,
-    T: ToSql,
+    T: SqlFnOutput,
 {
     /// Returns the current value of the aggregate. Unlike xFinal, the
     /// implementation should not delete any context.
@@ -311,6 +366,7 @@ bitflags::bitflags! {
     /// Function Flags.
     /// See [sqlite3_create_function](https://sqlite.org/c3ref/create_function.html)
     /// and [Function Flags](https://sqlite.org/c3ref/c_deterministic.html) for details.
+    #[derive(Clone, Copy, Debug)]
     #[repr(C)]
     pub struct FunctionFlags: ::std::os::raw::c_int {
         /// Specifies UTF-8 as the text encoding this SQL function prefers for its parameters.
@@ -329,6 +385,8 @@ bitflags::bitflags! {
         const SQLITE_SUBTYPE       = 0x0000_0010_0000; // 3.30.0
         /// Means that the function is unlikely to cause problems even if misused.
         const SQLITE_INNOCUOUS     = 0x0000_0020_0000; // 3.31.0
+        /// Indicates to SQLite that a function might call `sqlite3_result_subtype()` to cause a sub-type to be associated with its result.
+        const SQLITE_RESULT_SUBTYPE     = 0x0000_0100_0000; // 3.45.0
     }
 }
 
@@ -387,7 +445,7 @@ impl Connection {
     ) -> Result<()>
     where
         F: FnMut(&Context<'_>) -> Result<T> + Send + UnwindSafe + 'static,
-        T: ToSql,
+        T: SqlFnOutput,
     {
         self.db
             .borrow_mut()
@@ -411,7 +469,7 @@ impl Connection {
     where
         A: RefUnwindSafe + UnwindSafe,
         D: Aggregate<A, T> + 'static,
-        T: ToSql,
+        T: SqlFnOutput,
     {
         self.db
             .borrow_mut()
@@ -436,7 +494,7 @@ impl Connection {
     where
         A: RefUnwindSafe + UnwindSafe,
         W: WindowAggregate<A, T> + 'static,
-        T: ToSql,
+        T: SqlFnOutput,
     {
         self.db
             .borrow_mut()
@@ -469,7 +527,7 @@ impl InnerConnection {
     ) -> Result<()>
     where
         F: FnMut(&Context<'_>) -> Result<T> + Send + UnwindSafe + 'static,
-        T: ToSql,
+        T: SqlFnOutput,
     {
         unsafe extern "C" fn call_boxed_closure<F, T>(
             ctx: *mut sqlite3_context,
@@ -477,15 +535,13 @@ impl InnerConnection {
             argv: *mut *mut sqlite3_value,
         ) where
             F: FnMut(&Context<'_>) -> Result<T>,
-            T: ToSql,
+            T: SqlFnOutput,
         {
+            let args = slice::from_raw_parts(argv, argc as usize);
             let r = catch_unwind(|| {
                 let boxed_f: *mut F = ffi::sqlite3_user_data(ctx).cast::<F>();
                 assert!(!boxed_f.is_null(), "Internal error - null function pointer");
-                let ctx = Context {
-                    ctx,
-                    args: slice::from_raw_parts(argv, argc as usize),
-                };
+                let ctx = Context { ctx, args };
                 (*boxed_f)(&ctx)
             });
             let t = match r {
@@ -495,13 +551,7 @@ impl InnerConnection {
                 }
                 Ok(r) => r,
             };
-            let t = t.as_ref().map(|t| ToSql::to_sql(t));
-
-            match t {
-                Ok(Ok(ref value)) => set_result(ctx, value),
-                Ok(Err(err)) => report_error(ctx, &err),
-                Err(err) => report_error(ctx, err),
-            }
+            sql_result(ctx, args, t);
         }
 
         let boxed_f: *mut F = Box::into_raw(Box::new(x_func));
@@ -532,7 +582,7 @@ impl InnerConnection {
     where
         A: RefUnwindSafe + UnwindSafe,
         D: Aggregate<A, T> + 'static,
-        T: ToSql,
+        T: SqlFnOutput,
     {
         let boxed_aggr: *mut D = Box::into_raw(Box::new(aggr));
         let c_name = str_to_cstring(fn_name)?;
@@ -563,7 +613,7 @@ impl InnerConnection {
     where
         A: RefUnwindSafe + UnwindSafe,
         W: WindowAggregate<A, T> + 'static,
-        T: ToSql,
+        T: SqlFnOutput,
     {
         let boxed_aggr: *mut W = Box::into_raw(Box::new(aggr));
         let c_name = str_to_cstring(fn_name)?;
@@ -618,7 +668,7 @@ unsafe extern "C" fn call_boxed_step<A, D, T>(
 ) where
     A: RefUnwindSafe + UnwindSafe,
     D: Aggregate<A, T>,
-    T: ToSql,
+    T: SqlFnOutput,
 {
     let pac = if let Some(pac) = aggregate_context(ctx, std::mem::size_of::<*mut A>()) {
         pac
@@ -666,7 +716,7 @@ unsafe extern "C" fn call_boxed_inverse<A, W, T>(
 ) where
     A: RefUnwindSafe + UnwindSafe,
     W: WindowAggregate<A, T>,
-    T: ToSql,
+    T: SqlFnOutput,
 {
     let pac = if let Some(pac) = aggregate_context(ctx, std::mem::size_of::<*mut A>()) {
         pac
@@ -704,7 +754,7 @@ unsafe extern "C" fn call_boxed_final<A, D, T>(ctx: *mut sqlite3_context)
 where
     A: RefUnwindSafe + UnwindSafe,
     D: Aggregate<A, T>,
-    T: ToSql,
+    T: SqlFnOutput,
 {
     // Within the xFinal callback, it is customary to set N=0 in calls to
     // sqlite3_aggregate_context(C,N) so that no pointless memory allocations occur.
@@ -738,12 +788,7 @@ where
         }
         Ok(r) => r,
     };
-    let t = t.as_ref().map(|t| ToSql::to_sql(t));
-    match t {
-        Ok(Ok(ref value)) => set_result(ctx, value),
-        Ok(Err(err)) => report_error(ctx, &err),
-        Err(err) => report_error(ctx, err),
-    }
+    sql_result(ctx, &[], t);
 }
 
 #[cfg(feature = "window")]
@@ -751,7 +796,7 @@ unsafe extern "C" fn call_boxed_value<A, W, T>(ctx: *mut sqlite3_context)
 where
     A: RefUnwindSafe + UnwindSafe,
     W: WindowAggregate<A, T>,
-    T: ToSql,
+    T: SqlFnOutput,
 {
     // Within the xValue callback, it is customary to set N=0 in calls to
     // sqlite3_aggregate_context(C,N) so that no pointless memory allocations occur.
@@ -775,12 +820,7 @@ where
         }
         Ok(r) => r,
     };
-    let t = t.as_ref().map(|t| ToSql::to_sql(t));
-    match t {
-        Ok(Ok(ref value)) => set_result(ctx, value),
-        Ok(Err(err)) => report_error(ctx, &err),
-        Err(err) => report_error(ctx, err),
-    }
+    sql_result(ctx, &[], t);
 }
 
 #[cfg(test)]
@@ -790,7 +830,7 @@ mod test {
 
     #[cfg(feature = "window")]
     use crate::functions::WindowAggregate;
-    use crate::functions::{Aggregate, Context, FunctionFlags};
+    use crate::functions::{Aggregate, Context, FunctionFlags, SqlFnArg, SubType};
     use crate::{Connection, Error, Result};
 
     fn half(ctx: &Context<'_>) -> Result<c_double> {
@@ -1066,6 +1106,39 @@ mod test {
             ("e".to_owned(), 9),
         ];
         assert_eq!(expected, results);
+        Ok(())
+    }
+
+    #[test]
+    fn test_sub_type() -> Result<()> {
+        fn test_getsubtype(ctx: &Context<'_>) -> Result<i32> {
+            Ok(ctx.get_subtype(0) as i32)
+        }
+        fn test_setsubtype(ctx: &Context<'_>) -> Result<(SqlFnArg, SubType)> {
+            use std::os::raw::c_uint;
+            let value = ctx.get_arg(0);
+            let sub_type = ctx.get::<c_uint>(1)?;
+            Ok((value, Some(sub_type)))
+        }
+        let db = Connection::open_in_memory()?;
+        db.create_scalar_function(
+            "test_getsubtype",
+            1,
+            FunctionFlags::SQLITE_UTF8,
+            test_getsubtype,
+        )?;
+        db.create_scalar_function(
+            "test_setsubtype",
+            2,
+            FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_RESULT_SUBTYPE,
+            test_setsubtype,
+        )?;
+        let result: i32 = db.one_column("SELECT test_getsubtype('hello');")?;
+        assert_eq!(0, result);
+
+        let result: i32 = db.one_column("SELECT test_getsubtype(test_setsubtype('hello',123));")?;
+        assert_eq!(123, result);
+
         Ok(())
     }
 }
