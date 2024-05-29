@@ -2553,25 +2553,6 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WHEN session onProductUrlChange is successful THEN notify of completion`() {
-        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
-        val delegate = engineSession.createContentDelegate()
-        var productUrlStatus = false
-        engineSession.register(
-            object : EngineSession.Observer {
-                override fun onProductUrlChange(isProductUrl: Boolean) {
-                    productUrlStatus = isProductUrl
-                }
-            },
-        )
-
-        delegate.onProductUrl(geckoSession)
-
-        assertTrue(productUrlStatus)
-        assertEquals(true, productUrlStatus)
-    }
-
-    @Test
     fun `WHEN session requestProductAnalysis is successful with analysis object THEN notify of completion`() {
         val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
         var onResultCalled = false

@@ -1467,10 +1467,6 @@ class GeckoEngineSession(
             notifyObservers { onCookieBannerChange(CookieBannerHandlingStatus.HANDLED) }
         }
 
-        override fun onProductUrl(session: GeckoSession) {
-            notifyObservers { onProductUrlChange(true) }
-        }
-
         override fun onFirstComposite(session: GeckoSession) = Unit
 
         override fun onFirstContentfulPaint(session: GeckoSession) {

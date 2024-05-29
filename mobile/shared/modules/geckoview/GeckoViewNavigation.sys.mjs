@@ -10,7 +10,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.sys.mjs",
-  isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
 });
 
@@ -643,14 +642,6 @@ export class GeckoViewNavigation extends GeckoViewModule {
     };
   }
 
-  async isProductURL(aLocationURI) {
-    if (lazy.isProductURL(aLocationURI)) {
-      this.eventDispatcher.sendRequest({
-        type: "GeckoView:OnProductUrl",
-      });
-    }
-  }
-
   // WebProgress event handler.
   onLocationChange(aWebProgress, aRequest, aLocationURI) {
     debug`onLocationChange`;
@@ -720,8 +711,6 @@ export class GeckoViewNavigation extends GeckoViewModule {
     };
     lazy.TranslationsParent.onLocationChange(this.browser);
     this.eventDispatcher.sendRequest(message);
-
-    this.isProductURL(aLocationURI);
   }
 }
 
