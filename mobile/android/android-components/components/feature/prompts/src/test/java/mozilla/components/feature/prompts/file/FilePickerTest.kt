@@ -107,7 +107,8 @@ class FilePickerTest {
     }
 
     @Test
-    fun `handleFilePickerRequest without the required permission will call askAndroidPermissionsForRequest`() {
+    @Config(sdk = [32])
+    fun `handleFilePickerRequest without the required permission will call askAndroidPermissionsForRequest on SDK 32 and below`() {
         var onRequestPermissionWasCalled = false
         val context = ApplicationProvider.getApplicationContext<Context>()
 
@@ -176,18 +177,19 @@ class FilePickerTest {
     }
 
     @Test
-    fun `onPermissionsGranted will forward call to filePickerRequest`() {
+    fun `onPermissionsGranted will forward call to to build intents and show file chooser`() {
         stubContext()
         filePicker = spy(filePicker)
         filePicker.currentRequest = request
 
-        filePicker.onPermissionsGranted()
+        filePicker.onPermissionsGranted(request)
 
         // The original prompt that started the request permission flow is persisted in the store
         // That should not be accesses / modified in any way.
         verifyNoInteractions(store)
         // After the permission is granted we should retry picking a file based on the original request.
-        verify(filePicker).handleFileRequest(eq(request), eq(false))
+        verify(filePicker).buildIntentList(eq(request))
+        verify(filePicker).showChooser(any())
     }
 
     @Test
@@ -316,7 +318,7 @@ class FilePickerTest {
 
         filePicker.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_GRANTED })
 
-        verify(filePicker).onPermissionsGranted()
+        verify(filePicker).onPermissionsGranted(request)
     }
 
     @Test
