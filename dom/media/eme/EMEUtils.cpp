@@ -152,19 +152,6 @@ bool IsHardwareDecryptionSupported(const KeySystemConfig& aConfig) {
   return false;
 }
 
-const char* EncryptionSchemeStr(const CryptoScheme& aScheme) {
-  switch (aScheme) {
-    case CryptoScheme::None:
-      return "none";
-    case CryptoScheme::Cenc:
-      return "cenc";
-    case CryptoScheme::Cbcs:
-      return "cbcs";
-    default:
-      return "not-defined!";
-  }
-}
-
 #ifdef MOZ_WMF_CDM
 void MFCDMCapabilitiesIPDLToKeySystemConfig(
     const MFCDMCapabilitiesIPDL& aCDMConfig,
@@ -199,7 +186,7 @@ void MFCDMCapabilitiesIPDLToKeySystemConfig(
   aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
   for (const auto& scheme : aCDMConfig.encryptionSchemes()) {
     aKeySystemConfig.mEncryptionSchemes.AppendElement(
-        NS_ConvertUTF8toUTF16(EncryptionSchemeStr(scheme)));
+        NS_ConvertUTF8toUTF16(CryptoSchemeToString(scheme)));
   }
   aKeySystemConfig.mIsHDCP22Compatible = aCDMConfig.isHDCP22Compatible()
                                              ? *aCDMConfig.isHDCP22Compatible()
