@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/ElementInlines.h"
-#include "mozilla/ScrollContainerFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
 namespace mozilla::dom {
@@ -64,10 +64,10 @@ void ViewTimeline::ReplacePropertiesWith(Element* aSubjectElement,
 }
 
 Maybe<ScrollTimeline::ScrollOffsets> ViewTimeline::ComputeOffsets(
-    const ScrollContainerFrame* aScrollContainerFrame,
+    const nsIScrollableFrame* aScrollFrame,
     layers::ScrollDirection aOrientation) const {
   MOZ_ASSERT(mSubject);
-  MOZ_ASSERT(aScrollContainerFrame);
+  MOZ_ASSERT(aScrollFrame);
 
   const Element* subjectElement =
       AnimationUtils::GetElementForRestyle(mSubject, mSubjectPseudoType);
@@ -81,8 +81,8 @@ Maybe<ScrollTimeline::ScrollOffsets> ViewTimeline::ComputeOffsets(
 
   // In order to get the distance between the subject and the scrollport
   // properly, we use the position based on the domain of the scrolled frame,
-  // instead of the scroll container frame.
-  const nsIFrame* scrolledFrame = aScrollContainerFrame->GetScrolledFrame();
+  // instead of the scrollable frame.
+  const nsIFrame* scrolledFrame = aScrollFrame->GetScrolledFrame();
   MOZ_ASSERT(scrolledFrame);
   const nsRect subjectRect(subject->GetOffsetTo(scrolledFrame),
                            subject->GetSize());
@@ -90,7 +90,7 @@ Maybe<ScrollTimeline::ScrollOffsets> ViewTimeline::ComputeOffsets(
   // Use scrollport size (i.e. padding box size - scrollbar size), which is used
   // for calculating the view progress visibility range.
   // https://drafts.csswg.org/scroll-animations/#view-progress-visibility-range
-  const nsRect scrollPort = aScrollContainerFrame->GetScrollPortRect();
+  const nsRect scrollPort = aScrollFrame->GetScrollPortRect();
 
   // Adjuct the positions and sizes based on the physical axis.
   nscoord subjectPosition = subjectRect.y;
@@ -114,7 +114,7 @@ Maybe<ScrollTimeline::ScrollOffsets> ViewTimeline::ComputeOffsets(
   // (i.e. the box of the scrollport), where as |startOffset| refers to the
   // start of the timeline, and similarly for end side/offset. [1]
   // https://drafts.csswg.org/css-writing-modes-4/#css-start
-  const auto sideInsets = ComputeInsets(aScrollContainerFrame, aOrientation);
+  const auto sideInsets = ComputeInsets(aScrollFrame, aOrientation);
 
   // Basically, we are computing the "cover" timeline range name, which
   // represents the full range of the view progress timeline.
@@ -131,15 +131,14 @@ Maybe<ScrollTimeline::ScrollOffsets> ViewTimeline::ComputeOffsets(
 }
 
 ScrollTimeline::ScrollOffsets ViewTimeline::ComputeInsets(
-    const ScrollContainerFrame* aScrollContainerFrame,
+    const nsIScrollableFrame* aScrollFrame,
     layers::ScrollDirection aOrientation) const {
   // If view-timeline-inset is auto, it indicates to use the value of
   // scroll-padding. We use logical dimension to map that start/end offset to
   // the corresponding scroll-padding-{inline|block}-{start|end} values.
-  const WritingMode wm =
-      aScrollContainerFrame->GetScrolledFrame()->GetWritingMode();
+  const WritingMode wm = aScrollFrame->GetScrolledFrame()->GetWritingMode();
   const auto& scrollPadding =
-      LogicalMargin(wm, aScrollContainerFrame->GetScrollPadding());
+      LogicalMargin(wm, aScrollFrame->GetScrollPadding());
   const bool isBlockAxis =
       mAxis == StyleScrollAxis::Block ||
       (mAxis == StyleScrollAxis::Horizontal && wm.IsVertical()) ||
@@ -148,7 +147,7 @@ ScrollTimeline::ScrollOffsets ViewTimeline::ComputeInsets(
   // The percentages of view-timelne-inset is relative to the corresponding
   // dimension of the relevant scrollport.
   // https://drafts.csswg.org/scroll-animations-1/#view-timeline-inset
-  const nsRect scrollPort = aScrollContainerFrame->GetScrollPortRect();
+  const nsRect scrollPort = aScrollFrame->GetScrollPortRect();
   const nscoord percentageBasis =
       aOrientation == layers::ScrollDirection::eHorizontal ? scrollPort.width
                                                            : scrollPort.height;

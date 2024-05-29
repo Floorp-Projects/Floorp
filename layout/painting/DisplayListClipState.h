@@ -13,6 +13,7 @@
 #include "mozilla/DebugOnly.h"
 
 class nsIFrame;
+class nsIScrollableFrame;
 
 namespace mozilla {
 

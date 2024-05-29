@@ -33,11 +33,11 @@
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
 #include "nsIController.h"
+#include "nsIScrollableFrame.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/InputEventOptions.h"
 #include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -340,7 +340,7 @@ class TextInputSelectionController final : public nsSupportsWeakReference,
 
   TextInputSelectionController(PresShell* aPresShell, nsIContent* aLimiter);
 
-  void SetScrollContainerFrame(ScrollContainerFrame* aScrollContainerFrame);
+  void SetScrollableFrame(nsIScrollableFrame* aScrollableFrame);
   nsFrameSelection* GetConstFrameSelection() { return mFrameSelection; }
   // Will return null if !mFrameSelection.
   Selection* GetSelection(SelectionType aSelectionType);
@@ -383,7 +383,7 @@ class TextInputSelectionController final : public nsSupportsWeakReference,
 
  private:
   RefPtr<nsFrameSelection> mFrameSelection;
-  ScrollContainerFrame* mScrollContainerFrame = nullptr;
+  nsIScrollableFrame* mScrollFrame;
   nsWeakPtr mPresShellWeak;
 };
 
@@ -398,7 +398,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_WEAK(TextInputSelectionController, mFrameSelection)
 
 TextInputSelectionController::TextInputSelectionController(
-    PresShell* aPresShell, nsIContent* aLimiter) {
+    PresShell* aPresShell, nsIContent* aLimiter)
+    : mScrollFrame(nullptr) {
   if (aPresShell) {
     bool accessibleCaretEnabled =
         PresShell::AccessibleCaretEnabled(aLimiter->OwnerDoc()->GetDocShell());
@@ -408,10 +409,10 @@ TextInputSelectionController::TextInputSelectionController(
   }
 }
 
-void TextInputSelectionController::SetScrollContainerFrame(
-    ScrollContainerFrame* aScrollContainerFrame) {
-  mScrollContainerFrame = aScrollContainerFrame;
-  if (!mScrollContainerFrame && mFrameSelection) {
+void TextInputSelectionController::SetScrollableFrame(
+    nsIScrollableFrame* aScrollableFrame) {
+  mScrollFrame = aScrollableFrame;
+  if (!mScrollFrame && mFrameSelection) {
     mFrameSelection->DisconnectFromPresShell();
     mFrameSelection = nullptr;
   }
@@ -652,15 +653,16 @@ NS_IMETHODIMP
 TextInputSelectionController::PageMove(bool aForward, bool aExtend) {
   // expected behavior for PageMove is to scroll AND move the caret
   // and to remain relative position of the caret in view. see Bug 4302.
-  if (mScrollContainerFrame) {
+  if (mScrollFrame) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-    // We won't scroll parent scrollable element of mScrollContainerFrame.
-    // Therefore, this may be handled when mScrollContainerFrame is completely
-    // outside of the view. In such case, user may be confused since they might
-    // have wanted to scroll a parent scrollable element. For making clearer
-    // which element handles PageDown/PageUp, we should move selection into view
-    // even if selection is not changed.
-    return frameSelection->PageMove(aForward, aExtend, mScrollContainerFrame,
+    nsIFrame* scrollFrame = do_QueryFrame(mScrollFrame);
+    // We won't scroll parent scrollable element of mScrollFrame.  Therefore,
+    // this may be handled when mScrollFrame is completely outside of the view.
+    // In such case, user may be confused since they might have wanted to
+    // scroll a parent scrollable element.  For making clearer which element
+    // handles PageDown/PageUp, we should move selection into view even if
+    // selection is not changed.
+    return frameSelection->PageMove(aForward, aExtend, scrollFrame,
                                     nsFrameSelection::SelectionIntoView::Yes);
   }
   // Similarly, if there is no scrollable frame, we should move the editor
@@ -675,12 +677,12 @@ TextInputSelectionController::PageMove(bool aForward, bool aExtend) {
 
 NS_IMETHODIMP
 TextInputSelectionController::CompleteScroll(bool aForward) {
-  if (!mScrollContainerFrame) {
+  if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mScrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                                  ScrollUnit::WHOLE, ScrollMode::Instant);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE,
+                         ScrollMode::Instant);
   return NS_OK;
 }
 
@@ -728,34 +730,34 @@ TextInputSelectionController::CompleteMove(bool aForward, bool aExtend) {
 
 NS_IMETHODIMP
 TextInputSelectionController::ScrollPage(bool aForward) {
-  if (!mScrollContainerFrame) {
+  if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mScrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                                  ScrollUnit::PAGES, ScrollMode::Smooth);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES,
+                         ScrollMode::Smooth);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TextInputSelectionController::ScrollLine(bool aForward) {
-  if (!mScrollContainerFrame) {
+  if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mScrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                                  ScrollUnit::LINES, ScrollMode::Smooth);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::LINES,
+                         ScrollMode::Smooth);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TextInputSelectionController::ScrollCharacter(bool aRight) {
-  if (!mScrollContainerFrame) {
+  if (!mScrollFrame) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mScrollContainerFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0),
-                                  ScrollUnit::LINES, ScrollMode::Smooth);
+  mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0), ScrollUnit::LINES,
+                         ScrollMode::Smooth);
   return NS_OK;
 }
 
@@ -2447,7 +2449,7 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
       mTextListener->EndListeningToSelectionChange();
     }
 
-    mSelCon->SetScrollContainerFrame(nullptr);
+    mSelCon->SetScrollableFrame(nullptr);
     mSelCon = nullptr;
   }
 
@@ -3035,7 +3037,7 @@ void TextControlState::InitializeKeyboardEventListeners() {
                                     TrustedEventsAtSystemGroupBubble());
   }
 
-  mSelCon->SetScrollContainerFrame(mBoundFrame->GetScrollTargetFrame());
+  mSelCon->SetScrollableFrame(mBoundFrame->GetScrollTargetFrame());
 }
 
 void TextControlState::SetPreviewText(const nsAString& aValue, bool aNotify) {

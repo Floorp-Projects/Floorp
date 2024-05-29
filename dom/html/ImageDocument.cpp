@@ -15,7 +15,6 @@
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "nsICSSDeclaration.h"
 #include "nsObjectLoadingContent.h"
@@ -42,6 +41,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"
 #include "nsThreadUtils.h"
+#include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -297,7 +297,7 @@ void ImageDocument::ScrollImageTo(int32_t aX, int32_t aY) {
     return;
   }
 
-  ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
+  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
   if (!sf) {
     return;
   }

@@ -19,10 +19,9 @@
 
 struct nsRect;
 class nsIFrame;
+class nsIScrollableFrame;
 
 namespace mozilla {
-
-class ScrollContainerFrame;
 
 class StickyScrollContainer final : public nsIScrollPositionListener {
  public:
@@ -49,9 +48,7 @@ class StickyScrollContainer final : public nsIScrollPositionListener {
   void AddFrame(nsIFrame* aFrame) { mFrames.AppendElement(aFrame); }
   void RemoveFrame(nsIFrame* aFrame) { mFrames.RemoveElement(aFrame); }
 
-  ScrollContainerFrame* ScrollContainer() const {
-    return mScrollContainerFrame;
-  }
+  nsIScrollableFrame* ScrollFrame() const { return mScrollFrame; }
 
   // Compute the offsets for a sticky position element
   static void ComputeStickyOffsets(nsIFrame* aFrame);
@@ -97,7 +94,7 @@ class StickyScrollContainer final : public nsIScrollPositionListener {
   bool IsStuckInYDirection(nsIFrame* aFrame) const;
 
  private:
-  explicit StickyScrollContainer(ScrollContainerFrame* aScrollContainerFrame);
+  explicit StickyScrollContainer(nsIScrollableFrame* aScrollFrame);
 
   /**
    * Compute two rectangles that determine sticky positioning: |aStick|, based
@@ -108,7 +105,7 @@ class StickyScrollContainer final : public nsIScrollPositionListener {
   void ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
                            nsRect* aContain) const;
 
-  ScrollContainerFrame* const mScrollContainerFrame;
+  nsIScrollableFrame* const mScrollFrame;
   nsTArray<nsIFrame*> mFrames;
   nsPoint mScrollPosition;
 };

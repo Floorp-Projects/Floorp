@@ -35,7 +35,6 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/SimpleEnumerator.h"
 #include "mozilla/StaticPrefs_browser.h"
@@ -147,6 +146,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsScriptSecurityManager.h"
+#include "nsIScrollableFrame.h"
 #include "nsIScrollObserver.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISecureBrowserUI.h"
@@ -4907,7 +4907,7 @@ void nsDocShell::SetTitleOnHistoryEntry(bool aUpdateEntryInSessionHistory) {
 
 nsPoint nsDocShell::GetCurScrollPos() {
   nsPoint scrollPos;
-  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+  if (nsIScrollableFrame* sf = GetRootScrollFrame()) {
     scrollPos = sf->GetVisualViewportOffset();
   }
   return scrollPos;
@@ -4915,7 +4915,7 @@ nsPoint nsDocShell::GetCurScrollPos() {
 
 nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
                                        int32_t aCurVerticalPos) {
-  ScrollContainerFrame* sf = GetRootScrollContainerFrame();
+  nsIScrollableFrame* sf = GetRootScrollFrame();
   NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
   ScrollMode scrollMode =
@@ -4958,11 +4958,11 @@ void nsDocShell::SetScrollbarPreference(mozilla::ScrollbarPreference aPref) {
   if (!ps) {
     return;
   }
-  nsIFrame* rootScrollContainerFrame = ps->GetRootScrollContainerFrame();
-  if (!rootScrollContainerFrame) {
+  nsIFrame* scrollFrame = ps->GetRootScrollFrame();
+  if (!scrollFrame) {
     return;
   }
-  ps->FrameNeedsReflow(rootScrollContainerFrame,
+  ps->FrameNeedsReflow(scrollFrame,
                        IntrinsicDirty::FrameAncestorsAndDescendants,
                        NS_FRAME_IS_DIRTY);
 }
@@ -7578,9 +7578,12 @@ nsresult nsDocShell::RestoreFromHistory() {
               ("resize widget(%d, %d, %d, %d)", newBounds.x, newBounds.y,
                newBounds.width, newBounds.height));
       mDocumentViewer->SetBounds(newBounds);
-    } else if (ScrollContainerFrame* sf =
-                   presShell->GetRootScrollContainerFrame()) {
-      sf->PostScrolledAreaEventForCurrentArea();
+    } else {
+      nsIScrollableFrame* rootScrollFrame =
+          presShell->GetRootScrollFrameAsScrollable();
+      if (rootScrollFrame) {
+        rootScrollFrame->PostScrolledAreaEventForCurrentArea();
+      }
     }
   }
 
@@ -10704,7 +10707,7 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
     return NS_OK;
   }
 
-  ScrollContainerFrame* rootScroll = presShell->GetRootScrollContainerFrame();
+  nsIScrollableFrame* rootScroll = presShell->GetRootScrollFrameAsScrollable();
   if (rootScroll) {
     rootScroll->ClearDidHistoryRestore();
   }
@@ -12349,11 +12352,11 @@ nsresult nsDocShell::GetPromptAndStringBundle(nsIPrompt** aPrompt,
   return NS_OK;
 }
 
-ScrollContainerFrame* nsDocShell::GetRootScrollContainerFrame() {
+nsIScrollableFrame* nsDocShell::GetRootScrollFrame() {
   PresShell* presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
 
-  return presShell->GetRootScrollContainerFrame();
+  return presShell->GetRootScrollFrameAsScrollable();
 }
 
 nsresult nsDocShell::EnsureScriptEnvironment() {

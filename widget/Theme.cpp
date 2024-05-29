@@ -18,12 +18,12 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/RelativeLuminanceUtils.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsScrollbarFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
@@ -189,8 +189,8 @@ void Theme::LookAndFeelChanged() {
   }
 }
 
-auto Theme::GetDPIRatio(nsPresContext* aPc,
-                        StyleAppearance aAppearance) -> DPIRatio {
+auto Theme::GetDPIRatio(nsPresContext* aPc, StyleAppearance aAppearance)
+    -> DPIRatio {
   // Widgets react to zoom, except scrollbars.
   if (IsWidgetScrollbarPart(aAppearance)) {
     return GetScrollbarDrawing().GetDPIRatioForScrollbarPart(aPc);
@@ -198,8 +198,8 @@ auto Theme::GetDPIRatio(nsPresContext* aPc,
   return DPIRatio(float(AppUnitsPerCSSPixel()) / aPc->AppUnitsPerDevPixel());
 }
 
-auto Theme::GetDPIRatio(nsIFrame* aFrame,
-                        StyleAppearance aAppearance) -> DPIRatio {
+auto Theme::GetDPIRatio(nsIFrame* aFrame, StyleAppearance aAppearance)
+    -> DPIRatio {
   return GetDPIRatio(aFrame->PresContext(), aAppearance);
 }
 
@@ -1139,7 +1139,7 @@ static ScrollbarDrawing::ScrollbarKind ComputeScrollbarKind(
 
 static ScrollbarDrawing::ScrollbarKind ComputeScrollbarKindForScrollCorner(
     nsIFrame* aFrame) {
-  ScrollContainerFrame* sf = do_QueryFrame(aFrame->GetParent());
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame->GetParent());
   if (!sf) {
     return ScrollbarDrawing::ScrollbarKind::VerticalRight;
   }

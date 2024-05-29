@@ -35,6 +35,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsError.h"
 #include "nsIAppWindow.h"
@@ -80,7 +81,6 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ProcessPriorityManager.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -974,10 +974,9 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* frame) {
   if (PresShell* presShell = ds->GetPresShell()) {
     // Ensure root scroll frame is reflowed in case margins have changed.
     if (marginsChanged) {
-      if (nsIFrame* rootScrollContainerFrame =
-              presShell->GetRootScrollContainerFrame()) {
-        presShell->FrameNeedsReflow(rootScrollContainerFrame,
-                                    IntrinsicDirty::None, NS_FRAME_IS_DIRTY);
+      if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
+        presShell->FrameNeedsReflow(rootScrollFrame, IntrinsicDirty::None,
+                                    NS_FRAME_IS_DIRTY);
       }
     }
     nsView* childView = presShell->GetViewManager()->GetRootView();

@@ -67,9 +67,14 @@ enum class LogicalCorner : uint8_t {
 // Physical axis constants.
 enum class PhysicalAxis : uint8_t { Vertical, Horizontal };
 
-using PhysicalAxes = EnumSet<PhysicalAxis>;
-static constexpr PhysicalAxes kPhysicalAxesBoth{PhysicalAxis::Vertical,
-                                                PhysicalAxis::Horizontal};
+// Represents zero or more physical axes.
+enum class PhysicalAxes : uint8_t {
+  None = 0x0,
+  Horizontal = 0x1,
+  Vertical = 0x2,
+  Both = Horizontal | Vertical,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PhysicalAxes)
 
 inline LogicalAxis GetOrthogonalAxis(LogicalAxis aAxis) {
   return aAxis == LogicalAxis::Block ? LogicalAxis::Inline : LogicalAxis::Block;

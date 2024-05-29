@@ -10,7 +10,6 @@
 #include "gfxUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
@@ -24,6 +23,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
+#include "nsIScrollableFrame.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsHTMLParts.h"
@@ -533,7 +533,7 @@ static bool CellHasVisibleContent(nsTableFrame* aTableFrame,
 
 nsIFrame* nsTableCellFrame::CellContentFrame() const {
   nsIFrame* inner = mFrames.FirstChild();
-  if (ScrollContainerFrame* sf = do_QueryFrame(inner)) {
+  if (nsIScrollableFrame* sf = do_QueryFrame(inner)) {
     return sf->GetScrolledFrame();
   }
   return inner;
@@ -590,7 +590,7 @@ int32_t nsTableCellFrame::GetColSpan() {
   return colSpan;
 }
 
-ScrollContainerFrame* nsTableCellFrame::GetScrollTargetFrame() const {
+nsIScrollableFrame* nsTableCellFrame::GetScrollTargetFrame() const {
   return do_QueryFrame(mFrames.FirstChild());
 }
 

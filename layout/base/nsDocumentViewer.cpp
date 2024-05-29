@@ -48,7 +48,6 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -87,6 +86,7 @@
 #include "nsJSEnvironment.h"
 #include "nsFocusManager.h"
 
+#include "nsIScrollableFrame.h"
 #include "nsStyleSheetService.h"
 #include "nsILoadContext.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -2954,19 +2954,18 @@ static const nsIFrame* GetTargetPageFrame(int32_t aTargetPageNum,
 }
 
 // Calculate the scroll position where the center of |aFrame| is positioned at
-// the center of |aScrollContainerFrame|'s scroll port for the print preview.
+// the center of |aScrollable|'s scroll port for the print preview.
 // So what we do for that is;
 // 1) Calculate the position of the center of |aFrame| in the print preview
 //    coordinates.
 // 2) Reduce the half height of the scroll port from the result of 1.
-static nscoord ScrollPositionForFrame(
-    const nsIFrame* aFrame, ScrollContainerFrame* aScrollContainerFrame,
-    float aPreviewScale) {
+static nscoord ScrollPositionForFrame(const nsIFrame* aFrame,
+                                      nsIScrollableFrame* aScrollable,
+                                      float aPreviewScale) {
   // Note that even if the computed scroll position is out of the range of
-  // the scroll port, it gets clamped in ScrollContainerFrame::ScrollTo.
+  // the scroll port, it gets clamped in nsIScrollableFrame::ScrollTo.
   return nscoord(aPreviewScale * aFrame->GetRect().Center().y -
-                 float(aScrollContainerFrame->GetScrollPortRect().height) /
-                     2.0f);
+                 float(aScrollable->GetScrollPortRect().height) / 2.0f);
 }
 
 //----------------------------------------------------------------------
@@ -2975,10 +2974,8 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
 
-  ScrollContainerFrame* sf = mPresShell->GetRootScrollContainerFrame();
-  if (!sf) {
-    return NS_OK;
-  }
+  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
+  if (!sf) return NS_OK;
 
   auto [seqFrame, sheetCount] = mPrintJob->GetSeqFrameAndCountSheets();
   Unused << sheetCount;
@@ -3051,7 +3048,7 @@ nsDocumentViewer::GetCurrentSheetFrameAndNumber() const {
     return {nullptr, 0};
   }
 
-  ScrollContainerFrame* sf = mPresShell->GetRootScrollContainerFrame();
+  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
   if (!sf) {
     // No scrollable contents, returns 1 even if there are multiple sheets.
     return {seqFrame->PrincipalChildList().FirstChild(), 1};

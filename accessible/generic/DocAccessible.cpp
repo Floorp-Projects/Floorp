@@ -30,6 +30,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsImageFrame.h"
 #include "nsViewManager.h"
+#include "nsIScrollableFrame.h"
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
@@ -41,7 +42,6 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/dom/AncestorIterator.h"
@@ -581,7 +581,7 @@ nsRect DocAccessible::RelativeBounds(nsIFrame** aRelativeFrame) const {
     }
 
     nsRect scrollPort;
-    ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
+    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
       scrollPort = sf->GetScrollPortRect();
     } else {
@@ -709,9 +709,9 @@ std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
   nsRect scrollRange;
 
   if (nsIFrame* frame = aAcc->GetFrame()) {
-    ScrollContainerFrame* sf = aAcc == this
-                                   ? mPresShell->GetRootScrollContainerFrame()
-                                   : frame->GetScrollTargetFrame();
+    nsIScrollableFrame* sf = aAcc == this
+                                 ? mPresShell->GetRootScrollFrameAsScrollable()
+                                 : frame->GetScrollTargetFrame();
 
     // If there is no scrollable frame, it's likely a scroll in a popup, like
     // <select>. Return a scroll offset and range of 0. The scroll info

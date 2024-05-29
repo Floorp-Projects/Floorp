@@ -49,6 +49,7 @@ class nsIContent;
 class nsIPrincipal;
 class nsIWidget;
 class nsAtom;
+class nsIScrollableFrame;
 class nsRegion;
 enum nsChangeHint : uint32_t;
 class nsFontMetrics;
@@ -81,7 +82,6 @@ class WritingMode;
 class DisplayItemClip;
 class EffectSet;
 struct ActiveScrolledRoot;
-class ScrollContainerFrame;
 enum class ScrollOrigin : uint8_t;
 enum class StyleImageOrientation : uint8_t;
 enum class StyleSystemFont : uint8_t;
@@ -213,27 +213,25 @@ class nsLayoutUtils {
   static nsIContent* FindContentFor(ViewID aId);
 
   /**
-   * Find the scroll container frame for a given content element.
+   * Find the scrollable frame for a given content element.
    */
-  static mozilla::ScrollContainerFrame* FindScrollContainerFrameFor(
-      nsIContent* aContent);
+  static nsIScrollableFrame* FindScrollableFrameFor(nsIContent* aContent);
 
   /**
-   * Find the scroll container frame for a given ID.
+   * Find the scrollable frame for a given ID.
    */
-  static mozilla::ScrollContainerFrame* FindScrollContainerFrameFor(ViewID aId);
+  static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);
 
   /**
-   * Helper for FindScrollContainerFrameFor(), also used in DisplayPortUtils.
-   * Most clients should use FindScrollContainerFrameFor().
+   * Helper for FindScrollableFrameFor(), also used in DisplayPortUtils.
+   * Most clients should use FindScrollableFrameFor().
    */
-  static nsIFrame* GetScrollContainerFrameFromContent(nsIContent* aContent);
+  static nsIFrame* GetScrollFrameFromContent(nsIContent* aContent);
 
   /**
-   * Find the ID for a given scroll container frame.
+   * Find the ID for a given scrollable frame.
    */
-  static ViewID FindIDForScrollContainerFrame(
-      mozilla::ScrollContainerFrame* aScrollContainerFrame);
+  static ViewID FindIDForScrollableFrame(nsIScrollableFrame* aScrollable);
 
   /**
    * Notify the scroll frame with the given scroll id that its scroll offset
@@ -523,10 +521,9 @@ class nsLayoutUtils {
   static ViewID ScrollIdForRootScrollFrame(nsPresContext* aPresContext);
 
   /**
-   * GetScrollContainerFrameFor returns the scroll container frame for a
-   * scrolled frame.
+   * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
    */
-  static mozilla::ScrollContainerFrame* GetScrollContainerFrameFor(
+  static nsIScrollableFrame* GetScrollableFrameFor(
       const nsIFrame* aScrolledFrame);
 
   /**
@@ -539,9 +536,9 @@ class nsLayoutUtils {
    *
    * @param  aFrame the frame to start with
    * @param  aDirection Whether it's for horizontal or vertical scrolling.
-   * @return the nearest scroll container frame or nullptr if not found
+   * @return the nearest scrollable frame or nullptr if not found
    */
-  static mozilla::ScrollContainerFrame* GetNearestScrollableFrameForDirection(
+  static nsIScrollableFrame* GetNearestScrollableFrameForDirection(
       nsIFrame* aFrame, mozilla::layers::ScrollDirections aDirections);
 
   enum {
@@ -582,7 +579,7 @@ class nsLayoutUtils {
     SCROLLABLE_STOP_AT_PAGE = 0x20,
   };
   /**
-   * GetNearestScrollContainerFrame locates the first ancestor of aFrame
+   * GetNearestScrollableFrame locates the first ancestor of aFrame
    * (or aFrame itself) that is scrollable with overflow:scroll or
    * overflow:auto in some direction.
    *
@@ -590,10 +587,10 @@ class nsLayoutUtils {
    * @param  aFlags if SCROLLABLE_SAME_DOC is set, do not search across
    * document boundaries. If SCROLLABLE_INCLUDE_HIDDEN is set, include
    * frames scrollable with overflow:hidden.
-   * @return the nearest scroll container frame or nullptr if not found
+   * @return the nearest scrollable frame or nullptr if not found
    */
-  static mozilla::ScrollContainerFrame* GetNearestScrollContainerFrame(
-      nsIFrame* aFrame, uint32_t aFlags = 0);
+  static nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame,
+                                                       uint32_t aFlags = 0);
 
   /**
    * GetScrolledRect returns the range of allowable scroll offsets
@@ -786,12 +783,12 @@ class nsLayoutUtils {
     float mVisibleThreshold;
 
     FrameForPointOptions(Bits aBits, float aVisibleThreshold)
-        : mBits(aBits), mVisibleThreshold(aVisibleThreshold) {};
+        : mBits(aBits), mVisibleThreshold(aVisibleThreshold){};
 
     MOZ_IMPLICIT FrameForPointOptions(Bits aBits)
         : FrameForPointOptions(aBits, 1.0f) {}
 
-    FrameForPointOptions() : FrameForPointOptions(Bits()) {};
+    FrameForPointOptions() : FrameForPointOptions(Bits()){};
   };
 
   /**
@@ -2660,13 +2657,12 @@ class nsLayoutUtils {
 
   /**
    * Calculate the scrollable rect for a frame. See FrameMetrics.h for
-   * definition of scrollable rect. aScrollContainerFrame is the scroll
-   * container frame to calculate the scrollable rect for. If it's null then we
-   * calculate the scrollable rect as the rect of the root frame.
+   * defintion of scrollable rect. aScrollableFrame is the scroll frame to
+   * calculate the scrollable rect for. If it's null then we calculate the
+   * scrollable rect as the rect of the root frame.
    */
   static nsRect CalculateScrollableRectForFrame(
-      const mozilla::ScrollContainerFrame* aScrollContainerFrame,
-      const nsIFrame* aRootFrame);
+      const nsIScrollableFrame* aScrollableFrame, const nsIFrame* aRootFrame);
 
   /**
    * Calculate the expanded scrollable rect for a frame. See FrameMetrics.h for
@@ -2751,14 +2747,13 @@ class nsLayoutUtils {
    * viewport offset; if you need the visual viewport offset, that needs to
    * be queried independently via PresShell::GetVisualViewportOffset().
    *
-   * By contrast, ComputeScrollMetadata() computes all the fields, but requires
+   * By contrast, ComputeFrameMetrics() computes all the fields, but requires
    * extra inputs and can only be called during frame layer building.
    */
   static FrameMetrics CalculateBasicFrameMetrics(
-      mozilla::ScrollContainerFrame* aScrollContainerFrame);
+      nsIScrollableFrame* aScrollFrame);
 
-  static mozilla::ScrollContainerFrame* GetAsyncScrollableAncestorFrame(
-      nsIFrame* aTarget);
+  static nsIScrollableFrame* GetAsyncScrollableAncestorFrame(nsIFrame* aTarget);
 
   static void SetBSizeFromFontMetrics(
       const nsIFrame* aFrame, mozilla::ReflowOutput& aMetrics,
@@ -2848,16 +2843,14 @@ class nsLayoutUtils {
    * rect. This rect is used to clip the result.
    */
   static CSSRect GetBoundingContentRect(
-      const nsIContent* aContent,
-      const mozilla::ScrollContainerFrame* aRootScrollContainerFrame,
+      const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame,
       mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr);
 
   /**
    * Similar to GetBoundingContentRect for nsIFrame.
    */
   static CSSRect GetBoundingFrameRect(
-      nsIFrame* aFrame,
-      const mozilla::ScrollContainerFrame* aRootScrollContainerFrame,
+      nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame,
       mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr);
 
   /**

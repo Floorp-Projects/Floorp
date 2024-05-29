@@ -47,6 +47,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsDisplayList.h"
+#include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleChangeList.h"
@@ -1817,7 +1818,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   nsRect tableRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height());
 
   if (ShouldApplyOverflowClipping(aReflowInput.mStyleDisplay) !=
-      kPhysicalAxesBoth) {
+      PhysicalAxes::Both) {
     // collapsed border may leak out
     LogicalMargin bcMargin = GetExcludedOuterBCBorder(wm);
     tableRect.Inflate(bcMargin.GetPhysicalMargin(wm));
@@ -1890,7 +1891,7 @@ void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
 bool nsTableFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
   // As above in Reflow, make sure the table overflow area includes the table
   // rect, and check for collapsed borders leaking out.
-  if (ShouldApplyOverflowClipping(StyleDisplay()) != kPhysicalAxesBoth) {
+  if (ShouldApplyOverflowClipping(StyleDisplay()) != PhysicalAxes::Both) {
     nsRect bounds(nsPoint(0, 0), GetSize());
     WritingMode wm = GetWritingMode();
     LogicalMargin bcMargin = GetExcludedOuterBCBorder(wm);

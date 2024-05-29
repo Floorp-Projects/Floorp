@@ -8,7 +8,6 @@
 
 #include "DisplayItemClipChain.h"
 #include "FrameMetrics.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -320,9 +319,9 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   Maybe<wr::WrSpatialId> ancestorSpace =
       DefineScrollLayers(aASR->mParent, aItem);
 
-  ScrollContainerFrame* scrollContainerFrame = aASR->mScrollContainerFrame;
-  Maybe<ScrollMetadata> metadata = scrollContainerFrame->ComputeScrollMetadata(
-      mManager, aItem->Frame(), aItem->ToReferenceFrame());
+  Maybe<ScrollMetadata> metadata =
+      aASR->mScrollableFrame->ComputeScrollMetadata(mManager, aItem->Frame(),
+                                                    aItem->ToReferenceFrame());
   if (!metadata) {
     MOZ_ASSERT_UNREACHABLE("Expected scroll metadata to be available!");
     return ancestorSpace;
@@ -334,10 +333,12 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
     return ancestorSpace;
   }
 
-  nsPoint offset = scrollContainerFrame->GetOffsetToCrossDoc(aItem->Frame()) +
+  nsIScrollableFrame* scrollableFrame = aASR->mScrollableFrame;
+  nsIFrame* scrollFrame = do_QueryFrame(scrollableFrame);
+  nsPoint offset = scrollFrame->GetOffsetToCrossDoc(aItem->Frame()) +
                    aItem->ToReferenceFrame();
   int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  nsRect scrollPort = scrollContainerFrame->GetScrollPortRect() + offset;
+  nsRect scrollPort = scrollableFrame->GetScrollPortRect() + offset;
   LayoutDeviceRect clipBounds =
       LayoutDeviceRect::FromAppUnits(scrollPort, auPerDevPixel);
 
@@ -369,9 +370,9 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   LayoutDevicePoint scrollOffset =
       useRoundedOffset
           ? LayoutDevicePoint::FromAppUnitsRounded(
-                scrollContainerFrame->GetScrollPosition(), auPerDevPixel)
+                scrollableFrame->GetScrollPosition(), auPerDevPixel)
           : LayoutDevicePoint::FromAppUnits(
-                scrollContainerFrame->GetScrollPosition(), auPerDevPixel);
+                scrollableFrame->GetScrollPosition(), auPerDevPixel);
 
   // Currently we track scroll-linked effects at the granularity of documents,
   // not scroll frames, so we consider a scroll frame to have a scroll-linked
@@ -384,11 +385,9 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   return Some(mBuilder->DefineScrollLayer(
       viewId, parent, wr::ToLayoutRect(contentRect),
       wr::ToLayoutRect(clipBounds), wr::ToLayoutVector2D(scrollOffset),
-      wr::ToWrAPZScrollGeneration(
-          scrollContainerFrame->ScrollGenerationOnApz()),
+      wr::ToWrAPZScrollGeneration(scrollableFrame->ScrollGenerationOnApz()),
       wr::ToWrHasScrollLinkedEffect(hasScrollLinkedEffect),
-      wr::SpatialKey(uint64_t(scrollContainerFrame), 0,
-                     wr::SpatialKeyKind::Scroll)));
+      wr::SpatialKey(uint64_t(scrollFrame), 0, wr::SpatialKeyKind::Scroll)));
 }
 
 Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
@@ -401,7 +400,7 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
   for (const DisplayItemClipChain* chain = aChain; chain;
        chain = chain->mParent) {
     MOZ_DIAGNOSTIC_ASSERT(chain->mOnStack || !chain->mASR ||
-                          chain->mASR->mScrollContainerFrame);
+                          chain->mASR->mScrollableFrame);
 
     if (!chain->mClip.HasClip()) {
       // This item in the chain is a no-op, skip over it

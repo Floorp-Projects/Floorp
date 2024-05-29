@@ -30,7 +30,6 @@
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/StaticPrefs_test.h"
@@ -43,6 +42,8 @@
 #include "mozilla/media/MediaUtils.h"
 #include "nsQueryObject.h"
 #include "CubebDeviceEnumerator.h"
+
+#include "nsIScrollableFrame.h"
 
 #include "nsContentUtils.h"
 
@@ -602,15 +603,15 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetScrollbarSizes(Element* aElement,
                                     uint32_t* aOutVerticalScrollbarWidth,
                                     uint32_t* aOutHorizontalScrollbarHeight) {
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::FindScrollContainerFrameFor(aElement);
-  if (!scrollContainerFrame) {
+  nsIScrollableFrame* scrollFrame =
+      nsLayoutUtils::FindScrollableFrameFor(aElement);
+  if (!scrollFrame) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  CSSIntMargin scrollbarSizes = RoundedToInt(
-      CSSMargin::FromAppUnits(scrollContainerFrame->GetActualScrollbarSizes(
-          ScrollContainerFrame::ScrollbarSizesOptions::
+  CSSIntMargin scrollbarSizes =
+      RoundedToInt(CSSMargin::FromAppUnits(scrollFrame->GetActualScrollbarSizes(
+          nsIScrollableFrame::ScrollbarSizesOptions::
               INCLUDE_VISUAL_VIEWPORT_SCROLLBARS)));
   *aOutVerticalScrollbarWidth = scrollbarSizes.LeftRight();
   *aOutHorizontalScrollbarHeight = scrollbarSizes.TopBottom();
@@ -1723,7 +1724,7 @@ static nsresult getScrollXYAppUnits(const nsWeakPtr& aWindow, bool aFlushLayout,
   }
 
   if (PresShell* presShell = doc->GetPresShell()) {
-    ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
+    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
       aScrollPos = sf->GetScrollPosition();
     }
@@ -2014,10 +2015,10 @@ nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
   PresShell* presShell = doc->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
-  ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
-  NS_ENSURE_TRUE(sf, NS_OK);
+  nsIScrollableFrame* scrollFrame = presShell->GetRootScrollFrameAsScrollable();
+  NS_ENSURE_TRUE(scrollFrame, NS_OK);
 
-  nsMargin sizes = sf->GetActualScrollbarSizes();
+  nsMargin sizes = scrollFrame->GetActualScrollbarSizes();
   *aWidth = nsPresContext::AppUnitsToIntCSSPixels(sizes.LeftRight());
   *aHeight = nsPresContext::AppUnitsToIntCSSPixels(sizes.TopBottom());
 
@@ -2093,7 +2094,7 @@ nsDOMWindowUtils::GetRootBounds(DOMRect** aResult) {
   nsRect bounds(0, 0, 0, 0);
   PresShell* presShell = doc->GetPresShell();
   if (presShell) {
-    ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
+    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
       bounds = sf->GetScrollRange();
       bounds.SetWidth(bounds.Width() + sf->GetScrollPortRect().Width());
@@ -2967,23 +2968,28 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult) {
 NS_IMETHODIMP
 nsDOMWindowUtils::DisableApzForElement(Element* aElement) {
   aElement->SetProperty(nsGkAtoms::apzDisabled, reinterpret_cast<void*>(true));
-  if (ScrollContainerFrame* sf =
-          nsLayoutUtils::FindScrollContainerFrameFor(aElement)) {
-    sf->SchedulePaint();
+  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aElement);
+  if (!sf) {
+    return NS_OK;
   }
+  nsIFrame* frame = do_QueryFrame(sf);
+  if (!frame) {
+    return NS_OK;
+  }
+  frame->SchedulePaint();
   return NS_OK;
 }
 
-static nsTArray<ScrollContainerFrame*> CollectScrollableAncestors(
+static nsTArray<nsIScrollableFrame*> CollectScrollableAncestors(
     nsIFrame* aStart) {
-  nsTArray<ScrollContainerFrame*> result;
+  nsTArray<nsIScrollableFrame*> result;
   nsIFrame* frame = aStart;
   while (frame) {
     frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
     if (!frame) {
       break;
     }
-    ScrollContainerFrame* scrollAncestor =
+    nsIScrollableFrame* scrollAncestor =
         nsLayoutUtils::GetAsyncScrollableAncestorFrame(frame);
     if (!scrollAncestor) {
       break;
@@ -3064,16 +3070,15 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     flags |= layers::ONLY_ZOOM_TO_DEFAULT_SCALE;
   }
 
-  ScrollContainerFrame* rootScrollContainerFrame =
-      presShell->GetRootScrollContainerFrame();
-  if (!rootScrollContainerFrame) {
+  nsIScrollableFrame* rootScrollFrame =
+      presShell->GetRootScrollFrameAsScrollable();
+  if (!rootScrollFrame) {
     return NS_OK;
   }
 
   CSSRect bounds;
   if (element->IsHTMLElement(nsGkAtoms::input)) {
-    bounds = nsLayoutUtils::GetBoundingContentRect(element,
-                                                   rootScrollContainerFrame);
+    bounds = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame);
   } else {
     // When focused elment is content editable or <textarea> element,
     // focused element will have multi-line content.
@@ -3083,15 +3088,13 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
       if (caret && caret->IsVisible()) {
         nsRect rect;
         if (nsIFrame* frame = caret->GetGeometry(&rect)) {
-          bounds = nsLayoutUtils::GetBoundingFrameRect(
-              frame, rootScrollContainerFrame);
+          bounds = nsLayoutUtils::GetBoundingFrameRect(frame, rootScrollFrame);
         }
       }
     }
     if (bounds.IsEmpty()) {
       // Fallback if no caret frame.
-      bounds = nsLayoutUtils::GetBoundingContentRect(element,
-                                                     rootScrollContainerFrame);
+      bounds = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame);
     }
   }
 
@@ -3100,11 +3103,10 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     return NS_OK;
   }
 
-  bounds -=
-      CSSPoint::FromAppUnits(rootScrollContainerFrame->GetScrollPosition());
+  bounds -= CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
 
   bool waitForRefresh = false;
-  for (ScrollContainerFrame* scrollAncestor :
+  for (nsIScrollableFrame* scrollAncestor :
        CollectScrollableAncestors(element->GetPrimaryFrame())) {
     if (scrollAncestor->HasScrollUpdates()) {
       waitForRefresh = true;

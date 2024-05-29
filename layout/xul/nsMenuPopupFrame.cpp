@@ -24,6 +24,7 @@
 #include "nsFrameManager.h"
 #include "mozilla/dom/Document.h"
 #include "nsRect.h"
+#include "nsIScrollableFrame.h"
 #include "nsIPopupContainer.h"
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
@@ -52,7 +53,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Element.h"
@@ -472,7 +472,7 @@ void nsMenuPopupFrame::TweakMinPrefISize(nscoord& aSize) {
   //
   // Automatically accommodating for the scrollbar otherwise would be bug
   // 764076, but that has its own set of problems.
-  if (ScrollContainerFrame* sf = GetScrollContainerFrame()) {
+  if (nsIScrollableFrame* sf = GetScrollFrame()) {
     aSize += sf->GetDesiredScrollbarSizes().LeftRight();
   }
 
@@ -1170,7 +1170,7 @@ nsPoint nsMenuPopupFrame::AdjustPositionForAnchorAlign(
         // popup up in a way that our box would no longer intersect with the
         // anchor.
         nscoord maxOffset = aPrefSize.height - itemHeight;
-        if (const ScrollContainerFrame* sf = GetScrollContainerFrame()) {
+        if (const nsIScrollableFrame* sf = GetScrollFrame()) {
           // HACK: We ideally would want to use the offset from the bottom
           // bottom of our scroll-frame to the bottom of our frame (so as to
           // ensure that the bottom of the scrollport is inside the anchor
@@ -1183,7 +1183,8 @@ nsPoint nsMenuPopupFrame::AdjustPositionForAnchorAlign(
           // from the top. This holds for all the popups where this matters
           // (menulists on macOS, effectively), and seems better than somehow
           // moving the popup after the fact as we used to do.
-          maxOffset -= sf->GetOffsetTo(this).y;
+          const nsIFrame* f = do_QueryFrame(sf);
+          maxOffset -= f->GetOffsetTo(this).y;
         }
         mPositionedOffset =
             originalAnchorRect.height + std::min(itemOffset, maxOffset);
@@ -1904,12 +1905,12 @@ ConsumeOutsideClicksResult nsMenuPopupFrame::ConsumeOutsideClicks() {
   return ConsumeOutsideClicks_True;
 }
 
-static ScrollContainerFrame* DoGetScrollContainerFrame(const nsIFrame* aFrame) {
-  if (const ScrollContainerFrame* sf = do_QueryFrame(aFrame)) {
-    return const_cast<ScrollContainerFrame*>(sf);
+static nsIScrollableFrame* DoGetScrollFrame(const nsIFrame* aFrame) {
+  if (const nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
+    return const_cast<nsIScrollableFrame*>(sf);
   }
   for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
-    if (auto* sf = DoGetScrollContainerFrame(childFrame)) {
+    if (auto* sf = DoGetScrollFrame(childFrame)) {
       return sf;
     }
   }
@@ -1918,8 +1919,8 @@ static ScrollContainerFrame* DoGetScrollContainerFrame(const nsIFrame* aFrame) {
 
 // XXXroc this is megalame. Fossicking around for a frame of the right
 // type is a recipe for disaster in the long term.
-ScrollContainerFrame* nsMenuPopupFrame::GetScrollContainerFrame() const {
-  return DoGetScrollContainerFrame(this);
+nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame() const {
+  return DoGetScrollFrame(this);
 }
 
 void nsMenuPopupFrame::ChangeByPage(bool aIsUp) {
@@ -1928,7 +1929,7 @@ void nsMenuPopupFrame::ChangeByPage(bool aIsUp) {
     return;
   }
 
-  ScrollContainerFrame* scrollContainerFrame = GetScrollContainerFrame();
+  nsIScrollableFrame* scrollframe = GetScrollFrame();
 
   RefPtr popup = &PopupElement();
   XULButtonElement* currentMenu = popup->GetActiveMenuChild();
@@ -1946,8 +1947,7 @@ void nsMenuPopupFrame::ChangeByPage(bool aIsUp) {
 
   if (currentMenu && currentMenu->GetPrimaryFrame()) {
     const nscoord scrollHeight =
-        scrollContainerFrame ? scrollContainerFrame->GetScrollPortRect().height
-                             : mRect.height;
+        scrollframe ? scrollframe->GetScrollPortRect().height : mRect.height;
     const nsRect currentRect = currentMenu->GetPrimaryFrame()->GetRect();
     const XULButtonElement* startMenu = currentMenu;
 

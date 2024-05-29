@@ -52,7 +52,6 @@
 #include "mozilla/ToString.h"
 #include "mozilla/Try.h"
 #include "mozilla/ViewportUtils.h"
-#include "mozilla/WritingModes.h"
 
 #include "nsCOMPtr.h"
 #include "nsFieldSetFrame.h"
@@ -74,6 +73,7 @@
 #include "nsTableWrapperFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
 #include "nsStyleConsts.h"
@@ -1218,8 +1218,8 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       if (auto* container = ScrollAnchorContainer::FindFor(this)) {
         container->InvalidateAnchor();
       }
-      if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(this)) {
-        scrollContainerFrame->Anchor()->InvalidateAnchor();
+      if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(this)) {
+        scrollableFrame->Anchor()->InvalidateAnchor();
       }
     }
 
@@ -1258,9 +1258,9 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
     if (aOldComputedStyle->IsRootElementStyle() &&
         disp->mScrollSnapType != oldDisp->mScrollSnapType) {
-      if (ScrollContainerFrame* sf =
-              PresShell()->GetRootScrollContainerFrame()) {
-        sf->PostPendingResnap();
+      if (nsIScrollableFrame* scrollableFrame =
+              PresShell()->GetRootScrollFrameAsScrollable()) {
+        scrollableFrame->PostPendingResnap();
       }
     }
     if (StyleUIReset()->mMozSubtreeHiddenOnlyVisually &&
@@ -1768,7 +1768,7 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
     return false;
   }
 
-  return ShouldApplyOverflowClipping(disp).isEmpty() &&
+  return ShouldApplyOverflowClipping(disp) == PhysicalAxes::None &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
          !SVGIntegrationUtils::UsingEffectsForFrame(this) &&
          !effects->HasMixBlendMode() &&
@@ -2186,7 +2186,8 @@ void nsIFrame::UpdateVisibilitySynchronously() {
   nsRect rect = GetRectRelativeToSelf();
   nsIFrame* rectFrame = this;
   while (f && visible) {
-    if (ScrollContainerFrame* sf = do_QueryFrame(f)) {
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if (sf) {
       nsRect transformedRect =
           nsLayoutUtils::TransformFrameRectToAncestor(rectFrame, rect, f);
       if (!sf->IsRectNearlyVisible(transformedRect)) {
@@ -2736,13 +2737,13 @@ Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
  */
 static void ApplyOverflowClipping(
     nsDisplayListBuilder* aBuilder, const nsIFrame* aFrame,
-    PhysicalAxes aClipAxes,
+    nsIFrame::PhysicalAxes aClipAxes,
     DisplayListClipState::AutoClipMultiple& aClipState) {
   // Only 'clip' is handled here (and 'hidden' for table frames, and any
   // non-'visible' value for blocks in a paginated context).
   // We allow 'clip' to apply to any kind of frame. This is required by
   // comboboxes which make their display text (an inline frame) have clipping.
-  MOZ_ASSERT(!aClipAxes.isEmpty());
+  MOZ_ASSERT(aClipAxes != nsIFrame::PhysicalAxes::None);
   MOZ_ASSERT(aFrame->ShouldApplyOverflowClipping(aFrame->StyleDisplay()) ==
              aClipAxes);
 
@@ -2776,7 +2777,7 @@ static void ApplyOverflowClipping(
 
   nsRect rect(nsPoint(0, 0), aFrame->GetSize());
   rect.Inflate(boxMargin);
-  if (MOZ_UNLIKELY(!aClipAxes.contains(PhysicalAxis::Horizontal))) {
+  if (MOZ_UNLIKELY(!(aClipAxes & nsIFrame::PhysicalAxes::Horizontal))) {
     // NOTE(mats) We shouldn't be clipping at all in this dimension really,
     // but clipping in just one axis isn't supported by our GFX APIs so we
     // clip to our visual overflow rect instead.
@@ -2784,7 +2785,7 @@ static void ApplyOverflowClipping(
     rect.x = o.x;
     rect.width = o.width;
   }
-  if (MOZ_UNLIKELY(!aClipAxes.contains(PhysicalAxis::Vertical))) {
+  if (MOZ_UNLIKELY(!(aClipAxes & nsIFrame::PhysicalAxes::Vertical))) {
     // See the note above.
     nsRect o = aFrame->InkOverflowRect();
     rect.y = o.y;
@@ -2798,7 +2799,7 @@ static void ApplyOverflowClipping(
 
 nsSize nsIFrame::OverflowClipMargin(PhysicalAxes aClipAxes) const {
   nsSize result;
-  if (aClipAxes.isEmpty()) {
+  if (aClipAxes == PhysicalAxes::None) {
     return result;
   }
   const auto& margin = StyleMargin()->mOverflowClipMargin;
@@ -2806,10 +2807,10 @@ nsSize nsIFrame::OverflowClipMargin(PhysicalAxes aClipAxes) const {
     return result;
   }
   nscoord marginAu = margin.ToAppUnits();
-  if (aClipAxes.contains(PhysicalAxis::Horizontal)) {
+  if (aClipAxes & PhysicalAxes::Horizontal) {
     result.width = marginAu;
   }
-  if (aClipAxes.contains(PhysicalAxis::Vertical)) {
+  if (aClipAxes & PhysicalAxes::Vertical) {
     result.height = marginAu;
   }
   return result;
@@ -3785,8 +3786,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     StickyScrollContainer* stickyScrollContainer =
         StickyScrollContainer::GetStickyScrollContainerForFrame(this);
-    if (stickyScrollContainer && stickyScrollContainer->ScrollContainer()
-                                     ->IsMaybeAsynchronouslyScrolled()) {
+    if (stickyScrollContainer &&
+        stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled()) {
       shouldFlatten = false;
     }
 
@@ -3800,7 +3801,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // inhibits paint skipping).
     if (aBuilder->GetFilterASR() && aBuilder->GetFilterASR() == stickyASR) {
       aBuilder->GetFilterASR()
-          ->mScrollContainerFrame->SetHasOutOfFlowContentInsideFilter();
+          ->mScrollableFrame->SetHasOutOfFlowContentInsideFilter();
     }
   }
 
@@ -3933,7 +3934,7 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
   // content underneath the toolbar, so expand the overflow rect here to
   // allow display list building to descend into the scroll frame.
   if (aBuilder->IsForEventDelivery() &&
-      aChild == aChild->PresShell()->GetRootScrollContainerFrame() &&
+      aChild == aChild->PresShell()->GetRootScrollFrame() &&
       aChild->PresContext()->IsRootContentDocumentCrossProcess() &&
       aChild->PresContext()->HasDynamicToolbar()) {
     overflow.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
@@ -4088,8 +4089,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       // Animations may change the stacking context state.
       // ShouldApplyOverflowClipping is affected by the parent style, which does
       // not invalidate the NS_FRAME_SIMPLE_DISPLAYLIST bit.
-      !(!overflowClipAxes.isEmpty() || child->MayHaveTransformAnimation() ||
-        child->MayHaveOpacityAnimation());
+      !(overflowClipAxes != PhysicalAxes::None ||
+        child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
 
   if (aBuilder->IsForPainting()) {
     aBuilder->ClearWillChangeBudgetStatus(child);
@@ -4272,7 +4273,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // FIXME(emilio): Why can't we handle this more similarly to `clip` (on the
   // parent, rather than on the children)? Would ClipContentDescendants do what
   // we want?
-  if (!overflowClipAxes.isEmpty()) {
+  if (overflowClipAxes != PhysicalAxes::None) {
     ApplyOverflowClipping(aBuilder, parent, overflowClipAxes, clipState);
     awayFromCommonPath = true;
   }
@@ -4705,16 +4706,16 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   if (isPrimaryButtonDown) {
     // If the mouse is dragged outside the nearest enclosing scrollable area
     // while making a selection, the area will be scrolled. To do this, capture
-    // the mouse on the nearest scroll container frame. If there isn't a scroll
-    // container frame, or something else is already capturing the mouse,
-    // there's no reason to capture.
+    // the mouse on the nearest scrollable frame. If there isn't a scrollable
+    // frame, or something else is already capturing the mouse, there's no
+    // reason to capture.
     if (!PresShell::GetCapturingContent()) {
-      ScrollContainerFrame* scrollContainerFrame =
-          nsLayoutUtils::GetNearestScrollContainerFrame(
+      nsIScrollableFrame* scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(
               this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                         nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-      if (scrollContainerFrame) {
-        nsIFrame* capturingFrame = scrollContainerFrame;
+      if (scrollFrame) {
+        nsIFrame* capturingFrame = do_QueryFrame(scrollFrame);
         PresShell::SetCapturingContent(capturingFrame->GetContent(),
                                        CaptureFlags::IgnoreAllowedState);
       }
@@ -5209,14 +5210,13 @@ NS_IMETHODIMP nsIFrame::HandleDrag(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // Get the nearest scroll container frame.
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::GetNearestScrollContainerFrame(
-          this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
-                    nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  // get the nearest scrollframe
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
+      this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
-  if (scrollContainerFrame) {
-    nsIFrame* capturingFrame = scrollContainerFrame->GetScrolledFrame();
+  if (scrollFrame) {
+    nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
     if (capturingFrame) {
       nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
           mouseEvent, RelativeTo{capturingFrame});
@@ -5357,14 +5357,14 @@ NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
     frameSelection->SetDragState(false);
     frameSelection->StopAutoScrollTimer();
     if (wf.IsAlive()) {
-      ScrollContainerFrame* scrollContainerFrame =
-          nsLayoutUtils::GetNearestScrollContainerFrame(
+      nsIScrollableFrame* scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(
               this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                         nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-      if (scrollContainerFrame) {
+      if (scrollFrame) {
         // Perform any additional scrolling needed to maintain CSS snap point
         // requirements when autoscrolling is over.
-        scrollContainerFrame->ScrollSnap();
+        scrollFrame->ScrollSnap();
       }
     }
   }
@@ -10015,7 +10015,8 @@ static nsRect ComputeOutlineInnerRect(
 
   auto overflowClipAxes = aFrame->ShouldApplyOverflowClipping(disp);
   auto overflowClipMargin = aFrame->OverflowClipMargin(overflowClipAxes);
-  if (overflowClipAxes == kPhysicalAxesBoth && overflowClipMargin == nsSize()) {
+  if (overflowClipAxes == nsIFrame::PhysicalAxes::Both &&
+      overflowClipMargin == nsSize()) {
     return u;
   }
 
@@ -10082,7 +10083,7 @@ static nsRect ComputeOutlineInnerRect(
     }
   }
 
-  if (!overflowClipAxes.isEmpty()) {
+  if (overflowClipAxes != nsIFrame::PhysicalAxes::None) {
     OverflowAreas::ApplyOverflowClippingOnRect(u, bounds, overflowClipAxes,
                                                overflowClipMargin);
   }
@@ -10231,7 +10232,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
   if (ChildrenHavePerspective(disp) && sizeChanged) {
     RecomputePerspectiveChildrenOverflow(this);
 
-    if (overflowClipAxes != kPhysicalAxesBoth) {
+    if (overflowClipAxes != PhysicalAxes::Both) {
       aOverflowAreas.SetAllTo(bounds);
       DebugOnly<bool> ok = ComputeCustomOverflow(aOverflowAreas);
 
@@ -10276,7 +10277,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
       // that's the pre-existing behavior, and breaks pre-rendering otherwise).
       // FIXME(bug 1770704): This check most likely wants to be removed or check
       // for specific frame types at least.
-      return !overflowClipAxes.isEmpty();
+      return overflowClipAxes != PhysicalAxes::None;
     }
     return true;
   }();
@@ -10292,7 +10293,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
   // dimension(s). The children are actually clipped to the padding-box, but
   // since the overflow area should include the entire border-box, just set it
   // to the border-box size here.
-  if (!overflowClipAxes.isEmpty()) {
+  if (overflowClipAxes != PhysicalAxes::None) {
     aOverflowAreas.ApplyClipping(bounds, overflowClipAxes,
                                  OverflowClipMargin(overflowClipAxes));
   }
@@ -10798,17 +10799,17 @@ bool nsIFrame::IsFocusableDueToScrollFrame() {
   // with the mouse, because the extra focus outlines are considered
   // unnecessarily ugly.  When clicked on, the selection position within the
   // element will be enough to make them keyboard scrollable.
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(this);
-  if (!scrollContainerFrame) {
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(this);
+  if (!scrollFrame) {
     return false;
   }
-  if (scrollContainerFrame->IsForTextControlWithNoScrollbars()) {
+  if (scrollFrame->IsForTextControlWithNoScrollbars()) {
     return false;
   }
-  if (scrollContainerFrame->GetScrollStyles().IsHiddenInBothDirections()) {
+  if (scrollFrame->GetScrollStyles().IsHiddenInBothDirections()) {
     return false;
   }
-  if (scrollContainerFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
+  if (scrollFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
     return false;
   }
   return true;
@@ -11173,8 +11174,8 @@ static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
   // subtree
   for (nsIFrame* f = const_cast<nsIFrame*>(aParent); f;
        f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
-    ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
-    if (scrollContainerFrame) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
+    if (scrollableFrame) {
       clipParent = f;
       break;
     }
@@ -11361,14 +11362,13 @@ void nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const {
 nsRect nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder) {
   nsRect area;
 
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::GetScrollContainerFrameFor(this);
-  if (scrollContainerFrame) {
-    // If this frame is the scrolled frame of a scroll container frame, then we
-    // need to pick up the area corresponding to the overflow rect as well.
-    // Otherwise the parts of the overflow that are not occupied by descendants
-    // get skipped and the APZ code sends touch events to the content underneath
-    // instead. See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
+  if (scrollFrame) {
+    // If the frame is content of a scrollframe, then we need to pick up the
+    // area corresponding to the overflow rect as well. Otherwise the parts of
+    // the overflow that are not occupied by descendants get skipped and the
+    // APZ code sends touch events to the content underneath instead.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
     area = ScrollableOverflowRect();
   } else {
     area = GetRectRelativeToSelf();
@@ -11441,12 +11441,12 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
         aBuilder->GetCompositorHitTestInfo() & CompositorHitTestTouchActionMask;
 
     nsIFrame* touchActionFrame = this;
-    if (ScrollContainerFrame* scrollContainerFrame =
-            nsLayoutUtils::GetScrollContainerFrameFor(this)) {
-      ScrollStyles ss = scrollContainerFrame->GetScrollStyles();
+    if (nsIScrollableFrame* scrollFrame =
+            nsLayoutUtils::GetScrollableFrameFor(this)) {
+      ScrollStyles ss = scrollFrame->GetScrollStyles();
       if (ss.mVertical != StyleOverflow::Hidden ||
           ss.mHorizontal != StyleOverflow::Hidden) {
-        touchActionFrame = scrollContainerFrame;
+        touchActionFrame = do_QueryFrame(scrollFrame);
         // On scrollframes, stop inheriting the pan-x and pan-y flags; instead,
         // reset them back to zero to allow panning on the scrollframe unless we
         // encounter an element that disables it that's inside the scrollframe.
@@ -11542,7 +11542,7 @@ void nsIFrame::UpdateVisibleDescendantsState() {
   }
 }
 
-PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
+nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
     const nsStyleDisplay* aDisp) const {
   MOZ_ASSERT(aDisp == StyleDisplay(), "Wrong display struct");
 
@@ -11553,7 +11553,7 @@ PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
   // (e.g. because it forms a fixed-pos containing block).
   if (aDisp->IsContainPaint() && !IsScrollContainerFrame() &&
       SupportsContainLayoutAndPaint()) {
-    return kPhysicalAxesBoth;
+    return PhysicalAxes::Both;
   }
 
   // and overflow:hidden that we should interpret as clip
@@ -11568,14 +11568,14 @@ PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
       case LayoutFrameType::SVGInnerSVG:
       case LayoutFrameType::SVGSymbol:
       case LayoutFrameType::SVGForeignObject:
-        return kPhysicalAxesBoth;
+        return PhysicalAxes::Both;
       default:
         if (IsReplacedWithBlock()) {
           if (type == mozilla::LayoutFrameType::TextInput) {
             // It has an anonymous scroll frame that handles any overflow.
-            return PhysicalAxes();
+            return PhysicalAxes::None;
           }
-          return kPhysicalAxesBoth;
+          return PhysicalAxes::Both;
         }
     }
   }
@@ -11590,23 +11590,23 @@ PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
     const auto* element = Element::FromNodeOrNull(GetContent());
     if (!element ||
         !PresContext()->ElementWouldPropagateScrollStyles(*element)) {
-      PhysicalAxes axes;
+      uint8_t axes = uint8_t(PhysicalAxes::None);
       if (aDisp->mOverflowX == mozilla::StyleOverflow::Clip) {
-        axes += PhysicalAxis::Horizontal;
+        axes |= uint8_t(PhysicalAxes::Horizontal);
       }
       if (aDisp->mOverflowY == mozilla::StyleOverflow::Clip) {
-        axes += PhysicalAxis::Vertical;
+        axes |= uint8_t(PhysicalAxes::Vertical);
       }
-      return axes;
+      return PhysicalAxes(axes);
     }
   }
 
   if (HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    return PhysicalAxes();
+    return PhysicalAxes::None;
   }
 
-  return IsSuppressedScrollableBlockForPrint() ? kPhysicalAxesBoth
-                                               : PhysicalAxes();
+  return IsSuppressedScrollableBlockForPrint() ? PhysicalAxes::Both
+                                               : PhysicalAxes::None;
 }
 
 bool nsIFrame::IsSuppressedScrollableBlockForPrint() const {
