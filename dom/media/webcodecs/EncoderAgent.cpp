@@ -205,6 +205,7 @@ RefPtr<EncoderAgent::ReconfigurationPromise> EncoderAgent::Reconfigure(
             self->mReconfigurationRequest.Complete();
             LOGE("EncoderAgent #%zu (%p) reconfigure success", self->mId,
                  self.get());
+            self->SetState(State::Configured);
             self->mReconfigurationPromise.Resolve(true, __func__);
           },
           [self = RefPtr{this}](const MediaResult& aError) {
