@@ -554,7 +554,6 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->page_parent_tree = -1;
     _cairo_array_init (&surface->page_annots, sizeof (cairo_pdf_resource_t));
-    _cairo_array_init (&surface->forward_links, sizeof (cairo_pdf_forward_link_t));
     surface->tagged = FALSE;
     surface->current_page_label = NULL;
     _cairo_array_init (&surface->page_labels, sizeof (char *));
@@ -2823,7 +2822,6 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     _cairo_array_fini (&surface->fonts);
     _cairo_array_fini (&surface->knockout_group);
     _cairo_array_fini (&surface->page_annots);
-    _cairo_array_fini (&surface->forward_links);
 
      _cairo_hash_table_foreach (surface->color_glyphs,
 				_cairo_pdf_color_glyph_pluck,

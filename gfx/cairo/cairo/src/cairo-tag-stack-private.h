@@ -116,4 +116,7 @@ _cairo_tag_get_type (const char *name);
 cairo_private cairo_status_t
 _cairo_tag_error (const char *fmt, ...) CAIRO_PRINTF_FORMAT (1, 2);
 
+cairo_private void
+_cairo_tag_warning (const char *fmt, ...) CAIRO_PRINTF_FORMAT (1, 2);
+
 #endif /* CAIRO_TAG_STACK_PRIVATE_H */
