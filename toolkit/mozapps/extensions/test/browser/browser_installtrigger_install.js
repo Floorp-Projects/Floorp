@@ -244,20 +244,20 @@ add_task(async function testInstallTriggerFromSubframe() {
   const testCases = [
     ["blank iframe with no attributes", SECURE_TESTROOT, {}, expected.http],
     ["iframe srcdoc=''", SECURE_TESTROOT, { srcdoc: "" }, expected.http],
-
-    // These are blocked by a Firefox doorhanger and the user can't allow it neither.
     [
       "http page iframe src='blob:...'",
       SECURE_TESTROOT,
       { src: "blob:" },
-      expected.httpBlockedOnOrigin,
+      expected.httpBlob,
     ],
     [
       "file page iframe src='blob:...'",
       fileURL,
       { src: "blob:" },
-      expected.otherBlockedOnOrigin,
+      expected.fileBlob,
     ],
+
+    // These are blocked by a Firefox doorhanger and the user can't allow it neither.
     [
       "blank iframe embedded into a top-level sandbox page",
       `${SECURE_TESTROOT}sandboxed.html`,
@@ -331,7 +331,7 @@ add_task(function testInstallBlankFrameNestedIntoBlobURLPage() {
     {
       source: "test-host",
     },
-    /* expectBlockedOrigin */ true
+    /* expectBlockedOrigin */ false
   );
 });
 

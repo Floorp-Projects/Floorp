@@ -24,6 +24,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "nsCOMPtr.h"
@@ -399,7 +400,9 @@ ThirdPartyUtil::GetTopWindowForChannel(nsIChannel* aChannel,
 // "bbc.co.uk". Only properly-formed URI's are tolerated, though a trailing
 // dot may be present. If aHostURI is an IP address, an alias such as
 // 'localhost', an eTLD such as 'co.uk', or the empty string, aBaseDomain will
-// be the exact host. The result of this function should only be used in exact
+// be the exact host. Blob URIs will incur a lookup for their blob URL entry,
+// and will perform the same construction from their principal's base domain.
+// The result of this function should only be used in exact
 // string comparisons, since substring comparisons will not be valid for the
 // special cases elided above.
 NS_IMETHODIMP
@@ -408,9 +411,26 @@ ThirdPartyUtil::GetBaseDomain(nsIURI* aHostURI, nsACString& aBaseDomain) {
     return NS_ERROR_INVALID_ARG;
   }
 
+  // First, get the base domain from aHostURI. In the common case, this is
+  // direct. For blob URLs we get this from the blob url's entry in the blob url
+  // store.
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (aHostURI->SchemeIs("blob")) {
+    if (BlobURLProtocolHandler::GetBlobURLPrincipal(
+            aHostURI, getter_AddRefs(blobPrincipal))) {
+      // If the blob URL is expired, this will be the uuid of a NullPrincipal
+      rv = blobPrincipal->GetBaseDomain(aBaseDomain);
+    } else {
+      // If the blob is expired and no longer has a map entry, we fail
+      rv = nsresult::NS_ERROR_DOM_BAD_URI;
+    }
+  } else {
+    rv = mTLDService->GetBaseDomain(aHostURI, 0, aBaseDomain);
+  }
+
   // Get the base domain. this will fail if the host contains a leading dot,
   // more than one trailing dot, or is otherwise malformed.
-  nsresult rv = mTLDService->GetBaseDomain(aHostURI, 0, aBaseDomain);
   if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
       rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
     // aHostURI is either an IP address, an alias such as 'localhost', an eTLD
