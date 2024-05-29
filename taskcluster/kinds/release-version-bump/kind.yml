@@ -27,20 +27,16 @@ job-defaults:
         # We're bumping both desktop and mobile version regardless of which product is getting
         # released, to avoid confusion from them getting out of sync.
         bump-files:
-            by-project:
+            by-release-type:
                 default:
                     - "browser/config/version_display.txt"
                     - "mobile/android/version.txt"
-                mozilla-release:
+                release:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
                     - "mobile/android/version.txt"
-                mozilla-esr.*:
-                    - "browser/config/version.txt"
-                    - "browser/config/version_display.txt"
-                    - "config/milestone.txt"
-                maple:
+                esr.*:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
