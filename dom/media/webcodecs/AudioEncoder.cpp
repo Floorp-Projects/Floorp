@@ -459,13 +459,16 @@ RefPtr<EncodedAudioChunk> AudioEncoder::EncodedDataToOutputType(
   return encoded;
 }
 
-AudioDecoderConfigInternal AudioEncoder::EncoderConfigToDecoderConfig(
-    nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aRawData,
-    const AudioEncoderConfigInternal& aOutputConfig) const {
-  MOZ_ASSERT(aOutputConfig.mSampleRate.isSome());
-  MOZ_ASSERT(aOutputConfig.mNumberOfChannels.isSome());
-  uint32_t sampleRate = aOutputConfig.mSampleRate.value();
-  uint32_t channelCount = aOutputConfig.mNumberOfChannels.value();
+void AudioEncoder::EncoderConfigToDecoderConfig(
+    JSContext* aCx, const RefPtr<MediaRawData>& aRawData,
+    const AudioEncoderConfigInternal& aSrcConfig,
+    AudioDecoderConfig& aDestConfig) const {
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aSrcConfig.mSampleRate.isSome());
+  MOZ_ASSERT(aSrcConfig.mNumberOfChannels.isSome());
+
+  uint32_t sampleRate = aSrcConfig.mSampleRate.value();
+  uint32_t channelCount = aSrcConfig.mNumberOfChannels.value();
   // Check if the encoder had to modify the settings because of codec
   // constraints. e.g. FFmpegAudioEncoder can encode any sample-rate, but if the
   // codec is Opus, then it will resample the audio one of the specific rates
@@ -474,9 +477,19 @@ AudioDecoderConfigInternal AudioEncoder::EncoderConfigToDecoderConfig(
     sampleRate = aRawData->mConfig->mSampleRate;
     channelCount = aRawData->mConfig->mNumberOfChannels;
   }
-  return AudioDecoderConfigInternal(aOutputConfig.mCodec, sampleRate,
-                                    channelCount,
-                                    do_AddRef(aRawData->mExtraData));
+
+  aDestConfig.mCodec = aSrcConfig.mCodec;
+  aDestConfig.mNumberOfChannels = channelCount;
+  aDestConfig.mSampleRate = sampleRate;
+
+  if (aRawData->mExtraData && !aRawData->mExtraData->IsEmpty()) {
+    Span<const uint8_t> description(aRawData->mExtraData->Elements(),
+                                    aRawData->mExtraData->Length());
+    if (!CopyExtradataToDescription(aCx, description,
+                                    aDestConfig.mDescription.Construct())) {
+      LOGE("Failed to copy extra data");
+    }
+  }
 }
 
 #undef LOG

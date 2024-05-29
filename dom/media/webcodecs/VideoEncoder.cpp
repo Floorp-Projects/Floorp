@@ -566,29 +566,41 @@ RefPtr<EncodedVideoChunk> VideoEncoder::EncodedDataToOutputType(
   return encodedVideoChunk;
 }
 
-VideoDecoderConfigInternal VideoEncoder::EncoderConfigToDecoderConfig(
-    nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aRawData,
-    const VideoEncoderConfigInternal& aOutputConfig) const {
-  // Colorspace is mandatory when outputing a decoder config after encode
-  VideoColorSpaceInternal init;
-  init.mFullRange.emplace(false);
-  init.mMatrix.emplace(VideoMatrixCoefficients::Bt709);
-  init.mPrimaries.emplace(VideoColorPrimaries::Bt709);
-  init.mTransfer.emplace(VideoTransferCharacteristics::Bt709);
+void VideoEncoder::EncoderConfigToDecoderConfig(
+    JSContext* aCx, const RefPtr<MediaRawData>& aRawData,
+    const VideoEncoderConfigInternal& aSrcConfig,
+    VideoDecoderConfig& aDestConfig) const {
+  MOZ_ASSERT(aCx);
 
-  return VideoDecoderConfigInternal(
-      aOutputConfig.mCodec,        /* aCodec */
-      Some(aOutputConfig.mHeight), /* aCodedHeight */
-      Some(aOutputConfig.mWidth),  /* aCodedWidth */
-      Some(init),                  /* aColorSpace */
-      aRawData->mExtraData && !aRawData->mExtraData->IsEmpty()
-          ? aRawData->mExtraData.forget()
-          : nullptr,                                 /* aDescription*/
-      Maybe<uint32_t>(aOutputConfig.mDisplayHeight), /* aDisplayAspectHeight*/
-      Maybe<uint32_t>(aOutputConfig.mDisplayWidth),  /* aDisplayAspectWidth */
-      aOutputConfig.mHardwareAcceleration,           /* aHardwareAcceleration */
-      Nothing()                                      /*  aOptimizeForLatency */
-  );
+  aDestConfig.mCodec = aSrcConfig.mCodec;
+  aDestConfig.mCodedHeight.Construct(aSrcConfig.mHeight);
+  aDestConfig.mCodedWidth.Construct(aSrcConfig.mWidth);
+
+  // Colorspace is mandatory when outputing a decoder config after encode
+  RootedDictionary<VideoColorSpaceInit> colorSpace(aCx);
+  colorSpace.mFullRange.SetValue(false);
+  colorSpace.mMatrix.SetValue(VideoMatrixCoefficients::Bt709);
+  colorSpace.mPrimaries.SetValue(VideoColorPrimaries::Bt709);
+  colorSpace.mTransfer.SetValue(VideoTransferCharacteristics::Bt709);
+  aDestConfig.mColorSpace.Construct(std::move(colorSpace));
+
+  if (aRawData->mExtraData && !aRawData->mExtraData->IsEmpty()) {
+    Span<const uint8_t> description(aRawData->mExtraData->Elements(),
+                                    aRawData->mExtraData->Length());
+    if (!CopyExtradataToDescription(aCx, description,
+                                    aDestConfig.mDescription.Construct())) {
+      LOGE("Failed to copy extra data");
+    }
+  }
+
+  if (aSrcConfig.mDisplayHeight) {
+    aDestConfig.mDisplayAspectHeight.Construct(
+        aSrcConfig.mDisplayHeight.value());
+  }
+  if (aSrcConfig.mDisplayWidth) {
+    aDestConfig.mDisplayAspectWidth.Construct(aSrcConfig.mDisplayWidth.value());
+  }
+  aDestConfig.mHardwareAcceleration = aSrcConfig.mHardwareAcceleration;
 }
 
 #undef LOG

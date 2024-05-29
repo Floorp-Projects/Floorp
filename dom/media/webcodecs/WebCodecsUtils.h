@@ -95,7 +95,7 @@ Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
 bool CopyExtradataToDescription(
-    nsIGlobalObject* aGlobal, Span<const uint8_t>& aSrc,
+    JSContext* aCx, Span<const uint8_t>& aSrc,
     OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest);
 
 /*

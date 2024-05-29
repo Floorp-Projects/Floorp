@@ -67,10 +67,10 @@ class VideoEncoder final : public EncoderTemplate<VideoEncoderTraits> {
   virtual RefPtr<EncodedVideoChunk> EncodedDataToOutputType(
       nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aData) override;
 
-  virtual VideoDecoderConfigInternal EncoderConfigToDecoderConfig(
-      nsIGlobalObject* aGlobal /* TODO: delete */,
-      const RefPtr<MediaRawData>& aRawData,
-      const VideoEncoderConfigInternal& aOutputConfig) const override;
+  virtual void EncoderConfigToDecoderConfig(
+      JSContext* aCx, const RefPtr<MediaRawData>& aRawData,
+      const VideoEncoderConfigInternal& aSrcConfig,
+      VideoDecoderConfig& aDestConfig) const override;
 };
 
 }  // namespace mozilla::dom

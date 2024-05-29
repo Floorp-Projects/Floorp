@@ -338,62 +338,11 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
 
     RootedDictionary<EncodedVideoChunkMetadata> metadata(cx);
     if (mOutputNewDecoderConfig) {
-      VideoDecoderConfigInternal decoderConfigInternal =
-          EncoderConfigToDecoderConfig(GetParentObject(), data, *mActiveConfig);
-
-      // Convert VideoDecoderConfigInternal to VideoDecoderConfig
       RootedDictionary<VideoDecoderConfig> decoderConfig(cx);
-      decoderConfig.mCodec = decoderConfigInternal.mCodec;
-      if (decoderConfigInternal.mCodedHeight) {
-        decoderConfig.mCodedHeight.Construct(
-            decoderConfigInternal.mCodedHeight.value());
-      }
-      if (decoderConfigInternal.mCodedWidth) {
-        decoderConfig.mCodedWidth.Construct(
-            decoderConfigInternal.mCodedWidth.value());
-      }
-      if (decoderConfigInternal.mColorSpace) {
-        RootedDictionary<VideoColorSpaceInit> colorSpace(cx);
-        colorSpace.mFullRange =
-            MaybeToNullable(decoderConfigInternal.mColorSpace->mFullRange);
-        colorSpace.mMatrix =
-            MaybeToNullable(decoderConfigInternal.mColorSpace->mMatrix);
-        colorSpace.mPrimaries =
-            MaybeToNullable(decoderConfigInternal.mColorSpace->mPrimaries);
-        colorSpace.mTransfer =
-            MaybeToNullable(decoderConfigInternal.mColorSpace->mTransfer);
-        decoderConfig.mColorSpace.Construct(std::move(colorSpace));
-      }
-
-      if (decoderConfigInternal.mDescription &&
-          !decoderConfigInternal.mDescription->IsEmpty()) {
-        Span<const uint8_t> description(
-            decoderConfigInternal.mDescription->Elements(),
-            decoderConfigInternal.mDescription->Length());
-        if (!CopyExtradataToDescription(
-                GetParentObject(), description,
-                decoderConfig.mDescription.Construct())) {
-          LOGE("Failed to copy extra data");
-        }
-      }
-
-      if (decoderConfigInternal.mDisplayAspectHeight) {
-        decoderConfig.mDisplayAspectHeight.Construct(
-            decoderConfigInternal.mDisplayAspectHeight.value());
-      }
-      if (decoderConfigInternal.mDisplayAspectWidth) {
-        decoderConfig.mDisplayAspectWidth.Construct(
-            decoderConfigInternal.mDisplayAspectWidth.value());
-      }
-      if (decoderConfigInternal.mOptimizeForLatency) {
-        decoderConfig.mOptimizeForLatency.Construct(
-            decoderConfigInternal.mOptimizeForLatency.value());
-      }
-
+      EncoderConfigToDecoderConfig(cx, data, *mActiveConfig, decoderConfig);
       metadata.mDecoderConfig.Construct(std::move(decoderConfig));
       mOutputNewDecoderConfig = false;
-      LOG("New config passed to output callback: %s",
-          decoderConfigInternal.ToString().get());
+      LOG("New config passed to output callback");
     }
 
     nsAutoCString metadataInfo;
@@ -449,32 +398,11 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
 
     RootedDictionary<EncodedAudioChunkMetadata> metadata(cx);
     if (mOutputNewDecoderConfig) {
-      AudioDecoderConfigInternal decoderConfigInternal =
-          this->EncoderConfigToDecoderConfig(GetParentObject(), data,
-                                             *mActiveConfig);
-
-      // Convert AudioDecoderConfigInternal to AudioDecoderConfig
       RootedDictionary<AudioDecoderConfig> decoderConfig(cx);
-      decoderConfig.mCodec = decoderConfigInternal.mCodec;
-      decoderConfig.mNumberOfChannels = decoderConfigInternal.mNumberOfChannels;
-      decoderConfig.mSampleRate = decoderConfigInternal.mSampleRate;
-
-      if (decoderConfigInternal.mDescription &&
-          !decoderConfigInternal.mDescription->IsEmpty()) {
-        Span<const uint8_t> description(
-            decoderConfigInternal.mDescription->Elements(),
-            decoderConfigInternal.mDescription->Length());
-        if (!CopyExtradataToDescription(
-                GetParentObject(), description,
-                decoderConfig.mDescription.Construct())) {
-          LOGE("Failed to copy extra data");
-        }
-      }
-
+      EncoderConfigToDecoderConfig(cx, data, *mActiveConfig, decoderConfig);
       metadata.mDecoderConfig.Construct(std::move(decoderConfig));
       mOutputNewDecoderConfig = false;
-      LOG("New config passed to output callback: %s",
-          decoderConfigInternal.ToString().get());
+      LOG("New config passed to output callback");
     }
 
     nsAutoCString metadataInfo;

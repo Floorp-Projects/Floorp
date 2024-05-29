@@ -66,9 +66,10 @@ class AudioEncoder final : public EncoderTemplate<AudioEncoderTraits> {
       nsIGlobalObject* aGlobalObject,
       const RefPtr<MediaRawData>& aData) override;
 
-  virtual AudioDecoderConfigInternal EncoderConfigToDecoderConfig(
-      nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aRawData,
-      const AudioEncoderConfigInternal& aOutputConfig) const override;
+  virtual void EncoderConfigToDecoderConfig(
+      JSContext* aCx, const RefPtr<MediaRawData>& aRawData,
+      const AudioEncoderConfigInternal& aSrcConfig,
+      AudioDecoderConfig& aDestConfig) const override;
 };
 
 }  // namespace mozilla::dom
