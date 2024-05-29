@@ -2628,58 +2628,16 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
   switch (counter) {
     case JSUseCounter::ASMJS:
       SetUseCounter(obj, eUseCounter_custom_JS_asmjs);
-      return;
+      break;
     case JSUseCounter::WASM:
       SetUseCounter(obj, eUseCounter_custom_JS_wasm);
-      return;
+      break;
     case JSUseCounter::WASM_LEGACY_EXCEPTIONS:
       SetUseCounter(obj, eUseCounter_custom_JS_wasm_legacy_exceptions);
-      return;
-    case JSUseCounter::SUBCLASSING_ARRAY_TYPE_II:
-      SetUseCounter(obj,
-                    mozilla::eUseCounter_custom_JS_subclassing_array_type_2);
-      return;
-    case JSUseCounter::SUBCLASSING_ARRAY_TYPE_III:
-      SetUseCounter(obj,
-                    mozilla::eUseCounter_custom_JS_subclassing_array_type_3);
-      return;
-    case JSUseCounter::SUBCLASSING_PROMISE_TYPE_II:
-      SetUseCounter(obj,
-                    mozilla::eUseCounter_custom_JS_subclassing_promise_type_2);
-      return;
-    case JSUseCounter::SUBCLASSING_PROMISE_TYPE_III:
-      SetUseCounter(obj,
-                    mozilla::eUseCounter_custom_JS_subclassing_promise_type_3);
-      return;
-    case JSUseCounter::SUBCLASSING_TYPEDARRAY_TYPE_II:
-      SetUseCounter(
-          obj, mozilla::eUseCounter_custom_JS_subclassing_typedarray_type_2);
-      return;
-    case JSUseCounter::SUBCLASSING_TYPEDARRAY_TYPE_III:
-      SetUseCounter(
-          obj, mozilla::eUseCounter_custom_JS_subclassing_typedarray_type_3);
-      return;
-    case JSUseCounter::SUBCLASSING_ARRAYBUFFER_TYPE_III:
-      SetUseCounter(
-          obj, mozilla::eUseCounter_custom_JS_subclassing_arraybuffer_type_3);
-      return;
-    case JSUseCounter::SUBCLASSING_SHAREDARRAYBUFFER_TYPE_III:
-      SetUseCounter(
-          obj,
-          mozilla::eUseCounter_custom_JS_subclassing_sharedarraybuffer_type_3);
-      return;
-    case JSUseCounter::SUBCLASSING_REGEXP_TYPE_III:
-      SetUseCounter(obj,
-                    mozilla::eUseCounter_custom_JS_subclassing_regexp_type_3);
-      return;
-    case JSUseCounter::SUBCLASSING_REGEXP_TYPE_IV:
-      SetUseCounter(obj,
-                    mozilla::eUseCounter_custom_JS_subclassing_regexp_type_4);
-      return;
-    case JSUseCounter::COUNT:
       break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");
   }
-  MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");
 }
 
 static void GetRealmNameCallback(JSContext* cx, Realm* realm, char* buf,

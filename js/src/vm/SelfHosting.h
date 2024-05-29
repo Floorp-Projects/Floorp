@@ -292,12 +292,6 @@ bool IsTupleUnchecked(JSContext* cx, const CallArgs& args);
 bool intrinsic_IsTuple(JSContext* cx, unsigned argc, JS::Value* vp);
 #endif
 
-bool intrinsic_ReportUsageCounter(JSContext* cx, unsigned argc, JS::Value* vp);
-
-// The arguments to this are defined in SelfHostingDefines.h
-bool ReportUsageCounter(JSContext* cx, HandleObject constructor,
-                        int32_t builtin, int32_t type);
-
 } /* namespace js */
 
 #endif /* vm_SelfHosting_h_ */
