@@ -47,6 +47,8 @@ typedef enum {
     TAG_LINK_DEST,
     TAG_LINK_URI,
     TAG_LINK_FILE,
+    TAG_LINK_PAGE,
+    TAG_LINK_DEST_AND_URI,
 } cairo_tag_link_type_t;
 
 typedef struct _cairo_content_attrs {

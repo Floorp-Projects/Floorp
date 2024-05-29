@@ -331,3 +331,17 @@ _cairo_tag_error (const char *fmt, ...)
     }
     return _cairo_error (CAIRO_STATUS_TAG_ERROR);
 }
+
+void
+_cairo_tag_warning (const char *fmt, ...)
+{
+    va_list ap;
+
+    if (getenv ("CAIRO_DEBUG_TAG") != NULL) {
+	printf ("TAG WARNING: ");
+	va_start (ap, fmt);
+	vprintf (fmt, ap);
+	va_end (ap);
+	printf ("\n");
+    }
+}
