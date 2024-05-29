@@ -2617,7 +2617,7 @@
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Submit</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Close</string>
+    <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Close</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Thanks for your feedback!</string>
     <!-- Option for likert scale -->
