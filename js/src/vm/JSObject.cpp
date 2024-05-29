@@ -2215,6 +2215,14 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     return true;
   }
 
+#ifdef NIGHTLY_BUILD
+  if (key == JSProto_ArrayBuffer && !JS::Prefs::arraybuffer_transfer() &&
+      (id == NameToId(cx->names().transfer) ||
+       id == NameToId(cx->names().transferToFixedLength) ||
+       id == NameToId(cx->names().detached))) {
+    return true;
+  }
+
   if (key == JSProto_ArrayBuffer &&
       !JS::Prefs::experimental_arraybuffer_resizable() &&
       (id == NameToId(cx->names().maxByteLength) ||
@@ -2231,14 +2239,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     return true;
   }
 
-  if (key == JSProto_ArrayBuffer && !JS::Prefs::arraybuffer_transfer() &&
-      (id == NameToId(cx->names().transfer) ||
-       id == NameToId(cx->names().transferToFixedLength) ||
-       id == NameToId(cx->names().detached))) {
-    return true;
-  }
-
-#ifdef NIGHTLY_BUILD
   if (key == JSProto_Uint8Array &&
       !JS::Prefs::experimental_uint8array_base64() &&
       (id == NameToId(cx->names().setFromBase64) ||
@@ -2751,8 +2751,9 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
         if (false) {
           ;
         }
-#define TEST_SLOT_MATCHES_PROTOTYPE(name, clasp)       \
-  else if ((JSProto_##name) == slot){slotname = #name; \
+#define TEST_SLOT_MATCHES_PROTOTYPE(name, clasp) \
+  else if ((JSProto_##name) == slot) {           \
+    slotname = #name;                            \
   }
         JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
 #undef TEST_SLOT_MATCHES_PROTOTYPE
