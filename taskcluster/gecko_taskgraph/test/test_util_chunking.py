@@ -160,6 +160,7 @@ def mock_mozinfo():
             "condprof": False,
             "canvas": False,
             "webgpu": False,
+            "webcodecs": False,
             "privatebrowsing": False,
         }
 

@@ -31,6 +31,7 @@ WPT_SUBSUITES = {
     "canvas": "html/canvas",
     "webgpu": "_mozilla/webgpu",
     "privatebrowsing": "/service-workers/cache-storage",
+    "webcodecs": "webcodecs",
 }
 
 

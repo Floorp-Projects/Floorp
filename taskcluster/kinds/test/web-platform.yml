@@ -101,6 +101,7 @@ web-platform-tests:
             # other than webgpu/* that are tagged webgpu, e.g. canvas tests)
             - --exclude-tag=webgpu
             - --exclude-tag=canvas
+            - --exclude-tag=webcodecs
 
 web-platform-tests-backlog:
     description: "Web platform test (backlog) run"
@@ -136,6 +137,7 @@ web-platform-tests-backlog:
             - --skip-implementation-status=not-implementing
             - --backlog
             - --exclude-tag=webgpu
+            - --exclude-tag=webcodecs
 
 web-platform-tests-privatebrowsing:
     description: "Web platform privatebrowsing test run"
@@ -160,6 +162,27 @@ web-platform-tests-privatebrowsing:
             - --setpref=browser.privatebrowsing.autostart=true
             - --setpref=dom.cache.privateBrowsing.enabled=true
             - --tag=privatebrowsing
+
+web-platform-tests-webcodecs:
+    description: "Web platform webcodecs test run"
+    suite: web-platform-tests
+    treeherder-symbol: W(codecs)
+    virtualization: virtual
+    tier: default
+    chunks: 1
+    max-run-time: 1800
+    variants: []  # We don't need sw or nofis testing.
+    run-on-projects:
+        by-test-platform:
+            android.*: []
+            .*wayland.*: []
+            default: built-projects
+    mozharness:
+        chunked: true
+        extra-options:
+            - --test-type=testharness
+            - --default-exclude
+            - --tag=webcodecs
 
 web-platform-tests-reftest:
     description: "Web platform reftest run"
@@ -270,6 +293,7 @@ web-platform-tests-webgpu:
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --exclude-tag=webcodecs
                     - --setpref=gfx.webgpu.ignore-blocklist=true
                 default:
                     - --test-type=testharness
@@ -278,6 +302,7 @@ web-platform-tests-webgpu:
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --exclude-tag=webcodecs
 
 web-platform-tests-webgpu-backlog:
     description: "Web platform WebGPU test run (backlog)"
@@ -316,6 +341,7 @@ web-platform-tests-webgpu-backlog:
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --exclude-tag=webcodecs
                     - --skip-implementation-status=implementing
                     - --skip-implementation-status=not-implementing
                     - --backlog
@@ -325,6 +351,7 @@ web-platform-tests-webgpu-backlog:
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --exclude-tag=webcodecs
                     - --skip-implementation-status=implementing
                     - --skip-implementation-status=not-implementing
                     - --backlog
@@ -385,6 +412,7 @@ web-platform-tests-canvas:
             - --default-exclude
             - --tag=canvas
             - --exclude-tag=webgpu
+            - --exclude-tag=webcodecs
 
 web-platform-tests-reftest-backlog:
     description: "Web platform reftest (backlog) run"
@@ -414,6 +442,7 @@ web-platform-tests-reftest-backlog:
             - --skip-implementation-status=not-implementing
             - --backlog
             - --exclude-tag=webgpu
+            - --exclude-tag=webcodecs
 
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
