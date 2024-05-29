@@ -10,8 +10,8 @@ origin:
     SQLite is a C-language library that implements a small, fast,
     self-contained, high-reliability, full-featured, SQL database engine.
   url: https://www.sqlite.org/
-  release: version-3.45.2 (2024-03-12T11:06:23+00:00).
-  revision: version-3.45.2
+  release: version-3.46.0 (2024-05-23T13:25:27Z).
+  revision: version-3.46.0
   license: Public Domain
   license-file: LICENSE.md
   notes: >
