@@ -35,7 +35,8 @@ import java.util.Locale.US
 
 internal sealed class MimeType(
     private val type: String,
-    val permission: List<String>,
+    val filePermissions: List<String>,
+    val capturePermission: String? = null,
 ) {
 
     data class Image(
@@ -45,19 +46,20 @@ internal sealed class MimeType(
     ) : MimeType(
         "image/",
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            listOf(CAMERA, READ_MEDIA_IMAGES, READ_MEDIA_VISUAL_USER_SELECTED)
+            listOf(READ_MEDIA_IMAGES, READ_MEDIA_VISUAL_USER_SELECTED)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(CAMERA, READ_MEDIA_IMAGES)
+            listOf(READ_MEDIA_IMAGES)
         } else {
-            listOf(CAMERA)
+            emptyList()
         },
+        capturePermission = CAMERA,
     ) {
         /**
          * Build an image capture intent using the application FileProvider.
          * A FileProvider must be defined in your AndroidManifest.xml, see
          * https://developer.android.com/training/camera/photobasics#TaskPath
          */
-        override fun buildIntent(context: Context, request: File): Intent? {
+        override fun buildCaptureIntent(context: Context, request: File): Intent? {
             val intent = Intent(ACTION_IMAGE_CAPTURE).withDeviceSupport(context) ?: return null
 
             val photoFile = try {
@@ -76,33 +78,36 @@ internal sealed class MimeType(
     object Video : MimeType(
         "video/",
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            listOf(CAMERA, READ_MEDIA_VIDEO, READ_MEDIA_VISUAL_USER_SELECTED)
+            listOf(READ_MEDIA_VIDEO, READ_MEDIA_VISUAL_USER_SELECTED)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(CAMERA, READ_MEDIA_VIDEO)
+            listOf(READ_MEDIA_VIDEO)
         } else {
-            listOf(CAMERA)
+            emptyList()
         },
+        capturePermission = CAMERA,
     ) {
-        override fun buildIntent(context: Context, request: File) =
-            Intent(ACTION_VIDEO_CAPTURE).withDeviceSupport(context)?.addCaptureHint(request.captureMode)
+        override fun buildCaptureIntent(context: Context, request: File) =
+            Intent(ACTION_VIDEO_CAPTURE).withDeviceSupport(context)
+                ?.addCaptureHint(request.captureMode)
     }
 
     object Audio : MimeType(
         "audio/",
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(RECORD_AUDIO, READ_MEDIA_AUDIO)
+            listOf(READ_MEDIA_AUDIO)
         } else {
-            listOf(RECORD_AUDIO)
+            emptyList()
         },
+        capturePermission = RECORD_AUDIO,
     ) {
-        override fun buildIntent(context: Context, request: File) =
+        override fun buildCaptureIntent(context: Context, request: File) =
             Intent(RECORD_SOUND_ACTION).withDeviceSupport(context)
     }
 
     object Wildcard : MimeType(
         "*/",
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(READ_MEDIA_IMAGES, READ_MEDIA_AUDIO, READ_MEDIA_VIDEO)
+            emptyList()
         } else {
             listOf(READ_EXTERNAL_STORAGE)
         },
@@ -146,7 +151,8 @@ internal sealed class MimeType(
             mimeTypes.isNotEmpty() &&
             mimeTypes.all { it.startsWith(type) }
 
-    abstract fun buildIntent(context: Context, request: File): Intent?
+    open fun buildIntent(context: Context, request: File): Intent? = null
+    open fun buildCaptureIntent(context: Context, request: File): Intent? = null
 
     companion object {
         /**

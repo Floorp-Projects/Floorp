@@ -62,56 +62,116 @@ internal class FilePicker(
     @VisibleForTesting
     internal var currentRequest: PromptRequest? = null
 
+    /**
+     * Handles the file request by building the appropriate intents and starting the file picker.
+     *
+     * @param promptRequest The [File] prompt request.
+     */
     @Suppress("ComplexMethod")
-    fun handleFileRequest(promptRequest: File, requestPermissions: Boolean = true) {
+    fun handleFileRequest(promptRequest: File) {
         // Track which permissions are needed.
-        val neededPermissions = mutableSetOf<String>()
-        // Build a list of intents for capturing media and opening the file picker to combine later.
-        val intents = mutableListOf<Intent>()
-        captureUri = null
+        val neededPermissions = getNecessaryPermissions(promptRequest)
 
-        // Compare the accepted values against image/*, video/*, and audio/*
-        for (type in MimeType.values()) {
-            val hasPermission = container.context.isPermissionGranted(type.permission)
-            // The captureMode attribute can be used if the accepted types are exactly for
-            // image/*, video/*, or audio/*.
-            if (hasPermission && type.shouldCapture(
-                    promptRequest.mimeTypes,
-                    promptRequest.captureMode,
-                )
-            ) {
-                type.buildIntent(container.context, promptRequest)?.also {
-                    saveCaptureUriIfPresent(it)
-                    container.startActivityForResult(it, FILE_PICKER_ACTIVITY_REQUEST_CODE)
-                    return
-                }
-            }
-            // Otherwise, build the intent and create a chooser later
-            if (type.matches(promptRequest.mimeTypes)) {
-                if (hasPermission) {
-                    type.buildIntent(container.context, promptRequest)?.also {
-                        saveCaptureUriIfPresent(it)
-                        intents.add(it)
-                    }
-                } else {
-                    neededPermissions.addAll(type.permission)
-                }
-            }
+        // Check if we already have all needed permissions.
+        val missingPermissions = neededPermissions.filter {
+            !container.context.isPermissionGranted(it)
         }
 
-        val canSkipPermissionRequest = !requestPermissions && intents.isNotEmpty()
+        if (missingPermissions.isEmpty()) {
+            onPermissionsGranted(promptRequest)
+        } else {
+            askAndroidPermissionsForRequest(neededPermissions, promptRequest)
+        }
+    }
 
-        if (neededPermissions.isEmpty() || canSkipPermissionRequest) {
+    /**
+     * Returns the necessary permissions for the given [File] prompt request.
+     *
+     * @param promptRequest The [File] prompt request.
+     * @return The set of permissions needed for the prompt request.
+     */
+    private fun getNecessaryPermissions(promptRequest: File): Set<String> {
+        return MimeType.values()
+            .filter { it.matches(promptRequest.mimeTypes) }
+            .flatMap { mimeType ->
+                val permissions = mutableListOf<String>()
+                permissions.addAll(mimeType.filePermissions)
+                mimeType.capturePermission?.let { permissions.add(it) }
+                permissions
+            }.toSet()
+    }
+
+    /**
+     * Handles the file request by building the appropriate intents and starting the file picker.
+     *
+     * @param intents the list of intents used to build the chooser Intent.
+     */
+    @VisibleForTesting
+    internal fun showChooser(intents: MutableList<Intent>) {
+        if (intents.isNotEmpty()) {
             // Combine the intents together using a chooser.
             val lastIntent = intents.removeAt(intents.lastIndex)
+
             val chooser = Intent.createChooser(lastIntent, null).apply {
                 putExtra(EXTRA_INITIAL_INTENTS, intents.toTypedArray())
             }
 
             container.startActivityForResult(chooser, FILE_PICKER_ACTIVITY_REQUEST_CODE)
-        } else {
-            askAndroidPermissionsForRequest(neededPermissions, promptRequest)
         }
+    }
+
+    /**
+     * Builds a list of intents based on the accepted mime types and capture mode.
+     *
+     * @param promptRequest The [File] prompt request.
+     * @return The list of intents to be used to build the chooser.
+     */
+    @VisibleForTesting
+    internal fun buildIntentList(promptRequest: File): MutableList<Intent> {
+        val intents = mutableListOf<Intent>()
+        captureUri = null
+
+        // Compare the accepted values against image/*, video/*, and audio/*
+        for (type in MimeType.values()) {
+            if (type.matches(promptRequest.mimeTypes)) {
+                val hasCapturePermission = type.capturePermission?.let {
+                    container.context.isPermissionGranted(
+                        it,
+                    )
+                } ?: false
+
+                // The captureMode attribute can be used if the accepted types are exactly for
+                // image/*, video/*, or audio/*.
+                if (hasCapturePermission && type.shouldCapture(
+                        promptRequest.mimeTypes,
+                        promptRequest.captureMode,
+                    )
+                ) {
+                    type.buildIntent(container.context, promptRequest)?.also {
+                        saveCaptureUriIfPresent(it)
+                        container.startActivityForResult(it, FILE_PICKER_ACTIVITY_REQUEST_CODE)
+                        return emptyList<Intent>().toMutableList()
+                    }
+                }
+
+                val hasFilePermissions = container.context.isPermissionGranted(type.filePermissions)
+
+                if (hasFilePermissions) {
+                    type.buildIntent(container.context, promptRequest)?.also {
+                        saveCaptureUriIfPresent(it)
+                        intents.add(it)
+                    }
+                }
+
+                if (hasCapturePermission) {
+                    type.buildCaptureIntent(container.context, promptRequest)?.also {
+                        saveCaptureUriIfPresent(it)
+                        intents.add(it)
+                    }
+                }
+            }
+        }
+        return intents
     }
 
     /**
@@ -155,9 +215,11 @@ internal class FilePicker(
      * @see [onNeedToRequestPermissions].
      */
     override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
-        if (grantResults.isNotEmpty() && grantResults.all { it == PERMISSION_GRANTED }) {
-            onPermissionsGranted()
+        if (grantResults.isNotEmpty() && grantResults.any { it == PERMISSION_GRANTED }) {
+            // at least one permission was granted
+            onPermissionsGranted(currentRequest as File)
         } else {
+            // all permissions were denied, either when requested or already permanently denied
             onPermissionsDenied()
         }
         currentRequest = null
@@ -171,18 +233,17 @@ internal class FilePicker(
      * If the required permission has not been granted
      * [onNeedToRequestPermissions] will be called.
      */
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun onPermissionsGranted() {
-        // Try again handling the original request which we've cached before.
-        // Actually consuming it will be done in onActivityResult once the user returns from the file picker.
-        handleFileRequest(currentRequest as File, requestPermissions = false)
+    @VisibleForTesting
+    internal fun onPermissionsGranted(promptRequest: File) {
+        val intents = buildIntentList(promptRequest)
+        showChooser(intents)
     }
 
     /**
      * Used in conjunction with [onNeedToRequestPermissions] to notify the feature that one
      * or more required permissions have been denied.
      */
-    @VisibleForTesting(otherwise = PRIVATE)
+    @VisibleForTesting
     internal fun onPermissionsDenied() {
         // Nothing left to do. Consume / cleanup the requests.
         store.consumePromptFrom<File>(sessionId) { request ->
