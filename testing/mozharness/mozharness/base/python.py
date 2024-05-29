@@ -41,6 +41,10 @@ external_tools_path = os.path.join(
 )
 
 
+class MultipleWheelMatchError(Exception):
+    pass
+
+
 def get_tlsv1_post():
     # Monkeypatch to work around SSL errors in non-bleeding-edge Python.
     # Taken from https://lukasa.co.uk/2013/01/Choosing_SSL_Version_In_Requests/
@@ -460,44 +464,52 @@ class VirtualenvMixin(object):
         ]
         if "abs_src_dir" not in dirs and "repo_path" in self.config:
             dirs["abs_src_dir"] = os.path.normpath(self.config["repo_path"])
+
+        wheels = {}
+
         for d in vendor_search_dirs:
             try:
                 src_dir = Path(d.format(**dirs))
             except KeyError:
                 continue
 
-            pip_wheel_path = (
-                src_dir
-                / "third_party"
-                / "python"
-                / "_venv"
-                / "wheels"
-                / "pip-24.0-py3-none-any.whl"
+            src_dir_wheels_path = (
+                src_dir / "third_party" / "python" / "_venv" / "wheels"
             )
-            setuptools_wheel_path = (
-                src_dir
-                / "third_party"
-                / "python"
-                / "_venv"
-                / "wheels"
-                / "setuptools-70.0.0-py3-none-any.whl"
-            )
-            wheel_wheel_path = (
-                src_dir
-                / "third_party"
-                / "python"
-                / "_venv"
-                / "wheels"
-                / "wheel-0.43.0-py3-none-any.whl"
-            )
+            wheel_patterns = {
+                "wheel": "wheel*.whl",
+                "pip": "pip*.whl",
+                "setuptools": "setuptools*.whl",
+            }
+            wheel_matches = {}
+            multi_match_errors = []
 
-            if all(
-                path.exists()
-                for path in (pip_wheel_path, setuptools_wheel_path, wheel_wheel_path)
-            ):
+            for key, pattern in wheel_patterns.items():
+                files = list(src_dir_wheels_path.glob(pattern))
+                num_matches = len(files)
+                if num_matches > 1:
+                    multi_match_errors.append(
+                        f"{num_matches} wheels for '{key}' were found."
+                    )
+                elif num_matches == 1:
+                    wheel_matches[key] = files[0]
+
+            if multi_match_errors:
+                error_message = (
+                    "Found multiple matches for wheels of the same package. "
+                    "Please ensure that only a single wheel is vendored for each:\n"
+                    + "\n".join(multi_match_errors)
+                )
+                raise MultipleWheelMatchError(error_message)
+
+            # At this point, we've errored out if there's more than one match for a specific wheel.
+            # So if every wheel has a single match, we're done and can break out. If we didn't match
+            # all the wheels we expect, continue searching in another directory.
+            if set(wheel_patterns.keys()) == set(wheel_matches.keys()):
+                wheels = wheel_matches
                 break
         else:
-            self.fatal("Can't find all of 'pip', 'setuptools', and 'wheel' wheels")
+            self.fatal("Can't find all of 'pip', 'setuptools', and 'wheel' wheels.")
 
         venv_python_bin = Path(self.query_python_path())
 
@@ -568,9 +580,9 @@ class VirtualenvMixin(object):
                     "--only-binary",
                     ":all:",
                     "--disable-pip-version-check",
-                    str(pip_wheel_path),
-                    str(setuptools_wheel_path),
-                    str(wheel_wheel_path),
+                    wheels["pip"],
+                    wheels["setuptools"],
+                    wheels["wheel"],
                 ],
                 cwd=dirs["abs_work_dir"],
                 error_list=VirtualenvErrorList,
