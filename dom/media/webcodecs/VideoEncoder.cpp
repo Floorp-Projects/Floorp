@@ -568,7 +568,7 @@ RefPtr<EncodedVideoChunk> VideoEncoder::EncodedDataToOutputType(
 
 VideoDecoderConfigInternal VideoEncoder::EncoderConfigToDecoderConfig(
     nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aRawData,
-    const VideoEncoderConfigInternal& mOutputConfig) const {
+    const VideoEncoderConfigInternal& aOutputConfig) const {
   // Colorspace is mandatory when outputing a decoder config after encode
   VideoColorSpaceInternal init;
   init.mFullRange.emplace(false);
@@ -577,16 +577,16 @@ VideoDecoderConfigInternal VideoEncoder::EncoderConfigToDecoderConfig(
   init.mTransfer.emplace(VideoTransferCharacteristics::Bt709);
 
   return VideoDecoderConfigInternal(
-      mOutputConfig.mCodec,        /* aCodec */
-      Some(mOutputConfig.mHeight), /* aCodedHeight */
-      Some(mOutputConfig.mWidth),  /* aCodedWidth */
+      aOutputConfig.mCodec,        /* aCodec */
+      Some(aOutputConfig.mHeight), /* aCodedHeight */
+      Some(aOutputConfig.mWidth),  /* aCodedWidth */
       Some(init),                  /* aColorSpace */
       aRawData->mExtraData && !aRawData->mExtraData->IsEmpty()
           ? aRawData->mExtraData.forget()
           : nullptr,                                 /* aDescription*/
-      Maybe<uint32_t>(mOutputConfig.mDisplayHeight), /* aDisplayAspectHeight*/
-      Maybe<uint32_t>(mOutputConfig.mDisplayWidth),  /* aDisplayAspectWidth */
-      mOutputConfig.mHardwareAcceleration,           /* aHardwareAcceleration */
+      Maybe<uint32_t>(aOutputConfig.mDisplayHeight), /* aDisplayAspectHeight*/
+      Maybe<uint32_t>(aOutputConfig.mDisplayWidth),  /* aDisplayAspectWidth */
+      aOutputConfig.mHardwareAcceleration,           /* aHardwareAcceleration */
       Nothing()                                      /*  aOptimizeForLatency */
   );
 }
