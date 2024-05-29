@@ -203,19 +203,21 @@ void CookieServiceParent::UpdateCookieInContentList(
 void CookieServiceParent::SerializeCookieListTable(
     const nsTArray<RefPtr<Cookie>>& aFoundCookieList,
     nsTArray<CookieStructTable>& aCookiesListTable, nsIURI* aHostURI) {
-  nsTHashMap<nsCStringHashKey, CookieStructTable*> cookieListTable;
+  // Stores the index in aCookiesListTable by origin attributes suffix.
+  nsTHashMap<nsCStringHashKey, size_t> cookieListTable;
 
   for (Cookie* cookie : aFoundCookieList) {
     nsAutoCString attrsSuffix;
     cookie->OriginAttributesRef().CreateSuffix(attrsSuffix);
-    CookieStructTable* table =
-        cookieListTable.LookupOrInsertWith(attrsSuffix, [&] {
-          CookieStructTable* newTable = aCookiesListTable.AppendElement();
-          newTable->attrs() = cookie->OriginAttributesRef();
-          return newTable;
-        });
+    size_t tableIndex = cookieListTable.LookupOrInsertWith(attrsSuffix, [&] {
+      size_t index = aCookiesListTable.Length();
+      CookieStructTable* newTable = aCookiesListTable.AppendElement();
+      newTable->attrs() = cookie->OriginAttributesRef();
+      return index;
+    });
 
-    CookieStruct* cookieStruct = table->cookies().AppendElement();
+    CookieStruct* cookieStruct =
+        aCookiesListTable[tableIndex].cookies().AppendElement();
     *cookieStruct = cookie->ToIPC();
 
     // clear http-only cookie values
