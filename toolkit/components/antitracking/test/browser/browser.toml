@@ -114,6 +114,10 @@ skip-if = ["os == 'mac' && !debug"] # Bug 1503778, 1577362
 
 ["browser_partitionedABA.js"]
 
+["browser_partitionedABnavigatestToAA.js"]
+
+["browser_partitionedBlobSubresources.js"]
+
 ["browser_partitionedClearSiteDataHeader.js"]
 support-files = ["clearSiteData.sjs"]
 
@@ -122,13 +126,13 @@ support-files = ["clearSiteData.sjs"]
 ["browser_partitionedCookies.js"]
 support-files = ["cookies.sjs"]
 
+["browser_partitionedDOMCache.js"]
+
 ["browser_partitionedDedicatedWorker.js"]
 support-files = [
   "cookies.sjs",
   "dedicatedWorker.js",
 ]
-
-["browser_partitionedDOMCache.js"]
 
 ["browser_partitionedIndexedDB.js"]
 
