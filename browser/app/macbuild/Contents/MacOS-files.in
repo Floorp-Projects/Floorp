@@ -10,7 +10,7 @@
 #endif
 /gtest/***
 /http3server
-#if defined(MOZ_ASAN) || defined(MOZ_TSAN)
+#if defined(MOZ_ASAN) || defined(MOZ_TSAN) || defined(FUZZING)
 /llvm-symbolizer
 #endif
 #if defined(MOZ_CRASHREPORTER)

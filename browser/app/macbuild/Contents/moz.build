@@ -10,6 +10,7 @@ for s in (
     "MOZ_GECKODRIVER",
     "MOZ_ASAN",
     "MOZ_TSAN",
+    "FUZZING",
     "MOZ_CRASHREPORTER",
     "MOZ_APP_NAME",
 ):
