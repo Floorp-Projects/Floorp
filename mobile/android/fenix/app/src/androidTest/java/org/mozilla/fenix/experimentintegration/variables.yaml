@@ -7,4 +7,31 @@ urls:
   prod_server: "https://experimenter.services.mozilla.com"
   telemetry_server: "http://172.25.58.187:5000"
 smoke_tests:
-  - "AddressAutofillTest"
+  - AddressAutofillTest
+  - BookmarksTest
+  - CookieBannerBlockerTest
+  - CrashReportingTest
+  - CreditCardAutofillTest
+  - CustomTabsTest
+  - DownloadTest
+  - EnhancedTrackingProtectionTest
+  - FirefoxSuggestTest
+  - HistoryTest
+  - HomeScreenTest
+  - LoginsTest
+  - MainMenuTest
+  - MediaNotificationTest
+  - OnboardingTest
+  - PDFViewerTest
+  - RecentlyClosedTabsTest
+  - SearchTest
+  - SettingsDeleteBrowsingDataTest
+  - SettingsAddonsTest
+  - SettingsGeneralTest
+  - SettingsHomepageTest
+  - SettingsSearchTest
+  - SitePermissionsTest
+  - SponsoredShortcutsTest
+  - TabbedBrowsingTest
+  - TextSelectionTest
+  - TopSitesTest
