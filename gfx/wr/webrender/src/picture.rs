@@ -3967,22 +3967,26 @@ impl SurfaceInfo {
 
     pub fn map_to_device_rect(
         &self,
-        local_rect: &PictureRect,
+        picture_rect: &PictureRect,
         spatial_tree: &SpatialTree,
     ) -> DeviceRect {
         let raster_rect = if self.raster_spatial_node_index != self.surface_spatial_node_index {
+            // Currently, the surface's spatial node can be different from its raster node only
+            // for surfaces in the root coordinate system for snapping reasons.
+            // See `PicturePrimitive::assign_surface`.
             assert_eq!(self.device_pixel_scale.0, 1.0);
+            assert_eq!(self.raster_spatial_node_index, spatial_tree.root_reference_frame_index());
 
-            let local_to_world = SpaceMapper::new_with_target(
-                spatial_tree.root_reference_frame_index(),
+            let pic_to_raster = SpaceMapper::new_with_target(
+                self.raster_spatial_node_index,
                 self.surface_spatial_node_index,
                 WorldRect::max_rect(),
                 spatial_tree,
             );
 
-            local_to_world.map(&local_rect).unwrap()
+            pic_to_raster.map(&picture_rect).unwrap()
         } else {
-            local_rect.cast_unit()
+            picture_rect.cast_unit()
         };
 
         raster_rect * self.device_pixel_scale
