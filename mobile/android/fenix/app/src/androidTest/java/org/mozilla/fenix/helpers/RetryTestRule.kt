@@ -12,8 +12,10 @@ import junit.framework.AssertionFailedError
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.IdlingResourceHelper.unregisterAllIdlingResources
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 
 /**
@@ -34,6 +36,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                 } catch (t: AssertionError) {
                     Log.i(TAG, "RetryTestRule: AssertionError caught, retrying the UI test")
                     unregisterAllIdlingResources()
+                    appContext.components.useCases.tabsUseCases.removeAllTabs()
                     exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
