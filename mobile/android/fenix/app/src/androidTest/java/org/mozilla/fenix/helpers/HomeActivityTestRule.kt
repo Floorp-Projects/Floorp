@@ -13,7 +13,6 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiSelector
-import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.junit.rules.TestRule
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.helpers.Constants.TAG
@@ -21,7 +20,6 @@ import org.mozilla.fenix.helpers.FeatureSettingsHelper.Companion.settings
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.onboarding.FenixOnboarding
-import org.mozilla.fenix.settings.PhoneFeature
 
 typealias HomeActivityComposeTestRule = AndroidComposeTestRule<out TestRule, HomeActivity>
 
@@ -59,7 +57,6 @@ class HomeActivityTestRule(
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         composeTopSitesEnabled: Boolean = false,
-        isLocationPermissionEnabled: SitePermissionsRules.Action = getFeaturePermission(PhoneFeature.LOCATION, settings),
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -73,7 +70,6 @@ class HomeActivityTestRule(
         this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.etpPolicy = etpPolicy
         this.composeTopSitesEnabled = composeTopSitesEnabled
-        this.isLocationPermissionEnabled = isLocationPermissionEnabled
     }
 
     /**
@@ -172,7 +168,6 @@ class HomeActivityIntentTestRule internal constructor(
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         composeTopSitesEnabled: Boolean = false,
-        isLocationPermissionEnabled: SitePermissionsRules.Action = getFeaturePermission(PhoneFeature.LOCATION, settings),
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -186,7 +181,6 @@ class HomeActivityIntentTestRule internal constructor(
         this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.etpPolicy = etpPolicy
         this.composeTopSitesEnabled = composeTopSitesEnabled
-        this.isLocationPermissionEnabled = isLocationPermissionEnabled
     }
 
     private val longTapUserPreference = getLongPressTimeout()
@@ -255,7 +249,6 @@ class HomeActivityIntentTestRule internal constructor(
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions
         isOpenInAppBannerEnabled = settings.shouldShowOpenInAppBanner
         etpPolicy = getETPPolicy(settings)
-        isLocationPermissionEnabled = getFeaturePermission(PhoneFeature.LOCATION, settings)
     }
 
     companion object {

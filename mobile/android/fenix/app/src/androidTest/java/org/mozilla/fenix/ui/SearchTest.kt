@@ -70,7 +70,6 @@ class SearchTest : TestSetup() {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
-            isLocationPermissionEnabled = SitePermissionsRules.Action.BLOCKED,
         ),
     ) { it.activity }
 
