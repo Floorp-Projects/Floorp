@@ -3034,13 +3034,16 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructorArg,
       // I'm inclined to say not at the moment -- but it would
       // be a behaviour change if we removed subclassing.
       if (constructor && IsTypedArrayConstructor(constructor)) {
-        fprintf(stderr, "Skipping known typed array constructor\n");
         return true;
       }
       switch (type) {
         case SUBCLASSING_TYPE_II:
           cx->runtime()->setUseCounter(
               cx->global(), JSUseCounter::SUBCLASSING_TYPEDARRAY_TYPE_II);
+          return true;
+        case SUBCLASSING_TYPE_III:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_TYPEDARRAY_TYPE_III);
           return true;
         default:
           MOZ_CRASH("Unhandled subclassing type");
