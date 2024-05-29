@@ -18,6 +18,10 @@
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript">
+  const { BrowserTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/BrowserTestUtils.sys.mjs"
+  );
+
   add_task(async function testMozToggleDisplay() {
     const mozToggle = document.querySelector("moz-toggle");
     ok(mozToggle, "moz-toggle is rendered");
@@ -59,13 +63,29 @@
 
     is(mozToggle.pressed, false, "The toggle pressed state can be changed via space bar");
     is(button.getAttribute("aria-pressed"), "false", "aria-pressed reflects this change");
+
+    let descriptionClicked = BrowserTestUtils.waitForEvent(mozToggle, "click");
+    synthesizeMouseAtCenter(mozToggle.descriptionEl, {});
+    await descriptionClicked;
+    isnot(
+      mozToggle.shadowRoot.activeElement,
+      mozToggle.buttonEl,
+      "Clicking the description should not focus the toggle button"
+    );
   });
 
   add_task(async function testSupportsAccesskey() {
     const mozToggle = document.querySelector("moz-toggle");
     let nextAccesskey = "l";
     mozToggle.setAttribute("accesskey", nextAccesskey);
+    await new Promise(requestAnimationFrame);
 
+    mozToggle.blur();
+    isnot(
+      mozToggle.shadowRoot.activeElement,
+      mozToggle.buttonEl,
+      "Toggle button should not be focused."
+    );
     synthesizeKey(
       nextAccesskey,
       navigator.platform.includes("Mac")
