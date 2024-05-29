@@ -52,3 +52,26 @@ TYPED_ARRAY_FROM_NON_ITERATOR.forEach((x) => {
 SUBCLASS_FROM_NON_ITERATOR.forEach((x) => {
     test_function_for_use_counter_integration(x, "SubclassingTypedArrayTypeII",  /* expected_growth = */ true)
 })
+
+// Type III Subclassing
+class Sentinel extends Int8Array { }
+class MyInt8Array extends Int8Array {
+    static get [Symbol.species]() {
+        return Sentinel;
+    }
+}
+
+function int8_test() {
+    let a = Int8Array.of(0, 1, 2, 3);
+    let r = a.filter(() => true);
+    assertEq(r instanceof Int8Array, true);
+}
+
+function myint8_test() {
+    let a = MyInt8Array.of(0, 1, 2, 3);
+    let r = a.filter(() => true);
+    assertEq(r instanceof Sentinel, true);
+}
+
+test_function_for_use_counter_integration(int8_test, "SubclassingTypedArrayTypeIII", /*expected_growth=*/ false);
+test_function_for_use_counter_integration(myint8_test, "SubclassingTypedArrayTypeIII", /*expected_growth=*/ true);
