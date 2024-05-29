@@ -85,6 +85,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
                      UniquePtr<ConfigTypeInternal>&& aConfig);
 
     UniquePtr<ConfigTypeInternal> mConfig;
+    const nsCString mCodec;
   };
 
   class DecodeMessage final

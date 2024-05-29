@@ -61,12 +61,14 @@ namespace mozilla::dom {
 template <typename DecoderType>
 DecoderTemplate<DecoderType>::ConfigureMessage::ConfigureMessage(
     WebCodecsId aConfigId, UniquePtr<ConfigTypeInternal>&& aConfig)
-    : ControlMessage(aConfigId), mConfig(std::move(aConfig)) {}
+    : ControlMessage(aConfigId),
+      mConfig(std::move(aConfig)),
+      mCodec(NS_ConvertUTF16toUTF8(mConfig->mCodec)) {}
 
 template <typename DecoderType>
 nsCString DecoderTemplate<DecoderType>::ConfigureMessage::ToString() const {
   return nsPrintfCString("configure #%zu (%s)", ControlMessage::mConfigId,
-                         NS_ConvertUTF16toUTF8(mConfig->mCodec).get());
+                         mCodec.get());
 }
 
 /* static */
