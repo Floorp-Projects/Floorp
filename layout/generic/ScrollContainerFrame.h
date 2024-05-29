@@ -36,6 +36,7 @@ namespace mozilla {
 struct nsDisplayListCollection;
 class PresShell;
 class PresState;
+enum class PhysicalAxis : uint8_t;
 enum class StyleScrollbarWidth : uint8_t;
 class ScrollContainerFrame;
 class ScrollPositionUpdate;
@@ -887,12 +888,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   a11y::AccType AccessibleType() override;
 #endif
 
-  enum class OverflowState : uint32_t {
-    None = 0,
-    Vertical = (1 << 0),
-    Horizontal = (1 << 1),
-  };
-
   static void AsyncScrollCallback(ScrollContainerFrame* aInstance,
                                   TimeStamp aTime);
   static void AsyncSmoothMSDScrollCallback(ScrollContainerFrame* aInstance,
@@ -1063,7 +1058,7 @@ class ScrollContainerFrame : public nsContainerFrame,
     return true;
   }
 
-  OverflowState GetOverflowState() const;
+  PhysicalAxes GetOverflowAxes() const;
 
   MOZ_CAN_RUN_SCRIPT nsresult FireScrollPortEvent();
   void PostScrollEndEvent(bool aDelayed = false);
@@ -1527,8 +1522,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   nsRect mScrollPort;
   UniquePtr<ScrollSnapTargetIds> mLastSnapTargetIds;
 };
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollContainerFrame::OverflowState)
 
 }  // namespace mozilla
 
