@@ -133,15 +133,11 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
     description = rv.unwrap();
   }
 
-  Maybe<VideoColorSpaceInternal> colorSpace;
-  if (aConfig.mColorSpace.WasPassed()) {
-    colorSpace.emplace(VideoColorSpaceInternal(aConfig.mColorSpace.Value()));
-  }
-
   return UniquePtr<VideoDecoderConfigInternal>(new VideoDecoderConfigInternal(
       aConfig.mCodec, OptionalToMaybe(aConfig.mCodedHeight),
-      OptionalToMaybe(aConfig.mCodedWidth), std::move(colorSpace),
-      description.forget(), OptionalToMaybe(aConfig.mDisplayAspectHeight),
+      OptionalToMaybe(aConfig.mCodedWidth),
+      OptionalToMaybe(aConfig.mColorSpace), description.forget(),
+      OptionalToMaybe(aConfig.mDisplayAspectHeight),
       OptionalToMaybe(aConfig.mDisplayAspectWidth),
       aConfig.mHardwareAcceleration,
       OptionalToMaybe(aConfig.mOptimizeForLatency)));
