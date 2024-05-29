@@ -2672,6 +2672,10 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
       SetUseCounter(obj,
                     mozilla::eUseCounter_custom_JS_subclassing_regexp_type_3);
       return;
+    case JSUseCounter::SUBCLASSING_REGEXP_TYPE_IV:
+      SetUseCounter(obj,
+                    mozilla::eUseCounter_custom_JS_subclassing_regexp_type_4);
+      return;
     case JSUseCounter::COUNT:
       break;
   }
