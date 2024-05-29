@@ -610,6 +610,29 @@ const char* CryptoSchemeToString(const CryptoScheme& aScheme) {
   }
 }
 
+nsCString CryptoSchemeSetToString(const CryptoSchemeSet& aSchemes) {
+  nsAutoCString rv;
+  if (aSchemes.contains(CryptoScheme::Cenc)) {
+    rv.AppendLiteral("cenc");
+  }
+  if (aSchemes.contains(CryptoScheme::Cbcs)) {
+    if (!rv.IsEmpty()) {
+      rv.AppendLiteral("/");
+    }
+    rv.AppendLiteral("cbcs");
+  }
+  if (aSchemes.contains(CryptoScheme::Cbcs_1_9)) {
+    if (!rv.IsEmpty()) {
+      rv.AppendLiteral("/");
+    }
+    rv.AppendLiteral("cbcs-1-9");
+  }
+  if (rv.IsEmpty()) {
+    rv.AppendLiteral("none");
+  }
+  return std::move(rv);
+}
+
 CryptoScheme StringToCryptoScheme(const nsAString& aString) {
   if (aString.EqualsLiteral("cenc")) {
     return CryptoScheme::Cenc;
