@@ -18,7 +18,6 @@
 
 namespace mozilla {
 class PresShell;
-class ScrollContainerFrame;
 }  // namespace mozilla
 
 /**
@@ -46,7 +45,7 @@ class nsTableCellFrame : public nsContainerFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsTableCellFrame)
 
-  mozilla::ScrollContainerFrame* GetScrollTargetFrame() const final;
+  nsIScrollableFrame* GetScrollTargetFrame() const final;
 
   nsTableRowFrame* GetTableRowFrame() const {
     nsIFrame* parent = GetParent();

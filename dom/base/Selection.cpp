@@ -56,6 +56,7 @@
 #include "nsTArray.h"
 #include "nsTableWrapperFrame.h"
 #include "nsTableCellFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsIDocumentEncoder.h"
 #include "nsTextFragment.h"

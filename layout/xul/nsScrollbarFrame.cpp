@@ -16,6 +16,7 @@
 #include "nsScrollbarButtonFrame.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsGkAtoms.h"
+#include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
@@ -24,7 +25,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_apz.h"
 
 using namespace mozilla;
@@ -166,13 +166,13 @@ nsresult nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
     return rv;
   }
 
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(GetParent());
-  if (!scrollContainerFrame) {
+  nsIScrollableFrame* scrollable = do_QueryFrame(GetParent());
+  if (!scrollable) {
     return rv;
   }
 
   nsCOMPtr<nsIContent> content(mContent);
-  scrollContainerFrame->CurPosAttributeChanged(content);
+  scrollable->CurPosAttributeChanged(content);
   return rv;
 }
 
@@ -214,11 +214,11 @@ nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
     return nullptr;
   }
   nsIFrame* f = mScrollbarMediator->GetPrimaryFrame();
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(f);
   nsIScrollbarMediator* sbm;
 
-  if (scrollContainerFrame) {
-    nsIFrame* scrolledFrame = scrollContainerFrame->GetScrolledFrame();
+  if (scrollFrame) {
+    nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
     sbm = do_QueryFrame(scrolledFrame);
     if (sbm) {
       return sbm;
@@ -226,7 +226,7 @@ nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
   }
   sbm = do_QueryFrame(f);
   if (f && !sbm) {
-    f = f->PresShell()->GetRootScrollContainerFrame();
+    f = f->PresShell()->GetRootScrollFrame();
     if (f && f->GetContent() == mScrollbarMediator) {
       return do_QueryFrame(f);
     }

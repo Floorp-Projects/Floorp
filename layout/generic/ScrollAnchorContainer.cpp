@@ -66,7 +66,7 @@ ScrollAnchorContainer* ScrollAnchorContainer::FindFor(nsIFrame* aFrame) {
   if (!aFrame) {
     return nullptr;
   }
-  ScrollContainerFrame* nearest = nsLayoutUtils::GetNearestScrollContainerFrame(
+  nsIScrollableFrame* nearest = nsLayoutUtils::GetNearestScrollableFrame(
       aFrame, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                   nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
   if (nearest) {
@@ -75,7 +75,7 @@ ScrollAnchorContainer* ScrollAnchorContainer::FindFor(nsIFrame* aFrame) {
   return nullptr;
 }
 
-ScrollContainerFrame* ScrollAnchorContainer::ScrollContainer() const {
+nsIScrollableFrame* ScrollAnchorContainer::ScrollableFrame() const {
   return Frame()->GetScrollTargetFrame();
 }
 
@@ -207,9 +207,8 @@ static nscoord FindScrollAnchoringBoundingOffset(
   WritingMode writingMode = aScrollContainerFrame->GetWritingMode();
   nsRect physicalBounding =
       FindScrollAnchoringBoundingRect(aScrollContainerFrame, aCandidate);
-  LogicalRect logicalBounding(
-      writingMode, physicalBounding,
-      aScrollContainerFrame->GetScrolledFrame()->GetSize());
+  LogicalRect logicalBounding(writingMode, physicalBounding,
+                              aScrollContainerFrame->mScrolledFrame->GetSize());
   return logicalBounding.BStart(writingMode);
 }
 
@@ -315,7 +314,7 @@ void ScrollAnchorContainer::UserScrolled() {
   if (!StaticPrefs::
           layout_css_scroll_anchoring_reset_heuristic_during_animation() &&
       Frame()->ScrollAnimationState().contains(
-          ScrollContainerFrame::AnimationState::APZInProgress)) {
+          nsIScrollableFrame::AnimationState::APZInProgress)) {
     // We'd want to skip resetting our heuristic while APZ is running an async
     // scroll because this UserScrolled function gets called on every refresh
     // driver's tick during running the async scroll, thus it will clobber the
@@ -466,7 +465,7 @@ void ScrollAnchorContainer::ApplyAdjustments() {
            layout_css_scroll_anchoring_reset_heuristic_during_animation() &&
        Frame()->IsProcessingScrollEvent()) ||
       Frame()->ScrollAnimationState().contains(
-          ScrollContainerFrame::AnimationState::TriggeredByScript) ||
+          nsIScrollableFrame::AnimationState::TriggeredByScript) ||
       Frame()->GetScrollPosition() == nsPoint()) {
     ANCHOR_LOG(
         "Ignoring post-reflow (anchor=%p, dirty=%d, disabled=%d, "
@@ -477,7 +476,7 @@ void ScrollAnchorContainer::ApplyAdjustments() {
         Frame()->HasPendingScrollRestoration(),
         Frame()->IsProcessingScrollEvent(),
         Frame()->ScrollAnimationState().contains(
-            ScrollContainerFrame::AnimationState::TriggeredByScript),
+            nsIScrollableFrame::AnimationState::TriggeredByScript),
         Frame()->GetScrollPosition() == nsPoint(), mSuppressAnchorAdjustment,
         this);
     if (mSuppressAnchorAdjustment) {
@@ -611,11 +610,11 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
 
   // See if this frame has or could maintain its own anchor node.
   const bool isScrollableWithAnchor = [&] {
-    ScrollContainerFrame* scrollContainer = do_QueryFrame(aFrame);
-    if (!scrollContainer) {
+    nsIScrollableFrame* scrollable = do_QueryFrame(aFrame);
+    if (!scrollable) {
       return false;
     }
-    auto* anchor = scrollContainer->Anchor();
+    auto* anchor = scrollable->Anchor();
     return anchor->AnchorNode() || anchor->CanMaintainAnchor();
   }();
 

@@ -137,6 +137,7 @@
 #include "nsDOMString.h"
 #include "nsThreadUtils.h"
 #include "nsILoadContext.h"
+#include "nsIScrollableFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIPrompt.h"
@@ -163,7 +164,6 @@
 #include "nsIURIMutator.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
 #include "nsIAppWindow.h"
@@ -3793,7 +3793,7 @@ void nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
 
 int32_t nsGlobalWindowOuter::GetScrollBoundaryOuter(Side aSide) {
   FlushPendingNotifications(FlushType::Layout);
-  if (ScrollContainerFrame* sf = GetScrollContainerFrame()) {
+  if (nsIScrollableFrame* sf = GetScrollFrame()) {
     return nsPresContext::AppUnitsToIntCSSPixels(
         sf->GetScrollRange().Edge(aSide));
   }
@@ -3807,7 +3807,7 @@ CSSPoint nsGlobalWindowOuter::GetScrollXY(bool aDoFlush) {
     EnsureSizeAndPositionUpToDate();
   }
 
-  ScrollContainerFrame* sf = GetScrollContainerFrame();
+  nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf) {
     return CSSIntPoint(0, 0);
   }
@@ -7047,14 +7047,14 @@ nsPIDOMWindowOuter::GetWebBrowserChrome() {
   return browserChrome.forget();
 }
 
-ScrollContainerFrame* nsGlobalWindowOuter::GetScrollContainerFrame() {
+nsIScrollableFrame* nsGlobalWindowOuter::GetScrollFrame() {
   if (!mDocShell) {
     return nullptr;
   }
 
   PresShell* presShell = mDocShell->GetPresShell();
   if (presShell) {
-    return presShell->GetRootScrollContainerFrame();
+    return presShell->GetRootScrollFrameAsScrollable();
   }
   return nullptr;
 }

@@ -54,7 +54,6 @@
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/ReflowOutput.h"
 #include "mozilla/RelativeTo.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/ServoStyleConstsInlines.h"
@@ -164,6 +163,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
+#include "nsIScrollableFrame.h"
 #include "nsISpeculativeConnect.h"
 #include "nsISupports.h"
 #include "nsISupportsUtils.h"
@@ -657,8 +657,8 @@ already_AddRefed<nsIHTMLCollection> Element::GetElementsByTagName(
   return NS_GetContentList(this, kNameSpaceID_Unknown, aLocalName);
 }
 
-ScrollContainerFrame* Element::GetScrollContainerFrame(nsIFrame** aFrame,
-                                                       FlushType aFlushType) {
+nsIScrollableFrame* Element::GetScrollFrame(nsIFrame** aFrame,
+                                            FlushType aFlushType) {
   nsIFrame* frame = GetPrimaryFrame(aFlushType);
   if (aFrame) {
     *aFrame = frame;
@@ -669,12 +669,11 @@ ScrollContainerFrame* Element::GetScrollContainerFrame(nsIFrame** aFrame,
       return nullptr;
     }
 
-    if (ScrollContainerFrame* scrollContainerFrame =
-            frame->GetScrollTargetFrame()) {
+    if (nsIScrollableFrame* scrollFrame = frame->GetScrollTargetFrame()) {
       MOZ_ASSERT(!OwnerDoc()->IsScrollingElement(this),
-                 "How can we have a scroll container frame if we're the "
+                 "How can we have a scrollframe if we're the "
                  "scrollingElement for our document?");
-      return scrollContainerFrame;
+      return scrollFrame;
     }
   }
 
@@ -683,15 +682,13 @@ ScrollContainerFrame* Element::GetScrollContainerFrame(nsIFrame** aFrame,
   // a quirks mode document.
   const bool isScrollingElement = doc->IsScrollingElement(this);
   if (isScrollingElement) {
-    // Our scroll info should map to the root scroll container frame if there is
-    // one.
+    // Our scroll info should map to the root scrollable frame if there is one.
     if (PresShell* presShell = doc->GetPresShell()) {
-      if (ScrollContainerFrame* rootScrollContainerFrame =
-              presShell->GetRootScrollContainerFrame()) {
+      if ((frame = presShell->GetRootScrollFrame())) {
         if (aFrame) {
-          *aFrame = rootScrollContainerFrame;
+          *aFrame = frame;
         }
-        return rootScrollContainerFrame;
+        return do_QueryFrame(frame);
       }
     }
   }
@@ -828,7 +825,7 @@ void Element::ScrollTo(const ScrollToOptions& aOptions) {
       (aOptions.mTop.WasPassed() && aOptions.mTop.Value() != 0.0);
 
   nsIFrame* frame;
-  ScrollContainerFrame* sf = GetScrollContainerFrame(
+  nsIScrollableFrame* sf = GetScrollFrame(
       &frame, needsLayoutFlush ? FlushType::Layout : FlushType::Frames);
   if (!sf) {
     return;
@@ -857,7 +854,7 @@ void Element::ScrollBy(double aXScrollDif, double aYScrollDif) {
 
 void Element::ScrollBy(const ScrollToOptions& aOptions) {
   nsIFrame* frame;
-  ScrollContainerFrame* sf = GetScrollContainerFrame(&frame);
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   if (!sf) {
     return;
   }
@@ -900,15 +897,14 @@ void Element::SetScrollLeft(int32_t aScrollLeft) {
 }
 
 void Element::MozScrollSnap() {
-  if (ScrollContainerFrame* sf =
-          GetScrollContainerFrame(nullptr, FlushType::None)) {
+  if (nsIScrollableFrame* sf = GetScrollFrame(nullptr, FlushType::None)) {
     sf->ScrollSnap();
   }
 }
 
 nsRect Element::GetScrollRange() {
   nsIFrame* frame;
-  ScrollContainerFrame* sf = GetScrollContainerFrame(&frame);
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   if (!sf) {
     return nsRect();
   }
@@ -956,7 +952,7 @@ static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame) {
 nsSize Element::GetScrollSize() {
   nsIFrame* frame;
   nsSize size;
-  if (ScrollContainerFrame* sf = GetScrollContainerFrame(&frame)) {
+  if (nsIScrollableFrame* sf = GetScrollFrame(&frame)) {
     size = sf->GetScrollRange().Size() + sf->GetScrollPortRect().Size();
   } else {
     size = GetScrollRectSizeForOverflowVisibleFrame(frame);
@@ -969,7 +965,7 @@ nsSize Element::GetScrollSize() {
 
 nsPoint Element::GetScrollOrigin() {
   nsIFrame* frame;
-  ScrollContainerFrame* sf = GetScrollContainerFrame(&frame);
+  nsIScrollableFrame* sf = GetScrollFrame(&frame);
   if (!sf) {
     return nsPoint();
   }
@@ -1004,16 +1000,17 @@ nsRect Element::GetClientAreaRect() {
   }
 
   nsIFrame* frame;
-  if (ScrollContainerFrame* sf = GetScrollContainerFrame(&frame)) {
+  if (nsIScrollableFrame* sf = GetScrollFrame(&frame)) {
     nsRect scrollPort = sf->GetScrollPortRect();
 
     if (!sf->IsRootScrollFrameOfDocument()) {
       MOZ_ASSERT(frame);
+      nsIFrame* scrollableAsFrame = do_QueryFrame(sf);
       // We want the offset to be relative to `frame`, not `sf`... Except for
       // the root scroll frame, which is an ancestor of frame rather than a
       // descendant and thus this wouldn't particularly make sense.
-      if (frame != sf) {
-        scrollPort.MoveBy(sf->GetOffsetTo(frame));
+      if (frame != scrollableAsFrame) {
+        scrollPort.MoveBy(scrollableAsFrame->GetOffsetTo(frame));
       }
     }
 
@@ -1870,7 +1867,7 @@ void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
 }
 
 bool Element::HasVisibleScrollbars() {
-  ScrollContainerFrame* scrollFrame = GetScrollContainerFrame();
+  nsIScrollableFrame* scrollFrame = GetScrollFrame();
   return scrollFrame && !scrollFrame->GetScrollbarVisibility().isEmpty();
 }
 

@@ -12,8 +12,8 @@
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/ElementAnimationData.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
 namespace mozilla::dom {
@@ -119,8 +119,8 @@ Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
   }
 
   // if this is not a scroller container, this timeline is inactive.
-  const ScrollContainerFrame* scrollContainerFrame = GetScrollContainerFrame();
-  if (!scrollContainerFrame) {
+  const nsIScrollableFrame* scrollFrame = GetScrollFrame();
+  if (!scrollFrame) {
     return nullptr;
   }
 
@@ -128,15 +128,14 @@ Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
 
   // If there is no scrollable overflow, then the ScrollTimeline is inactive.
   // https://drafts.csswg.org/scroll-animations-1/#scrolltimeline-interface
-  if (!scrollContainerFrame->GetAvailableScrollingDirections().contains(
-          orientation)) {
+  if (!scrollFrame->GetAvailableScrollingDirections().contains(orientation)) {
     return nullptr;
   }
 
   const bool isHorizontal = orientation == layers::ScrollDirection::eHorizontal;
-  const nsPoint& scrollPosition = scrollContainerFrame->GetScrollPosition();
+  const nsPoint& scrollPosition = scrollFrame->GetScrollPosition();
   const Maybe<ScrollOffsets>& offsets =
-      ComputeOffsets(scrollContainerFrame, orientation);
+      ComputeOffsets(scrollFrame, orientation);
   if (!offsets) {
     return nullptr;
   }
@@ -166,10 +165,10 @@ layers::ScrollDirection ScrollTimeline::Axis() const {
 StyleOverflow ScrollTimeline::SourceScrollStyle() const {
   MOZ_ASSERT(mSource && mSource.mElement->GetPrimaryFrame());
 
-  const ScrollContainerFrame* scrollContainerFrame = GetScrollContainerFrame();
-  MOZ_ASSERT(scrollContainerFrame);
+  const nsIScrollableFrame* scrollFrame = GetScrollFrame();
+  MOZ_ASSERT(scrollFrame);
 
-  const ScrollStyles scrollStyles = scrollContainerFrame->GetScrollStyles();
+  const ScrollStyles scrollStyles = scrollFrame->GetScrollStyles();
 
   return Axis() == layers::ScrollDirection::eHorizontal
              ? scrollStyles.mHorizontal
@@ -184,10 +183,9 @@ bool ScrollTimeline::APZIsActiveForSource() const {
 }
 
 bool ScrollTimeline::ScrollingDirectionIsAvailable() const {
-  const ScrollContainerFrame* scrollContainerFrame = GetScrollContainerFrame();
-  MOZ_ASSERT(scrollContainerFrame);
-  return scrollContainerFrame->GetAvailableScrollingDirections().contains(
-      Axis());
+  const nsIScrollableFrame* scrollFrame = GetScrollFrame();
+  MOZ_ASSERT(scrollFrame);
+  return scrollFrame->GetAvailableScrollingDirections().contains(Axis());
 }
 
 void ScrollTimeline::ReplacePropertiesWith(const Element* aReferenceElement,
@@ -206,9 +204,9 @@ void ScrollTimeline::ReplacePropertiesWith(const Element* aReferenceElement,
 }
 
 Maybe<ScrollTimeline::ScrollOffsets> ScrollTimeline::ComputeOffsets(
-    const ScrollContainerFrame* aScrollContainerFrame,
+    const nsIScrollableFrame* aScrollFrame,
     layers::ScrollDirection aOrientation) const {
-  const nsRect& scrollRange = aScrollContainerFrame->GetScrollRange();
+  const nsRect& scrollRange = aScrollFrame->GetScrollRange();
   nscoord range = aOrientation == layers::ScrollDirection::eHorizontal
                       ? scrollRange.width
                       : scrollRange.height;
@@ -243,7 +241,7 @@ void ScrollTimeline::UnregisterFromScrollSource() {
   }
 }
 
-const ScrollContainerFrame* ScrollTimeline::GetScrollContainerFrame() const {
+const nsIScrollableFrame* ScrollTimeline::GetScrollFrame() const {
   if (!mSource) {
     return nullptr;
   }
@@ -252,13 +250,13 @@ const ScrollContainerFrame* ScrollTimeline::GetScrollContainerFrame() const {
     case Scroller::Type::Root:
       if (const PresShell* presShell =
               mSource.mElement->OwnerDoc()->GetPresShell()) {
-        return presShell->GetRootScrollContainerFrame();
+        return presShell->GetRootScrollFrameAsScrollable();
       }
       return nullptr;
     case Scroller::Type::Nearest:
     case Scroller::Type::Name:
     case Scroller::Type::Self:
-      return nsLayoutUtils::FindScrollContainerFrameFor(mSource.mElement);
+      return nsLayoutUtils::FindScrollableFrameFor(mSource.mElement);
   }
 
   MOZ_ASSERT_UNREACHABLE("Unsupported scroller type");

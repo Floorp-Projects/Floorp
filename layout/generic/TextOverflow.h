@@ -15,12 +15,11 @@
 #include "mozilla/WritingModes.h"
 #include <algorithm>
 
+class nsIScrollableFrame;
 class nsBlockFrame;
 class nsLineBox;
 
 namespace mozilla {
-class ScrollContainerFrame;
-
 namespace css {
 
 /**
@@ -261,7 +260,7 @@ class TextOverflow final {
   LogicalRect mContentArea;
   nsDisplayListBuilder* mBuilder;
   nsIFrame* mBlock;
-  ScrollContainerFrame* mScrollContainerFrame;
+  nsIScrollableFrame* mScrollableFrame;
   nsDisplayList mMarkerList;
   nsSize mBlockSize;
   WritingMode mBlockWM;

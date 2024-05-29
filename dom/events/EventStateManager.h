@@ -31,6 +31,7 @@ class nsIDocShellTreeItem;
 class nsIFrame;
 class imgIContainer;
 class nsIDocumentViewer;
+class nsIScrollableFrame;
 class nsITimer;
 class nsIWidget;
 class nsPresContext;
@@ -43,7 +44,6 @@ class EditorBase;
 class EnterLeaveDispatcher;
 class IMEContentObserver;
 class ScrollbarsForWheel;
-class ScrollContainerFrame;
 class TextControlElement;
 class WheelTransaction;
 
@@ -999,26 +999,26 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   // The delta values in the wheel event may be changed if the event is for
   // auto-dir scrolling. For information on auto-dir,
   // @see mozilla::WheelDeltaAdjustmentStrategy
-  ScrollContainerFrame* ComputeScrollTargetAndMayAdjustWheelEvent(
+  nsIFrame* ComputeScrollTargetAndMayAdjustWheelEvent(
       nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent,
       ComputeScrollTargetOptions aOptions);
 
-  ScrollContainerFrame* ComputeScrollTargetAndMayAdjustWheelEvent(
+  nsIFrame* ComputeScrollTargetAndMayAdjustWheelEvent(
       nsIFrame* aTargetFrame, double aDirectionX, double aDirectionY,
       WidgetWheelEvent* aEvent, ComputeScrollTargetOptions aOptions);
 
-  ScrollContainerFrame* ComputeScrollTarget(
-      nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent,
-      ComputeScrollTargetOptions aOptions) {
+  nsIFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
+                                WidgetWheelEvent* aEvent,
+                                ComputeScrollTargetOptions aOptions) {
     MOZ_ASSERT(!(aOptions & MAY_BE_ADJUSTED_BY_AUTO_DIR),
                "aEvent may be modified by auto-dir");
     return ComputeScrollTargetAndMayAdjustWheelEvent(aTargetFrame, aEvent,
                                                      aOptions);
   }
 
-  ScrollContainerFrame* ComputeScrollTarget(
-      nsIFrame* aTargetFrame, double aDirectionX, double aDirectionY,
-      WidgetWheelEvent* aEvent, ComputeScrollTargetOptions aOptions) {
+  nsIFrame* ComputeScrollTarget(nsIFrame* aTargetFrame, double aDirectionX,
+                                double aDirectionY, WidgetWheelEvent* aEvent,
+                                ComputeScrollTargetOptions aOptions) {
     MOZ_ASSERT(!(aOptions & MAY_BE_ADJUSTED_BY_AUTO_DIR),
                "aEvent may be modified by auto-dir");
     return ComputeScrollTargetAndMayAdjustWheelEvent(
@@ -1030,22 +1030,21 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * one page.  If the wheel event scrolls a page, returns the page width and
    * height.  Otherwise, returns line height for both its width and height.
    *
-   * @param aScrollContainerFrame A frame which will be scrolled by the event.
-   *                              The result of
-   *                              ComputeScrollTargetAndMayAdjustWheelEvent() is
-   *                              expected for this value.
-   *                              This can be nullptr if there is no scrollable
-   *                              frame.  Then, this method uses root frame's
-   *                              line height or visible area's width and
-   *                              height.
+   * @param aScrollableFrame    A frame which will be scrolled by the event.
+   *                            The result of
+   *                            ComputeScrollTargetAndMayAdjustWheelEvent() is
+   *                            expected for this value.
+   *                            This can be nullptr if there is no scrollable
+   *                            frame.  Then, this method uses root frame's
+   *                            line height or visible area's width and height.
    */
   nsSize GetScrollAmount(nsPresContext* aPresContext, WidgetWheelEvent* aEvent,
-                         ScrollContainerFrame* aScrollContainerFrame);
+                         nsIScrollableFrame* aScrollableFrame);
 
   /**
-   * DoScrollText() scrolls the scroll container frame for aEvent.
+   * DoScrollText() scrolls the scrollable frame for aEvent.
    */
-  void DoScrollText(ScrollContainerFrame* aScrollContainerFrame,
+  void DoScrollText(nsIScrollableFrame* aScrollableFrame,
                     WidgetWheelEvent* aEvent);
 
   void DoScrollHistory(int32_t direction);

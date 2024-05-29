@@ -3695,10 +3695,10 @@ static Subgrid* SubgridComputeMarginBorderPadding(
 
   bool scroller = false;
   nsIFrame* outerFrame = [&]() -> nsIFrame* {
-    if (ScrollContainerFrame* scrollContainerFrame =
-            aGridItem.mFrame->GetScrollTargetFrame()) {
+    if (ScrollContainerFrame* scrollFrame =
+            do_QueryFrame(aGridItem.mFrame->GetScrollTargetFrame())) {
       scroller = true;
-      return scrollContainerFrame;
+      return scrollFrame;
     }
     if (nsHTMLButtonControlFrame* f = do_QueryFrame(aGridItem.mFrame)) {
       return f;
@@ -7542,7 +7542,7 @@ nsGridContainerFrame::GetNearestFragmentainer(
   WritingMode wm = aState.mWM;
   const ReflowInput* cbRI = gridRI->mCBReflowInput;
   for (; cbRI; cbRI = cbRI->mCBReflowInput) {
-    ScrollContainerFrame* sf = do_QueryFrame(cbRI->mFrame);
+    nsIScrollableFrame* sf = do_QueryFrame(cbRI->mFrame);
     if (sf) {
       break;
     }

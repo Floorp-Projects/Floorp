@@ -42,7 +42,6 @@ namespace mozilla {
 class Encoding;
 class HTMLEditor;
 class ObservedDocShell;
-class ScrollContainerFrame;
 enum class TaskCategory;
 namespace dom {
 class ClientInfo;
@@ -64,6 +63,7 @@ class nsIDocumentViewer;
 class nsIHttpChannel;
 class nsIMutableArray;
 class nsIPrompt;
+class nsIScrollableFrame;
 class nsIStringBundle;
 class nsIURIFixup;
 class nsIURIFixupInfo;
@@ -970,7 +970,7 @@ class nsDocShell final : public nsDocLoader,
   bool NavigationBlockedByPrinting(bool aDisplayErrorDialog = true);
   bool IsNavigationAllowed(bool aDisplayPrintErrorDialog = true,
                            bool aCheckIfUnloadFired = true);
-  mozilla::ScrollContainerFrame* GetRootScrollContainerFrame();
+  nsIScrollableFrame* GetRootScrollFrame();
   nsIChannel* GetCurrentDocChannel();
   nsresult EnsureScriptEnvironment();
   nsresult EnsureEditorData();

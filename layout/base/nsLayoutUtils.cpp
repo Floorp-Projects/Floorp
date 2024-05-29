@@ -82,7 +82,6 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollOrigin.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleSetInlines.h"
@@ -140,6 +139,7 @@
 #include "nsIFrameInlines.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIScrollableFrame.h"
 #include "nsIWidget.h"
 #include "nsListControlFrame.h"
 #include "nsPIDOMWindow.h"
@@ -629,48 +629,47 @@ nsIContent* nsLayoutUtils::FindContentFor(ViewID aId) {
   }
 }
 
-nsIFrame* nsLayoutUtils::GetScrollContainerFrameFromContent(
-    nsIContent* aContent) {
+nsIFrame* nsLayoutUtils::GetScrollFrameFromContent(nsIContent* aContent) {
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (aContent->OwnerDoc()->GetRootElement() == aContent) {
     PresShell* presShell = frame ? frame->PresShell() : nullptr;
     if (!presShell) {
       presShell = aContent->OwnerDoc()->GetPresShell();
     }
-    // We want the scroll container frame, the root scroll frame differs from
-    // all others in that the primary frame is not the scroll frame.
-    nsIFrame* rootScrollContainerFrame =
-        presShell ? presShell->GetRootScrollContainerFrame() : nullptr;
-    if (rootScrollContainerFrame) {
-      frame = rootScrollContainerFrame;
+    // We want the scroll frame, the root scroll frame differs from all
+    // others in that the primary frame is not the scroll frame.
+    nsIFrame* rootScrollFrame =
+        presShell ? presShell->GetRootScrollFrame() : nullptr;
+    if (rootScrollFrame) {
+      frame = rootScrollFrame;
     }
   }
   return frame;
 }
 
-ScrollContainerFrame* nsLayoutUtils::FindScrollContainerFrameFor(
+nsIScrollableFrame* nsLayoutUtils::FindScrollableFrameFor(
     nsIContent* aContent) {
-  nsIFrame* scrollContainerFrame = GetScrollContainerFrameFromContent(aContent);
-  return scrollContainerFrame ? scrollContainerFrame->GetScrollTargetFrame()
-                              : nullptr;
+  nsIFrame* scrollFrame = GetScrollFrameFromContent(aContent);
+  return scrollFrame ? scrollFrame->GetScrollTargetFrame() : nullptr;
 }
 
-ScrollContainerFrame* nsLayoutUtils::FindScrollContainerFrameFor(ViewID aId) {
+nsIScrollableFrame* nsLayoutUtils::FindScrollableFrameFor(ViewID aId) {
   nsIContent* content = FindContentFor(aId);
   if (!content) {
     return nullptr;
   }
 
-  return FindScrollContainerFrameFor(content);
+  return FindScrollableFrameFor(content);
 }
 
-ViewID nsLayoutUtils::FindIDForScrollContainerFrame(
-    ScrollContainerFrame* aScrollContainerFrame) {
-  if (!aScrollContainerFrame) {
+ViewID nsLayoutUtils::FindIDForScrollableFrame(
+    nsIScrollableFrame* aScrollable) {
+  if (!aScrollable) {
     return ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
-  nsIContent* scrollContent = aScrollContainerFrame->GetContent();
+  nsIFrame* scrollFrame = do_QueryFrame(aScrollable);
+  nsIContent* scrollContent = scrollFrame->GetContent();
 
   ScrollableLayerGuid::ViewID scrollId;
   if (scrollContent && nsLayoutUtils::FindIDFor(scrollContent, &scrollId)) {
@@ -744,11 +743,10 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
           APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
               aContent)) {
     if (Document* rootDoc = rootPresShell->GetDocument()) {
-      nsIFrame* rootScrollContainerFrame =
-          rootPresShell->GetRootScrollContainerFrame();
-      nsIContent* rootContent = rootScrollContainerFrame
-                                    ? rootScrollContainerFrame->GetContent()
-                                    : rootDoc->GetDocumentElement();
+      nsIContent* rootContent =
+          rootPresShell->GetRootScrollFrame()
+              ? rootPresShell->GetRootScrollFrame()->GetContent()
+              : rootDoc->GetDocumentElement();
       // For the AccessibleCaret and other anonymous contents: disable APZ on
       // any scrollable subframes that are not the root scrollframe of a
       // document, if the document has any visible anonymous contents.
@@ -781,11 +779,13 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
 }
 
 void nsLayoutUtils::NotifyPaintSkipTransaction(ViewID aScrollId) {
-  if (ScrollContainerFrame* sf =
-          nsLayoutUtils::FindScrollContainerFrameFor(aScrollId)) {
-    MOZ_ASSERT(sf && sf->PresShell() &&
-               !sf->PresShell()->IsResolutionUpdated());
-    sf->NotifyApzTransaction();
+  if (nsIScrollableFrame* scrollFrame =
+          nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
+#ifdef DEBUG
+    nsIFrame* f = do_QueryFrame(scrollFrame);
+    MOZ_ASSERT(f && f->PresShell() && !f->PresShell()->IsResolutionUpdated());
+#endif
+    scrollFrame->NotifyApzTransaction();
   }
 }
 
@@ -1238,10 +1238,10 @@ nsView* nsLayoutUtils::FindSiblingViewFor(nsView* aParentView,
 }
 
 // static
-ScrollContainerFrame* nsLayoutUtils::GetScrollContainerFrameFor(
+nsIScrollableFrame* nsLayoutUtils::GetScrollableFrameFor(
     const nsIFrame* aScrolledFrame) {
   nsIFrame* frame = aScrolledFrame->GetParent();
-  ScrollContainerFrame* sf = do_QueryFrame(frame);
+  nsIScrollableFrame* sf = do_QueryFrame(frame);
   return (sf && sf->GetScrolledFrame() == aScrolledFrame) ? sf : nullptr;
 }
 
@@ -1271,7 +1271,7 @@ ScrollableLayerGuid::ViewID nsLayoutUtils::ScrollIdForRootScrollFrame(
     nsPresContext* aPresContext) {
   ViewID id = ScrollableLayerGuid::NULL_SCROLL_ID;
   if (nsIFrame* rootScrollFrame =
-          aPresContext->PresShell()->GetRootScrollContainerFrame()) {
+          aPresContext->PresShell()->GetRootScrollFrame()) {
     if (nsIContent* content = rootScrollFrame->GetContent()) {
       id = FindOrCreateIDFor(content);
     }
@@ -1280,7 +1280,7 @@ ScrollableLayerGuid::ViewID nsLayoutUtils::ScrollIdForRootScrollFrame(
 }
 
 // static
-ScrollContainerFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
+nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
     nsIFrame* aFrame, ScrollDirections aDirections) {
   NS_ASSERTION(
       aFrame, "GetNearestScrollableFrameForDirection expects a non-null frame");
@@ -1288,19 +1288,18 @@ ScrollContainerFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
   // process boundaries, in such cases we need to hand over in APZ side.
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
-    ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
-    if (scrollContainerFrame) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
+    if (scrollableFrame) {
       ScrollDirections directions =
-          scrollContainerFrame
-              ->GetAvailableScrollingDirectionsForUserInputEvents();
+          scrollableFrame->GetAvailableScrollingDirectionsForUserInputEvents();
       if (aDirections.contains(ScrollDirection::eVertical)) {
         if (directions.contains(ScrollDirection::eVertical)) {
-          return scrollContainerFrame;
+          return scrollableFrame;
         }
       }
       if (aDirections.contains(ScrollDirection::eHorizontal)) {
         if (directions.contains(ScrollDirection::eHorizontal)) {
-          return scrollContainerFrame;
+          return scrollableFrame;
         }
       }
     }
@@ -1330,13 +1329,13 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
     if ((aFlags & nsLayoutUtils::SCROLLABLE_STOP_AT_PAGE) && f->IsPageFrame()) {
       break;
     }
-    if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f)) {
+    if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(f)) {
       if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
-        if (scrollContainerFrame->WantAsyncScroll()) {
+        if (scrollableFrame->WantAsyncScroll()) {
           return f;
         }
       } else {
-        ScrollStyles ss = scrollContainerFrame->GetScrollStyles();
+        ScrollStyles ss = scrollableFrame->GetScrollStyles();
         if ((aFlags & nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN) ||
             ss.mVertical != StyleOverflow::Hidden ||
             ss.mHorizontal != StyleOverflow::Hidden) {
@@ -1345,8 +1344,7 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
       }
       if (aFlags & nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT) {
         PresShell* presShell = f->PresShell();
-        if (presShell->GetRootScrollContainerFrame() == f &&
-            presShell->GetDocument() &&
+        if (presShell->GetRootScrollFrame() == f && presShell->GetDocument() &&
             presShell->GetDocument()->IsRootDisplayDocument()) {
           return f;
         }
@@ -1355,15 +1353,15 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
     if ((aFlags & nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT) &&
         f->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
         nsLayoutUtils::IsReallyFixedPos(f)) {
-      return f->PresShell()->GetRootScrollContainerFrame();
+      return f->PresShell()->GetRootScrollFrame();
     }
   }
   return nullptr;
 }
 
 // static
-ScrollContainerFrame* nsLayoutUtils::GetNearestScrollContainerFrame(
-    nsIFrame* aFrame, uint32_t aFlags) {
+nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame,
+                                                             uint32_t aFlags) {
   nsIFrame* found = GetNearestScrollableOrOverflowClipFrame(aFrame, aFlags);
   if (!found) {
     return nullptr;
@@ -2377,7 +2375,7 @@ nsRect nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame,
   nsRect resultRect = aRect;
 
   while (closestScrollFrame) {
-    ScrollContainerFrame* sf = do_QueryFrame(closestScrollFrame);
+    nsIScrollableFrame* sf = do_QueryFrame(closestScrollFrame);
 
     nsRect scrollPortRect = sf->GetScrollPortRect();
     nsLayoutUtils::TransformRect(closestScrollFrame, aFrame, scrollPortRect);
@@ -2584,10 +2582,9 @@ nsresult nsLayoutUtils::GetFramesForArea(RelativeTo aRelativeTo,
     builder.IgnorePaintSuppression();
   }
   if (aOptions.mBits.contains(FrameForPointOption::IgnoreRootScrollFrame)) {
-    nsIFrame* rootScrollContainerFrame =
-        frame->PresShell()->GetRootScrollContainerFrame();
-    if (rootScrollContainerFrame) {
-      builder.SetIgnoreScrollFrame(rootScrollContainerFrame);
+    nsIFrame* rootScrollFrame = frame->PresShell()->GetRootScrollFrame();
+    if (rootScrollFrame) {
+      builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
   }
   if (aRelativeTo.mViewportType == ViewportType::Layout) {
@@ -2644,22 +2641,26 @@ nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
   return transformToAncestorScale;
 }
 
+// aScrollFrameAsScrollable must be non-nullptr and queryable to an nsIFrame
 FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
-    ScrollContainerFrame* aScrollContainerFrame) {
+    nsIScrollableFrame* aScrollFrame) {
+  nsIFrame* frame = do_QueryFrame(aScrollFrame);
+  MOZ_ASSERT(frame);
+
   // Calculate the metrics necessary for calculating the displayport.
   // This code has a lot in common with the code in ComputeFrameMetrics();
   // we may want to refactor this at some point.
   FrameMetrics metrics;
-  nsPresContext* presContext = aScrollContainerFrame->PresContext();
+  nsPresContext* presContext = frame->PresContext();
   PresShell* presShell = presContext->PresShell();
   CSSToLayoutDeviceScale deviceScale = presContext->CSSToDevPixelScale();
   float resolution = 1.0f;
-  bool isRcdRsf = aScrollContainerFrame->IsRootScrollFrameOfDocument() &&
+  bool isRcdRsf = aScrollFrame->IsRootScrollFrameOfDocument() &&
                   presContext->IsRootContentDocumentCrossProcess();
   metrics.SetIsRootContent(isRcdRsf);
   if (isRcdRsf) {
-    // Only the root content document's root scroll container frame should pick
-    // up the presShell's resolution. All the other frames are 1.0.
+    // Only the root content document's root scrollable frame should pick up
+    // the presShell's resolution. All the other frames are 1.0.
     resolution = presShell->GetResolution();
   }
   LayoutDeviceToLayerScale cumulativeResolution(
@@ -2670,17 +2671,16 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
   metrics.SetPresShellResolution(resolution);
 
   metrics.SetTransformToAncestorScale(
-      GetTransformToAncestorScaleCrossProcessForFrameMetrics(
-          aScrollContainerFrame));
+      GetTransformToAncestorScaleCrossProcessForFrameMetrics(frame));
   metrics.SetCumulativeResolution(cumulativeResolution);
   metrics.SetZoom(deviceScale * cumulativeResolution * layerToParentLayerScale);
 
   // Only the size of the composition bounds is relevant to the
   // displayport calculation, not its origin.
   nsSize compositionSize =
-      nsLayoutUtils::CalculateCompositionSizeForFrame(aScrollContainerFrame);
+      nsLayoutUtils::CalculateCompositionSizeForFrame(frame);
   LayoutDeviceToParentLayerScale compBoundsScale;
-  if (aScrollContainerFrame == presShell->GetRootScrollContainerFrame() &&
+  if (frame == presShell->GetRootScrollFrame() &&
       presContext->IsRootContentDocumentCrossProcess()) {
     if (presContext->GetParentPresContext()) {
       float res = presContext->GetParentPresContext()
@@ -2697,29 +2697,27 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
       compBoundsScale);
 
   metrics.SetBoundingCompositionSize(
-      nsLayoutUtils::CalculateBoundingCompositionSize(aScrollContainerFrame,
-                                                      false, metrics));
+      nsLayoutUtils::CalculateBoundingCompositionSize(frame, false, metrics));
 
-  metrics.SetLayoutViewport(CSSRect::FromAppUnits(
-      nsRect(aScrollContainerFrame->GetScrollPosition(),
-             aScrollContainerFrame->GetScrollPortRect().Size())));
+  metrics.SetLayoutViewport(
+      CSSRect::FromAppUnits(nsRect(aScrollFrame->GetScrollPosition(),
+                                   aScrollFrame->GetScrollPortRect().Size())));
   metrics.SetVisualScrollOffset(
       isRcdRsf ? CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset())
                : metrics.GetLayoutViewport().TopLeft());
 
-  metrics.SetScrollableRect(
-      CSSRect::FromAppUnits(nsLayoutUtils::CalculateScrollableRectForFrame(
-          aScrollContainerFrame, nullptr)));
+  metrics.SetScrollableRect(CSSRect::FromAppUnits(
+      nsLayoutUtils::CalculateScrollableRectForFrame(aScrollFrame, nullptr)));
 
   return metrics;
 }
 
-ScrollContainerFrame* nsLayoutUtils::GetAsyncScrollableAncestorFrame(
+nsIScrollableFrame* nsLayoutUtils::GetAsyncScrollableAncestorFrame(
     nsIFrame* aTarget) {
   uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT |
                    nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE |
                    nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT;
-  return nsLayoutUtils::GetNearestScrollContainerFrame(aTarget, flags);
+  return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
 }
 
 void nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder* aBuilder,
@@ -3059,12 +3057,14 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         aFrame, builder);
   }
 
-  ScrollContainerFrame* rootScrollContainerFrame =
-      presShell->GetRootScrollContainerFrame();
-  if (rootScrollContainerFrame && !aFrame->GetParent()) {
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  if (rootScrollFrame && !aFrame->GetParent()) {
+    nsIScrollableFrame* rootScrollableFrame =
+        presShell->GetRootScrollFrameAsScrollable();
+    MOZ_ASSERT(rootScrollableFrame);
     nsRect displayPortBase = rootInkOverflow;
     nsRect temp = displayPortBase;
-    Unused << rootScrollContainerFrame->DecideScrollableLayer(
+    Unused << rootScrollableFrame->DecideScrollableLayer(
         builder, &displayPortBase, &temp,
         /* aSetBase = */ true);
   }
@@ -3084,10 +3084,12 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
   Maybe<nsPoint> originalScrollPosition;
   auto maybeResetScrollPosition = MakeScopeExit([&]() {
-    if (originalScrollPosition && rootScrollContainerFrame) {
-      MOZ_ASSERT(rootScrollContainerFrame->GetScrolledFrame()->GetPosition() ==
+    if (originalScrollPosition && rootScrollFrame) {
+      nsIScrollableFrame* rootScrollableFrame =
+          presShell->GetRootScrollFrameAsScrollable();
+      MOZ_ASSERT(rootScrollableFrame->GetScrolledFrame()->GetPosition() ==
                  nsPoint());
-      rootScrollContainerFrame->GetScrolledFrame()->SetPosition(
+      rootScrollableFrame->GetScrolledFrame()->SetPosition(
           *originalScrollPosition);
     }
   });
@@ -3102,20 +3104,22 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         presContext, canvasArea.Size()));
   }
 
-  if (ignoreViewportScrolling && rootScrollContainerFrame) {
+  if (ignoreViewportScrolling && rootScrollFrame) {
+    nsIScrollableFrame* rootScrollableFrame =
+        presShell->GetRootScrollFrameAsScrollable();
     if (aFlags & PaintFrameFlags::ResetViewportScrolling) {
       // Temporarily scroll the root scroll frame to 0,0 so that position:fixed
       // elements will appear fixed to the top-left of the document. We manually
       // set the position of the scrolled frame instead of using ScrollTo, since
       // the latter fires scroll listeners, which we don't want.
       originalScrollPosition.emplace(
-          rootScrollContainerFrame->GetScrolledFrame()->GetPosition());
-      rootScrollContainerFrame->GetScrolledFrame()->SetPosition(nsPoint());
+          rootScrollableFrame->GetScrolledFrame()->GetPosition());
+      rootScrollableFrame->GetScrolledFrame()->SetPosition(nsPoint());
     }
     if (aFlags & PaintFrameFlags::DocumentRelative) {
       // Make visibleRegion and aRenderingContext relative to the
       // scrolled frame instead of the root frame.
-      nsPoint pos = rootScrollContainerFrame->GetScrollPosition();
+      nsPoint pos = rootScrollableFrame->GetScrollPosition();
       visibleRegion.MoveBy(-pos);
       if (aRenderingContext) {
         gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(
@@ -3125,10 +3129,10 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
                 devPixelOffset));
       }
     }
-    builder->SetIgnoreScrollFrame(rootScrollContainerFrame);
+    builder->SetIgnoreScrollFrame(rootScrollFrame);
 
     nsCanvasFrame* canvasFrame =
-        do_QueryFrame(rootScrollContainerFrame->GetScrolledFrame());
+        do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
     if (canvasFrame) {
       // Use UnionRect here to ensure that areas where the scrollbars
       // were are still filled with the background color.
@@ -3153,7 +3157,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
     if (presShell->GetDocument() &&
         presShell->GetDocument()->IsRootDisplayDocument() &&
-        !presShell->GetRootScrollContainerFrame()) {
+        !presShell->GetRootScrollFrame()) {
       // In cases where the root document is a XUL document, we want to take
       // the ViewID from the root element, as that will be the ViewID of the
       // root APZC in the tree. Skip doing this in cases where we know
@@ -3172,9 +3176,9 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       // the paint.
     } else if (XRE_IsParentProcess() && presContext->IsRoot() &&
                presShell->GetDocument() != nullptr &&
-               presShell->GetRootScrollContainerFrame() != nullptr &&
+               presShell->GetRootScrollFrame() != nullptr &&
                nsLayoutUtils::UsesAsyncScrolling(
-                   presShell->GetRootScrollContainerFrame())) {
+                   presShell->GetRootScrollFrame())) {
       if (dom::Element* element =
               presShell->GetDocument()->GetDocumentElement()) {
         if (!DisplayPortUtils::HasNonMinimalDisplayPort(element)) {
@@ -4097,21 +4101,17 @@ bool nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(
 }
 
 bool nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame) {
-  if (!aFrame) {
-    return false;
-  }
+  if (!aFrame) return false;
 
-  ScrollContainerFrame* rootScrollContainerFrame =
-      aFrame->PresShell()->GetRootScrollContainerFrame();
-  if (!rootScrollContainerFrame) {
-    return false;
-  }
+  nsIFrame* rootScrollFrame = aFrame->PresShell()->GetRootScrollFrame();
+  if (!rootScrollFrame) return false;
 
-  if (!IsProperAncestorFrame(rootScrollContainerFrame, aFrame)) {
-    return false;
-  }
+  nsIScrollableFrame* rootScrollableFrame = do_QueryFrame(rootScrollFrame);
+  NS_ASSERTION(rootScrollableFrame, "The root scorollable frame is null");
 
-  nsIFrame* rootScrolledFrame = rootScrollContainerFrame->GetScrolledFrame();
+  if (!IsProperAncestorFrame(rootScrollFrame, aFrame)) return false;
+
+  nsIFrame* rootScrolledFrame = rootScrollableFrame->GetScrolledFrame();
   return !(rootScrolledFrame == aFrame ||
            IsProperAncestorFrame(rootScrolledFrame, aFrame));
 }
@@ -5730,7 +5730,8 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     }
 
     // For first-line baselines, we have to consider scroll frames.
-    if (const ScrollContainerFrame* sFrame = do_QueryFrame(aFrame)) {
+    if (nsIScrollableFrame* sFrame =
+            do_QueryFrame(const_cast<nsIFrame*>(aFrame))) {
       LinePosition kidPosition;
       if (GetFirstLinePosition(aWM, sFrame->GetScrolledFrame(), &kidPosition)) {
         // Consider only the border (Padding is ignored, since
@@ -5823,7 +5824,7 @@ bool nsLayoutUtils::GetLastLineBaseline(WritingMode aWM, const nsIFrame* aFrame,
 
   const nsBlockFrame* block = do_QueryFrame(aFrame);
   if (!block) {
-    if (const ScrollContainerFrame* sFrame = do_QueryFrame(aFrame)) {
+    if (nsIScrollableFrame* sFrame = do_QueryFrame(aFrame)) {
       // Use the baseline position only if the last line's baseline is within
       // the scrolling frame's box in the initial position.
       const auto* scrolledFrame = sFrame->GetScrolledFrame();
@@ -8270,14 +8271,14 @@ bool nsLayoutUtils::UpdateCompositionBoundsForRCDRSF(
       nsSize intrinsicCompositionSize =
           CSSSize::ToAppUnits(MVM->GetIntrinsicCompositionSize());
 
-      if (ScrollContainerFrame* rootScrollContainerFrame =
-              aPresContext->PresShell()->GetRootScrollContainerFrame()) {
+      if (nsIScrollableFrame* rootScrollableFrame =
+              aPresContext->PresShell()->GetRootScrollFrameAsScrollable()) {
         // Expand the composition size to include the area initially covered by
         // the dynamic toolbar only if the content is taller than the intrinsic
         // composition size (i.e. the dynamic toolbar should be able to move
         // only if the content is vertically scrollable).
         if (intrinsicCompositionSize.height <
-            CalculateScrollableRectForFrame(rootScrollContainerFrame, nullptr)
+            CalculateScrollableRectForFrame(rootScrollableFrame, nullptr)
                 .Height()) {
           shouldSubtractDynamicToolbar = SubtractDynamicToolbar::No;
         }
@@ -8307,24 +8308,21 @@ nsMargin nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
   if (!presShell) {
     return nsMargin();
   }
-  bool isRootScrollContainerFrame =
-      aScrollFrame == presShell->GetRootScrollContainerFrame();
+  bool isRootScrollFrame = aScrollFrame == presShell->GetRootScrollFrame();
   bool isRootContentDocRootScrollFrame =
-      isRootScrollContainerFrame &&
-      presContext->IsRootContentDocumentCrossProcess();
+      isRootScrollFrame && presContext->IsRootContentDocumentCrossProcess();
   if (!isRootContentDocRootScrollFrame) {
     return nsMargin();
   }
   if (presContext->UseOverlayScrollbars()) {
     return nsMargin();
   }
-  ScrollContainerFrame* scrollContainerFrame =
-      aScrollFrame->GetScrollTargetFrame();
-  if (!scrollContainerFrame) {
+  nsIScrollableFrame* scrollableFrame = aScrollFrame->GetScrollTargetFrame();
+  if (!scrollableFrame) {
     return nsMargin();
   }
-  return scrollContainerFrame->GetActualScrollbarSizes(
-      ScrollContainerFrame::ScrollbarSizesOptions::
+  return scrollableFrame->GetActualScrollbarSizes(
+      nsIScrollableFrame::ScrollbarSizesOptions::
           INCLUDE_VISUAL_VIEWPORT_SCROLLBARS);
 }
 
@@ -8333,12 +8331,12 @@ nsSize nsLayoutUtils::CalculateCompositionSizeForFrame(
     nsIFrame* aFrame, bool aSubtractScrollbars,
     const nsSize* aOverrideScrollPortSize,
     IncludeDynamicToolbar aIncludeDynamicToolbar) {
-  // If we have a scroll container frame, restrict the composition bounds to its
+  // If we have a scrollable frame, restrict the composition bounds to its
   // scroll port. The scroll port excludes the frame borders and the scroll
   // bars, which we don't want to be part of the composition bounds.
-  ScrollContainerFrame* scrollContainerFrame = aFrame->GetScrollTargetFrame();
-  nsRect rect = scrollContainerFrame ? scrollContainerFrame->GetScrollPortRect()
-                                     : aFrame->GetRect();
+  nsIScrollableFrame* scrollableFrame = aFrame->GetScrollTargetFrame();
+  nsRect rect = scrollableFrame ? scrollableFrame->GetScrollPortRect()
+                                : aFrame->GetRect();
   nsSize size =
       aOverrideScrollPortSize ? *aOverrideScrollPortSize : rect.Size();
 
@@ -8347,7 +8345,7 @@ nsSize nsLayoutUtils::CalculateCompositionSizeForFrame(
 
   bool isRootContentDocRootScrollFrame =
       presContext->IsRootContentDocumentCrossProcess() &&
-      aFrame == presShell->GetRootScrollContainerFrame();
+      aFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
     ParentLayerRect compBounds;
     if (UpdateCompositionBoundsForRCDRSF(compBounds, presContext,
@@ -8418,10 +8416,10 @@ CSSSize nsLayoutUtils::CalculateBoundingCompositionSize(
   }
 
   // Adjust composition size for the size of scroll bars.
-  nsIFrame* rootRootScrollContainerFrame =
-      rootPresShell ? rootPresShell->GetRootScrollContainerFrame() : nullptr;
-  nsMargin scrollbarMargins = ScrollbarAreaToExcludeFromCompositionBoundsFor(
-      rootRootScrollContainerFrame);
+  nsIFrame* rootRootScrollFrame =
+      rootPresShell ? rootPresShell->GetRootScrollFrame() : nullptr;
+  nsMargin scrollbarMargins =
+      ScrollbarAreaToExcludeFromCompositionBoundsFor(rootRootScrollFrame);
   LayoutDeviceMargin margins = LayoutDeviceMargin::FromAppUnits(
       scrollbarMargins, rootPresContext->AppUnitsPerDevPixel());
   // Scrollbars are not subject to resolution scaling, so LD pixels = layer
@@ -8452,26 +8450,25 @@ CSSSize nsLayoutUtils::CalculateBoundingCompositionSize(
 
 /* static */
 nsRect nsLayoutUtils::CalculateScrollableRectForFrame(
-    const ScrollContainerFrame* aScrollContainerFrame,
-    const nsIFrame* aRootFrame) {
+    const nsIScrollableFrame* aScrollableFrame, const nsIFrame* aRootFrame) {
   nsRect contentBounds;
-  if (aScrollContainerFrame) {
-    contentBounds = aScrollContainerFrame->GetScrollRange();
+  if (aScrollableFrame) {
+    contentBounds = aScrollableFrame->GetScrollRange();
 
-    nsPoint scrollPosition = aScrollContainerFrame->GetScrollPosition();
-    if (aScrollContainerFrame->GetScrollStyles().mVertical ==
+    nsPoint scrollPosition = aScrollableFrame->GetScrollPosition();
+    if (aScrollableFrame->GetScrollStyles().mVertical ==
         StyleOverflow::Hidden) {
       contentBounds.y = scrollPosition.y;
       contentBounds.height = 0;
     }
-    if (aScrollContainerFrame->GetScrollStyles().mHorizontal ==
+    if (aScrollableFrame->GetScrollStyles().mHorizontal ==
         StyleOverflow::Hidden) {
       contentBounds.x = scrollPosition.x;
       contentBounds.width = 0;
     }
 
-    contentBounds.width += aScrollContainerFrame->GetScrollPortRect().width;
-    contentBounds.height += aScrollContainerFrame->GetScrollPortRect().height;
+    contentBounds.width += aScrollableFrame->GetScrollPortRect().width;
+    contentBounds.height += aScrollableFrame->GetScrollPortRect().height;
   } else {
     contentBounds = aRootFrame->GetRect();
     // Clamp to (0, 0) if there is no corresponding scrollable frame for the
@@ -8487,7 +8484,7 @@ nsRect nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame) {
       aFrame->GetScrollTargetFrame(), aFrame->PresShell()->GetRootFrame());
   nsSize compSize = CalculateCompositionSizeForFrame(aFrame);
 
-  if (aFrame == aFrame->PresShell()->GetRootScrollContainerFrame()) {
+  if (aFrame == aFrame->PresShell()->GetRootScrollFrame()) {
     // the composition size for the root scroll frame does not include the
     // local resolution, so we adjust.
     float res = aFrame->PresShell()->GetResolution();
@@ -8772,16 +8769,16 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         aContent->GetProperty(nsGkAtoms::MinimalDisplayPort));
   }
 
-  ScrollContainerFrame* scrollContainerFrame =
-      aScrollFrame ? aScrollFrame->GetScrollTargetFrame() : nullptr;
+  nsIScrollableFrame* scrollableFrame = nullptr;
+  if (aScrollFrame) scrollableFrame = aScrollFrame->GetScrollTargetFrame();
 
   metrics.SetScrollableRect(
       CSSRect::FromAppUnits(nsLayoutUtils::CalculateScrollableRectForFrame(
-          scrollContainerFrame, aForFrame)));
+          scrollableFrame, aForFrame)));
 
-  if (scrollContainerFrame) {
+  if (scrollableFrame) {
     CSSPoint layoutScrollOffset =
-        CSSPoint::FromAppUnits(scrollContainerFrame->GetScrollPosition());
+        CSSPoint::FromAppUnits(scrollableFrame->GetScrollPosition());
     CSSPoint visualScrollOffset =
         aIsRootContent
             ? CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset())
@@ -8802,7 +8799,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       }
     }
 
-    if (scrollContainerFrame->IsRootScrollFrameOfDocument()) {
+    if (scrollableFrame->IsRootScrollFrameOfDocument()) {
       if (const Maybe<PresShell::VisualScrollUpdate>& visualUpdate =
               presShell->GetPendingVisualScrollUpdate()) {
         metrics.SetVisualDestination(
@@ -8842,20 +8839,19 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       }
     }
 
-    metrics.SetScrollGeneration(
-        scrollContainerFrame->CurrentScrollGeneration());
+    metrics.SetScrollGeneration(scrollableFrame->CurrentScrollGeneration());
 
     CSSRect viewport = metrics.GetLayoutViewport();
     viewport.MoveTo(layoutScrollOffset);
     metrics.SetLayoutViewport(viewport);
 
-    nsSize lineScrollAmount = scrollContainerFrame->GetLineScrollAmount();
+    nsSize lineScrollAmount = scrollableFrame->GetLineScrollAmount();
     LayoutDeviceIntSize lineScrollAmountInDevPixels =
         LayoutDeviceIntSize::FromAppUnitsRounded(
             lineScrollAmount, presContext->AppUnitsPerDevPixel());
     metadata.SetLineScrollAmount(lineScrollAmountInDevPixels);
 
-    nsSize pageScrollAmount = scrollContainerFrame->GetPageScrollAmount();
+    nsSize pageScrollAmount = scrollableFrame->GetPageScrollAmount();
     LayoutDeviceIntSize pageScrollAmountInDevPixels =
         LayoutDeviceIntSize::FromAppUnitsRounded(
             pageScrollAmount, presContext->AppUnitsPerDevPixel());
@@ -8867,10 +8863,10 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
               aScrollFrame->GetParent()));
     }
 
-    metadata.SetSnapInfo(scrollContainerFrame->GetScrollSnapInfo());
+    metadata.SetSnapInfo(scrollableFrame->GetScrollSnapInfo());
     metadata.SetOverscrollBehavior(
-        scrollContainerFrame->GetOverscrollBehaviorInfo());
-    metadata.SetScrollUpdates(scrollContainerFrame->GetScrollUpdates());
+        scrollableFrame->GetOverscrollBehaviorInfo());
+    metadata.SetScrollUpdates(scrollableFrame->GetScrollUpdates());
   }
 
   // If we have the scrollparent being the same as the scroll id, the
@@ -8882,14 +8878,13 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   metrics.SetIsRootContent(aIsRootContent);
   metadata.SetScrollParentId(aScrollParentId);
 
-  const nsIFrame* rootScrollContainerFrame =
-      presShell->GetRootScrollContainerFrame();
-  bool isRootScrollContainerFrame = aScrollFrame == rootScrollContainerFrame;
+  const nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  bool isRootScrollFrame = aScrollFrame == rootScrollFrame;
   Document* document = presShell->GetDocument();
 
   if (scrollId != ScrollableLayerGuid::NULL_SCROLL_ID &&
       !presContext->GetParentPresContext()) {
-    if ((aScrollFrame && isRootScrollContainerFrame)) {
+    if ((aScrollFrame && isRootScrollFrame)) {
       metadata.SetIsLayersIdRoot(true);
     } else {
       MOZ_ASSERT(document, "A non-root-scroll frame must be in a document");
@@ -8907,9 +8902,9 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   // |ScrollMetadata|.
   const Element* bodyElement = document ? document->GetBodyElement() : nullptr;
   const nsIFrame* primaryFrame =
-      bodyElement ? bodyElement->GetPrimaryFrame() : rootScrollContainerFrame;
+      bodyElement ? bodyElement->GetPrimaryFrame() : rootScrollFrame;
   if (!primaryFrame) {
-    primaryFrame = rootScrollContainerFrame;
+    primaryFrame = rootScrollFrame;
   }
   if (primaryFrame) {
     WritingMode writingModeOfRootScrollFrame = primaryFrame->GetWritingMode();
@@ -8920,7 +8915,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
 
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
-  if (isRootScrollContainerFrame) {
+  if (isRootScrollFrame) {
     metrics.SetPresShellResolution(presShell->GetResolution());
   } else {
     metrics.SetPresShellResolution(1.0f);
@@ -8962,11 +8957,11 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aItemFrame) +
           aOffsetToReferenceFrame,
       frameForCompositionBoundsCalculation->GetSize());
-  if (scrollContainerFrame) {
+  if (scrollableFrame) {
     // If we have a scrollable frame, restrict the composition bounds to its
     // scroll port. The scroll port excludes the frame borders and the scroll
     // bars, which we don't want to be part of the composition bounds.
-    nsRect scrollPort = scrollContainerFrame->GetScrollPortRect();
+    nsRect scrollPort = scrollableFrame->GetScrollPortRect();
     compositionBounds = nsRect(
         compositionBounds.TopLeft() + scrollPort.TopLeft(), scrollPort.Size());
   }
@@ -8984,8 +8979,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   // correspond to what would be visible because they don't get modified by
   // setCSSViewport.
   bool isRootContentDocRootScrollFrame =
-      isRootScrollContainerFrame &&
-      presContext->IsRootContentDocumentCrossProcess();
+      isRootScrollFrame && presContext->IsRootContentDocumentCrossProcess();
   if (isRootContentDocRootScrollFrame) {
     UpdateCompositionBoundsForRCDRSF(frameBounds, presContext);
     if (RefPtr<MobileViewportManager> MVM =
@@ -9063,8 +9057,7 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
   // If the parent process is using XUL windows, there is no root scrollframe,
   // and without explicitly creating metrics there will be no guaranteed
   // top-level APZC.
-  bool addMetrics =
-      XRE_IsParentProcess() && !presShell->GetRootScrollContainerFrame();
+  bool addMetrics = XRE_IsParentProcess() && !presShell->GetRootScrollFrame();
 
   // Add metrics if there are none in the layer tree with the id (create an id
   // if there isn't one already) of the root scroll frame/root content.
@@ -9073,10 +9066,9 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
                                 !presContext->GetParentPresContext();
 
   nsIContent* content = nullptr;
-  ScrollContainerFrame* rootScrollContainerFrame =
-      presShell->GetRootScrollContainerFrame();
-  if (rootScrollContainerFrame) {
-    content = rootScrollContainerFrame->GetContent();
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  if (rootScrollFrame) {
+    content = rootScrollFrame->GetContent();
   } else {
     // If there is no root scroll frame, pick the document element instead.
     // The only case we don't want to do this is in non-APZ fennec, where
@@ -9096,11 +9088,13 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
     bool isRootContent = presContext->IsRootContentDocumentCrossProcess();
 
     nsSize scrollPortSize = frame->GetSize();
-    if (isRootContent && rootScrollContainerFrame) {
-      scrollPortSize = rootScrollContainerFrame->GetScrollPortRect().Size();
+    if (isRootContent && rootScrollFrame) {
+      nsIScrollableFrame* scrollableFrame =
+          rootScrollFrame->GetScrollTargetFrame();
+      scrollPortSize = scrollableFrame->GetScrollPortRect().Size();
     }
     return Some(nsLayoutUtils::ComputeScrollMetadata(
-        frame, rootScrollContainerFrame, content, frame,
+        frame, rootScrollFrame, content, frame,
         aBuilder->ToReferenceFrame(frame), aLayerManager,
         ScrollableLayerGuid::NULL_SCROLL_ID, scrollPortSize, isRootContent));
   }
@@ -9220,39 +9214,37 @@ nsBlockFrame* nsLayoutUtils::GetFloatContainingBlock(nsIFrame* aFrame) {
 // Element::GetBoundingClientRect().
 /* static */
 CSSRect nsLayoutUtils::GetBoundingContentRect(
-    const nsIContent* aContent,
-    const ScrollContainerFrame* aRootScrollContainerFrame,
+    const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame,
     Maybe<CSSRect>* aOutNearestScrollClip) {
   if (nsIFrame* frame = aContent->GetPrimaryFrame()) {
-    return GetBoundingFrameRect(frame, aRootScrollContainerFrame,
-                                aOutNearestScrollClip);
+    return GetBoundingFrameRect(frame, aRootScrollFrame, aOutNearestScrollClip);
   }
   return CSSRect();
 }
 
 /* static */
 CSSRect nsLayoutUtils::GetBoundingFrameRect(
-    nsIFrame* aFrame, const ScrollContainerFrame* aRootScrollContainerFrame,
+    nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame,
     Maybe<CSSRect>* aOutNearestScrollClip) {
   CSSRect result;
-  nsIFrame* relativeTo = aRootScrollContainerFrame->GetScrolledFrame();
+  nsIFrame* relativeTo = aRootScrollFrame->GetScrolledFrame();
   result = CSSRect::FromAppUnits(nsLayoutUtils::GetAllInFlowRectsUnion(
       aFrame, relativeTo,
       nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms));
 
-  // If the element is contained in a scroll container frame that is not the
-  // root scroll container frame, make sure to clip the result so that it is not
-  // larger than the containing scroll container frame's bounds.
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::GetNearestScrollContainerFrame(
-          aFrame, SCROLLABLE_INCLUDE_HIDDEN | SCROLLABLE_FIXEDPOS_FINDS_ROOT);
-  if (scrollContainerFrame &&
-      scrollContainerFrame != aRootScrollContainerFrame) {
+  // If the element is contained in a scrollable frame that is not
+  // the root scroll frame, make sure to clip the result so that it is
+  // not larger than the containing scrollable frame's bounds.
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
+      aFrame, SCROLLABLE_INCLUDE_HIDDEN | SCROLLABLE_FIXEDPOS_FINDS_ROOT);
+  if (scrollFrame && scrollFrame != aRootScrollFrame) {
+    nsIFrame* subFrame = do_QueryFrame(scrollFrame);
+    MOZ_ASSERT(subFrame);
     // Get the bounds of the scroll frame in the same coordinate space
     // as |result|.
-    nsRect subFrameRect = scrollContainerFrame->GetRectRelativeToSelf();
-    TransformResult res = nsLayoutUtils::TransformRect(
-        scrollContainerFrame, relativeTo, subFrameRect);
+    nsRect subFrameRect = subFrame->GetRectRelativeToSelf();
+    TransformResult res =
+        nsLayoutUtils::TransformRect(subFrame, relativeTo, subFrameRect);
     MOZ_ASSERT(res == TRANSFORM_SUCCEEDED || res == NONINVERTIBLE_TRANSFORM);
     if (res == TRANSFORM_SUCCEEDED) {
       CSSRect subFrameRectCSS = CSSRect::FromAppUnits(subFrameRect);
@@ -9308,7 +9300,7 @@ CSSPoint nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame) {
     nsPresContext* pc = frame->PresContext();
     if (pc->IsRootContentDocumentCrossProcess()) {
       if (PresShell* shell = pc->GetPresShell()) {
-        if (nsIFrame* rsf = shell->GetRootScrollContainerFrame()) {
+        if (nsIFrame* rsf = shell->GetRootScrollFrame()) {
           if (frame->GetContent() == rsf->GetContent()) {
             seenRcdRsf = true;
           }
@@ -9324,8 +9316,7 @@ CSSPoint nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame) {
     ViewportFrame* viewportFrame = do_QueryFrame(frame);
     if (viewportFrame) {
       if (pc->IsRootContentDocumentCrossProcess() && !seenRcdRsf) {
-        applyCallbackTransformForFrame(
-            pc->PresShell()->GetRootScrollContainerFrame());
+        applyCallbackTransformForFrame(pc->PresShell()->GetRootScrollFrame());
       }
     }
 

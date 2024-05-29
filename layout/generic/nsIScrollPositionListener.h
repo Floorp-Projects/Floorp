@@ -11,7 +11,7 @@
 
 /**
  * Provides a way to learn about scroll position changes of
- * ScrollContainerFrame's.
+ * nsIScrollableFrame's.
  */
 class nsIScrollPositionListener {
  public:

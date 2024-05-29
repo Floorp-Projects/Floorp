@@ -73,6 +73,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsView.h"
+#include "nsIScrollableFrame.h"
 #include "ChildIterator.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/MutationObservers.h"

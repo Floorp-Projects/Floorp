@@ -9,10 +9,6 @@
 
 #include "mozilla/dom/ScrollTimeline.h"
 
-namespace mozilla {
-class ScrollContainerFrame;
-}  // namespace mozilla
-
 namespace mozilla::dom {
 
 /*
@@ -64,10 +60,10 @@ class ViewTimeline final : public ScrollTimeline {
         mInset(aInset) {}
 
   Maybe<ScrollOffsets> ComputeOffsets(
-      const ScrollContainerFrame* aScrollContainerFrame,
+      const nsIScrollableFrame* aScrollFrame,
       layers::ScrollDirection aOrientation) const override;
 
-  ScrollOffsets ComputeInsets(const ScrollContainerFrame* aScrollContainerFrame,
+  ScrollOffsets ComputeInsets(const nsIScrollableFrame* aScrollFrame,
                               layers::ScrollDirection aOrientation) const;
 
   // The subject element.

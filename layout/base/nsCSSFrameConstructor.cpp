@@ -77,6 +77,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIPopupContainer.h"
 #include "nsIScriptError.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsListControlFrame.h"
 #include "nsMathMLParts.h"
@@ -5476,9 +5477,8 @@ nsContainerFrame* nsCSSFrameConstructor::GetAbsoluteContainingBlock(
       type = absPosCBCandidate->Type();
     }
     if (type == LayoutFrameType::ScrollContainer) {
-      ScrollContainerFrame* scrollContainerFrame =
-          do_QueryFrame(absPosCBCandidate);
-      absPosCBCandidate = scrollContainerFrame->GetScrolledFrame();
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(absPosCBCandidate);
+      absPosCBCandidate = scrollFrame->GetScrolledFrame();
       if (!absPosCBCandidate) {
         continue;
       }

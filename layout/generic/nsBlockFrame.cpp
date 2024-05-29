@@ -19,7 +19,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ToString.h"
@@ -46,6 +45,7 @@
 #include "nsFloatManager.h"
 #include "prenv.h"
 #include "nsError.h"
+#include "nsIScrollableFrame.h"
 #include <algorithm>
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
@@ -1126,10 +1126,11 @@ static LogicalSize CalculateContainingBlockSizeForAbsolutes(
 
   // For scroll containers, we can just use cbSize (which is the padding-box
   // size of the scrolled-content frame).
-  if (lastRI->mFrame->IsScrollContainerOrSubclass()) {
+  if (nsIScrollableFrame* scrollFrame = do_QueryFrame(lastRI->mFrame)) {
     // Assert that we're not missing any frames between the abspos containing
     // block and the scroll container.
     // the parent.
+    Unused << scrollFrame;
     MOZ_ASSERT(lastButOneRI == &aReflowInput);
     return cbSize;
   }

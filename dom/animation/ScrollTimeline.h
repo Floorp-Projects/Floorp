@@ -16,8 +16,9 @@
 
 #define PROGRESS_TIMELINE_DURATION_MILLISEC 100000
 
+class nsIScrollableFrame;
+
 namespace mozilla {
-class ScrollContainerFrame;
 class ElementAnimationData;
 struct NonOwningAnimationTarget;
 namespace dom {
@@ -37,7 +38,7 @@ class Element;
  *
  * As a result, we schedule an animation restyle when
  * 1) there are any scroll offsets updated (from APZ or script), via
- *    ScrollContainerFrame, or
+ *    nsIScrollableFrame, or
  * 2) there are any possible scroll range updated during the frame reflow.
  *
  * -------------
@@ -53,11 +54,11 @@ class Element;
  *   | Try schedule the scroll-driven animations, if there are any scroll
  *   | offsets changed or the scroll range changed [1].
  *   |
- * ------------------------
- * | ScrollContainerFrame |
- * ------------------------
+ * ----------------------
+ * | nsIScrollableFrame |
+ * ----------------------
  *
- * [1] ScrollContainerFrame uses its associated dom::Element to lookup the
+ * [1] nsIScrollableFrame uses its associated dom::Element to lookup the
  *     ScrollTimelineSet, and iterates the set to schedule the animations
  *     linked to the ScrollTimelines.
  */
@@ -176,7 +177,7 @@ class ScrollTimeline : public AnimationTimeline {
   // https://drafts.csswg.org/web-animations-1/#inactive-timeline
   // Note: This function is called only for compositor animations, so we must
   // have the primary frame (principal box) for the source element if it exists.
-  bool IsActive() const { return GetScrollContainerFrame(); }
+  bool IsActive() const { return GetScrollFrame(); }
 
   Element* SourceElement() const {
     MOZ_ASSERT(mSource);
@@ -210,7 +211,7 @@ class ScrollTimeline : public AnimationTimeline {
     nscoord mEnd = 0;
   };
   virtual Maybe<ScrollOffsets> ComputeOffsets(
-      const ScrollContainerFrame* aScrollFrame,
+      const nsIScrollableFrame* aScrollFrame,
       layers::ScrollDirection aOrientation) const;
 
   // Note: This function is required to be idempotent, as it can be called from
@@ -224,7 +225,7 @@ class ScrollTimeline : public AnimationTimeline {
   // Unregister this scroll timeline from the element property.
   void UnregisterFromScrollSource();
 
-  const ScrollContainerFrame* GetScrollContainerFrame() const;
+  const nsIScrollableFrame* GetScrollFrame() const;
 
   static std::pair<const Element*, PseudoStyleType> FindNearestScroller(
       Element* aSubject, PseudoStyleType aPseudoType);

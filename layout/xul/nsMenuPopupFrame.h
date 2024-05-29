@@ -338,7 +338,7 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   void MoveToAnchor(nsIContent* aAnchorContent, const nsAString& aPosition,
                     int32_t aXPos, int32_t aYPos, bool aAttributesOverride);
 
-  mozilla::ScrollContainerFrame* GetScrollContainerFrame() const;
+  nsIScrollableFrame* GetScrollFrame() const;
 
   void SetOverrideConstraintRect(const mozilla::CSSIntRect& aRect) {
     mOverrideConstraintRect = mozilla::CSSIntRect::ToAppUnits(aRect);

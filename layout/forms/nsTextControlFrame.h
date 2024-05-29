@@ -19,7 +19,6 @@ class nsISelectionController;
 class EditorInitializerEntryTracker;
 namespace mozilla {
 class AutoTextControlHandlingState;
-class ScrollContainerFrame;
 class TextEditor;
 class TextControlState;
 enum class PseudoStyleType : uint8_t;
@@ -59,7 +58,7 @@ class nsTextControlFrame : public nsContainerFrame,
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Destroy(DestroyContext&) override;
 
-  mozilla::ScrollContainerFrame* GetScrollTargetFrame() const override;
+  nsIScrollableFrame* GetScrollTargetFrame() const override;
 
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;

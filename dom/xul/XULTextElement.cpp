@@ -10,6 +10,7 @@
 #include "nsChangeHint.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
+#include "nsIScrollableFrame.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/XULTextElement.h"
 #include "mozilla/dom/XULTextElementBinding.h"

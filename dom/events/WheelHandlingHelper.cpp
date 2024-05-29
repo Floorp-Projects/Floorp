@@ -13,7 +13,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/TextControlElement.h"
@@ -24,6 +23,7 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"  // for Document and HTMLBodyElement
+#include "nsIScrollableFrame.h"
 #include "nsITimer.h"
 #include "nsPresContext.h"
 #include "prtime.h"
@@ -53,27 +53,24 @@ bool WheelHandlingUtils::CanScrollInRange(nscoord aMin, nscoord aValue,
 /* static */
 bool WheelHandlingUtils::CanScrollOn(nsIFrame* aFrame, double aDirectionX,
                                      double aDirectionY) {
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(aFrame);
-  if (!scrollContainerFrame) {
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
+  if (!scrollableFrame) {
     return false;
   }
-  return CanScrollOn(scrollContainerFrame, aDirectionX, aDirectionY);
+  return CanScrollOn(scrollableFrame, aDirectionX, aDirectionY);
 }
 
 /* static */
-bool WheelHandlingUtils::CanScrollOn(
-    ScrollContainerFrame* aScrollContainerFrame, double aDirectionX,
-    double aDirectionY) {
-  MOZ_ASSERT(aScrollContainerFrame);
+bool WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
+                                     double aDirectionX, double aDirectionY) {
+  MOZ_ASSERT(aScrollFrame);
   NS_ASSERTION(aDirectionX || aDirectionY,
                "One of the delta values must be non-zero at least");
 
-  nsPoint scrollPt = aScrollContainerFrame->GetVisualViewportOffset();
-  nsRect scrollRange =
-      aScrollContainerFrame->GetScrollRangeForUserInputEvents();
+  nsPoint scrollPt = aScrollFrame->GetVisualViewportOffset();
+  nsRect scrollRange = aScrollFrame->GetScrollRangeForUserInputEvents();
   layers::ScrollDirections directions =
-      aScrollContainerFrame
-          ->GetAvailableScrollingDirectionsForUserInputEvents();
+      aScrollFrame->GetAvailableScrollingDirectionsForUserInputEvents();
 
   return ((aDirectionX != 0.0) &&
           (directions.contains(layers::ScrollDirection::eHorizontal)) &&
@@ -169,10 +166,9 @@ void WheelTransaction::BeginTransaction(nsIFrame* aScrollTargetFrame,
 /* static */
 bool WheelTransaction::UpdateTransaction(const WidgetWheelEvent* aEvent) {
   nsIFrame* scrollToFrame = GetScrollTargetFrame();
-  ScrollContainerFrame* scrollContainerFrame =
-      scrollToFrame->GetScrollTargetFrame();
-  if (scrollContainerFrame) {
-    scrollToFrame = scrollContainerFrame;
+  nsIScrollableFrame* scrollableFrame = scrollToFrame->GetScrollTargetFrame();
+  if (scrollableFrame) {
+    scrollToFrame = do_QueryFrame(scrollableFrame);
   }
 
   if (!WheelHandlingUtils::CanScrollOn(scrollToFrame, aEvent->mDeltaX,
@@ -486,13 +482,17 @@ void ScrollbarsForWheel::PrepareToScrollText(EventStateManager* aESM,
 
 /* static */
 void ScrollbarsForWheel::SetActiveScrollTarget(
-    ScrollContainerFrame* aScrollTarget) {
+    nsIScrollableFrame* aScrollTarget) {
   if (!sHadWheelStart) {
     return;
   }
+  nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(aScrollTarget);
+  if (!scrollbarMediator) {
+    return;
+  }
   sHadWheelStart = false;
-  sActiveOwner = aScrollTarget;
-  aScrollTarget->ScrollbarActivityStarted();
+  sActiveOwner = do_QueryFrame(aScrollTarget);
+  scrollbarMediator->ScrollbarActivityStarted();
 }
 
 /* static */
@@ -544,12 +544,14 @@ void ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
     const DeltaValues* dir = &directions[i];
     AutoWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
     MOZ_ASSERT(!*scrollTarget, "scroll target still temporarily activated!");
-    ScrollContainerFrame* target = aESM->ComputeScrollTarget(
+    nsIScrollableFrame* target = do_QueryFrame(aESM->ComputeScrollTarget(
         aTargetFrame, dir->deltaX, dir->deltaY, aEvent,
-        EventStateManager::COMPUTE_DEFAULT_ACTION_TARGET);
-    if (target) {
-      *scrollTarget = target;
-      target->ScrollbarActivityStarted();
+        EventStateManager::COMPUTE_DEFAULT_ACTION_TARGET));
+    nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(target);
+    if (scrollbarMediator) {
+      nsIFrame* targetFrame = do_QueryFrame(target);
+      *scrollTarget = targetFrame;
+      scrollbarMediator->ScrollbarActivityStarted();
     }
   }
 }
@@ -710,7 +712,7 @@ ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
 
     if (!honouredFrame) {
       // If there is no <body> frame, fall back to the real root frame.
-      honouredFrame = aScrollFrame.PresShell()->GetRootScrollContainerFrame();
+      honouredFrame = aScrollFrame.PresShell()->GetRootScrollFrame();
     }
 
     if (!honouredFrame) {

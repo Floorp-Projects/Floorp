@@ -73,6 +73,7 @@
 #include "nsTableWrapperFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
 #include "nsStyleConsts.h"
@@ -1217,8 +1218,8 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       if (auto* container = ScrollAnchorContainer::FindFor(this)) {
         container->InvalidateAnchor();
       }
-      if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(this)) {
-        scrollContainerFrame->Anchor()->InvalidateAnchor();
+      if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(this)) {
+        scrollableFrame->Anchor()->InvalidateAnchor();
       }
     }
 
@@ -1257,9 +1258,9 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
     if (aOldComputedStyle->IsRootElementStyle() &&
         disp->mScrollSnapType != oldDisp->mScrollSnapType) {
-      if (ScrollContainerFrame* sf =
-              PresShell()->GetRootScrollContainerFrame()) {
-        sf->PostPendingResnap();
+      if (nsIScrollableFrame* scrollableFrame =
+              PresShell()->GetRootScrollFrameAsScrollable()) {
+        scrollableFrame->PostPendingResnap();
       }
     }
     if (StyleUIReset()->mMozSubtreeHiddenOnlyVisually &&
@@ -2185,7 +2186,8 @@ void nsIFrame::UpdateVisibilitySynchronously() {
   nsRect rect = GetRectRelativeToSelf();
   nsIFrame* rectFrame = this;
   while (f && visible) {
-    if (ScrollContainerFrame* sf = do_QueryFrame(f)) {
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if (sf) {
       nsRect transformedRect =
           nsLayoutUtils::TransformFrameRectToAncestor(rectFrame, rect, f);
       if (!sf->IsRectNearlyVisible(transformedRect)) {
@@ -3784,8 +3786,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     StickyScrollContainer* stickyScrollContainer =
         StickyScrollContainer::GetStickyScrollContainerForFrame(this);
-    if (stickyScrollContainer && stickyScrollContainer->ScrollContainer()
-                                     ->IsMaybeAsynchronouslyScrolled()) {
+    if (stickyScrollContainer &&
+        stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled()) {
       shouldFlatten = false;
     }
 
@@ -3799,7 +3801,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // inhibits paint skipping).
     if (aBuilder->GetFilterASR() && aBuilder->GetFilterASR() == stickyASR) {
       aBuilder->GetFilterASR()
-          ->mScrollContainerFrame->SetHasOutOfFlowContentInsideFilter();
+          ->mScrollableFrame->SetHasOutOfFlowContentInsideFilter();
     }
   }
 
@@ -3932,7 +3934,7 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
   // content underneath the toolbar, so expand the overflow rect here to
   // allow display list building to descend into the scroll frame.
   if (aBuilder->IsForEventDelivery() &&
-      aChild == aChild->PresShell()->GetRootScrollContainerFrame() &&
+      aChild == aChild->PresShell()->GetRootScrollFrame() &&
       aChild->PresContext()->IsRootContentDocumentCrossProcess() &&
       aChild->PresContext()->HasDynamicToolbar()) {
     overflow.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
@@ -4704,16 +4706,16 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   if (isPrimaryButtonDown) {
     // If the mouse is dragged outside the nearest enclosing scrollable area
     // while making a selection, the area will be scrolled. To do this, capture
-    // the mouse on the nearest scroll container frame. If there isn't a scroll
-    // container frame, or something else is already capturing the mouse,
-    // there's no reason to capture.
+    // the mouse on the nearest scrollable frame. If there isn't a scrollable
+    // frame, or something else is already capturing the mouse, there's no
+    // reason to capture.
     if (!PresShell::GetCapturingContent()) {
-      ScrollContainerFrame* scrollContainerFrame =
-          nsLayoutUtils::GetNearestScrollContainerFrame(
+      nsIScrollableFrame* scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(
               this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                         nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-      if (scrollContainerFrame) {
-        nsIFrame* capturingFrame = scrollContainerFrame;
+      if (scrollFrame) {
+        nsIFrame* capturingFrame = do_QueryFrame(scrollFrame);
         PresShell::SetCapturingContent(capturingFrame->GetContent(),
                                        CaptureFlags::IgnoreAllowedState);
       }
@@ -5208,14 +5210,13 @@ NS_IMETHODIMP nsIFrame::HandleDrag(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // Get the nearest scroll container frame.
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::GetNearestScrollContainerFrame(
-          this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
-                    nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  // get the nearest scrollframe
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
+      this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
-  if (scrollContainerFrame) {
-    nsIFrame* capturingFrame = scrollContainerFrame->GetScrolledFrame();
+  if (scrollFrame) {
+    nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
     if (capturingFrame) {
       nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
           mouseEvent, RelativeTo{capturingFrame});
@@ -5356,14 +5357,14 @@ NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
     frameSelection->SetDragState(false);
     frameSelection->StopAutoScrollTimer();
     if (wf.IsAlive()) {
-      ScrollContainerFrame* scrollContainerFrame =
-          nsLayoutUtils::GetNearestScrollContainerFrame(
+      nsIScrollableFrame* scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(
               this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                         nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-      if (scrollContainerFrame) {
+      if (scrollFrame) {
         // Perform any additional scrolling needed to maintain CSS snap point
         // requirements when autoscrolling is over.
-        scrollContainerFrame->ScrollSnap();
+        scrollFrame->ScrollSnap();
       }
     }
   }
@@ -10798,17 +10799,17 @@ bool nsIFrame::IsFocusableDueToScrollFrame() {
   // with the mouse, because the extra focus outlines are considered
   // unnecessarily ugly.  When clicked on, the selection position within the
   // element will be enough to make them keyboard scrollable.
-  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(this);
-  if (!scrollContainerFrame) {
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(this);
+  if (!scrollFrame) {
     return false;
   }
-  if (scrollContainerFrame->IsForTextControlWithNoScrollbars()) {
+  if (scrollFrame->IsForTextControlWithNoScrollbars()) {
     return false;
   }
-  if (scrollContainerFrame->GetScrollStyles().IsHiddenInBothDirections()) {
+  if (scrollFrame->GetScrollStyles().IsHiddenInBothDirections()) {
     return false;
   }
-  if (scrollContainerFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
+  if (scrollFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
     return false;
   }
   return true;
@@ -11173,8 +11174,8 @@ static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
   // subtree
   for (nsIFrame* f = const_cast<nsIFrame*>(aParent); f;
        f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
-    ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
-    if (scrollContainerFrame) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
+    if (scrollableFrame) {
       clipParent = f;
       break;
     }
@@ -11361,14 +11362,13 @@ void nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const {
 nsRect nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder) {
   nsRect area;
 
-  ScrollContainerFrame* scrollContainerFrame =
-      nsLayoutUtils::GetScrollContainerFrameFor(this);
-  if (scrollContainerFrame) {
-    // If this frame is the scrolled frame of a scroll container frame, then we
-    // need to pick up the area corresponding to the overflow rect as well.
-    // Otherwise the parts of the overflow that are not occupied by descendants
-    // get skipped and the APZ code sends touch events to the content underneath
-    // instead. See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
+  if (scrollFrame) {
+    // If the frame is content of a scrollframe, then we need to pick up the
+    // area corresponding to the overflow rect as well. Otherwise the parts of
+    // the overflow that are not occupied by descendants get skipped and the
+    // APZ code sends touch events to the content underneath instead.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1127773#c15.
     area = ScrollableOverflowRect();
   } else {
     area = GetRectRelativeToSelf();
@@ -11441,12 +11441,12 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
         aBuilder->GetCompositorHitTestInfo() & CompositorHitTestTouchActionMask;
 
     nsIFrame* touchActionFrame = this;
-    if (ScrollContainerFrame* scrollContainerFrame =
-            nsLayoutUtils::GetScrollContainerFrameFor(this)) {
-      ScrollStyles ss = scrollContainerFrame->GetScrollStyles();
+    if (nsIScrollableFrame* scrollFrame =
+            nsLayoutUtils::GetScrollableFrameFor(this)) {
+      ScrollStyles ss = scrollFrame->GetScrollStyles();
       if (ss.mVertical != StyleOverflow::Hidden ||
           ss.mHorizontal != StyleOverflow::Hidden) {
-        touchActionFrame = scrollContainerFrame;
+        touchActionFrame = do_QueryFrame(scrollFrame);
         // On scrollframes, stop inheriting the pan-x and pan-y flags; instead,
         // reset them back to zero to allow panning on the scrollframe unless we
         // encounter an element that disables it that's inside the scrollframe.
