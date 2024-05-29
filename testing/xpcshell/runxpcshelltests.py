@@ -93,7 +93,7 @@ from manifestparser.filters import chunk_by_slice, failures, pathprefix, tags
 from manifestparser.util import normsep
 from mozlog import commandline
 from mozprofile import Profile
-from mozprofile.cli import parse_preferences
+from mozprofile.cli import parse_key_value, parse_preferences
 from mozrunner.utils import get_stack_fixer_function
 
 # --------------------------------------------------------------
@@ -1855,6 +1855,13 @@ class XPCShellTests(object):
 
         # buildEnvironment() needs mozInfo, so we call it after mozInfo is initialized.
         self.buildEnvironment()
+        extraEnv = parse_key_value(options.get("extraEnv") or [], context="--setenv")
+        for k, v in extraEnv:
+            if k in self.env:
+                self.log.info(
+                    "Using environment variable %s instead of %s." % (v, self.env[k])
+                )
+            self.env[k] = v
 
         # The appDirKey is a optional entry in either the default or individual test
         # sections that defines a relative application directory for test runs. If
