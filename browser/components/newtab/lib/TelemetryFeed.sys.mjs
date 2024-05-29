@@ -114,6 +114,7 @@ const NEWTAB_PING_PREFS = {
   "feeds.section.topstories": Glean.pocket.enabled,
   showSponsored: Glean.pocket.sponsoredStoriesEnabled,
   topSitesRows: Glean.topsites.rows,
+  showWeather: Glean.newtab.weatherEnabled,
 };
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 
