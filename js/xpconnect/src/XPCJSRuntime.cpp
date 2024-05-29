@@ -2659,6 +2659,15 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
       SetUseCounter(
           obj, mozilla::eUseCounter_custom_JS_subclassing_typedarray_type_3);
       return;
+    case JSUseCounter::SUBCLASSING_ARRAYBUFFER_TYPE_III:
+      SetUseCounter(
+          obj, mozilla::eUseCounter_custom_JS_subclassing_arraybuffer_type_3);
+      return;
+    case JSUseCounter::SUBCLASSING_SHAREDARRAYBUFFER_TYPE_III:
+      SetUseCounter(
+          obj,
+          mozilla::eUseCounter_custom_JS_subclassing_sharedarraybuffer_type_3);
+      return;
     case JSUseCounter::COUNT:
       break;
   }
