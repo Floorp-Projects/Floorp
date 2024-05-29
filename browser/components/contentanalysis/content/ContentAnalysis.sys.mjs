@@ -819,7 +819,7 @@ export const ContentAnalysis = {
           }
           body = this.l10n.formatValueSync(bodyId);
         }
-        Services.prompt.alertBC(
+        await Services.prompt.asyncAlert(
           aBrowsingContext,
           Ci.nsIPromptService.MODAL_TYPE_TAB,
           this.l10n.formatValueSync(titleId),
