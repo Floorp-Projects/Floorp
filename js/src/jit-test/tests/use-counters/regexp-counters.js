@@ -67,3 +67,21 @@ function test_regexp_split_type_iii() {
 
 test_function_for_use_counter_integration(test_regexp_split, "SubclassingRegExpTypeIII", false)
 test_function_for_use_counter_integration(test_regexp_split_type_iii, "SubclassingRegExpTypeIII", true)
+
+function test_regexp_exec() {
+    let r = /r/;
+    "s".match(r);
+}
+
+function test_regexp_exec_type_iv() {
+    class R extends RegExp {
+        exec() {
+            return {};
+        }
+    }
+    "s".match(new R("s"));
+}
+
+test_function_for_use_counter_integration(test_regexp_exec, "SubclassingRegExpTypeIV", false)
+test_function_for_use_counter_integration(test_regexp_exec_type_iv, "SubclassingRegExpTypeIV", true)
+
