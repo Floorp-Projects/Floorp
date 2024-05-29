@@ -562,7 +562,10 @@ AppleVTEncoder::ProcessReconfigure(
     const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
   bool ok = false;
   for (const auto& confChange : aConfigurationChanges->mChanges) {
-    ok |= confChange.match(
+    // A reconfiguration on the fly succeeds if all changes can be applied
+    // successfuly. In case of failure, the encoder will be drained and
+    // recreated.
+    ok &= confChange.match(
         // Not supported yet
         [&](const DimensionsChange& aChange) -> bool { return false; },
         [&](const DisplayDimensionsChange& aChange) -> bool { return false; },
