@@ -70,7 +70,7 @@ class VideoEncoder final : public EncoderTemplate<VideoEncoderTraits> {
   virtual VideoDecoderConfigInternal EncoderConfigToDecoderConfig(
       nsIGlobalObject* aGlobal /* TODO: delete */,
       const RefPtr<MediaRawData>& aRawData,
-      const VideoEncoderConfigInternal& mOutputConfig) const override;
+      const VideoEncoderConfigInternal& aOutputConfig) const override;
 };
 
 }  // namespace mozilla::dom
