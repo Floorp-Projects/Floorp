@@ -45,30 +45,6 @@ add_setup(async function () {
 });
 
 /**
- * The security delay calculation in PopupNotification.sys.mjs is dependent on
- * the monotonically increasing value of performance.now. This timestamp is
- * not relative to a fixed date, but to runtime.
- * We need to wait for the value performance.now() to be larger than the
- * security delay in order to observe the bug. Only then does the
- * timeSinceShown check in PopupNotifications.sys.mjs lead to a timeSinceShown
- * value that is unconditionally greater than lazy.buttonDelay for
- * notification.timeShown = null = 0.
- * See: https://searchfox.org/mozilla-central/rev/f32d5f3949a3f4f185122142b29f2e3ab776836e/toolkit/modules/PopupNotifications.sys.mjs#1870-1872
- *
- * When running in automation as part of a larger test suite performance.now()
- * should usually be already sufficiently high in which case this check should
- * directly resolve.
- */
-async function ensureSecurityDelayReady() {
-  await TestUtils.waitForCondition(
-    () => performance.now() > TEST_SECURITY_DELAY,
-    "Wait for performance.now() > SECURITY_DELAY",
-    500,
-    50
-  );
-}
-
-/**
  * Test helper for security delay tests which performs the following steps:
  * 1. Shows a test notification.
  * 2. Waits for the notification panel to be shown and checks that the initial
