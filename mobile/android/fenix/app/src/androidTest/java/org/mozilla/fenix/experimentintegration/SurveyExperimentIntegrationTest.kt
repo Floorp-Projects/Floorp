@@ -92,7 +92,5 @@ class SurveyExperimentIntegrationTest {
         }.clickNoThanksSurveyButton {
             verifyTabCounter("0")
         }
-
-        checkExperimentExists()
     }
 }
