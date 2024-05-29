@@ -283,6 +283,26 @@ newtab:
     send_in_pings:
       - newtab
 
+  weather_enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether the weather widget is enabled on the newtab.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.showWeather` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1899340
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1899340
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - mcrawford@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings:
+      - newtab
+
   weather_open_provider_url:
     type: event
     description: >
