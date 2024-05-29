@@ -112,7 +112,7 @@ VideoDecoderConfigInternal::VideoDecoderConfigInternal(
       mOptimizeForLatency(std::move(aOptimizeForLatency)) {};
 
 /*static*/
-UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
+RefPtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
     const VideoDecoderConfig& aConfig) {
   nsCString errorMessage;
   if (!VideoDecoderTraits::Validate(aConfig, errorMessage)) {
@@ -133,14 +133,14 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
     description = rv.unwrap();
   }
 
-  return UniquePtr<VideoDecoderConfigInternal>(new VideoDecoderConfigInternal(
+  return MakeRefPtr<VideoDecoderConfigInternal>(
       aConfig.mCodec, OptionalToMaybe(aConfig.mCodedHeight),
       OptionalToMaybe(aConfig.mCodedWidth),
       OptionalToMaybe(aConfig.mColorSpace), description.forget(),
       OptionalToMaybe(aConfig.mDisplayAspectHeight),
       OptionalToMaybe(aConfig.mDisplayAspectWidth),
       aConfig.mHardwareAcceleration,
-      OptionalToMaybe(aConfig.mOptimizeForLatency)));
+      OptionalToMaybe(aConfig.mOptimizeForLatency));
 }
 
 nsCString VideoDecoderConfigInternal::ToString() const {
@@ -763,7 +763,7 @@ bool VideoDecoderTraits::Validate(const VideoDecoderConfig& aConfig,
 }
 
 /* static */
-UniquePtr<VideoDecoderConfigInternal> VideoDecoderTraits::CreateConfigInternal(
+RefPtr<VideoDecoderConfigInternal> VideoDecoderTraits::CreateConfigInternal(
     const VideoDecoderConfig& aConfig) {
   return VideoDecoderConfigInternal::Create(aConfig);
 }
