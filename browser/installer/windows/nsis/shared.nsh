@@ -112,6 +112,14 @@
     Pop $TmpVal ; get "Marker"
   ${EndIf}
 
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
+  ${If} ${Errors}
+    StrCpy $TmpVal "HKCU"
+  ${Else}
+    StrCpy $TmpVal "HKLM"
+  ${EndIf}
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   Call IsUserAdmin
   Pop $R0
