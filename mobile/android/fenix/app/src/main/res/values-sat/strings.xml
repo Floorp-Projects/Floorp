@@ -2265,6 +2265,34 @@
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
     <string name="review_quality_check_feature_name_2">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">ᱴᱷᱤᱠ ᱵᱟᱛᱟᱣᱟᱜᱠᱚ</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">ᱴᱷᱤᱠ ᱵᱟᱛᱟᱣᱟᱜ ᱟᱨ ᱵᱤᱱᱥᱨᱚᱛ ᱢᱮᱥᱟᱢᱤᱥᱤ ᱧᱮᱞᱵᱤᱲᱟᱹᱣᱟᱜᱠᱚ</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">ᱵᱤᱱᱥᱨᱚᱛ ᱧᱮᱞᱵᱤᱲᱟᱹᱣ</string>
+    <!-- Text for title presenting the reliability of a product's reviews. -->
+    <string name="review_quality_check_grade_title">ᱱᱚᱶᱟ ᱧᱮᱞᱵᱤᱲᱟᱹᱣᱠᱚ ᱛᱤᱱᱟᱹᱜ ᱵᱷᱚᱨᱥᱟ ᱫᱮᱲᱮᱭᱟᱜᱼᱟᱢ ?</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">ᱨᱮᱴᱤᱝ ᱥᱚᱢᱚᱡᱚᱥ ᱮᱱᱟ</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description_2">ᱵᱷᱚᱨᱥᱟᱡᱚᱱᱚᱠ ᱧᱮᱞᱵᱤᱲᱟᱹᱣ ᱪᱮᱛᱟᱱ ᱨᱮ</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">ᱱᱤᱛᱚᱜᱟᱜ ᱧᱮᱞᱵᱤᱲᱟᱹᱣ ᱠᱷᱚᱱ ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱪᱤᱱᱦᱟᱹᱦᱟᱜ</string>
+    <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
+    <string name="review_quality_check_explanation_title">ᱟᱞᱮ ᱫᱚ ᱧᱮᱞᱵᱤᱲᱟᱹᱣᱟᱜ ᱜᱩᱱ ᱫᱚ ᱪᱮᱫ ᱞᱮᱠᱷᱟ ᱞᱮ ᱵᱟᱲᱟᱭ ᱮᱫᱟ</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Mozilla  ᱯᱟᱦᱴᱟ ᱠᱷᱚᱱ %s ᱠᱷᱚᱱ AI ᱴᱮᱠᱱᱚᱞᱚᱡᱤ ᱵᱮᱵᱷᱟᱨ ᱠᱟᱛᱮᱜ ᱟᱞᱮ ᱯᱨᱚᱰᱚᱠᱴ ᱨᱤᱵᱷᱤᱭᱩ ᱨᱮᱱᱟᱜ ᱥᱟᱹᱨᱤᱜᱟᱱᱤ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣᱜ ᱮᱫᱟ ᱞᱮ ᱾ ᱱᱚᱶᱟ ᱫᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ ᱜᱩᱱ ᱵᱟᱲᱟᱭ ᱪᱷᱚ ᱨ ᱜᱚᱲᱚ ᱮᱢ ᱫᱟᱲᱮᱭᱟᱢᱟ, ᱯᱨᱚᱰᱚᱠᱴ ᱨᱮᱭᱟᱜ ᱢᱩᱞ ᱜᱩᱱ ᱵᱟᱵᱚᱛ ᱫᱚ ᱵᱟᱝᱟ ᱾</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[ᱟᱞᱮ ᱫᱚ ᱯᱨᱚᱰᱚᱠᱴ ᱨᱮᱭᱟᱜ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ ᱫᱚ <b>ᱪᱤᱠᱤ ᱜᱽᱨᱮᱰ</b> A ᱠᱷᱚᱱ F ᱫᱷᱟᱹᱵᱤᱡ ᱞᱮ ᱮᱢ ᱮᱫᱟ ᱾]]></string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">%s ᱵᱟᱵᱚᱛ ᱰᱷᱮᱨ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_info_learn_more_link_2">%s ᱫᱚ ᱧᱮᱞᱵᱤᱲᱟᱹᱣᱟᱜ ᱜᱩᱱ ᱫᱚ ᱪᱮᱫ ᱞᱮᱠᱷᱟ ᱵᱟᱲᱟᱭ ᱮᱫᱟ</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">ᱥᱟᱡᱟᱣᱠᱚ</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱨᱮ ᱫᱷᱟᱶᱨᱟ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
     <string name="review_quality_check_highlights_show_less">ᱠᱚᱢ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
@@ -2291,6 +2319,20 @@
     <string name="a11y_action_label_pocket_learn_more">ᱰᱷᱮᱨ ᱵᱟᱲᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱝᱠ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
 
     <!-- Translations feature-->
+
+
+    <!-- Button text on the translations dialog to begin a translation of the website. -->
+    <string name="translations_bottom_sheet_positive_button">ᱛᱚᱨᱡᱚᱢᱟ</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">ᱫᱩᱦᱲᱟᱹ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ</string>
+    <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
+    <string name="translations_bottom_sheet_translating_in_progress">ᱛᱚᱨᱡᱚᱢᱟᱜ ᱠᱟᱱᱟ</string>
+    <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">ᱛᱚᱨᱡᱚᱢᱟ ᱞᱟᱦᱟ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ</string>
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">ᱢᱤᱫᱴᱟᱝ ᱯᱟᱹᱨᱥᱤ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+    <!-- The title of the warning card informs the user that a translation could not be completed. -->
+    <string name="translation_error_could_not_translate_warning_text">ᱛᱚᱨᱡᱚᱢᱟ ᱡᱷᱚᱜ ᱵᱷᱩᱞ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱦᱩᱭᱮᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</string>
 
 
     <!-- The total tab count category in the tab count section in Tab Tools. -->
