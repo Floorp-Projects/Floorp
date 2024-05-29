@@ -123,6 +123,10 @@ for f in $files; do
                 jq -r "map(.phases[] | select(.name == "'"'"$phase"'"'" and (.skipped | not)))[-1].actionTaskId")
             service=queue
             ;;
+        *merge-automation)
+            # these tasks have no useful indexes; unable to update them automatically
+            continue
+            ;;
         *)
             echo unknown action $action >&2
             exit 1
