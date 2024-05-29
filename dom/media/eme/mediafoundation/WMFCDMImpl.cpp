@@ -107,7 +107,7 @@ WMFCDMCapabilites::GetCapabilities(
               }
               for (const auto& v : capabilities.encryptionSchemes()) {
                 EME_LOG("capabilities: encryptionScheme=%s",
-                        EncryptionSchemeStr(v));
+                        CryptoSchemeToString(v));
               }
               KeySystemConfig* config = outConfigs.AppendElement();
               MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, *config);

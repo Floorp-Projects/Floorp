@@ -603,8 +603,8 @@ const char* CryptoSchemeToString(const CryptoScheme& aScheme) {
     case CryptoScheme::Cbcs:
       return "cbcs";
     default:
-      MOZ_ASSERT_UNREACHABLE();
-      return "";
+      MOZ_ASSERT_UNREACHABLE("not supported scheme!");
+      return "not supported scheme!";
   }
 }
 
