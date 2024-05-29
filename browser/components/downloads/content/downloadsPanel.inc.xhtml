@@ -2,52 +2,32 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- The commands are handled by DownloadsPanel.handleEvent -->
 <commandset commandupdater="true" events="richlistbox-select"
-            oncommandupdate="goUpdateCommand('cmd_delete');">
-  <command id="downloadsCmd_doDefault"
-           oncommand="goDoCommand('downloadsCmd_doDefault')"/>
-  <command id="downloadsCmd_pauseResume"
-           oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
-  <command id="downloadsCmd_cancel"
-           oncommand="goDoCommand('downloadsCmd_cancel')"/>
-  <command id="downloadsCmd_unblock"
-           oncommand="goDoCommand('downloadsCmd_unblock')"/>
-  <command id="downloadsCmd_chooseUnblock"
-           oncommand="goDoCommand('downloadsCmd_chooseUnblock')"/>
-  <command id="downloadsCmd_unblockAndOpen"
-           oncommand="goDoCommand('downloadsCmd_unblockAndOpen')"/>
-  <command id="downloadsCmd_unblockAndSave"
-           oncommand="goDoCommand('downloadsCmd_unblockAndSave')"/>
-  <command id="downloadsCmd_confirmBlock"
-           oncommand="goDoCommand('downloadsCmd_confirmBlock')"/>
-  <command id="downloadsCmd_open"
-           oncommand="goDoCommand('downloadsCmd_open')"/>
-  <command id="downloadsCmd_open:current"
-           oncommand="goDoCommand('downloadsCmd_open:current')"/>
-  <command id="downloadsCmd_open:tab"
-           oncommand="goDoCommand('downloadsCmd_open:tab')"/>
-  <command id="downloadsCmd_open:tabshifted"
-           oncommand="goDoCommand('downloadsCmd_open:tabshifted')"/>
-  <command id="downloadsCmd_open:window"
-           oncommand="goDoCommand('downloadsCmd_open:window')"/>
-  <command id="downloadsCmd_show"
-           oncommand="goDoCommand('downloadsCmd_show')"/>
-  <command id="downloadsCmd_retry"
-           oncommand="goDoCommand('downloadsCmd_retry')"/>
-  <command id="downloadsCmd_openReferrer"
-           oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
-  <command id="downloadsCmd_copyLocation"
-           oncommand="goDoCommand('downloadsCmd_copyLocation')"/>
-  <command id="downloadsCmd_clearList"
-           oncommand="goDoCommand('downloadsCmd_clearList')"/>
-  <command id="downloadsCmd_openInSystemViewer"
-           oncommand="goDoCommand('downloadsCmd_openInSystemViewer')"/>
-  <command id="downloadsCmd_alwaysOpenInSystemViewer"
-           oncommand="goDoCommand('downloadsCmd_alwaysOpenInSystemViewer')"/>
-  <command id="downloadsCmd_alwaysOpenSimilarFiles"
-           oncommand="goDoCommand('downloadsCmd_alwaysOpenSimilarFiles')"/>
-  <command id="downloadsCmd_deleteFile"
-           oncommand="goDoCommand('downloadsCmd_deleteFile')"/>
+            oncommandupdate="goUpdateCommand('cmd_delete');"
+            id="downloadPanelCommands">
+  <command id="downloadsCmd_doDefault" />
+  <command id="downloadsCmd_pauseResume" />
+  <command id="downloadsCmd_cancel" />
+  <command id="downloadsCmd_unblock" />
+  <command id="downloadsCmd_chooseUnblock" />
+  <command id="downloadsCmd_unblockAndOpen" />
+  <command id="downloadsCmd_unblockAndSave" />
+  <command id="downloadsCmd_confirmBlock" />
+  <command id="downloadsCmd_open" />
+  <command id="downloadsCmd_open:current" />
+  <command id="downloadsCmd_open:tab" />
+  <command id="downloadsCmd_open:tabshifted" />
+  <command id="downloadsCmd_open:window" />
+  <command id="downloadsCmd_show" />
+  <command id="downloadsCmd_retry" />
+  <command id="downloadsCmd_openReferrer" />
+  <command id="downloadsCmd_copyLocation" />
+  <command id="downloadsCmd_clearList" />
+  <command id="downloadsCmd_openInSystemViewer" />
+  <command id="downloadsCmd_alwaysOpenInSystemViewer" />
+  <command id="downloadsCmd_alwaysOpenSimilarFiles" />
+  <command id="downloadsCmd_deleteFile" />
 </commandset>
 
 <!-- For accessibility to screen readers, we use a label on the panel instead

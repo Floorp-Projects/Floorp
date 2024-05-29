@@ -96,6 +96,9 @@ var DownloadsPanel = {
     this._initialized = true;
 
     window.addEventListener("unload", this.onWindowUnload);
+    document
+      .getElementById("downloadPanelCommands")
+      .addEventListener("command", this);
 
     // Load and resume active downloads if required.  If there are downloads to
     // be shown in the panel, they will be loaded asynchronously.
@@ -135,6 +138,9 @@ var DownloadsPanel = {
     }
 
     window.removeEventListener("unload", this.onWindowUnload);
+    document
+      .getElementById("downloadPanelCommands")
+      .removeEventListener("command", this);
 
     // Ensure that the panel is closed before shutting down.
     this.hidePanel();
@@ -226,6 +232,11 @@ var DownloadsPanel = {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "command":
+        // Handle the commands defined in downloadsPanel.inc.xhtml.
+        // Every command "id" is also its corresponding command.
+        goDoCommand(aEvent.target.id);
+        break;
       case "mousemove":
         if (
           !DownloadsView.contextMenuOpen &&
