@@ -1274,6 +1274,7 @@ AboutReader.prototype = {
       try {
         article = await ReaderMode.downloadAndParseDocument(
           url,
+          { ...this._doc.nodePrincipal?.originAttributes },
           docContentType
         );
       } catch (e) {
