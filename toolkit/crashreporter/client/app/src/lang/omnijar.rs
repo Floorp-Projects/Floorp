@@ -10,11 +10,12 @@ use crate::std::{
     path::Path,
 };
 use anyhow::Context;
+use once_cell::unsync::Lazy;
 use zip::read::ZipArchive;
 
 /// Read the appropriate localization fluent definitions from the omnijar files.
 ///
-/// Returns (locale name, fluent definitions).
+/// Returns language information if found in adjacent omnijar files.
 pub fn read() -> anyhow::Result<LanguageInfo> {
     let mut path = sibling_path(if cfg!(target_os = "macos") {
         "../Resources/omni.ja"
@@ -23,83 +24,86 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
     });
 
     let mut zip = read_omnijar_file(&path)?;
-    let locales = {
-        let buf = BufReader::new(
-            zip.by_name("res/multilocale.txt")
-                .context("failed to read multilocale file in zip archive")?,
-        );
-        let line = buf
-            .lines()
-            .next()
-            .ok_or(anyhow::anyhow!("multilocale file was empty"))?
-            .context("failed to read first line of multilocale file")?;
-        line.split(",")
-            .map(|s| s.trim().to_owned())
-            .collect::<Vec<_>>()
-    };
+    let buf = BufReader::new(
+        zip.by_name("res/multilocale.txt")
+            .context("failed to read multilocale file in zip archive")?,
+    );
+    let line = buf
+        .lines()
+        .next()
+        .ok_or(anyhow::anyhow!("multilocale file was empty"))?
+        .context("failed to read first line of multilocale file")?;
+    let locales = line.split(",").map(|s| s.trim());
 
-    let (locale, ftl_definitions) = 'defs: {
-        for locale in &locales {
-            match read_strings(locale, &mut zip) {
-                Ok(v) => break 'defs (locale.to_string(), v),
-                Err(e) => log::warn!("{e:#}"),
+    let (identifier, ftl_definitions) = 'defs: {
+        for locale in locales.clone() {
+            match read_archive_file_as_string(
+                &mut zip,
+                &format!("localization/{locale}/crashreporter/crashreporter.ftl"),
+            ) {
+                Ok(v) => break 'defs (locale.to_owned(), v),
+                Err(e) => log::warn!("failed to get localized strings for {locale}: {e:#}"),
             }
         }
         anyhow::bail!("failed to find any usable localized strings in the omnijar")
     };
 
-    // The brand ftl is in the browser omnijar.
+    // Firefox branding is in the browser omnijar.
     path.pop();
     path.push("browser");
     path.push("omni.ja");
 
+    let mut browser_omnijar = Lazy::new(|| match read_omnijar_file(&path) {
+        Err(e) => {
+            log::debug!("no browser omnijar found at {}: {e:#}", path.display());
+            None
+        }
+        Ok(z) => Some(z),
+    });
+
     let ftl_branding = 'branding: {
-        match read_omnijar_file(&path) {
-            Ok(mut zip) => {
-                for locale in &locales {
-                    match read_branding(&locale, &mut zip) {
-                        Ok(v) => break 'branding v,
-                        Err(e) => log::warn!("failed to read branding from omnijar: {e:#}"),
+        for locale in locales {
+            let brand_file = format!("localization/{locale}/branding/brand.ftl");
+            // Bug 1895244: Thunderbird branding is in the main omnijar
+            let result = read_archive_file_as_string(&mut zip, &brand_file).or_else(|e| {
+                match &mut *browser_omnijar {
+                    Some(browser_zip) => {
+                        log::debug!(
+                            "failed to read branding for {locale} from main omnijar ({e:#}), trying browser omnijar"
+                        );
+                        read_archive_file_as_string(browser_zip, &brand_file)
                     }
+                    None => Err(e)
                 }
+            });
+            match result {
+                Ok(b) => break 'branding b,
+                Err(e) => log::warn!("failed to read branding for {locale} from omnijar: {e:#}"),
             }
-            Err(e) => log::warn!("failed to read browser omnijar: {e:#}"),
         }
         log::info!("using fallback branding info");
         LanguageInfo::default().ftl_branding
     };
 
     Ok(LanguageInfo {
-        identifier: locale,
+        identifier,
         ftl_definitions,
         ftl_branding,
     })
 }
 
-/// Read the localized strings from the given zip archive (omnijar).
-fn read_strings(locale: &str, archive: &mut ZipArchive<File>) -> anyhow::Result<String> {
+/// Read a file from the given zip archive (omnijar) as a string.
+fn read_archive_file_as_string(
+    archive: &mut ZipArchive<File>,
+    path: &str,
+) -> anyhow::Result<String> {
     let mut file = archive
-        .by_name(&format!(
-            "localization/{locale}/crashreporter/crashreporter.ftl"
-        ))
-        .with_context(|| format!("failed to locate localization file for {locale}"))?;
-
-    let mut ftl_definitions = String::new();
-    file.read_to_string(&mut ftl_definitions)
-        .with_context(|| format!("failed to read localization file for {locale}"))?;
-
-    Ok(ftl_definitions)
-}
-
-/// Read the branding information from the given zip archive (omnijar).
-fn read_branding(locale: &str, archive: &mut ZipArchive<File>) -> anyhow::Result<String> {
-    let mut file = archive
-        .by_name(&format!("localization/{locale}/branding/brand.ftl"))
-        .with_context(|| format!("failed to locate branding localization file for {locale}"))?;
-    let mut s = String::new();
-    file.read_to_string(&mut s)
-        .with_context(|| format!("failed to read branding localization file for {locale}"))?;
-    Ok(s)
+        .by_name(path)
+        .with_context(|| format!("failed to locate {path} in archive"))?;
+    let mut data = String::new();
+    file.read_to_string(&mut data)
+        .with_context(|| format!("failed to read {path} from archive"))?;
+    Ok(data)
 }
 
 fn read_omnijar_file(path: &Path) -> anyhow::Result<ZipArchive<File>> {
