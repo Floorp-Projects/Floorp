@@ -766,3 +766,130 @@ fn test_stream_tester() {
         }
     }
 }
+
+// Simple stereo tone test
+#[ignore]
+#[test]
+fn test_tone() {
+    let devices = test_get_devices_in_scope(Scope::Output);
+    for (_, device) in devices.iter().enumerate() {
+        let info = TestDeviceInfo::new(*device, Scope::Output);
+        let mut pa = AudioObjectPropertyAddress::default();
+        pa.mSelector = kAudioDevicePropertyPreferredChannelsForStereo;
+        pa.mScope = kAudioDevicePropertyScopeOutput;
+        pa.mElement = kAudioObjectPropertyElementMaster;
+        get_serial_queue_singleton().run_sync(|| {
+            let mut ssize: usize = 8;
+            let mut value = [0 as u32; 2];
+            let r = audio_object_get_property_data(*device, &pa, &mut ssize, &mut value);
+            if r != 0 {
+                eprintln!("Error getting prop data");
+            }
+            println!(
+                "{}: Channels for the stereo pair are [{}, {}]",
+                info.label, value[0], value[1]
+            );
+        });
+    }
+    fn test_impl(ch_count: usize) {
+        use std::f32::consts::PI;
+        use std::thread;
+        use std::time::Duration;
+
+        const SAMPLE_FREQUENCY: u32 = 48000;
+
+        // Make sure the parameters meet the requirements of AudioUnitContext::stream_init
+        // (in the comments).
+        let mut output_params = ffi::cubeb_stream_params::default();
+        output_params.format = ffi::CUBEB_SAMPLE_FLOAT32NE;
+        output_params.rate = SAMPLE_FREQUENCY;
+        output_params.channels = ch_count as u32;
+        output_params.layout = if ch_count == 1 {
+            ffi::CUBEB_LAYOUT_MONO
+        } else {
+            ffi::CUBEB_LAYOUT_STEREO
+        };
+        output_params.prefs = ffi::CUBEB_STREAM_PREF_NONE;
+
+        struct Closure {
+            phase: i64,
+            channel_count: usize,
+        }
+        let mut closure = Closure {
+            phase: 0,
+            channel_count: ch_count,
+        };
+        let closure_ptr = &mut closure as *mut Closure as *mut c_void;
+
+        test_ops_stream_operation(
+            "tone",
+            ptr::null_mut(),
+            ptr::null_mut(),
+            ptr::null_mut(),
+            &mut output_params,
+            4096, // TODO: Get latency by get_min_latency instead ?
+            Some(data_callback),
+            Some(state_callback),
+            closure_ptr,
+            |stream| {
+                assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+                thread::sleep(Duration::from_millis(1000));
+                assert_eq!(unsafe { OPS.stream_stop.unwrap()(stream) }, ffi::CUBEB_OK);
+            },
+        );
+
+        extern "C" fn state_callback(
+            stream: *mut ffi::cubeb_stream,
+            user_ptr: *mut c_void,
+            state: ffi::cubeb_state,
+        ) {
+            assert!(!stream.is_null());
+            assert!(!user_ptr.is_null());
+            assert_ne!(state, ffi::CUBEB_STATE_ERROR);
+        }
+
+        extern "C" fn data_callback(
+            stream: *mut ffi::cubeb_stream,
+            user_ptr: *mut c_void,
+            _input_buffer: *const c_void,
+            output_buffer: *mut c_void,
+            nframes: i64,
+        ) -> i64 {
+            assert!(!stream.is_null());
+            assert!(!user_ptr.is_null());
+            assert!(!output_buffer.is_null());
+
+            let closure = unsafe { &mut *(user_ptr as *mut Closure) };
+
+            let buffer = unsafe {
+                let ptr = output_buffer as *mut f32;
+                let len = closure.channel_count * nframes as usize;
+                slice::from_raw_parts_mut(ptr, len)
+            };
+
+            for (i, e) in buffer.iter_mut().enumerate() {
+                // If stereo, L is 220Hz, R is 440Hz. If mono, 220Hz
+                let tone = (2.0
+                    * PI
+                    * (if i % closure.channel_count == 0 {
+                        220.0
+                    } else {
+                        440.0
+                    })
+                    * (closure.phase) as f32
+                    / SAMPLE_FREQUENCY as f32)
+                    .sin();
+                *e = tone;
+                if closure.channel_count > 1 {
+                    closure.phase += (i % closure.channel_count) as i64;
+                } else {
+                    closure.phase += 1;
+                }
+            }
+
+            nframes
+        }
+    }
+    test_impl(2);
+    test_impl(1);
+}
