@@ -14,7 +14,6 @@ function test() {
   let windowsToClose = [];
   let testURI = "about:blank";
   let pbMenuItem;
-  let cmd;
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(
@@ -24,7 +23,7 @@ function test() {
         pbMenuItem = aWindow.document.getElementById("menu_newPrivateWindow");
         ok(pbMenuItem, "The Private Browsing menu item exists");
 
-        cmd = aWindow.document.getElementById("Tools:PrivateBrowsing");
+        let cmd = aWindow.document.getElementById("Tools:PrivateBrowsing");
         isnot(
           cmd,
           null,
@@ -67,9 +66,10 @@ function test() {
       );
     }, "domwindowopened");
 
-    cmd = aWindow.document.getElementById("Tools:PrivateBrowsing");
-    var func = new Function("", cmd.getAttribute("oncommand"));
-    func.call(cmd);
+    let cmdEvent = aWindow.document.createEvent("xulcommandevent");
+    cmdEvent.initCommandEvent("command", true, true);
+    let cmd = aWindow.document.getElementById("Tools:PrivateBrowsing");
+    cmd.dispatchEvent(cmdEvent);
   }
 
   function testOnWindow(aOptions, aCallback) {
