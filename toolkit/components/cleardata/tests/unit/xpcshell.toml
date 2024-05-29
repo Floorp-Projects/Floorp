@@ -17,6 +17,8 @@ skip-if = ["condprof"] # Bug 1893058
 
 ["test_certs.js"]
 
+["test_clear_data_service_flags.js"]
+
 ["test_cookie_banner_handling.js"]
 
 ["test_cookies.js"]

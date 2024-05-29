@@ -285,32 +285,32 @@ interface nsIClearDataService : nsISupports
   /**
    * Clear state associated with FedCM
    */
-  const uint32_t CLEAR_CREDENTIAL_MANAGER_STATE = 1 << 24;
+  const uint32_t CLEAR_CREDENTIAL_MANAGER_STATE = 1 << 25;
 
   /**
    * Clear the per-site exception for cookie banner handling.
    */
-  const uint32_t CLEAR_COOKIE_BANNER_EXCEPTION = 1 << 25;
+  const uint32_t CLEAR_COOKIE_BANNER_EXCEPTION = 1 << 26;
 
   /**
    * Clear the site executed record for cookie banner handling.
    */
-  const uint32_t CLEAR_COOKIE_BANNER_EXECUTED_RECORD = 1 << 26;
+  const uint32_t CLEAR_COOKIE_BANNER_EXECUTED_RECORD = 1 << 27;
 
   /**
    * Clear state associated with the fingerprinting protection.
    */
-  const uint32_t CLEAR_FINGERPRINTING_PROTECTION_STATE = 1 << 27;
+  const uint32_t CLEAR_FINGERPRINTING_PROTECTION_STATE = 1 << 28;
 
   /**
    * Clear the bounce tracking protection state.
    */
-  const uint32_t CLEAR_BOUNCE_TRACKING_PROTECTION_STATE = 1 << 28;
+  const uint32_t CLEAR_BOUNCE_TRACKING_PROTECTION_STATE = 1 << 29;
 
   /**
    * Clear permissions of type "persistent-storage" and "storage-access"
    */
-  const uint32_t CLEAR_STORAGE_PERMISSIONS = 1 << 29;
+  const uint32_t CLEAR_STORAGE_PERMISSIONS = 1 << 30;
 
   /**
    * Use this value to delete all the data.
