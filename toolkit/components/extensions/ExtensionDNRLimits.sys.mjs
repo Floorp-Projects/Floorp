@@ -34,6 +34,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   20
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "MAX_NUMBER_OF_DISABLED_STATIC_RULES",
+  "extensions.dnr.max_number_of_disabled_static_rules",
+  5000
+);
+
 /**
  * NOTE: this limit may be increased in the future, see
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1894119
@@ -84,6 +91,14 @@ export const ExtensionDNRLimits = {
    */
   get MAX_NUMBER_OF_ENABLED_STATIC_RULESETS() {
     return lazy.MAX_NUMBER_OF_ENABLED_STATIC_RULESETS;
+  },
+
+  /**
+   * The maximum number of static rules that can be disabled on each static
+   * ruleset.
+   */
+  get MAX_NUMBER_OF_DISABLED_STATIC_RULES() {
+    return lazy.MAX_NUMBER_OF_DISABLED_STATIC_RULES;
   },
 
   /**

@@ -7,6 +7,7 @@ import { ExtensionParent } from "resource://gre/modules/ExtensionParent.sys.mjs"
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { ExtensionDNRLimits } from "./ExtensionDNRLimits.sys.mjs";
 
 const lazy = {};
 
@@ -73,7 +74,7 @@ class StoreData {
   // Changelog:
   // - 1: Initial DNR store schema:
   //      Initial implementation officially release in Firefox 113.
-  //      Support for disableStaticRules added in Firefox 128 (Bug 1810762).
+  //      Support for disableStaticRuleIds added in Firefox 128 (Bug 1810762).
   static VERSION = 1;
 
   static getLastUpdateTagPref(extensionUUID) {
@@ -168,6 +169,7 @@ class StoreData {
     // The lastUpdateTag gets set (and updated) by calls to updateRulesets.
     this.lastUpdateTag = undefined;
     this.#initialLastUdateTag = lastUpdateTag;
+
     this.#updateRulesets({
       staticRulesets: staticRulesets ?? new Map(),
       disabledStaticRuleIds: disabledStaticRuleIds ?? {},
@@ -1269,6 +1271,29 @@ class RulesetsStore {
         result = null;
       }
 
+      // If the number of disabled rules exceeds the limit when loaded from the store
+      // (e.g. if the limit has been customized through prefs, and so not expected to
+      // be a common case), then we drop the entire list of disabled rules.
+      if (result?.disabledStaticRuleIds) {
+        for (const [rulesetId, disabledRuleIds] of Object.entries(
+          result.disabledStaticRuleIds
+        )) {
+          if (
+            Array.isArray(disabledRuleIds) &&
+            disabledRuleIds.length <=
+              ExtensionDNRLimits.MAX_NUMBER_OF_DISABLED_STATIC_RULES
+          ) {
+            continue;
+          }
+
+          Cu.reportError(
+            `Discard "${extension.id}" static ruleset "${rulesetId}" disabled rules` +
+              ` for exceeding the MAX_NUMBER_OF_DISABLED_STATIC_RULES (${ExtensionDNRLimits.MAX_NUMBER_OF_DISABLED_STATIC_RULES})`
+          );
+          result.disabledStaticRuleIds[rulesetId] = [];
+        }
+      }
+
       // Use defaults and extension manifest if no data stored was found
       // (or it got reset due to an unsupported profile downgrade being detected).
       if (!result) {
@@ -1713,6 +1738,15 @@ class RulesetsStore {
 
     if (!changed) {
       return;
+    }
+
+    if (
+      disabledRuleIdsSet.size >
+      ExtensionDNRLimits.MAX_NUMBER_OF_DISABLED_STATIC_RULES
+    ) {
+      throw new ExtensionError(
+        `Number of individually disabled static rules exceeds MAX_NUMBER_OF_DISABLED_STATIC_RULES limit`
+      );
     }
 
     // Chrome doesn't seem to validate if the rule id actually exists in the ruleset,
