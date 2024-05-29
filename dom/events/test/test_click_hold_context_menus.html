@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1891221 -->
+<head>
+<title>Test for Bug 1891221</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SpecialPowers.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="application/javascript">
+"use strict";
+const kIsAndroid = navigator.userAgent.includes("Android");
+
+add_task(async function test_click_hold_context_menus_events_and_target() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["test.events.async.enabled", true],
+      ["ui.click_hold_context_menus", true],
+      ["ui.click_hold_context_menus.delay", 100],
+    ],
+  });
+  await SimpleTest.promiseFocus();
+  await SpecialPowers.contentTransformsReceived(window);
+
+  let seq = [];
+
+  const target = document.getElementById("target");
+
+  target.addEventListener("mousedown", e => {
+    seq.push("mousedown");
+  });
+
+  // Fenix's contextMenu is not part of geckoview UI
+  // So mouseup event will be dispatched to content directly.
+  var upPromise;
+  if (kIsAndroid) {
+    upPromise = new Promise(resolve => {
+      target.addEventListener("mouseup", e => {
+        seq.push("mouseup");
+        resolve();
+      });
+    });
+  }
+
+  // This should never happen
+  target.addEventListener("click", e => {
+    ok(false, "click shouldn't be dispatched");
+    seq.push("click");
+  });
+
+  const promise = new Promise(resolve => {
+    target.addEventListener("contextmenu", e => {
+      is(e.target, target, "Target should be the clickable element");
+      is(e.explicitOriginalTarget, target.childNodes[0], "explicitOriginalTarget should be text node");
+      seq.push("contextmenu");
+      resolve();
+    });
+  });
+
+  synthesizeMouse(
+    target,
+    10,
+    10,
+    { type: "mousedown" },
+  );
+
+  // ensure contextmenu before mouseup.
+  await promise;
+
+  synthesizeMouse(
+    target,
+    10,
+    10,
+    { type: "mouseup" },
+  );
+
+  if (kIsAndroid) {
+    await upPromise;
+  }
+
+  if (kIsAndroid) {
+    is(seq.toString(), ["mousedown", "contextmenu", "mouseup"].toString(), "Seq should match");
+  } else {
+    is(seq.toString(), ["mousedown", "contextmenu"].toString(), "Seq should match");
+  }
+
+  // Close context menu to prevent blocking other tests.
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  synthesizeKey("VK_ESCAPE", {}, window);
+});
+</script>
+</head>
+<body>
+<a id="target" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1891221">Mozilla Bug 1891221</a>
+</body>
+</html>

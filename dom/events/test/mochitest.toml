@@ -342,6 +342,9 @@ support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js
 run-if = ["os == 'win'"] # Only Windows 1809+ supports pen input synthesis
 support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"]
 
+["test_click_hold_context_menus.html"]
+skip-if = ["os == 'mac'"]
+
 ["test_click_on_reframed_generated_text.html"]
 
 ["test_click_on_restyled_element.html"]
