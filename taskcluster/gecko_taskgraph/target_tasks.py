@@ -1622,6 +1622,10 @@ def target_tasks_snap_upstream_tests(full_task_graph, parameters, graph_config):
 @register_target_task("nightly-android")
 def target_tasks_nightly_android(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
+        # bug 1899553: don't automatically schedule uploads to google play
+        if task.kind == "push-bundle":
+            return False
+
         # geckoview
         if task.attributes.get("shipping_product") == "fennec" and task.kind in (
             "beetmover-geckoview",
