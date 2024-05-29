@@ -40,6 +40,9 @@ class ClearDataCallback final : public nsIClearDataCallback,
   void RecordClearDurationTelemetry();
   glean::TimerId mClearDurationTimer;
 
+  // Purge count telemetry
+  void RecordPurgeCountTelemetry(bool aFailed);
+
   // URL Classifier telemetry
   void RecordURLClassifierTelemetry();
 
