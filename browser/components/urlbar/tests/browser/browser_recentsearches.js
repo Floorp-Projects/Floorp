@@ -96,14 +96,17 @@ add_setup(async () => {
 });
 
 add_task(async () => {
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    window.gBrowser,
-    "data:text/html,"
-  );
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: window.gBrowser,
+    opening: "data:text/html,",
+    waitForStateStop: true,
+  });
 
   info("Perform a search that will be added to search history.");
   let browserLoaded = BrowserTestUtils.browserLoaded(
-    window.gBrowser.selectedBrowser
+    window.gBrowser.selectedBrowser,
+    false,
+    "https://example.com/?q=Bob+Vylan"
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -131,7 +134,9 @@ add_task(async () => {
 
   info("Selecting the recent search should be indicated in telemetry.");
   browserLoaded = BrowserTestUtils.browserLoaded(
-    window.gBrowser.selectedBrowser
+    window.gBrowser.selectedBrowser,
+    false,
+    "https://example.com/?q=Bob+Vylan"
   );
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
