@@ -1656,7 +1656,8 @@ class nsDisplayListBuilder {
 
     ~Linkifier() {
       if (mBuilderToReset) {
-        mBuilderToReset->mLinkSpec.Truncate(0);
+        mBuilderToReset->mLinkURI.Truncate(0);
+        mBuilderToReset->mLinkDest.Truncate(0);
       }
     }
 
@@ -1786,7 +1787,8 @@ class nsDisplayListBuilder {
   // When we are inside a filter, the current ASR at the time we entered the
   // filter. Otherwise nullptr.
   const ActiveScrolledRoot* mFilterASR;
-  nsCString mLinkSpec;  // Destination of link currently being emitted, if any.
+  nsCString mLinkURI;   // URI of link currently being emitted, if any.
+  nsCString mLinkDest;  // Local destination name of link, if any.
 
   // Optimized versions for non-retained display list.
   LayoutDeviceIntRegion mWindowDraggingRegion;
@@ -6713,9 +6715,11 @@ class nsDisplayForeignObject : public nsDisplayWrapList {
 class nsDisplayLink : public nsPaintedDisplayItem {
  public:
   nsDisplayLink(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                const char* aLinkSpec, const nsRect& aRect)
+                const char* aLinkURI, const char* aLinkDest,
+                const nsRect& aRect)
       : nsPaintedDisplayItem(aBuilder, aFrame),
-        mLinkSpec(aLinkSpec),
+        mLinkURI(aLinkURI),
+        mLinkDest(aLinkDest),
         mRect(aRect) {}
 
   NS_DISPLAY_DECL_NAME("Link", TYPE_LINK)
@@ -6723,7 +6727,8 @@ class nsDisplayLink : public nsPaintedDisplayItem {
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
  private:
-  nsCString mLinkSpec;
+  nsCString mLinkURI;
+  nsCString mLinkDest;
   nsRect mRect;
 };
 

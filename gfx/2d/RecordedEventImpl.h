@@ -1763,8 +1763,11 @@ class RecordedFilterNodeSetInput
 
 class RecordedLink : public RecordedEventDerived<RecordedLink> {
  public:
-  RecordedLink(const char* aDestination, const Rect& aRect)
-      : RecordedEventDerived(LINK), mDestination(aDestination), mRect(aRect) {}
+  RecordedLink(const char* aLocalDest, const char* aURI, const Rect& aRect)
+      : RecordedEventDerived(LINK),
+        mLocalDest(aLocalDest),
+        mURI(aURI),
+        mRect(aRect) {}
 
   bool PlayEvent(Translator* aTranslator) const override;
   template <class S>
@@ -1776,7 +1779,8 @@ class RecordedLink : public RecordedEventDerived<RecordedLink> {
  private:
   friend class RecordedEvent;
 
-  std::string mDestination;
+  std::string mLocalDest;
+  std::string mURI;
   Rect mRect;
 
   template <class S>
@@ -4374,17 +4378,22 @@ inline bool RecordedLink::PlayEvent(Translator* aTranslator) const {
   if (!dt) {
     return false;
   }
-  dt->Link(mDestination.c_str(), mRect);
+  dt->Link(mLocalDest.c_str(), mURI.c_str(), mRect);
   return true;
 }
 
 template <class S>
 void RecordedLink::Record(S& aStream) const {
   WriteElement(aStream, mRect);
-  uint32_t len = mDestination.length();
+  uint32_t len = mLocalDest.length();
   WriteElement(aStream, len);
   if (len) {
-    aStream.write(mDestination.data(), len);
+    aStream.write(mLocalDest.data(), len);
+  }
+  len = mURI.length();
+  WriteElement(aStream, len);
+  if (len) {
+    aStream.write(mURI.data(), len);
   }
 }
 
@@ -4393,15 +4402,25 @@ RecordedLink::RecordedLink(S& aStream) : RecordedEventDerived(LINK) {
   ReadElement(aStream, mRect);
   uint32_t len;
   ReadElement(aStream, len);
-  mDestination.resize(size_t(len));
+  mLocalDest.resize(size_t(len));
   if (len && aStream.good()) {
-    aStream.read(&mDestination.front(), len);
+    aStream.read(&mLocalDest.front(), len);
+  }
+  ReadElement(aStream, len);
+  mURI.resize(size_t(len));
+  if (len && aStream.good()) {
+    aStream.read(&mURI.front(), len);
   }
 }
 
 inline void RecordedLink::OutputSimpleEventInfo(
     std::stringstream& aStringStream) const {
-  aStringStream << "Link [" << mDestination << " @ " << mRect << "]";
+  if (mLocalDest.empty()) {
+    aStringStream << "Link [" << mURI << " @ " << mRect << "]";
+  } else {
+    aStringStream << "Link [" << mLocalDest << " / " << mURI << " @ " << mRect
+                  << "]";
+  }
 }
 
 inline bool RecordedDestination::PlayEvent(Translator* aTranslator) const {

@@ -38,7 +38,8 @@ class DrawTargetRecording final : public DrawTarget {
   }
   virtual bool IsRecording() const override { return true; }
 
-  virtual void Link(const char* aDestination, const Rect& aRect) override;
+  virtual void Link(const char* aLocalDest, const char* aURI,
+                    const Rect& aRect) override;
   virtual void Destination(const char* aDestination,
                            const Point& aPoint) override;
 

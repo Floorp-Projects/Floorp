@@ -1356,7 +1356,8 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
   /**
    * Method to generate hyperlink in PDF output (with appropriate backend).
    */
-  virtual void Link(const char* aDestination, const Rect& aRect) {}
+  virtual void Link(const char* aLocalDest, const char* aURI,
+                    const Rect& aRect) {}
   virtual void Destination(const char* aDestination, const Point& aPoint) {}
 
   /**

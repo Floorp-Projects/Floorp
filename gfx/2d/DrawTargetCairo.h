@@ -59,7 +59,8 @@ class DrawTargetCairo final : public DrawTarget {
     return BackendType::CAIRO;
   }
 
-  virtual void Link(const char* aDestination, const Rect& aRect) override;
+  virtual void Link(const char* aDest, const char* aURI,
+                    const Rect& aRect) override;
   virtual void Destination(const char* aDestination,
                            const Point& aPoint) override;
 
