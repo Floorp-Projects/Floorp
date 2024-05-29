@@ -5,9 +5,15 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">In evidèntzia</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">Cumplementos</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">Cumplementos</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">Estensiones</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">Gestore de cumplementos</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Gestore de cumplementos</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">Gestore de estensiones</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Nàviga in artu</string>
-    </resources>
+    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
+    <string name="mozac_browser_menu_extensions_content_description">Estensiones, torra a coa</string>
+</resources>
