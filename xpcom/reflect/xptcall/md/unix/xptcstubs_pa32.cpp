@@ -9,10 +9,6 @@
 
 #include "xptcprivate.h"
 
-#if _HPUX
-#error "This code is for HP-PA RISC 32 bit mode only"
-#endif
-
 extern "C" nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
   uint32_t* args, uint32_t* floatargs)

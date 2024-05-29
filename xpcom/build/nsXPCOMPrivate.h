@@ -93,10 +93,6 @@ void LogTerm();
 #  error need_to_define_your_file_path_separator_and_illegal_characters
 #endif
 
-#ifdef AIX
-#  include <sys/param.h>
-#endif
-
 #ifndef MAXPATHLEN
 #  ifdef PATH_MAX
 #    define MAXPATHLEN PATH_MAX

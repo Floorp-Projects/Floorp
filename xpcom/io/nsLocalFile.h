@@ -89,15 +89,8 @@ inline nsresult nsresultForErrno(int aErr) {
     case EROFS: /*     Read-only file system. */
       return NS_ERROR_FILE_READ_ONLY;
 #endif
-      /*
-       * On AIX 4.3, ENOTEMPTY is defined as EEXIST,
-       * so there can't be cases for both without
-       * preprocessing.
-       */
-#if ENOTEMPTY != EEXIST
     case ENOTEMPTY:
       return NS_ERROR_FILE_DIR_NOT_EMPTY;
-#endif /* ENOTEMPTY != EEXIST */
     /* Note that nsIFile.createUnique() returns
        NS_ERROR_FILE_TOO_BIG when it cannot create a temporary
        file with a unique filename.
