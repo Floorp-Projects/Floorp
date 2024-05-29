@@ -1190,7 +1190,8 @@ bool js::GCMarker::mark(T* thing) {
 
   // Don't mark symbols if we're not collecting the atoms zone.
   if constexpr (std::is_same_v<T, JS::Symbol>) {
-    if (!thing->zone()->isGCMarkingOrVerifyingPreBarriers()) {
+    if (IsOwnedByOtherRuntime(runtime(), thing) ||
+        !thing->zone()->isGCMarkingOrVerifyingPreBarriers()) {
       return false;
     }
   }
