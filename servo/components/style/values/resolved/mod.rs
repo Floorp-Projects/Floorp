@@ -87,6 +87,8 @@ trivial_to_resolved_value!(crate::color::AbsoluteColor);
 trivial_to_resolved_value!(crate::values::generics::color::ColorMixFlags);
 trivial_to_resolved_value!(crate::Atom);
 trivial_to_resolved_value!(crate::values::AtomIdent);
+trivial_to_resolved_value!(crate::custom_properties::VariableValue);
+trivial_to_resolved_value!(crate::stylesheets::UrlExtraData);
 trivial_to_resolved_value!(app_units::Au);
 trivial_to_resolved_value!(computed::url::ComputedUrl);
 #[cfg(feature = "gecko")]

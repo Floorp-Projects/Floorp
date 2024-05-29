@@ -458,8 +458,8 @@ void nsComputedDOMStyle::GetPropertyValue(
     MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aMaybeCustomPropertyName));
     const nsACString& name =
         Substring(aMaybeCustomPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
-    Servo_GetCustomPropertyValue(
-        mComputedStyle, mPresShell->StyleSet()->RawData(), &name, &aReturn);
+    Servo_GetCustomPropertyValue(mComputedStyle, &name,
+                                 mPresShell->StyleSet()->RawData(), &aReturn);
     return;
   }
 
