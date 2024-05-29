@@ -14,12 +14,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.* // ktlint-disable no-wildcard-imports
 import org.mozilla.geckoview.GeckoSession.AnalysisStatusResponse
-import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.GeckoSession.Recommendation
 import org.mozilla.geckoview.GeckoSession.ReviewAnalysis
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -42,30 +39,6 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
                 "geckoview.shopping.mock_test_response" to false,
             ),
         )
-    }
-
-    @Test
-    fun onProductUrl() {
-        mainSession.loadUri("example.com")
-        sessionRule.waitForPageStop()
-
-        mainSession.loadUri("example.com/dp/ABCDEFG")
-        sessionRule.waitForPageStop()
-
-        // test below working product urls
-        mainSession.loadUri("example.com/dp/ABCDEFG123")
-        sessionRule.waitForPageStop()
-
-        mainSession.loadUri("example.com/dp/HIJKLMN456")
-        sessionRule.waitForPageStop()
-
-        mainSession.loadUri("example.com/dp/OPQRSTU789")
-        sessionRule.waitForPageStop()
-
-        mainSession.delegateUntilTestEnd(object : ContentDelegate {
-            @AssertCalled(count = 3)
-            override fun onProductUrl(session: GeckoSession) {}
-        })
     }
 
     @Test
