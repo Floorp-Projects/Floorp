@@ -6,6 +6,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  TopSites: "resource:///modules/TopSites.sys.mjs",
 });
 
 const EN_US_TOPSITES =
@@ -27,6 +28,18 @@ async function addTestVisits() {
     url: "https://www.youtube.com/",
     title: "YouTube",
   });
+
+  // Adding a bookmark will refresh the TopSites feed.
+  if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+    await TestUtils.topicObserved("topsites-refreshed");
+  }
+}
+
+async function getTopSites() {
+  if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+    return await TopSites.getSites();
+  }
+  return AboutNewTab.getTopSites();
 }
 
 async function checkDoesNotOpenOnFocus(win = window) {
@@ -77,7 +90,7 @@ add_setup(async function () {
 });
 
 add_task(async function topSitesShown() {
-  let sites = AboutNewTab.getTopSites();
+  let sites = await getTopSites();
 
   for (let prefVal of [true, false]) {
     // This test should work regardless of whether Top Sites are enabled on
@@ -181,7 +194,7 @@ add_task(async function selectSearchTopSite() {
 
 add_task(async function topSitesBookmarksAndTabs() {
   await addTestVisits();
-  let sites = AboutNewTab.getTopSites();
+  let sites = await getTopSites();
   Assert.equal(
     sites.length,
     7,
@@ -292,7 +305,7 @@ add_task(async function topSitesPinned() {
 
   await updateTopSites(sites => sites && sites[0] && sites[0].isPinned);
 
-  let sites = AboutNewTab.getTopSites();
+  let sites = await getTopSites();
   Assert.equal(
     sites.length,
     7,
@@ -347,7 +360,7 @@ add_task(async function topSitesBookmarksAndTabsDisabled() {
     ],
   });
 
-  let sites = AboutNewTab.getTopSites();
+  let sites = await getTopSites();
   Assert.equal(
     sites.length,
     7,
@@ -432,7 +445,7 @@ add_task(async function topSitesNumber() {
   // Wait for the expected number of Top sites.
   await updateTopSites(sites => sites && sites.length == 8);
   Assert.equal(
-    AboutNewTab.getTopSites().length,
+    (await getTopSites()).length,
     8,
     "The test suite browser should have 8 Top Sites."
   );
@@ -455,7 +468,7 @@ add_task(async function topSitesNumber() {
   // Wait for the expected number of Top sites.
   await updateTopSites(sites => sites && sites.length == 11);
   Assert.equal(
-    AboutNewTab.getTopSites().length,
+    (await getTopSites()).length,
     11,
     "The test suite browser should have 11 Top Sites."
   );
