@@ -954,12 +954,15 @@ impl Tile {
         &mut self,
         ctx: &TilePreUpdateContext,
     ) {
-        self.local_tile_rect = PictureRect::from_origin_and_size(
+        self.local_tile_rect = PictureRect::new(
             PicturePoint::new(
                 self.tile_offset.x as f32 * ctx.tile_size.width,
                 self.tile_offset.y as f32 * ctx.tile_size.height,
             ),
-            ctx.tile_size,
+            PicturePoint::new(
+                (self.tile_offset.x + 1) as f32 * ctx.tile_size.width,
+                (self.tile_offset.y + 1) as f32 * ctx.tile_size.height,
+            ),
         );
         // TODO(gw): This is a hack / fix for Box2D::union in euclid not working with
         //           zero sized rect accumulation. Once that lands, we'll revert this
