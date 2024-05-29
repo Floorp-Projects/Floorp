@@ -2639,6 +2639,10 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
       SetUseCounter(obj,
                     mozilla::eUseCounter_custom_JS_subclassing_array_type_2);
       return;
+    case JSUseCounter::SUBCLASSING_ARRAY_TYPE_III:
+      SetUseCounter(obj,
+                    mozilla::eUseCounter_custom_JS_subclassing_array_type_3);
+      return;
     case JSUseCounter::SUBCLASSING_PROMISE_TYPE_II:
       SetUseCounter(obj,
                     mozilla::eUseCounter_custom_JS_subclassing_promise_type_2);
