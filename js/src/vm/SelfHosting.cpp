@@ -2976,6 +2976,30 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructorArg,
       builtin = SUBCLASSING_TYPEDARRAY;
     } else if (IsArrayConstructor(constructor)) {
       builtin = SUBCLASSING_ARRAY;
+    } else {
+      if (IsCrossCompartmentWrapper(constructor)) {
+        // Bail on reporting CCWs.
+        return true;
+      }
+      Rooted<GlobalObject*> global(cx, &constructor->nonCCWGlobal());
+      RootedObject abConstructor(
+          cx, GlobalObject::getOrCreateArrayBufferConstructor(cx, global));
+      if (!abConstructor) {
+        return false;
+      }
+      if (constructor == abConstructor) {
+        builtin = SUBCLASSING_ARRAYBUFFER;
+      } else {
+        RootedObject sabConstructor(
+            cx,
+            GlobalObject::getOrCreateSharedArrayBufferConstructor(cx, global));
+        if (!sabConstructor) {
+          return false;
+        }
+        if (constructor == sabConstructor) {
+          builtin = SUBCLASSING_SHAREDARRAYBUFFER;
+        }
+      }
     }
 
     // While we still have builtins to process, return true here.
@@ -3048,6 +3072,16 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructorArg,
         default:
           MOZ_CRASH("Unhandled subclassing type");
       }
+    }
+    case SUBCLASSING_ARRAYBUFFER:
+    case SUBCLASSING_SHAREDARRAYBUFFER: {
+      MOZ_ASSERT(type == SUBCLASSING_TYPE_III);
+      cx->runtime()->setUseCounter(
+          cx->global(),
+          builtin == SUBCLASSING_ARRAYBUFFER
+              ? JSUseCounter::SUBCLASSING_ARRAYBUFFER_TYPE_III
+              : JSUseCounter::SUBCLASSING_SHAREDARRAYBUFFER_TYPE_III);
+      return true;
     }
     default:
       MOZ_CRASH("Unexpected builtin");

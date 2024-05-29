@@ -84,16 +84,18 @@ using JSAccumulateTelemetryDataCallback = void (*)(JSMetric, uint32_t);
 extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
     JSContext* cx, JSAccumulateTelemetryDataCallback callback);
 
-#define FOR_EACH_JS_USE_COUNTER(_)                               \
-  _(ASMJS, AsmJS)                                                \
-  _(WASM, Wasm)                                                  \
-  _(WASM_LEGACY_EXCEPTIONS, WasmLegacyExceptions)                \
-  _(SUBCLASSING_ARRAY_TYPE_II, SubclassingArrayTypeII)           \
-  _(SUBCLASSING_ARRAY_TYPE_III, SubclassingArrayTypeIII)         \
-  _(SUBCLASSING_PROMISE_TYPE_II, SubclassingPromiseTypeII)       \
-  _(SUBCLASSING_PROMISE_TYPE_III, SubclassingPromiseTypeIII)     \
-  _(SUBCLASSING_TYPEDARRAY_TYPE_II, SubclassingTypedArrayTypeII) \
-  _(SUBCLASSING_TYPEDARRAY_TYPE_III, SubclassingTypedArrayTypeIII)
+#define FOR_EACH_JS_USE_COUNTER(_)                                   \
+  _(ASMJS, AsmJS)                                                    \
+  _(WASM, Wasm)                                                      \
+  _(WASM_LEGACY_EXCEPTIONS, WasmLegacyExceptions)                    \
+  _(SUBCLASSING_ARRAY_TYPE_II, SubclassingArrayTypeII)               \
+  _(SUBCLASSING_ARRAY_TYPE_III, SubclassingArrayTypeIII)             \
+  _(SUBCLASSING_PROMISE_TYPE_II, SubclassingPromiseTypeII)           \
+  _(SUBCLASSING_PROMISE_TYPE_III, SubclassingPromiseTypeIII)         \
+  _(SUBCLASSING_TYPEDARRAY_TYPE_II, SubclassingTypedArrayTypeII)     \
+  _(SUBCLASSING_TYPEDARRAY_TYPE_III, SubclassingTypedArrayTypeIII)   \
+  _(SUBCLASSING_ARRAYBUFFER_TYPE_III, SubclassingArrayBufferTypeIII) \
+  _(SUBCLASSING_SHAREDARRAYBUFFER_TYPE_III, SubclassingSharedArrayBufferTypeIII)
 
 /*
  * Use counter names passed to the accumulate use counter callback.
