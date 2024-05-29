@@ -1,0 +1,58 @@
+app_version: 127.0a1
+backstop: true
+base_ref: default
+base_repository: https://hg.mozilla.org/mozilla-unified
+base_rev: 6d2805dd61cb37ade292b230f9ffe14f956f1708
+build_date: 1715549197
+build_number: 1
+do_not_optimize: []
+enable_always_target:
+- docker-image
+existing_tasks: {}
+files_changed:
+- taskcluster/kinds/fetch/toolchains.yml
+- widget/nsIJumpListBuilder.idl
+- widget/windows/JumpListBuilder.cpp
+- widget/windows/tests/gtest/TestJumpListBuilder.cpp
+filters:
+- target_tasks_method
+head_ref: 45d7400ced7eab36c5e094eabc83333b77bd5212
+head_repository: https://hg.mozilla.org/mozilla-central
+head_rev: 45d7400ced7eab36c5e094eabc83333b77bd5212
+head_tag: ''
+hg_branch: default
+level: '3'
+merge_config:
+  behavior: central-to-beta
+  force-dry-run: false
+  push: true
+message: ''
+moz_build_date: '20240512212637'
+next_version: null
+optimize_strategies: null
+optimize_target_tasks: true
+owner: imoraru@mozilla.com
+phabricator_diff: null
+project: mozilla-central
+pushdate: 1715549197
+pushlog_id: '41809'
+release_enable_emefree: false
+release_enable_partner_attribution: false
+release_enable_partner_repack: false
+release_eta: ''
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
+release_product: null
+release_type: nightly
+repository_type: hg
+required_signoffs: []
+signoff_urls: {}
+target_tasks_method: merge_automation
+tasks_for: action
+test_manifest_loader: default
+try_mode: null
+try_options: null
+try_task_config: {}
+version: 127.0a1

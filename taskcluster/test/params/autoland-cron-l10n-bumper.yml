@@ -1,0 +1,51 @@
+app_version: 128.0a1
+backstop: false
+base_ref: default
+base_repository: https://hg.mozilla.org/mozilla-unified
+base_rev: 1d5b46fd5546c7898c65da40fd0b4bce217e3b7c
+build_date: 1716964291
+build_number: 1
+do_not_optimize: []
+enable_always_target:
+  - docker-image
+existing_tasks: {}
+files_changed:
+  - security/sandbox/linux/launch/SandboxLaunch.cpp
+filters:
+  - target_tasks_method
+head_ref: 00327c4fd62255eb3ab07a275d90ad09cce51ac3
+head_repository: https://hg.mozilla.org/integration/autoland
+head_rev: 00327c4fd62255eb3ab07a275d90ad09cce51ac3
+head_tag: ''
+hg_branch: default
+level: '3'
+message: ''
+moz_build_date: '20240529063131'
+next_version: null
+optimize_strategies: gecko_taskgraph.optimize:project.autoland
+optimize_target_tasks: true
+owner: user@example.com
+phabricator_diff: null
+project: autoland
+pushdate: 1716964291
+pushlog_id: '206790'
+release_enable_emefree: false
+release_enable_partner_attribution: false
+release_enable_partner_repack: false
+release_eta: ''
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
+release_product: null
+release_type: ''
+repository_type: hg
+required_signoffs: []
+signoff_urls: {}
+target_tasks_method: l10n_bump
+tasks_for: cron
+test_manifest_loader: bugbug
+try_mode: null
+try_options: null
+try_task_config: {}
+version: 128.0a1
