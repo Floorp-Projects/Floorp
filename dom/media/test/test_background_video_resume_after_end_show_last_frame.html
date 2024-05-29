@@ -96,7 +96,8 @@ startTest({
     [ "media.suspend-background-video.enabled", true ],
     [ "media.suspend-background-video.delay-ms", 100 ],
     [ "media.dormant-on-pause-timeout-ms", -1],
-    [ "media.decoder.skip-to-next-key-frame.enabled", false]
+    [ "media.decoder.skip-to-next-key-frame.enabled", false],
+    [ "media.seekToNextFrame.enabled", true ],
   ],
   tests: gDecodeSuspendTests,
 
@@ -118,7 +119,7 @@ startTest({
       loadAndWaitUntilLoadedmetadata(vMuted, test.name),
       loadAndWaitUntilLoadedmetadata(vReference, test.name, "auto"),
     ]);
-    
+
     await waitUntilPlaying(v);
     await waitUntilPlaying(vMuted);
     await testVideoSuspendsWhenHidden(v);
