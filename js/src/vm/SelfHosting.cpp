@@ -2975,6 +2975,10 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructor,
           cx->runtime()->setUseCounter(cx->global(),
                                        JSUseCounter::SUBCLASSING_ARRAY_TYPE_II);
           return true;
+        case SUBCLASSING_TYPE_III:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_ARRAY_TYPE_III);
+          return true;
         default:
           MOZ_CRASH("Unexpected Subclassing Type");
       }
