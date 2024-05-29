@@ -6,6 +6,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  TopSites: "resource:///modules/TopSites.sys.mjs",
 });
 
 const EN_US_TOPSITES =
@@ -27,6 +28,11 @@ async function addTestVisits() {
     url: "https://www.youtube.com/",
     title: "YouTube",
   });
+
+  // Adding a bookmark will refresh the TopSites feed.
+  if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+    await TestUtils.topicObserved("topsites-refreshed");
+  }
 }
 
 add_setup(async function () {
@@ -58,7 +64,12 @@ add_task(async function topSitesPrivateWindow() {
     private: true,
   });
   await addTestVisits();
-  let sites = AboutNewTab.getTopSites();
+  let sites;
+  if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+    sites = await TopSites.getSites();
+  } else {
+    sites = AboutNewTab.getTopSites();
+  }
   Assert.equal(
     sites.length,
     7,
@@ -116,8 +127,14 @@ add_task(async function topSitesTabSwitch() {
 
   // Wait for the expected number of Top sites.
   await updateTopSites(sites => sites?.length == 7);
+  let sites;
+  if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+    sites = await TopSites.getSites();
+  } else {
+    sites = AboutNewTab.getTopSites();
+  }
   Assert.equal(
-    AboutNewTab.getTopSites().length,
+    sites.length,
     7,
     "The test suite browser should have 7 Top Sites."
   );

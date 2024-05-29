@@ -18,6 +18,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  TopSites: "resource:///modules/TopSites.sys.mjs",
   TOP_SITES_DEFAULT_ROWS: "resource://activity-stream/common/Reducers.sys.mjs",
   TOP_SITES_MAX_SITES_PER_ROW:
     "resource://activity-stream/common/Reducers.sys.mjs",
@@ -47,7 +48,11 @@ class ProviderTopSites extends UrlbarProvider {
 
     this._topSitesListeners = [];
     let callListeners = () => this._callTopSitesListeners();
-    Services.obs.addObserver(callListeners, "newtab-top-sites-changed");
+    if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+      Services.obs.addObserver(callListeners, "topsites-refreshed");
+    } else {
+      Services.obs.addObserver(callListeners, "newtab-top-sites-changed");
+    }
     for (let pref of TOP_SITES_ENABLED_PREFS) {
       Services.prefs.addObserver(pref, callListeners);
     }
@@ -126,7 +131,12 @@ class ProviderTopSites extends UrlbarProvider {
       return;
     }
 
-    let sites = lazy.AboutNewTab.getTopSites();
+    let sites;
+    if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+      sites = await lazy.TopSites.getSites();
+    } else {
+      sites = lazy.AboutNewTab.getTopSites();
+    }
 
     let instance = this.queryInstance;
 

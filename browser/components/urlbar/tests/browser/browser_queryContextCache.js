@@ -166,7 +166,12 @@ add_task(async function topSites_changed() {
     // Remove the new URL. The top sites will update themselves automatically,
     // so we only need to wait for newtab-top-sites-changed.
     info("Removing new URL and awaiting newtab-top-sites-changed");
-    let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed");
+    let changedPromise;
+    if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+      changedPromise = TestUtils.topicObserved("topsites-refreshed");
+    } else {
+      changedPromise = TestUtils.topicObserved("newtab-top-sites-changed");
+    }
     await PlacesUtils.history.remove([newURL]);
     await changedPromise;
 
@@ -476,9 +481,16 @@ async function openViewAndAssertCached({
  */
 async function updateTopSitesAndAwaitChanged(expectedCount) {
   info("Updating top sites and awaiting newtab-top-sites-changed");
-  let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
-    () => info("Observed newtab-top-sites-changed")
-  );
+  let changedPromise;
+  if (Services.prefs.getBoolPref("browser.topsites.component.enabled")) {
+    changedPromise = TestUtils.topicObserved("topsites-refreshed").then(() =>
+      info("Observed topsites-refreshed")
+    );
+  } else {
+    changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
+      () => info("Observed newtab-top-sites-changed")
+    );
+  }
   await updateTopSites(sites => sites?.length == expectedCount);
   await changedPromise;
 }
