@@ -469,8 +469,7 @@ RefPtr<nsRange> FragmentDirective::FindRangeForTextDirective(
       // (In this case, we found a prefix but it was followed by something other
       // than a matching text so we’ll continue searching for the next instance
       // of prefix.)
-      if (potentialMatch->GetStartContainer() !=
-          matchRange->GetStartContainer()) {
+      if (potentialMatch->StartRef() != matchRange->StartRef()) {
         continue;
       }
     }
