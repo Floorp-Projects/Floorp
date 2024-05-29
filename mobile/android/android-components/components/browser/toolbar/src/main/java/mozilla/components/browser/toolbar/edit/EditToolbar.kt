@@ -71,17 +71,14 @@ class EditToolbar internal constructor(
      * @property text Text color of the URL.
      * @property suggestionBackground The background color used for autocomplete suggestions.
      * @property suggestionForeground The foreground color used for autocomplete suggestions.
-     * @property pageActionSeparator Color tint of separator dividing page actions.
      */
     data class Colors(
         @ColorInt val clear: Int,
-        @ColorInt val erase: Int,
         @ColorInt val icon: Int?,
         @ColorInt val hint: Int,
         @ColorInt val text: Int,
         @ColorInt val suggestionBackground: Int,
         @ColorInt val suggestionForeground: Int?,
-        @ColorInt val pageActionSeparator: Int,
     )
 
     private val autocompleteDispatcher = SupervisorJob() +
@@ -100,11 +97,6 @@ class EditToolbar internal constructor(
         editActionsStart = rootView.findViewById(R.id.mozac_browser_toolbar_edit_actions_start),
         editActionsEnd = rootView.findViewById(R.id.mozac_browser_toolbar_edit_actions_end),
         clear = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_clear_view).apply {
-            setOnClickListener {
-                onClear()
-            }
-        },
-        erase = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_erase_view).apply {
             setOnClickListener {
                 onClear()
             }
@@ -136,7 +128,6 @@ class EditToolbar internal constructor(
                 false
             }
         },
-        pageActionSeparator = rootView.findViewById(R.id.mozac_browser_action_separator),
     )
 
     /**
@@ -144,20 +135,16 @@ class EditToolbar internal constructor(
      */
     var colors: Colors = Colors(
         clear = ContextCompat.getColor(context, colorsR.color.photonWhite),
-        erase = ContextCompat.getColor(context, colorsR.color.photonWhite),
         icon = null,
         hint = views.url.currentHintTextColor,
         text = views.url.currentTextColor,
         suggestionBackground = views.url.autoCompleteBackgroundColor,
         suggestionForeground = views.url.autoCompleteForegroundColor,
-        pageActionSeparator = ContextCompat.getColor(context, colorsR.color.photonGrey80),
     )
         set(value) {
             field = value
 
             views.clear.setColorFilter(value.clear)
-
-            views.erase.setColorFilter(value.erase)
 
             if (value.icon != null) {
                 views.icon.setColorFilter(value.icon)
@@ -167,7 +154,6 @@ class EditToolbar internal constructor(
             views.url.setTextColor(value.text)
             views.url.autoCompleteBackgroundColor = value.suggestionBackground
             views.url.autoCompleteForegroundColor = value.suggestionForeground
-            views.pageActionSeparator.setBackgroundColor(value.pageActionSeparator)
         }
 
     /**
@@ -296,8 +282,7 @@ class EditToolbar internal constructor(
         } else {
             views.url.setText(url, shouldAutoComplete)
         }
-        views.clear.isVisible = url.isNotBlank() && !toolbar.isNavBarEnabled
-        views.erase.isVisible = url.isNotBlank() && toolbar.isNavBarEnabled
+        views.clear.isVisible = url.isNotBlank()
 
         if (shouldHighlight) {
             views.url.setSelection(views.url.text.length - url.length, views.url.text.length)
@@ -363,8 +348,7 @@ class EditToolbar internal constructor(
     }
 
     private fun onTextChanged(text: String) {
-        views.clear.isVisible = text.isNotBlank() && !toolbar.isNavBarEnabled
-        views.erase.isVisible = text.isNotBlank() && toolbar.isNavBarEnabled
+        views.clear.isVisible = text.isNotBlank()
         views.editActionsEnd.autoHideAction(text.isEmpty())
 
         /*
@@ -383,33 +367,16 @@ class EditToolbar internal constructor(
         }
         editListener?.onTextChanged(text)
     }
-
-    /**
-     * Hides the page action separator in edit mode.
-     */
-    fun hidePageActionSeparator() {
-        views.pageActionSeparator.isVisible = false
-    }
-
-    /**
-     * Shows the page action separator in edit mode.
-     */
-    fun showPageActionSeparator() {
-        views.pageActionSeparator.isVisible = true
-    }
 }
 
 /**
  * Internal holder for view references.
  */
-@Suppress("LongParameterList")
 internal class EditToolbarViews(
     val background: ImageView,
     val icon: ImageView,
     val editActionsStart: ActionContainer,
     val editActionsEnd: ActionContainer,
     val clear: ImageView,
-    val erase: ImageView,
     val url: InlineAutocompleteEditText,
-    val pageActionSeparator: View,
 )

@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.home.toolbar
 
-import org.mozilla.fenix.search.ExtraAction
-
 /**
  * Interface for toolbar related actions.
  */
@@ -26,8 +24,6 @@ interface ToolbarInteractor {
 
     /**
      * Navigates to the search dialog.
-     *
-     * @param extraAction specify [ExtraAction] that needs to be performed in the search dialog.
      */
-    fun onNavigateSearch(extraAction: ExtraAction = ExtraAction.NONE)
+    fun onNavigateSearch()
 }

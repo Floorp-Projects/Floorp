@@ -31,7 +31,6 @@ import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
 import org.mozilla.fenix.home.toolbar.ToolbarController
 import org.mozilla.fenix.home.toolbar.ToolbarInteractor
-import org.mozilla.fenix.search.ExtraAction
 import org.mozilla.fenix.search.toolbar.SearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
@@ -334,8 +333,8 @@ class SessionControlInteractor(
         toolbarController.handlePaste(clipboardText)
     }
 
-    override fun onNavigateSearch(extraAction: ExtraAction) {
-        toolbarController.handleNavigateSearch(extraAction)
+    override fun onNavigateSearch() {
+        toolbarController.handleNavigateSearch()
     }
 
     override fun onRemoveCollectionsPlaceholder() {

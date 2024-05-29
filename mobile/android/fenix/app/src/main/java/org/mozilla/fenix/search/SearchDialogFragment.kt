@@ -83,7 +83,6 @@ import org.mozilla.fenix.components.Core.Companion.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.Core.Companion.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentSearchDialogBinding
 import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
@@ -104,13 +103,6 @@ import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
-
-/**
- * Possible extra actions when opening search dialog fragment.
- */
-enum class ExtraAction {
-    QR_READER, VOICE_SEARCH, NONE,
-}
 
 @SuppressWarnings("LargeClass", "TooManyFunctions")
 class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
@@ -260,12 +252,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             binding.toolbar,
             fromHomeFragment,
         ).also {
-            if (!IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled) {
-                it.view.hidePageActionSeparator()
-            } else {
-                it.view.showPageActionSeparator()
-                it.view.isNavBarEnabled = true
-            }
             inlineAutocompleteEditText = it.view.findViewById(R.id.mozac_browser_toolbar_edit_url_view)
             inlineAutocompleteEditText.increaseTapArea(TAP_INCREASE_DPS_4)
         }
@@ -481,13 +467,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             addSearchSelector()
             updateQrButton(it)
             updateVoiceSearchButton()
-        }
-
-        val args by navArgs<SearchDialogFragmentArgs>()
-        when (args.extraAction) {
-            ExtraAction.QR_READER -> launchQr()
-            ExtraAction.VOICE_SEARCH -> launchVoiceSearch()
-            ExtraAction.NONE -> {}
         }
     }
 

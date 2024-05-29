@@ -189,16 +189,6 @@ interface Toolbar : ScrollableToolbar {
     fun setDisplayHorizontalPadding(horizontalPadding: Int)
 
     /**
-     * Hides the page action separator in display mode.
-     */
-    fun hidePageActionSeparator()
-
-    /**
-     * Shows the page action separator in display mode.
-     */
-    fun showPageActionSeparator()
-
-    /**
      * Casts this toolbar to an Android View object.
      */
     fun asView(): View = this as View

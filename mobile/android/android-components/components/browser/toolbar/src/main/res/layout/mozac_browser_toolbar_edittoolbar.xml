@@ -61,31 +61,6 @@
         android:textSize="15sp"
         app:layout_goneMarginStart="8dp"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_toolbar_edit_actions_start"
-        app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_erase_view"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/mozac_browser_toolbar_erase_view"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:contentDescription="@string/mozac_clear_button_description"
-        android:scaleType="center"
-        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_20"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_edit_url_view"
-        app:layout_constraintEnd_toStartOf="@id/mozac_browser_action_separator"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:id="@+id/mozac_browser_action_separator"
-        android:layout_width="@dimen/mozac_browser_toolbar_page_action_separator_width"
-        android:layout_height="40dp"
-        android:layout_marginTop="8dp"
-        android:visibility="gone"
-        android:importantForAccessibility="no"
-        android:scaleType="center"
-        app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_erase_view"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_edit_actions_end"
         app:layout_constraintTop_toTopOf="parent" />
 
