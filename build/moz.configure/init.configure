@@ -1313,3 +1313,31 @@ set_config(
     moz_app_basename,
     when=depends(build_project)(lambda p: p != "js"),
 )
+
+
+@depends("MOZILLABUILD", when=host_is_windows)
+@checking("for MozillaBuild directory")
+@imports("os")
+def mozillabuild_dir(mozillabuild):
+    if mozillabuild and os.path.exists(mozillabuild[0]):
+        return mozillabuild[0]
+
+
+@depends_if(mozillabuild_dir)
+@checking("for MozillaBuild version")
+@imports(_from="__builtin__", _import="Exception")
+@imports(_from="__builtin__", _import="open")
+def mozillabuild_version(mozillabuild_dir):
+    try:
+        with open(os.path.join(mozillabuild_dir, "VERSION"), "r") as fh:
+            return Version(fh.readline().strip())
+    except Exception as e:
+        die(e)
+
+
+@depends_if(mozillabuild_version)
+def valid_mozillabuild_version(mozillabuild_version):
+    if mozillabuild_version < Version("4.0"):
+        die(
+            f"Please upgrade MozillaBuild. You can find a recent version at: https://wiki.mozilla.org/MozillaBuild"
+        )
