@@ -64,9 +64,11 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [
             "mozilla-beta",
             "mozilla-release",
             "mozilla-esr115",
+            "mozilla-esr128",
             "comm-beta",
             "comm-release",
             "comm-esr115",
+            "comm-esr128",
         },
     ],
 ]
@@ -114,9 +116,11 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [
             "mozilla-beta",
             "mozilla-release",
             "mozilla-esr115",
+            "mozilla-esr128",
             "comm-beta",
             "comm-release",
             "comm-esr115",
+            "comm-esr128",
         },
     ],
 ]
@@ -204,6 +208,13 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [
             "comm-esr115",
         },
     ],
+    [
+        "esr128",
+        {
+            "mozilla-esr128",
+            "comm-esr128",
+        },
+    ],
 ]
 
 """Map the balrog scope aliases to the actual scopes.
@@ -214,6 +225,7 @@ BALROG_SERVER_SCOPES = {
     "beta": "balrog:server:beta",
     "release": "balrog:server:release",
     "esr115": "balrog:server:esr",
+    "esr128": "balrog:server:esr",
     "default": "balrog:server:dep",
 }
 

@@ -34,13 +34,13 @@ jobs:
                         by-release-type:
                             beta: [32]
                             release: [145]
-                            esr115: [17824]
+                            esr128: [17916]
                             default: []
                     staging:
                         by-release-type:
                             beta: [32]
                             release: [145]
-                            esr115: [909]
+                            esr128: [3085]
                             default: []
             background-rate:
                 by-release-type:

@@ -590,8 +590,8 @@ merge-automation:
             replacements: []
             merge-old-head: false
             end-tag: "FIREFOX_ESR_{major_version}_BASE"
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr115'
-            to-branch: 'esr115'
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr128'
+            to-branch: 'esr128'
         bump-central:
             fetch-version-from: "browser/config/version.txt"
             version-files:
@@ -615,7 +615,7 @@ merge-automation:
             end-tag: 'FIREFOX_NIGHTLY_{major_version}_END'
             to-repo: 'https://hg.mozilla.org/mozilla-central'
             to-branch: 'central'
-        bump-esr115:
+        bump-esr128:
             fetch-version-from: "browser/config/version.txt"
             version-files:
                 - filename: "config/milestone.txt"
@@ -626,8 +626,8 @@ merge-automation:
                   version-bump: "minor"
             replacements: []
             merge-old-head: false
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr115'
-            to-branch: 'esr115'
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr128'
+            to-branch: 'esr128'
 
 scriptworker:
     # See additional configuration in taskcluster/gecko_taskgraph/util/scriptworker.py
