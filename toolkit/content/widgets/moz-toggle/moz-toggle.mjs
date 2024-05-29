@@ -22,6 +22,11 @@ import "chrome://global/content/elements/moz-label.mjs";
  *  Custom event indicating that the toggle's pressed state has changed.
  */
 export default class MozToggle extends MozLitElement {
+  static shadowRootOptions = {
+    ...MozLitElement.shadowRootOptions,
+    delegatesFocus: true,
+  };
+
   static properties = {
     pressed: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
@@ -58,11 +63,6 @@ export default class MozToggle extends MozLitElement {
   // Delegate clicks on the host to the input element
   click() {
     this.buttonEl.click();
-  }
-
-  // Delegate focus to the input element
-  focus() {
-    this.buttonEl.focus();
   }
 
   descriptionTemplate() {
