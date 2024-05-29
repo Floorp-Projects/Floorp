@@ -284,6 +284,14 @@ def add_common_arguments(parser):
         help="Defines an extra user preference (can be passed multiple times.",
     )
     parser.add_argument(
+        "--setenv",
+        action="append",
+        dest="extraEnv",
+        metavar="NAME=VALUE",
+        help="Set one or more environment variable before launching the test "
+        "(can be passed multiple times).",
+    )
+    parser.add_argument(
         "testPaths", nargs="*", default=None, help="Paths of tests to run."
     )
     parser.add_argument(
