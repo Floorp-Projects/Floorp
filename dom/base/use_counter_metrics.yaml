@@ -107,8 +107,8 @@ use.counter:
     send_in_pings:
       - use-counters
 
-# Total of 2311 use counter metrics (excludes denominators).
-# Total of 355 'page' use counters.
+# Total of 2313 use counter metrics (excludes denominators).
+# Total of 356 'page' use counters.
 use.counter.page:
   svgsvgelement_getelementbyid:
     type: counter
@@ -539,6 +539,23 @@ use.counter.page:
     type: counter
     description: >
       Whether a page Array is Type II subclassed.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  js_subclassing_promise_type_2:
+    type: counter
+    description: >
+      Whether a page Promise is Type II subclassed.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -6145,7 +6162,7 @@ use.counter.page:
     send_in_pings:
       - use-counters
 
-# Total of 355 'document' use counters.
+# Total of 356 'document' use counters.
 use.counter.doc:
   svgsvgelement_getelementbyid:
     type: counter
@@ -6576,6 +6593,23 @@ use.counter.doc:
     type: counter
     description: >
       Whether a document Array is Type II subclassed.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  js_subclassing_promise_type_2:
+    type: counter
+    description: >
+      Whether a document Promise is Type II subclassed.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:

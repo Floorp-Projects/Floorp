@@ -2966,19 +2966,27 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructor,
   switch (builtin) {
     case SUBCLASSING_ARRAY: {
       // Check if the provided function is actually the array constructor
-      // anyhow; We're interested in if the object is in the current realm; CCW
-      // realm is OK because even if this is a CCW it'll fail the
-      // IsArrayConstructor check.
-      //
-      // Constructor may be nullptr if check has already been done.
-      if (constructor && IsArrayConstructor(constructor) &&
-          constructor->maybeCCWRealm() == cx->realm()) {
+      // anyhow; Constructor may be nullptr if check has already been done.
+      if (constructor && IsArrayConstructor(constructor)) {
         return true;
       }
       switch (type) {
         case SUBCLASSING_TYPE_II:
           cx->runtime()->setUseCounter(cx->global(),
                                        JSUseCounter::SUBCLASSING_ARRAY_TYPE_II);
+          return true;
+        default:
+          MOZ_CRASH("Unexpected Subclassing Type");
+      }
+    }
+    case SUBCLASSING_PROMISE: {
+      if (constructor && IsPromiseConstructor(constructor)) {
+        return true;
+      }
+      switch (type) {
+        case SUBCLASSING_TYPE_II:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_PROMISE_TYPE_II);
           return true;
         default:
           MOZ_CRASH("Unexpected Subclassing Type");
@@ -3007,9 +3015,13 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructor,
 //
 // This produces the following magic constant values:
 //
-// Array Subclassing Type II:  (1 << 16) | 2 == 0x010002
-// Array Subclassing Type III: (1 << 16) | 3 == 0x010003
-// Array Subclassing Type IV:  (1 << 16) | 4 == 0x010004
+// Array Subclassing   Type II:  (1 << 16) | 2 == 0x010002
+// Array Subclassing   Type III: (1 << 16) | 3 == 0x010003
+// Array Subclassing   Type IV:  (1 << 16) | 4 == 0x010000
+//
+// Promise Subclassing Type II:  (2 << 16) | 2 == 0x020002
+// Promise Subclassing Type III: (2 << 16) | 3 == 0x020003
+// Promise Subclassing Type IV:  (2 << 16) | 4 == 0x020004
 //
 // Subclassing is reported iff the constructor provided doesn't match
 // the existing prototype.
