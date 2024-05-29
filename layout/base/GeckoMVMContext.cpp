@@ -6,7 +6,6 @@
 
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/VisualViewport.h"
@@ -15,6 +14,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
 #include "nsIObserverService.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
@@ -90,11 +90,11 @@ bool GeckoMVMContext::SubjectMatchesDocument(nsISupports* aSubject) const {
 
 Maybe<CSSRect> GeckoMVMContext::CalculateScrollableRectForRSF() const {
   MOZ_ASSERT(mPresShell);
-  if (ScrollContainerFrame* rootScrollContainerFrame =
-          mPresShell->GetRootScrollContainerFrame()) {
+  if (nsIScrollableFrame* rootScrollableFrame =
+          mPresShell->GetRootScrollFrameAsScrollable()) {
     return Some(
         CSSRect::FromAppUnits(nsLayoutUtils::CalculateScrollableRectForFrame(
-            rootScrollContainerFrame, nullptr)));
+            rootScrollableFrame, nullptr)));
   }
   return Nothing();
 }
@@ -109,7 +109,7 @@ GeckoMVMContext::ScrollbarAreaToExcludeFromCompositionBounds() const {
   MOZ_ASSERT(mPresShell);
   return LayoutDeviceMargin::FromAppUnits(
       nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
-          mPresShell->GetRootScrollContainerFrame()),
+          mPresShell->GetRootScrollFrame()),
       mPresShell->GetPresContext()->AppUnitsPerDevPixel());
 }
 
@@ -169,7 +169,7 @@ void GeckoMVMContext::PostVisualViewportResizeEventByDynamicToolbar() {
 
 void GeckoMVMContext::UpdateDisplayPortMargins() {
   MOZ_ASSERT(mPresShell);
-  if (ScrollContainerFrame* root = mPresShell->GetRootScrollContainerFrame()) {
+  if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
     nsIContent* content = root->GetContent();
     bool hasDisplayPort = DisplayPortUtils::HasNonMinimalDisplayPort(content);
     bool hasResolution = mPresShell->GetResolution() != 1.0f;
@@ -187,8 +187,9 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
     MOZ_ASSERT(
         mPresShell->GetPresContext()->IsRootContentDocumentCrossProcess());
     DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, displayportBase);
+    nsIScrollableFrame* scrollable = do_QueryFrame(root);
     DisplayPortUtils::CalculateAndSetDisplayPortMargins(
-        root, DisplayPortUtils::RepaintMode::Repaint);
+        scrollable, DisplayPortUtils::RepaintMode::Repaint);
   }
 }
 

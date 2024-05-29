@@ -65,6 +65,7 @@
 
 class gfxContext;
 class nsIContent;
+class nsIScrollableFrame;
 class nsSubDocumentFrame;
 class nsCaret;
 struct WrFiltersHolder;
@@ -79,7 +80,6 @@ enum class nsDisplayOwnLayerFlags;
 class nsDisplayCompositorHitTestInfo;
 class nsDisplayScrollInfoLayer;
 class PresShell;
-class ScrollContainerFrame;
 class StickyScrollContainer;
 
 namespace layers {
@@ -189,8 +189,8 @@ LazyLogModule& GetLoggerByProcess();
  */
 struct ActiveScrolledRoot {
   static already_AddRefed<ActiveScrolledRoot> CreateASRForFrame(
-      const ActiveScrolledRoot* aParent,
-      ScrollContainerFrame* aScrollContainerFrame, bool aIsRetained);
+      const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame,
+      bool aIsRetained);
 
   static const ActiveScrolledRoot* PickAncestor(
       const ActiveScrolledRoot* aOne, const ActiveScrolledRoot* aTwo) {
@@ -226,18 +226,19 @@ struct ActiveScrolledRoot {
   }
 
   RefPtr<const ActiveScrolledRoot> mParent;
-  ScrollContainerFrame* mScrollContainerFrame = nullptr;
+  nsIScrollableFrame* mScrollableFrame;
 
   NS_INLINE_DECL_REFCOUNTING(ActiveScrolledRoot)
 
  private:
-  ActiveScrolledRoot() : mDepth(0), mRetained(false) {}
+  ActiveScrolledRoot()
+      : mScrollableFrame(nullptr), mDepth(0), mRetained(false) {}
 
   ~ActiveScrolledRoot();
 
   static void DetachASR(ActiveScrolledRoot* aASR) {
     aASR->mParent = nullptr;
-    aASR->mScrollContainerFrame = nullptr;
+    aASR->mScrollableFrame = nullptr;
     NS_RELEASE(aASR);
   }
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(ActiveScrolledRootCache,
@@ -945,8 +946,7 @@ class nsDisplayListBuilder {
    * automatically when the arena goes away.
    */
   ActiveScrolledRoot* AllocateActiveScrolledRoot(
-      const ActiveScrolledRoot* aParent,
-      ScrollContainerFrame* aScrollContainerFrame);
+      const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame);
 
   /**
    * Allocate a new DisplayItemClipChain object in the arena. Will be cleaned
@@ -1178,15 +1178,15 @@ class nsDisplayListBuilder {
     void SetCurrentActiveScrolledRoot(
         const ActiveScrolledRoot* aActiveScrolledRoot);
 
-    void EnterScrollFrame(ScrollContainerFrame* aScrollContainerFrame) {
+    void EnterScrollFrame(nsIScrollableFrame* aScrollableFrame) {
       MOZ_ASSERT(!mUsed);
       ActiveScrolledRoot* asr = mBuilder->AllocateActiveScrolledRoot(
-          mBuilder->mCurrentActiveScrolledRoot, aScrollContainerFrame);
+          mBuilder->mCurrentActiveScrolledRoot, aScrollableFrame);
       mBuilder->mCurrentActiveScrolledRoot = asr;
       mUsed = true;
     }
 
-    void InsertScrollFrame(ScrollContainerFrame* aScrollContainerFrame);
+    void InsertScrollFrame(nsIScrollableFrame* aScrollableFrame);
 
    private:
     nsDisplayListBuilder* mBuilder;
@@ -1642,9 +1642,8 @@ class nsDisplayListBuilder {
     }
   };
 
-  void AddScrollContainerFrameToNotify(
-      ScrollContainerFrame* aScrollContainerFrame);
-  void NotifyAndClearScrollContainerFrames();
+  void AddScrollFrameToNotify(nsIScrollableFrame* aScrollFrame);
+  void NotifyAndClearScrollFrames();
 
   // Helper class to find what link spec (if any) to associate with a frame,
   // recording it in the builder, and generate the corresponding DisplayItem.
@@ -1827,7 +1826,7 @@ class nsDisplayListBuilder {
   std::unordered_set<const DisplayItemClipChain*, DisplayItemClipChainHasher,
                      DisplayItemClipChainEqualer>
       mClipDeduplicator;
-  std::unordered_set<ScrollContainerFrame*> mScrollContainerFramesToNotify;
+  std::unordered_set<nsIScrollableFrame*> mScrollFramesToNotify;
 
   AutoTArray<nsIFrame*, 20> mFramesWithOOFData;
   AutoTArray<nsIFrame*, 40> mFramesMarkedForDisplayIfVisible;

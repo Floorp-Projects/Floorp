@@ -90,7 +90,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollTimelineAnimationTracker.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoBindings.h"
@@ -157,6 +156,7 @@
 #include "nsIReflowCallback.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
+#include "nsIScrollableFrame.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsLayoutUtils.h"
@@ -2200,10 +2200,11 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
 
     mFramesToDirty.Remove(aFrame);
 
-    if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(aFrame)) {
-      mPendingScrollAnchorSelection.Remove(scrollContainerFrame);
-      mPendingScrollAnchorAdjustment.Remove(scrollContainerFrame);
-      mPendingScrollResnap.Remove(scrollContainerFrame);
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
+    if (scrollableFrame) {
+      mPendingScrollAnchorSelection.Remove(scrollableFrame);
+      mPendingScrollAnchorAdjustment.Remove(scrollableFrame);
+      mPendingScrollResnap.Remove(scrollableFrame);
     }
   }
 }
@@ -2331,7 +2332,7 @@ NS_IMETHODIMP
 PresShell::PageMove(bool aForward, bool aExtend) {
   nsIFrame* frame = nullptr;
   if (!aExtend) {
-    frame = GetScrollContainerFrameToScroll(VerticalScrollDirection);
+    frame = do_QueryFrame(GetScrollableFrameToScroll(VerticalScrollDirection));
     // If there is no scrollable frame, get the frame to move caret instead.
   }
   if (!frame || frame->PresContext() != mPresContext) {
@@ -2350,50 +2351,50 @@ PresShell::PageMove(bool aForward, bool aExtend) {
 
 NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward) {
-  ScrollContainerFrame* scrollContainerFrame =
-      GetScrollContainerFrameToScroll(VerticalScrollDirection);
+  nsIScrollableFrame* scrollFrame =
+      GetScrollableFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Pages);
-  if (scrollContainerFrame) {
-    scrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                                   ScrollUnit::PAGES, scrollMode, nullptr,
-                                   mozilla::ScrollOrigin::NotSpecified,
-                                   ScrollContainerFrame::NOT_MOMENTUM,
-                                   ScrollSnapFlags::IntendedDirection |
-                                       ScrollSnapFlags::IntendedEndPosition);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES,
+                          scrollMode, nullptr,
+                          mozilla::ScrollOrigin::NotSpecified,
+                          nsIScrollableFrame::NOT_MOMENTUM,
+                          ScrollSnapFlags::IntendedDirection |
+                              ScrollSnapFlags::IntendedEndPosition);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward) {
-  ScrollContainerFrame* scrollContainerFrame =
-      GetScrollContainerFrameToScroll(VerticalScrollDirection);
+  nsIScrollableFrame* scrollFrame =
+      GetScrollableFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
-  if (scrollContainerFrame) {
-    nsRect scrollPort = scrollContainerFrame->GetScrollPortRect();
-    nsSize lineSize = scrollContainerFrame->GetLineScrollAmount();
+  if (scrollFrame) {
+    nsRect scrollPort = scrollFrame->GetScrollPortRect();
+    nsSize lineSize = scrollFrame->GetLineScrollAmount();
     int32_t lineCount = StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
     if (lineCount * lineSize.height > scrollPort.Height()) {
       return ScrollPage(aForward);
     }
-    scrollContainerFrame->ScrollBy(
+    scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? lineCount : -lineCount), ScrollUnit::LINES,
         scrollMode, nullptr, mozilla::ScrollOrigin::NotSpecified,
-        ScrollContainerFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedDirection);
+        nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedDirection);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::ScrollCharacter(bool aRight) {
-  ScrollContainerFrame* scrollContainerFrame =
-      GetScrollContainerFrameToScroll(HorizontalScrollDirection);
+  nsIScrollableFrame* scrollFrame =
+      GetScrollableFrameToScroll(HorizontalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
-  if (scrollContainerFrame) {
+  if (scrollFrame) {
     int32_t h = StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
-    scrollContainerFrame->ScrollBy(
+    scrollFrame->ScrollBy(
         nsIntPoint(aRight ? h : -h, 0), ScrollUnit::LINES, scrollMode, nullptr,
-        mozilla::ScrollOrigin::NotSpecified, ScrollContainerFrame::NOT_MOMENTUM,
+        mozilla::ScrollOrigin::NotSpecified, nsIScrollableFrame::NOT_MOMENTUM,
         ScrollSnapFlags::IntendedDirection);
   }
   return NS_OK;
@@ -2401,15 +2402,14 @@ PresShell::ScrollCharacter(bool aRight) {
 
 NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward) {
-  ScrollContainerFrame* scrollContainerFrame =
-      GetScrollContainerFrameToScroll(VerticalScrollDirection);
+  nsIScrollableFrame* scrollFrame =
+      GetScrollableFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Other);
-  if (scrollContainerFrame) {
-    scrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                                   ScrollUnit::WHOLE, scrollMode, nullptr,
-                                   mozilla::ScrollOrigin::NotSpecified,
-                                   ScrollContainerFrame::NOT_MOMENTUM,
-                                   ScrollSnapFlags::IntendedEndPosition);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(
+        nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, scrollMode,
+        nullptr, mozilla::ScrollOrigin::NotSpecified,
+        nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedEndPosition);
   }
   return NS_OK;
 }
@@ -2448,7 +2448,7 @@ PresShell::CompleteMove(bool aForward, bool aExtend) {
 
 // end implementations nsISelectionController
 
-ScrollContainerFrame* PresShell::GetRootScrollContainerFrame() const {
+nsIFrame* PresShell::GetRootScrollFrame() const {
   if (!mFrameConstructor) {
     return nullptr;
   }
@@ -2460,7 +2460,18 @@ ScrollContainerFrame* PresShell::GetRootScrollContainerFrame() const {
   if (!theFrame || !theFrame->IsScrollContainerFrame()) {
     return nullptr;
   }
-  return static_cast<ScrollContainerFrame*>(theFrame);
+  return theFrame;
+}
+
+nsIScrollableFrame* PresShell::GetRootScrollFrameAsScrollable() const {
+  nsIFrame* frame = GetRootScrollFrame();
+  if (!frame) {
+    return nullptr;
+  }
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(frame);
+  NS_ASSERTION(scrollableFrame,
+               "All scroll frames must implement nsIScrollableFrame");
+  return scrollableFrame;
 }
 
 nsPageSequenceFrame* PresShell::GetPageSequenceFrame() const {
@@ -2472,8 +2483,9 @@ nsCanvasFrame* PresShell::GetCanvasFrame() const {
 }
 
 void PresShell::RestoreRootScrollPosition() {
-  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
-    sf->ScrollToRestoredPosition();
+  nsIScrollableFrame* scrollableFrame = GetRootScrollFrameAsScrollable();
+  if (scrollableFrame) {
+    scrollableFrame->ScrollToRestoredPosition();
   }
 }
 
@@ -2581,11 +2593,11 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
 
 void PresShell::PostPendingScrollAnchorSelection(
     mozilla::layout::ScrollAnchorContainer* aContainer) {
-  mPendingScrollAnchorSelection.Insert(aContainer->ScrollContainer());
+  mPendingScrollAnchorSelection.Insert(aContainer->ScrollableFrame());
 }
 
 void PresShell::FlushPendingScrollAnchorSelections() {
-  for (ScrollContainerFrame* scroll : mPendingScrollAnchorSelection) {
+  for (nsIScrollableFrame* scroll : mPendingScrollAnchorSelection) {
     scroll->Anchor()->SelectAnchor();
   }
   mPendingScrollAnchorSelection.Clear();
@@ -2593,24 +2605,23 @@ void PresShell::FlushPendingScrollAnchorSelections() {
 
 void PresShell::PostPendingScrollAnchorAdjustment(
     ScrollAnchorContainer* aContainer) {
-  mPendingScrollAnchorAdjustment.Insert(aContainer->ScrollContainer());
+  mPendingScrollAnchorAdjustment.Insert(aContainer->ScrollableFrame());
 }
 
 void PresShell::FlushPendingScrollAnchorAdjustments() {
-  for (ScrollContainerFrame* scroll : mPendingScrollAnchorAdjustment) {
+  for (nsIScrollableFrame* scroll : mPendingScrollAnchorAdjustment) {
     scroll->Anchor()->ApplyAdjustments();
   }
   mPendingScrollAnchorAdjustment.Clear();
 }
 
-void PresShell::PostPendingScrollResnap(
-    ScrollContainerFrame* aScrollContainerFrame) {
-  mPendingScrollResnap.Insert(aScrollContainerFrame);
+void PresShell::PostPendingScrollResnap(nsIScrollableFrame* aScrollableFrame) {
+  mPendingScrollResnap.Insert(aScrollableFrame);
 }
 
 void PresShell::FlushPendingScrollResnap() {
-  for (ScrollContainerFrame* scrollContainerFrame : mPendingScrollResnap) {
-    scrollContainerFrame->TryResnap();
+  for (nsIScrollableFrame* scrollableFrame : mPendingScrollResnap) {
+    scrollableFrame->TryResnap();
   }
   mPendingScrollResnap.Clear();
 }
@@ -2830,36 +2841,35 @@ already_AddRefed<nsIContent> PresShell::GetSelectedContentForScrolling() const {
   return selectedContent.forget();
 }
 
-ScrollContainerFrame* PresShell::GetScrollContainerFrameToScrollForContent(
+nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
     nsIContent* aContent, ScrollDirections aDirections) {
-  ScrollContainerFrame* scrollContainerFrame = nullptr;
+  nsIScrollableFrame* scrollFrame = nullptr;
   if (aContent) {
     nsIFrame* startFrame = aContent->GetPrimaryFrame();
     if (startFrame) {
-      scrollContainerFrame = startFrame->GetScrollTargetFrame();
-      if (scrollContainerFrame) {
-        startFrame = scrollContainerFrame->GetScrolledFrame();
+      scrollFrame = startFrame->GetScrollTargetFrame();
+      if (scrollFrame) {
+        startFrame = scrollFrame->GetScrolledFrame();
       }
-      scrollContainerFrame =
-          nsLayoutUtils::GetNearestScrollableFrameForDirection(startFrame,
-                                                               aDirections);
+      scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
+          startFrame, aDirections);
     }
   }
-  if (!scrollContainerFrame) {
-    scrollContainerFrame = GetRootScrollContainerFrame();
-    if (!scrollContainerFrame || !scrollContainerFrame->GetScrolledFrame()) {
+  if (!scrollFrame) {
+    scrollFrame = GetRootScrollFrameAsScrollable();
+    if (!scrollFrame || !scrollFrame->GetScrolledFrame()) {
       return nullptr;
     }
-    scrollContainerFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
-        scrollContainerFrame->GetScrolledFrame(), aDirections);
+    scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
+        scrollFrame->GetScrolledFrame(), aDirections);
   }
-  return scrollContainerFrame;
+  return scrollFrame;
 }
 
-ScrollContainerFrame* PresShell::GetScrollContainerFrameToScroll(
+nsIScrollableFrame* PresShell::GetScrollableFrameToScroll(
     ScrollDirections aDirections) {
   nsCOMPtr<nsIContent> content = GetContentForScrolling();
-  return GetScrollContainerFrameToScrollForContent(content.get(), aDirections);
+  return GetScrollableFrameToScrollForContent(content.get(), aDirections);
 }
 
 void PresShell::CancelAllPendingReflows() {
@@ -3114,7 +3124,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   esm->SetContentState(target, ElementState::URLTARGET);
 
   // TODO: Spec probably needs a section to account for this.
-  if (ScrollContainerFrame* rootScroll = GetRootScrollContainerFrame()) {
+  if (nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable()) {
     if (rootScroll->DidHistoryRestore()) {
       // Scroll position restored from history trumps scrolling to anchor.
       aScroll = false;
@@ -3135,7 +3145,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
           ScrollAxis(),
           ScrollFlags::AnchorScrollFlags | aAdditionalScrollFlags));
 
-      if (ScrollContainerFrame* rootScroll = GetRootScrollContainerFrame()) {
+      if (nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable()) {
         mLastAnchorScrolledTo = target;
         mLastAnchorScrollPositionY = rootScroll->GetScrollPosition().y;
       }
@@ -3216,7 +3226,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 #endif
   } else if (nsContentUtils::EqualsIgnoreASCIICase(aAnchorName, u"top"_ns)) {
     // 2.2. Scroll to the beginning of the document for the Document.
-    ScrollContainerFrame* sf = GetRootScrollContainerFrame();
+    nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable();
     // Check |aScroll| after setting |rv| so we set |rv| to the same
     // thing whether or not |aScroll| is true.
     if (aScroll && sf) {
@@ -3239,7 +3249,7 @@ nsresult PresShell::ScrollToAnchor() {
   }
 
   NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
-  ScrollContainerFrame* rootScroll = GetRootScrollContainerFrame();
+  nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
   if (!rootScroll ||
       mLastAnchorScrollPositionY != rootScroll->GetScrollPosition().y) {
     return NS_OK;
@@ -3414,18 +3424,18 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
 }
 
 static WhereToScroll GetApplicableWhereToScroll(
-    const ScrollContainerFrame* aScrollContainerFrame,
+    const nsIScrollableFrame* aFrameAsScrollable,
     const nsIFrame* aScrollableFrame, const nsIFrame* aTarget,
     ScrollDirection aScrollDirection, WhereToScroll aOriginal) {
-  MOZ_ASSERT(do_QueryFrame(aScrollContainerFrame) == aScrollableFrame);
+  MOZ_ASSERT(do_QueryFrame(aFrameAsScrollable) == aScrollableFrame);
   if (aTarget == aScrollableFrame) {
     return aOriginal;
   }
 
   StyleScrollSnapAlignKeyword align =
       aScrollDirection == ScrollDirection::eHorizontal
-          ? aScrollContainerFrame->GetScrollSnapAlignFor(aTarget).first
-          : aScrollContainerFrame->GetScrollSnapAlignFor(aTarget).second;
+          ? aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).first
+          : aFrameAsScrollable->GetScrollSnapAlignFor(aTarget).second;
 
   switch (align) {
     case StyleScrollSnapAlignKeyword::None:
@@ -3441,26 +3451,26 @@ static WhereToScroll GetApplicableWhereToScroll(
 }
 
 /**
- * This function takes a scroll container frame, a rect in the coordinate system
+ * This function takes a scrollable frame, a rect in the coordinate system
  * of the scrolled frame, and a desired percentage-based scroll
  * position and attempts to scroll the rect to that position in the
  * visual viewport.
  *
  * This needs to work even if aRect has a width or height of zero.
  */
-static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
+static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                              const nsIFrame* aScrollableFrame,
                              const nsIFrame* aTarget, const nsRect& aRect,
                              const Sides aScrollPaddingSkipSides,
                              const nsMargin& aMargin, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
-  nsPoint scrollPt = aScrollContainerFrame->GetVisualViewportOffset();
+  nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
   const nsPoint originalScrollPt = scrollPt;
   const nsRect visibleRect(scrollPt,
-                           aScrollContainerFrame->GetVisualViewportSize());
+                           aFrameAsScrollable->GetVisualViewportSize());
 
   const nsMargin padding = [&] {
-    nsMargin p = aScrollContainerFrame->GetScrollPadding();
+    nsMargin p = aFrameAsScrollable->GetScrollPadding();
     p.ApplySkipSides(aScrollPaddingSkipSides);
     return p + aMargin;
   }();
@@ -3468,7 +3478,7 @@ static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
   const nsRect rectToScrollIntoView = [&] {
     nsRect r(aRect);
     r.Inflate(padding);
-    return r.Intersect(aScrollContainerFrame->GetScrolledRect());
+    return r.Intersect(aFrameAsScrollable->GetScrolledRect());
   }();
 
   nsSize lineSize;
@@ -3479,12 +3489,12 @@ static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
   // it would assert and possible give the wrong result.
   if (aVertical.mWhenToScroll == WhenToScroll::IfNotVisible ||
       aHorizontal.mWhenToScroll == WhenToScroll::IfNotVisible) {
-    lineSize = aScrollContainerFrame->GetLineScrollAmount();
+    lineSize = aFrameAsScrollable->GetLineScrollAmount();
   }
-  ScrollStyles ss = aScrollContainerFrame->GetScrollStyles();
+  ScrollStyles ss = aFrameAsScrollable->GetScrollStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
   ScrollDirections directions =
-      aScrollContainerFrame->GetAvailableScrollingDirections();
+      aFrameAsScrollable->GetAvailableScrollingDirections();
 
   if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
        ss.mVertical != StyleOverflow::Hidden) &&
@@ -3495,7 +3505,7 @@ static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
                             visibleRect.YMost() - padding.bottom)) {
       // If the scroll-snap-align on the frame is valid, we need to respect it.
       WhereToScroll whereToScroll = GetApplicableWhereToScroll(
-          aScrollContainerFrame, aScrollableFrame, aTarget,
+          aFrameAsScrollable, aScrollableFrame, aTarget,
           ScrollDirection::eVertical, aVertical.mWhereToScroll);
 
       nscoord maxHeight;
@@ -3516,7 +3526,7 @@ static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
                             visibleRect.XMost() - padding.right)) {
       // If the scroll-snap-align on the frame is valid, we need to respect it.
       WhereToScroll whereToScroll = GetApplicableWhereToScroll(
-          aScrollContainerFrame, aScrollableFrame, aTarget,
+          aFrameAsScrollable, aScrollableFrame, aTarget,
           ScrollDirection::eHorizontal, aHorizontal.mWhereToScroll);
 
       nscoord maxWidth;
@@ -3545,17 +3555,17 @@ static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
   } else if (aScrollFlags & ScrollFlags::ScrollSmoothAuto) {
     behavior = ScrollBehavior::Auto;
   }
-  bool smoothScroll = aScrollContainerFrame->IsSmoothScroll(behavior);
+  bool smoothScroll = aFrameAsScrollable->IsSmoothScroll(behavior);
   if (smoothScroll) {
     scrollMode = ScrollMode::SmoothMsd;
   }
-  nsIFrame* frame = do_QueryFrame(aScrollContainerFrame);
+  nsIFrame* frame = do_QueryFrame(aFrameAsScrollable);
   AutoWeakFrame weakFrame(frame);
-  aScrollContainerFrame->ScrollTo(scrollPt, scrollMode, &allowedRange,
-                                  ScrollSnapFlags::IntendedEndPosition,
-                                  aScrollFlags & ScrollFlags::TriggeredByScript
-                                      ? ScrollTriggeredByScript::Yes
-                                      : ScrollTriggeredByScript::No);
+  aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
+                               ScrollSnapFlags::IntendedEndPosition,
+                               aScrollFlags & ScrollFlags::TriggeredByScript
+                                   ? ScrollTriggeredByScript::Yes
+                                   : ScrollTriggeredByScript::No);
   if (!weakFrame.IsAlive()) {
     return;
   }
@@ -3564,7 +3574,7 @@ static void ScrollToShowRect(ScrollContainerFrame* aScrollContainerFrame,
   // scroll the rect into view visually, and that may require scrolling
   // the visual viewport in scenarios where there is not enough layout
   // scroll range.
-  if (aScrollContainerFrame->IsRootScrollFrameOfDocument() &&
+  if (aFrameAsScrollable->IsRootScrollFrameOfDocument() &&
       frame->PresContext()->IsRootContentDocumentCrossProcess()) {
     frame->PresShell()->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
                                        scrollMode);
@@ -3746,7 +3756,7 @@ bool PresShell::ScrollFrameIntoView(
     MaybeSkipPaddingSides(aTargetFrame);
     while (nsIFrame* parent = container->GetParent()) {
       container = parent;
-      if (container->IsScrollContainerOrSubclass()) {
+      if (static_cast<nsIScrollableFrame*>(do_QueryFrame(container))) {
         // We really just need a non-fragmented frame so that we can accumulate
         // the bounds of all our continuations relative to it. We shouldn't jump
         // out of our nearest scrollable frame, and that's an ok reference
@@ -3788,7 +3798,7 @@ bool PresShell::ScrollFrameIntoView(
   // Walk up the frame hierarchy scrolling the rect into view and
   // keeping rect relative to container
   do {
-    if (ScrollContainerFrame* sf = do_QueryFrame(container)) {
+    if (nsIScrollableFrame* sf = do_QueryFrame(container)) {
       nsPoint oldPosition = sf->GetScrollPosition();
       nsRect targetRect = rect;
       // Inflate the scrolled rect by the container's padding in each dimension,
@@ -4960,13 +4970,12 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
     }
 
     info->mResolution *= resolution;
-    nsIFrame* rootScrollContainerFrame = shell->GetRootScrollContainerFrame();
-    ViewID zoomedId = nsLayoutUtils::FindOrCreateIDFor(
-        rootScrollContainerFrame->GetContent());
+    nsIFrame* rootScrollFrame = shell->GetRootScrollFrame();
+    ViewID zoomedId =
+        nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent());
 
     nsDisplayList wrapped(&info->mBuilder);
-    wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder,
-                                               rootScrollContainerFrame,
+    wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder, rootScrollFrame,
                                                &info->mList, nullptr, zoomedId);
     info->mList.AppendToTop(&wrapped);
   }
@@ -5341,7 +5350,7 @@ void PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder* aBuilder,
   // nsDisplayCanvasBackground paint it.
   bool addedScrollingBackgroundColor = false;
   if (isViewport) {
-    if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+    if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting()) {
         // TODO: We should be able to set canvas background color during display
@@ -6014,7 +6023,8 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
 
   nsRect rect = aRect;
 
-  if (ScrollContainerFrame* scrollFrame = do_QueryFrame(aFrame)) {
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(aFrame);
+  if (scrollFrame) {
     bool ignoreDisplayPort = false;
     if (DisplayPortUtils::IsMissingDisplayPortBaseRect(aFrame->GetContent())) {
       // We can properly set the base rect for root scroll frames on top level
@@ -8079,7 +8089,7 @@ PresShell::EventHandler::ComputeRootFrameToHandleEventWithCapturingContent(
 
   // scrollable frames should use the scrolling container as the root instead
   // of the document
-  ScrollContainerFrame* scrollFrame = do_QueryFrame(captureFrame);
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(captureFrame);
   return scrollFrame ? scrollFrame->GetScrolledFrame()
                      : aRootFrameToHandleEvent;
 }
@@ -9354,15 +9364,15 @@ void PresShell::EventHandler::GetCurrentItemAndPositionForElement(
     if (!istree) {
       extra = frame->GetSize().height;
       if (checkLineHeight) {
-        ScrollContainerFrame* scrollContainerFrame =
-            nsLayoutUtils::GetNearestScrollContainerFrame(
+        nsIScrollableFrame* scrollFrame =
+            nsLayoutUtils::GetNearestScrollableFrame(
                 frame, nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN |
                            nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT);
-        if (scrollContainerFrame) {
-          nsSize scrollAmount = scrollContainerFrame->GetLineScrollAmount();
+        if (scrollFrame) {
+          nsSize scrollAmount = scrollFrame->GetLineScrollAmount();
+          nsIFrame* f = do_QueryFrame(scrollFrame);
           int32_t APD = presContext->AppUnitsPerDevPixel();
-          int32_t scrollAPD =
-              scrollContainerFrame->PresContext()->AppUnitsPerDevPixel();
+          int32_t scrollAPD = f->PresContext()->AppUnitsPerDevPixel();
           scrollAmount = scrollAmount.ScaleToOtherAppUnits(scrollAPD, APD);
           if (extra > scrollAmount.height) {
             extra = scrollAmount.height;
@@ -11350,8 +11360,9 @@ void PresShell::CompleteChangeToVisualViewportSize() {
   // items). Callers that update the visual viewport during a reflow are
   // responsible for maintaining these invariants.
   if (!mIsReflowing) {
-    if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
-      sf->MarkScrollbarsDirtyForReflow();
+    if (nsIScrollableFrame* rootScrollFrame =
+            GetRootScrollFrameAsScrollable()) {
+      rootScrollFrame->MarkScrollbarsDirtyForReflow();
     }
     MarkFixedFramesForReflow(IntrinsicDirty::None);
   }
@@ -11389,13 +11400,11 @@ void PresShell::ResetVisualViewportSize() {
 bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
                                         const nsPoint& aPrevLayoutScrollPos) {
   nsPoint newOffset = aScrollOffset;
-  ScrollContainerFrame* rootScrollContainerFrame =
-      GetRootScrollContainerFrame();
-  if (rootScrollContainerFrame) {
+  nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable();
+  if (rootScrollFrame) {
     // See the comment in ScrollContainerFrame::Reflow above the call to
     // SetVisualViewportOffset for why we need to do this.
-    nsRect scrollRange =
-        rootScrollContainerFrame->GetScrollRangeForUserInputEvents();
+    nsRect scrollRange = rootScrollFrame->GetScrollRangeForUserInputEvents();
     if (!scrollRange.Contains(newOffset)) {
       newOffset.x = std::min(newOffset.x, scrollRange.XMost());
       newOffset.x = std::max(newOffset.x, scrollRange.x);
@@ -11422,13 +11431,14 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
     window->VisualViewport()->PostScrollEvent(prevOffset, aPrevLayoutScrollPos);
   }
 
-  if (IsVisualViewportSizeSet() && rootScrollContainerFrame) {
-    rootScrollContainerFrame->Anchor()->UserScrolled();
+  if (IsVisualViewportSizeSet() && rootScrollFrame) {
+    rootScrollFrame->Anchor()->UserScrolled();
   }
 
   if (gfxPlatform::UseDesktopZoomingScrollbars()) {
-    if (rootScrollContainerFrame) {
-      rootScrollContainerFrame->UpdateScrollbarPosition();
+    if (nsIScrollableFrame* rootScrollFrame =
+            GetRootScrollFrameAsScrollable()) {
+      rootScrollFrame->UpdateScrollbarPosition();
     }
   }
 
@@ -11443,7 +11453,7 @@ void PresShell::ScrollToVisual(const nsPoint& aVisualViewportOffset,
   MOZ_ASSERT(aMode == ScrollMode::Instant || aMode == ScrollMode::SmoothMsd);
 
   if (aMode == ScrollMode::SmoothMsd) {
-    if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+    if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
       if (sf->SmoothScrollVisual(aVisualViewportOffset, aUpdateType)) {
         return;
       }
@@ -11485,7 +11495,7 @@ nsPoint PresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
 
 nsPoint PresShell::GetLayoutViewportOffset() const {
   nsPoint result;
-  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+  if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
     result = sf->GetScrollPosition();
   }
   return result;
@@ -11493,7 +11503,7 @@ nsPoint PresShell::GetLayoutViewportOffset() const {
 
 nsSize PresShell::GetLayoutViewportSize() const {
   nsSize result;
-  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+  if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
     result = sf->GetScrollPortRect().Size();
   }
   return result;
@@ -11674,7 +11684,7 @@ void PresShell::SyncWindowProperties(bool aSync) {
   }
 
   AutoWeakFrame weak(rootFrame);
-  if (!GetRootScrollContainerFrame()) {
+  if (!GetRootScrollFrame()) {
     // Scrollframes use native widgets which don't work well with
     // translucent windows, at least in Windows XP. So if the document
     // has a root scrollrame it's useless to try to make it transparent,

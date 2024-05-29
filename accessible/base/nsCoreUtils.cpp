@@ -15,6 +15,7 @@
 #include "nsIDocShell.h"
 #include "nsIObserverService.h"
 #include "nsPresContext.h"
+#include "nsIScrollableFrame.h"
 #include "nsISelectionController.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/dom/TouchEvent.h"
@@ -23,7 +24,6 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/TouchEvents.h"
 #include "nsView.h"
 #include "nsGkAtoms.h"
@@ -253,24 +253,21 @@ nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
   return NS_OK;
 }
 
-void nsCoreUtils::ScrollFrameToPoint(nsIFrame* aScrollContainerFrame,
+void nsCoreUtils::ScrollFrameToPoint(nsIFrame* aScrollableFrame,
                                      nsIFrame* aFrame,
                                      const LayoutDeviceIntPoint& aPoint) {
-  ScrollContainerFrame* scrollContainerFrame =
-      do_QueryFrame(aScrollContainerFrame);
-  if (!scrollContainerFrame) {
-    return;
-  }
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollableFrame);
+  if (!scrollableFrame) return;
 
   nsPoint point = LayoutDeviceIntPoint::ToAppUnits(
       aPoint, aFrame->PresContext()->AppUnitsPerDevPixel());
   nsRect frameRect = aFrame->GetScreenRectInAppUnits();
   nsPoint deltaPoint = point - frameRect.TopLeft();
 
-  nsPoint scrollPoint = scrollContainerFrame->GetScrollPosition();
+  nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
   scrollPoint -= deltaPoint;
 
-  scrollContainerFrame->ScrollTo(scrollPoint, ScrollMode::Instant);
+  scrollableFrame->ScrollTo(scrollPoint, ScrollMode::Instant);
 }
 
 void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,

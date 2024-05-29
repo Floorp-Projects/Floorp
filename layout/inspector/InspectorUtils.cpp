@@ -14,6 +14,7 @@
 #include "nsContentList.h"
 #include "nsString.h"
 #include "nsIContentInlines.h"
+#include "nsIScrollableFrame.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
@@ -26,7 +27,6 @@
 #include "nsRange.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/CSSBinding.h"
@@ -949,17 +949,17 @@ static void AddOverflowingChildrenOfElement(const nsIFrame* aFrame,
 already_AddRefed<nsINodeList> InspectorUtils::GetOverflowingChildrenOfElement(
     GlobalObject& aGlobal, Element& aElement) {
   auto list = MakeRefPtr<nsSimpleContentList>(&aElement);
-  const ScrollContainerFrame* scrollContainerFrame =
-      aElement.GetScrollContainerFrame();
-  // Element must be a ScrollContainerFrame.
-  if (!scrollContainerFrame) {
+  const nsIScrollableFrame* scrollFrame = aElement.GetScrollFrame();
+  // Element must have a nsIScrollableFrame
+  if (!scrollFrame) {
     return list.forget();
   }
 
-  auto scrollPortRect = scrollContainerFrame->GetScrollPortRect();
-  const nsIFrame* scrolledFrame = scrollContainerFrame->GetScrolledFrame();
-  AddOverflowingChildrenOfElement(scrolledFrame, scrollContainerFrame,
-                                  scrollPortRect, *list);
+  auto scrollPortRect = scrollFrame->GetScrollPortRect();
+  const nsIFrame* outerFrame = do_QueryFrame(scrollFrame);
+  const nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
+  AddOverflowingChildrenOfElement(scrolledFrame, outerFrame, scrollPortRect,
+                                  *list);
   return list.forget();
 }
 

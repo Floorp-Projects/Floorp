@@ -225,7 +225,9 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame,
   /**
    * Returns whether mContent supports multiple selection.
    */
-  bool GetMultiple() const;
+  bool GetMultiple() const {
+    return mContent->AsElement()->HasAttr(nsGkAtoms::multiple);
+  }
 
   mozilla::dom::HTMLSelectElement& Select() const;
 

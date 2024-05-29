@@ -32,7 +32,6 @@ class nsTreeImageListener;
 
 namespace mozilla {
 class PresShell;
-class ScrollContainerFrame;
 namespace layout {
 class ScrollbarActivity;
 }  // namespace layout
@@ -180,7 +179,7 @@ class nsTreeBodyFrame final : public mozilla::SimpleXULLeafFrame,
     nsScrollbarFrame* mHScrollbar;
     RefPtr<mozilla::dom::Element> mHScrollbarContent;
     nsIFrame* mColumnsFrame;
-    mozilla::ScrollContainerFrame* mColumnsScrollFrame;
+    nsIScrollableFrame* mColumnsScrollFrame;
   };
 
   ImgDrawResult PaintTreeBody(gfxContext& aRenderingContext,

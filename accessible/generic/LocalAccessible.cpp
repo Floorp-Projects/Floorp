@@ -58,6 +58,7 @@
 #include "nsTextFrame.h"
 #include "nsView.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIScrollableFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsFocusManager.h"
 
@@ -71,7 +72,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerMarkers.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLLabelElement.h"
@@ -320,10 +320,10 @@ uint64_t LocalAccessible::VisibilityState() const {
     nsIFrame* parentFrame = curFrame->GetParent();
     // If contained by scrollable frame then check that at least 12 pixels
     // around the object is visible, otherwise the object is offscreen.
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(parentFrame);
     const nscoord kMinPixels = nsPresContext::CSSPixelsToAppUnits(12);
-    if (ScrollContainerFrame* scrollContainerFrame =
-            do_QueryFrame(parentFrame)) {
-      nsRect scrollPortRect = scrollContainerFrame->GetScrollPortRect();
+    if (scrollableFrame) {
+      nsRect scrollPortRect = scrollableFrame->GetScrollPortRect();
       nsRect frameRect = nsLayoutUtils::TransformFrameRectToAncestor(
           frame, frame->GetRectRelativeToSelf(), parentFrame);
       if (!scrollPortRect.Contains(frameRect)) {
@@ -670,9 +670,9 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       return result;
     }
 
-    if (ScrollContainerFrame* sf =
+    if (nsIScrollableFrame* sf =
             mParent == mDoc
-                ? mDoc->PresShellPtr()->GetRootScrollContainerFrame()
+                ? mDoc->PresShellPtr()->GetRootScrollFrameAsScrollable()
                 : boundingFrame->GetScrollTargetFrame()) {
       // If boundingFrame has a scroll position, result is currently relative
       // to that. Instead, we want result to remain the same regardless of
@@ -2259,9 +2259,8 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (frame) {
         nsView* view = frame->GetView();
         if (view) {
-          ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(frame);
-          if (scrollContainerFrame || view->GetWidget() ||
-              !frame->GetParent()) {
+          nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
+          if (scrollFrame || view->GetWidget() || !frame->GetParent()) {
             rel.AppendTarget(LocalParent());
           }
         }
@@ -3472,7 +3471,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
       nsTArray<nsIFrame*> frames;
-      ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
+      nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
       nsRect scrollPort = sf ? sf->GetScrollPortRect() : rootFrame->GetRect();
 
       nsLayoutUtils::GetFramesForArea(

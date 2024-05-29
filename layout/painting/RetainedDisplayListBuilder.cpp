@@ -8,10 +8,10 @@
 #include "RetainedDisplayListBuilder.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
+#include "nsIScrollableFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
@@ -305,8 +305,8 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
         !item->GetActiveScrolledRoot()) {
       agrFrame = aAsyncAncestor;
     } else {
-      agrFrame = item->GetActiveScrolledRoot()
-                     ->mScrollContainerFrame->GetScrolledFrame();
+      agrFrame =
+          item->GetActiveScrolledRoot()->mScrollableFrame->GetScrolledFrame();
     }
 
     if (aAGR && agrFrame != aAGR) {
@@ -363,7 +363,7 @@ static Maybe<const ActiveScrolledRoot*> SelectContainerASR(
       aClipChain ? aClipChain->mASR : nullptr;
 
   MOZ_DIAGNOSTIC_ASSERT(!aClipChain || aClipChain->mOnStack || !itemClipASR ||
-                        itemClipASR->mScrollContainerFrame);
+                        itemClipASR->mScrollableFrame);
 
   const ActiveScrolledRoot* finiteBoundsASR =
       ActiveScrolledRoot::PickDescendant(itemClipASR, aItemASR);
@@ -973,7 +973,7 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
 
     // Check whether the current frame is a scrollable frame with display port.
     nsRect displayPort;
-    ScrollContainerFrame* sf = do_QueryFrame(currentFrame);
+    nsIScrollableFrame* sf = do_QueryFrame(currentFrame);
     nsIContent* content = sf ? currentFrame->GetContent() : nullptr;
 
     if (content && DisplayPortUtils::GetDisplayPort(content, &displayPort)) {
@@ -1611,8 +1611,8 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   // This is normally handled by EnterPresShell, but we skipped it so that we
   // didn't call MarkFrameForDisplayIfVisible before ComputeRebuildRegion.
-  ScrollContainerFrame* sf =
-      RootReferenceFrame()->PresShell()->GetRootScrollContainerFrame();
+  nsIScrollableFrame* sf =
+      RootReferenceFrame()->PresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
     nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
     if (canvasFrame) {
