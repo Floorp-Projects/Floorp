@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<script>
+// This test ensures Firefox doesn't crash when there's a selection that crosses
+// the shadow boundary, and the ancestor of the end boundary is
+// later being removed from the DOM.
+window.addEventListener("DOMContentLoaded", () => {
+  try {
+    let sel = window.getSelection()
+    o3.select()
+    o1.insertBefore(o4, o1.childNodes[0])
+    sel.extend(o4.attachShadow({mode: "open"}))
+  } catch (e) {}
+  o2.outerHTML = undefined
+  document.documentElement.removeAttribute("class");
+})
+</script>
+<h2>
+<content id="o1" contenteditable="true">
+</h2>
+<samp id="o2">
+<input id="o3">
+<h1 id="o4" hidden="">
+</html>
