@@ -24,7 +24,7 @@ async function waitForPopupNotificationSecurityDelay() {
   );
   await TestUtils.waitForCondition(
     () => {
-      let timeSinceShown = Cu.now() - notification.timeShown;
+      let timeSinceShown = performance.now() - notification.timeShown;
       return timeSinceShown > notificationEnableDelayMS;
     },
     "Wait for security delay to expire",
