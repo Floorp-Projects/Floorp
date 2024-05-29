@@ -8,7 +8,6 @@
        type="arrow"
        role="alertdialog"
        noautofocus="true"
-       aria-labelledby="full-page-translations-panel-header"
        orient="vertical"
        onclick="FullPageTranslationsPanel.handlePanelButtonEvent(event)"
        onpopupshown="FullPageTranslationsPanel.handlePanelPopupShownEvent(event)"
@@ -18,6 +17,7 @@
     <panelview id="full-page-translations-panel-view-default"
                class="PanelUI-subView translations-panel-view"
                role="document"
+               aria-labelledby="full-page-translations-panel-header"
                mainview-with-header="true"
                has-custom-header="true">
       <hbox class="panel-header translations-panel-header">
@@ -108,6 +108,7 @@
     <panelview id="full-page-translations-panel-view-unsupported-language"
                class="PanelUI-subView translations-panel-view"
                role="document"
+               aria-labelledby="full-page-translations-panel-unsupported-language-header"
                has-custom-header="true">
       <hbox class="panel-header translations-panel-header">
         <image class="translations-panel-error-icon" />

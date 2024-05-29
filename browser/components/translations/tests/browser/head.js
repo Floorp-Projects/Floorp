@@ -755,6 +755,13 @@ class FullPageTranslationsTestUtils {
       FullPageTranslationsPanel,
       expectedId
     );
+
+    const panelView = document.getElementById(expectedId);
+    const label = document.getElementById(
+      panelView.getAttribute("aria-labelledby")
+    );
+    ok(label, "The a11y label for the panel view can be found.");
+    assertVisibility({ visible: { label } });
   }
 
   /**
@@ -2602,6 +2609,18 @@ class SelectTranslationsTestUtils {
     if (expectedToLanguage !== undefined) {
       SelectTranslationsTestUtils.assertSelectedToLanguage(expectedToLanguage);
     }
+
+    const { panel } = SelectTranslationsPanel.elements;
+
+    const documentRoleElement = panel.querySelector('[role="document"]');
+    ok(documentRoleElement, "The document-role element can be found.");
+
+    const label = document.getElementById(
+      documentRoleElement.getAttribute("aria-labelledby")
+    );
+    ok(label, "The a11y label for the panel view can be found.");
+
+    assertVisibility({ visible: { label } });
   }
 
   /**

@@ -26,11 +26,6 @@ add_task(async function test_translations_panel_basics() {
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
-  const panel = document.getElementById("full-page-translations-panel");
-  const label = document.getElementById(panel.getAttribute("aria-labelledby"));
-  ok(label, "The a11y label for the panel can be found.");
-  assertVisibility({ visible: { label } });
-
   await FullPageTranslationsTestUtils.clickTranslateButton();
 
   await FullPageTranslationsTestUtils.assertTranslationsButton(
