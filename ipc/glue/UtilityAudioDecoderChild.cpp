@@ -235,10 +235,6 @@ void UtilityAudioDecoderChild::GetKeySystemCapabilities(
                       CryptoSchemeToString(scheme));
             }
           }
-          for (const auto& e : capabilities.encryptionSchemes()) {
-            EME_LOG("  capabilities: encryptionScheme=%s",
-                    CryptoSchemeToString(e));
-          }
           auto* info = cdmInfo.AppendElement(fallible);
           if (!info) {
             promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);

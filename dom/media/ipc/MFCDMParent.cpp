@@ -854,10 +854,8 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
       CryptoScheme::Cbcs,
   });
 
-  // Remember supported video codecs.
-  // It will be used when collecting audio codec and encryption scheme
-  // support.
-  // TODO : scheme part should be removed later
+  // Remember supported video codecs, which will be used when collecting audio
+  // codec support.
   nsTArray<KeySystemConfig::EMECodecString> supportedVideoCodecs;
 
   if (aFlags.contains(CapabilitesFlag::NeedClearLeadCheck)) {
@@ -985,31 +983,6 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
       c->encryptionSchemes().AppendElement(CryptoScheme::Cenc);
       MFCDM_PARENT_SLOG("%s: +audio:%s", __func__, codec.get());
     }
-  }
-
-  // 'If value is unspecified, default value of "cenc" is used.' See
-  // https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
-  if (!supportedVideoCodecs.IsEmpty()) {
-    aCapabilitiesOut.encryptionSchemes().AppendElement(CryptoScheme::Cenc);
-    MFCDM_PARENT_SLOG("%s: +scheme:cenc", __func__);
-  }
-
-  // Check another scheme "cbcs"
-  static std::pair<CryptoScheme, nsDependentString> kCbcs =
-      std::pair<CryptoScheme, nsDependentString>(
-          CryptoScheme::Cbcs, u"encryption-type=cbcs,encryption-iv-size=16,");
-  bool ok = true;
-  for (const auto& codec : supportedVideoCodecs) {
-    ok &= FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
-                          nsCString(""), kCbcs.second /* additional feature */,
-                          isHardwareDecryption);
-    if (!ok) {
-      break;
-    }
-  }
-  if (ok) {
-    aCapabilitiesOut.encryptionSchemes().AppendElement(kCbcs.first);
-    MFCDM_PARENT_SLOG("%s: +scheme:cbcs", __func__);
   }
 
   // Only perform HDCP if necessary, "The hdcp query (item 4) has a
