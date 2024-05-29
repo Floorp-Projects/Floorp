@@ -644,6 +644,14 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_SharedArrayBuffer);
   }
 
+  static JSObject* getOrCreateSharedArrayBufferConstructor(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    if (!ensureConstructor(cx, global, JSProto_SharedArrayBuffer)) {
+      return nullptr;
+    }
+    return &global->getConstructor(JSProto_SharedArrayBuffer);
+  }
+
   static JSObject* getOrCreateCustomErrorPrototype(JSContext* cx,
                                                    Handle<GlobalObject*> global,
                                                    JSExnType exnType) {

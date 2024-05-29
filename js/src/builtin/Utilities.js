@@ -114,6 +114,9 @@ function SpeciesConstructor(obj, defaultConstructor) {
 
   // Step 7.
   if (IsConstructor(s)) {
+    if (ctor !== defaultConstructor) {
+      ReportUsageCounter(defaultConstructor, SUBCLASSING_DETERMINE_THROUGH_CONSTRUCTOR_TYPE_III);
+    }
     return s;
   }
 
