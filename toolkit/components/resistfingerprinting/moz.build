@@ -39,6 +39,7 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.gtest += ["nsUserCharacteristics.h"]
 
 EXTRA_JS_MODULES += [
+    "!RFPTargetConstants.sys.mjs",
     "FingerprintingWebCompatService.sys.mjs",
     "RFPHelper.sys.mjs",
     "UserCharacteristicsPageService.sys.mjs",
@@ -57,3 +58,9 @@ XPIDL_SOURCES += [
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
+
+GeneratedFile(
+    "RFPTargetConstants.sys.mjs",
+    script="extract_rfp_targets.py",
+    inputs=["RFPTargets.inc", "RFPTargetsDefault.inc"],
+)
