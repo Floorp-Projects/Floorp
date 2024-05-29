@@ -71,10 +71,11 @@ class PwaTest : TestSetup() {
     @SmokeTest
     @Test
     fun installPWAFromTheMainMenuTest() {
-        val pwaPage = "https://mozilla-mobile.github.io/testapp/"
+        val pwaPage = "https://mozilla-mobile.github.io/testapp/loginForm"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pwaPage.toUri()) {
+            verifyPageContent("Login Form")
         }.openThreeDotMenu {
         }.clickInstall {
             clickAddAutomaticallyButton()
