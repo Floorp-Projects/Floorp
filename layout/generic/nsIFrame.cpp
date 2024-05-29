@@ -52,7 +52,6 @@
 #include "mozilla/ToString.h"
 #include "mozilla/Try.h"
 #include "mozilla/ViewportUtils.h"
-#include "mozilla/WritingModes.h"
 
 #include "nsCOMPtr.h"
 #include "nsFieldSetFrame.h"
@@ -1768,7 +1767,7 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
     return false;
   }
 
-  return ShouldApplyOverflowClipping(disp).isEmpty() &&
+  return ShouldApplyOverflowClipping(disp) == PhysicalAxes::None &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
          !SVGIntegrationUtils::UsingEffectsForFrame(this) &&
          !effects->HasMixBlendMode() &&
@@ -2736,13 +2735,13 @@ Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
  */
 static void ApplyOverflowClipping(
     nsDisplayListBuilder* aBuilder, const nsIFrame* aFrame,
-    PhysicalAxes aClipAxes,
+    nsIFrame::PhysicalAxes aClipAxes,
     DisplayListClipState::AutoClipMultiple& aClipState) {
   // Only 'clip' is handled here (and 'hidden' for table frames, and any
   // non-'visible' value for blocks in a paginated context).
   // We allow 'clip' to apply to any kind of frame. This is required by
   // comboboxes which make their display text (an inline frame) have clipping.
-  MOZ_ASSERT(!aClipAxes.isEmpty());
+  MOZ_ASSERT(aClipAxes != nsIFrame::PhysicalAxes::None);
   MOZ_ASSERT(aFrame->ShouldApplyOverflowClipping(aFrame->StyleDisplay()) ==
              aClipAxes);
 
@@ -2776,7 +2775,7 @@ static void ApplyOverflowClipping(
 
   nsRect rect(nsPoint(0, 0), aFrame->GetSize());
   rect.Inflate(boxMargin);
-  if (MOZ_UNLIKELY(!aClipAxes.contains(PhysicalAxis::Horizontal))) {
+  if (MOZ_UNLIKELY(!(aClipAxes & nsIFrame::PhysicalAxes::Horizontal))) {
     // NOTE(mats) We shouldn't be clipping at all in this dimension really,
     // but clipping in just one axis isn't supported by our GFX APIs so we
     // clip to our visual overflow rect instead.
@@ -2784,7 +2783,7 @@ static void ApplyOverflowClipping(
     rect.x = o.x;
     rect.width = o.width;
   }
-  if (MOZ_UNLIKELY(!aClipAxes.contains(PhysicalAxis::Vertical))) {
+  if (MOZ_UNLIKELY(!(aClipAxes & nsIFrame::PhysicalAxes::Vertical))) {
     // See the note above.
     nsRect o = aFrame->InkOverflowRect();
     rect.y = o.y;
@@ -2798,7 +2797,7 @@ static void ApplyOverflowClipping(
 
 nsSize nsIFrame::OverflowClipMargin(PhysicalAxes aClipAxes) const {
   nsSize result;
-  if (aClipAxes.isEmpty()) {
+  if (aClipAxes == PhysicalAxes::None) {
     return result;
   }
   const auto& margin = StyleMargin()->mOverflowClipMargin;
@@ -2806,10 +2805,10 @@ nsSize nsIFrame::OverflowClipMargin(PhysicalAxes aClipAxes) const {
     return result;
   }
   nscoord marginAu = margin.ToAppUnits();
-  if (aClipAxes.contains(PhysicalAxis::Horizontal)) {
+  if (aClipAxes & PhysicalAxes::Horizontal) {
     result.width = marginAu;
   }
-  if (aClipAxes.contains(PhysicalAxis::Vertical)) {
+  if (aClipAxes & PhysicalAxes::Vertical) {
     result.height = marginAu;
   }
   return result;
@@ -4088,8 +4087,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       // Animations may change the stacking context state.
       // ShouldApplyOverflowClipping is affected by the parent style, which does
       // not invalidate the NS_FRAME_SIMPLE_DISPLAYLIST bit.
-      !(!overflowClipAxes.isEmpty() || child->MayHaveTransformAnimation() ||
-        child->MayHaveOpacityAnimation());
+      !(overflowClipAxes != PhysicalAxes::None ||
+        child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
 
   if (aBuilder->IsForPainting()) {
     aBuilder->ClearWillChangeBudgetStatus(child);
@@ -4272,7 +4271,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // FIXME(emilio): Why can't we handle this more similarly to `clip` (on the
   // parent, rather than on the children)? Would ClipContentDescendants do what
   // we want?
-  if (!overflowClipAxes.isEmpty()) {
+  if (overflowClipAxes != PhysicalAxes::None) {
     ApplyOverflowClipping(aBuilder, parent, overflowClipAxes, clipState);
     awayFromCommonPath = true;
   }
@@ -10015,7 +10014,8 @@ static nsRect ComputeOutlineInnerRect(
 
   auto overflowClipAxes = aFrame->ShouldApplyOverflowClipping(disp);
   auto overflowClipMargin = aFrame->OverflowClipMargin(overflowClipAxes);
-  if (overflowClipAxes == kPhysicalAxesBoth && overflowClipMargin == nsSize()) {
+  if (overflowClipAxes == nsIFrame::PhysicalAxes::Both &&
+      overflowClipMargin == nsSize()) {
     return u;
   }
 
@@ -10082,7 +10082,7 @@ static nsRect ComputeOutlineInnerRect(
     }
   }
 
-  if (!overflowClipAxes.isEmpty()) {
+  if (overflowClipAxes != nsIFrame::PhysicalAxes::None) {
     OverflowAreas::ApplyOverflowClippingOnRect(u, bounds, overflowClipAxes,
                                                overflowClipMargin);
   }
@@ -10231,7 +10231,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
   if (ChildrenHavePerspective(disp) && sizeChanged) {
     RecomputePerspectiveChildrenOverflow(this);
 
-    if (overflowClipAxes != kPhysicalAxesBoth) {
+    if (overflowClipAxes != PhysicalAxes::Both) {
       aOverflowAreas.SetAllTo(bounds);
       DebugOnly<bool> ok = ComputeCustomOverflow(aOverflowAreas);
 
@@ -10276,7 +10276,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
       // that's the pre-existing behavior, and breaks pre-rendering otherwise).
       // FIXME(bug 1770704): This check most likely wants to be removed or check
       // for specific frame types at least.
-      return !overflowClipAxes.isEmpty();
+      return overflowClipAxes != PhysicalAxes::None;
     }
     return true;
   }();
@@ -10292,7 +10292,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
   // dimension(s). The children are actually clipped to the padding-box, but
   // since the overflow area should include the entire border-box, just set it
   // to the border-box size here.
-  if (!overflowClipAxes.isEmpty()) {
+  if (overflowClipAxes != PhysicalAxes::None) {
     aOverflowAreas.ApplyClipping(bounds, overflowClipAxes,
                                  OverflowClipMargin(overflowClipAxes));
   }
@@ -11542,7 +11542,7 @@ void nsIFrame::UpdateVisibleDescendantsState() {
   }
 }
 
-PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
+nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
     const nsStyleDisplay* aDisp) const {
   MOZ_ASSERT(aDisp == StyleDisplay(), "Wrong display struct");
 
@@ -11553,7 +11553,7 @@ PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
   // (e.g. because it forms a fixed-pos containing block).
   if (aDisp->IsContainPaint() && !IsScrollContainerFrame() &&
       SupportsContainLayoutAndPaint()) {
-    return kPhysicalAxesBoth;
+    return PhysicalAxes::Both;
   }
 
   // and overflow:hidden that we should interpret as clip
@@ -11568,14 +11568,14 @@ PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
       case LayoutFrameType::SVGInnerSVG:
       case LayoutFrameType::SVGSymbol:
       case LayoutFrameType::SVGForeignObject:
-        return kPhysicalAxesBoth;
+        return PhysicalAxes::Both;
       default:
         if (IsReplacedWithBlock()) {
           if (type == mozilla::LayoutFrameType::TextInput) {
             // It has an anonymous scroll frame that handles any overflow.
-            return PhysicalAxes();
+            return PhysicalAxes::None;
           }
-          return kPhysicalAxesBoth;
+          return PhysicalAxes::Both;
         }
     }
   }
@@ -11590,23 +11590,23 @@ PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
     const auto* element = Element::FromNodeOrNull(GetContent());
     if (!element ||
         !PresContext()->ElementWouldPropagateScrollStyles(*element)) {
-      PhysicalAxes axes;
+      uint8_t axes = uint8_t(PhysicalAxes::None);
       if (aDisp->mOverflowX == mozilla::StyleOverflow::Clip) {
-        axes += PhysicalAxis::Horizontal;
+        axes |= uint8_t(PhysicalAxes::Horizontal);
       }
       if (aDisp->mOverflowY == mozilla::StyleOverflow::Clip) {
-        axes += PhysicalAxis::Vertical;
+        axes |= uint8_t(PhysicalAxes::Vertical);
       }
-      return axes;
+      return PhysicalAxes(axes);
     }
   }
 
   if (HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    return PhysicalAxes();
+    return PhysicalAxes::None;
   }
 
-  return IsSuppressedScrollableBlockForPrint() ? kPhysicalAxesBoth
-                                               : PhysicalAxes();
+  return IsSuppressedScrollableBlockForPrint() ? PhysicalAxes::Both
+                                               : PhysicalAxes::None;
 }
 
 bool nsIFrame::IsSuppressedScrollableBlockForPrint() const {
