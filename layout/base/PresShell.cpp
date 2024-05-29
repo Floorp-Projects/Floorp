@@ -8692,19 +8692,15 @@ void PresShell::EventHandler::MaybeHandleKeyboardEventBeforeDispatch(
     }
   }
 
-  if (XRE_IsParentProcess() &&
-      !mPresShell->mIsLastChromeOnlyEscapeKeyConsumed) {
-    if (PointerLockManager::GetLockedRemoteTarget() ||
-        PointerLockManager::IsLocked()) {
-      // XXX See above comment to understand the reason why this needs
-      //     to claim that the Escape key event is consumed by content
-      //     even though it will be dispatched only into chrome.
-      aKeyboardEvent->PreventDefaultBeforeDispatch(
-          CrossProcessForwarding::eStop);
-      aKeyboardEvent->mFlags.mOnlyChromeDispatch = true;
-      if (aKeyboardEvent->mMessage == eKeyUp) {
-        PointerLockManager::Unlock();
-      }
+  nsCOMPtr<Document> pointerLockedDoc = PointerLockManager::GetLockedDocument();
+  if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed && pointerLockedDoc) {
+    // XXX See above comment to understand the reason why this needs
+    //     to claim that the Escape key event is consumed by content
+    //     even though it will be dispatched only into chrome.
+    aKeyboardEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
+    aKeyboardEvent->mFlags.mOnlyChromeDispatch = true;
+    if (aKeyboardEvent->mMessage == eKeyUp) {
+      PointerLockManager::Unlock();
     }
   }
 }
