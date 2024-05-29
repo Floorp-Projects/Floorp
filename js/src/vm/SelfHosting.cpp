@@ -3111,6 +3111,10 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructorArg,
           cx->runtime()->setUseCounter(
               cx->global(), JSUseCounter::SUBCLASSING_REGEXP_TYPE_III);
           return true;
+        case SUBCLASSING_TYPE_IV:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_REGEXP_TYPE_IV);
+          return true;
         default:
           MOZ_CRASH("Unexpected RegExp Subclassing Type");
       }
