@@ -84,6 +84,11 @@ using JSAccumulateTelemetryDataCallback = void (*)(JSMetric, uint32_t);
 extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
     JSContext* cx, JSAccumulateTelemetryDataCallback callback);
 
+#define FOR_EACH_JS_USE_COUNTER(_) \
+  _(ASMJS, AsmJS)                  \
+  _(WASM, Wasm)                    \
+  _(WASM_LEGACY_EXCEPTIONS, WasmLegacyExceptions)
+
 /*
  * Use counter names passed to the accumulate use counter callback.
  *
@@ -91,7 +96,9 @@ extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
  * fixed member of the mozilla::UseCounter enum by the callback.
  */
 
-enum class JSUseCounter { ASMJS, WASM, WASM_LEGACY_EXCEPTIONS };
+#define ENUM_DEF(NAME, _) NAME,
+enum class JSUseCounter { FOR_EACH_JS_USE_COUNTER(ENUM_DEF) COUNT };
+#undef ENUM_DEF
 
 using JSSetUseCounterCallback = void (*)(JSObject*, JSUseCounter);
 
