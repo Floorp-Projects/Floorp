@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Popup blocker a target=_blank</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<button>click</button>
+<a target=_blank href="https://example.com">Link</a>
+<script>
+const {BrowserTestUtils} = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
+);
+const gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
+
+add_task(async function() {
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  let button = document.querySelector("button");
+
+  const promise = new Promise(resolve => {
+    button.addEventListener("click", () => {
+      document.querySelector("a").dispatchEvent(new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      }));
+
+      BrowserTestUtils.waitForNewTab(gBrowser, null, true).then(function(aNewTab) {
+        ok(true, "A new tab was opened");
+        BrowserTestUtils.removeTab(aNewTab);
+        resolve();
+      });
+    });
+  });
+
+  button.dispatchEvent(new MouseEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+  }));
+
+  await promise;
+});
+</script>
+</body>
