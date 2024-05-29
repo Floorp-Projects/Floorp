@@ -750,17 +750,28 @@ nsBrowserContentHandler.prototype = {
             const nimbusOverrideUrl = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url_nimbus"
             );
+            // This defines the maximum allowed Fx update version to see the
+            // nimbus WNP. For ex, if maxVersion is set to 127 but user updates
+            // to 128, they will not qualify.
             const maxVersion = Services.prefs.getCharPref(
               "startup.homepage_override_nimbus_maxVersion",
               ""
             );
+            // This defines the minimum allowed Fx update version to see the
+            // nimbus WNP. For ex, if minVersion is set to 126 but user updates
+            // to 124, they will not qualify.
+            const minVersion = Services.prefs.getCharPref(
+              "startup.homepage_override_nimbus_minVersion",
+              ""
+            );
             let nimbusWNP;
 
-            // Update version should be less than or equal to maxVersion set by
-            // the experiment
+            // The update version should be less than or equal to maxVersion and
+            // greater or equal to minVersion set by the experiment.
             if (
               nimbusOverrideUrl &&
-              Services.vc.compare(update.appVersion, maxVersion) <= 0
+              Services.vc.compare(update.appVersion, maxVersion) <= 0 &&
+              Services.vc.compare(update.appVersion, minVersion) >= 0
             ) {
               try {
                 let uri = Services.io.newURI(nimbusOverrideUrl);

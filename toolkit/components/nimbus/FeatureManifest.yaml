@@ -1338,6 +1338,12 @@ whatsNewPage:
       setPref:
         branch: user
         pref: startup.homepage_override_nimbus_maxVersion
+    minVersion:
+      description: Minimum Firefox update version
+      type: string
+      setPref:
+        branch: user
+        pref: startup.homepage_override_nimbus_minVersion
 
 pbNewtab:
   description: "A Firefox Messaging System message for the pbNewtab message channel"
