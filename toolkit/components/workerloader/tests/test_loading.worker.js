@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-env worker */
-
 "use strict";
 
 importScripts("utils_worker.js"); // Test suite code

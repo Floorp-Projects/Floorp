@@ -7,7 +7,7 @@ support-files = [
   "file_image_great.png",
   "file_sample.html",
   "file_with_images.html",
-  "webrequest_chromeworker.js",
+  "webrequest_chrome.worker.js",
   "webrequest_test.sys.mjs",
 ]
 prefs = ["security.mixed_content.upgrade_display_content=false"]

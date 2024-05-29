@@ -2,7 +2,7 @@
 skip-if = ["os == 'android'"]
 support-files = [
   "xpcshellTestHarnessAdaptor.js",
-  "ctypes_worker.js",
+  "ctypes.worker.js",
   "../unit/test_jsctypes.js",
 ]
 
