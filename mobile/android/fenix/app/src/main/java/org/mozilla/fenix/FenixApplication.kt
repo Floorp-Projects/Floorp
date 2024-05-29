@@ -527,8 +527,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
      * megazord - it contains everything that fenix needs, and (currently) nothing more.
      *
      * Documentation on what megazords are, and why they're needed:
-     * - https://github.com/mozilla/application-services/blob/master/docs/design/megazords.md
-     * - https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
+     * - https://github.com/mozilla/application-services/blob/main/docs/design/megazords.md
+     * - https://mozilla.github.io/application-services/book/design/megazords.html
      *
      * This is the initialization of the megazord without setting up networking, i.e. needing the
      * engine for networking. This should do the minimum work necessary as it is done on the main
