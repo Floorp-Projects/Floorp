@@ -23,6 +23,6 @@ function run_test() {
 
   Assert.equal(
     createPrincipal("http://test/foo^bar").exposableSpec,
-    "http://test/foo%5Ebar"
+    "http://test/foo^bar"
   );
 }
