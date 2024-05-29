@@ -3906,26 +3906,53 @@ impl<'ctx> CoreStreamData<'ctx> {
                 device_layout
             );
 
-            // The mixer will be set up when
-            // 1. using aggregate device whose input device has output channels
-            // 2. output device has more channels than we need
-            // 3. output device has different layout than the one we have
-            self.mixer = if self.output_dev_desc.mChannelsPerFrame
-                != self.output_stream_params.channels()
-                || device_layout != mixer::get_channel_order(self.output_stream_params.layout())
+            // Simple case of stereo output only, map to the stereo pair (that might not be the first two channels)
+            if !self.has_input()
+                && self.output_stream_params.channels() == 2
+                && self.output_stream_params.layout() == ChannelLayout::STEREO
             {
-                cubeb_log!("Incompatible channel layouts detected, setting up remixer");
-                // We will be remixing the data before it reaches the output device.
-                Some(Mixer::new(
-                    self.output_stream_params.format(),
-                    self.output_stream_params.channels() as usize,
-                    self.output_stream_params.layout(),
-                    self.output_dev_desc.mChannelsPerFrame as usize,
-                    device_layout,
-                ))
+                let layout = AudioChannelLayout {
+                    mChannelLayoutTag: kAudioChannelLayoutTag_Stereo,
+                    ..Default::default()
+                };
+                let r = audio_unit_set_property(
+                    self.output_unit,
+                    kAudioUnitProperty_AudioChannelLayout,
+                    kAudioUnitScope_Input,
+                    AU_OUT_BUS,
+                    &layout,
+                    mem::size_of::<AudioChannelLayout>(),
+                );
+                if r != NO_ERR {
+                    cubeb_log!(
+                        "AudioUnitSetProperty/output/kAudioUnitProperty_AudioChannelLayout rv={}",
+                        r
+                    );
+                    return Err(Error::error());
+                }
             } else {
-                None
-            };
+                // The mixer will be set up when
+                // 0. not playing simply stereo
+                // 1. using aggregate device whose input device has output channels
+                // 2. output device has more channels than we need, and stream isn't simply mono or stereo
+                // 3. output device has different layout than the one we have
+                self.mixer = if self.output_dev_desc.mChannelsPerFrame
+                    != self.output_stream_params.channels()
+                    || device_layout != mixer::get_channel_order(self.output_stream_params.layout())
+                {
+                    cubeb_log!("Incompatible channel layouts detected, setting up remixer");
+                    // We will be remixing the data before it reaches the output device.
+                    Some(Mixer::new(
+                        self.output_stream_params.format(),
+                        self.output_stream_params.channels() as usize,
+                        self.output_stream_params.layout(),
+                        self.output_dev_desc.mChannelsPerFrame as usize,
+                        device_layout,
+                    ))
+                } else {
+                    None
+                };
+            }
 
             let r = audio_unit_set_property(
                 self.output_unit,
