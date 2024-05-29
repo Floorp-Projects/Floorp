@@ -39,6 +39,7 @@ browser.jar:
         content/browser/browser-a11yUtils.js          (content/browser-a11yUtils.js)
         content/browser/browser-addons.js             (content/browser-addons.js)
         content/browser/browser-captivePortal.js      (content/browser-captivePortal.js)
+        content/browser/browser-command-listeners.js  (content/browser-command-listeners.js)
         content/browser/browser-commands.js           (content/browser-commands.js)
         content/browser/browser-customization.js      (content/browser-customization.js)
         content/browser/browser-data-submission-info-bar.js (content/browser-data-submission-info-bar.js)
