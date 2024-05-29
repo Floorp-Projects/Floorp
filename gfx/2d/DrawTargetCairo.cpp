@@ -654,39 +654,45 @@ SurfaceFormat GfxFormatForCairoSurface(cairo_surface_t* surface) {
   return CairoContentToGfxFormat(cairo_surface_get_content(surface));
 }
 
-void DrawTargetCairo::Link(const char* aDestination, const Rect& aRect) {
-  if (!aDestination || !*aDestination) {
+void DrawTargetCairo::Link(const char* aDest, const char* aURI,
+                           const Rect& aRect) {
+  if ((!aURI || !*aURI) && (!aDest || !*aDest)) {
     // No destination? Just bail out.
     return;
   }
 
-  // We need to \-escape any single-quotes in the destination string, in order
-  // to pass it via the attributes arg to cairo_tag_begin.
+  // We need to \-escape any single-quotes in the destination and URI strings,
+  // in order to pass them via the attributes arg to cairo_tag_begin.
   //
   // We also need to escape any backslashes (bug 1748077), as per doc at
   // https://www.cairographics.org/manual/cairo-Tags-and-Links.html#cairo-tag-begin
   //
   // (Encoding of non-ASCII chars etc gets handled later by the PDF backend.)
-  nsAutoCString dest(aDestination);
-  for (size_t i = dest.Length(); i > 0;) {
-    --i;
-    if (dest[i] == '\'') {
-      dest.ReplaceLiteral(i, 1, "\\'");
-    } else if (dest[i] == '\\') {
-      dest.ReplaceLiteral(i, 1, "\\\\");
+  auto escapeForCairo = [](nsACString& aStr) {
+    for (size_t i = aStr.Length(); i > 0;) {
+      --i;
+      if (aStr[i] == '\'') {
+        aStr.ReplaceLiteral(i, 1, "\\'");
+      } else if (aStr[i] == '\\') {
+        aStr.ReplaceLiteral(i, 1, "\\\\");
+      }
     }
-  }
+  };
 
   double x = aRect.x, y = aRect.y, w = aRect.width, h = aRect.height;
   cairo_user_to_device(mContext, &x, &y);
   cairo_user_to_device_distance(mContext, &w, &h);
+  nsPrintfCString attributes("rect=[%f %f %f %f]", x, y, w, h);
 
-  nsPrintfCString attributes("rect=[%f %f %f %f] ", x, y, w, h);
-  if (dest[0] == '#') {
-    // The actual destination does not have a leading '#'.
-    attributes.AppendPrintf("dest='%s'", dest.get() + 1);
-  } else {
-    attributes.AppendPrintf("uri='%s'", dest.get());
+  if (aDest && *aDest) {
+    nsAutoCString dest(aDest);
+    escapeForCairo(dest);
+    attributes.AppendPrintf(" dest='%s'", dest.get());
+  }
+  if (aURI && *aURI) {
+    nsAutoCString uri(aURI);
+    escapeForCairo(uri);
+    attributes.AppendPrintf(" uri='%s'", uri.get());
   }
 
   // We generate a begin/end pair with no content in between, because we are

@@ -235,10 +235,11 @@ DrawTargetRecording::~DrawTargetRecording() {
   mRecorder->ClearDrawTarget(this);
 }
 
-void DrawTargetRecording::Link(const char* aDestination, const Rect& aRect) {
+void DrawTargetRecording::Link(const char* aLocalDest, const char* aURI,
+                               const Rect& aRect) {
   MarkChanged();
 
-  RecordEventSelf(RecordedLink(aDestination, aRect));
+  RecordEventSelf(RecordedLink(aLocalDest, aURI, aRect));
 }
 
 void DrawTargetRecording::Destination(const char* aDestination,

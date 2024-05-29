@@ -615,7 +615,7 @@ nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
 
   // Links don't nest, so if the builder already has a destination, no need to
   // check for a link element here.
-  if (!aBuilder->mLinkSpec.IsEmpty()) {
+  if (!aBuilder->mLinkURI.IsEmpty() || !aBuilder->mLinkDest.IsEmpty()) {
     return;
   }
 
@@ -629,27 +629,33 @@ nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  // Is it a local (in-page) destination?
+  // Is it potentially a local (in-document) destination?
   bool hasRef, eqExRef;
   nsIURI* docURI;
   if (StaticPrefs::print_save_as_pdf_internal_destinations_enabled() &&
       NS_SUCCEEDED(uri->GetHasRef(&hasRef)) && hasRef &&
       (docURI = aFrame->PresContext()->Document()->GetDocumentURI()) &&
       NS_SUCCEEDED(uri->EqualsExceptRef(docURI, &eqExRef)) && eqExRef) {
-    if (NS_FAILED(uri->GetRef(aBuilder->mLinkSpec)) ||
-        aBuilder->mLinkSpec.IsEmpty()) {
-      return;
+    // Try to get a local destination name. If this fails, we'll leave the
+    // mLinkDest string empty, but still try to set mLinkURI below.
+    if (NS_FAILED(uri->GetRef(aBuilder->mLinkDest))) {
+      aBuilder->mLinkDest.Truncate();
     }
     // The destination name is simply a string; we don't want URL-escaping
     // applied to it.
-    NS_UnescapeURL(aBuilder->mLinkSpec);
-    // Mark the link spec as being an internal destination
-    aBuilder->mLinkSpec.Insert('#', 0);
-  } else {
-    if (NS_FAILED(uri->GetSpec(aBuilder->mLinkSpec)) ||
-        aBuilder->mLinkSpec.IsEmpty()) {
-      return;
+    if (!aBuilder->mLinkDest.IsEmpty()) {
+      NS_UnescapeURL(aBuilder->mLinkDest);
     }
+  }
+
+  if (NS_FAILED(uri->GetSpec(aBuilder->mLinkURI))) {
+    aBuilder->mLinkURI.Truncate();
+  }
+
+  // If we didn't get either kind of destination, we won't try to linkify at
+  // this level.
+  if (aBuilder->mLinkDest.IsEmpty() && aBuilder->mLinkURI.IsEmpty()) {
+    return;
   }
 
   // Record that we need to reset the builder's state on destruction.
@@ -659,11 +665,12 @@ nsDisplayListBuilder::Linkifier::Linkifier(nsDisplayListBuilder* aBuilder,
 void nsDisplayListBuilder::Linkifier::MaybeAppendLink(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
   // Note that we may generate a link here even if the constructor bailed out
-  // without updating aBuilder->LinkSpec(), because it may have been set by
+  // without updating aBuilder->mLinkURI/Dest, because it may have been set by
   // an ancestor that was associated with a link element.
-  if (!aBuilder->mLinkSpec.IsEmpty()) {
+  if (!aBuilder->mLinkURI.IsEmpty() || !aBuilder->mLinkDest.IsEmpty()) {
     auto* link = MakeDisplayItem<nsDisplayLink>(
-        aBuilder, aFrame, aBuilder->mLinkSpec.get(), aFrame->GetRect());
+        aBuilder, aFrame, aBuilder->mLinkDest.get(), aBuilder->mLinkURI.get(),
+        aFrame->GetRect());
     mList->AppendToTop(link);
   }
 }
@@ -6351,8 +6358,8 @@ static bool ShouldUsePartialPrerender(const nsIFrame* aFrame) {
 
 /* static */
 auto nsDisplayTransform::ShouldPrerenderTransformedContent(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsRect* aDirtyRect)
-    -> PrerenderInfo {
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+    nsRect* aDirtyRect) -> PrerenderInfo {
   PrerenderInfo result;
   // If we are in a preserve-3d tree, and we've disallowed async animations, we
   // return No prerender decision directly.
@@ -8531,7 +8538,8 @@ bool nsDisplayForeignObject::CreateWebRenderCommands(
 void nsDisplayLink::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   auto appPerDev = mFrame->PresContext()->AppUnitsPerDevPixel();
   aCtx->GetDrawTarget()->Link(
-      mLinkSpec.get(), NSRectToRect(GetPaintRect(aBuilder, aCtx), appPerDev));
+      mLinkURI.get(), mLinkDest.get(),
+      NSRectToRect(GetPaintRect(aBuilder, aCtx), appPerDev));
 }
 
 void nsDisplayDestination::Paint(nsDisplayListBuilder* aBuilder,
