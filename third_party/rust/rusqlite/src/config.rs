@@ -9,6 +9,7 @@ use crate::{Connection, Result};
 /// Database Connection Configuration Options
 /// See [Database Connection Configuration Options](https://sqlite.org/c3ref/c_dbconfig_enable_fkey.html) for details.
 #[repr(i32)]
+#[derive(Copy, Clone, Debug)]
 #[allow(non_snake_case, non_camel_case_types)]
 #[non_exhaustive]
 #[allow(clippy::upper_case_acronyms)]

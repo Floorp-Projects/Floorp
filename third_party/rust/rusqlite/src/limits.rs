@@ -9,6 +9,7 @@ use std::os::raw::c_int;
 /// See the official documentation for more information:
 /// - <https://www.sqlite.org/c3ref/c_limit_attached.html>
 /// - <https://www.sqlite.org/limits.html>
+#[derive(Copy, Clone, Debug)]
 #[repr(i32)]
 #[non_exhaustive]
 #[allow(clippy::upper_case_acronyms, non_camel_case_types)]

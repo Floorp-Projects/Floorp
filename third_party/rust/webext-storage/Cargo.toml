@@ -37,7 +37,7 @@ path = "../support/error"
 path = "../support/interrupt"
 
 [dependencies.rusqlite]
-version = "0.30.0"
+version = "0.31.0"
 features = [
     "functions",
     "bundled",
@@ -64,7 +64,7 @@ version = "2.1"
 features = ["serde"]
 
 [dev-dependencies]
-libsqlite3-sys = "0.27.0"
+libsqlite3-sys = "0.28.0"
 tempfile = "3"
 
 [dev-dependencies.env_logger]

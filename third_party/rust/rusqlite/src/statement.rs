@@ -606,6 +606,13 @@ impl Statement<'_> {
                     .conn
                     .decode_result(unsafe { ffi::sqlite3_bind_zeroblob(ptr, col as c_int, len) });
             }
+            #[cfg(feature = "functions")]
+            ToSqlOutput::Arg(_) => {
+                return Err(Error::SqliteFailure(
+                    ffi::Error::new(ffi::SQLITE_MISUSE),
+                    Some(format!("Unsupported value \"{value:?}\"")),
+                ));
+            }
             #[cfg(feature = "array")]
             ToSqlOutput::Array(a) => {
                 return self.conn.decode_result(unsafe {
@@ -650,9 +657,12 @@ impl Statement<'_> {
     fn execute_with_bound_parameters(&mut self) -> Result<usize> {
         self.check_update()?;
         let r = self.stmt.step();
-        self.stmt.reset();
+        let rr = self.stmt.reset();
         match r {
-            ffi::SQLITE_DONE => Ok(self.conn.changes() as usize),
+            ffi::SQLITE_DONE => match rr {
+                ffi::SQLITE_OK => Ok(self.conn.changes() as usize),
+                _ => Err(self.conn.decode_result(rr).unwrap_err()),
+            },
             ffi::SQLITE_ROW => Err(Error::ExecuteReturnedResults),
             _ => Err(self.conn.decode_result(r).unwrap_err()),
         }
@@ -847,8 +857,11 @@ impl Statement<'_> {
     }
 
     #[inline]
-    pub(super) fn reset(&self) -> c_int {
-        self.stmt.reset()
+    pub(super) fn reset(&self) -> Result<()> {
+        match self.stmt.reset() {
+            ffi::SQLITE_OK => Ok(()),
+            code => Err(self.conn.decode_result(code).unwrap_err()),
+        }
     }
 }
 
@@ -1274,7 +1287,7 @@ mod test {
         assert_eq!(0, stmt.column_count());
         stmt.parameter_index("test").unwrap();
         stmt.step().unwrap_err();
-        stmt.reset();
+        stmt.reset().unwrap(); // SQLITE_OMIT_AUTORESET = false
         stmt.execute([]).unwrap_err();
         Ok(())
     }
@@ -1347,7 +1360,7 @@ mod test {
     fn test_error_offset() -> Result<()> {
         use crate::ffi::ErrorCode;
         let db = Connection::open_in_memory()?;
-        let r = db.execute_batch("SELECT CURRENT_TIMESTANP;");
+        let r = db.execute_batch("SELECT INVALID_FUNCTION;");
         match r.unwrap_err() {
             Error::SqlInputError { error, offset, .. } => {
                 assert_eq!(error.code, ErrorCode::Unknown);

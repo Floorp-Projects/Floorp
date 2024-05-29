@@ -1,16 +1,20 @@
 //! Ensure loadable_extension.rs works.
 
 use rusqlite::{Connection, Result};
+use std::env::consts::{DLL_PREFIX, DLL_SUFFIX};
 
 fn main() -> Result<()> {
     let db = Connection::open_in_memory()?;
 
     unsafe {
         db.load_extension_enable()?;
-        #[cfg(not(windows))]
-        db.load_extension("target/debug/examples/libloadable_extension", None)?;
-        #[cfg(windows)]
-        db.load_extension("target/debug/examples/loadable_extension", None)?;
+        db.load_extension(
+            format!(
+                "target/debug/examples/{}loadable_extension{}",
+                DLL_PREFIX, DLL_SUFFIX
+            ),
+            None,
+        )?;
         db.load_extension_disable()?;
     }
 

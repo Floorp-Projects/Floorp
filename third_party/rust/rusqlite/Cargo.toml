@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "rusqlite"
-version = "0.30.0"
+version = "0.31.0"
 authors = ["The rusqlite developers"]
 exclude = [
     "/.github/*",
@@ -59,9 +59,7 @@ name = "loadable_extension"
 crate-type = ["cdylib"]
 required-features = [
     "loadable_extension",
-    "modern_sqlite",
     "functions",
-    "vtab",
     "trace",
 ]
 
@@ -71,7 +69,6 @@ required-features = [
     "load_extension",
     "bundled",
     "functions",
-    "vtab",
     "trace",
 ]
 
@@ -113,13 +110,13 @@ version = "0.3"
 version = "0.1"
 
 [dependencies.hashlink]
-version = "0.8"
+version = "0.9"
 
 [dependencies.libsqlite3-sys]
-version = "0.27.0"
+version = "0.28.0"
 
 [dependencies.rusqlite-macros]
-version = "0.1.0"
+version = "0.2.0"
 optional = true
 
 [dependencies.serde_json]
@@ -246,7 +243,6 @@ unlock_notify = ["libsqlite3-sys/unlock_notify"]
 vtab = []
 wasm32-wasi-vfs = ["libsqlite3-sys/wasm32-wasi-vfs"]
 window = ["functions"]
-winsqlite3 = ["libsqlite3-sys/winsqlite3"]
 with-asan = ["libsqlite3-sys/with-asan"]
 
 [badges.appveyor]

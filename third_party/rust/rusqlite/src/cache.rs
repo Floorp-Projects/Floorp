@@ -57,7 +57,7 @@ impl Connection {
 }
 
 /// Prepared statements LRU cache.
-// #[derive(Debug)] // FIXME: https://github.com/kyren/hashlink/pull/4
+#[derive(Debug)]
 pub struct StatementCache(RefCell<LruCache<Arc<str>, RawStatement>>);
 
 #[allow(clippy::non_send_fields_in_send_ty)]

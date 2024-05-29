@@ -1494,7 +1494,7 @@ mod test {
 
     #[test]
     #[cfg(feature = "extra_check")]
-    fn test_execute_select() {
+    fn test_execute_select_with_no_row() {
         let db = checked_memory_handle();
         let err = db.execute("SELECT 1 WHERE 1 < ?1", [1i32]).unwrap_err();
         assert_eq!(
@@ -1502,6 +1502,13 @@ mod test {
             Error::ExecuteReturnedResults,
             "Unexpected error: {err}"
         );
+    }
+
+    #[test]
+    fn test_execute_select_with_row() {
+        let db = checked_memory_handle();
+        let err = db.execute("SELECT 1", []).unwrap_err();
+        assert_eq!(err, Error::ExecuteReturnedResults);
     }
 
     #[test]
@@ -1874,7 +1881,7 @@ mod test {
     #[test]
     fn test_from_handle_owned() -> Result<()> {
         let mut handle: *mut ffi::sqlite3 = std::ptr::null_mut();
-        let r = unsafe { ffi::sqlite3_open(":memory:\0".as_ptr() as *const i8, &mut handle) };
+        let r = unsafe { ffi::sqlite3_open(":memory:\0".as_ptr() as *const c_char, &mut handle) };
         assert_eq!(r, ffi::SQLITE_OK);
         let db = unsafe { Connection::from_handle_owned(handle) }?;
         db.execute_batch("PRAGMA VACUUM")?;

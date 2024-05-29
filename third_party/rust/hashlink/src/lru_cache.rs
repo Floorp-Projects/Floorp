@@ -1,4 +1,4 @@
-use std::{
+use core::{
     borrow::Borrow,
     fmt,
     hash::{BuildHasher, Hash},
@@ -87,12 +87,12 @@ where
     S: BuildHasher,
 {
     #[inline]
-    pub fn contains_key<Q>(&mut self, key: &Q) -> bool
+    pub fn contains_key<Q>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
     {
-        self.get_mut(key).is_some()
+        self.map.contains_key(key)
     }
 
     /// Insert a new value into the `LruCache`.

@@ -373,6 +373,7 @@ bitflags::bitflags! {
     /// Virtual table scan flags
     /// See [Function Flags](https://sqlite.org/c3ref/c_index_scan_unique.html) for details.
     #[repr(C)]
+    #[derive(Copy, Clone, Debug)]
     pub struct IndexFlags: ::std::os::raw::c_int {
         /// Default
         const NONE     = 0;
@@ -703,7 +704,7 @@ impl Context {
     #[inline]
     pub fn set_result<T: ToSql>(&mut self, value: &T) -> Result<()> {
         let t = value.to_sql()?;
-        unsafe { set_result(self.0, &t) };
+        unsafe { set_result(self.0, &[], &t) };
         Ok(())
     }
 
