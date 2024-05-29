@@ -29,7 +29,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.search.ExtraAction
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class) // For gleanTestRule
@@ -129,54 +128,6 @@ class DefaultToolbarControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_search_dialog },
-                any<NavOptions>(),
-            )
-        }
-    }
-
-    @Test
-    @Suppress("Deprecation")
-    fun `WHEN the toolbar QR button is tapped THEN navigate to the search dialog with QR reader activated`() {
-        assertNull(Events.searchBarTapped.testGetValue())
-
-        createController().handleNavigateSearch(ExtraAction.QR_READER)
-
-        assertNotNull(Events.searchBarTapped.testGetValue())
-
-        val recordedEvents = Events.searchBarTapped.testGetValue()!!
-        assertEquals(1, recordedEvents.size)
-        assertEquals("HOME_QR", recordedEvents.single().extra?.getValue("source"))
-
-        verify {
-            navController.navigate(
-                match<NavDirections> {
-                    it.actionId == R.id.action_global_search_dialog &&
-                        it.arguments.get("extra_action") as ExtraAction == ExtraAction.QR_READER
-                },
-                any<NavOptions>(),
-            )
-        }
-    }
-
-    @Test
-    @Suppress("Deprecation")
-    fun `WHEN the toolbar VOICE button is tapped THEN navigate to the search dialog with voice search activated`() {
-        assertNull(Events.searchBarTapped.testGetValue())
-
-        createController().handleNavigateSearch(ExtraAction.VOICE_SEARCH)
-
-        assertNotNull(Events.searchBarTapped.testGetValue())
-
-        val recordedEvents = Events.searchBarTapped.testGetValue()!!
-        assertEquals(1, recordedEvents.size)
-        assertEquals("HOME_VOICE", recordedEvents.single().extra?.getValue("source"))
-
-        verify {
-            navController.navigate(
-                match<NavDirections> {
-                    it.actionId == R.id.action_global_search_dialog &&
-                        it.arguments.get("extra_action") as ExtraAction == ExtraAction.VOICE_SEARCH
-                },
                 any<NavOptions>(),
             )
         }
