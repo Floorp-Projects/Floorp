@@ -74,7 +74,7 @@ class CookieServiceParent : public PCookieServiceParent {
       GetCookieListResolver&& aResolve);
 
   static void SerializeCookieListTable(
-      const nsTArray<Cookie*>& aFoundCookieList,
+      const nsTArray<RefPtr<Cookie>>& aFoundCookieList,
       nsTArray<CookieStructTable>& aCookiesListTable, nsIURI* aHostURI);
 
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;

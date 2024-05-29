@@ -621,8 +621,8 @@ void CookiePersistentStorage::MaybeStoreCookiesToDB(
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-void CookiePersistentStorage::StaleCookies(const nsTArray<Cookie*>& aCookieList,
-                                           int64_t aCurrentTimeInUsec) {
+void CookiePersistentStorage::StaleCookies(
+    const nsTArray<RefPtr<Cookie>>& aCookieList, int64_t aCurrentTimeInUsec) {
   // Create an array of parameters to bind to our update statement. Batching
   // is OK here since we're updating cookies with no interleaved operations.
   nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;

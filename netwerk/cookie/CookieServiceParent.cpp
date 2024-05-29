@@ -166,7 +166,7 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   }
 
   // Send matching cookies to Child.
-  nsTArray<Cookie*> foundCookieList;
+  nsTArray<RefPtr<Cookie>> foundCookieList;
   mCookieService->GetCookiesForURI(
       uri, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
@@ -201,7 +201,7 @@ void CookieServiceParent::UpdateCookieInContentList(
 
 // static
 void CookieServiceParent::SerializeCookieListTable(
-    const nsTArray<Cookie*>& aFoundCookieList,
+    const nsTArray<RefPtr<Cookie>>& aFoundCookieList,
     nsTArray<CookieStructTable>& aCookiesListTable, nsIURI* aHostURI) {
   nsTHashMap<nsCStringHashKey, CookieStructTable*> cookieListTable;
 
@@ -252,7 +252,7 @@ IPCResult CookieServiceParent::RecvGetCookieList(
     UpdateCookieInContentList(aHost, attrs);
   }
 
-  nsTArray<Cookie*> foundCookieList;
+  nsTArray<RefPtr<Cookie>> foundCookieList;
   // Note: passing nullptr as aChannel to GetCookiesForURI() here is fine since
   // this argument is only used for proper reporting of cookie loads, but the
   // child process already does the necessary reporting in this case for us.
