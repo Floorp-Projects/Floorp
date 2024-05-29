@@ -54,7 +54,7 @@ USE_LIBS += [
     "zlib",
 ]
 
-if CONFIG["OS_ARCH"] not in ("WINNT", "HP-UX"):
+if CONFIG["OS_ARCH"] != "WINNT":
     OS_LIBS += [
         "m",
     ]

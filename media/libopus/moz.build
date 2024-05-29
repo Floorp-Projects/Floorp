@@ -50,8 +50,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     if CONFIG["CC_TYPE"] in ("clang", "gcc"):
         DEFINES["HAVE_LRINTF"] = True
 
-if CONFIG["OS_ARCH"] == "AIX":
-    DEFINES["alloca"] = "__alloca"
 
 if CONFIG["OS_ARCH"] == "SunOS":
     DEFINES["HAVE_ALLOCA_H"] = True

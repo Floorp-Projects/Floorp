@@ -7,10 +7,6 @@
 
 #include "xptcprivate.h"
 
-#if _HPUX
-#error "This code is for HP-PA RISC 32 bit mode only"
-#endif
-
 #include <alloca.h>
 
 typedef unsigned nsXPCVariant;
