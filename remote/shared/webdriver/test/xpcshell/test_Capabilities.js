@@ -50,7 +50,7 @@ add_task(function test_Timeouts_fromJSON() {
   equal(ts.script, json.script);
 });
 
-add_task(function test_Timeouts_fromJSON_unrecognised_field() {
+add_task(function test_Timeouts_fromJSON_unrecognized_field() {
   let json = {
     sessionId: "foobar",
   };
@@ -58,7 +58,7 @@ add_task(function test_Timeouts_fromJSON_unrecognised_field() {
     Timeouts.fromJSON(json);
   } catch (e) {
     equal(e.name, error.InvalidArgumentError.name);
-    equal(e.message, "Unrecognised timeout: sessionId");
+    equal(e.message, "Unrecognized timeout: sessionId");
   }
 });
 
@@ -439,27 +439,53 @@ add_task(function test_Capabilities_fromJSON() {
   caps = fromJSON({ acceptInsecureCerts: false });
   equal(false, caps.get("acceptInsecureCerts"));
 
-  for (let strategy of Object.values(PageLoadStrategy)) {
-    caps = fromJSON({ pageLoadStrategy: strategy });
-    equal(strategy, caps.get("pageLoadStrategy"));
-  }
-
   let proxyConfig = { proxyType: "manual" };
   caps = fromJSON({ proxy: proxyConfig });
   equal("manual", caps.get("proxy").proxyType);
 
+  // HTTP only capabilities
+  for (let strategy of Object.values(PageLoadStrategy)) {
+    caps = fromJSON({ pageLoadStrategy: strategy }, true);
+    equal(strategy, caps.get("pageLoadStrategy"));
+
+    caps = fromJSON({ pageLoadStrategy: strategy });
+    equal("normal", caps.get("pageLoadStrategy"));
+  }
+
   let timeoutsConfig = { implicit: 123 };
   caps = fromJSON({ timeouts: timeoutsConfig });
+  equal(0, caps.get("timeouts").implicit);
+  caps = fromJSON({ timeouts: timeoutsConfig }, true);
   equal(123, caps.get("timeouts").implicit);
 
-  caps = fromJSON({ strictFileInteractability: false });
+  caps = fromJSON({ strictFileInteractability: false }, true);
   equal(false, caps.get("strictFileInteractability"));
-  caps = fromJSON({ strictFileInteractability: true });
+  caps = fromJSON({ strictFileInteractability: true }, true);
   equal(true, caps.get("strictFileInteractability"));
 
-  caps = fromJSON({ webSocketUrl: true });
+  caps = fromJSON({ webSocketUrl: true }, true);
   equal(true, caps.get("webSocketUrl"));
 
+  // Mozilla specific capabilities
+  caps = fromJSON({ "moz:accessibilityChecks": true });
+  equal(true, caps.get("moz:accessibilityChecks"));
+  caps = fromJSON({ "moz:accessibilityChecks": false });
+  equal(false, caps.get("moz:accessibilityChecks"));
+
+  caps = fromJSON({ "moz:webdriverClick": true }, true);
+  equal(true, caps.get("moz:webdriverClick"));
+  caps = fromJSON({ "moz:webdriverClick": false }, true);
+  equal(false, caps.get("moz:webdriverClick"));
+
+  // capability is always populated with null if remote agent is not listening
+  caps = fromJSON({});
+  equal(null, caps.get("moz:debuggerAddress"));
+  caps = fromJSON({ "moz:debuggerAddress": "foo" });
+  equal(null, caps.get("moz:debuggerAddress"));
+  caps = fromJSON({ "moz:debuggerAddress": true });
+  equal(null, caps.get("moz:debuggerAddress"));
+
+  // Extension capabilities
   caps = fromJSON({ "webauthn:virtualAuthenticators": true });
   equal(true, caps.get("webauthn:virtualAuthenticators"));
   caps = fromJSON({ "webauthn:virtualAuthenticators": false });
@@ -505,31 +531,13 @@ add_task(function test_Capabilities_fromJSON() {
     /InvalidArgumentError/
   );
 
-  caps = fromJSON({ "moz:accessibilityChecks": true });
-  equal(true, caps.get("moz:accessibilityChecks"));
-  caps = fromJSON({ "moz:accessibilityChecks": false });
-  equal(false, caps.get("moz:accessibilityChecks"));
-
-  // capability is always populated with null if remote agent is not listening
-  caps = fromJSON({});
-  equal(null, caps.get("moz:debuggerAddress"));
-  caps = fromJSON({ "moz:debuggerAddress": "foo" });
-  equal(null, caps.get("moz:debuggerAddress"));
-  caps = fromJSON({ "moz:debuggerAddress": true });
-  equal(null, caps.get("moz:debuggerAddress"));
-
-  caps = fromJSON({ "moz:webdriverClick": true });
-  equal(true, caps.get("moz:webdriverClick"));
-  caps = fromJSON({ "moz:webdriverClick": false });
-  equal(false, caps.get("moz:webdriverClick"));
-
   // No longer supported capabilities
   Assert.throws(
-    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": false }),
+    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": false }, true),
     /InvalidArgumentError/
   );
   Assert.throws(
-    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": true }),
+    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": true }, true),
     /InvalidArgumentError/
   );
 });
