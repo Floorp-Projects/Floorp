@@ -2628,16 +2628,21 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
   switch (counter) {
     case JSUseCounter::ASMJS:
       SetUseCounter(obj, eUseCounter_custom_JS_asmjs);
-      break;
+      return;
     case JSUseCounter::WASM:
       SetUseCounter(obj, eUseCounter_custom_JS_wasm);
-      break;
+      return;
     case JSUseCounter::WASM_LEGACY_EXCEPTIONS:
       SetUseCounter(obj, eUseCounter_custom_JS_wasm_legacy_exceptions);
+      return;
+    case JSUseCounter::SUBCLASSING_ARRAY_TYPE_II:
+      SetUseCounter(obj,
+                    mozilla::eUseCounter_custom_JS_subclassing_array_type_2);
+      return;
+    case JSUseCounter::COUNT:
       break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");
   }
+  MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");
 }
 
 static void GetRealmNameCallback(JSContext* cx, Realm* realm, char* buf,
