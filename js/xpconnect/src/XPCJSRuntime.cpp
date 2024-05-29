@@ -2668,6 +2668,10 @@ static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
           obj,
           mozilla::eUseCounter_custom_JS_subclassing_sharedarraybuffer_type_3);
       return;
+    case JSUseCounter::SUBCLASSING_REGEXP_TYPE_III:
+      SetUseCounter(obj,
+                    mozilla::eUseCounter_custom_JS_subclassing_regexp_type_3);
+      return;
     case JSUseCounter::COUNT:
       break;
   }
