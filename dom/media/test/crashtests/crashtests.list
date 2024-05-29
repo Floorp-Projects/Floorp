@@ -94,7 +94,7 @@ load 1384248.html
 load 1389304.html
 load 1393272.webm
 load 1411322.html
-load 1450845.html
+pref(media.seektonextframe.enabled,true) load 1450845.html
 load 1489160.html
 load disconnect-wrong-destination.html
 load analyser-channels-1.html
@@ -150,7 +150,6 @@ load 1693043.html
 load 1696511.html
 load 1697521.html
 load 1708790.html
-skip-if(cocoaWidget) load 1709130.html # video failed decoding on MacOS, 1709684
 skip-if(appleSilicon) load 1517199.html
 load 1734008.html
 load 1741677.html

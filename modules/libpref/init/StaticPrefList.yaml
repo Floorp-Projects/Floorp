@@ -11199,7 +11199,7 @@
 # Is support for HTMLMediaElement.seekToNextFrame enabled?
 - name: media.seekToNextFrame.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Is the Audio Output Devices API enabled?
