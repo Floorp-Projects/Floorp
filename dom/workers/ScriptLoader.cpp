@@ -1025,6 +1025,18 @@ nsresult WorkerScriptLoader::LoadScript(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    // Set the IsInThirdPartyContext for the channel's loadInfo according to the
+    // partitionKey of the principal. The worker is foreign if it's using
+    // partitioned principal, i.e. the partitionKey is not empty. In this case,
+    // we need to set the bit to the channel's loadInfo.
+    if (!principal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+      rv = loadInfo->SetIsInThirdPartyContext(true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
   }
 
   // Associate any originating stack with the channel.

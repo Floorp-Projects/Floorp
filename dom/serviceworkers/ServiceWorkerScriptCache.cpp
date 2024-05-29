@@ -693,6 +693,16 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
     return rv;
   }
 
+  // Set the IsInThirdPartyContext for the channel's loadInfo according to the
+  // partitionKey of the principal. The worker is foreign if it's using
+  // partitioned principal, i.e. the partitionKey is not empty. In this case,
+  // we need to set the bit to the channel's loadInfo.
+  if (!aPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+    rv = loadInfo->SetIsInThirdPartyContext(true);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (httpChannel) {
     // Spec says no redirects allowed for top-level SW scripts.
