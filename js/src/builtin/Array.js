@@ -1017,6 +1017,7 @@ function ArraySpeciesCreate(originalArray, length) {
     if (C === null) {
       return std_Array(length);
     }
+
   }
 
   // Step 6.
@@ -1030,6 +1031,7 @@ function ArraySpeciesCreate(originalArray, length) {
   }
 
   // Step 8.
+  ReportUsageCounter(C, SUBCLASS_ARRAY_TYPE_III);
   return constructContentFunction(C, C, length);
 }
 

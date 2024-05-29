@@ -54,4 +54,30 @@ function array_fromAsync_subclassing_type_ii() {
 test_function_for_use_counter_integration(array_fromAsync, "SubclassingArrayTypeII", /* expected_growth = */ false);
 test_function_for_use_counter_integration(array_fromAsync_subclassing_type_ii, "SubclassingArrayTypeII", /* expected_growth = */ true);
 
-// Array.of
+// Since all the Array methods go through ArraySpeciesCreate, only testing concat below, but
+// it should work for all classes. Testing will be hard in one file however due to the
+// CacheIR optimization.
+class Sentinel { };
+
+class MyArray2 extends Array {
+    static get [Symbol.species]() {
+        return Sentinel;
+    }
+}
+
+function array_concat() {
+    let x = Array.from([1, 2]);
+    let y = Array.from([3, 4]);
+    let concat = x.concat(y);
+    assertEq(concat instanceof Array, true);
+}
+
+function array_concat_subclassing_type_iii() {
+    let x = MyArray2.from([1, 2]);
+    let y = MyArray2.from([3, 4]);
+    let concat = x.concat(y);
+    assertEq(concat instanceof Sentinel, true);
+}
+
+test_function_for_use_counter_integration(array_concat, "SubclassingArrayTypeIII", /* expected_growth = */ false);
+test_function_for_use_counter_integration(array_concat_subclassing_type_iii, "SubclassingArrayTypeIII", /* expected_growth = */ true);

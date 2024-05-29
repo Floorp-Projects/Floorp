@@ -89,6 +89,7 @@ extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
   _(WASM, Wasm)                                            \
   _(WASM_LEGACY_EXCEPTIONS, WasmLegacyExceptions)          \
   _(SUBCLASSING_ARRAY_TYPE_II, SubclassingArrayTypeII)     \
+  _(SUBCLASSING_ARRAY_TYPE_III, SubclassingArrayTypeIII)   \
   _(SUBCLASSING_PROMISE_TYPE_II, SubclassingPromiseTypeII) \
   _(SUBCLASSING_TYPEDARRAY_TYPE_II, SubclassingTypedArrayTypeII)
 
