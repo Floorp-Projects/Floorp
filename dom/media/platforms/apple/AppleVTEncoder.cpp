@@ -15,6 +15,7 @@
 #include "H264.h"
 
 #include "AppleUtils.h"
+#include "nsCocoaFeatures.h"
 
 namespace mozilla {
 extern LazyLogModule sPEMLog;
@@ -157,6 +158,15 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   if (mConfig.mSize.width == 0 || mConfig.mSize.height == 0) {
     LOGE("width or height 0 in encoder init");
     return InitPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
+  }
+
+  if (mConfig.mScalabilityMode != ScalabilityMode::None &&
+      !nsCocoaFeatures::IsAtLeastVersion(11, 3, 0)) {
+    LOGE("SVC only supported on macOS 11.3 and more recent");
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                    "SVC only supported on macOS 11.3 and more recent"),
+        __func__);
   }
 
   bool lowLatencyRateControl =
