@@ -28,6 +28,7 @@ web-platform-tests:
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
     - web-platform-tests-canvas
+    - web-platform-tests-webcodecs
 
 web-platform-tests-backlog:
     - web-platform-tests-backlog
@@ -149,6 +150,7 @@ linux32-gtest:
 
 linux32-tests:
     - web-platform-tests
+    - web-platform-tests-webcodecs
 
 linux1804-tests:
     - cppunittest
@@ -260,6 +262,7 @@ windows11-64-2009-ccov-tests:
     - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
+    - web-platform-tests-webcodecs
 
 windows11-2009-tests:
     - cppunittest
@@ -370,6 +373,7 @@ macosx1100-64-qr-tests:
     - mochitest-webgl2-ext
     - reftest
     - xpcshell
+    - web-platform-tests-webcodecs
 
 macosx1100-aarch64-qr-tests:
     - mochitest-media
@@ -449,6 +453,7 @@ android-x86_64-tests:
     - web-platform-tests-crashtest
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
+    - web-platform-tests-webcodecs
     - xpcshell
 
 android-x86-tests:
