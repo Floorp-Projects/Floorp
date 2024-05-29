@@ -451,9 +451,10 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     int64_t currentTimeInUsec = PR_Now();
     int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
 
-    const nsTArray<RefPtr<Cookie>>* cookies = storage->GetCookiesFromHost(
-        baseDomain, principal->OriginAttributesRef());
-    if (!cookies) {
+    nsTArray<RefPtr<Cookie>> cookies;
+    storage->GetCookiesFromHost(baseDomain, principal->OriginAttributesRef(),
+                                cookies);
+    if (cookies.IsEmpty()) {
       continue;
     }
 
@@ -465,7 +466,7 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     bool stale = false;
 
     // iterate the cookies!
-    for (Cookie* cookie : *cookies) {
+    for (Cookie* cookie : cookies) {
       // check the host, since the base domain lookup is conservative.
       if (!CookieCommons::DomainMatches(cookie, hostFromURI)) {
         continue;
@@ -1132,9 +1133,9 @@ void CookieService::GetCookiesForURI(
     int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
     bool stale = false;
 
-    const nsTArray<RefPtr<Cookie>>* cookies =
-        storage->GetCookiesFromHost(baseDomain, attrs);
-    if (!cookies) {
+    nsTArray<RefPtr<Cookie>> cookies;
+    storage->GetCookiesFromHost(baseDomain, attrs, cookies);
+    if (cookies.IsEmpty()) {
       continue;
     }
 
@@ -1144,7 +1145,7 @@ void CookieService::GetCookiesForURI(
             aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
 
     // iterate the cookies!
-    for (Cookie* cookie : *cookies) {
+    for (Cookie* cookie : cookies) {
       // check the host, since the base domain lookup is conservative.
       if (!CookieCommons::DomainMatches(cookie, hostFromURI)) {
         continue;
@@ -2397,14 +2398,16 @@ CookieService::GetCookiesFromHost(const nsACString& aHost,
 
   CookieStorage* storage = PickStorage(attrs);
 
-  const nsTArray<RefPtr<Cookie>>* cookies =
-      storage->GetCookiesFromHost(baseDomain, attrs);
+  nsTArray<RefPtr<Cookie>> cookies;
+  storage->GetCookiesFromHost(baseDomain, attrs, cookies);
 
-  if (cookies) {
-    aResult.SetCapacity(cookies->Length());
-    for (Cookie* cookie : *cookies) {
-      aResult.AppendElement(cookie);
-    }
+  if (cookies.IsEmpty()) {
+    return NS_OK;
+  }
+
+  aResult.SetCapacity(cookies.Length());
+  for (Cookie* cookie : cookies) {
+    aResult.AppendElement(cookie);
   }
 
   return NS_OK;

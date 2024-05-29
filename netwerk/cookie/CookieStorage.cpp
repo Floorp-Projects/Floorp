@@ -254,11 +254,16 @@ void CookieStorage::GetAll(nsTArray<RefPtr<nsICookie>>& aResult) const {
   }
 }
 
-const nsTArray<RefPtr<Cookie>>* CookieStorage::GetCookiesFromHost(
-    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes) {
+void CookieStorage::GetCookiesFromHost(
+    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+    nsTArray<RefPtr<Cookie>>& aCookies) {
   CookieEntry* entry =
       mHostTable.GetEntry(CookieKey(aBaseDomain, aOriginAttributes));
-  return entry ? &entry->GetCookies() : nullptr;
+  if (!entry) {
+    return;
+  }
+
+  aCookies = entry->GetCookies().Clone();
 }
 
 void CookieStorage::GetCookiesWithOriginAttributes(

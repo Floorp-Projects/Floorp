@@ -94,8 +94,9 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   void GetAll(nsTArray<RefPtr<nsICookie>>& aResult) const;
 
-  const nsTArray<RefPtr<Cookie>>* GetCookiesFromHost(
-      const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes);
+  void GetCookiesFromHost(const nsACString& aBaseDomain,
+                          const OriginAttributes& aOriginAttributes,
+                          nsTArray<RefPtr<Cookie>>& aCookies);
 
   void GetCookiesWithOriginAttributes(const OriginAttributesPattern& aPattern,
                                       const nsACString& aBaseDomain,
