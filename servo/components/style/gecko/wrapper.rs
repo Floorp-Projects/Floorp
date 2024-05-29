@@ -891,10 +891,15 @@ impl<'le> GeckoElement<'le> {
             AnimationValue::from_computed_values(property_declaration_id, before_change_style);
         let to = AnimationValue::from_computed_values(property_declaration_id, after_change_style);
 
-        // If the declaration contains a custom property and getComputedValue was previously called
-        // before that custom property was defined, `from` will be `None` here.
         debug_assert!(
-            to.is_some() == from.is_some() || matches!(to, Some(AnimationValue::Custom(..)))
+            to.is_some() == from.is_some() ||
+                // If the declaration contains a custom property and getComputedValue was previously
+                // called before that custom property was defined, `from` will be `None` here.
+                matches!(from, Some(AnimationValue::Custom(..))) ||
+                // Similarly, if the declaration contains a custom property, getComputedValue was
+                // previously called, and the custom property registration is removed, `to` will be
+                // `None`.
+                matches!(to, Some(AnimationValue::Custom(..)))
         );
 
         from != to
