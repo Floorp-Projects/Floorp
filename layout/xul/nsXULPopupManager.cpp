@@ -1850,7 +1850,7 @@ nsIContent* nsXULPopupManager::GetTopActiveMenuItemContent() {
   return nullptr;
 }
 
-void nsXULPopupManager::GetVisiblePopups(nsTArray<nsIFrame*>& aPopups) {
+void nsXULPopupManager::GetVisiblePopups(nsTArray<nsMenuPopupFrame*>& aPopups) {
   aPopups.Clear();
   for (nsMenuChainItem* item = mPopups.get(); item; item = item->GetParent()) {
     // Skip panels which are not visible as well as popups that are transparent
