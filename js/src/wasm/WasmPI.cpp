@@ -559,12 +559,17 @@ static void CleanupActiveSuspender(JSContext* cx) {
 //   (type $results (struct (field ..)*)))
 //   (import "" "" (func $suspending.wrappedfn ..))
 //   (import "" "" (func $suspending.add-promise-reactions ..))
-//   (import "" "" (func $suspending.get-suspending-promise-result ..))
 //   (func $suspending.exported .. )
 //   (func $suspending.trampoline ..)
 //   (func $suspending.continue-on-suspendable ..)
 //   (export "" (func $suspending.exported))
 // )
+//
+// The module provides logic for the state transitions (see the SMDOC):
+//  - Invoke Suspending Import via $suspending.exported
+//  - Suspending Function Returns a Promise via $suspending.trampoline
+//  - Promise Resolved transitions via $suspending.continue-on-suspendable
+//
 class SuspendingFunctionModuleFactory {
  public:
   enum TypeIdx {
@@ -1184,6 +1189,10 @@ JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
 //   (func $promising.trampoline ..)
 //   (export "" (func $promising.exported))
 // )
+//
+// The module provides logic for the Invoke Promising Import state transition
+// via $promising.exported and $promising.trampoline (see the SMDOC).
+//
 class PromisingFunctionModuleFactory {
  public:
   enum TypeIdx {
