@@ -851,6 +851,10 @@
         "type": "number",
         "description": "The maximum number of static Rulesets an extension can specify as part of the rule_resources manifest key."
       },
+      "MAX_NUMBER_OF_DISABLED_STATIC_RULES": {
+        "type": "number",
+        "description": "The maximum number of static rules that can be disabled on each static ruleset."
+      },
       "MAX_NUMBER_OF_ENABLED_STATIC_RULESETS": {
         "type": "number",
         "description": "The maximum number of static Rulesets an extension can enable at any one time."

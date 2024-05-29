@@ -23,6 +23,9 @@ this.declarativeNetRequest = class extends ExtensionAPI {
         get MAX_NUMBER_OF_ENABLED_STATIC_RULESETS() {
           return ExtensionDNRLimits.MAX_NUMBER_OF_ENABLED_STATIC_RULESETS;
         },
+        get MAX_NUMBER_OF_DISABLED_STATIC_RULES() {
+          return ExtensionDNRLimits.MAX_NUMBER_OF_DISABLED_STATIC_RULES;
+        },
         get MAX_NUMBER_OF_DYNAMIC_RULES() {
           return ExtensionDNRLimits.MAX_NUMBER_OF_DYNAMIC_RULES;
         },
