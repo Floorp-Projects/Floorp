@@ -155,6 +155,7 @@ use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::generics::color::ColorMixFlags;
 use style::values::generics::easing::BeforeFlag;
+use style::values::resolved;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::specified::{AbsoluteLength, NoCalcLength};
@@ -7603,7 +7604,7 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
 fn computed_or_resolved_value(
     style: &ComputedValues,
     prop: nsCSSPropertyID,
-    context: Option<&style::values::resolved::Context>,
+    context: Option<&resolved::Context>,
     value: &mut nsACString,
 ) {
     if let Some(longhand) = LonghandId::from_nscsspropertyid(prop) {
@@ -7641,8 +7642,6 @@ pub unsafe extern "C" fn Servo_GetResolvedValue(
     element: &RawGeckoElement,
     value: &mut nsACString,
 ) {
-    use style::values::resolved;
-
     let data = raw_data.borrow();
     let device = data.stylist.device();
     let context = resolved::Context {
@@ -7658,26 +7657,23 @@ pub unsafe extern "C" fn Servo_GetResolvedValue(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
-    computed_values: &ComputedValues,
-    raw_style_set: &PerDocumentStyleData,
+    style: &ComputedValues,
     name: &nsACString,
+    raw_data: &PerDocumentStyleData,
     value: &mut nsACString,
 ) -> bool {
-    let doc_data = raw_style_set.borrow();
+    let data = raw_data.borrow();
     let name = Atom::from(name.as_str_unchecked());
-    let custom_registration = doc_data.stylist.get_custom_property_registration(&name);
-    let computed_value = if custom_registration.inherits() {
-        computed_values.custom_properties.inherited.get(&name)
-    } else {
-        computed_values.custom_properties.non_inherited.get(&name)
+    let custom_registration = data.stylist.get_custom_property_registration(&name);
+    let computed_value = style.custom_properties.get(custom_registration, &name);
+    let computed_value = match computed_value {
+        Some(v) => v,
+        None => return false,
     };
-
-    if let Some(v) = computed_value {
-        v.to_css(&mut CssWriter::new(value)).unwrap();
-        true
-    } else {
-        false
-    }
+    // TODO(emilio): This might want to return resolved colors and so on for example, see
+    // https://github.com/w3c/csswg-drafts/issues/10371.
+    computed_value.to_css(&mut CssWriter::new(value)).unwrap();
+    true
 }
 
 #[no_mangle]

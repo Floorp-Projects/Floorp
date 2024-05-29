@@ -726,6 +726,7 @@ trivial_to_computed_value!(crate::values::AtomIdent);
 trivial_to_computed_value!(crate::Namespace);
 #[cfg(feature = "servo")]
 trivial_to_computed_value!(crate::Prefix);
+trivial_to_computed_value!(crate::stylesheets::UrlExtraData);
 trivial_to_computed_value!(String);
 trivial_to_computed_value!(Box<str>);
 trivial_to_computed_value!(crate::OwnedStr);
