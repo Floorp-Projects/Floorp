@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.ui
 
-import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -27,9 +26,7 @@ import org.mozilla.fenix.ui.robots.shareOverlay
 
 class TextSelectionTest : TestSetup() {
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule(
-        isLocationPermissionEnabled = SitePermissionsRules.Action.BLOCKED,
-    )
+    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
@@ -104,8 +101,8 @@ class TextSelectionTest : TestSetup() {
             longClickPageObject(itemContainingText("content"))
             clickContextMenuItem("Search")
             mDevice.waitForIdle()
-            verifyUrl("content")
             verifyTabCounter("2")
+            verifyUrl("content")
         }
     }
 
@@ -203,8 +200,8 @@ class TextSelectionTest : TestSetup() {
             clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Search")
-            verifyUrl("Crossing")
             verifyTabCounter("2")
+            verifyUrl("Crossing")
         }
     }
 
@@ -222,8 +219,8 @@ class TextSelectionTest : TestSetup() {
             clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Private Search")
-            verifyUrl("Crossing")
             verifyTabCounter("2")
+            verifyUrl("Crossing")
         }
     }
 
