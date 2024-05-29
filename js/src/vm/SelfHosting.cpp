@@ -2992,6 +2992,27 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructor,
           MOZ_CRASH("Unexpected Subclassing Type");
       }
     }
+    case SUBCLASSING_TYPEDARRAY: {
+      // So here's a design question: Do we ultimately care about
+      // matching typed arrays? i.e. if someone does
+      // UInt8Array.from.call(Int8Array, 0), should this count
+      // as subclassing?
+      //
+      // I'm inclined to say not at the moment -- but it would
+      // be a behaviour change if we removed subclassing.
+      if (constructor && IsTypedArrayConstructor(constructor)) {
+        fprintf(stderr, "Skipping known typed array constructor\n");
+        return true;
+      }
+      switch (type) {
+        case SUBCLASSING_TYPE_II:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_TYPEDARRAY_TYPE_II);
+          return true;
+        default:
+          MOZ_CRASH("Unhandled subclassing type");
+      }
+    }
     default:
       MOZ_CRASH("Unexpected builtin");
   };
@@ -3008,7 +3029,7 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructor,
 // To handle this with just two parameters, we treat our integer parameter as a
 // packed integer; This introduces some magic, but allows us to communicate all
 // call-site constant data in a single int32.
-//
+//`
 // The packing is as follows:
 //
 // SubclassingElgibleBuiltins << 16 | SubclassingType
@@ -3022,6 +3043,8 @@ bool js::ReportUsageCounter(JSContext* cx, HandleObject constructor,
 // Promise Subclassing Type II:  (2 << 16) | 2 == 0x020002
 // Promise Subclassing Type III: (2 << 16) | 3 == 0x020003
 // Promise Subclassing Type IV:  (2 << 16) | 4 == 0x020004
+//
+// ... etc.
 //
 // Subclassing is reported iff the constructor provided doesn't match
 // the existing prototype.
