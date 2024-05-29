@@ -2696,7 +2696,7 @@ impl TileCacheInstance {
             frame_context.spatial_tree,
         );
 
-        let normalized_prim_to_device = prim_offset.pre_transform(&local_prim_to_device);
+        let normalized_prim_to_device = prim_offset.then(&local_prim_to_device);
 
         let local_to_raster = ScaleOffset::identity();
         let raster_to_device = normalized_prim_to_device;
