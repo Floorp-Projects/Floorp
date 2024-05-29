@@ -870,34 +870,13 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
 bool AntiTrackingUtils::IsThirdPartyChannel(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  // We have to handle blob URLs here because they always fail
-  // IsThirdPartyChannel because of how blob URLs are constructed. We just
-  // recompare to their ancestor chain from the loadInfo, bailing if any is
-  // third party.
-  nsAutoCString scheme;
-  nsCOMPtr<nsIURI> channelURI;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(channelURI));
-  if (NS_SUCCEEDED(rv) && channelURI->SchemeIs("blob")) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    for (const nsCOMPtr<nsIPrincipal>& principal :
-         loadInfo->AncestorPrincipals()) {
-      bool thirdParty = true;
-      rv = loadInfo->PrincipalToInherit()->IsThirdPartyPrincipal(principal,
-                                                                 &thirdParty);
-      if (NS_SUCCEEDED(rv) && thirdParty) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   nsCOMPtr<mozIThirdPartyUtil> tpuService =
       mozilla::components::ThirdPartyUtil::Service();
   if (!tpuService) {
     return true;
   }
   bool thirdParty = true;
-  rv = tpuService->IsThirdPartyChannel(aChannel, nullptr, &thirdParty);
+  nsresult rv = tpuService->IsThirdPartyChannel(aChannel, nullptr, &thirdParty);
   if (NS_FAILED(rv)) {
     return true;
   }
@@ -960,15 +939,11 @@ bool AntiTrackingUtils::IsThirdPartyDocument(Document* aDocument) {
     return true;
   }
   bool thirdParty = true;
-  if (!aDocument->GetChannel() ||
-      aDocument->GetDocumentURI()->SchemeIs("blob")) {
+  if (!aDocument->GetChannel()) {
     // If we can't get the channel from the document, i.e. initial about:blank
     // page, we use the browsingContext of the document to check if it's in the
     // third-party context. If the browsing context is still not available, we
     // will treat the window as third-party.
-    // We also rely on IsThirdPartyContext for blob documents because the
-    // IsThirdPartyChannel check relies on getting the BaseDomain,
-    // which correctly fails for blobs URIs.
     RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
     return bc ? IsThirdPartyContext(bc) : true;
   }
