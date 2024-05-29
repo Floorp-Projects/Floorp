@@ -5343,18 +5343,19 @@ ScrollContainerFrame::LoadingState ScrollContainerFrame::GetPageLoadingState() {
              : LoadingState::Loading;
 }
 
-PhysicalAxes ScrollContainerFrame::GetOverflowAxes() const {
+ScrollContainerFrame::OverflowState ScrollContainerFrame::GetOverflowState()
+    const {
   nsSize scrollportSize = mScrollPort.Size();
   nsSize childSize = GetScrolledRect().Size();
 
-  PhysicalAxes result;
+  OverflowState result = OverflowState::None;
 
   if (childSize.height > scrollportSize.height) {
-    result += PhysicalAxis::Vertical;
+    result |= OverflowState::Vertical;
   }
 
   if (childSize.width > scrollportSize.width) {
-    result += PhysicalAxis::Horizontal;
+    result |= OverflowState::Horizontal;
   }
 
   return result;
@@ -5369,12 +5370,12 @@ nsresult ScrollContainerFrame::FireScrollPortEvent() {
   //
   // Should we remove this?
 
-  PhysicalAxes overflowAxes = GetOverflowAxes();
+  OverflowState overflowState = GetOverflowState();
 
-  bool newVerticalOverflow = overflowAxes.contains(PhysicalAxis::Vertical);
+  bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
 
-  bool newHorizontalOverflow = overflowAxes.contains(PhysicalAxis::Horizontal);
+  bool newHorizontalOverflow = !!(overflowState & OverflowState::Horizontal);
   bool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
 
   if (!vertChanged && !horizChanged) {
@@ -5981,12 +5982,12 @@ void ScrollContainerFrame::PostOverflowEvent() {
     return;
   }
 
-  PhysicalAxes overflowAxes = GetOverflowAxes();
+  OverflowState overflowState = GetOverflowState();
 
-  bool newVerticalOverflow = overflowAxes.contains(PhysicalAxis::Vertical);
+  bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
 
-  bool newHorizontalOverflow = overflowAxes.contains(PhysicalAxis::Horizontal);
+  bool newHorizontalOverflow = !!(overflowState & OverflowState::Horizontal);
   bool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
 
   if (!vertChanged && !horizChanged) {
