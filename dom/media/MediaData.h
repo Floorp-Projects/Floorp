@@ -582,10 +582,12 @@ class VideoData : public MediaData {
   media::TimeUnit mNextKeyFrameTime;
 };
 
+// See https://w3c.github.io/encrypted-media/#scheme-cenc
 enum class CryptoScheme : uint8_t {
   None,
   Cenc,
   Cbcs,
+  Cbcs_1_9,
 };
 using CryptoSchemeSet = EnumSet<CryptoScheme, uint8_t>;
 
