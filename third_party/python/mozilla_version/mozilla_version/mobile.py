@@ -1,12 +1,17 @@
 """Defines characteristics of a Mobile version at Mozilla."""
 
-import attr
 import re
 
-from mozilla_version.errors import PatternNotMatchedError, TooManyTypesError, NoVersionTypeError
+import attr
+
+from mozilla_version.errors import (
+    NoVersionTypeError,
+    PatternNotMatchedError,
+    TooManyTypesError,
+)
 from mozilla_version.gecko import GeckoVersion
-from mozilla_version.version import BaseVersion, VersionType
 from mozilla_version.parser import strictly_positive_int_or_none
+from mozilla_version.version import BaseVersion, ShipItVersion, VersionType
 
 
 def _find_type(version):
@@ -14,9 +19,7 @@ def _find_type(version):
 
     def ensure_version_type_is_not_already_defined(previous_type, candidate_type):
         if previous_type is not None:
-            raise TooManyTypesError(
-                str(version), previous_type, candidate_type
-            )
+            raise TooManyTypesError(str(version), previous_type, candidate_type)
 
     if version.is_nightly:
         version_type = VersionType.NIGHTLY
@@ -24,7 +27,9 @@ def _find_type(version):
         ensure_version_type_is_not_already_defined(version_type, VersionType.BETA)
         version_type = VersionType.BETA
     if version.is_release_candidate:
-        ensure_version_type_is_not_already_defined(version_type, VersionType.RELEASE_CANDIDATE)
+        ensure_version_type_is_not_already_defined(
+            version_type, VersionType.RELEASE_CANDIDATE
+        )
         version_type = VersionType.RELEASE_CANDIDATE
     if version.is_release:
         ensure_version_type_is_not_already_defined(version_type, VersionType.RELEASE)
@@ -37,13 +42,14 @@ def _find_type(version):
 
 
 @attr.s(frozen=True, eq=False, hash=True)
-class MobileVersion(BaseVersion):
+class MobileVersion(ShipItVersion):
     """Validate and handle version numbers for mobile products.
 
     This covers applications such as Fenix and Focus for Android.
     """
 
-    _VALID_ENOUGH_VERSION_PATTERN = re.compile(r"""
+    _VALID_ENOUGH_VERSION_PATTERN = re.compile(
+        r"""
         ^(?P<major_number>\d+)
         \.(?P<minor_number>\d+)
         (\.(?P<patch_number>\d+))?
@@ -52,10 +58,15 @@ class MobileVersion(BaseVersion):
             |(-beta\.|b)(?P<beta_number>\d+)
             |-rc\.(?P<release_candidate_number>\d+)
         )?
-        -?(build(?P<build_number>\d+))?$""", re.VERBOSE)
+        -?(build(?P<build_number>\d+))?$""",
+        re.VERBOSE,
+    )
 
     _OPTIONAL_NUMBERS = (
-        'patch_number', 'beta_number', 'release_candidate_number', 'build_number'
+        "patch_number",
+        "beta_number",
+        "release_candidate_number",
+        "build_number",
     )
 
     _ALL_NUMBERS = BaseVersion._MANDATORY_NUMBERS + _OPTIONAL_NUMBERS
@@ -66,87 +77,103 @@ class MobileVersion(BaseVersion):
     # Android-Components later (bug 1800611)
     _LAST_VERSION_TO_FOLLOW_MAVEN_PATTERN = 108
 
-    build_number = attr.ib(type=int, converter=strictly_positive_int_or_none, default=None)
-    beta_number = attr.ib(type=int, converter=strictly_positive_int_or_none, default=None)
+    build_number = attr.ib(
+        type=int, converter=strictly_positive_int_or_none, default=None
+    )
+    beta_number = attr.ib(
+        type=int, converter=strictly_positive_int_or_none, default=None
+    )
     is_nightly = attr.ib(type=bool, default=False)
     release_candidate_number = attr.ib(
         type=int, converter=strictly_positive_int_or_none, default=None
     )
-    version_type = attr.ib(init=False, default=attr.Factory(_find_type, takes_self=True))
+    version_type = attr.ib(
+        init=False, default=attr.Factory(_find_type, takes_self=True)
+    )
 
-    def __attrs_post_init__(self):
-        """Ensure attributes are sane all together."""
-        error_messages = []
+    def _get_all_error_messages_for_attributes(self):
+        error_messages = super()._get_all_error_messages_for_attributes()
 
         if self.is_gecko_pattern:
-            error_messages.extend([
-                pattern_message
-                for condition, pattern_message in ((
-                    self.beta_number is not None and self.patch_number is not None,
-                    'Beta number and patch number cannot be both defined',
-                ), (
-                    self.release_candidate_number is not None,
-                    'Release candidate number cannot be defined after Mobile v{}'.format(
-                        self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN
-                    ),
-                ), (
-                    self.major_number > self._LAST_VERSION_TO_FOLLOW_MAVEN_PATTERN and
-                    self.minor_number == 0 and
-                    self.patch_number == 0,
-                    'Minor number and patch number cannot be both equal to 0 past '
-                    'Mobile v{}'.format(
-                        self._LAST_VERSION_TO_FOLLOW_MAVEN_PATTERN
-                    ),
-                ), (
-                    self.minor_number != 0 and self.patch_number is None,
-                    'Patch number cannot be undefined if minor number is greater than 0',
-                ))
-                if condition
-            ])
+            error_messages.extend(
+                [
+                    pattern_message
+                    for condition, pattern_message in (
+                        (
+                            self.beta_number is not None
+                            and self.patch_number is not None,
+                            "Beta number and patch number cannot be both defined",
+                        ),
+                        (
+                            self.release_candidate_number is not None,
+                            "Release candidate number cannot be defined after Mobile "
+                            f"v{self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN}",
+                        ),
+                        (
+                            self.major_number
+                            > self._LAST_VERSION_TO_FOLLOW_MAVEN_PATTERN
+                            and self.minor_number == 0
+                            and self.patch_number == 0,
+                            "Minor number and patch number cannot be both equal to 0 "
+                            f"past Mobile {self._LAST_VERSION_TO_FOLLOW_MAVEN_PATTERN}",
+                        ),
+                        (
+                            self.minor_number != 0 and self.patch_number is None,
+                            "Patch number cannot be undefined if minor number is "
+                            "greater than 0",
+                        ),
+                    )
+                    if condition
+                ]
+            )
         else:
-            error_messages.extend([
-                pattern_message
-                for condition, pattern_message in ((
-                    self.patch_number is None,
-                    'Patch number must be defined before Mobile v{}'.format(
-                        self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN
-                    ),
-                ), (
-                    self.is_nightly,
-                    'Nightlies are not supported until Mobile v{}'.format(
-                        self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN
-                    ),
-                ))
-                if condition
-            ])
+            error_messages.extend(
+                [
+                    pattern_message
+                    for condition, pattern_message in (
+                        (
+                            self.patch_number is None,
+                            "Patch number must be defined before Mobile "
+                            f"v{self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN}",
+                        ),
+                        (
+                            self.is_nightly,
+                            "Nightlies are not supported until Mobile "
+                            f"v{self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN}",
+                        ),
+                    )
+                    if condition
+                ]
+            )
 
-        if error_messages:
-            raise PatternNotMatchedError(self, patterns=error_messages)
+        return error_messages
 
     @classmethod
     def parse(cls, version_string):
         """Construct an object representing a valid Firefox version number."""
-        mobile_version = super().parse(
-            version_string, regex_groups=('is_nightly',)
-        )
+        mobile_version = super().parse(version_string, regex_groups=("is_nightly",))
 
         # Betas are supported in both the old and the gecko pattern. Let's make sure
         # the string we got follows the right rules
         if mobile_version.is_beta:
-            if mobile_version.is_gecko_pattern and '-beta.' in version_string:
+            if mobile_version.is_gecko_pattern and "-beta." in version_string:
                 raise PatternNotMatchedError(
-                    mobile_version, ['"-beta." can only be used before Mobile v{}'.format(
-                        cls._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN
-                    )]
+                    mobile_version,
+                    [
+                        '"-beta." can only be used before Mobile '
+                        f"v{cls._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN}"
+                    ],
                 )
-            if not mobile_version.is_gecko_pattern and re.search(r"\db\d", version_string):
+            if not mobile_version.is_gecko_pattern and re.search(
+                r"\db\d", version_string
+            ):
                 raise PatternNotMatchedError(
-                    mobile_version, [
-                        '"b" cannot be used before Mobile v{} to define a '
-                        'beta version'.format(
-                            cls._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN
-                        )
-                    ]
+                    mobile_version,
+                    [
+                        '"b" cannot be used before Mobile '
+                        f"v{cls._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN} to define a "
+                        "beta version"
+                    ],
                 )
 
         return mobile_version
@@ -158,20 +185,24 @@ class MobileVersion(BaseVersion):
 
     @property
     def is_beta(self):
-        """Return `True` if `MobileVersion` was built with a string matching a beta version."""
+        """Return `True` if `MobileVersion` was built with a `beta_number`."""
         return self.beta_number is not None
 
     @property
     def is_release_candidate(self):
-        """Return `True` if `MobileVersion` was built with a string matching an RC version."""
+        """Return `True` if `MobilVersion` was built with `release_candidate_number`."""
         return self.release_candidate_number is not None
 
     @property
     def is_release(self):
-        """Return `True` if `MobileVersion` was built with a string matching a release version."""
-        return not any((
-            self.is_nightly, self.is_beta, self.is_release_candidate,
-        ))
+        """Return `True` if `MobileVersion` was built as a release version."""
+        return not any(
+            (
+                self.is_nightly,
+                self.is_beta,
+                self.is_release_candidate,
+            )
+        )
 
     def __str__(self):
         """Implement string representation.
@@ -179,20 +210,22 @@ class MobileVersion(BaseVersion):
         Computes a new string based on the given attributes.
         """
         if self.is_gecko_pattern:
-            string = str(GeckoVersion(
-                major_number=self.major_number,
-                minor_number=self.minor_number,
-                patch_number=self.patch_number,
-                build_number=self.build_number,
-                beta_number=self.beta_number,
-                is_nightly=self.is_nightly,
-            ))
+            string = str(
+                GeckoVersion(
+                    major_number=self.major_number,
+                    minor_number=self.minor_number,
+                    patch_number=self.patch_number,
+                    build_number=self.build_number,
+                    beta_number=self.beta_number,
+                    is_nightly=self.is_nightly,
+                )
+            )
         else:
             string = super().__str__()
             if self.is_beta:
-                string = f'{string}-beta.{self.beta_number}'
+                string = f"{string}-beta.{self.beta_number}"
             elif self.is_release_candidate:
-                string = f'{string}-rc.{self.release_candidate_number}'
+                string = f"{string}-rc.{self.release_candidate_number}"
 
         return string
 
@@ -216,7 +249,9 @@ class MobileVersion(BaseVersion):
                 return beta_difference
 
         if self.is_release_candidate and other.is_release_candidate:
-            rc_difference = self.release_candidate_number - other.release_candidate_number
+            rc_difference = (
+                self.release_candidate_number - other.release_candidate_number
+            )
             if rc_difference != 0:
                 return rc_difference
 
@@ -228,23 +263,24 @@ class MobileVersion(BaseVersion):
     def _create_bump_kwargs(self, field):
         bump_kwargs = super()._create_bump_kwargs(field)
 
-        if field != 'build_number' and bump_kwargs.get('build_number') == 0:
-            del bump_kwargs['build_number']
-        if bump_kwargs.get('beta_number') == 0:
+        if field != "build_number" and bump_kwargs.get("build_number") == 0:
+            del bump_kwargs["build_number"]
+        if bump_kwargs.get("beta_number") == 0:
             if self.is_beta:
-                bump_kwargs['beta_number'] = 1
+                bump_kwargs["beta_number"] = 1
             else:
-                del bump_kwargs['beta_number']
+                del bump_kwargs["beta_number"]
 
-        if field != 'release_candidate_number':
-            del bump_kwargs['release_candidate_number']
+        if field != "release_candidate_number":
+            del bump_kwargs["release_candidate_number"]
 
         if (
-            field == 'major_number'
-            and bump_kwargs.get('major_number') == self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN
+            field == "major_number"
+            and bump_kwargs.get("major_number")
+            == self._FIRST_VERSION_TO_FOLLOW_GECKO_PATTERN
         ):
-            del bump_kwargs['patch_number']
+            del bump_kwargs["patch_number"]
 
-        bump_kwargs['is_nightly'] = self.is_nightly
+        bump_kwargs["is_nightly"] = self.is_nightly
 
         return bump_kwargs
