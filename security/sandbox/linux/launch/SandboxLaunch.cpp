@@ -319,6 +319,13 @@ void SandboxLaunch::Configure(GeckoProcessType aType, SandboxingKind aKind,
         flags |= CLONE_NEWNET;
       }
       break;
+    case GeckoProcessType_Utility:
+      if (level >= 1) {
+        canChroot = true;
+        flags |= CLONE_NEWIPC;
+        flags |= CLONE_NEWNET;
+      }
+      break;
     case GeckoProcessType_Content:
       if (level >= 4) {
         canChroot = true;
