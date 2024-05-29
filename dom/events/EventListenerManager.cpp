@@ -2293,7 +2293,7 @@ EventListenerManager::ListenerSignalFollower::ListenerSignalFollower(
       mListener(aListener->mListener.Clone()),
       mTypeAtom(aTypeAtom),
       mAllEvents(aListener->mAllEvents),
-      mFlags(aListener->mFlags){};
+      mFlags(aListener->mFlags) {};
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(EventListenerManager::ListenerSignalFollower)
 
