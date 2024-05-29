@@ -3058,11 +3058,12 @@ class nsIFrame : public nsQueryFrame {
   virtual void UnionChildOverflow(mozilla::OverflowAreas& aOverflowAreas);
 
   // Returns the applicable overflow-clip-margin values.
-  using PhysicalAxes = mozilla::PhysicalAxes;
+  nsSize OverflowClipMargin(mozilla::PhysicalAxes aClipAxes) const;
 
-  nsSize OverflowClipMargin(PhysicalAxes aClipAxes) const;
   // Returns the axes on which this frame should apply overflow clipping.
-  PhysicalAxes ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const;
+  mozilla::PhysicalAxes ShouldApplyOverflowClipping(
+      const nsStyleDisplay* aDisp) const;
+
   // Returns whether this frame is a block that was supposed to be a
   // scrollframe, but that was suppressed for print.
   bool IsSuppressedScrollableBlockForPrint() const;
