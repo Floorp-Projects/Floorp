@@ -7,6 +7,7 @@
 #include "APZCBasicTester.h"
 #include "APZCTreeManagerTester.h"
 #include "APZTestCommon.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 
 #include "InputUtils.h"
@@ -1845,8 +1846,7 @@ TEST_F(APZCOverscrollTesterMock,
   EXPECT_TRUE(ApzcOf(layers[1])->IsOverscrolled());
 
   // Sample all animations until all of them have been finished.
-  while (SampleAnimationsOnce())
-    ;
+  while (SampleAnimationsOnce());
 
   // After the animations finished, all overscrolled states should have been
   // restored.
@@ -2025,6 +2025,93 @@ TEST_F(APZCOverscrollTesterMock, OverscrollIntoPreventDefault) {
   EXPECT_FALSE(rootApzc->IsOverscrolled());
   EXPECT_EQ(rootApzc->GetFrameMetrics().GetVisualScrollOffset(),
             CSSPoint(0, 0));
+}
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
+TEST_F(APZCOverscrollTesterMock, StuckInOverscroll_Bug1810935) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  using ViewID = ScrollableLayerGuid::ViewID;
+  ViewID rootScrollId = ScrollableLayerGuid::START_SCROLL_ID;
+  ViewID subframeScrollId = ScrollableLayerGuid::START_SCROLL_ID + 1;
+
+  const char* treeShape = "x(x)";
+  LayerIntRect layerVisibleRects[] = {LayerIntRect(0, 0, 100, 100),
+                                      LayerIntRect(50, 0, 50, 100)};
+  CreateScrollData(treeShape, layerVisibleRects);
+  SetScrollableFrameMetrics(root, rootScrollId, CSSRect(0, 0, 100, 200));
+  SetScrollableFrameMetrics(layers[1], subframeScrollId,
+                            CSSRect(0, 0, 50, 200));
+  SetScrollHandoff(layers[1], root);
+
+  registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
+  UpdateHitTestingTree();
+  rootApzc = ApzcOf(root);
+  auto* subframeApzc = ApzcOf(layers[1]);
+  rootApzc->GetFrameMetrics().SetIsRootContent(true);
+
+  // Try to scroll upwards over the subframe.
+  ScreenIntPoint panPoint(75, 50);
+  QueueMockHitResult(subframeScrollId);
+  PanGesture(PanGestureInput::PANGESTURE_START, manager, panPoint,
+             ScreenPoint(0, -10), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(subframeScrollId);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, panPoint,
+             ScreenPoint(0, -50), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(subframeScrollId);
+  PanGesture(PanGestureInput::PANGESTURE_END, manager, panPoint,
+             ScreenPoint(0, 0), mcc->Time());
+
+  // The root APZC should be overscrolled. (The subframe APZC should be be.)
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  EXPECT_FALSE(subframeApzc->IsOverscrolled());
+
+  // Give the overscroll animation on the root a chance to start.
+  mcc->AdvanceByMillis(10);
+  EXPECT_TRUE(rootApzc->IsOverscrollAnimationRunning());
+
+  // Scroll the subframe downwards, with a large delta.
+  QueueMockHitResult(subframeScrollId);
+  PanGesture(PanGestureInput::PANGESTURE_START, manager, panPoint,
+             ScreenPoint(0, 50), mcc->Time());
+
+  // Already after the first event, the overscroll animation should be
+  // interrupted.
+  EXPECT_FALSE(rootApzc->IsOverscrollAnimationRunning());
+
+  // Cotninue the downward scroll gesture.
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(subframeScrollId);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, panPoint,
+             ScreenPoint(0, 100), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(subframeScrollId);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, panPoint,
+             ScreenPoint(0, 100), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(subframeScrollId);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, manager, panPoint,
+             ScreenPoint(0, 100), mcc->Time());
+  mcc->AdvanceByMillis(10);
+  QueueMockHitResult(subframeScrollId);
+  // Important: pass aSimulateMomentum=true for the pan-end to exercise the bug.
+  PanGesture(PanGestureInput::PANGESTURE_END, manager, panPoint,
+             ScreenPoint(0, 0), mcc->Time(), MODIFIER_NONE,
+             /*aSimulateMomentum=*/true);
+
+  // The root and the subframe should both be overscrolled.
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+  EXPECT_TRUE(subframeApzc->IsOverscrolled());
+
+  // Sample animations until all of them have been finished.
+  while (SampleAnimationsOnce());
+
+  // All overscrolled APZCs should have snapped back.
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+  EXPECT_FALSE(subframeApzc->IsOverscrolled());
 }
 #endif
 
