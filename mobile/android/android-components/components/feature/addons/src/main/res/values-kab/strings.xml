@@ -76,8 +76,6 @@
     <string name="mozac_feature_addons_version">Lqem</string>
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Ameskar</string>
-    <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Imeskaren</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Aleqqem aneggaru</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -94,8 +92,6 @@
     <string name="mozac_feature_addons_settings">Iɣewwaṛen</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Yermed</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Yensa</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Sireg di tunigin tusligt</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -104,8 +100,6 @@
     <string name="mozac_feature_addons_not_allowed_in_private_browsing">Ur yettusireg ara deg yisfuyla usligen</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Irmed</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Yensa</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Ibded</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -140,22 +134,20 @@
     <string name="mozac_feature_addons_permissions_dialog_deny">Gdel</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Sefsex</string>
-    <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Asebded n uzegrir</string>
     <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_install_addon_content_description_2">Sebded %1$s</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Sefsex</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
     <string name="mozac_feature_addons_user_rating_count_2">Cegger: %1$s</string>
-    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
-    <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/55</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Izegrar</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Amsefrak n yizegrar</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">Azegrir yensa i kra n wakud</string>
+    <!-- The title of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_title_text">Isiɣzaf nsan i kra n wakud</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Ales asenker n yizegrar</string>
     <!-- Button to re-enable the extensions in the "crash" notification -->
@@ -260,10 +252,8 @@
     <string name="mozac_feature_addons_updater_dialog_status">Addaden:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s yettwarna ɣer %2$s</string>
-    <!-- Text shown in the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Ldi-t deg wumuɣ</string>
-    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Ih, awi-t-id</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">Kcem ɣer %1$s seg wumuɣ %2$s.</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button_2">IH</string>
     <!-- "Learn more" link displayed below an add-on status message. -->

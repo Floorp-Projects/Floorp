@@ -700,7 +700,7 @@
     <!-- The title of the required permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Обязательно</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Необязательно</string>
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Необязательные</string>
 
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Разрешить для всех сайтов</string>

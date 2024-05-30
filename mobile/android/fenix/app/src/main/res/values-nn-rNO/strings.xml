@@ -1882,6 +1882,8 @@
     <string name="logins_biometric_prompt_message_2">Lås opp for å sjå dei lagra passorda dine</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Sikre dei lagra passorda dine</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2">Konfigurer ein PIN-kode, eit passord eller eit låsemønster for å beskytte dei lagra passorda dine om nokon andre skulle få tak i eininga di.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Seinare</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1910,6 +1912,8 @@
     <string name="preferences_credit_cards_2">Betalingsmåtar</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Lagre og fyll inn betalingsmåtar</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s krypterer alle betalingsmåtar du lagrar</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkroniser kort på tvers av einingar</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
