@@ -988,7 +988,6 @@ Version:
   description: >
     Product version.
   type: string
-  ping: true
 
 VRProcessStatus:
   description: >

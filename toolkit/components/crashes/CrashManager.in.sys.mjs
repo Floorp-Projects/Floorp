@@ -74,71 +74,6 @@ function parseAndRemoveField(obj, field) {
 }
 
 /**
- * Convert a legacy Telemetry `StackTraces` layout to that expected by Glean.
- *
- * @param stackTraces {Object} The legacy Telemetry StackTraces object.
- *
- * @returns {Object} The stack traces layout expected by the Glean crash.stackTraces metric.
- */
-function stackTracesLegacyToGlean(stackTraces) {
-  // Make a clone to fix up the values without altering the original.
-  stackTraces = structuredClone(stackTraces);
-  // Change "status" to "error", only populate if an error occurred.
-  if ("status" in stackTraces && stackTraces.status !== "OK") {
-    stackTraces.error = stackTraces.status;
-  }
-  delete stackTraces.status;
-
-  // Change "crash_info" to flattened individual fields.
-  if ("crash_info" in stackTraces) {
-    stackTraces.crash_type = stackTraces.crash_info.type;
-    stackTraces.crash_address = stackTraces.crash_info.address;
-    stackTraces.crash_thread = stackTraces.crash_info.crashing_thread;
-    delete stackTraces.crash_info;
-  }
-
-  // Rename modules[].{base_addr,end_addr}
-  if ("modules" in stackTraces) {
-    for (let module of stackTraces.modules) {
-      module.base_address = module.base_addr;
-      delete module.base_addr;
-      module.end_address = module.end_addr;
-      delete module.end_addr;
-    }
-  }
-
-  return stackTraces;
-}
-
-/**
- * Convert a legacy Telemetry `AsyncShutdownTimeout` value to that expected by Glean.
- *
- * @param value {String} The legacy Telemetry value.
- *
- * @returns {Object} The object appropriate for being `.set()` on the Glean
- * crash.asyncShutdownTimeout metric.
- */
-function asyncShutdownTimeoutLegacyToGlean(value) {
-  let obj = JSON.parse(value);
-  // The conditions object isn't a consistent shape, so we just store it as a serialized string.
-  obj.conditions = JSON.stringify(obj.conditions);
-  return obj;
-}
-
-/**
- * Convert a legacy Telemetry `QuotaManagerShutdownTimeout` value to that expected by Glean.
- *
- * @param value {String} The legacy Telemetry value.
- *
- * @returns {Array} The array appropriate for being `.set()` on the Glean
- * crash.quotaManagerShutdownTimeout metric.
- */
-function quotaManagerShutdownTimeoutLegacyToGlean(value) {
-  // The Glean metric is an array of the lines.
-  return value.split("\n");
-}
-
-/**
  * A gateway to crash-related data.
  *
  * This type is generic and can be instantiated any number of times.
@@ -755,163 +690,17 @@ CrashManager.prototype = Object.freeze({
    * @param {string} reason - the reason for the crash ping, one of: "crash", "event_found"
    * @param {string} type - the process type (from {@link processTypes})
    * @param {DateTime} date - the time of the crash (or the closest time after it)
-   * @param {string} minidumpHash - the hash of the minidump file, if any
-   * @param {object} stackTraces - the object containing stack trace information
    * @param {object} metadata - the object of Telemetry crash metadata
    */
-  _submitGleanCrashPing(
-    reason,
-    type,
-    date,
-    minidumpHash,
-    stackTraces,
-    metadata
-  ) {
-    if (stackTraces) {
-      // Glean.crash.stack_traces has a slightly different shape than Telemetry
-      stackTraces = stackTracesLegacyToGlean(stackTraces);
-
-      // FIXME: Glean should probably accept an empty object here. Some tests
-      // pass { status: "OK" }, which ends up being removed by the above logic.
-      if (Object.keys(stackTraces).length) {
-        Glean.crash.stackTraces.set(stackTraces);
-      }
+  _submitGleanCrashPing(reason, type, date, metadata) {
+    if ("UptimeTS" in metadata) {
+      Glean.crash.uptime.setRaw(parseFloat(metadata.UptimeTS) * 1e3);
     }
-
     Glean.crash.processType.set(type);
     Glean.crash.time.set(date.getTime() * 1000);
-    Glean.crash.minidumpSha256Hash.set(minidumpHash);
-
-    // Convert Telemetry environment values to Glean metrics
-
-    const cap = Symbol("capitalize");
-    // Types such as quantity and string which can simply be `.set()`.
-    const generic = Symbol("generic");
-    const bool = Symbol("bool");
-    const string = Symbol("string");
-    const semicolon_list = Symbol("semicolon-separated string");
-    const comma_list = Symbol("comma-separated string");
-    const seconds = Symbol("seconds (floating)");
-
-    class Typed {
-      constructor(type, metaKey) {
-        this.type = type;
-        this.metaKey = metaKey;
-      }
-    }
-    function t(type, metaKey) {
-      return new Typed(type, metaKey);
-    }
-
-    const fieldMapping = {
-      crash: {
-        appChannel: "ReleaseChannel",
-        appDisplayVersion: "Version",
-        appBuild: "BuildID",
-        asyncShutdownTimeout: t(asyncShutdownTimeoutLegacyToGlean, cap),
-        backgroundTaskName: cap,
-        eventLoopNestingLevel: cap,
-        fontName: cap,
-        gpuProcessLaunch: "GPUProcessLaunchCount",
-        ipcChannelError: "ipc_channel_error",
-        isGarbageCollecting: cap,
-        mainThreadRunnableName: cap,
-        mozCrashReason: cap,
-        profilerChildShutdownPhase: cap,
-        quotaManagerShutdownTimeout: t(
-          quotaManagerShutdownTimeoutLegacyToGlean,
-          cap
-        ),
-        remoteType: cap,
-        shutdownProgress: cap,
-        startup: t(bool, "StartupCrash"),
-      },
-      crashWindows: {
-        errorReporting: t(bool, "WindowsErrorReporting"),
-        fileDialogErrorCode: t(string, "WindowsFileDialogErrorCode"),
-      },
-      dllBlocklist: {
-        list: t(semicolon_list, "BlockedDllList"),
-        initFailed: t(bool, "BlocklistInitFailed"),
-        user32LoadedBefore: t(bool, "User32BeforeBlocklist"),
-      },
-      environment: {
-        experimentalFeatures: t(comma_list, cap),
-        headlessMode: t(bool, cap),
-        uptime: t(seconds, "UptimeTS"),
-      },
-      memory: {
-        availableCommit: "AvailablePageFile",
-        availablePhysical: "AvailablePhysicalMemory",
-        availableSwap: "AvailableSwapMemory",
-        availableVirtual: "AvailableVirtualMemory",
-        lowPhysical: "LowPhysicalMemoryEvents",
-        oomAllocationSize: "OOMAllocationSize",
-        purgeablePhysical: "PurgeablePhysicalMemory",
-        systemUsePercentage: "SystemMemoryUsePercentage",
-        texture: "TextureUsage",
-        totalPageFile: cap,
-        totalPhysical: "TotalPhysicalMemory",
-        totalVirtual: "TotalVirtualMemory",
-      },
-      windows: {
-        packageFamilyName: "WindowsPackageFamilyName",
-      },
-    };
-
-    function gleanSet(root, mapping) {
-      for (const key in mapping) {
-        let value = mapping[key];
-        if (
-          typeof value === "string" ||
-          value === cap ||
-          value instanceof Typed
-        ) {
-          // Get type and metadata key
-          let type = generic;
-          let metadataKey = value;
-          if (value instanceof Typed) {
-            type = value.type;
-            metadataKey = value.metaKey;
-          }
-          // Elaborate metadata key if set to capitilize the Glean key.
-          if (metadataKey === cap) {
-            metadataKey = key.charAt(0).toUpperCase() + key.slice(1);
-          }
-
-          // If the metadata key is set, set the Glean metric.
-          if (metadataKey in metadata) {
-            let metaValue = metadata[metadataKey];
-
-            if (type === seconds) {
-              metaValue = parseFloat(metaValue) * 1e3;
-              root[key].setRaw(metaValue);
-              continue;
-            }
-
-            // Interpret types prior to calling `set`.
-            if (type === bool) {
-              metaValue = metaValue === "1";
-            } else if (type === string) {
-              metaValue = metaValue.toString();
-            } else if (type === semicolon_list) {
-              metaValue = metaValue.split(";").filter(x => x);
-            } else if (type === comma_list) {
-              metaValue = metaValue.split(",").filter(x => x);
-            } else if (typeof type === "function") {
-              // `object` metric transformation
-              metaValue = type(metaValue);
-            }
-            root[key].set(metaValue);
-          }
-        } else {
-          gleanSet(root[key], value);
-        }
-      }
-    }
-
-    gleanSet(Glean, fieldMapping);
-
+    Glean.crash.startup.set(
+      "StartupCrash" in metadata && parseInt(metadata.StartupCrash) === 1
+    );
     GleanPings.crash.submit(reason);
   },
 
@@ -949,14 +738,7 @@ CrashManager.prototype = Object.freeze({
     // separately in lib-crash for Fenix (and potentially other GeckoView
     // users).
     if (AppConstants.platform !== "android") {
-      this._submitGleanCrashPing(
-        reason,
-        type,
-        date,
-        minidumpSha256Hash,
-        stackTraces,
-        reportMeta
-      );
+      this._submitGleanCrashPing(reason, type, date, reportMeta);
     }
 
     if (onlyGlean) {
