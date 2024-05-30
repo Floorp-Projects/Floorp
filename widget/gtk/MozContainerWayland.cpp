@@ -721,7 +721,7 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
     nsIntSize recentSize;
     wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
                                     &recentSize.height);
-    if (requestedSize != recentSize) {
+    if (requestedSize != recentSize || wl_container->buffer_scale != scale) {
       LOGCONTAINER("%s [%p] resized to %d x %d (with scale %f)\n", __FUNCTION__,
                    (void*)moz_container_get_nsWindow(container),
                    requestedSize.width, requestedSize.height, scale);
