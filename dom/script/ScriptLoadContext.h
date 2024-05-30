@@ -183,6 +183,8 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   nsIScriptElement* GetScriptElement() const;
 
+  void GetInlineScriptText(nsAString& aText) const;
+
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!GetScriptElement());
