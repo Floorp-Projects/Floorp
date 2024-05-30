@@ -1,0 +1,12 @@
+[package]
+name = "buildid_reader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+goblin = "^0.8.1"
+libc = "0.2"
+scroll = "0.12"
+log = "0.4"
+nsstring = { path = "../../../xpcom/rust/nsstring" }
+nserror = { path = "../../../xpcom/rust/nserror" }
