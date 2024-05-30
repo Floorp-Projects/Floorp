@@ -22,6 +22,9 @@ async function networkRequest(url, opts) {
 
   const response = await fetch(url, {
     cache: opts.loadFromCache ? "default" : "no-cache",
+    // See Bug 1899389, by default fetch calls from the system principal no
+    // longer use credentials.
+    credentials: "same-origin",
     redirect: opts.allowRedirects ? "follow" : "error",
   });
 

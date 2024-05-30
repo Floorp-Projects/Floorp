@@ -239,6 +239,8 @@ skip-if = ["os == 'linux' && !asan"] # bug 1447118
 ["browser_dbg-sourcemaps-breakpoints.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
+["browser_dbg-sourcemaps-credentials.js"]
+
 ["browser_dbg-sourcemaps-disabled.js"]
 
 ["browser_dbg-sourcemaps-ignorelist.js"]
