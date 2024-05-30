@@ -1571,14 +1571,14 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
     }
   }
 
-  // If the layer can't handle a new sample, early exit.
+  // If the layer can't handle a new sample, note that in the log.
   if (!videoLayer.readyForMoreMediaData) {
 #ifdef NIGHTLY_BUILD
     if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
-      NSLog(@"VIDEO_LOG: EnqueueSurface failed on readyForMoreMediaData.");
+      NSLog(@"VIDEO_LOG: EnqueueSurface even though layer is not ready for "
+            @"more data.");
     }
 #endif
-    return false;
   }
 
   // Convert the IOSurfaceRef into a CMSampleBuffer, so we can enqueue it in
