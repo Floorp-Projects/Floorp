@@ -133,7 +133,7 @@ bool ScriptLoadContext::IsPreload() const {
     return root->GetScriptLoadContext()->IsPreload();
   }
 
-  MOZ_ASSERT_IF(mIsPreload, !GetScriptElement());
+  MOZ_ASSERT_IF(mIsPreload, !HasScriptElement());
   return mIsPreload;
 }
 
@@ -145,6 +145,10 @@ nsIScriptElement* ScriptLoadContext::GetScriptElement() const {
   nsCOMPtr<nsIScriptElement> scriptElement =
       do_QueryInterface(mRequest->mFetchOptions->mElement);
   return scriptElement;
+}
+
+bool ScriptLoadContext::HasScriptElement() const {
+  return !!GetScriptElement();
 }
 
 void ScriptLoadContext::GetInlineScriptText(nsAString& aText) const {
@@ -174,7 +178,7 @@ JS::ColumnNumberOneOrigin ScriptLoadContext::GetScriptColumnNumber() const {
 
 void ScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(!GetScriptElement());
+  MOZ_ASSERT(!HasScriptElement());
   MOZ_ASSERT(IsPreload());
   // We are not tracking our own element, and are relying on the one in
   // FetchOptions.
