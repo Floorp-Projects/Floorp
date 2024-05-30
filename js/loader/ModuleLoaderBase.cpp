@@ -1301,8 +1301,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (request->HasScriptLoadContext()) {
-    TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                   "scriptloader_evaluate_module");
+    TRACE_FOR_TEST(aRequest, "scriptloader_evaluate_module");
   }
 
   JS::Rooted<JS::Value> rval(aCx);

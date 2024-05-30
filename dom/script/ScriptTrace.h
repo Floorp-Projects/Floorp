@@ -9,41 +9,46 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "js/loader/ScriptLoadRequest.h"
+#include "mozilla/dom/ScriptLoadContext.h"
 
 // This macro is used to wrap a tracing mechanism which is scheduling events
 // which are then used by the JavaScript code of test cases to track the code
 // path to verify the optimizations are working as expected.
-#define TRACE_FOR_TEST(elem, str)                  \
-  PR_BEGIN_MACRO                                   \
-  nsresult rv = NS_OK;                             \
-  rv = mozilla::dom::script::TestingDispatchEvent( \
-      elem, NS_LITERAL_STRING_FROM_CSTRING(str));  \
-  NS_ENSURE_SUCCESS(rv, rv);                       \
+#define TRACE_FOR_TEST(request, str)                 \
+  PR_BEGIN_MACRO                                     \
+  nsresult rv = NS_OK;                               \
+  rv = mozilla::dom::script::TestingDispatchEvent(   \
+      request, NS_LITERAL_STRING_FROM_CSTRING(str)); \
+  NS_ENSURE_SUCCESS(rv, rv);                         \
   PR_END_MACRO
 
-#define TRACE_FOR_TEST_BOOL(elem, str)             \
-  PR_BEGIN_MACRO                                   \
-  nsresult rv = NS_OK;                             \
-  rv = mozilla::dom::script::TestingDispatchEvent( \
-      elem, NS_LITERAL_STRING_FROM_CSTRING(str));  \
-  NS_ENSURE_SUCCESS(rv, false);                    \
+#define TRACE_FOR_TEST_BOOL(request, str)            \
+  PR_BEGIN_MACRO                                     \
+  nsresult rv = NS_OK;                               \
+  rv = mozilla::dom::script::TestingDispatchEvent(   \
+      request, NS_LITERAL_STRING_FROM_CSTRING(str)); \
+  NS_ENSURE_SUCCESS(rv, false);                      \
   PR_END_MACRO
 
-#define TRACE_FOR_TEST_NONE(elem, str)            \
-  PR_BEGIN_MACRO                                  \
-  mozilla::dom::script::TestingDispatchEvent(     \
-      elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
+#define TRACE_FOR_TEST_NONE(request, str)            \
+  PR_BEGIN_MACRO                                     \
+  mozilla::dom::script::TestingDispatchEvent(        \
+      request, NS_LITERAL_STRING_FROM_CSTRING(str)); \
   PR_END_MACRO
 
 namespace mozilla::dom::script {
 
-static nsresult TestingDispatchEvent(nsIScriptElement* aScriptElement,
+static nsresult TestingDispatchEvent(JS::loader::ScriptLoadRequest* aRequest,
                                      const nsAString& aEventType) {
   if (!StaticPrefs::dom_expose_test_interfaces()) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> target(do_QueryInterface(aScriptElement));
+  nsIScriptElement* scriptElement =
+      aRequest->GetScriptLoadContext()->GetScriptElement();
+
+  nsCOMPtr<nsINode> target(do_QueryInterface(scriptElement));
   if (!target) {
     return NS_OK;
   }
