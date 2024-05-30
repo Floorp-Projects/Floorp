@@ -2705,7 +2705,6 @@ void BrowserChild::InitRenderingState(
     gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
     InitAPZState();
   } else {
-    NS_WARNING("Fallback to FallbackRenderer");
     mLayersConnected = Some(false);
   }
 
