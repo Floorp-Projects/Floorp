@@ -207,8 +207,9 @@ static nscoord FindScrollAnchoringBoundingOffset(
   WritingMode writingMode = aScrollContainerFrame->GetWritingMode();
   nsRect physicalBounding =
       FindScrollAnchoringBoundingRect(aScrollContainerFrame, aCandidate);
-  LogicalRect logicalBounding(writingMode, physicalBounding,
-                              aScrollContainerFrame->mScrolledFrame->GetSize());
+  LogicalRect logicalBounding(
+      writingMode, physicalBounding,
+      aScrollContainerFrame->GetScrolledFrame()->GetSize());
   return logicalBounding.BStart(writingMode);
 }
 
