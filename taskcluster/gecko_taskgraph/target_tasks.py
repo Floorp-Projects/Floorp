@@ -709,6 +709,21 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
+@register_target_task("cypress_tasks")
+def target_tasks_cypress(full_task_graph, parameters, graph_config):
+    filtered_for_project = target_tasks_default(
+        full_task_graph, parameters, graph_config
+    )
+
+    def filter(task):
+        # bug 1899403: no need for android tasks
+        if "android" in task.attributes.get("build_platform", ""):
+            return False
+        return True
+
+    return [l for l in filtered_for_project if filter(full_task_graph[l])]
+
+
 @register_target_task("pine_tasks")
 def target_tasks_pine(full_task_graph, parameters, graph_config):
     """Bug 1879960 - no reftests or wpt needed"""

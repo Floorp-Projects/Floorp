@@ -100,6 +100,9 @@ PER_PROJECT_PARAMETERS = {
         "target_tasks_method": "pine_tasks",
         "release_type": "nightly-pine",
     },
+    "cypress": {
+        "target_tasks_method": "cypress_tasks",
+    },
     "larch": {
         "target_tasks_method": "larch_tasks",
         "release_type": "nightly-larch",
