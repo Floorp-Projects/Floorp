@@ -129,6 +129,7 @@ EXPORTS += [
     "ScrollAnimationPhysics.h",
     "ScrollbarActivity.h",
     "ScrollSnap.h",
+    "ScrollVelocityQueue.h",
     "TextDrawTarget.h",
     "Visibility.h",
 ]

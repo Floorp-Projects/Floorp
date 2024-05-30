@@ -12,6 +12,7 @@
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/ElementAnimationData.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"

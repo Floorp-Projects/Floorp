@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
