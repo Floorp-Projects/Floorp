@@ -169,13 +169,11 @@ void InitializeHitTestInfo(nsDisplayListBuilder* aBuilder,
 
 /* static */
 already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
-    const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame,
-    bool aIsRetained) {
-  nsIFrame* f = do_QueryFrame(aScrollableFrame);
-
+    const ActiveScrolledRoot* aParent,
+    ScrollContainerFrame* aScrollContainerFrame, bool aIsRetained) {
   RefPtr<ActiveScrolledRoot> asr;
   if (aIsRetained) {
-    asr = f->GetProperty(ActiveScrolledRootCache());
+    asr = aScrollContainerFrame->GetProperty(ActiveScrolledRootCache());
   }
 
   if (!asr) {
@@ -183,11 +181,12 @@ already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
 
     if (aIsRetained) {
       RefPtr<ActiveScrolledRoot> ref = asr;
-      f->SetProperty(ActiveScrolledRootCache(), ref.forget().take());
+      aScrollContainerFrame->SetProperty(ActiveScrolledRootCache(),
+                                         ref.forget().take());
     }
   }
   asr->mParent = aParent;
-  asr->mScrollableFrame = aScrollableFrame;
+  asr->mScrollContainerFrame = aScrollContainerFrame;
   asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
   asr->mRetained = aIsRetained;
 
@@ -226,7 +225,7 @@ nsCString ActiveScrolledRoot::ToString(
     const ActiveScrolledRoot* aActiveScrolledRoot) {
   nsAutoCString str;
   for (const auto* asr = aActiveScrolledRoot; asr; asr = asr->mParent) {
-    str.AppendPrintf("<0x%p>", asr->mScrollableFrame);
+    str.AppendPrintf("<0x%p>", asr->mScrollContainerFrame);
     if (asr->mParent) {
       str.AppendLiteral(", ");
     }
@@ -235,14 +234,13 @@ nsCString ActiveScrolledRoot::ToString(
 }
 
 ScrollableLayerGuid::ViewID ActiveScrolledRoot::ComputeViewId() const {
-  nsIContent* content = mScrollableFrame->GetScrolledFrame()->GetContent();
+  nsIContent* content = mScrollContainerFrame->GetScrolledFrame()->GetContent();
   return nsLayoutUtils::FindOrCreateIDFor(content);
 }
 
 ActiveScrolledRoot::~ActiveScrolledRoot() {
-  if (mScrollableFrame && mRetained) {
-    nsIFrame* f = do_QueryFrame(mScrollableFrame);
-    f->RemoveProperty(ActiveScrolledRootCache());
+  if (mScrollContainerFrame && mRetained) {
+    mScrollContainerFrame->RemoveProperty(ActiveScrolledRootCache());
   }
 }
 
@@ -455,7 +453,7 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
                                   aActiveScrolledRoot, mBuilder->mFilterASR)) {
     for (const ActiveScrolledRoot* asr = mBuilder->mFilterASR;
          asr && asr != aActiveScrolledRoot; asr = asr->mParent) {
-      asr->mScrollableFrame->SetHasOutOfFlowContentInsideFilter();
+      asr->mScrollContainerFrame->SetHasOutOfFlowContentInsideFilter();
     }
   }
 
@@ -463,12 +461,12 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
 }
 
 void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
-    InsertScrollFrame(nsIScrollableFrame* aScrollableFrame) {
+    InsertScrollFrame(ScrollContainerFrame* aScrollContainerFrame) {
   MOZ_ASSERT(!mUsed);
   size_t descendantsEndIndex = mBuilder->mActiveScrolledRoots.Length();
   const ActiveScrolledRoot* parentASR = mBuilder->mCurrentActiveScrolledRoot;
   const ActiveScrolledRoot* asr =
-      mBuilder->AllocateActiveScrolledRoot(parentASR, aScrollableFrame);
+      mBuilder->AllocateActiveScrolledRoot(parentASR, aScrollContainerFrame);
   mBuilder->mCurrentActiveScrolledRoot = asr;
 
   // All child ASRs of parentASR that were created while this
@@ -1450,9 +1448,10 @@ void nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(
 }
 
 ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRoot(
-    const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame) {
+    const ActiveScrolledRoot* aParent,
+    ScrollContainerFrame* aScrollContainerFrame) {
   RefPtr<ActiveScrolledRoot> asr = ActiveScrolledRoot::CreateASRForFrame(
-      aParent, aScrollableFrame, IsRetainingDisplayList());
+      aParent, aScrollContainerFrame, IsRetainingDisplayList());
   mActiveScrolledRoots.AppendElement(asr);
   return asr;
 }
@@ -7443,7 +7442,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
     // document is always active, so using IsAncestorFrameCrossDocInProcess
     // should be fine here.
     if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
-            asr->mScrollableFrame->GetScrolledFrame(), perspectiveFrame)) {
+            asr->mScrollContainerFrame->GetScrolledFrame(), perspectiveFrame)) {
       scrollingRelativeTo.emplace(asr->GetViewId());
       break;
     }

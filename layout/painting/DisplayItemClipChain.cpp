@@ -69,7 +69,7 @@ nsCString DisplayItemClipChain::ToString(
   for (auto* sc = aClipChain; sc; sc = sc->mParent) {
     if (sc->mASR) {
       str.AppendPrintf("0x%p <%s> [0x%p]", sc, sc->mClip.ToString().get(),
-                       sc->mASR->mScrollableFrame);
+                       sc->mASR->mScrollContainerFrame);
     } else {
       str.AppendPrintf("0x%p <%s> [root asr]", sc, sc->mClip.ToString().get());
     }

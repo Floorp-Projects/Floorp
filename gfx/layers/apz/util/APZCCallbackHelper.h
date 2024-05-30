@@ -16,7 +16,6 @@
 #include <functional>
 
 class nsIContent;
-class nsIScrollableFrame;
 class nsIWidget;
 class nsPresContext;
 template <class T>
@@ -27,6 +26,7 @@ class nsCOMPtr;
 namespace mozilla {
 
 class PresShell;
+class ScrollContainerFrame;
 enum class PreventDefaultResult : uint8_t;
 
 namespace layers {
@@ -176,14 +176,14 @@ class APZCCallbackHelper {
                                          float aScale);
 
   /*
-   * Check if the scrollable frame is currently in the middle of a main thread
-   * async or smooth scroll, or has already requested some other apz scroll that
-   * hasn't been acknowledged by apz.
+   * Check if the scroll container frame is currently in the middle of a main
+   * thread async or smooth scroll, or has already requested some other apz
+   * scroll that hasn't been acknowledged by apz.
    *
    * We want to discard apz updates to the main-thread scroll offset if this is
    * true to prevent clobbering higher priority origins.
    */
-  static bool IsScrollInProgress(nsIScrollableFrame* aFrame);
+  static bool IsScrollInProgress(ScrollContainerFrame* aFrame);
 
   /* Notify content of the progress of a pinch gesture that APZ won't do
    * zooming for (because the apz.allow_zooming pref is false). This function

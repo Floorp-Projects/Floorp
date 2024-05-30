@@ -65,7 +65,7 @@ static PresShell* GetPresShell(const nsIContent* aContent) {
   return nullptr;
 }
 
-static CSSPoint ScrollFrameTo(nsIScrollableFrame* aFrame,
+static CSSPoint ScrollFrameTo(ScrollContainerFrame* aFrame,
                               const RepaintRequest& aRequest,
                               bool& aSuccessOut) {
   aSuccessOut = false;
@@ -160,7 +160,7 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
     sf->ResetScrollInfoIfNeeded(aRequest.GetScrollGeneration(),
                                 aRequest.GetScrollGenerationOnApz(),
                                 aRequest.GetScrollAnimationType(),
-                                nsIScrollableFrame::InScrollingGesture(
+                                ScrollContainerFrame::InScrollingGesture(
                                     aRequest.IsInScrollingGesture()));
     sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
@@ -580,11 +580,11 @@ void APZCCallbackHelper::FireSingleTapEvent(
 }
 
 static dom::Element* GetDisplayportElementFor(
-    nsIScrollableFrame* aScrollableFrame) {
-  if (!aScrollableFrame) {
+    ScrollContainerFrame* aScrollContainerFrame) {
+  if (!aScrollContainerFrame) {
     return nullptr;
   }
-  nsIFrame* scrolledFrame = aScrollableFrame->GetScrolledFrame();
+  nsIFrame* scrolledFrame = aScrollContainerFrame->GetScrolledFrame();
   if (!scrolledFrame) {
     return nullptr;
   }
@@ -827,8 +827,8 @@ void APZCCallbackHelper::NotifyFlushComplete(PresShell* aPresShell) {
 }
 
 /* static */
-bool APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame) {
-  using AnimationState = nsIScrollableFrame::AnimationState;
+bool APZCCallbackHelper::IsScrollInProgress(ScrollContainerFrame* aFrame) {
+  using AnimationState = ScrollContainerFrame::AnimationState;
 
   return aFrame->ScrollAnimationState().contains(AnimationState::MainThread) ||
          nsLayoutUtils::CanScrollOriginClobberApz(aFrame->LastScrollOrigin());
