@@ -147,6 +147,11 @@ nsIScriptElement* ScriptLoadContext::GetScriptElement() const {
   return scriptElement;
 }
 
+void ScriptLoadContext::GetInlineScriptText(nsAString& aText) const {
+  MOZ_ASSERT(mIsInline);
+  GetScriptElement()->GetScriptText(aText);
+}
+
 void ScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!GetScriptElement());
