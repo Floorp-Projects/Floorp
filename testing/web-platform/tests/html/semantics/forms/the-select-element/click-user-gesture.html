@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<title>Test click() user gesture requirement</title>
+<meta name="timeout" content="long">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<body></body>
+<script type=module>
+    test(() => {
+        const select = document.createElement("select");
+
+        assert_throws_dom('NotAllowedError', () => { select.click(); });
+    }, `select click() requires a user gesture`);
+
+    promise_test(async t => {
+        const select = document.createElement("select");
+        document.body.append(select)
+
+        await test_driver.bless('click');
+        select.click();
+        select.blur();
+    }, `select click() does not throw when user activation is active`);
+
+    promise_test(async t => {
+        const select = document.createElement("select");
+        document.body.append(select)
+
+        await test_driver.bless('click');
+        select.click();
+        select.blur();
+
+        assert_false(navigator.userActivation.isActive);
+    }, `select click() consumes user activation`);
+</script>
