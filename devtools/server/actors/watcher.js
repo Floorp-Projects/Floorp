@@ -258,24 +258,10 @@ exports.WatcherActor = class WatcherActor extends Actor {
         continue;
       }
       promises.push(
-        domProcess
-          .getActor(this._jsActorName)
-          .watchTargets({
-            watcherActorID: this.actorID,
-            targetType,
-          })
-          .catch(e => {
-            // Ignore any process that got destroyed while trying to send the request
-            if (!domProcess.canSend) {
-              console.warn(
-                "Content process closed while requesting targets",
-                domProcess.name,
-                domProcess.remoteType
-              );
-              return;
-            }
-            throw e;
-          })
+        domProcess.getActor(this._jsActorName).watchTargets({
+          watcherActorID: this.actorID,
+          targetType,
+        })
       );
     }
     await Promise.all(promises);
@@ -567,27 +553,13 @@ exports.WatcherActor = class WatcherActor extends Actor {
     const domProcesses = ChromeUtils.getAllDOMProcesses();
     for (const domProcess of domProcesses) {
       promises.push(
-        domProcess
-          .getActor(this._jsActorName)
-          .addOrSetSessionDataEntry({
-            watcherActorID: this.actorID,
-            sessionContext: this.sessionContext,
-            type: "resources",
-            entries: resourceTypes,
-            updateType: "add",
-          })
-          .catch(e => {
-            // Ignore any process that got destroyed while trying to send the request
-            if (!domProcess.canSend) {
-              console.warn(
-                "Content process closed while requesting resources",
-                domProcess.name,
-                domProcess.remoteType
-              );
-              return;
-            }
-            throw e;
-          })
+        domProcess.getActor(this._jsActorName).addOrSetSessionDataEntry({
+          watcherActorID: this.actorID,
+          sessionContext: this.sessionContext,
+          type: "resources",
+          entries: resourceTypes,
+          updateType: "add",
+        })
       );
     }
     await Promise.all(promises);
@@ -786,27 +758,13 @@ exports.WatcherActor = class WatcherActor extends Actor {
     const domProcesses = ChromeUtils.getAllDOMProcesses();
     for (const domProcess of domProcesses) {
       promises.push(
-        domProcess
-          .getActor(this._jsActorName)
-          .addOrSetSessionDataEntry({
-            watcherActorID: this.actorID,
-            sessionContext: this.sessionContext,
-            type,
-            entries,
-            updateType,
-          })
-          .catch(e => {
-            // Ignore any process that got destroyed while trying to send the request
-            if (!domProcess.canSend) {
-              console.warn(
-                "Content process closed while sending session data",
-                domProcess.name,
-                domProcess.remoteType
-              );
-              return;
-            }
-            throw e;
-          })
+        domProcess.getActor(this._jsActorName).addOrSetSessionDataEntry({
+          watcherActorID: this.actorID,
+          sessionContext: this.sessionContext,
+          type,
+          entries,
+          updateType,
+        })
       );
     }
     await Promise.all(promises);
