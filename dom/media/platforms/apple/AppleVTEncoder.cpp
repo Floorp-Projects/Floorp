@@ -174,7 +174,14 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   }
 
   if (mConfig.mBitrate) {
-    if (!SetBitrateAndMode(mSession, mConfig.mBitrateMode, mConfig.mBitrate)) {
+    if (mConfig.mCodec == CodecType::H264 &&
+        mConfig.mBitrateMode == BitrateMode::Constant) {
+      // Not supported, fall-back to VBR.
+      LOGD("H264 CBR not supported in VideoToolbox, falling back to VBR");
+      mConfig.mBitrateMode = BitrateMode::Variable;
+    }
+    bool rv = SetBitrateAndMode(mSession, mConfig.mBitrateMode, mConfig.mBitrate);
+    if (!rv) {
       LOGE("failed to set bitrate to %d and mode to %s", mConfig.mBitrate,
            mConfig.mBitrateMode == BitrateMode::Constant ? "constant"
                                                          : "variable");
