@@ -136,6 +136,8 @@ serp:
     type: event
     description: >
       Recorded when a search engine results page (SERP) is shown to a user.
+      The feature began rolling out to all users with Firefox 115, and was
+      permanently enabled in Firefox 119.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
@@ -192,11 +194,12 @@ serp:
       is_private:
         description:
           Indicates if the page was loaded while in Private Browsing Mode.
+          Added in Firefox 120.
         type: boolean
       is_signed_in:
         description:
           Indicates if the page was loaded while the user is signed in to a
-          provider's account.
+          provider's account. Added in Firefox 127.
         type: boolean
 
   engagement:
