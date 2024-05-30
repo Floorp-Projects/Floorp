@@ -14,13 +14,11 @@ exclude: true
 ⚠️  breaking change and deprecation notices
 
 ## v128
-- ⚠️ Deprecated [`GeckoSession.NavigationDelegate.onLocationChange`][128.1], will now be removed in v128.
-  ([bug 1896454]({{bugzilla}}1896454))
+- ⚠️ Removed deprecated [`GeckoSession.NavigationDelegate.onLocationChange`][128.1]
 - Reverted the change to the `WebExtension.MetaData` related to "prompt" permissions ([bug 1879543]({{bugzilla}}1879543)) and explicitly passed the permissions/origins into the `PromptDelegate` methods. Required permissions and origins are now available via [`WebExtension.MetaData.requiredPermissions`][128.2] and [`WebExtension.MetaData.requiredOrigins`][128.3].
 - Added additional [`Autocomplete.LoginSelectOption`][128.4] constructor that takes a `hint` ([bug 1877237]({{bugzilla}}1877237)).
 - ⚠️ Deprecated [`GeckoSession.ContentDelegate.onProductUrl`][128.5], will now be removed in v131.
   ([bug 1898055]({{bugzilla}}1898055))
-
 
 [128.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
 [128.2]: {{javadoc_uri}}/WebExtension.MetaData.html#promptPermissions
@@ -1573,4 +1571,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e29ec469218f165e799441602510a3968ddb94d2
+[api-version]: 24697aa7b11e3d09335606e1951de2dd4c9f15df
