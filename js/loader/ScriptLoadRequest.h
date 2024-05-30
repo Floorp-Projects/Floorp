@@ -24,7 +24,6 @@
 #include "LoadedScript.h"
 #include "ScriptKind.h"
 #include "ScriptFetchOptions.h"
-#include "nsIScriptElement.h"
 
 class nsICacheInfoChannel;
 

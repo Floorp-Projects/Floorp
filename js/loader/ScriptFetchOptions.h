@@ -8,7 +8,6 @@
 #define js_loader_ScriptFecthOptions_h
 
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/RequestBinding.h"  // RequestPriority
 #include "nsCOMPtr.h"
@@ -55,8 +54,7 @@ class ScriptFetchOptions {
   ScriptFetchOptions(mozilla::CORSMode aCORSMode, const nsAString& aNonce,
                      mozilla::dom::RequestPriority aFetchPriority,
                      const ParserMetadata aParserMetadata,
-                     nsIPrincipal* aTriggeringPrincipal,
-                     mozilla::dom::Element* aElement = nullptr);
+                     nsIPrincipal* aTriggeringPrincipal);
 
   /*
    *  The credentials mode used for the initial fetch (for module scripts)
@@ -88,14 +86,6 @@ class ScriptFetchOptions {
    *  TODO: Move to ScriptLoadContext
    */
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  /*
-   *  Represents fields populated by DOM elements (nonce, parser metadata)
-   *  Leave this field as a nullptr for any fetch that requires the
-   *  default classic script options.
-   *  (https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options)
-   *  TODO: extract necessary fields rather than passing this object
-   */
-  nsCOMPtr<mozilla::dom::Element> mElement;
 };
 
 }  // namespace JS::loader

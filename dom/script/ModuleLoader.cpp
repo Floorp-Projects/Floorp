@@ -346,7 +346,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
     // "auto".
     options = new ScriptFetchOptions(
         mozilla::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
-        ParserMetadata::NotParserInserted, principal, nullptr);
+        ParserMetadata::NotParserInserted, principal);
     referrerPolicy = document->GetReferrerPolicy();
     baseURL = document->GetDocBaseURI();
   }
