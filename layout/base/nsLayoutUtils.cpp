@@ -781,13 +781,11 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
 }
 
 void nsLayoutUtils::NotifyPaintSkipTransaction(ViewID aScrollId) {
-  if (nsIScrollableFrame* scrollFrame =
+  if (ScrollContainerFrame* sf =
           nsLayoutUtils::FindScrollContainerFrameFor(aScrollId)) {
-#ifdef DEBUG
-    nsIFrame* f = do_QueryFrame(scrollFrame);
-    MOZ_ASSERT(f && f->PresShell() && !f->PresShell()->IsResolutionUpdated());
-#endif
-    scrollFrame->NotifyApzTransaction();
+    MOZ_ASSERT(sf && sf->PresShell() &&
+               !sf->PresShell()->IsResolutionUpdated());
+    sf->NotifyApzTransaction();
   }
 }
 
@@ -1332,13 +1330,13 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
     if ((aFlags & nsLayoutUtils::SCROLLABLE_STOP_AT_PAGE) && f->IsPageFrame()) {
       break;
     }
-    if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(f)) {
+    if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f)) {
       if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
-        if (scrollableFrame->WantAsyncScroll()) {
+        if (scrollContainerFrame->WantAsyncScroll()) {
           return f;
         }
       } else {
-        ScrollStyles ss = scrollableFrame->GetScrollStyles();
+        ScrollStyles ss = scrollContainerFrame->GetScrollStyles();
         if ((aFlags & nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN) ||
             ss.mVertical != StyleOverflow::Hidden ||
             ss.mHorizontal != StyleOverflow::Hidden) {
@@ -2379,7 +2377,7 @@ nsRect nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame,
   nsRect resultRect = aRect;
 
   while (closestScrollFrame) {
-    nsIScrollableFrame* sf = do_QueryFrame(closestScrollFrame);
+    ScrollContainerFrame* sf = do_QueryFrame(closestScrollFrame);
 
     nsRect scrollPortRect = sf->GetScrollPortRect();
     nsLayoutUtils::TransformRect(closestScrollFrame, aFrame, scrollPortRect);
@@ -5732,8 +5730,7 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     }
 
     // For first-line baselines, we have to consider scroll frames.
-    if (nsIScrollableFrame* sFrame =
-            do_QueryFrame(const_cast<nsIFrame*>(aFrame))) {
+    if (const ScrollContainerFrame* sFrame = do_QueryFrame(aFrame)) {
       LinePosition kidPosition;
       if (GetFirstLinePosition(aWM, sFrame->GetScrolledFrame(), &kidPosition)) {
         // Consider only the border (Padding is ignored, since
@@ -5826,7 +5823,7 @@ bool nsLayoutUtils::GetLastLineBaseline(WritingMode aWM, const nsIFrame* aFrame,
 
   const nsBlockFrame* block = do_QueryFrame(aFrame);
   if (!block) {
-    if (nsIScrollableFrame* sFrame = do_QueryFrame(aFrame)) {
+    if (const ScrollContainerFrame* sFrame = do_QueryFrame(aFrame)) {
       // Use the baseline position only if the last line's baseline is within
       // the scrolling frame's box in the initial position.
       const auto* scrolledFrame = sFrame->GetScrolledFrame();
@@ -8327,7 +8324,7 @@ nsMargin nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
     return nsMargin();
   }
   return scrollContainerFrame->GetActualScrollbarSizes(
-      nsIScrollableFrame::ScrollbarSizesOptions::
+      ScrollContainerFrame::ScrollbarSizesOptions::
           INCLUDE_VISUAL_VIEWPORT_SCROLLBARS);
 }
 

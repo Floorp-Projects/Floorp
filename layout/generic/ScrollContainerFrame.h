@@ -70,7 +70,6 @@ class ScrollContainerFrame : public nsContainerFrame,
                              public nsIStatefulFrame {
  public:
   using Element = dom::Element;
-  using InScrollingGesture = nsIScrollableFrame::InScrollingGesture;
   using ScrollAnchorContainer = layout::ScrollAnchorContainer;
   using SnapTargetSet = nsTHashSet<RefPtr<nsIContent>>;
 
@@ -203,8 +202,7 @@ class ScrollContainerFrame : public nsContainerFrame,
     return result;
   }
   nsMargin GetActualScrollbarSizes(
-      nsIScrollableFrame::ScrollbarSizesOptions aOptions =
-          nsIScrollableFrame::ScrollbarSizesOptions::NONE) const final;
+      ScrollbarSizesOptions aOptions = ScrollbarSizesOptions::NONE) const final;
   nsMargin GetDesiredScrollbarSizes() const final;
   static nscoord GetNonOverlayScrollbarSize(const nsPresContext*,
                                             StyleScrollbarWidth);
@@ -266,8 +264,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                 nsIntPoint* aOverflow = nullptr,
                 ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
-                nsIScrollableFrame::ScrollMomentum aMomentum =
-                    nsIScrollableFrame::NOT_MOMENTUM,
+                ScrollMomentum aMomentum = NOT_MOMENTUM,
                 ScrollSnapFlags aSnapFlags = ScrollSnapFlags::Disabled) final;
   void ScrollByCSSPixels(const CSSIntPoint& aDelta,
                          ScrollMode aMode = ScrollMode::Instant) final {
@@ -310,7 +307,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   bool IsRectNearlyVisible(const nsRect& aRect) const final;
   nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const final;
   ScrollOrigin LastScrollOrigin() const final { return mLastScrollOrigin; }
-  using AnimationState = nsIScrollableFrame::AnimationState;
   EnumSet<AnimationState> ScrollAnimationState() const final;
   MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mScrollGeneration;
@@ -392,7 +388,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   void TryResnap() final;
   void PostPendingResnapIfNeeded(const nsIFrame* aFrame) final;
   void PostPendingResnap() final;
-  using PhysicalScrollSnapAlign = nsIScrollableFrame::PhysicalScrollSnapAlign;
   PhysicalScrollSnapAlign GetScrollSnapAlignFor(
       const nsIFrame* aFrame) const final;
 

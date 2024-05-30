@@ -1729,7 +1729,7 @@ void ScrollContainerFrame::HandleScrollbarStyleSwitching() {
     mScrollbarActivity->Destroy();
     mScrollbarActivity = nullptr;
   } else if (!mScrollbarActivity && UsesOverlayScrollbars()) {
-    mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(this));
+    mScrollbarActivity = new ScrollbarActivity(this);
   }
 }
 
@@ -1877,7 +1877,7 @@ void ScrollContainerFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
 
   nsIntPoint overflow;
   ScrollBy(delta, ScrollUnit::LINES, ScrollMode::Smooth, &overflow,
-           ScrollOrigin::Other, nsIScrollableFrame::NOT_MOMENTUM, aSnapFlags);
+           ScrollOrigin::Other, NOT_MOMENTUM, aSnapFlags);
 }
 
 void ScrollContainerFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar) {
@@ -1932,8 +1932,8 @@ void ScrollContainerFrame::ScrollByUnit(nsScrollbarFrame* aScrollbar,
     delta.y = aDirection;
   }
   nsIntPoint overflow;
-  ScrollBy(delta, aUnit, aMode, &overflow, ScrollOrigin::Other,
-           nsIScrollableFrame::NOT_MOMENTUM, aSnapFlags);
+  ScrollBy(delta, aUnit, aMode, &overflow, ScrollOrigin::Other, NOT_MOMENTUM,
+           aSnapFlags);
 }
 
 //-------------------- Helper ----------------------
@@ -4805,20 +4805,21 @@ static void CalcRangeForScrollBy(int32_t aDelta, nscoord aPos,
                                   (aDelta > 0 ? aPosTolerance : aNegTolerance));
 }
 
-void ScrollContainerFrame::ScrollBy(
-    nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-    nsIntPoint* aOverflow, ScrollOrigin aOrigin,
-    nsIScrollableFrame::ScrollMomentum aMomentum, ScrollSnapFlags aSnapFlags) {
+void ScrollContainerFrame::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
+                                    ScrollMode aMode, nsIntPoint* aOverflow,
+                                    ScrollOrigin aOrigin,
+                                    ScrollMomentum aMomentum,
+                                    ScrollSnapFlags aSnapFlags) {
   // When a smooth scroll is being processed on a frame, mouse wheel and
   // trackpad momentum scroll event updates must notcancel the SMOOTH or
   // SMOOTH_MSD scroll animations, enabling Javascript that depends on them to
   // be responsive without forcing the user to wait for the fling animations to
   // completely stop.
   switch (aMomentum) {
-    case nsIScrollableFrame::NOT_MOMENTUM:
+    case NOT_MOMENTUM:
       mIgnoreMomentumScroll = false;
       break;
-    case nsIScrollableFrame::SYNTHESIZED_MOMENTUM_EVENT:
+    case SYNTHESIZED_MOMENTUM_EVENT:
       if (mIgnoreMomentumScroll) {
         return;
       }
@@ -6962,16 +6963,13 @@ nsRect ScrollContainerFrame::GetUnsnappedScrolledRectInternal(
 }
 
 nsMargin ScrollContainerFrame::GetActualScrollbarSizes(
-    nsIScrollableFrame::ScrollbarSizesOptions
-        aOptions /* = nsIScrollableFrame::ScrollbarSizesOptions::NONE */)
-    const {
+    ScrollbarSizesOptions aOptions /* = ScrollbarSizesOptions::NONE */) const {
   nsRect r = GetPaddingRectRelativeToSelf();
 
   nsMargin m(mScrollPort.y - r.y, r.XMost() - mScrollPort.XMost(),
              r.YMost() - mScrollPort.YMost(), mScrollPort.x - r.x);
 
-  if (aOptions == nsIScrollableFrame::ScrollbarSizesOptions::
-                      INCLUDE_VISUAL_VIEWPORT_SCROLLBARS &&
+  if (aOptions == ScrollbarSizesOptions::INCLUDE_VISUAL_VIEWPORT_SCROLLBARS &&
       !UsesOverlayScrollbars()) {
     // If we are using layout scrollbars and they only exist to scroll the
     // visual viewport then they do not take up any layout space (so the
@@ -7066,8 +7064,8 @@ bool ScrollContainerFrame::IsLastScrollUpdateTriggeredByScriptAnimating()
   return false;
 }
 
-using AnimationState = nsIScrollableFrame::AnimationState;
-EnumSet<AnimationState> ScrollContainerFrame::ScrollAnimationState() const {
+EnumSet<ScrollContainerFrame::AnimationState>
+ScrollContainerFrame::ScrollAnimationState() const {
   EnumSet<AnimationState> retval;
   if (IsApzAnimationInProgress()) {
     retval += AnimationState::APZInProgress;
@@ -7471,7 +7469,7 @@ static void CollectScrollPositionsForSnap(
     ScrollContainerFrame::SnapTargetSet* aSnapTargets) {
   // Snap positions only affect the nearest ancestor scroll container on the
   // element's containing block chain.
-  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  ScrollContainerFrame* sf = do_QueryFrame(aFrame);
   if (sf) {
     return;
   }
@@ -8009,7 +8007,7 @@ void ScrollContainerFrame::AppendScrollUpdate(
 void ScrollContainerFrame::ScheduleScrollAnimations() {
   nsIContent* content = GetContent();
   MOZ_ASSERT(content && content->IsElement(),
-             "The nsIScrollableFrame should have the element.");
+             "The ScrollContainerFrame should have the element.");
 
   const Element* elementOrPseudo = content->AsElement();
   PseudoStyleType pseudo = elementOrPseudo->GetPseudoElementType();

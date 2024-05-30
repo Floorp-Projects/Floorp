@@ -17,6 +17,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/Try.h"
 #include "mozilla/intl/Segmenter.h"
 
@@ -57,7 +58,6 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsIScrollableFrame.h"
 #include "nsDisplayList.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/Event.h"
@@ -710,7 +710,7 @@ nsresult nsTreeBodyFrame::InvalidateRange(int32_t aStart, int32_t aEnd) {
 static void FindScrollParts(nsIFrame* aCurrFrame,
                             nsTreeBodyFrame::ScrollParts* aResult) {
   if (!aResult->mColumnsScrollFrame) {
-    nsIScrollableFrame* f = do_QueryFrame(aCurrFrame);
+    ScrollContainerFrame* f = do_QueryFrame(aCurrFrame);
     if (f) {
       aResult->mColumnsFrame = aCurrFrame;
       aResult->mColumnsScrollFrame = f;

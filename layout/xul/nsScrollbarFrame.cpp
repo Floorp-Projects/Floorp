@@ -166,13 +166,13 @@ nsresult nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
     return rv;
   }
 
-  nsIScrollableFrame* scrollable = do_QueryFrame(GetParent());
-  if (!scrollable) {
+  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(GetParent());
+  if (!scrollContainerFrame) {
     return rv;
   }
 
   nsCOMPtr<nsIContent> content(mContent);
-  scrollable->CurPosAttributeChanged(content);
+  scrollContainerFrame->CurPosAttributeChanged(content);
   return rv;
 }
 
@@ -214,11 +214,11 @@ nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
     return nullptr;
   }
   nsIFrame* f = mScrollbarMediator->GetPrimaryFrame();
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(f);
+  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
   nsIScrollbarMediator* sbm;
 
-  if (scrollFrame) {
-    nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
+  if (scrollContainerFrame) {
+    nsIFrame* scrolledFrame = scrollContainerFrame->GetScrolledFrame();
     sbm = do_QueryFrame(scrolledFrame);
     if (sbm) {
       return sbm;

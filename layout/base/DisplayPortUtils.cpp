@@ -73,7 +73,8 @@ DisplayPortMargins DisplayPortMargins::ForContent(
 }
 
 ScreenMargin DisplayPortMargins::GetRelativeToLayoutViewport(
-    ContentGeometryType aGeometryType, nsIScrollableFrame* aScrollableFrame,
+    ContentGeometryType aGeometryType,
+    ScrollContainerFrame* aScrollContainerFrame,
     const CSSToScreenScale2D& aDisplayportScale) const {
   // APZ wants |mMargins| applied relative to the visual viewport.
   // The main-thread painting code applies margins relative to
@@ -82,7 +83,7 @@ ScreenMargin DisplayPortMargins::GetRelativeToLayoutViewport(
   // magnitude of the translation depends on whether we are
   // applying the displayport to scrolled or fixed content.
   CSSPoint scrollDeltaCss =
-      ComputeAsyncTranslation(aGeometryType, aScrollableFrame);
+      ComputeAsyncTranslation(aGeometryType, aScrollContainerFrame);
   ScreenPoint scrollDelta = scrollDeltaCss * aDisplayportScale;
   ScreenMargin margins = mMargins;
   margins.left -= scrollDelta.x;
@@ -106,7 +107,7 @@ std::ostream& operator<<(std::ostream& aOs,
 
 CSSPoint DisplayPortMargins::ComputeAsyncTranslation(
     ContentGeometryType aGeometryType,
-    nsIScrollableFrame* aScrollableFrame) const {
+    ScrollContainerFrame* aScrollContainerFrame) const {
   // If we are applying the displayport to scrolled content, the
   // translation is the entire difference between the visual and
   // layout offsets.
@@ -122,15 +123,14 @@ CSSPoint DisplayPortMargins::ComputeAsyncTranslation(
   // with it. We want only the remaining delta, i.e. the offset of
   // the visual viewport relative to the (async-scrolled) layout
   // viewport.
-  if (!aScrollableFrame) {
+  if (!aScrollContainerFrame) {
     // Displayport on a non-scrolling frame for some reason.
     // There will be no divergence between the two viewports.
     return CSSPoint();
   }
   // Fixed content is always fixed to an RSF.
-  MOZ_ASSERT(aScrollableFrame->IsRootScrollFrameOfDocument());
-  nsIFrame* scrollFrame = do_QueryFrame(aScrollableFrame);
-  if (!scrollFrame->PresShell()->IsVisualViewportSizeSet()) {
+  MOZ_ASSERT(aScrollContainerFrame->IsRootScrollFrameOfDocument());
+  if (!aScrollContainerFrame->PresShell()->IsVisualViewportSizeSet()) {
     // Zooming is disabled, so the layout viewport tracks the
     // visual viewport completely.
     return CSSPoint();
@@ -145,12 +145,13 @@ CSSPoint DisplayPortMargins::ComputeAsyncTranslation(
       // mVisualOffset, and using it to adjust the visual viewport size here.
       // Note that any incorrectness caused by this will only occur transiently
       // during async zooming.
-      CSSSize::FromAppUnits(scrollFrame->PresShell()->GetVisualViewportSize())};
+      CSSSize::FromAppUnits(
+          aScrollContainerFrame->PresShell()->GetVisualViewportSize())};
   const CSSRect scrollableRect = CSSRect::FromAppUnits(
-      nsLayoutUtils::CalculateExpandedScrollableRect(scrollFrame));
+      nsLayoutUtils::CalculateExpandedScrollableRect(aScrollContainerFrame));
   CSSRect asyncLayoutViewport{
       mLayoutOffset,
-      CSSSize::FromAppUnits(aScrollableFrame->GetScrollPortRect().Size())};
+      CSSSize::FromAppUnits(aScrollContainerFrame->GetScrollPortRect().Size())};
   FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
       visualViewport, scrollableRect, /* out */ asyncLayoutViewport);
   return mVisualOffset - asyncLayoutViewport.TopLeft();
@@ -744,7 +745,7 @@ bool DisplayPortUtils::FrameHasDisplayPort(nsIFrame* aFrame,
   if (!aFrame->GetContent() || !HasDisplayPort(aFrame->GetContent())) {
     return false;
   }
-  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  ScrollContainerFrame* sf = do_QueryFrame(aFrame);
   if (sf) {
     if (aScrolledFrame && aScrolledFrame != sf->GetScrolledFrame()) {
       return false;
@@ -900,12 +901,12 @@ void DisplayPortUtils::ExpireDisplayPortOnAsyncScrollableAncestor(
     if (!frame) {
       break;
     }
-    nsIScrollableFrame* scrollAncestor =
+    ScrollContainerFrame* scrollAncestor =
         nsLayoutUtils::GetAsyncScrollableAncestorFrame(frame);
     if (!scrollAncestor) {
       break;
     }
-    frame = do_QueryFrame(scrollAncestor);
+    frame = scrollAncestor;
     MOZ_ASSERT(frame);
     if (!frame) {
       break;

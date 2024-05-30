@@ -53,7 +53,6 @@
 #include "nsIContentInlines.h"
 #include "nsIDocShell.h"
 #include "nsIFormControl.h"
-#include "nsIScrollableFrame.h"
 #include "nsISHistory.h"
 #include "nsIXULRuntime.h"
 #include "nsPresContext.h"

@@ -7,13 +7,13 @@
 
 #include "mozilla/TypedEnumBits.h"
 
-// Types used in main-thread scrolling interfaces such as nsIScrollableFrame.
+// Types used in main-thread scrolling interfaces such as ScrollContainerFrame.
 
 namespace mozilla {
 
 /**
  * Scroll modes for main-thread scroll operations. These are mostly used
- * by nsIScrollableFrame methods.
+ * by ScrollContainerFrame methods.
  *
  * When a scroll operation is requested, we ask for instant, smooth,
  * smooth msd, or normal scrolling.

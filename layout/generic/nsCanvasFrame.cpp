@@ -278,9 +278,8 @@ nsRect nsCanvasFrame::CanvasArea() const {
   // matter.
   nsRect result(InkOverflowRect());
 
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetParent());
-  if (scrollableFrame) {
-    nsRect portRect = scrollableFrame->GetScrollPortRect();
+  if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(GetParent())) {
+    nsRect portRect = scrollContainerFrame->GetScrollPortRect();
     result.UnionRect(result, nsRect(nsPoint(0, 0), portRect.Size()));
   }
   return result;
@@ -587,12 +586,11 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 void nsCanvasFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
   nsRect focusRect(aPt, GetSize());
 
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetParent());
-  if (scrollableFrame) {
-    nsRect portRect = scrollableFrame->GetScrollPortRect();
+  if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(GetParent())) {
+    nsRect portRect = scrollContainerFrame->GetScrollPortRect();
     focusRect.width = portRect.width;
     focusRect.height = portRect.height;
-    focusRect.MoveBy(scrollableFrame->GetScrollPosition());
+    focusRect.MoveBy(scrollContainerFrame->GetScrollPosition());
   }
 
   // XXX use the root frame foreground color, but should we find BODY frame
