@@ -707,9 +707,7 @@ export class GeckoViewNavigation extends GeckoViewModule {
       isTopLevel: aWebProgress.isTopLevel,
       permissions,
       hasUserGesture:
-        this.window.document.hasValidTransientUserGestureActivation !== null
-          ? this.window.document.hasValidTransientUserGestureActivation
-          : false,
+        this.window.document.hasValidTransientUserGestureActivation,
     };
     lazy.TranslationsParent.onLocationChange(this.browser);
     this.eventDispatcher.sendRequest(message);

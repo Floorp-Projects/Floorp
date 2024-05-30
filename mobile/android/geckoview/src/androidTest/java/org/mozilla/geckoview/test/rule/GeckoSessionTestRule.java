@@ -824,11 +824,13 @@ public class GeckoSessionTestRule implements TestRule {
       return null;
     }
 
+    // The default impl of this will call `onLocationChange(2)` which causes duplicated
+    // call records, to avoid that we implement it here so that it doesn't do anything.
     @Override
     public void onLocationChange(
         @NonNull GeckoSession session,
         @Nullable String url,
-        @NonNull final List<ContentPermission> perms,
+        @NonNull List<ContentPermission> perms,
         @NonNull Boolean hasUserGesture) {}
 
     @Override
