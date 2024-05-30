@@ -340,10 +340,13 @@ fn main() -> std::io::Result<()> {
         File::create(out_path.join("builtins.rs")).expect("Could not write builtins.rs."),
     );
 
-    let input: &str = &std::fs::read_to_string("../../../nss/lib/ckfw/builtins/certdata.txt")
+    let mut input: String = std::fs::read_to_string("../../../nss/lib/ckfw/builtins/certdata.txt")
         .expect("Unable to read certdata.txt.");
 
-    let blocks = match parse(input) {
+    // Add a trailing newline to simplify parsing.
+    input.push('\n');
+
+    let blocks = match parse(&input) {
         Ok((_, blocks)) => blocks,
         Err(e) => {
             let input = match e {
@@ -353,7 +356,7 @@ fn main() -> std::io::Result<()> {
             emit_build_error!(
                 out,
                 &format!(
-                    "Could not parse certdata.txt. Failed at: \'{}\'\");",
+                    "Could not parse certdata.txt. Failed at: \'{}\');",
                     input.escape_debug().to_string().escape_debug()
                 )
             );
