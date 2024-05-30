@@ -47,11 +47,11 @@ into the registry.
    [HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\MaintenanceService\3932ecacee736d366d6436db0f55bce4]
 
    [HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\MaintenanceService\3932ecacee736d366d6436db0f55bce4\0]
-   "issuer"="DigiCert SHA2 Assured ID Code Signing CA"
+   "issuer"="DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1"
    "name"="Mozilla Corporation"
 
    [HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\MaintenanceService\3932ecacee736d366d6436db0f55bce4\1]
-   "issuer"="DigiCert Assured ID Code Signing CA-1"
+   "issuer"="DigiCert SHA2 Assured ID Code Signing CA"
    "name"="Mozilla Corporation"
 
    [HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\MaintenanceService\3932ecacee736d366d6436db0f55bce4\2]
