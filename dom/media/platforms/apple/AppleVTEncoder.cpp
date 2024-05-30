@@ -737,11 +737,6 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessDrain() {
   AssertOnTaskQueue();
   MOZ_ASSERT(mSession);
 
-  if (mFramesCompleted) {
-    MOZ_DIAGNOSTIC_ASSERT(mEncodedData.IsEmpty());
-    return EncodePromise::CreateAndResolve(EncodedData(), __func__);
-  }
-
   OSStatus status =
       VTCompressionSessionCompleteFrames(mSession, kCMTimeIndefinite);
   if (status != noErr) {
@@ -749,7 +744,6 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessDrain() {
     return EncodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                           __func__);
   }
-  mFramesCompleted = true;
   // VTCompressionSessionCompleteFrames() could have queued multiple tasks with
   // the new drained frames. Dispatch a task after them to resolve the promise
   // with those frames.
