@@ -183,7 +183,6 @@ UNIFIED_SOURCES += [
     "InputStreamUtils.cpp",
     "IPCMessageUtilsSpecializations.cpp",
     "IPCStreamUtils.cpp",
-    "LaunchError.cpp",
     "MessageChannel.cpp",
     "MessageLink.cpp",
     "MessagePump.cpp",
