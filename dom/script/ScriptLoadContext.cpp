@@ -192,6 +192,12 @@ void ScriptLoadContext::ContinueParserAsync() const {
   GetScriptElement()->ContinueParserAsync();
 }
 
+Document* ScriptLoadContext::GetScriptOwnerDocument() const {
+  nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(GetScriptElement()));
+  MOZ_ASSERT(scriptContent);
+  return scriptContent->OwnerDoc();
+}
+
 void ScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!HasScriptElement());
