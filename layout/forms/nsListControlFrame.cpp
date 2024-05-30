@@ -668,6 +668,10 @@ void nsListControlFrame::SetInitialChildList(ChildListID aListID,
   ScrollContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 
+bool nsListControlFrame::GetMultiple() const {
+  return mContent->AsElement()->HasAttr(nsGkAtoms::multiple);
+}
+
 HTMLSelectElement& nsListControlFrame::Select() const {
   return *static_cast<HTMLSelectElement*>(GetContent());
 }

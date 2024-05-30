@@ -19,7 +19,6 @@
 #include "nsIReflowCallback.h"
 #include "nsQueryFrame.h"
 #include "nsExpirationTracker.h"
-#include "TextOverflow.h"
 #include "ScrollVelocityQueue.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/PresState.h"
@@ -33,6 +32,7 @@ class nsIScrollPositionListener;
 class AutoContainsBlendModeCapturer;
 
 namespace mozilla {
+struct nsDisplayListCollection;
 class PresShell;
 enum class StyleScrollbarWidth : uint8_t;
 class ScrollContainerFrame;
