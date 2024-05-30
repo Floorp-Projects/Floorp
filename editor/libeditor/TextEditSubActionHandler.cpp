@@ -219,7 +219,8 @@ TextEditor::InsertLineFeedCharacterAtSelection() {
 
   // Insert a linefeed character.
   Result<InsertTextResult, nsresult> insertTextResult =
-      InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert);
+      InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert,
+                                InsertTextTo::ExistingTextNodeIfAvailable);
   if (MOZ_UNLIKELY(insertTextResult.isErr())) {
     NS_WARNING("TextEditor::InsertTextWithTransaction(\"\\n\") failed");
     return insertTextResult.propagateErr();
@@ -461,7 +462,8 @@ Result<EditActionResult, nsresult> TextEditor::HandleInsertText(
     }
     Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, insertionString,
-                                  compositionStartPoint);
+                                  compositionStartPoint,
+                                  InsertTextTo::ExistingTextNodeIfAvailable);
     if (MOZ_UNLIKELY(insertTextResult.isErr())) {
       NS_WARNING("EditorBase::InsertTextWithTransaction() failed");
       return insertTextResult.propagateErr();
@@ -482,7 +484,8 @@ Result<EditActionResult, nsresult> TextEditor::HandleInsertText(
 
     Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, insertionString,
-                                  atStartOfSelection);
+                                  atStartOfSelection,
+                                  InsertTextTo::ExistingTextNodeIfAvailable);
     if (MOZ_UNLIKELY(insertTextResult.isErr())) {
       NS_WARNING("EditorBase::InsertTextWithTransaction() failed");
       return insertTextResult.propagateErr();
