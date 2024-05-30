@@ -205,11 +205,6 @@ if __name__ == "__main__":
     # an error.
     atexit.register(early_exit_handler)
 
-    # other scripts assume the short-sha is used for various comparisons, so
-    # make sure the provided sha is in the short form.
-    cmd = f"git show --format=%h --no-patch {args.commit_sha}"
-    args.commit_sha = run_git(cmd, args.repo_path)[0]
-
     commit_message_filename = os.path.join(args.tmp_path, "cherry-pick-commit_msg.txt")
 
     resume_state_filename = os.path.join(args.state_path, "cherry_pick_commit.resume")
@@ -277,14 +272,6 @@ if __name__ == "__main__":
     stdout_lines = run_hg("hg status")
     if len(stdout_lines) != 0:
         sys.exit(1)
-
-    # make sure the github repo exists
-    error_help = (
-        f"No moz-libwebrtc github repo found at {args.repo_path}\n"
-        f"Please run restore_patch_stack.py before running {script_name}"
-    )
-    if not os.path.exists(args.repo_path):
-        sys.exit(1)
     error_help = None
 
     if len(resume_state) == 0:
@@ -315,6 +302,20 @@ if __name__ == "__main__":
                 args.tar_name,
                 "https",  # unused if a previous restore has completed
             )
+
+    # make sure the github repo exists
+    error_help = (
+        f"No moz-libwebrtc github repo found at {args.repo_path}\n"
+        f"Please run restore_patch_stack.py before running {script_name}"
+    )
+    if not os.path.exists(args.repo_path):
+        sys.exit(1)
+    error_help = None
+
+    # Other scripts assume the short-sha is used for various comparisons, so
+    # make sure the provided sha is in the short form.
+    cmd = f"git rev-parse --short {args.commit_sha}"
+    args.commit_sha = run_git(cmd, args.repo_path)[0]
 
     if len(resume_state) == 0 or resume_state == "resume2":
         resume_state = ""
