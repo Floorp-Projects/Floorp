@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "superiorblock@ext:1.0",
+          "charityaff@testnet:2024.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1716455304678,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1716834906988,
+      "id": "dcd0b6d7-76ec-4c93-a447-c90fb79a8376",
+      "last_modified": 1716834963648
+    },
+    {
+      "stash": {
+        "blocked": [
           "hiddenads@addon:1.2",
           "hiddenads@addon:1.1"
         ],
@@ -678,5 +692,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1715085361954
+  "timestamp": 1716834963648
 }

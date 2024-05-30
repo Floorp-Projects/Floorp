@@ -13822,6 +13822,10 @@ ie.ua
 // HostyHosting (hostyhosting.com)
 hostyhosting.io
 
+// Hypernode B.V. : https://www.hypernode.com/
+// Submitted by Cipriano Groenendal <security@nl.team.blue>
+hypernode.io
+
 // Häkkinen.fi
 // Submitted by Eero Häkkinen <Eero+psl@Häkkinen.fi>
 häkkinen.fi
@@ -15647,6 +15651,14 @@ wmflabs.org
 panel.gg
 daemon.panel.gg
 
+// Wix.com, Inc. : https://www.wix.com
+// Submitted by Shahar Talmi / Alon Kochba <publicsuffixlist@wix.com>
+wixsite.com
+wixstudio.com
+editorx.io
+wixstudio.io
+wix.run
+
 // Wizard Zines : https://wizardzines.com
 // Submitted by Julia Evans <julia@wizardzines.com>
 messwithdns.com
@@ -15671,13 +15683,6 @@ weeklylottery.org.uk
 // Submitted by Brandon DuRette <brandon.durette@wpengine.com>
 wpenginepowered.com
 js.wpenginepowered.com
-
-// Wix.com, Inc. : https://www.wix.com
-// Submitted by Shahar Talmi <shahar@wix.com>
-wixsite.com
-editorx.io
-wixstudio.io
-wix.run
 
 // XenonCloud GbR: https://xenoncloud.net
 // Submitted by Julian Uphoff <publicsuffixlist@xenoncloud.net>
