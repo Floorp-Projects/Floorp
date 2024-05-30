@@ -3435,13 +3435,9 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
   AutoTArray<nsString, 1> params;
   CopyUTF8toUTF16(aRequest->mURI->GetSpecOrDefault(), *params.AppendElement());
 
-  nsIScriptElement* element =
-      aRequest->GetScriptLoadContext()->GetScriptElement();
-  uint32_t lineNo = element ? element->GetScriptLineNumber() : 0;
-  JS::ColumnNumberOneOrigin columnNo;
-  if (element) {
-    columnNo = element->GetScriptColumnNumber();
-  }
+  uint32_t lineNo = aRequest->GetScriptLoadContext()->GetScriptLineNumber();
+  JS::ColumnNumberOneOrigin columnNo =
+      aRequest->GetScriptLoadContext()->GetScriptColumnNumber();
 
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, "Script Loader"_ns, mDocument,
@@ -3452,13 +3448,9 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
 void ScriptLoader::ReportWarningToConsole(
     ScriptLoadRequest* aRequest, const char* aMessageName,
     const nsTArray<nsString>& aParams) const {
-  nsIScriptElement* element =
-      aRequest->GetScriptLoadContext()->GetScriptElement();
-  uint32_t lineNo = element ? element->GetScriptLineNumber() : 0;
-  JS::ColumnNumberOneOrigin columnNo;
-  if (element) {
-    columnNo = element->GetScriptColumnNumber();
-  }
+  uint32_t lineNo = aRequest->GetScriptLoadContext()->GetScriptLineNumber();
+  JS::ColumnNumberOneOrigin columnNo =
+      aRequest->GetScriptLoadContext()->GetScriptColumnNumber();
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, "Script Loader"_ns, mDocument,
       nsContentUtils::eDOM_PROPERTIES, aMessageName, aParams, nullptr, u""_ns,
