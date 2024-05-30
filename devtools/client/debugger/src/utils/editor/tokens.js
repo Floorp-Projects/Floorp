@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { features } from "../prefs";
+
 function _isInvalidTarget(target) {
   if (!target || !target.innerText) {
     return true;
@@ -22,11 +24,17 @@ function _isInvalidTarget(target) {
   // - operators
   // - tags
   const INVALID_TARGET_CLASSES = [
+    // CM5 tokens,
     "cm-atom",
     "cm-number",
     "cm-operator",
     "cm-string",
     "cm-tag",
+    // CM6 tokens,
+    "tok-string",
+    "tok-punctuation",
+    "tok-number",
+    "tok-operator",
     // also exclude editor element (defined in Editor component)
     "editor-mount",
   ];
@@ -40,7 +48,12 @@ function _isInvalidTarget(target) {
   // We need to exclude keywords, but since codeMirror tags "this" as a keyword, we need
   // to check the tokenText as well.
   // This seems to be the only case that we want to exclude (see devtools/client/shared/sourceeditor/codemirror/mode/javascript/javascript.js#24-41)
-  if (target.classList.contains("cm-keyword") && tokenText !== "this") {
+  // For CM6 https://github.com/codemirror/lang-javascript/blob/7edd3df9b0df41aef7c9835efac53fb52b747282/src/javascript.ts#L79
+  if (
+    (target.classList.contains("cm-keyword") ||
+      target.classList.contains("tok-keyword")) &&
+    tokenText !== "this"
+  ) {
     return true;
   }
 
@@ -48,11 +61,16 @@ function _isInvalidTarget(target) {
   if (
     // exclude inline preview
     target.closest(".CodeMirror-widget") ||
+    target.closest(".inline-preview") ||
     // exclude in-line "empty" space, as well as the gutter
     target.matches(".CodeMirror-line, .CodeMirror-gutter-elt") ||
     // exclude items that are not in a line
-    !target.closest(".CodeMirror-line") ||
-    target.getBoundingClientRect().top == 0
+    (!target.closest(".CodeMirror-line") &&
+      // exclude items that are not in a line  for CM6
+      !target.closest(".cm-line")) ||
+    target.getBoundingClientRect().top == 0 ||
+    // exclude selecting the whole line, CM6
+    target.classList.contains("cm-line")
   ) {
     return true;
   }
@@ -65,8 +83,16 @@ function _isInvalidTarget(target) {
   return false;
 }
 
-function _dispatch(codeMirror, eventName, data) {
-  codeMirror.constructor.signal(codeMirror, eventName, data);
+function _dispatch(codeMirrorOrSourceEditor, eventName, data) {
+  if (features.codemirrorNext) {
+    codeMirrorOrSourceEditor.emit(eventName, data);
+  } else {
+    codeMirrorOrSourceEditor.constructor.signal(
+      codeMirrorOrSourceEditor,
+      eventName,
+      data
+    );
+  }
 }
 
 function _invalidLeaveTarget(target) {
@@ -79,10 +105,10 @@ function _invalidLeaveTarget(target) {
 
 /**
  * Wraps the codemirror mouse events  to generate token events
- * @param {*} codeMirror
- * @returns
+ * @param {Object} codeMirrorOrSourceEditor
+ * @returns {Function}
  */
-export function onMouseOver(codeMirror) {
+export function onMouseOver(codeMirrorOrEditor) {
   let prevTokenPos = null;
 
   function onMouseLeave(event) {
@@ -92,7 +118,7 @@ export function onMouseOver(codeMirror) {
     }
 
     prevTokenPos = null;
-    _dispatch(codeMirror, "tokenleave", event);
+    _dispatch(codeMirrorOrEditor, "tokenleave", event);
   }
 
   function addMouseLeave(target) {
@@ -102,14 +128,19 @@ export function onMouseOver(codeMirror) {
     });
   }
 
-  return enterEvent => {
+  return (enterEvent, cm, cursorLine, cursorColumn, eventLine, eventColumn) => {
     const { target } = enterEvent;
 
     if (_isInvalidTarget(target)) {
       return;
     }
-
-    const tokenPos = getTokenLocation(codeMirror, target);
+    let tokenPos;
+    if (features.codemirrorNext) {
+      // using the line and column on hover
+      tokenPos = { line: eventLine, column: eventColumn };
+    } else {
+      tokenPos = getTokenLocation(codeMirrorOrEditor, target);
+    }
 
     if (
       prevTokenPos?.line !== tokenPos?.line ||
@@ -117,7 +148,7 @@ export function onMouseOver(codeMirror) {
     ) {
       addMouseLeave(target);
 
-      _dispatch(codeMirror, "tokenenter", {
+      _dispatch(codeMirrorOrEditor, "tokenenter", {
         event: enterEvent,
         target,
         tokenPos,
