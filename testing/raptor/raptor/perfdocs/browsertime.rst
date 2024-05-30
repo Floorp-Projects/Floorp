@@ -222,7 +222,7 @@ To run this test on try and get a compare view link, run the following
 More Examples
 -------------
 
-`Browsertime docs <https://github.com/sitespeedio/browsertime/tree/main/docs/examples>`_
+`Browsertime docs <https://www.sitespeed.io/documentation/sitespeed.io/scripting/>`_
 
 Passing Additional Arguments to Browsertime
 -------------------------------------------
