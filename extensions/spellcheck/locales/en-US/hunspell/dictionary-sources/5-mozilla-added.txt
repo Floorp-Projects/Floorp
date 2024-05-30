@@ -5243,6 +5243,14 @@ Zora
 Zora's
 Zune
 Zune's
+abdominally
+abjections
+ableism
+abolisher
+abolishers
+abolishment
+abolishment's
+abolishments
 abridgement
 abridgement's
 abridgements
@@ -5254,6 +5262,8 @@ absorbers
 accelerometer
 accelerometer's
 accelerometers
+accomplisher
+accomplishers
 accountabilities
 accrete
 accreted
@@ -5261,6 +5271,9 @@ accretes
 acetabular
 acetabulum
 actin
+adaptively
+adaptiveness
+adaptivity
 add-on
 add-ons
 addendums
@@ -5281,6 +5294,10 @@ adwares
 affective
 affordance
 affordances
+aggress
+aggressed
+aggresses
+aggressing
 aider
 aider's
 al
@@ -5481,6 +5498,7 @@ bougies
 boulderer
 boulderer's
 bouldering
+breathability
 bridesman
 bridesman's
 bridesmen
@@ -5502,6 +5520,7 @@ cantina
 cantinas
 capita
 captcha
+captchas
 carabiner
 carboxylic
 cardinalities
@@ -5520,6 +5539,12 @@ chemistries
 chewable
 chiral
 chirality
+cholla
+cholla's
+chollas
+chorizo
+chorizo's
+chorizos
 ciphertext
 ciphertexts
 cisgendered
@@ -5672,6 +5697,7 @@ datasheet
 datasheet's
 datasheets
 de
+decarboxylation
 decertification
 decertifications
 decertified
@@ -5704,6 +5730,9 @@ dehydrogenase's
 demonym
 demonyms
 dequeuing
+desalinator
+desalinator's
+desalinators
 descalable
 designee
 designings
@@ -5975,10 +6004,14 @@ greyness's
 greys
 guac
 gunsmoke
+habanero
+habanero's
+habaneros
 habeas
 hadithes
 hadron
 hadronic
+hairstyling
 handwashing
 handwrite
 handwrites
@@ -6009,6 +6042,7 @@ howto
 howto's
 howtos
 hydride
+hypotheticals
 iPods
 iatrogenesis
 iatrogenic
@@ -6117,10 +6151,13 @@ keyloggings
 kibibyte
 kibibyte's
 kibibytes
+klansmen
+kleptocracies
 kludgy
 kombucha
 kryptonite
 labelled
+laggy
 laissez-faire
 langue
 langue's
@@ -6689,6 +6726,7 @@ solvability
 sommelier
 sommelier's
 sommeliers
+speciation
 spectrogram
 spectrogram's
 spectrograms
@@ -6887,6 +6925,8 @@ uncontradicted
 uncopyrightable
 uncoupler
 uncouplers
+undebatable
+undebatably
 undeliverables
 underinclusive
 underlayer

@@ -1,4 +1,4 @@
-53553
+53569
 0/nm
 0th/pt
 1/n1
@@ -13605,7 +13605,7 @@ abbé/SM
 abdicate/GNDSX
 abdication/M
 abdomen/SM
-abdominal
+abdominal/Y
 abduct/DSG
 abductee/MS
 abduction/SM
@@ -13630,7 +13630,7 @@ abide/GS
 abiding/Y
 ability/IEMS
 abject/YP
-abjection/M
+abjection/MS
 abjectness/M
 abjuration/SM
 abjuratory
@@ -13641,6 +13641,7 @@ ablation/M
 ablative/MS
 ablaze
 able/UT
+ableism
 abler
 abloom
 ablution/SM
@@ -13650,7 +13651,8 @@ abnormal/Y
 abnormality/SM
 aboard
 abode/MS
-abolish/GDS
+abolish/ZGLDRS
+abolishment/SM
 abolition/M
 abolitionism/M
 abolitionist/SM
@@ -13796,7 +13798,7 @@ accompaniment/MS
 accompanist/SM
 accompany/DSG
 accomplice/SM
-accomplish/DSLG
+accomplish/DRSLZG
 accomplished/U
 accomplishment/MS
 accord/GMDS
@@ -13965,6 +13967,8 @@ adaptability/M
 adaptation/MS
 adapter/M
 adaption/S
+adaptive/PY
+adaptivity
 add-on/S
 add/SDRBZG
 addend/MS
@@ -14282,6 +14286,7 @@ aggravation/M
 aggregate/MGNDSX
 aggregation/M
 aggregator/SM
+aggress/DSGV
 aggression/M
 aggressive/PY
 aggressiveness/M
@@ -17892,6 +17897,7 @@ breastplate/SM
 breaststroke/SM
 breastwork/MS
 breath/MDRSZGB
+breathability
 breathalyze/ZGDRS
 breathe
 breather/M
@@ -18740,7 +18746,7 @@ capsulize/DSG
 capt
 captain/SMDG
 captaincy/SM
-captcha
+captcha/S
 caption/SMDG
 captious/YP
 captiousness/M
@@ -19649,6 +19655,7 @@ choler/M
 cholera/M
 choleric
 cholesterol/M
+cholla/MS
 chomp/ZGMDRS
 choose/ZGRS
 chooser/M
@@ -19677,6 +19684,7 @@ choreographically
 choreographs
 choreography/M
 chorister/SM
+chorizo/MS
 choroid/MS
 chortle/MZGDRS
 chortler/M
@@ -22560,6 +22568,7 @@ deb/SM
 debacle/MS
 debarkation/M
 debarment/M
+debatable/U
 debate/BMZR
 debater/M
 debating/M
@@ -22592,6 +22601,7 @@ decal/MS
 decampment/M
 decapitate/XGNDS
 decapitator/MS
+decarboxylation
 decathlete/S
 decathlon/SM
 decay/GD
@@ -23025,6 +23035,7 @@ derv
 dervish/MS
 desalinate/GNDS
 desalination/M
+desalinator/SM
 desalinization/M
 desalinize/GDS
 descant/M
@@ -29293,6 +29304,7 @@ gyve/MGDS
 h'm
 h/NRSXZGVJ
 ha/SH
+habanero/MS
 habeas
 haberdasher/SM
 haberdashery/SM
@@ -29369,7 +29381,7 @@ hairsplitter/SM
 hairsplitting/M
 hairspray/S
 hairspring/MS
-hairstyle/MS
+hairstyle/MGS
 hairstylist/SM
 hairy/TRP
 haj
@@ -30853,7 +30865,7 @@ hypothermia/M
 hypotheses
 hypothesis/M
 hypothesize/DSG
-hypothetical/Y
+hypothetical/YS
 hypothyroid/M
 hypothyroidism/M
 hyssop/M
@@ -32980,8 +32992,9 @@ kitty/SM
 kiwi/MS
 kiwifruit/MS
 kl
+klansmen
 klaxon/S
-kleptocracy
+kleptocracy/S
 kleptomania/M
 kleptomaniac/SM
 kludge/GDS
@@ -33155,6 +33168,7 @@ lager/M
 laggard/MYS
 lagged
 lagging/M
+laggy
 lagniappe/SM
 lagoon/SM
 laid/IA
@@ -46769,6 +46783,7 @@ specialist/MS
 specialization/MS
 specialize/GDS
 specialty/SM
+speciation
 specie/SM
 species/M
 specif
@@ -50941,6 +50956,7 @@ unctuous/YP
 unctuousness/M
 uncut
 undaunted/Y
+undebatably
 undecided/SM
 undemonstrative/Y
 undeniably
