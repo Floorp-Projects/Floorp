@@ -12,7 +12,6 @@
 #include "nsAccessibilityService.h"
 #include "NotificationController.h"
 #include "States.h"
-#include "nsIScrollableFrame.h"
 #include "mozilla/dom/DocumentInlines.h"
 
 #ifdef A11Y_LOG
