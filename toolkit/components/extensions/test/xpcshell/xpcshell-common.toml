@@ -496,6 +496,7 @@ run-sequentially = "very high failure rate in parallel"
 ["test_ext_scripting_mv2.js"]
 
 ["test_ext_scripting_persistAcrossSessions.js"]
+requesttimeoutfactor = 2 # Needed for Android + TV (chaos mode) - bug 1899777
 
 ["test_ext_scripting_startupCache.js"]
 
