@@ -1281,75 +1281,52 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
 
   // don't change my selection in subtransactions
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
-  int32_t pos = 0;
-  constexpr auto newlineStr = NS_LITERAL_STRING_FROM_CSTRING(LFSTR);
-
   {
     AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);
+
+    const auto GetInsertTextTo = [](int32_t aInclusiveNextLinefeedOffset,
+                                    uint32_t aLineStartOffset) {
+      if (aInclusiveNextLinefeedOffset > 0) {
+        return aLineStartOffset > 0
+                   // If we'll insert a <br> and we're inserting 2nd or later
+                   // line, we should always create new `Text` since it'll be
+                   // between 2 <br> elements.
+                   ? InsertTextTo::AlwaysCreateNewTextNode
+                   // If we'll insert a <br> and we're inserting first line,
+                   // we should append text to preceding text node, but
+                   // we don't want to insert it to a a following text node
+                   // because of avoiding to split the `Text`.
+                   : InsertTextTo::ExistingTextNodeIfAvailableAndNotStart;
+      }
+      // If we're inserting the last line, the text should be inserted to
+      // start of the following `Text` if there is or middle of the `Text`
+      // at insertion position if we're inserting only the line.
+      return InsertTextTo::ExistingTextNodeIfAvailable;
+    };
 
     // for efficiency, break out the pre case separately.  This is because
     // its a lot cheaper to search the input string for only newlines than
     // it is to search for both tabs and newlines.
     if (!isWhiteSpaceCollapsible || IsPlaintextMailComposer()) {
-      while (pos != -1 &&
-             pos < AssertedCast<int32_t>(aInsertionString.Length())) {
-        int32_t oldPos = pos;
-        int32_t subStrLen;
-        pos = aInsertionString.FindChar(nsCRT::LF, oldPos);
-
-        if (pos != -1) {
-          subStrLen = pos - oldPos;
-          // if first char is newline, then use just it
-          if (!subStrLen) {
-            subStrLen = 1;
-          }
-        } else {
-          subStrLen = aInsertionString.Length() - oldPos;
-          pos = aInsertionString.Length();
-        }
-
-        nsDependentSubstring subStr(aInsertionString, oldPos, subStrLen);
-
-        // is it a return?
-        if (subStr.Equals(newlineStr)) {
-          Result<CreateElementResult, nsresult> insertBRElementResult =
-              InsertBRElement(WithTransaction::Yes, currentPoint);
-          if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
-            NS_WARNING(
-                "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-            return insertBRElementResult.propagateErr();
-          }
-          CreateElementResult unwrappedInsertBRElementResult =
-              insertBRElementResult.unwrap();
-          // We don't want to update selection here because we've blocked
-          // InsertNodeTransaction updating selection with
-          // dontChangeMySelection.
-          unwrappedInsertBRElementResult.IgnoreCaretPointSuggestion();
-          MOZ_ASSERT(!AllowsTransactionsToChangeSelection());
-
-          pos++;
-          RefPtr<Element> brElement =
-              unwrappedInsertBRElementResult.UnwrapNewNode();
-          if (brElement->GetNextSibling()) {
-            pointToInsert.Set(brElement->GetNextSibling());
-          } else {
-            pointToInsert.SetToEndOf(currentPoint.GetContainer());
-          }
-          // XXX In most cases, pointToInsert and currentPoint are same here.
-          //     But if the <br> element has been moved to different point by
-          //     mutation observer, those points become different.
-          currentPoint.SetAfter(brElement);
-          NS_WARNING_ASSERTION(currentPoint.IsSet(),
-                               "Failed to set after the <br> element");
-          NS_WARNING_ASSERTION(currentPoint == pointToInsert,
-                               "Perhaps, <br> element position has been moved "
-                               "to different point "
-                               "by mutation observer");
-        } else {
+      uint32_t nextOffset = 0;
+      while (nextOffset < aInsertionString.Length()) {
+        const uint32_t lineStartOffset = nextOffset;
+        const int32_t inclusiveNextLinefeedOffset =
+            aInsertionString.FindChar(nsCRT::LF, lineStartOffset);
+        const uint32_t lineLength =
+            inclusiveNextLinefeedOffset != -1
+                ? static_cast<uint32_t>(inclusiveNextLinefeedOffset) -
+                      lineStartOffset
+                : aInsertionString.Length() - lineStartOffset;
+        if (lineLength) {
+          // lineText does not include the preformatted line break.
+          const nsDependentSubstring lineText(aInsertionString, lineStartOffset,
+                                              lineLength);
           Result<InsertTextResult, nsresult> insertTextResult =
               InsertTextWithTransaction(
-                  *document, subStr, currentPoint,
-                  InsertTextTo::ExistingTextNodeIfAvailable);
+                  *document, lineText, currentPoint,
+                  GetInsertTextTo(inclusiveNextLinefeedOffset,
+                                  lineStartOffset));
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
             return insertTextResult.propagateErr();
@@ -1364,104 +1341,75 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
           } else {
             pointToInsert = currentPoint;
           }
+          if (inclusiveNextLinefeedOffset < 0) {
+            break;  // We reached the last line
+          }
         }
+        MOZ_ASSERT(inclusiveNextLinefeedOffset >= 0);
+        Result<CreateElementResult, nsresult> insertBRElementResult =
+            InsertBRElement(WithTransaction::Yes, currentPoint);
+        if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
+          NS_WARNING(
+              "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+          return insertBRElementResult.propagateErr();
+        }
+        CreateElementResult unwrappedInsertBRElementResult =
+            insertBRElementResult.unwrap();
+        // We don't want to update selection here because we've blocked
+        // InsertNodeTransaction updating selection with
+        // dontChangeMySelection.
+        unwrappedInsertBRElementResult.IgnoreCaretPointSuggestion();
+        MOZ_ASSERT(!AllowsTransactionsToChangeSelection());
+
+        nextOffset = inclusiveNextLinefeedOffset + 1;
+        RefPtr<Element> brElement =
+            unwrappedInsertBRElementResult.UnwrapNewNode();
+        if (brElement->GetNextSibling()) {
+          pointToInsert.Set(brElement->GetNextSibling());
+        } else {
+          pointToInsert.SetToEndOf(currentPoint.GetContainer());
+        }
+        // XXX In most cases, pointToInsert and currentPoint are same here.
+        //     But if the <br> element has been moved to different point by
+        //     mutation observer, those points become different.
+        currentPoint.SetAfter(brElement);
+        NS_WARNING_ASSERTION(currentPoint.IsSet(),
+                             "Failed to set after the <br> element");
+        NS_WARNING_ASSERTION(currentPoint == pointToInsert,
+                             "Perhaps, <br> element position has been moved to "
+                             "different point by mutation observer");
       }
     } else {
-      constexpr auto tabStr = u"\t"_ns;
-      constexpr auto spacesStr = u"    "_ns;
-      nsAutoString insertionString(aInsertionString);  // For FindCharInSet().
-      while (pos != -1 &&
-             pos < AssertedCast<int32_t>(insertionString.Length())) {
-        int32_t oldPos = pos;
-        int32_t subStrLen;
-        pos = insertionString.FindCharInSet(u"\t\n", oldPos);
+      uint32_t nextOffset = 0;
+      while (nextOffset < aInsertionString.Length()) {
+        const uint32_t lineStartOffset = nextOffset;
+        const int32_t inclusiveNextLinefeedOffset =
+            aInsertionString.FindChar(nsCRT::LF, lineStartOffset);
+        const uint32_t lineLength =
+            inclusiveNextLinefeedOffset != -1
+                ? static_cast<uint32_t>(inclusiveNextLinefeedOffset) -
+                      lineStartOffset
+                : aInsertionString.Length() - lineStartOffset;
 
-        if (pos != -1) {
-          subStrLen = pos - oldPos;
-          // if first char is newline, then use just it
-          if (!subStrLen) {
-            subStrLen = 1;
-          }
-        } else {
-          subStrLen = insertionString.Length() - oldPos;
-          pos = insertionString.Length();
-        }
-
-        nsDependentSubstring subStr(insertionString, oldPos, subStrLen);
-
-        // is it a tab?
-        if (subStr.Equals(tabStr)) {
-          Result<InsertTextResult, nsresult> insertTextResult =
-              WhiteSpaceVisibilityKeeper::InsertText(
-                  *this, spacesStr, currentPoint,
-                  InsertTextTo::ExistingTextNodeIfAvailable, *editingHost);
-          if (MOZ_UNLIKELY(insertTextResult.isErr())) {
-            NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
-            return insertTextResult.propagateErr();
-          }
-          // Ignore the caret suggestion because of `dontChangeMySelection`
-          // above.
-          insertTextResult.inspect().IgnoreCaretPointSuggestion();
-          pos++;
-          if (insertTextResult.inspect().Handled()) {
-            pointToInsert = currentPoint = insertTextResult.unwrap()
-                                               .EndOfInsertedTextRef()
-                                               .To<EditorDOMPoint>();
-            MOZ_ASSERT(pointToInsert.IsSet());
-          } else {
-            pointToInsert = currentPoint;
-            MOZ_ASSERT(pointToInsert.IsSet());
-          }
-        }
-        // is it a return?
-        else if (subStr.Equals(newlineStr)) {
-          Result<CreateElementResult, nsresult> insertBRElementResult =
-              WhiteSpaceVisibilityKeeper::InsertBRElement(*this, currentPoint,
-                                                          *editingHost);
-          if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
-            NS_WARNING("WhiteSpaceVisibilityKeeper::InsertBRElement() failed");
-            return insertBRElementResult.propagateErr();
-          }
-          CreateElementResult unwrappedInsertBRElementResult =
-              insertBRElementResult.unwrap();
-          // TODO: Some methods called for handling non-preformatted text use
-          //       ComputeEditingHost().  Therefore, they depend on the latest
-          //       selection.  So we cannot skip updating selection here.
-          nsresult rv = unwrappedInsertBRElementResult.SuggestCaretPointTo(
-              *this, {SuggestCaret::OnlyIfHasSuggestion,
-                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                      SuggestCaret::AndIgnoreTrivialError});
-          if (NS_FAILED(rv)) {
-            NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-            return Err(rv);
-          }
-          NS_WARNING_ASSERTION(
-              rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-              "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-          pos++;
-          RefPtr<Element> newBRElement =
-              unwrappedInsertBRElementResult.UnwrapNewNode();
-          MOZ_DIAGNOSTIC_ASSERT(newBRElement);
-          if (newBRElement->GetNextSibling()) {
-            pointToInsert.Set(newBRElement->GetNextSibling());
-          } else {
-            pointToInsert.SetToEndOf(currentPoint.GetContainer());
-          }
-          currentPoint.SetAfter(newBRElement);
-          NS_WARNING_ASSERTION(currentPoint.IsSet(),
-                               "Failed to set after the new <br> element");
-          // XXX If the newBRElement has been moved or removed by mutation
-          //     observer, we hit this assert.  We need to check if
-          //     newBRElement is in expected point, though, we must have
-          //     a lot of same bugs...
-          NS_WARNING_ASSERTION(
-              currentPoint == pointToInsert,
-              "Perhaps, newBRElement has been moved or removed unexpectedly");
-        } else {
-          Result<InsertTextResult, nsresult> insertTextResult =
-              WhiteSpaceVisibilityKeeper::InsertText(
-                  *this, subStr, currentPoint,
-                  InsertTextTo::ExistingTextNodeIfAvailable, *editingHost);
+        if (lineLength) {
+          auto insertTextResult =
+              [&]() MOZ_CAN_RUN_SCRIPT -> Result<InsertTextResult, nsresult> {
+            // lineText does not include the preformatted line break.
+            const nsDependentSubstring lineText(aInsertionString,
+                                                lineStartOffset, lineLength);
+            if (!lineText.Contains(u'\t')) {
+              return WhiteSpaceVisibilityKeeper::InsertText(
+                  *this, lineText, currentPoint,
+                  GetInsertTextTo(inclusiveNextLinefeedOffset, lineStartOffset),
+                  *editingHost);
+            }
+            nsAutoString formattedLineText(lineText);
+            formattedLineText.ReplaceSubstring(u"\t"_ns, u"    "_ns);
+            return WhiteSpaceVisibilityKeeper::InsertText(
+                *this, formattedLineText, currentPoint,
+                GetInsertTextTo(inclusiveNextLinefeedOffset, lineStartOffset),
+                *editingHost);
+          }();
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
             return insertTextResult.propagateErr();
@@ -1473,12 +1421,56 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
             pointToInsert = currentPoint = insertTextResult.unwrap()
                                                .EndOfInsertedTextRef()
                                                .To<EditorDOMPoint>();
-            MOZ_ASSERT(pointToInsert.IsSet());
           } else {
             pointToInsert = currentPoint;
-            MOZ_ASSERT(pointToInsert.IsSet());
+          }
+          if (inclusiveNextLinefeedOffset < 0) {
+            break;  // We reached the last line
           }
         }
+
+        Result<CreateElementResult, nsresult> insertBRElementResult =
+            WhiteSpaceVisibilityKeeper::InsertBRElement(*this, currentPoint,
+                                                        *editingHost);
+        if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
+          NS_WARNING("WhiteSpaceVisibilityKeeper::InsertBRElement() failed");
+          return insertBRElementResult.propagateErr();
+        }
+        CreateElementResult unwrappedInsertBRElementResult =
+            insertBRElementResult.unwrap();
+        // TODO: Some methods called for handling non-preformatted text use
+        //       ComputeEditingHost().  Therefore, they depend on the latest
+        //       selection.  So we cannot skip updating selection here.
+        nsresult rv = unwrappedInsertBRElementResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+          return Err(rv);
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+        nextOffset = inclusiveNextLinefeedOffset + 1;
+        RefPtr<Element> newBRElement =
+            unwrappedInsertBRElementResult.UnwrapNewNode();
+        MOZ_DIAGNOSTIC_ASSERT(newBRElement);
+        if (newBRElement->GetNextSibling()) {
+          pointToInsert.Set(newBRElement->GetNextSibling());
+        } else {
+          pointToInsert.SetToEndOf(currentPoint.GetContainer());
+        }
+        currentPoint.SetAfter(newBRElement);
+        NS_WARNING_ASSERTION(currentPoint.IsSet(),
+                             "Failed to set after the new <br> element");
+        // XXX If the newBRElement has been moved or removed by mutation
+        //     observer, we hit this assert.  We need to check if
+        //     newBRElement is in expected point, though, we must have
+        //     a lot of same bugs...
+        NS_WARNING_ASSERTION(
+            currentPoint == pointToInsert,
+            "Perhaps, newBRElement has been moved or removed unexpectedly");
       }
     }
 
