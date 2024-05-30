@@ -193,6 +193,9 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   uint32_t GetScriptLineNumber() const;
   JS::ColumnNumberOneOrigin GetScriptColumnNumber() const;
 
+  void BeginEvaluatingTopLevel() const;
+  void EndEvaluatingTopLevel() const;
+
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!HasScriptElement());

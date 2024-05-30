@@ -176,6 +176,14 @@ JS::ColumnNumberOneOrigin ScriptLoadContext::GetScriptColumnNumber() const {
   return JS::ColumnNumberOneOrigin();
 }
 
+void ScriptLoadContext::BeginEvaluatingTopLevel() const {
+  GetScriptElement()->BeginEvaluating();
+}
+
+void ScriptLoadContext::EndEvaluatingTopLevel() const {
+  GetScriptElement()->EndEvaluating();
+}
+
 void ScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!HasScriptElement());

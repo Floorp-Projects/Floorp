@@ -2154,7 +2154,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
         aRequest->GetScriptLoadContext()->GetScriptElement();
   }
 
-  aRequest->GetScriptLoadContext()->GetScriptElement()->BeginEvaluating();
+  aRequest->GetScriptLoadContext()->BeginEvaluatingTopLevel();
 
   FireScriptAvailable(NS_OK, aRequest);
 
@@ -2197,7 +2197,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
 
   FireScriptEvaluated(rv, aRequest);
 
-  aRequest->GetScriptLoadContext()->GetScriptElement()->EndEvaluating();
+  aRequest->GetScriptLoadContext()->EndEvaluatingTopLevel();
 
   if (parserCreated) {
     mCurrentParserInsertedScript = oldParserInsertedScript;
