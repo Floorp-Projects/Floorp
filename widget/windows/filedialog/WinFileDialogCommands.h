@@ -85,10 +85,6 @@ struct Error {
 
   // "Enum" denoting error-location. Members are in `VALID_STRINGS`, and have no
   // name other than their string.
-  //
-  // (Note: under C++20, this could reasonably be replaced with an `nsString`
-  // alongside a check that all constructors are either a) consteval or b) from
-  // IPC.)
   class Location {
     uint32_t value;
     constexpr explicit Location(uint32_t value) : value(value) {}
@@ -153,10 +149,12 @@ struct Error {
       return value < VALID_STRINGS_COUNT ? VALID_STRINGS[value]
                                          : "<bad filedialog::Error::Location?>";
     }
-    constexpr static Location FromString(std::string_view str) {
+    constexpr static Location FromString(StaticString str) {
+      std::string_view val(str.get());
       for (uint32_t i = 0; i < VALID_STRINGS_COUNT; ++i) {
-        if (str == VALID_STRINGS[i]) return Location{i};
+        if (val == VALID_STRINGS[i]) return Location{i};
       }
+      // TODO(C++20): fail here at compile-time
       return npos();
     }
 
