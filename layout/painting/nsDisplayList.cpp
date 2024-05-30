@@ -5867,9 +5867,10 @@ UniquePtr<ScrollMetadata> nsDisplayScrollInfoLayer::ComputeScrollMetadata(
       ToReferenceFrame(), aLayerManager, mScrollParentId,
       mScrollFrame->GetSize(), false);
   metadata.GetMetrics().SetIsScrollInfoLayer(true);
-  nsIScrollableFrame* scrollableFrame = mScrollFrame->GetScrollTargetFrame();
-  if (scrollableFrame) {
-    aBuilder->AddScrollFrameToNotify(scrollableFrame);
+  ScrollContainerFrame* scrollContainerFrame =
+      mScrollFrame->GetScrollTargetFrame();
+  if (scrollContainerFrame) {
+    aBuilder->AddScrollFrameToNotify(scrollContainerFrame);
   }
 
   return UniquePtr<ScrollMetadata>(new ScrollMetadata(metadata));

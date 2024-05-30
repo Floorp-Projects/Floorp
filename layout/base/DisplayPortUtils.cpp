@@ -196,10 +196,10 @@ static nsRect GetDisplayPortFromMarginsData(
     isRoot = true;
   }
 
-  nsIScrollableFrame* scrollableFrame = frame->GetScrollTargetFrame();
+  ScrollContainerFrame* scrollContainerFrame = frame->GetScrollTargetFrame();
   nsPoint scrollPos;
-  if (scrollableFrame) {
-    scrollPos = scrollableFrame->GetScrollPosition();
+  if (scrollContainerFrame) {
+    scrollPos = scrollContainerFrame->GetScrollPosition();
   }
 
   nsPresContext* presContext = frame->PresContext();
@@ -252,7 +252,7 @@ static nsRect GetDisplayPortFromMarginsData(
   MOZ_ASSERT(presShell);
 
   ScreenMargin margins = aMarginsData->mMargins.GetRelativeToLayoutViewport(
-      aOptions.mGeometryType, scrollableFrame,
+      aOptions.mGeometryType, scrollContainerFrame,
       presContext->CSSToDevPixelScale() * res);
 
   if (presShell->IsDisplayportSuppressed() ||
@@ -514,7 +514,7 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
 
   nsIFrame* frame = nsLayoutUtils::GetScrollFrameFromContent(aContent);
   if (frame) {
-    frame = do_QueryFrame(frame->GetScrollTargetFrame());
+    frame = frame->GetScrollTargetFrame();
   }
 
   if (changed && frame) {
@@ -625,9 +625,9 @@ bool DisplayPortUtils::SetDisplayPortMargins(
     aContent->RemoveProperty(nsGkAtoms::MinimalDisplayPort);
   }
 
-  nsIScrollableFrame* scrollableFrame =
+  ScrollContainerFrame* scrollContainerFrame =
       scrollFrame ? scrollFrame->GetScrollTargetFrame() : nullptr;
-  if (!scrollableFrame) {
+  if (!scrollContainerFrame) {
     return true;
   }
 
@@ -657,13 +657,13 @@ bool DisplayPortUtils::SetDisplayPortMargins(
   InvalidateForDisplayPortChange(aContent, hadDisplayPort, oldDisplayPort,
                                  newDisplayPort, aRepaintMode);
 
-  scrollableFrame->TriggerDisplayPortExpiration();
+  scrollContainerFrame->TriggerDisplayPortExpiration();
 
   // Display port margins changing means that the set of visible frames may
   // have drastically changed. Check if we should schedule an update.
-  hadDisplayPort =
-      scrollableFrame->GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
-          &oldDisplayPort);
+  hadDisplayPort = scrollContainerFrame
+                       ->GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
+                           &oldDisplayPort);
 
   bool needVisibilityUpdate = !hadDisplayPort;
   // Check if the total size has changed by a large factor.
