@@ -39,7 +39,10 @@ use crate::stylesheets::container_rule::ContainerCondition;
 use crate::stylesheets::import_rule::ImportLayer;
 use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
-use crate::stylesheets::scope_rule::{ImplicitScopeRoot, ScopeBounds};
+use crate::stylesheets::scope_rule::{
+    collect_scope_roots, element_is_outside_of_scope, ImplicitScopeRoot, ScopeBounds,
+    ScopeRootCandidate, ScopeTarget,
+};
 #[cfg(feature = "gecko")]
 use crate::stylesheets::{
     CounterStyleRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
@@ -68,7 +71,6 @@ use selectors::parser::{
     SelectorList,
 };
 use selectors::visitor::{SelectorListKind, SelectorVisitor};
-use selectors::OpaqueElement;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use std::cmp::Ordering;
@@ -2371,15 +2373,6 @@ impl ContainerConditionReference {
     }
 }
 
-/// A scope root candidate.
-#[derive(Clone, Copy, Debug)]
-pub struct ScopeRootCandidate {
-    /// This candidate's scope root.
-    pub root: OpaqueElement,
-    /// Ancestor hop from the element under consideration to this scope root.
-    pub proximity: ScopeProximity,
-}
-
 /// The id of a given scope condition, a sequentially-increasing identifier
 /// for a given style set.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, PartialOrd, Ord)]
@@ -2783,16 +2776,110 @@ impl CascadeData {
 
     pub(crate) fn scope_condition_matches<E>(
         &self,
-        _id: ScopeConditionId,
-        _stylist: &Stylist,
-        _element: E,
-        _context: &mut MatchingContext<E::Impl>,
-    ) -> Option<Vec<ScopeRootCandidate>>
+        id: ScopeConditionId,
+        stylist: &Stylist,
+        element: E,
+        context: &mut MatchingContext<E::Impl>,
+    ) -> Vec<ScopeRootCandidate>
     where
         E: TElement,
     {
-        // TODO(dshin, bug 1886441)
-        None
+        let condition_ref = &self.scope_conditions[id.0 as usize];
+        let bounds = match condition_ref.condition {
+            None => return vec![],
+            Some(ref c) => c,
+        };
+        // Make sure the parent scopes ara evaluated first. This runs a bit counter to normal
+        // selector matching where rightmost selectors match first. However, this avoids having
+        // to traverse through descendants (i.e. Avoids tree traversal vs linear traversal).
+        let outer_scope_roots =
+            self.scope_condition_matches(condition_ref.parent, stylist, element, context);
+        let is_outermost_scope = condition_ref.parent == ScopeConditionId::none();
+        if !is_outermost_scope && outer_scope_roots.is_empty() {
+            return vec![];
+        }
+
+        let (root_target, matches_shadow_host) = if let Some(start) = bounds.start.as_ref() {
+            (
+                ScopeTarget::Selector(start),
+                start.slice().iter().any(|s| {
+                    !s.matches_featureless_host_selector_or_pseudo_element()
+                        .is_empty()
+                }),
+            )
+        } else {
+            let implicit_root = condition_ref
+                .implicit_scope_root
+                .as_ref()
+                .expect("No boundaries, no implicit root?");
+            match implicit_root {
+                StylistImplicitScopeRoot::Normal(r) => {
+                    match r.element(context.current_host.clone()) {
+                        None => return vec![],
+                        Some(root) => (ScopeTarget::Element(root), r.matches_shadow_host()),
+                    }
+                },
+                StylistImplicitScopeRoot::Cached(index) => {
+                    use crate::dom::TShadowRoot;
+                    let shadow_root = if let Some(root) = element.shadow_root() {
+                        root
+                    } else {
+                        element.containing_shadow().expect("Not shadow host and not under shadow tree?")
+                    };
+                    match shadow_root.implicit_scope_for_sheet(*index) {
+                        None => return vec![],
+                        Some(root) => {
+                            match root.element(context.current_host.clone()) {
+                                None => return vec![],
+                                Some(r) =>  (ScopeTarget::Element(r), root.matches_shadow_host()),
+                            }
+                        },
+                    }
+                },
+            }
+        };
+
+        let potential_scope_roots = if is_outermost_scope {
+            collect_scope_roots(element, None, context, &root_target, matches_shadow_host)
+        } else {
+            let mut result = vec![];
+            for activation in &outer_scope_roots {
+                let mut this_result = collect_scope_roots(
+                    element,
+                    Some(activation.root),
+                    context,
+                    &root_target,
+                    matches_shadow_host,
+                );
+                result.append(&mut this_result);
+            }
+            result
+        };
+
+        if potential_scope_roots.is_empty() {
+            return potential_scope_roots;
+        }
+
+        if let Some(end) = bounds.end.as_ref() {
+            let mut result = vec![];
+            // If any scope-end selector matches, we're not in scope.
+            for scope_root in potential_scope_roots {
+                if end.slice().iter().all(|selector| {
+                    !element_is_outside_of_scope(
+                        selector,
+                        element,
+                        scope_root.root,
+                        context,
+                        matches_shadow_host,
+                    )
+                }) {
+                    result.push(scope_root);
+                }
+            }
+            result
+        } else {
+            potential_scope_roots
+        }
     }
 
     fn did_finish_rebuild(&mut self) {
