@@ -498,7 +498,7 @@ class BackgroundContextOwner {
     }
 
     // Ensure any idle background timer is not running.
-    this.backgroundBuilder.idleManager.clearTimer();
+    this.backgroundBuilder.idleManager.clearState();
 
     const bgInstance = this.bgInstance;
     if (bgInstance) {
@@ -790,6 +790,10 @@ class BackgroundBuilder {
       });
     };
 
+    let idleWaitUntil = (_, { promise, reason }) => {
+      this.idleManager.waitUntil(promise, reason);
+    };
+
     if (!extension.persistentBackground) {
       // Listen for events from the EventManager
       extension.on("background-script-reset-idle", resetBackgroundIdle);
@@ -798,6 +802,8 @@ class BackgroundBuilder {
       extension.once("background-script-started", () => {
         this.idleManager.resetTimer();
       });
+
+      extension.on("background-script-idle-waituntil", idleWaitUntil);
     }
 
     // TODO bug 1844488: terminateBackground should account for externally
@@ -901,7 +907,7 @@ class BackgroundBuilder {
       }
 
       extension.backgroundState = BACKGROUND_STATE.SUSPENDING;
-      this.idleManager.clearTimer();
+      this.idleManager.clearState();
       // call runtime.onSuspend
       await extension.emit("background-script-suspend");
       // If in the meantime another event fired, state will be RUNNING,
@@ -910,6 +916,7 @@ class BackgroundBuilder {
         return;
       }
       extension.off("background-script-reset-idle", resetBackgroundIdle);
+      extension.off("background-script-idle-waituntil", idleWaitUntil);
 
       // TODO(Bug 1790087): record similar telemetry for background service worker.
       if (!this.isWorker) {
@@ -976,7 +983,7 @@ class BackgroundBuilder {
  * Times the suspension of the background page, acts like a 3-state machine:
  *  - suspended (or uninitialized)
  *  - waiting for a timeout (now() < sleepTime)
- *  - TODO: waiting on a promise (keepAwake.size > 0)
+ *  - waiting on a promise (keepAlive.size > 0)
  */
 var IdleManager = class IdleManager {
   sleepTime = 0;
@@ -987,6 +994,41 @@ var IdleManager = class IdleManager {
 
   constructor(extension) {
     this.extension = extension;
+  }
+
+  waitUntil(originalPromise, reason) {
+    // Wrap the passed in promise so that we can resolve our .finally() handler
+    // in clearState() below, while also not keeping the originalPromise alive.
+    let { promise, resolve } = Promise.withResolvers();
+    originalPromise.finally(() => resolve());
+    let start = Cu.now();
+
+    this.keepAlive.set(promise, { reason, resolve });
+    promise.finally(() => {
+      if (
+        this.keepAlive.delete(promise) &&
+        !this.keepAlive.size &&
+        this.extension.backgroundState === BACKGROUND_STATE.RUNNING
+      ) {
+        this.resetTimer();
+      }
+
+      if (Cu.now() - start > backgroundIdleTimeout) {
+        ExtensionTelemetry.eventPageIdleResult.histogramAdd({
+          extension: this.extension,
+          category: reason,
+          value: Math.round((Cu.now() - start) / backgroundIdleTimeout),
+        });
+      }
+    });
+  }
+
+  clearState() {
+    for (let { resolve } of this.keepAlive.values()) {
+      resolve();
+    }
+    this.keepAlive.clear();
+    this.clearTimer();
   }
 
   clearTimer() {

@@ -12,6 +12,11 @@
 <script type="text/javascript">
 "use strict";
 
+// This is the longest running mochitest here, often times out on ASAN builds.
+if (AppConstants.ASAN) {
+  SimpleTest.requestLongerTimeout(5);
+}
+
 const URL1 =
   "https://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_tabs_permission_page1.html";
 const URL2 =
