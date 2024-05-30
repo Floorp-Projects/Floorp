@@ -44,6 +44,7 @@ class SessionPrioritizationMiddleware(
     @VisibleForTesting
     internal var previousHighestPriorityTabId = ""
 
+    @Suppress("NestedBlockDepth")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -53,19 +54,24 @@ class SessionPrioritizationMiddleware(
             is EngineAction.UnlinkEngineSessionAction -> {
                 val activeTab = context.state.findTab(action.tabId)
                 activeTab?.engineState?.engineSession?.updateSessionPriority(DEFAULT)
+                if (previousHighestPriorityTabId == action.tabId) {
+                    previousHighestPriorityTabId = ""
+                }
                 logger.info("Update the tab ${activeTab?.id} priority to ${DEFAULT.name}")
             }
             is ContentAction.UpdateHasFormDataAction -> {
-                val tab = context.state.findTab(action.tabId)
-                if (action.containsFormData) {
-                    tab?.engineState?.engineSession?.updateSessionPriority(HIGH)
-                    logger.info("Update the tab ${tab?.id} priority to ${HIGH.name}")
-                    tab?.let {
-                        updatePriorityToDefault(context, it.id, updatePriorityAfterMillis)
+                if (action.adjustPriority) {
+                    val tab = context.state.findTab(action.tabId)
+                    if (action.containsFormData) {
+                        tab?.engineState?.engineSession?.updateSessionPriority(HIGH)
+                        logger.info("Update the tab ${tab?.id} priority to ${HIGH.name}")
+                        tab?.let {
+                            updatePriorityToDefault(context, it.id, updatePriorityAfterMillis)
+                        }
+                    } else {
+                        tab?.engineState?.engineSession?.updateSessionPriority(DEFAULT)
+                        logger.info("Update the tab ${tab?.id} priority to ${DEFAULT.name}")
                     }
-                } else {
-                    tab?.engineState?.engineSession?.updateSessionPriority(DEFAULT)
-                    logger.info("Update the tab ${tab?.id} priority to ${DEFAULT.name}")
                 }
             }
             is ContentAction.UpdatePriorityToDefaultAfterTimeoutAction -> {
@@ -79,7 +85,7 @@ class SessionPrioritizationMiddleware(
             is AppLifecycleAction.PauseAction -> {
                 // Check for form data for the selected tab when the app is backgrounded.
                 mainScope.launch {
-                    context.state.selectedTab?.engineState?.engineSession?.checkForFormData()
+                    context.state.selectedTab?.engineState?.engineSession?.checkForFormData(adjustPriority = false)
                 }
             }
             else -> {

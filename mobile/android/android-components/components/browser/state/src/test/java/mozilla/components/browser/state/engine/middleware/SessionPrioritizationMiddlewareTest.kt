@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.engine.middleware
 
+import mozilla.components.browser.state.action.AppLifecycleAction
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
@@ -14,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.SessionPriority.DEFAULT
 import mozilla.components.concept.engine.EngineSession.SessionPriority.HIGH
+import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
@@ -23,6 +25,8 @@ import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.clearInvocations
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class SessionPrioritizationMiddlewareTest {
@@ -75,6 +79,25 @@ class SessionPrioritizationMiddlewareTest {
         store.waitUntilIdle()
 
         capture.assertLastAction(ContentAction.UpdatePriorityToDefaultAfterTimeoutAction::class) {}
+    }
+
+    @Test
+    fun `GIVEN a linked session WHEN CheckForFormDataAction with adjustPriority = false THEN do nothing`() = runTestOnMain {
+        val middleware = SessionPrioritizationMiddleware()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "1"),
+                ),
+            ),
+            middleware = listOf(middleware),
+        )
+        val engineSession1: EngineSession = mock()
+
+        store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
+
+        store.dispatch(ContentAction.UpdateHasFormDataAction("1", true, false)).joinBlocking()
+        verify(engineSession1, never()).updateSessionPriority(any())
     }
 
     @Test
@@ -151,5 +174,63 @@ class SessionPrioritizationMiddlewareTest {
         store.dispatch(TabListAction.SelectTabAction("1")).joinBlocking()
 
         assertEquals("", middleware.previousHighestPriorityTabId)
+    }
+
+    @Test
+    fun `GIVEN selected tab WHEN PauseAction THEN checkForFormData should be called with adjustPriority = false`() = runTestOnMain {
+        val middleware = SessionPrioritizationMiddleware()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "1"),
+                ),
+            ),
+            middleware = listOf(middleware),
+        )
+
+        val engineSession1: EngineSession = mock()
+
+        store.dispatch(TabListAction.SelectTabAction("1")).joinBlocking()
+        store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
+        verify(engineSession1).updateSessionPriority(HIGH)
+
+        store.dispatch(AppLifecycleAction.PauseAction).joinBlocking()
+        verify(engineSession1).checkForFormData(adjustPriority = false)
+    }
+
+    @Test
+    fun `GIVEN a linked session WHEN UnlinkEngineSessionAction THEN reset previousHighestPriorityTabId`() = runTestOnMain {
+        val middleware = SessionPrioritizationMiddleware()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "1"),
+                ),
+            ),
+            middleware = listOf(middleware),
+        )
+
+        val engineSession1: EngineSession = mock()
+
+        store.dispatch(TabListAction.SelectTabAction("1")).joinBlocking()
+        store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
+        verify(engineSession1).updateSessionPriority(HIGH)
+        assertEquals("1", middleware.previousHighestPriorityTabId)
+
+        // Previously, `UpdateHasFormDataAction` could be dispatched after `PauseAction` wrongly.
+        store.dispatch(ContentAction.UpdateHasFormDataAction("1", false)).joinBlocking()
+        verify(engineSession1).updateSessionPriority(DEFAULT)
+        assertEquals("1", middleware.previousHighestPriorityTabId)
+
+        clearInvocations(engineSession1)
+        store.dispatch(EngineAction.UnlinkEngineSessionAction("1")).joinBlocking()
+        verify(engineSession1).updateSessionPriority(DEFAULT)
+        assertEquals("", middleware.previousHighestPriorityTabId)
+
+        // Previously, `updateSessionPriority` will never be called.
+        clearInvocations(engineSession1)
+        store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
+        verify(engineSession1).updateSessionPriority(HIGH)
+        assertEquals("1", middleware.previousHighestPriorityTabId)
     }
 }

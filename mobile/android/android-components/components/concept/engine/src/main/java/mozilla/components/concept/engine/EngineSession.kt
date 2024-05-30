@@ -325,7 +325,7 @@ abstract class EngineSession(
          *
          * @param containsFormData Indicates if the session has form data.
          */
-        fun onCheckForFormData(containsFormData: Boolean) = Unit
+        fun onCheckForFormData(containsFormData: Boolean, adjustPriority: Boolean = true) = Unit
 
         /**
          * Event to indicate that an exception was thrown while checking for form data.
@@ -1075,7 +1075,7 @@ abstract class EngineSession(
     /**
      * Checks this session for existing user form data.
      */
-    open fun checkForFormData() = Unit
+    open fun checkForFormData(adjustPriority: Boolean = true) = Unit
 
     /**
      * Purges the history for the session (back and forward history).

@@ -3344,7 +3344,7 @@ class GeckoEngineSessionTest {
         var formData = false
         engineSession.register(
             object : EngineSession.Observer {
-                override fun onCheckForFormData(containsFormData: Boolean) {
+                override fun onCheckForFormData(containsFormData: Boolean, adjustPriority: Boolean) {
                     formData = true
                 }
             },

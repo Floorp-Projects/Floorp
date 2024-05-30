@@ -461,8 +461,8 @@ internal class EngineObserver(
         store.dispatch(EngineAction.SaveToPdfCompleteAction(tabId))
     }
 
-    override fun onCheckForFormData(containsFormData: Boolean) {
-        store.dispatch(ContentAction.UpdateHasFormDataAction(tabId, containsFormData))
+    override fun onCheckForFormData(containsFormData: Boolean, adjustPriority: Boolean) {
+        store.dispatch(ContentAction.UpdateHasFormDataAction(tabId, containsFormData, adjustPriority))
     }
 
     override fun onCheckForFormDataException(throwable: Throwable) {
