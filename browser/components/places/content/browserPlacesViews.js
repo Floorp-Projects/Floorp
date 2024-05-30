@@ -1620,13 +1620,31 @@ class PlacesToolbar extends PlacesViewBase {
         }
       }
     } else {
-      // We are most likely dragging on the empty area of the
-      // toolbar, we should drop after the last node.
       dropPoint.ip = new PlacesInsertionPoint({
         parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
         orientation: Ci.nsITreeView.DROP_BEFORE,
       });
+
+      // If could not find an insertion point before bookmark items or empty,
+      // drop after the last bookmark.
       dropPoint.beforeIndex = -1;
+
+      let canInsertHere = this.isRTL
+        ? (x, rect) => x >= Math.round(rect.right)
+        : (x, rect) => x <= Math.round(rect.left);
+
+      // Find the bookmark placed just after the mouse point as the insertion
+      // point.
+      for (let i = 0; i < this._rootElt.children.length; i++) {
+        let childRect = window.windowUtils.getBoundsWithoutFlushing(
+          this._rootElt.children[i]
+        );
+        if (canInsertHere(aEvent.clientX, childRect)) {
+          dropPoint.beforeIndex = i;
+          dropPoint.ip.index = i;
+          break;
+        }
+      }
     }
 
     return dropPoint;
