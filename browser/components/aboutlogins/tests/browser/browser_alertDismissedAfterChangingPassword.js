@@ -24,6 +24,10 @@ let VULNERABLE_TEST_LOGIN2 = new nsLoginInfo(
   "password"
 );
 
+let { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   VULNERABLE_TEST_LOGIN2 = await addLogin(VULNERABLE_TEST_LOGIN2);
@@ -32,7 +36,12 @@ add_setup(async function () {
     gBrowser,
     url: "about:logins",
   });
+
+  // Enable OS reauth so we can test it.
+  sinon.stub(LoginHelper, "getOSAuthEnabled").returns(true);
+
   registerCleanupFunction(() => {
+    sinon.restore();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     Services.logins.removeAllUserFacingLogins();
   });
