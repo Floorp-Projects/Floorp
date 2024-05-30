@@ -10,7 +10,6 @@
         "revert-llvmorg-15-init-13446-g7524fe962e47.patch",
         "win64-ret-null-on-commitment-limit_clang_14.patch",
         "arm64e-hack.patch",
-        "i586-linux.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
     ]
 }
