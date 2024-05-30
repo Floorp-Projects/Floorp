@@ -123,6 +123,9 @@ class RemoteProcessMonitor(object):
             time.sleep(interval)
             timer += interval
             interval *= 1.5
+            # We're using exponential back-off. To avoid unnecessarily waiting
+            # for too long, cap the maximum sleep interval to 15 seconds.
+            interval = min(15, interval)
             if timeout and timer > timeout:
                 status = False
                 self.log.info(
