@@ -535,6 +535,345 @@ impl PositionVisibility {
     }
 }
 
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[allow(missing_docs)]
+#[repr(u8)]
+/// Possible values for the `inset-area` preperty's keywords.
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-inset-area
+pub enum InsetAreaKeyword {
+    None,
+
+    // Common (shared) keywords:
+    Center,
+    SpanAll,
+
+    // Horizontal keywords:
+    Left,
+    Right,
+    SpanLeft,
+    SpanRight,
+    XStart,
+    XEnd,
+    SpanXStart,
+    SpanXEnd,
+    XSelfStart,
+    XSelfEnd,
+    SpanXSelfStart,
+    SpanXSelfEnd,
+    // Vertical keywords:
+    Top,
+    Bottom,
+    SpanTop,
+    SpanBottom,
+    YStart,
+    YEnd,
+    SpanYStart,
+    SpanYEnd,
+    YSelfStart,
+    YSelfEnd,
+    SpanYSelfStart,
+    SpanYSelfEnd,
+
+    // Block keywords:
+    BlockStart,
+    BlockEnd,
+    SpanBlockStart,
+    SpanBlockEnd,
+    // Inline keywords:
+    InlineStart,
+    InlineEnd,
+    SpanInlineStart,
+    SpanInlineEnd,
+
+    // "Self" block keywords:
+    SelfBlockStart,
+    SelfBlockEnd,
+    SpanSelfBlockStart,
+    SpanSelfBlockEnd,
+    // "Self" inline keywords:
+    SelfInlineStart,
+    SelfInlineEnd,
+    SpanSelfInlineStart,
+    SpanSelfInlineEnd,
+
+    // Inferred axis keywords:
+    Start,
+    End,
+    SpanStart,
+    SpanEnd,
+
+    // "Self" inferred axis keywords:
+    SelfStart,
+    SelfEnd,
+    SpanSelfStart,
+    SpanSelfEnd,
+}
+
+impl Default for InsetAreaKeyword {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+#[allow(missing_docs)]
+impl InsetAreaKeyword {
+    #[inline]
+    pub fn none() -> Self {
+        Self::None
+    }
+
+    pub fn is_none(&self) -> bool {
+        *self == Self::None
+    }
+
+    /// Is a value that's common to all compatible keyword groupings.
+    pub fn is_common(&self) -> bool {
+        *self == Self::Center || *self == Self::SpanAll
+    }
+
+    pub fn is_horizontal(&self) -> bool {
+        matches!(
+            self,
+            Self::Left |
+                Self::Right |
+                Self::SpanLeft |
+                Self::SpanRight |
+                Self::XStart |
+                Self::XEnd |
+                Self::SpanXStart |
+                Self::SpanXEnd |
+                Self::XSelfStart |
+                Self::XSelfEnd |
+                Self::SpanXSelfStart |
+                Self::SpanXSelfEnd
+        )
+    }
+    pub fn is_vertical(&self) -> bool {
+        matches!(
+            self,
+            Self::Top |
+                Self::Bottom |
+                Self::SpanTop |
+                Self::SpanBottom |
+                Self::YStart |
+                Self::YEnd |
+                Self::SpanYStart |
+                Self::SpanYEnd |
+                Self::YSelfStart |
+                Self::YSelfEnd |
+                Self::SpanYSelfStart |
+                Self::SpanYSelfEnd
+        )
+    }
+
+    pub fn is_block(&self) -> bool {
+        matches!(
+            self,
+            Self::BlockStart | Self::BlockEnd | Self::SpanBlockStart | Self::SpanBlockEnd
+        )
+    }
+    pub fn is_inline(&self) -> bool {
+        matches!(
+            self,
+            Self::InlineStart | Self::InlineEnd | Self::SpanInlineStart | Self::SpanInlineEnd
+        )
+    }
+
+    pub fn is_self_block(&self) -> bool {
+        matches!(
+            self,
+            Self::SelfBlockStart |
+                Self::SelfBlockEnd |
+                Self::SpanSelfBlockStart |
+                Self::SpanSelfBlockEnd
+        )
+    }
+    pub fn is_self_inline(&self) -> bool {
+        matches!(
+            self,
+            Self::SelfInlineStart |
+                Self::SelfInlineEnd |
+                Self::SpanSelfInlineStart |
+                Self::SpanSelfInlineEnd
+        )
+    }
+
+    pub fn is_inferred_logical(&self) -> bool {
+        matches!(
+            self,
+            Self::Start | Self::End | Self::SpanStart | Self::SpanEnd
+        )
+    }
+
+    pub fn is_self_inferred_logical(&self) -> bool {
+        matches!(
+            self,
+            Self::SelfStart | Self::SelfEnd | Self::SpanSelfStart | Self::SpanSelfEnd
+        )
+    }
+}
+
+#[inline]
+fn is_compatible_pairing(first: InsetAreaKeyword, second: InsetAreaKeyword) -> bool {
+    if first.is_none() || second.is_none() {
+        // `none` is not allowed as one of the keywords when two keywords are
+        // provided.
+        return false;
+    }
+    if first.is_common() || second.is_common() {
+        return true;
+    }
+    if first.is_horizontal() {
+        return second.is_vertical();
+    }
+    if first.is_vertical() {
+        return second.is_horizontal();
+    }
+    if first.is_block() {
+        return second.is_inline();
+    }
+    if first.is_inline() {
+        return second.is_block();
+    }
+    if first.is_self_block() {
+        return second.is_self_inline();
+    }
+    if first.is_self_inline() {
+        return second.is_self_block();
+    }
+    if first.is_inferred_logical() {
+        return second.is_inferred_logical();
+    }
+    if first.is_self_inferred_logical() {
+        return second.is_self_inferred_logical();
+    }
+
+    debug_assert!(false, "Not reached");
+
+    // Return false to increase the chances of this being reported to us if we
+    // ever were to get here.
+    false
+}
+
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C)]
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-inset-area
+pub struct InsetArea {
+    /// First keyword, if any.
+    pub first: InsetAreaKeyword,
+    /// Second keyword, if any.
+    #[css(skip_if = "InsetAreaKeyword::is_none")]
+    pub second: InsetAreaKeyword,
+}
+
+#[allow(missing_docs)]
+impl InsetArea {
+    #[inline]
+    pub fn none() -> Self {
+        Self {
+            first: InsetAreaKeyword::None,
+            second: InsetAreaKeyword::None,
+        }
+    }
+
+    #[inline]
+    pub fn is_none(&self) -> bool {
+        self.first.is_none()
+    }
+}
+
+impl Parse for InsetArea {
+    fn parse<'i, 't>(
+        _context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        let mut first = InsetAreaKeyword::parse(input)?;
+        if first.is_none() {
+            return Ok(Self::none());
+        }
+
+        let location = input.current_source_location();
+        let second = input.try_parse(InsetAreaKeyword::parse);
+        if let Ok(InsetAreaKeyword::None) = second {
+            // `none` is only allowed as a single value
+            return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+        }
+        let mut second = second.unwrap_or(InsetAreaKeyword::None);
+        if second.is_none() {
+            // Either there was no second keyword and try_parse returned a
+            // BasicParseErrorKind::EndOfInput, or else the second "keyword"
+            // was invalid. We assume the former case here, and if it's the
+            // latter case then our caller detects the error (try_parse will,
+            // have rewound, leaving an unparsed token).
+            return Ok(Self { first, second });
+        }
+
+        if !is_compatible_pairing(first, second) {
+            return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+        }
+
+        // Normalize by applying the shortest serialization principle:
+        // https://drafts.csswg.org/cssom/#serializing-css-values
+        if first.is_inferred_logical() ||
+            second.is_inferred_logical() ||
+            first.is_self_inferred_logical() ||
+            second.is_self_inferred_logical() ||
+            (first.is_common() && second.is_common())
+        {
+            // In these cases we must not change the order of the keywords
+            // since their meaning is inferred from their order. However, if
+            // both keywords are the same, only one should be set.
+            if first == second {
+                second = InsetAreaKeyword::None;
+            }
+        } else if second == InsetAreaKeyword::SpanAll {
+            // Span-all is the default behavior, so specifying `span-all` is
+            // superfluous.
+            second = InsetAreaKeyword::None;
+        } else if first == InsetAreaKeyword::SpanAll {
+            // Same here, but the non-superfluous keyword must come first.
+            first = second;
+            second = InsetAreaKeyword::None;
+        } else if first.is_vertical() ||
+            second.is_horizontal() ||
+            first.is_inline() ||
+            second.is_block() ||
+            first.is_self_inline() ||
+            second.is_self_block()
+        {
+            // Canonical order is horizontal before vertical, block before inline.
+            std::mem::swap(&mut first, &mut second);
+        }
+
+        Ok(Self { first, second })
+    }
+}
+
 /// Represents a side, either horizontal or vertical, of a CSS position.
 pub trait Side {
     /// Returns the start side.

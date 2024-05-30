@@ -98,6 +98,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "ime-mode",
       "-moz-inert",
       "initial-letter",
+      "inset-area",
       "isolation",
       "justify-content",
       "justify-items",

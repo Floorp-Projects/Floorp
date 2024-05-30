@@ -566,6 +566,8 @@ class Longhand(Property):
                 "ImageRendering",
                 "InitialLetter",
                 "Integer",
+                "InsetArea",
+                "InsetAreaKeyword",
                 "JustifyContent",
                 "JustifyItems",
                 "JustifySelf",
