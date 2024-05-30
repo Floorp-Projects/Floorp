@@ -66,11 +66,14 @@ linux64-rust-1.78:
             '--target', 'aarch64-unknown-linux-gnu',
             '--target', 'wasm32-wasi',
         ]
-        toolchain-alias: linux64-rust
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust
 
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
-linux64-rust-dev:
+linux64-rust-1.78-dev:
     description: "build rust from source"
     worker-type: b-linux-large-gcp
     treeherder:
@@ -88,6 +91,10 @@ linux64-rust-dev:
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
         ]
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust-dev
     fetches:
         fetch:
             - rust-1.78.0
@@ -116,7 +123,10 @@ linux64-rust-cross-1.78:
             '--target', 'i686-linux-android',
             '--target', 'x86_64-linux-android',
         ]
-        toolchain-alias: linux64-rust-cross
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust-cross
 
 linux64-rust-static-1.78:
     description: "rust repack with static linking support"
@@ -132,7 +142,10 @@ linux64-rust-static-1.78:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-musl',
         ]
-        toolchain-alias: linux64-rust-static
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust-static
 
 linux64-rust-macos-1.78:
     description: "rust repack with macos-cross support"
@@ -146,7 +159,10 @@ linux64-rust-macos-1.78:
             '--target', 'x86_64-apple-darwin',
             '--target', 'aarch64-apple-darwin',
         ]
-        toolchain-alias: linux64-rust-macos
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust-macos
 
 linux64-rust-ios-1.78:
     description: "rust repack with ios-cross support"
@@ -160,7 +176,10 @@ linux64-rust-ios-1.78:
             '--target', 'aarch64-apple-ios',
             '--target', 'aarch64-apple-ios-sim',
         ]
-        toolchain-alias: linux64-rust-ios
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust-ios
 
 linux64-rust-android-1.78:
     description: "rust repack with android-cross support"
@@ -177,7 +196,10 @@ linux64-rust-android-1.78:
             '--target', 'i686-linux-android',
             '--target', 'x86_64-linux-android',
         ]
-        toolchain-alias: linux64-rust-android
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust-android
 
 linux64-rust-windows-1.78:
     description: "rust repack with windows-cross support"
@@ -192,7 +214,10 @@ linux64-rust-windows-1.78:
             '--target', 'i686-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',
         ]
-        toolchain-alias: linux64-rust-windows
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: linux64-rust-windows
 
 win64-rust-1.78:
     treeherder:
@@ -205,7 +230,10 @@ win64-rust-1.78:
             '--target', 'i686-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',
         ]
-        toolchain-alias: win64-rust
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: win64-rust
 
 macosx64-rust-1.78:
     treeherder:
@@ -216,7 +244,10 @@ macosx64-rust-1.78:
             '--host', 'x86_64-apple-darwin',
             '--target', 'x86_64-apple-darwin',
         ]
-        toolchain-alias: macosx64-rust
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: macosx64-rust
 
 mingw32-rust-1.78:
     treeherder:
@@ -230,4 +261,241 @@ mingw32-rust-1.78:
             '--target', 'x86_64-pc-windows-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
         ]
-        toolchain-alias: mingw32-rust
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: mingw32-rust
+
+linux64-rust-nightly:
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TL(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'aarch64-unknown-linux-gnu',
+            '--target', 'wasm32-wasi',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust
+                default: null
+
+# A patched rust toolchain that allows us to use sanitizers in our vendored
+# build environment. See the rust fetch's comments for more details.
+linux64-rust-nightly-dev:
+    attributes:
+        cached_task: false
+    description: "build rust from source"
+    worker-type: b-linux-large-gcp
+    treeherder:
+        symbol: TL(rust-dev-nightly)
+    worker:
+        env:
+            # Work around https://github.com/rust-lang/rust/issues/105967
+            RUSTFLAGS_BOOTSTRAP: '-Clink-arg=-Wl,--undefined-version'
+            RUSTFLAGS_NOT_BOOTSTRAP: '-Clink-arg=-Wl,--undefined-version'
+    run:
+        arguments: [
+            '--patch', 'rust-vendor-std.patch',
+            '--patch', 'src/tools/cargo:cargo-vendor-std-1.79.patch',
+            '--channel', 'dev',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust-dev
+                default: null
+    fetches:
+        fetch:
+            - rust-nightly
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-toolchain-sysroot
+
+linux64-rust-cross-nightly:
+    attributes:
+        cached_task: false
+    description: "rust repack with macos and windows cross support"
+    treeherder:
+        symbol: TL(rust-cross-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+            '--target', 'aarch64-apple-darwin',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
+            '--target', 'armv7-linux-androideabi',
+            '--target', 'thumbv7neon-linux-androideabi',
+            '--target', 'aarch64-linux-android',
+            '--target', 'i686-linux-android',
+            '--target', 'x86_64-linux-android',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust-cross
+                default: null
+
+linux64-rust-static-nightly:
+    attributes:
+        cached_task: false
+    description: "rust repack with static linking support"
+    treeherder:
+        symbol: TL(rust-static-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'aarch64-unknown-linux-musl',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-musl',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-musl',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust-static
+                default: null
+
+linux64-rust-macos-nightly:
+    attributes:
+        cached_task: false
+    description: "rust repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-macos-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+            '--target', 'aarch64-apple-darwin',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust-macos
+                default: null
+
+linux64-rust-ios-nightly:
+    attributes:
+        cached_task: false
+    description: "rust repack with ios-cross support"
+    treeherder:
+        symbol: TL(rust-ios-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'aarch64-apple-ios',
+            '--target', 'aarch64-apple-ios-sim',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust-ios
+                default: null
+
+linux64-rust-android-nightly:
+    attributes:
+        cached_task: false
+    description: "rust repack with android-cross support"
+    treeherder:
+        symbol: TL(rust-android-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'armv7-linux-androideabi',
+            '--target', 'thumbv7neon-linux-androideabi',
+            '--target', 'aarch64-linux-android',
+            '--target', 'i686-linux-android',
+            '--target', 'x86_64-linux-android',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust-android
+                default: null
+
+linux64-rust-windows-nightly:
+    attributes:
+        cached_task: false
+    description: "rust repack with windows-cross support"
+    treeherder:
+        symbol: TL(rust-win-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: linux64-rust-windows
+                default: null
+
+win64-rust-nightly:
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TW64(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: win64-rust
+                default: null
+
+macosx64-rust-nightly:
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TM(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-apple-darwin',
+            '--target', 'x86_64-apple-darwin',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: macosx64-rust
+                default: null
+
+mingw32-rust-nightly:
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TMW(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly', '--allow-generic-channel',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'i686-pc-windows-gnu',
+            '--target', 'x86_64-pc-windows-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+        ]
+        toolchain-alias:
+            by-project:
+                toolchains: mingw32-rust
+                default: null

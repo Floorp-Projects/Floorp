@@ -388,6 +388,14 @@ rust-1.78.0:
         repo: https://github.com/rust-lang/rust/
         revision: 9b00956e56009bab2aa15d7bff10916599e3d6d6
 
+rust-nightly:
+    description: Rust nightly source code
+    fetch:
+        type: git
+        include-dot-git: true
+        repo: https://github.com/rust-lang/rust/
+        branch: master
+
 wasi-sdk-11:
     description: wasi-sdk-11 source code
     fetch:

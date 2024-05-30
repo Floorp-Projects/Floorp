@@ -625,6 +625,11 @@ def args():
         required=True,
     )
     parser.add_argument(
+        "--allow-generic-channel",
+        action="store_true",
+        help='Allow to use e.g. "nightly" without a date as a channel.',
+    )
+    parser.add_argument(
         "--patch",
         dest="patches",
         action="append",
@@ -659,12 +664,14 @@ def args():
     args = parser.parse_args()
     if not args.cargo_channel:
         args.cargo_channel = args.channel
-    validate_channel(args.channel)
-    validate_channel(args.cargo_channel)
+    if not args.allow_generic_channel:
+        validate_channel(args.channel)
+        validate_channel(args.cargo_channel)
     if not args.host:
         args.host = "linux64"
     args.host = expand_platform(args.host)
     args.targets = [expand_platform(t) for t in args.targets]
+    delattr(args, "allow_generic_channel")
 
     return args
 
