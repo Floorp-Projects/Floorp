@@ -19,6 +19,7 @@
 #include "mozilla/PositionedEventTargeting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/ToString.h"
@@ -36,7 +37,6 @@
 #include "nsDocShell.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsINamed.h"
-#include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
@@ -493,7 +493,8 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
                                           Maybe<uint64_t> aInputBlockId) {
   switch (aChange) {
     case APZStateChange::eTransformBegin: {
-      nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
+      ScrollContainerFrame* sf =
+          nsLayoutUtils::FindScrollContainerFrameFor(aViewId);
       if (sf) {
         sf->SetTransformingByAPZ(true);
         sf->ScrollbarActivityStarted();
@@ -509,7 +510,8 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
       break;
     }
     case APZStateChange::eTransformEnd: {
-      nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
+      ScrollContainerFrame* sf =
+          nsLayoutUtils::FindScrollContainerFrameFor(aViewId);
       if (sf) {
         sf->SetTransformingByAPZ(false);
         sf->ScrollbarActivityStopped();
