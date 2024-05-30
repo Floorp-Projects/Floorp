@@ -1617,12 +1617,15 @@ var gBrowserInit = {
 
   onDOMContentLoaded() {
     // Floorp Injections
-    let webPanelId = new URL(window.location.href).searchParams.get("floorpWebPanelId");
+    let webPanelId = new URL(window.location.href).searchParams.get(
+      "floorpWebPanelId"
+    );
     if (!webPanelId) {
       // This needs setting up before we create the first remote browser.
       window.docShell.treeOwner
         .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
+        .getInterface(Ci.nsIAppWindow).XULBrowserWindow =
+        window.XULBrowserWindow;
       window.browserDOMWindow = new nsBrowserAccess();
     }
     // End Floorp Injections
@@ -1642,7 +1645,7 @@ var gBrowserInit = {
       let type = CustomizableUI.getAreaType(area);
       // Floorp Injections
       if (type == CustomizableUI.TYPE_TOOLBAR && area !== "statusBar") {
-      // End Floorp InjectionsZ
+        // End Floorp InjectionsZ
         let node = document.getElementById(area);
         CustomizableUI.registerToolbarNode(node);
       }
@@ -2389,7 +2392,6 @@ var gBrowserInit = {
       let uri = window.arguments?.[0];
 
       /*** Floorp Injections *********************************************************************************************/
-
       if (uri) {
         try {
           // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
@@ -2405,10 +2407,7 @@ var gBrowserInit = {
               "true"
             );
 
-            document.documentElement.setAttribute(
-              "FloorpSSBId",
-              id
-            );
+            document.documentElement.setAttribute("FloorpSSBId", id);
 
             // Add SSB Window or Tab Attribute
             // This attribute is used to make do not restore the window or tab when the browser is restarted.
@@ -2420,14 +2419,39 @@ var gBrowserInit = {
                 tab.setAttribute("floorpSSB", "true");
               });
               window.gBrowser.floorpSsbWindow = true;
-              import("chrome://floorp/content/browser-ssb-window.mjs")
+              import("chrome://floorp/content/browser-ssb-window.mjs");
             });
           }
-        }
-        catch (e) {
+        } catch (e) {
           // Do nothing
         }
       }
+
+      SessionStore.promiseInitialized.then(() => {
+        const windows = Services.wm.getEnumerator("navigator:browser");
+        const excludedWindows = Array.from(windows).filter(
+          win => win != window
+        );
+        if (
+          (window.SessionStartup.isAutomaticRestoreEnabled() &&
+            excludedWindows.length === 0 &&
+            window.workspacesWindowId == null) ||
+          window.workspacesWindowId == undefined ||
+          window.workspacesWindowId == ""
+        ) {
+          // If there is no other browser window, we need to restore the last session.
+          const closedWindows = window.SessionStore.getClosedWindowData();
+          const closedWindow = closedWindows[0] ? closedWindows[0] : null;
+          if (closedWindow && closedWindow.closedId) {
+            // Last window should be restored.
+            // But secound or later window should not be restored if it was not closed recent of 1st window closed time.
+            // recent is 10000ms or -10000ms.
+            console.log("Closed Window ID: " + closedWindow.closedId);
+            window.SessionStore.undoCloseById(closedWindow.closedId);
+            window.close();
+          }
+        }
+      });
 
       const SsbPrefName = "browser.ssb.startup";
       let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
@@ -2621,14 +2645,15 @@ var gBrowserInit = {
     window.XULBrowserWindow = null;
 
     // Floorp Injections
-    let webPanelId = new URL(window.location.href).searchParams.get("floorpWebPanelId");
+    let webPanelId = new URL(window.location.href).searchParams.get(
+      "floorpWebPanelId"
+    );
     if (!webPanelId) {
       window.docShell.treeOwner
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
       window.browserDOMWindow = null;
     }
-
   },
 };
 
@@ -5324,7 +5349,13 @@ var XULBrowserWindow = {
    */
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated) {
     // Floorp Injections
-    window.gFloorpOnLocationChange.onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated);
+    window.gFloorpOnLocationChange.onLocationChange(
+      aWebProgress,
+      aRequest,
+      aLocationURI,
+      aFlags,
+      aIsSimulated
+    );
     var location = aLocationURI ? aLocationURI.spec : "";
 
     UpdateBackForwardCommands(gBrowser.webNavigation);
