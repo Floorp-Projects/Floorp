@@ -16,6 +16,23 @@ add_task(async function setup_storage() {
   );
 });
 
+async function disableOSAuthForThisTest() {
+  let oldValue = FormAutofillUtils.getOSAuthEnabled(
+    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF
+  );
+  FormAutofillUtils.setOSAuthEnabled(
+    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+    false
+  );
+
+  registerCleanupFunction(() => {
+    FormAutofillUtils.setOSAuthEnabled(
+      FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+      oldValue
+    );
+  });
+}
+
 add_task(async function test_active_delay() {
   // This is a workaround for the fact that we don't have a way
   // to know when the popup was opened exactly and this makes our test
@@ -28,10 +45,9 @@ add_task(async function test_active_delay() {
   await SpecialPowers.pushPrefEnv({
     set: [["security.notification_enable_delay", 1000]],
   });
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    false
-  );
+
+  await disableOSAuthForThisTest();
+
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CC_URL },
     async function (browser) {
@@ -121,9 +137,5 @@ add_task(async function test_no_delay() {
       // Clean up
       await closePopup(browser);
     }
-  );
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    true
   );
 });

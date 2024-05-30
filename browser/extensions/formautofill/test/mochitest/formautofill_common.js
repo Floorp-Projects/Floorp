@@ -2,6 +2,10 @@
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/EventUtils.js */
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 /* eslint-disable no-unused-vars */
+// Despite a use of `spawnChrome` and thus ChromeUtils, we can't use isInstance
+// here as it gets used in plain mochitests which don't have the ChromeOnly
+// APIs for it.
+/* eslint-disable mozilla/use-isInstance */
 
 "use strict";
 
@@ -205,7 +209,7 @@ async function triggerAutofillAndCheckProfile(profile) {
                 );
               }
               ok(
-                InputEvent.isInstance(event),
+                event instanceof InputEvent,
                 `"input" event should be dispatched with InputEvent interface on ${element.tagName}`
               );
               is(
@@ -226,7 +230,7 @@ async function triggerAutofillAndCheckProfile(profile) {
                 `"beforeinput" event shouldn't be fired on ${element.tagName}`
               );
               ok(
-                Event.isInstance(event) && !UIEvent.isInstance(event),
+                event instanceof Event && !(event instanceof UIEvent),
                 `"input" event should be dispatched with Event interface on ${element.tagName}`
               );
             }

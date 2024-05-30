@@ -37,11 +37,16 @@ add_setup(async function () {
     url: "about:logins",
   });
 
-  // Enable OS reauth so we can test it.
-  sinon.stub(LoginHelper, "getOSAuthEnabled").returns(true);
+  if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin() && OSKeyStore.canReauth()) {
+    info("Stubbing for true");
+    // Enable OS reauth so we can test it.
+    sinon.stub(LoginHelper, "getOSAuthEnabled").returns(true);
+    registerCleanupFunction(() => {
+      sinon.restore();
+    });
+  }
 
   registerCleanupFunction(() => {
-    sinon.restore();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     Services.logins.removeAllUserFacingLogins();
   });
