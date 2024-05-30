@@ -786,12 +786,12 @@ class nsLayoutUtils {
     float mVisibleThreshold;
 
     FrameForPointOptions(Bits aBits, float aVisibleThreshold)
-        : mBits(aBits), mVisibleThreshold(aVisibleThreshold){};
+        : mBits(aBits), mVisibleThreshold(aVisibleThreshold) {};
 
     MOZ_IMPLICIT FrameForPointOptions(Bits aBits)
         : FrameForPointOptions(aBits, 1.0f) {}
 
-    FrameForPointOptions() : FrameForPointOptions(Bits()){};
+    FrameForPointOptions() : FrameForPointOptions(Bits()) {};
   };
 
   /**
