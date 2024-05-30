@@ -68,7 +68,7 @@
       "channel": "release",
       "userFacingName": "Android Onboarding - Remove Sync Card",
       "userFacingDescription": "Mobile Onboarding experiment",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
