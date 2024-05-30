@@ -511,7 +511,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::Encode(
 
 RefPtr<MediaDataEncoder::ReconfigurationPromise> AppleVTEncoder::Reconfigure(
     const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
-  return InvokeAsync<const RefPtr<const EncoderConfigurationChangeList>&>(
+  return InvokeAsync(
       mTaskQueue, this, __func__, &AppleVTEncoder::ProcessReconfigure,
       aConfigurationChanges);
 }
