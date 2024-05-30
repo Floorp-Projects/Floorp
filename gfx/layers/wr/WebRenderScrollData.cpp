@@ -11,6 +11,7 @@
 #include "Units.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ToString.h"
 #include "mozilla/Unused.h"
 #include "nsDisplayList.h"
@@ -71,9 +72,9 @@ void WebRenderLayerScrollData::Initialize(
       mScrollIds.AppendElement(index.ref());
     } else {
       Maybe<ScrollMetadata> metadata =
-          asr->mScrollableFrame->ComputeScrollMetadata(
+          asr->mScrollContainerFrame->ComputeScrollMetadata(
               aOwner.GetManager(), aItem->Frame(), aItem->ToReferenceFrame());
-      aOwner.GetBuilder()->AddScrollFrameToNotify(asr->mScrollableFrame);
+      aOwner.GetBuilder()->AddScrollFrameToNotify(asr->mScrollContainerFrame);
       if (metadata) {
         MOZ_ASSERT(metadata->GetMetrics().GetScrollId() == scrollId);
         mScrollIds.AppendElement(aOwner.AddMetadata(metadata.ref()));

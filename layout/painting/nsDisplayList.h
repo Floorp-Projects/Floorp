@@ -80,6 +80,7 @@ enum class nsDisplayOwnLayerFlags;
 class nsDisplayCompositorHitTestInfo;
 class nsDisplayScrollInfoLayer;
 class PresShell;
+class ScrollContainerFrame;
 class StickyScrollContainer;
 
 namespace layers {
@@ -189,8 +190,8 @@ LazyLogModule& GetLoggerByProcess();
  */
 struct ActiveScrolledRoot {
   static already_AddRefed<ActiveScrolledRoot> CreateASRForFrame(
-      const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame,
-      bool aIsRetained);
+      const ActiveScrolledRoot* aParent,
+      ScrollContainerFrame* aScrollContainerFrame, bool aIsRetained);
 
   static const ActiveScrolledRoot* PickAncestor(
       const ActiveScrolledRoot* aOne, const ActiveScrolledRoot* aTwo) {
@@ -226,19 +227,18 @@ struct ActiveScrolledRoot {
   }
 
   RefPtr<const ActiveScrolledRoot> mParent;
-  nsIScrollableFrame* mScrollableFrame;
+  ScrollContainerFrame* mScrollContainerFrame = nullptr;
 
   NS_INLINE_DECL_REFCOUNTING(ActiveScrolledRoot)
 
  private:
-  ActiveScrolledRoot()
-      : mScrollableFrame(nullptr), mDepth(0), mRetained(false) {}
+  ActiveScrolledRoot() : mDepth(0), mRetained(false) {}
 
   ~ActiveScrolledRoot();
 
   static void DetachASR(ActiveScrolledRoot* aASR) {
     aASR->mParent = nullptr;
-    aASR->mScrollableFrame = nullptr;
+    aASR->mScrollContainerFrame = nullptr;
     NS_RELEASE(aASR);
   }
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(ActiveScrolledRootCache,
@@ -946,7 +946,8 @@ class nsDisplayListBuilder {
    * automatically when the arena goes away.
    */
   ActiveScrolledRoot* AllocateActiveScrolledRoot(
-      const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame);
+      const ActiveScrolledRoot* aParent,
+      ScrollContainerFrame* aScrollContainerFrame);
 
   /**
    * Allocate a new DisplayItemClipChain object in the arena. Will be cleaned
@@ -1178,15 +1179,15 @@ class nsDisplayListBuilder {
     void SetCurrentActiveScrolledRoot(
         const ActiveScrolledRoot* aActiveScrolledRoot);
 
-    void EnterScrollFrame(nsIScrollableFrame* aScrollableFrame) {
+    void EnterScrollFrame(ScrollContainerFrame* aScrollContainerFrame) {
       MOZ_ASSERT(!mUsed);
       ActiveScrolledRoot* asr = mBuilder->AllocateActiveScrolledRoot(
-          mBuilder->mCurrentActiveScrolledRoot, aScrollableFrame);
+          mBuilder->mCurrentActiveScrolledRoot, aScrollContainerFrame);
       mBuilder->mCurrentActiveScrolledRoot = asr;
       mUsed = true;
     }
 
-    void InsertScrollFrame(nsIScrollableFrame* aScrollableFrame);
+    void InsertScrollFrame(ScrollContainerFrame* aScrollContainerFrame);
 
    private:
     nsDisplayListBuilder* mBuilder;
