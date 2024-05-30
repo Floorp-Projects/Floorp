@@ -7,6 +7,12 @@ filter-input =
   .key = F
   .aria-label = Search Your Data
 
+menu-more-options-button = …
+  .aria-label = More
+
+more-options-popup =
+  .aria-label = More Options
+
 ## Commands
 
 command-copy = Copy
