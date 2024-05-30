@@ -2463,17 +2463,6 @@ ScrollContainerFrame* PresShell::GetRootScrollContainerFrame() const {
   return static_cast<ScrollContainerFrame*>(theFrame);
 }
 
-nsIScrollableFrame* PresShell::GetRootScrollFrameAsScrollable() const {
-  nsIFrame* frame = GetRootScrollContainerFrame();
-  if (!frame) {
-    return nullptr;
-  }
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(frame);
-  NS_ASSERTION(scrollableFrame,
-               "All scroll frames must implement nsIScrollableFrame");
-  return scrollableFrame;
-}
-
 nsPageSequenceFrame* PresShell::GetPageSequenceFrame() const {
   return mFrameConstructor->GetPageSequenceFrame();
 }
@@ -2483,9 +2472,8 @@ nsCanvasFrame* PresShell::GetCanvasFrame() const {
 }
 
 void PresShell::RestoreRootScrollPosition() {
-  nsIScrollableFrame* scrollableFrame = GetRootScrollFrameAsScrollable();
-  if (scrollableFrame) {
-    scrollableFrame->ScrollToRestoredPosition();
+  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+    sf->ScrollToRestoredPosition();
   }
 }
 
@@ -3125,7 +3113,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   esm->SetContentState(target, ElementState::URLTARGET);
 
   // TODO: Spec probably needs a section to account for this.
-  if (nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable()) {
+  if (ScrollContainerFrame* rootScroll = GetRootScrollContainerFrame()) {
     if (rootScroll->DidHistoryRestore()) {
       // Scroll position restored from history trumps scrolling to anchor.
       aScroll = false;
@@ -3146,7 +3134,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
           ScrollAxis(),
           ScrollFlags::AnchorScrollFlags | aAdditionalScrollFlags));
 
-      if (nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable()) {
+      if (ScrollContainerFrame* rootScroll = GetRootScrollContainerFrame()) {
         mLastAnchorScrolledTo = target;
         mLastAnchorScrollPositionY = rootScroll->GetScrollPosition().y;
       }
@@ -3227,7 +3215,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 #endif
   } else if (nsContentUtils::EqualsIgnoreASCIICase(aAnchorName, u"top"_ns)) {
     // 2.2. Scroll to the beginning of the document for the Document.
-    nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable();
+    ScrollContainerFrame* sf = GetRootScrollContainerFrame();
     // Check |aScroll| after setting |rv| so we set |rv| to the same
     // thing whether or not |aScroll| is true.
     if (aScroll && sf) {
@@ -3250,7 +3238,7 @@ nsresult PresShell::ScrollToAnchor() {
   }
 
   NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
-  nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
+  ScrollContainerFrame* rootScroll = GetRootScrollContainerFrame();
   if (!rootScroll ||
       mLastAnchorScrollPositionY != rootScroll->GetScrollPosition().y) {
     return NS_OK;
@@ -5352,7 +5340,7 @@ void PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder* aBuilder,
   // nsDisplayCanvasBackground paint it.
   bool addedScrollingBackgroundColor = false;
   if (isViewport) {
-    if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
+    if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting()) {
         // TODO: We should be able to set canvas background color during display
@@ -11362,9 +11350,8 @@ void PresShell::CompleteChangeToVisualViewportSize() {
   // items). Callers that update the visual viewport during a reflow are
   // responsible for maintaining these invariants.
   if (!mIsReflowing) {
-    if (nsIScrollableFrame* rootScrollFrame =
-            GetRootScrollFrameAsScrollable()) {
-      rootScrollFrame->MarkScrollbarsDirtyForReflow();
+    if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
+      sf->MarkScrollbarsDirtyForReflow();
     }
     MarkFixedFramesForReflow(IntrinsicDirty::None);
   }
@@ -11402,11 +11389,13 @@ void PresShell::ResetVisualViewportSize() {
 bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
                                         const nsPoint& aPrevLayoutScrollPos) {
   nsPoint newOffset = aScrollOffset;
-  nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable();
-  if (rootScrollFrame) {
+  ScrollContainerFrame* rootScrollContainerFrame =
+      GetRootScrollContainerFrame();
+  if (rootScrollContainerFrame) {
     // See the comment in ScrollContainerFrame::Reflow above the call to
     // SetVisualViewportOffset for why we need to do this.
-    nsRect scrollRange = rootScrollFrame->GetScrollRangeForUserInputEvents();
+    nsRect scrollRange =
+        rootScrollContainerFrame->GetScrollRangeForUserInputEvents();
     if (!scrollRange.Contains(newOffset)) {
       newOffset.x = std::min(newOffset.x, scrollRange.XMost());
       newOffset.x = std::max(newOffset.x, scrollRange.x);
@@ -11433,14 +11422,13 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
     window->VisualViewport()->PostScrollEvent(prevOffset, aPrevLayoutScrollPos);
   }
 
-  if (IsVisualViewportSizeSet() && rootScrollFrame) {
-    rootScrollFrame->Anchor()->UserScrolled();
+  if (IsVisualViewportSizeSet() && rootScrollContainerFrame) {
+    rootScrollContainerFrame->Anchor()->UserScrolled();
   }
 
   if (gfxPlatform::UseDesktopZoomingScrollbars()) {
-    if (nsIScrollableFrame* rootScrollFrame =
-            GetRootScrollFrameAsScrollable()) {
-      rootScrollFrame->UpdateScrollbarPosition();
+    if (rootScrollContainerFrame) {
+      rootScrollContainerFrame->UpdateScrollbarPosition();
     }
   }
 
@@ -11455,7 +11443,7 @@ void PresShell::ScrollToVisual(const nsPoint& aVisualViewportOffset,
   MOZ_ASSERT(aMode == ScrollMode::Instant || aMode == ScrollMode::SmoothMsd);
 
   if (aMode == ScrollMode::SmoothMsd) {
-    if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
+    if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
       if (sf->SmoothScrollVisual(aVisualViewportOffset, aUpdateType)) {
         return;
       }
@@ -11497,7 +11485,7 @@ nsPoint PresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
 
 nsPoint PresShell::GetLayoutViewportOffset() const {
   nsPoint result;
-  if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
+  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
     result = sf->GetScrollPosition();
   }
   return result;
@@ -11505,7 +11493,7 @@ nsPoint PresShell::GetLayoutViewportOffset() const {
 
 nsSize PresShell::GetLayoutViewportSize() const {
   nsSize result;
-  if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
+  if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
     result = sf->GetScrollPortRect().Size();
   }
   return result;

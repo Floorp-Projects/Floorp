@@ -72,6 +72,7 @@
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/Components.h"
 #include "mozilla/SizeOfState.h"
@@ -263,7 +264,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIScrollableFrame.h"
 #include "nsISerialEventTarget.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISizeOfEventTarget.h"
@@ -3817,7 +3817,7 @@ void nsGlobalWindowInner::ScrollTo(const ScrollToOptions& aOptions) {
           ? FlushType::Layout
           : FlushType::Frames;
   FlushPendingNotifications(flushType);
-  nsIScrollableFrame* sf = GetScrollFrame();
+  ScrollContainerFrame* sf = GetScrollContainerFrame();
 
   if (sf) {
     CSSIntPoint scrollPos = sf->GetRoundedScrollPositionCSSPixels();
@@ -3847,7 +3847,7 @@ void nsGlobalWindowInner::ScrollTo(const CSSIntPoint& aScroll,
   FlushType flushType =
       (aScroll.x || aScroll.y) ? FlushType::Layout : FlushType::Frames;
   FlushPendingNotifications(flushType);
-  nsIScrollableFrame* sf = GetScrollFrame();
+  ScrollContainerFrame* sf = GetScrollContainerFrame();
 
   if (sf) {
     // Here we calculate what the max pixel value is that we can
@@ -3876,7 +3876,7 @@ void nsGlobalWindowInner::ScrollTo(const CSSIntPoint& aScroll,
 
 void nsGlobalWindowInner::ScrollBy(double aXScrollDif, double aYScrollDif) {
   FlushPendingNotifications(FlushType::Layout);
-  nsIScrollableFrame* sf = GetScrollFrame();
+  ScrollContainerFrame* sf = GetScrollContainerFrame();
 
   if (sf) {
     // It seems like it would make more sense for ScrollBy to use
@@ -3891,7 +3891,7 @@ void nsGlobalWindowInner::ScrollBy(double aXScrollDif, double aYScrollDif) {
 
 void nsGlobalWindowInner::ScrollBy(const ScrollToOptions& aOptions) {
   FlushPendingNotifications(FlushType::Layout);
-  nsIScrollableFrame* sf = GetScrollFrame();
+  ScrollContainerFrame* sf = GetScrollContainerFrame();
 
   if (sf) {
     CSSIntPoint scrollDelta;
@@ -3915,7 +3915,7 @@ void nsGlobalWindowInner::ScrollBy(const ScrollToOptions& aOptions) {
 void nsGlobalWindowInner::ScrollByLines(int32_t numLines,
                                         const ScrollOptions& aOptions) {
   FlushPendingNotifications(FlushType::Layout);
-  nsIScrollableFrame* sf = GetScrollFrame();
+  ScrollContainerFrame* sf = GetScrollContainerFrame();
   if (sf) {
     // It seems like it would make more sense for ScrollByLines to use
     // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
@@ -3931,7 +3931,7 @@ void nsGlobalWindowInner::ScrollByLines(int32_t numLines,
 void nsGlobalWindowInner::ScrollByPages(int32_t numPages,
                                         const ScrollOptions& aOptions) {
   FlushPendingNotifications(FlushType::Layout);
-  nsIScrollableFrame* sf = GetScrollFrame();
+  ScrollContainerFrame* sf = GetScrollContainerFrame();
   if (sf) {
     // It seems like it would make more sense for ScrollByPages to use
     // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
@@ -3946,7 +3946,7 @@ void nsGlobalWindowInner::ScrollByPages(int32_t numPages,
 
 void nsGlobalWindowInner::MozScrollSnap() {
   FlushPendingNotifications(FlushType::Layout);
-  nsIScrollableFrame* sf = GetScrollFrame();
+  ScrollContainerFrame* sf = GetScrollContainerFrame();
   if (sf) {
     sf->ScrollSnap();
   }
@@ -6379,8 +6379,8 @@ nsGlobalWindowInner::GetWebBrowserChrome() {
   return browserChrome.forget();
 }
 
-nsIScrollableFrame* nsGlobalWindowInner::GetScrollFrame() {
-  FORWARD_TO_OUTER(GetScrollFrame, (), nullptr);
+ScrollContainerFrame* nsGlobalWindowInner::GetScrollContainerFrame() {
+  FORWARD_TO_OUTER(GetScrollContainerFrame, (), nullptr);
 }
 
 bool nsGlobalWindowInner::IsPrivateBrowsing() {
@@ -7592,7 +7592,7 @@ void nsGlobalWindowInner::SetScrollMarks(const nsTArray<uint32_t>& aScrollMarks,
   if (mDoc) {
     PresShell* presShell = mDoc->GetPresShell();
     if (presShell) {
-      nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+      ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
       if (sf) {
         sf->InvalidateScrollbars();
       }

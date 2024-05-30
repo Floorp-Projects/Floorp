@@ -58,7 +58,6 @@ class nsIContent;
 class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
 class nsIDOMWindowUtils;
-class nsIScrollableFrame;
 class nsIControllers;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
@@ -85,6 +84,7 @@ class PromiseDocumentFlushedResolver;
 
 namespace mozilla {
 class AbstractThread;
+class ScrollContainerFrame;
 class ErrorResult;
 
 namespace glean {
@@ -431,9 +431,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   bool IsChromeWindow() const { return mIsChrome; }
 
-  // GetScrollFrame does not flush.  Callers should do it themselves as needed,
-  // depending on which info they actually want off the scrollable frame.
-  nsIScrollableFrame* GetScrollFrame();
+  // GetScrollContainerFrame does not flush. Callers should do it themselves as
+  // needed, depending on which info they actually want off the scroll container
+  // frame.
+  mozilla::ScrollContainerFrame* GetScrollContainerFrame();
 
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
                    const char16_t* aData);

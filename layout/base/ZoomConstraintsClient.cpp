@@ -12,11 +12,11 @@
 #include "mozilla/layers/ZoomConstraints.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "nsIFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPoint.h"
 #include "nsView.h"
@@ -275,8 +275,8 @@ void ZoomConstraintsClient::RefreshZoomConstraints() {
   // We only ever create a ZoomConstraintsClient for an RCD, so the RSF of
   // the presShell must be the RCD-RSF (if it exists).
   MOZ_ASSERT(mPresShell->GetPresContext()->IsRootContentDocumentCrossProcess());
-  if (nsIScrollableFrame* rcdrsf =
-          mPresShell->GetRootScrollFrameAsScrollable()) {
+  if (ScrollContainerFrame* rcdrsf =
+          mPresShell->GetRootScrollContainerFrame()) {
     ZCC_LOG("Notifying RCD-RSF that it is zoomable: %d\n",
             mZoomConstraints.mAllowZoom);
     rcdrsf->SetZoomableByAPZ(mZoomConstraints.mAllowZoom);

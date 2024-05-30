@@ -8,8 +8,8 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ToString.h"
-#include "nsIScrollableFrame.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
@@ -78,7 +78,7 @@ CSSSize VisualViewport::VisualViewportSize() const {
               ? presShell->GetVisualViewportSizeUpdatedByDynamicToolbar()
               : presShell->GetVisualViewportSize());
     } else {
-      nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+      ScrollContainerFrame* sf = presShell->GetRootScrollContainerFrame();
       if (sf) {
         size = CSSRect::FromAppUnits(sf->GetScrollPortRect().Size());
       }

@@ -3061,14 +3061,12 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         aFrame, builder);
   }
 
-  nsIFrame* rootScrollContainerFrame = presShell->GetRootScrollContainerFrame();
+  ScrollContainerFrame* rootScrollContainerFrame =
+      presShell->GetRootScrollContainerFrame();
   if (rootScrollContainerFrame && !aFrame->GetParent()) {
-    nsIScrollableFrame* rootScrollableFrame =
-        presShell->GetRootScrollFrameAsScrollable();
-    MOZ_ASSERT(rootScrollableFrame);
     nsRect displayPortBase = rootInkOverflow;
     nsRect temp = displayPortBase;
-    Unused << rootScrollableFrame->DecideScrollableLayer(
+    Unused << rootScrollContainerFrame->DecideScrollableLayer(
         builder, &displayPortBase, &temp,
         /* aSetBase = */ true);
   }
@@ -3089,11 +3087,9 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   Maybe<nsPoint> originalScrollPosition;
   auto maybeResetScrollPosition = MakeScopeExit([&]() {
     if (originalScrollPosition && rootScrollContainerFrame) {
-      nsIScrollableFrame* rootScrollableFrame =
-          presShell->GetRootScrollFrameAsScrollable();
-      MOZ_ASSERT(rootScrollableFrame->GetScrolledFrame()->GetPosition() ==
+      MOZ_ASSERT(rootScrollContainerFrame->GetScrolledFrame()->GetPosition() ==
                  nsPoint());
-      rootScrollableFrame->GetScrolledFrame()->SetPosition(
+      rootScrollContainerFrame->GetScrolledFrame()->SetPosition(
           *originalScrollPosition);
     }
   });
@@ -3109,21 +3105,19 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   }
 
   if (ignoreViewportScrolling && rootScrollContainerFrame) {
-    nsIScrollableFrame* rootScrollableFrame =
-        presShell->GetRootScrollFrameAsScrollable();
     if (aFlags & PaintFrameFlags::ResetViewportScrolling) {
       // Temporarily scroll the root scroll frame to 0,0 so that position:fixed
       // elements will appear fixed to the top-left of the document. We manually
       // set the position of the scrolled frame instead of using ScrollTo, since
       // the latter fires scroll listeners, which we don't want.
       originalScrollPosition.emplace(
-          rootScrollableFrame->GetScrolledFrame()->GetPosition());
-      rootScrollableFrame->GetScrolledFrame()->SetPosition(nsPoint());
+          rootScrollContainerFrame->GetScrolledFrame()->GetPosition());
+      rootScrollContainerFrame->GetScrolledFrame()->SetPosition(nsPoint());
     }
     if (aFlags & PaintFrameFlags::DocumentRelative) {
       // Make visibleRegion and aRenderingContext relative to the
       // scrolled frame instead of the root frame.
-      nsPoint pos = rootScrollableFrame->GetScrollPosition();
+      nsPoint pos = rootScrollContainerFrame->GetScrollPosition();
       visibleRegion.MoveBy(-pos);
       if (aRenderingContext) {
         gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(
@@ -3136,7 +3130,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     builder->SetIgnoreScrollFrame(rootScrollContainerFrame);
 
     nsCanvasFrame* canvasFrame =
-        do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
+        do_QueryFrame(rootScrollContainerFrame->GetScrolledFrame());
     if (canvasFrame) {
       // Use UnionRect here to ensure that areas where the scrollbars
       // were are still filled with the background color.
