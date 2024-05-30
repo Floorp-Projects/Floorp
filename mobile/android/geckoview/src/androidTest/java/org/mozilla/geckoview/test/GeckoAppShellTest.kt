@@ -84,13 +84,13 @@ class GeckoAppShellTest : BaseSessionTest() {
             goHomeAndReturnWithPageLoad()
 
             // This is waiting and holding the test harness open while Android Lifecycle events complete
-            sessionRule.waitUntilCalled(object : GeckoSession.NavigationDelegate {
+            mainSession.waitUntilCalled(object : GeckoSession.ContentDelegate, GeckoSession.NavigationDelegate {
                 @GeckoSessionTestRule.AssertCalled(count = 2)
+                @Suppress("OVERRIDE_DEPRECATION")
                 override fun onLocationChange(
                     session: GeckoSession,
                     url: String?,
                     perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>,
-                    hasUserGesture: Boolean,
                 ) {
                     // Result of first clock settings change
                     if (onLoadRequestCount == 0) {

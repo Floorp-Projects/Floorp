@@ -4931,6 +4931,23 @@ public class GeckoSession {
     /**
      * A view has started loading content from the network.
      *
+     * @deprecated use {@link #onLocationChange(GeckoSession, String,
+     *     List<PermissionDelegate.ContentPermission>, Boolean) onLocationChange} instead
+     * @param session The GeckoSession that initiated the callback.
+     * @param url The resource being loaded.
+     * @param perms The permissions currently associated with this url.
+     */
+    @UiThread
+    @Deprecated
+    @DeprecationSchedule(id = "geckoview-onlocationchange", version = 128)
+    default void onLocationChange(
+        @NonNull GeckoSession session,
+        @Nullable String url,
+        final @NonNull List<PermissionDelegate.ContentPermission> perms) {}
+
+    /**
+     * A view has started loading content from the network.
+     *
      * @param session The GeckoSession that initiated the callback.
      * @param url The resource being loaded.
      * @param perms The permissions currently associated with this url.
@@ -4942,7 +4959,9 @@ public class GeckoSession {
         @NonNull GeckoSession session,
         @Nullable String url,
         final @NonNull List<PermissionDelegate.ContentPermission> perms,
-        @NonNull Boolean hasUserGesture) {}
+        final @NonNull Boolean hasUserGesture) {
+      session.getNavigationDelegate().onLocationChange(session, url, perms);
+    }
 
     /**
      * The view's ability to go back has changed.
