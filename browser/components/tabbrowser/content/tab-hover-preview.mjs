@@ -88,6 +88,16 @@ export default class TabHoverPreviewPanel {
     }
 
     this._tab = tab;
+
+    // Calling `moveToAnchor` in advance of the call to `openPopup` ensures
+    // that race conditions can be avoided in cases where the user hovers
+    // over a different tab while the preview panel is still opening.
+    // This will ensure the move operation is carried out even if the popup is
+    // in an intermediary state (opening but not fully open).
+    //
+    // If the popup is closed this call will be ignored.
+    this._movePanel();
+
     this._thumbnailElement = null;
     this._maybeRequestThumbnail();
     if (this._panel.state == "open") {
@@ -179,7 +189,11 @@ export default class TabHoverPreviewPanel {
         })
       );
     }
-    if (this._tab && this._panel.state == "open") {
+    this._movePanel();
+  }
+
+  _movePanel() {
+    if (this._tab) {
       this._panel.moveToAnchor(
         this._tab,
         POPUP_OPTIONS.position,
