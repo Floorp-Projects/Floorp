@@ -584,7 +584,7 @@ static nsresult CreateChannelForScriptLoading(nsIChannel** aOutChannel,
   nsContentPolicyType contentPolicyType =
       ScriptLoadRequestToContentPolicyType(aRequest);
   nsCOMPtr<nsINode> context;
-  if (aRequest->GetScriptLoadContext()->GetScriptElement()) {
+  if (aRequest->GetScriptLoadContext()->HasScriptElement()) {
     context =
         do_QueryInterface(aRequest->GetScriptLoadContext()->GetScriptElement());
   } else {
@@ -806,7 +806,7 @@ nsresult ScriptLoader::PrepareHttpRequestAndInitiatorType(
 
     nsAutoString hintCharset;
     if (!aRequest->GetScriptLoadContext()->IsPreload() &&
-        aRequest->GetScriptLoadContext()->GetScriptElement()) {
+        aRequest->GetScriptLoadContext()->HasScriptElement()) {
       aRequest->GetScriptLoadContext()->GetHintCharset(hintCharset);
     } else if (aCharsetForPreload.isSome()) {
       hintCharset = aCharsetForPreload.ref();
@@ -2065,8 +2065,8 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   // Element may not be ready yet if speculatively compiling, so process the
   // request in ProcessPendingRequests when it is available.
   MOZ_ASSERT_IF(!SpeculativeOMTParsingEnabled(),
-                aRequest->GetScriptLoadContext()->GetScriptElement());
-  if (!aRequest->GetScriptLoadContext()->GetScriptElement()) {
+                aRequest->GetScriptLoadContext()->HasScriptElement());
+  if (!aRequest->GetScriptLoadContext()->HasScriptElement()) {
     // Unblock onload here in case this request never gets executed.
     aRequest->GetScriptLoadContext()->MaybeUnblockOnload();
     return NS_OK;
