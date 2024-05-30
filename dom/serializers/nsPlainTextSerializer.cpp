@@ -322,9 +322,12 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
   if (aFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-    NS_ASSERTION(aFlags & nsIDocumentEncoder::OutputFormatted,
-                 "If you want format=flowed, you must combine it with "
-                 "nsIDocumentEncoder::OutputFormatted");
+    // One of OutputFormatted or OutputWrap must be set, but not both.
+    NS_ASSERTION((aFlags & nsIDocumentEncoder::OutputFormatted) !=
+                     (aFlags & nsIDocumentEncoder::OutputWrap),
+                 "If you want format=flowed, you must combine it "
+                 "with either nsIDocumentEncoder::OutputFormatted "
+                 "or nsIDocumentEncoder::OutputWrap");
   }
 
   if (aFlags & nsIDocumentEncoder::OutputFormatted) {
