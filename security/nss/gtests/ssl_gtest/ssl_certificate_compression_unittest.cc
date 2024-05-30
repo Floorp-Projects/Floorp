@@ -229,12 +229,18 @@ static SECStatus SimpleXorCertCompEncode(const SECItem* input,
 }
 
 /* Test decoding function.  */
-static SECStatus SimpleXorCertCompDecode(const SECItem* input, SECItem* output,
-                                         size_t expectedLenDecodedCertificate) {
-  PORT_Memcpy(output->data, input->data, input->len);
-  for (size_t i = 0; i < output->len; i++) {
-    output->data[i] ^= 0x55;
+static SECStatus SimpleXorCertCompDecode(const SECItem* input, uint8_t* output,
+                                         size_t outputLen,
+                                         size_t* receivedOutputLen) {
+  if (input->len != outputLen) {
+    return SECFailure;
   }
+
+  PORT_Memcpy(output, input->data, input->len);
+  for (size_t i = 0; i < outputLen; i++) {
+    output[i] ^= 0x55;
+  }
+  *receivedOutputLen = outputLen;
 
   return SECSuccess;
 }
@@ -249,13 +255,19 @@ static SECStatus SimpleXorWithDifferentValueEncode(const SECItem* input,
 }
 
 /* Test decoding function.  */
-static SECStatus SimpleXorWithDifferentValueDecode(
-    const SECItem* input, SECItem* output,
-    size_t expectedLenDecodedCertificate) {
-  PORT_Memcpy(output->data, input->data, input->len);
-  for (size_t i = 0; i < output->len; i++) {
-    output->data[i] ^= 0x77;
+static SECStatus SimpleXorWithDifferentValueDecode(const SECItem* input,
+                                                   uint8_t* output,
+                                                   size_t outputLen,
+                                                   size_t* receivedOutputLen) {
+  if (input->len != outputLen) {
+    return SECFailure;
   }
+
+  PORT_Memcpy(output, input->data, input->len);
+  for (size_t i = 0; i < outputLen; i++) {
+    output[i] ^= 0x77;
+  }
+  *receivedOutputLen = outputLen;
 
   return SECSuccess;
 }
@@ -1235,8 +1247,8 @@ static SECStatus SimpleXorCertCompEncode_always_error(const SECItem* input,
 
 /* Test decoding function.  Returns error unconditionally. */
 static SECStatus SimpleXorCertCompDecode_always_error(
-    const SECItem* input, SECItem* output,
-    size_t expectedLenDecodedCertificate) {
+    const SECItem* input, uint8_t* output, size_t outputLen,
+    size_t* receivedOutputLen) {
   return SECFailure;
 }
 
@@ -1272,6 +1284,48 @@ TEST_F(TlsConnectStreamTls13, CertificateCompression_CertificateCannotDecode) {
   SSLCertificateCompressionAlgorithm t = {0xff01, "test function",
                                           SimpleXorCertCompEncode,
                                           SimpleXorCertCompDecode_always_error};
+
+  EXPECT_EQ(SECSuccess,
+            SSLExp_SetCertificateCompressionAlgorithm(server_->ssl_fd(), t));
+  EXPECT_EQ(SECSuccess,
+            SSLExp_SetCertificateCompressionAlgorithm(client_->ssl_fd(), t));
+
+  ExpectAlert(client_, kTlsAlertBadCertificate);
+  StartConnect();
+
+  client_->SetServerKeyBits(server_->server_key_bits());
+  client_->Handshake();
+  server_->Handshake();
+
+  ASSERT_TRUE_WAIT(client_->state() != TlsAgent::STATE_CONNECTING, 5000);
+
+  server_->ExpectReceiveAlert(kTlsAlertCloseNotify);
+  client_->ExpectSendAlert(kTlsAlertCloseNotify);
+
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CERTIFICATE);
+}
+
+/* Decoding function returning unexpected decoded certificate length.  */
+static SECStatus WrongUsedLenCertCompDecode(const SECItem* input,
+                                            uint8_t* output, size_t outputLen,
+                                            size_t* receivedOutputLen) {
+  if (input->len != outputLen) {
+    return SECFailure;
+  }
+
+  PORT_Memcpy(output, input->data, input->len);
+  *receivedOutputLen = outputLen - 1;
+
+  return SECSuccess;
+}
+
+TEST_F(TlsConnectStreamTls13,
+       CertificateCompression_WrongDecodedCertificateLength) {
+  EnsureTlsSetup();
+
+  SSLCertificateCompressionAlgorithm t = {0xff01, "test function",
+                                          SimpleXorCertCompEncode,
+                                          WrongUsedLenCertCompDecode};
 
   EXPECT_EQ(SECSuccess,
             SSLExp_SetCertificateCompressionAlgorithm(server_->ssl_fd(), t));

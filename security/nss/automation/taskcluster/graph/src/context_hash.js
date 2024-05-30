@@ -16,6 +16,10 @@ function sha256(data) {
 
 // Recursively collect a list of all files of a given directory.
 function collectFilesInDirectory(dir) {
+  if (fs.lstatSync(dir).isFile()) {
+    return [dir];
+  }
+
   return flatmap(fs.readdirSync(dir), entry => {
     let entry_path = path.join(dir, entry);
 
@@ -40,8 +44,8 @@ function collectFileHashes(context_path) {
 
 // Compute a context hash for the given context path.
 export default function (context_path) {
-  // Regenerate all images when the image_builder changes.
-  let hashes = collectFileHashes("automation/taskcluster/image_builder");
+  // Regenerate when image_builder.js changes
+  let hashes = collectFileHashes("automation/taskcluster/graph/src/image_builder.js");
 
   // Regenerate images when the image itself changes.
   hashes = hashes.concat(collectFileHashes(context_path));

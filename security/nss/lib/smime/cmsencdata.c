@@ -16,6 +16,7 @@
 #include "prtime.h"
 #include "secerr.h"
 #include "secpkcs5.h"
+#include "smime.h"
 
 /*
  * NSS_CMSEncryptedData_Create - create an empty encryptedData object.
@@ -117,6 +118,7 @@ NSS_CMSEncryptedData_Encode_BeforeStart(NSSCMSEncryptedData *encd)
     PK11SymKey *bulkkey = NULL;
     SECItem *dummy;
     NSSCMSContentInfo *cinfo = &(encd->contentInfo);
+    SECAlgorithmID *algid = NULL;
 
     if (NSS_CMSArray_IsEmpty((void **)encd->unprotectedAttr))
         version = NSS_CMS_ENCRYPTED_DATA_VERSION;
@@ -128,10 +130,11 @@ NSS_CMSEncryptedData_Encode_BeforeStart(NSSCMSEncryptedData *encd)
         return SECFailure;
 
     /* now get content encryption key (bulk key) by using our cmsg callback */
-    if (encd->cmsg->decrypt_key_cb)
-        bulkkey = (*encd->cmsg->decrypt_key_cb)(encd->cmsg->decrypt_key_cb_arg,
-                                                NSS_CMSContentInfo_GetContentEncAlg(cinfo));
-    if (bulkkey == NULL)
+    if (encd->cmsg->decrypt_key_cb) {
+        algid = NSS_CMSContentInfo_GetContentEncAlg(cinfo);
+        bulkkey = (*encd->cmsg->decrypt_key_cb)(encd->cmsg->decrypt_key_cb_arg, algid);
+    }
+    if ((bulkkey == NULL) || (algid == NULL))
         return SECFailure;
 
     /* store the bulk key in the contentInfo so that the encoder can find it */
@@ -148,34 +151,47 @@ SECStatus
 NSS_CMSEncryptedData_Encode_BeforeData(NSSCMSEncryptedData *encd)
 {
     NSSCMSContentInfo *cinfo;
-    PK11SymKey *bulkkey;
+    PK11SymKey *bulkkey = NULL;
     SECAlgorithmID *algid;
-    SECStatus rv;
+    SECStatus rv = SECFailure;
 
     cinfo = &(encd->contentInfo);
 
     /* find bulkkey and algorithm - must have been set by NSS_CMSEncryptedData_Encode_BeforeStart */
     bulkkey = NSS_CMSContentInfo_GetBulkKey(cinfo);
-    if (bulkkey == NULL)
-        return SECFailure;
+    if (bulkkey == NULL) {
+        goto loser;
+    }
+
     algid = NSS_CMSContentInfo_GetContentEncAlg(cinfo);
-    if (algid == NULL)
-        return SECFailure;
+    if (algid == NULL) {
+        goto loser;
+    }
 
     rv = NSS_CMSContentInfo_Private_Init(cinfo);
     if (rv != SECSuccess) {
-        return SECFailure;
+        goto loser;
     }
+
+    if (!NSS_SMIMEUtil_EncryptionAllowed(algid, bulkkey)) {
+        goto loser;
+    }
+
     /* this may modify algid (with IVs generated in a token).
      * it is therefore essential that algid is a pointer to the "real" contentEncAlg,
      * not just to a copy */
     cinfo->privateInfo->ciphcx = NSS_CMSCipherContext_StartEncrypt(encd->cmsg->poolp,
                                                                    bulkkey, algid);
-    PK11_FreeSymKey(bulkkey);
     if (cinfo->privateInfo->ciphcx == NULL)
-        return SECFailure;
+        goto loser;
 
-    return SECSuccess;
+    rv = SECSuccess;
+
+loser:
+    if (bulkkey) {
+        PK11_FreeSymKey(bulkkey);
+    }
+    return rv;
 }
 
 /*
@@ -224,16 +240,19 @@ NSS_CMSEncryptedData_Decode_BeforeData(NSSCMSEncryptedData *encd)
     }
     rv = SECFailure;
 
+    if (!NSS_SMIMEUtil_DecryptionAllowed(bulkalg, bulkkey)) {
+        goto loser;
+    }
+
     cinfo->privateInfo->ciphcx = NSS_CMSCipherContext_StartDecrypt(bulkkey, bulkalg);
     if (cinfo->privateInfo->ciphcx == NULL)
         goto loser; /* error has been set by NSS_CMSCipherContext_StartDecrypt */
-
-    /* we are done with (this) bulkkey now. */
-    PK11_FreeSymKey(bulkkey);
-
     rv = SECSuccess;
 
 loser:
+    if (bulkkey) {
+        PK11_FreeSymKey(bulkkey);
+    }
     return rv;
 }
 

@@ -163,6 +163,7 @@ OCSPResponseContext::OCSPResponseContext(const CertID& aCertID, time_t time)
   , producedAt(time)
   , singleExtensions(nullptr)
   , responseExtensions(nullptr)
+  , trailingResponseData(nullptr)
   , includeEmptyExtensions(false)
   , signatureAlgorithm(sha256WithRSAEncryption())
   , badSignature(false)
@@ -958,6 +959,9 @@ ResponseData(OCSPResponseContext& context)
   value.append(producedAtEncoded);
   value.append(responses);
   value.append(responseExtensions);
+  if (context.trailingResponseData) {
+    value.append(*(context.trailingResponseData));
+  }
   return TLV(der::SEQUENCE, value);
 }
 

@@ -12,6 +12,7 @@ EXPORTS = \
 	kyber.h \
 	nssb64.h \
 	nssb64t.h \
+        nsshash.h \
 	nsslocks.h \
 	nssilock.h \
 	nssilckt.h \
@@ -60,6 +61,7 @@ CSRCS = \
 	errstrs.c \
 	nssb64d.c \
 	nssb64e.c \
+	nsshash.c \
 	nssrwlk.c \
 	nssilock.c \
 	oidstring.c \

@@ -29,6 +29,7 @@ find . -type f -name '*.[ch]' -exec clang-format -i {} \+
 # It was implemented like this due to not uniqueness of the names in the verified folders
 # For instance, the files Hacl_Chacha20.h are present in both directories, but the content differs.
 
+# TODO(Bug 1899443): remove these exceptions
 files=($(find ~/nss/lib/freebl/verified/internal -type f -name '*.[ch]'))
 for f in "${files[@]}"; do
     file_name=$(basename "$f")
@@ -37,7 +38,7 @@ for f in "${files[@]}"; do
         -o $file_name == "Hacl_Ed25519_PrecompTable.h" ]
     then
         continue;
-    fi  
+    fi
     diff $hacl_file $f
 done
 
@@ -45,12 +46,11 @@ files=($(find ~/nss/lib/freebl/verified/ -type f -name '*.[ch]' -not -path "*/fr
 for f in "${files[@]}"; do
     file_name=$(basename "$f")
     hacl_file=($(find ~/hacl-star/dist/mozilla/ ~/hacl-star/dist/karamel/ -type f -name $file_name -not -path "*/hacl-star/dist/mozilla/internal/*"))
-    # TODO(Bug 1854438): Remove P384 exception.
-    # TODO(Bug 1854439): Remove P521 exception.
     if [ $file_name == "Hacl_P384.c"  \
         -o $file_name == "Hacl_P384.h" \
         -o $file_name == "Hacl_P521.c" \
-        -o $file_name == "Hacl_P521.h" ]
+        -o $file_name == "Hacl_P521.h" \
+        -o $file_name == "target.h" ]
     then
         continue;
     fi

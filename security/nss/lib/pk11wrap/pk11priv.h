@@ -37,7 +37,6 @@ SECStatus PK11_DeleteSlotFromList(PK11SlotList *list, PK11SlotListElement *le);
 PK11SlotListElement *PK11_FindSlotElement(PK11SlotList *list,
                                           PK11SlotInfo *slot);
 PK11SlotInfo *PK11_FindSlotBySerial(char *serial);
-int PK11_GetMaxKeyLength(CK_MECHANISM_TYPE type);
 
 /************************************************************
  * Generic Slot Management

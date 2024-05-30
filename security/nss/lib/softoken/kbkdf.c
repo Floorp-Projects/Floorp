@@ -1512,6 +1512,7 @@ sftk_fips_SP800_108_PowerUpSelfTests(void)
             (output_buffer == NULL) ||
             (PORT_Memcmp(output_buffer, test->expected_key_bytes, buffer_length) != 0)) {
             PORT_ZFree(output_buffer, buffer_length);
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             return SECFailure;
         }
         PORT_ZFree(output_buffer, buffer_length);

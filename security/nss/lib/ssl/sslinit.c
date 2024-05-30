@@ -7,6 +7,7 @@
 
 #include "prtypes.h"
 #include "prinit.h"
+#include "nss.h"
 #include "seccomon.h"
 #include "secerr.h"
 #include "ssl.h"
@@ -16,6 +17,13 @@
 static int ssl_isInited = 0;
 static PRCallOnceType ssl_init = { 0 };
 PR_STATIC_ASSERT(sizeof(unsigned long) <= sizeof(PRUint64));
+
+static SECStatus
+ssl_InitShutdown(void *appData, void *nssData)
+{
+    memset(&ssl_init, 0, sizeof(ssl_init));
+    return SECSuccess;
+}
 
 PRStatus
 ssl_InitCallOnce(void *arg)
@@ -33,6 +41,12 @@ ssl_InitCallOnce(void *arg)
 #endif
 
     rv = ssl3_ApplyNSSPolicy();
+    if (rv != SECSuccess) {
+        *error = PORT_GetError();
+        return PR_FAILURE;
+    }
+
+    rv = NSS_RegisterShutdown(ssl_InitShutdown, NULL);
     if (rv != SECSuccess) {
         *error = PORT_GetError();
         return PR_FAILURE;

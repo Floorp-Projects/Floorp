@@ -71,6 +71,11 @@ static const uint8_t zeroByteInteger[] = {
   0x30, 0x02, 0x02, 0x00
 };
 
+static const uint8_t trailingData[] = {
+  0x30, 0x03, 0x02, 0x01, 0x05, // statusRequest
+  0xe5, 0xe5, 0xe5 // trailing data
+};
+
 static const TLSFeaturesTestParams
   TLSFEATURESSATISFIED_TEST_PARAMS[] =
 {
@@ -86,6 +91,8 @@ static const TLSFeaturesTestParams
   { BS(twoByteUnknown), Result::ERROR_REQUIRED_TLS_FEATURE_MISSING,
     Result::ERROR_REQUIRED_TLS_FEATURE_MISSING },
   { BS(zeroByteInteger), Result::ERROR_REQUIRED_TLS_FEATURE_MISSING,
+    Result::ERROR_REQUIRED_TLS_FEATURE_MISSING },
+  { BS(trailingData), Result::ERROR_BAD_DER,
     Result::ERROR_REQUIRED_TLS_FEATURE_MISSING },
 };
 

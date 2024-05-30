@@ -239,6 +239,9 @@ TEST(RsaPkcs1Test, Pkcs1MinimumPadding) {
   SECItem hash_item = {siBuffer, toUcharPtr(hash.data()),
                        static_cast<unsigned int>(hash.len())};
   SECItem sig_item = {siBuffer, toUcharPtr(sig.data()), sig_len};
+  /* don't let policy foil us */
+  NSS_OptionSet(NSS_KEY_SIZE_POLICY_CLEAR_FLAGS,
+                NSS_KEY_SIZE_POLICY_VERIFY_FLAG);
   rv = VFY_VerifyDigestDirect(&hash_item, short_pub.get(), &sig_item,
                               SEC_OID_PKCS1_RSA_ENCRYPTION, SEC_OID_SHA512,
                               nullptr);

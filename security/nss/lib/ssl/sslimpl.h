@@ -1962,6 +1962,29 @@ SECStatus SSLExp_AeadDecrypt(const SSLAeadContext *ctx, PRUint64 counter,
                              const PRUint8 *aad, unsigned int aadLen,
                              const PRUint8 *plaintext, unsigned int plaintextLen,
                              PRUint8 *out, unsigned int *outLen, unsigned int maxOut);
+
+/* The next function is responsible for registering a certificate compression mechanism
+ to be used for TLS connection.
+ The caller passes SSLCertificateCompressionAlgorithm algorithm:
+
+ typedef struct SSLCertificateCompressionAlgorithmStr {
+    SSLCertificateCompressionAlgorithmID id;
+    const char* name;
+    SECStatus (*encode)(const SECItem* input, SECItem* output);
+    SECStatus (*decode)(const SECItem* input, unsigned char* output, size_t outputLen, size_t* usedLen);
+ } SSLCertificateCompressionAlgorithm;
+
+ Certificate Compression encoding function is responsible for allocating the output buffer itself.
+ If encoding function fails, the function has the install the appropriate error code and return an error.
+
+ Certificate Compression decoding function operates an output buffer allocated in NSS.
+ The function returns success or an error code. 
+ If successful, the function sets the number of bytes used to stored the decoded certificate 
+ in the outparam usedLen. If provided buffer is not enough to store the output (or any problem has occured during
+ decoding of the buffer), the function has the install the appropriate error code and return an error.
+ Note: usedLen is always <= outputLen.
+
+ */
 SECStatus SSLExp_SetCertificateCompressionAlgorithm(PRFileDesc *fd, SSLCertificateCompressionAlgorithm alg);
 SECStatus SSLExp_HkdfExtract(PRUint16 version, PRUint16 cipherSuite,
                              PK11SymKey *salt, PK11SymKey *ikm, PK11SymKey **keyp);

@@ -44,7 +44,7 @@ checkKeyParams(const SECAlgorithmID *sigAlgorithm, const SECKEYPublicKey *key)
     SECOidTag sigAlg;
     SECOidTag curve;
     PRUint32 policyFlags = 0;
-    PRInt32 minLen, len;
+    PRInt32 minLen, len, optFlags;
 
     sigAlg = SECOID_GetAlgorithmTag(sigAlgorithm);
 
@@ -109,6 +109,13 @@ checkKeyParams(const SECAlgorithmID *sigAlgorithm, const SECKEYPublicKey *key)
                 return SECFailure;
             }
 
+            if (NSS_OptionGet(NSS_KEY_SIZE_POLICY_FLAGS, &optFlags) == SECFailure) {
+                return SECSuccess;
+            }
+            if ((optFlags & NSS_KEY_SIZE_POLICY_VERIFY_FLAG) == 0) {
+                return SECSuccess;
+            }
+
             len = 8 * key->u.rsa.modulus.len;
 
             rv = NSS_OptionGet(NSS_RSA_MIN_KEY_SIZE, &minLen);
@@ -130,6 +137,12 @@ checkKeyParams(const SECAlgorithmID *sigAlgorithm, const SECKEYPublicKey *key)
             if (key->keyType != dsaKey) {
                 PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
                 return SECFailure;
+            }
+            if (NSS_OptionGet(NSS_KEY_SIZE_POLICY_FLAGS, &optFlags) == SECFailure) {
+                return SECSuccess;
+            }
+            if ((optFlags & NSS_KEY_SIZE_POLICY_VERIFY_FLAG) == 0) {
+                return SECSuccess;
             }
 
             len = 8 * key->u.dsa.params.prime.len;
@@ -162,6 +175,7 @@ CERT_VerifySignedDataWithPublicKey(const CERTSignedData *sd,
     SECOidTag sigAlg;
     SECOidTag encAlg;
     SECOidTag hashAlg;
+    CK_MECHANISM_TYPE mech;
     PRUint32 policyFlags;
 
     if (!pubKey || !sd) {
@@ -173,7 +187,7 @@ CERT_VerifySignedDataWithPublicKey(const CERTSignedData *sd,
     sigAlg = SECOID_GetAlgorithmTag(&sd->signatureAlgorithm);
     rv = sec_DecodeSigAlg(pubKey, sigAlg,
                           &sd->signatureAlgorithm.parameters,
-                          &encAlg, &hashAlg);
+                          &encAlg, &hashAlg, &mech, NULL);
     if (rv != SECSuccess) {
         return SECFailure; /* error is set */
     }

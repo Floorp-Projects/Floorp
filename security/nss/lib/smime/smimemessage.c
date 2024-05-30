@@ -131,7 +131,7 @@ NSS_SMIMEMessage_CreateSigned(CERTCertificate *scert,
 {
     NSSCMSMessage *cmsg;
     NSSCMSSignedData *sigd;
-    NSSCMSSignerInfo *signerinfo;
+    NSSCMSSignerInfo *signerinfo = NULL;
 
     /* See note in header comment above about digestalg. */
     /* Doesn't explain this.  PORT_Assert (digestalgtag == SEC_OID_SHA1); */
@@ -160,6 +160,8 @@ NSS_SMIMEMessage_CreateSigned(CERTCertificate *scert,
     /* now add the signerinfo to the signeddata */
     if (NSS_CMSSignedData_AddSignerInfo(sigd, signerinfo) != SECSuccess)
         goto loser;
+    /* sigd (and therefore cmsg) has adopted signerinfo */
+    signerinfo = NULL;
 
     /* include the signing cert and its entire chain */
     /* note that there are no checks for duplicate certs in place, as all the */
@@ -178,6 +180,8 @@ NSS_SMIMEMessage_CreateSigned(CERTCertificate *scert,
 loser:
     if (cmsg)
         NSS_CMSMessage_Destroy(cmsg);
+    if (signerinfo)
+        NSS_CMSSignerInfo_Destroy(signerinfo);
     return NULL;
 }
 #endif

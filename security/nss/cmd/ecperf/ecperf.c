@@ -207,37 +207,20 @@ M_TimeOperation(void (*threadFunc)(void *),
 }
 
 /* Test curve using specific field arithmetic. */
-#define ECTEST_NAMED_GFP(name_c, name_v)                                        \
-    if (usefreebl) {                                                            \
-        printf("Testing %s using freebl implementation...\n", name_c);          \
-        rv = ectest_curve_freebl(name_v, iterations, numThreads, ec_field_GFp); \
-        if (rv != SECSuccess)                                                   \
-            goto cleanup;                                                       \
-        printf("... okay.\n");                                                  \
-    }                                                                           \
-    if (usepkcs11) {                                                            \
-        printf("Testing %s using pkcs11 implementation...\n", name_c);          \
-        rv = ectest_curve_pkcs11(name_v, iterations, numThreads);               \
-        if (rv != SECSuccess)                                                   \
-            goto cleanup;                                                       \
-        printf("... okay.\n");                                                  \
-    }
-
-/* Test curve using specific field arithmetic. */
-#define ECTEST_NAMED_CUSTOM(name_c, name_v)                                       \
-    if (usefreebl) {                                                              \
-        printf("Testing %s using freebl implementation...\n", name_c);            \
-        rv = ectest_curve_freebl(name_v, iterations, numThreads, ec_field_plain); \
-        if (rv != SECSuccess)                                                     \
-            goto cleanup;                                                         \
-        printf("... okay.\n");                                                    \
-    }                                                                             \
-    if (usepkcs11) {                                                              \
-        printf("Testing %s using pkcs11 implementation...\n", name_c);            \
-        rv = ectest_curve_pkcs11(name_v, iterations, numThreads);                 \
-        if (rv != SECSuccess)                                                     \
-            goto cleanup;                                                         \
-        printf("... okay.\n");                                                    \
+#define ECTEST_NAMED(name_c, name_v)                                   \
+    if (usefreebl) {                                                   \
+        printf("Testing %s using freebl implementation...\n", name_c); \
+        rv = ectest_curve_freebl(name_v, iterations, numThreads);      \
+        if (rv != SECSuccess)                                          \
+            goto cleanup;                                              \
+        printf("... okay.\n");                                         \
+    }                                                                  \
+    if (usepkcs11) {                                                   \
+        printf("Testing %s using pkcs11 implementation...\n", name_c); \
+        rv = ectest_curve_pkcs11(name_v, iterations, numThreads);      \
+        if (rv != SECSuccess)                                          \
+            goto cleanup;                                              \
+        printf("... okay.\n");                                         \
     }
 
 #define PK11_SETATTRS(x, id, v, l) \
@@ -455,8 +438,7 @@ ECDH_DeriveWrap(ECPrivateKey *priv, ECPublicKey *pub, int *dummy)
  * If tests fail, then it prints an error message, aborts, and returns an
  * error code. Otherwise, returns 0. */
 SECStatus
-ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
-                    ECFieldType fieldType)
+ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads)
 {
     ECParams ecParams = { 0 };
     ECPrivateKey *ecPriv = NULL;
@@ -620,10 +602,10 @@ main(int argv, char **argc)
 
     /* specific arithmetic tests */
     if (nist) {
-        ECTEST_NAMED_GFP("NIST-P256", ECCurve_NIST_P256);
-        ECTEST_NAMED_GFP("NIST-P384", ECCurve_NIST_P384);
-        ECTEST_NAMED_GFP("NIST-P521", ECCurve_NIST_P521);
-        ECTEST_NAMED_CUSTOM("Curve25519", ECCurve25519);
+        ECTEST_NAMED("NIST-P256", ECCurve_NIST_P256);
+        ECTEST_NAMED("NIST-P384", ECCurve_NIST_P384);
+        ECTEST_NAMED("NIST-P521", ECCurve_NIST_P521);
+        ECTEST_NAMED("Curve25519", ECCurve25519);
     }
 
 cleanup:

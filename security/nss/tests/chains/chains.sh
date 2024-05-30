@@ -1323,4 +1323,12 @@ chains_stop_httpserv
 chains_run_httpserv get-unknown
 chains_main
 chains_stop_httpserv
+export NSS_COMBO_SIGNATURES=signonly
+chains_run_httpserv random
+chains_main
+chains_stop_httpserv
+export NSS_COMBO_SIGNATURES=vfynonly
+chains_run_httpserv random
+chains_main
+chains_stop_httpserv
 chains_cleanup

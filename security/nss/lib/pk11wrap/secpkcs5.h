@@ -35,6 +35,16 @@ SECItem *
 SEC_PKCS5GetIV(SECAlgorithmID *algid, SECItem *pwitem, PRBool faulty3DES);
 
 SECOidTag SEC_PKCS5GetCryptoAlgorithm(SECAlgorithmID *algid);
+SECOidTag SEC_PKCS5GetHashAlgorithm(SECAlgorithmID *algid);
+
+/* the next 2  maps a PKCS #12 PBE or PKCS #5v1 PBE oid to it's encryption algorithm
+ * and hash algorithms.
+ * All other values map to SEC_OID_UNKNOWN. In most cases you want
+ * to use SEC_PKCS5GetCryptoAlgorithm() with a full SECAlgorithmID which
+ * can handle PKCS #5v2 */
+SECOidTag SEC_PKCS5GetCryptoFromAlgTag(SECOidTag algTag);
+SECOidTag SEC_PKCS5GetHashFromAlgTag(SECOidTag algTag);
+
 PRBool SEC_PKCS5IsAlgorithmPBEAlg(SECAlgorithmID *algid);
 PRBool SEC_PKCS5IsAlgorithmPBEAlgTag(SECOidTag algTag);
 SECOidTag SEC_PKCS5GetPBEAlgorithm(SECOidTag algTag, int keyLen);

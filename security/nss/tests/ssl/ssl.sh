@@ -293,11 +293,6 @@ start_selfserv()
   echo "selfserv with PID ${PID} started at `date`"
 }
 
-ignore_blank_lines()
-{
-  LC_ALL=C egrep -v '^[[:space:]]*(#|$)' "$1"
-}
-
 ############################## ssl_cov #################################
 # local shell function to perform SSL Cipher Coverage tests
 ########################################################################
@@ -821,33 +816,6 @@ ssl_crl_ssl()
   html "</TABLE><BR>"
 }
 
-############################# setup_policy #############################
-# local shell function to create policy configuration
-########################################################################
-setup_policy()
-{
-  policy="$1"
-  outdir="$2"
-  OUTFILE="${outdir}/pkcs11.txt"
-  cat > "$OUTFILE" << ++EOF++
-library=
-name=NSS Internal PKCS #11 Module
-parameters=configdir='./client' certPrefix='' keyPrefix='' secmod='secmod.db' flags= updatedir='' updateCertPrefix='' updateKeyPrefix='' updateid='' updateTokenDescription=''
-NSS=Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES,Camellia,SEED,SHA256,SHA512] askpw=any timeout=30})
-++EOF++
-  echo "config=${policy}" >> "$OUTFILE"
-  echo "" >> "$OUTFILE"
-  echo "library=${DIST}/${OBJDIR}/lib/libnssckbi.so" >> "$OUTFILE"
-  cat >> "$OUTFILE" << ++EOF++
-name=RootCerts
-NSS=trustOrder=100
-++EOF++
-
-  echo "******************************Testing with: "
-  cat "$OUTFILE"
-  echo "******************************"
-}
-
 ############################## ssl_policy ##############################
 # local shell function to perform SSL Policy tests
 ########################################################################
@@ -864,7 +832,7 @@ ssl_policy()
   fi
 
   echo "Saving pkcs11.txt"
-  cp ${P_R_CLIENTDIR}/pkcs11.txt ${P_R_CLIENTDIR}/pkcs11.txt.sav
+  save_pkcs11 ${P_R_CLIENTDIR}
 
   start_selfserv $CIPHER_SUITES
 
@@ -907,7 +875,7 @@ ssl_policy()
       html_msg $ret ${value} "${testname}" \
                "produced a returncode of $ret, expected is ${value}"
   done
-  cp ${P_R_CLIENTDIR}/pkcs11.txt.sav ${P_R_CLIENTDIR}/pkcs11.txt
+  restore_pkcs11 ${P_R_CLIENTDIR}
 
   kill_selfserv
   html "</TABLE><BR>"
@@ -994,9 +962,8 @@ ssl_policy_pkix_ocsp()
   #verbose="-v"
   html_head "Check that OCSP doesn't break if we disable sha1 $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
 
-  PKIX_SAVE=${NSS_ENABLE_PKIX_VERIFY-"unset"}
-  NSS_ENABLE_PKIX_VERIFY="1"
-  export NSS_ENABLE_PKIX_VERIFY
+  PKIX_SAVE=${NSS_DISABLE_LIBPKIX_VERIFY-"unset"}
+  unset NSS_DISABLE_LIBPKIX_VERIFY
 
   testname=""
 
@@ -1021,12 +988,10 @@ ssl_policy_pkix_ocsp()
   html_msg $RET $RET_EXP "${testname}" \
            "produced a returncode of $RET, expected is $RET_EXP"
 
-  if [ "${PKIX_SAVE}" = "unset" ]; then
-      unset NSS_ENABLE_PKIX_VERIFY
-  else
-      NSS_ENABLE_PKIX_VERIFY=${PKIX_SAVE}
-      export NSS_ENABLE_PKIX_VERIFY
+  if [ "{PKIX_SAVE}" != "unset" ]; then
+      export NSS_DISABLE_LIBPKIX_VERIFY=${PKIX_SAVE}
   fi
+
   cp ${P_R_SERVERDIR}/pkcs11.txt.sav ${P_R_SERVERDIR}/pkcs11.txt
 
   html "</TABLE><BR>"

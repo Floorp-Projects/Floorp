@@ -57,6 +57,10 @@
 #define KRML_HOST_IGNORE(x) (void)(x)
 #endif
 
+#ifndef KRML_MAYBE_UNUSED_VAR
+#define KRML_MAYBE_UNUSED_VAR(x) KRML_HOST_IGNORE(x)
+#endif
+
 #ifndef KRML_MAYBE_UNUSED
 #if defined(__GNUC__)
 #define KRML_MAYBE_UNUSED __attribute__((unused))

@@ -22,12 +22,12 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define NSS_VERSION "3.100" _NSS_CUSTOMIZED
+#define NSS_VERSION "3.101" _NSS_CUSTOMIZED " Beta"
 #define NSS_VMAJOR 3
-#define NSS_VMINOR 100
+#define NSS_VMINOR 101
 #define NSS_VPATCH 0
 #define NSS_VBUILD 0
-#define NSS_BETA PR_FALSE
+#define NSS_BETA PR_TRUE
 
 #ifndef RC_INVOKED
 
@@ -307,8 +307,8 @@ SECStatus NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
  *    NSS_KEY_SIZE_POLICY_FLAGS sets and clears all the flags to the input
  *                              value
  *     On get it returns all the flags
- *    NSS_KEY_SIZE_POLICY_SET_FLAGS sets only the flags=1 in theinput value and
- *                                  does not affect the other flags
+ *    NSS_KEY_SIZE_POLICY_SET_FLAGS sets only the flags=1 in the input value
+ *                                  and does not affect the other flags
  *     On get it returns all the flags
  *    NSS_KEY_SIZE_POLICY_CLEAR_FLAGS clears only the flags=1 in the input
  *                                    value and does not affect the other flags
@@ -321,6 +321,8 @@ SECStatus NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
 #define NSS_KEY_SIZE_POLICY_SSL_FLAG 1
 #define NSS_KEY_SIZE_POLICY_VERIFY_FLAG 2
 #define NSS_KEY_SIZE_POLICY_SIGN_FLAG 4
+#define NSS_KEY_SIZE_POLICY_SMIME_FLAG 8
+#define NSS_KEY_SIZE_POLICY_ALL_FLAGS 0x0f
 
 #define NSS_ECC_MIN_KEY_SIZE 0x011
 

@@ -527,6 +527,9 @@ typedef enum {
     SEC_OID_DHSINGLEPASS_COFACTORDH_SHA256KDF_SCHEME = 382,
     SEC_OID_DHSINGLEPASS_COFACTORDH_SHA384KDF_SCHEME = 383,
     SEC_OID_DHSINGLEPASS_COFACTORDH_SHA512KDF_SCHEME = 384,
+    SEC_OID_RC2_64_CBC = 385,
+    SEC_OID_RC2_128_CBC = 386,
+    SEC_OID_ECDH_KEA = 387,
 
     SEC_OID_TOTAL
 } SECOidTag;
@@ -559,21 +562,44 @@ struct SECOidDataStr {
  * These are algorithm policy Flags, used with functions
  * NSS_SetAlgorithmPolicy & NSS_GetAlgorithmPolicy.
  */
-#define NSS_USE_ALG_IN_CERT_SIGNATURE 0x00000001 /* CRLs and OCSP, too */
-#define NSS_USE_ALG_IN_CMS_SIGNATURE 0x00000002  /* used in S/MIME */
-#define NSS_USE_ALG_IN_SSL_KX 0x00000004         /* used in SSL key exchange */
-#define NSS_USE_ALG_IN_SSL 0x00000008            /* used in SSL record protocol */
-#define NSS_USE_POLICY_IN_SSL 0x00000010         /* enable policy in SSL protocol */
-#define NSS_USE_ALG_IN_ANY_SIGNATURE 0x00000020  /* used in any signature */
-#define NSS_USE_ALG_IN_PKCS12 0x00000040         /* used in pkcs12 */
-#define NSS_USE_DEFAULT_NOT_VALID 0x80000000     /* clear to make the default flag valid */
-#define NSS_USE_DEFAULT_SSL_ENABLE 0x40000000    /* default cipher suite setting 1=enable */
+#define NSS_USE_ALG_IN_CERT_SIGNATURE 0x00000001   /* CRLs and OCSP, too */
+#define NSS_USE_ALG_IN_SMIME_SIGNATURE 0x00000002  /* used in S/MIME */
+#define NSS_USE_ALG_IN_SSL_KX 0x00000004           /* used in SSL key exchange */
+#define NSS_USE_ALG_IN_SSL 0x00000008              /* used in SSL record protocol */
+#define NSS_USE_POLICY_IN_SSL 0x00000010           /* enable policy in SSL protocol */
+#define NSS_USE_ALG_IN_ANY_SIGNATURE 0x00000020    /* used in any signature */
+#define NSS_USE_ALG_IN_PKCS12_DECRYPT 0x00000040   /* used to decrypt pkcs12 */
+#define NSS_USE_ALG_IN_PKCS12_ENCRYPT 0x00000080   /* used encrypt pkcs12 */
+#define NSS_USE_ALG_IN_SMIME_LEGACY 0x00000100     /* used to decrypt smime */
+#define NSS_USE_ALG_IN_SMIME_ENCRYPT 0x00000200    /* used to decrypt smime */
+#define NSS_USE_ALG_IN_SMIME_KX_LEGACY 0x00000400  /* used to decrypt smime */
+#define NSS_USE_ALG_IN_SMIME_KX_ENCRYPT 0x00000800 /* used to decrypt smime */
+/* these flags are used by the automatic policy scheme to set the default values
+ * for enabling and disabling ciphers. Applications should use the enable/disable
+ * calls directly. */
+#define NSS_USE_DEFAULT_NOT_VALID 0x80000000  /* clear to make the default flag valid */
+#define NSS_USE_DEFAULT_SSL_ENABLE 0x40000000 /* default cipher suite setting 1=enable */
+/* S/MIME Enable sets the list of algorithms we advertise and which algorithms
+ * we will encrypt/decrypt with. We will decrypt anything that's allowable */
+#define NSS_USE_DEFAULT_SMIME_ENABLE 0x20000000 /* default cipher suite setting 1=enable */
 
-/* Combo policy bites */
-#define NSS_USE_ALG_RESERVED 0x3fffffc0 /* may be used in future */
+/* Combo policy bits */
+#define NSS_USE_ALG_RESERVED 0x1ffff000 /* may be used in future */
+/* both encrypt and decrypt PKCS 12 */
+#define NSS_USE_ALG_IN_PKCS12 (NSS_USE_ALG_IN_PKCS12_DECRYPT | \
+                               NSS_USE_ALG_IN_PKCS12_ENCRYPT)
+/* both encrypt and decrypt SMIME */
+#define NSS_USE_ALG_IN_SMIME (NSS_USE_ALG_IN_SMIME_LEGACY | \
+                              NSS_USE_ALG_IN_SMIME_ENCRYPT)
+/* both encrypt and decrypt key exchange */
+#define NSS_USE_ALG_IN_SMIME_KX (NSS_USE_ALG_IN_SMIME_KX_LEGACY | \
+                                 NSS_USE_ALG_IN_SMIME_KX_ENCRYPT)
+/* All the key exchange bits */
+#define NSS_USE_ALG_IN_KEY_EXCHANGE (NSS_USE_ALG_IN_SMIME_KX | \
+                                     NSS_USE_ALG_IN_SSL_KX)
 /* Alias of all the signature values. */
-#define NSS_USE_ALG_IN_SIGNATURE (NSS_USE_ALG_IN_CERT_SIGNATURE | \
-                                  NSS_USE_ALG_IN_CMS_SIGNATURE |  \
+#define NSS_USE_ALG_IN_SIGNATURE (NSS_USE_ALG_IN_CERT_SIGNATURE |  \
+                                  NSS_USE_ALG_IN_SMIME_SIGNATURE | \
                                   NSS_USE_ALG_IN_ANY_SIGNATURE)
 /* all the bits needed for a certificate signature
  * and only the bits needed for a certificate signature */
@@ -581,8 +607,12 @@ struct SECOidDataStr {
                                    NSS_USE_ALG_IN_ANY_SIGNATURE)
 /* all the bits needed for an SMIME signature
  * and only the bits needed for an SMIME signature */
-#define NSS_USE_CMS_SIGNATURE_OK (NSS_USE_ALG_IN_CMS_SIGNATURE | \
-                                  NSS_USE_ALG_IN_ANY_SIGNATURE)
+#define NSS_USE_SMIME_SIGNATURE_OK (NSS_USE_ALG_IN_SMIME_SIGNATURE | \
+                                    NSS_USE_ALG_IN_ANY_SIGNATURE)
+
+/* legacy names */
+#define NSS_USE_ALG_IN_CMS_SIGNATURE NSS_USE_ALG_IN_SMIME_SIGNATURE
+#define NSS_USE_ALG_CMS_SIGNATURE_OK NSS_USE_ALG_SMIME_SIGNATURE_OK
 
 /* Code MUST NOT SET or CLEAR reserved bits, and must NOT depend on them
  * being all zeros or having any other known value.  The reserved bits

@@ -241,6 +241,7 @@ sec_pkcs12_decoder_decryption_allowed(SECAlgorithmID *algid,
     PRBool decryptionAllowed = SEC_PKCS12DecryptionAllowed(algid);
 
     if (!decryptionAllowed) {
+        PORT_SetError(SEC_ERROR_BAD_EXPORT_ALGORITHM);
         return PR_FALSE;
     }
 
@@ -1325,17 +1326,14 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 {
     PK11Context *pk11cx = NULL;
     PK11SymKey *symKey = NULL;
-    SECItem *params = NULL;
     unsigned char *buf;
     SECStatus rv = SECFailure;
     SECStatus lrv;
     unsigned int bufLen;
-    int iteration;
     int bytesRead;
-    SECOidTag algtag;
     SECItem hmacRes;
     SECItem ignore = { 0 };
-    CK_MECHANISM_TYPE integrityMech;
+    CK_MECHANISM_TYPE hmacMech;
 
     if (!p12dcx || p12dcx->error) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1350,28 +1348,15 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 #endif
 
     /* generate hmac key */
-    if (p12dcx->macData.iter.data) {
-        iteration = (int)DER_GetInteger(&p12dcx->macData.iter);
-    } else {
-        iteration = 1;
-    }
-
-    params = PK11_CreatePBEParams(&p12dcx->macData.macSalt, p12dcx->pwitem,
-                                  iteration);
-
-    algtag = SECOID_GetAlgorithmTag(&p12dcx->macData.safeMac.digestAlgorithm);
-    integrityMech = sec_pkcs12_algtag_to_keygen_mech(algtag);
-    if (integrityMech == CKM_INVALID_MECHANISM) {
+    symKey = sec_pkcs12_integrity_key(p12dcx->slot, &p12dcx->macData,
+                                      p12dcx->pwitem, &hmacMech, PR_TRUE,
+                                      p12dcx->wincx);
+    if (symKey == NULL) {
         goto loser;
     }
-    symKey = PK11_KeyGen(NULL, integrityMech, params, 0, NULL);
-    PK11_DestroyPBEParams(params);
-    params = NULL;
-    if (!symKey)
-        goto loser;
+
     /* init hmac */
-    pk11cx = PK11_CreateContextBySymKey(sec_pkcs12_algtag_to_mech(algtag),
-                                        CKA_SIGN, symKey, &ignore);
+    pk11cx = PK11_CreateContextBySymKey(hmacMech, CKA_SIGN, symKey, &ignore);
     if (!pk11cx) {
         goto loser;
     }
@@ -1439,9 +1424,6 @@ loser:
 
     if (pk11cx) {
         PK11_DestroyContext(pk11cx, PR_TRUE);
-    }
-    if (params) {
-        PK11_DestroyPBEParams(params);
     }
     if (symKey) {
         PK11_FreeSymKey(symKey);
@@ -2470,6 +2452,12 @@ sec_pkcs12_add_key(sec_PKCS12SafeBag *key, SECKEYPublicKey *pubKey,
             SECAlgorithmID *algid =
                 &key->safeBagContent.pkcs8ShroudedKeyBag->algorithm;
             SECOidTag algorithm = SECOID_GetAlgorithmTag(algid);
+
+            if (!SEC_PKCS12DecryptionAllowed(algid)) {
+                key->error = SEC_ERROR_BAD_EXPORT_ALGORITHM;
+                key->problem = PR_TRUE;
+                return SECFailure;
+            }
 
             if (forceUnicode) {
                 if (SECITEM_CopyItem(NULL, &pwitem, key->pwitem) != SECSuccess) {

@@ -61,3 +61,31 @@ TEST_F(pkixcheck_CheckIssuer, EmptyIssuer)
 {
   ASSERT_EQ(Result::ERROR_EMPTY_ISSUER_NAME, CheckIssuer(EMPTY_NAME));
 }
+
+TEST_F(pkixcheck_CheckIssuer, TrailingData)
+{
+  static const uint8_t validNameData[] = {
+    0x30/*SEQUENCE*/, 0x02/*LENGTH=2*/,
+      0x31, 0x00 // the contents of the sequence aren't validated
+  };
+  static const Input validName(validNameData);
+  ASSERT_EQ(Success, CheckIssuer(validName));
+
+  static const uint8_t trailingDataData[] = {
+    0x30/*SEQUENCE*/, 0x02/*LENGTH=2*/,
+      0x31, 0x00, // the contents of the sequence aren't validated
+    0x77 // trailing data is invalid
+  };
+  static const Input trailingData(trailingDataData);
+  ASSERT_EQ(Result::ERROR_BAD_DER, CheckIssuer(trailingData));
+}
+
+TEST_F(pkixcheck_CheckIssuer, InvalidContents)
+{
+  static const uint8_t invalidContentsData[] = {
+    0x31/*SET (should be SEQUENCE)*/, 0x02/*LENGTH=2*/,
+      0x31, 0x00
+  };
+  static const Input invalidContents(invalidContentsData);
+  ASSERT_EQ(Result::ERROR_BAD_DER, CheckIssuer(invalidContents));
+}

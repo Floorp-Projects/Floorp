@@ -12,25 +12,18 @@
 #include "ciferfam.h" /* for CIPHER_FAMILY symbols */
 #include "secasn1.h"
 #include "secitem.h"
+#include "sechash.h"
 #include "cert.h"
 #include "keyhi.h"
 #include "secerr.h"
 #include "cms.h"
 #include "nss.h"
+#include "prerror.h"
+#include "prinit.h"
 
 SEC_ASN1_MKSUB(CERT_IssuerAndSNTemplate)
 SEC_ASN1_MKSUB(SEC_OctetStringTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_IssuerAndSNTemplate)
-
-/* various integer's ASN.1 encoding */
-static unsigned char asn1_int40[] = { SEC_ASN1_INTEGER, 0x01, 0x28 };
-static unsigned char asn1_int64[] = { SEC_ASN1_INTEGER, 0x01, 0x40 };
-static unsigned char asn1_int128[] = { SEC_ASN1_INTEGER, 0x02, 0x00, 0x80 };
-
-/* RC2 algorithm parameters (used in smime_cipher_map) */
-static SECItem param_int40 = { siBuffer, asn1_int40, sizeof(asn1_int40) };
-static SECItem param_int64 = { siBuffer, asn1_int64, sizeof(asn1_int64) };
-static SECItem param_int128 = { siBuffer, asn1_int128, sizeof(asn1_int128) };
 
 /*
  * XXX Would like the "parameters" field to be a SECItem *, but the
@@ -97,42 +90,540 @@ static const SEC_ASN1Template smime_encryptionkeypref_template[] = {
     { 0 }
 };
 
+/* table of implemented key exchange algorithms. As we add algorithms,
+ * update this table */
+static const SECOidTag implemented_key_encipherment[] = {
+    SEC_OID_PKCS1_RSA_ENCRYPTION,
+    SEC_OID_DHSINGLEPASS_STDDH_SHA1KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_STDDH_SHA224KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_STDDH_SHA256KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_STDDH_SHA384KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_STDDH_SHA512KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_COFACTORDH_SHA1KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_COFACTORDH_SHA224KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_COFACTORDH_SHA256KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_COFACTORDH_SHA384KDF_SCHEME,
+    SEC_OID_DHSINGLEPASS_COFACTORDH_SHA512KDF_SCHEME,
+};
+static const int implemented_key_encipherment_len =
+    PR_ARRAY_SIZE(implemented_key_encipherment);
+
 /* smime_cipher_map - map of SMIME symmetric "ciphers" to algtag & parameters */
 typedef struct {
     unsigned long cipher;
-    SECOidTag algtag;
-    SECItem *parms;
-    PRBool enabled; /* in the user's preferences */
-    PRBool allowed; /* per export policy */
-} smime_cipher_map_entry;
+    SECOidTag policytag;
+} smime_legacy_map_entry;
 
-/* global: list of supported SMIME symmetric ciphers, ordered roughly by increasing strength */
-static smime_cipher_map_entry smime_cipher_map[] = {
-    /*    cipher, algtag, parms, enabled, allowed    */
+/* legacy array of S/MIME values to map old SMIME entries to modern
+ * algtags. */
+static const smime_legacy_map_entry smime_legacy_map[] = {
+    /*    cipher, algtag, policy  */
     /*    ---------------------------------------    */
-    { SMIME_RC2_CBC_40, SEC_OID_RC2_CBC, &param_int40, PR_TRUE, PR_TRUE },
-    { SMIME_DES_CBC_56, SEC_OID_DES_CBC, NULL, PR_TRUE, PR_TRUE },
-    { SMIME_RC2_CBC_64, SEC_OID_RC2_CBC, &param_int64, PR_TRUE, PR_TRUE },
-    { SMIME_RC2_CBC_128, SEC_OID_RC2_CBC, &param_int128, PR_TRUE, PR_TRUE },
-    { SMIME_DES_EDE3_168, SEC_OID_DES_EDE3_CBC, NULL, PR_TRUE, PR_TRUE },
-    { SMIME_AES_CBC_128, SEC_OID_AES_128_CBC, NULL, PR_TRUE, PR_TRUE },
-    { SMIME_AES_CBC_256, SEC_OID_AES_256_CBC, NULL, PR_TRUE, PR_TRUE }
+    { SMIME_RC2_CBC_40, SEC_OID_RC2_40_CBC },
+    { SMIME_DES_CBC_56, SEC_OID_DES_CBC },
+    { SMIME_RC2_CBC_64, SEC_OID_RC2_64_CBC },
+    { SMIME_RC2_CBC_128, SEC_OID_RC2_128_CBC },
+    { SMIME_DES_EDE3_168, SEC_OID_DES_EDE3_CBC },
+    { SMIME_AES_CBC_128, SEC_OID_AES_128_CBC },
+    { SMIME_AES_CBC_256, SEC_OID_AES_256_CBC },
 };
-static const int smime_cipher_map_count = sizeof(smime_cipher_map) / sizeof(smime_cipher_map_entry);
+static const int smime_legacy_map_count = PR_ARRAY_SIZE(smime_legacy_map);
 
-/*
- * smime_mapi_by_cipher - find index into smime_cipher_map by cipher
- */
 static int
-smime_mapi_by_cipher(unsigned long cipher)
+smime_legacy_pref(SECOidTag algtag)
 {
     int i;
 
-    for (i = 0; i < smime_cipher_map_count; i++) {
-        if (smime_cipher_map[i].cipher == cipher)
-            return i; /* bingo */
+    for (i = 0; i < smime_legacy_map_count; i++) {
+        if (smime_legacy_map[i].policytag == algtag)
+            return i;
     }
-    return -1; /* should not happen if we're consistent, right? */
+    return -1;
+}
+
+/*
+ * smime_legacy_to policy - find policy algtag from a legacy input
+ */
+static SECOidTag
+smime_legacy_to_policy(unsigned long which)
+{
+    int i;
+
+    for (i = 0; i < smime_legacy_map_count; i++) {
+        if (smime_legacy_map[i].cipher == which)
+            return smime_legacy_map[i].policytag;
+    }
+    return SEC_OID_UNKNOWN;
+}
+
+/* map the old legacy values to modern oids. If the value isn't a recognized
+ * legacy value, assume it's a SECOidTag and continue. This allows us to use
+ * the old query and set interfaces with modern oids. */
+SECOidTag
+smime_legacy_to_oid(unsigned long which)
+{
+    unsigned long mask;
+
+    /* NOTE: all the legacy values and a CIPHER_FAMILYID of 0x00010000,
+     * (CIPHER_FAMILYID_MASK is 0xffff0000). SECOidTags start at 0 and
+     * increase monotonically, so as long as there is less than 16K of
+     * tags, we can distinguish between values intended to be SMIME ciphers
+     * and values intended to be SECOidTags */
+    mask = which & CIPHER_FAMILYID_MASK;
+    if (mask == CIPHER_FAMILYID_SMIME) {
+        return smime_legacy_to_policy(which);
+    }
+    return (SECOidTag)which;
+}
+
+/* SEC_OID_RC2_CBC is actually 3 ciphers with different key lengths. All modern
+ * symmetric ciphers include the key length with the oid. To handle policy for
+ * the different keylengths, we include fake oids that let us map the policy based
+ * on key length */
+static SECOidTag
+smime_get_policy_tag_from_key_length(SECOidTag algtag, unsigned long keybits)
+{
+    if (algtag == SEC_OID_RC2_CBC) {
+        switch (keybits) {
+            case 40:
+                return SEC_OID_RC2_40_CBC;
+            case 64:
+                return SEC_OID_RC2_64_CBC;
+            case 128:
+                return SEC_OID_RC2_128_CBC;
+            default:
+                break;
+        }
+        return SEC_OID_UNKNOWN;
+    }
+    return algtag;
+}
+
+PRBool
+smime_allowed_by_policy(SECOidTag algtag, PRUint32 neededPolicy)
+{
+    PRUint32 policyFlags;
+
+    /* some S/MIME algs map to the same underlying KEA mechanism,
+     * collaps them here */
+    if ((neededPolicy & (NSS_USE_ALG_IN_SMIME_KX | NSS_USE_ALG_IN_SMIME_KX_LEGACY)) != 0) {
+        CK_MECHANISM_TYPE mechType = PK11_AlgtagToMechanism(algtag);
+        switch (mechType) {
+            case CKM_ECDH1_DERIVE:
+            case CKM_ECDH1_COFACTOR_DERIVE:
+                algtag = SEC_OID_ECDH_KEA;
+                break;
+        }
+    }
+
+    if ((NSS_GetAlgorithmPolicy(algtag, &policyFlags) == SECFailure) ||
+        ((policyFlags & neededPolicy) != neededPolicy)) {
+        PORT_SetError(SEC_ERROR_BAD_EXPORT_ALGORITHM);
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+/*
+ * We'll need this for the fake policy oids for RC2, but the
+ * rest of these should be moved to pk11wrap for generic
+ * algtag to key size values. We already need this for
+ * sec_pkcs5v2_key_length_by oid.
+ */
+static int
+smime_keysize_by_cipher(SECOidTag algtag)
+{
+    int keysize;
+
+    switch (algtag) {
+        case SEC_OID_RC2_40_CBC:
+            keysize = 40;
+            break;
+        case SEC_OID_RC2_64_CBC:
+            keysize = 64;
+            break;
+        case SEC_OID_RC2_128_CBC:
+        case SEC_OID_AES_128_CBC:
+        case SEC_OID_CAMELLIA_128_CBC:
+            keysize = 128;
+            break;
+        case SEC_OID_AES_192_CBC:
+        case SEC_OID_CAMELLIA_192_CBC:
+            keysize = 192;
+            break;
+        case SEC_OID_AES_256_CBC:
+        case SEC_OID_CAMELLIA_256_CBC:
+            keysize = 256;
+            break;
+        default:
+            keysize = 0;
+            break;
+    }
+
+    return keysize;
+}
+
+static int
+smime_max_keysize_by_cipher(SECOidTag algtag)
+{
+    int keysize = smime_keysize_by_cipher(algtag);
+
+    if (keysize == 0) {
+        CK_MECHANISM_TYPE mech = PK11_AlgtagToMechanism(algtag);
+        return PK11_GetMaxKeyLength(mech) * PR_BITS_PER_BYTE;
+    }
+    return keysize;
+}
+
+SECOidTag
+smime_get_alg_from_policy(SECOidTag policy)
+{
+    switch (policy) {
+        case SEC_OID_RC2_40_CBC:
+        case SEC_OID_RC2_64_CBC:
+        case SEC_OID_RC2_128_CBC:
+            return SEC_OID_RC2_CBC;
+        default:
+            break;
+    }
+    return policy;
+}
+
+typedef struct SMIMEListStr {
+    SECOidTag *tags;
+    size_t space_len;
+    size_t array_len;
+} SMIMEList;
+
+static SMIMEList *smime_algorithm_list = NULL;
+static PZLock *algorithm_list_lock = NULL;
+static PRCallOnceType smime_init_arg = { 0 };
+
+/* return the number of algorithms in the list */
+size_t
+smime_list_length(const SMIMEList *list)
+{
+    if ((list == NULL) || (list->tags == NULL)) {
+        return 0;
+    }
+    return list->array_len;
+}
+
+/* find the index of the algtag in the list. If the algtag isn't on the list,
+ * return the size of the list */
+size_t
+smime_list_index_find(const SMIMEList *list, SECOidTag algtag)
+{
+    int i;
+    if ((list == NULL) || (list->tags == NULL)) {
+        return 0;
+    }
+    for (i = 0; i < list->array_len; i++) {
+        if (algtag == list->tags[i]) {
+            return i;
+        }
+    }
+    return list->array_len;
+}
+
+#define SMIME_CHUNK_COUNT 10
+/* initialize and grow the list if necessary */
+static SECStatus
+smime_list_grow(SMIMEList **list)
+{
+    /* first make sure the inital list is created */
+    if (*list == NULL) {
+        *list = PORT_ZNew(SMIMEList);
+        if (*list == NULL) {
+            return SECFailure;
+        }
+    }
+    /* make sure the tag array is intialized */
+    if ((*list)->tags == NULL) {
+        (*list)->tags = PORT_ZNewArray(SECOidTag, SMIME_CHUNK_COUNT);
+        if ((*list)->tags == NULL) {
+            return SECFailure;
+        }
+        (*list)->space_len = SMIME_CHUNK_COUNT;
+    }
+    /* grow the tag array if necessary */
+    if ((*list)->array_len == (*list)->space_len) {
+        SECOidTag *new_space;
+        size_t new_len = (*list)->space_len + SMIME_CHUNK_COUNT;
+        new_space = (SECOidTag *)PORT_Realloc((*list)->tags,
+                                              new_len * sizeof(SECOidTag));
+        if (new_space) {
+            return SECFailure;
+        }
+        (*list)->tags = new_space;
+        (*list)->space_len = new_len;
+    }
+    return SECSuccess;
+}
+
+/* add a new algtag to the list. if the algtag is already on the list,
+ * do nothing */
+static SECStatus
+smime_list_add(SMIMEList **list, SECOidTag algtag)
+{
+    SECStatus rv;
+    size_t array_len = smime_list_length(*list);
+    size_t c_index = smime_list_index_find(*list, algtag);
+
+    if (array_len != c_index) {
+        /* already on the list */
+        return SECSuccess;
+    }
+
+    /* go the list if necessary */
+    rv = smime_list_grow(list);
+    if (rv != SECSuccess) {
+        return rv;
+    }
+    (*list)->tags[(*list)->array_len++] = algtag;
+    return SECSuccess;
+}
+
+static SECStatus
+smime_list_remove(SMIMEList *list, SECOidTag algtag)
+{
+    size_t c_index, i;
+    size_t cipher_count = smime_list_length(list);
+
+    if (cipher_count == 0) {
+        return SECSuccess;
+    }
+    c_index = smime_list_index_find(list, algtag);
+    if (c_index == cipher_count) {
+        /* already removed from the list */
+        return SECSuccess;
+    }
+    for (i = c_index; i < cipher_count - 1; i++) {
+        list->tags[i] = list->tags[i + 1];
+    }
+    list->array_len--;
+    list->tags[i] = 0;
+    return SECSuccess;
+}
+
+static SECOidTag
+smime_list_fetch_by_index(const SMIMEList *list, size_t c_index)
+{
+    size_t cipher_count = smime_list_length(list);
+
+    if (c_index >= cipher_count) {
+        return SEC_OID_UNKNOWN;
+    }
+    /* we know this is safe because list cipher_count is non-zero (if it were
+     * any value of c_index will cause the above if to trigger */
+    return list->tags[c_index];
+}
+
+static void
+smime_free_list(SMIMEList **list)
+{
+    if (*list) {
+        if ((*list)->tags) {
+            PORT_Free((*list)->tags);
+        }
+        PORT_Free(*list);
+    }
+    *list = NULL;
+}
+
+static void
+smime_lock_algorithm_list(void)
+{
+    PORT_Assert(algorithm_list_lock);
+    if (algorithm_list_lock) {
+        PZ_Lock(algorithm_list_lock);
+    }
+    return;
+}
+
+static void
+smime_unlock_algorithm_list(void)
+{
+    PORT_Assert(algorithm_list_lock);
+    if (algorithm_list_lock) {
+        PZ_Unlock(algorithm_list_lock);
+    }
+    return;
+}
+
+static SECStatus
+smime_shutdown(void *appData, void *nssData)
+{
+    if (algorithm_list_lock) {
+        PZ_DestroyLock(algorithm_list_lock);
+        algorithm_list_lock = NULL;
+    }
+    smime_free_list(&smime_algorithm_list);
+    memset(&smime_init_arg, 0, sizeof(smime_init_arg));
+    return SECSuccess;
+}
+
+static PRStatus
+smime_init_once(void *arg)
+{
+    SECOidTag *tags = NULL;
+    SECStatus rv;
+    int tagCount;
+    int i;
+    int *error = (int *)arg;
+    int *lengths = NULL;
+    int *legacy_prefs = NULL;
+
+    rv = NSS_RegisterShutdown(smime_shutdown, NULL);
+    if (rv != SECSuccess) {
+        *error = PORT_GetError();
+        return PR_FAILURE;
+    }
+    algorithm_list_lock = PZ_NewLock(nssILockCache);
+    if (algorithm_list_lock == NULL) {
+        *error = PORT_GetError();
+        return PR_FAILURE;
+    }
+
+    /* At initialization time, we need to set up the defaults. We first
+     * look to see if the system or application has set up certain algorithms
+     * by policy. If they have set up values by policy we'll only allow those
+     * algorithms. We'll then look to see if any algorithms are enabled by
+     * the application. */
+    rv = NSS_GetAlgorithmPolicyAll(NSS_USE_ALG_IN_SMIME_LEGACY,
+                                   NSS_USE_ALG_IN_SMIME_LEGACY,
+                                   &tags, &tagCount);
+    if (tags) {
+        PORT_Free(tags);
+        tags = NULL;
+    }
+    if ((rv != SECSuccess) || (tagCount == 0)) {
+        /* No algorithms have been enabled by policy (either by the system
+         * or by the application, we then will use the traditional default
+         * algorithms from the policy map */
+        for (i = smime_legacy_map_count - 1; i >= 0; i--) {
+            SECOidTag policytag = smime_legacy_map[i].policytag;
+            /* this enables the algorithm by policy. We need this or
+             * the policy code will reject attempts to use it */
+            NSS_SetAlgorithmPolicy(policytag, NSS_USE_ALG_IN_SMIME, 0);
+            /* We also need to enable the algorithm. This is usually unde
+             * application control once the defaults are set up, so the
+             * application can turn off a policy that is already on, but
+             * not turn on a policy that is already off */
+            smime_list_add(&smime_algorithm_list, policytag);
+        }
+        return PR_SUCCESS;
+    }
+    /* We have a system supplied policy, do we also have
+     * system supplied defaults? If we do we will only actually
+     * turn on the algorithms that have been specified. */
+    rv = NSS_GetAlgorithmPolicyAll(NSS_USE_DEFAULT_NOT_VALID |
+                                       NSS_USE_DEFAULT_SMIME_ENABLE,
+                                   NSS_USE_DEFAULT_SMIME_ENABLE,
+                                   &tags, &tagCount);
+    /* if none found, enable the default algorithms */
+    if ((rv != SECSuccess) || (tagCount == 0)) {
+        if (tags) {
+            PORT_Free(tags);
+            tags = NULL;
+        }
+        for (i = smime_legacy_map_count - 1; i >= 0; i--) {
+            SECOidTag policytag = smime_legacy_map[i].policytag;
+            /* we only enable the default algorithm, we don't change 
+             * it's policy, which the system has already set. NOTE:
+             * what 'enable' means in the S/MIME sense is we advertise
+             * that we can do the given algorithm in our smime capabilities. */
+            smime_list_add(&smime_algorithm_list, policytag);
+        }
+        return PR_SUCCESS;
+    }
+
+    /* Sort tags by key strength here */
+    lengths = PORT_ZNewArray(int, tagCount);
+    if (lengths == NULL) {
+        *error = PORT_GetError();
+        goto loser;
+    }
+    legacy_prefs = PORT_ZNewArray(int, tagCount);
+    if (lengths == NULL) {
+        *error = PORT_GetError();
+        goto loser;
+    }
+    /* Sort the tags array, highest preference at index 0 */
+    for (i = 0; i < tagCount; i++) {
+        int len = smime_max_keysize_by_cipher(tags[i]);
+        int lpref = smime_legacy_pref(tags[i]);
+        SECOidTag current = tags[i];
+        PRBool shift = PR_FALSE;
+        int j;
+        /* Determine best position for tags[i].
+         * For each position j, check if tags [i] has a higher preference.
+         * If yes, store tags[i] at position j, and move all following
+         * entries one position to the back of the array.
+         */
+        for (j = 0; j < i; j++) {
+            int tlen = lengths[j];
+            int tpref = legacy_prefs[j];
+            SECOidTag ttag = tags[j];
+            /* we prefer ciphers with bigger keysizes, then
+             * we prefer ciphers in our historical list,
+             * then we prefer ciphers that show up first
+             * from the oid table */
+            if (shift || (len > tlen) || ((len == tlen) && (lpref > tpref))) {
+                tags[j] = current;
+                lengths[j] = len;
+                legacy_prefs[j] = lpref;
+                current = ttag;
+                len = tlen;
+                lpref = tpref;
+                shift = PR_TRUE;
+            }
+        }
+        tags[i] = current;
+        lengths[i] = len;
+        legacy_prefs[i] = lpref;
+    }
+
+    /* put them in the enable list */
+    for (i = 0; i < tagCount; i++) {
+        smime_list_add(&smime_algorithm_list, tags[i]);
+    }
+    PORT_Free(lengths);
+    PORT_Free(legacy_prefs);
+    PORT_Free(tags);
+    return PR_SUCCESS;
+loser:
+    if (lengths)
+        PORT_Free(lengths);
+    if (legacy_prefs)
+        PORT_Free(legacy_prefs);
+    if (tags)
+        PORT_Free(tags);
+    return PR_FAILURE;
+}
+
+static SECStatus
+smime_init(void)
+{
+    static PRBool smime_policy_initted = PR_FALSE;
+    static int error = 0;
+    PRStatus nrv;
+
+    /* has NSS been initialized? */
+    if (!NSS_IsInitialized()) {
+        PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+        return SECFailure;
+    }
+    if (smime_policy_initted) {
+        return SECSuccess;
+    }
+    nrv = PR_CallOnceWithArg(&smime_init_arg, smime_init_once, &error);
+    if (nrv == PR_SUCCESS) {
+        smime_policy_initted = PR_TRUE;
+        return SECSuccess;
+    }
+    PORT_SetError(error);
+    return SECFailure;
 }
 
 /*
@@ -141,31 +632,27 @@ smime_mapi_by_cipher(unsigned long cipher)
 SECStatus
 NSS_SMIMEUtil_EnableCipher(unsigned long which, PRBool on)
 {
-    unsigned long mask;
-    int mapi;
+    SECOidTag algtag;
 
-    mask = which & CIPHER_FAMILYID_MASK;
-
-    PORT_Assert(mask == CIPHER_FAMILYID_SMIME);
-    if (mask != CIPHER_FAMILYID_SMIME)
-        /* XXX set an error! */
+    SECStatus rv = smime_init();
+    if (rv != SECSuccess) {
         return SECFailure;
+    }
 
-    mapi = smime_mapi_by_cipher(which);
-    if (mapi < 0)
-        /* XXX set an error */
-        return SECFailure;
-
-    /* do we try to turn on a forbidden cipher? */
-    if (!smime_cipher_map[mapi].allowed && on) {
+    algtag = smime_legacy_to_oid(which);
+    if (!smime_allowed_by_policy(algtag, NSS_USE_ALG_IN_SMIME)) {
         PORT_SetError(SEC_ERROR_BAD_EXPORT_ALGORITHM);
         return SECFailure;
     }
 
-    if (smime_cipher_map[mapi].enabled != on)
-        smime_cipher_map[mapi].enabled = on;
-
-    return SECSuccess;
+    smime_lock_algorithm_list();
+    if (on) {
+        rv = smime_list_add(&smime_algorithm_list, algtag);
+    } else {
+        rv = smime_list_remove(smime_algorithm_list, algtag);
+    }
+    smime_unlock_algorithm_list();
+    return rv;
 }
 
 /*
@@ -174,99 +661,131 @@ NSS_SMIMEUtil_EnableCipher(unsigned long which, PRBool on)
 SECStatus
 NSS_SMIMEUtil_AllowCipher(unsigned long which, PRBool on)
 {
-    unsigned long mask;
-    int mapi;
-
-    mask = which & CIPHER_FAMILYID_MASK;
-
-    PORT_Assert(mask == CIPHER_FAMILYID_SMIME);
-    if (mask != CIPHER_FAMILYID_SMIME)
-        /* XXX set an error! */
+    SECOidTag algtag = smime_legacy_to_oid(which);
+    PRUint32 set = on ? NSS_USE_ALG_IN_SMIME : 0;
+    PRUint32 clear = on ? 0 : NSS_USE_ALG_IN_SMIME;
+    /* make sure we are inited before setting, so
+     * the defaults are correct */
+    SECStatus rv = smime_init();
+    if (rv != SECSuccess) {
         return SECFailure;
-
-    mapi = smime_mapi_by_cipher(which);
-    if (mapi < 0)
-        /* XXX set an error */
-        return SECFailure;
-
-    if (smime_cipher_map[mapi].allowed != on)
-        smime_cipher_map[mapi].allowed = on;
-
-    return SECSuccess;
-}
-
-/*
- * Based on the given algorithm (including its parameters, in some cases!)
- * and the given key (may or may not be inspected, depending on the
- * algorithm), find the appropriate policy algorithm specification
- * and return it.  If no match can be made, -1 is returned.
- */
-static SECStatus
-nss_smime_get_cipher_for_alg_and_key(SECAlgorithmID *algid, PK11SymKey *key,
-                                     unsigned long *cipher)
-{
-    SECOidTag algtag;
-    unsigned int keylen_bits;
-    unsigned long c;
-
-    algtag = SECOID_GetAlgorithmTag(algid);
-    switch (algtag) {
-        case SEC_OID_RC2_CBC:
-            keylen_bits = PK11_GetKeyStrength(key, algid);
-            switch (keylen_bits) {
-                case 40:
-                    c = SMIME_RC2_CBC_40;
-                    break;
-                case 64:
-                    c = SMIME_RC2_CBC_64;
-                    break;
-                case 128:
-                    c = SMIME_RC2_CBC_128;
-                    break;
-                default:
-                    return SECFailure;
-            }
-            break;
-        case SEC_OID_DES_CBC:
-            c = SMIME_DES_CBC_56;
-            break;
-        case SEC_OID_DES_EDE3_CBC:
-            c = SMIME_DES_EDE3_168;
-            break;
-        case SEC_OID_AES_128_CBC:
-            c = SMIME_AES_CBC_128;
-            break;
-        case SEC_OID_AES_256_CBC:
-            c = SMIME_AES_CBC_256;
-            break;
-        default:
-            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-            return SECFailure;
     }
-    *cipher = c;
-    return SECSuccess;
-}
 
-static PRBool
-nss_smime_cipher_allowed(unsigned long which)
-{
-    int mapi;
-
-    mapi = smime_mapi_by_cipher(which);
-    if (mapi < 0)
-        return PR_FALSE;
-    return smime_cipher_map[mapi].allowed;
+    return NSS_SetAlgorithmPolicy(algtag, set, clear);
 }
 
 PRBool
 NSS_SMIMEUtil_DecryptionAllowed(SECAlgorithmID *algid, PK11SymKey *key)
 {
-    unsigned long which;
+    SECOidTag algtag;
+    /* make sure we are inited before checking policy, so
+     * the defaults are correct */
+    SECStatus rv = smime_init();
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
 
-    if (nss_smime_get_cipher_for_alg_and_key(algid, key, &which) != SECSuccess)
-        return PR_FALSE;
+    algtag = smime_get_policy_tag_from_key_length(SECOID_GetAlgorithmTag(algid),
+                                                  PK11_GetKeyStrength(key, algid));
+    return smime_allowed_by_policy(algtag, NSS_USE_ALG_IN_SMIME_LEGACY);
+}
 
-    return nss_smime_cipher_allowed(which);
+PRBool
+NSS_SMIMEUtil_EncryptionAllowed(SECAlgorithmID *algid, PK11SymKey *key)
+{
+    SECOidTag algtag;
+    /* make sure we are inited before checking policy, so
+     * the defaults are correct */
+    SECStatus rv = smime_init();
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    algtag = smime_get_policy_tag_from_key_length(SECOID_GetAlgorithmTag(algid),
+                                                  PK11_GetKeyStrength(key, algid));
+    return smime_allowed_by_policy(algtag, NSS_USE_ALG_IN_SMIME);
+}
+
+PRBool
+NSS_SMIMEUtil_SigningAllowed(SECAlgorithmID *algid)
+{
+    SECOidTag algtag;
+    /* we don't adjust SIGNATURE policy based on defaults, so no need
+     * to call smime_init() */
+
+    algtag = SECOID_GetAlgorithmTag(algid);
+    return smime_allowed_by_policy(algtag, NSS_USE_ALG_IN_SMIME_SIGNATURE);
+}
+
+static PRBool
+nss_smime_enforce_key_size(void)
+{
+    PRInt32 optFlags;
+
+    if (NSS_OptionGet(NSS_KEY_SIZE_POLICY_FLAGS, &optFlags) != SECFailure) {
+        if (optFlags & NSS_KEY_SIZE_POLICY_SMIME_FLAG) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
+PRBool
+NSS_SMIMEUtil_KeyEncodingAllowed(SECAlgorithmID *algid, CERTCertificate *cert,
+                                 SECKEYPublicKey *key)
+{
+    SECOidTag algtag;
+    /* we don't adjust KEA policy based on defaults, so no need
+     * to call smime_init() */
+
+    /* if required, make sure the key lengths are enforced */
+    if (nss_smime_enforce_key_size()) {
+        SECStatus rv;
+        PRBool freeKey = PR_FALSE;
+
+        if (!key) {
+            /* either the public key or the cert must be supplied. If the
+             * key wasn't supplied, get it from the certificate */
+            if (!cert) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return PR_FALSE;
+            }
+            key = CERT_ExtractPublicKey(cert);
+            freeKey = PR_TRUE;
+        }
+        rv = SECKEY_EnforceKeySize(key->keyType,
+                                   SECKEY_PublicKeyStrengthInBits(key),
+                                   SEC_ERROR_BAD_EXPORT_ALGORITHM);
+        if (freeKey) {
+            SECKEY_DestroyPublicKey(key);
+        }
+        if (rv != SECSuccess) {
+            return PR_FALSE;
+        }
+    }
+    algtag = SECOID_GetAlgorithmTag(algid);
+    return smime_allowed_by_policy(algtag, NSS_USE_ALG_IN_SMIME_KX);
+}
+
+PRBool
+NSS_SMIMEUtil_KeyDecodingAllowed(SECAlgorithmID *algid, SECKEYPrivateKey *key)
+{
+    SECOidTag algtag;
+    /* we don't adjust KEA policy based on defaults, so no need
+     * to call smime_init() */
+
+    /* if required, make sure the key lengths are enforced */
+    if (nss_smime_enforce_key_size()) {
+        SECStatus rv;
+        rv = SECKEY_EnforceKeySize(key->keyType,
+                                   SECKEY_PrivateKeyStrengthInBits(key),
+                                   SEC_ERROR_BAD_EXPORT_ALGORITHM);
+        if (rv != SECSuccess) {
+            return PR_FALSE;
+        }
+    }
+    algtag = SECOID_GetAlgorithmTag(algid);
+    return smime_allowed_by_policy(algtag, NSS_USE_ALG_IN_SMIME_KX_LEGACY);
 }
 
 /*
@@ -290,89 +809,142 @@ NSS_SMIMEUtil_DecryptionAllowed(SECAlgorithmID *algid, PK11SymKey *key)
 PRBool
 NSS_SMIMEUtil_EncryptionPossible(void)
 {
-    int i;
-
-    for (i = 0; i < smime_cipher_map_count; i++) {
-        if (smime_cipher_map[i].allowed)
-            return PR_TRUE;
+    SECStatus rv = smime_init();
+    size_t len;
+    if (rv != SECSuccess) {
+        return SECFailure;
     }
-    return PR_FALSE;
+    smime_lock_algorithm_list();
+    len = smime_list_length(smime_algorithm_list);
+    smime_unlock_algorithm_list();
+    return len != 0 ? PR_TRUE : PR_FALSE;
 }
 
-static int
+PRBool
+NSS_SMIMEUtil_EncryptionEnabled(int which)
+{
+    SECOidTag algtag;
+    size_t c_index, len;
+
+    SECStatus rv = smime_init();
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    algtag = smime_legacy_to_oid(which);
+
+    smime_lock_algorithm_list();
+    len = smime_list_length(smime_algorithm_list);
+    c_index = smime_list_index_find(smime_algorithm_list, algtag);
+    smime_unlock_algorithm_list();
+
+    if (len >= c_index) {
+        return PR_FALSE;
+    }
+
+    return smime_allowed_by_policy(algtag, NSS_USE_ALG_IN_SMIME);
+}
+
+static SECOidTag
 nss_SMIME_FindCipherForSMIMECap(NSSSMIMECapability *cap)
 {
-    int i;
     SECOidTag capIDTag;
 
     /* we need the OIDTag here */
     capIDTag = SECOID_FindOIDTag(&(cap->capabilityID));
 
-    /* go over all the SMIME ciphers we know and see if we find a match */
-    for (i = 0; i < smime_cipher_map_count; i++) {
-        if (smime_cipher_map[i].algtag != capIDTag)
-            continue;
-        /*
-         * XXX If SECITEM_CompareItem allowed NULLs as arguments (comparing
-         * 2 NULLs as equal and NULL and non-NULL as not equal), we could
-         * use that here instead of all of the following comparison code.
-         */
-        if (!smime_cipher_map[i].parms) {
-            if (!cap->parameters.data || !cap->parameters.len)
-                break; /* both empty: bingo */
-            if (cap->parameters.len == 2 &&
-                cap->parameters.data[0] == SEC_ASN1_NULL &&
-                cap->parameters.data[1] == 0)
-                break; /* DER NULL == NULL, bingo */
-        } else if (cap->parameters.data != NULL &&
-                   cap->parameters.len == smime_cipher_map[i].parms->len &&
-                   PORT_Memcmp(cap->parameters.data, smime_cipher_map[i].parms->data,
-                               cap->parameters.len) == 0) {
-            break; /* both not empty, same length & equal content: bingo */
+    /* RC2 used a generic oid and encoded the key length in the
+     * parameters */
+    if (capIDTag == SEC_OID_RC2_CBC) {
+        SECStatus rv;
+        unsigned long key_bits;
+        SECItem keyItem = { siBuffer, NULL, 0 };
+
+        rv = SEC_ASN1DecodeItem(NULL, &keyItem,
+                                SEC_ASN1_GET(SEC_IntegerTemplate), &cap->parameters);
+        if (rv != SECSuccess) {
+            return SEC_OID_UNKNOWN;
         }
+        rv = SEC_ASN1DecodeInteger(&keyItem, &key_bits);
+        SECITEM_FreeItem(&keyItem, PR_FALSE);
+        if (rv != SECSuccess) {
+            return SEC_OID_UNKNOWN;
+        }
+        return smime_get_policy_tag_from_key_length(capIDTag, key_bits);
     }
 
-    if (i == smime_cipher_map_count)
-        return 0;                      /* no match found */
-    return smime_cipher_map[i].cipher; /* match found, point to cipher */
+    /* everything else uses a null parameter */
+    if (!cap->parameters.data || !cap->parameters.len) {
+        return capIDTag;
+    }
+    if (cap->parameters.len == 2 &&
+        cap->parameters.data[0] == SEC_ASN1_NULL &&
+        cap->parameters.data[1] == 0) {
+        return capIDTag;
+    }
+    return SEC_OID_UNKNOWN;
 }
 
 /*
  * smime_choose_cipher - choose a cipher that works for all the recipients
  *
- * "scert"  - sender's certificate
  * "rcerts" - recipient's certificates
  */
-static long
-smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
+static SECOidTag
+smime_choose_cipher(CERTCertificate **rcerts)
 {
-    PLArenaPool *poolp;
-    long cipher;
-    long chosen_cipher;
+    PLArenaPool *poolp = NULL;
+    SECOidTag chosen_cipher = SEC_OID_UNKNOWN;
+    size_t cipher_count;
+    SECOidTag cipher;
     int *cipher_abilities;
     int *cipher_votes;
-    int weak_mapi;
-    int strong_mapi;
-    int aes128_mapi;
-    int aes256_mapi;
-    int rcount, mapi, max, i;
+    size_t weak_index;
+    size_t strong_index;
+    size_t aes128_index;
+    size_t aes256_index;
+    size_t c_index;
+    int rcount, max;
 
-    chosen_cipher = SMIME_RC2_CBC_40; /* the default, LCD */
-    weak_mapi = smime_mapi_by_cipher(chosen_cipher);
-    aes128_mapi = smime_mapi_by_cipher(SMIME_AES_CBC_128);
-    aes256_mapi = smime_mapi_by_cipher(SMIME_AES_CBC_256);
+    smime_lock_algorithm_list();
+    cipher_count = smime_list_length(smime_algorithm_list);
+    if (cipher_count == 0) {
+        goto done;
+    }
+
+    chosen_cipher = SEC_OID_RC2_40_CBC; /* the default, LCD */
+    weak_index = smime_list_index_find(smime_algorithm_list, chosen_cipher);
+    strong_index = smime_list_index_find(smime_algorithm_list, SEC_OID_DES_EDE3_CBC);
+    aes128_index = smime_list_index_find(smime_algorithm_list, SEC_OID_AES_128_CBC);
+    aes256_index = smime_list_index_find(smime_algorithm_list, SEC_OID_AES_256_CBC);
+    /* make sure the default selected cipher is enabled */
+    if (weak_index == cipher_count) {
+        chosen_cipher = SEC_OID_DES_EDE3_CBC;
+        if (strong_index == cipher_count) {
+            chosen_cipher = SEC_OID_AES_128_CBC;
+            if (aes128_index == cipher_count) {
+                chosen_cipher = SEC_OID_AES_256_CBC;
+                if (aes256_index == cipher_count) {
+                    /* none of the standard algorithms are enabled, If the
+                     * recipients don't explicitly include a better cipher
+                     * then fail */
+                    chosen_cipher = SEC_OID_UNKNOWN;
+                }
+            }
+        }
+    }
 
     poolp = PORT_NewArena(1024); /* XXX what is right value? */
     if (poolp == NULL)
         goto done;
 
-    cipher_abilities = (int *)PORT_ArenaZAlloc(poolp, smime_cipher_map_count * sizeof(int));
-    cipher_votes = (int *)PORT_ArenaZAlloc(poolp, smime_cipher_map_count * sizeof(int));
-    if (cipher_votes == NULL || cipher_abilities == NULL)
+    cipher_abilities = PORT_ArenaZNewArray(poolp, int, cipher_count + 1);
+    cipher_votes = PORT_ArenaZNewArray(poolp, int, cipher_count + 1);
+    if (cipher_votes == NULL || cipher_abilities == NULL) {
         goto done;
+    }
 
     /* Make triple-DES the strong cipher. */
-    strong_mapi = smime_mapi_by_cipher(SMIME_DES_EDE3_168);
 
     /* walk all the recipient's certs */
     for (rcount = 0; rcerts[rcount] != NULL; rcount++) {
@@ -381,9 +953,9 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
         int pref;
 
         /* the first cipher that matches in the user's SMIME profile gets
-         * "smime_cipher_map_count" votes; the next one gets "smime_cipher_map_count" - 1
+         * "cipher_count" votes; the next one gets "cipher_count" - 1
          * and so on. If every cipher matches, the last one gets 1 (one) vote */
-        pref = smime_cipher_map_count;
+        pref = cipher_count;
 
         /* find recipient's SMIME profile */
         profile = CERT_FindSMimeProfile(rcerts[rcount]);
@@ -395,14 +967,15 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
             if (SEC_QuickDERDecodeItem(poolp, &caps,
                                        NSSSMIMECapabilitiesTemplate, profile) == SECSuccess &&
                 caps != NULL) {
+                int i;
                 /* walk the SMIME capabilities for this recipient */
                 for (i = 0; caps[i] != NULL; i++) {
                     cipher = nss_SMIME_FindCipherForSMIMECap(caps[i]);
-                    mapi = smime_mapi_by_cipher(cipher);
-                    if (mapi >= 0) {
+                    c_index = smime_list_index_find(smime_algorithm_list, cipher);
+                    if (c_index < cipher_count) {
                         /* found the cipher */
-                        cipher_abilities[mapi]++;
-                        cipher_votes[mapi] += pref;
+                        cipher_abilities[c_index]++;
+                        cipher_votes[c_index] += pref;
                         --pref;
                     }
                 }
@@ -444,17 +1017,19 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
                  * security strength so that symmetric key is not weak link. */
 
                 /* RC2-40 is not compatible with elliptic curve keys. */
-                chosen_cipher = SMIME_DES_EDE3_168;
+                if (chosen_cipher == SEC_OID_RC2_40_CBC) {
+                    chosen_cipher = SEC_OID_AES_128_CBC;
+                }
                 if (pklen_bits > 256) {
-                    cipher_abilities[aes256_mapi]++;
-                    cipher_votes[aes256_mapi] += pref;
+                    cipher_abilities[aes256_index]++;
+                    cipher_votes[aes256_index] += pref;
                     pref--;
                 }
-                cipher_abilities[aes128_mapi]++;
-                cipher_votes[aes128_mapi] += pref;
+                cipher_abilities[aes128_index]++;
+                cipher_votes[aes128_index] += pref;
                 pref--;
-                cipher_abilities[strong_mapi]++;
-                cipher_votes[strong_mapi] += pref;
+                cipher_abilities[strong_index]++;
+                cipher_votes[strong_index] += pref;
                 pref--;
             } else {
                 if (pklen_bits > 3072) {
@@ -463,8 +1038,8 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
                      * bits provide more than 128 bits of security strength.
                      * So, AES 256 should be used to provide comparable
                      * security. */
-                    cipher_abilities[aes256_mapi]++;
-                    cipher_votes[aes256_mapi] += pref;
+                    cipher_abilities[aes256_index]++;
+                    cipher_votes[aes256_index] += pref;
                     pref--;
                 }
                 if (pklen_bits > 1023) {
@@ -472,20 +1047,20 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
                      * that RSA and DSA signature keys SHOULD NOT be less than
                      * 1024 bits. So, cast vote for AES 128 if key length
                      * is at least 1024 bits. */
-                    cipher_abilities[aes128_mapi]++;
-                    cipher_votes[aes128_mapi] += pref;
+                    cipher_abilities[aes128_index]++;
+                    cipher_votes[aes128_index] += pref;
                     pref--;
                 }
                 if (pklen_bits > 512) {
                     /* cast votes for the strong algorithm */
-                    cipher_abilities[strong_mapi]++;
-                    cipher_votes[strong_mapi] += pref;
+                    cipher_abilities[strong_index]++;
+                    cipher_votes[strong_index] += pref;
                     pref--;
                 }
 
                 /* always cast (possibly less) votes for the weak algorithm */
-                cipher_abilities[weak_mapi]++;
-                cipher_votes[weak_mapi] += pref;
+                cipher_abilities[weak_index]++;
+                cipher_votes[weak_index] += pref;
             }
         }
         if (profile != NULL)
@@ -494,68 +1069,31 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
 
     /* find cipher that is agreeable by all recipients and that has the most votes */
     max = 0;
-    for (mapi = 0; mapi < smime_cipher_map_count; mapi++) {
+    for (c_index = 0; c_index < cipher_count; c_index++) {
         /* if not all of the recipients can do this, forget it */
-        if (cipher_abilities[mapi] != rcount)
+        if (cipher_abilities[c_index] != rcount)
             continue;
-        /* if cipher is not enabled or not allowed by policy, forget it */
-        if (!smime_cipher_map[mapi].enabled || !smime_cipher_map[mapi].allowed)
+        cipher = smime_list_fetch_by_index(smime_algorithm_list, c_index);
+        /* if cipher is allowed by policy, forget it */
+        if (!smime_allowed_by_policy(cipher, NSS_USE_ALG_IN_SMIME)) {
             continue;
+        }
         /* now see if this one has more votes than the last best one */
-        if (cipher_votes[mapi] >= max) {
+        if (cipher_votes[c_index] >= max) {
             /* if equal number of votes, prefer the ones further down in the list */
             /* with the expectation that these are higher rated ciphers */
-            chosen_cipher = smime_cipher_map[mapi].cipher;
-            max = cipher_votes[mapi];
+            chosen_cipher = cipher;
+            max = cipher_votes[c_index];
         }
     }
     /* if no common cipher was found, chosen_cipher stays at the default */
 
 done:
+    smime_unlock_algorithm_list();
     if (poolp != NULL)
         PORT_FreeArena(poolp, PR_FALSE);
 
     return chosen_cipher;
-}
-
-/*
- * XXX This is a hack for now to satisfy our current interface.
- * Eventually, with more parameters needing to be specified, just
- * looking up the keysize is not going to be sufficient.
- */
-static int
-smime_keysize_by_cipher(unsigned long which)
-{
-    int keysize;
-
-    switch (which) {
-        case SMIME_RC2_CBC_40:
-            keysize = 40;
-            break;
-        case SMIME_RC2_CBC_64:
-            keysize = 64;
-            break;
-        case SMIME_RC2_CBC_128:
-        case SMIME_AES_CBC_128:
-            keysize = 128;
-            break;
-        case SMIME_AES_CBC_256:
-            keysize = 256;
-            break;
-        case SMIME_DES_CBC_56:
-        case SMIME_DES_EDE3_168:
-            /*
-         * These are special; since the key size is fixed, we actually
-         * want to *avoid* specifying a key size.
-         */
-            keysize = 0;
-            break;
-        default:
-            keysize = -1;
-            break;
-    }
-
-    return keysize;
 }
 
 /*
@@ -568,18 +1106,68 @@ SECStatus
 NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts,
                                        SECOidTag *bulkalgtag, int *keysize)
 {
-    unsigned long cipher;
-    int mapi;
+    SECOidTag cipher;
 
-    cipher = smime_choose_cipher(NULL, rcerts);
-    mapi = smime_mapi_by_cipher(cipher);
+    SECStatus rv = smime_init();
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
 
-    *bulkalgtag = smime_cipher_map[mapi].algtag;
-    *keysize = smime_keysize_by_cipher(smime_cipher_map[mapi].cipher);
+    cipher = smime_choose_cipher(rcerts);
+    if (cipher == SEC_OID_UNKNOWN) {
+        PORT_SetError(SEC_ERROR_BAD_EXPORT_ALGORITHM);
+        return SECFailure;
+    }
+
+    *bulkalgtag = smime_get_alg_from_policy(cipher);
+    *keysize = smime_keysize_by_cipher(cipher);
 
     return SECSuccess;
 }
 
+/*
+ * Create a new Capability from an oid tag
+ */
+static NSSSMIMECapability *
+smime_create_capability(SECOidTag cipher)
+{
+    NSSSMIMECapability *cap = NULL;
+    SECOidData *oiddata = NULL;
+    SECItem *dummy = NULL;
+
+    oiddata = SECOID_FindOIDByTag(smime_get_alg_from_policy(cipher));
+    if (oiddata == NULL) {
+        return NULL;
+    }
+
+    cap = PORT_ZNew(NSSSMIMECapability);
+    if (cap == NULL) {
+        return NULL;
+    }
+
+    cap->capabilityID.data = oiddata->oid.data;
+    cap->capabilityID.len = oiddata->oid.len;
+    if (cipher == SEC_OID_RC2_CBC) {
+        SECItem keyItem = { siBuffer, NULL, 0 };
+        unsigned long keybits = smime_get_alg_from_policy(cipher);
+        dummy = SEC_ASN1EncodeInteger(NULL, &keyItem, keybits);
+        if (dummy == NULL) {
+            PORT_Free(cap);
+            return NULL;
+        }
+        dummy = SEC_ASN1EncodeItem(NULL, &cap->parameters,
+                                   &keyItem, SEC_ASN1_GET(SEC_IntegerTemplate));
+        SECITEM_FreeItem(&keyItem, PR_FALSE);
+        if (dummy == NULL) {
+            PORT_Free(cap);
+            return NULL;
+        }
+    } else {
+        cap->parameters.data = NULL;
+        cap->parameters.len = 0;
+    }
+    return cap;
+}
 /*
  * NSS_SMIMEUtil_CreateSMIMECapabilities - get S/MIME capabilities for this instance of NSS
  *
@@ -595,58 +1183,115 @@ NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts,
 SECStatus
 NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest)
 {
-    NSSSMIMECapability *cap;
-    NSSSMIMECapability **smime_capabilities;
-    smime_cipher_map_entry *map;
-    SECOidData *oiddata;
-    SECItem *dummy;
+    NSSSMIMECapability *cap = NULL;
+    NSSSMIMECapability **smime_capabilities = NULL;
+    SECItem *dummy = NULL;
     int i, capIndex;
+    int cap_count;
+    int cipher_count;
+    int hash_count;
 
-    /* if we have an old NSSSMIMECapability array, we'll reuse it (has the right size) */
-    /* smime_cipher_map_count + 1 is an upper bound - we might end up with less */
-    smime_capabilities = (NSSSMIMECapability **)PORT_ZAlloc((smime_cipher_map_count + 1) * sizeof(NSSSMIMECapability *));
-    if (smime_capabilities == NULL)
+    SECStatus rv = smime_init();
+    if (rv != SECSuccess) {
         return SECFailure;
+    }
+    /* First get the hash count */
+    for (i = HASH_AlgNULL + 1;; i++) {
+        if (HASH_GetHashOidTagByHashType(i) == SEC_OID_UNKNOWN) {
+            break;
+        }
+    }
+    hash_count = i - 1;
+
+    smime_lock_algorithm_list();
+    /* now get the cipher count */
+    cipher_count = smime_list_length(smime_algorithm_list);
+    if (cipher_count == 0) {
+        smime_unlock_algorithm_list();
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        return SECFailure;
+    }
+
+    cap_count = cipher_count + hash_count + implemented_key_encipherment_len;
+
+    /* cipher_count + 1 is an upper bound - we might end up with less */
+    smime_capabilities = PORT_ZNewArray(NSSSMIMECapability *, cap_count + 1);
+    if (smime_capabilities == NULL) {
+        smime_unlock_algorithm_list();
+        return SECFailure;
+    }
 
     capIndex = 0;
 
     /* Add all the symmetric ciphers
-     * We walk the cipher list backwards, as it is ordered by increasing strength,
+     * We walk the cipher list,  as it is ordered by decreasing strength,
      * we prefer the stronger cipher over a weaker one, and we have to list the
      * preferred algorithm first */
-    for (i = smime_cipher_map_count - 1; i >= 0; i--) {
-        /* Find the corresponding entry in the cipher map. */
-        map = &(smime_cipher_map[i]);
-        if (!map->enabled)
-            continue;
+    for (i = 0; i < cipher_count; i++) {
+        SECOidTag cipher = smime_list_fetch_by_index(smime_algorithm_list, i);
 
-        /* get next SMIME capability */
-        cap = (NSSSMIMECapability *)PORT_ZAlloc(sizeof(NSSSMIMECapability));
+        /* is it allowed by policy? */
+        if (!smime_allowed_by_policy(cipher, NSS_USE_ALG_IN_SMIME)) {
+            continue;
+        }
+        cipher = smime_get_alg_from_policy(cipher);
+
+        cap = smime_create_capability(cipher);
         if (cap == NULL)
             break;
         smime_capabilities[capIndex++] = cap;
+    }
+    /* add signature algorithms = hash algs.
+     * probably also need to figure how what
+     * actual signatures we support in secvfy
+     * as well. We currently don't look a these
+     * when choosing hash and signature (hash is
+     * chosen by the application and signature
+     * type is chosen by the signing cert/key) */
+    smime_unlock_algorithm_list();
+    for (i = HASH_AlgNULL + 1; i < hash_count + 1; i++) {
+        SECOidTag hash_alg = HASH_GetHashOidTagByHashType(i);
 
-        oiddata = SECOID_FindOIDByTag(map->algtag);
-        if (oiddata == NULL)
+        if (!smime_allowed_by_policy(hash_alg,
+                                     NSS_USE_ALG_IN_SMIME_SIGNATURE | NSS_USE_ALG_IN_SIGNATURE)) {
+            continue;
+        }
+        cap = smime_create_capability(hash_alg);
+        /* get next SMIME capability */
+        if (cap == NULL)
             break;
-
-        cap->capabilityID.data = oiddata->oid.data;
-        cap->capabilityID.len = oiddata->oid.len;
-        cap->parameters.data = map->parms ? map->parms->data : NULL;
-        cap->parameters.len = map->parms ? map->parms->len : 0;
-        cap->cipher = smime_cipher_map[i].cipher;
+        smime_capabilities[capIndex++] = cap;
     }
 
-    /* XXX add signature algorithms */
-    /* XXX add key encipherment algorithms */
+    /* add key encipherment algorithms . These are static
+     * to the s/mime library, so we can just use the table.
+     * new kea algs should be implemented. We don't use these
+     * because the senders key pretty much selects what time
+     * of kea we are going to implement */
+    for (i = 0; i < implemented_key_encipherment_len; i++) {
+        SECOidTag kea_alg = implemented_key_encipherment[i];
+
+        if (!smime_allowed_by_policy(kea_alg, NSS_USE_ALG_IN_SMIME_KX)) {
+            continue;
+        }
+        cap = smime_create_capability(kea_alg);
+        /* get next SMIME capability */
+        if (cap == NULL)
+            break;
+        smime_capabilities[capIndex++] = cap;
+    }
 
     smime_capabilities[capIndex] = NULL; /* last one - now encode */
     dummy = SEC_ASN1EncodeItem(poolp, dest, &smime_capabilities, NSSSMIMECapabilitiesTemplate);
 
     /* now that we have the proper encoded SMIMECapabilities (or not),
      * free the work data */
-    for (i = 0; smime_capabilities[i] != NULL; i++)
+    for (i = 0; smime_capabilities[i] != NULL; i++) {
+        if (smime_capabilities[i]->parameters.data) {
+            PORT_Free(smime_capabilities[i]->parameters.data);
+        }
         PORT_Free(smime_capabilities[i]);
+    }
     PORT_Free(smime_capabilities);
 
     return (dummy == NULL) ? SECFailure : SECSuccess;

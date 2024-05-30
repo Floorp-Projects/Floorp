@@ -942,24 +942,14 @@ PKCS12U_MapHashFromString(char *hashString)
     }
     /* make sure it's a hashing oid */
     if (HASH_GetHashTypeByOidTag(hashAlg) == HASH_AlgNULL) {
-        return SEC_OID_UNKNOWN;
+        /* allow HMAC here. HMAC implies PKCS 5 v2 pba */
+        SECOidTag baseHashAlg = HASH_GetHashOidTagByHMACOidTag(hashAlg);
+        if (baseHashAlg == SEC_OID_UNKNOWN) {
+            /* not an hmac either, reject the entry */
+            return SEC_OID_UNKNOWN;
+        }
     }
     return hashAlg;
-}
-
-static void
-p12u_EnableAllCiphers()
-{
-    SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
-    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
-    SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
-    SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
-    SEC_PKCS12EnableCipher(PKCS12_AES_CBC_128, 1);
-    SEC_PKCS12EnableCipher(PKCS12_AES_CBC_192, 1);
-    SEC_PKCS12EnableCipher(PKCS12_AES_CBC_256, 1);
-    SEC_PKCS12SetPreferredCipher(PKCS12_AES_CBC_256, 1);
 }
 
 static PRUintn
@@ -983,7 +973,8 @@ P12U_Init(char *dir, char *dbprefix, PRBool listonly)
     PORT_SetUCS2_ASCIIConversionFunction(p12u_ucs2_ascii_conversion_function);
     /* use the defaults for UCS4-UTF8 and UCS2-UTF8 */
 
-    p12u_EnableAllCiphers();
+    /* ciphers are already enabled by default, allow policy to work */
+    /* p12u_EnableAllCiphers(); */
 
     return 0;
 }
@@ -1173,6 +1164,10 @@ main(int argc, char **argv)
                 goto done;
             }
         }
+    }
+    /* in FIPS mode default to encoding with pkcs5v2 for the MAC */
+    if (PK11_IsFIPS()) {
+        hash = SEC_OID_HMAC_SHA256;
     }
     if (pk12util.options[opt_Mac].activated) {
         char *hashString = pk12util.options[opt_Mac].arg;

@@ -1,0 +1,111 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License: v. 2.0. If a copy of the MPL was not distributed with this
+# file: You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file enables policy testing
+#
+# The policy string is set to the config= line in the pkcs11.txt
+# it currently has 2 keywords:
+#
+# disallow= turn off the use of this algorithm by policy. (implies disable)
+# allow= allow this algorithm to by used if selected by policy.
+# disable= turn off the use of this algorithm even if allowed by policy
+#          (application can override)
+# enable= turn off this algorithm by default (implies allow)
+# flags= policy-lock: can't change policy with NSS_SetAlgorithmPolicy:
+#  NSS_SetOption: or SSL_SetCipherPolicy
+#        ssl-lock: can't change the cipher suite settings with the application.
+#
+# The syntax is disallow=algorithm{/uses}:algorithm{/uses}
+# where {} signifies an optional element
+#
+# Signatures:
+#	DSA
+#	RSA-PKCS
+#	RSA-PSS
+#       ECDSA
+# Hashes:
+#	MD2
+#	MD4
+#	MD5
+#	SHA1
+#	SHA224
+#	SHA256
+#	SHA384
+#	SHA512
+#	SHA3_224
+#	SHA3_256
+#	SHA3_384
+#	SHA3_512
+# Ciphers:
+#	AES128-CBC
+#	AES192-CBC
+#	AES256-CBC
+#	CAMELLIA128-CBC
+#	CAMELLIA192-CBC
+#	CAMELLIA256-CBC
+#	SEED-CBC
+#	DES-EDE3-CBC
+#	RC2-40-CBC
+#	RC2-64-CBC
+#	RC2-128-CBC
+# Key exchange
+#	RSA-PKCS
+#	RSA-OAEP
+#	DH
+#	ECDH
+# Include all of the above:
+#       ALL
+#-----------------------------------------------
+# Uses are:
+#    pkcs12
+#    pkcs12-legacy
+#    legacy
+#    all (includes all of the above)
+#
+# error codes from pk12util:
+#
+# KEY-ENCRYPT-FAILED       28 (PK12UERR_ADDCERTKEY)
+# CERT-ENCRYPT-FAILED      27 (PK12UERR_CERTKEYSAFE)
+# INTEGRITY-ENCRYPT_FAILED 29 (PK12UERR_ENCODE)
+# KEY-DECRYPT-FAILED       19 (PK12UERR_DECODEIMPTBAGS)
+# CERT-DECRYPT-FAILED      18 (PK12UERR_DECODEVALIBAGS)
+# INTEGRITY-DECRYPT_FAILED 17 (PK12UERR_DECODEVERIFY)
+#
+# The tests below uses the error codes when if forces policy failures
+# on particular operations.
+#
+#exp imp exp_policy imp_policy key_cipher cert_cipher  hash Test Name
+  0  0 allow=tls  allow=tls AES-128-CBC AES-128-CBC SHA-256  Use default policy and enable
+  0  0 allow=all  allow=all AES-128-CBC AES-128-CBC SHA-256  allow all
+ 27  x disallow=all_allow=all/legacy disallow_all_allow=all/legacy AES-128-CBC AES-128-CBC SHA-256  Only allow legacy read (write)
+  0  0 allow=all  disallow=all_allow=all/legacy AES-128-CBC AES-128-CBC SHA-256  Only allow legacy read (read)
+ 28  x disallow=aes128-cbc disallow_all_allow=all/legacy AES-128-CBC AES-256-CBC SHA-256  Disallow AES-128-CBC, key_encrypt=AES-128-CBC (write)
+  0 19 allow=all disallow=aes128-cbc AES-128-CBC AES-256-CBC SHA-256 Disallow AES-128-CBC, key_decrypt=AES-128-CBC (read)
+ 27  x disallow=aes128-cbc disallow_all_allow=all/legacy AES-256-CBC AES-128-CBC SHA-256  Disallow AES-128-CBC, cert_encrypt=AES-128-CBC (write cert)
+  0 18 allow=all disallow=aes128-cbc AES-256-CBC AES-128-CBC SHA-256 Disallow AES-128-CBC, cert_decrypt=AES-128-CBC (read cert)
+  0  0 allow=all allow=all PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC4 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC SHA-1  allow all, RC4 and RC2
+ 28  x disallow=rc4 allow=all PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC4 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC SHA-1  disallow rc4 (write), RC4 and RC2
+ 27  x disallow=rc2 allow=all PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC4 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC SHA-1  disallow rc2 (write), RC4 and RC2
+  0 19 allow_all disallow=rc4 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC4 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC SHA-1  disallow rc4 (read), RC4 and RC2
+  0 18 allow_all disallow=rc2 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC4 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC SHA-1  disallow rc2 (read), RC4 and RC2
+# integrity policy check the various has based controls.
+#  NOTE: md4, md2, and md5 are turned off by policy by default for encrypting
+# (decrypting is fine). To be enabled, you must allow=all or allow=mdX on the
+# encryption side. These tests purposefully tests that the default fails to encrypt
+# but succeeds when decrypting.
+ 27  x allow=tls allow=tls PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Use default policy with multiple hashes
+  0  0 allow=all allow=tls PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Allow all encrypt, use default decrypt with multiple hashes
+  0  0 allow=all allow=all PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Allow all with multiple hashes
+ 28  x disallow=sha1_allow=md2 allow=all PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow sha1 on write
+ 27  x disallow=md2 allow=all PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow md2 on write
+ 29  x disallow=sha256_allow=md2 allow=all PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow sha256 on write
+  0 19 allow=all disallow=sha1 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow sha1 on read
+  0 18 allow=all disallow=md2 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow md2 on read
+  0 17 allow=all disallow=sha256 PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow sha256 on read
+  0  0 allow=all disallow=md2/pkcs12-encrypt PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow md2 on read
+  0  0 allow=all disallow=sha1/pkcs12-encrypt PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow sha1 on read
+  0  0 allow=all disallow=sha256/pkcs12-encrypt PKCS_#12_V2_PBE_With_SHA-1_And_128_Bit_RC2_CBC PKCS_#5_Password_Based_Encryption_with_MD2_and_DES-CBC SHA-256 Disallow sha256 on read
+  0  0 allow=all allow=all AES-128-CBC AES-128-CBC HMAC_SHA-256
+ 29  x disallow=hmac-sha256 allow=all AES-128-CBC AES-128-CBC HMAC_SHA-256
+  0 18 allow=all disallow=hmac-sha256 AES-128-CBC AES-128-CBC HMAC_SHA-256

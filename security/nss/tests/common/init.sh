@@ -140,8 +140,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         echo "NSS_SSL_RUN=\"${NSS_SSL_RUN}\""
         echo "NSS_DEFAULT_DB_TYPE=${NSS_DEFAULT_DB_TYPE}"
         echo "export NSS_DEFAULT_DB_TYPE"
-        echo "NSS_ENABLE_PKIX_VERIFY=${NSS_ENABLE_PKIX_VERIFY}"
-        echo "export NSS_ENABLE_PKIX_VERIFY"
+        echo "NSS_DISABLE_PKIX_VERIFY=${NSS_DISABLE_PKIX_VERIFY}"
+        echo "export NSS_DISABLE_PKIX_VERIFY"
         echo "init_directories"
     }
 
@@ -322,7 +322,48 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
       fi
     }
 
+    save_pkcs11()
+    {
+      outdir="$1"
+      cp ${outdir}/pkcs11.txt ${outdir}/pkcs11.txt.sav
+    }
 
+    restore_pkcs11()
+    {
+      outdir="$1"
+      cp ${outdir}/pkcs11.txt.sav ${outdir}/pkcs11.txt
+    }
+
+    # create a new pkcs11.txt with and explict policy. overwrites
+    # the existing pkcs11
+    setup_policy()
+    {
+      policy="$1"
+      outdir="$2"
+      OUTFILE="${outdir}/pkcs11.txt"
+      cat > "$OUTFILE" << ++EOF++
+library=
+name=NSS Internal PKCS #11 Module
+parameters=configdir='./client' certPrefix='' keyPrefix='' secmod='secmod.db' flags= updatedir='' updateCertPrefix='' updateKeyPrefix='' updateid='' updateTokenDescription=''
+NSS=Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES,Camellia,SEED,SHA256,SHA512] askpw=any timeout=30})
+++EOF++
+      echo "config=${policy}" >> "$OUTFILE"
+      echo "" >> "$OUTFILE"
+      echo "library=${DIST}/${OBJDIR}/lib/libnssckbi.so" >> "$OUTFILE"
+      cat >> "$OUTFILE" << ++EOF++
+name=RootCerts
+NSS=trustOrder=100
+++EOF++
+
+      echo "******************************Testing $outdir with: "
+      cat "$OUTFILE"
+      echo "******************************"
+    }
+
+    ignore_blank_lines()
+    {
+      LC_ALL=C egrep -v '^[[:space:]]*(#|$)' "$1"
+    }
 
 #directory name init
     SCRIPTNAME=init.sh

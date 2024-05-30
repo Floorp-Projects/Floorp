@@ -1345,7 +1345,7 @@ SECKEY_CopyPublicKey(const SECKEYPublicKey *pubk)
  * size.
  */
 SECStatus
-seckey_EnforceKeySize(KeyType keyType, unsigned keyLength, SECErrorCodes error)
+SECKEY_EnforceKeySize(KeyType keyType, unsigned keyLength, SECErrorCodes error)
 {
     PRInt32 opt = -1;
     PRInt32 optVal;
@@ -2310,10 +2310,18 @@ sec_GetHashMechanismByOidTag(SECOidTag tag)
     }
 }
 
-static CK_RSA_PKCS_MGF_TYPE
-sec_GetMgfTypeByOidTag(SECOidTag tag)
+CK_RSA_PKCS_MGF_TYPE
+SEC_GetMgfTypeByOidTag(SECOidTag tag)
 {
     switch (tag) {
+        case SEC_OID_SHA3_512:
+            return CKG_MGF1_SHA3_512;
+        case SEC_OID_SHA3_384:
+            return CKG_MGF1_SHA3_384;
+        case SEC_OID_SHA3_256:
+            return CKG_MGF1_SHA3_256;
+        case SEC_OID_SHA3_224:
+            return CKG_MGF1_SHA3_224;
         case SEC_OID_SHA512:
             return CKG_MGF1_SHA512;
         case SEC_OID_SHA384:
@@ -2415,7 +2423,8 @@ sec_DecodeRSAPSSParams(PLArenaPool *arena,
 SECStatus
 sec_DecodeRSAPSSParamsToMechanism(PLArenaPool *arena,
                                   const SECItem *params,
-                                  CK_RSA_PKCS_PSS_PARAMS *mech)
+                                  CK_RSA_PKCS_PSS_PARAMS *mech,
+                                  SECOidTag *hashAlgp)
 {
     SECOidTag hashAlg;
     SECOidTag maskHashAlg;
@@ -2427,13 +2436,14 @@ sec_DecodeRSAPSSParamsToMechanism(PLArenaPool *arena,
     if (rv != SECSuccess) {
         return SECFailure;
     }
+    *hashAlgp = hashAlg;
 
     mech->hashAlg = sec_GetHashMechanismByOidTag(hashAlg);
     if (mech->hashAlg == CKM_INVALID_MECHANISM) {
         return SECFailure;
     }
 
-    mech->mgf = sec_GetMgfTypeByOidTag(maskHashAlg);
+    mech->mgf = SEC_GetMgfTypeByOidTag(maskHashAlg);
     if (mech->mgf == 0) {
         return SECFailure;
     }

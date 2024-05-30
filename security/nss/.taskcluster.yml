@@ -76,6 +76,16 @@ tasks:
         features:
           taskclusterProxy: true
 
+        artifacts:
+          'public/docker-contexts':
+            type: 'directory'
+            path: '/home/worker/docker-contexts'
+            # This needs to be at least the deadline of the
+            # decision task + the docker-image task deadlines.
+            # It is set to a week to allow for some time for
+            # debugging, but they are not useful long-term.
+            expires: {$fromNow: '7 day'}
+
       extra:
         treeherder:
           symbol: D

@@ -20,11 +20,6 @@ const ACVP_IMAGE = {
   path: "automation/taskcluster/docker-acvp"
 };
 
-const ECCKIILA_IMAGE = {
-  name: "ecckiila",
-  path: "automation/taskcluster/docker-ecckiila"
-};
-
 const CLANG_FORMAT_IMAGE = {
   name: "clang-format",
   path: "automation/taskcluster/docker-clang-format"
@@ -1180,17 +1175,6 @@ async function scheduleTools() {
     ]
   }));
   
-  queue.scheduleTask(merge(base, {
-    symbol: "ecckiila",
-    name: "ecckiila",
-    image: ECCKIILA_IMAGE,
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && bin/ecckiila.sh && bin/run.sh"
-    ]
-  }));
-
   queue.scheduleTask(merge(base, {
     symbol: "Coverage",
     name: "Coverage",

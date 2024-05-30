@@ -585,13 +585,13 @@ typedef enum {
     ssl_dhe_group_max
 } SSLDHEGroupType;
 
-/* RFC 8879: TLS Certificate Compression - 3. Negotiating Certificate Compression 
+/* RFC 8879: TLS Certificate Compression - 3. Negotiating Certificate Compression
 ** enum {
 **  zlib(1),
 **  brotli(2),
 **  zstd(3),
 **  (65535)
-** } CertificateCompressionAlgorithm; 
+** } CertificateCompressionAlgorithm;
 */
 typedef PRUint16 SSLCertificateCompressionAlgorithmID;
 
@@ -599,7 +599,11 @@ typedef struct SSLCertificateCompressionAlgorithmStr {
     SSLCertificateCompressionAlgorithmID id;
     const char* name;
     SECStatus (*encode)(const SECItem* input, SECItem* output);
-    SECStatus (*decode)(const SECItem* input, SECItem* output, size_t expectedLenDecodedCertificate);
+    /* outputLen is the length of the output buffer passed by NSS to the decode function.
+     * Decode should return an error code if the decoding fails or the output buffer is not big enough.
+     * usedLen is an outparam which indicates the number of bytes the decoder consumed from output.
+     * Note: usedLen is always <= outputLen. */
+    SECStatus (*decode)(const SECItem* input, unsigned char* output, size_t outputLen, size_t* usedLen);
 } SSLCertificateCompressionAlgorithm;
 
 #endif /* __sslt_h_ */

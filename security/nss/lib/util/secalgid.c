@@ -7,6 +7,7 @@
 #include "secasn1.h"
 #include "secitem.h"
 #include "secerr.h"
+#include "nsshash.h"
 
 SECOidTag
 SECOID_GetAlgorithmTag(const SECAlgorithmID *id)
@@ -15,6 +16,26 @@ SECOID_GetAlgorithmTag(const SECAlgorithmID *id)
         return SEC_OID_UNKNOWN;
 
     return SECOID_FindOIDTag(&(id->algorithm));
+}
+
+static PRBool
+secoid_IsRSAPKCS1(SECOidTag which)
+{
+    switch (which) {
+        case SEC_OID_PKCS1_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
+            return PR_TRUE;
+        default:
+            break;
+    }
+    return PR_FALSE;
 }
 
 SECStatus
@@ -33,29 +54,11 @@ SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *id, SECOidTag which,
     if (SECITEM_CopyItem(arena, &id->algorithm, &oiddata->oid))
         return SECFailure;
 
-    switch (which) {
-        case SEC_OID_MD2:
-        case SEC_OID_MD4:
-        case SEC_OID_MD5:
-        case SEC_OID_SHA1:
-        case SEC_OID_SHA224:
-        case SEC_OID_SHA256:
-        case SEC_OID_SHA384:
-        case SEC_OID_SHA512:
-        case SEC_OID_PKCS1_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
-            add_null_param = PR_TRUE;
-            break;
-        default:
-            add_null_param = PR_FALSE;
-            break;
+    if ((secoid_IsRSAPKCS1(which)) ||
+        (HASH_GetHashTypeByOidTag(which) != HASH_AlgNULL)) {
+        add_null_param = PR_TRUE;
+    } else {
+        add_null_param = PR_FALSE;
     }
 
     if (params) {

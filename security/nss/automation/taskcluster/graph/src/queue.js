@@ -107,6 +107,10 @@ function convertTask(def) {
   if (def.parents) {
     dependencies = dependencies.concat(def.parents);
   }
+  if (dependencies.length === 0) {
+    // If task has no dependencies, make it depend on the Decision task.
+    dependencies.push(process.env.TASK_ID);
+  }
 
   if (def.tests) {
     env.NSS_TESTS = def.tests;

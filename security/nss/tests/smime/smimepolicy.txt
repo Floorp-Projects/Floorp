@@ -1,0 +1,91 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License: v. 2.0. If a copy of the MPL was not distributed with this
+# file: You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file enables policy testing
+#
+# The policy string is set to the config= line in the pkcs11.txt
+# it currently has 2 keywords:
+#
+# disallow= turn off the use of this algorithm by policy. (implies disable)
+# allow= allow this algorithm to by used if selected by policy.
+# disable= turn off the use of this algorithm even if allowed by policy
+#          (application can override)
+# enable= turn off this algorithm by default (implies allow)
+# flags= policy-lock: can't change policy with NSS_SetAlgorithmPolicy:
+#  NSS_SetOption: or SSL_SetCipherPolicy
+#        ssl-lock: can't change the cipher suite settings with the application.
+#
+# The syntax is disallow=algorithm{/uses}:algorithm{/uses}
+# where {} signifies an optional element
+#
+# Signatures:
+#	DSA
+#	RSA-PKCS
+#	RSA-PSS
+#       ECDSA
+# Hashes:
+#	MD2
+#	MD4
+#	MD5
+#	SHA1
+#	SHA224
+#	SHA256
+#	SHA384
+#	SHA512
+#	SHA3_224
+#	SHA3_256
+#	SHA3_384
+#	SHA3_512
+# Ciphers:
+#	AES128-CBC
+#	AES192-CBC
+#	AES256-CBC
+#	CAMELLIA128-CBC
+#	CAMELLIA192-CBC
+#	CAMELLIA256-CBC
+#	SEED-CBC
+#	DES-EDE3-CBC
+#	RC2-40-CBC
+#	RC2-64-CBC
+#	RC2-128-CBC
+# Key exchange
+#	RSA-PKCS
+#	RSA-OAEP
+#	DH
+#	ECDH
+# Include all of the above:
+#       ALL
+#-----------------------------------------------
+# Uses are:
+#    smime
+#    smime-legacy
+#    smime-key-exchange
+#    key-exchange (includes smime-key-exchange)
+#    cert-signature
+#    smime-signature  (=cms-signature)
+#    all-signature (includes cert-signature)
+#    signature (all signatures off: some signature allowed based on other option)
+#    all (includes all of the above)
+#
+# NOTE: the certificates used in validation are rsa-pkcs1/sha256 signed.
+#
+# Sign Vfy Enc Dec hash rec_email rec_name rec_policy snd_name snd_policy alg Test Name
+  0 0 0 0 SHA256 dave@example.com Dave enable=hmac-sha1 Alice enable=hmac-sha1 AES-256-CBC  Use default policy and enable
+  0 0 0 0 SHA512 bob@example.com Bob enable=aes256-cbc Alice enable=aes256-cbc AES-256-CBC Only enable aes-256
+  0 0 0 0 SHA512 bob@example.com Bob enable=camellia256-cbc Alice enable=camellia256-cbc CAMELLIA-256-CBC Only enable camellia
+  0 0 1 x SHA1 bob@example.com Bob allow=aes128-cbc:aes192-cbc:aes256-cbc:camellia128-cbc:camellia192-cbc:camellia256-cbc:des-ede3-cbc:rc2-40-cbc:rc2-64-cbc:rc2-128-cbc Alice enable=camellia256-cbc NONE-FAILURE Bob allows all: enables default, alice allows and enables camellia
+  0 0 0 1 SHA384 bob@example.com Bob enable=camellia256-cbc Alice allow=aes128-cbc:aes192-cbc:aes256-cbc:camellia128-cbc:camellia192-cbc:camellia256-cbc:des-ede3-cbc:rc2-40-cbc:rc2-64-cbc:rc2-128-cbc RC2-CBC Alice allows all: enables default, bob allows and enables camellia
+  0 0 1 x SHA384 bob@example.com Bob enable=aes256-cbc Alice enable=camellia256-cbc NONE-FAILURE Bob Only enables aes Alice Only enables camellia
+  0 0 0 0 SHA384 bob@example.com Bob enable=camellia256-cbc Alice enable=aes128-cbc:aes192-cbc:aes256-cbc:camellia128-cbc:camellia192-cbc:camellia256-cbc:des-ede3-cbc:rc2-40-cbc:rc2-64-cbc:rc2-128-cbc CAMELLIA-256-CBC Alice enable all explicit, bob allows and enables camellia
+  0 0 0 0 SHA1 bob@example.com Bob enable=aes128-cbc:aes192-cbc:aes256-cbc:camellia128-cbc:camellia192-cbc:camellia256-cbc:des-ede3-cbc:rc2-40-cbc:rc2-64-cbc:rc2-128-cbc Alice enable=camellia256-cbc CAMELLIA-256-CBC Bob enables all explicit, alice allows and enables camellia
+  0 0 0 1 SHA256 dave@example.com Dave disallow=rsa-pkcs/smime-key-exchange Alice enable=hmac-sha1 AES-256-CBC  turn off RSA key exchange (decrypt)
+  1 x x x SHA-1 dave@example.com Dave disallow=sha1/smime-signature Alice enable=hmac-sha1 NONE-FAILURE turn off sha-1 for S/MIME (generate sig)
+  0 1 x x SHA-1 dave@example.com Dave enable=hmac-sha1 Alice disallow=sha1/smime-signature  NONE-FAILURE turn off sha-1 for S/MIME (verify sig)
+  0 0 1 x SHA256 dave@example.com Dave enable-hmac-sha1 Alice disallow=rsa-pkcs/smime-key-exchange NONE-FAILURE turn off RSA key exchange (encrypt)
+  0 0 1 x SHA256 dave@example.com Dave enable-hmac-sha1 Alice disallow=rsa-pkcs/smime-key-exchange_allow=rsa-pkcs/smime-key-echange_legacy NONE_FAILURE turn off RSA key exchange for encrypt only (try to encrypt)
+  0 0 0 0 SHA256 dave@example.com Dave disallow=rsa-pkcs/smime-key-exchange-encrypt Alice enable=hmac-sha1 AES-256-CBC  turn off RSA key exchange for encrypt only (try to decrypt)
+  1 x x x SHA256 dave@example.com Dave allow=rsa-min=3000 Alice allow=all NONE-FAILED  Enforce all key size policy on Sender
+  0 1 x x SHA256 dave@example.com Dave allow=all Alice allow=rsa-min=3000 NONE-FAILED  Enforce all key size policy on Recipient
+  0 0 1 x SHA256 dave@example.com Dave allow=all Alice allow=key-size-flags=key-size-smime:rsa-min=3000 NONE-FAILED  Enforce KEA key size policy on Recipient
+  0 0 0 1 SHA256 dave@example.com Dave allow=key-size-flags=key-size-smime:rsa-min=3000 Alice allow=all AES-256-CBC  Enforce KEA key size policy on Sender

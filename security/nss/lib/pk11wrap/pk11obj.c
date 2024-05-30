@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include "seccomon.h"
+#include "secder.h"
 #include "secmod.h"
 #include "secmodi.h"
 #include "secmodti.h"
@@ -1805,6 +1806,55 @@ PK11_ReadRawAttributes(PLArenaPool *arena, PK11ObjectType objType, void *objSpec
         return SECFailure;
     }
     return SECSuccess;
+}
+
+SECStatus
+PK11_ReadDistrustAfterAttribute(PK11SlotInfo *slot,
+                                CK_OBJECT_HANDLE object,
+                                CK_ATTRIBUTE_TYPE type,
+                                /* out */ PRBool *distrusted,
+                                /* out */ PRTime *time)
+{
+    if (!slot || !distrusted || !time) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (type != CKA_NSS_SERVER_DISTRUST_AFTER && type != CKA_NSS_EMAIL_DISTRUST_AFTER) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    // The CKA_NSS_SERVER_DISTRUST_AFTER and CKA_NSS_EMAIL_DISTRUST_AFTER
+    // attributes have either a 13 byte UTCTime value or a 1 byte value
+    // (equal to 0) indicating that no distrust after date is set.
+    unsigned char buf[13] = { 0 };
+    CK_ATTRIBUTE attr = { .type = type, .pValue = buf, .ulValueLen = sizeof buf };
+    CK_RV crv;
+
+    PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_GetAttributeValue(slot->session, object, &attr, 1);
+    PK11_ExitSlotMonitor(slot);
+    if (crv != CKR_OK) {
+        PORT_SetError(PK11_MapError(crv));
+        return SECFailure;
+    }
+
+    if (attr.ulValueLen == 1 && buf[0] == 0) {
+        // The distrust after date is not set.
+        *distrusted = PR_FALSE;
+        return SECSuccess;
+    }
+
+    if (attr.ulValueLen != sizeof buf) {
+        // Ensure the date is encoded in the expected 13 byte format.
+        PORT_SetError(SEC_ERROR_INVALID_TIME);
+        return SECFailure;
+    }
+
+    *distrusted = PR_TRUE;
+    SECItem item = { siUTCTime, buf, sizeof buf };
+    return DER_UTCTimeToTime(time, &item);
 }
 
 /*

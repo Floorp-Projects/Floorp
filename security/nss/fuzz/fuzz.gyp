@@ -9,6 +9,9 @@
     'variables': {
       'debug_optimization_level': '2',
     },
+    'cflags_cc': [
+        '-Wno-vla-extension',
+    ],
     'target_conditions': [
       [ '_type=="executable"', {
         'libraries!': [
