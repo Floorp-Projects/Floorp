@@ -7270,11 +7270,16 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(
   // Ensure that the passed-in BrowsingContextGroup is valid.
   RefPtr<BrowsingContextGroup> group =
       BrowsingContextGroup::GetOrCreate(aGroupId);
-  if (parent && parent->Group() != group) {
+  if (parent) {
     if (parent->Group()->Id() != aGroupId) {
       return IPC_FAIL(this, "Parent has different group ID");
     }
-    return IPC_FAIL(this, "Parent has different group object");
+    if (parent->IsDiscarded()) {
+      return IPC_FAIL(this, "Parent is discarded");
+    }
+    if (parent->Group() != group) {
+      return IPC_FAIL(this, "Parent has different group object");
+    }
   }
   if (opener && opener->Group() != group) {
     if (opener->Group()->Id() != aGroupId) {
