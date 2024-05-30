@@ -11,6 +11,9 @@ permalink: /changelog/
   * Added new parameters for `showRefreshButton` and `showMenu` to `CustomTabsToolbarButtonConfig`, see [Bug 1897811](https://bugzilla.mozilla.org/show_bug.cgi?id=1897811).
   * Added a new parameter for `refreshListener` and moved `shareListener` to `CustomTabsToolbarListeners`, see [Bug 1897811](https://bugzilla.mozilla.org/show_bug.cgi?id=1897811).
 
+* **browser-state**, **browser-engine-gecko**
+    * Added a new parameter `adjustPriority` to `onCheckForFormData`, `UpdateHasFormDataAction` and `checkForFormData` to specify whether or not to adjust session priority after checking from data. [Bug 1893846](https://bugzilla.mozilla.org/show_bug.cgi?id=1893846)
+
 # 127.0
 
 * **feature-prompts** **browser-storage-sync**
