@@ -1256,3 +1256,17 @@ SECMOD_LockedModuleHasRemovableSlots;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.101 { 	# NSS 3.101 release
+;+    global:
+HASH_GetHashOidTagByHMACOidTag;
+PK11_GetMaxKeyLength;
+PK11_ReadDistrustAfterAttribute;
+SEC_GetMgfTypeByOidTag;
+SEC_PKCS5GetCryptoFromAlgTag;
+SEC_PKCS5GetHashAlgorithm;
+SEC_PKCS5GetHashFromAlgTag;
+SECKEY_EnforceKeySize;
+SECKEY_PrivateKeyStrengthInBits;
+;+    local:
+;+       *;
+;+};

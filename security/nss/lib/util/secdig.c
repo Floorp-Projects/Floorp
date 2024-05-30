@@ -6,6 +6,8 @@
 #include "secoid.h"
 #include "secasn1.h"
 #include "secerr.h"
+#include "hasht.h"
+#include "nsshash.h"
 
 /*
  * XXX Want to have a SGN_DecodeDigestInfo, like:
@@ -38,20 +40,10 @@ SGN_CreateDigestInfo(SECOidTag algorithm, const unsigned char *sig,
     SECItem *null_param;
     SECItem dummy_value;
 
-    switch (algorithm) {
-        case SEC_OID_MD2:
-        case SEC_OID_MD5:
-        case SEC_OID_SHA1:
-        case SEC_OID_SHA224:
-        case SEC_OID_SHA256:
-        case SEC_OID_SHA384:
-        case SEC_OID_SHA512:
-            break;
-        default:
-            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-            return NULL;
+    /* make sure we are encoding an actual hash function */
+    if (HASH_GetHashTypeByOidTag(algorithm) == HASH_AlgNULL) {
+        return NULL;
     }
-
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
         return NULL;

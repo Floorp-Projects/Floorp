@@ -20,14 +20,12 @@ typedef struct {
     char *their_pubhex;
     char *common_key;
     char *name;
-    ECFieldType fieldType;
 } ECDH_KAT;
 
 typedef struct {
     ECCurveName curve;
     char *point;
     char *name;
-    ECFieldType fieldType;
 } ECDH_BAD;
 
 #include "testvecs.h"
@@ -49,8 +47,7 @@ printBuf(const SECItem *item)
 
 /* Initialise test with basic curve populate with only the necessary things */
 SECStatus
-init_params(ECParams *ecParams, ECCurveName curve, PLArenaPool **arena,
-            ECFieldType type)
+init_params(ECParams *ecParams, ECCurveName curve, PLArenaPool **arena)
 {
     if ((curve < ECCurve_noName) || (curve > ECCurve_pastLastCurve)) {
         return SECFailure;
@@ -69,7 +66,7 @@ init_params(ECParams *ecParams, ECCurveName curve, PLArenaPool **arena,
     ecParams->DEREncoding.len = 0;
     ecParams->arena = *arena;
     ecParams->fieldID.size = ecCurve_map[curve]->size;
-    ecParams->fieldID.type = type;
+    ecParams->fieldID.type = ec_field_plain;
     ecParams->cofactor = ecCurve_map[curve]->cofactor;
 
     return SECSuccess;
@@ -173,7 +170,7 @@ ectest_validate_point(ECDH_BAD *bad)
     SECStatus rv = SECFailure;
     PLArenaPool *arena = NULL;
 
-    rv = init_params(&ecParams, bad->curve, &arena, bad->fieldType);
+    rv = init_params(&ecParams, bad->curve, &arena);
     if (rv != SECSuccess) {
         return rv;
     }

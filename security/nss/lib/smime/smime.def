@@ -297,3 +297,10 @@ NSS_CMSRecipient_IsSupported;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.101 {    # NSS 3.101 release
+;+    global:
+SEC_PKCS12CipherAllowed;
+SEC_PKCS12IntegrityHashAllowed;
+;+    local:
+;+       *;
+;+};

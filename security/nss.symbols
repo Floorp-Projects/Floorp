@@ -178,8 +178,11 @@ HASH_Create
 HASH_Destroy
 HASH_End
 HASH_GetHashObject
+HASH_GetHashOidTagByHMACOidTag
+HASH_GetHashOidTagByHMACOidTag_Util
 HASH_GetHashOidTagByHashType
 HASH_GetHashTypeByOidTag
+HASH_GetHashTypeByOidTag_Util
 HASH_GetType
 HASH_HashBuf
 HASH_ResultLenByOidTag

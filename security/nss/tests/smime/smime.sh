@@ -74,6 +74,7 @@ smime_init()
   mkdir -p ${SMIMEDIR}
   cd ${SMIMEDIR}
   cp ${QADIR}/smime/alice.txt ${SMIMEDIR}
+  SMIMEPOLICY=${QADIR}/smime/smimepolicy.txt
 
   mkdir tb
   cp ${QADIR}/smime/interop-openssl/*.p12 ${SMIMEDIR}/tb
@@ -744,11 +745,114 @@ smime_main()
 smime_data_tb()
 {
   ${BINDIR}/pk12util -d ${P_R_ALICEDIR} -o tb/Alice.p12 -n Alice -K nss -W nss
+  ${BINDIR}/pk12util -d ${P_R_ALICEDIR} -o tb/Alice-ec.p12 -n Alice-ec -K nss -W nss
   ${BINDIR}/pk12util -d ${P_R_BOBDIR} -o tb/Bob.p12 -n Bob -K nss -W nss
   ${BINDIR}/pk12util -d ${P_R_DAVEDIR} -o tb/Dave.p12 -n Dave -K nss -W nss
   ${BINDIR}/pk12util -d ${P_R_EVEDIR} -o tb/Eve.p12 -n Eve -K nss -W nss
   CAOUT=tb/TestCA.pem
   cat ${P_R_CADIR}/TestCA.ca.cert | sed 's/\r$//' | ${BINDIR}/btoa -w c >> ${CAOUT}
+}
+
+################## smime_setup_policy_directory ########################
+# set up a clean directory for the policy test
+########################################################################
+smime_setup_policy_directory()
+{
+      dir=$1
+      name=$2
+      policy=$3
+      policy=`echo ${policy} | sed -e 's;_; ;g'`
+
+      rm -rf ${dir} ; mkdir ${dir}
+      ${BINDIR}/certutil -N -d ${dir} -f ${R_PWFILE}
+      ${BINDIR}/certutil -A -n "TestCA" -t "TC,TC,TC" -f ${R_PWFILE} -d ${dir} -i ${P_R_CADIR}/TestCA.ca.cert
+      ${BINDIR}/pk12util -d ${dir} -i tb/${name}.p12 -K nss -W nss > /dev/null
+      setup_policy "$policy" ${dir}
+}
+
+############################## smime_policy ##############################
+# local shell function to perform SMIME Policy tests
+########################################################################
+smime_policy()
+{
+  testname=""
+  recipient_dir=tb/recipient
+  sender_dir=tb/sender
+  source=alice.txt
+  sign=${recipient_dir}/message.sig
+  verify=${sender_dir}/message.vfy
+  encrypt=${sender_dir}/message.enc
+  envelope=${sender_dir}/message.env
+  decrypt=${recipient_dir}/message.dec
+
+  ignore_blank_lines ${SMIMEPOLICY} | \
+  while read sign_ret verify_ret encrypt_ret decrypt_ret hash recipient_email recipient_name recipient_policy sender_name sender_policy algorithm testname
+  do
+      echo "$SCRIPTNAME: S/MIME Policy Test {${testname}} ---------------"
+      smime_setup_policy_directory ${recipient_dir} ${recipient_name} ${recipient_policy}
+      smime_setup_policy_directory ${sender_dir} ${sender_name} ${sender_policy}
+
+      # first the recipient signs a message
+      echo "$SCRIPTNAME: Signing policy message {${testname}} ---------------"
+      echo "cmsutil -S -G -P -N ${recipient_name} -H ${hash} -i ${source} -d ${recipient_dir} -p nss -o ${sign}"
+      ${PROFTOOL} ${BINDIR}/cmsutil -S -G -P -N ${recipient_name} -H ${hash} -i ${source} -d ${recipient_dir} -p nss -o ${sign}
+      ret=$?
+      html_msg $ret ${sign_ret} "Signing policy message (${testname})" "."
+
+      if [ ${sign_ret} -ne 0 ]; then
+          continue;
+      fi
+
+      # next the sender imports the certs in the signed message
+      echo "$SCRIPTNAME: Verify policy message {${testname}} ---------------"
+      echo "cmsutil -D -k -i ${sign} -d ${sender_dir} -o ${verify}"
+      ${PROFTOOL} ${BINDIR}/cmsutil -D -k -i ${sign} -d ${sender_dir} -o ${verify}
+      ret=$?
+      html_msg $ret ${verify_ret} "Verify policy message (${testname})" "."
+
+      if [ ${verify_ret} -ne 0 ]; then
+          continue;
+      fi
+
+      echo "diff ${source} ${verify}"
+      diff ${source} ${verify}
+      html_msg $? 0 "Compare policy signed data (${testname})" "."
+
+      # the sender encrypts a message
+      echo "$SCRIPTNAME: Encrypt policy message (${testname}) --------"
+      echo "cmsutil -C -i ${source} -d ${sender_dir} -e ${envelope} \\"
+      echo "        -r \"${recipient_email}\" -o ${encrypt}"
+      ${PROFTOOL} ${BINDIR}/cmsutil -C -i ${source} -d ${sender_dir} \
+          -e ${envelope} -r "${recipient_email}" -o ${encrypt}
+      ret=$?
+      html_msg $ret ${encrypt_ret} "Encrypted policy message (${testname})" "."
+
+      if [ ${encrypt_ret} -ne 0 ]; then
+          continue;
+      fi
+
+      # verify the message was encrypted with the algorithm
+      encryption=$(${BINDIR}/pp -t pkcs7 -i ${encrypt} | grep "Content Encryption Algorithm" | sed -e 's;^.*Content Encryption Algorithm: ;;')
+      if [ "${encryption}" != "${algorithm}" ]; then
+          html_failed "Encryption algorithm (${encryption}) doe not match expected algorithm (${algorithm}) in policy test ({$testname})"
+      fi
+
+      # the recipient decrypts the message
+      echo "$SCRIPTNAME: Decrypt policy message (${testname}) --------"
+      echo "cmsutil -D -i ${encrypt} -d ${recipient_dir} -e ${envelope} -p nss \\"
+      echo "        -o ${decrypt}"
+      ${PROFTOOL} ${BINDIR}/cmsutil -D -i ${encrypt} -d ${recipient_dir} -e ${envelope} -p nss -o ${decrypt}
+
+      ret=$?
+      html_msg $ret ${decrypt_ret} "Decrypted policy message (${testname})" "."
+
+      if [ ${decrypt_ret} -eq 0 ]; then
+          echo "diff ${source} ${decrypt}"
+          diff ${source} ${decrypt}
+          html_msg $? 0 "Compare policy encrypted data (${testname})" "."
+      fi
+
+  done
 }
 
 ############################## smime_cleanup ###########################
@@ -768,5 +872,8 @@ smime_init
 smime_main
 smime_data_tb
 smime_p7
+if [ "${TEST_MODE}" = "SHARED_DB" ] ; then
+  smime_policy
+fi
 smime_cleanup
 

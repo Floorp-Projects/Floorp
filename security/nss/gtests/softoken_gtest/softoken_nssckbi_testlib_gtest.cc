@@ -64,6 +64,22 @@ TEST_F(SoftokenBuiltinsTest, CheckNoDistrustFields) {
   EXPECT_EQ(PR_FALSE,
             PK11_HasAttributeSet(cert->slot, cert->pkcs11ID,
                                  CKA_NSS_EMAIL_DISTRUST_AFTER, PR_FALSE));
+
+  SECStatus rv;
+  PRBool isDistrusted;
+  PRTime distrustAfter;
+  rv = PK11_ReadDistrustAfterAttribute(cert->slot, cert->pkcs11ID,
+                                       CKA_NSS_SERVER_DISTRUST_AFTER,
+                                       &isDistrusted, &distrustAfter);
+  EXPECT_EQ(SECSuccess, rv);
+  EXPECT_EQ(PR_FALSE, isDistrusted);
+
+  rv = PK11_ReadDistrustAfterAttribute(cert->slot, cert->pkcs11ID,
+                                       CKA_NSS_EMAIL_DISTRUST_AFTER,
+                                       &isDistrusted, &distrustAfter);
+  EXPECT_EQ(SECSuccess, rv);
+  EXPECT_EQ(PR_FALSE, isDistrusted);
+
   ASSERT_FALSE(cert->distrust);
 }
 
@@ -95,6 +111,23 @@ TEST_F(SoftokenBuiltinsTest, CheckOkDistrustFields) {
   EXPECT_TRUE(!memcmp(kExpectedDERValueEmail,
                       cert->distrust->emailDistrustAfter.data,
                       kDistrustFieldSize));
+
+  SECStatus rv;
+  PRBool isDistrusted;
+  PRTime distrustAfter;
+  rv = PK11_ReadDistrustAfterAttribute(cert->slot, cert->pkcs11ID,
+                                       CKA_NSS_SERVER_DISTRUST_AFTER,
+                                       &isDistrusted, &distrustAfter);
+  EXPECT_EQ(SECSuccess, rv);
+  EXPECT_EQ(PR_TRUE, isDistrusted);
+  EXPECT_EQ(1592352000000000, distrustAfter);
+
+  rv = PK11_ReadDistrustAfterAttribute(cert->slot, cert->pkcs11ID,
+                                       CKA_NSS_EMAIL_DISTRUST_AFTER,
+                                       &isDistrusted, &distrustAfter);
+  EXPECT_EQ(SECSuccess, rv);
+  EXPECT_EQ(PR_TRUE, isDistrusted);
+  EXPECT_EQ(1192352000000000, distrustAfter);
 }
 
 TEST_F(SoftokenBuiltinsTest, CheckInvalidDistrustFields) {
@@ -119,6 +152,19 @@ TEST_F(SoftokenBuiltinsTest, CheckInvalidDistrustFields) {
             PK11_HasAttributeSet(cert->slot, cert->pkcs11ID,
                                  CKA_NSS_EMAIL_DISTRUST_AFTER, PR_FALSE));
   ASSERT_FALSE(cert->distrust);
+
+  SECStatus rv;
+  PRBool isDistrusted;
+  PRTime distrustAfter;
+  rv = PK11_ReadDistrustAfterAttribute(cert->slot, cert->pkcs11ID,
+                                       CKA_NSS_SERVER_DISTRUST_AFTER,
+                                       &isDistrusted, &distrustAfter);
+  EXPECT_EQ(SECFailure, rv);
+
+  rv = PK11_ReadDistrustAfterAttribute(cert->slot, cert->pkcs11ID,
+                                       CKA_NSS_EMAIL_DISTRUST_AFTER,
+                                       &isDistrusted, &distrustAfter);
+  EXPECT_EQ(SECFailure, rv);
 }
 
 }  // namespace nss_test

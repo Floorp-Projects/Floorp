@@ -3397,7 +3397,8 @@ sftk_getParameters(CK_C_INITIALIZE_ARGS *init_args, PRBool isFIPS,
                     if (libParams) {
                         /* memory allocated */
                         if (PR_Read(file_dc, libParams, len) == -1) {
-                            PR_Free(libParams);
+                            PORT_Free(libParams);
+                            libParams = NULL;
                         } else {
                             free_mem = PR_TRUE;
                             libParams[len] = '\0';
@@ -3409,7 +3410,7 @@ sftk_getParameters(CK_C_INITIALIZE_ARGS *init_args, PRBool isFIPS,
             }
         }
 
-        if (!libParams)
+        if (libParams == NULL)
             libParams = LIB_PARAM_DEFAULT;
 
     } else {
@@ -3426,7 +3427,7 @@ sftk_getParameters(CK_C_INITIALIZE_ARGS *init_args, PRBool isFIPS,
     crv = CKR_OK;
 loser:
     if (free_mem)
-        PR_Free(libParams);
+        PORT_Free(libParams);
 
     return crv;
 }
@@ -4805,8 +4806,14 @@ NSC_CreateObject(CK_SESSION_HANDLE hSession,
     if (object == NULL) {
         return CKR_HOST_MEMORY;
     }
-    object->isFIPS = PR_FALSE; /* if we created the object on the fly,
-                                * it's not a FIPS object */
+
+    /*
+     * sftk_NewObject will set object->isFIPS to PR_TRUE if the slot is FIPS.
+     * We don't need to worry about that here, as FC_CreateObject will always
+     * disallow the import of secret and private keys, regardless of isFIPS
+     * approval status. Therefore, at this point we know that the key is a
+     * public key, which is acceptable to be imported in plaintext.
+     */
 
     /*
      * load the template values into the object

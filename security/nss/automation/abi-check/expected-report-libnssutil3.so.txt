@@ -1,24 +1,27 @@
 
+7 Added functions:
+
+  'function SECOidTag HASH_GetHMACOidTagByHashOidTag_Util(SECOidTag)'    {HASH_GetHMACOidTagByHashOidTag_Util@@NSSUTIL_3.101}
+  'function SECOidTag HASH_GetHashOidTagByHMACOidTag_Util(SECOidTag)'    {HASH_GetHashOidTagByHMACOidTag_Util@@NSSUTIL_3.101}
+  'function SECOidTag HASH_GetHashOidTagByHashType_Util(HASH_HashType)'    {HASH_GetHashOidTagByHashType_Util@@NSSUTIL_3.101}
+  'function HASH_HashType HASH_GetHashTypeByOidTag_Util(SECOidTag)'    {HASH_GetHashTypeByOidTag_Util@@NSSUTIL_3.101}
+  'function SECStatus NSS_GetAlgorithmPolicyAll(PRUint32, PRUint32, SECOidTag**, int*)'    {NSS_GetAlgorithmPolicyAll@@NSSUTIL_3.101}
+  'function SECStatus NSS_SetAlgorithmPolicyAll(PRUint32, PRUint32)'    {NSS_SetAlgorithmPolicyAll@@NSSUTIL_3.101}
+  'function SECOidTag SECOID_GetTotalTags()'    {SECOID_GetTotalTags@@NSSUTIL_3.101}
+
 1 function with some indirect sub-type change:
 
-  [C]'function SECStatus NSS_GetAlgorithmPolicy(SECOidTag, PRUint32*)' at secoid.c:2336:1 has some indirect sub-type changes:
+  [C]'function SECStatus NSS_GetAlgorithmPolicy(SECOidTag, PRUint32*)' at secoid.c:2366:1 has some indirect sub-type changes:
     parameter 1 of type 'typedef SECOidTag' has sub-type changes:
       underlying type 'enum __anonymous_enum__' at secoidt.h:34:1 changed:
         type size hasn't changed
-        10 enumerator insertions:
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_STDDH_SHA1KDF_SCHEME' value '375'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_STDDH_SHA224KDF_SCHEME' value '376'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_STDDH_SHA256KDF_SCHEME' value '377'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_STDDH_SHA384KDF_SCHEME' value '378'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_STDDH_SHA512KDF_SCHEME' value '379'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_COFACTORDH_SHA1KDF_SCHEME' value '380'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_COFACTORDH_SHA224KDF_SCHEME' value '381'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_COFACTORDH_SHA256KDF_SCHEME' value '382'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_COFACTORDH_SHA384KDF_SCHEME' value '383'
-          '__anonymous_enum__::SEC_OID_DHSINGLEPASS_COFACTORDH_SHA512KDF_SCHEME' value '384'
+        3 enumerator insertions:
+          '__anonymous_enum__::SEC_OID_RC2_64_CBC' value '385'
+          '__anonymous_enum__::SEC_OID_RC2_128_CBC' value '386'
+          '__anonymous_enum__::SEC_OID_ECDH_KEA' value '387'
 
         1 enumerator change:
-          '__anonymous_enum__::SEC_OID_TOTAL' from value '375' to '385' at secoidt.h:34:1
+          '__anonymous_enum__::SEC_OID_TOTAL' from value '385' to '388' at secoidt.h:34:1
 
 
 

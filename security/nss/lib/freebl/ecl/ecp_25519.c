@@ -9,11 +9,6 @@
 #endif
 
 #include "ecl-priv.h"
-#include "ecp.h"
-#include "mpi.h"
-#include "mplogic.h"
-#include "mpi-priv.h"
-#include "secmpi.h"
 #include "secitem.h"
 #include "secerr.h"
 #include "secport.h"

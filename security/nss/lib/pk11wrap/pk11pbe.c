@@ -134,6 +134,37 @@ sec_pkcs5GetCryptoFromAlgTag(SECOidTag algorithm)
 }
 
 /*
+ * only gets the tag from PKCS5v1 or PKCS12pbe.
+ * PKCS5v2 requires the algid to get the full thing
+ */
+SECOidTag
+SEC_PKCS5GetHashFromAlgTag(SECOidTag algtag)
+{
+    switch (algtag) {
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_2KEY_TRIPLE_DES_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC:
+        case SEC_OID_PKCS5_PBE_WITH_SHA1_AND_DES_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC4:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC4:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC4:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC4:
+            return SEC_OID_SHA1;
+        case SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC:
+            return SEC_OID_MD5;
+        case SEC_OID_PKCS5_PBE_WITH_MD2_AND_DES_CBC:
+            return SEC_OID_MD2;
+        default:
+            break;
+    }
+    return SEC_OID_UNKNOWN;
+}
+
+/*
  * get a new PKCS5 V2 Parameter from the algorithm id.
  *  if arena is passed in, use it, otherwise create a new arena.
  */
@@ -181,6 +212,69 @@ sec_pkcs5_v2_destroy_v2_param(sec_pkcs5V2Parameter *param)
 /* maps crypto algorithm from PBE algorithm.
  */
 SECOidTag
+SEC_PKCS5GetHashAlgorithm(SECAlgorithmID *algid)
+{
+
+    SECOidTag pbeAlg;
+    SECOidTag hashAlg = SEC_OID_UNKNOWN;
+    PLArenaPool *arena = NULL;
+
+    if (algid == NULL)
+        return SEC_OID_UNKNOWN;
+
+    pbeAlg = SECOID_GetAlgorithmTag(algid);
+    /* if we are using a PKCS 5v2 algorithm, get the hash from the parameters */
+    if ((pbeAlg == SEC_OID_PKCS5_PBES2) ||
+        (pbeAlg == SEC_OID_PKCS5_PBMAC1)) {
+        SEC_PKCS5PBEParameter p5_param;
+        sec_pkcs5V2Parameter *pbeV2_param;
+        SECOidTag kdfAlg;
+        SECStatus rv;
+
+        arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
+        if (arena == NULL) {
+            goto loser;
+        }
+
+        pbeV2_param = sec_pkcs5_v2_get_v2_param(arena, algid);
+        if (pbeV2_param == NULL) {
+            goto loser;
+        }
+
+        kdfAlg = SECOID_GetAlgorithmTag(&pbeV2_param->pbeAlgId);
+        /* sanity check, they should all be PBKDF2 here */
+        if (kdfAlg != SEC_OID_PKCS5_PBKDF2) {
+            goto loser;
+        }
+
+        PORT_Memset(&p5_param, 0, sizeof(p5_param));
+        rv = SEC_ASN1DecodeItem(arena, &p5_param,
+                                SEC_PKCS5V2PBEParameterTemplate,
+                                &pbeV2_param->pbeAlgId.parameters);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+        /* if the prf does not exist, it defaults to SHA1 */
+        hashAlg = SEC_OID_SHA1;
+        if (p5_param.pPrfAlgId &&
+            p5_param.pPrfAlgId->algorithm.data != 0) {
+            hashAlg = HASH_GetHashOidTagByHMACOidTag(
+                SECOID_GetAlgorithmTag(p5_param.pPrfAlgId));
+        }
+    } else {
+        return SEC_PKCS5GetHashFromAlgTag(pbeAlg);
+    }
+loser:
+    if (arena != NULL) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
+
+    return hashAlg;
+}
+
+/* maps crypto algorithm from PBE algorithm.
+ */
+SECOidTag
 SEC_PKCS5GetCryptoAlgorithm(SECAlgorithmID *algid)
 {
 
@@ -204,6 +298,21 @@ SEC_PKCS5GetCryptoAlgorithm(SECAlgorithmID *algid)
         }
     }
 
+    return cipherAlg;
+}
+
+/*
+ * only gets the tag from PKCS5v1 or PKCS12pbe.
+ * PKCS5v2 requires the algid to get the full thing
+ */
+SECOidTag
+SEC_PKCS5GetCryptoFromAlgTag(SECOidTag algtag)
+{
+    SECOidTag cipherAlg;
+    cipherAlg = sec_pkcs5GetCryptoFromAlgTag(algtag);
+    if (cipherAlg == SEC_OID_PKCS5_PBKDF2) {
+        return SEC_OID_UNKNOWN;
+    }
     return cipherAlg;
 }
 
@@ -782,7 +891,7 @@ pbe_PK11AlgidToParam(SECAlgorithmID *algid, SECItem *mech)
     unsigned char *pSalt = NULL;
     CK_ULONG iterations;
     int paramLen = 0;
-    int iv_len;
+    int iv_len = -1;
 
     arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
     if (arena == NULL) {

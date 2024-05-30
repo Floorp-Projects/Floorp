@@ -115,7 +115,7 @@
 
       <varlistentry>
         <term>-M hashAlg</term>
-        <listitem><para>Specify the hash algorithm used in the pkcs #12 mac. This algorithm also specifies the HMAC used in the prf when using pkcs #5 v2.</para></listitem>
+        <listitem><para>Specify the hash algorithm used in the pkcs #12 mac. If an hmac is specified, then the PKCS #12 mac is replaced by a PKCS #5 mac1 pbe. This algorithm also specifies the HMAC used in the prf when using pkcs #5 v2.</para></listitem>
       </varlistentry>
 
 

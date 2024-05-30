@@ -1601,7 +1601,7 @@ freebl_fips_EC_PowerUpSelfTest()
         NULL,
         ec_params_named,                                                     /* arena, type */
                                                                              /* fieldID */
-        { 256, ec_field_GFp,                                                 /* size and type */
+        { 256, ec_field_plain,                                               /* size and type */
           { { siBuffer, (unsigned char *)p256_prime, sizeof(p256_prime) } }, /* u.prime */
           0,
           0,

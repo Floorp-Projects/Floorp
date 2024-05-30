@@ -1189,8 +1189,8 @@ const SEC_ASN1Template secuKDF2Params[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(secuPBEParams) },
     { SEC_ASN1_OCTET_STRING, offsetof(secuPBEParams, salt) },
     { SEC_ASN1_INTEGER, offsetof(secuPBEParams, iterationCount) },
-    { SEC_ASN1_INTEGER, offsetof(secuPBEParams, keyLength) },
-    { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(secuPBEParams, kdfAlg),
+    { SEC_ASN1_INTEGER | SEC_ASN1_OPTIONAL, offsetof(secuPBEParams, keyLength) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN | SEC_ASN1_OPTIONAL, offsetof(secuPBEParams, kdfAlg),
       SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
     { 0 }
 };
@@ -1301,8 +1301,15 @@ secu_PrintKDF2Params(FILE *out, SECItem *value, char *m, int level)
         SECU_PrintAsHex(out, &param.salt, "Salt", level + 1);
         SECU_PrintInteger(out, &param.iterationCount, "Iteration Count",
                           level + 1);
-        SECU_PrintInteger(out, &param.keyLength, "Key Length", level + 1);
-        SECU_PrintAlgorithmID(out, &param.kdfAlg, "KDF algorithm", level + 1);
+        if (param.keyLength.data != NULL) {
+            SECU_PrintInteger(out, &param.keyLength, "Key Length", level + 1);
+        }
+        if (param.kdfAlg.algorithm.data != NULL) {
+            SECU_PrintAlgorithmID(out, &param.kdfAlg, "KDF algorithm", level + 1);
+        } else {
+            SECU_Indent(out, level + 1);
+            fprintf(out, "Implicit KDF Algorithm: HMAC-SHA-1\n");
+        }
     }
     PORT_FreeArena(pool, PR_FALSE);
 }

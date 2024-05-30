@@ -520,9 +520,14 @@ ResponseData(Reader& input, Context& context,
     return rv;
   }
 
-  return der::OptionalExtensions(input,
-                                 der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
-                                 ExtensionNotUnderstood);
+  rv = der::OptionalExtensions(input,
+                               der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
+                               ExtensionNotUnderstood);
+  if (rv != Success) {
+    return rv;
+  }
+
+  return der::End(input);
 }
 
 // SingleResponse ::= SEQUENCE {

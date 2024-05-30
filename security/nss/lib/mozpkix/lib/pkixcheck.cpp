@@ -131,9 +131,11 @@ CheckIssuer(Input encodedIssuer)
 {
   // "The issuer field MUST contain a non-empty distinguished name (DN)."
   Reader issuer(encodedIssuer);
-  Input encodedRDNs;
-  ExpectTagAndGetValue(issuer, der::SEQUENCE, encodedRDNs);
-  Reader rdns(encodedRDNs);
+  Reader rdns;
+  Result rv = der::ExpectTagAndGetValueAtEnd(issuer, der::SEQUENCE, rdns);
+  if (rv != Success) {
+    return rv;
+  }
   // Check that the issuer name contains at least one RDN
   // (Note: this does not check related grammar rules, such as there being one
   // or more AVAs in each RDN, or the values in AVAs not being empty strings)
@@ -420,7 +422,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const Input* encodedKeyUsage,
 
   Reader input(*encodedKeyUsage);
   Reader value;
-  if (der::ExpectTagAndGetValue(input, der::BIT_STRING, value) != Success) {
+  if (der::ExpectTagAndGetValueAtEnd(input, der::BIT_STRING, value) != Success) {
     return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
 
@@ -914,7 +916,7 @@ TLSFeaturesSatisfiedInternal(const Input* requiredTLSFeatures,
   const static uint8_t status_request_bytes[] = { status_request };
 
   Reader input(*requiredTLSFeatures);
-  return der::NestedOf(input, der::SEQUENCE, der::INTEGER,
+  Result rv = der::NestedOf(input, der::SEQUENCE, der::INTEGER,
                        der::EmptyAllowed::No, [&](Reader& r) {
     if (!r.MatchRest(status_request_bytes)) {
       return Result::ERROR_REQUIRED_TLS_FEATURE_MISSING;
@@ -926,6 +928,10 @@ TLSFeaturesSatisfiedInternal(const Input* requiredTLSFeatures,
 
     return Result::Success;
   });
+  if (rv != Success) {
+    return rv;
+  }
+  return der::End(input);
 }
 
 Result

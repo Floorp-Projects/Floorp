@@ -40,7 +40,7 @@ static struct nssOps nss_ops = {
     0xffff,
     PR_FALSE,
     0,
-    NSS_KEY_SIZE_POLICY_SSL_FLAG,
+    NSS_KEY_SIZE_POLICY_ALL_FLAGS,
     SSL_ECC_MIN_CURVE_BITS
 };
 

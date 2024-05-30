@@ -22,6 +22,7 @@
             'nssilckt.h',
             'nssilock.h',
             'nsslocks.h',
+            'nsshash.h',
             'nssrwlk.h',
             'nssrwlkt.h',
             'nssutil.h',

@@ -209,19 +209,21 @@ create_objects_from_handles(
     PRUint32 numH)
 {
     nssCryptokiObject **objects;
+    if (numH == PR_UINT32_MAX) {
+        return NULL; /* avoid overflow in ZNEWARRAY */
+    }
     objects = nss_ZNEWARRAY(NULL, nssCryptokiObject *, numH + 1);
-    if (objects) {
-        PRInt32 i;
-        for (i = 0; i < (PRInt32)numH; i++) {
-            objects[i] = nssCryptokiObject_Create(tok, session, handles[i]);
-            if (!objects[i]) {
-                for (--i; i > 0; --i) {
-                    nssCryptokiObject_Destroy(objects[i]);
-                }
-                nss_ZFreeIf(objects);
-                objects = NULL;
-                break;
+    if (!objects) {
+        return NULL;
+    }
+    for (PRUint32 i = 0; i < numH; i++) {
+        objects[i] = nssCryptokiObject_Create(tok, session, handles[i]);
+        if (!objects[i]) {
+            for (; i > 0; --i) {
+                nssCryptokiObject_Destroy(objects[i - 1]);
             }
+            nss_ZFreeIf(objects);
+            return NULL;
         }
     }
     return objects;

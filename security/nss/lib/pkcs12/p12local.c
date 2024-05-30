@@ -14,6 +14,9 @@
 #include "pk11func.h"
 #include "p12local.h"
 #include "p12.h"
+#include "nsshash.h"
+#include "secpkcs5.h"
+#include "p12plcy.h"
 
 #define SALT_LENGTH 16
 
@@ -23,25 +26,8 @@ SEC_ASN1_MKSUB(sgn_DigestInfoTemplate)
 CK_MECHANISM_TYPE
 sec_pkcs12_algtag_to_mech(SECOidTag algtag)
 {
-    switch (algtag) {
-        case SEC_OID_MD2:
-            return CKM_MD2_HMAC;
-        case SEC_OID_MD5:
-            return CKM_MD5_HMAC;
-        case SEC_OID_SHA1:
-            return CKM_SHA_1_HMAC;
-        case SEC_OID_SHA224:
-            return CKM_SHA224_HMAC;
-        case SEC_OID_SHA256:
-            return CKM_SHA256_HMAC;
-        case SEC_OID_SHA384:
-            return CKM_SHA384_HMAC;
-        case SEC_OID_SHA512:
-            return CKM_SHA512_HMAC;
-        default:
-            break;
-    }
-    return CKM_INVALID_MECHANISM;
+    SECOidTag hmacAlg = HASH_GetHMACOidTagByHashOidTag(algtag);
+    return PK11_AlgtagToMechanism(hmacAlg);
 }
 
 CK_MECHANISM_TYPE
@@ -73,6 +59,91 @@ sec_pkcs12_algtag_to_keygen_mech(SECOidTag algtag)
             break;
     }
     return CKM_INVALID_MECHANISM;
+}
+
+PK11SymKey *
+sec_pkcs12_integrity_key(PK11SlotInfo *slot, sec_PKCS12MacData *macData,
+                         SECItem *pwitem, CK_MECHANISM_TYPE *hmacMech,
+                         PRBool isDecrypt, void *pwarg)
+{
+    int iteration;
+    CK_MECHANISM_TYPE integrityMech;
+    PK11SymKey *symKey = NULL;
+    SECItem *params = NULL;
+    SECAlgorithmID *prfAlgid = &macData->safeMac.digestAlgorithm;
+    SECOidTag algtag = SECOID_GetAlgorithmTag(prfAlgid);
+
+    /* handle PBE v2 case */
+    if (algtag == SEC_OID_PKCS5_PBMAC1) {
+        SECOidTag hmacAlg;
+        SECItem utf8Pw;
+        int keyLen;
+
+        hmacAlg = SEC_PKCS5GetCryptoAlgorithm(prfAlgid);
+        /* make sure we are using an hmac */
+        if (HASH_GetHashOidTagByHMACOidTag(hmacAlg) == SEC_OID_UNKNOWN) {
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return NULL;
+        }
+        if (!SEC_PKCS12IntegrityHashAllowed(hmacAlg, isDecrypt)) {
+            PORT_SetError(SEC_ERROR_BAD_EXPORT_ALGORITHM);
+            return NULL;
+        }
+        /* make sure the length is valid, as well as decoding the length
+         * from prfAlgid, SEC_PKCS5GetLength does some
+         * fallbacks, which evenutally gets the max length of the key if
+         * the decode fails. All HMAC keys have a max length of 128 bytes
+         * in softoken, so if we get a keyLen of 128 we know we hit an error. */
+        keyLen = SEC_PKCS5GetKeyLength(prfAlgid);
+        if ((keyLen == 0) || (keyLen == 128)) {
+            PORT_SetError(SEC_ERROR_BAD_DER);
+            return NULL;
+        }
+        *hmacMech = PK11_AlgtagToMechanism(hmacAlg);
+        /* pkcs12v2 hmac uses UTF8 rather than unicode */
+        if (!sec_pkcs12_convert_item_to_unicode(NULL, &utf8Pw, pwitem,
+                                                PR_TRUE, PR_FALSE, PR_FALSE)) {
+            return NULL;
+        }
+        symKey = PK11_PBEKeyGen(slot, prfAlgid, &utf8Pw, PR_FALSE, pwarg);
+        SECITEM_ZfreeItem(&utf8Pw, PR_FALSE);
+        return symKey;
+    }
+
+    /* handle Legacy case */
+    if (!SEC_PKCS12IntegrityHashAllowed(algtag, isDecrypt)) {
+        PORT_SetError(SEC_ERROR_BAD_EXPORT_ALGORITHM);
+        return NULL;
+    }
+    integrityMech = sec_pkcs12_algtag_to_keygen_mech(algtag);
+    *hmacMech = sec_pkcs12_algtag_to_mech(algtag);
+    if (integrityMech == CKM_INVALID_MECHANISM) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        goto loser;
+    }
+    if (macData->iter.data) {
+        iteration = (int)DER_GetInteger(&macData->iter);
+    } else {
+        iteration = 1;
+    }
+
+    params = PK11_CreatePBEParams(&macData->macSalt, pwitem, iteration);
+    if (params == NULL) {
+        goto loser;
+    }
+
+    symKey = PK11_KeyGen(slot, integrityMech, params, 0, pwarg);
+    PK11_DestroyPBEParams(params);
+    params = NULL;
+    if (!symKey)
+        goto loser;
+    return symKey;
+
+loser:
+    if (params) {
+        PK11_DestroyPBEParams(params);
+    }
+    return NULL;
 }
 
 /* helper functions */

@@ -23,50 +23,6 @@
 #define EC_DOUBLECHECK PR_FALSE
 
 SECStatus
-ec_secp384r1_scalar_validate(const SECItem *scalar)
-{
-    if (!scalar || !scalar->data) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-
-    if (scalar->len != 48) {
-        PORT_SetError(SEC_ERROR_BAD_KEY);
-        return SECFailure;
-    }
-
-    bool b = Hacl_P384_validate_private_key(scalar->data);
-
-    if (!b) {
-        PORT_SetError(SEC_ERROR_BAD_KEY);
-        return SECFailure;
-    }
-    return SECSuccess;
-}
-
-SECStatus
-ec_secp521r1_scalar_validate(const SECItem *scalar)
-{
-    if (!scalar || !scalar->data) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-
-    if (scalar->len != 66) {
-        PORT_SetError(SEC_ERROR_BAD_KEY);
-        return SECFailure;
-    }
-
-    bool b = Hacl_P521_validate_private_key(scalar->data);
-
-    if (!b) {
-        PORT_SetError(SEC_ERROR_BAD_KEY);
-        return SECFailure;
-    }
-    return SECSuccess;
-}
-
-SECStatus
 ec_ED25519_pt_validate(const SECItem *px)
 {
     if (!px || !px->data || px->len != Ed25519_PUBLIC_KEYLEN) {
@@ -104,19 +60,19 @@ static const ECMethod kMethods[] = {
     },
     {
         ECCurve_NIST_P384,
-        NULL,
-        NULL,
+        ec_secp384r1_pt_mul,
+        ec_secp384r1_pt_validate,
         ec_secp384r1_scalar_validate,
-        NULL,
-        NULL,
+        ec_secp384r1_sign_digest,
+        ec_secp384r1_verify_digest,
     },
     {
         ECCurve_NIST_P521,
-        NULL,
-        NULL,
+        ec_secp521r1_pt_mul,
+        ec_secp521r1_pt_validate,
         ec_secp521r1_scalar_validate,
-        NULL,
-        NULL,
+        ec_secp521r1_sign_digest,
+        ec_secp521r1_verify_digest,
     },
     { ECCurve_Ed25519,
       NULL,
@@ -138,159 +94,6 @@ ec_get_method_from_name(ECCurveName name)
     return NULL;
 }
 
-/*
- * Returns true if pointP is the point at infinity, false otherwise
- */
-PRBool
-ec_point_at_infinity(SECItem *pointP)
-{
-    unsigned int i;
-
-    for (i = 1; i < pointP->len; i++) {
-        if (pointP->data[i] != 0x00)
-            return PR_FALSE;
-    }
-
-    return PR_TRUE;
-}
-
-/*
- * Computes scalar point multiplication pointQ = k1 * G + k2 * pointP for
- * the curve whose parameters are encoded in params with base point G.
- */
-SECStatus
-ec_points_mul(const ECParams *params, const mp_int *k1, const mp_int *k2,
-              const SECItem *pointP, SECItem *pointQ)
-{
-    mp_int Px, Py, Qx, Qy;
-    mp_int Gx, Gy, order, irreducible, a, b;
-    ECGroup *group = NULL;
-    SECStatus rv = SECFailure;
-    mp_err err = MP_OKAY;
-    unsigned int len;
-
-#if EC_DEBUG
-    int i;
-    char mpstr[256];
-
-    printf("ec_points_mul: params [len=%d]:", params->DEREncoding.len);
-    for (i = 0; i < params->DEREncoding.len; i++)
-        printf("%02x:", params->DEREncoding.data[i]);
-    printf("\n");
-
-    if (k1 != NULL) {
-        mp_tohex((mp_int *)k1, mpstr);
-        printf("ec_points_mul: scalar k1: %s\n", mpstr);
-        mp_todecimal((mp_int *)k1, mpstr);
-        printf("ec_points_mul: scalar k1: %s (dec)\n", mpstr);
-    }
-
-    if (k2 != NULL) {
-        mp_tohex((mp_int *)k2, mpstr);
-        printf("ec_points_mul: scalar k2: %s\n", mpstr);
-        mp_todecimal((mp_int *)k2, mpstr);
-        printf("ec_points_mul: scalar k2: %s (dec)\n", mpstr);
-    }
-
-    if (pointP != NULL) {
-        printf("ec_points_mul: pointP [len=%d]:", pointP->len);
-        for (i = 0; i < pointP->len; i++)
-            printf("%02x:", pointP->data[i]);
-        printf("\n");
-    }
-#endif
-
-    /* NOTE: We only support uncompressed points for now */
-    len = (((unsigned int)params->fieldID.size) + 7) >> 3;
-    if (pointP != NULL) {
-        if ((pointP->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
-            (pointP->len != (2 * len + 1))) {
-            PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
-            return SECFailure;
-        };
-    }
-
-    MP_DIGITS(&Px) = 0;
-    MP_DIGITS(&Py) = 0;
-    MP_DIGITS(&Qx) = 0;
-    MP_DIGITS(&Qy) = 0;
-    MP_DIGITS(&Gx) = 0;
-    MP_DIGITS(&Gy) = 0;
-    MP_DIGITS(&order) = 0;
-    MP_DIGITS(&irreducible) = 0;
-    MP_DIGITS(&a) = 0;
-    MP_DIGITS(&b) = 0;
-    CHECK_MPI_OK(mp_init(&Px));
-    CHECK_MPI_OK(mp_init(&Py));
-    CHECK_MPI_OK(mp_init(&Qx));
-    CHECK_MPI_OK(mp_init(&Qy));
-    CHECK_MPI_OK(mp_init(&Gx));
-    CHECK_MPI_OK(mp_init(&Gy));
-    CHECK_MPI_OK(mp_init(&order));
-    CHECK_MPI_OK(mp_init(&irreducible));
-    CHECK_MPI_OK(mp_init(&a));
-    CHECK_MPI_OK(mp_init(&b));
-
-    if ((k2 != NULL) && (pointP != NULL)) {
-        /* Initialize Px and Py */
-        CHECK_MPI_OK(mp_read_unsigned_octets(&Px, pointP->data + 1, (mp_size)len));
-        CHECK_MPI_OK(mp_read_unsigned_octets(&Py, pointP->data + 1 + len, (mp_size)len));
-    }
-
-    /* construct from named params, if possible */
-    if (params->name != ECCurve_noName) {
-        group = ECGroup_fromName(params->name);
-    }
-
-    if (group == NULL)
-        goto cleanup;
-
-    if ((k2 != NULL) && (pointP != NULL)) {
-        CHECK_MPI_OK(ECPoints_mul(group, k1, k2, &Px, &Py, &Qx, &Qy));
-    } else {
-        CHECK_MPI_OK(ECPoints_mul(group, k1, NULL, NULL, NULL, &Qx, &Qy));
-    }
-
-    /* our ECC codes uses large stack variables to store intermediate results,
-     * clear our stack before returning to prevent CSP leakage */
-    BLAPI_CLEAR_STACK(2048)
-
-    /* Construct the SECItem representation of point Q */
-    pointQ->data[0] = EC_POINT_FORM_UNCOMPRESSED;
-    CHECK_MPI_OK(mp_to_fixlen_octets(&Qx, pointQ->data + 1,
-                                     (mp_size)len));
-    CHECK_MPI_OK(mp_to_fixlen_octets(&Qy, pointQ->data + 1 + len,
-                                     (mp_size)len));
-
-    rv = SECSuccess;
-
-#if EC_DEBUG
-    printf("ec_points_mul: pointQ [len=%d]:", pointQ->len);
-    for (i = 0; i < pointQ->len; i++)
-        printf("%02x:", pointQ->data[i]);
-    printf("\n");
-#endif
-
-cleanup:
-    ECGroup_free(group);
-    mp_clear(&Px);
-    mp_clear(&Py);
-    mp_clear(&Qx);
-    mp_clear(&Qy);
-    mp_clear(&Gx);
-    mp_clear(&Gy);
-    mp_clear(&order);
-    mp_clear(&irreducible);
-    mp_clear(&a);
-    mp_clear(&b);
-    if (err) {
-        MP_TO_SEC_ERROR(err);
-        rv = SECFailure;
-    }
-
-    return rv;
-}
-
 /* Generates a new EC key pair. The private key is a supplied
  * value and the public key is the result of performing a scalar
  * point multiplication of that value with the curve's base point.
@@ -302,18 +105,16 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
     SECStatus rv = SECFailure;
     PLArenaPool *arena;
     ECPrivateKey *key;
-    mp_int k;
-    mp_err err = MP_OKAY;
     int len;
-
-#if EC_DEBUG
-    printf("ec_NewKey called\n");
-#endif
-    MP_DIGITS(&k) = 0;
 
     if (!ecParams || ecParams->name == ECCurve_noName ||
         !privKey || !privKeyBytes || privKeyLen <= 0) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (ecParams->fieldID.type != ec_field_plain) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
         return SECFailure;
     }
 
@@ -323,8 +124,7 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
 
     key = (ECPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(ECPrivateKey));
     if (!key) {
-        PORT_FreeArena(arena, PR_TRUE);
-        return SECFailure;
+        goto cleanup;
     }
 
     /* Set the version number (SEC 1 section C.4 says it should be 1) */
@@ -338,14 +138,8 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
     key->ecParams.type = ecParams->type;
     key->ecParams.fieldID.size = ecParams->fieldID.size;
     key->ecParams.fieldID.type = ecParams->fieldID.type;
-    if (ecParams->fieldID.type == ec_field_GFp ||
-        ecParams->fieldID.type == ec_field_plain) {
-        CHECK_SEC_OK(SECITEM_CopyItem(arena, &key->ecParams.fieldID.u.prime,
-                                      &ecParams->fieldID.u.prime));
-    } else {
-        CHECK_SEC_OK(SECITEM_CopyItem(arena, &key->ecParams.fieldID.u.poly,
-                                      &ecParams->fieldID.u.poly));
-    }
+    CHECK_SEC_OK(SECITEM_CopyItem(arena, &key->ecParams.fieldID.u.prime,
+                                  &ecParams->fieldID.u.prime));
     key->ecParams.fieldID.k1 = ecParams->fieldID.k1;
     key->ecParams.fieldID.k2 = ecParams->fieldID.k2;
     key->ecParams.fieldID.k3 = ecParams->fieldID.k3;
@@ -381,56 +175,24 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
     /* Compute corresponding public key */
 
     /* Use curve specific code for point multiplication */
-
     if (ecParams->name == ECCurve_Ed25519) {
-        rv = ED_DerivePublicKey(&key->privateValue, &key->publicValue);
-        if (rv != SECSuccess) {
-            goto cleanup;
-        }
-        NSS_DECLASSIFY(key->publicValue.data, key->publicValue.len); /* Declassifying public key to avoid false positive */
-        goto done;
-    }
-
-    if (ecParams->fieldID.type == ec_field_plain) {
+        CHECK_SEC_OK(ED_DerivePublicKey(&key->privateValue, &key->publicValue));
+    } else {
         const ECMethod *method = ec_get_method_from_name(ecParams->name);
         if (method == NULL || method->pt_mul == NULL) {
-            /* unknown curve */
+            PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
             rv = SECFailure;
             goto cleanup;
         }
-        rv = method->pt_mul(&key->publicValue, &key->privateValue, NULL);
-        NSS_DECLASSIFY(key->publicValue.data, key->publicValue.len); /* Declassifying public key to avoid false positive */
-        if (rv != SECSuccess) {
-            goto cleanup;
-        } else {
-            goto done;
-        }
+        CHECK_SEC_OK(method->pt_mul(&key->publicValue, &key->privateValue, NULL));
     }
 
-    CHECK_MPI_OK(mp_init(&k));
-    CHECK_MPI_OK(mp_read_unsigned_octets(&k, key->privateValue.data,
-                                         (mp_size)len));
-
-    rv = ec_points_mul(ecParams, &k, NULL, NULL, &(key->publicValue));
     NSS_DECLASSIFY(key->publicValue.data, key->publicValue.len); /* Declassifying public key to avoid false positive */
-    if (rv != SECSuccess) {
-        goto cleanup;
-    }
-
-done:
     *privKey = key;
+    return SECSuccess;
 
 cleanup:
-    mp_clear(&k);
-    if (rv) {
-        PORT_FreeArena(arena, PR_TRUE);
-    }
-
-#if EC_DEBUG
-    printf("ec_NewKey returning %s\n",
-           (rv == SECSuccess) ? "success" : "failure");
-#endif
-
+    PORT_FreeArena(arena, PR_TRUE);
     return rv;
 }
 
@@ -443,9 +205,7 @@ SECStatus
 EC_NewKeyFromSeed(ECParams *ecParams, ECPrivateKey **privKey,
                   const unsigned char *seed, int seedlen)
 {
-    SECStatus rv = SECFailure;
-    rv = ec_NewKey(ecParams, privKey, seed, seedlen);
-    return rv;
+    return ec_NewKey(ecParams, privKey, seed, seedlen);
 }
 
 /* Generate a random private key using the algorithm A.4.1 or A.4.2 of ANSI X9.62,
@@ -556,95 +316,28 @@ cleanup:
 SECStatus
 EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
 {
-    mp_int Px, Py;
-    ECGroup *group = NULL;
-    SECStatus rv = SECFailure;
-    mp_err err = MP_OKAY;
-    unsigned int len;
-
     if (!ecParams || ecParams->name == ECCurve_noName ||
         !publicValue || !publicValue->len) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        rv = SECFailure;
-        return rv;
+        return SECFailure;
     }
 
     /* Uses curve specific code for point validation. */
-    if (ecParams->fieldID.type == ec_field_plain) {
-        const ECMethod *method = ec_get_method_from_name(ecParams->name);
-        if (method == NULL || method->pt_validate == NULL) {
-            /* unknown curve */
-            PORT_SetError(SEC_ERROR_INVALID_ARGS);
-            rv = SECFailure;
-            return rv;
-        }
-        rv = method->pt_validate(publicValue);
-        if (rv != SECSuccess) {
-            PORT_SetError(SEC_ERROR_BAD_KEY);
-        }
-        return rv;
+    if (ecParams->fieldID.type != ec_field_plain) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+        return SECFailure;
     }
 
-    /* NOTE: We only support uncompressed points for now */
-    len = (((unsigned int)ecParams->fieldID.size) + 7) >> 3;
-    if (publicValue->data[0] != EC_POINT_FORM_UNCOMPRESSED) {
-        PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
+    const ECMethod *method = ec_get_method_from_name(ecParams->name);
+    if (method == NULL || method->pt_validate == NULL) {
+        /* unknown curve */
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
-    } else if (publicValue->len != (2 * len + 1)) {
+    }
+
+    SECStatus rv = method->pt_validate(publicValue);
+    if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_BAD_KEY);
-        return SECFailure;
-    }
-
-    MP_DIGITS(&Px) = 0;
-    MP_DIGITS(&Py) = 0;
-    CHECK_MPI_OK(mp_init(&Px));
-    CHECK_MPI_OK(mp_init(&Py));
-
-    /* Initialize Px and Py */
-    CHECK_MPI_OK(mp_read_unsigned_octets(&Px, publicValue->data + 1, (mp_size)len));
-    CHECK_MPI_OK(mp_read_unsigned_octets(&Py, publicValue->data + 1 + len, (mp_size)len));
-
-    /* construct from named params */
-    group = ECGroup_fromName(ecParams->name);
-    if (group == NULL) {
-        /*
-         * ECGroup_fromName fails if ecParams->name is not a valid
-         * ECCurveName value, or if we run out of memory, or perhaps
-         * for other reasons.  Unfortunately if ecParams->name is a
-         * valid ECCurveName value, we don't know what the right error
-         * code should be because ECGroup_fromName doesn't return an
-         * error code to the caller.  Set err to MP_UNDEF because
-         * that's what ECGroup_fromName uses internally.
-         */
-        if ((ecParams->name <= ECCurve_noName) ||
-            (ecParams->name >= ECCurve_pastLastCurve)) {
-            err = MP_BADARG;
-        } else {
-            err = MP_UNDEF;
-        }
-        goto cleanup;
-    }
-
-    /* validate public point */
-    if ((err = ECPoint_validate(group, &Px, &Py)) < MP_YES) {
-        if (err == MP_NO) {
-            PORT_SetError(SEC_ERROR_BAD_KEY);
-            rv = SECFailure;
-            err = MP_OKAY; /* don't change the error code */
-        }
-        goto cleanup;
-    }
-
-    rv = SECSuccess;
-
-cleanup:
-    ECGroup_free(group);
-    mp_clear(&Px);
-    mp_clear(&Py);
-
-    if (err) {
-        MP_TO_SEC_ERROR(err);
-        rv = SECFailure;
     }
     return rv;
 }
@@ -666,16 +359,11 @@ ECDH_Derive(SECItem *publicValue,
             PRBool withCofactor,
             SECItem *derivedSecret)
 {
-    SECStatus rv = SECFailure;
-    unsigned int len = 0;
-    mp_err err = MP_OKAY;
-
     if (!publicValue || !publicValue->len ||
         !ecParams || ecParams->name == ECCurve_noName ||
         !privateValue || !privateValue->len || !derivedSecret) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        rv = SECFailure;
-        return rv;
+        return SECFailure;
     }
 
     /*
@@ -684,107 +372,32 @@ ECDH_Derive(SECItem *publicValue,
      */
     if (EC_ValidatePublicKey(ecParams, publicValue) != SECSuccess) {
         PORT_SetError(SEC_ERROR_BAD_KEY);
-        rv = SECFailure;
-        return rv;
-    }
-
-    /* Perform curve specific multiplication using ECMethod */
-    if (ecParams->fieldID.type == ec_field_plain) {
-        const ECMethod *method;
-        memset(derivedSecret, 0, sizeof(*derivedSecret));
-        derivedSecret = SECITEM_AllocItem(NULL, derivedSecret, EC_GetScalarSize(ecParams));
-        if (derivedSecret == NULL) {
-            PORT_SetError(SEC_ERROR_NO_MEMORY);
-            rv = SECFailure;
-            return rv;
-        }
-        method = ec_get_method_from_name(ecParams->name);
-        if (method == NULL || method->pt_validate == NULL ||
-            method->pt_mul == NULL) {
-            PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-            rv = SECFailure;
-            goto done;
-        }
-        rv = method->pt_mul(derivedSecret, privateValue, publicValue);
-        if (rv != SECSuccess) {
-            PORT_SetError(SEC_ERROR_BAD_KEY);
-        }
-        goto done;
-    }
-
-    SECItem pointQ = { siBuffer, NULL, 0 };
-    mp_int k; /* to hold the private value */
-#if EC_DEBUG
-    int i;
-#endif
-
-    /*
-     * We fail if the public value is the point at infinity, since
-     * this produces predictable results.
-     */
-    if (ec_point_at_infinity(publicValue)) {
-        PORT_SetError(SEC_ERROR_BAD_KEY);
         return SECFailure;
     }
 
-    MP_DIGITS(&k) = 0;
-    memset(derivedSecret, 0, sizeof *derivedSecret);
-    len = (ecParams->fieldID.size + 7) >> 3;
-    pointQ.len = EC_GetPointSize(ecParams);
-    if ((pointQ.data = PORT_Alloc(pointQ.len)) == NULL)
-        goto cleanup;
-
-    CHECK_MPI_OK(mp_init(&k));
-    CHECK_MPI_OK(mp_read_unsigned_octets(&k, privateValue->data,
-                                         (mp_size)privateValue->len));
-
-    if (withCofactor && (ecParams->cofactor != 1)) {
-        mp_int cofactor;
-        /* multiply k with the cofactor */
-        MP_DIGITS(&cofactor) = 0;
-        CHECK_MPI_OK(mp_init(&cofactor));
-        mp_set(&cofactor, ecParams->cofactor);
-        CHECK_MPI_OK(mp_mul(&k, &cofactor, &k));
-        mp_clear(&cofactor);
+    /* Perform curve specific multiplication using ECMethod */
+    if (ecParams->fieldID.type != ec_field_plain) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+        return SECFailure;
     }
 
-    /* Multiply our private key and peer's public point */
-    if (ec_points_mul(ecParams, NULL, &k, publicValue, &pointQ) != SECSuccess) {
-        goto cleanup;
-    }
-    if (ec_point_at_infinity(&pointQ)) {
-        PORT_SetError(SEC_ERROR_BAD_KEY); /* XXX better error code? */
-        goto cleanup;
+    const ECMethod *method = ec_get_method_from_name(ecParams->name);
+    if (method == NULL || method->pt_validate == NULL ||
+        method->pt_mul == NULL) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+        return SECFailure;
     }
 
-    /* Allocate memory for the derived secret and copy
-     * the x co-ordinate of pointQ into it.
-     */
-    SECITEM_AllocItem(NULL, derivedSecret, len);
-    memcpy(derivedSecret->data, pointQ.data + 1, len);
-
-    rv = SECSuccess;
-
-#if EC_DEBUG
-    printf("derived_secret:\n");
-    for (i = 0; i < derivedSecret->len; i++)
-        printf("%02x:", derivedSecret->data[i]);
-    printf("\n");
-#endif
-
-cleanup:
-    mp_clear(&k);
-
-    if (pointQ.data) {
-        PORT_ZFree(pointQ.data, pointQ.len);
+    memset(derivedSecret, 0, sizeof(*derivedSecret));
+    derivedSecret = SECITEM_AllocItem(NULL, derivedSecret, EC_GetScalarSize(ecParams));
+    if (derivedSecret == NULL) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return SECFailure;
     }
 
-done:
-
-    if (err) {
-        MP_TO_SEC_ERROR(err);
-    }
+    SECStatus rv = method->pt_mul(derivedSecret, privateValue, publicValue);
     if (rv != SECSuccess) {
+        PORT_SetError(SEC_ERROR_BAD_KEY);
         SECITEM_ZfreeItem(derivedSecret, PR_FALSE);
     }
     return rv;
@@ -799,255 +412,48 @@ static SECStatus
 ec_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
                       const SECItem *digest, const unsigned char *kb, const int kblen)
 {
-    SECStatus rv = SECFailure;
     ECParams *ecParams = NULL;
-    mp_err err = MP_OKAY;
-    int flen = 0;  /* length in bytes of the field size */
     unsigned olen; /* length in bytes of the base point order */
 
     /* Check args */
     if (!key || !signature || !digest || !kb || (kblen <= 0)) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        rv = SECFailure;
-        goto done;
+        return SECFailure;
     }
 
     ecParams = &(key->ecParams);
-    flen = (ecParams->fieldID.size + 7) >> 3;
     olen = ecParams->order.len;
     if (signature->data == NULL) {
         /* a call to get the signature length only */
         signature->len = 2 * olen;
-        rv = SECSuccess;
-        goto done;
+        return SECSuccess;
     }
     if (signature->len < 2 * olen) {
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
-        rv = SECFailure;
-        goto done;
+        return SECFailure;
     }
 
     /* Perform curve specific signature using ECMethod */
-    if (ecParams->fieldID.type == ec_field_plain) {
-        const ECMethod *method = ec_get_method_from_name(ecParams->name);
-        if (method == NULL || method->sign_digest == NULL) {
-            PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-            rv = SECFailure;
-            goto done;
-        }
-        rv = method->sign_digest(key, signature, digest, kb, kblen);
-        if (rv != SECSuccess) {
-            PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        }
-        goto done;
+    if (ecParams->fieldID.type != ec_field_plain) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+        return SECFailure;
     }
 
-    mp_int x1;
-    mp_int d, k; /* private key, random integer */
-    mp_int r, s; /* tuple (r, s) is the signature */
-    mp_int t;    /* holding tmp values */
-    mp_int n;
-    mp_int ar; /* blinding value */
-    SECItem kGpoint = { siBuffer, NULL, 0 };
-    unsigned char *t2 = NULL;
-    unsigned obits; /* length in bits  of the base point order */
-
-#if EC_DEBUG
-    char mpstr[256];
-#endif
-
-    /* Initialize MPI integers. */
-    /* must happen before the first potential call to cleanup */
-    MP_DIGITS(&x1) = 0;
-    MP_DIGITS(&d) = 0;
-    MP_DIGITS(&k) = 0;
-    MP_DIGITS(&r) = 0;
-    MP_DIGITS(&s) = 0;
-    MP_DIGITS(&n) = 0;
-    MP_DIGITS(&t) = 0;
-    MP_DIGITS(&ar) = 0;
-
-    CHECK_MPI_OK(mp_init(&x1));
-    CHECK_MPI_OK(mp_init(&d));
-    CHECK_MPI_OK(mp_init(&k));
-    CHECK_MPI_OK(mp_init(&r));
-    CHECK_MPI_OK(mp_init(&s));
-    CHECK_MPI_OK(mp_init(&n));
-    CHECK_MPI_OK(mp_init(&t));
-    CHECK_MPI_OK(mp_init(&ar));
-
-    SECITEM_TO_MPINT(ecParams->order, &n);
-    SECITEM_TO_MPINT(key->privateValue, &d);
-
-    CHECK_MPI_OK(mp_read_unsigned_octets(&k, kb, kblen));
-    /* Make sure k is in the interval [1, n-1] */
-    if ((mp_cmp_z(&k) <= 0) || (mp_cmp(&k, &n) >= 0)) {
-#if EC_DEBUG
-        printf("k is outside [1, n-1]\n");
-        mp_tohex(&k, mpstr);
-        printf("k : %s \n", mpstr);
-        mp_tohex(&n, mpstr);
-        printf("n : %s \n", mpstr);
-#endif
-        PORT_SetError(SEC_ERROR_NEED_RANDOM);
-        goto cleanup;
+    const ECMethod *method = ec_get_method_from_name(ecParams->name);
+    if (method == NULL || method->sign_digest == NULL) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+        return SECFailure;
     }
 
-    /*
-    ** ANSI X9.62, Section 5.3.2, Step 2
-    **
-    ** Compute kG
-    */
-    kGpoint.len = EC_GetPointSize(ecParams);
-    kGpoint.data = PORT_Alloc(kGpoint.len);
-    if ((kGpoint.data == NULL) ||
-        (ec_points_mul(ecParams, &k, NULL, NULL, &kGpoint) != SECSuccess))
-        goto cleanup;
-    NSS_DECLASSIFY(kGpoint.data, kGpoint.len); /* Declassifying the r component */
-    /*
-    ** ANSI X9.62, Section 5.3.3, Step 1
-    **
-    ** Extract the x co-ordinate of kG into x1
-    */
-    CHECK_MPI_OK(mp_read_unsigned_octets(&x1, kGpoint.data + 1,
-                                         (mp_size)flen));
-
-    /*
-    ** ANSI X9.62, Section 5.3.3, Step 2
-    **
-    ** r = x1 mod n  NOTE: n is the order of the curve
-    */
-    CHECK_MPI_OK(mp_mod(&x1, &n, &r));
-
-    /*
-    ** ANSI X9.62, Section 5.3.3, Step 3
-    **
-    ** verify r != 0
-    */
-    if (mp_cmp_z(&r) == 0) {
-        PORT_SetError(SEC_ERROR_NEED_RANDOM);
-        goto cleanup;
-    }
-
-    /*
-    ** ANSI X9.62, Section 5.3.3, Step 4
-    **
-    ** s = (k**-1 * (HASH(M) + d*r)) mod n
-    */
-    SECITEM_TO_MPINT(*digest, &s); /* s = HASH(M)     */
-
-    /* In the definition of EC signing, digests are truncated
-     * to the length of n in bits.
-     * (see SEC 1 "Elliptic Curve Digit Signature Algorithm" section 4.1.*/
-    CHECK_MPI_OK((obits = mpl_significant_bits(&n)));
-    if (digest->len * 8 > obits) {
-        mpl_rsh(&s, &s, digest->len * 8 - obits);
-    }
-
-#if EC_DEBUG
-    mp_todecimal(&n, mpstr);
-    printf("n : %s (dec)\n", mpstr);
-    mp_todecimal(&d, mpstr);
-    printf("d : %s (dec)\n", mpstr);
-    mp_tohex(&x1, mpstr);
-    printf("x1: %s\n", mpstr);
-    mp_todecimal(&s, mpstr);
-    printf("digest: %s (decimal)\n", mpstr);
-    mp_todecimal(&r, mpstr);
-    printf("r : %s (dec)\n", mpstr);
-    mp_tohex(&r, mpstr);
-    printf("r : %s\n", mpstr);
-#endif
-
-    if ((t2 = PORT_Alloc(2 * ecParams->order.len)) == NULL) {
-        rv = SECFailure;
-        goto cleanup;
-    }
-    if (RNG_GenerateGlobalRandomBytes(t2, 2 * ecParams->order.len) != SECSuccess) {
-        PORT_SetError(SEC_ERROR_NEED_RANDOM);
-        rv = SECFailure;
-        goto cleanup;
-    }
-    CHECK_MPI_OK(mp_read_unsigned_octets(&t, t2, 2 * ecParams->order.len)); /* t <-$ Zn */
-    PORT_Memset(t2, 0, 2 * ecParams->order.len);
-    if (RNG_GenerateGlobalRandomBytes(t2, 2 * ecParams->order.len) != SECSuccess) {
-        PORT_SetError(SEC_ERROR_NEED_RANDOM);
-        rv = SECFailure;
-        goto cleanup;
-    }
-    CHECK_MPI_OK(mp_read_unsigned_octets(&ar, t2, 2 * ecParams->order.len)); /* ar <-$ Zn */
-
-    /* Using mp_invmod on k directly would leak bits from k. */
-    CHECK_MPI_OK(mp_mul(&k, &ar, &k));                              /* k = k * ar */
-    NSS_DECLASSIFY(MP_DIGITS(&k), MP_ALLOC(&k) * sizeof(mp_digit)); /* declassifying k here because it is masked by multiplying with ar */
-    CHECK_MPI_OK(mp_mulmod(&k, &t, &n, &k));                        /* k = k * t mod n */
-    CHECK_MPI_OK(mp_invmod(&k, &n, &k));                            /* k = k**-1 mod n */
-    CHECK_MPI_OK(mp_mulmod(&k, &t, &n, &k));                        /* k = k * t mod n */
-    /* To avoid leaking secret bits here the addition is blinded. */
-    CHECK_MPI_OK(mp_mul(&d, &ar, &t));                              /* t = d * ar */
-    NSS_DECLASSIFY(MP_DIGITS(&t), MP_ALLOC(&t) * sizeof(mp_digit)); /* declassifying d here because it is masked by multiplying with ar */
-    CHECK_MPI_OK(mp_mulmod(&t, &r, &n, &d));                        /* d = t * r mod n */
-    CHECK_MPI_OK(mp_mulmod(&s, &ar, &n, &t));                       /* t = s * ar mod n */
-    CHECK_MPI_OK(mp_add(&t, &d, &s));                               /* s = t + d */
-    CHECK_MPI_OK(mp_mulmod(&s, &k, &n, &s));                        /* s = s * k mod n */
-
-#if EC_DEBUG
-    mp_todecimal(&s, mpstr);
-    printf("s : %s (dec)\n", mpstr);
-    mp_tohex(&s, mpstr);
-    printf("s : %s\n", mpstr);
-#endif
-
-    /*
-    ** ANSI X9.62, Section 5.3.3, Step 5
-    **
-    ** verify s != 0
-    */
-    if (mp_cmp_z(&s) == 0) {
-        PORT_SetError(SEC_ERROR_NEED_RANDOM);
-        goto cleanup;
-    }
-
-    /*
-    **
-    ** Signature is tuple (r, s)
-    */
-    CHECK_MPI_OK(mp_to_fixlen_octets(&r, signature->data, olen));
-    CHECK_MPI_OK(mp_to_fixlen_octets(&s, signature->data + olen, olen));
-
-    signature->len = 2 * olen;
-    rv = SECSuccess;
-    err = MP_OKAY;
-
-cleanup:
-    mp_clear(&x1);
-    mp_clear(&d);
-    mp_clear(&k);
-    mp_clear(&r);
-    mp_clear(&s);
-    mp_clear(&n);
-    mp_clear(&t);
-    mp_clear(&ar);
-
-    if (t2) {
-        PORT_ZFree(t2, 2 * ecParams->order.len);
-    }
-
-    if (kGpoint.data) {
-        PORT_ZFree(kGpoint.data, kGpoint.len);
-    }
-
-done:
-    if (err) {
-        MP_TO_SEC_ERROR(err);
-        rv = SECFailure;
+    SECStatus rv = method->sign_digest(key, signature, digest, kb, kblen);
+    if (rv != SECSuccess) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
     }
 
 #if EC_DEBUG
     printf("ECDSA signing with seed %s\n",
            (rv == SECSuccess) ? "succeeded" : "failed");
 #endif
-
     return rv;
 }
 
@@ -1086,7 +492,6 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
 SECStatus
 ECDSA_SignDigest(ECPrivateKey *key, SECItem *signature, const SECItem *digest)
 {
-    SECStatus rv = SECFailure;
     SECItem nonceRand = { siBuffer, NULL, 0 };
 
     if (!key) {
@@ -1098,21 +503,20 @@ ECDSA_SignDigest(ECPrivateKey *key, SECItem *signature, const SECItem *digest)
     SECITEM_AllocItem(NULL, &nonceRand, EC_GetScalarSize(&key->ecParams));
     if (nonceRand.data == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
-        rv = SECFailure;
+        return SECFailure;
+    }
+
+    SECStatus rv = ec_GenerateRandomPrivateKey(&key->ecParams, &nonceRand);
+    if (rv != SECSuccess) {
         goto cleanup;
     }
-    rv = ec_GenerateRandomPrivateKey(&key->ecParams, &nonceRand);
-    if (rv != SECSuccess || nonceRand.data == NULL)
-        goto cleanup;
 
     /* Generate ECDSA signature with the specified k value */
     rv = ECDSA_SignDigestWithSeed(key, signature, digest, nonceRand.data, nonceRand.len);
     NSS_DECLASSIFY(signature->data, signature->len);
 
 cleanup:
-    if (nonceRand.data) {
-        SECITEM_ZfreeItem(&nonceRand, PR_FALSE);
-    }
+    SECITEM_ZfreeItem(&nonceRand, PR_FALSE);
 
 #if EC_DEBUG
     printf("ECDSA signing %s\n",
@@ -1136,218 +540,30 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
 {
     SECStatus rv = SECFailure;
     ECParams *ecParams = NULL;
-    mp_err err = MP_OKAY;
 
     /* Check args */
     if (!key || !signature || !digest) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        rv = SECFailure;
-        goto done;
+        return SECFailure;
     }
 
     ecParams = &(key->ecParams);
 
     /* Perform curve specific signature verification using ECMethod */
-    if (ecParams->fieldID.type == ec_field_plain) {
-        const ECMethod *method = ec_get_method_from_name(ecParams->name);
-        if (method == NULL || method->verify_digest == NULL) {
-            PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-            rv = SECFailure;
-            goto done;
-        }
-        rv = method->verify_digest(key, signature, digest);
-        if (rv != SECSuccess) {
-            PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-        }
-        goto done;
+    if (ecParams->fieldID.type != ec_field_plain) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+        return SECFailure;
     }
 
-    mp_int r_, s_;       /* tuple (r', s') is received signature) */
-    mp_int c, u1, u2, v; /* intermediate values used in verification */
-    mp_int x1;
-    mp_int n;
-    SECItem pointC = { siBuffer, NULL, 0 };
-    int slen;       /* length in bytes of a half signature (r or s) */
-    int flen;       /* length in bytes of the field size */
-    unsigned olen;  /* length in bytes of the base point order */
-    unsigned obits; /* length in bits  of the base point order */
-
-#if EC_DEBUG
-    char mpstr[256];
-    printf("ECDSA verification called\n");
-#endif
-
-    /* Initialize MPI integers. */
-    /* must happen before the first potential call to cleanup */
-    MP_DIGITS(&r_) = 0;
-    MP_DIGITS(&s_) = 0;
-    MP_DIGITS(&c) = 0;
-    MP_DIGITS(&u1) = 0;
-    MP_DIGITS(&u2) = 0;
-    MP_DIGITS(&x1) = 0;
-    MP_DIGITS(&v) = 0;
-    MP_DIGITS(&n) = 0;
-
-    CHECK_MPI_OK(mp_init(&r_));
-    CHECK_MPI_OK(mp_init(&s_));
-    CHECK_MPI_OK(mp_init(&c));
-    CHECK_MPI_OK(mp_init(&u1));
-    CHECK_MPI_OK(mp_init(&u2));
-    CHECK_MPI_OK(mp_init(&x1));
-    CHECK_MPI_OK(mp_init(&v));
-    CHECK_MPI_OK(mp_init(&n));
-
-    flen = (ecParams->fieldID.size + 7) >> 3;
-    olen = ecParams->order.len;
-    if (signature->len == 0 || signature->len % 2 != 0 ||
-        signature->len > 2 * olen) {
-        PORT_SetError(SEC_ERROR_INPUT_LEN);
-        goto cleanup;
-    }
-    slen = signature->len / 2;
-
-    /*
-     * The incoming point has been verified in sftk_handlePublicKeyObject.
-     */
-
-    SECITEM_AllocItem(NULL, &pointC, EC_GetPointSize(ecParams));
-    if (pointC.data == NULL) {
-        goto cleanup;
+    const ECMethod *method = ec_get_method_from_name(ecParams->name);
+    if (method == NULL || method->verify_digest == NULL) {
+        PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+        return SECFailure;
     }
 
-    /*
-    ** Convert received signature (r', s') into MPI integers.
-    */
-    CHECK_MPI_OK(mp_read_unsigned_octets(&r_, signature->data, slen));
-    CHECK_MPI_OK(mp_read_unsigned_octets(&s_, signature->data + slen, slen));
-
-    /*
-    ** ANSI X9.62, Section 5.4.2, Steps 1 and 2
-    **
-    ** Verify that 0 < r' < n and 0 < s' < n
-    */
-    SECITEM_TO_MPINT(ecParams->order, &n);
-    if (mp_cmp_z(&r_) <= 0 || mp_cmp_z(&s_) <= 0 ||
-        mp_cmp(&r_, &n) >= 0 || mp_cmp(&s_, &n) >= 0) {
+    rv = method->verify_digest(key, signature, digest);
+    if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-        goto cleanup; /* will return rv == SECFailure */
-    }
-
-    /*
-    ** ANSI X9.62, Section 5.4.2, Step 3
-    **
-    ** c = (s')**-1 mod n
-    */
-    CHECK_MPI_OK(mp_invmod(&s_, &n, &c)); /* c = (s')**-1 mod n */
-
-    /*
-    ** ANSI X9.62, Section 5.4.2, Step 4
-    **
-    ** u1 = ((HASH(M')) * c) mod n
-    */
-    SECITEM_TO_MPINT(*digest, &u1); /* u1 = HASH(M)     */
-
-    /* In the definition of EC signing, digests are truncated
-     * to the length of n in bits.
-     * (see SEC 1 "Elliptic Curve Digit Signature Algorithm" section 4.1.*/
-    CHECK_MPI_OK((obits = mpl_significant_bits(&n)));
-    if (digest->len * 8 > obits) { /* u1 = HASH(M')     */
-        mpl_rsh(&u1, &u1, digest->len * 8 - obits);
-    }
-
-#if EC_DEBUG
-    mp_todecimal(&r_, mpstr);
-    printf("r_: %s (dec)\n", mpstr);
-    mp_todecimal(&s_, mpstr);
-    printf("s_: %s (dec)\n", mpstr);
-    mp_todecimal(&c, mpstr);
-    printf("c : %s (dec)\n", mpstr);
-    mp_todecimal(&u1, mpstr);
-    printf("digest: %s (dec)\n", mpstr);
-#endif
-
-    CHECK_MPI_OK(mp_mulmod(&u1, &c, &n, &u1)); /* u1 = u1 * c mod n */
-
-    /*
-    ** ANSI X9.62, Section 5.4.2, Step 4
-    **
-    ** u2 = ((r') * c) mod n
-    */
-    CHECK_MPI_OK(mp_mulmod(&r_, &c, &n, &u2));
-
-    /*
-    ** ANSI X9.62, Section 5.4.3, Step 1
-    **
-    ** Compute u1*G + u2*Q
-    ** Here, A = u1.G     B = u2.Q    and   C = A + B
-    ** If the result, C, is the point at infinity, reject the signature
-    */
-    if (ec_points_mul(ecParams, &u1, &u2, &key->publicValue, &pointC) != SECSuccess) {
-        rv = SECFailure;
-        goto cleanup;
-    }
-    if (ec_point_at_infinity(&pointC)) {
-        PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-        rv = SECFailure;
-        goto cleanup;
-    }
-
-    CHECK_MPI_OK(mp_read_unsigned_octets(&x1, pointC.data + 1, flen));
-
-    /*
-    ** ANSI X9.62, Section 5.4.4, Step 2
-    **
-    ** v = x1 mod n
-    */
-    CHECK_MPI_OK(mp_mod(&x1, &n, &v));
-
-#if EC_DEBUG
-    mp_todecimal(&r_, mpstr);
-    printf("r_: %s (dec)\n", mpstr);
-    mp_todecimal(&v, mpstr);
-    printf("v : %s (dec)\n", mpstr);
-#endif
-
-    /*
-    ** ANSI X9.62, Section 5.4.4, Step 3
-    **
-    ** Verification:  v == r'
-    */
-    if (mp_cmp(&v, &r_)) {
-        PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-        rv = SECFailure; /* Signature failed to verify. */
-    } else {
-        rv = SECSuccess; /* Signature verified. */
-    }
-
-#if EC_DEBUG
-    mp_todecimal(&u1, mpstr);
-    printf("u1: %s (dec)\n", mpstr);
-    mp_todecimal(&u2, mpstr);
-    printf("u2: %s (dec)\n", mpstr);
-    mp_tohex(&x1, mpstr);
-    printf("x1: %s\n", mpstr);
-    mp_todecimal(&v, mpstr);
-    printf("v : %s (dec)\n", mpstr);
-#endif
-
-cleanup:
-    mp_clear(&r_);
-    mp_clear(&s_);
-    mp_clear(&c);
-    mp_clear(&u1);
-    mp_clear(&u2);
-    mp_clear(&x1);
-    mp_clear(&v);
-    mp_clear(&n);
-
-    if (pointC.data)
-        SECITEM_ZfreeItem(&pointC, PR_FALSE);
-
-done:
-    if (err) {
-        MP_TO_SEC_ERROR(err);
-        rv = SECFailure;
     }
 
 #if EC_DEBUG

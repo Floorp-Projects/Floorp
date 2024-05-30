@@ -34,11 +34,6 @@ policy_cleanup()
   . common/cleanup.sh
 }
 
-ignore_blank_lines()
-{
-  LC_ALL=C egrep -v '^[[:space:]]*(#|$)' "$1"
-}
-
 policy_run_tests()
 {
   html_head "CRYPTO-POLICY"

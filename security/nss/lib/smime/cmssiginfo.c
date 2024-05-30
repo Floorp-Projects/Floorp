@@ -222,6 +222,11 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest,
                               cmsSignAlgTag, NULL) != SECSuccess)
         goto loser;
 
+    if (!NSS_SMIMEUtil_SigningAllowed(&signerinfo->digestEncAlg)) {
+        PORT_SetError(SEC_ERROR_BAD_EXPORT_ALGORITHM);
+        goto loser;
+    }
+
     if (signerinfo->authAttr != NULL) {
         SECItem encoded_attrs;
 
@@ -376,6 +381,10 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
     if ((pubkAlgTag == SEC_OID_UNKNOWN) || (digestalgtag == SEC_OID_UNKNOWN) ||
         (sigAlgTag == SEC_OID_UNKNOWN)) {
         vs = NSSCMSVS_SignatureAlgorithmUnknown;
+        goto loser;
+    }
+    if (!NSS_SMIMEUtil_SigningAllowed(&signerinfo->digestEncAlg)) {
+        vs = NSSCMSVS_SignatureAlgorithmUnsupported;
         goto loser;
     }
 

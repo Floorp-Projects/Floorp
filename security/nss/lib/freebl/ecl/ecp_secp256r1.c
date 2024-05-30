@@ -153,28 +153,43 @@ ec_secp256r1_pt_mul(SECItem *X, SECItem *k, SECItem *P)
  */
 
 SECStatus
-ec_secp256r1_sign_digest(ECPrivateKey *key, SECItem *signature,
+ec_secp256r1_sign_digest(ECPrivateKey *ecPrivKey, SECItem *signature,
                          const SECItem *digest, const unsigned char *kb,
                          const unsigned int kblen)
 {
     SECStatus res = SECSuccess;
 
-    if (!key || !signature || !digest || !kb ||
-        !key->privateValue.data ||
+    if (!ecPrivKey || !signature || !digest || !kb ||
+        !ecPrivKey->privateValue.data ||
         !signature->data || !digest->data ||
-        key->ecParams.name != ECCurve_NIST_P256) {
+        ecPrivKey->ecParams.name != ECCurve_NIST_P256) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         res = SECFailure;
         return res;
     }
 
-    if (key->privateValue.len != 32 ||
-        kblen == 0 ||
-        digest->len == 0 ||
-        signature->len < 64) {
+    if (kblen == 0 || digest->len == 0 || signature->len < 64) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
         res = SECFailure;
         return res;
+    }
+
+    // Private keys should be 32 bytes, but some software trims leading zeros,
+    // and some software produces 33 byte keys with a leading zero. We'll
+    // accept these variants.
+    uint8_t padded_key_data[32] = { 0 };
+    uint8_t *key;
+    SECItem *privKey = &ecPrivKey->privateValue;
+    if (privKey->len == 32) {
+        key = privKey->data;
+    } else if (privKey->len == 33 && privKey->data[0] == 0) {
+        key = privKey->data + 1;
+    } else if (privKey->len < 32) {
+        memcpy(padded_key_data + 32 - privKey->len, privKey->data, privKey->len);
+        key = padded_key_data;
+    } else {
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return SECFailure;
     }
 
     uint8_t hash[32] = { 0 };
@@ -192,8 +207,7 @@ ec_secp256r1_sign_digest(ECPrivateKey *key, SECItem *signature,
     }
 
     bool b = Hacl_P256_ecdsa_sign_p256_without_hash(
-        signature->data, 32, hash,
-        key->privateValue.data, nonce);
+        signature->data, 32, hash, key, nonce);
     if (!b) {
         PORT_SetError(SEC_ERROR_BAD_KEY);
         res = SECFailure;
@@ -214,6 +228,9 @@ ec_secp256r1_verify_digest(ECPublicKey *key, const SECItem *signature,
 {
     SECStatus res = SECSuccess;
 
+    unsigned char _padded_sig_data[64] = { 0 };
+    unsigned char *sig_r, *sig_s;
+
     if (!key || !signature || !digest ||
         !key->publicValue.data ||
         !signature->data || !digest->data ||
@@ -223,9 +240,10 @@ ec_secp256r1_verify_digest(ECPublicKey *key, const SECItem *signature,
         return res;
     }
 
-    if (key->publicValue.len != 65 ||
-        digest->len == 0 ||
-        signature->len != 64) {
+    unsigned int olen = key->ecParams.order.len;
+    if (signature->len == 0 || signature->len % 2 != 0 ||
+        signature->len > 2 * olen ||
+        digest->len == 0 || key->publicValue.len != 65) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
         res = SECFailure;
         return res;
@@ -235,6 +253,24 @@ ec_secp256r1_verify_digest(ECPublicKey *key, const SECItem *signature,
         PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
         res = SECFailure;
         return res;
+    }
+
+    /* P-256 signature has to be 64 bytes long, pad it with 0s if it isn't */
+    if (signature->len != 64) {
+        unsigned split = signature->len / 2;
+        unsigned pad = 32 - split;
+
+        unsigned char *o_sig = signature->data;
+        unsigned char *p_sig = _padded_sig_data;
+
+        memcpy(p_sig + pad, o_sig, split);
+        memcpy(p_sig + 32 + pad, o_sig + split, split);
+
+        sig_r = p_sig;
+        sig_s = p_sig + 32;
+    } else {
+        sig_r = signature->data;
+        sig_s = signature->data + 32;
     }
 
     uint8_t hash[32] = { 0 };
@@ -247,7 +283,7 @@ ec_secp256r1_verify_digest(ECPublicKey *key, const SECItem *signature,
     bool b = Hacl_P256_ecdsa_verif_without_hash(
         32, hash,
         key->publicValue.data + 1,
-        signature->data, signature->data + 32);
+        sig_r, sig_s);
     if (!b) {
         PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
         res = SECFailure;

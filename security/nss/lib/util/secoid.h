@@ -62,6 +62,15 @@ extern SECStatus SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *dest
 extern SECOidTag SECOID_GetAlgorithmTag(const SECAlgorithmID *aid);
 
 /*
+** Get the number of valid tags in the current system. This includes dynamic
+** tags. This value can grow but never shrink. This is more reliable than using
+** SEC_OID_TOTAL because 1) it includes dynamic tags, and 2) it includes any
+** new tags the nss library has added since the last time the application
+** was compilied.
+*/
+extern SECOidTag SECOID_GetTotalTags(void);
+
+/*
 ** Destroy an algorithm-id object.
 **      "aid" the certificate-request to destroy
 **      "freeit" if PR_TRUE then free the object as well as its sub-objects
@@ -134,6 +143,17 @@ extern SECStatus NSS_GetAlgorithmPolicy(SECOidTag tag, PRUint32 *pValue);
  */
 extern SECStatus
 NSS_SetAlgorithmPolicy(SECOidTag tag, PRUint32 setBits, PRUint32 clearBits);
+
+/* Set all the tags to a particular policy (like to clear all S/MIME bits */
+extern SECStatus
+NSS_SetAlgorithmPolicyAll(PRUint32 setBits, PRUint32 clearBits);
+
+/* Get all the tags with a particular policy. The policy must match the exact
+ * value after applying the mask. Caller is responsible for
+ * freeing the tag array with PORT_Free() */
+extern SECStatus
+NSS_GetAlgorithmPolicyAll(PRUint32 maskBits, PRUint32 valueBits,
+                          SECOidTag **outTags, int *outTagCount);
 
 /* Lock the policy so NSS_SetAlgorithmPolicy (and other policy functions)
  * No longer function */

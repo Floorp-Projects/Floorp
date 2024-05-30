@@ -122,6 +122,10 @@
 #define SGN_CopyDigestInfo SGN_CopyDigestInfo_Util
 #define SGN_CreateDigestInfo SGN_CreateDigestInfo_Util
 #define SGN_DestroyDigestInfo SGN_DestroyDigestInfo_Util
+#define HASH_GetHashTypeByOidTag HASH_GetHashTypeByOidTag_Util
+#define HASH_GetHashOidTagByHashType HASH_GetHashOidTagByHashType_Util
+#define HASH_GetHashOidTagByHMACOidTag HASH_GetHashOidTagByHMACOidTag_Util
+#define HASH_GetHMACOidTagByHashOidTag HASH_GetHMACOidTagByHashOidTag_Util
 
 /* templates moved from libnss3 */
 #define NSS_Get_SEC_AnyTemplate NSS_Get_SEC_AnyTemplate_Util
