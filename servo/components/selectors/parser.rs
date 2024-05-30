@@ -723,6 +723,30 @@ pub fn namespace_empty_string<Impl: SelectorImpl>() -> Impl::NamespaceUrl {
 
 type SelectorData<Impl> = ThinArc<SpecificityAndFlags, Component<Impl>>;
 
+bitflags! {
+    /// What kind of selectors potentially matching featureless shawdow host are present.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    pub struct FeaturelessHostMatches: u8 {
+        /// This selector matches featureless shadow host via `:host`.
+        const FOR_HOST = 1 << 0;
+        /// This selector matches featureless shadow host via `:scope`.
+        /// Featureless match applies only if we're:
+        /// 1) In a scoping context, AND
+        /// 2) The scope is a shadow host.
+        const FOR_SCOPE = 1 << 1;
+    }
+}
+
+impl FeaturelessHostMatches {
+    fn insert_not_empty(&mut self, other: Self) -> bool {
+        if other.is_empty() {
+            return false;
+        }
+        self.insert(other);
+        true
+    }
+}
+
 /// A Selector stores a sequence of simple selectors and combinators. The
 /// iterator classes allow callers to iterate at either the raw sequence level or
 /// at the level of sequences of simple selectors separated by combinators. Most
@@ -895,13 +919,23 @@ impl<Impl: SelectorImpl> Selector<Impl> {
         }
     }
 
-    /// Whether this selector is a featureless :host selector, with no combinators to the left, and
+    /// Whether this selector matches a featureless shadow host, with no combinators to the left, and
     /// optionally has a pseudo-element to the right.
     #[inline]
-    pub fn is_featureless_host_selector_or_pseudo_element(&self) -> bool {
+    pub fn matches_featureless_host_selector_or_pseudo_element(&self) -> FeaturelessHostMatches {
         let flags = self.flags();
-        flags.intersects(SelectorFlags::HAS_HOST) &&
-            !flags.intersects(SelectorFlags::HAS_NON_FEATURELESS_COMPONENT)
+
+        let mut result = FeaturelessHostMatches::empty();
+        if flags.intersects(SelectorFlags::HAS_NON_FEATURELESS_COMPONENT) {
+            return result;
+        }
+        if flags.intersects(SelectorFlags::HAS_HOST) {
+            result.insert(FeaturelessHostMatches::FOR_HOST);
+        }
+        if flags.intersects(SelectorFlags::HAS_SCOPE) {
+            result.insert(FeaturelessHostMatches::FOR_SCOPE);
+        }
+        result
     }
 
     /// Returns an iterator over this selector in matching order (right-to-left),
@@ -1336,13 +1370,26 @@ impl<'a, Impl: 'a + SelectorImpl> SelectorIter<'a, Impl> {
         self.next_combinator.take()
     }
 
-    /// Whether this selector is a featureless host selector, with no
+    /// Whether this selector is a featureless selector matching the shadow host, with no
     /// combinators to the left.
     #[inline]
-    pub(crate) fn is_featureless_host_selector(&mut self) -> bool {
-        self.selector_length() > 0 &&
-            self.all(|component| component.matches_featureless_host()) &&
-            self.next_sequence().is_none()
+    pub(crate) fn is_featureless_host_selector(&mut self) -> FeaturelessHostMatches {
+        if self.selector_length() == 0 {
+            return FeaturelessHostMatches::empty();
+        }
+        let mut result = FeaturelessHostMatches::empty();
+        while let Some(c) = self.next() {
+            let component_matches = c.matches_featureless_host();
+            if component_matches.is_empty() {
+                return FeaturelessHostMatches::empty();
+            }
+            result.insert(component_matches);
+        }
+        if self.next_sequence().is_some() {
+            FeaturelessHostMatches::empty()
+        } else {
+            result
+        }
     }
 
     #[inline]
@@ -2021,20 +2068,29 @@ impl<Impl: SelectorImpl> Component<Impl> {
         matches!(*self, Component::Host(..))
     }
 
-    /// Returns true if this is a :host() selector.
+    /// Returns if this component can match a featureless shadow host, and if so,
+    /// via which selector.
     #[inline]
-    pub fn matches_featureless_host(&self) -> bool {
+    pub fn matches_featureless_host(&self) -> FeaturelessHostMatches {
         match *self {
-            Component::Host(..) => true,
+            Component::Host(..) => FeaturelessHostMatches::FOR_HOST,
+            Component::Scope | Component::ImplicitScope => FeaturelessHostMatches::FOR_SCOPE,
             Component::Where(ref l) | Component::Is(ref l) => {
-                // TODO(emilio): For now we use .all() rather than .any(), because not doing so
-                // brings up a fair amount of extra complexity (we can't make the decision on
-                // whether to walk out statically).
-                l.slice()
-                    .iter()
-                    .all(|i| i.is_featureless_host_selector_or_pseudo_element())
+                debug_assert!(l.len() > 0, "Zero length selector?");
+                // TODO(emilio): For now we require that everything in logical combination can match
+                // the featureless shadow host, because not doing so brings up a fair amount of extra
+                // complexity (we can't make the decision on whether to walk out statically).
+                let mut result = FeaturelessHostMatches::empty();
+                for i in l.slice() {
+                    if !result.insert_not_empty(
+                        i.matches_featureless_host_selector_or_pseudo_element()
+                    ) {
+                        return FeaturelessHostMatches::empty();
+                    }
+                }
+                result
             },
-            _ => false,
+            _ => FeaturelessHostMatches::empty(),
         }
     }
 
@@ -3732,6 +3788,10 @@ pub mod tests {
             true
         }
 
+        fn parse_host(&self) -> bool {
+            true
+        }
+
         fn parse_non_ts_pseudo_class(
             &self,
             location: SourceLocation,
@@ -4523,6 +4583,21 @@ pub mod tests {
                 SelectorFlags::HAS_SCOPE | SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
             )])
         );
+    }
+
+    #[test]
+    fn test_featureless() {
+        let featureless = parse(":host, :scope").unwrap();
+        assert_eq!(featureless.slice().len(), 2);
+        for selector in featureless.slice() {
+            assert!(!selector.flags().intersects(SelectorFlags::HAS_NON_FEATURELESS_COMPONENT));
+        }
+
+        let non_featureless = parse(":host.foo, :scope.foo, :host .foo, :scope .foo").unwrap();
+        assert_eq!(non_featureless.slice().len(), 4);
+        for selector in non_featureless.slice() {
+            assert!(selector.flags().intersects(SelectorFlags::HAS_NON_FEATURELESS_COMPONENT));
+        }
     }
 
     struct TestVisitor {

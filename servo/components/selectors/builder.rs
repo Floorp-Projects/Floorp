@@ -257,7 +257,9 @@ impl From<Specificity> for u32 {
     }
 }
 
-pub(crate) fn specificity_and_flags<Impl>(iter: slice::Iter<Component<Impl>>) -> SpecificityAndFlags
+fn specificity_and_flags<Impl>(
+    iter: slice::Iter<Component<Impl>>,
+) -> SpecificityAndFlags
 where
     Impl: SelectorImpl,
 {
@@ -325,17 +327,14 @@ where
             Component::AttributeOther(..) |
             Component::Root |
             Component::Empty |
-            Component::Scope |
-            Component::ImplicitScope |
             Component::Nth(..) |
             Component::NonTSPseudoClass(..) => {
-                if matches!(*simple_selector, Component::Scope | Component::ImplicitScope) {
-                    flags.insert(SelectorFlags::HAS_SCOPE);
-                }
                 flags.insert(SelectorFlags::HAS_NON_FEATURELESS_COMPONENT);
-                if !matches!(*simple_selector, Component::ImplicitScope) {
-                    // Implicit :scope does not add specificity. See
-                    // https://github.com/w3c/csswg-drafts/issues/10196
+                specificity.class_like_selectors += 1;
+            },
+            Component::Scope | Component::ImplicitScope => {
+                flags.insert(SelectorFlags::HAS_SCOPE);
+                if matches!(*simple_selector, Component::Scope) {
                     specificity.class_like_selectors += 1;
                 }
             },
@@ -386,7 +385,11 @@ where
     let mut specificity = Default::default();
     let mut flags = Default::default();
     for simple_selector in iter {
-        component_specificity(&simple_selector, &mut specificity, &mut flags);
+        component_specificity(
+            &simple_selector,
+            &mut specificity,
+            &mut flags,
+        );
     }
     SpecificityAndFlags {
         specificity: specificity.into(),
