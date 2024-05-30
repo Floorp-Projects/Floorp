@@ -7,6 +7,7 @@
 #include "PageThumbProtocolHandler.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/ipc/URIParams.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
@@ -313,8 +314,8 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
 
   nsresult rv;
   if (aHost.EqualsLiteral(PAGE_THUMB_HOST)) {
-    nsCOMPtr<nsIPageThumbsStorageService> pageThumbsStorage =
-        do_GetService("@mozilla.org/thumbnails/pagethumbs-service;1", &rv);
+    nsCOMPtr<nsIPageThumbsStorageService> pageThumbsStorage;
+    pageThumbsStorage = mozilla::components::PageThumbsStorage::Service(&rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -324,8 +325,8 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
                                               aThumbnailPath);
 #ifdef MOZ_PLACES
   } else if (aHost.EqualsLiteral(PLACES_PREVIEWS_HOST)) {
-    nsCOMPtr<nsIPlacesPreviewsHelperService> helper =
-        do_GetService("@mozilla.org/places/previews-helper;1", &rv);
+    nsCOMPtr<nsIPlacesPreviewsHelperService> helper;
+    helper = mozilla::components::PlacesPreviewsHelper::Service(&rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

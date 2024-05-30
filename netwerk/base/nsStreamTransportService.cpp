@@ -17,6 +17,7 @@
 #include "nsITransport.h"
 #include "nsIObserverService.h"
 #include "nsThreadPool.h"
+#include "mozilla/Components.h"
 #include "mozilla/Services.h"
 
 namespace mozilla {
@@ -91,8 +92,8 @@ nsInputStreamTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
   NS_ENSURE_TRUE(!mInProgress, NS_ERROR_IN_PROGRESS);
 
   nsresult rv;
-  nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIEventTarget> target;
+  target = mozilla::components::StreamTransport::Service(&rv);
   if (NS_FAILED(rv)) return rv;
 
   // XXX if the caller requests an unbuffered stream, then perhaps

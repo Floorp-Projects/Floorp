@@ -10,6 +10,7 @@
 #include "WebSocketConnection.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/net/SocketProcessBackgroundChild.h"
+#include "mozilla/Components.h"
 #include "nsISerializable.h"
 #include "nsITLSSocketControl.h"
 #include "nsITransportSecurityInfo.h"
@@ -35,7 +36,7 @@ void WebSocketConnectionChild::Init(uint32_t aListenerId) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
-  mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  mSocketThread = mozilla::components::SocketTransport::Service(&rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!mSocketThread) {
     return;

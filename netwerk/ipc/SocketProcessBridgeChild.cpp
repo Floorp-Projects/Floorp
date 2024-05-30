@@ -7,6 +7,7 @@
 #include "SocketProcessLogging.h"
 
 #include "mozilla/AppShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -144,8 +145,8 @@ void SocketProcessBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
     }
 
     nsresult res;
-    nsCOMPtr<nsISerialEventTarget> mSTSThread =
-        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
+    nsCOMPtr<nsISerialEventTarget> mSTSThread;
+    mSTSThread = mozilla::components::SocketTransport::Service(&res);
     if (NS_SUCCEEDED(res) && mSTSThread) {
       // This must be called off the main thread.  If we don't make this call
       // ipc::BackgroundChild::GetOrCreateSocketActorForCurrentThread() will

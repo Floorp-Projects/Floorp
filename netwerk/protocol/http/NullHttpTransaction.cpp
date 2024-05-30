@@ -8,6 +8,7 @@
 #include "HttpLog.h"
 
 #include "mozilla/net/NeckoChannelParams.h"  // For HttpActivityArgs.
+#include "mozilla/Components.h"
 #include "nsHttp.h"
 #include "NullHttpTransaction.h"
 #include "nsHttpHandler.h"
@@ -34,7 +35,7 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo* ci,
       mConnectionInfo(ci) {
   nsresult rv;
   mActivityDistributor =
-      do_GetService(NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &rv);
+      mozilla::components::HttpActivityDistributor::Service(&rv);
   if (NS_FAILED(rv)) {
     return;
   }

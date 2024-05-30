@@ -8,6 +8,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "mozilla/ArrayAlgorithm.h"
+#include "mozilla/Components.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
@@ -194,8 +195,8 @@ BackgroundFileSaver::EnableSha256() {
              "Can't enable sha256 or initialize NSS off the main thread");
   // Ensure Personal Security Manager is initialized. This is required for
   // PK11_* operations to work.
-  nsresult rv;
-  nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &rv);
+  nsresult rv = NS_OK;
+  mozilla::components::NSSComponent::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
   MutexAutoLock lock(mLock);
   mSha256Enabled = true;  // this will be read by the worker thread
@@ -219,8 +220,8 @@ BackgroundFileSaver::EnableSignatureInfo() {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can't enable signature extraction off the main thread");
   // Ensure Personal Security Manager is initialized.
-  nsresult rv;
-  nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &rv);
+  nsresult rv = NS_OK;
+  mozilla::components::NSSComponent::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
   MutexAutoLock lock(mLock);
   mSignatureInfoEnabled = true;

@@ -26,6 +26,7 @@
 #include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SHA1.h"
@@ -595,8 +596,8 @@ void nsNetworkLinkService::calculateNetworkIdWithDelay(uint32_t aDelay) {
     return;
   }
 
-  nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  nsCOMPtr<nsIEventTarget> target;
+  target = mozilla::components::StreamTransport::Service();
   if (!target) {
     return;
   }
@@ -723,8 +724,8 @@ void nsNetworkLinkService::NetworkConfigChanged(SCDynamicStoreRef aStoreREf,
 
 void nsNetworkLinkService::DNSConfigChanged(uint32_t aDelayMs) {
   LOG(("nsNetworkLinkService::DNSConfigChanged"));
-  nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  nsCOMPtr<nsIEventTarget> target;
+  target = mozilla::components::StreamTransport::Service();
   if (!target) {
     return;
   }
@@ -752,8 +753,8 @@ void nsNetworkLinkService::DNSConfigChanged(uint32_t aDelayMs) {
 nsresult nsNetworkLinkService::Init(void) {
   nsresult rv;
 
-  nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1", &rv);
+  nsCOMPtr<nsIObserverService> observerService;
+  observerService = mozilla::components::Observer::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = observerService->AddObserver(this, "xpcom-shutdown", false);

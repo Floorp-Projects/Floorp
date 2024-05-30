@@ -4,6 +4,7 @@
 
 #include "mozilla/dom/NetDashboardBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/net/Dashboard.h"
 #include "mozilla/net/HttpInfo.h"
@@ -821,7 +822,7 @@ Dashboard::RequestDNSInfo(nsINetDashboardCallback* aCallback) {
   dnsData->mEventTarget = GetCurrentSerialEventTarget();
 
   if (!mDnsService) {
-    mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    mDnsService = mozilla::components::DNS::Service(&rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -931,7 +932,7 @@ Dashboard::RequestDNSLookup(const nsACString& aHost,
   nsresult rv;
 
   if (!mDnsService) {
-    mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    mDnsService = mozilla::components::DNS::Service(&rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -955,7 +956,7 @@ Dashboard::RequestDNSHTTPSRRLookup(const nsACString& aHost,
   nsresult rv;
 
   if (!mDnsService) {
-    mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    mDnsService = mozilla::components::DNS::Service(&rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1150,8 +1151,7 @@ using ErrorEntry = struct {
 };
 
 #undef ERROR
-#define ERROR(key, val) \
-  { key, #key }
+#define ERROR(key, val) {key, #key}
 
 ErrorEntry socketTransportStatuses[] = {
     ERROR(NS_NET_STATUS_RESOLVING_HOST, FAILURE(3)),

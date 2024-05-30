@@ -144,8 +144,8 @@ static nsCString GetDeviceModelId() {
   // Assumed to be running on the main thread
   // We need the device property in either case
   nsAutoCString deviceModelId;
-  nsCOMPtr<nsIPropertyBag2> infoService =
-      do_GetService("@mozilla.org/system-info;1");
+  nsCOMPtr<nsIPropertyBag2> infoService;
+  infoService = mozilla::components::SystemInfo::Service();
   MOZ_ASSERT(infoService, "Could not find a system info service");
   nsAutoString androidDevice;
   nsresult rv = infoService->GetPropertyAsAString(u"device"_ns, androidDevice);
@@ -266,7 +266,8 @@ nsHttpHandler::nsHttpHandler()
 
   MOZ_ASSERT(!gHttpHandler, "HTTP handler already created!");
 
-  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  nsCOMPtr<nsIXULRuntime> runtime;
+  runtime = mozilla::components::XULRuntime::Service();
   if (runtime) {
     runtime->GetProcessID(&mProcessId);
   }
@@ -327,7 +328,8 @@ nsresult nsHttpHandler::Init() {
   rv = nsHttp::CreateAtomTable();
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIIOService> service = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIIOService> service;
+  service = mozilla::components::IO::Service(&rv);
   if (NS_FAILED(rv)) {
     NS_WARNING("unable to continue without io service");
     return rv;
@@ -387,8 +389,8 @@ nsresult nsHttpHandler::Init() {
 
   mCompatFirefox.AssignLiteral("Firefox/" MOZILLA_UAVERSION);
 
-  nsCOMPtr<nsIXULAppInfo> appInfo =
-      do_GetService("@mozilla.org/xre/app-info;1");
+  nsCOMPtr<nsIXULAppInfo> appInfo;
+  appInfo = mozilla::components::XULRuntime::Service();
 
   mAppName.AssignLiteral(MOZ_APP_UA_NAME);
   if (mAppName.Length() == 0 && appInfo) {
@@ -666,8 +668,8 @@ bool nsHttpHandler::IsAcceptableEncoding(const char* enc, bool isSecure) {
 
 nsISiteSecurityService* nsHttpHandler::GetSSService() {
   if (!mSSService) {
-    nsCOMPtr<nsISiteSecurityService> service =
-        do_GetService(NS_SSSERVICE_CONTRACTID);
+    nsCOMPtr<nsISiteSecurityService> service;
+    service = mozilla::components::SiteSecurity::Service();
     mSSService = new nsMainThreadPtrHolder<nsISiteSecurityService>(
         "nsHttpHandler::mSSService", service);
   }
@@ -889,8 +891,8 @@ void nsHttpHandler::InitUserAgentComponents() {
 #endif
 
 #ifdef ANDROID
-  nsCOMPtr<nsIPropertyBag2> infoService =
-      do_GetService("@mozilla.org/system-info;1");
+  nsCOMPtr<nsIPropertyBag2> infoService;
+  infoService = mozilla::components::SystemInfo::Service();
   MOZ_ASSERT(infoService, "Could not find a system info service");
   nsresult rv;
 
