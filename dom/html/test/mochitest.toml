@@ -621,6 +621,8 @@ skip-if = [
 ["test_bug641219.html"]
 
 ["test_bug643051.html"]
+# This test fails with xorigin when 3pc are rejected by default (Bug 1873980).
+skip-if = ["xorigin"]
 
 ["test_bug646157.html"]
 
