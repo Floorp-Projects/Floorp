@@ -105,6 +105,8 @@ include = [
   "FontVariantEastAsian",
   "FontVariantLigatures",
   "FontVariantNumeric",
+  "InsetArea",
+  "InsetAreaKeyword",
   "ComputedFontStretchRange",
   "ComputedFontStyleDescriptor",
   "ComputedFontWeightRange",

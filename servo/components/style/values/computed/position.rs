@@ -14,7 +14,7 @@ use crate::values::generics::position::PositionComponent as GenericPositionCompo
 use crate::values::generics::position::PositionOrAuto as GenericPositionOrAuto;
 use crate::values::generics::position::ZIndex as GenericZIndex;
 pub use crate::values::specified::position::{GridAutoFlow, GridTemplateAreas, MasonryAutoFlow};
-pub use crate::values::specified::position::{AnchorName, AnchorScope, PositionAnchor, PositionVisibility};
+pub use crate::values::specified::position::{AnchorName, AnchorScope, InsetArea, InsetAreaKeyword, PositionAnchor, PositionVisibility};
 use crate::Zero;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
