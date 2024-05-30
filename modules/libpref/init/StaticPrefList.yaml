@@ -9952,14 +9952,14 @@
   mirror: always
 
 # Whether we expose the functionality proposed in
-# https://github.com/WICG/encrypted-media-encryption-scheme/blob/master/explainer.md
+# https://w3c.github.io/encrypted-media/#ref-for-dom-mediakeysystemmediacapability-encryptionscheme-2
 # I.e. if true, apps calling navigator.requestMediaKeySystemAccess() can pass
 # an optional encryption scheme as part of MediaKeySystemMediaCapability
 # objects. If a scheme is present when we check for support, we must ensure we
 # support that scheme in order to provide key system access.
 - name: media.eme.encrypted-media-encryption-scheme.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Do we need explicit approval from the application to allow access to EME?
