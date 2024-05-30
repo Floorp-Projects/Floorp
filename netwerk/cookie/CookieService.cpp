@@ -145,7 +145,7 @@ constexpr auto SAMESITE_MDN_URL =
 
 namespace {
 
-void ComposeCookieString(nsTArray<Cookie*>& aCookieList,
+void ComposeCookieString(nsTArray<RefPtr<Cookie>>& aCookieList,
                          nsACString& aCookieString) {
   for (Cookie* cookie : aCookieList) {
     // check if we have anything to write
@@ -421,7 +421,7 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     principals.AppendElement(aDocument->PartitionedPrincipal());
   }
 
-  nsTArray<Cookie*> cookieList;
+  nsTArray<RefPtr<Cookie>> cookieList;
 
   for (auto& principal : principals) {
     if (!CookieCommons::IsSchemeSupported(principal)) {
@@ -451,9 +451,10 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     int64_t currentTimeInUsec = PR_Now();
     int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
 
-    const nsTArray<RefPtr<Cookie>>* cookies = storage->GetCookiesFromHost(
-        baseDomain, principal->OriginAttributesRef());
-    if (!cookies) {
+    nsTArray<RefPtr<Cookie>> cookies;
+    storage->GetCookiesFromHost(baseDomain, principal->OriginAttributesRef(),
+                                cookies);
+    if (cookies.IsEmpty()) {
       continue;
     }
 
@@ -465,7 +466,7 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     bool stale = false;
 
     // iterate the cookies!
-    for (Cookie* cookie : *cookies) {
+    for (Cookie* cookie : cookies) {
       // check the host, since the base domain lookup is conservative.
       if (!CookieCommons::DomainMatches(cookie, hostFromURI)) {
         continue;
@@ -580,7 +581,7 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
     MOZ_ASSERT(!partitionedOriginAttributes.mPartitionKey.IsEmpty());
   }
 
-  AutoTArray<Cookie*, 8> foundCookieList;
+  AutoTArray<RefPtr<Cookie>, 8> foundCookieList;
   GetCookiesForURI(
       aHostURI, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
@@ -1039,7 +1040,7 @@ void CookieService::GetCookiesForURI(
     bool aHadCrossSiteRedirects, bool aHttpBound,
     bool aAllowSecureCookiesToInsecureOrigin,
     const nsTArray<OriginAttributes>& aOriginAttrsList,
-    nsTArray<Cookie*>& aCookieList) {
+    nsTArray<RefPtr<Cookie>>& aCookieList) {
   NS_ASSERTION(aHostURI, "null host!");
 
   if (!CookieCommons::IsSchemeSupported(aHostURI)) {
@@ -1132,9 +1133,9 @@ void CookieService::GetCookiesForURI(
     int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
     bool stale = false;
 
-    const nsTArray<RefPtr<Cookie>>* cookies =
-        storage->GetCookiesFromHost(baseDomain, attrs);
-    if (!cookies) {
+    nsTArray<RefPtr<Cookie>> cookies;
+    storage->GetCookiesFromHost(baseDomain, attrs, cookies);
+    if (cookies.IsEmpty()) {
       continue;
     }
 
@@ -1144,7 +1145,7 @@ void CookieService::GetCookiesForURI(
             aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
 
     // iterate the cookies!
-    for (Cookie* cookie : *cookies) {
+    for (Cookie* cookie : cookies) {
       // check the host, since the base domain lookup is conservative.
       if (!CookieCommons::DomainMatches(cookie, hostFromURI)) {
         continue;
@@ -2397,14 +2398,16 @@ CookieService::GetCookiesFromHost(const nsACString& aHost,
 
   CookieStorage* storage = PickStorage(attrs);
 
-  const nsTArray<RefPtr<Cookie>>* cookies =
-      storage->GetCookiesFromHost(baseDomain, attrs);
+  nsTArray<RefPtr<Cookie>> cookies;
+  storage->GetCookiesFromHost(baseDomain, attrs, cookies);
 
-  if (cookies) {
-    aResult.SetCapacity(cookies->Length());
-    for (Cookie* cookie : *cookies) {
-      aResult.AppendElement(cookie);
-    }
+  if (cookies.IsEmpty()) {
+    return NS_OK;
+  }
+
+  aResult.SetCapacity(cookies.Length());
+  for (Cookie* cookie : cookies) {
+    aResult.AppendElement(cookie);
   }
 
   return NS_OK;

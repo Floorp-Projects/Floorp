@@ -17,8 +17,8 @@ already_AddRefed<CookiePrivateStorage> CookiePrivateStorage::Create() {
   return storage.forget();
 }
 
-void CookiePrivateStorage::StaleCookies(const nsTArray<Cookie*>& aCookieList,
-                                        int64_t aCurrentTimeInUsec) {
+void CookiePrivateStorage::StaleCookies(
+    const nsTArray<RefPtr<Cookie>>& aCookieList, int64_t aCurrentTimeInUsec) {
   int32_t count = aCookieList.Length();
   for (int32_t i = 0; i < count; ++i) {
     Cookie* cookie = aCookieList.ElementAt(i);

@@ -65,9 +65,8 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         self.kind = if self.ref_spatial_node_index == target_node_index {
             CoordinateSpaceMapping::Local
         } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
-            let scale_offset = ref_spatial_node.content_transform
-                .inverse()
-                .pre_transform(&target_spatial_node.content_transform);
+            let scale_offset = target_spatial_node.content_transform
+                .then(&ref_spatial_node.content_transform.inverse());
             CoordinateSpaceMapping::ScaleOffset(scale_offset)
         } else {
             let transform = spatial_tree
@@ -236,10 +235,10 @@ impl SpaceSnapper {
         self.current_target_spatial_node_index = target_node_index;
         self.snapping_transform = match (ref_snap, target_snap) {
             (Some(ref ref_scale_offset), Some(ref target_scale_offset)) => {
-                Some(ref_scale_offset
-                    .inverse()
-                    .pre_transform(target_scale_offset)
-                    .pre_scale(self.raster_pixel_scale.0))
+                Some(target_scale_offset
+                    .pre_scale(self.raster_pixel_scale.0)
+                    .then(&ref_scale_offset.inverse())
+                )
             }
             _ => None,
         };

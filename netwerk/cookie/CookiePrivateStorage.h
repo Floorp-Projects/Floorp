@@ -17,12 +17,12 @@ class CookiePrivateStorage final : public CookieStorage {
  public:
   static already_AddRefed<CookiePrivateStorage> Create();
 
-  void StaleCookies(const nsTArray<Cookie*>& aCookieList,
+  void StaleCookies(const nsTArray<RefPtr<Cookie>>& aCookieList,
                     int64_t aCurrentTimeInUsec) override;
 
-  void Close() override{};
+  void Close() override {};
 
-  void EnsureInitialized() override{};
+  void EnsureInitialized() override {};
 
   nsresult RunInTransaction(nsICookieTransactionCallback* aCallback) override {
     // It might make sense for this to be a no-op, or to return
@@ -52,7 +52,7 @@ class CookiePrivateStorage final : public CookieStorage {
                    Cookie* aCookie) override {}
 
  private:
-  void CollectCookieJarSizeData() override{};
+  void CollectCookieJarSizeData() override {};
 };
 
 }  // namespace net

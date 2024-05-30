@@ -10,7 +10,13 @@
  * designed to be used as input to the C preprocessor *only*.
  */
 
-DEPRECATED_OPERATION(MutationEvent)
+DEPRECATED_OPERATION(DOMSubtreeModified)
+DEPRECATED_OPERATION(DOMNodeInserted)
+DEPRECATED_OPERATION(DOMNodeRemoved)
+DEPRECATED_OPERATION(DOMNodeRemovedFromDocument)
+DEPRECATED_OPERATION(DOMNodeInsertedIntoDocument)
+DEPRECATED_OPERATION(DOMAttrModified)
+DEPRECATED_OPERATION(DOMCharacterDataModified)
 DEPRECATED_OPERATION(Components)
 DEPRECATED_OPERATION(NodeIteratorDetach)
 DEPRECATED_OPERATION(LenientThis)

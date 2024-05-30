@@ -263,6 +263,7 @@ bool IsPromiseWithDefaultResolvingFunction(PromiseObject* promise);
 void SetAlreadyResolvedPromiseWithDefaultResolvingFunction(
     PromiseObject* promise);
 
+bool IsPromiseConstructor(const JSObject* obj);
 }  // namespace js
 
 #endif  // builtin_Promise_h

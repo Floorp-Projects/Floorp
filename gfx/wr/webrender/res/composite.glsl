@@ -45,11 +45,11 @@ uniform mediump vec2 uTextureSize;
 // CPU side data is in CompositeInstance (gpu_types.rs) and is
 // converted to GPU data using desc::COMPOSITE (renderer.rs) by
 // filling vaos.composite_vao with VertexArrayKind::Composite.
-PER_INSTANCE attribute vec4 aLocalRect;
+PER_INSTANCE attribute vec4 aDeviceRect;
 PER_INSTANCE attribute vec4 aDeviceClipRect;
 PER_INSTANCE attribute vec4 aColor;
 PER_INSTANCE attribute vec4 aParams;
-PER_INSTANCE attribute vec4 aTransform;
+PER_INSTANCE attribute vec2 aFlip;
 
 #ifdef WR_FEATURE_YUV
 // YUV treats these as a UV clip rect (clamp)
@@ -59,10 +59,6 @@ PER_INSTANCE attribute vec4 aUvRect2;
 #else
 PER_INSTANCE attribute vec4 aUvRect0;
 #endif
-
-vec2 apply_transform(vec2 p, vec4 transform) {
-    return p * transform.xy + transform.zw;
-}
 
 #ifdef WR_FEATURE_YUV
 YuvPrimitive fetch_yuv_primitive() {
@@ -75,16 +71,17 @@ YuvPrimitive fetch_yuv_primitive() {
 #endif
 
 void main(void) {
-	// Get world position
-    vec2 world_p0 = apply_transform(aLocalRect.xy, aTransform);
-    vec2 world_p1 = apply_transform(aLocalRect.zw, aTransform);
-    vec2 world_pos = mix(world_p0, world_p1, aPosition.xy);
+    // Flip device rect if required
+    vec4 device_rect = mix(aDeviceRect.xyzw, aDeviceRect.zwxy, aFlip.xyxy);
+
+    // Get world position
+    vec2 world_pos = mix(device_rect.xy, device_rect.zw, aPosition.xy);
 
     // Clip the position to the world space clip rect
     vec2 clipped_world_pos = clamp(world_pos, aDeviceClipRect.xy, aDeviceClipRect.zw);
 
     // Derive the normalized UV from the clipped vertex position
-    vec2 uv = (clipped_world_pos - world_p0) / (world_p1 - world_p0);
+    vec2 uv = (clipped_world_pos - device_rect.xy) / (device_rect.zw - device_rect.xy);
 
 #ifdef WR_FEATURE_YUV
     YuvPrimitive prim = fetch_yuv_primitive();
