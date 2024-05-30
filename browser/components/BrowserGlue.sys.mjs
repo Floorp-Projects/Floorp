@@ -1468,6 +1468,17 @@ BrowserGlue.prototype = {
       lazy.PdfJs.checkIsDefault(this._isNewProfile);
     }
 
+    if (!AppConstants.NIGHTLY_BUILD && this._isNewProfile) {
+      lazy.FormAutofillUtils.setOSAuthEnabled(
+        lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+        false
+      );
+      lazy.LoginHelper.setOSAuthEnabled(
+        lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,
+        false
+      );
+    }
+
     listeners.init();
 
     lazy.SessionStore.init();
@@ -3793,7 +3804,7 @@ BrowserGlue.prototype = {
   _migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 145;
+    const UI_VERSION = 147;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4456,33 +4467,62 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 146) {
+    // Version 146 had a typo issue and thus it has been replaced by 147.
+
+    if (currentUIVersion < 147) {
       // We're securing the boolean prefs for OS Authentication.
       // This is achieved by converting them into a string pref and encrypting the values
       // stored inside it.
 
       if (!AppConstants.NIGHTLY_BUILD) {
-        // We only perform pref migration for Beta and Release since for nightly we are
-        // enabling OSAuth (exiting functionality) for creditcards and passwords as defualt.
-        let ccReauthPrefValue = Services.prefs.getBoolPref(
-          "extensions.formautofill.reauth.enabled"
+        const hasRunBetaMigration = Services.prefs
+          .getCharPref("browser.startup.homepage_override.mstone", "")
+          .startsWith("127.0b");
+
+        // Version 146 UI migration wrote to a wrong `creditcards` pref when
+        // the feature was disabled, instead it should have used `creditCards`.
+        // The correct pref name is in AUTOFILL_CREDITCARDS_REAUTH_PREF.
+        // Note that we only wrote prefs if the feature was disabled.
+        let ccTypoDisabled = !lazy.FormAutofillUtils.getOSAuthEnabled(
+          "extensions.formautofill.creditcards.reauth.optout"
         );
-        let pwdReauthPrefValue = Services.prefs.getBoolPref(
-          "signon.management.page.os-auth.enabled"
+        let ccCorrectPrefDisabled = !lazy.FormAutofillUtils.getOSAuthEnabled(
+          lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF
         );
+        let ccPrevReauthPrefValue = Services.prefs.getBoolPref(
+          "extensions.formautofill.reauth.enabled",
+          false
+        );
+
+        let userHadEnabledCreditCardReauth =
+          // If we've run beta migration, and neither typo nor correct pref
+          // indicate disablement, the user enabled the pref:
+          (hasRunBetaMigration && !ccTypoDisabled && !ccCorrectPrefDisabled) ||
+          // Or if we never ran beta migration and the bool pref is set:
+          ccPrevReauthPrefValue;
 
         lazy.FormAutofillUtils.setOSAuthEnabled(
           lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-          ccReauthPrefValue
+          userHadEnabledCreditCardReauth
         );
 
-        lazy.LoginHelper.setOSAuthEnabled(
-          lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,
-          pwdReauthPrefValue
-        );
+        if (!hasRunBetaMigration) {
+          const passwordsPrevReauthPrefValue = Services.prefs.getBoolPref(
+            "signon.management.page.os-auth.enabled",
+            false
+          );
+          lazy.LoginHelper.setOSAuthEnabled(
+            lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,
+            passwordsPrevReauthPrefValue
+          );
+        }
       }
+
       Services.prefs.clearUserPref("extensions.formautofill.reauth.enabled");
       Services.prefs.clearUserPref("signon.management.page.os-auth.enabled");
+      Services.prefs.clearUserPref(
+        "extensions.formautofill.creditcards.reauth.optout"
+      );
     }
 
     // Update the migration version.
