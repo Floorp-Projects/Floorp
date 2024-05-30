@@ -277,9 +277,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_PANGO_CFLAGS"]
 
 DEFINES["TOPOBJDIR"] = TOPOBJDIR
-
-if not CONFIG["MOZ_ARTIFACT_BUILDS"]:
-    FINAL_TARGET_PP_FILES += ["platform.ini"]
+FINAL_TARGET_PP_FILES += ["platform.ini"]
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["test/gtest"]
