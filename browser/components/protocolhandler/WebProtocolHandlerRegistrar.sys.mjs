@@ -3,15 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
 export function WebProtocolHandlerRegistrar() {}
 
 const lazy = {};
 
+XPCOMUtils.defineLazyServiceGetters(lazy, {
+  ExternalProtocolService: [
+    "@mozilla.org/uriloader/external-protocol-service;1",
+    "nsIExternalProtocolService",
+  ],
+});
+
 ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -44,14 +54,138 @@ WebProtocolHandlerRegistrar.prototype = {
     return this.stringBundle.GetStringFromName(key);
   },
 
+  /* Because we want to iterate over the known webmailers in the observe method
+   * and with each site visited, we want to check as fast as possible if the
+   * current site is already registered as a mailto handler. Using the sites
+   * domain name as a key ensures that we can use Map.has(...) later to find
+   * it.
+   */
+  _addedObservers: 0,
+  _knownWebmailerCache: new Map(),
+  _ensureWebmailerCache() {
+    this._knownWebmailerCache = new Map();
+
+    const handler =
+      lazy.ExternalProtocolService.getProtocolHandlerInfo("mailto");
+
+    for (const h of handler.possibleApplicationHandlers.enumerate()) {
+      // Services.io.newURI could fail for broken handlers in which case we
+      // simply leave them out, but write a debug message (just in case)
+      try {
+        if (h instanceof Ci.nsIWebHandlerApp && h.uriTemplate) {
+          const mailerUri = Services.io.newURI(h.uriTemplate);
+          if (mailerUri.scheme == "https") {
+            this._knownWebmailerCache.set(
+              Services.io.newURI(h.uriTemplate).host,
+              {
+                uriPath: Services.io.newURI(h.uriTemplate).resolve("."),
+                uriTemplate: Services.io.newURI(h.uriTemplate),
+                name: h.name,
+              }
+            );
+          }
+        }
+      } catch (e) {
+        lazy.log.debug(`Could not add ${h.uriTemplate} to cache: ${e.message}`);
+      }
+    }
+  },
+
+  /* This function can be called multiple times and (re-)initializes the cache
+   * if the feature is toggled on. If called with the feature off it will also
+   * unregister the observers.
+   *
+   * @param {boolean} firstInit
+   *
+   */
+  init(firstInit = false) {
+    if (firstInit) {
+      lazy.NimbusFeatures.mailto.onUpdate(() =>
+        // make firstInit explicitly false to avoid multiple registrations.
+        this.init(false)
+      );
+    }
+
+    const observers = ["mailto::onLocationChange", "mailto::onClearCache"];
+    if (
+      lazy.NimbusFeatures.mailto.getVariable("dualPrompt") &&
+      lazy.NimbusFeatures.mailto.getVariable("dualPrompt.onLocationChange")
+    ) {
+      this._ensureWebmailerCache();
+      observers.forEach(o => {
+        this._addedObservers++;
+        Services.obs.addObserver(this, o);
+      });
+      lazy.log.debug(`mailto observers activated: [${observers}]`);
+    } else {
+      // With `dualPrompt` and `dualPrompt.onLocationChange` toggled on we get
+      // up to two notifications when we turn the feature off again, but we
+      // only want to unregister the observers once.
+      //
+      // Using `hasObservers` would allow us to loop over all observers as long
+      // as there are more, but hasObservers is not implemented hence why we
+      // use `enumerateObservers` here to create the loop and `hasMoreElements`
+      // to return true or false as `hasObservers` would if it existed.
+      observers.forEach(o => {
+        if (
+          0 < this._addedObservers &&
+          Services.obs.enumerateObservers(o).hasMoreElements()
+        ) {
+          Services.obs.removeObserver(this, o);
+          this._addedObservers--;
+          lazy.log.debug(`mailto observer "${o}" deactivated.`);
+        }
+      });
+    }
+  },
+
+  async observe(browser, topic) {
+    try {
+      switch (topic) {
+        case "mailto::onLocationChange": {
+          // registerProtocolHandler only works for https
+          const uri = browser.currentURI;
+          if (!uri.schemeIs("https")) {
+            return;
+          }
+
+          const host = browser.currentURI.host;
+          if (this._knownWebmailerCache.has(host)) {
+            // second: search the cache for an entry which starts with the path
+            // of the current uri. If it exists we identified the current page as
+            // webmailer (again).
+            const value = this._knownWebmailerCache.get(host);
+            await this._askUserToSetMailtoHandler(
+              browser,
+              "mailto",
+              value.uriTemplate,
+              value.name
+            );
+          }
+          break; // the switch(topic) statement
+        }
+        case "mailto::onClearCache":
+          // clear the cache for now. We could try to dynamically update the
+          // cache, which is easy if a webmailer is added to the settings, but
+          // becomes more complicated when webmailers are removed, because then
+          // the store gets rewritten and we would require an event to deal with
+          // that as well. So instead we recreate it entirely.
+          this._ensureWebmailerCache();
+          break;
+        default:
+          lazy.log.debug(`observe reached with unknown topic: ${topic}`);
+      }
+    } catch (e) {
+      lazy.log.debug(`Problem in observer: ${e}`);
+    }
+  },
+
   /**
    * See nsIWebProtocolHandlerRegistrar
    */
   removeProtocolHandler(aProtocol, aURITemplate) {
-    let eps = Cc[
-      "@mozilla.org/uriloader/external-protocol-service;1"
-    ].getService(Ci.nsIExternalProtocolService);
-    let handlerInfo = eps.getProtocolHandlerInfo(aProtocol);
+    let handlerInfo =
+      lazy.ExternalProtocolService.getProtocolHandlerInfo(aProtocol);
     let handlers = handlerInfo.possibleApplicationHandlers;
     for (let i = 0; i < handlers.length; i++) {
       try {
@@ -81,21 +215,52 @@ WebProtocolHandlerRegistrar.prototype = {
    * @returns {boolean} true if it is already registered, false otherwise.
    */
   _protocolHandlerRegistered(aProtocol, aURITemplate) {
-    let eps = Cc[
-      "@mozilla.org/uriloader/external-protocol-service;1"
-    ].getService(Ci.nsIExternalProtocolService);
-    let handlerInfo = eps.getProtocolHandlerInfo(aProtocol);
+    let handlerInfo =
+      lazy.ExternalProtocolService.getProtocolHandlerInfo(aProtocol);
     let handlers = handlerInfo.possibleApplicationHandlers;
-    for (let i = 0; i < handlers.length; i++) {
-      try {
-        // We only want to test web handlers
-        let handler = handlers.queryElementAt(i, Ci.nsIWebHandlerApp);
-        if (handler.uriTemplate == aURITemplate) {
-          return true;
-        }
-      } catch (e) {
-        /* it wasn't a web handler */
-        lazy.log.debug("no protocolhandler registered, because: " + e.message);
+    for (let handler of handlers.enumerate()) {
+      // We only want to test web handlers
+      if (
+        handler instanceof Ci.nsIWebHandlerApp &&
+        handler.uriTemplate == aURITemplate
+      ) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Returns true if aURITemplate.spec points to the currently configured
+   * handler for aProtocol links and the OS default is also readily configured.
+   * Returns false if some of it can be made default.
+   *
+   * @param {string} aProtocol
+   *        The scheme of the web handler we are checking for.
+   * @param {string} aURITemplate
+   *        The URI template that the handler uses to handle the protocol.
+   */
+  _isProtocolHandlerDefault(aProtocol, aURITemplate) {
+    const handlerInfo =
+      lazy.ExternalProtocolService.getProtocolHandlerInfo(aProtocol);
+
+    if (
+      handlerInfo.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
+      handlerInfo.preferredApplicationHandler instanceof Ci.nsIWebHandlerApp
+    ) {
+      let webHandlerApp =
+        handlerInfo.preferredApplicationHandler.QueryInterface(
+          Ci.nsIWebHandlerApp
+        );
+
+      // If we are already configured as default, we cannot set a new default
+      // and if the current site is already registered as default webmailer we
+      // are fully set up as the default app for webmail.
+      if (
+        !this._canSetOSDefault(aProtocol) &&
+        webHandlerApp.uriTemplate == aURITemplate.spec
+      ) {
+        return true;
       }
     }
     return false;
@@ -192,43 +357,6 @@ WebProtocolHandlerRegistrar.prototype = {
   },
 
   /**
-   * Private method, which returns true only if the OS default handler for
-   * aProtocol is us and the configured mailto handler for us is aURI.spec.
-   *
-   * @param {string} aProtocol
-   * @param {nsIURI} aURI
-   * @returns {boolean}
-   */
-  _isOsAndLocalDefault(aProtocol, aURI, aTitle) {
-    let eps = Cc[
-      "@mozilla.org/uriloader/external-protocol-service;1"
-    ].getService(Ci.nsIExternalProtocolService);
-
-    let pah = eps.getProtocolHandlerInfo(aProtocol).preferredApplicationHandler;
-
-    // that means that always ask is configure or at least no web handler, so
-    // the answer if this is site/aURI.spec a local default is no/false.
-    if (!pah) {
-      return false;
-    }
-
-    let webHandlerApp = pah.QueryInterface(Ci.nsIWebHandlerApp);
-    if (
-      webHandlerApp.uriTemplate != aURI.spec ||
-      webHandlerApp.name != aTitle
-    ) {
-      return false;
-    }
-
-    // If the protocol handler is already registered
-    if (!this._protocolHandlerRegistered(aProtocol, aURI.spec)) {
-      return false;
-    }
-
-    return true;
-  },
-
-  /**
    * Private method to set the default uri to handle a certain protocol. This
    * automates in a way what a user can do in settings under applications,
    * where different 'actions' can be chosen for different 'content types'.
@@ -236,40 +364,33 @@ WebProtocolHandlerRegistrar.prototype = {
    * @param {string} protocol
    * @param {handler} handler
    */
-  _setLocalDefault(protocol, handler) {
-    let eps = Cc[
-      "@mozilla.org/uriloader/external-protocol-service;1"
-    ].getService(Ci.nsIExternalProtocolService);
-
-    let handlerInfo = eps.getProtocolHandlerInfo(protocol);
-    handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp; // this is IMPORTANT!
+  _setProtocolHandlerDefault(protocol, handler) {
+    let handlerInfo =
+      lazy.ExternalProtocolService.getProtocolHandlerInfo(protocol);
+    handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
     handlerInfo.preferredApplicationHandler = handler;
     handlerInfo.alwaysAskBeforeHandling = false;
     let hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
       Ci.nsIHandlerService
     );
     hs.store(handlerInfo);
+    return handlerInfo;
   },
 
   /**
-   * Private method to set the default uri to handle a certain protocol. This
-   * automates in a way what a user can do in settings under applications,
-   * where different 'actions' can be chosen for different 'content types'.
+   * Private method to add a ProtocolHandler of type nsIWebHandlerApp to the
+   * list of possible handlers for a protocol.
    *
    * @param {string} protocol - e.g. 'mailto', so again without ://
    * @param {string} name - the protocol associated 'Action'
    * @param {string} uri - the uri (compare 'use other...' in the preferences)
    * @returns {handler} handler - either the existing one or a newly created
    */
-  _addLocal(protocol, name, uri) {
-    let eps = Cc[
-      "@mozilla.org/uriloader/external-protocol-service;1"
-    ].getService(Ci.nsIExternalProtocolService);
-
-    let phi = eps.getProtocolHandlerInfo(protocol);
+  _addWebProtocolHandler(protocol, name, uri) {
+    let phi = lazy.ExternalProtocolService.getProtocolHandlerInfo(protocol);
     // not adding duplicates and bail out with the existing entry
     for (let h of phi.possibleApplicationHandlers.enumerate()) {
-      if (h.uriTemplate == uri) {
+      if (h instanceof Ci.nsIWebHandlerApp && h.uriTemplate === uri) {
         return h;
       }
     }
@@ -280,14 +401,9 @@ WebProtocolHandlerRegistrar.prototype = {
     handler.name = name;
     handler.uriTemplate = uri;
 
-    let handlerInfo = eps.getProtocolHandlerInfo(protocol);
+    let handlerInfo =
+      lazy.ExternalProtocolService.getProtocolHandlerInfo(protocol);
     handlerInfo.possibleApplicationHandlers.appendElement(handler);
-
-    // Since the user has agreed to add a new handler, chances are good
-    // that the next time they see a handler of this type, they're going
-    // to want to use it.  Reset the handlerInfo to ask before the next
-    // use.
-    handlerInfo.alwaysAskBeforeHandling = true;
 
     let hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
       Ci.nsIHandlerService
@@ -354,6 +470,41 @@ WebProtocolHandlerRegistrar.prototype = {
         },
       });
     });
+  },
+
+  /* function to look up for a specific stored (in site specific settings)
+   * timestamp and check if it is now older as again_after_minutes.
+   *
+   * @param {string} group
+   *        site specific setting group (e.g. domain)
+   * @param {string} setting_name
+   *        site specific settings name (e.g. `last_dimissed_ts`)
+   * @param {number} again_after_minutes
+   *        length in minutes of time difference allowed between setting and now
+   * @returns {boolean}
+   *        true: within again_after_minutes
+   *        false: older than again_after_minutes
+   */
+  async _isStillDismissed(group, setting_name, again_after_minutes = 0) {
+    let lastDismiss = await this._getSiteSpecificSetting(group, setting_name);
+
+    // first: if we find such a value, then the user has already been
+    // interactive with the page
+    if (lastDismiss) {
+      let timeNow = new Date().getTime();
+      let minutesAgo = (timeNow - lastDismiss) / 1000 / 60;
+      if (minutesAgo < again_after_minutes) {
+        lazy.log.debug(
+          `prompt not shown- a site with setting_name '${setting_name}'` +
+            ` was last dismissed ${minutesAgo.toFixed(2)} minutes ago and` +
+            ` will only be shown again after ${again_after_minutes} minutes.`
+        );
+        return true;
+      }
+    } else {
+      lazy.log.debug(`no such setting: '${setting_name}'`);
+    }
+    return false;
   },
 
   /**
@@ -426,10 +577,8 @@ WebProtocolHandlerRegistrar.prototype = {
         handler.name = name;
         handler.uriTemplate = aButtonInfo.protocolInfo.uri;
 
-        let eps = Cc[
-          "@mozilla.org/uriloader/external-protocol-service;1"
-        ].getService(Ci.nsIExternalProtocolService);
-        let handlerInfo = eps.getProtocolHandlerInfo(protocol);
+        let handlerInfo =
+          lazy.ExternalProtocolService.getProtocolHandlerInfo(protocol);
         handlerInfo.possibleApplicationHandlers.appendElement(handler);
 
         // Since the user has agreed to add a new handler, chances are good
@@ -475,68 +624,63 @@ WebProtocolHandlerRegistrar.prototype = {
    * @param {string} aTitle
    */
   async _askUserToSetMailtoHandler(browser, aProtocol, aURI, aTitle) {
-    let currentHandler = this._addLocal(aProtocol, aTitle, aURI.spec);
     let notificationId = "OS Protocol Registration: " + aProtocol;
 
-    // guard: if we have shown the bar before and it was dismissed: do not show
-    // it again. The pathHash is used to secure the URL by limiting this user
-    // input to a well-defined character set with a fixed length before it gets
-    // written to the underlaying sqlite database.
-    const gMailtoSiteSpecificDismiss = "protocolhandler.mailto.pathHash";
-    let pathHash = lazy.PlacesUtils.md5(aURI.spec, { format: "hex" });
-    let lastHash = await this._getSiteSpecificSetting(
-      aURI.host,
-      gMailtoSiteSpecificDismiss
-    );
-    if (pathHash == lastHash) {
+    // guard: we do not want to reconfigure settings in private browsing mode
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal)) {
+      lazy.log.debug("prompt not shown, because this is a private window.");
+      return;
+    }
+
+    // guard: check if everything has been configured to use the current site
+    // as default webmailer and bail out if so.
+    if (this._isProtocolHandlerDefault(aProtocol, aURI)) {
       lazy.log.debug(
-        "prompt not shown, because a site with the pathHash " +
-          pathHash +
-          " was dismissed before."
+        `prompt not shown, because ${aTitle} is already configured to` +
+          ` handle ${aProtocol}-links under ${aURI.spec}.`
       );
       return;
     }
 
-    // guard: do not show the same bar twice on a single day after dismissed
-    // with 'X'
-    const gMailtoSiteSpecificXClick = "protocolhandler.mailto.xclickdate";
-    let lastShown = await this._getSiteSpecificSetting(
-      aURI.host,
-      gMailtoSiteSpecificXClick,
-      null,
-      0
-    );
-    let currentTS = new Date().getTime();
-    let timeRemaining = 24 * 60 * 60 * 1000 - (currentTS - lastShown);
-    if (0 < timeRemaining) {
-      lazy.log.debug(
-        "prompt will only be shown again in " + timeRemaining + " ms."
-      );
+    // guard: bail out if this site has been dismissed before (either by
+    // clicking the 'x' button or the 'not now' button.
+    const pathHash = lazy.PlacesUtils.md5(aURI.spec, { format: "hex" });
+    const aSettingGroup = aURI.host + `/${pathHash}`;
+
+    const mailtoSiteSpecificNotNow = `dismissed`;
+    const mailtoSiteSpecificXClick = `xclicked`;
+
+    if (
+      await this._isStillDismissed(
+        aSettingGroup,
+        mailtoSiteSpecificNotNow,
+        lazy.NimbusFeatures.mailto.getVariable(
+          "dualPrompt.dismissNotNowMinutes"
+        )
+      )
+    ) {
       return;
     }
 
-    // guard: bail out if already configured as default...
-    if (this._isOsAndLocalDefault(aProtocol, aURI, aTitle)) {
-      lazy.log.debug(
-        "prompt not shown, because " +
-          aTitle +
-          " is already configured" +
-          " to handle " +
-          aProtocol +
-          "-links under " +
-          aURI.spec +
-          " and we are already configured to be the OS default handler."
-      );
+    if (
+      await this._isStillDismissed(
+        aSettingGroup,
+        mailtoSiteSpecificXClick,
+        lazy.NimbusFeatures.mailto.getVariable(
+          "dualPrompt.dismissXClickMinutes"
+        )
+      )
+    ) {
       return;
     }
 
+    // Now show the prompt if there is not already one...
     let osDefaultNotificationBox = browser
       .getTabBrowser()
       .getNotificationBox(browser);
 
     if (!osDefaultNotificationBox.getNotificationWithValue(notificationId)) {
       let win = browser.ownerGlobal;
-      win.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
       win.MozXULElement.insertFTLIfNeeded("browser/webProtocolHandler.ftl");
 
       let notification = await osDefaultNotificationBox.appendNotification(
@@ -552,8 +696,8 @@ WebProtocolHandlerRegistrar.prototype = {
             // bar again tomorrow...
             if (eventType === "dismissed") {
               this._saveSiteSpecificSetting(
-                aURI.host,
-                gMailtoSiteSpecificXClick,
+                aSettingGroup,
+                mailtoSiteSpecificXClick,
                 new Date().getTime()
               );
             }
@@ -564,7 +708,12 @@ WebProtocolHandlerRegistrar.prototype = {
             "l10n-id": "protocolhandler-mailto-os-handler-yes-button",
             primary: true,
             callback: newitem => {
-              this._setLocalDefault(aProtocol, currentHandler);
+              let currentHandler = this._addWebProtocolHandler(
+                aProtocol,
+                aTitle,
+                aURI.spec
+              );
+              this._setProtocolHandlerDefault(aProtocol, currentHandler);
               Glean.protocolhandlerMailto.promptClicked.set_local_default.add();
 
               if (this._canSetOSDefault(aProtocol)) {
@@ -605,9 +754,9 @@ WebProtocolHandlerRegistrar.prototype = {
             "l10n-id": "protocolhandler-mailto-os-handler-no-button",
             callback: () => {
               this._saveSiteSpecificSetting(
-                aURI.host,
-                gMailtoSiteSpecificDismiss,
-                pathHash
+                aSettingGroup,
+                mailtoSiteSpecificNotNow,
+                new Date().getTime()
               );
               return false;
             },
@@ -615,12 +764,11 @@ WebProtocolHandlerRegistrar.prototype = {
         ]
       );
 
+      Glean.protocolhandlerMailto.handlerPromptShown.os_default.add();
       // remove the icon from the infobar, which is automatically assigned
       // after its priority, because the priority is also an indicator which
       // type of bar it is, e.g. a warning or error:
       notification.setAttribute("type", "system");
-
-      Glean.protocolhandlerMailto.handlerPromptShown.os_default.add();
     }
   },
 

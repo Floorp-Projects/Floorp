@@ -3,12 +3,32 @@
 
 "use strict";
 
+const { ExperimentAPI } = ChromeUtils.importESModule(
+  "resource://nimbus/ExperimentAPI.sys.mjs"
+);
+const { ExperimentFakes } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
+);
 const WebProtocolHandlerRegistrar = ChromeUtils.importESModule(
   "resource:///modules/WebProtocolHandlerRegistrar.sys.mjs"
 ).WebProtocolHandlerRegistrar.prototype;
 
-add_setup(function add_setup() {
-  Services.prefs.setBoolPref("browser.mailto.dualPrompt", true);
+add_setup(async () => {
+  Services.prefs.setCharPref("browser.protocolhandler.loglevel", "debug");
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.protocolhandler.loglevel");
+  });
+
+  Services.prefs.clearUserPref("browser.mailto.dualPrompt");
+  Services.prefs.clearUserPref("browser.mailto.dualPrompt.onLocationChange");
+
+  await ExperimentAPI.ready();
+
+  WebProtocolHandlerRegistrar._addWebProtocolHandler(
+    protocol,
+    "example.com",
+    "example.com"
+  );
 });
 
 /* helper function to delete site specific settings needed to clean up
@@ -35,23 +55,18 @@ function _deleteSiteSpecificSetting(domain, setting, context = null) {
 // site specific settings
 const protocol = "mailto";
 const subdomain = (Math.random() + 1).toString(36).substring(7);
-const sss_domain = subdomain + ".example.com";
+const sss_domain = "example.com";
 const ss_setting = "system.under.test";
 
-add_task(async function check_null_value() {
-  Assert.ok(
-    /[a-z0-9].+\.[a-z]+\.[a-z]+/.test(sss_domain),
-    "test the validity of this random domain name before using it for tests: '" +
-      sss_domain +
-      "'"
-  );
-});
+const selector_mailto_prompt =
+  'notification-message[message-bar-type="infobar"]' +
+  '[value="OS Protocol Registration: mailto"]';
 
 add_task(async function check_null_value() {
   Assert.equal(
     null,
     await WebProtocolHandlerRegistrar._getSiteSpecificSetting(
-      sss_domain,
+      `${subdomain}.${sss_domain}`,
       ss_setting
     ),
     "site specific setting should initially not exist and return null."
@@ -62,7 +77,7 @@ add_task(async function check_default_value() {
   Assert.equal(
     true,
     await WebProtocolHandlerRegistrar._getSiteSpecificSetting(
-      sss_domain,
+      `${subdomain}.${sss_domain}`,
       ss_setting,
       null,
       true
@@ -73,7 +88,7 @@ add_task(async function check_default_value() {
 
 add_task(async function check_save_value() {
   WebProtocolHandlerRegistrar._saveSiteSpecificSetting(
-    sss_domain,
+    `${subdomain}.${sss_domain}`,
     ss_setting,
     ss_setting
   );
@@ -82,12 +97,12 @@ add_task(async function check_save_value() {
   try {
     fetchedSiteSpecificSetting =
       await WebProtocolHandlerRegistrar._getSiteSpecificSetting(
-        sss_domain,
+        `${subdomain}.${sss_domain}`,
         ss_setting
       );
   } finally {
     // make sure the cleanup happens, no matter what
-    _deleteSiteSpecificSetting(sss_domain, ss_setting);
+    _deleteSiteSpecificSetting(`${subdomain}.${sss_domain}`, ss_setting);
   }
   Assert.equal(
     ss_setting,
@@ -98,7 +113,7 @@ add_task(async function check_save_value() {
   Assert.equal(
     null,
     await WebProtocolHandlerRegistrar._getSiteSpecificSetting(
-      sss_domain,
+      `${subdomain}.${sss_domain}`,
       ss_setting
     ),
     "site specific setting should not exist after delete."
@@ -113,11 +128,11 @@ add_task(async function check_installHash() {
   );
 });
 
-add_task(async function check_addLocal() {
-  let currentHandler = WebProtocolHandlerRegistrar._addLocal(
+add_task(async function check_addWebProtocolHandler() {
+  let currentHandler = WebProtocolHandlerRegistrar._addWebProtocolHandler(
     protocol,
     sss_domain,
-    sss_domain
+    "https://" + sss_domain
   );
 
   Assert.equal(
@@ -126,41 +141,175 @@ add_task(async function check_addLocal() {
     "does the handler have the right name?"
   );
   Assert.equal(
-    sss_domain,
+    "https://" + sss_domain,
     currentHandler.uriTemplate,
     "does the handler have the right uri?"
   );
 
-  WebProtocolHandlerRegistrar._setLocalDefault(currentHandler);
-
+  WebProtocolHandlerRegistrar._setProtocolHandlerDefault(
+    protocol,
+    currentHandler
+  );
   WebProtocolHandlerRegistrar.removeProtocolHandler(
     protocol,
     currentHandler.uriTemplate
   );
 });
 
-add_task(async function check_bar_is_shown() {
-  let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  browserWindow.windowUtils.disableNonTestMouseEvents(true);
-  browserWindow.document
-    .getElementById("main-window")
-    .removeAttribute("remotecontrol");
-  let browser = browserWindow.gBrowser.selectedBrowser;
+/* The next test is to ensure that we offer users to configure a webmailer
+ * instead of a custom executable. They will not get a prompt if they have
+ * configured their OS as default handler.
+ */
+add_task(async function promptShownForLocalHandler() {
+  let handlerApp = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
+  handlerApp.executable = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+  WebProtocolHandlerRegistrar._setProtocolHandlerDefault(protocol, handlerApp);
 
-  await WebProtocolHandlerRegistrar._askUserToSetMailtoHandler(
-    browser,
-    protocol,
-    Services.io.newURI("https://" + sss_domain),
-    sss_domain
-  );
+  await BrowserTestUtils.withNewTab("https://example.com/", async browser => {
+    await WebProtocolHandlerRegistrar._askUserToSetMailtoHandler(
+      browser,
+      protocol,
+      Services.io.newURI("https://example.com"),
+      "https://example.com"
+    );
 
-  let button_yes = browserWindow.document.querySelector(
-    "[data-l10n-id='protocolhandler-mailto-os-handler-yes-button']"
-  );
-  Assert.notEqual(null, button_yes, "is the yes-button there?");
+    Assert.notEqual(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "The prompt is shown when an executable is configured as handler."
+    );
+  });
+});
 
-  let button_no = browserWindow.document.querySelector(
-    "[data-l10n-id='protocolhandler-mailto-os-handler-no-button']"
+function test_rollout(
+  dualPrompt = false,
+  onLocationChange = false,
+  dismissNotNowMinutes = 15,
+  dismissXClickMinutes = 15
+) {
+  return ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: NimbusFeatures.mailto.featureId,
+      value: {
+        dualPrompt,
+        "dualPrompt.onLocationChange": onLocationChange,
+        "dualPrompt.dismissXClickMinutes": dismissXClickMinutes,
+        "dualPrompt.dismissNotNowMinutes": dismissNotNowMinutes,
+      },
+    },
+    { isRollout: true }
   );
-  Assert.notEqual(null, button_no, "is the no-button there?");
+}
+
+add_task(async function check_no_button() {
+  let cleanup = await test_rollout(true, true);
+
+  const url = "https://" + sss_domain;
+  WebProtocolHandlerRegistrar._addWebProtocolHandler(protocol, sss_domain, url);
+
+  await BrowserTestUtils.withNewTab("https://example.com/", async () => {
+    Assert.notEqual(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "The prompt is shown with dualPrompt.onLocationChange toggled on."
+    );
+  });
+
+  await BrowserTestUtils.withNewTab("https://example.com/", async browser => {
+    let button_no = document.querySelector(
+      "[data-l10n-id='protocolhandler-mailto-os-handler-no-button']"
+    );
+    Assert.notEqual(null, button_no, "is the no-button there?");
+
+    await button_no.click();
+    Assert.equal(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "prompt hidden after button_no clicked."
+    );
+
+    await WebProtocolHandlerRegistrar._askUserToSetMailtoHandler(
+      browser,
+      protocol,
+      Services.io.newURI("https://example.com"),
+      "https://example.com"
+    );
+
+    Assert.equal(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "prompt stays hidden even when called after the no button was clicked."
+    );
+  });
+
+  await cleanup();
+});
+
+add_task(async function check_x_button() {
+  let cleanup = await test_rollout(true, true, 0, 15);
+
+  await BrowserTestUtils.withNewTab("https://example.com/", async browser => {
+    Assert.notEqual(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "prompt gets shown again- the timeout for the no_button was set to zero"
+    );
+
+    let button_x = document
+      .querySelector(".infobar")
+      .shadowRoot.querySelector(".close");
+    Assert.notEqual(null, button_x, "is the x-button there?");
+
+    await button_x.click();
+    Assert.equal(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "prompt hidden after 'X' button clicked."
+    );
+
+    await WebProtocolHandlerRegistrar._askUserToSetMailtoHandler(
+      browser,
+      protocol,
+      Services.io.newURI("https://example.com"),
+      "https://example.com"
+    );
+
+    Assert.equal(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "prompt stays hidden even when called after the no button was clicked."
+    );
+  });
+
+  await cleanup();
+});
+
+add_task(async function check_x_button() {
+  let cleanup = await test_rollout(true, true, 0, 0);
+
+  await BrowserTestUtils.withNewTab("https://example.com/", async () => {
+    Assert.notEqual(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "prompt gets shown again- the timeout for the no_button was set to zero"
+    );
+  });
+
+  await cleanup();
+});
+
+add_task(async function check_bar_is_not_shown() {
+  let cleanup = await test_rollout(true, false);
+
+  await BrowserTestUtils.withNewTab("https://example.com/", async () => {
+    Assert.equal(
+      null,
+      document.querySelector(selector_mailto_prompt),
+      "Prompt is not shown, because the dualPrompt.onLocationChange is off"
+    );
+  });
+
+  await cleanup();
 });

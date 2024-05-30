@@ -490,6 +490,10 @@ HandlerService.prototype = {
     if (handlerInfo.type == "application/pdf") {
       Services.obs.notifyObservers(null, TOPIC_PDFJS_HANDLER_CHANGED);
     }
+
+    if (handlerInfo.type == "mailto") {
+      Services.obs.notifyObservers(null, "mailto::onClearCache");
+    }
   },
 
   // nsIHandlerService
