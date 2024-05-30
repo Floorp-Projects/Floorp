@@ -186,7 +186,7 @@ add_task(async function rightClickSelectsAll() {
 
   gURLBar.querySelector("moz-input-box").menupopup.hidePopup();
   gURLBar.blur();
-  checkPrimarySelection(gURLBar._untrimmedValue);
+  checkPrimarySelection(gURLBar.untrimmedValue);
   await SpecialPowers.popPrefEnv();
 });
 
