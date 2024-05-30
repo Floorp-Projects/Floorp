@@ -174,3 +174,13 @@ pub enum ImplicitScopeRoot {
     /// under consideration's shadow root (If one exists).
     Constructed,
 }
+
+impl ImplicitScopeRoot {
+    /// Return true if this matches the shadow host.
+    pub fn matches_shadow_host(&self) -> bool {
+        match self {
+            Self::InLightTree(..) | Self::InShadowTree(..) => false,
+            Self::ShadowHost(..) | Self::Constructed => true,
+        }
+    }
+}

@@ -344,7 +344,7 @@ where
             None => return,
         };
 
-        let host_rules = match style_data.host_rules(self.pseudo_element) {
+        let host_rules = match style_data.featureless_host_rules(self.pseudo_element) {
             Some(rules) => rules,
             None => return,
         };

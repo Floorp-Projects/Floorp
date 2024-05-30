@@ -64,7 +64,8 @@ use selectors::matching::{
 };
 use selectors::matching::{MatchingForInvalidation, VisitedHandlingMode};
 use selectors::parser::{
-    AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
+    AncestorHashes, Combinator, Component, FeaturelessHostMatches, Selector, SelectorIter,
+    SelectorList,
 };
 use selectors::visitor::{SelectorListKind, SelectorVisitor};
 use selectors::OpaqueElement;
@@ -599,6 +600,7 @@ struct ContainingRuleState {
     container_condition_id: ContainerConditionId,
     in_starting_style: bool,
     scope_condition_id: ScopeConditionId,
+    scope_matches_shadow_host: bool,
     ancestor_selector_lists: SmallVec<[SelectorList<SelectorImpl>; 2]>,
 }
 
@@ -611,6 +613,7 @@ impl Default for ContainingRuleState {
             in_starting_style: false,
             ancestor_selector_lists: Default::default(),
             scope_condition_id: ScopeConditionId::none(),
+            scope_matches_shadow_host: true,
         }
     }
 }
@@ -622,6 +625,7 @@ struct SavedContainingRuleState {
     container_condition_id: ContainerConditionId,
     in_starting_style: bool,
     scope_condition_id: ScopeConditionId,
+    scope_matches_shadow_host: bool,
 }
 
 impl ContainingRuleState {
@@ -633,6 +637,7 @@ impl ContainingRuleState {
             container_condition_id: self.container_condition_id,
             in_starting_style: self.in_starting_style,
             scope_condition_id: self.scope_condition_id,
+            scope_matches_shadow_host: self.scope_matches_shadow_host,
         }
     }
 
@@ -646,6 +651,7 @@ impl ContainingRuleState {
         self.container_condition_id = saved.container_condition_id;
         self.in_starting_style = saved.in_starting_style;
         self.scope_condition_id = saved.scope_condition_id;
+        self.scope_matches_shadow_host = saved.scope_matches_shadow_host;
     }
 }
 
@@ -2427,8 +2433,9 @@ pub struct CascadeData {
     normal_rules: ElementAndPseudoRules,
 
     /// The `:host` pseudo rules that are the rightmost selector (without
-    /// accounting for pseudo-elements).
-    host_rules: Option<Box<ElementAndPseudoRules>>,
+    /// accounting for pseudo-elements), or `:scope` rules that may match
+    /// the featureless host.
+    featureless_host_rules: Option<Box<ElementAndPseudoRules>>,
 
     /// The data coming from ::slotted() pseudo-element rules.
     ///
@@ -2562,7 +2569,7 @@ impl CascadeData {
     pub fn new() -> Self {
         Self {
             normal_rules: ElementAndPseudoRules::default(),
-            host_rules: None,
+            featureless_host_rules: None,
             slotted_rules: None,
             part_rules: None,
             invalidation_map: InvalidationMap::new(),
@@ -2700,15 +2707,20 @@ impl CascadeData {
         self.normal_rules.rules(pseudo)
     }
 
-    /// Returns the host pseudo rule map for a given pseudo-element.
+    /// Returns the featureless pseudo rule map for a given pseudo-element.
     #[inline]
-    pub fn host_rules(&self, pseudo: Option<&PseudoElement>) -> Option<&SelectorMap<Rule>> {
-        self.host_rules.as_ref().and_then(|d| d.rules(pseudo))
+    pub fn featureless_host_rules(
+        &self,
+        pseudo: Option<&PseudoElement>,
+    ) -> Option<&SelectorMap<Rule>> {
+        self.featureless_host_rules
+            .as_ref()
+            .and_then(|d| d.rules(pseudo))
     }
 
-    /// Whether there's any host rule that could match in this scope.
-    pub fn any_host_rules(&self) -> bool {
-        self.host_rules.is_some()
+    /// Whether there's any featureless rule that could match in this scope.
+    pub fn any_featureless_host_rules(&self) -> bool {
+        self.featureless_host_rules.is_some()
     }
 
     /// Returns the slotted rule map for a given pseudo-element.
@@ -2790,7 +2802,7 @@ impl CascadeData {
 
     fn shrink_maps_if_needed(&mut self) {
         self.normal_rules.shrink_if_needed();
-        if let Some(ref mut host_rules) = self.host_rules {
+        if let Some(ref mut host_rules) = self.featureless_host_rules {
             host_rules.shrink_if_needed();
         }
         if let Some(ref mut slotted_rules) = self.slotted_rules {
@@ -3047,15 +3059,25 @@ impl CascadeData {
                             // NOTE(emilio): It's fine to look at :host and then at
                             // ::slotted(..), since :host::slotted(..) could never
                             // possibly match, as <slot> is not a valid shadow host.
-                            // TODO(dshin, bug 1886441): If we have a featureless
-                            // `:scope`, we need to add to `host_rules` (Which should
-                            // be then rennamed `featureless_rules`).
+                            // :scope may match featureless shadow host if the scope
+                            // root is the shadow root.
                             // See https://github.com/w3c/csswg-drafts/issues/9025
-                            let rules = if rule
+                            let potentially_matches_featureless_host = rule
                                 .selector
-                                .is_featureless_host_selector_or_pseudo_element()
+                                .matches_featureless_host_selector_or_pseudo_element();
+                            let matches_featureless_host = if potentially_matches_featureless_host
+                                .intersects(FeaturelessHostMatches::FOR_HOST)
                             {
-                                self.host_rules
+                                true
+                            } else if potentially_matches_featureless_host
+                                .intersects(FeaturelessHostMatches::FOR_SCOPE)
+                            {
+                                containing_rule_state.scope_matches_shadow_host
+                            } else {
+                                false
+                            };
+                            let rules = if matches_featureless_host {
+                                self.featureless_host_rules
                                     .get_or_insert_with(|| Box::new(Default::default()))
                             } else if rule.selector.is_slotted() {
                                 self.slotted_rules
@@ -3279,13 +3301,19 @@ impl CascadeData {
                 },
                 CssRule::Scope(ref rule) => {
                     let id = ScopeConditionId(self.scope_conditions.len() as u16);
-                    let implicit_scope_root = if rule.bounds.start.is_some() {
+                    let mut matches_shadow_host = false;
+                    let implicit_scope_root = if let Some(start) = rule.bounds.start.as_ref() {
+                        matches_shadow_host = start.slice().iter().any(|s| {
+                            !s.matches_featureless_host_selector_or_pseudo_element()
+                                .is_empty()
+                        });
                         // Would be unused anyway.
                         None
                     } else {
                         // (Re)Moving stylesheets trigger a complete flush, so saving the implicit
                         // root here should be safe.
                         stylesheet.implicit_scope_root().map(|root| {
+                            matches_shadow_host = root.matches_shadow_host();
                             match root {
                                 ImplicitScopeRoot::InLightTree(_) |
                                 ImplicitScopeRoot::Constructed => {
@@ -3325,6 +3353,7 @@ impl CascadeData {
                         condition: Some(replaced),
                         implicit_scope_root,
                     });
+                    containing_rule_state.scope_matches_shadow_host &= matches_shadow_host;
                     containing_rule_state.scope_condition_id = id;
                 },
                 // We don't care about any other rule.
@@ -3511,7 +3540,7 @@ impl CascadeData {
         if let Some(ref mut part_rules) = self.part_rules {
             part_rules.clear();
         }
-        if let Some(ref mut host_rules) = self.host_rules {
+        if let Some(ref mut host_rules) = self.featureless_host_rules {
             host_rules.clear();
         }
         self.animations.clear();
@@ -3583,7 +3612,7 @@ impl CascadeDataCacheEntry for CascadeData {
         if let Some(ref part_rules) = self.part_rules {
             part_rules.add_size_of(ops, sizes);
         }
-        if let Some(ref host_rules) = self.host_rules {
+        if let Some(ref host_rules) = self.featureless_host_rules {
             host_rules.add_size_of(ops, sizes);
         }
         sizes.mInvalidationMap += self.invalidation_map.size_of(ops);
