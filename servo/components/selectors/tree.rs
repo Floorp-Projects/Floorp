@@ -17,6 +17,9 @@ use std::ptr::NonNull;
 pub struct OpaqueElement(NonNull<()>);
 
 unsafe impl Send for OpaqueElement {}
+// This should be safe given that we do not provide a way to recover
+// the original reference.
+unsafe impl Sync for OpaqueElement {}
 
 impl OpaqueElement {
     /// Creates a new OpaqueElement from an arbitrarily-typed pointer.

@@ -868,6 +868,8 @@ malloc_size_of_is_0!(cssparser::TokenSerializationType, cssparser::SourceLocatio
 
 malloc_size_of_is_0!(dom::ElementState, dom::DocumentState);
 
+malloc_size_of_is_0!(selectors::OpaqueElement);
+
 #[cfg(feature = "servo")]
 malloc_size_of_is_0!(csp::Destination);
 

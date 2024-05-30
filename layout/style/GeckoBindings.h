@@ -482,6 +482,15 @@ mozilla::StyleSheet* Gecko_StyleSheet_Clone(
 
 void Gecko_StyleSheet_AddRef(const mozilla::StyleSheet* aSheet);
 void Gecko_StyleSheet_Release(const mozilla::StyleSheet* aSheet);
+
+struct GeckoImplicitScopeRoot {
+  const mozilla::dom::Element* mHost;
+  const mozilla::dom::Element* mRoot;
+  bool mConstructed;
+};
+GeckoImplicitScopeRoot Gecko_StyleSheet_ImplicitScopeRoot(
+    const mozilla::StyleSheet* aSheet);
+
 bool Gecko_IsDocumentBody(const mozilla::dom::Element* element);
 
 bool Gecko_IsDarkColorScheme(const mozilla::dom::Document*,
