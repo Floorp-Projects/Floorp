@@ -10,6 +10,7 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.Engine
@@ -80,8 +81,24 @@ class TranslationsMiddleware(
                         }
                     }
                     TranslationOperation.FETCH_PAGE_SETTINGS -> {
-                        scope.launch {
-                            requestPageSettings(context, action.tabId)
+                        val tabId = action.tabId ?: context.state.selectedTab?.id
+                        if (action.tabId == null) {
+                            logger.warn(
+                                "Passed null tabId to FETCH_PAGE_SETTINGS, " +
+                                    "Will use current selected tab.",
+                            )
+                        }
+                        if (tabId != null) {
+                            scope.launch {
+                                context.state.selectedTab?.let {
+                                    requestPageSettings(context, it.id)
+                                }
+                            }
+                        } else {
+                            logger.warn(
+                                "Passed null tabId to FETCH_PAGE_SETTINGS, " +
+                                    "and no selected tab was available. Performing no action.",
+                            )
                         }
                     }
                     TranslationOperation.FETCH_OFFER_SETTING -> {
