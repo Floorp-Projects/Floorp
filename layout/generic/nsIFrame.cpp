@@ -1257,9 +1257,9 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
     if (aOldComputedStyle->IsRootElementStyle() &&
         disp->mScrollSnapType != oldDisp->mScrollSnapType) {
-      if (nsIScrollableFrame* scrollableFrame =
-              PresShell()->GetRootScrollFrameAsScrollable()) {
-        scrollableFrame->PostPendingResnap();
+      if (ScrollContainerFrame* sf =
+              PresShell()->GetRootScrollContainerFrame()) {
+        sf->PostPendingResnap();
       }
     }
     if (StyleUIReset()->mMozSubtreeHiddenOnlyVisually &&

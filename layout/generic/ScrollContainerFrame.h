@@ -723,8 +723,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   nsRect RestrictToRootDisplayPort(const nsRect& aDisplayportBase);
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aVisibleRect, nsRect* aDirtyRect,
-                             bool aSetBase,
-                             bool* aDirtyRectHasBeenOverriden = nullptr);
+                             bool aSetBase, bool* aDirtyRectHasBeenOverriden);
   bool AllowDisplayPortExpiration();
   void ResetDisplayPortExpiryTimer();
 

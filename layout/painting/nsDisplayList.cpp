@@ -1084,7 +1084,7 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
   state->mFirstFrameWithOOFData = mFramesWithOOFData.Length();
 
-  nsIScrollableFrame* sf = state->mPresShell->GetRootScrollFrameAsScrollable();
+  ScrollContainerFrame* sf = state->mPresShell->GetRootScrollContainerFrame();
   if (sf && IsInSubdocument()) {
     // We are forcing a rebuild of nsDisplayCanvasBackgroundColor to make sure
     // that the canvas background color will be set correctly, and that only one

@@ -8,10 +8,10 @@
 #include "RetainedDisplayListBuilder.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
@@ -1611,8 +1611,8 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   // This is normally handled by EnterPresShell, but we skipped it so that we
   // didn't call MarkFrameForDisplayIfVisible before ComputeRebuildRegion.
-  nsIScrollableFrame* sf =
-      RootReferenceFrame()->PresShell()->GetRootScrollFrameAsScrollable();
+  ScrollContainerFrame* sf =
+      RootReferenceFrame()->PresShell()->GetRootScrollContainerFrame();
   if (sf) {
     nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
     if (canvasFrame) {

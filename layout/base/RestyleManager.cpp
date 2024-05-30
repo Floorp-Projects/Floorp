@@ -19,6 +19,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -1460,8 +1461,8 @@ static inline void TryToDealWithScrollbarChange(nsChangeHint& aHint,
         // already exists, so we can simply reflow instead of reframing.
         if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
           sf->MarkScrollbarsDirtyForReflow();
-        } else if (nsIScrollableFrame* sf =
-                       aPc->PresShell()->GetRootScrollFrameAsScrollable()) {
+        } else if (ScrollContainerFrame* sf =
+                       aPc->PresShell()->GetRootScrollContainerFrame()) {
           sf->MarkScrollbarsDirtyForReflow();
         }
         aHint |= nsChangeHint_ReflowHintsForScrollbarChange;
