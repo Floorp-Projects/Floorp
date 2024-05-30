@@ -11,6 +11,7 @@ import { LoginExport } from "resource://gre/modules/LoginExport.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
+  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -81,6 +82,10 @@ export class LoginDataSource extends DataSourceBase {
       this.#header = this.createHeaderLine(strings.headerLabel);
       this.#header.commands.push(
         { id: "Create", label: "passwords-command-create" },
+        {
+          id: "ImportFromBrowser",
+          label: "passwords-command-import-from-browser",
+        },
         { id: "Import", label: "passwords-command-import" },
         { id: "Export", label: "passwords-command-export" },
         { id: "RemoveAll", label: "passwords-command-remove-all" },
@@ -95,6 +100,7 @@ export class LoginDataSource extends DataSourceBase {
           strings.passwordsImportFilePickerTsvFilterTitle
         );
 
+      this.#header.executeImportFromBrowser = () => this.#importFromBrowser();
       this.#header.executeRemoveAll = () => this.#removeAllPasswords();
       this.#header.executeSettings = () => this.#openPreferences();
       this.#header.executeHelp = () => this.#getHelp();
@@ -348,6 +354,20 @@ export class LoginDataSource extends DataSourceBase {
         resolve({ result, path: fp.file.path });
       });
     });
+  }
+
+  #importFromBrowser() {
+    const { BrowserWindowTracker } = ChromeUtils.importESModule(
+      "resource:///modules/BrowserWindowTracker.sys.mjs"
+    );
+    const browser = BrowserWindowTracker.getTopWindow().gBrowser;
+    try {
+      lazy.MigrationUtils.showMigrationWizard(browser.ownerGlobal, {
+        entrypoint: lazy.MigrationUtils.MIGRATION_ENTRYPOINTS.PASSWORDS,
+      });
+    } catch (ex) {
+      console.error(ex);
+    }
   }
 
   #removeAllPasswords() {
