@@ -143,22 +143,29 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   // (and therefore the partitioned OriginAttributes), the unpartitioned cookie
   // jar is only available in first-party or third-party with storageAccess
   // contexts.
-  bool isCHIPS = StaticPrefs::network_cookie_CHIPS_enabled();
-  bool isUnpartitioned = storageOriginAttributes.mPartitionKey.IsEmpty();
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      CookieCommons::GetCookieJarSettings(aChannel);
+  bool isCHIPS = StaticPrefs::network_cookie_CHIPS_enabled() &&
+                 cookieJarSettings->GetPartitionForeign();
+  bool isUnpartitioned =
+      !result.contains(ThirdPartyAnalysis::IsForeign) ||
+      result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted);
   if (isCHIPS && isUnpartitioned) {
-    // Assert that we are only doing this if we are first-party or third-party
-    // with storageAccess.
-    MOZ_ASSERT(
-        !result.contains(ThirdPartyAnalysis::IsForeign) ||
-        result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted));
+    // Assert that the storage originAttributes is empty. In other words,
+    // it's unpartitioned.
+    MOZ_ASSERT(storageOriginAttributes.mPartitionKey.IsEmpty());
     // Add the partitioned principal to principals
     OriginAttributes partitionedOriginAttributes;
     StoragePrincipalHelper::GetOriginAttributes(
         aChannel, partitionedOriginAttributes,
         StoragePrincipalHelper::ePartitionedPrincipal);
-    originAttributesList.AppendElement(partitionedOriginAttributes);
-    // Assert partitionedOAs have partitioneKey set.
-    MOZ_ASSERT(!partitionedOriginAttributes.mPartitionKey.IsEmpty());
+    // Only append the partitioned originAttributes if the partitionKey is set.
+    // The partitionKey could be empty for partitionKey in partitioned
+    // originAttributes if the channel is for privilege request, such as
+    // extension's requests.
+    if (!partitionedOriginAttributes.mPartitionKey.IsEmpty()) {
+      originAttributesList.AppendElement(partitionedOriginAttributes);
+    }
   }
 
   for (auto& originAttributes : originAttributesList) {
