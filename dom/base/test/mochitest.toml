@@ -1513,6 +1513,7 @@ support-files = [
 ]
 
 ["test_script_loader_js_cache_frames.html"]
+disabled = "https://bugzilla.mozilla.org/show_bug.cgi?id=1853173"
 skip-if = ["verify"]
 support-files = [
   "file_script_module_frames_relay.js",
