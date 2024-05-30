@@ -861,6 +861,10 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
         !Http3Allowed(), std::move(aServerCertHashes));
   }
 
+  if (ShouldIntercept()) {
+    return RedirectToInterceptedChannel();
+  }
+
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
 
@@ -874,10 +878,6 @@ nsresult nsHttpChannel::Connect() {
   if (LoadResuming() && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
     LOG(("Resuming from cache is not supported yet"));
     return NS_ERROR_DOCUMENT_NOT_CACHED;
-  }
-
-  if (ShouldIntercept()) {
-    return RedirectToInterceptedChannel();
   }
 
   // Step 8.18 of HTTP-network-or-cache fetch
