@@ -280,13 +280,19 @@ export class BaseContent extends React.PureComponent {
         `url(${darkWallpaper?.wallpaperUrl || ""})`
       );
 
+      // Grab the contrast of the currently displayed wallpaper.
+      const { theme } =
+        this.state.colorMode === "light" ? lightWallpaper : darkWallpaper;
+
       // Add helper class to body if user has a wallpaper selected
-      if (lightWallpaper) {
-        global.document?.body.classList.add("hasWallpaperLight");
+      if (theme === "light") {
+        global.document?.body.classList.add("lightWallpaper");
+        global.document?.body.classList.remove("darkWallpaper");
       }
 
-      if (darkWallpaper) {
-        global.document?.body.classList.add("hasWallpaperDark");
+      if (theme === "dark") {
+        global.document?.body.classList.add("darkWallpaper");
+        global.document?.body.classList.remove("lightWallpaper");
       }
     }
   }

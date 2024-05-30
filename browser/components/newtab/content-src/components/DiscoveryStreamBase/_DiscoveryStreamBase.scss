@@ -41,10 +41,13 @@ $ds-width: 936px;
 
 .ds-header,
 .ds-layout .section-title span {
-  color: var(--newtab-text-primary-color);
+  color: var(--newtab-contextual-text-primary-color);
   font-size: $section-title-font-size;
   font-weight: 600;
   line-height: 20px;
+
+  // Contrast fix for users who have wallpapers set
+  @include wallpaper-contrast-fix;
 
   .icon {
     fill: var(--newtab-text-secondary-color);
@@ -58,6 +61,9 @@ $ds-width: 936px;
     .learn-more-link a {
       color: var(--newtab-primary-action-background);
       font-weight: 500;
+
+      // Contrast fix for users who have wallpapers set
+      @include wallpaper-contrast-fix;
 
       &:is(:focus, :hover) {
         text-decoration: none;

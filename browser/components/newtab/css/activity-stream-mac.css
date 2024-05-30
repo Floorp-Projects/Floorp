@@ -38,12 +38,16 @@ input {
 }
 
 :root {
+  color-scheme: light;
   --newtab-background-color: #F9F9FB;
   --newtab-background-color-secondary: #FFF;
   --newtab-text-primary-color: #15141a;
-  --newtab-primary-action-background: #0061e0;
+  --newtab-contextual-text-primary-color: light-dark(var(--newtab-text-primary-color), #fbfbfe);
+  --newtab-primary-action-background: light-dark(#0061e0, #00ddff);
   --newtab-primary-action-background-pocket: #008078;
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
+  --newtab-contextual-text-secondary-color: color-mix(in srgb, var(--newtab-contextual-text-primary-color) 70%, transparent);
+  --newtab-weather-background-color: light-dark(rgba(255, 255, 255, 70%), rgba(35, 34, 43, 70%));
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
   --newtab-button-background: var(--button-background-color);
@@ -52,10 +56,10 @@ input {
   --newtab-button-hover-background: var(--button-background-color-hover);
   --newtab-button-active-background: var(--button-background-color-active);
   --newtab-button-text: var(--button-text-color);
-  --newtab-button-static-background: #F0F0F4;
+  --newtab-button-static-background: light-dark(#F0F0F4, #2B2A33);
   --newtab-button-static-focus-background: var(--newtab-button-static-background);
-  --newtab-button-static-hover-background: #E0E0E6;
-  --newtab-button-static-active-background: #CFCFD8;
+  --newtab-button-static-hover-background: light-dark(#E0E0E6, #52525E);
+  --newtab-button-static-active-background: light-dark(#CFCFD8, #5B5B66);
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
   --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
@@ -66,7 +70,7 @@ input {
   --newtab-primary-action-background-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
   --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 25%, transparent);
   --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #000);
-  --newtab-wordmark-color: #20123A;
+  --newtab-wordmark-color: light-dark(#20123A, #fbfbfe);
   --newtab-status-success: #058B00;
   --newtab-status-error: #D70022;
   --newtab-inner-box-shadow-color: rgba(0, 0, 0, 0.1);
@@ -76,10 +80,10 @@ input {
   --newtab-button-secondary-color: inherit;
 }
 :root[lwt-newtab-brighttext] {
+  color-scheme: dark;
   --newtab-background-color: #2B2A33;
   --newtab-background-color-secondary: #42414d;
-  --newtab-text-primary-color: #fbfbfe;
-  --newtab-primary-action-background: #00ddff;
+  --newtab-contextual-text-primary-color: light-dark(#15141a, var(--newtab-text-primary-color));
   --newtab-primary-action-background-pocket: #00ddff;
   --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
   --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 55%, #FFF);
@@ -91,11 +95,7 @@ input {
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 30%, transparent);
   --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #FFF);
   --newtab-primary-element-text-color: #2b2a33;
-  --newtab-wordmark-color: #fbfbfe;
   --newtab-status-success: #7C6;
-  --newtab-button-static-background: #2B2A33;
-  --newtab-button-static-hover-background: #52525E;
-  --newtab-button-static-active-background: #5B5B66;
 }
 
 @media (prefers-contrast) {
@@ -531,6 +531,13 @@ main section {
 .wallpaper-attribution {
   padding: 0 25px;
   font-size: 14px;
+  color: var(--newtab-contextual-text-primary-color);
+}
+.lightWallpaper .wallpaper-attribution {
+  color-scheme: light;
+}
+.darkWallpaper .wallpaper-attribution {
+  color-scheme: dark;
 }
 .wallpaper-attribution.theme-light {
   display: inline-block;
@@ -545,7 +552,7 @@ main section {
   display: inline-block;
 }
 .wallpaper-attribution a {
-  color: var(--newtab-element-color);
+  color: inherit;
 }
 .wallpaper-attribution a:hover {
   text-decoration: none;
@@ -682,6 +689,12 @@ main section {
 .top-site-outer:is(:hover) .context-menu-button {
   opacity: 1;
 }
+.lightWallpaper .top-site-outer:not(:hover, :active, .active) {
+  color-scheme: light;
+}
+.darkWallpaper .top-site-outer:not(:hover, :active, .active) {
+  color-scheme: dark;
+}
 .top-site-outer.active .context-menu-button {
   opacity: 1;
   background-color: var(--newtab-button-active-background);
@@ -701,6 +714,12 @@ main section {
   position: absolute;
   top: -20px;
   transition: opacity 200ms;
+}
+.lightWallpaper .top-site-outer .context-menu-button {
+  color-scheme: light;
+}
+.darkWallpaper .top-site-outer .context-menu-button {
+  color-scheme: dark;
 }
 .top-site-outer .context-menu-button:hover {
   background-color: var(--newtab-button-hover-background);
@@ -724,7 +743,7 @@ main section {
   cursor: pointer;
   position: relative;
   align-items: center;
-  color: var(--newtab-text-secondary-color);
+  color: var(--newtab-contextual-text-secondary-color);
   display: flex;
   font-size: 32px;
   font-weight: 200;
@@ -813,7 +832,7 @@ main section {
   -moz-context-properties: fill;
 }
 .top-site-outer .title {
-  color: var(--newtab-text-primary-color);
+  color: var(--newtab-contextual-text-primary-color);
   padding-top: 8px;
   font: caption;
   text-align: center;
@@ -830,7 +849,7 @@ main section {
   white-space: nowrap;
 }
 .top-site-outer .title .sponsored-label {
-  color: var(--newtab-text-secondary-color);
+  color: var(--newtab-contextual-text-secondary-color);
   font-size: 0.9em;
 }
 .top-site-outer .title:not(.sponsored) .sponsored-label {
@@ -1273,6 +1292,12 @@ main section {
   margin-inline-start: 16px;
   width: 134px;
 }
+.lightWallpaper .search-wrapper .logo-and-wordmark .wordmark {
+  color-scheme: light;
+}
+.darkWallpaper .search-wrapper .logo-and-wordmark .wordmark {
+  color-scheme: dark;
+}
 @media (max-width: 609px) {
   .search-wrapper .logo-and-wordmark .logo {
     background-size: 64px;
@@ -1684,6 +1709,12 @@ main section {
   background-color: transparent;
   padding: 15px;
 }
+.lightWallpaper .personalize-button:not(:hover, :active) {
+  color-scheme: light;
+}
+.darkWallpaper .personalize-button:not(:hover, :active) {
+  color-scheme: dark;
+}
 .personalize-button:hover {
   background-color: var(--newtab-element-hover-color);
 }
@@ -1922,20 +1953,16 @@ main section {
   padding: 0;
   border: none;
 }
-.wallpaper-list .wallpaper-input.theme-light,
-.wallpaper-list .sr-only.theme-light {
+.wallpaper-list:not(.ignore-color-mode) .wallpaper-input.theme-light, .wallpaper-list:not(.ignore-color-mode) .sr-only.theme-light {
   display: inline-block;
 }
-[lwt-newtab-brighttext] .wallpaper-list .wallpaper-input.theme-light,
-[lwt-newtab-brighttext] .wallpaper-list .sr-only.theme-light {
+[lwt-newtab-brighttext] .wallpaper-list:not(.ignore-color-mode) .wallpaper-input.theme-light, [lwt-newtab-brighttext] .wallpaper-list:not(.ignore-color-mode) .sr-only.theme-light {
   display: none;
 }
-.wallpaper-list .wallpaper-input.theme-dark,
-.wallpaper-list .sr-only.theme-dark {
+.wallpaper-list:not(.ignore-color-mode) .wallpaper-input.theme-dark, .wallpaper-list:not(.ignore-color-mode) .sr-only.theme-dark {
   display: none;
 }
-[lwt-newtab-brighttext] .wallpaper-list .wallpaper-input.theme-dark,
-[lwt-newtab-brighttext] .wallpaper-list .sr-only.theme-dark {
+[lwt-newtab-brighttext] .wallpaper-list:not(.ignore-color-mode) .wallpaper-input.theme-dark, [lwt-newtab-brighttext] .wallpaper-list:not(.ignore-color-mode) .sr-only.theme-dark {
   display: inline-block;
 }
 .wallpaper-list .wallpaper-input {
@@ -2068,6 +2095,15 @@ main section {
 .weatherSponsorText {
   visibility: hidden;
   font-size: var(--newtab-weather-sponsor-font-size);
+  color: var(--newtab-contextual-text-primary-color);
+}
+.lightWallpaper .weatherSponsorText {
+  color-scheme: light;
+}
+.darkWallpaper .weatherSponsorText {
+  color-scheme: dark;
+}
+.weatherSponsorText span {
   color: var(--text-color-deemphasized);
 }
 
@@ -2090,35 +2126,17 @@ main section {
 .weatherInfoLink:focus-visible, .weatherButtonContextMenuWrapper:focus-visible {
   outline: var(--focus-outline);
 }
-@media (prefers-color-scheme: dark) {
-  .hasWallpaperDark .weatherInfoLink, .hasWallpaperDark .weatherButtonContextMenuWrapper {
-    background-color: rgba(35, 34, 43, 0.7);
-  }
-  .hasWallpaperDark .weatherInfoLink:hover, .hasWallpaperDark .weatherButtonContextMenuWrapper:hover {
-    background-color: var(--newtab-button-static-hover-background);
-  }
-  .hasWallpaperDark .weatherInfoLink:hover:active, .hasWallpaperDark .weatherButtonContextMenuWrapper:hover:active {
-    background-color: var(--newtab-button-static-active-background);
-  }
+.lightWallpaper .weatherInfoLink, .darkWallpaper .weatherInfoLink, .lightWallpaper .weatherButtonContextMenuWrapper, .darkWallpaper .weatherButtonContextMenuWrapper {
+  background-color: var(--newtab-weather-background-color);
 }
-@media (prefers-contrast) and (prefers-color-scheme: dark) {
-  .hasWallpaperDark .weatherInfoLink, .hasWallpaperDark .weatherButtonContextMenuWrapper {
-    background-color: var(--background-color-box);
-  }
+.lightWallpaper .weatherInfoLink:hover, .darkWallpaper .weatherInfoLink:hover, .lightWallpaper .weatherButtonContextMenuWrapper:hover, .darkWallpaper .weatherButtonContextMenuWrapper:hover {
+  background-color: var(--newtab-button-static-hover-background);
 }
-@media (prefers-color-scheme: light) {
-  .hasWallpaperLight .weatherInfoLink, .hasWallpaperLight .weatherButtonContextMenuWrapper {
-    background-color: rgba(255, 255, 255, 0.7);
-  }
-  .hasWallpaperLight .weatherInfoLink:hover, .hasWallpaperLight .weatherButtonContextMenuWrapper:hover {
-    background-color: var(--newtab-button-static-hover-background);
-  }
-  .hasWallpaperLight .weatherInfoLink:hover:active, .hasWallpaperLight .weatherButtonContextMenuWrapper:hover:active {
-    background-color: var(--newtab-button-static-active-background);
-  }
+.lightWallpaper .weatherInfoLink:hover:active, .darkWallpaper .weatherInfoLink:hover:active, .lightWallpaper .weatherButtonContextMenuWrapper:hover:active, .darkWallpaper .weatherButtonContextMenuWrapper:hover:active {
+  background-color: var(--newtab-button-static-active-background);
 }
-@media (prefers-contrast) and (prefers-color-scheme: light) {
-  .hasWallpaperLight .weatherInfoLink, .hasWallpaperLight .weatherButtonContextMenuWrapper {
+@media (prefers-contrast) {
+  .lightWallpaper .weatherInfoLink, .darkWallpaper .weatherInfoLink, .lightWallpaper .weatherButtonContextMenuWrapper, .darkWallpaper .weatherButtonContextMenuWrapper {
     background-color: var(--background-color-box);
   }
 }
@@ -2168,11 +2186,6 @@ main section {
   display: block;
   position: absolute;
   z-index: 0;
-}
-@media (prefers-color-scheme: dark) {
-  .weatherButtonContextMenuWrapper::after {
-    background-color: var(--color-gray-70);
-  }
 }
 .weatherButtonContextMenuWrapper:hover::after {
   background-color: transparent;
@@ -3137,10 +3150,18 @@ main section {
 
 .ds-header,
 .ds-layout .section-title span {
-  color: var(--newtab-text-primary-color);
+  color: var(--newtab-contextual-text-primary-color);
   font-size: 17px;
   font-weight: 600;
   line-height: 20px;
+}
+.lightWallpaper .ds-header,
+.lightWallpaper .ds-layout .section-title span {
+  color-scheme: light;
+}
+.darkWallpaper .ds-header,
+.darkWallpaper .ds-layout .section-title span {
+  color-scheme: dark;
 }
 .ds-header .icon,
 .ds-layout .section-title span .icon {
@@ -3153,6 +3174,12 @@ main section {
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
   color: var(--newtab-primary-action-background);
   font-weight: 500;
+}
+.lightWallpaper .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
+  color-scheme: light;
+}
+.darkWallpaper .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
+  color-scheme: dark;
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
   text-decoration: none;
@@ -3723,7 +3750,7 @@ main section {
 
 /* stylelint-disable max-nesting-depth */
 .ds-navigation {
-  color: var(--newtab-text-primary-color);
+  color: var(--newtab-contextual-text-primary-color);
   font-size: 11.5px;
   font-weight: 500;
   line-height: 22px;
@@ -3740,6 +3767,12 @@ main section {
 }
 .ds-navigation.ds-navigation-right-aligned {
   text-align: end;
+}
+.lightWallpaper .ds-navigation {
+  color-scheme: light;
+}
+.darkWallpaper .ds-navigation {
+  color-scheme: dark;
 }
 .ds-navigation ul {
   display: inline;
@@ -4927,6 +4960,12 @@ main section {
   background-size: 20px;
   color: var(--icon-color);
   vertical-align: text-bottom;
+}
+.lightWallpaper .sponsored-content-highlight .icon-help {
+  color-scheme: light;
+}
+.darkWallpaper .sponsored-content-highlight .icon-help {
+  color-scheme: dark;
 }
 .sponsored-content-highlight .feature-highlight-modal.inset-inline-start::after {
   margin-inline-end: 11px;

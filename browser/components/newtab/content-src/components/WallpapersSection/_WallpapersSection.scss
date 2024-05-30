@@ -7,8 +7,8 @@
   padding: 0;
   border: none;
 
-  .wallpaper-input,
-  .sr-only {
+  &:not(.ignore-color-mode) .wallpaper-input,
+  &:not(.ignore-color-mode) .sr-only {
     &.theme-light {
       display: inline-block;
 

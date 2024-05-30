@@ -135,6 +135,10 @@ main {
 .wallpaper-attribution {
   padding: 0 $section-horizontal-padding;
   font-size: 14px;
+  color: var(--newtab-contextual-text-primary-color);
+
+  // Contrast fix for users who have wallpapers set
+  @include wallpaper-contrast-fix;
 
   &.theme-light {
     display: inline-block;
@@ -153,7 +157,7 @@ main {
   }
 
   a {
-    color: var(--newtab-element-color);
+    color: inherit;
 
     &:hover {
       text-decoration: none;

@@ -48,3 +48,15 @@
   border-radius: 4px;
   outline: none;
 }
+
+// Some wallpapers are light/dark, and may not match the user set contrast,
+// so some text, icons, etc that are displayed over the wallpaper need a contrast fix.
+@mixin wallpaper-contrast-fix {
+  .lightWallpaper & {
+    color-scheme: light;
+  }
+
+  .darkWallpaper & {
+    color-scheme: dark;
+  }
+}

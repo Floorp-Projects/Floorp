@@ -322,11 +322,12 @@ export class _Weather extends React.PureComponent {
               </button>
             </div>
           </div>
-          <span
-            data-l10n-id="newtab-weather-sponsored"
-            data-l10n-args='{"provider": "AccuWeather"}'
-            className="weatherSponsorText"
-          ></span>
+          <span className="weatherSponsorText">
+            <span
+              data-l10n-id="newtab-weather-sponsored"
+              data-l10n-args='{"provider": "AccuWeather"}'
+            ></span>
+          </span>
         </div>
       );
     }

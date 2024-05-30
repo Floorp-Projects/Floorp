@@ -57,7 +57,14 @@
 .weatherSponsorText {
   visibility: hidden;
   font-size: var(--newtab-weather-sponsor-font-size);
-  color: var(--text-color-deemphasized);
+  color: var(--newtab-contextual-text-primary-color);
+
+  // Contrast fix for users who have wallpapers set
+  @include wallpaper-contrast-fix;
+
+  span {
+    color: var(--text-color-deemphasized);
+  }
 }
 
 .weatherInfoLink, .weatherButtonContextMenuWrapper {
@@ -86,44 +93,22 @@
   }
 
   // Contrast fix for users who have wallpapers set
-  .hasWallpaperDark & {
-    @media (prefers-color-scheme: dark) {
-      // TODO: Replace with token
-      background-color: rgba(35, 34, 43, 70%);
+  .lightWallpaper &,
+  .darkWallpaper & {
+    background-color: var(--newtab-weather-background-color);
 
-      &:hover {
-        background-color: var(--newtab-button-static-hover-background);
-      }
-
-      &:hover:active {
-        background-color: var(--newtab-button-static-active-background);
-      }
+    &:hover {
+      background-color: var(--newtab-button-static-hover-background);
     }
 
-    @media (prefers-contrast) and (prefers-color-scheme: dark) {
+    &:hover:active {
+      background-color: var(--newtab-button-static-active-background);
+    }
+
+    @media (prefers-contrast) {
       background-color: var(--background-color-box);
     }
   }
-
-  .hasWallpaperLight & {
-    @media (prefers-color-scheme: light) {
-      // TODO: Replace with token
-      background-color: rgba(255, 255, 255, 70%);
-
-      &:hover {
-        background-color: var(--newtab-button-static-hover-background);
-      }
-
-      &:hover:active {
-        background-color: var(--newtab-button-static-active-background);
-      }
-    }
-
-    @media (prefers-contrast) and (prefers-color-scheme: light) {
-      background-color: var(--background-color-box);
-    }
-  }
-
 }
 
 .weatherInfoLink {
@@ -177,12 +162,6 @@
     display: block;
     position: absolute;
     z-index: 0;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    &::after {
-      background-color: var(--color-gray-70);
-    }
   }
 
   &:hover {

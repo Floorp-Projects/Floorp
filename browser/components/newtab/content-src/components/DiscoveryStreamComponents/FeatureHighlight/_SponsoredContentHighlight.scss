@@ -15,6 +15,9 @@
     background-size: 20px;
     color: var(--icon-color);
     vertical-align: text-bottom;
+
+    // Contrast fix for users who have wallpapers set
+    @include wallpaper-contrast-fix;
   }
 
   .feature-highlight-modal {

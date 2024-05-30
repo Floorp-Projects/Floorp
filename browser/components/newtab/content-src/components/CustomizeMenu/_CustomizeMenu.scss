@@ -21,6 +21,11 @@
   background-color: transparent;
   padding: 15px;
 
+  // Contrast fix for users who have wallpapers set
+  &:not(:hover, :active) {
+    @include wallpaper-contrast-fix;
+  }
+
   &:hover {
     background-color: var(--newtab-element-hover-color);
   }

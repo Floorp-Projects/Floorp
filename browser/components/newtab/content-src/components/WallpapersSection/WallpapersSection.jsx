@@ -25,36 +25,48 @@ export class _WallpapersSection extends React.PureComponent {
     const { id } = event.target;
     const prefs = this.props.Prefs.values;
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
+    if (prefs["newtabWallpapers.v2.enabled"]) {
+      // If we don't care about color mode, set both to the same wallpaper.
+      this.props.setPref(`newtabWallpapers.wallpaper-dark`, id);
+      this.props.setPref(`newtabWallpapers.wallpaper-light`, id);
+    } else {
+      this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
+      // bug 1892095
+      if (
+        prefs["newtabWallpapers.wallpaper-dark"] === "" &&
+        colorMode === "light"
+      ) {
+        this.props.setPref(
+          "newtabWallpapers.wallpaper-dark",
+          id.replace("light", "dark")
+        );
+      }
+
+      if (
+        prefs["newtabWallpapers.wallpaper-light"] === "" &&
+        colorMode === "dark"
+      ) {
+        this.props.setPref(
+          `newtabWallpapers.wallpaper-light`,
+          id.replace("dark", "light")
+        );
+      }
+    }
     this.handleUserEvent({
       selected_wallpaper: id,
       hadPreviousWallpaper: !!this.props.activeWallpaper,
     });
-    // bug 1892095
-    if (
-      prefs["newtabWallpapers.wallpaper-dark"] === "" &&
-      colorMode === "light"
-    ) {
-      this.props.setPref(
-        "newtabWallpapers.wallpaper-dark",
-        id.replace("light", "dark")
-      );
-    }
-
-    if (
-      prefs["newtabWallpapers.wallpaper-light"] === "" &&
-      colorMode === "dark"
-    ) {
-      this.props.setPref(
-        `newtabWallpapers.wallpaper-light`,
-        id.replace("dark", "light")
-      );
-    }
   }
 
   handleReset() {
+    const prefs = this.props.Prefs.values;
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
+    if (prefs["newtabWallpapers.v2.enabled"]) {
+      this.props.setPref("newtabWallpapers.wallpaper-light", "");
+      this.props.setPref("newtabWallpapers.wallpaper-dark", "");
+    } else {
+      this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
+    }
     this.handleUserEvent({
       selected_wallpaper: "none",
       hadPreviousWallpaper: !!this.props.activeWallpaper,
@@ -74,9 +86,14 @@ export class _WallpapersSection extends React.PureComponent {
   render() {
     const { wallpaperList } = this.props.Wallpapers;
     const { activeWallpaper } = this.props;
+    const prefs = this.props.Prefs.values;
+    let fieldsetClassname = `wallpaper-list`;
+    if (prefs["newtabWallpapers.v2.enabled"]) {
+      fieldsetClassname += " ignore-color-mode";
+    }
     return (
       <div>
-        <fieldset className="wallpaper-list">
+        <fieldset className={fieldsetClassname}>
           {wallpaperList.map(({ title, theme, fluent_id }) => {
             return (
               <>
