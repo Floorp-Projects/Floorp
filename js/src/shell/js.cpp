@@ -363,11 +363,9 @@ void counters_dump(int) { __gcov_dump(); }
 
 void counters_reset(int) { __gcov_reset(); }
 #  else
-void counters_dump(int) { /* Do nothing */
-}
+void counters_dump(int) { /* Do nothing */ }
 
-void counters_reset(int) { /* Do nothing */
-}
+void counters_reset(int) { /* Do nothing */ }
 #  endif
 
 static void InstallCoverageSignalHandlers() {
@@ -1507,6 +1505,54 @@ static void WriteTelemetryDataToDisk(const char* dir) {
 }
 
 #undef MAP_TELEMETRY
+
+// Use Counter introspection
+static Mutex useCounterLock(mutexid::ShellUseCounters);
+class MOZ_RAII AutoLockUseCounters : public LockGuard<Mutex> {
+  using Base = LockGuard<Mutex>;
+
+ public:
+  AutoLockUseCounters() : Base(useCounterLock) {}
+};
+
+using UseCounterArray =
+    mozilla::Array<uint32_t, static_cast<size_t>(JSUseCounter::COUNT)>;
+static UseCounterArray useCounterResults;
+static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
+  MOZ_RELEASE_ASSERT(obj);
+  AutoLockUseCounters aluc;
+  // Maybe should ensure obj is a global object?
+  useCounterResults[static_cast<size_t>(counter)]++;
+}
+
+static bool GetUseCounterResults(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
+  if (!obj) {
+    return false;
+  }
+
+  // Make a private copy holding the lock then release, because we can't
+  // hold this mutex while doing JS_DefineProperty, which holds MemoryTracker
+  // mutex.
+  UseCounterArray local;
+  {
+    AutoLockUseCounters aluc;
+    local = useCounterResults;
+  }
+
+  RootedValue val(cx);
+#define ADD_VALUE(ENUM, NAME)                                      \
+  val.setInt32(local[static_cast<size_t>(JSUseCounter::ENUM)]);    \
+  if (!JS_DefineProperty(cx, obj, #NAME, val, JSPROP_ENUMERATE)) { \
+    return false;                                                  \
+  }
+
+  FOR_EACH_JS_USE_COUNTER(ADD_VALUE);
+
+  args.rval().setObject(*obj);
+  return true;
+}
 
 static bool BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -9869,6 +9915,10 @@ JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
 " Return an object with a property 'obj.test == 42', backed by a resolve hook "
 " with the Debugger shouldAvoidSideEffects flag integration."),
 
+  JS_FN_HELP("getUseCounterResults", GetUseCounterResults, 0, 0,
+"getUseCounterResults()",
+" Return the values of the shell use counters."),
+
     JS_FS_HELP_END
 };
 // clang-format on
@@ -11894,6 +11944,7 @@ int main(int argc, char** argv) {
   if (telemetryLock) {
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryDataCallback);
   }
+  JS_SetSetUseCounterCallback(cx, SetUseCounterCallback);
 
   auto destroyCx = MakeScopeExit([cx] { JS_DestroyContext(cx); });
 

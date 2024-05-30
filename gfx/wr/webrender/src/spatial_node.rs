@@ -473,8 +473,7 @@ impl SpatialNode {
                                     state.coordinate_system_relative_scale_offset.scale,
                                 );
                             }
-                            cs_scale_offset =
-                                state.coordinate_system_relative_scale_offset.pre_transform(&maybe_snapped);
+                            cs_scale_offset = maybe_snapped.then(&state.coordinate_system_relative_scale_offset);
                         }
                         None => reset_cs_id = true,
                     }

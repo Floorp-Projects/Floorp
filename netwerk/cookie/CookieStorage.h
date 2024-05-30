@@ -94,8 +94,9 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   void GetAll(nsTArray<RefPtr<nsICookie>>& aResult) const;
 
-  const nsTArray<RefPtr<Cookie>>* GetCookiesFromHost(
-      const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes);
+  void GetCookiesFromHost(const nsACString& aBaseDomain,
+                          const OriginAttributes& aOriginAttributes,
+                          nsTArray<RefPtr<Cookie>>& aCookies);
 
   void GetCookiesWithOriginAttributes(const OriginAttributesPattern& aPattern,
                                       const nsACString& aBaseDomain,
@@ -130,7 +131,7 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
   static void CreateOrUpdatePurgeList(nsCOMPtr<nsIArray>& aPurgedList,
                                       nsICookie* aCookie);
 
-  virtual void StaleCookies(const nsTArray<Cookie*>& aCookieList,
+  virtual void StaleCookies(const nsTArray<RefPtr<Cookie>>& aCookieList,
                             int64_t aCurrentTimeInUsec) = 0;
 
   virtual void Close() = 0;

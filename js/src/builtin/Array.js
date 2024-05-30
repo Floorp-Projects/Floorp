@@ -681,7 +681,8 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
       //     Step 3.e.i. Let A be ? Construct(C).
       // Step 3.f. Else,
       //     Step 3.f.i. Let A be ! ArrayCreate(0).
-      var A = IsConstructor(C) ? constructContentFunction(C, C) : [];
+      var A = IsConstructor(C) ?
+        (ReportUsageCounter(C, SUBCLASS_ARRAY_TYPE_II), constructContentFunction(C, C)) : [];
 
 
       // Step 3.j.i. Let k be 0.
@@ -750,7 +751,7 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
     //     Step 3.k.iv.1. Let A be ? Construct(C, « 𝔽(len) »).
     // Step 3.k.v. Else,
     //     Step 3.k.v.1. Let A be ? ArrayCreate(len).
-    var A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
+    var A = IsConstructor(C) ? (ReportUsageCounter(C, SUBCLASS_ARRAY_TYPE_II), constructContentFunction(C, C, len)) : std_Array(len);
 
     // Step 3.k.vi. Let k be 0.
     var k = 0;
@@ -814,7 +815,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
     }
 
     // Steps 5.a-b.
-    var A = IsConstructor(C) ? constructContentFunction(C, C) : [];
+    var A = IsConstructor(C) ? (ReportUsageCounter(C, SUBCLASS_ARRAY_TYPE_II), constructContentFunction(C, C)) : [];
 
     // Step 5.d.
     var k = 0;
@@ -857,7 +858,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
 
   // Steps 12-14.
   var A = IsConstructor(C)
-    ? constructContentFunction(C, C, len)
+    ? (ReportUsageCounter(C, SUBCLASS_ARRAY_TYPE_II), constructContentFunction(C, C, len))
     : std_Array(len);
 
   // Steps 15-16.
@@ -921,7 +922,7 @@ function ArrayToLocaleString(locales, options) {
   if (IsNullOrUndefined(firstElement)) {
     R = "";
   } else {
-#if JS_HAS_INTL_API
+    #if JS_HAS_INTL_API
     R = ToString(
       callContentFunction(
         firstElement.toLocaleString,
@@ -930,11 +931,11 @@ function ArrayToLocaleString(locales, options) {
         options
       )
     );
-#else
+    #else
     R = ToString(
       callContentFunction(firstElement.toLocaleString, firstElement)
     );
-#endif
+    #endif
   }
 
   // Step 3 (reordered).
@@ -949,7 +950,7 @@ function ArrayToLocaleString(locales, options) {
     // Steps 9.a, 9.c-e.
     R += separator;
     if (!IsNullOrUndefined(nextElement)) {
-#if JS_HAS_INTL_API
+      #if JS_HAS_INTL_API
       R += ToString(
         callContentFunction(
           nextElement.toLocaleString,
@@ -958,11 +959,11 @@ function ArrayToLocaleString(locales, options) {
           options
         )
       );
-#else
+      #else
       R += ToString(
         callContentFunction(nextElement.toLocaleString, nextElement)
       );
-#endif
+      #endif
     }
   }
 
@@ -1016,6 +1017,7 @@ function ArraySpeciesCreate(originalArray, length) {
     if (C === null) {
       return std_Array(length);
     }
+
   }
 
   // Step 6.
@@ -1029,6 +1031,7 @@ function ArraySpeciesCreate(originalArray, length) {
   }
 
   // Step 8.
+  ReportUsageCounter(C, SUBCLASS_ARRAY_TYPE_III);
   return constructContentFunction(C, C, length);
 }
 

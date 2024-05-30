@@ -171,6 +171,9 @@ void PopulateScreenProperties() {
   glean::characteristics::screen_width.Set(rect.Width());
 
   glean::characteristics::video_dynamic_range.Set(screen->GetIsHDR());
+
+  mozilla::glean::characteristics::screen_orientation.Set(
+      (int)screen->GetOrientationType());
 }
 
 void PopulateMissingFonts() {

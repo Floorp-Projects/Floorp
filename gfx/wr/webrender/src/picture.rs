@@ -954,12 +954,15 @@ impl Tile {
         &mut self,
         ctx: &TilePreUpdateContext,
     ) {
-        self.local_tile_rect = PictureRect::from_origin_and_size(
+        self.local_tile_rect = PictureRect::new(
             PicturePoint::new(
                 self.tile_offset.x as f32 * ctx.tile_size.width,
                 self.tile_offset.y as f32 * ctx.tile_size.height,
             ),
-            ctx.tile_size,
+            PicturePoint::new(
+                (self.tile_offset.x + 1) as f32 * ctx.tile_size.width,
+                (self.tile_offset.y + 1) as f32 * ctx.tile_size.height,
+            ),
         );
         // TODO(gw): This is a hack / fix for Box2D::union in euclid not working with
         //           zero sized rect accumulation. Once that lands, we'll revert this
@@ -2200,8 +2203,7 @@ impl TileCacheInstance {
         }
 
         // Use that compositor transform to calculate a relative local to surface
-        // TODO(nical): this looks wrong. It should probably be `local_to_device.then(&raster_to_device.inverse())`.
-        let local_to_raster = local_to_device.pre_transform(&raster_to_device.inverse());
+        let local_to_raster = local_to_device.then(&raster_to_device.inverse());
 
         const EPSILON: f32 = 0.001;
         let compositor_translation_changed =
@@ -2697,7 +2699,7 @@ impl TileCacheInstance {
             frame_context.spatial_tree,
         );
 
-        let normalized_prim_to_device = prim_offset.pre_transform(&local_prim_to_device);
+        let normalized_prim_to_device = prim_offset.then(&local_prim_to_device);
 
         let local_to_raster = ScaleOffset::identity();
         let raster_to_device = normalized_prim_to_device;
@@ -3967,22 +3969,26 @@ impl SurfaceInfo {
 
     pub fn map_to_device_rect(
         &self,
-        local_rect: &PictureRect,
+        picture_rect: &PictureRect,
         spatial_tree: &SpatialTree,
     ) -> DeviceRect {
         let raster_rect = if self.raster_spatial_node_index != self.surface_spatial_node_index {
+            // Currently, the surface's spatial node can be different from its raster node only
+            // for surfaces in the root coordinate system for snapping reasons.
+            // See `PicturePrimitive::assign_surface`.
             assert_eq!(self.device_pixel_scale.0, 1.0);
+            assert_eq!(self.raster_spatial_node_index, spatial_tree.root_reference_frame_index());
 
-            let local_to_world = SpaceMapper::new_with_target(
-                spatial_tree.root_reference_frame_index(),
+            let pic_to_raster = SpaceMapper::new_with_target(
+                self.raster_spatial_node_index,
                 self.surface_spatial_node_index,
                 WorldRect::max_rect(),
                 spatial_tree,
             );
 
-            local_to_world.map(&local_rect).unwrap()
+            pic_to_raster.map(&picture_rect).unwrap()
         } else {
-            local_rect.cast_unit()
+            picture_rect.cast_unit()
         };
 
         raster_rect * self.device_pixel_scale

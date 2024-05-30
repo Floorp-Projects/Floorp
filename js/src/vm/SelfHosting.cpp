@@ -2161,6 +2161,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpSearcher", RegExpSearcher, 3, 0, RegExpSearcher),
     JS_INLINABLE_FN("RegExpSearcherLastLimit", RegExpSearcherLastLimit, 0, 0,
                     RegExpSearcherLastLimit),
+    JS_FN("ReportUsageCounter", intrinsic_ReportUsageCounter, 2, 0),
     JS_INLINABLE_FN("SameValue", js::obj_is, 2, 0, ObjectIs),
     JS_FN("SetCopy", SetObject::copy, 1, 0),
     JS_FN("SharedArrayBufferByteLength",
@@ -2958,6 +2959,223 @@ bool js::IsSelfHostedFunctionWithName(const Value& v, JSAtom* name) {
   }
   JSFunction* fun = &v.toObject().as<JSFunction>();
   return IsSelfHostedFunctionWithName(fun, name);
+}
+
+// MG:XXX: Need to adopt a solid policy around CCW constructors.
+// -- Going to default to "different realm don't matter".
+bool js::ReportUsageCounter(JSContext* cx, HandleObject constructorArg,
+                            int32_t builtin, int32_t type) {
+  RootedObject constructor(cx, constructorArg);
+
+  // Do this here rather than as part of the self-hosted code.
+  if (builtin == SUBCLASSING_DETERMINE_THROUGH_CONSTRUCTOR) {
+    MOZ_ASSERT(constructor);
+
+    do {
+      if (IsPromiseConstructor(constructor)) {
+        builtin = SUBCLASSING_PROMISE;
+        break;
+      }
+      if (IsTypedArrayConstructor(constructor)) {
+        builtin = SUBCLASSING_TYPEDARRAY;
+        break;
+      }
+      if (IsArrayConstructor(constructor)) {
+        builtin = SUBCLASSING_ARRAY;
+        break;
+      }
+      if (IsCrossCompartmentWrapper(constructor)) {
+        // Bail on reporting CCWs.
+        return true;
+      }
+
+      Rooted<GlobalObject*> global(cx, &constructor->nonCCWGlobal());
+      RootedObject abConstructor(
+          cx, GlobalObject::getOrCreateArrayBufferConstructor(cx, global));
+      if (!abConstructor) {
+        return false;
+      }
+      if (constructor == abConstructor) {
+        builtin = SUBCLASSING_ARRAYBUFFER;
+        break;
+      }
+
+      RootedObject sabConstructor(
+          cx,
+          GlobalObject::getOrCreateSharedArrayBufferConstructor(cx, global));
+      if (!sabConstructor) {
+        return false;
+      }
+      if (constructor == sabConstructor) {
+        builtin = SUBCLASSING_SHAREDARRAYBUFFER;
+        break;
+      }
+
+      RootedObject regExpConstructor(
+          cx, GlobalObject::getOrCreateRegExpConstructor(cx, global));
+      if (!regExpConstructor) {
+        return false;
+      }
+      if (constructor == regExpConstructor) {
+        builtin = SUBCLASSING_REGEXP;
+        break;
+      }
+
+    } while (false);
+
+    // We should have determined the constructor here.
+    if (builtin == SUBCLASSING_DETERMINE_THROUGH_CONSTRUCTOR) {
+      MOZ_CRASH("Unable to determine constructor where expected.");
+      return true;
+    }
+    // We -do- want to report here, because we've determined exterior to this
+    // that we're in a subclassing scenario; so don't do the check for a
+    // matching constructor here.
+    constructor = nullptr;
+  }
+
+  switch (builtin) {
+    case SUBCLASSING_ARRAY: {
+      // Check if the provided function is actually the array constructor
+      // anyhow; Constructor may be nullptr if check has already been done.
+      if (constructor && IsArrayConstructor(constructor)) {
+        return true;
+      }
+      switch (type) {
+        case SUBCLASSING_TYPE_II:
+          cx->runtime()->setUseCounter(cx->global(),
+                                       JSUseCounter::SUBCLASSING_ARRAY_TYPE_II);
+          return true;
+        case SUBCLASSING_TYPE_III:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_ARRAY_TYPE_III);
+          return true;
+        default:
+          MOZ_CRASH("Unexpected Subclassing Type");
+      }
+    }
+    case SUBCLASSING_PROMISE: {
+      if (constructor && IsPromiseConstructor(constructor)) {
+        return true;
+      }
+      switch (type) {
+        case SUBCLASSING_TYPE_II:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_PROMISE_TYPE_II);
+          return true;
+        case SUBCLASSING_TYPE_III:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_PROMISE_TYPE_III);
+          return true;
+        default:
+          MOZ_CRASH("Unexpected Subclassing Type");
+      }
+    }
+    case SUBCLASSING_TYPEDARRAY: {
+      // So here's a design question: Do we ultimately care about
+      // matching typed arrays? i.e. if someone does
+      // UInt8Array.from.call(Int8Array, 0), should this count
+      // as subclassing?
+      //
+      // I'm inclined to say not at the moment -- but it would
+      // be a behaviour change if we removed subclassing.
+      if (constructor && IsTypedArrayConstructor(constructor)) {
+        return true;
+      }
+      switch (type) {
+        case SUBCLASSING_TYPE_II:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_TYPEDARRAY_TYPE_II);
+          return true;
+        case SUBCLASSING_TYPE_III:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_TYPEDARRAY_TYPE_III);
+          return true;
+        default:
+          MOZ_CRASH("Unhandled subclassing type");
+      }
+    }
+    case SUBCLASSING_ARRAYBUFFER:
+    case SUBCLASSING_SHAREDARRAYBUFFER: {
+      MOZ_ASSERT(type == SUBCLASSING_TYPE_III);
+      cx->runtime()->setUseCounter(
+          cx->global(),
+          builtin == SUBCLASSING_ARRAYBUFFER
+              ? JSUseCounter::SUBCLASSING_ARRAYBUFFER_TYPE_III
+              : JSUseCounter::SUBCLASSING_SHAREDARRAYBUFFER_TYPE_III);
+      return true;
+    }
+    case SUBCLASSING_REGEXP: {
+      switch (type) {
+        case SUBCLASSING_TYPE_III:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_REGEXP_TYPE_III);
+          return true;
+        case SUBCLASSING_TYPE_IV:
+          cx->runtime()->setUseCounter(
+              cx->global(), JSUseCounter::SUBCLASSING_REGEXP_TYPE_IV);
+          return true;
+        default:
+          MOZ_CRASH("Unexpected RegExp Subclassing Type");
+      }
+    }
+    default:
+      MOZ_CRASH("Unexpected builtin");
+  };
+}
+
+// In the interests of efficiency and simplicity, we would like this function
+// to have to do as little as possible, and take as few parameters as possible.
+//
+// Nevethreless, we also wish to be able to report correctly for interesting
+// cases like Array.from.call(Map, ...) -- essentially, catching the case where
+// someone using a subclassing-elgible class as the 'this' value, thereby
+// executing a sub classing.
+//
+// To handle this with just two parameters, we treat our integer parameter as a
+// packed integer; This introduces some magic, but allows us to communicate all
+// call-site constant data in a single int32.
+//`
+// The packing is as follows:
+//
+// SubclassingElgibleBuiltins << 16 | SubclassingType
+//
+// This produces the following magic constant values:
+//
+// Array Subclassing   Type II:  (1 << 16) | 2 == 0x010002
+// Array Subclassing   Type III: (1 << 16) | 3 == 0x010003
+// Array Subclassing   Type IV:  (1 << 16) | 4 == 0x010000
+//
+// Promise Subclassing Type II:  (2 << 16) | 2 == 0x020002
+// Promise Subclassing Type III: (2 << 16) | 3 == 0x020003
+// Promise Subclassing Type IV:  (2 << 16) | 4 == 0x020004
+//
+// ... etc.
+//
+// Subclassing is reported iff the constructor provided doesn't match
+// the existing prototype.
+//
+bool js::intrinsic_ReportUsageCounter(JSContext* cx, unsigned int argc,
+                                      JS::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  // Currently usage counter is only used for reporting subclassing
+  // as a result we hyper-specialize the following
+  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args.get(0).isObject());
+  MOZ_ASSERT(args.get(1).isInt32());
+
+  HandleValue arg0 = args.get(0);
+  RootedObject constructor(cx, &arg0.toObject());
+
+  int32_t packedTypeAndBuiltin = args.get(1).toInt32();
+
+  int32_t type = packedTypeAndBuiltin & SUBCLASSING_TYPE_MASK;
+  MOZ_ASSERT(type >= SUBCLASSING_TYPE_II && type <= SUBCLASSING_TYPE_IV);
+
+  int32_t builtin = packedTypeAndBuiltin >> SUBCLASSING_BUILTIN_SHIFT;
+  MOZ_ASSERT(builtin >= 0 && builtin < SUBCLASSING_LAST_BUILTIN);
+
+  return ReportUsageCounter(cx, constructor, builtin, type);
 }
 
 static_assert(

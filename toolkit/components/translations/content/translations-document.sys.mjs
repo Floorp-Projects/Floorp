@@ -465,8 +465,18 @@ export class TranslationsDocument {
       this.handleVisibilityChange
     );
 
-    this.addRootElement(document.querySelector("title"));
-    this.addRootElement(document.body, true /* reportWordsInViewport */);
+    const addRootElements = () => {
+      this.addRootElement(document.querySelector("title"));
+      this.addRootElement(document.body, true /* reportWordsInViewport */);
+    };
+
+    if (document.body) {
+      addRootElements();
+    } else {
+      // The TranslationsDocument was invoked before the DOM was ready, wait for
+      // it to be loaded.
+      document.addEventListener("DOMContentLoaded", addRootElements);
+    }
 
     this.viewportTranslated?.then(() => {
       ChromeUtils.addProfilerMarker(

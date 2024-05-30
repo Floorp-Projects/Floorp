@@ -89,7 +89,7 @@ class CookieService final : public nsICookieService,
                         bool aHttpBound,
                         bool aAllowSecureCookiesToInsecureOrigin,
                         const nsTArray<OriginAttributes>& aOriginAttrsList,
-                        nsTArray<Cookie*>& aCookieList);
+                        nsTArray<RefPtr<Cookie>>& aCookieList);
 
   /**
    * This method is a helper that allows calling nsICookieManager::Remove()

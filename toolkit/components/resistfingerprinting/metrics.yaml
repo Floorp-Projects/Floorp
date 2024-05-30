@@ -442,6 +442,25 @@ characteristics:
     data_sensitivity:
       - technical
 
+  screen_orientation:
+    type: quantity
+    unit: enum hal::ScreenOrientation value
+    description: >
+      Orientation of the primary screen.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881749
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881749#c5
+    expires: never
+    data_sensitivity:
+      - technical
+
   screen_height:
     type: quantity
     unit: pixels

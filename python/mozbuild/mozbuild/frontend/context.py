@@ -419,12 +419,14 @@ class AsmFlags(BaseCompileFlags):
                     debug_flags += ["-F", "cv8"]
                 elif self._context.config.substs.get("OS_ARCH") != "Darwin":
                     debug_flags += ["-F", "dwarf"]
-            elif (
-                self._context.config.substs.get("OS_ARCH") == "WINNT"
-                and self._context.config.substs.get("TARGET_CPU") == "aarch64"
-            ):
-                # armasm64 accepts a paucity of options compared to ml/ml64.
-                pass
+            elif self._context.config.substs.get("CC_TYPE") == "clang-cl":
+                if self._context.config.substs.get("TARGET_CPU") == "aarch64":
+                    # armasm64 accepts a paucity of options compared to ml/ml64.
+                    pass
+                else:
+                    # Unintuitively, -Zi for ml/ml64 is equivalent to -Z7 for cl.exe.
+                    # -Zi for cl.exe has a different purpose, so this is only used here.
+                    debug_flags += ["-Zi"]
             else:
                 debug_flags += self._context.config.substs.get("MOZ_DEBUG_FLAGS", [])
         return debug_flags
