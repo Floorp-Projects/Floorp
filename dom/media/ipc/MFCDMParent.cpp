@@ -1298,7 +1298,7 @@ RefPtr<GenericNonExclusivePromise> MFCDMService::LaunchMFCDMProcessIfNeeded(
             }
             return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
           },
-          [](nsresult aError) {
+          [](ipc::LaunchError const& aError) {
             NS_WARNING("Failed to start the MFCDM process!");
             return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                                __func__);

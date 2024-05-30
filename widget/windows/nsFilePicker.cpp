@@ -153,12 +153,12 @@ static auto ShowRemote(ActionType&& action) -> RefPtr<FDPromise<ReturnType>> {
               return std::move(val);
             });
       },
-      [](nsresult error) -> RefPtr<RetPromise> {
+      [](mozilla::ipc::LaunchError const& error) {
         MOZ_LOG(sLogFileDialog, LogLevel::Error,
-                ("could not acquire WinFileDialog: %zu", size_t(error)));
-        // TODO: pipe more data up from utility-process creation
-        FAIL("UtilityProcessManager::CreateWinFileDialogActor",
-             (uint32_t)error);
+                ("could not acquire WinFileDialog: %s:%zu",
+                 error.FunctionName().get(), size_t(error.ErrorCode())));
+        return RetPromise::CreateAndReject(Error::From(error),
+                                           "nsFilePicker::ShowRemote");
       });
 
 #undef FAIL

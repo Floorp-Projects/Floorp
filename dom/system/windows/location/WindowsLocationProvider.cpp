@@ -92,7 +92,7 @@ void WindowsLocationProvider::MaybeCreateLocationActor() {
   auto wuPromise = utilityProc->GetWindowsUtilsPromise();
   mActorPromise = wuPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [self](RefPtr<WindowsUtilsParent> wup) {
+      [self](RefPtr<WindowsUtilsParent> const& wup) {
         self->mActorPromise = nullptr;
         auto actor = MakeRefPtr<WindowsLocationParent>(self);
         if (!wup->SendPWindowsLocationConstructor(actor)) {
@@ -108,10 +108,11 @@ void WindowsLocationProvider::MaybeCreateLocationActor() {
         self->mActor = actor;
         return WindowsLocationPromise::CreateAndResolve(self->mActor, __func__);
       },
-
-      [self](nsresult aError) {
-        LOG("WindowsLocationProvider failed to connect to actor (%p,%p,%p)",
-            self.get(), self->mActor.get(), self->mActorPromise.get());
+      [self](::mozilla::ipc::LaunchError&& err) {
+        LOG("WindowsLocationProvider failed to connect to actor: [%s, %lX] "
+            "(%p,%p,%p)",
+            err.FunctionName().get(), err.ErrorCode(), self.get(),
+            self->mActor.get(), self->mActorPromise.get());
         self->mActorPromise = nullptr;
         return WindowsLocationPromise::CreateAndReject(false, __func__);
       });

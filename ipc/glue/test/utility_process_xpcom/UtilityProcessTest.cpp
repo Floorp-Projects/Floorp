@@ -146,10 +146,10 @@ UtilityProcessTest::StartProcess(const nsTArray<nsCString>& aActorsToRegister,
               promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
             }
           },
-          [promise](nsresult aError) {
+          [promise](LaunchError aError) {
             MOZ_ASSERT_UNREACHABLE(
                 "UtilityProcessTest; failure to get Utility process");
-            promise->MaybeReject(aError);
+            promise->MaybeReject(NS_ERROR_FAILURE);
           });
 
   promise.forget(aOutPromise);
