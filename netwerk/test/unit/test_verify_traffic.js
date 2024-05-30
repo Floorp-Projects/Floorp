@@ -9,6 +9,14 @@
 /* import-globals-from head_channels.js */
 /* import-globals-from head_servers.js */
 
+const gDashboard = Cc["@mozilla.org/network/dashboard;1"].getService(
+  Ci.nsIDashboard
+);
+
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
+
 function makeChan(uri) {
   let chan = NetUtil.newChannel({
     uri,
@@ -105,6 +113,37 @@ add_task(async function test_verify_traffic_for_http2() {
 
   sessionCount = await server.sessionCount();
   Assert.equal(sessionCount, 2);
+
+  // Create another request and trigger the network change event again.
+  // The second network change event is to put the second connection into the
+  // pending list.
+  res = await new Promise(resolve => {
+    // Create a request that takes 8s to finish.
+    let chan = makeChan(`https://localhost:${server.port()}/longDelay`);
+    chan.asyncOpen(new ChannelListener(resolve, null, CL_ALLOW_UNKNOWN_CL));
+
+    Services.obs.notifyObservers(
+      null,
+      "network:link-status-changed",
+      "changed"
+    );
+  });
+
+  Assert.equal(res.status, Cr.NS_OK);
+  Assert.equal(res.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
+
+  async function getSocketCount() {
+    return new Promise(resolve => {
+      gDashboard.requestSockets(function (data) {
+        resolve(data.sockets.length);
+      });
+    });
+  }
+
+  await TestUtils.waitForCondition(async () => {
+    const socketCount = await getSocketCount();
+    return socketCount === 0;
+  }, "Socket count should be 0");
 
   await server.stop();
 });

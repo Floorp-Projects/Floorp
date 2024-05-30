@@ -509,6 +509,9 @@ void ConnectionEntry::VerifyTraffic() {
             mActiveConns.RemoveElementAt(index);
             gHttpHandler->ConnMgr()->DecrementActiveConnCount(conn);
             mPendingConns.AppendElement(conn);
+            // After DontReuse(), the connection will be closed after the last
+            // transition is done.
+            conn->DontReuse();
             LOG(("Move active connection to pending list [conn=%p]\n",
                  conn.get()));
           }
