@@ -15,9 +15,9 @@
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/PAPZ.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
@@ -722,8 +722,10 @@ void DisplayPortUtils::RemoveDisplayPort(nsIContent* aContent) {
 }
 
 bool DisplayPortUtils::ViewportHasDisplayPort(nsPresContext* aPresContext) {
-  nsIFrame* rootScrollFrame = aPresContext->PresShell()->GetRootScrollFrame();
-  return rootScrollFrame && HasDisplayPort(rootScrollFrame->GetContent());
+  nsIFrame* rootScrollContainerFrame =
+      aPresContext->PresShell()->GetRootScrollContainerFrame();
+  return rootScrollContainerFrame &&
+         HasDisplayPort(rootScrollContainerFrame->GetContent());
 }
 
 bool DisplayPortUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame) {
@@ -835,7 +837,7 @@ void DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
     frame = do_QueryFrame(scrollAncestor);
     MOZ_ASSERT(frame);
     MOZ_ASSERT(scrollAncestor->WantAsyncScroll() ||
-               frame->PresShell()->GetRootScrollFrame() == frame);
+               frame->PresShell()->GetRootScrollContainerFrame() == frame);
     if (nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
         !HasDisplayPort(frame->GetContent())) {
       SetDisplayPortMargins(frame->GetContent(), frame->PresShell(),
@@ -916,7 +918,7 @@ void DisplayPortUtils::ExpireDisplayPortOnAsyncScrollableAncestor(
       break;
     }
     MOZ_ASSERT(scrollAncestor->WantAsyncScroll() ||
-               frame->PresShell()->GetRootScrollFrame() == frame);
+               frame->PresShell()->GetRootScrollContainerFrame() == frame);
     if (HasDisplayPort(frame->GetContent())) {
       scrollAncestor->TriggerDisplayPortExpiration();
       // Stop after the first trigger. If it failed, there's no point in
@@ -943,7 +945,7 @@ Maybe<nsRect> DisplayPortUtils::GetRootDisplayportBase(PresShell* aPresShell) {
     return browserChild->GetVisibleRect();
   }
 
-  nsIFrame* frame = aPresShell->GetRootScrollFrame();
+  nsIFrame* frame = aPresShell->GetRootScrollContainerFrame();
   if (!frame) {
     frame = aPresShell->GetRootFrame();
   }

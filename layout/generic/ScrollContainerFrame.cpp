@@ -4353,7 +4353,7 @@ nsRect ScrollContainerFrame::RestrictToRootDisplayPort(
     return aDisplayportBase;
   }
   const mozilla::PresShell* const rootPresShell = rootPresContext->PresShell();
-  nsIFrame* rootFrame = rootPresShell->GetRootScrollFrame();
+  nsIFrame* rootFrame = rootPresShell->GetRootScrollContainerFrame();
   if (!rootFrame) {
     rootFrame = rootPresShell->GetRootFrame();
   }
@@ -4394,7 +4394,7 @@ nsRect ScrollContainerFrame::RestrictToRootDisplayPort(
     // CalculateCompositionSizeForFrame did not take the document's
     // resolution into account, so we must.
     if (rootPresContext->IsRootContentDocumentCrossProcess() &&
-        rootFrame == rootPresShell->GetRootScrollFrame()) {
+        rootFrame == rootPresShell->GetRootScrollContainerFrame()) {
       MOZ_LOG(
           sDisplayportLog, LogLevel::Verbose,
           ("RestrictToRootDisplayPort: Removing resolution %f from root "
