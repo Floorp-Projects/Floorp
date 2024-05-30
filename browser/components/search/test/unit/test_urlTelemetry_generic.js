@@ -4,7 +4,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
@@ -271,10 +270,6 @@ add_task(async function setup() {
   await SearchSERPTelemetry.init();
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   sinon.stub(BrowserSearchTelemetry, "shouldRecordSearchCount").returns(true);
-  // There is no concept of browsing in unit tests, so assume in tests that we
-  // are not in private browsing mode. We have browser tests that check when
-  // private browsing is used.
-  sinon.stub(PrivateBrowsingUtils, "isBrowserPrivate").returns(false);
 });
 
 add_task(async function test_parsing_search_urls() {
@@ -285,6 +280,14 @@ add_task(async function test_parsing_search_urls() {
     }
     let browser = {
       getTabBrowser: () => {},
+      // There is no concept of browsing in unit tests, so assume in tests that we
+      // are not in private browsing mode. We have browser tests that check when
+      // private browsing is used.
+      contentPrincipal: {
+        originAttributes: {
+          privateBrowsingId: 0,
+        },
+      },
     };
     SearchSERPTelemetry.updateTrackingStatus(browser, test.trackingUrl);
     SearchSERPTelemetry.reportPageImpression(
