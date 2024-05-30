@@ -58,13 +58,22 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">سون ساخلانان‌لار</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">سون ساخلانان‌لار</string>
 
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">بوتون ساخلانمیش بوکمارک‌لاری گؤستر</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">بوتون ساخلانمیش بوکمارک‌لاری گؤستر</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">قالدیر</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">قالدیر</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">بوکمارک‌لار</string>
+
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">بوتون بوکمارک‌لاری گؤستر</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">قالدیر</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s موزیلا طرفیندن دوزه‌دیلمیش.</string>
@@ -391,8 +400,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">فایرفاکس گیزللیک بیلدیریمی</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">گیزلیلیک بیلدیریمیزده آرتیق بیلین</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">سیزی قوروماغی سئویریک</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -672,8 +679,6 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">ایجازه وئریلمه‌دی</string>
 
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">سایتی سیل</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">بوتون سایتلار اوچون ایجازه وئر</string>
 
@@ -696,7 +701,7 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">قاباقکی تاغ‌لارا قاییت</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">سوْن بوکمارک‌لار</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">سوْن بوکمارک‌لار</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">سون باخیلان‌لار</string>
@@ -780,8 +785,6 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">بوُکمارک‌لار</string>
 
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">گیریش‌لر</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">رمز‌لر</string>
     <!-- Preference for syncing tabs -->
@@ -810,8 +813,6 @@
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s - %2$s %3$s</string>
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">اعتباری کارتلار</string>
 
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">اؤدمه آپاری‌ْلاری</string>

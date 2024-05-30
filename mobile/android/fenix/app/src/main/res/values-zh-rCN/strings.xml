@@ -418,8 +418,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox 隐私声明</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">阅读我们的隐私声明详细了解</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">我们乐于为您护航</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -707,10 +705,6 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">必需</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">可选</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">读取和更改网站数据</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">删除网站</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">允许在所有网站上运行</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -838,8 +832,6 @@
     <string name="preferences_sync_history">历史记录</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">书签</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">登录信息</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">密码</string>
     <!-- Preference for syncing tabs -->
@@ -866,9 +858,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$s 上的 %1$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">信用卡</string>
-
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">付款方式</string>
     <!-- Preference for syncing addresses -->
@@ -885,6 +874,11 @@
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">来自 %s 的标签页</string>
 
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">已关闭 %1$s 中的 %2$d 个标签页</string>
     <!-- The body for a "closed synced tabs" notification. -->
     <string name="fxa_tabs_closed_text">查看最近关闭的标签页</string>
 
@@ -1846,11 +1840,7 @@
     <string name="add_to_homescreen_description_2">您可以轻松将此网站添加到设备主屏幕，以便迅捷访问并以类似应用的体验畅享浏览。</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">密码</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">密码</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">保存登录名和密码</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">保存密码</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1868,47 +1858,28 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">在您设备上的其他应用程序中填充用户名和密码。</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">添加登录信息</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">添加密码</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">同步登录信息</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">同步密码</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">跨设备同步登录信息</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">跨设备同步密码</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">保存的登录信息</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">保存的密码</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">您保存或同步到 %s 的登录信息将显示于此处。</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">保存和同步到 %s 的密码会显示在这里，所有密码均已加密保存。
 </string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">详细了解“同步”。</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">详细了解同步功能</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">例外</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">不保存登录名和密码的网站将显示于此处。</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s 将不会保存此处所列网站的密码。</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">将不保存这些网站的登录名和密码。</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s 将不会保存这些网站的密码。</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">删除所有例外</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">搜索登录信息</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">搜索密码</string>
     <!-- The header for the site that a login is for -->
@@ -1937,16 +1908,10 @@
     <string name="saved_login_reveal_password">显示密码</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">隐藏密码</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">解锁以查看您保存的登录信息</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">解锁以查看保存的密码</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">保护您的登录名和密码</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">保护您保存的密码</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">设置设备锁定图案、PIN 或密码以保护您保存的登录名与密码，避免他人盗用。</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">设置设备锁定图案、PIN 或密码以保护您保存的密码，避免他人盗用。</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1964,8 +1929,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">名称（A-Z）</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">上次使用</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">排序登录信息菜单</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">密码排序菜单</string>
@@ -1975,41 +1938,27 @@
     <string name="preferences_autofill">自动填充</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">地址</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">信用卡</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">付款方式</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">保存并自动填充信用卡信息</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">保存和填写付款方式</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">数据已加密</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s 会加密您保存的所有付款方式</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">跨设备同步信用卡信息</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">同步卡片信息</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">添加信用卡</string>
 
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">添加信用卡</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">管理保存的卡片</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">管理信用卡</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">添加地址</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">管理地址</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">保存并自动填充地址</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">保存和填充地址</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">包含号码、邮箱和收货地址等信息</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">包括电话号码和邮箱地址</string>
@@ -2033,8 +1982,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">删除卡片</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">您确定要删除此信用卡吗？</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">确定删除信用卡吗？</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">删除</string>
@@ -2048,24 +1995,15 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">保存的卡片</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">请输入有效的信用卡卡号</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">请输入有效卡号</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">请填写此栏</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">请输入持卡人姓名</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">解锁后即可查看保存的卡片信息</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">保护您的卡片信息</string>
 
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">保护您保存的付款方式</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">设置设备锁定图案、PIN 或密码以保护您保存的卡片信息，避免他人盗用。</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">设置设备锁定图案、PIN 或密码以保护您保存的付款方式，避免他人盗用。</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2075,9 +2013,6 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">解锁设备</string>
 
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">解锁以使用存储的卡片信息</string>
-
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">解锁以使用保存的付款方式</string>
     <!-- Title of the "Add address" screen -->
@@ -2086,12 +2021,6 @@
     <string name="addresses_edit_address">编辑地址</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">管理地址</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">名</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">中间名</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">姓</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">姓名</string>
     <!-- The header for the street address of an address -->
@@ -2117,8 +2046,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">删除地址</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">您确定要删除此地址吗？</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">确定删除此地址吗？</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2217,48 +2144,28 @@
     <string name="login_menu_delete_button">删除</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">编辑</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">您确定要删除此登录信息吗？</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">您确定要删除此密码吗？</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">删除</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">取消</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">登录选项</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">密码选项</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">登录信息中的网址输入框。</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">网址输入框。</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">登录信息中的用户名输入框。</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">用户名输入框。</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">登录信息中的密码输入框。</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">密码输入框。</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">保存编辑过的登录信息。</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">保存更改。</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">编辑</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">编辑密码</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">新建登录信息</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">添加密码</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">需要密码</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">请输入密码</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">用户名不能为空</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">请输入用户名</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2676,6 +2583,9 @@
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">关闭翻译表单</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">部分设置暂时无法使用。</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">翻译</string>
@@ -2697,6 +2607,9 @@
     <string name="automatic_translation_toolbar_title_preference">自动翻译</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">请选择语言来管理“总是翻译”和“永不翻译”首选项。</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">无法加载语言包，请稍后再试。</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2721,6 +2634,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">移除 %1$s</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">无法加载网站，请稍后再试。</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">确定删除 %1$s 吗？</string>
@@ -2820,6 +2735,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">标签页创建工具</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">要创建的标签页数量</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">文本框为空</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">只能输入正整数</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">只能输入大于 0 的数字</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">超出单次操作所能生成的标签页数量上限（%1$s 个）</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">添加到活跃标签页</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2836,11 +2761,11 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">隐私声明</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">提交</string>
+    <string name="micro_survey_submit_button_label">提交</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">关闭</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">关闭</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">感谢反馈！</string>
+    <string name="micro_survey_feedback_confirmation">感谢反馈！</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">非常满意</string>
     <!-- Option for likert scale -->
@@ -2852,6 +2777,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">不满意</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">非常不满意</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">打开问卷</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">关闭问卷</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">关闭</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->

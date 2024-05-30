@@ -796,11 +796,20 @@
     <string name="extension_process_crash_dialog_title">Utvidinga er mellombels deaktivert</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Eitt eller fleire tillegg slutta å fungere, noko som gjorde systemet ditt ustabilt. %1$s prøvde utan hell å starte tillegget/tillegga på nytt.\n\nTillegg vil ikkje bli starta på nytt under gjeldande økt.\n\nDersom du fjernar eller deaktiverer tillegg, kan dette løyse problemet.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Ei eller flere utvidingar slutta å fungere, noko som gjorde systemet ditt ustabilt. %1$s prøvde utan hell å starte utvidinga(ne) på nytt.\n\nUtvidingane vil ikkje bli starta på nytt under gjeldande økt.\n\nViss du fjernar eller deaktiverer utvidingar, kan dette løyse problemet.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Prøv å starte tillegga på nytt</string>
 
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Prøv å starte utvidingar på nytt</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Hald fram med deaktiverte tillegg</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Hald fram med utvidingar deaktiverte</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -861,6 +870,9 @@
     open on this device from another device that's signed in to the same Mozilla account.
     %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
     <string name="fxa_tabs_closed_notification_title">%1$s lét att %2$d faner</string>
+
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Vis nyleg attlatne faner</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -1442,6 +1454,8 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">Late att private faner?</string>
 
+    <string name="notification_erase_text_android_14">Trykk eller sveip dette varselet for å late att private faner.</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marknadsføring</string>
 
@@ -1823,10 +1837,16 @@
     <string name="preferences_passwords_sync_logins_across_devices_2">Synkroniser passord på tvers av einingar</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Lagra passord</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Passorda du lagrar eller synkroniserer med %s vil bli oppførte her. Alle passorda du lagrar er krypterte.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Les meir om synkronisering</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Unntak</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2">%s vil ikkje lagre passord for nettstadar som er oppførte her.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2">%s vil ikkje lagre passord for desse nettstadane.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Slett alle unntak</string>
     <!-- Hint for search box in passwords list -->
@@ -1858,6 +1878,10 @@
     <string name="saved_login_reveal_password">Vis passord</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Gøym passord</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2">Lås opp for å sjå dei lagra passorda dine</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2">Sikre dei lagra passorda dine</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Seinare</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2200,6 +2224,9 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Søk med %s</string>
 
+    <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Endre standardnettlesar</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Vel at lenker frå nettstadar, e-postmeldingar og meldingar skal opnast automatisk i Firefox.</string>
 
@@ -2427,6 +2454,8 @@
     <string name="translations_bottom_sheet_translate_from">Omset frå</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Omset til</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Prøv eit anna kjeldespråk</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ikkje no</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2456,6 +2485,8 @@
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Innstillingar for omsetjing</string>
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">Innstillingar for omsetting</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Tilby alltid å omsetje</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2472,6 +2503,9 @@
     <string name="translation_option_bottom_sheet_translation_settings">Innstillingar for omsetjing</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Om omsetjingar i %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">Lat att omsettingsarket</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2614,6 +2648,8 @@
 
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Hald fram</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">Ver med i denne undersøkinga</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Personvernerklæring</string>
     <!-- The submit button label text -->
