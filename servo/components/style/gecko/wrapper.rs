@@ -61,6 +61,7 @@ use crate::rule_tree::CascadeLevel as ServoCascadeLevel;
 use crate::selector_parser::{AttrValue, Lang};
 use crate::shared_lock::{Locked, SharedRwLock};
 use crate::string_cache::{Atom, Namespace, WeakAtom, WeakNamespace};
+use crate::stylesheets::scope_rule::ImplicitScopeRoot;
 use crate::stylist::CascadeData;
 use crate::values::computed::Display;
 use crate::values::{AtomIdent, AtomString};
@@ -207,6 +208,15 @@ impl<'lr> TShadowRoot for GeckoShadowRoot<'lr> {
         }
 
         unsafe { mem::transmute(slice) }
+    }
+
+    #[inline]
+    fn implicit_scope_for_sheet(&self, sheet_index: usize) -> Option<ImplicitScopeRoot> {
+        use crate::stylesheets::StylesheetInDocument;
+
+        let author_styles = unsafe { self.0.mServoStyles.mPtr.as_ref()? };
+        let sheet = author_styles.stylesheets.get(sheet_index)?;
+        sheet.implicit_scope_root()
     }
 }
 

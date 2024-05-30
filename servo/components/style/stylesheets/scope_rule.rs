@@ -17,6 +17,7 @@ use cssparser::{Parser, SourceLocation, ToCss};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOfOps, MallocUnconditionalSizeOf, MallocUnconditionalShallowSizeOf};
 use selectors::parser::{ParseRelative, SelectorList};
+use selectors::OpaqueElement;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
 use style_traits::CssWriter;
@@ -158,4 +159,18 @@ impl ScopeBounds {
         );
         Self { start, end }
     }
+}
+
+/// Types of implicit scope root.
+#[derive(Debug, Clone, MallocSizeOf)]
+pub enum ImplicitScopeRoot {
+    /// This implicit scope root is in the light tree.
+    InLightTree(OpaqueElement),
+    /// This implicit scope root is in the shadow tree.
+    InShadowTree(OpaqueElement),
+    /// This implicit scope root is the shadow host of the stylesheet-containing shadow tree.
+    ShadowHost(OpaqueElement),
+    /// The implicit scope root is in a constructed stylesheet - the scope root the element
+    /// under consideration's shadow root (If one exists).
+    Constructed,
 }

@@ -39,7 +39,7 @@ use crate::stylesheets::container_rule::ContainerCondition;
 use crate::stylesheets::import_rule::ImportLayer;
 use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
-use crate::stylesheets::scope_rule::ScopeBounds;
+use crate::stylesheets::scope_rule::{ImplicitScopeRoot, ScopeBounds};
 #[cfg(feature = "gecko")]
 use crate::stylesheets::{
     CounterStyleRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
@@ -186,7 +186,13 @@ where
         match self.entries.entry(key) {
             HashMapEntry::Vacant(e) => {
                 debug!("> Picking the slow path (not in the cache)");
-                new_entry = Entry::rebuild(device, quirks_mode, collection, guard, old_entry)?;
+                new_entry = Entry::rebuild(
+                    device,
+                    quirks_mode,
+                    collection,
+                    guard,
+                    old_entry,
+                )?;
                 e.insert(new_entry.clone());
             },
             HashMapEntry::Occupied(mut e) => {
@@ -202,12 +208,18 @@ where
                     }
                     // The line below ensures the "committed" bit is updated
                     // properly.
-                    collection.each(|_, _| true);
+                    collection.each(|_, _, _| true);
                     return Ok(Some(e.get().clone()));
                 }
 
                 debug!("> Picking the slow path due to same entry as old");
-                new_entry = Entry::rebuild(device, quirks_mode, collection, guard, old_entry)?;
+                new_entry = Entry::rebuild(
+                    device,
+                    quirks_mode,
+                    collection,
+                    guard,
+                    old_entry,
+                )?;
                 e.insert(new_entry.clone());
             },
         }
@@ -287,11 +299,12 @@ impl CascadeDataCacheEntry for UserAgentCascadeData {
             precomputed_pseudo_element_decls: PrecomputedPseudoElementDeclarations::default(),
         };
 
-        for sheet in collection.sheets() {
+        for (index, sheet) in collection.sheets().enumerate() {
             new_data.cascade_data.add_stylesheet(
                 device,
                 quirks_mode,
                 sheet,
+                index,
                 guard,
                 SheetRebuildKind::Full,
                 Some(&mut new_data.precomputed_pseudo_element_decls),
@@ -762,8 +775,13 @@ impl Stylist {
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
-        self.author_data_cache
-            .lookup(&self.device, self.quirks_mode, collection, guard, old_data)
+        self.author_data_cache.lookup(
+            &self.device,
+            self.quirks_mode,
+            collection,
+            guard,
+            old_data,
+        )
     }
 
     /// Iterate over the extra data in origin order.
@@ -2374,6 +2392,7 @@ struct ScopeConditionReference {
     // TODO(dshin): With replaced parent selectors, these may be unique...
     #[ignore_malloc_size_of = "Arc inside"]
     condition: Option<ScopeBounds>,
+    implicit_scope_root: Option<StylistImplicitScopeRoot>,
 }
 
 impl ScopeConditionReference {
@@ -2381,9 +2400,20 @@ impl ScopeConditionReference {
         Self {
             parent: ScopeConditionId::none(),
             condition: None,
+            implicit_scope_root: None,
         }
     }
 }
+
+/// Implicit scope root, which may or may not be cached (i.e. For shadow DOM author
+/// styles that are cached and shared).
+#[derive(Clone, Debug, MallocSizeOf)]
+enum StylistImplicitScopeRoot {
+    Normal(ImplicitScopeRoot),
+    Cached(usize),
+}
+// Should be safe, only mutated through mutable methods in `Stylist`.
+unsafe impl Sync for StylistImplicitScopeRoot {}
 
 /// Data resulting from performing the CSS cascade that is specific to a given
 /// origin.
@@ -2587,11 +2617,12 @@ impl CascadeData {
 
         let mut result = Ok(());
 
-        collection.each(|stylesheet, rebuild_kind| {
+        collection.each(|index, stylesheet, rebuild_kind| {
             result = self.add_stylesheet(
                 device,
                 quirks_mode,
                 stylesheet,
+                index,
                 guard,
                 rebuild_kind,
                 /* precomputed_pseudo_element_decls = */ None,
@@ -2874,6 +2905,7 @@ impl CascadeData {
         device: &Device,
         quirks_mode: QuirksMode,
         stylesheet: &S,
+        sheet_index: usize,
         guard: &SharedRwLockReadGuard,
         rebuild_kind: SheetRebuildKind,
         containing_rule_state: &mut ContainingRuleState,
@@ -3247,6 +3279,31 @@ impl CascadeData {
                 },
                 CssRule::Scope(ref rule) => {
                     let id = ScopeConditionId(self.scope_conditions.len() as u16);
+                    let implicit_scope_root = if rule.bounds.start.is_some() {
+                        // Would be unused anyway.
+                        None
+                    } else {
+                        // (Re)Moving stylesheets trigger a complete flush, so saving the implicit
+                        // root here should be safe.
+                        stylesheet.implicit_scope_root().map(|root| {
+                            match root {
+                                ImplicitScopeRoot::InLightTree(_) |
+                                ImplicitScopeRoot::Constructed => {
+                                    StylistImplicitScopeRoot::Normal(root)
+                                },
+                                ImplicitScopeRoot::ShadowHost(_) | ImplicitScopeRoot::InShadowTree(_) => {
+                                    // Style data can be shared between shadow trees, so we must
+                                    // query the implicit root for that specific tree.
+                                    // Shared stylesheet means shared sheet indices, so we can
+                                    // use that to locate the implicit root.
+                                    // Technically, this can also be applied to the light tree,
+                                    // but that requires also knowing about what cascade level we're at.
+                                    StylistImplicitScopeRoot::Cached(sheet_index)
+                                },
+                            }
+                        })
+                    };
+
                     let replaced = {
                         let start = rule.bounds.start.as_ref().map(|selector| {
                             match containing_rule_state.ancestor_selector_lists.last() {
@@ -3266,6 +3323,7 @@ impl CascadeData {
                     self.scope_conditions.push(ScopeConditionReference {
                         parent: containing_rule_state.scope_condition_id,
                         condition: Some(replaced),
+                        implicit_scope_root,
                     });
                     containing_rule_state.scope_condition_id = id;
                 },
@@ -3279,6 +3337,7 @@ impl CascadeData {
                     device,
                     quirks_mode,
                     stylesheet,
+                    sheet_index,
                     guard,
                     rebuild_kind,
                     containing_rule_state,
@@ -3298,6 +3357,7 @@ impl CascadeData {
         device: &Device,
         quirks_mode: QuirksMode,
         stylesheet: &S,
+        sheet_index: usize,
         guard: &SharedRwLockReadGuard,
         rebuild_kind: SheetRebuildKind,
         mut precomputed_pseudo_element_decls: Option<&mut PrecomputedPseudoElementDeclarations>,
@@ -3321,6 +3381,7 @@ impl CascadeData {
             device,
             quirks_mode,
             stylesheet,
+            sheet_index,
             guard,
             rebuild_kind,
             &mut state,
@@ -3504,7 +3565,12 @@ impl CascadeDataCacheEntry for CascadeData {
             DataValidity::Valid | DataValidity::CascadeInvalid => old.clone(),
             DataValidity::FullyInvalid => Self::new(),
         };
-        updatable_entry.rebuild(device, quirks_mode, collection, guard)?;
+        updatable_entry.rebuild(
+            device,
+            quirks_mode,
+            collection,
+            guard,
+        )?;
         Ok(Arc::new(updatable_entry))
     }
 

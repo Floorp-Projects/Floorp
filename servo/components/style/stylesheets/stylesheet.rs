@@ -24,6 +24,8 @@ use servo_arc::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use style_traits::ParsingMode;
 
+use super::scope_rule::ImplicitScopeRoot;
+
 /// This structure holds the user-agent and user stylesheets.
 pub struct UserAgentStylesheets {
     /// The lock used for user-agent stylesheets.
@@ -249,6 +251,9 @@ pub trait StylesheetInDocument: ::std::fmt::Debug {
     ) -> EffectiveRulesIterator<'a, 'b> {
         self.iter_rules::<EffectiveRules>(device, guard)
     }
+
+    /// Return the implicit scope root for this stylesheet, if one exists.
+    fn implicit_scope_root(&self) -> Option<ImplicitScopeRoot>;
 }
 
 impl StylesheetInDocument for Stylesheet {
@@ -263,6 +268,10 @@ impl StylesheetInDocument for Stylesheet {
     #[inline]
     fn contents(&self) -> &StylesheetContents {
         &self.contents
+    }
+
+    fn implicit_scope_root(&self) -> Option<ImplicitScopeRoot> {
+        None
     }
 }
 
@@ -292,6 +301,10 @@ impl StylesheetInDocument for DocumentStyleSheet {
     #[inline]
     fn contents(&self) -> &StylesheetContents {
         self.0.contents()
+    }
+
+    fn implicit_scope_root(&self) -> Option<ImplicitScopeRoot> {
+        None
     }
 }
 

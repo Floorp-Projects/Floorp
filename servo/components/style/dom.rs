@@ -16,6 +16,7 @@ use crate::media_queries::Device;
 use crate::properties::{AnimationDeclarations, ComputedValues, PropertyDeclarationBlock};
 use crate::selector_parser::{AttrValue, Lang, PseudoElement, SelectorImpl};
 use crate::shared_lock::{Locked, SharedRwLock};
+use crate::stylesheets::scope_rule::ImplicitScopeRoot;
 use crate::stylist::CascadeData;
 use crate::values::computed::Display;
 use crate::values::AtomIdent;
@@ -374,6 +375,11 @@ pub trait TShadowRoot: Sized + Copy + Clone + Debug + PartialEq {
         Self: 'a,
     {
         Err(())
+    }
+
+    /// Get the implicit scope for a stylesheet in given index.
+    fn implicit_scope_for_sheet(&self, _sheet_index: usize) -> Option<ImplicitScopeRoot> {
+        None
     }
 }
 
