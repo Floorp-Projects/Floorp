@@ -76,6 +76,7 @@ class BrowserToolbar @JvmOverloads constructor(
     @VisibleForTesting
     internal var searchTerms: String = ""
     private var urlCommitListener: ((String) -> Boolean)? = null
+    var isNavBarEnabled: Boolean = false
 
     /**
      * Toolbar in "display mode".
@@ -354,6 +355,22 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     override fun setDisplayHorizontalPadding(horizontalPadding: Int) {
         display.setHorizontalPadding(horizontalPadding)
+    }
+
+    /**
+     * Hides the page action separator in display/edit mode.
+     */
+    override fun hidePageActionSeparator() {
+        display.hidePageActionSeparator()
+        edit.hidePageActionSeparator()
+    }
+
+    /**
+     * Shows the page action separator in display/edit mode.
+     */
+    override fun showPageActionSeparator() {
+        display.showPageActionSeparator()
+        edit.showPageActionSeparator()
     }
 
     /**

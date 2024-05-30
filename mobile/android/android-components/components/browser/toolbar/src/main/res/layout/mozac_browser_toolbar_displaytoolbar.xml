@@ -106,11 +106,24 @@
         android:layout_height="40dp"
         android:layout_marginTop="8dp"
         android:paddingEnd="@dimen/mozac_browser_toolbar_origin_padding_end"
-        app:layout_constraintEnd_toStartOf="@+id/mozac_browser_toolbar_page_actions"
+        app:layout_constraintEnd_toStartOf="@+id/mozac_browser_toolbar_action_separator"
         app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_security_indicator"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_goneMarginStart="8dp"
         app:layout_goneMarginTop="8dp" />
+
+    <View
+        android:id="@+id/mozac_browser_toolbar_action_separator"
+        android:layout_width="@dimen/mozac_browser_toolbar_page_action_separator_width"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:visibility="gone"
+        android:importantForAccessibility="no"
+        android:scaleType="center"
+        app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_origin_view"
+        app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_page_actions"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Page actions -->
 

@@ -512,6 +512,8 @@ abstract class BaseBrowserFragment :
                 context = context,
                 activity = activity,
             )
+        } else {
+            browserToolbarView.view.hidePageActionSeparator()
         }
 
         if (!shouldAddNavigationBar && shouldShowMicrosurveyPrompt()) {
@@ -1301,6 +1303,7 @@ abstract class BaseBrowserFragment :
         context: Context,
         activity: HomeActivity,
     ) {
+        browserToolbar.showPageActionSeparator()
         val isToolbarAtBottom = isToolbarAtBottom(context)
 
         // The toolbar view has already been added directly to the container.
