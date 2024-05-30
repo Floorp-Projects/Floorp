@@ -10,7 +10,7 @@ use crate::context::QuirksMode;
 use crate::dom::TElement;
 use crate::rule_tree::CascadeLevel;
 use crate::selector_parser::SelectorImpl;
-use crate::stylist::{CascadeData, ContainerConditionId, Rule, Stylist};
+use crate::stylist::{CascadeData, ContainerConditionId, Rule, ScopeConditionId, Stylist};
 use crate::AllocErr;
 use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded, WeakAtom};
 use dom::ElementState;
@@ -330,19 +330,19 @@ impl SelectorMap<Rule> {
     ) where
         E: TElement,
     {
-        use selectors::matching::IncludeStartingStyle;
-
-        let include_starting_style =
-            matches!(matching_context.include_starting_style, IncludeStartingStyle::Yes);
-        for rule in rules {
-            if !matches_selector(
-                &rule.selector,
-                0,
-                Some(&rule.hashes),
-                &element,
-                matching_context,
-            ) {
-                continue;
+        fn add_rule_if_matching<E: TElement>(
+            element: E,
+            scope_proximity: ScopeProximity,
+            rule: &Rule,
+            matching_rules: &mut ApplicableDeclarationList,
+            matching_context: &mut MatchingContext<E::Impl>,
+            cascade_level: CascadeLevel,
+            cascade_data: &CascadeData,
+            stylist: &Stylist,
+            include_starting_style: bool,
+        ) {
+            if !matches_selector(&rule.selector, 0, Some(&rule.hashes), &element, matching_context) {
+                return;
             }
 
             if rule.container_condition_id != ContainerConditionId::none() {
@@ -352,7 +352,7 @@ impl SelectorMap<Rule> {
                     element,
                     matching_context,
                 ) {
-                    continue;
+                    return;
                 }
             }
 
@@ -363,16 +363,59 @@ impl SelectorMap<Rule> {
                 matching_context.has_starting_style = true;
 
                 if !include_starting_style {
-                    continue;
+                    return;
                 }
             }
 
-            // TODO(dshin, bug 1886441): Scope proximity calculation
             matching_rules.push(rule.to_applicable_declaration_block(
                 cascade_level,
                 cascade_data,
-                ScopeProximity::infinity(),
+                scope_proximity,
             ));
+        }
+
+        use selectors::matching::IncludeStartingStyle;
+
+        let include_starting_style =
+            matches!(matching_context.include_starting_style, IncludeStartingStyle::Yes);
+        for rule in rules {
+            if rule.scope_condition_id == ScopeConditionId::none() {
+                add_rule_if_matching(
+                    element,
+                    ScopeProximity::infinity(),
+                    rule,
+                    matching_rules,
+                    matching_context,
+                    cascade_level,
+                    cascade_data,
+                    stylist,
+                    include_starting_style
+                );
+            } else if let Some(scopes) = cascade_data.scope_condition_matches(
+                rule.scope_condition_id,
+                stylist,
+                element,
+                matching_context,
+            ) {
+                // We had to gather scope roots first, since the scope element must change before the rule's
+                // selector is tested. Candidates are sorted in proximity.
+                for candidate in scopes {
+                    matching_context.nest_for_scope(Some(candidate.root), |context|
+                        add_rule_if_matching(
+                            element,
+                            candidate.proximity,
+                            rule,
+                            matching_rules,
+                            context,
+                            cascade_level,
+                            cascade_data,
+                            stylist,
+                            include_starting_style
+                        )
+                    );
+                    // Given rule may match with a scope root of further proximity - Can't just break here.
+                }
+            }
         }
     }
 }

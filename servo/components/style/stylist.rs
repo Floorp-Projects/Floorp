@@ -66,6 +66,7 @@ use selectors::parser::{
     AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
 };
 use selectors::visitor::{SelectorListKind, SelectorVisitor};
+use selectors::OpaqueElement;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use std::cmp::Ordering;
@@ -577,7 +578,7 @@ impl From<StyleRuleInclusion> for RuleInclusion {
 }
 
 /// A struct containing state from ancestor rules like @layer / @import /
-/// @container / @starting-style / nesting.
+/// @container / nesting.
 struct ContainingRuleState {
     layer_name: LayerName,
     layer_id: LayerId,
@@ -2318,7 +2319,7 @@ impl CascadeLayer {
 pub struct ContainerConditionId(u16);
 
 impl ContainerConditionId {
-    /// A special id that represents no container rule all.
+    /// A special id that represents no container rule.
     pub const fn none() -> Self {
         Self(0)
     }
@@ -2337,6 +2338,27 @@ impl ContainerConditionReference {
             parent: ContainerConditionId::none(),
             condition: None,
         }
+    }
+}
+
+/// A scope root candidate.
+#[derive(Clone, Copy, Debug)]
+pub struct ScopeRootCandidate {
+    /// This candidate's scope root.
+    pub root: OpaqueElement,
+    /// Ancestor hop from the element under consideration to this scope root.
+    pub proximity: ScopeProximity,
+}
+
+/// The id of a given scope condition, a sequentially-increasing identifier
+/// for a given style set.
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, PartialOrd, Ord)]
+pub struct ScopeConditionId(u16);
+
+impl ScopeConditionId {
+    /// A special id that represents no scope rule.
+    pub const fn none() -> Self {
+        Self(0)
     }
 }
 
@@ -2673,6 +2695,20 @@ impl CascadeData {
         }
     }
 
+    pub(crate) fn scope_condition_matches<E>(
+        &self,
+        _id: ScopeConditionId,
+        _stylist: &Stylist,
+        _element: E,
+        _context: &mut MatchingContext<E::Impl>,
+    ) -> Option<Vec<ScopeRootCandidate>>
+    where
+        E: TElement,
+    {
+        // TODO(dshin, bug 1886441)
+        None
+    }
+
     fn did_finish_rebuild(&mut self) {
         self.shrink_maps_if_needed();
         self.compute_layer_order();
@@ -2866,6 +2902,7 @@ impl CascadeData {
                             containing_rule_state.layer_id,
                             containing_rule_state.container_condition_id,
                             containing_rule_state.in_starting_style,
+                            ScopeConditionId::none(),
                         );
 
                         if collect_replaced_selectors {
@@ -3448,6 +3485,9 @@ pub struct Rule {
     /// True if this rule is inside @starting-style.
     pub is_starting_style: bool,
 
+    /// The current @scope rule id.
+    pub scope_condition_id: ScopeConditionId,
+
     /// The actual style rule.
     #[cfg_attr(
         feature = "gecko",
@@ -3497,6 +3537,7 @@ impl Rule {
         layer_id: LayerId,
         container_condition_id: ContainerConditionId,
         is_starting_style: bool,
+        scope_condition_id: ScopeConditionId,
     ) -> Self {
         Rule {
             selector,
@@ -3506,6 +3547,7 @@ impl Rule {
             layer_id,
             container_condition_id,
             is_starting_style,
+            scope_condition_id,
         }
     }
 }
