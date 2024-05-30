@@ -858,13 +858,6 @@ input[type=number]::-moz-number-spin-box {
   overflow: clip;
 }
 
-/* stylelint-disable-next-line media-query-no-invalid */
-@media (-moz-bool-pref: "dom.forms.number.hide_spin_buttons_when_no_hover_or_focus") {
-  input[type=number]:not(:hover, :focus)::-moz-number-spin-box {
-    opacity: 0;
-  }
-}
-
 input[type=number]::-moz-number-spin-up,
 input[type=number]::-moz-number-spin-down {
   writing-mode: horizontal-tb;

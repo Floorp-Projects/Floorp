@@ -1,5 +1,5 @@
 # sanity checks:
-fails-if(Android) pref(dom.forms.number.hide_spin_buttons_when_no_hover_or_focus,false) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+fails-if(Android) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
 != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
 
 # should look the same as type=text, except for the spin box
@@ -17,7 +17,7 @@ fuzzy(0-2,0-13) == show-value.html show-value-ref.html
 
 # disabled
 == number-disabled.html number-disabled-ref.html
-fails-if(Android) pref(dom.forms.number.hide_spin_buttons_when_no_hover_or_focus,false) != number-spinbox-disabled.html number-spinbox-disabled-notref.html
+fails-if(Android) != number-spinbox-disabled.html number-spinbox-disabled-notref.html
 
 # auto width:
 == number-auto-width-1.html number-auto-width-1-ref.html
@@ -72,5 +72,3 @@ fuzzy(0-14,0-4) == clipped-text.html clipped-text-ref.html
 fails-if(useDrawSnapshot) needs-focus != caret-right.html caret-right-notref.html
 fails-if(useDrawSnapshot) needs-focus != caret-left-rtl.html caret-left-rtl-notref.html
 fails-if(useDrawSnapshot) needs-focus != caret-right-vertical.html caret-right-vertical-notref.html
-
-fails-if(Android) test-pref(dom.forms.number.hide_spin_buttons_when_no_hover_or_focus,true) ref-pref(dom.forms.number.hide_spin_buttons_when_no_hover_or_focus,false) != number.html number.html
