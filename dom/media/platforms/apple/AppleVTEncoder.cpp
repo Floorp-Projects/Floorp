@@ -556,7 +556,7 @@ void AppleVTEncoder::OutputFrame(CMSampleBufferRef aBuffer) {
     forceAvcc = mConfig.mCodecSpecific->as<H264Specific>().mFormat ==
                 H264BitStreamFormat::AVC;
   }
-  bool asAnnexB = mConfig.mUsage == Usage::Realtime && !forceAvcc;
+  bool asAnnexB = !forceAvcc;
   bool succeeded = WriteExtraData(output, aBuffer, asAnnexB) &&
                    WriteNALUs(output, aBuffer, asAnnexB);
 
