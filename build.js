@@ -219,7 +219,10 @@ async function run() {
     product: "firefox",
     executablePath: binPathExe,
     userDataDir: "./dist/profile/test",
+    extraPrefsFirefox: { "browser.newtabpage.enabled": true },
   });
+
+  (await browser.pages())[0].goto("about:newtab");
 
   const page = await browser.newPage();
   await page.setViewport({ width: 0, height: 0 });
