@@ -2293,6 +2293,42 @@
     <string name="review_quality_check_settings_title">ᱥᱟᱡᱟᱣᱠᱚ</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱨᱮ ᱫᱷᱟᱶᱨᱟ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
+    <!-- Text for turning sidebar off button from review quality check settings section. -->
+    <string name="review_quality_check_settings_turn_off">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">ᱰᱷᱮᱨ ᱮᱢ ᱧᱮᱞᱟ</string>
+    <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">ᱰᱷᱟᱶᱨᱟᱤᱭᱟᱹ ᱫᱚ %s</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱫᱚ %s ᱜᱚᱲᱚ ᱥᱟᱦᱚᱫ ᱮᱢ ᱠᱟᱜᱼᱟᱭ</string>
+    <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s Mozilla ᱛᱮ</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱶᱟ ᱵᱤᱵᱨᱚᱬ</string>
+    <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
+    <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱧᱮᱞ ᱢᱮ</string>
+    <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_title">ᱩᱱᱟᱹᱜ ᱧᱮᱞᱵᱤᱲᱟᱹᱣ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱟ</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body">ᱛᱤᱧ ᱡᱷᱚᱜ ᱡᱤᱱᱤᱥ ᱨᱮ ᱡᱟᱹᱥᱛᱤ ᱧᱮᱞᱵᱤᱲᱟᱹᱣ ᱛᱟᱦᱮᱸᱱᱟ, ᱟᱞᱮ ᱫᱚ ᱚᱱᱟ ᱨᱮᱭᱟᱜ ᱜᱩᱱ ᱵᱚᱵᱚᱛ ᱞᱮ ᱢᱮᱱ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
+    <!-- Title for warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_title">ᱡᱤᱱᱤᱥ ᱫᱚ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱟ</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body">ᱡᱩᱫᱤ ᱥᱴᱚᱠ ᱛᱮ ᱡᱤᱱᱤᱥ ᱦᱮᱡ ᱞᱮᱠᱷᱟᱢ ᱵᱩᱡᱷᱟᱹᱣ ᱠᱮᱫ ᱠᱷᱟᱱ, ᱟᱞᱮ ᱴᱷᱮᱱ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱠᱟᱜ ᱢᱮ ᱟᱞᱮ ᱫᱚ ᱧᱮᱞᱵᱤᱲᱟᱹᱣᱠᱚᱞᱮ ᱧᱮᱞ ᱟ ᱾</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2">ᱠᱷᱚᱵᱚᱨ ᱢᱮ ᱡᱮ ᱡᱤᱱᱤᱥ ᱫᱚ ᱥᱴᱚᱠ ᱨᱮ ᱦᱮᱡ ᱦᱩᱭ ᱮᱱᱟ</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱜᱩᱱ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱮᱫᱟ (%s)</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body">ᱱᱚᱶᱟ ᱫᱚ 60 ᱴᱤᱡ ᱜᱟᱱ ᱚᱠᱛᱚ ᱤᱫᱤᱭᱟᱭ ᱾</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title">ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱞᱟᱹᱜᱤᱫ ᱟᱹᱰᱤ ᱥᱟᱯᱲᱟᱣ!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body">ᱟᱞᱮ ᱴᱷᱮᱱ ᱫᱚ ᱱᱚᱶᱟ ᱡᱤᱱᱤᱥ ᱵᱚᱵᱛ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ 24 ᱴᱟᱲᱟᱝ ᱜᱟᱱ ᱞᱟᱣᱟ ᱞᱮᱭᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">ᱟᱞᱮ ᱫᱚ ᱱᱚᱶᱟ ᱵᱟᱞᱮ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ </string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
     <string name="review_quality_check_highlights_show_less">ᱠᱚᱢ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
