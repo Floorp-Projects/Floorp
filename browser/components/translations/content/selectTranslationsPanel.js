@@ -308,7 +308,9 @@ var SelectTranslationsPanel = new (class {
 
     // Since none of the detected languages were supported, check to see if the
     // document has a specified language tag that is supported.
-    const { docLangTag, isDocLangTagSupported } = this.#languageInfo;
+    const { docLangTag, isDocLangTagSupported } = this.#getLanguageInfo(
+      /* forceFetch */ true
+    );
     if (isDocLangTagSupported) {
       return docLangTag;
     }
@@ -323,14 +325,21 @@ var SelectTranslationsPanel = new (class {
    * This data is helpful for telemetry. Leaves the cache unpopulated if the info failed to be
    * retrieved.
    *
+   * @param {boolean} forceFetch - Clears the cache and attempts to refetch data if true.
+   *
    * @returns {object} - The cached language-info object.
    */
-  #maybeCacheLanguageInfo() {
+  #getLanguageInfo(forceFetch = false) {
+    if (!forceFetch && this.#languageInfo.docLangTag !== undefined) {
+      return this.#languageInfo;
+    }
+
     this.#languageInfo = {
       docLangTag: undefined,
       isDocLangTagSupported: undefined,
       topPreferredLanguage: undefined,
     };
+
     try {
       const actor = TranslationsParent.getTranslationsActor(
         gBrowser.selectedBrowser
@@ -527,8 +536,8 @@ var SelectTranslationsPanel = new (class {
       return;
     }
 
-    const { docLangTag, topPreferredLanguage } = this.#maybeCacheLanguageInfo();
     const { fromLanguage, toLanguage } = await langPairPromise;
+    const { docLangTag, topPreferredLanguage } = this.#getLanguageInfo();
 
     TranslationsParent.telemetry().selectTranslationsPanel().onOpen({
       maintainFlow,
@@ -1943,7 +1952,7 @@ var SelectTranslationsPanel = new (class {
     const { detectedLanguage } = this.#translationState;
 
     if (this.#mostRecentUIPhase !== "unsupported") {
-      const { docLangTag } = this.#languageInfo;
+      const { docLangTag } = this.#getLanguageInfo();
       TranslationsParent.telemetry()
         .selectTranslationsPanel()
         .onUnsupportedLanguageMessage({ docLangTag, detectedLanguage });
@@ -2055,7 +2064,7 @@ var SelectTranslationsPanel = new (class {
       return;
     }
 
-    const { docLangTag, topPreferredLanguage } = this.#languageInfo;
+    const { docLangTag, topPreferredLanguage } = this.#getLanguageInfo();
     const sourceText = this.getSourceText();
     const translationId = ++this.#translationId;
 
