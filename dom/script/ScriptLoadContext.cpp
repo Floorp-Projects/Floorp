@@ -152,6 +152,10 @@ void ScriptLoadContext::GetInlineScriptText(nsAString& aText) const {
   GetScriptElement()->GetScriptText(aText);
 }
 
+void ScriptLoadContext::GetHintCharset(nsAString& aCharset) const {
+  GetScriptElement()->GetScriptCharset(aCharset);
+}
+
 void ScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!GetScriptElement());
