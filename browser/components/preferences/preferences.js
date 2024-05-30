@@ -230,9 +230,8 @@ function init_all() {
     "resource://floorp/FloorpAppConstants.sys.mjs"
   );
 
-
   if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
-    register_module("paneCSK", gCSKPane)
+    register_module("paneCsk", { init() {} });
     register_module("paneWorkspaces", gWorkspacesPane);
   }
 
@@ -569,11 +568,12 @@ async function confirmRestartPrompt(
     restartLaterButtonText,
   ] = await document.l10n.formatValues([
     {
-      id: aRestartToEnable === null
-        ? "feature-requires-restart"
-        : aRestartToEnable
-        ? "feature-enable-requires-restart"
-        : "feature-disable-requires-restart",
+      id:
+        aRestartToEnable === null
+          ? "feature-requires-restart"
+          : aRestartToEnable
+          ? "feature-enable-requires-restart"
+          : "feature-disable-requires-restart",
     },
     { id: "should-restart-title" },
     { id: "should-restart-ok" },
