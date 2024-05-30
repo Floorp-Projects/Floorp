@@ -905,7 +905,16 @@ add_task(
       promiseObservable("unregister-primed-listener", 2),
       promiseObservable("prime-event-listener", 2),
     ]);
-    await extension.terminateBackground();
+    await extension.terminateBackground({
+      // Calls to `extension.terminateBackground` may not always terminate the background context
+      // (e.g. when `pendingRunListenerPromisesCount` is non-zero). This could happen when `testAfterRestart`
+      // receives the messages from the background script before the child confirmed the completion
+      // of the event dispatched to the parent.
+      //
+      // When `terminateBackground` is ignored, the event page would terminate at the next scheduled
+      // idle check, which defaults to 30 seconds and can cause test timeouts.
+      disableResetIdleForTest: true,
+    });
     await registrationEvents;
     await testAfterRestart();
 
