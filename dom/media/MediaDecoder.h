@@ -758,12 +758,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   bool mShouldDelaySeek = false;
   Maybe<SeekTarget> mDelayedSeekTarget;
 
-#  ifdef MOZ_WMF_MEDIA_ENGINE
-  // True if we've ever recreated a new state machine due to the previous state
-  // didn't support the media format or key system.
-  bool mStateMachineRecreated = false;
-#  endif
-
  public:
   Canonical<double>& CanonicalVolume() { return mVolume; }
   Canonical<bool>& CanonicalPreservesPitch() { return mPreservesPitch; }

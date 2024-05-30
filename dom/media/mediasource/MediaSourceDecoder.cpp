@@ -372,23 +372,6 @@ bool MediaSourceDecoder::HadCrossOriginRedirects() {
   return false;
 }
 
-#ifdef MOZ_WMF_MEDIA_ENGINE
-void MediaSourceDecoder::MetadataLoaded(
-    UniquePtr<MediaInfo> aInfo, UniquePtr<MetadataTags> aTags,
-    MediaDecoderEventVisibility aEventVisibility) {
-  // If the previous state machine has loaded the metadata, then we don't need
-  // to load it again. This can happen when the media format or key system is
-  // not supported by previous state machine.
-  if (mFiredMetadataLoaded && mStateMachineRecreated) {
-    MSE_DEBUG(
-        "Metadata already loaded and being informed by previous state machine");
-    return;
-  }
-  MediaDecoder::MetadataLoaded(std::move(aInfo), std::move(aTags),
-                               aEventVisibility);
-}
-#endif
-
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 
