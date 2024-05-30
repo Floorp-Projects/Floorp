@@ -40,8 +40,8 @@ use crate::stylesheets::import_rule::ImportLayer;
 use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
 use crate::stylesheets::scope_rule::{
-    collect_scope_roots, element_is_outside_of_scope, ImplicitScopeRoot, ScopeBounds,
-    ScopeRootCandidate, ScopeTarget,
+    collect_scope_roots, element_is_outside_of_scope, ImplicitScopeRoot, ScopeRootCandidate,
+    ScopeTarget,
 };
 #[cfg(feature = "gecko")]
 use crate::stylesheets::{
@@ -2388,9 +2388,8 @@ impl ScopeConditionId {
 #[derive(Clone, Debug, MallocSizeOf)]
 struct ScopeConditionReference {
     parent: ScopeConditionId,
-    // TODO(dshin): With replaced parent selectors, these may be unique...
-    #[ignore_malloc_size_of = "Arc inside"]
-    condition: Option<ScopeBounds>,
+    condition: Option<ScopeBoundsWithHashes>,
+    #[ignore_malloc_size_of = "Raw ptr behind the scenes"]
     implicit_scope_root: Option<StylistImplicitScopeRoot>,
 }
 
@@ -2403,6 +2402,49 @@ impl ScopeConditionReference {
         }
     }
 }
+
+#[derive(Clone, Debug, MallocSizeOf)]
+struct ScopeBoundWithHashes {
+    // TODO(dshin): With replaced parent selectors, these may be unique...
+    #[ignore_malloc_size_of = "Arc"]
+    selectors: SelectorList<SelectorImpl>,
+    hashes: SmallVec<[AncestorHashes; 1]>,
+}
+
+impl ScopeBoundWithHashes {
+    fn new(
+        quirks_mode: QuirksMode,
+        selectors: SelectorList<SelectorImpl>,
+    ) -> Self {
+        let mut hashes = SmallVec::with_capacity(selectors.len());
+        for selector in selectors.slice() {
+            hashes.push(AncestorHashes::new(selector, quirks_mode));
+        }
+        Self { selectors, hashes }
+    }
+}
+
+#[derive(Clone, Debug, MallocSizeOf)]
+struct ScopeBoundsWithHashes {
+    start: Option<ScopeBoundWithHashes>,
+    end: Option<ScopeBoundWithHashes>,
+}
+
+impl ScopeBoundsWithHashes {
+    fn new(
+        quirks_mode: QuirksMode,
+        start: Option<SelectorList<SelectorImpl>>,
+        end: Option<SelectorList<SelectorImpl>>,
+    ) -> Self {
+        Self {
+            start: start.map(|selectors| ScopeBoundWithHashes::new(
+                quirks_mode, selectors)),
+            end: end.map(|selectors| ScopeBoundWithHashes::new(
+                quirks_mode, selectors)),
+        }
+    }
+}
+
 
 /// Implicit scope root, which may or may not be cached (i.e. For shadow DOM author
 /// styles that are cached and shared).
@@ -2801,8 +2843,8 @@ impl CascadeData {
 
         let (root_target, matches_shadow_host) = if let Some(start) = bounds.start.as_ref() {
             (
-                ScopeTarget::Selector(start),
-                start.slice().iter().any(|s| {
+                ScopeTarget::Selector(&start.selectors, &start.hashes),
+                start.selectors.slice().iter().any(|s| {
                     !s.matches_featureless_host_selector_or_pseudo_element()
                         .is_empty()
                 }),
@@ -2864,9 +2906,10 @@ impl CascadeData {
             let mut result = vec![];
             // If any scope-end selector matches, we're not in scope.
             for scope_root in potential_scope_roots {
-                if end.slice().iter().all(|selector| {
+                if end.selectors.slice().iter().zip(end.hashes.iter()).all(|(selector, hashes)| {
                     !element_is_outside_of_scope(
                         selector,
+                        hashes,
                         element,
                         scope_root.root,
                         context,
@@ -3429,10 +3472,9 @@ impl CascadeData {
                         let end = rule.bounds
                             .end
                             .as_ref()
-                            .map(|selector| selector.replace_parent_selector(
-                                parent_selector_for_scope(start.as_ref())));
+                            .map(|selector| selector.replace_parent_selector(parent_selector_for_scope(start.as_ref())));
                         containing_rule_state.ancestor_selector_lists.push(parent_selector_for_scope(start.as_ref()).clone());
-                        ScopeBounds { start, end }
+                        ScopeBoundsWithHashes::new(quirks_mode, start, end)
                     };
 
                     self.scope_conditions.push(ScopeConditionReference {
