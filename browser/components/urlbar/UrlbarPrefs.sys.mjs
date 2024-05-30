@@ -518,6 +518,7 @@ const PREF_OTHER_DEFAULTS = new Map([
   ["browser.search.suggest.enabled.private", false],
   ["browser.search.widget.inNavBar", false],
   ["keyword.enabled", true],
+  ["security.insecure_connection_text.enabled", false],
   ["ui.popup.disable_autohide", false],
 ]);
 
