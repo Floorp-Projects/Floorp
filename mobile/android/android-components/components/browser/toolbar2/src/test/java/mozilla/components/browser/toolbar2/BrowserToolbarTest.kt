@@ -567,36 +567,6 @@ class BrowserToolbarTest {
     }
 
     @Test
-    fun `WHEN showPageActionSeparator is sent to BrowserToolbar THEN it will be forwarded to the DisplayToolbar and EditToolbar`() {
-        val toolbar = BrowserToolbar(testContext)
-
-        val display: DisplayToolbar = mock()
-        val edit: EditToolbar = mock()
-        toolbar.display = display
-        toolbar.edit = edit
-
-        toolbar.showPageActionSeparator()
-
-        verify(display).showPageActionSeparator()
-        verify(edit).showPageActionSeparator()
-    }
-
-    @Test
-    fun `WHEN hidePageActionSeparator is sent to BrowserToolbar THEN it will be forwarded to the DisplayToolbar and EditToolbar`() {
-        val toolbar = BrowserToolbar(testContext)
-
-        val display: DisplayToolbar = mock()
-        val edit: EditToolbar = mock()
-        toolbar.display = display
-        toolbar.edit = edit
-
-        toolbar.hidePageActionSeparator()
-
-        verify(display).hidePageActionSeparator()
-        verify(edit).hidePageActionSeparator()
-    }
-
-    @Test
     fun `WHEN setDisplayHorizontalPadding is sent to BrowserToolbar THEN it will be forwarded to the DisplayToolbar`() {
         val toolbar = BrowserToolbar(testContext)
 
