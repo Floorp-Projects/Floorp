@@ -18,7 +18,6 @@
 #include "js/ArrayBuffer.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
-#include "js/experimental/TypedData.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Maybe.h"
@@ -26,6 +25,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Variant.h"
 #include "mozilla/dom/PBackgroundSDBConnection.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/fallible.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -45,35 +45,37 @@ using namespace mozilla::ipc;
 
 namespace {
 
+template <typename BufferT>
+nsresult AppendDataToString(const BufferT& aBuffer, nsCString& aData) {
+  return aBuffer.ProcessData(
+      [&aData](const mozilla::Span<const uint8_t>& aSrcData,
+               JS::AutoCheckCannotGC&&) {
+        if (aSrcData.LengthBytes() > INT32_MAX) {
+          return NS_ERROR_ILLEGAL_VALUE;
+        }
+        if (NS_WARN_IF(!aData.Append(aSrcData, fallible))) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        return NS_OK;
+      });
+}
+
 nsresult GetWriteData(JSContext* aCx, JS::Handle<JS::Value> aValue,
                       nsCString& aData) {
-  if (aValue.isObject()) {
-    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+  MOZ_ASSERT(aData.IsEmpty());
 
-    bool isView = false;
-    if (JS::IsArrayBufferObject(obj) ||
-        (isView = JS_IsArrayBufferViewObject(obj))) {
-      uint8_t* data;
-      size_t length;
-      bool unused;
-      if (isView) {
-        JS_GetObjectAsArrayBufferView(obj, &length, &unused, &data);
-      } else {
-        JS::GetObjectAsArrayBuffer(obj, &length, &data);
-      }
+  if (!aValue.isObject()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
-      // Throw for large buffers to prevent truncation.
-      if (length > INT32_MAX) {
-        return NS_ERROR_ILLEGAL_VALUE;
-      }
+  mozilla::dom::ArrayBufferView view;
+  if (view.Init(&aValue.toObject())) {
+    return AppendDataToString(view, aData);
+  }
 
-      if (NS_WARN_IF(!aData.Assign(reinterpret_cast<char*>(data), length,
-                                   fallible_t()))) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      return NS_OK;
-    }
+  mozilla::dom::ArrayBuffer arrayBuffer;
+  if (arrayBuffer.Init(&aValue.toObject())) {
+    return AppendDataToString(arrayBuffer, aData);
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;
