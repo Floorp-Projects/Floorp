@@ -357,7 +357,21 @@ async function canTestOSKeyStoreLogin() {
 }
 
 async function waitForOSKeyStoreLogin(login = false) {
-  await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", { login });
+  // Need to fetch this from the parent in order for it to be correct.
+  let isOSAuthEnabled = await SpecialPowers.spawnChrome([], () => {
+    // Need to re-import this because we're running in the parent.
+    // eslint-disable-next-line no-shadow
+    const { FormAutofillUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
+    );
+
+    return FormAutofillUtils.getOSAuthEnabled(
+      FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF
+    );
+  });
+  if (isOSAuthEnabled) {
+    await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", { login });
+  }
 }
 
 function patchRecordCCNumber(record) {
