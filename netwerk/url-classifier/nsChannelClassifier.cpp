@@ -186,7 +186,7 @@ nsresult nsChannelClassifier::StartInternal() {
   }
 
   nsCOMPtr<nsIURIClassifier> uriClassifier =
-      do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
+      mozilla::components::UrlClassifierDB::Service(&rv);
   if (rv == NS_ERROR_FACTORY_NOT_REGISTERED || rv == NS_ERROR_NOT_AVAILABLE) {
     // no URI classifier, ignore this failure.
     return NS_ERROR_NOT_AVAILABLE;
@@ -194,7 +194,7 @@ nsresult nsChannelClassifier::StartInternal() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIScriptSecurityManager> securityManager =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+      mozilla::components::ScriptSecurityManager::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> principal;

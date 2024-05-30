@@ -209,8 +209,8 @@ nsresult DnsAndConnectSocket::SetupDnsFlags(ConnectionEntry* ent) {
 
   if (ent->mConnInfo->HasIPHintAddress()) {
     nsresult rv;
-    nsCOMPtr<nsIDNSService> dns =
-        do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    nsCOMPtr<nsIDNSService> dns;
+    dns = mozilla::components::DNS::Service(&rv);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1206,8 +1206,8 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
   }
 
   if (ci->HasIPHintAddress()) {
-    nsCOMPtr<nsIDNSService> dns =
-        do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    nsCOMPtr<nsIDNSService> dns;
+    dns = mozilla::components::DNS::Service(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The spec says: "If A and AAAA records for TargetName are locally

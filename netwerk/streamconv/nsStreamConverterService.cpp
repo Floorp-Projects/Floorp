@@ -18,6 +18,7 @@
 #include "nsTArray.h"
 #include "nsServiceManagerUtils.h"
 #include "nsISimpleEnumerator.h"
+#include "mozilla/Components.h"
 #include "mozilla/UniquePtr.h"
 
 ///////////////////////////////////////////////////////////////////
@@ -65,7 +66,7 @@ nsresult nsStreamConverterService::BuildGraph() {
   nsresult rv;
 
   nsCOMPtr<nsICategoryManager> catmgr(
-      do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+      mozilla::components::CategoryManager::Service(&rv));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsISimpleEnumerator> entries;

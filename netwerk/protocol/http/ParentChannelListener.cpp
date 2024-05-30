@@ -14,6 +14,7 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
+#include "mozilla/Components.h"
 #include "mozilla/SchedulerGroup.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIPrompt.h"
@@ -165,8 +166,8 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
       NS_ENSURE_TRUE(win, NS_ERROR_NO_INTERFACE);
 
       nsresult rv;
-      nsCOMPtr<nsIWindowWatcher> wwatch =
-          do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+      nsCOMPtr<nsIWindowWatcher> wwatch;
+      wwatch = mozilla::components::WindowWatcher::Service(&rv);
 
       if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
         return NS_ERROR_NO_INTERFACE;
@@ -248,8 +249,8 @@ ParentChannelListener::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   }
   // we're either allowing auth, or it's a proxy request
   nsresult rv;
-  nsCOMPtr<nsIPromptFactory> wwatch =
-      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+  nsCOMPtr<nsIPromptFactory> wwatch;
+  wwatch = mozilla::components::WindowWatcher::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> window;

@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Predictor.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Components.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/HoldDropJSObjects.h"
@@ -60,8 +62,8 @@ static nsresult ResolveHost(const nsACString& host,
                             nsIDNSListener* listener) {
   nsresult rv;
 
-  nsCOMPtr<nsIDNSService> dns =
-      do_GetService("@mozilla.org/network/dns-service;1", &rv);
+  nsCOMPtr<nsIDNSService> dns;
+  dns = mozilla::components::DNS::Service(&rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -245,8 +247,7 @@ nsUDPSocket::nsUDPSocket() {
   // constructed yet.  the STS constructor sets gSocketTransportService.
   if (!gSocketTransportService) {
     // This call can fail if we're offline, for example.
-    nsCOMPtr<nsISocketTransportService> sts =
-        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+    mozilla::components::SocketTransport::Service();
   }
 
   mSts = gSocketTransportService;

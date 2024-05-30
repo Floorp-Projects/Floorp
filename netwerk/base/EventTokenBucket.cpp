@@ -12,6 +12,9 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSocketTransportService2.h"
+
+#include "mozilla/Components.h"
+
 #ifdef DEBUG
 #  include "MainThreadUtils.h"
 #endif
@@ -91,7 +94,7 @@ EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond, uint32_t burstSize)
   nsCOMPtr<nsIEventTarget> sts;
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   if (NS_SUCCEEDED(rv)) {
-    sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+    sts = mozilla::components::SocketTransport::Service(&rv);
   }
   if (NS_SUCCEEDED(rv)) mTimer = NS_NewTimer(sts);
   SetRate(eventsPerSecond, burstSize);

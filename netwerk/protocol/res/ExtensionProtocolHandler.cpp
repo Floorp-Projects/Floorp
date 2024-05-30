@@ -7,6 +7,7 @@
 #include "ExtensionProtocolHandler.h"
 
 #include "mozilla/BinarySearch.h"
+#include "mozilla/Components.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Promise-inl.h"
@@ -551,8 +552,8 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                    nsIChannel* channel,
                                    nsIChannel* origChannel) -> nsresult {
       nsresult rv;
-      nsCOMPtr<nsIStreamConverterService> convService =
-          do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+      nsCOMPtr<nsIStreamConverterService> convService;
+      convService = mozilla::components::StreamConverter::Service(&rv);
       MOZ_TRY(rv);
 
       nsCOMPtr<nsIURI> uri;

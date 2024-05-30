@@ -6,6 +6,7 @@
 
 #include "mozilla/net/TRRServiceChild.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Components.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -42,8 +43,8 @@ TRRServiceChild* TRRServiceChild::GetSingleton() {
 void TRRServiceChild::Init(const bool& aCaptiveIsPassed,
                            const bool& aParentalControlEnabled,
                            nsTArray<nsCString>&& aDNSSuffixList) {
-  nsCOMPtr<nsIDNSService> dns =
-      do_GetService("@mozilla.org/network/dns-service;1");
+  nsCOMPtr<nsIDNSService> dns;
+  dns = mozilla::components::DNS::Service();
   sDNSService = dns;
   ClearOnShutdown(&sDNSService);
   MOZ_ASSERT(sDNSService);

@@ -30,6 +30,7 @@
 #include "prio.h"
 #include <algorithm>
 
+#include "mozilla/Components.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 
@@ -149,8 +150,8 @@ nsresult nsFileCopyEvent::Dispatch(nsIRunnable* callback,
   if (NS_FAILED(rv)) return rv;
 
   // Dispatch ourselves to I/O thread pool...
-  nsCOMPtr<nsIEventTarget> pool =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIEventTarget> pool;
+  pool = mozilla::components::StreamTransport::Service(&rv);
   if (NS_FAILED(rv)) return rv;
 
   return pool->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -427,8 +428,7 @@ nsresult nsFileChannel::ListenerBlockingPromise(BlockingPromise** aPromise) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIEventTarget> sts(
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+  nsCOMPtr<nsIEventTarget> sts(mozilla::components::StreamTransport::Service());
   if (!sts) {
     return FixupContentLength(true);
   }

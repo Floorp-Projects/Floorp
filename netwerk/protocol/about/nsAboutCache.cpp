@@ -21,6 +21,8 @@
 
 #include "nsThreadUtils.h"
 
+#include "mozilla/Components.h"
+
 using namespace mozilla::net;
 
 NS_IMPL_ISUPPORTS(nsAboutCache, nsIAboutModule)
@@ -213,8 +215,8 @@ nsresult nsAboutCache::GetStorage(nsACString const& storageName,
                                   nsICacheStorage** storage) {
   nsresult rv;
 
-  nsCOMPtr<nsICacheStorageService> cacheService =
-      do_GetService("@mozilla.org/netwerk/cache-storage-service;1", &rv);
+  nsCOMPtr<nsICacheStorageService> cacheService;
+  cacheService = mozilla::components::CacheStorage::Service(&rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsICacheStorage> cacheStorage;

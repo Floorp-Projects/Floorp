@@ -8,6 +8,7 @@
 #include "CookieLogging.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/Document.h"
@@ -268,13 +269,13 @@ CookieService::CookieService() = default;
 
 nsresult CookieService::Init() {
   nsresult rv;
-  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
+  mTLDService = mozilla::components::EffectiveTLD::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+  mIDNService = mozilla::components::IDN::Service(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  mThirdPartyUtil = mozilla::components::ThirdPartyUtil::Service();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Init our default, and possibly private CookieStorages.

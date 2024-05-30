@@ -7,6 +7,7 @@
 
 #include "nsHttp.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Components.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
@@ -572,8 +573,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredPredict(
     const OriginAttributes& aOriginAttributes, const bool& hasVerifier) {
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictor> predictor =
-      do_GetService("@mozilla.org/network/predictor;1", &rv);
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  predictor = mozilla::components::Predictor::Service(&rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsINetworkPredictorVerifier> verifier;
@@ -590,8 +591,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredLearn(
     const OriginAttributes& aOriginAttributes) {
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictor> predictor =
-      do_GetService("@mozilla.org/network/predictor;1", &rv);
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  predictor = mozilla::components::Predictor::Service(&rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   predictor->LearnNative(aTargetURI, aSourceURI, aReason, aOriginAttributes);
@@ -601,8 +602,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredLearn(
 mozilla::ipc::IPCResult NeckoParent::RecvPredReset() {
   // Get the current predictor
   nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictor> predictor =
-      do_GetService("@mozilla.org/network/predictor;1", &rv);
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  predictor = mozilla::components::Predictor::Service(&rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   predictor->Reset();
