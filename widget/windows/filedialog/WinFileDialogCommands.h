@@ -10,12 +10,15 @@
 #include "ipc/EnumSerializer.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/ipc/MessageLink.h"
 #include "mozilla/widget/filedialog/WinFileDialogCommandsDefn.h"
 
 // Windows interface types, defined in <shobjidl.h>
 struct IFileDialog;
 struct IFileOpenDialog;
+
+namespace mozilla::ipc {
+class LaunchError;
+}
 
 namespace mozilla::widget::filedialog {
 
@@ -83,40 +86,60 @@ struct Error {
     IPCError,
   };
 
+  constexpr static const StaticString kInvalidValue{
+      "<bad filedialog::Error::Location?>"};
+
   // "Enum" denoting error-location. Members are in `VALID_STRINGS`, and have no
   // name other than their string.
+  //
+  // The "enum" also supports importing "dynamic" strings from ipc::LaunchError.
+  // These strings will not be present in the VALID_STRINGS set and so cannot be
+  // faithfully serialized for IPC -- which is fine, since definitionally if you
+  // get one you won't have an IPC connection to worry about passing it over
+  // anyway.
   class Location {
+    // The printable form of the location.
+    StaticString text;
+    // The numeric value for the location.
+    //
+    // This will be less than `VALID_STRINGS_COUNT` iff the text of `text` is
+    // equal to that of some string in `VALID_STRINGS`; other values have no
+    // individual significance.
     uint32_t value;
-    constexpr explicit Location(uint32_t value) : value(value) {}
+
+    constexpr explicit Location(uint32_t value)
+        : text(value < VALID_STRINGS_COUNT ? StaticString(VALID_STRINGS[value])
+                                           : kInvalidValue),
+          value(value) {}
 
     // Valid locations for errors. (Indices do not need to remain stable between
     // releases; but -- where meaningful -- string values themselves should, for
     // ease of telemetry-aggregation.)
-    constexpr static std::string_view const VALID_STRINGS[] = {
-        "ApplyCommands",
-        "CoCreateInstance(CLSID_ShellLibrary)",
-        "GetFileResults: GetShellItemPath (1)",
-        "GetFileResults: GetShellItemPath (2)",
-        "GetShellItemPath",
-        "IFileDialog::GetFileTypeIndex",
-        "IFileDialog::GetOptions",
-        "IFileDialog::GetResult",
-        "IFileDialog::GetResult: item",
-        "IFileDialog::Show",
-        "IFileOpenDialog::GetResults",
-        "IFileOpenDialog::GetResults: items",
-        "IPC",
-        "IShellItemArray::GetCount",
-        "IShellItemArray::GetItemAt",
-        "MakeFileDialog",
-        "NS_NewNamedThread",
-        "Save + FOS_ALLOWMULTISELECT",
-        "ShowFilePicker",
-        "ShowFolderPicker",
-        "ShowRemote: UtilityProcessManager::GetSingleton",
-        "ShowRemote: invocation of CreateWinFileDialogActor",
-        "UtilityProcessManager::CreateWinFileDialogActor",
-        "internal IPC failure?",
+    constexpr static nsLiteralCString const VALID_STRINGS[] = {
+        "ApplyCommands"_ns,
+        "CoCreateInstance(CLSID_ShellLibrary)"_ns,
+        "GetFileResults: GetShellItemPath (1)"_ns,
+        "GetFileResults: GetShellItemPath (2)"_ns,
+        "GetShellItemPath"_ns,
+        "IFileDialog::GetFileTypeIndex"_ns,
+        "IFileDialog::GetOptions"_ns,
+        "IFileDialog::GetResult"_ns,
+        "IFileDialog::GetResult: item"_ns,
+        "IFileDialog::Show"_ns,
+        "IFileOpenDialog::GetResults"_ns,
+        "IFileOpenDialog::GetResults: items"_ns,
+        "IPC"_ns,
+        "IShellItemArray::GetCount"_ns,
+        "IShellItemArray::GetItemAt"_ns,
+        "MakeFileDialog"_ns,
+        "NS_NewNamedThread"_ns,
+        "Save + FOS_ALLOWMULTISELECT"_ns,
+        "ShowFilePicker"_ns,
+        "ShowFolderPicker"_ns,
+        "ShowRemote: UtilityProcessManager::GetSingleton"_ns,
+        "ShowRemote: invocation of CreateWinFileDialogActor"_ns,
+        "UtilityProcessManager::CreateWinFileDialogActor"_ns,
+        "internal IPC failure?"_ns,
     };
     constexpr static size_t VALID_STRINGS_COUNT =
         std::extent_v<decltype(VALID_STRINGS)>;
@@ -126,7 +149,8 @@ struct Error {
     static_assert(
         []() {
           for (size_t i = 0; i + 1 < VALID_STRINGS_COUNT; ++i) {
-            if (!(VALID_STRINGS[i] < VALID_STRINGS[i + 1])) {
+            if (!(std::string_view{VALID_STRINGS[i]} <
+                  std::string_view{VALID_STRINGS[i + 1]})) {
               return false;
             }
           }
@@ -135,52 +159,66 @@ struct Error {
         "VALID_STRINGS should be ASCIIbetically sorted");
 
    public:
+    // A LaunchError's carried location won't be in the list and so is not
+    // IPDL-serializable -- but it's still telemetry-safe.
+    constexpr explicit Location(mozilla::ipc::LaunchError const& err);
+
     constexpr uint32_t Serialize() const { return value; }
     constexpr static Location Deserialize(uint32_t val) {
-      return Location{val};
+      MOZ_ASSERT(val < VALID_STRINGS_COUNT);
+      return Location(val);
     }
 
    public:
-    constexpr static Location npos() { return Location{~uint32_t(0)}; }
+    constexpr static Location npos() { return Location(~uint32_t(0)); }
 
-    constexpr bool IsValid() const { return value < VALID_STRINGS_COUNT; }
-
-    constexpr std::string_view ToString() const {
-      return value < VALID_STRINGS_COUNT ? VALID_STRINGS[value]
-                                         : "<bad filedialog::Error::Location?>";
+    // True iff this Location was formed from a string in VALID_STRINGS.
+    constexpr bool IsSerializable() const {
+      return value < VALID_STRINGS_COUNT;
     }
+
+    constexpr StaticString ToString() const { return text; }
+
     constexpr static Location FromString(StaticString str) {
       std::string_view val(str.get());
       for (uint32_t i = 0; i < VALID_STRINGS_COUNT; ++i) {
-        if (val == VALID_STRINGS[i]) return Location{i};
+        if (val == VALID_STRINGS[i]) {
+          return Location(i);
+        }
       }
-      // TODO(C++20): fail here at compile-time
+      // TODO(C++20): make this `consteval` and fail here, eliminating any need
+      // for a return value for the fallthrough case.
       return npos();
     }
 
-    constexpr char const* c_str() const { return ToString().data(); }
-  };
+    constexpr char const* c_str() const { return ToString().get(); }
+  };  // class Error::Location
 
   // Where and how (run-time) this error occurred.
   Kind kind;
   // Where (compile-time) this error occurred.
   Location where;
-  // Why (run-time) this error occurred. Probably an HRESULT.
+  // Why (run-time) this error occurred. Usually an HRESULT, but its
+  // interpretation is necessarily dependent on the value of `where`.
   uint32_t why;
 
   // `impl Debug for Kind`
   static const char* KindName(Kind);
+
+  // Constructs an error of Kind "LocalError" (since launch-errors are always
+  // considered local).
+  static Error From(mozilla::ipc::LaunchError const&);
 };
 
-// Create a filedialog::Error, confirming at compile-time that the supplied
-// where-string is valid.
+// Create a filedialog::Error from a where-string, confirming at compile-time
+// that the supplied where-string is validly serializable.
 #define MOZ_FD_ERROR(kind_, where_, why_)                                 \
   ([](HRESULT why_arg_) -> ::mozilla::widget::filedialog::Error {         \
     using Error = ::mozilla::widget::filedialog::Error;                   \
     constexpr static const Error::Location loc =                          \
         Error::Location::FromString(where_);                              \
     static_assert(                                                        \
-        loc.IsValid(),                                                    \
+        loc.IsSerializable(),                                             \
         "filedialog::Error: location not found in Error::VALID_STRINGS"); \
     return Error{                                                         \
         .kind = Error::kind_, .where = loc, .why = (uint32_t)why_arg_};   \
