@@ -375,10 +375,13 @@ CookieServiceChild::GetCookieStringFromDocument(dom::Document* aDocument,
   // CHIPS - If CHIPS is enabled the partitioned cookie jar is always available
   // (and therefore the partitioned principal), the unpartitioned cookie jar is
   // only available in first-party or third-party with storageAccess contexts.
+  // In both cases, the document will have storage access.
   bool isCHIPS = aDocument->CookieJarSettings()->GetPartitionForeign() &&
                  StaticPrefs::network_cookie_CHIPS_enabled();
-  bool isUnpartitioned = !thirdParty || aDocument->UsingStorageAccess();
-  if (isCHIPS && isUnpartitioned) {
+  bool documentHasStorageAccess = false;
+  nsresult rv = aDocument->HasStorageAccessSync(documentHasStorageAccess);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (isCHIPS && documentHasStorageAccess) {
     /// Assert that the cookie principal is unpartitioned.
     MOZ_ASSERT(cookiePrincipal->OriginAttributesRef().mPartitionKey.IsEmpty());
     // Only append the partitioned originAttributes if the partitionKey is set.
@@ -398,7 +401,7 @@ CookieServiceChild::GetCookieStringFromDocument(dom::Document* aDocument,
     }
 
     nsAutoCString baseDomain;
-    nsresult rv = CookieCommons::GetBaseDomain(principal, baseDomain);
+    rv = CookieCommons::GetBaseDomain(principal, baseDomain);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_OK;
     }
