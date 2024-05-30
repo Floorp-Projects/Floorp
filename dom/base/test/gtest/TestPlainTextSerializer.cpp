@@ -187,7 +187,7 @@ TEST(PlainTextSerializer, PreformatFlowedQuotes)
       "<html><body>"
       "<span style=\"white-space: pre-wrap;\" _moz_quote=\"true\">"
       "&gt; Firefox Firefox Firefox Firefox <br>"
-      "&gt; Firefox Firefox Firefox Firefox<br>"
+      "&gt; Firefox Firefox Firefox <b>Firefox</b><br>"
       "&gt;<br>"
       "&gt;&gt; Firefox Firefox Firefox Firefox <br>"
       "&gt;&gt; Firefox Firefox Firefox Firefox<br>"
@@ -203,15 +203,50 @@ TEST(PlainTextSerializer, PreformatFlowedQuotes)
   // create result case
   result.AssignLiteral(
       "> Firefox Firefox Firefox Firefox \r\n"
+      "> Firefox Firefox Firefox *Firefox*\r\n"
+      ">\r\n"
+      ">> Firefox Firefox Firefox Firefox \r\n"
+      ">> Firefox Firefox Firefox Firefox\r\n");
+
+  ASSERT_EQ(test, result) << "Wrong HTML to ASCII text serialization "
+                             "with format=flowed; and quoted "
+                             "lines using OutputFormatted";
+}
+
+// Test for ASCII with format=flowed; and not using OutputFormatted.
+TEST(PlainTextSerializer, OutputFormatFlowedAndWrapped)
+{
+  nsString test;
+  nsString result;
+
+  test.AssignLiteral(
+      "<html><body>"
+      "<span style=\"white-space: pre-wrap;\" _moz_quote=\"true\">"
+      "&gt; Firefox Firefox Firefox Firefox <br>"
+      "&gt; Firefox Firefox Firefox <b>Firefox</b><br>"
+      "&gt;<br>"
+      "&gt;&gt; Firefox Firefox Firefox Firefox <br>"
+      "&gt;&gt; Firefox Firefox Firefox Firefox<br>"
+      "</span></body></html>");
+
+  ConvertBufToPlainText(test,
+                        nsIDocumentEncoder::OutputWrap |
+                            nsIDocumentEncoder::OutputCRLineBreak |
+                            nsIDocumentEncoder::OutputLFLineBreak |
+                            nsIDocumentEncoder::OutputFormatFlowed,
+                        kDefaultWrapColumn);
+
+  // create result case
+  result.AssignLiteral(
+      "> Firefox Firefox Firefox Firefox \r\n"
       "> Firefox Firefox Firefox Firefox\r\n"
       ">\r\n"
       ">> Firefox Firefox Firefox Firefox \r\n"
       ">> Firefox Firefox Firefox Firefox\r\n");
 
-  ASSERT_TRUE(test.Equals(result))
-  << "Wrong HTML to ASCII text serialization "
-     "with format=flowed; and quoted "
-     "lines";
+  ASSERT_EQ(test, result) << "Wrong HTML to ASCII text serialization "
+                             "with format=flowed; and quoted "
+                             "lines using OutputWrap";
 }
 
 TEST(PlainTextSerializer, PrettyPrintedHtml)

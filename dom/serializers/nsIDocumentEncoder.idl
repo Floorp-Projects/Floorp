@@ -58,6 +58,9 @@ interface nsIDocumentEncoder : nsISupports
     * XML output:
     * - Do prettyprinting, ignoring existing formatting.
     * - Doesn't implicitly wrap
+    *
+    * If `OutputFormatFlowed` is set, exactly one of `OutputFormatted`
+    * or `OutputWrap` must be set as well.
     */
   const unsigned long OutputFormatted     = (1 << 1);
 
@@ -91,9 +94,12 @@ interface nsIDocumentEncoder : nsISupports
    * Set implicitly in HTML/XHTML output when no OutputRaw.
    * Ignored when OutputRaw.
    * For XML, XHTML and  HTML: does not wrap values in attributes.
+   *
+   * If `OutputFormatFlowed` is set, exactly one of `OutputFormatted`
+   * or `OutputWrap` must be set as well.
+   *
    * XXXLJ: set implicitly in HTML/XHTML output, to keep compatible behaviors
    *        for old callers of this interface
-   * XXXbz How does this interact with OutputFormatFlowed?
    */
   const unsigned long OutputWrap          = (1 << 5);
 
@@ -103,8 +109,11 @@ interface nsIDocumentEncoder : nsISupports
    * but in an important way from normal formatted, and that is that
    * lines are space stuffed. This can't (correctly) be done later.
    * PlainText output only.
-   * If this flag is set, `OutputFormat` has to be set too.
-   * XXXbz How does this interact with OutputRaw/OutputWrap?
+   *
+   * If this flag is set, exactly one of `OutputFormatted` or `OutputWrap`
+   * must be set as well.
+   *
+   * XXXbz: How does this interact with OutputRaw?
    */
   const unsigned long OutputFormatFlowed  = (1 << 6);
 
