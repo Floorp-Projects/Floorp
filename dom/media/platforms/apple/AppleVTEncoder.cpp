@@ -25,23 +25,7 @@ extern LazyLogModule sPEMLog;
   MOZ_LOG(sPEMLog, mozilla::LogLevel::Debug, \
           ("[AppleVTEncoder] %s: " fmt, __func__, ##__VA_ARGS__))
 
-static CFDictionaryRef BuildEncoderSpec(const bool aHardwareNotAllowed,
-                                        const bool aLowLatencyRateControl) {
-  if (__builtin_available(macos 11.3, *)) {
-    if (aLowLatencyRateControl) {
-      // If doing low-latency rate control, the hardware encoder is required.
-      const void* keys[] = {
-          kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder,
-          kVTVideoEncoderSpecification_EnableLowLatencyRateControl};
-      const void* values[] = {kCFBooleanTrue, kCFBooleanTrue};
-
-      static_assert(ArrayLength(keys) == ArrayLength(values),
-                    "Non matching keys/values array size");
-      return CFDictionaryCreate(
-          kCFAllocatorDefault, keys, values, ArrayLength(keys),
-          &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    }
-  }
+static CFDictionaryRef BuildEncoderSpec(const bool aHardwareNotAllowed) {
   const void* keys[] = {
       kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder};
   const void* values[] = {aHardwareNotAllowed ? kCFBooleanFalse
@@ -57,14 +41,12 @@ static CFDictionaryRef BuildEncoderSpec(const bool aHardwareNotAllowed,
 static void FrameCallback(void* aEncoder, void* aFrameRefCon, OSStatus aStatus,
                           VTEncodeInfoFlags aInfoFlags,
                           CMSampleBufferRef aSampleBuffer) {
-  if (aInfoFlags & kVTEncodeInfo_FrameDropped) {
-    LOGE("frame tagged as dropped");
-    return;
-  }
   if (aStatus != noErr || !aSampleBuffer) {
     LOGE("VideoToolbox encoder returned no data status=%d sample=%p", aStatus,
          aSampleBuffer);
     aSampleBuffer = nullptr;
+  } else if (aInfoFlags & kVTEncodeInfo_FrameDropped) {
+    LOGE("frame tagged as dropped");
     return;
   }
   (static_cast<AppleVTEncoder*>(aEncoder))->OutputFrame(aSampleBuffer);
@@ -159,19 +141,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
     return InitPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
   }
 
-  if (mConfig.mScalabilityMode != ScalabilityMode::None && !OSSupportsSVC()) {
-    LOGE("SVC only supported on macOS 11.3 and more recent");
-    return InitPromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
-                    "SVC only supported on macOS 11.3 and more recent"),
-        __func__);
-  }
-
-  bool lowLatencyRateControl =
-      mConfig.mUsage == Usage::Realtime ||
-      mConfig.mScalabilityMode != ScalabilityMode::None;
-  AutoCFRelease<CFDictionaryRef> spec(
-      BuildEncoderSpec(mHardwareNotAllowed, lowLatencyRateControl));
+  AutoCFRelease<CFDictionaryRef> spec(BuildEncoderSpec(mHardwareNotAllowed));
   AutoCFRelease<CFDictionaryRef> srcBufferAttr(
       BuildSourceImageBufferAttributes());
   if (!srcBufferAttr) {
@@ -196,83 +166,21 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   }
 
   if (mConfig.mUsage == Usage::Realtime && !SetRealtime(mSession, true)) {
-    LOGE("fail to configure realtime properties");
+    LOGE("fail to configurate realtime properties");
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    "fail to configure real-time"),
+                    "fail to configurate average bitrate"),
         __func__);
   }
 
   if (mConfig.mBitrate) {
-    if (mConfig.mCodec == CodecType::H264 &&
-        mConfig.mBitrateMode == BitrateMode::Constant) {
-      // Not supported, fall-back to VBR.
-      LOGD("H264 CBR not supported in VideoToolbox, falling back to VBR");
-      mConfig.mBitrateMode = BitrateMode::Variable;
-    }
-    bool rv =
-        SetBitrateAndMode(mSession, mConfig.mBitrateMode, mConfig.mBitrate);
-    if (!rv) {
+    if (!SetBitrateAndMode(mSession, mConfig.mBitrateMode, mConfig.mBitrate)) {
       LOGE("failed to set bitrate to %d and mode to %s", mConfig.mBitrate,
            mConfig.mBitrateMode == BitrateMode::Constant ? "constant"
                                                          : "variable");
       return InitPromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       "fail to configurate bitrate"),
-          __func__);
-    }
-  }
-
-  if (mConfig.mScalabilityMode != ScalabilityMode::None) {
-    // A real-time encoder, with reordering disabled is required for SVC to
-    // work.
-    if (!SetRealtime(mSession, true)) {
-      LOGE("fail to configure real-time encoding for svc");
-      return InitPromise::CreateAndReject(
-          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      "fail to configure real-time encoding for svc"),
-          __func__);
-    }
-
-    mConfig.mUsage = Usage::Realtime;
-
-    if (__builtin_available(macos 11.3, *)) {
-      float baseLayerFPSRatio = 1.0f;
-      switch (mConfig.mScalabilityMode) {
-        case ScalabilityMode::L1T2:
-          baseLayerFPSRatio = 0.5;
-          break;
-        case ScalabilityMode::L1T3:
-          // Not supported in hw on macOS, but is accepted and errors out when
-          // encoding. Reject the configuration now.
-          LOGE("macOS only supports L1T2 h264 SVC");
-          return InitPromise::CreateAndReject(
-              MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                          nsPrintfCString("macOS only support L1T2 h264 SVC")),
-              __func__);
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unhandled value");
-      }
-      CFNumberRef baseLayerFPSRatioRef = CFNumberCreate(
-          kCFAllocatorDefault, kCFNumberFloatType, &baseLayerFPSRatio);
-      AutoCFRelease<CFNumberRef> cf(CFNumberCreate(
-          kCFAllocatorDefault, kCFNumberFloatType, &baseLayerFPSRatio));
-      if (VTSessionSetProperty(
-              mSession, kVTCompressionPropertyKey_BaseLayerFrameRateFraction,
-              baseLayerFPSRatioRef)) {
-        LOGE("Failed to set base layer framerate fraction to %f",
-             baseLayerFPSRatio);
-        return InitPromise::CreateAndReject(
-            MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                        nsPrintfCString("fail to configure SVC (base ratio: %f",
-                                        baseLayerFPSRatio)),
-            __func__);
-      }
-    } else {
-      LOGE("MacOS version too old to enable SVC");
-      return InitPromise::CreateAndReject(
-          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      "macOS version too old to enable SVC"),
           __func__);
     }
   }
@@ -548,23 +456,12 @@ void AppleVTEncoder::OutputFrame(CMSampleBufferRef aBuffer) {
   LOGD("::OutputFrame");
   RefPtr<MediaRawData> output(new MediaRawData());
 
-  if (__builtin_available(macos 11.3, *)) {
-    if (mConfig.mScalabilityMode != ScalabilityMode::None) {
-      CFDictionaryRef dict = (CFDictionaryRef)(CFArrayGetValueAtIndex(
-          CMSampleBufferGetSampleAttachmentsArray(aBuffer, true), 0));
-      CFBooleanRef isBaseLayerRef = (CFBooleanRef)CFDictionaryGetValue(
-          dict, (const void*)kCMSampleAttachmentKey_IsDependedOnByOthers);
-      Boolean isBaseLayer = CFBooleanGetValue(isBaseLayerRef);
-      output->mTemporalLayerId.emplace(isBaseLayer ? 0 : 1);
-    }
-  }
-
   bool forceAvcc = false;
   if (mConfig.mCodecSpecific->is<H264Specific>()) {
     forceAvcc = mConfig.mCodecSpecific->as<H264Specific>().mFormat ==
                 H264BitStreamFormat::AVC;
   }
-  bool asAnnexB = !forceAvcc;
+  bool asAnnexB = mConfig.mUsage == Usage::Realtime && !forceAvcc;
   bool succeeded = WriteExtraData(output, aBuffer, asAnnexB) &&
                    WriteNALUs(output, aBuffer, asAnnexB);
 
@@ -607,9 +504,9 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::Encode(
 
 RefPtr<MediaDataEncoder::ReconfigurationPromise> AppleVTEncoder::Reconfigure(
     const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
-  return InvokeAsync(mTaskQueue, this, __func__,
-                     &AppleVTEncoder::ProcessReconfigure,
-                     aConfigurationChanges);
+  return InvokeAsync<const RefPtr<const EncoderConfigurationChangeList>&>(
+      mTaskQueue, this, __func__, &AppleVTEncoder::ProcessReconfigure,
+      aConfigurationChanges);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessEncode(
@@ -658,10 +555,7 @@ AppleVTEncoder::ProcessReconfigure(
     const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
   bool ok = false;
   for (const auto& confChange : aConfigurationChanges->mChanges) {
-    // A reconfiguration on the fly succeeds if all changes can be applied
-    // successfuly. In case of failure, the encoder will be drained and
-    // recreated.
-    ok &= confChange.match(
+    ok |= confChange.match(
         // Not supported yet
         [&](const DimensionsChange& aChange) -> bool { return false; },
         [&](const DisplayDimensionsChange& aChange) -> bool { return false; },
@@ -833,6 +727,11 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessDrain() {
   AssertOnTaskQueue();
   MOZ_ASSERT(mSession);
 
+  if (mFramesCompleted) {
+    MOZ_DIAGNOSTIC_ASSERT(mEncodedData.IsEmpty());
+    return EncodePromise::CreateAndResolve(EncodedData(), __func__);
+  }
+
   OSStatus status =
       VTCompressionSessionCompleteFrames(mSession, kCMTimeIndefinite);
   if (status != noErr) {
@@ -840,6 +739,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessDrain() {
     return EncodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                           __func__);
   }
+  mFramesCompleted = true;
   // VTCompressionSessionCompleteFrames() could have queued multiple tasks with
   // the new drained frames. Dispatch a task after them to resolve the promise
   // with those frames.
