@@ -58,7 +58,6 @@
 #include "nsTextFrame.h"
 #include "nsView.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIScrollableFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsFocusManager.h"
 
@@ -72,6 +71,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLLabelElement.h"
@@ -670,9 +670,9 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       return result;
     }
 
-    if (nsIScrollableFrame* sf =
+    if (ScrollContainerFrame* sf =
             mParent == mDoc
-                ? mDoc->PresShellPtr()->GetRootScrollFrameAsScrollable()
+                ? mDoc->PresShellPtr()->GetRootScrollContainerFrame()
                 : boundingFrame->GetScrollTargetFrame()) {
       // If boundingFrame has a scroll position, result is currently relative
       // to that. Instead, we want result to remain the same regardless of
