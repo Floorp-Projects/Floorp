@@ -22,7 +22,7 @@ const noReadonlySupport = ['button', 'checkbox', 'color', 'file',
 'hidden', 'image', 'radio', 'range', 'reset', 'submit'];
 for (const inputType of inputTypes) {
   if (!noReadonlySupport.includes(inputType)) {
-    test(() => {
+    promise_test(async () => {
       const input = document.createElement("input");
       input.setAttribute("type", inputType);
       input.setAttribute("readonly", "");
@@ -33,7 +33,7 @@ for (const inputType of inputTypes) {
       assert_true(navigator.userActivation.isActive, 'User activation is not consumed for readonly showPicker() call');
     }, `input[type=${inputType}] showPicker() throws when readonly`);
   } else {
-    test(() => {
+    promise_test(async () => {
       const input = document.createElement("input");
       input.setAttribute("type", inputType);
       input.setAttribute("readonly", "");
