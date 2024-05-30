@@ -501,8 +501,7 @@ void ScriptLoader::RunScriptWhenSafe(ScriptLoadRequest* aRequest) {
 
 nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   aRequest->DropBytecode();
-  TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                 "scriptloader_fallback");
+  TRACE_FOR_TEST(aRequest, "scriptloader_fallback");
 
   // Notify preload restart so that we can register this preload request again.
   aRequest->GetScriptLoadContext()->NotifyRestart(mDocument);
@@ -1326,8 +1325,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       aElement->GetScriptColumnNumber();
   request->mFetchSourceOnly = true;
   request->SetTextSource(request->mLoadContext.get());
-  TRACE_FOR_TEST_BOOL(request->GetScriptLoadContext()->GetScriptElement(),
-                      "scriptloader_load_source");
+  TRACE_FOR_TEST_BOOL(request, "scriptloader_load_source");
   CollectScriptTelemetry(request);
 
   // Only the 'async' attribute is heeded on an inline module script and
@@ -1720,8 +1718,7 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
   if (aRequest->IsTextSource()) {
     if (!StaticPrefs::javascript_options_parallel_parsing() ||
         aRequest->ScriptTextLength() < OffThreadMinimumTextLength) {
-      TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                     "scriptloader_main_thread_compile");
+      TRACE_FOR_TEST(aRequest, "scriptloader_main_thread_compile");
       return NS_OK;
     }
   } else {
@@ -2022,21 +2019,17 @@ nsresult ScriptLoader::CreateOffThreadTask(
   if (StaticPrefs::dom_expose_test_interfaces()) {
     switch (aOptions.eagerDelazificationStrategy()) {
       case JS::DelazificationOption::OnDemandOnly:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_on_demand_only");
+        TRACE_FOR_TEST(aRequest, "delazification_on_demand_only");
         break;
       case JS::DelazificationOption::CheckConcurrentWithOnDemand:
       case JS::DelazificationOption::ConcurrentDepthFirst:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_concurrent_depth_first");
+        TRACE_FOR_TEST(aRequest, "delazification_concurrent_depth_first");
         break;
       case JS::DelazificationOption::ConcurrentLargeFirst:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_concurrent_large_first");
+        TRACE_FOR_TEST(aRequest, "delazification_concurrent_large_first");
         break;
       case JS::DelazificationOption::ParseEverythingEagerly:
-        TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                       "delazification_parse_everything_eagerly");
+        TRACE_FOR_TEST(aRequest, "delazification_parse_everything_eagerly");
         break;
     }
   }
@@ -2639,8 +2632,7 @@ void ScriptLoader::MaybePrepareForBytecodeEncodingBeforeExecute(
 nsresult ScriptLoader::MaybePrepareForBytecodeEncodingAfterExecute(
     ScriptLoadRequest* aRequest, nsresult aRv) {
   if (aRequest->IsMarkedForBytecodeEncoding()) {
-    TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                   "scriptloader_encode");
+    TRACE_FOR_TEST(aRequest, "scriptloader_encode");
     // Check that the TranscodeBuffer which is going to receive the encoded
     // bytecode only contains the SRI, and nothing more.
     //
@@ -2655,8 +2647,7 @@ nsresult ScriptLoader::MaybePrepareForBytecodeEncodingAfterExecute(
 
   LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
        unsigned(aRv)));
-  TRACE_FOR_TEST_NONE(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                      "scriptloader_no_encode");
+  TRACE_FOR_TEST_NONE(aRequest, "scriptloader_no_encode");
   aRequest->mCacheInfo = nullptr;
   MOZ_ASSERT(IsAlreadyHandledForBytecodeEncodingPreparation(aRequest));
 
@@ -2750,8 +2741,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
          mTotalFullParseSize));
   }
 
-  TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                 "scriptloader_execute");
+  TRACE_FOR_TEST(aRequest, "scriptloader_execute");
   JS::Rooted<JSObject*> global(cx, aGlobalObject->GetGlobalJSObject());
   JSExecutionContext exec(cx, global, options, classicScriptValue,
                           introductionScript);
@@ -2914,10 +2904,8 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   using namespace mozilla::Telemetry;
   nsresult rv = NS_OK;
   MOZ_ASSERT(aRequest->mCacheInfo);
-  auto bytecodeFailed = mozilla::MakeScopeExit([&]() {
-    TRACE_FOR_TEST_NONE(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                        "scriptloader_bytecode_failed");
-  });
+  auto bytecodeFailed = mozilla::MakeScopeExit(
+      [&]() { TRACE_FOR_TEST_NONE(aRequest, "scriptloader_bytecode_failed"); });
 
   bool result;
   if (aRequest->IsModuleRequest()) {
@@ -2991,8 +2979,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   MOZ_RELEASE_ASSERT(compressedBytecode.length() == n);
 
   bytecodeFailed.release();
-  TRACE_FOR_TEST_NONE(aRequest->GetScriptLoadContext()->GetScriptElement(),
-                      "scriptloader_bytecode_saved");
+  TRACE_FOR_TEST_NONE(aRequest, "scriptloader_bytecode_saved");
 }
 
 void ScriptLoader::GiveUpBytecodeEncoding() {
@@ -3018,8 +3005,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
   while (!mBytecodeEncodingQueue.isEmpty()) {
     RefPtr<ScriptLoadRequest> request = mBytecodeEncodingQueue.StealFirst();
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
-    TRACE_FOR_TEST_NONE(request->GetScriptLoadContext()->GetScriptElement(),
-                        "scriptloader_bytecode_failed");
+    TRACE_FOR_TEST_NONE(request, "scriptloader_bytecode_failed");
     MOZ_ASSERT(!IsWebExtensionRequest(request));
 
     if (aes.isSome()) {
