@@ -187,7 +187,6 @@ FRAME_CLASSES = [
     AbstractFrame("nsIMathMLFrame"),
     AbstractFrame("nsIPercentBSizeObserver"),
     AbstractFrame("nsIPopupContainer"),
-    AbstractFrame("nsIScrollableFrame"),
     AbstractFrame("nsIScrollbarMediator"),
     AbstractFrame("nsISelectControlFrame"),
     AbstractFrame("nsIStatefulFrame"),
