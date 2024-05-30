@@ -8872,7 +8872,7 @@ class TextLayer {
   #textDivProperties = new WeakMap();
   #transform = null;
   static #ascentCache = new Map();
-  static #canvasCtx = null;
+  static #canvasContexts = new Map();
   static #pendingTextLayers = new Set();
   constructor({
     textContentSource,
@@ -8904,7 +8904,6 @@ class TextLayer {
     this.#pageWidth = pageWidth;
     this.#pageHeight = pageHeight;
     setLayerDimensions(container, viewport);
-    TextLayer.#pendingTextLayers.add(this);
     this.#capability.promise.catch(() => {}).then(() => {
       TextLayer.#pendingTextLayers.delete(this);
       this.#layoutTextParams = null;
@@ -8928,6 +8927,7 @@ class TextLayer {
       }, this.#capability.reject);
     };
     this.#reader = this.#textContentSource.getReader();
+    TextLayer.#pendingTextLayers.add(this);
     pump();
     return this.#capability.promise;
   }
@@ -9122,19 +9122,26 @@ class TextLayer {
       return;
     }
     this.#ascentCache.clear();
-    this.#canvasCtx?.canvas.remove();
-    this.#canvasCtx = null;
+    for (const {
+      canvas
+    } of this.#canvasContexts.values()) {
+      canvas.remove();
+    }
+    this.#canvasContexts.clear();
   }
   static #getCtx(lang = null) {
-    if (!this.#canvasCtx) {
+    let canvasContext = this.#canvasContexts.get(lang ||= "");
+    if (!canvasContext) {
       const canvas = document.createElement("canvas");
       canvas.className = "hiddenCanvasElement";
+      canvas.lang = lang;
       document.body.append(canvas);
-      this.#canvasCtx = canvas.getContext("2d", {
+      canvasContext = canvas.getContext("2d", {
         alpha: false
       });
+      this.#canvasContexts.set(lang, canvasContext);
     }
-    return this.#canvasCtx;
+    return canvasContext;
   }
   static #getAscent(fontFamily, lang) {
     const cachedAscent = this.#ascentCache.get(fontFamily);
@@ -9327,7 +9334,7 @@ function getDocument(src) {
   }
   const docParams = {
     docId,
-    apiVersion: "4.3.83",
+    apiVersion: "4.3.138",
     data,
     password,
     disableAutoFetch,
@@ -9351,11 +9358,13 @@ function getDocument(src) {
   const transportParams = {
     disableFontFace,
     fontExtraProperties,
-    enableXfa,
     ownerDocument,
-    disableAutoFetch,
     pdfBug,
-    styleElement
+    styleElement,
+    loadingParams: {
+      disableAutoFetch,
+      enableXfa
+    }
   };
   worker.promise.then(function () {
     if (task.destroyed) {
@@ -10227,6 +10236,7 @@ class WorkerTransport {
       ownerDocument: params.ownerDocument,
       styleElement: params.styleElement
     });
+    this.loadingParams = params.loadingParams;
     this._params = params;
     this.canvasFactory = factory.canvasFactory;
     this.filterFactory = factory.filterFactory;
@@ -10768,16 +10778,6 @@ class WorkerTransport {
     const refStr = ref.gen === 0 ? `${ref.num}R` : `${ref.num}R${ref.gen}`;
     return this.#pageRefCache.get(refStr) ?? null;
   }
-  get loadingParams() {
-    const {
-      disableAutoFetch,
-      enableXfa
-    } = this._params;
-    return shadow(this, "loadingParams", {
-      disableAutoFetch,
-      enableXfa
-    });
-  }
 }
 const INITIAL_DATA = Symbol("INITIAL_DATA");
 class PDFObjects {
@@ -10989,8 +10989,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.3.83";
-const build = "9ee7c07b8";
+const version = "4.3.138";
+const build = "24e12d515";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -11341,6 +11341,7 @@ class AnnotationElementFactory {
 class AnnotationElement {
   #updates = null;
   #hasBorder = false;
+  #popupElement = null;
   constructor(parameters, {
     isRenderable = false,
     ignoreBorder = false,
@@ -11389,12 +11390,14 @@ class AnnotationElement {
     if (rect) {
       this.#setRectEdited(rect);
     }
+    this.#popupElement?.popup.updateEdited(params);
   }
   resetEdited() {
     if (!this.#updates) {
       return;
     }
     this.#setRectEdited(this.#updates.rect);
+    this.#popupElement?.popup.resetEdited();
     this.#updates = null;
   }
   #setRectEdited(rect) {
@@ -11744,7 +11747,7 @@ class AnnotationElement {
       data
     } = this;
     container.setAttribute("aria-haspopup", "dialog");
-    const popup = new PopupAnnotationElement({
+    const popup = this.#popupElement = new PopupAnnotationElement({
       data: {
         color: data.color,
         titleObj: data.titleObj,
@@ -12946,10 +12949,11 @@ class PopupAnnotationElement extends AnnotationElement {
       isRenderable: AnnotationElement._hasPopupData(data)
     });
     this.elements = elements;
+    this.popup = null;
   }
   render() {
     this.container.classList.add("popupAnnotation");
-    const popup = new PopupElement({
+    const popup = this.popup = new PopupElement({
       container: this.container,
       color: this.data.color,
       titleObj: this.data.titleObj,
@@ -12986,9 +12990,11 @@ class PopupElement {
   #parentRect = null;
   #pinned = false;
   #popup = null;
+  #position = null;
   #rect = null;
   #richText = null;
   #titleObj = null;
+  #updates = null;
   #wasVisible = false;
   constructor({
     container,
@@ -13032,19 +13038,6 @@ class PopupElement {
     if (this.#popup) {
       return;
     }
-    const {
-      page: {
-        view
-      },
-      viewport: {
-        rawDims: {
-          pageWidth,
-          pageHeight,
-          pageX,
-          pageY
-        }
-      }
-    } = this.#parent;
     const popup = this.#popup = document.createElement("div");
     popup.className = "popup";
     if (this.#color) {
@@ -13070,39 +13063,63 @@ class PopupElement {
       }));
       header.append(modificationDate);
     }
-    const contentsObj = this.#contentsObj;
-    const richText = this.#richText;
-    if (richText?.str && (!contentsObj?.str || contentsObj.str === richText.str)) {
+    const html = this.#html;
+    if (html) {
       XfaLayer.render({
-        xfaHtml: richText.html,
+        xfaHtml: html,
         intent: "richText",
         div: popup
       });
       popup.lastChild.classList.add("richText", "popupContent");
     } else {
-      const contents = this._formatContents(contentsObj);
+      const contents = this._formatContents(this.#contentsObj);
       popup.append(contents);
     }
-    let useParentRect = !!this.#parentRect;
-    let rect = useParentRect ? this.#parentRect : this.#rect;
-    for (const element of this.#elements) {
-      if (!rect || Util.intersect(element.data.rect, rect) !== null) {
-        rect = element.data.rect;
-        useParentRect = true;
-        break;
-      }
-    }
-    const normalizedRect = Util.normalizeRect([rect[0], view[3] - rect[1] + view[1], rect[2], view[3] - rect[3] + view[1]]);
-    const HORIZONTAL_SPACE_AFTER_ANNOTATION = 5;
-    const parentWidth = useParentRect ? rect[2] - rect[0] + HORIZONTAL_SPACE_AFTER_ANNOTATION : 0;
-    const popupLeft = normalizedRect[0] + parentWidth;
-    const popupTop = normalizedRect[1];
-    const {
-      style
-    } = this.#container;
-    style.left = `${100 * (popupLeft - pageX) / pageWidth}%`;
-    style.top = `${100 * (popupTop - pageY) / pageHeight}%`;
     this.#container.append(popup);
+  }
+  get #html() {
+    const richText = this.#richText;
+    const contentsObj = this.#contentsObj;
+    if (richText?.str && (!contentsObj?.str || contentsObj.str === richText.str)) {
+      return this.#richText.html || null;
+    }
+    return null;
+  }
+  get #fontSize() {
+    return this.#html?.attributes?.style?.fontSize || 0;
+  }
+  get #fontColor() {
+    return this.#html?.attributes?.style?.color || null;
+  }
+  #makePopupContent(text) {
+    const popupLines = [];
+    const popupContent = {
+      str: text,
+      html: {
+        name: "div",
+        attributes: {
+          dir: "auto"
+        },
+        children: [{
+          name: "p",
+          children: popupLines
+        }]
+      }
+    };
+    const lineAttributes = {
+      style: {
+        color: this.#fontColor,
+        fontSize: this.#fontSize ? `calc(${this.#fontSize}px * var(--scale-factor))` : ""
+      }
+    };
+    for (const line of text.split("\n")) {
+      popupLines.push({
+        name: "span",
+        value: line,
+        attributes: lineAttributes
+      });
+    }
+    return popupContent;
   }
   _formatContents({
     str,
@@ -13129,6 +13146,75 @@ class PopupElement {
       this.#toggle();
     }
   }
+  updateEdited({
+    rect,
+    popupContent
+  }) {
+    this.#updates ||= {
+      contentsObj: this.#contentsObj,
+      richText: this.#richText
+    };
+    if (rect) {
+      this.#position = null;
+    }
+    if (popupContent) {
+      this.#richText = this.#makePopupContent(popupContent);
+      this.#contentsObj = null;
+    }
+    this.#popup?.remove();
+    this.#popup = null;
+  }
+  resetEdited() {
+    if (!this.#updates) {
+      return;
+    }
+    ({
+      contentsObj: this.#contentsObj,
+      richText: this.#richText
+    } = this.#updates);
+    this.#updates = null;
+    this.#popup?.remove();
+    this.#popup = null;
+    this.#position = null;
+  }
+  #setPosition() {
+    if (this.#position !== null) {
+      return;
+    }
+    const {
+      page: {
+        view
+      },
+      viewport: {
+        rawDims: {
+          pageWidth,
+          pageHeight,
+          pageX,
+          pageY
+        }
+      }
+    } = this.#parent;
+    let useParentRect = !!this.#parentRect;
+    let rect = useParentRect ? this.#parentRect : this.#rect;
+    for (const element of this.#elements) {
+      if (!rect || Util.intersect(element.data.rect, rect) !== null) {
+        rect = element.data.rect;
+        useParentRect = true;
+        break;
+      }
+    }
+    const normalizedRect = Util.normalizeRect([rect[0], view[3] - rect[1] + view[1], rect[2], view[3] - rect[3] + view[1]]);
+    const HORIZONTAL_SPACE_AFTER_ANNOTATION = 5;
+    const parentWidth = useParentRect ? rect[2] - rect[0] + HORIZONTAL_SPACE_AFTER_ANNOTATION : 0;
+    const popupLeft = normalizedRect[0] + parentWidth;
+    const popupTop = normalizedRect[1];
+    this.#position = [100 * (popupLeft - pageX) / pageWidth, 100 * (popupTop - pageY) / pageHeight];
+    const {
+      style
+    } = this.#container;
+    style.left = `${this.#position[0]}%`;
+    style.top = `${this.#position[1]}%`;
+  }
   #toggle() {
     this.#pinned = !this.#pinned;
     if (this.#pinned) {
@@ -13146,6 +13232,7 @@ class PopupElement {
       this.render();
     }
     if (!this.isVisible) {
+      this.#setPosition();
       this.#container.hidden = false;
       this.#container.style.zIndex = parseInt(this.#container.style.zIndex) + 1000;
     } else if (this.#pinned) {
@@ -13170,6 +13257,9 @@ class PopupElement {
   maybeShow() {
     if (!this.#wasVisible) {
       return;
+    }
+    if (!this.#popup) {
+      this.#show();
     }
     this.#wasVisible = false;
     this.#container.hidden = false;
@@ -14317,7 +14407,8 @@ class FreeTextEditor extends AnnotationEditor {
     }
     const padding = FreeTextEditor._internalPadding * this.parentScale;
     annotation.updateEdited({
-      rect: this.getRect(padding, padding)
+      rect: this.getRect(padding, padding),
+      popupContent: this.#content
     });
     return content;
   }
@@ -16828,26 +16919,22 @@ class StampEditor extends AnnotationEditor {
       const offscreen = new OffscreenCanvas(width, height);
       const ctx = offscreen.getContext("2d");
       ctx.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height, 0, 0, width, height);
-      offscreen.convertToBlob().then(blob => {
-        const fileReader = new FileReader();
-        fileReader.onload = () => {
-          const url = fileReader.result;
-          this._uiManager.mlGuess({
-            service: "image-to-text",
-            request: {
-              imageData: url
-            }
-          }).then(response => {
-            const altText = response?.output || "";
-            if (this.parent && altText && !this.hasAltText()) {
-              this.altTextData = {
-                altText,
-                decorative: false
-              };
-            }
-          });
-        };
-        fileReader.readAsDataURL(blob);
+      this._uiManager.mlGuess({
+        service: "image-to-text",
+        request: {
+          data: ctx.getImageData(0, 0, width, height).data,
+          width,
+          height,
+          channels: 4
+        }
+      }).then(response => {
+        const altText = response?.output || "";
+        if (this.parent && altText && !this.hasAltText()) {
+          this.altTextData = {
+            altText,
+            decorative: false
+          };
+        }
       });
     }
     const ctx = canvas.getContext("2d");
@@ -17776,8 +17863,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.3.83";
-const pdfjsBuild = "9ee7c07b8";
+const pdfjsVersion = "4.3.138";
+const pdfjsBuild = "24e12d515";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

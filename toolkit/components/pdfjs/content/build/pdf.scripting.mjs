@@ -3956,8 +3956,8 @@ function initSandbox(params) {
 
 ;// CONCATENATED MODULE: ./src/pdf.scripting.js
 
-const pdfjsVersion = "4.3.83";
-const pdfjsBuild = "9ee7c07b8";
+const pdfjsVersion = "4.3.138";
+const pdfjsBuild = "24e12d515";
 globalThis.pdfjsScripting = {
   initSandbox: initSandbox
 };
