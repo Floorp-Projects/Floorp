@@ -139,7 +139,7 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   virtual ~ScriptLoadContext();
 
  public:
-  explicit ScriptLoadContext();
+  explicit ScriptLoadContext(nsIScriptElement* aScriptElement = nullptr);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScriptLoadContext,
@@ -181,10 +181,6 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   bool IsAsyncScript() const { return mScriptMode == ScriptMode::eAsync; }
 
- private:
-  nsIScriptElement* GetScriptElement() const;
-
- public:
   // Accessors for the script element, for each purpose.
   //
   // The script element reference is guaranteed to be available only for:
@@ -197,41 +193,46 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   // TODO: This is basically unnecessary and a document can be used instead.
   //       Remove this.
   inline nsIScriptElement* GetScriptElementForLoadingNode() const {
-    return GetScriptElement();
+    MOZ_ASSERT(mScriptElement);
+    return mScriptElement;
   }
 
   // For TRACE_FOR_TEST macros.
   // NOTE: This is called also for imported modules.
   //       The consumer allows nullptr.
   inline nsIScriptElement* GetScriptElementForTrace() const {
-    return GetScriptElement();
+    return mScriptElement;
   }
 
   // Event target for beforescriptexecute/afterscriptexecute events.
   inline nsIScriptElement* GetScriptElementForExecuteEvents() const {
-    return GetScriptElement();
+    MOZ_ASSERT(mScriptElement);
+    return mScriptElement;
   }
 
   // For ScriptLoader::mCurrentParserInsertedScript.
   inline nsIScriptElement* GetScriptElementForCurrentParserInsertedScript()
       const {
-    return GetScriptElement();
+    MOZ_ASSERT(mScriptElement);
+    return mScriptElement;
   }
 
   // For nsIScriptLoaderObserver.
   inline nsIScriptElement* GetScriptElementForObserver() const {
-    return GetScriptElement();
+    MOZ_ASSERT(mScriptElement);
+    return mScriptElement;
   }
 
   // For URL classifier.
   inline nsIScriptElement* GetScriptElementForUrlClassifier() const {
-    return GetScriptElement();
+    return mScriptElement;
   }
 
   // For AutoCurrentScriptUpdater.
   // This is valid only for classic script.
   inline nsIScriptElement* GetScriptElementForCurrentScript() const {
-    return GetScriptElement();
+    MOZ_ASSERT(mScriptElement);
+    return mScriptElement;
   }
 
   bool HasScriptElement() const;
@@ -263,11 +264,10 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   void SetIsLoadRequest(nsIScriptElement* aElement);
 
   FromParser GetParserCreated() const {
-    nsIScriptElement* element = GetScriptElement();
-    if (!element) {
+    if (!mScriptElement) {
       return NOT_FROM_PARSER;
     }
-    return element->GetParserCreated();
+    return mScriptElement->GetParserCreated();
   }
 
   // Used to output a string for the Gecko Profiler.
@@ -311,6 +311,10 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   // Non-null if there is a document that this request is blocking from loading.
   RefPtr<Document> mLoadBlockedDocument;
+
+  // The script element which trigerred this script load.
+  // This is valid only for classic script and top-level module script.
+  nsCOMPtr<nsIScriptElement> mScriptElement;
 
   // For preload requests, we defer reporting errors to the console until the
   // request is used.

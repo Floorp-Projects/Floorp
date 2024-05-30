@@ -972,11 +972,10 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
     const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy,
     ParserMetadata aParserMetadata) {
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
-  nsCOMPtr<Element> domElement = do_QueryInterface(aElement);
   RefPtr<ScriptFetchOptions> fetchOptions =
       new ScriptFetchOptions(aCORSMode, aNonce, aRequestPriority,
-                             aParserMetadata, aTriggeringPrincipal, domElement);
-  RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
+                             aParserMetadata, aTriggeringPrincipal);
+  RefPtr<ScriptLoadContext> context = new ScriptLoadContext(aElement);
 
   if (aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap) {
     RefPtr<ScriptLoadRequest> aRequest =
