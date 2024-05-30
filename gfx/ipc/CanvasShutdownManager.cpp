@@ -93,8 +93,7 @@ void CanvasShutdownManager::Destroy() {
   }
 
   if (NS_IsMainThread()) {
-    if (NS_WARN_IF(
-            AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed))) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       return nullptr;
     }
 
