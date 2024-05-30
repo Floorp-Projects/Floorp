@@ -184,6 +184,14 @@ void ScriptLoadContext::EndEvaluatingTopLevel() const {
   GetScriptElement()->EndEvaluating();
 }
 
+void ScriptLoadContext::UnblockParser() const {
+  GetScriptElement()->UnblockParser();
+}
+
+void ScriptLoadContext::ContinueParserAsync() const {
+  GetScriptElement()->ContinueParserAsync();
+}
+
 void ScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!HasScriptElement());
