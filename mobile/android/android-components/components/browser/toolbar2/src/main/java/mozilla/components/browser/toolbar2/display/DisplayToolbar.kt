@@ -679,20 +679,6 @@ class DisplayToolbar internal constructor(
             background.layoutParams = this
         }
     }
-
-    /**
-     * Hides the page action separator in display mode.
-     */
-    fun hidePageActionSeparator() {
-        views.pageActionSeparator.isVisible = false
-    }
-
-    /**
-     * Shows the page action separator in display mode.
-     */
-    internal fun showPageActionSeparator() {
-        views.pageActionSeparator.isVisible = true
-    }
 }
 
 /**

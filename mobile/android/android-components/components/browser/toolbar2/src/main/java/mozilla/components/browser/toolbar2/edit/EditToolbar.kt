@@ -383,20 +383,6 @@ class EditToolbar internal constructor(
         }
         editListener?.onTextChanged(text)
     }
-
-    /**
-     * Hides the page action separator in edit mode.
-     */
-    fun hidePageActionSeparator() {
-        views.pageActionSeparator.isVisible = false
-    }
-
-    /**
-     * Shows the page action separator in edit mode.
-     */
-    fun showPageActionSeparator() {
-        views.pageActionSeparator.isVisible = true
-    }
 }
 
 /**
