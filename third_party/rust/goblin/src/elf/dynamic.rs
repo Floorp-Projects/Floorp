@@ -550,7 +550,7 @@ macro_rules! elf_dyn_std_impl {
             }
 
             // TODO: these bare functions have always seemed awkward, but not sure where they should go...
-            /// Maybe gets and returns the dynamic array with the same lifetime as the [phdrs], using the provided bias with wrapping addition.
+            /// Maybe gets and returns the dynamic array with the same lifetime as the `phdrs`, using the provided bias with wrapping addition.
             /// If the bias is wrong, it will either segfault or give you incorrect values, beware
             pub unsafe fn from_phdrs(bias: usize, phdrs: &[$phdr]) -> Option<&[Dyn]> {
                 for phdr in phdrs {

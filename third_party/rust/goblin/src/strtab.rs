@@ -29,7 +29,7 @@ impl<'a> Strtab<'a> {
     /// Creates a `Strtab` with `bytes` as the backing string table, using `delim` as the delimiter between entries.
     ///
     /// NB: this does *not* preparse the string table, which can have non-optimal access patterns.
-    /// See https://github.com/m4b/goblin/pull/275#issue-660364025
+    /// See <https://github.com/m4b/goblin/pull/275>
     pub fn new(bytes: &'a [u8], delim: u8) -> Self {
         Self::from_slice_unparsed(bytes, 0, bytes.len(), delim)
     }
