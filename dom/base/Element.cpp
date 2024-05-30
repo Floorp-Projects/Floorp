@@ -54,6 +54,7 @@
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/ReflowOutput.h"
 #include "mozilla/RelativeTo.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/ServoStyleConstsInlines.h"
@@ -163,7 +164,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
-#include "nsIScrollableFrame.h"
 #include "nsISpeculativeConnect.h"
 #include "nsISupports.h"
 #include "nsISupportsUtils.h"
@@ -684,7 +684,7 @@ nsIScrollableFrame* Element::GetScrollFrame(nsIFrame** aFrame,
   if (isScrollingElement) {
     // Our scroll info should map to the root scrollable frame if there is one.
     if (PresShell* presShell = doc->GetPresShell()) {
-      if ((frame = presShell->GetRootScrollFrame())) {
+      if ((frame = presShell->GetRootScrollContainerFrame())) {
         if (aFrame) {
           *aFrame = frame;
         }
