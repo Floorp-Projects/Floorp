@@ -2879,15 +2879,28 @@ class EventManager {
         listener.added = true;
 
         recordStartupData = false;
-        this.remove.set(callback, () => {
-          EventManager.clearPersistentListener(
-            extension,
-            module,
-            event,
-            uneval(args),
-            listener.primeId
-          );
-        });
+
+        // Do not clear the persistent listener for a non-persistent backgrond
+        // context on removeListener calls got after the background context
+        // was fully started. The persistent listener can instead be cleared
+        // by not re-registering it on the next background context startup.
+        //
+        // This check prevents that for listeners that were already persisted
+        // and primed (a separate one below prevents it for new listeners).
+        //
+        // TODO Bug 1899767: do not reprime if the listener has been
+        // unregistered.
+        if (extension.persistentBackground) {
+          this.remove.set(callback, () => {
+            EventManager.clearPersistentListener(
+              extension,
+              module,
+              event,
+              uneval(args),
+              listener.primeId
+            );
+          });
+        }
       }
     }
 
@@ -2903,15 +2916,28 @@ class EventManager {
     if (recordStartupData) {
       const [, , , /* _module */ /* _event */ /* _key */ primeId] =
         EventManager.savePersistentListener(extension, module, event, args);
-      this.remove.set(callback, () => {
-        EventManager.clearPersistentListener(
-          extension,
-          module,
-          event,
-          uneval(args),
-          primeId
-        );
-      });
+
+      // Do not clear the persistent listener for a non-persistent backgrond
+      // context on removeListener calls got after the background context
+      // was fully started. The persistent listener can instead be cleared
+      // by not re-registering it on the next background context startup.
+      //
+      // This check prevents that for new listeners that were not already persisted
+      // and primed.
+      //
+      // TODO Bug 1899767: do not reprime if the listener has been
+      // unregistered.
+      if (extension.persistentBackground) {
+        this.remove.set(callback, () => {
+          EventManager.clearPersistentListener(
+            extension,
+            module,
+            event,
+            uneval(args),
+            primeId
+          );
+        });
+      }
     }
   }
 

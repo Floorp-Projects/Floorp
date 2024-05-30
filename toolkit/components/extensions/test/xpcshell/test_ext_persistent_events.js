@@ -923,6 +923,174 @@ add_task(
   }
 );
 
+add_task(async function test_eventPage_asyncUnregistered_persistentListeners() {
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      browser_specific_settings: {
+        gecko: { id: "eventpage-sync-removed-listeners@test" },
+      },
+      background: { persistent: false },
+    },
+    background() {
+      let listeners = {
+        startupBlocking: arg =>
+          browser.test.sendMessage("triggered-startupBlocking", arg),
+        nonStartupBlocking: arg =>
+          browser.test.sendMessage("triggered-nonStartupBlocking", arg),
+      };
+
+      browser.startupBlocking.onEvent1.addListener(listeners.startupBlocking);
+      browser.nonStartupBlocking.onEvent1.addListener(
+        listeners.nonStartupBlocking
+      );
+
+      if (localStorage.getItem("sync-unregister-listeners")) {
+        browser.test.log("Removing listeners synchronously");
+        browser.startupBlocking.onEvent1.removeListener(
+          listeners.startupBlocking
+        );
+        browser.nonStartupBlocking.onEvent1.removeListener(
+          listeners.nonStartupBlocking
+        );
+      }
+
+      browser.test.onMessage.addListener((msg, ...args) => {
+        switch (msg) {
+          case "async-unregister-listener": {
+            const apiNs = args[0];
+            browser[apiNs].onEvent1.removeListener(listeners[apiNs]);
+            break;
+          }
+          case "sync-unregister-listeners-next": {
+            localStorage.setItem("sync-unregister-listeners", true);
+            break;
+          }
+          default:
+            browser.test.fail(`Got unexpected test message: ${msg}`);
+        }
+        browser.test.sendMessage(`${msg}:done`);
+      });
+      browser.test.sendMessage("bg_started");
+    },
+  });
+
+  async function unregisterListeners() {
+    info("Unregister startupBlocking listener");
+    extension.sendMessage("async-unregister-listener", "startupBlocking");
+    await extension.awaitMessage("async-unregister-listener:done");
+    info("Unregister nonStartupBlocking listener");
+    extension.sendMessage("async-unregister-listener", "nonStartupBlocking");
+    await extension.awaitMessage("async-unregister-listener:done");
+    assertPersistentListeners(extension, "nonStartupBlocking", "onEvent1", {
+      primed: false,
+      persisted: true,
+    });
+    assertPersistentListeners(extension, "startupBlocking", "onEvent1", {
+      primed: false,
+      persisted: true,
+    });
+  }
+
+  await AddonTestUtils.promiseStartupManager();
+
+  await Promise.all([
+    promiseObservable("register-event-listener", 2),
+    extension.startup(),
+  ]);
+  await extension.awaitMessage("bg_started");
+
+  info(
+    "Verify new persistent listeners are still persisted if removed asynchronously"
+  );
+  await unregisterListeners();
+
+  info("Verify that unregistered persistent listeners are primed as expected");
+  await Promise.all([
+    promiseObservable("prime-event-listener", 2),
+    extension.terminateBackground(),
+  ]);
+  assertPersistentListeners(extension, "nonStartupBlocking", "onEvent1", {
+    primed: true,
+  });
+  assertPersistentListeners(extension, "startupBlocking", "onEvent1", {
+    primed: true,
+  });
+
+  info("Verify listeners are primed after AOM restart");
+  await Promise.all([
+    new Promise(resolve => extension.extension.once("shutdown", resolve)),
+    AddonTestUtils.promiseShutdownManager(),
+  ]);
+  await AddonTestUtils.promiseStartupManager({ lateStartup: false });
+  await extension.awaitStartup();
+
+  assertPersistentListeners(extension, "nonStartupBlocking", "onEvent1", {
+    primed: false,
+    persisted: true,
+  });
+  assertPersistentListeners(extension, "startupBlocking", "onEvent1", {
+    primed: true,
+  });
+
+  let converted = promiseObservable(
+    "convert-event-listener",
+    // Only startupBlocking is primed and expected to be converted.
+    1
+  );
+  Services.obs.notifyObservers(
+    { listenerArgs: "eventReceivedData" },
+    "fire-startupBlocking.onEvent1"
+  );
+  await extension.awaitMessage("bg_started");
+  await converted;
+  equal(
+    await extension.awaitMessage("triggered-startupBlocking"),
+    "eventReceivedData",
+    "triggered startupBlocking listener"
+  );
+
+  info(
+    "Verify existing persisted listeners are still persisted when removed asynchronously"
+  );
+  // Sanity check
+  assertPersistentListeners(extension, "nonStartupBlocking", "onEvent1", {
+    primed: false,
+    persisted: true,
+  });
+  assertPersistentListeners(extension, "startupBlocking", "onEvent1", {
+    primed: false,
+    persisted: true,
+  });
+
+  await unregisterListeners();
+
+  info(
+    "Prepare test extension to synchronously unregister the primed listeners on next event page startup"
+  );
+  extension.sendMessage("sync-unregister-listeners-next");
+  await extension.awaitMessage("sync-unregister-listeners-next:done");
+  await extension.terminateBackground();
+  Services.obs.notifyObservers(
+    { listenerArgs: "eventReceivedData" },
+    "fire-nonStartupBlocking.onEvent1"
+  );
+  await extension.awaitMessage("bg_started");
+
+  info(
+    "Verify listeners are still persisted after being removed synchronously"
+  );
+  assertPersistentListeners(extension, "nonStartupBlocking", "onEvent1", {
+    persisted: true,
+  });
+  assertPersistentListeners(extension, "startupBlocking", "onEvent1", {
+    persisted: true,
+  });
+
+  await extension.unload();
+  await AddonTestUtils.promiseShutdownManager();
+});
+
 // This test verifies primeListener behavior for errors or ignored listeners.
 add_task(async function test_background_primeListener_errors() {
   await AddonTestUtils.promiseStartupManager();
