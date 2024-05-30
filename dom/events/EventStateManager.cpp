@@ -3197,11 +3197,9 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     // hasn't moved.
     nsIFrame* lastScrollFrame = WheelTransaction::GetScrollTargetFrame();
     if (lastScrollFrame) {
-      nsIScrollableFrame* scrollableFrame =
+      ScrollContainerFrame* scrollContainerFrame =
           lastScrollFrame->GetScrollTargetFrame();
-      if (scrollableFrame) {
-        nsIFrame* frameToScroll = do_QueryFrame(scrollableFrame);
-        MOZ_ASSERT(frameToScroll);
+      if (scrollContainerFrame) {
         if (isAutoDir) {
           ESMAutoDirWheelDeltaAdjuster adjuster(*aEvent, *lastScrollFrame,
                                                 honoursRoot);
@@ -3211,7 +3209,7 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
           // adjustment.
           adjuster.Adjust();
         }
-        return frameToScroll;
+        return scrollContainerFrame;
       }
     }
   }
@@ -3246,8 +3244,9 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
                               : GetParentFrameToScroll(aTargetFrame);
   for (; scrollFrame; scrollFrame = GetParentFrameToScroll(scrollFrame)) {
     // Check whether the frame wants to provide us with a scrollable view.
-    nsIScrollableFrame* scrollableFrame = scrollFrame->GetScrollTargetFrame();
-    if (!scrollableFrame) {
+    ScrollContainerFrame* scrollContainerFrame =
+        scrollFrame->GetScrollTargetFrame();
+    if (!scrollContainerFrame) {
       nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(scrollFrame);
       if (menuPopupFrame) {
         return nullptr;
@@ -3255,11 +3254,8 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
       continue;
     }
 
-    nsIFrame* frameToScroll = do_QueryFrame(scrollableFrame);
-    MOZ_ASSERT(frameToScroll);
-
     if (!checkIfScrollableX && !checkIfScrollableY) {
-      return frameToScroll;
+      return scrollContainerFrame;
     }
 
     // If the frame disregards the direction the user is trying to scroll, then
@@ -3283,7 +3279,8 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     }
 
     layers::ScrollDirections directions =
-        scrollableFrame->GetAvailableScrollingDirectionsForUserInputEvents();
+        scrollContainerFrame
+            ->GetAvailableScrollingDirectionsForUserInputEvents();
     if ((!(directions.contains(layers::ScrollDirection::eVertical)) &&
          !(directions.contains(layers::ScrollDirection::eHorizontal))) ||
         (checkIfScrollableY && !checkIfScrollableX &&
@@ -3301,17 +3298,17 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
       if (adjuster.ShouldBeAdjusted()) {
         adjuster.Adjust();
         canScroll = true;
-      } else if (WheelHandlingUtils::CanScrollOn(scrollableFrame, aDirectionX,
-                                                 aDirectionY)) {
+      } else if (WheelHandlingUtils::CanScrollOn(scrollContainerFrame,
+                                                 aDirectionX, aDirectionY)) {
         canScroll = true;
       }
-    } else if (WheelHandlingUtils::CanScrollOn(scrollableFrame, aDirectionX,
-                                               aDirectionY)) {
+    } else if (WheelHandlingUtils::CanScrollOn(scrollContainerFrame,
+                                               aDirectionX, aDirectionY)) {
       canScroll = true;
     }
 
     if (canScroll) {
-      return frameToScroll;
+      return scrollContainerFrame;
     }
 
     // Where we are at is the block ending in a for loop.
@@ -6827,8 +6824,8 @@ nsresult EventStateManager::DoContentCommandScrollEvent(
 
   aEvent->mSucceeded = true;
 
-  nsIScrollableFrame* sf =
-      presShell->GetScrollableFrameToScroll(layers::EitherScrollDirection);
+  ScrollContainerFrame* sf =
+      presShell->GetScrollContainerFrameToScroll(layers::EitherScrollDirection);
   aEvent->mIsEnabled =
       sf ? (aEvent->mScroll.mIsHorizontal ? WheelHandlingUtils::CanScrollOn(
                                                 sf, aEvent->mScroll.mAmount, 0)

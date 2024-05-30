@@ -2332,7 +2332,7 @@ NS_IMETHODIMP
 PresShell::PageMove(bool aForward, bool aExtend) {
   nsIFrame* frame = nullptr;
   if (!aExtend) {
-    frame = do_QueryFrame(GetScrollableFrameToScroll(VerticalScrollDirection));
+    frame = GetScrollContainerFrameToScroll(VerticalScrollDirection);
     // If there is no scrollable frame, get the frame to move caret instead.
   }
   if (!frame || frame->PresContext() != mPresContext) {
@@ -2351,33 +2351,33 @@ PresShell::PageMove(bool aForward, bool aExtend) {
 
 NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward) {
-  nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(VerticalScrollDirection);
+  ScrollContainerFrame* scrollContainerFrame =
+      GetScrollContainerFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Pages);
-  if (scrollFrame) {
-    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES,
-                          scrollMode, nullptr,
-                          mozilla::ScrollOrigin::NotSpecified,
-                          nsIScrollableFrame::NOT_MOMENTUM,
-                          ScrollSnapFlags::IntendedDirection |
-                              ScrollSnapFlags::IntendedEndPosition);
+  if (scrollContainerFrame) {
+    scrollContainerFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                                   ScrollUnit::PAGES, scrollMode, nullptr,
+                                   mozilla::ScrollOrigin::NotSpecified,
+                                   nsIScrollableFrame::NOT_MOMENTUM,
+                                   ScrollSnapFlags::IntendedDirection |
+                                       ScrollSnapFlags::IntendedEndPosition);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward) {
-  nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(VerticalScrollDirection);
+  ScrollContainerFrame* scrollContainerFrame =
+      GetScrollContainerFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
-  if (scrollFrame) {
-    nsRect scrollPort = scrollFrame->GetScrollPortRect();
-    nsSize lineSize = scrollFrame->GetLineScrollAmount();
+  if (scrollContainerFrame) {
+    nsRect scrollPort = scrollContainerFrame->GetScrollPortRect();
+    nsSize lineSize = scrollContainerFrame->GetLineScrollAmount();
     int32_t lineCount = StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
     if (lineCount * lineSize.height > scrollPort.Height()) {
       return ScrollPage(aForward);
     }
-    scrollFrame->ScrollBy(
+    scrollContainerFrame->ScrollBy(
         nsIntPoint(0, aForward ? lineCount : -lineCount), ScrollUnit::LINES,
         scrollMode, nullptr, mozilla::ScrollOrigin::NotSpecified,
         nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedDirection);
@@ -2387,12 +2387,12 @@ PresShell::ScrollLine(bool aForward) {
 
 NS_IMETHODIMP
 PresShell::ScrollCharacter(bool aRight) {
-  nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(HorizontalScrollDirection);
+  ScrollContainerFrame* scrollContainerFrame =
+      GetScrollContainerFrameToScroll(HorizontalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
-  if (scrollFrame) {
+  if (scrollContainerFrame) {
     int32_t h = StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
-    scrollFrame->ScrollBy(
+    scrollContainerFrame->ScrollBy(
         nsIntPoint(aRight ? h : -h, 0), ScrollUnit::LINES, scrollMode, nullptr,
         mozilla::ScrollOrigin::NotSpecified, nsIScrollableFrame::NOT_MOMENTUM,
         ScrollSnapFlags::IntendedDirection);
@@ -2402,11 +2402,11 @@ PresShell::ScrollCharacter(bool aRight) {
 
 NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward) {
-  nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(VerticalScrollDirection);
+  ScrollContainerFrame* scrollContainerFrame =
+      GetScrollContainerFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Other);
-  if (scrollFrame) {
-    scrollFrame->ScrollBy(
+  if (scrollContainerFrame) {
+    scrollContainerFrame->ScrollBy(
         nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, scrollMode,
         nullptr, mozilla::ScrollOrigin::NotSpecified,
         nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedEndPosition);
@@ -2841,35 +2841,36 @@ already_AddRefed<nsIContent> PresShell::GetSelectedContentForScrolling() const {
   return selectedContent.forget();
 }
 
-nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
+ScrollContainerFrame* PresShell::GetScrollContainerFrameToScrollForContent(
     nsIContent* aContent, ScrollDirections aDirections) {
-  nsIScrollableFrame* scrollFrame = nullptr;
+  ScrollContainerFrame* scrollContainerFrame = nullptr;
   if (aContent) {
     nsIFrame* startFrame = aContent->GetPrimaryFrame();
     if (startFrame) {
-      scrollFrame = startFrame->GetScrollTargetFrame();
-      if (scrollFrame) {
-        startFrame = scrollFrame->GetScrolledFrame();
+      scrollContainerFrame = startFrame->GetScrollTargetFrame();
+      if (scrollContainerFrame) {
+        startFrame = scrollContainerFrame->GetScrolledFrame();
       }
-      scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
-          startFrame, aDirections);
+      scrollContainerFrame =
+          nsLayoutUtils::GetNearestScrollableFrameForDirection(startFrame,
+                                                               aDirections);
     }
   }
-  if (!scrollFrame) {
-    scrollFrame = GetRootScrollFrameAsScrollable();
-    if (!scrollFrame || !scrollFrame->GetScrolledFrame()) {
+  if (!scrollContainerFrame) {
+    scrollContainerFrame = GetRootScrollContainerFrame();
+    if (!scrollContainerFrame || !scrollContainerFrame->GetScrolledFrame()) {
       return nullptr;
     }
-    scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
-        scrollFrame->GetScrolledFrame(), aDirections);
+    scrollContainerFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
+        scrollContainerFrame->GetScrolledFrame(), aDirections);
   }
-  return scrollFrame;
+  return scrollContainerFrame;
 }
 
-nsIScrollableFrame* PresShell::GetScrollableFrameToScroll(
+ScrollContainerFrame* PresShell::GetScrollContainerFrameToScroll(
     ScrollDirections aDirections) {
   nsCOMPtr<nsIContent> content = GetContentForScrolling();
-  return GetScrollableFrameToScrollForContent(content.get(), aDirections);
+  return GetScrollContainerFrameToScrollForContent(content.get(), aDirections);
 }
 
 void PresShell::CancelAllPendingReflows() {

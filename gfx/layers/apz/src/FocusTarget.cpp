@@ -188,20 +188,20 @@ FocusTarget::FocusTarget(PresShell* aRootPresShell,
   nsCOMPtr<nsIContent> selectedContent =
       presShell->GetSelectedContentForScrolling();
 
-  // Gather the scrollable frames that would be scrolled in each direction
+  // Gather the scroll container frames that would be scrolled in each direction
   // for this scroll target
-  nsIScrollableFrame* horizontal =
-      presShell->GetScrollableFrameToScrollForContent(
+  ScrollContainerFrame* horizontal =
+      presShell->GetScrollContainerFrameToScrollForContent(
           selectedContent.get(), HorizontalScrollDirection);
-  nsIScrollableFrame* vertical =
-      presShell->GetScrollableFrameToScrollForContent(selectedContent.get(),
-                                                      VerticalScrollDirection);
+  ScrollContainerFrame* vertical =
+      presShell->GetScrollContainerFrameToScrollForContent(
+          selectedContent.get(), VerticalScrollDirection);
 
   // We might have the globally focused element for scrolling. Gather a ViewID
   // for the horizontal and vertical scroll targets of this element.
   ScrollTargets target;
-  target.mHorizontal = nsLayoutUtils::FindIDForScrollableFrame(horizontal);
-  target.mVertical = nsLayoutUtils::FindIDForScrollableFrame(vertical);
+  target.mHorizontal = nsLayoutUtils::FindIDForScrollContainerFrame(horizontal);
+  target.mVertical = nsLayoutUtils::FindIDForScrollContainerFrame(vertical);
   mData = AsVariant(target);
 
   FT_LOG("Creating scroll target with seq=%" PRIu64 ", kl=%d, h=%" PRIu64
