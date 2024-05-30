@@ -10,6 +10,7 @@
 #include "ipc/EnumSerializer.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/ipc/MessageLink.h"
 #include "mozilla/widget/filedialog/WinFileDialogCommandsDefn.h"
 
 // Windows interface types, defined in <shobjidl.h>
