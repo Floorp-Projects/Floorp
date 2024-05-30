@@ -10,7 +10,6 @@ import Popup from "./Popup";
 
 import { getIsCurrentThreadPaused } from "../../../selectors/index";
 import actions from "../../../actions/index";
-import { features } from "../../../utils/prefs";
 
 const EXCEPTION_MARKER = "mark-text-exception";
 
@@ -32,40 +31,26 @@ class Preview extends PureComponent {
   }
 
   componentDidMount() {
-    if (features.codemirrorNext) {
-      this.props.editor.on("tokenenter", this.onTokenEnter);
-      this.props.editor.addEditorDOMEventListeners({
-        mouseup: this.onMouseUp,
-        mousedown: this.onMouseDown,
-        scroll: this.onScroll,
-      });
-    } else {
-      const { codeMirror } = this.props.editor;
-      const codeMirrorWrapper = codeMirror.getWrapperElement();
-      codeMirror.on("tokenenter", this.onTokenEnter);
-      codeMirror.on("scroll", this.onScroll);
-      codeMirrorWrapper.addEventListener("mouseup", this.onMouseUp);
-      codeMirrorWrapper.addEventListener("mousedown", this.onMouseDown);
-    }
+    this.updateListeners();
   }
 
   componentWillUnmount() {
-    if (features.codemirrorNext) {
-      this.props.editor.off("tokenenter", this.onTokenEnter);
-      this.props.editor.removeEditorDOMEventListeners({
-        mouseup: this.onMouseUp,
-        mousedown: this.onMouseDown,
-        scroll: this.onScroll,
-      });
-    } else {
-      const { codeMirror } = this.props.editor;
-      const codeMirrorWrapper = codeMirror.getWrapperElement();
+    const { codeMirror } = this.props.editor;
+    const codeMirrorWrapper = codeMirror.getWrapperElement();
 
-      codeMirror.off("tokenenter", this.onTokenEnter);
-      codeMirror.off("scroll", this.onScroll);
-      codeMirrorWrapper.removeEventListener("mouseup", this.onMouseUp);
-      codeMirrorWrapper.removeEventListener("mousedown", this.onMouseDown);
-    }
+    codeMirror.off("tokenenter", this.onTokenEnter);
+    codeMirror.off("scroll", this.onScroll);
+    codeMirrorWrapper.removeEventListener("mouseup", this.onMouseUp);
+    codeMirrorWrapper.removeEventListener("mousedown", this.onMouseDown);
+  }
+
+  updateListeners() {
+    const { codeMirror } = this.props.editor;
+    const codeMirrorWrapper = codeMirror.getWrapperElement();
+    codeMirror.on("tokenenter", this.onTokenEnter);
+    codeMirror.on("scroll", this.onScroll);
+    codeMirrorWrapper.addEventListener("mouseup", this.onMouseUp);
+    codeMirrorWrapper.addEventListener("mousedown", this.onMouseDown);
   }
 
   // Note that these events are emitted by utils/editor/tokens.js
@@ -80,11 +65,11 @@ class Preview extends PureComponent {
 
     let preview;
     if (isTargetException) {
-      preview = await getExceptionPreview(target, tokenPos, editor);
+      preview = await getExceptionPreview(target, tokenPos, editor.codeMirror);
     }
 
     if (!preview && this.props.isPaused && !this.state.selecting) {
-      preview = await getPreview(target, tokenPos, editor);
+      preview = await getPreview(target, tokenPos, editor.codeMirror);
     }
 
     // Prevent modifying state and showing this preview if we started hovering another token

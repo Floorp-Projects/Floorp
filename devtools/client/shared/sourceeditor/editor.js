@@ -174,7 +174,7 @@ class Editor extends EventEmitter {
   #lineGutterMarkers = new Map();
   #lineContentMarkers = new Map();
   #posContentMarkers = new Map();
-  #editorDOMEventHandlers = {};
+  #lineContentEventHandlers = {};
 
   #updateListener = null;
 
@@ -636,7 +636,6 @@ class Editor extends EventEmitter {
     const lineContentMarkerCompartment = new Compartment();
     const positionContentMarkersCompartment = new Compartment();
     const searchHighlightCompartment = new Compartment();
-    const domEventHandlersCompartment = new Compartment();
 
     this.#compartments = {
       tabSizeCompartment,
@@ -647,7 +646,6 @@ class Editor extends EventEmitter {
       lineContentMarkerCompartment,
       positionContentMarkersCompartment,
       searchHighlightCompartment,
-      domEventHandlersCompartment,
     };
 
     const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
@@ -689,9 +687,10 @@ class Editor extends EventEmitter {
           this.#updateListener(v);
         }
       }),
-      domEventHandlersCompartment.of(EditorView.domEventHandlers({})),
       lineNumberMarkersCompartment.of([]),
-      lineContentMarkerCompartment.of(this.#lineContentMarkersExtension([])),
+      lineContentMarkerCompartment.of(
+        this.#lineContentMarkersExtension({ lineMarkers: [] })
+      ),
       positionContentMarkersCompartment.of(
         this.#positionContentMarkersExtension([])
       ),
@@ -716,10 +715,12 @@ class Editor extends EventEmitter {
    * This creates the extension used to manage the rendering of markers
    * for in editor line content.
    * @param   {Array}             lineMarkers - The current list of markers
+   * @param   {Object}            domEventHandlers - A dictionary of handlers for the DOM events
+   *                                                  See https://codemirror.net/docs/ref/#view.PluginSpec.eventHandlers
    * @returns {Array<ViewPlugin>}  An extension which is an array containing the view
    *                               which manages the rendering of the line content markers.
    */
-  #lineContentMarkersExtension(lineMarkers) {
+  #lineContentMarkersExtension({ lineMarkers, domEventHandlers }) {
     const {
       codemirrorView: { Decoration, ViewPlugin, WidgetType },
       codemirrorState: { RangeSetBuilder, RangeSet },
@@ -780,136 +781,44 @@ class Editor extends EventEmitter {
           }
         }
       },
-      { decorations: v => v.decorations }
+      {
+        decorations: v => v.decorations,
+        eventHandlers: domEventHandlers || this.#lineContentEventHandlers,
+      }
     );
 
     return [lineContentMarkersView];
   }
 
-  #createEventHandlers() {
+  /**
+   *
+   * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
+   */
+  setContentEventListeners(domEventHandlers) {
     const cm = editors.get(this);
-    function posToLineColumn(pos, view) {
-      if (!pos) {
-        return { line: null, column: null };
-      }
-      const cursor = view.state.doc.lineAt(pos);
-      const column = pos - cursor.from;
-      return { line: cursor.number, column };
-    }
-    const eventHandlers = {};
-    for (const eventName in this.#editorDOMEventHandlers) {
-      const handlers = this.#editorDOMEventHandlers[eventName];
-      eventHandlers[eventName] = (event, editor) => {
-        if (!event.target) {
-          return;
-        }
-        for (const handler of handlers) {
-          // Wait a cycle so the codemirror updates to the current cursor position,
-          // information, TODO: Currently noticed this issue with CM6, not ideal but should
-          // investigate further Bug 1890895.
-          event.target.ownerGlobal.setTimeout(() => {
-            const view = editor.viewState;
-            const cursorPos = posToLineColumn(
-              view.state.selection.main.head,
-              view
-            );
-            // For events like mouse over the event postion which gives the line / column on hover.
-            const pos =
-              !event.pageX || !event.pageY
-                ? null
-                : cm.posAtCoords({ x: event.pageX, y: event.pageY });
-            const eventPos = posToLineColumn(pos, view);
-            handler(
-              event,
-              view,
-              cursorPos.line,
-              cursorPos.column,
-              eventPos.line,
-              eventPos.column
-            );
-          }, 0);
-        }
+
+    for (const eventName in domEventHandlers) {
+      const handler = domEventHandlers[eventName];
+      domEventHandlers[eventName] = (event, editor) => {
+        // Wait a cycle so the codemirror updates to the current cursor position,
+        // information, TODO: Currently noticed this issue with CM6, not ideal but should
+        // investigate further Bug 1890895.
+        event.target.ownerGlobal.setTimeout(() => {
+          const view = editor.viewState;
+          const head = view.state.selection.main.head;
+          const cursor = view.state.doc.lineAt(head);
+          const column = head - cursor.from;
+          handler(event, view, cursor.number, column);
+        }, 0);
       };
     }
-    return eventHandlers;
-  }
 
-  /**
-   * Adds the DOM event handlers for the editor.
-   * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
-   *                                    the handlers are getting called with the following arguments
-   *                                     - {Object} `event`: The DOM event
-   *                                     - {Object} `view`: The codemirror view
-   *                                     - {Number} cursorLine`: The line where the cursor is currently position
-   *                                     - {Number} `cursorColumn`: The column where the cursor is currently position
-   *                                     - {Number} `eventLine`: The line where the event was fired.
-   *                                                             This might be different from the cursor line for mouse events.
-   *                                     - {Number} `eventColumn`: The column where the event was fired.
-   *                                                                This might be different from the cursor column for mouse events.
-   */
-  addEditorDOMEventListeners(domEventHandlers) {
-    const cm = editors.get(this);
-    const {
-      codemirrorView: { EditorView },
-    } = this.#CodeMirror6;
-
-    // Update the cache of dom event handlers
-    for (const eventName in domEventHandlers) {
-      if (!this.#editorDOMEventHandlers[eventName]) {
-        this.#editorDOMEventHandlers[eventName] = [];
-      }
-      this.#editorDOMEventHandlers[eventName].push(domEventHandlers[eventName]);
-    }
+    // Cache the handlers related to the editor content
+    this.#lineContentEventHandlers = domEventHandlers;
 
     cm.dispatch({
-      effects: this.#compartments.domEventHandlersCompartment.reconfigure(
-        EditorView.domEventHandlers(this.#createEventHandlers())
-      ),
-    });
-  }
-
-  /**
-   * Remove specified DOM event handlers for the editor.
-   * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
-   */
-  removeEditorDOMEventListeners(domEventHandlers) {
-    const cm = editors.get(this);
-    const {
-      codemirrorView: { EditorView },
-    } = this.#CodeMirror6;
-
-    for (const eventName in domEventHandlers) {
-      const domEventHandler = domEventHandlers[eventName];
-      const cachedEventHandlers = this.#editorDOMEventHandlers[eventName];
-      if (!domEventHandler || !cachedEventHandlers) {
-        continue;
-      }
-      const index = cachedEventHandlers.findIndex(
-        handler => handler == domEventHandler
-      );
-      this.#editorDOMEventHandlers[eventName].splice(index, 1);
-    }
-
-    cm.dispatch({
-      effects: this.#compartments.domEventHandlersCompartment.reconfigure(
-        EditorView.domEventHandlers(this.#createEventHandlers())
-      ),
-    });
-  }
-
-  /**
-   * Clear the DOM event handlers for the editor.
-   */
-  #clearEditorDOMEventListeners() {
-    const cm = editors.get(this);
-    const {
-      codemirrorView: { EditorView },
-    } = this.#CodeMirror6;
-
-    this.#editorDOMEventHandlers = {};
-    cm.dispatch({
-      effects: this.#compartments.domEventHandlersCompartment.reconfigure(
-        EditorView.domEventHandlers({})
+      effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
+        this.#lineContentMarkersExtension({ domEventHandlers })
       ),
     });
   }
@@ -931,9 +840,9 @@ class Editor extends EventEmitter {
 
     cm.dispatch({
       effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
-        this.#lineContentMarkersExtension(
-          Array.from(this.#lineContentMarkers.values())
-        )
+        this.#lineContentMarkersExtension({
+          lineMarkers: Array.from(this.#lineContentMarkers.values()),
+        })
       ),
     });
   }
@@ -948,9 +857,9 @@ class Editor extends EventEmitter {
 
     cm.dispatch({
       effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
-        this.#lineContentMarkersExtension(
-          Array.from(this.#lineContentMarkers.values())
-        )
+        this.#lineContentMarkersExtension({
+          lineMarkers: Array.from(this.#lineContentMarkers.values()),
+        })
       ),
     });
   }
@@ -1446,104 +1355,6 @@ class Editor extends EventEmitter {
       return cm.state.doc.sliceString(selection.from, selection.to);
     }
     return cm.getSelection().trim();
-  }
-
-  /**
-   * Returns the token at a specific position in the source
-   *
-   * @param   {Object} cm
-   * @param   {Object} position
-   * @param   {Number} position.line - line in the source
-   * @param   {Number} position.column  - column on a line in the source
-   * @returns {Object|null} token - start position of the token, end position of the token and
-   *                                      the  type of the token. Returns null if no token are
-   *                                      found at the passed coords
-   */
-  #tokenAtCoords(cm, { line, column }) {
-    if (this.config.cm6) {
-      const {
-        codemirrorLanguage: { syntaxTree },
-      } = this.#CodeMirror6;
-      const lineObject = cm.state.doc.line(line);
-      const pos = lineObject.from + column;
-      const token = syntaxTree(cm.state).resolve(pos, 1);
-      if (!token) {
-        return null;
-      }
-      return {
-        startColumn: column,
-        endColumn: token.to - token.from,
-        type: token.type?.name,
-      };
-    }
-    if (line < 0 || line >= cm.lineCount()) {
-      return null;
-    }
-
-    const token = cm.getTokenAt({ line: line - 1, ch: column });
-    if (!token) {
-      return null;
-    }
-
-    return { startColumn: token.start, endColumn: token.end, type: token.type };
-  }
-
-  /**
-   * Returns the expression at the specified position.
-   *
-   * The strategy of querying codeMirror tokens was borrowed
-   * from Chrome's inital implementation in JavaScriptSourceFrame.js#L414
-   *
-   * @param {Object} coord
-   * @param {Number} coord.line - line in the source
-   * @param {Number} coord.column  - column on a line in the source
-   * @return {Object|null} An object with the following properties:
-   *                       - {String} `expression`: The expression at specified coordinate
-   *                       - {Object} `location`: start and end lines/columns of the expression
-   *                       Returns null if no suitable expression could be found at passed coordinates
-   */
-  getExpressionFromCoords(coord) {
-    const cm = editors.get(this);
-    const token = this.#tokenAtCoords(cm, coord);
-    if (!token) {
-      return null;
-    }
-
-    let expressionStart = token.startColumn;
-    const expressionEnd = token.endColumn;
-    const lineNumber = coord.line;
-
-    const lineText = this.config.cm6
-      ? cm.state.doc.line(coord.line).text
-      : cm.doc.getLine(coord.line - 1);
-
-    while (
-      expressionStart > 1 &&
-      lineText.charAt(expressionStart - 1) === "."
-    ) {
-      const tokenBefore = this.#tokenAtCoords(cm, {
-        line: coord.line,
-        column: expressionStart - 2,
-      });
-
-      if (!tokenBefore?.type) {
-        return null;
-      }
-
-      expressionStart = tokenBefore.startColumn;
-    }
-
-    const expression = lineText.substring(expressionStart, expressionEnd) || "";
-
-    if (!expression) {
-      return null;
-    }
-
-    const location = {
-      start: { line: lineNumber, column: expressionStart },
-      end: { line: lineNumber, column: expressionEnd },
-    };
-    return { expression, location };
   }
 
   /**
@@ -2704,10 +2515,7 @@ class Editor extends EventEmitter {
     this.#updateListener = null;
     this.#lineGutterMarkers.clear();
     this.#lineContentMarkers.clear();
-
-    if (this.config.cm6) {
-      this.#clearEditorDOMEventListeners();
-    }
+    this.#lineContentEventHandlers = {};
 
     if (this.#prefObserver) {
       this.#prefObserver.off(KEYMAP_PREF, this.setKeyMap);
