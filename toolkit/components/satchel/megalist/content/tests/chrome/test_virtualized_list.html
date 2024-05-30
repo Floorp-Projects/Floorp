@@ -53,6 +53,7 @@
 
     add_task(async function test_rebuildVisibleLines() {
       let container = virtualizedList.querySelector(".lines-container");
+      let linesContainerWrapper = container.parentElement;
       let initialLines = container.querySelectorAll(".line");
       // Get boundaries of visible item count as they are rendered.
       let visibleItemsCount = {
@@ -61,7 +62,7 @@
       };
 
       is(
-        container.style.height,
+        linesContainerWrapper.style.height,
         `${virtualizedList.lineHeight * virtualizedList.lineCount}px`,
         "VirtualizedList is correct height."
       );
@@ -118,6 +119,36 @@
     selectedLine = container.querySelector(".selected");
     is(selectedLine.dataset.index, "0", "The same selected line is rendered.");
   });
+
+
+  /**
+  * Tests that new items are added to the end of the container when scrolling down
+  */
+  add_task(async function test_scrollDirectionDown(){
+    let container = virtualizedList.querySelector(".lines-container");
+    const initialLastRowIndex = Number(container.lastChild.getAttribute("data-index"));
+
+    // Scroll down lineHeight pixels
+    dispatchScrollEvent(virtualizedList, virtualizedList.lineHeight);
+    const newLastRowIndex = container.lastChild.getAttribute("data-index");
+    is(newLastRowIndex, String(initialLastRowIndex + 1))
+  })
+
+  /**
+  * Tests that new items are added to the start of the container when scrolling up
+  */
+  add_task(async function test_scrollDirectionUp(){
+    let container = virtualizedList.querySelector(".lines-container");
+
+    // First scroll 800px down
+    dispatchScrollEvent(virtualizedList, 800);
+    const initialFirstRowIndex = Number(container.firstChild.getAttribute("data-index"));
+
+    // Scroll back up by lineHeightpx;
+    dispatchScrollEvent(virtualizedList, virtualizedList.scrollTop - virtualizedList.lineHeight);
+    const newFirstRowIndex = container.firstChild.getAttribute("data-index");
+    is(newFirstRowIndex, String(initialFirstRowIndex - 1));
+  })
 
 </script>
 </pre>
