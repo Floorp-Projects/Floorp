@@ -205,7 +205,7 @@ async function triggerAutofillAndCheckProfile(profile) {
                 );
               }
               ok(
-                InputEvent.isInstance(event),
+                event instanceof InputEvent,
                 `"input" event should be dispatched with InputEvent interface on ${element.tagName}`
               );
               is(
@@ -226,7 +226,7 @@ async function triggerAutofillAndCheckProfile(profile) {
                 `"beforeinput" event shouldn't be fired on ${element.tagName}`
               );
               ok(
-                Event.isInstance(event) && !UIEvent.isInstance(event),
+                event instanceof Event && !(event instanceof UIEvent),
                 `"input" event should be dispatched with Event interface on ${element.tagName}`
               );
             }
