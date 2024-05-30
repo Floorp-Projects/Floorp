@@ -7542,7 +7542,7 @@ nsGridContainerFrame::GetNearestFragmentainer(
   WritingMode wm = aState.mWM;
   const ReflowInput* cbRI = gridRI->mCBReflowInput;
   for (; cbRI; cbRI = cbRI->mCBReflowInput) {
-    nsIScrollableFrame* sf = do_QueryFrame(cbRI->mFrame);
+    ScrollContainerFrame* sf = do_QueryFrame(cbRI->mFrame);
     if (sf) {
       break;
     }

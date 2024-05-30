@@ -14,13 +14,13 @@
 #include "mozilla/CaretAssociationHint.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_bidi.h"
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
 #include "nsITimer.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsIContent.h"
 #include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
@@ -188,7 +188,7 @@ void nsCaret::SetCaretReadOnly(bool aReadOnly) {
 static nsPoint AdjustRectForClipping(const nsRect& aRect, nsIFrame* aFrame,
                                      bool aVertical) {
   nsRect rectRelativeToClip = aRect;
-  nsIScrollableFrame* sf = nullptr;
+  ScrollContainerFrame* sf = nullptr;
   nsIFrame* scrollFrame = nullptr;
   for (nsIFrame* current = aFrame; current; current = current->GetParent()) {
     if ((sf = do_QueryFrame(current))) {

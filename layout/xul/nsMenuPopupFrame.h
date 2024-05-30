@@ -24,7 +24,6 @@
 
 #include "Units.h"
 
-class nsIScrollableFrame;
 class nsIWidget;
 
 namespace mozilla {
@@ -339,7 +338,7 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   void MoveToAnchor(nsIContent* aAnchorContent, const nsAString& aPosition,
                     int32_t aXPos, int32_t aYPos, bool aAttributesOverride);
 
-  nsIScrollableFrame* GetScrollFrame() const;
+  mozilla::ScrollContainerFrame* GetScrollContainerFrame() const;
 
   void SetOverrideConstraintRect(const mozilla::CSSIntRect& aRect) {
     mOverrideConstraintRect = mozilla::CSSIntRect::ToAppUnits(aRect);

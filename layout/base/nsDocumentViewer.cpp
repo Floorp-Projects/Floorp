@@ -2963,7 +2963,7 @@ static nscoord ScrollPositionForFrame(
     const nsIFrame* aFrame, ScrollContainerFrame* aScrollContainerFrame,
     float aPreviewScale) {
   // Note that even if the computed scroll position is out of the range of
-  // the scroll port, it gets clamped in nsIScrollableFrame::ScrollTo.
+  // the scroll port, it gets clamped in ScrollContainerFrame::ScrollTo.
   return nscoord(aPreviewScale * aFrame->GetRect().Center().y -
                  float(aScrollContainerFrame->GetScrollPortRect().height) /
                      2.0f);
