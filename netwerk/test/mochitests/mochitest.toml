@@ -61,12 +61,18 @@ support-files = [
 ]
 prefs = ["javascript.options.large_arraybuffers=true"]
 
+# test_1331680* fail with xorigin if 3pc are rejected by default (Bug 1873998).
 ["test_1331680.html"]
+skip-if = ["xorigin"]
 
 ["test_1331680_iframe.html"]
+skip-if = ["xorigin"]
 
 ["test_1331680_xhr.html"]
-skip-if = ["verify"]
+skip-if = [
+  "verify",
+  "xorigin",
+]
 
 ["test_1396395.html"]
 skip-if = [
@@ -74,9 +80,12 @@ skip-if = [
   "http2",
 ]
 
+# test_142* fail with xorigin if 3pc are rejected by default (Bug 1873998).
 ["test_1421324.html"]
+skip-if = ["xorigin"]
 
 ["test_1425031.html"]
+skip-if = ["xorigin"]
 
 ["test_1502055.html"]
 support-files = [
