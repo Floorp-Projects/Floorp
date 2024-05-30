@@ -204,7 +204,7 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProcessFields);
 
-    explicit ProcessFields(SandboxingKind aSandbox) : mSandbox(aSandbox){};
+    explicit ProcessFields(SandboxingKind aSandbox) : mSandbox(aSandbox) {};
 
     // Promise will be resolved when this Utility process has been fully started
     // and configured. Only accessed on the main thread.
