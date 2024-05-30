@@ -43,6 +43,7 @@ data_storage = { path = "../../../../security/manager/ssl/data_storage" }
 bitsdownload = { path = "../../../components/bitsdownload", optional = true }
 storage = { path = "../../../../storage/rust" }
 bookmark_sync = { path = "../../../components/places/bookmark_sync", optional = true }
+buildid_reader = { path = "../../buildid_reader" }
 chardetng_c = "0.1.1"
 audio_thread_priority = { version = "0.32", default_features = false }
 mdns_service = { path="../../../../dom/media/webrtc/transport/mdns_service", optional = true }

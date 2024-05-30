@@ -575,6 +575,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "buildid_reader"
+version = "0.1.0"
+dependencies = [
+ "goblin 0.8.1",
+ "libc",
+ "log",
+ "nserror",
+ "nsstring",
+ "scroll",
+]
+
+[[package]]
 name = "builtins-static"
 version = "0.1.0"
 dependencies = [
@@ -2255,6 +2267,7 @@ dependencies = [
  "binary_http",
  "bitsdownload",
  "bookmark_sync",
+ "buildid_reader",
  "cascade_bloom_filter",
  "cert_storage",
  "chardetng_c",
