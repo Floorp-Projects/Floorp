@@ -199,6 +199,8 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   void UnblockParser() const;
   void ContinueParserAsync() const;
 
+  Document* GetScriptOwnerDocument() const;
+
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!HasScriptElement());
