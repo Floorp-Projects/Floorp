@@ -6,6 +6,8 @@
 //!
 //! [scope]: https://drafts.csswg.org/css-cascade-6/#scoped-styles
 
+use crate::dom::TElement;
+use crate::applicable_declarations::ScopeProximity;
 use crate::parser::ParserContext;
 use crate::selector_parser::{SelectorImpl, SelectorParser};
 use crate::shared_lock::{
@@ -16,7 +18,9 @@ use crate::stylesheets::CssRules;
 use cssparser::{Parser, SourceLocation, ToCss};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOfOps, MallocUnconditionalSizeOf, MallocUnconditionalShallowSizeOf};
-use selectors::parser::{ParseRelative, SelectorList};
+use selectors::context::MatchingContext;
+use selectors::matching::{matches_selector, matches_selector_list};
+use selectors::parser::{ParseRelative, Selector, SelectorList};
 use selectors::OpaqueElement;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
@@ -183,4 +187,120 @@ impl ImplicitScopeRoot {
             Self::ShadowHost(..) | Self::Constructed => true,
         }
     }
+
+    /// Return the scope root element, given the element to be styled.
+    pub fn element(&self, current_host: Option<OpaqueElement>) -> Option<OpaqueElement> {
+        match self {
+            Self::InLightTree(e) |
+            Self::InShadowTree(e) |
+            Self::ShadowHost(e) => Some(*e),
+            Self::Constructed => current_host,
+        }
+    }
+}
+
+/// Target of this scope.
+pub enum ScopeTarget<'a> {
+    /// Target matches an element matching the specified selector list.
+    Selector(&'a SelectorList<SelectorImpl>),
+    /// Target matches only the specified element.
+    Element(OpaqueElement),
+}
+
+impl<'a> ScopeTarget<'a> {
+    /// Check if the given element is the scope.
+    pub fn check<E: TElement>(
+        &self,
+        element: E,
+        scope: Option<OpaqueElement>,
+        context: &mut MatchingContext<E::Impl>,
+    ) -> bool {
+        match self {
+            Self::Selector(list) => context.nest_for_scope_condition(scope, |context| {
+                matches_selector_list(list, &element, context)
+            }),
+            Self::Element(e) => element.opaque() == *e,
+        }
+    }
+}
+
+/// A scope root candidate.
+#[derive(Clone, Copy, Debug)]
+pub struct ScopeRootCandidate {
+    /// This candidate's scope root.
+    pub root: OpaqueElement,
+    /// Ancestor hop from the element under consideration to this scope root.
+    pub proximity: ScopeProximity,
+}
+
+/// Collect potential scope roots for a given element and its scope target.
+/// The check may not pass the ceiling, if specified.
+pub fn collect_scope_roots<E>(
+    element: E,
+    ceiling: Option<OpaqueElement>,
+    context: &mut MatchingContext<E::Impl>,
+    target: &ScopeTarget,
+    matches_shadow_host: bool,
+) -> Vec<ScopeRootCandidate>
+where
+    E: TElement,
+{
+    let mut result = vec![];
+    let mut parent = Some(element);
+    let mut proximity = 0usize;
+    while let Some(p) = parent {
+        if ceiling == Some(p.opaque()) {
+            break;
+        }
+        if target.check(p, ceiling, context) {
+            result.push(ScopeRootCandidate {
+                root: p.opaque(),
+                proximity: ScopeProximity::new(proximity),
+            });
+            // Note that we can't really break here - we need to consider
+            // ALL scope roots to figure out whch one didn't end.
+        }
+        parent = p.parent_element();
+        proximity += 1;
+        // We we got to the top of the shadow tree - keep going
+        // if we may match the shadow host.
+        if parent.is_none() && matches_shadow_host {
+            parent = p.containing_shadow_host();
+        }
+    }
+    result
+}
+
+/// Given the scope-end selector, check if the element is outside of the scope.
+/// That is, check if any ancestor to the root matches the scope-end selector.
+pub fn element_is_outside_of_scope<E>(
+    selector: &Selector<E::Impl>,
+    element: E,
+    root: OpaqueElement,
+    context: &mut MatchingContext<E::Impl>,
+    root_may_be_shadow_host: bool,
+) -> bool
+where
+    E: TElement,
+{
+    let mut parent = Some(element);
+    context.nest_for_scope_condition(Some(root), |context| {
+        while let Some(p) = parent {
+            if matches_selector(selector, 0, None, &p, context) {
+                return true;
+            }
+            if p.opaque() == root {
+                // Reached the top, not lying outside of scope.
+                break;
+            }
+            parent = p.parent_element();
+            if parent.is_none() && root_may_be_shadow_host {
+                if let Some(host) = p.containing_shadow_host() {
+                    // Pretty much an edge case where user specified scope-start and -end of :host
+                    return host.opaque() == root;
+                }
+            }
+        }
+        return false;
+    })
 }

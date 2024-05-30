@@ -391,12 +391,18 @@ impl SelectorMap<Rule> {
                     stylist,
                     include_starting_style
                 );
-            } else if let Some(scopes) = cascade_data.scope_condition_matches(
-                rule.scope_condition_id,
-                stylist,
-                element,
-                matching_context,
-            ) {
+            } else {
+                // First element contains the closest matching scope, but the selector may match
+                // a scope root that is further out (e.g. `.foo > .foo .bar > .baz` for `scope-start`
+                // selector `.foo` and inner selector `.bar .baz`). This requires returning all
+                // potential scopes.
+                let scopes = cascade_data.scope_condition_matches(
+                    rule.scope_condition_id,
+                    stylist,
+                    element,
+                    matching_context,
+                );
+
                 // We had to gather scope roots first, since the scope element must change before the rule's
                 // selector is tested. Candidates are sorted in proximity.
                 for candidate in scopes {
