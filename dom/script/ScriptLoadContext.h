@@ -181,7 +181,58 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   bool IsAsyncScript() const { return mScriptMode == ScriptMode::eAsync; }
 
+ private:
   nsIScriptElement* GetScriptElement() const;
+
+ public:
+  // Accessors for the script element, for each purpose.
+  //
+  // The script element reference is guaranteed to be available only for:
+  //   * inline/external classic script
+  //   * inline/external top-level module
+  //
+  // The reference is valid only for specific purpose explained below.
+
+  // For aLoadingNode parameter of a new channel.
+  // TODO: This is basically unnecessary and a document can be used instead.
+  //       Remove this.
+  inline nsIScriptElement* GetScriptElementForLoadingNode() const {
+    return GetScriptElement();
+  }
+
+  // For TRACE_FOR_TEST macros.
+  // NOTE: This is called also for imported modules.
+  //       The consumer allows nullptr.
+  inline nsIScriptElement* GetScriptElementForTrace() const {
+    return GetScriptElement();
+  }
+
+  // Event target for beforescriptexecute/afterscriptexecute events.
+  inline nsIScriptElement* GetScriptElementForExecuteEvents() const {
+    return GetScriptElement();
+  }
+
+  // For ScriptLoader::mCurrentParserInsertedScript.
+  inline nsIScriptElement* GetScriptElementForCurrentParserInsertedScript()
+      const {
+    return GetScriptElement();
+  }
+
+  // For nsIScriptLoaderObserver.
+  inline nsIScriptElement* GetScriptElementForObserver() const {
+    return GetScriptElement();
+  }
+
+  // For URL classifier.
+  inline nsIScriptElement* GetScriptElementForUrlClassifier() const {
+    return GetScriptElement();
+  }
+
+  // For AutoCurrentScriptUpdater.
+  // This is valid only for classic script.
+  inline nsIScriptElement* GetScriptElementForCurrentScript() const {
+    return GetScriptElement();
+  }
 
   bool HasScriptElement() const;
 

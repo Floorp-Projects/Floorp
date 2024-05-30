@@ -585,8 +585,8 @@ static nsresult CreateChannelForScriptLoading(nsIChannel** aOutChannel,
       ScriptLoadRequestToContentPolicyType(aRequest);
   nsCOMPtr<nsINode> context;
   if (aRequest->GetScriptLoadContext()->HasScriptElement()) {
-    context =
-        do_QueryInterface(aRequest->GetScriptLoadContext()->GetScriptElement());
+    context = do_QueryInterface(
+        aRequest->GetScriptLoadContext()->GetScriptElementForLoadingNode());
   } else {
     context = aDocument;
   }
@@ -2137,8 +2137,8 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
     }
   }
 
-  nsCOMPtr<nsINode> scriptElem =
-      do_QueryInterface(aRequest->GetScriptLoadContext()->GetScriptElement());
+  nsCOMPtr<nsINode> scriptElem = do_QueryInterface(
+      aRequest->GetScriptLoadContext()->GetScriptElementForExecuteEvents());
 
   nsCOMPtr<Document> doc;
   if (!aRequest->GetScriptLoadContext()->mIsInline ||
@@ -2151,7 +2151,8 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   if (parserCreated) {
     oldParserInsertedScript = mCurrentParserInsertedScript;
     mCurrentParserInsertedScript =
-        aRequest->GetScriptLoadContext()->GetScriptElement();
+        aRequest->GetScriptLoadContext()
+            ->GetScriptElementForCurrentParserInsertedScript();
   }
 
   aRequest->GetScriptLoadContext()->BeginEvaluatingTopLevel();
@@ -2230,7 +2231,8 @@ void ScriptLoader::FireScriptAvailable(nsresult aResult,
   for (int32_t i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
     obs->ScriptAvailable(
-        aResult, aRequest->GetScriptLoadContext()->GetScriptElement(),
+        aResult,
+        aRequest->GetScriptLoadContext()->GetScriptElementForObserver(),
         aRequest->GetScriptLoadContext()->mIsInline, aRequest->mURI,
         aRequest->GetScriptLoadContext()->mLineNo);
   }
@@ -2238,7 +2240,7 @@ void ScriptLoader::FireScriptAvailable(nsresult aResult,
   bool isInlineClassicScript = aRequest->GetScriptLoadContext()->mIsInline &&
                                !aRequest->IsModuleRequest();
   RefPtr<nsIScriptElement> scriptElement =
-      aRequest->GetScriptLoadContext()->GetScriptElement();
+      aRequest->GetScriptLoadContext()->GetScriptElementForObserver();
   scriptElement->ScriptAvailable(aResult, scriptElement, isInlineClassicScript,
                                  aRequest->mURI,
                                  aRequest->GetScriptLoadContext()->mLineNo);
@@ -2250,13 +2252,13 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void ScriptLoader::FireScriptEvaluated(
   for (int32_t i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
     RefPtr<nsIScriptElement> scriptElement =
-        aRequest->GetScriptLoadContext()->GetScriptElement();
+        aRequest->GetScriptLoadContext()->GetScriptElementForObserver();
     obs->ScriptEvaluated(aResult, scriptElement,
                          aRequest->GetScriptLoadContext()->mIsInline);
   }
 
   RefPtr<nsIScriptElement> scriptElement =
-      aRequest->GetScriptLoadContext()->GetScriptElement();
+      aRequest->GetScriptLoadContext()->GetScriptElementForObserver();
   scriptElement->ScriptEvaluated(aResult, scriptElement,
                                  aRequest->GetScriptLoadContext()->mIsInline);
 }
@@ -2490,7 +2492,8 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
-  Document* ownerDoc = aRequest->GetScriptLoadContext()->GetScriptOwnerDocument();
+  Document* ownerDoc =
+      aRequest->GetScriptLoadContext()->GetScriptOwnerDocument();
   if (ownerDoc != mDocument) {
     // Willful violation of HTML5 as of 2010-12-01
     return NS_ERROR_FAILURE;
@@ -2524,9 +2527,9 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
   // This must be destroyed after destroying nsAutoMicroTask, see:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1620505#c4
   nsIScriptElement* currentScript =
-      aRequest->IsModuleRequest()
-          ? nullptr
-          : aRequest->GetScriptLoadContext()->GetScriptElement();
+      aRequest->IsModuleRequest() ? nullptr
+                                  : aRequest->GetScriptLoadContext()
+                                        ->GetScriptElementForCurrentScript();
   AutoCurrentScriptUpdater scriptUpdater(this, currentScript);
 
   Maybe<AutoSetProcessingScriptTag> setProcessingScriptTag;
@@ -3478,8 +3481,8 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
    */
   if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
           aResult)) {
-    nsCOMPtr<nsIContent> cont =
-        do_QueryInterface(aRequest->GetScriptLoadContext()->GetScriptElement());
+    nsCOMPtr<nsIContent> cont = do_QueryInterface(
+        aRequest->GetScriptLoadContext()->GetScriptElementForUrlClassifier());
     mDocument->AddBlockedNodeByClassifier(cont);
   }
 
@@ -3540,13 +3543,14 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
     mParserBlockingRequest = nullptr;
     UnblockParser(aRequest);
 
-    // Ensure that we treat aRequest->GetScriptLoadContext()->GetScriptElement()
-    // as our current parser-inserted script while firing onerror on it.
+    // Ensure that we treat the script as our current parser-inserted script
+    // while firing onerror on it.
     MOZ_ASSERT(aRequest->GetScriptLoadContext()->GetParserCreated());
     nsCOMPtr<nsIScriptElement> oldParserInsertedScript =
         mCurrentParserInsertedScript;
     mCurrentParserInsertedScript =
-        aRequest->GetScriptLoadContext()->GetScriptElement();
+        aRequest->GetScriptLoadContext()
+            ->GetScriptElementForCurrentParserInsertedScript();
     FireScriptAvailable(aResult, aRequest);
     ContinueParserAsync(aRequest);
     mCurrentParserInsertedScript = oldParserInsertedScript;

@@ -46,7 +46,7 @@ static nsresult TestingDispatchEvent(JS::loader::ScriptLoadRequest* aRequest,
   }
 
   nsIScriptElement* scriptElement =
-      aRequest->GetScriptLoadContext()->GetScriptElement();
+      aRequest->GetScriptLoadContext()->GetScriptElementForTrace();
 
   nsCOMPtr<nsINode> target(do_QueryInterface(scriptElement));
   if (!target) {
