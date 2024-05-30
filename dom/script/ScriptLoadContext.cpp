@@ -156,6 +156,22 @@ void ScriptLoadContext::GetHintCharset(nsAString& aCharset) const {
   GetScriptElement()->GetScriptCharset(aCharset);
 }
 
+uint32_t ScriptLoadContext::GetScriptLineNumber() const {
+  nsIScriptElement* element = GetScriptElement();
+  if (element) {
+    return element->GetScriptLineNumber();
+  }
+  return 0;
+}
+
+JS::ColumnNumberOneOrigin ScriptLoadContext::GetScriptColumnNumber() const {
+  nsIScriptElement* element = GetScriptElement();
+  if (element) {
+    return element->GetScriptColumnNumber();
+  }
+  return JS::ColumnNumberOneOrigin();
+}
+
 void ScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!GetScriptElement());
