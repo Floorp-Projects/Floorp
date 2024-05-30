@@ -2620,13 +2620,24 @@ mailto:
       description: >-
         Can be used to toggle the entire feature on and off.
       fallbackPref: browser.mailto.dualPrompt
-    dualPrompt.os:
+    dualPrompt.onLocationChange:
       type: boolean
       description: >-
-        Make webmail sites display prompts to set Firefox as default OS mailto
-        application and another prompt to set the current site as default
-        webmail site in Firefox.
-      fallbackPref: browser.mailto.dualPrompt.os
+        Display a reminder prompt for known webmailers if the prompt was not
+        dismissed before the next visit of that webmailer.
+      fallbackPref: browser.mailto.dualPrompt.onLocationChange
+    dualPrompt.dismissXClickMinutes:
+      type: int
+      description: >-
+        This pref controls after how many minutes the mailto prompt can be shown
+        again, which has been dismissed by clicking the 'X' button before.
+      fallbackPref: browser.mailto.dualPrompt.dismissXClickMinutes
+    dualPrompt.dismissNotNowMinutes:
+      type: int
+      description: >-
+        This pref controls after how many minutes the mailto prompt can be shown
+        again, which has been dismissed by clicking a 'not now' button on it.
+      fallbackPref: browser.mailto.dualPrompt.dismissNotNowMinutes
 
 nimbusIsReady:
   description: A feature that provides the number of Nimbus is_ready events to send

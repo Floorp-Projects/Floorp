@@ -100,6 +100,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UIState: "resource://services-sync/UIState.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
+  WebProtocolHandlerRegistrar:
+    "resource:///modules/WebProtocolHandlerRegistrar.sys.mjs",
   WindowsLaunchOnLogin: "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   WindowsGPOParser: "resource://gre/modules/policies/WindowsGPOParser.sys.mjs",
@@ -2897,6 +2899,13 @@ BrowserGlue.prototype = {
             "@mozilla.org/uriloader/handler-service;1"
           ].getService(Ci.nsIHandlerService);
           handlerService.asyncInit();
+        },
+      },
+
+      {
+        name: "webProtocolHandlerService.asyncInit",
+        task: () => {
+          lazy.WebProtocolHandlerRegistrar.prototype.init(true);
         },
       },
 
