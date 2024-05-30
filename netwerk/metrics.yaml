@@ -888,6 +888,25 @@ networking:
       - regular
       - private
 
+  http_redirect_to_scheme_top_level: &http_redirect_to_scheme_top_level
+    type: labeled_counter
+    description: >
+      Count of the HTTP redirection that triggered by top-level document, keyed by the URL scheme redirected to
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1413512
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1567462
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1897290
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1897290
+    notification_emails:
+      - necko@mozilla.com
+    expires: never
+
+  http_redirect_to_scheme_subresource:
+    <<: *http_redirect_to_scheme_top_level
+    description: >
+      Count of the HTTP redirection that triggered by subresource, keyed by the URL scheme redirected to
+
   http_response_version:
     type: labeled_counter
     description: >
