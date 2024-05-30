@@ -4001,10 +4001,21 @@ void AsyncPanZoomController::HandleFlingOverscroll(
         residualVelocity.y = 0;
       }
 
+      // If there is velocity left over from the fling which could not
+      // be handed off to another other APZC in the handoff chain,
+      // start an overscroll animation which will enter overscroll
+      // and then relieve it.
       if (!IsZero(residualVelocity)) {
         mOverscrollEffect->RelieveOverscroll(residualVelocity,
                                              aOverscrollSideBits);
       }
+
+      // Additionally snap back any other APZC in the handoff chain
+      // which may be overscrolled (e.g. an ancestor whose overscroll
+      // animation may have been interrupted by the input gesture which
+      // triggered the fling).
+      aOverscrollHandoffChain->SnapBackOverscrolledApzcForMomentum(
+          this, residualVelocity);
     }
   }
 }
