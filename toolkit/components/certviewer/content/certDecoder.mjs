@@ -65,23 +65,32 @@ const getKeyUsages = (x509, criticalExtensions) => {
     purposes: [],
   };
 
-  let keyUsagesBS = getX509Ext(x509.extensions, "2.5.29.15");
-  if (keyUsagesBS !== undefined) {
-    // parse the bit string, shifting as necessary
-    let unusedBits = keyUsagesBS.valueBlock.unusedBits;
-    keyUsagesBS = parseInt(keyUsagesBS.valueBlock.valueHex, 16) >> unusedBits;
+  let keyUsagesExt = getX509Ext(x509.extensions, "2.5.29.15");
+  if (keyUsagesExt !== undefined) {
+    // zero pad or truncate the hex value to 4 digits
+    let keyUsagesHex = keyUsagesExt.valueBlock.valueHex
+      .slice(0, 4)
+      .padEnd(4, "0");
+
+    let keyUsagesInt = parseInt(keyUsagesHex, 16);
+
+    // Clear any unused bits (accounting for padding or truncation above).
+    let unusedBits = keyUsagesExt.valueBlock.unusedBits;
+    if (keyUsagesExt.valueBlock.valueHex.length == 2) {
+      unusedBits += 8;
+    } else if (keyUsagesExt.valueBlock.valueHex.length > 4) {
+      unusedBits = 0;
+    }
+    keyUsagesInt &= ~((1 << unusedBits) - 1);
 
     // iterate through the bit string
-    strings.keyUsages.slice(unusedBits - 1).forEach(usage => {
-      if (keyUsagesBS & 1) {
+    strings.keyUsages.forEach(usage => {
+      if (keyUsagesInt & 0x8000) {
         keyUsages.purposes.push(usage);
       }
 
-      keyUsagesBS = keyUsagesBS >> 1;
+      keyUsagesInt = keyUsagesInt << 1;
     });
-
-    // reverse the order for legibility
-    keyUsages.purposes.reverse();
   }
 
   return keyUsages;
@@ -1058,13 +1067,15 @@ const strings = {
   },
 
   keyUsages: [
-    "CRL Signing",
-    "Certificate Signing",
-    "Key Agreement",
-    "Data Encipherment",
-    "Key Encipherment",
-    "Non-Repudiation",
     "Digital Signature",
+    "Non-Repudiation",
+    "Key Encipherment",
+    "Data Encipherment",
+    "Key Agreement",
+    "Certificate Signing",
+    "CRL Signing",
+    "Encipher Only",
+    "Decipher Only",
   ],
 
   san: [
