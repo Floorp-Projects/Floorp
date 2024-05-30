@@ -79,7 +79,7 @@ class EnhancedTrackingProtectionTest : TestSetup() {
             openExceptionsLearnMoreLink()
         }
         browserScreen {
-            verifyUrl("support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-android")
+            verifyETPLearnMoreURL()
         }
     }
 
