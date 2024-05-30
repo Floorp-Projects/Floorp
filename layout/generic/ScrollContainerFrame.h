@@ -9,21 +9,22 @@
 #ifndef mozilla_ScrollContainerFrame_h_
 #define mozilla_ScrollContainerFrame_h_
 
+#include "FrameMetrics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/WindowBinding.h"  // for mozilla::dom::ScrollBehavior
+#include "mozilla/layout/ScrollAnchorContainer.h"
+#include "mozilla/ScrollOrigin.h"
+#include "mozilla/ScrollTypes.h"
+#include "mozilla/TypedEnumBits.h"
 #include "nsContainerFrame.h"
+#include "nsExpirationTracker.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIScrollableFrame.h"
+#include "nsIReflowCallback.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIStatefulFrame.h"
-#include "nsThreadUtils.h"
-#include "nsIReflowCallback.h"
 #include "nsQueryFrame.h"
-#include "nsExpirationTracker.h"
+#include "nsThreadUtils.h"
 #include "ScrollVelocityQueue.h"
-#include "mozilla/ScrollTypes.h"
-#include "mozilla/PresState.h"
-#include "mozilla/layout/ScrollAnchorContainer.h"
-#include "mozilla/TypedEnumBits.h"
 
 class nsPresContext;
 class nsIContent;
@@ -34,9 +35,12 @@ class AutoContainsBlendModeCapturer;
 namespace mozilla {
 struct nsDisplayListCollection;
 class PresShell;
+class PresState;
 enum class StyleScrollbarWidth : uint8_t;
 class ScrollContainerFrame;
+class ScrollPositionUpdate;
 struct ScrollReflowInput;
+struct ScrollStyles;
 struct StyleScrollSnapAlign;
 namespace layers {
 class Layer;
@@ -64,7 +68,7 @@ namespace mozilla {
  * or remove the scrolled frame
  */
 class ScrollContainerFrame : public nsContainerFrame,
-                             public nsIScrollableFrame,
+                             public nsIScrollbarMediator,
                              public nsIAnonymousContentCreator,
                              public nsIReflowCallback,
                              public nsIStatefulFrame {
@@ -180,18 +184,47 @@ class ScrollContainerFrame : public nsContainerFrame,
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>&) final;
   void AppendAnonymousContentTo(nsTArray<nsIContent*>&, uint32_t aFilter) final;
 
-  // nsIScrollableFrame
-  nsIFrame* GetScrolledFrame() const final { return mScrolledFrame; }
-  ScrollStyles GetScrollStyles() const final;
-  bool IsForTextControlWithNoScrollbars() const final;
-  bool HasAllNeededScrollbars() const final {
+  /**
+   * Get the frame for the content that we are scrolling within
+   * this scrollable frame.
+   */
+  nsIFrame* GetScrolledFrame() const { return mScrolledFrame; }
+
+  /**
+   * Get the overflow styles (StyleOverflow::Scroll, StyleOverflow::Hidden, or
+   * StyleOverflow::Auto) governing the horizontal and vertical scrollbars for
+   * this frame.
+   *
+   * This is special because they can be propagated from the <body> element,
+   * unlike other styles.
+   */
+  ScrollStyles GetScrollStyles() const;
+
+  /**
+   * Returns whether this scroll frame is for a text control element with no
+   * scrollbars (for <input>, basically).
+   */
+  bool IsForTextControlWithNoScrollbars() const;
+
+  /**
+   * Returns whether we already have anonymous content nodes for all our needed
+   * scrollbar parts (or a superset thereof).
+   */
+  bool HasAllNeededScrollbars() const {
     return GetCurrentAnonymousContent().contains(GetNeededAnonymousContent());
   }
 
-  layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo() const final;
-  layers::ScrollDirections GetAvailableScrollingDirectionsForUserInputEvents()
-      const final;
-  layers::ScrollDirections GetScrollbarVisibility() const final {
+  /**
+   * Get the overscroll-behavior styles.
+   */
+  layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo() const;
+
+  /**
+   * Return the scrollbars which are visible. It's OK to call this during reflow
+   * of the scrolled contents, in which case it will reflect the current
+   * assumptions about scrollbar visibility.
+   */
+  layers::ScrollDirections GetScrollbarVisibility() const {
     layers::ScrollDirections result;
     if (mHasHorizontalScrollbar) {
       result += layers::ScrollDirection::eHorizontal;
@@ -201,23 +234,96 @@ class ScrollContainerFrame : public nsContainerFrame,
     }
     return result;
   }
+
+  /**
+   * Returns the directions in which scrolling is allowed (if the scroll range
+   * is at least one device pixel in that direction).
+   */
+  layers::ScrollDirections GetAvailableScrollingDirections() const;
+
+  /**
+   * Returns the directions in which scrolling is allowed when taking into
+   * account the visual viewport size and overflow hidden. (An (apz) zoomed in
+   * overflow hidden scrollframe is actually user scrollable.)
+   */
+  layers::ScrollDirections GetAvailableScrollingDirectionsForUserInputEvents()
+      const;
+
+  /**
+   * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
+   * positions that don't have a scrollbar or where the scrollbar is not
+   * visible. Do not call this while this frame's descendants are being
+   * reflowed, it won't be accurate.
+   * INCLUDE_VISUAL_VIEWPORT_SCROLLBARS means we include the size of layout
+   * scrollbars that are only visible to scroll the visual viewport inside the
+   * layout viewport (ie the layout viewport cannot be scrolled) even though
+   * there is no layout space set aside for these scrollbars.
+   */
+  enum class ScrollbarSizesOptions { NONE, INCLUDE_VISUAL_VIEWPORT_SCROLLBARS };
   nsMargin GetActualScrollbarSizes(
-      ScrollbarSizesOptions aOptions = ScrollbarSizesOptions::NONE) const final;
-  nsMargin GetDesiredScrollbarSizes() const final;
-  static nscoord GetNonOverlayScrollbarSize(const nsPresContext*,
-                                            StyleScrollbarWidth);
-  nsSize GetLayoutSize() const final {
+      ScrollbarSizesOptions aOptions = ScrollbarSizesOptions::NONE) const;
+
+  /**
+   * Return the sizes of all scrollbars assuming that any scrollbars that could
+   * be visible due to overflowing content, are. This can be called during
+   * reflow of the scrolled contents.
+   */
+  nsMargin GetDesiredScrollbarSizes() const;
+
+  /**
+   * Get the layout size of this frame.
+   * Note that this is a value which is not expanded by the minimum scale size.
+   * For scroll frames other than the root content document's scroll frame, this
+   * value will be the same as GetScrollPortRect().Size().
+   *
+   * This value is used for Element.clientWidth and clientHeight.
+   */
+  nsSize GetLayoutSize() const {
     if (mIsUsingMinimumScaleSize) {
       return mICBSize;
     }
     return mScrollPort.Size();
   }
-  nsRect GetScrolledRect() const final;
-  nsRect GetScrollPortRect() const final { return mScrollPort; }
-  nsPoint GetScrollPosition() const final {
+
+  /**
+   * GetScrolledRect is designed to encapsulate deciding which
+   * directions of overflow should be reachable by scrolling and which
+   * should not.  Callers should NOT depend on it having any particular
+   * behavior.
+   *
+   * This should only be called when the scrolled frame has been
+   * reflowed with the scroll port size given in mScrollPort.
+   *
+   * Currently it allows scrolling down and to the right for
+   * ScrollContainerFrames with LTR directionality, and allows scrolling down
+   * and to the left for ScrollContainerFrames with RTL directionality.
+   */
+  nsRect GetScrolledRect() const;
+
+  /**
+   * Get the area of the scrollport relative to the origin of this frame's
+   * border-box.
+   * This is the area of this frame minus border and scrollbars.
+   */
+  nsRect GetScrollPortRect() const { return mScrollPort; }
+
+  /**
+   * Get the offset of the scrollport origin relative to the scrolled
+   * frame origin. Typically the position will be non-negative.
+   * This will always be a multiple of device pixels.
+   */
+  nsPoint GetScrollPosition() const {
     return mScrollPort.TopLeft() - mScrolledFrame->GetPosition();
   }
-  nsPoint GetLogicalScrollPosition() const final {
+
+  /**
+   * For LTR frames, the logical scroll position is the offset of the top left
+   * corner of the frame from the top left corner of the scroll port (same as
+   * GetScrollPosition).
+   * For RTL frames, it is the offset of the top right corner of the frame from
+   * the top right corner of the scroll port.
+   */
+  nsPoint GetLogicalScrollPosition() const {
     nsPoint pt;
     pt.x = IsPhysicalLTR()
                ? mScrollPort.x - mScrolledFrame->GetPosition().x
@@ -226,50 +332,520 @@ class ScrollContainerFrame : public nsContainerFrame,
     return pt;
   }
 
-  nsRect GetScrollRange() const final { return GetLayoutScrollRange(); }
-  nsSize GetVisualViewportSize() const final;
-  nsPoint GetVisualViewportOffset() const final;
-  bool SetVisualViewportOffset(const nsPoint& aOffset, bool aRepaint) final;
-  nsRect GetVisualScrollRange() const final;
-  nsRect GetScrollRangeForUserInputEvents() const final;
-  nsSize GetLineScrollAmount() const final;
-  nsSize GetPageScrollAmount() const final;
-  nsMargin GetScrollPadding() const final;
+  /**
+   * Get the area that must contain the scroll position. Typically
+   * (but not always, e.g. for RTL content) x and y will be 0, and
+   * width or height will be nonzero if the content can be scrolled in
+   * that direction. Since scroll positions must be a multiple of
+   * device pixels, the range extrema will also be a multiple of
+   * device pixels.
+   */
+  nsRect GetScrollRange() const { return GetLayoutScrollRange(); }
+
+  /**
+   * Get the size of the view port to use when clamping the scroll
+   * position.
+   */
+  nsSize GetVisualViewportSize() const;
+
+  /**
+   * Returns the offset of the visual viewport relative to
+   * the origin of the scrolled content. Note that only the RCD-RSF
+   * has a distinct visual viewport; for other scroll frames, the
+   * visual viewport always coincides with the layout viewport, and
+   * consequently the offset this function returns is equal to
+   * GetScrollPosition().
+   */
+  nsPoint GetVisualViewportOffset() const;
+
+  /**
+   * Set the visual viewport offset associated with a root scroll frame. This is
+   * only valid when called on a root scroll frame and will assert otherwise.
+   * aRepaint indicates if we need to ask for a main thread paint if this
+   * changes scrollbar positions or not. For example, if the compositor has
+   * already put the scrollbars at this position then they don't need to move so
+   * we can skip the repaint. Returns true if the offset changed and the scroll
+   * frame is still alive after this call.
+   */
+  bool SetVisualViewportOffset(const nsPoint& aOffset, bool aRepaint);
+  /**
+   * Get the area that must contain the visual viewport offset.
+   */
+  nsRect GetVisualScrollRange() const;
+
+  /**
+   * Like GetVisualScrollRange but also takes into account overflow: hidden.
+   */
+  nsRect GetScrollRangeForUserInputEvents() const;
+
+  /**
+   * Return how much we would try to scroll by in each direction if
+   * asked to scroll by one "line" vertically and horizontally.
+   */
+  nsSize GetLineScrollAmount() const;
+  /**
+   * Return how much we would try to scroll by in each direction if
+   * asked to scroll by one "page" vertically and horizontally.
+   */
+  nsSize GetPageScrollAmount() const;
+
+  /**
+   * Return scroll-padding value of this frame.
+   */
+  nsMargin GetScrollPadding() const;
+
   /**
    * @note This method might destroy the frame, pres shell and other objects.
+   * Clamps aScrollPosition to GetScrollRange and sets the scroll position
+   * to that value.
+   * @param aRange If non-null, specifies area which contains aScrollPosition
+   * and can be used for choosing a performance-optimized scroll position.
+   * Any point within this area can be chosen.
+   * The choosen point will be as close as possible to aScrollPosition.
    */
   void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
                 const nsRect* aRange = nullptr,
                 ScrollSnapFlags aSnapFlags = ScrollSnapFlags::Disabled,
                 ScrollTriggeredByScript aTriggeredByScript =
-                    ScrollTriggeredByScript::No) final {
+                    ScrollTriggeredByScript::No) {
     return ScrollToInternal(aScrollPosition, aMode, ScrollOrigin::Other, aRange,
                             aSnapFlags, aTriggeredByScript);
   }
-  /**
-   * @note This method might destroy the frame, pres shell and other objects.
-   */
-  void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
-                         ScrollMode aMode = ScrollMode::Instant) final;
-  void ScrollToCSSPixelsForApz(const CSSPoint& aScrollPosition,
-                               ScrollSnapTargetIds&& aLastSnapTargetIds) final;
-  /**
-   * @note This method might destroy the frame, pres shell and other objects.
-   */
-  CSSIntPoint GetRoundedScrollPositionCSSPixels() final;
 
   /**
    * @note This method might destroy the frame, pres shell and other objects.
+   * Scrolls to a particular position in integer CSS pixels.
+   * Keeps the exact current horizontal or vertical position if the current
+   * position, rounded to CSS pixels, matches aScrollPosition. If
+   * aScrollPosition.x/y is different from the current CSS pixel position,
+   * makes sure we only move in the direction given by the difference.
+   *
+   * When aMode is SMOOTH, INSTANT, or NORMAL, GetRoundedScrollPositionCSSPixels
+   * (the scroll position after rounding to CSS pixels) will be exactly
+   * aScrollPosition at the end of the scroll animation.
+   *
+   * When aMode is SMOOTH_MSD, intermediate animation frames may be outside the
+   * range and / or moving in any direction; GetRoundedScrollPositionCSSPixels
+   * will be exactly aScrollPosition at the end of the scroll animation unless
+   * the SMOOTH_MSD animation is interrupted.
+   */
+  void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                         ScrollMode aMode = ScrollMode::Instant);
+
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   * Scrolls to a particular position in float CSS pixels.
+   * This does not guarantee that GetRoundedScrollPositionCSSPixels equals
+   * aScrollPosition afterward. It tries to scroll as close to
+   * aScrollPosition as possible while scrolling by an integer
+   * number of layer pixels (so the operation is fast and looks clean).
+   */
+  void ScrollToCSSPixelsForApz(const CSSPoint& aScrollPosition,
+                               ScrollSnapTargetIds&& aLastSnapTargetIds);
+
+  /**
+   * Returns the scroll position in integer CSS pixels, rounded to the nearest
+   * pixel.
+   */
+  CSSIntPoint GetRoundedScrollPositionCSSPixels();
+
+  /**
+   * Some platforms (OSX) may generate additional scrolling events even
+   * after the user has stopped scrolling, simulating a momentum scrolling
+   * effect resulting from fling gestures.
+   * SYNTHESIZED_MOMENTUM_EVENT indicates that the scrolling is being requested
+   * by such a synthesized event and may be ignored if another scroll has
+   * been started since the last actual user input.
+   */
+  enum ScrollMomentum { NOT_MOMENTUM, SYNTHESIZED_MOMENTUM_EVENT };
+
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   * Modifies the current scroll position by aDelta units given by aUnit,
+   * clamping it to GetScrollRange. If WHOLE is specified as the unit,
+   * content is scrolled all the way in the direction(s) given by aDelta.
+   * @param aOverflow if non-null, returns the amount that scrolling
+   * was clamped by in each direction (how far we moved the scroll position
+   * to bring it back into the legal range). This is never negative. The
+   * values are in device pixels.
    */
   void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                 nsIntPoint* aOverflow = nullptr,
                 ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
                 ScrollMomentum aMomentum = NOT_MOMENTUM,
-                ScrollSnapFlags aSnapFlags = ScrollSnapFlags::Disabled) final;
+                ScrollSnapFlags aSnapFlags = ScrollSnapFlags::Disabled);
+
   void ScrollByCSSPixels(const CSSIntPoint& aDelta,
-                         ScrollMode aMode = ScrollMode::Instant) final {
+                         ScrollMode aMode = ScrollMode::Instant) {
     return ScrollByCSSPixelsInternal(aDelta, aMode);
   }
+
+  /**
+   * Perform scroll snapping, possibly resulting in a smooth scroll to
+   * maintain the scroll snap position constraints.  Velocity sampled from
+   * main thread scrolling is used to determine best matching snap point
+   * when called after a fling gesture on a trackpad or mouse wheel.
+   */
+  void ScrollSnap() { return ScrollSnap(ScrollMode::SmoothMsd); }
+
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   * This tells the scroll frame to try scrolling to the scroll
+   * position that was restored from the history. This must be called
+   * at least once after state has been restored. It is called by the
+   * scrolled frame itself during reflow, but sometimes state can be
+   * restored after reflows are done...
+   * XXX should we take an aMode parameter here? Currently it's instant.
+   */
+  void ScrollToRestoredPosition();
+
+  /**
+   * Add a scroll position listener. This listener must be removed
+   * before it is destroyed.
+   */
+  void AddScrollPositionListener(nsIScrollPositionListener* aListener) {
+    mListeners.AppendElement(aListener);
+  }
+
+  /**
+   * Remove a scroll position listener.
+   */
+  void RemoveScrollPositionListener(nsIScrollPositionListener* aListener) {
+    mListeners.RemoveElement(aListener);
+  }
+
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   * Internal method used by scrollbars to notify their scrolling
+   * container of changes.
+   */
+  void CurPosAttributeChanged(nsIContent* aChild) {
+    return CurPosAttributeChangedInternal(aChild);
+  }
+
+  /**
+   * Allows the docshell to request that the scroll frame post an event
+   * after being restored from history.
+   */
+  NS_IMETHOD PostScrolledAreaEventForCurrentArea() final {
+    PostScrolledAreaEvent();
+    return NS_OK;
+  }
+
+  /**
+   * Returns true if this scrollframe is being "actively scrolled".
+   * This basically means that we should allocate resources in the
+   * expectation that scrolling is going to happen.
+   */
+  bool IsScrollingActive() const;
+
+  /**
+   * Returns true if this scroll frame might be scrolled
+   * asynchronously by the compositor.
+   */
+  bool IsMaybeAsynchronouslyScrolled() const {
+    // If this is true, then we'll build an ASR, and that's what we want
+    // to know I think.
+    return mWillBuildScrollableLayer;
+  }
+
+  /**
+   * Was the current presentation state for this frame restored from history?
+   */
+  bool DidHistoryRestore() const { return mDidHistoryRestore; }
+
+  /**
+   * Clear the flag so that DidHistoryRestore() returns false until the next
+   * RestoreState call.
+   * @see nsIStatefulFrame::RestoreState
+   */
+  void ClearDidHistoryRestore() { mDidHistoryRestore = false; }
+
+  /**
+   * Mark the frame as having been scrolled at least once, so that it remains
+   * active and we can also start storing its scroll position when saving state.
+   */
+  void MarkEverScrolled();
+
+  /**
+   * Determine if the passed in rect is nearly visible according to the frame
+   * visibility heuristics for how close it is to the visible scrollport.
+   */
+  bool IsRectNearlyVisible(const nsRect& aRect) const;
+
+  /**
+   * Expand the given rect taking into account which directions we can scroll
+   * and how far we want to expand for frame visibility purposes.
+   */
+  nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const;
+
+  /**
+   * Returns the origin that triggered the last instant scroll. Will equal
+   * ScrollOrigin::Apz when the compositor's replica frame metrics includes the
+   * latest instant scroll.
+   */
+  ScrollOrigin LastScrollOrigin() const { return mLastScrollOrigin; }
+
+  /**
+   * Gets the async scroll animation state of this scroll frame.
+   *
+   * There are five possible kinds that can overlap.
+   * MainThread means async scroll animated by the main thread.
+   * APZ scroll animations that are requested from the main thread go through
+   * three states: 1) pending, when the main thread has recorded that it wants
+   * apz to do a scroll animation, 2) requested, when the main thread has sent
+   * the request to the compositor (but it hasn't necessarily arrived yet), and
+   * 3) in progress, after apz has responded to the main thread that it got the
+   * request.
+   * TriggeredByScript means that the async scroll animation was triggered by
+   * script, e.g. Element.scrollTo().
+   */
+  enum class AnimationState {
+    MainThread,        // mAsyncScroll || mAsyncSmoothMSDScroll
+    APZPending,        // mScrollUpdates.LastElement() is Smooth or SmoothMsd
+    APZRequested,      // mApzAnimationRequested
+    APZInProgress,     // mCurrentAPZScrollAnimationType !=
+                       // APZScrollAniationType::No
+    TriggeredByScript  // The animation was triggered with
+                       // ScrollTriggeredByScript::Yes
+  };
+  EnumSet<AnimationState> ScrollAnimationState() const;
+
+  /**
+   * Returns the current generation counter for the scrollframe. This counter
+   * increments every time the scroll position is set.
+   */
+  MainThreadScrollGeneration CurrentScrollGeneration() const {
+    return mScrollGeneration;
+  }
+
+  /**
+   * The APZ scroll generation associated with the last APZ scroll offset for
+   * which we processed a repaint request.
+   */
+  APZScrollGeneration ScrollGenerationOnApz() const {
+    return mScrollGenerationOnApz;
+  }
+
+  /**
+   * LastScrollDestination returns the destination of the most recently
+   * requested smooth scroll animation.
+   */
+  nsPoint LastScrollDestination() { return mDestination; }
+
+  /**
+   * Returns the list of scroll position updates since the last call to
+   * NotifyApzTransaction().
+   */
+  nsTArray<ScrollPositionUpdate> GetScrollUpdates() const;
+
+  /**
+   * Returns true if the scroll frame has any scroll position updates since
+   * the last call to NotifyApzTransaction().
+   */
+  bool HasScrollUpdates() const { return !mScrollUpdates.IsEmpty(); }
+
+  /**
+   * Clears the "origin of last scroll" property stored in this frame, if
+   * the generation counter passed in matches the current scroll generation
+   * counter, and clears the "origin of last smooth scroll" property if the
+   * generation counter matches. It also resets whether there's an ongoing apz
+   * animation.
+   */
+  enum class InScrollingGesture : bool { No, Yes };
+  void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
+                               const APZScrollGeneration& aGenerationOnApz,
+                               APZScrollAnimationType aAPZScrollAnimationType,
+                               InScrollingGesture aInScrollingGesture);
+
+  /**
+   * Determine whether it is desirable to be able to asynchronously scroll this
+   * scroll frame.
+   */
+  bool WantAsyncScroll() const;
+
+  /**
+   * Returns the ScrollMetadata contributed by this frame, if there is one.
+   */
+  Maybe<layers::ScrollMetadata> ComputeScrollMetadata(
+      layers::WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
+      const nsPoint& aOffsetToReferenceFrame) const;
+
+  /**
+   * Mark the scrollbar frames for reflow.
+   */
+  void MarkScrollbarsDirtyForReflow() const;
+
+  /**
+   * Invalidate the scrollbar after the marks have been changed.
+   */
+  void InvalidateScrollbars() const;
+
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   * Update scrollbar curpos attributes to reflect current scroll position
+   */
+  void UpdateScrollbarPosition();
+
+  void SetTransformingByAPZ(bool aTransforming);
+  bool IsTransformingByAPZ() const { return mTransformingByAPZ; }
+
+  /**
+   * Notify this scroll frame that it can be scrolled by APZ. In particular,
+   * this is called *after* the APZ code has created an APZC for this scroll
+   * frame and verified that it is not a scrollinfo layer. Therefore, setting an
+   * async transform on it is actually user visible.
+   */
+  void SetScrollableByAPZ(bool aScrollable);
+
+  /**
+   * Notify this scroll frame that it can be zoomed by APZ.
+   */
+  void SetZoomableByAPZ(bool aZoomable);
+
+  /**
+   * Mark this scroll frame as having out-of-flow content inside a CSS filter.
+   * Such content will move incorrectly during async-scrolling; to mitigate
+   * this, paint skipping is disabled for such scroll frames.
+   */
+  void SetHasOutOfFlowContentInsideFilter();
+
+  /**
+   * Determine if we should build a scrollable layer for this scroll frame and
+   * return the result. It will also record this result on the scroll frame.
+   * Pass the visible rect in aVisibleRect. On return it will be set to the
+   * displayport if there is one.
+   * Pass the dirty rect in aDirtyRect. On return it will be set to the
+   * dirty rect inside the displayport (ie the dirty rect that should be used).
+   * This function will set the display port base rect if aSetBase is true.
+   * aSetBase is only allowed to be false if there has been a call with it
+   * set to true before on the same paint.
+   */
+  bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                             nsRect* aVisibleRect, nsRect* aDirtyRect,
+                             bool aSetBase) {
+    return DecideScrollableLayer(aBuilder, aVisibleRect, aDirtyRect, aSetBase,
+                                 nullptr);
+  }
+
+  /**
+   * Notify the scrollframe that the current scroll offset and origin have been
+   * sent over in a layers transaction.
+   *
+   * This sets a flag on the scrollframe that indicates subsequent changes
+   * to the scroll position by "weaker" origins are permitted to overwrite the
+   * the scroll origin. Scroll origins that
+   * nsLayoutUtils::CanScrollOriginClobberApz returns false for are considered
+   * "weaker" than scroll origins for which that function returns true.
+   *
+   * This function must be called for a scrollframe after all calls to
+   * ComputeScrollMetadata in a layers transaction have been completed.
+   *
+   */
+  void NotifyApzTransaction();
+
+  /**
+   * Notification that this scroll frame is getting its frame visibility
+   * updated. aIgnoreDisplayPort indicates that the display port was ignored
+   * (because there was no suitable base rect)
+   */
+  void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort);
+
+  /**
+   * Returns true if this scroll frame had a display port at the last frame
+   * visibility update and fills in aDisplayPort with that displayport. Returns
+   * false otherwise, and doesn't touch aDisplayPort.
+   */
+  bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
+      nsRect* aDisplayPort);
+
+  /**
+   * This is called when a descendant scrollframe's has its displayport expired.
+   * This function will check to see if this scrollframe may safely expire its
+   * own displayport and schedule a timer to do that if it is safe.
+   */
+  void TriggerDisplayPortExpiration();
+
+  /**
+   * Returns information required to determine where to snap to after a scroll.
+   */
+  ScrollSnapInfo GetScrollSnapInfo();
+
+  void TryResnap();
+
+  /**
+   * Post a pending re-snap request if the given |aFrame| is one of the snap
+   * points on the last scroll operation.
+   */
+  void PostPendingResnapIfNeeded(const nsIFrame* aFrame);
+  void PostPendingResnap();
+
+  /**
+   * Returns a pair of the scroll-snap-align property value both on X and Y axes
+   * for the given |aFrame| considering the scroll-snap-type of this scroll
+   * container. For example, if the scroll-snap-type is `none`, the pair of
+   * scroll-snap-align is also `none none`.
+   */
+  using PhysicalScrollSnapAlign =
+      std::pair<StyleScrollSnapAlignKeyword, StyleScrollSnapAlignKeyword>;
+  PhysicalScrollSnapAlign GetScrollSnapAlignFor(const nsIFrame* aFrame) const;
+
+  /**
+   * Given the drag event aEvent, determine whether the mouse is near the edge
+   * of the scrollable area, and scroll the view in the direction of that edge
+   * if so. If scrolling occurred, true is returned. When false is returned, the
+   * caller should look for an ancestor to scroll.
+   */
+  bool DragScroll(WidgetEvent* aEvent);
+
+  void AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                   layers::ScrollDirection aDirection);
+  void AsyncScrollbarDragRejected();
+
+  /**
+   * Returns whether this scroll frame is the root scroll frame of the document
+   * that it is in. Note that some documents don't have root scroll frames at
+   * all (ie XUL documents) even though they may contain other scroll frames.
+   */
+  bool IsRootScrollFrameOfDocument() const { return mIsRoot; }
+
+  /**
+   * Returns the paint sequence number if this scroll frame was the first
+   * scrollable frame for the paint.
+   */
+  Maybe<uint32_t> IsFirstScrollableFrameSequenceNumber() const {
+    return mIsFirstScrollableFrameSequenceNumber;
+  }
+
+  /**
+   * Set the paint sequence number for the paint in which this was the first
+   * scrollable frame that was encountered.
+   */
+  void SetIsFirstScrollableFrameSequenceNumber(Maybe<uint32_t> aValue) {
+    mIsFirstScrollableFrameSequenceNumber = aValue;
+  }
+
+  /**
+   * Returns the scroll anchor associated with this scrollable frame. This is
+   * never null.
+   */
+  const ScrollAnchorContainer* Anchor() const { return &mAnchor; }
+  ScrollAnchorContainer* Anchor() { return &mAnchor; }
+
+  bool SmoothScrollVisual(
+      const nsPoint& aVisualViewportOffset,
+      layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType);
+
+  /**
+   * Returns true if this scroll frame should perform smooth scroll with the
+   * given |aBehavior|.
+   */
+  bool IsSmoothScroll(
+      dom::ScrollBehavior aBehavior = dom::ScrollBehavior::Auto) const;
+
+  static nscoord GetNonOverlayScrollbarSize(const nsPresContext*,
+                                            StyleScrollbarWidth);
+
   void ScrollByCSSPixelsInternal(
       const CSSIntPoint& aDelta, ScrollMode aMode = ScrollMode::Instant,
       // This ScrollByCSSPixels is mainly used for Element.scrollBy and
@@ -277,73 +853,6 @@ class ScrollContainerFrame : public nsContainerFrame,
       // ScrollToCSSPixels.
       ScrollSnapFlags aSnapFlags = ScrollSnapFlags::IntendedDirection |
                                    ScrollSnapFlags::IntendedEndPosition);
-
-  void ScrollSnap() final { return ScrollSnap(ScrollMode::SmoothMsd); }
-
-  /**
-   * @note This method might destroy the frame, pres shell and other objects.
-   */
-  void ScrollToRestoredPosition() final;
-  /**
-   * @note This method might destroy the frame, pres shell and other objects.
-   */
-  void CurPosAttributeChanged(nsIContent* aChild) final {
-    return CurPosAttributeChangedInternal(aChild);
-  }
-  NS_IMETHOD PostScrolledAreaEventForCurrentArea() final {
-    PostScrolledAreaEvent();
-    return NS_OK;
-  }
-  bool IsScrollingActive() const final;
-  bool IsMaybeAsynchronouslyScrolled() const final {
-    // If this is true, then we'll build an ASR, and that's what we want
-    // to know I think.
-    return mWillBuildScrollableLayer;
-  }
-
-  bool DidHistoryRestore() const final { return mDidHistoryRestore; }
-  void ClearDidHistoryRestore() final { mDidHistoryRestore = false; }
-  void MarkEverScrolled() final;
-  bool IsRectNearlyVisible(const nsRect& aRect) const final;
-  nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const final;
-  ScrollOrigin LastScrollOrigin() const final { return mLastScrollOrigin; }
-  EnumSet<AnimationState> ScrollAnimationState() const final;
-  MainThreadScrollGeneration CurrentScrollGeneration() const final {
-    return mScrollGeneration;
-  }
-  APZScrollGeneration ScrollGenerationOnApz() const final {
-    return mScrollGenerationOnApz;
-  }
-  nsPoint LastScrollDestination() final { return mDestination; }
-  nsTArray<ScrollPositionUpdate> GetScrollUpdates() const final;
-  bool HasScrollUpdates() const final { return !mScrollUpdates.IsEmpty(); }
-  void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
-                               const APZScrollGeneration& aGenerationOnApz,
-                               APZScrollAnimationType aAPZScrollAnimationType,
-                               InScrollingGesture aInScrollingGesture) final;
-  bool WantAsyncScroll() const final;
-  Maybe<layers::ScrollMetadata> ComputeScrollMetadata(
-      layers::WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
-      const nsPoint& aOffsetToReferenceFrame) const final;
-  void MarkScrollbarsDirtyForReflow() const final;
-  void InvalidateScrollbars() const final;
-
-  /**
-   * @note This method might destroy the frame, pres shell and other objects.
-   * Update scrollbar curpos attributes to reflect current scroll position
-   */
-  void UpdateScrollbarPosition() final;
-  bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
-                             nsRect* aVisibleRect, nsRect* aDirtyRect,
-                             bool aSetBase) final {
-    return DecideScrollableLayer(aBuilder, aVisibleRect, aDirtyRect, aSetBase,
-                                 nullptr);
-  }
-  void NotifyApzTransaction() final;
-  void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort) final;
-  bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
-      nsRect* aDisplayPort) final;
-  void TriggerDisplayPortExpiration() final;
 
   // nsIStatefulFrame
   UniquePtr<PresState> SaveState() final;
@@ -369,59 +878,17 @@ class ScrollContainerFrame : public nsContainerFrame,
   nsScrollbarFrame* GetScrollbarBox(bool aVertical) final {
     return aVertical ? mVScrollbarBox : mHScrollbarBox;
   }
-
   void ScrollbarActivityStarted() const final;
   void ScrollbarActivityStopped() const final;
-
   bool IsScrollbarOnRight() const final;
-
   bool ShouldSuppressScrollbarRepaints() const final {
     return mSuppressScrollbarRepaints;
   }
-  void SetTransformingByAPZ(bool aTransforming) final;
-  bool IsTransformingByAPZ() const final { return mTransformingByAPZ; }
-  void SetScrollableByAPZ(bool aScrollable) final;
-  void SetZoomableByAPZ(bool aZoomable) final;
-  void SetHasOutOfFlowContentInsideFilter() final;
-  ScrollSnapInfo GetScrollSnapInfo() final;
-
-  void TryResnap() final;
-  void PostPendingResnapIfNeeded(const nsIFrame* aFrame) final;
-  void PostPendingResnap() final;
-  PhysicalScrollSnapAlign GetScrollSnapAlignFor(
-      const nsIFrame* aFrame) const final;
-
-  bool DragScroll(WidgetEvent* aEvent) final;
-
-  void AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
-                                   layers::ScrollDirection aDirection) final;
-
-  void AsyncScrollbarDragRejected() final;
-
-  bool IsRootScrollFrameOfDocument() const final { return mIsRoot; }
-
-  Maybe<uint32_t> IsFirstScrollableFrameSequenceNumber() const final {
-    return mIsFirstScrollableFrameSequenceNumber;
-  }
-
-  void SetIsFirstScrollableFrameSequenceNumber(Maybe<uint32_t> aValue) final {
-    mIsFirstScrollableFrameSequenceNumber = aValue;
-  }
-
-  const ScrollAnchorContainer* Anchor() const final { return &mAnchor; }
-  ScrollAnchorContainer* Anchor() final { return &mAnchor; }
 
   // Return the scrolled frame.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) final {
     aResult.AppendElement(OwnedAnonBox(GetScrolledFrame()));
   }
-
-  bool SmoothScrollVisual(
-      const nsPoint& aVisualViewportOffset,
-      layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType) final;
-
-  bool IsSmoothScroll(
-      dom::ScrollBehavior aBehavior = dom::ScrollBehavior::Auto) const final;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
@@ -482,13 +949,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   bool NeedsResnap();
 
   void SetLastSnapTargetIds(UniquePtr<ScrollSnapTargetIds> aId);
-  void AddScrollPositionListener(nsIScrollPositionListener* aListener) final {
-    mListeners.AppendElement(aListener);
-  }
-  void RemoveScrollPositionListener(
-      nsIScrollPositionListener* aListener) final {
-    mListeners.RemoveElement(aListener);
-  }
 
   static void SetScrollbarVisibility(nsIFrame* aScrollbar, bool aVisible);
 
