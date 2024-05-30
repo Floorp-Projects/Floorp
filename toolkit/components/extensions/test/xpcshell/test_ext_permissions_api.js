@@ -23,6 +23,11 @@ AddonTestUtils.createAppInfo(
 let OptionalPermissions;
 
 add_task(async function setup() {
+  // FOG needs a profile and to be initialized.
+  do_get_profile();
+  Services.fog.initializeFOG();
+  Services.fog.testResetFOG();
+
   // Bug 1646182: Force ExtensionPermissions to run in rkv mode, the legacy
   // storage mode will run in xpcshell-legacy-ep.toml
   await ExtensionPermissions._uninit();
@@ -460,6 +465,64 @@ add_task(
     details = await extension.awaitMessage("removed");
     Assert.deepEqual(permObj, details, "got removed event");
 
+    await extension.unload();
+  }
+);
+
+add_task(
+  {
+    pref_set: [
+      ["extensions.background.idle.timeout", 100],
+      ["extensions.webextOptionalPermissionPrompts", true],
+    ],
+  },
+  async function test_permissions_request_idle_suspend() {
+    info("Test that permissions.request() keeps bg page alive.");
+
+    let pr = Glean.extensionsCounters.eventPageIdleResult.permissions_request;
+    let before = pr.testGetValue() ?? 0;
+    info(`Glean value permissions_request before: ${before}`);
+
+    async function background() {
+      browser.test.onMessage.addListener(async () => {
+        browser.test.log("Calling permissions.request().");
+        await browser.permissions.request({ permissions: ["browserSettings"] });
+        browser.test.log("permissions.request() resolved.");
+        browser.test.sendMessage("done");
+      });
+    }
+
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        manifest_version: 3,
+        optional_permissions: ["browserSettings"],
+      },
+      background,
+    });
+    await extension.startup();
+
+    function obs(subject, _topic) {
+      info("Waiting 200ms, normally the bg page would idle out.");
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      setTimeout(() => subject.wrappedJSObject.resolve(true), 200);
+    }
+
+    info("Setup permissions prompt observer.");
+    Services.obs.addObserver(obs, "webextension-optional-permission-prompt");
+
+    await withHandlingUserInput(extension, async () => {
+      extension.sendMessage("request");
+      await extension.awaitMessage("done");
+    });
+    info("permissions.request() resolved successfully, bg page not suspended.");
+
+    let count = pr.testGetValue() - before;
+    // Because this "counter" measures time in increments of
+    // background.idle.timeout, we know it should take at least 200ms,
+    // but we need to leave slack of up to 500ms for slow test runs.
+    ok(count >= 2 && count <= 5, `permissions_request counter: ${count}.`);
+
+    Services.obs.removeObserver(obs, "webextension-optional-permission-prompt");
     await extension.unload();
   }
 );
