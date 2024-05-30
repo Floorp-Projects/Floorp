@@ -1696,8 +1696,12 @@ class SelectTranslationsTestUtils {
    * state when the language lists fail to initialize upon opening the panel.
    */
   static async assertPanelViewInitFailure() {
-    const { cancelButton, settingsButton, tryAgainButton } =
-      SelectTranslationsPanel.elements;
+    const {
+      cancelButton,
+      initFailureMessageBar,
+      settingsButton,
+      tryAgainButton,
+    } = SelectTranslationsPanel.elements;
     await SelectTranslationsTestUtils.waitForPanelState("init-failure");
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       header: true,
@@ -1715,6 +1719,8 @@ class SelectTranslationsTestUtils {
         : [cancelButton, tryAgainButton]),
     ]);
     SharedTranslationsTestUtils._assertHasFocus(tryAgainButton);
+    const ariaDescribedBy = tryAgainButton.getAttribute("aria-describedby");
+    ok(ariaDescribedBy.includes(initFailureMessageBar.id));
   }
 
   /**
@@ -1763,6 +1769,8 @@ class SelectTranslationsTestUtils {
         : [cancelButton, tryAgainButton]),
     ]);
     SharedTranslationsTestUtils._assertHasFocus(tryAgainButton);
+    const ariaDescribedBy = tryAgainButton.getAttribute("aria-describedby");
+    ok(ariaDescribedBy.includes(translationFailureMessageBar.id));
   }
 
   static #assertPanelTextAreaDirection(langTag = null) {
