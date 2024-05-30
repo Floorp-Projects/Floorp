@@ -11,7 +11,7 @@ $tags:
   - 'Core :: Widget: Win32'
 
 file_dialog:
-  fallback:
+  fallback_v2:
     type: event
     description: >
       Records the result of an attempt to open and use the out-of-process file
@@ -24,11 +24,13 @@ file_dialog:
       - rkraesig@mozilla.com
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1872397
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884221
     # this event may alternatively be manually expired once bug 1677170 is
     # closed
     expires: 135
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1872397#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884221#c2
     extra_keys:
       succeeded:
         type: boolean
@@ -39,8 +41,13 @@ file_dialog:
         type: quantity
         description: >
           The time between the out-of-process file dialog's instantiation
-          attempt and its failure, in milliseconds.
-      hresult_remote:
+          attempt and its conclusion (successful or otherwise), in milliseconds.
+      where_remote:
+        type: string
+        description: >
+          The place (in the source code) where the out-of-process file dialog
+          failed. One of a finite set of strings. Only present when `!succeeded`.
+      why_remote:
         type: string
         description: >
           The failure code produced by the out-of-process file dialog, formatted
@@ -51,8 +58,19 @@ file_dialog:
           The time between the in-process file dialog's instantiation attempt
           and its conclusion (successfully or otherwise), in milliseconds. Only
           present when `!succeeded`.
-      hresult_local:
+      where_local:
         type: string
         description: >
-          The return code produced by the in-process file dialog, formatted as
-          eight hexdigits. Only present when `!succeeded`.
+          The place (in the source code) where the in-process file dialog
+          failed. One of a finite set of strings.
+
+          Only present when the in-process file dialog fails. (`!succeeded` is
+          necessary but not sufficient.)
+      why_local:
+        type: string
+        description: >
+          The failure code produced by the in-process file dialog, formatted as
+          eight hexdigits.
+
+          Only present when the in-process file dialog fails. (`!succeeded` is
+          necessary but not sufficient.)
