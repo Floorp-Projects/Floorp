@@ -807,8 +807,7 @@ nsresult ScriptLoader::PrepareHttpRequestAndInitiatorType(
     nsAutoString hintCharset;
     if (!aRequest->GetScriptLoadContext()->IsPreload() &&
         aRequest->GetScriptLoadContext()->GetScriptElement()) {
-      aRequest->GetScriptLoadContext()->GetScriptElement()->GetScriptCharset(
-          hintCharset);
+      aRequest->GetScriptLoadContext()->GetHintCharset(hintCharset);
     } else if (aCharsetForPreload.isSome()) {
       hintCharset = aCharsetForPreload.ref();
     }

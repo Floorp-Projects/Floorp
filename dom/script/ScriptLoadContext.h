@@ -185,6 +185,8 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   void GetInlineScriptText(nsAString& aText) const;
 
+  void GetHintCharset(nsAString& aCharset) const;
+
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!GetScriptElement());
