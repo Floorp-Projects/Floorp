@@ -1207,7 +1207,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
       // since empty strings are meaningful there.
       Result<InsertTextResult, nsresult> insertTextResult =
           InsertTextWithTransaction(*document, aInsertionString,
-                                    compositionStartPoint);
+                                    compositionStartPoint,
+                                    InsertTextTo::ExistingTextNodeIfAvailable);
       if (MOZ_UNLIKELY(insertTextResult.isErr())) {
         NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
         return insertTextResult.propagateErr();
@@ -1234,7 +1235,7 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
         WhiteSpaceVisibilityKeeper::ReplaceText(
             *this, aInsertionString,
             EditorDOMRange(compositionStartPoint, compositionEndPoint),
-            *editingHost);
+            InsertTextTo::ExistingTextNodeIfAvailable, *editingHost);
     if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
       NS_WARNING("WhiteSpaceVisibilityKeeper::ReplaceText() failed");
       return replaceTextResult.propagateErr();
@@ -1346,7 +1347,9 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
                                "by mutation observer");
         } else {
           Result<InsertTextResult, nsresult> insertTextResult =
-              InsertTextWithTransaction(*document, subStr, currentPoint);
+              InsertTextWithTransaction(
+                  *document, subStr, currentPoint,
+                  InsertTextTo::ExistingTextNodeIfAvailable);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
             return insertTextResult.propagateErr();
@@ -1390,7 +1393,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
         if (subStr.Equals(tabStr)) {
           Result<InsertTextResult, nsresult> insertTextResult =
               WhiteSpaceVisibilityKeeper::InsertText(
-                  *this, spacesStr, currentPoint, *editingHost);
+                  *this, spacesStr, currentPoint,
+                  InsertTextTo::ExistingTextNodeIfAvailable, *editingHost);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
             return insertTextResult.propagateErr();
@@ -1456,7 +1460,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
         } else {
           Result<InsertTextResult, nsresult> insertTextResult =
               WhiteSpaceVisibilityKeeper::InsertText(
-                  *this, subStr, currentPoint, *editingHost);
+                  *this, subStr, currentPoint,
+                  InsertTextTo::ExistingTextNodeIfAvailable, *editingHost);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
             return insertTextResult.propagateErr();
@@ -2533,7 +2538,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::HandleInsertLinefeed(
     AutoTrackDOMPoint trackingInsertingPosition(RangeUpdaterRef(),
                                                 &pointToInsert);
     Result<InsertTextResult, nsresult> insertTextResult =
-        InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert);
+        InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert,
+                                  InsertTextTo::ExistingTextNodeIfAvailable);
     if (MOZ_UNLIKELY(insertTextResult.isErr())) {
       NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
       return insertTextResult.propagateErr();

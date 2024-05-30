@@ -802,7 +802,8 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<InsertTextResult, nsresult>
   InsertTextWithTransaction(Document& aDocument,
                             const nsAString& aStringToInsert,
-                            const EditorDOMPoint& aPointToInsert) final;
+                            const EditorDOMPoint& aPointToInsert,
+                            InsertTextTo aInsertTextTo) final;
 
   /**
    * CopyLastEditableChildStyles() clones inline container elements into

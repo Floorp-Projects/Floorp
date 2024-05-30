@@ -1682,11 +1682,20 @@ class EditorBase : public nsIEditor,
    * @param aStringToInsert The string to insert.
    * @param aPointToInsert  The point to insert aStringToInsert.
    *                        Must be valid DOM point.
+   * @param aInsertTextTo   Whether forcibly creates a new `Text` node in
+   *                        specific condition or use existing `Text` if
+   *                        available.
    */
+  enum class InsertTextTo {
+    ExistingTextNodeIfAvailable,
+    ExistingTextNodeIfAvailableAndNotStart,
+    AlwaysCreateNewTextNode
+  };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual Result<InsertTextResult, nsresult>
   InsertTextWithTransaction(Document& aDocument,
                             const nsAString& aStringToInsert,
-                            const EditorDOMPoint& aPointToInsert);
+                            const EditorDOMPoint& aPointToInsert,
+                            InsertTextTo aInsertTextTo);
 
   /**
    * Insert aStringToInsert to aPointToInsert.

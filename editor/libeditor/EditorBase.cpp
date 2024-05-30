@@ -3020,7 +3020,10 @@ nsresult EditorBase::ScrollSelectionFocusIntoView() const {
 
 Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
-    const EditorDOMPoint& aPointToInsert) {
+    const EditorDOMPoint& aPointToInsert, InsertTextTo aInsertTextTo) {
+  MOZ_ASSERT_IF(IsTextEditor(),
+                aInsertTextTo == InsertTextTo::ExistingTextNodeIfAvailable);
+
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return Err(NS_ERROR_INVALID_ARG);
   }
@@ -3038,8 +3041,32 @@ Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
     if (IsTextEditor()) {
       return AsTextEditor()->FindBetterInsertionPoint(aPointToInsert);
     }
-    return aPointToInsert
-        .GetPointInTextNodeIfPointingAroundTextNode<EditorDOMPoint>();
+    const EditorDOMPoint pointToInsert =
+        aPointToInsert
+            .GetPointInTextNodeIfPointingAroundTextNode<EditorDOMPoint>();
+    if (aInsertTextTo == InsertTextTo::AlwaysCreateNewTextNode) {
+      NS_WARNING_ASSERTION(!pointToInsert.IsInTextNode() ||
+                               pointToInsert.IsStartOfContainer() ||
+                               pointToInsert.IsEndOfContainer(),
+                           "aPointToInsert is \"AlwaysCreateNewTextNode\", but "
+                           "specified point middle of a `Text`");
+      if (!pointToInsert.IsInTextNode()) {
+        return pointToInsert;
+      }
+      return pointToInsert.IsStartOfContainer()
+                 ? EditorDOMPoint(pointToInsert.ContainerAs<Text>())
+                 : (pointToInsert.IsEndOfContainer()
+                        ? EditorDOMPoint::After(
+                              *pointToInsert.ContainerAs<Text>())
+                        : pointToInsert);
+    }
+    if (aInsertTextTo == InsertTextTo::ExistingTextNodeIfAvailableAndNotStart) {
+      return !(pointToInsert.IsInTextNode() &&
+               pointToInsert.IsStartOfContainer())
+                 ? pointToInsert
+                 : EditorDOMPoint(pointToInsert.ContainerAs<Text>());
+    }
+    return pointToInsert;
   }();
 
   if (ShouldHandleIMEComposition()) {

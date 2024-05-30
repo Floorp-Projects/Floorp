@@ -1028,7 +1028,8 @@ WhiteSpaceVisibilityKeeper::InsertBRElement(
 // static
 Result<InsertTextResult, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
     HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
-    const EditorDOMRange& aRangeToBeReplaced, const Element& aEditingHost) {
+    const EditorDOMRange& aRangeToBeReplaced, InsertTextTo aInsertTextTo,
+    const Element& aEditingHost) {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in HandleInsertText() in
   // HTMLEditSubActionHandler.cpp
@@ -1405,7 +1406,8 @@ Result<InsertTextResult, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
                                          &pointToPutCaret);
   OwningNonNull<Document> document = *aHTMLEditor.GetDocument();
   Result<InsertTextResult, nsresult> insertTextResult =
-      aHTMLEditor.InsertTextWithTransaction(document, theString, pointToInsert);
+      aHTMLEditor.InsertTextWithTransaction(document, theString, pointToInsert,
+                                            aInsertTextTo);
   if (MOZ_UNLIKELY(insertTextResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
     return insertTextResult.propagateErr();

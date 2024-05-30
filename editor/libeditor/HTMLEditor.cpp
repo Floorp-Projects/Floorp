@@ -4045,7 +4045,8 @@ Result<InsertTextResult, nsresult> HTMLEditor::ReplaceTextWithTransaction(
     }
     Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, aStringToInsert,
-                                  EditorDOMPoint(&aTextNode, aOffset));
+                                  EditorDOMPoint(&aTextNode, aOffset),
+                                  InsertTextTo::ExistingTextNodeIfAvailable);
     NS_WARNING_ASSERTION(insertTextResult.isOk(),
                          "HTMLEditor::InsertTextWithTransaction() failed");
     return insertTextResult;
@@ -4127,7 +4128,7 @@ Result<InsertTextResult, nsresult> HTMLEditor::ReplaceTextWithTransaction(
 
 Result<InsertTextResult, nsresult> HTMLEditor::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
-    const EditorDOMPoint& aPointToInsert) {
+    const EditorDOMPoint& aPointToInsert, InsertTextTo aInsertTextTo) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return Err(NS_ERROR_INVALID_ARG);
   }
@@ -4139,7 +4140,7 @@ Result<InsertTextResult, nsresult> HTMLEditor::InsertTextWithTransaction(
   }
 
   return EditorBase::InsertTextWithTransaction(aDocument, aStringToInsert,
-                                               aPointToInsert);
+                                               aPointToInsert, aInsertTextTo);
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(

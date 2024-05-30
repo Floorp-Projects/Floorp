@@ -1474,6 +1474,8 @@ class WhiteSpaceVisibilityKeeper final {
   using VisibleWhiteSpacesData = WSRunScanner::VisibleWhiteSpacesData;
 
  public:
+  using InsertTextTo = EditorBase::InsertTextTo;
+
   WhiteSpaceVisibilityKeeper() = delete;
   explicit WhiteSpaceVisibilityKeeper(
       const WhiteSpaceVisibilityKeeper& aOther) = delete;
@@ -1654,15 +1656,18 @@ class WhiteSpaceVisibilityKeeper final {
    *
    * @param aStringToInsert     The string to insert.
    * @param aRangeToBeReplaced  The range to be replaced.
+   * @param aInsertTextTo       Whether forcibly creates a new `Text` node in
+   *                            specific condition or use existing `Text` if
+   *                            available.
    */
   template <typename EditorDOMPointType>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<InsertTextResult, nsresult>
   InsertText(HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
              const EditorDOMPointType& aPointToInsert,
-             const Element& aEditingHost) {
+             InsertTextTo aInsertTextTo, const Element& aEditingHost) {
     return WhiteSpaceVisibilityKeeper::ReplaceText(
         aHTMLEditor, aStringToInsert, EditorDOMRange(aPointToInsert),
-        aEditingHost);
+        aInsertTextTo, aEditingHost);
   }
 
   /**
@@ -1672,11 +1677,14 @@ class WhiteSpaceVisibilityKeeper final {
    *
    * @param aStringToInsert     The string to insert.
    * @param aRangeToBeReplaced  The range to be replaced.
+   * @param aInsertTextTo       Whether forcibly creates a new `Text` node in
+   *                            specific condition or use existing `Text` if
+   *                            available.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<InsertTextResult, nsresult>
   ReplaceText(HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
               const EditorDOMRange& aRangeToBeReplaced,
-              const Element& aEditingHost);
+              InsertTextTo aInsertTextTo, const Element& aEditingHost);
 
   /**
    * Delete previous white-space of aPoint.  This automatically keeps visibility
