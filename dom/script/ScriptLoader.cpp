@@ -3564,16 +3564,12 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
 }
 
 void ScriptLoader::UnblockParser(ScriptLoadRequest* aParserBlockingRequest) {
-  aParserBlockingRequest->GetScriptLoadContext()
-      ->GetScriptElement()
-      ->UnblockParser();
+  aParserBlockingRequest->GetScriptLoadContext()->UnblockParser();
 }
 
 void ScriptLoader::ContinueParserAsync(
     ScriptLoadRequest* aParserBlockingRequest) {
-  aParserBlockingRequest->GetScriptLoadContext()
-      ->GetScriptElement()
-      ->ContinueParserAsync();
+  aParserBlockingRequest->GetScriptLoadContext()->ContinueParserAsync();
 }
 
 uint32_t ScriptLoader::NumberOfProcessors() {

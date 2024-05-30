@@ -196,6 +196,9 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   void BeginEvaluatingTopLevel() const;
   void EndEvaluatingTopLevel() const;
 
+  void UnblockParser() const;
+  void ContinueParserAsync() const;
+
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!HasScriptElement());
