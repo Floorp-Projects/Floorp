@@ -28,6 +28,7 @@ class AppleVTEncoder final : public MediaDataEncoder {
         mTaskQueue(aTaskQueue),
         mHardwareNotAllowed(aConfig.mHardwarePreference ==
                             HardwarePreference::RequireSoftware),
+        mFramesCompleted(false),
         mError(NS_OK),
         mSession(nullptr) {
     MOZ_ASSERT(mConfig.mSize.width > 0 && mConfig.mSize.height > 0);
@@ -73,6 +74,7 @@ class AppleVTEncoder final : public MediaDataEncoder {
   const bool mHardwareNotAllowed;
   // Access only in mTaskQueue.
   EncodedData mEncodedData;
+  bool mFramesCompleted;
   RefPtr<MediaByteBuffer> mAvcc;  // Stores latest avcC data.
   MediaResult mError;
 
