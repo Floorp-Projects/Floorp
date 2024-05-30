@@ -2420,7 +2420,6 @@ STATIC_ATOMS = [
     Atom("layout_css_always_underline_links", "layout.css.always_underline_links"),
     Atom("layout_css_cached_scrollbar_styles_enabled", "layout.css.cached-scrollbar-styles.enabled"),
     Atom("layout_css_h1_in_section_ua_styles_enabled", "layout.css.h1-in-section-ua-styles.enabled"),
-    Atom("dom_forms_number_hide_spin_buttons_when_no_hover_or_focus", "dom.forms.number.hide_spin_buttons_when_no_hover_or_focus"),
     # Contextual Identity / Containers
     Atom("usercontextid", "usercontextid"),
     Atom("geckoViewSessionContextId", "geckoViewSessionContextId"),

@@ -2703,13 +2703,6 @@
   value: false
   mirror: always
 
-# Whether the spin buttons will always appear, or if they
-# will only appear when the input is focused or hovered.
-- name: dom.forms.number.hide_spin_buttons_when_no_hover_or_focus
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # Whether the Gamepad API is enabled
 - name: dom.gamepad.enabled
   type: bool
