@@ -9,6 +9,7 @@ import android.hardware.camera2.CameraManager
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume
@@ -70,6 +71,7 @@ class SearchTest : TestSetup() {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
+            isLocationPermissionEnabled = SitePermissionsRules.Action.BLOCKED,
         ),
     ) { it.activity }
 
