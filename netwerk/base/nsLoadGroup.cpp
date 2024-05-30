@@ -103,7 +103,7 @@ nsLoadGroup::~nsLoadGroup() {
 
   if (mRequestContext && !mExternalRequestContext) {
     mRequestContextService->RemoveRequestContext(mRequestContext->GetID());
-    if (IsNeckoChild() && gNeckoChild) {
+    if (IsNeckoChild() && gNeckoChild && gNeckoChild->CanSend()) {
       gNeckoChild->SendRemoveRequestContext(mRequestContext->GetID());
     }
   }
