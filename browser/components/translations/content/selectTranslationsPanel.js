@@ -1895,6 +1895,10 @@ var SelectTranslationsPanel = new (class {
       ],
       makeVisible: [initFailureContent, cancelButton, tryAgainButton],
     });
+    tryAgainButton.setAttribute(
+      "aria-describedby",
+      "select-translations-panel-init-failure-message-bar"
+    );
     tryAgainButton.focus({ focusVisible: true });
   }
 
@@ -1941,6 +1945,10 @@ var SelectTranslationsPanel = new (class {
         tryAgainButton,
       ],
     });
+    tryAgainButton.setAttribute(
+      "aria-describedby",
+      "select-translations-panel-translation-failure-message-bar"
+    );
     tryAgainButton.focus({ focusVisible: true });
   }
 
