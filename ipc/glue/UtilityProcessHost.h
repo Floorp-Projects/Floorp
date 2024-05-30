@@ -57,10 +57,11 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   //        Extra options to pass to the subprocess.
   bool Launch(StringVector aExtraOpts);
 
+  using LaunchPromiseType = MozPromise<Ok, LaunchError, false>;
   // Return a promise that will be resolved once the process has completed its
   // launch. The promise will be immediately resolved if the launch has already
   // succeeded.
-  RefPtr<GenericNonExclusivePromise> LaunchPromise();
+  RefPtr<LaunchPromiseType> LaunchPromise();
 
   // Inform the process that it should clean up its resources and shut
   // down. This initiates an asynchronous shutdown sequence. After this
@@ -130,8 +131,8 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   bool mShutdownRequested = false;
 
-  void RejectPromise();
   void ResolvePromise();
+  void RejectPromise(LaunchError);
 
 #if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX) && !defined(MOZ_ASAN)
   void EnsureWidevineL1PathForSandbox(StringVector& aExtraOpts);
@@ -149,7 +150,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   // only be read or written on the main thread.
   const RefPtr<media::Refcountable<bool>> mLiveToken;
 
-  RefPtr<GenericNonExclusivePromise::Private> mLaunchPromise{};
+  RefPtr<LaunchPromiseType::Private> mLaunchPromise{};
   bool mLaunchPromiseSettled = false;
   bool mLaunchPromiseLaunched = false;
   // Will be set to true if the Utility process as successfully started.

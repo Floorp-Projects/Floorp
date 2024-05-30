@@ -1327,7 +1327,9 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
                              StartRemoteDecodingUtilityPromise::
                                  ResolveOrRejectValue&& aValue) mutable {
                        if (aValue.IsReject()) {
-                         resolver(Type(aValue.RejectValue(),
+                         // the RejectValue() has something that might be an
+                         // nsresult, but our sole caller discards it anyway
+                         resolver(Type(NS_ERROR_FAILURE,
                                        Endpoint<PRemoteDecoderManagerChild>()));
                          return;
                        }

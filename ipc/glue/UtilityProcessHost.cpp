@@ -65,8 +65,7 @@ UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
     : GeckoChildProcessHost(GeckoProcessType_Utility),
       mListener(std::move(aListener)),
       mLiveToken(new media::Refcountable<bool>(true)),
-      mLaunchPromise(
-          MakeRefPtr<GenericNonExclusivePromise::Private>(__func__)) {
+      mLaunchPromise(MakeRefPtr<LaunchPromiseType::Private>(__func__)) {
   MOZ_COUNT_CTOR(UtilityProcessHost);
   LOGD("[%p] UtilityProcessHost::UtilityProcessHost sandboxingKind=%" PRIu64,
        this, aSandbox);
@@ -127,7 +126,8 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
   return true;
 }
 
-RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
+RefPtr<UtilityProcessHost::LaunchPromiseType>
+UtilityProcessHost::LaunchPromise() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mLaunchPromiseLaunched) {
@@ -148,7 +148,7 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
         }
         mLaunchCompleted = true;
         if (aResult.IsReject()) {
-          RejectPromise();
+          RejectPromise(aResult.RejectValue());
         }
         // If aResult.IsResolve() then we have succeeded in launching the
         // Utility process. The promise will be resolved once the channel has
@@ -180,12 +180,11 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Waiting);
   MOZ_ASSERT(!mUtilityProcessParent);
 
-  mLaunchPhase = LaunchPhase::Complete;
+  // This function is patterned after other `FooProcessHost` functions, but we
+  // never actually call it with `false`.
+  MOZ_ASSERT(aSucceeded);
 
-  if (!aSucceeded) {
-    RejectPromise();
-    return;
-  }
+  mLaunchPhase = LaunchPhase::Complete;
 
   mUtilityProcessParent = MakeRefPtr<UtilityProcessParent>(this);
   DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mUtilityProcessParent.get());
@@ -245,7 +244,7 @@ void UtilityProcessHost::Shutdown() {
   MOZ_ASSERT(!mShutdownRequested);
   LOGD("[%p] UtilityProcessHost::Shutdown", this);
 
-  RejectPromise();
+  RejectPromise(LaunchError("aborted by UtilityProcessHost::Shutdown"));
 
   if (mUtilityProcessParent) {
     LOGD("[%p] UtilityProcessHost::Shutdown not destroying utility process.",
@@ -282,7 +281,7 @@ void UtilityProcessHost::OnChannelClosed() {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost::OnChannelClosed", this);
 
-  RejectPromise();
+  RejectPromise(LaunchError("UtilityProcessHost::OnChannelClosed"));
 
   if (!mShutdownRequested && mListener) {
     // This is an unclean shutdown. Notify our listener that we're going away.
@@ -311,7 +310,7 @@ void UtilityProcessHost::DestroyProcess() {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost::DestroyProcess", this);
 
-  RejectPromise();
+  RejectPromise(LaunchError("UtilityProcessHost::DestroyProcess"));
 
   // Any pending tasks will be cancelled from now on.
   *mLiveToken = false;
@@ -325,20 +324,20 @@ void UtilityProcessHost::ResolvePromise() {
   LOGD("[%p] UtilityProcessHost connected - resolving launch promise", this);
 
   if (!mLaunchPromiseSettled) {
-    mLaunchPromise->Resolve(true, __func__);
+    mLaunchPromise->Resolve(Ok{}, __func__);
     mLaunchPromiseSettled = true;
   }
 
   mLaunchCompleted = true;
 }
 
-void UtilityProcessHost::RejectPromise() {
+void UtilityProcessHost::RejectPromise(LaunchError err) {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost connection failed - rejecting launch promise",
        this);
 
   if (!mLaunchPromiseSettled) {
-    mLaunchPromise->Reject(NS_ERROR_FAILURE, __func__);
+    mLaunchPromise->Reject(std::move(err), __func__);
     mLaunchPromiseSettled = true;
   }
 
