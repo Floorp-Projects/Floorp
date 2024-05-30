@@ -126,6 +126,11 @@ $letter-fallback-color: $white;
     }
   }
 
+  // Contrast fix for users who have wallpapers set
+  &:not(:hover, :active, .active) {
+    @include wallpaper-contrast-fix;
+  }
+
   // Necessary for when navigating by a keyboard, having the context
   // menu open should display the "…" button. This style is a clone
   // of the `:active` state for `.context-menu-button`
@@ -151,6 +156,9 @@ $letter-fallback-color: $white;
     position: absolute;
     top: -20px;
     transition: opacity 200ms;
+
+    // Contrast fix for users who have wallpapers set
+    @include wallpaper-contrast-fix;
 
     &:hover {
       background-color: var(--newtab-button-hover-background);
@@ -180,7 +188,7 @@ $letter-fallback-color: $white;
 
     // For letter fallback
     align-items: center;
-    color: var(--newtab-text-secondary-color);
+    color: var(--newtab-contextual-text-secondary-color);
     display: flex;
     font-size: 32px;
     font-weight: 200;
@@ -286,7 +294,7 @@ $letter-fallback-color: $white;
   }
 
   .title {
-    color: var(--newtab-text-primary-color);
+    color: var(--newtab-contextual-text-primary-color);
     padding-top: 8px;
     font: caption;
     text-align: center;
@@ -305,7 +313,7 @@ $letter-fallback-color: $white;
     }
 
     .sponsored-label {
-      color: var(--newtab-text-secondary-color);
+      color: var(--newtab-contextual-text-secondary-color);
       font-size: 0.9em;
     }
 

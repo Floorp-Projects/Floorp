@@ -24,14 +24,24 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
 
 // Default theme
 :root {
+  color-scheme: light;
   // General styles
   --newtab-background-color: #{$in-content-page-background};
   --newtab-background-color-secondary: #{$newtab-background-secondary};
   --newtab-text-primary-color: #{$in-content-page-color};
-  --newtab-primary-action-background: #{$primary-blue};
+  // We need to be careful about the contrast of text over newtab wallpapers, which might not match the theme.
+  // --newtab-text-primary-color is set in contextTheme.js and reacts to possible installed addon themes.
+  // If we use that variable here, with light-dark, we can retain that addon theme text color,
+  // and also have a fallback in case the wallpaper contrast doesn't match.
+  --newtab-contextual-text-primary-color: light-dark(var(--newtab-text-primary-color), #{$in-content-page-color-dark});
+  --newtab-primary-action-background: light-dark(#{$primary-blue}, #{$primary-blue-dark});
   // A button colour closer to the Pocket brand for usage in the Pocket section.
   --newtab-primary-action-background-pocket: #{$primary-green};
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
+  --newtab-contextual-text-secondary-color: color-mix(in srgb, var(--newtab-contextual-text-primary-color) 70%, transparent);
+
+  // A background color for weather widget to help with wallpaper contrast.
+  --newtab-weather-background-color: light-dark(rgba(255, 255, 255, 70%), rgba(35, 34, 43, 70%));
 
   // --newtab-element-*-color is used when an element needs to be set off from
   // the primary background color.
@@ -48,10 +58,10 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
 
   // --newtab-button-static*-color is used on pocket cards and require a
   // static color unit due to transparency issues with `color-mix`
-  --newtab-button-static-background: #F0F0F4;
+  --newtab-button-static-background: light-dark(#F0F0F4, #2B2A33);
   --newtab-button-static-focus-background: var(--newtab-button-static-background);
-  --newtab-button-static-hover-background: #E0E0E6;
-  --newtab-button-static-active-background: #CFCFD8;
+  --newtab-button-static-hover-background: light-dark(#E0E0E6, #52525E);
+  --newtab-button-static-active-background: light-dark(#CFCFD8, #5B5B66);
 
   // --newtab-element-secondary*-color is used when an element needs to be set
   // off from the secondary background color.
@@ -67,7 +77,7 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
   --newtab-primary-action-background-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
   --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 25%, transparent);
   --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #{$black});
-  --newtab-wordmark-color: #{$newtab-wordmark-default-color};
+  --newtab-wordmark-color: light-dark(#{$newtab-wordmark-default-color}, #{$newtab-wordmark-darktheme-color});
   --newtab-status-success: #{$status-green};
   --newtab-status-error: #{$red-60};
   --newtab-inner-box-shadow-color: #{$black-10};
@@ -79,12 +89,13 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
   --newtab-button-secondary-color: inherit;
 
   &[lwt-newtab-brighttext] {
+    // We export color-scheme because some addon themes might not work with light-dark and prefers-color-scheme.
+    // If we add color-scheme here, we can still use light-dark
+    color-scheme: dark;
     // General styles
     --newtab-background-color: #{$in-content-page-background-dark};
     --newtab-background-color-secondary: #{$newtab-background-secondary-dark};
-    --newtab-text-primary-color: #{$in-content-page-color-dark};
-
-    --newtab-primary-action-background: #{$primary-blue-dark};
+    --newtab-contextual-text-primary-color: light-dark(#{$in-content-page-color}, var(--newtab-text-primary-color));
     --newtab-primary-action-background-pocket: #{$primary-blue-dark};
     --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
 
@@ -100,14 +111,7 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
 
     --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #{$white});
     --newtab-primary-element-text-color: #{$primary-text-color-dark};
-    --newtab-wordmark-color: #{$newtab-wordmark-darktheme-color};
     --newtab-status-success: #{$status-dark-green};
-
-    // --newtab-button-static*-color is used on pocket cards and require a
-    // static color unit due to transparency issues with `color-mix`
-    --newtab-button-static-background: #2B2A33;
-    --newtab-button-static-hover-background: #52525E;
-    --newtab-button-static-active-background: #5B5B66;
   }
 }
 

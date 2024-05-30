@@ -1,7 +1,7 @@
 /* stylelint-disable max-nesting-depth */
 
 .ds-navigation {
-  color: var(--newtab-text-primary-color);
+  color: var(--newtab-contextual-text-primary-color);
   font-size: 11.5px;
   font-weight: 500;
   line-height: 22px;
@@ -19,6 +19,9 @@
   &.ds-navigation-right-aligned {
     text-align: end;
   }
+
+  // Contrast fix for users who have wallpapers set
+  @include wallpaper-contrast-fix;
 
   ul {
     display: inline;

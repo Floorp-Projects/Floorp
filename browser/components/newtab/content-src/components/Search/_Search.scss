@@ -39,6 +39,9 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       height: $logo-size;
       margin-inline-start: 16px;
       width: $wordmark-size;
+
+      // Contrast fix for users who have wallpapers set
+      @include wallpaper-contrast-fix;
     }
 
     @media (max-width: $break-point-medium - 1) {
