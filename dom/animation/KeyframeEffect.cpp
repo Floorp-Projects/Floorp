@@ -23,6 +23,7 @@
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -36,7 +37,6 @@
 #include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
@@ -1521,18 +1521,18 @@ bool KeyframeEffect::CanThrottleOverflowChangesInScrollable(
     return true;
   }
 
-  // If the nearest scrollable ancestor has overflow:hidden,
+  // If the nearest scroll container ancestor has overflow:hidden,
   // we don't care about overflow.
-  nsIScrollableFrame* scrollable =
-      nsLayoutUtils::GetNearestScrollableFrame(&aFrame);
-  if (!scrollable) {
+  ScrollContainerFrame* scrollContainerFrame =
+      nsLayoutUtils::GetNearestScrollContainerFrame(&aFrame);
+  if (!scrollContainerFrame) {
     return true;
   }
 
-  ScrollStyles ss = scrollable->GetScrollStyles();
+  ScrollStyles ss = scrollContainerFrame->GetScrollStyles();
   if (ss.mVertical == StyleOverflow::Hidden &&
       ss.mHorizontal == StyleOverflow::Hidden &&
-      scrollable->GetLogicalScrollPosition() == nsPoint(0, 0)) {
+      scrollContainerFrame->GetLogicalScrollPosition() == nsPoint(0, 0)) {
     return true;
   }
 

@@ -8,10 +8,10 @@
 
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/TouchEvents.h"
 #include "nsContainerFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
 namespace mozilla::layers {
@@ -90,9 +90,8 @@ TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehaviorForFrame(
     return behavior;
   }
 
-  nsIScrollableFrame* nearestScrollableParent =
-      nsLayoutUtils::GetNearestScrollableFrame(aFrame, 0);
-  nsIFrame* nearestScrollableFrame = do_QueryFrame(nearestScrollableParent);
+  nsIFrame* nearestScrollContainerFrame =
+      nsLayoutUtils::GetNearestScrollContainerFrame(aFrame, 0);
 
   // We're walking up the DOM tree until we meet the element with touch behavior
   // and accumulating touch-action restrictions of all elements in this chain.
@@ -118,7 +117,7 @@ TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehaviorForFrame(
        frame = frame->GetInFlowParent()) {
     UpdateAllowedBehavior(frame->UsedTouchAction(), considerPanning, behavior);
 
-    if (frame == nearestScrollableFrame) {
+    if (frame == nearestScrollContainerFrame) {
       // We met the scrollable element, after it we shouldn't consider
       // touch-action values for the purpose of panning but only for zooming.
       considerPanning = false;

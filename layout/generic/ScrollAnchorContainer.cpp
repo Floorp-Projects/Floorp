@@ -66,7 +66,7 @@ ScrollAnchorContainer* ScrollAnchorContainer::FindFor(nsIFrame* aFrame) {
   if (!aFrame) {
     return nullptr;
   }
-  nsIScrollableFrame* nearest = nsLayoutUtils::GetNearestScrollableFrame(
+  ScrollContainerFrame* nearest = nsLayoutUtils::GetNearestScrollContainerFrame(
       aFrame, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                   nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
   if (nearest) {

@@ -8,10 +8,10 @@
 
 #include "FrameMetrics.h"
 
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/ScrollSnapInfo.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "nsIFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsTArray.h"
@@ -731,7 +731,7 @@ void ScrollSnapUtils::PostPendingResnapIfNeededFor(nsIFrame* aFrame) {
     return;
   }
 
-  if (nsIScrollableFrame* sf = nsLayoutUtils::GetNearestScrollableFrame(
+  if (ScrollContainerFrame* sf = nsLayoutUtils::GetNearestScrollContainerFrame(
           aFrame, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                       nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN)) {
     sf->PostPendingResnapIfNeeded(aFrame);
@@ -739,7 +739,7 @@ void ScrollSnapUtils::PostPendingResnapIfNeededFor(nsIFrame* aFrame) {
 }
 
 void ScrollSnapUtils::PostPendingResnapFor(nsIFrame* aFrame) {
-  if (nsIScrollableFrame* sf = nsLayoutUtils::GetNearestScrollableFrame(
+  if (ScrollContainerFrame* sf = nsLayoutUtils::GetNearestScrollContainerFrame(
           aFrame, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                       nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN)) {
     sf->PostPendingResnap();

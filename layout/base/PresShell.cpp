@@ -9366,15 +9366,15 @@ void PresShell::EventHandler::GetCurrentItemAndPositionForElement(
     if (!istree) {
       extra = frame->GetSize().height;
       if (checkLineHeight) {
-        nsIScrollableFrame* scrollFrame =
-            nsLayoutUtils::GetNearestScrollableFrame(
+        ScrollContainerFrame* scrollContainerFrame =
+            nsLayoutUtils::GetNearestScrollContainerFrame(
                 frame, nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN |
                            nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT);
-        if (scrollFrame) {
-          nsSize scrollAmount = scrollFrame->GetLineScrollAmount();
-          nsIFrame* f = do_QueryFrame(scrollFrame);
+        if (scrollContainerFrame) {
+          nsSize scrollAmount = scrollContainerFrame->GetLineScrollAmount();
           int32_t APD = presContext->AppUnitsPerDevPixel();
-          int32_t scrollAPD = f->PresContext()->AppUnitsPerDevPixel();
+          int32_t scrollAPD =
+              scrollContainerFrame->PresContext()->AppUnitsPerDevPixel();
           scrollAmount = scrollAmount.ScaleToOtherAppUnits(scrollAPD, APD);
           if (extra > scrollAmount.height) {
             extra = scrollAmount.height;

@@ -90,11 +90,11 @@ bool GeckoMVMContext::SubjectMatchesDocument(nsISupports* aSubject) const {
 
 Maybe<CSSRect> GeckoMVMContext::CalculateScrollableRectForRSF() const {
   MOZ_ASSERT(mPresShell);
-  if (nsIScrollableFrame* rootScrollableFrame =
-          mPresShell->GetRootScrollFrameAsScrollable()) {
+  if (ScrollContainerFrame* rootScrollContainerFrame =
+          mPresShell->GetRootScrollContainerFrame()) {
     return Some(
         CSSRect::FromAppUnits(nsLayoutUtils::CalculateScrollableRectForFrame(
-            rootScrollableFrame, nullptr)));
+            rootScrollContainerFrame, nullptr)));
   }
   return Nothing();
 }
@@ -169,7 +169,7 @@ void GeckoMVMContext::PostVisualViewportResizeEventByDynamicToolbar() {
 
 void GeckoMVMContext::UpdateDisplayPortMargins() {
   MOZ_ASSERT(mPresShell);
-  if (nsIFrame* root = mPresShell->GetRootScrollContainerFrame()) {
+  if (ScrollContainerFrame* root = mPresShell->GetRootScrollContainerFrame()) {
     nsIContent* content = root->GetContent();
     bool hasDisplayPort = DisplayPortUtils::HasNonMinimalDisplayPort(content);
     bool hasResolution = mPresShell->GetResolution() != 1.0f;
@@ -187,9 +187,8 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
     MOZ_ASSERT(
         mPresShell->GetPresContext()->IsRootContentDocumentCrossProcess());
     DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, displayportBase);
-    nsIScrollableFrame* scrollable = do_QueryFrame(root);
     DisplayPortUtils::CalculateAndSetDisplayPortMargins(
-        scrollable, DisplayPortUtils::RepaintMode::Repaint);
+        root, DisplayPortUtils::RepaintMode::Repaint);
   }
 }
 
