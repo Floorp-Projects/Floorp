@@ -434,6 +434,7 @@ skip-if = [
 ["test_scopes.html"]
 
 ["test_script_loader_intercepted_js_cache.html"]
+disabled = "https://bugzilla.mozilla.org/show_bug.cgi?id=1853173"
 skip-if = ["serviceworker_e10s"]
 
 ["test_self_update_worker.html"]
