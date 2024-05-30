@@ -87,21 +87,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
 
-  bool TryLayout(ScrollReflowInput& aState, ReflowOutput* aKidMetrics,
-                 bool aAssumeHScroll, bool aAssumeVScroll, bool aForce);
-
-  // Return true if ReflowScrolledFrame is going to do something different based
-  // on the presence of a horizontal scrollbar in a horizontal writing mode or a
-  // vertical scrollbar in a vertical writing mode.
-  bool ScrolledContentDependsOnBSize(const ScrollReflowInput& aState) const;
-
-  void ReflowScrolledFrame(ScrollReflowInput& aState, bool aAssumeHScroll,
-                           bool aAssumeVScroll, ReflowOutput* aMetrics);
-  void ReflowContents(ScrollReflowInput& aState,
-                      const ReflowOutput& aDesiredSize);
-  void PlaceScrollArea(ScrollReflowInput& aState,
-                       const nsPoint& aScrollPosition);
-
   // Return the sum of inline-size of the scrollbar gutters (if any) at the
   // inline-start and inline-end edges of the scroll frame (for a potential
   // scrollbar that scrolls in the block axis).
@@ -854,6 +839,10 @@ class ScrollContainerFrame : public nsContainerFrame,
       ScrollSnapFlags aSnapFlags = ScrollSnapFlags::IntendedDirection |
                                    ScrollSnapFlags::IntendedEndPosition);
 
+  // nsIReflowCallback
+  bool ReflowFinished() final;
+  void ReflowCallbackCanceled() final;
+
   // nsIStatefulFrame
   UniquePtr<PresState> SaveState() final;
   NS_IMETHOD RestoreState(PresState* aState) final;
@@ -968,24 +957,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   bool IsPhysicalLTR() const { return GetWritingMode().IsPhysicalLTR(); }
   bool IsBidiLTR() const { return GetWritingMode().IsBidiLTR(); }
 
-  void UpdateSticky();
-
-  void UpdatePrevScrolledRect();
-
-  // adjust the scrollbar rectangle aRect to account for any visible resizer.
-  // aHasResizer specifies if there is a content resizer, however this method
-  // will also check if a widget resizer is present as well.
-  void AdjustScrollbarRectForResizer(nsIFrame* aFrame,
-                                     nsPresContext* aPresContext, nsRect& aRect,
-                                     bool aHasResizer,
-                                     layers::ScrollDirection aDirection);
-  void LayoutScrollbars(ScrollReflowInput& aState,
-                        const nsRect& aInsideBorderArea,
-                        const nsRect& aOldScrollPort);
-
-  void LayoutScrollbarPartAtRect(const ScrollReflowInput&,
-                                 ReflowInput& aKidReflowInput, const nsRect&);
-
   bool IsAlwaysActive() const;
   void MarkRecentlyScrolled();
   void MarkNotRecentlyScrolled();
@@ -1051,6 +1022,38 @@ class ScrollContainerFrame : public nsContainerFrame,
   // NS_FRAME_FIRST_REFLOW set are NOT "initial" as far as we're concerned.
   bool InInitialReflow() const;
 
+  bool TryLayout(ScrollReflowInput& aState, ReflowOutput* aKidMetrics,
+                 bool aAssumeHScroll, bool aAssumeVScroll, bool aForce);
+
+  // Return true if ReflowScrolledFrame is going to do something different based
+  // on the presence of a horizontal scrollbar in a horizontal writing mode or a
+  // vertical scrollbar in a vertical writing mode.
+  bool ScrolledContentDependsOnBSize(const ScrollReflowInput& aState) const;
+
+  void ReflowScrolledFrame(ScrollReflowInput& aState, bool aAssumeHScroll,
+                           bool aAssumeVScroll, ReflowOutput* aMetrics);
+  void ReflowContents(ScrollReflowInput& aState,
+                      const ReflowOutput& aDesiredSize);
+  void PlaceScrollArea(ScrollReflowInput& aState,
+                       const nsPoint& aScrollPosition);
+
+  void UpdateSticky();
+  void UpdatePrevScrolledRect();
+
+  // adjust the scrollbar rectangle aRect to account for any visible resizer.
+  // aHasResizer specifies if there is a content resizer, however this method
+  // will also check if a widget resizer is present as well.
+  void AdjustScrollbarRectForResizer(nsIFrame* aFrame,
+                                     nsPresContext* aPresContext, nsRect& aRect,
+                                     bool aHasResizer,
+                                     layers::ScrollDirection aDirection);
+  void LayoutScrollbars(ScrollReflowInput& aState,
+                        const nsRect& aInsideBorderArea,
+                        const nsRect& aOldScrollPort);
+
+  void LayoutScrollbarPartAtRect(const ScrollReflowInput&,
+                                 ReflowInput& aKidReflowInput, const nsRect&);
+
   /**
    * Override this to return false if computed bsize/min-bsize/max-bsize
    * should NOT be propagated to child content.
@@ -1084,10 +1087,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   void AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
                            const nsDisplayListSet& aLists, bool aCreateLayer,
                            bool aPositioned);
-
-  // nsIReflowCallback
-  bool ReflowFinished() final;
-  void ReflowCallbackCanceled() final;
 
   /**
    * @note This method might destroy the frame, pres shell and other objects.
