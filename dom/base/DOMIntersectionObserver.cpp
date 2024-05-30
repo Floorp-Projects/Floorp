@@ -353,7 +353,8 @@ static Maybe<nsRect> ComputeTheIntersection(
     // FIXME(emilio): What about other scroll frames that inherit from
     // ScrollContainerFrame but have a different type, like nsListControlFrame?
     // This looks bogus in that case, but different bug.
-    if (nsIScrollableFrame* scrollFrame = do_QueryFrame(containerFrame)) {
+    if (ScrollContainerFrame* scrollContainerFrame =
+            do_QueryFrame(containerFrame)) {
       if (containerFrame->GetParent() == aRoot && !aRoot->GetParent()) {
         // This is subtle: if we're computing the intersection against the
         // viewport (the root frame), and this is its scroll frame, we really
@@ -361,7 +362,7 @@ static Maybe<nsRect> ComputeTheIntersection(
         // root margin, which is already in aRootBounds).
         break;
       }
-      nsRect subFrameRect = scrollFrame->GetScrollPortRect();
+      nsRect subFrameRect = scrollContainerFrame->GetScrollPortRect();
 
       // 3.1 Map intersectionRect to the coordinate space of container.
       nsRect intersectionRectRelativeToContainer =
@@ -543,10 +544,11 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
   if (aRoot && aRoot->IsElement()) {
     if ((rootFrame = aRoot->AsElement()->GetPrimaryFrame())) {
       nsRect rootRectRelativeToRootFrame;
-      if (nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame)) {
+      if (ScrollContainerFrame* scrollContainerFrame =
+              do_QueryFrame(rootFrame)) {
         // rootRectRelativeToRootFrame should be the content rect of rootFrame,
         // not including the scrollbars.
-        rootRectRelativeToRootFrame = scrollFrame->GetScrollPortRect();
+        rootRectRelativeToRootFrame = scrollContainerFrame->GetScrollPortRect();
       } else {
         // rootRectRelativeToRootFrame should be the border rect of rootFrame.
         rootRectRelativeToRootFrame = rootFrame->GetRectRelativeToSelf();

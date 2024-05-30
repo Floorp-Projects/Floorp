@@ -8,10 +8,10 @@
 
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/SVGUtils.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include <limits>
 
@@ -48,7 +48,7 @@ static uint32_t GetNodeDepth(nsINode* aNode) {
 }
 
 static nsSize GetContentRectSize(const nsIFrame& aFrame) {
-  if (const nsIScrollableFrame* f = do_QueryFrame(&aFrame)) {
+  if (const ScrollContainerFrame* f = do_QueryFrame(&aFrame)) {
     // We return the scrollport rect for compat with other UAs, see bug 1733042.
     // But the scrollPort includes padding (but not border!), so remove it.
     nsRect scrollPort = f->GetScrollPortRect();

@@ -610,7 +610,7 @@ nsDOMWindowUtils::GetScrollbarSizes(Element* aElement,
 
   CSSIntMargin scrollbarSizes = RoundedToInt(
       CSSMargin::FromAppUnits(scrollContainerFrame->GetActualScrollbarSizes(
-          nsIScrollableFrame::ScrollbarSizesOptions::
+          ScrollContainerFrame::ScrollbarSizesOptions::
               INCLUDE_VISUAL_VIEWPORT_SCROLLBARS)));
   *aOutVerticalScrollbarWidth = scrollbarSizes.LeftRight();
   *aOutHorizontalScrollbarHeight = scrollbarSizes.TopBottom();
@@ -2974,16 +2974,16 @@ nsDOMWindowUtils::DisableApzForElement(Element* aElement) {
   return NS_OK;
 }
 
-static nsTArray<nsIScrollableFrame*> CollectScrollableAncestors(
+static nsTArray<ScrollContainerFrame*> CollectScrollableAncestors(
     nsIFrame* aStart) {
-  nsTArray<nsIScrollableFrame*> result;
+  nsTArray<ScrollContainerFrame*> result;
   nsIFrame* frame = aStart;
   while (frame) {
     frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
     if (!frame) {
       break;
     }
-    nsIScrollableFrame* scrollAncestor =
+    ScrollContainerFrame* scrollAncestor =
         nsLayoutUtils::GetAsyncScrollableAncestorFrame(frame);
     if (!scrollAncestor) {
       break;
@@ -3104,7 +3104,7 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
       CSSPoint::FromAppUnits(rootScrollContainerFrame->GetScrollPosition());
 
   bool waitForRefresh = false;
-  for (nsIScrollableFrame* scrollAncestor :
+  for (ScrollContainerFrame* scrollAncestor :
        CollectScrollableAncestors(element->GetPrimaryFrame())) {
     if (scrollAncestor->HasScrollUpdates()) {
       waitForRefresh = true;
