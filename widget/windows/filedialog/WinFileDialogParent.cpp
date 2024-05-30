@@ -9,6 +9,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Result.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/StaticString.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "nsISupports.h"
 
@@ -55,9 +56,9 @@ PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
 }
 
 // Convert the raw IPC promise-type to a filedialog::Promise.
-template <typename T, typename Ex, size_t N>
+template <typename T, typename Ex>
 static auto ConvertToFDPromise(
-    const char (&aMethod)[N],  // __func__
+    StaticString aMethod,  // __func__
     Ex&& extractor,
     RefPtr<MozPromise<T, mozilla::ipc::ResponseRejectReason, true>>
         aSrcPromise) {
