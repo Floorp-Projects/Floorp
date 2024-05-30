@@ -92,3 +92,21 @@ add_task(async function test_customize_sidebar_actions() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_customize_not_added_in_menubar() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  const { document } = win;
+  if (document.hasPendingL10nMutations) {
+    await BrowserTestUtils.waitForEvent(document, "L10nMutationsFinished");
+  }
+  let sidebarsMenu = document.getElementById("viewSidebarMenu");
+  let menuItems = sidebarsMenu.querySelectorAll("menuitem");
+  ok(
+    !Array.from(menuItems).find(menuitem =>
+      menuitem.getAttribute("label").includes("Customize")
+    ),
+    "The View > Sidebars menu doesn't include any option for 'customize'."
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+});
