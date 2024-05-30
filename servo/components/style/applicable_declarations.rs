@@ -132,6 +132,45 @@ impl CascadePriority {
     }
 }
 
+/// Proximity to the scope root.
+///
+/// https://drafts.csswg.org/css-cascade-6/#cascade-proximity
+#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
+pub struct ScopeProximity(u16);
+
+impl PartialOrd for ScopeProximity {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for ScopeProximity {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // Lower proximity to scope root wins
+        other.0.cmp(&self.0)
+    }
+}
+
+/// Sacrifice the largest possible value for infinity. This makes the comparison
+/// trivial.
+const PROXIMITY_INFINITY: u16 = u16::MAX;
+
+impl ScopeProximity {
+    /// Construct a new scope proximity.
+    pub fn new(proximity: usize) -> Self {
+        if cfg!(debug_assertions) && proximity >= PROXIMITY_INFINITY as usize {
+            warn!("Proximity out of bounds");
+        }
+        Self(proximity.clamp(0, (PROXIMITY_INFINITY - 1) as usize) as u16)
+    }
+
+    /// Create a scope proximity for delcarations outside of any scope root.
+    pub fn infinity() -> Self {
+        Self(PROXIMITY_INFINITY)
+    }
+}
+
 /// A property declaration together with its precedence among rules of equal
 /// specificity so that we can sort them.
 ///
@@ -148,6 +187,8 @@ pub struct ApplicableDeclarationBlock {
     source_order: u32,
     /// The specificity of the selector.
     pub specificity: u32,
+    /// The proximity to the scope root.
+    pub scope_proximity: ScopeProximity,
     /// The cascade priority of the rule.
     pub cascade_priority: CascadePriority,
 }
@@ -165,6 +206,7 @@ impl ApplicableDeclarationBlock {
             source: StyleSource::from_declarations(declarations),
             source_order: 0,
             specificity: 0,
+            scope_proximity: ScopeProximity::infinity(),
             cascade_priority: CascadePriority::new(level, layer_order),
         }
     }
@@ -177,11 +219,13 @@ impl ApplicableDeclarationBlock {
         level: CascadeLevel,
         specificity: u32,
         layer_order: LayerOrder,
+        scope_proximity: ScopeProximity,
     ) -> Self {
         ApplicableDeclarationBlock {
             source,
             source_order: source_order & SOURCE_ORDER_MASK,
             specificity,
+            scope_proximity,
             cascade_priority: CascadePriority::new(level, layer_order),
         }
     }
@@ -204,11 +248,28 @@ impl ApplicableDeclarationBlock {
         self.cascade_priority.layer_order()
     }
 
+    /// Returns the scope proximity of the block.
+    #[inline]
+    pub fn scope_proximity(&self) -> ScopeProximity {
+        self.scope_proximity
+    }
+
     /// Convenience method to consume self and return the right thing for the
     /// rule tree to iterate over.
     #[inline]
     pub fn for_rule_tree(self) -> (StyleSource, CascadePriority) {
         (self.source, self.cascade_priority)
+    }
+
+    /// Return the key used to sort applicable declarations.
+    #[inline]
+    pub fn sort_key(&self) -> (LayerOrder, u32, ScopeProximity, u32) {
+        (
+            self.layer_order(),
+            self.specificity,
+            self.scope_proximity(),
+            self.source_order(),
+        )
     }
 }
 

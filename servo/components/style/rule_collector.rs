@@ -143,9 +143,7 @@ where
         self.context.current_host = host.map(|e| e.opaque());
         f(self);
         if start != self.rules.len() {
-            self.rules[start..].sort_unstable_by_key(|block| {
-                (block.layer_order(), block.specificity, block.source_order())
-            });
+            self.rules[start..].sort_unstable_by_key(|block| block.sort_key());
         }
         self.context.current_host = old_host;
         self.in_sort_scope = false;
