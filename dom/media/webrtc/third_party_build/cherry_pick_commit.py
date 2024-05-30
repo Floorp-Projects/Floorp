@@ -232,13 +232,13 @@ if __name__ == "__main__":
 
     # handle aborting cherry-pick
     if args.abort:
+        run_hg("hg revert --all")
+        run_hg("hg purge {}".format(args.target_path))
         # If the resume_state is not resume2 or resume3 that means we may
         # have committed something to mercurial.  First we need to check
         # for our cherry-pick commit message, and if found, remove
         # that commit.
         if not (resume_state == "resume2" or resume_state == "resume3"):
-            run_hg("hg revert --all")
-            run_hg("hg purge {}".format(args.target_path))
             # check for committed mercurial patch and backout
             stdout_lines = run_hg("hg log --template {desc|firstline}\n -r .")
             # check for "Cherry-pick upstream libwebrtc commit"
