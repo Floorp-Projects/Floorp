@@ -5343,19 +5343,18 @@ ScrollContainerFrame::LoadingState ScrollContainerFrame::GetPageLoadingState() {
              : LoadingState::Loading;
 }
 
-ScrollContainerFrame::OverflowState ScrollContainerFrame::GetOverflowState()
-    const {
+PhysicalAxes ScrollContainerFrame::GetOverflowAxes() const {
   nsSize scrollportSize = mScrollPort.Size();
   nsSize childSize = GetScrolledRect().Size();
 
-  OverflowState result = OverflowState::None;
+  PhysicalAxes result;
 
   if (childSize.height > scrollportSize.height) {
-    result |= OverflowState::Vertical;
+    result += PhysicalAxis::Vertical;
   }
 
   if (childSize.width > scrollportSize.width) {
-    result |= OverflowState::Horizontal;
+    result += PhysicalAxis::Horizontal;
   }
 
   return result;
@@ -5370,12 +5369,12 @@ nsresult ScrollContainerFrame::FireScrollPortEvent() {
   //
   // Should we remove this?
 
-  OverflowState overflowState = GetOverflowState();
+  PhysicalAxes overflowAxes = GetOverflowAxes();
 
-  bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
+  bool newVerticalOverflow = overflowAxes.contains(PhysicalAxis::Vertical);
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
 
-  bool newHorizontalOverflow = !!(overflowState & OverflowState::Horizontal);
+  bool newHorizontalOverflow = overflowAxes.contains(PhysicalAxis::Horizontal);
   bool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
 
   if (!vertChanged && !horizChanged) {
@@ -5982,12 +5981,12 @@ void ScrollContainerFrame::PostOverflowEvent() {
     return;
   }
 
-  OverflowState overflowState = GetOverflowState();
+  PhysicalAxes overflowAxes = GetOverflowAxes();
 
-  bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
+  bool newVerticalOverflow = overflowAxes.contains(PhysicalAxis::Vertical);
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
 
-  bool newHorizontalOverflow = !!(overflowState & OverflowState::Horizontal);
+  bool newHorizontalOverflow = overflowAxes.contains(PhysicalAxis::Horizontal);
   bool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
 
   if (!vertChanged && !horizChanged) {
@@ -6229,7 +6228,7 @@ bool ScrollContainerFrame::ReflowFinished() {
 
 #if defined(MOZ_WIDGET_ANDROID)
     const bool hasVerticalOverflow =
-        GetOverflowState() & OverflowState::Vertical &&
+        GetOverflowAxes().contains(PhysicalAxis::Vertical) &&
         GetScrollStyles().mVertical != StyleOverflow::Hidden;
     if (!mFirstReflow && mHasVerticalOverflowForDynamicToolbar &&
         !hasVerticalOverflow) {
