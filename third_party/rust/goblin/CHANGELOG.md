@@ -5,6 +5,20 @@ Before 1.0, this project does not adhere to [Semantic Versioning](http://semver.
 
 Goblin is now 0.8, which means we will try our best to ease breaking changes. Tracking issue is here: https://github.com/m4b/goblin/issues/97
 
+## [0.8.1]  - 2024-04-27
+### Docs
+pe: document pe header, thanks @JohnScience: https://github.com/m4b/goblin/pull/399
+pe, elf: fix doc warnings, thanks @5225225: https://github.com/m4b/goblin/pull/395
+pe: document dos header, thanks @JohnScience: https://github.com/m4b/goblin/pull/393
+### Added
+pe: add TE (terse executable) support, big thanks @Javagedes: https://github.com/m4b/goblin/pull/397
+elf: allow parsing section headers from raw bytes, thanks @lissyx: https://github.com/m4b/goblin/pull/391
+mach: add support for lossy parsing, thanks @h33p: https://github.com/m4b/goblin/pull/386
+elf: add convenience functions, thanks @tiann : https://github.com/m4b/goblin/pull/387
+### Fixed
+pe: read reserved dos headers, thanks @kkent030315: https://github.com/m4b/goblin/pull/405
+
+
 ## [0.8.0]  - 2023-12-31 - Happy New Years!
 ### Breaking
 msrv: bumped to 1.63.0 since scroll bumped as well

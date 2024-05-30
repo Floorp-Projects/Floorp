@@ -2453,14 +2453,14 @@ dependencies = [
 name = "goblin"
 version = "0.7.999"
 dependencies = [
- "goblin 0.8.0",
+ "goblin 0.8.1",
 ]
 
 [[package]]
 name = "goblin"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb07a4ffed2093b118a525b1d8f5204ae274faed5604537caf7135d0f18d9887"
+checksum = "8ce2dfb858618fd40cafc83efadd02705adf6ffba765098736bd950c3c945fe0"
 dependencies = [
  "log",
  "plain",
@@ -3642,7 +3642,7 @@ dependencies = [
  "byteorder",
  "cfg-if",
  "crash-context",
- "goblin 0.8.0",
+ "goblin 0.8.1",
  "libc",
  "log",
  "mach2",
@@ -6169,7 +6169,7 @@ dependencies = [
  "cargo_metadata",
  "fs-err",
  "glob",
- "goblin 0.8.0",
+ "goblin 0.8.1",
  "heck",
  "once_cell",
  "paste",

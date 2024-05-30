@@ -92,7 +92,7 @@ impl ImageDebugDirectory {
         )
     }
 
-    fn parse_with_opts(
+    pub(crate) fn parse_with_opts(
         bytes: &[u8],
         dd: data_directories::DataDirectory,
         sections: &[section_table::SectionTable],

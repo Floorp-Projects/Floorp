@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.63.0"
 name = "goblin"
-version = "0.8.0"
+version = "0.8.1"
 authors = [
     "m4b <m4b.github.io@gmail.com>",
     "seu <seu@panopticon.re>",
@@ -44,7 +44,6 @@ categories = [
 ]
 license = "MIT"
 repository = "https://github.com/m4b/goblin"
-resolver = "2"
 
 [dependencies.log]
 version = "0.4"
@@ -75,6 +74,7 @@ default = [
     "mach64",
     "pe32",
     "pe64",
+    "te",
     "archive",
     "endian_fd",
 ]
@@ -102,6 +102,10 @@ pe64 = [
 std = [
     "alloc",
     "scroll/std",
+]
+te = [
+    "alloc",
+    "endian_fd",
 ]
 
 [badges.travis-ci]
