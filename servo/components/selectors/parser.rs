@@ -445,17 +445,15 @@ pub enum ParseRelative {
     No,
 }
 
-impl ParseRelative {
-    #[inline]
-    pub(crate) fn needs_implicit_parent_selector(self) -> bool {
-        matches!(self, Self::ForNesting)
-    }
-}
-
 impl<Impl: SelectorImpl> SelectorList<Impl> {
     /// Returns a selector list with a single `&`
     pub fn ampersand() -> Self {
         Self::from_one(Selector::ampersand())
+    }
+
+    /// Returns a selector list with a single `:scope`
+    pub fn scope() -> Self {
+        Self::from_one(Selector::scope())
     }
 
     /// Parse a comma-separated list of Selectors.
@@ -760,6 +758,16 @@ impl<Impl: SelectorImpl> Selector<Impl> {
         ))
     }
 
+    fn scope() -> Self {
+        Self(ThinArc::from_header_and_iter(
+            SpecificityAndFlags {
+                specificity: Specificity::single_class_like().into(),
+                flags: SelectorFlags::HAS_SCOPE,
+            },
+            std::iter::once(Component::Scope),
+        ))
+    }
+
     #[inline]
     pub fn specificity(&self) -> u32 {
         self.0.header.specificity
@@ -778,6 +786,11 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     #[inline]
     pub fn has_parent_selector(&self) -> bool {
         self.flags().intersects(SelectorFlags::HAS_PARENT)
+    }
+
+    #[inline]
+    pub fn has_scope_selector(&self) -> bool {
+        self.flags().intersects(SelectorFlags::HAS_SCOPE)
     }
 
     #[inline]
@@ -1081,6 +1094,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                 Root |
                 Empty |
                 Scope |
+                ImplicitScope |
                 Nth(..) |
                 NonTSPseudoClass(..) |
                 PseudoElement(..) |
@@ -1924,6 +1938,14 @@ pub enum Component<Impl: SelectorImpl> {
     Root,
     Empty,
     Scope,
+    /// :scope added implicitly into scoped rules (i.e. In `@scope`) not
+    /// explicitly using `:scope` or `&` selectors.
+    ///
+    /// https://drafts.csswg.org/css-cascade-6/#scoped-rules
+    ///
+    /// Unlike the normal `:scope` selector, this does not add any specificity.
+    /// See https://github.com/w3c/csswg-drafts/issues/10196
+    ImplicitScope,
     ParentSelector,
     Nth(NthSelectorData),
     NthOf(NthOfSelectorData<Impl>),
@@ -2252,13 +2274,14 @@ impl<Impl: SelectorImpl> ToCss for Selector<Impl> {
             debug_assert!(!combinators_exhausted);
 
             // https://drafts.csswg.org/cssom/#serializing-selectors
-            if compound.is_empty() {
-                continue;
-            }
-            if let Component::RelativeSelectorAnchor = compound.first().unwrap() {
+            let first_compound = match compound.first() {
+                None => continue,
+                Some(c) => c,
+            };
+            if matches!(first_compound, Component::RelativeSelectorAnchor | Component::ImplicitScope) {
                 debug_assert!(
                     compound.len() == 1,
-                    "RelativeLeft should only be a simple selector"
+                    "RelativeSelectorAnchor/ImplicitScope should only be a simple selector"
                 );
                 combinators.next().unwrap().to_css_relative(dest)?;
                 continue;
@@ -2530,7 +2553,7 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
             },
             NonTSPseudoClass(ref pseudo) => pseudo.to_css(dest),
             Invalid(ref css) => dest.write_str(css),
-            RelativeSelectorAnchor => Ok(()),
+            RelativeSelectorAnchor | ImplicitScope => Ok(()),
         }
     }
 }
@@ -2613,7 +2636,10 @@ where
                     let selector = match parse_relative {
                         ParseRelative::ForHas | ParseRelative::No => unreachable!(),
                         ParseRelative::ForNesting => Component::ParentSelector,
-                        ParseRelative::ForScope => Component::Scope,
+                        // See https://github.com/w3c/csswg-drafts/issues/10196
+                        // Implicitly added `:scope` does not add specificity
+                        // for non-relative selectors, so do the same.
+                        ParseRelative::ForScope => Component::ImplicitScope,
                     };
                     builder.push_simple_selector(selector);
                     builder.push_combinator(combinator);
@@ -4440,6 +4466,63 @@ pub mod tests {
         assert_eq!(iter.next_sequence(), Some(Combinator::PseudoElement));
         assert_eq!(iter.next(), None);
         assert_eq!(iter.next_sequence(), None);
+    }
+
+    #[test]
+    fn test_parse_implicit_scope() {
+        assert_eq!(
+            parse_relative_expected(".foo", ParseRelative::ForScope, None).unwrap(),
+            SelectorList::from_vec(vec![Selector::from_vec(
+                vec![
+                    Component::ImplicitScope,
+                    Component::Combinator(Combinator::Descendant),
+                    Component::Class(DummyAtom::from("foo")),
+                ],
+                specificity(0, 1, 0),
+                SelectorFlags::HAS_SCOPE | SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
+            )])
+        );
+
+        assert_eq!(
+            parse_relative_expected(":scope .foo", ParseRelative::ForScope, None).unwrap(),
+            SelectorList::from_vec(vec![Selector::from_vec(
+                vec![
+                    Component::Scope,
+                    Component::Combinator(Combinator::Descendant),
+                    Component::Class(DummyAtom::from("foo")),
+                ],
+                specificity(0, 2, 0),
+                SelectorFlags::HAS_SCOPE | SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
+            )])
+        );
+
+        assert_eq!(
+            parse_relative_expected("> .foo", ParseRelative::ForScope, Some("> .foo")).unwrap(),
+            SelectorList::from_vec(vec![Selector::from_vec(
+                vec![
+                    Component::ImplicitScope,
+                    Component::Combinator(Combinator::Child),
+                    Component::Class(DummyAtom::from("foo")),
+                ],
+                specificity(0, 1, 0),
+                SelectorFlags::HAS_SCOPE | SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
+            )])
+        );
+
+        assert_eq!(
+            parse_relative_expected(".foo :scope > .bar", ParseRelative::ForScope, None).unwrap(),
+            SelectorList::from_vec(vec![Selector::from_vec(
+                vec![
+                    Component::Class(DummyAtom::from("foo")),
+                    Component::Combinator(Combinator::Descendant),
+                    Component::Scope,
+                    Component::Combinator(Combinator::Child),
+                    Component::Class(DummyAtom::from("bar")),
+                ],
+                specificity(0, 3, 0),
+                SelectorFlags::HAS_SCOPE | SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
+            )])
+        );
     }
 
     struct TestVisitor {

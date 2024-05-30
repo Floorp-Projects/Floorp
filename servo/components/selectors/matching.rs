@@ -1194,7 +1194,7 @@ where
         Component::Host(ref selector) => {
             return matches_host(element, selector.as_ref(), &mut context.shared, rightmost);
         },
-        Component::ParentSelector | Component::Scope => match context.shared.scope_element {
+        Component::ParentSelector | Component::Scope | Component::ImplicitScope => match context.shared.scope_element {
             Some(ref scope_element) => element.opaque() == *scope_element,
             None => element.is_root(),
         },

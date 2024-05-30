@@ -39,6 +39,7 @@ use crate::stylesheets::container_rule::ContainerCondition;
 use crate::stylesheets::import_rule::ImportLayer;
 use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
+use crate::stylesheets::scope_rule::ScopeBounds;
 #[cfg(feature = "gecko")]
 use crate::stylesheets::{
     CounterStyleRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
@@ -578,12 +579,13 @@ impl From<StyleRuleInclusion> for RuleInclusion {
 }
 
 /// A struct containing state from ancestor rules like @layer / @import /
-/// @container / nesting.
+/// @container / nesting / @scope.
 struct ContainingRuleState {
     layer_name: LayerName,
     layer_id: LayerId,
     container_condition_id: ContainerConditionId,
     in_starting_style: bool,
+    scope_condition_id: ScopeConditionId,
     ancestor_selector_lists: SmallVec<[SelectorList<SelectorImpl>; 2]>,
 }
 
@@ -595,6 +597,7 @@ impl Default for ContainingRuleState {
             container_condition_id: ContainerConditionId::none(),
             in_starting_style: false,
             ancestor_selector_lists: Default::default(),
+            scope_condition_id: ScopeConditionId::none(),
         }
     }
 }
@@ -605,6 +608,7 @@ struct SavedContainingRuleState {
     layer_id: LayerId,
     container_condition_id: ContainerConditionId,
     in_starting_style: bool,
+    scope_condition_id: ScopeConditionId,
 }
 
 impl ContainingRuleState {
@@ -615,6 +619,7 @@ impl ContainingRuleState {
             layer_id: self.layer_id,
             container_condition_id: self.container_condition_id,
             in_starting_style: self.in_starting_style,
+            scope_condition_id: self.scope_condition_id,
         }
     }
 
@@ -627,6 +632,7 @@ impl ContainingRuleState {
         self.layer_id = saved.layer_id;
         self.container_condition_id = saved.container_condition_id;
         self.in_starting_style = saved.in_starting_style;
+        self.scope_condition_id = saved.scope_condition_id;
     }
 }
 
@@ -2362,6 +2368,23 @@ impl ScopeConditionId {
     }
 }
 
+#[derive(Clone, Debug, MallocSizeOf)]
+struct ScopeConditionReference {
+    parent: ScopeConditionId,
+    // TODO(dshin): With replaced parent selectors, these may be unique...
+    #[ignore_malloc_size_of = "Arc inside"]
+    condition: Option<ScopeBounds>,
+}
+
+impl ScopeConditionReference {
+    const fn none() -> Self {
+        Self {
+            parent: ScopeConditionId::none(),
+            condition: None,
+        }
+    }
+}
+
 /// Data resulting from performing the CSS cascade that is specific to a given
 /// origin.
 ///
@@ -2468,6 +2491,9 @@ pub struct CascadeData {
     /// The list of container conditions, indexed by their id.
     container_conditions: SmallVec<[ContainerConditionReference; 1]>,
 
+    /// The list of scope conditions, indexed by their id.
+    scope_conditions: SmallVec<[ScopeConditionReference; 1]>,
+
     /// Effective media query results cached from the last rebuild.
     effective_media_query_results: EffectiveMediaQueryResults,
 
@@ -2483,6 +2509,22 @@ pub struct CascadeData {
 
     /// The total number of declarations.
     num_declarations: usize,
+}
+
+fn parent_selector_for_scope(parent: Option<&SelectorList<SelectorImpl>>) -> &SelectorList<SelectorImpl> {
+    lazy_static! {
+        static ref SCOPE: SelectorList<SelectorImpl> = {
+            let list = SelectorList::scope();
+            list.slice()
+                .iter()
+                .for_each(|selector| selector.mark_as_intentionally_leaked());
+            list
+        };
+    };
+    match parent {
+        Some(l) => l,
+        None => &SCOPE,
+    }
 }
 
 impl CascadeData {
@@ -2510,6 +2552,7 @@ impl CascadeData {
             layer_id: Default::default(),
             layers: smallvec::smallvec![CascadeLayer::root()],
             container_conditions: smallvec::smallvec![ContainerConditionReference::none()],
+            scope_conditions: smallvec::smallvec![ScopeConditionReference::none()],
             extra_data: ExtraStyleData::default(),
             effective_media_query_results: EffectiveMediaQueryResults::new(),
             rules_source_order: 0,
@@ -2867,7 +2910,11 @@ impl CascadeData {
                                 debug_assert!(!has_nested_rules);
                                 debug_assert_eq!(stylesheet.contents().origin, Origin::UserAgent);
                                 debug_assert_eq!(containing_rule_state.layer_id, LayerId::root());
-                                // TODO(dshin, bug 1886441): Because we precompute pseudos, we cannot possibly calculate scope proximity.
+                                // Because we precompute pseudos, we cannot possibly calculate scope proximity.
+                                debug_assert_eq!(
+                                    containing_rule_state.scope_condition_id,
+                                    ScopeConditionId::none()
+                                );
                                 precomputed_pseudo_element_decls
                                     .as_mut()
                                     .expect("Expected precomputed declarations for the UA level")
@@ -2902,7 +2949,7 @@ impl CascadeData {
                             containing_rule_state.layer_id,
                             containing_rule_state.container_condition_id,
                             containing_rule_state.in_starting_style,
-                            ScopeConditionId::none(),
+                            containing_rule_state.scope_condition_id,
                         );
 
                         if collect_replaced_selectors {
@@ -2968,6 +3015,10 @@ impl CascadeData {
                             // NOTE(emilio): It's fine to look at :host and then at
                             // ::slotted(..), since :host::slotted(..) could never
                             // possibly match, as <slot> is not a valid shadow host.
+                            // TODO(dshin, bug 1886441): If we have a featureless
+                            // `:scope`, we need to add to `host_rules` (Which should
+                            // be then rennamed `featureless_rules`).
+                            // See https://github.com/w3c/csswg-drafts/issues/9025
                             let rules = if rule
                                 .selector
                                 .is_featureless_host_selector_or_pseudo_element()
@@ -3194,6 +3245,30 @@ impl CascadeData {
                 CssRule::StartingStyle(..) => {
                     containing_rule_state.in_starting_style = true;
                 },
+                CssRule::Scope(ref rule) => {
+                    let id = ScopeConditionId(self.scope_conditions.len() as u16);
+                    let replaced = {
+                        let start = rule.bounds.start.as_ref().map(|selector| {
+                            match containing_rule_state.ancestor_selector_lists.last() {
+                                Some(s) => selector.replace_parent_selector(s),
+                                None => selector.clone(),
+                            }
+                        });
+                        let end = rule.bounds
+                            .end
+                            .as_ref()
+                            .map(|selector| selector.replace_parent_selector(
+                                parent_selector_for_scope(start.as_ref())));
+                        containing_rule_state.ancestor_selector_lists.push(parent_selector_for_scope(start.as_ref()).clone());
+                        ScopeBounds { start, end }
+                    };
+
+                    self.scope_conditions.push(ScopeConditionReference {
+                        parent: containing_rule_state.scope_condition_id,
+                        condition: Some(replaced),
+                    });
+                    containing_rule_state.scope_condition_id = id;
+                },
                 // We don't care about any other rule.
                 _ => {},
             }
@@ -3386,6 +3461,8 @@ impl CascadeData {
         self.container_conditions.clear();
         self.container_conditions
             .push(ContainerConditionReference::none());
+        self.scope_conditions.clear();
+        self.scope_conditions.push(ScopeConditionReference::none());
         self.extra_data.clear();
         self.rules_source_order = 0;
         self.num_selectors = 0;

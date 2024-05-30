@@ -97,17 +97,19 @@ impl<Impl: SelectorImpl> SelectorBuilder<Impl> {
         mut spec: SpecificityAndFlags,
         parse_relative: ParseRelative,
     ) -> ThinArc<SpecificityAndFlags, Component<Impl>> {
-        let implicit_parent = parse_relative.needs_implicit_parent_selector() &&
-            !spec.flags.contains(SelectorFlags::HAS_PARENT);
-
-        let parent_selector_and_combinator;
-        let implicit_parent = if implicit_parent {
-            spec.flags.insert(SelectorFlags::HAS_PARENT);
-            parent_selector_and_combinator = [
+        let implicit_addition = match parse_relative {
+            ParseRelative::ForNesting if !spec.flags.intersects(SelectorFlags::HAS_PARENT) => Some((Component::ParentSelector, SelectorFlags::HAS_PARENT)),
+            ParseRelative::ForScope if !spec.flags.intersects(SelectorFlags::HAS_SCOPE | SelectorFlags::HAS_PARENT) => Some((Component::ImplicitScope, SelectorFlags::HAS_SCOPE)),
+            _ => None,
+        };
+        let implicit_selector_and_combinator;
+        let implicit_selector = if let Some((component, flag)) = implicit_addition {
+            spec.flags.insert(flag);
+            implicit_selector_and_combinator = [
                 Component::Combinator(Combinator::Descendant),
-                Component::ParentSelector,
+                component,
             ];
-            &parent_selector_and_combinator[..]
+            &implicit_selector_and_combinator[..]
         } else {
             &[]
         };
@@ -115,11 +117,11 @@ impl<Impl: SelectorImpl> SelectorBuilder<Impl> {
         // As an optimization, for a selector without combinators, we can just keep the order
         // as-is.
         if self.last_compound_start.is_none() {
-            return Arc::from_header_and_iter(spec, ExactChain(self.components.drain(..), implicit_parent.iter().cloned()));
+            return Arc::from_header_and_iter(spec, ExactChain(self.components.drain(..), implicit_selector.iter().cloned()));
         }
 
         self.reverse_last_compound();
-        Arc::from_header_and_iter(spec, ExactChain(self.components.drain(..).rev(), implicit_parent.iter().cloned()))
+        Arc::from_header_and_iter(spec, ExactChain(self.components.drain(..).rev(), implicit_selector.iter().cloned()))
     }
 }
 
@@ -178,6 +180,7 @@ bitflags! {
         const HAS_PARENT = 1 << 3;
         const HAS_NON_FEATURELESS_COMPONENT = 1 << 4;
         const HAS_HOST = 1 << 5;
+        const HAS_SCOPE = 1 << 6;
     }
 }
 
@@ -219,6 +222,18 @@ pub(crate) struct Specificity {
     id_selectors: u32,
     class_like_selectors: u32,
     element_selectors: u32,
+}
+
+impl Specificity {
+    // Return the specficity of a single class-like selector.
+    #[inline]
+    pub fn single_class_like() -> Self {
+        Specificity {
+            id_selectors: 0,
+            class_like_selectors: 1,
+            element_selectors: 0,
+        }
+    }
 }
 
 impl From<u32> for Specificity {
@@ -311,10 +326,18 @@ where
             Component::Root |
             Component::Empty |
             Component::Scope |
+            Component::ImplicitScope |
             Component::Nth(..) |
             Component::NonTSPseudoClass(..) => {
+                if matches!(*simple_selector, Component::Scope | Component::ImplicitScope) {
+                    flags.insert(SelectorFlags::HAS_SCOPE);
+                }
                 flags.insert(SelectorFlags::HAS_NON_FEATURELESS_COMPONENT);
-                specificity.class_like_selectors += 1;
+                if !matches!(*simple_selector, Component::ImplicitScope) {
+                    // Implicit :scope does not add specificity. See
+                    // https://github.com/w3c/csswg-drafts/issues/10196
+                    specificity.class_like_selectors += 1;
+                }
             },
             Component::NthOf(ref nth_of_data) => {
                 // https://drafts.csswg.org/selectors/#specificity-rules:

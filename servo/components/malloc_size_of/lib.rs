@@ -791,6 +791,7 @@ where
             Component::Root |
             Component::Empty |
             Component::Scope |
+            Component::ImplicitScope |
             Component::ParentSelector |
             Component::Nth(..) |
             Component::Host(None) |
