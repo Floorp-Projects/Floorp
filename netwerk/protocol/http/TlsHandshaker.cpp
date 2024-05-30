@@ -316,19 +316,39 @@ void TlsHandshaker::EarlyDataTelemetry(int16_t tlsVersion,
                                        int64_t aContentBytesWritten0RTT) {
   // Send the 0RTT telemetry only for tls1.3
   if (tlsVersion > nsITLSSocketControl::TLS_VERSION_1_2) {
-    Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_NEGOTIATED,
-                          (mEarlyDataState == EarlyData::NOT_AVAILABLE)
-                              ? TLS_EARLY_DATA_NOT_AVAILABLE
-                              : ((mEarlyDataState == EarlyData::USED)
-                                     ? TLS_EARLY_DATA_AVAILABLE_AND_USED
-                                     : TLS_EARLY_DATA_AVAILABLE_BUT_NOT_USED));
+    if (mEarlyDataState == EarlyData::NOT_AVAILABLE) {  // not possible
+      Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_NEGOTIATED,
+                            TLS_EARLY_DATA_NOT_AVAILABLE);
+      mozilla::glean::network::tls_early_data_negotiated.Get("not_available"_ns)
+          .Add(1);
+    } else if (mEarlyDataState == EarlyData::USED) {  // possible and used
+      Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_NEGOTIATED,
+                            TLS_EARLY_DATA_AVAILABLE_AND_USED);
+      mozilla::glean::network::tls_early_data_negotiated
+          .Get("available_and_used"_ns)
+          .Add(1);
+    } else {  // possible but not used
+      Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_NEGOTIATED,
+                            TLS_EARLY_DATA_AVAILABLE_BUT_NOT_USED);
+      mozilla::glean::network::tls_early_data_negotiated
+          .Get("available_but_not_used"_ns)
+          .Add(1);
+    }
+
+    // TLS early data was used and it was accepted/rejected by the remote host.
     if (EarlyDataUsed()) {
       Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_ACCEPTED,
                             earlyDataAccepted);
+      mozilla::glean::network::tls_early_data_accepted
+          .Get(earlyDataAccepted ? "accepted"_ns : "not_accepted"_ns)
+          .Add(1);
     }
+
+    // Amount of bytes sent using TLS early data at the start of a TLS
+    // connection for a given channel.
     if (earlyDataAccepted) {
-      Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_BYTES_WRITTEN,
-                            aContentBytesWritten0RTT);
+      mozilla::glean::network::tls_early_data_bytes_written
+          .AccumulateSingleSample(aContentBytesWritten0RTT);
     }
   }
 }
