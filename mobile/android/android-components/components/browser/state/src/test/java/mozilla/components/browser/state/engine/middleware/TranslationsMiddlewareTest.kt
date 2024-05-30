@@ -66,7 +66,7 @@ class TranslationsMiddlewareTest {
     )
     private val translationsMiddleware = TranslationsMiddleware(engine = engine, scope = scope)
     private val tabs = spy(listOf(tab))
-    private val state = spy(BrowserState(tabs = tabs))
+    private val state = spy(BrowserState(tabs = tabs, selectedTabId = tab.id))
     private val store = spy(BrowserStore(middleware = listOf(translationsMiddleware), initialState = state))
     private val context = mock<MiddlewareContext<BrowserState, BrowserAction>>()
 

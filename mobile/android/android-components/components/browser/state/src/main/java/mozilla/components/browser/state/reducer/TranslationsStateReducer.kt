@@ -6,6 +6,7 @@ package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TranslationsState
@@ -337,10 +338,15 @@ internal object TranslationsStateReducer {
                 }
 
                 TranslationOperation.FETCH_PAGE_SETTINGS -> {
-                    state.copyWithTranslationsState(action.tabId) {
-                        it.copy(
-                            pageSettings = null,
-                        )
+                    val tabId = action.tabId ?: state.selectedTab?.id
+                    if (tabId != null) {
+                        state.copyWithTranslationsState(tabId) {
+                            it.copy(
+                                pageSettings = null,
+                            )
+                        }
+                    } else {
+                        state
                     }
                 }
 

@@ -995,13 +995,15 @@ sealed class TranslationsAction : BrowserAction() {
     /**
      * Indicates that the given [operation] data should be fetched for the given [tabId].
      *
-     * @property tabId The ID of the tab the [EngineSession] should be linked to.
+     * @property tabId The ID of the tab the [EngineSession] should be linked to. May be null
+     * to complete the operation on the current tab (when a tab is required for the operation)
+     * or when no session is associated with the request.
      * @property operation The translation operation that failed.
      */
     data class OperationRequestedAction(
-        override val tabId: String,
+        val tabId: String?,
         val operation: TranslationOperation,
-    ) : TranslationsAction(), ActionWithTab
+    ) : TranslationsAction()
 
     /**
      * Sets whether the device architecture supports translations or not on
