@@ -383,10 +383,15 @@ export class MegalistView extends MozLitElement {
     if (!snapshotData.commands?.length) {
       return;
     }
+    const button = menuButton.querySelector("button");
     const popup = this.ownerDocument.createElement("div");
+    popup.setAttribute("role", "menu");
+    popup.setAttribute("data-l10n-id", "more-options-popup");
+
     popup.className = "menuPopup";
 
     let closeMenu = () => {
+      button.setAttribute("aria-expanded", "false");
       popup.remove();
       this.searchInput.focus();
     };
@@ -462,19 +467,22 @@ export class MegalistView extends MozLitElement {
       }
 
       const menuItem = this.ownerDocument.createElement("button");
+      menuItem.setAttribute("role", "menuitem");
       menuItem.setAttribute("data-l10n-id", command.label);
       menuItem.addEventListener("click", e => {
         this.#messageToViewModel("Command", {
           snapshotId,
           commandId: command.id,
         });
+        button.setAttribute("aria-expanded", "false");
         popup.remove();
         e.preventDefault();
       });
       popup.appendChild(menuItem);
     }
 
-    menuButton.querySelector("button").after(popup);
+    button.setAttribute("aria-expanded", "true");
+    button.after(popup);
     popup.querySelector("button")?.focus();
   }
 
