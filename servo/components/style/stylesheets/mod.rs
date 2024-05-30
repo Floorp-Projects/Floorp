@@ -23,11 +23,11 @@ mod property_rule;
 mod rule_list;
 mod rule_parser;
 mod rules_iterator;
+pub mod scope_rule;
 mod starting_style_rule;
 mod style_rule;
 mod stylesheet;
 pub mod supports_rule;
-mod scope_rule;
 
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::sugar::refptr::RefCounted;
@@ -71,9 +71,9 @@ pub use self::rules_iterator::{AllRules, EffectiveRules};
 pub use self::rules_iterator::{
     EffectiveRulesIterator, NestedRuleIterationCondition, RulesIterator,
 };
+pub use self::scope_rule::ScopeRule;
 pub use self::starting_style_rule::StartingStyleRule;
 pub use self::style_rule::StyleRule;
-pub use self::scope_rule::ScopeRule;
 pub use self::stylesheet::{AllowImportRules, SanitizationData, SanitizationKind};
 pub use self::stylesheet::{DocumentStyleSheet, Namespaces, Stylesheet};
 pub use self::stylesheet::{StylesheetContents, StylesheetInDocument, UserAgentStylesheets};

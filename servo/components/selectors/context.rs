@@ -465,6 +465,35 @@ where
         result
     }
 
+    /// Runs F with a deeper nesting level, with the given element as the scope.
+    #[inline]
+    pub fn nest_for_scope<F, R>(&mut self, scope: Option<OpaqueElement>, f: F) -> R
+    where
+        F: FnOnce(&mut Self) -> R,
+    {
+        let original_scope_element = self.scope_element;
+        self.scope_element = scope;
+        let result = f(self);
+        self.scope_element = original_scope_element;
+        result
+    }
+
+    /// Runs F with a deeper nesting level, with the given element as the scope, for
+    /// matching `scope-start` and/or `scope-end` conditions.
+    #[inline]
+    pub fn nest_for_scope_condition<F, R>(&mut self, scope: Option<OpaqueElement>, f: F) -> R
+    where
+        F: FnOnce(&mut Self) -> R,
+    {
+        let original_matching_mode = self.matching_mode;
+        // We may as well be matching for a pseudo-element inside `@scope`, but
+        // the scope-defining selectors wouldn't be matching them.
+        self.matching_mode = MatchingMode::Normal;
+        let result = self.nest_for_scope(scope, f);
+        self.matching_mode = original_matching_mode;
+        result
+    }
+
     /// Returns the current anchor element to evaluate the relative selector against.
     #[inline]
     pub fn relative_selector_anchor(&self) -> Option<OpaqueElement> {
