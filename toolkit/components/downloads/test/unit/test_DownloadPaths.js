@@ -34,29 +34,29 @@ add_task(async function test_sanitize() {
   // Platform-dependent conversion of special characters to spaces.
   const kSpecialChars = 'A:*?|""<<>>;,+=[]B][=+,;>><<""|?*:C';
   if (AppConstants.platform == "android") {
-    testSanitize(kSpecialChars, "A B C");
-    testSanitize(" :: Website :: ", "Website");
-    testSanitize("* Website!", "Website!");
-    testSanitize("Website | Page!", "Website Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
+    testSanitize(kSpecialChars, "A________________B________________C");
+    testSanitize(" :: Website :: ", "__ Website __");
+    testSanitize("* Website!", "_ Website!");
+    testSanitize("Website | Page!", "Website _ Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing_ _a_b_");
   } else if (AppConstants.platform == "win") {
-    testSanitize(kSpecialChars, "A ;,+=[]B][=+,; C");
-    testSanitize(" :: Website :: ", "Website");
-    testSanitize("* Website!", "Website!");
-    testSanitize("Website | Page!", "Website Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
+    testSanitize(kSpecialChars, "A__________;,+=[]B][=+,;__________C");
+    testSanitize(" :: Website :: ", "__ Website __");
+    testSanitize("* Website!", "_ Website!");
+    testSanitize("Website | Page!", "Website _ Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing_ _a_b_");
   } else if (AppConstants.platform == "macosx") {
-    testSanitize(kSpecialChars, "A ;,+=[]B][=+,; C");
-    testSanitize(" :: Website :: ", "Website");
-    testSanitize("* Website!", "Website!");
-    testSanitize("Website | Page!", "Website Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
+    testSanitize(kSpecialChars, "A__________;,+=[]B][=+,;__________C");
+    testSanitize(" :: Website :: ", "__ Website __");
+    testSanitize("* Website!", "_ Website!");
+    testSanitize("Website | Page!", "Website _ Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing_ _a_b_");
   } else {
-    testSanitize(kSpecialChars, "A ;,+=[]B][=+,; C");
-    testSanitize(" :: Website :: ", "Website");
-    testSanitize("* Website!", "Website!");
-    testSanitize("Website | Page!", "Website Page!");
-    testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
+    testSanitize(kSpecialChars, "A__________;,+=[]B][=+,;__________C");
+    testSanitize(" :: Website :: ", "__ Website __");
+    testSanitize("* Website!", "_ Website!");
+    testSanitize("Website | Page!", "Website _ Page!");
+    testSanitize("Directory Listing: /a/b/", "Directory Listing_ _a_b_");
   }
 
   // Conversion of consecutive runs of slashes and backslashes to underscores.
@@ -64,9 +64,9 @@ add_task(async function test_sanitize() {
 
   // Removal of leading and trailing whitespace and dots after conversion.
   testSanitize("  Website  ", "Website");
-  testSanitize(". . Website . Page . .", "Website . Page");
-  testSanitize(" File . txt ", "File . txt");
-  testSanitize("\f\n\r\t\v\x00\x1f\x7f\x80\x9f\xa0 . txt", "txt");
+  testSanitize(". . Website . Page . .", "Website .Page");
+  testSanitize(" File . txt ", "File .txt");
+  testSanitize("\f\n\r\t\v\x00\x1f\x7f\x80\x9f\xa0 . txt", "_________ .txt");
   testSanitize("\u1680\u180e\u2000\u2008\u200a . txt", "txt");
   testSanitize("\u2028\u2029\u202f\u205f\u3000\ufeff . txt", "txt");
 
@@ -77,25 +77,25 @@ add_task(async function test_sanitize() {
   testSanitize(" . ", "");
 
   // Stripping of BIDI formatting characters.
-  testSanitize("\u200e \u202b\u202c\u202d\u202etest\x7f\u200f", "_ ____test _");
-  testSanitize("AB\x7f\u202a\x7f\u202a\x7fCD", "AB _ _ CD");
+  testSanitize("\u200e \u202b\u202c\u202d\u202etest\x7f\u200f", "_ ____test__");
+  testSanitize("AB\x7f\u202a\x7f\u202a\x7fCD", "AB_____CD");
 
   // Stripping of colons:
-  testSanitize("foo:bar", "foo bar");
+  testSanitize("foo:bar", "foo_bar");
 
   // not compressing whitespaces.
-  testSanitize("foo : bar", "foo   bar", { compressWhitespaces: false });
+  testSanitize("foo :  bar", "foo _  bar", { compressWhitespaces: false });
 
   testSanitize("thing.lnk", "thing.lnk.download");
-  testSanitize("thing.lnk\n", "thing.lnk.download");
+  testSanitize("thing.lnk\n", "thing.lnk_");
   testSanitize("thing.lnk", "thing.lnk", {
     allowInvalidFilenames: true,
   });
-  testSanitize("thing.lnk\n", "thing.lnk", {
+  testSanitize("thing.lnk\n", "thing.lnk_", {
     allowInvalidFilenames: true,
   });
   testSanitize("thing.URl", "thing.URl.download");
-  testSanitize("thing.URl  \n", "thing.URl", {
+  testSanitize("thing.URl  \n", "thing.URl_", {
     allowInvalidFilenames: true,
   });
 
@@ -107,12 +107,12 @@ add_task(async function test_sanitize() {
     allowInvalidFilenames: true,
   });
 
-  testSanitize("thing.local|", "thing.local.download");
-  testSanitize("thing.lo|cal", "thing.lo cal");
-  testSanitize('thing.local/*"', "thing.local_");
+  testSanitize("thing.local|", "thing.local_");
+  testSanitize("thing.lo|cal", "thing.lo_cal");
+  testSanitize('thing.local/*"', "thing.local___");
 
   testSanitize("thing.desktoP", "thing.desktoP.download");
-  testSanitize("thing.desktoP  \n", "thing.desktoP", {
+  testSanitize("thing.desktoP  \n", "thing.desktoP_", {
     allowInvalidFilenames: true,
   });
 });
