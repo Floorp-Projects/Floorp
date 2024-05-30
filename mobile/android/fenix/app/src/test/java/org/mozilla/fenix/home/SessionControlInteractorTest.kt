@@ -27,6 +27,7 @@ import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.toolbar.ToolbarController
+import org.mozilla.fenix.search.ExtraAction
 import org.mozilla.fenix.search.toolbar.SearchSelectorController
 
 class SessionControlInteractorTest {
@@ -145,6 +146,18 @@ class SessionControlInteractorTest {
     fun onNavigateSearch() {
         interactor.onNavigateSearch()
         verify { toolbarController.handleNavigateSearch() }
+    }
+
+    @Test
+    fun onNavigateSearchWithQr() {
+        interactor.onNavigateSearch(ExtraAction.QR_READER)
+        verify { toolbarController.handleNavigateSearch(ExtraAction.QR_READER) }
+    }
+
+    @Test
+    fun onNavigateSearchWithVoice() {
+        interactor.onNavigateSearch(ExtraAction.VOICE_SEARCH)
+        verify { toolbarController.handleNavigateSearch(ExtraAction.VOICE_SEARCH) }
     }
 
     @Test

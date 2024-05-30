@@ -15,6 +15,7 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.search.ExtraAction
 
 /**
  * An interface that handles the view manipulation of the home screen toolbar.
@@ -33,7 +34,7 @@ interface ToolbarController {
     /**
      * @see [ToolbarInteractor.onNavigateSearch]
      */
-    fun handleNavigateSearch()
+    fun handleNavigateSearch(extraAction: ExtraAction = ExtraAction.NONE)
 }
 
 /**
@@ -73,10 +74,11 @@ class DefaultToolbarController(
         navController.nav(navController.currentDestination?.id, directions)
     }
 
-    override fun handleNavigateSearch() {
+    override fun handleNavigateSearch(extraAction: ExtraAction) {
         val directions =
             NavGraphDirections.actionGlobalSearchDialog(
                 sessionId = null,
+                extraAction = extraAction,
             )
 
         navController.nav(
@@ -85,6 +87,13 @@ class DefaultToolbarController(
             BrowserAnimator.getToolbarNavOptions(activity),
         )
 
-        Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
+        when (extraAction) {
+            ExtraAction.QR_READER ->
+                Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME_QR"))
+            ExtraAction.VOICE_SEARCH ->
+                Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME_VOICE"))
+            ExtraAction.NONE ->
+                Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
+        }
     }
 }

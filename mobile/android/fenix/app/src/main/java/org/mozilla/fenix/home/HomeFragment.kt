@@ -466,6 +466,7 @@ class HomeFragment : Fragment() {
             binding = binding,
             context = requireContext(),
             interactor = sessionControlInteractor,
+            searchEngine = components.core.store.state.search.selectedOrDefaultSearchEngine,
         )
 
         val shouldAddNavigationBar = shouldAddNavigationBar(requireContext())

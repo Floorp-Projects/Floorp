@@ -132,6 +132,7 @@ class CustomTabsToolbarFeature(
     internal fun init(config: CustomTabConfig) {
         // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
         toolbar.display.onUrlClicked = { false }
+        toolbar.display.hidePageActionSeparator()
 
         // Use the intent provided color scheme or fallback to the app night mode preference.
         val nightMode = config.colorScheme?.toNightMode() ?: appNightMode
