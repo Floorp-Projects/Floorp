@@ -4,6 +4,7 @@
 
 import { isConsole } from "../utils/preview";
 import { getGrip, getFront } from "../utils/evaluation-result";
+import { getExpressionFromCoords } from "../utils/editor/get-expression";
 
 import {
   isLineInScope,
@@ -17,7 +18,7 @@ import {
 
 import { getMappedExpression } from "./expressions";
 
-async function findExpressionMatch(state, parserWorker, editor, tokenPos) {
+async function findExpressionMatch(state, parserWorker, codeMirror, tokenPos) {
   const location = getSelectedLocation(state);
   if (!location) {
     return null;
@@ -32,10 +33,10 @@ async function findExpressionMatch(state, parserWorker, editor, tokenPos) {
   if (match) {
     return match;
   }
-  return editor.getExpressionFromCoords(tokenPos);
+  return getExpressionFromCoords(codeMirror, tokenPos);
 }
 
-export function getPreview(target, tokenPos, editor) {
+export function getPreview(target, tokenPos, codeMirror) {
   return async thunkArgs => {
     const { getState, client, parserWorker } = thunkArgs;
     if (
@@ -58,7 +59,7 @@ export function getPreview(target, tokenPos, editor) {
     const match = await findExpressionMatch(
       getState(),
       parserWorker,
-      editor,
+      codeMirror,
       tokenPos
     );
     if (!match) {
@@ -126,12 +127,12 @@ export function getPreview(target, tokenPos, editor) {
   };
 }
 
-export function getExceptionPreview(target, tokenPos, editor) {
+export function getExceptionPreview(target, tokenPos, codeMirror) {
   return async ({ getState, parserWorker }) => {
     const match = await findExpressionMatch(
       getState(),
       parserWorker,
-      editor,
+      codeMirror,
       tokenPos
     );
     if (!match) {

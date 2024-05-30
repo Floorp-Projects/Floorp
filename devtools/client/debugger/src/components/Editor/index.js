@@ -244,11 +244,10 @@ class Editor extends PureComponent {
         click: (event, cm, line) => this.onGutterClick(cm, line, null, event),
         contextmenu: (event, cm, line) => this.openMenu(event, line),
       });
-      editor.addEditorDOMEventListeners({
+      editor.setContentEventListeners({
         click: (event, cm, line, column) => this.onClick(event, line, column),
         contextmenu: (event, cm, line, column) =>
           this.openMenu(event, line, column),
-        mouseover: onMouseOver(editor),
       });
     }
     this.setState({ editor });
@@ -354,8 +353,14 @@ class Editor extends PureComponent {
   }
 
   componentWillUnmount() {
-    const { editor } = this.state;
     if (!features.codemirrorNext) {
+      const { editor } = this.state;
+      if (editor) {
+        editor.destroy();
+        editor.codeMirror.off("scroll", this.onEditorScroll);
+        this.setState({ editor: null });
+      }
+
       const { shortcuts } = this.context;
       shortcuts.off(L10N.getStr("sourceTabs.closeTab.key"));
       shortcuts.off(L10N.getStr("toggleBreakpoint.key"));
@@ -366,13 +371,6 @@ class Editor extends PureComponent {
         this.abortController.abort();
         this.abortController = null;
       }
-    }
-    if (editor) {
-      if (!features.codemirrorNext) {
-        editor.codeMirror.off("scroll", this.onEditorScroll);
-      }
-      editor.destroy();
-      this.setState({ editor: null });
     }
   }
 
@@ -833,15 +831,6 @@ class Editor extends PureComponent {
         React.Fragment,
         null,
         React.createElement(Breakpoints, { editor }),
-        isPaused &&
-          selectedSource.isOriginal &&
-          !selectedSource.isPrettyPrinted &&
-          !mapScopesEnabled
-          ? null
-          : React.createElement(Preview, {
-              editor,
-              editorRef: this.$editorWrapper,
-            }),
         React.createElement(DebugLine, { editor, selectedSource }),
         React.createElement(HighlightLine, { editor }),
         React.createElement(Exceptions, { editor }),

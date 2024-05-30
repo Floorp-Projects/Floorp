@@ -7,6 +7,7 @@ DIRS += []
 
 CompiledModules(
     "create-editor.js",
+    "get-expression.js",
     "index.js",
     "source-documents.js",
     "source-search.js",
