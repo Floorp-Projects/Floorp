@@ -662,14 +662,13 @@ nsIScrollableFrame* nsLayoutUtils::FindScrollableFrameFor(ViewID aId) {
   return FindScrollableFrameFor(content);
 }
 
-ViewID nsLayoutUtils::FindIDForScrollableFrame(
-    nsIScrollableFrame* aScrollable) {
-  if (!aScrollable) {
+ViewID nsLayoutUtils::FindIDForScrollContainerFrame(
+    ScrollContainerFrame* aScrollContainerFrame) {
+  if (!aScrollContainerFrame) {
     return ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
-  nsIFrame* scrollFrame = do_QueryFrame(aScrollable);
-  nsIContent* scrollContent = scrollFrame->GetContent();
+  nsIContent* scrollContent = aScrollContainerFrame->GetContent();
 
   ScrollableLayerGuid::ViewID scrollId;
   if (scrollContent && nsLayoutUtils::FindIDFor(scrollContent, &scrollId)) {
@@ -1281,7 +1280,7 @@ ScrollableLayerGuid::ViewID nsLayoutUtils::ScrollIdForRootScrollFrame(
 }
 
 // static
-nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
+ScrollContainerFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
     nsIFrame* aFrame, ScrollDirections aDirections) {
   NS_ASSERTION(
       aFrame, "GetNearestScrollableFrameForDirection expects a non-null frame");
@@ -1289,18 +1288,19 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
   // process boundaries, in such cases we need to hand over in APZ side.
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
-    if (scrollableFrame) {
+    ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f);
+    if (scrollContainerFrame) {
       ScrollDirections directions =
-          scrollableFrame->GetAvailableScrollingDirectionsForUserInputEvents();
+          scrollContainerFrame
+              ->GetAvailableScrollingDirectionsForUserInputEvents();
       if (aDirections.contains(ScrollDirection::eVertical)) {
         if (directions.contains(ScrollDirection::eVertical)) {
-          return scrollableFrame;
+          return scrollContainerFrame;
         }
       }
       if (aDirections.contains(ScrollDirection::eHorizontal)) {
         if (directions.contains(ScrollDirection::eHorizontal)) {
-          return scrollableFrame;
+          return scrollContainerFrame;
         }
       }
     }

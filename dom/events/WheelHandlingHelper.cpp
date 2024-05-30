@@ -53,24 +53,27 @@ bool WheelHandlingUtils::CanScrollInRange(nscoord aMin, nscoord aValue,
 /* static */
 bool WheelHandlingUtils::CanScrollOn(nsIFrame* aFrame, double aDirectionX,
                                      double aDirectionY) {
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
-  if (!scrollableFrame) {
+  ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(aFrame);
+  if (!scrollContainerFrame) {
     return false;
   }
-  return CanScrollOn(scrollableFrame, aDirectionX, aDirectionY);
+  return CanScrollOn(scrollContainerFrame, aDirectionX, aDirectionY);
 }
 
 /* static */
-bool WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
-                                     double aDirectionX, double aDirectionY) {
-  MOZ_ASSERT(aScrollFrame);
+bool WheelHandlingUtils::CanScrollOn(
+    ScrollContainerFrame* aScrollContainerFrame, double aDirectionX,
+    double aDirectionY) {
+  MOZ_ASSERT(aScrollContainerFrame);
   NS_ASSERTION(aDirectionX || aDirectionY,
                "One of the delta values must be non-zero at least");
 
-  nsPoint scrollPt = aScrollFrame->GetVisualViewportOffset();
-  nsRect scrollRange = aScrollFrame->GetScrollRangeForUserInputEvents();
+  nsPoint scrollPt = aScrollContainerFrame->GetVisualViewportOffset();
+  nsRect scrollRange =
+      aScrollContainerFrame->GetScrollRangeForUserInputEvents();
   layers::ScrollDirections directions =
-      aScrollFrame->GetAvailableScrollingDirectionsForUserInputEvents();
+      aScrollContainerFrame
+          ->GetAvailableScrollingDirectionsForUserInputEvents();
 
   return ((aDirectionX != 0.0) &&
           (directions.contains(layers::ScrollDirection::eHorizontal)) &&
