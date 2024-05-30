@@ -63,7 +63,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsError.h"
 #include "nsFieldSetFrame.h"
-#include "nsFileControlFrame.h"
 #include "nsFirstLetterFrame.h"
 #include "nsFlexContainerFrame.h"
 #include "nsGkAtoms.h"
@@ -3443,7 +3442,7 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
 
   if (aElement.IsInNativeAnonymousSubtree() &&
       aElement.NodeInfo()->NameAtom() == nsGkAtoms::label && aParentFrame) {
-    if (static_cast<nsFileControlFrame*>(do_QueryFrame(aParentFrame))) {
+    if (aParentFrame->IsFileControlFrame()) {
       static constexpr FrameConstructionData sFileLabelData(
           NS_NewFileControlLabelFrame);
       return &sFileLabelData;

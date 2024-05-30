@@ -61,7 +61,7 @@ FRAME_CLASSES = [
     Frame("nsContinuingTextFrame", "Text", TEXT),
     Frame("nsDateTimeControlFrame", "DateTimeControl", REPLACED_WITH_BLOCK),
     Frame("nsFieldSetFrame", "FieldSet", BLOCK),
-    Frame("nsFileControlFrame", "Block", REPLACED_WITH_BLOCK | LEAF | BFC),
+    Frame("nsFileControlFrame", "FileControl", REPLACED_WITH_BLOCK | LEAF | BFC),
     Frame("FileControlLabelFrame", "Block", BLOCK | LEAF),
     Frame("nsFirstLetterFrame", "Letter", INLINE),
     Frame("nsFloatingFirstLetterFrame", "Letter", INLINE - {"LineParticipant"}),
