@@ -84,7 +84,7 @@ async function initBin() {
 async function compile() {
   await build({
     root: r("src"),
-    publicDir: r("public"),
+    publicDir: r("src/public"),
     build: {
       sourcemap: true,
       reportCompressedSize: false,
