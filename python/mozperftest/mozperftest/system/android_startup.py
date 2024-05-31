@@ -34,53 +34,6 @@ TEST_COLD_VIEW_FF = "cold_view_first_frame"
 TEST_COLD_VIEW_NAV_START = "cold_view_nav_start"
 TEST_URI = "https://example.com"
 
-BASE_URL_DICT = {
-    PROD_FENIX: (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "gecko.v2.mozilla-central.pushdate.{date}.latest.mobile.fenix-nightly"
-        "/artifacts/public%2Fbuild%2Ftarget.{architecture}.apk"
-    ),
-    PROD_FENIX
-    + "-pre-mono-repo": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.fenix-nightly.{date}.latest.{architecture}/artifacts/"
-        "public%2Fbuild%2Ftarget.{architecture}.apk"
-    ),
-    PROD_FENIX
-    + "-latest": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "gecko.v2.mozilla-central.latest.mobile.fenix-nightly/artifacts/"
-        "public%2Fbuild%2Ftarget.{architecture}.apk"
-    ),
-    PROD_FOCUS: (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "gecko.v2.mozilla-central.pushdate.{date}.latest.mobile.focus-nightly"
-        "/artifacts/public%2Fbuild%2Ftarget.{architecture}.apk"
-    ),
-    PROD_FOCUS
-    + "-pre-mono-repo": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}"
-        "/artifacts/public%2Fbuild%2Ftarget.{architecture}.apk"
-    ),
-    PROD_FOCUS
-    + "-latest": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "gecko.v2.mozilla-central.latest.mobile.focus-nightly/artifacts/"
-        "public%2Fbuild%2Ftarget.{architecture}.apk"
-    ),
-    PROD_GVEX: (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "gecko.v2.mozilla-central.pushdate.{date}.latest.mobile.android-"
-        "{architecture}-debug/artifacts/public%2Fbuild%2Fgeckoview_example.apk"
-    ),
-    PROD_GVEX
-    + "-latest": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "gecko.v2.mozilla-central.shippable.latest.mobile.android-"
-        "{architecture}-opt/artifacts/public/build/geckoview_example.apk"
-    ),
-}
 PROD_TO_CHANNEL_TO_PKGID = {
     PROD_FENIX: {
         "nightly": "org.mozilla.fenix",
@@ -200,7 +153,8 @@ class AndroidStartUp(AndroidDevice):
         self.get_measurements(metadata)
 
         # Cleanup
-        self.device.shell(f"rm {self.key_name}")
+        if self.product in MOZILLA_PRODUCTS:
+            self.device.uninstall_app(self.package_id)
 
         return metadata
 
@@ -234,15 +188,9 @@ class AndroidStartUp(AndroidDevice):
                 install_path = self.custom_apk_path
             else:
                 install_path = str(self.get_install_path())
-            self.device.uninstall_app(self.package_id)
-            self.info(f"Installing {install_path}...")
-            app_name = self.device.install_app(install_path)
-            if self.device.is_app_installed(app_name):
-                self.info(f"Successfully installed {app_name}")
-            else:
-                raise AndroidStartUpInstallError("The android app was not installed")
-        if not self.device.is_app_installed(self.package_id):
-            raise AndroidStartUpInstallError("Please verify your app is installed")
+            self.install_application([install_path], self.package_id)
+        elif not self.device.is_app_installed(self.package_id):
+            raise AndroidStartUpInstallError("Please verify your apk is installed")
         return self.run_tests()
 
     def get_install_path(self):
@@ -416,18 +364,7 @@ class AndroidStartUp(AndroidDevice):
         return stdout[1]
 
     def skip_onboarding(self, test_name):
-        """
-        We skip onboarding for focus in measure_start_up.py because it's stateful
-        and needs to be called for every cold start intent.
-        Onboarding only visibly gets in the way of our MAIN test results.
-
-        Additionally, the code block with pm grant enables notifications for the app,
-        otherwise during testing a request to enable/disable notifications will persist
-        through app shutdowns.
-        """
-        self.device.shell(
-            f"pm grant {self.package_id} android.permission.POST_NOTIFICATIONS"
-        )
+        self.enable_notifications(self.package_id)
 
         if self.product == PROD_FOCUS or test_name not in {
             TEST_COLD_MAIN_FF,
@@ -436,9 +373,4 @@ class AndroidStartUp(AndroidDevice):
             return
 
         if self.product in MOZILLA_PRODUCTS:
-            # This sets mutable state so we only need to pass this flag once, before we start the test
-            self.device.shell(
-                f"am start-activity -W -a android.intent.action.MAIN --ez "
-                f"performancetest true -n{self.package_id}/org.mozilla.fenix.App"
-            )
-            time.sleep(4)  # ensure skip onboarding call has time to propagate.
+            self.skip_app_onboarding(self.package_id)
