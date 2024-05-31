@@ -34,12 +34,12 @@ class FakeDevice:
     def uninstall_app(self, app):
         pass
 
-    def install_app(self, app_name):
+    def install_app(self, app_name, replace=True):
         return app_name
 
     def is_app_installed(self, name):
         self.name = name
-        if "not_installed_name" == name or "geckoview_example.apk" in name:
+        if "not_installed_name" == name or "geckoview_example.apk" == name:
             return False
         else:
             return True
@@ -92,31 +92,6 @@ def running_env(**kw):
     "mozdevice.ADBDevice",
     new=FakeDevice,
 )
-@mock.patch("time.sleep", return_value=time.sleep(0))
-@mock.patch("mozperftest.system.android_startup.ON_TRY", False)
-def test_install_failed(*mocked):
-    ARGS["AndroidStartUp-product"] = "app_name"
-    mach_cmd, metadata, env = running_env(
-        tests=[str(EXAMPLE_ANDROID_STARTUP_TEST)], **ARGS
-    )
-    test = android_startup.AndroidStartUp(env, mach_cmd)
-    with pytest.raises(AndroidStartUpInstallError):
-        test.run(metadata)
-    pass
-
-
-@mock.patch(
-    "mozperftest.system.android_startup.PROD_TO_CHANNEL_TO_PKGID",
-    {"app_name": {"nightly": "not_installed_name"}},
-)
-@mock.patch(
-    "mozperftest.system.android_startup.MOZILLA_PRODUCTS",
-    ["app_name"],
-)
-@mock.patch(
-    "mozdevice.ADBDevice",
-    new=FakeDevice,
-)
 @mock.patch("mozperftest.system.android_startup.ON_TRY", True)
 @mock.patch("time.sleep", return_value=time.sleep(0))
 def test_install_failed_CI(*mocked):
@@ -136,8 +111,16 @@ def test_install_failed_CI(*mocked):
 )
 @mock.patch("mozperftest.system.android_startup.ON_TRY", True)
 @mock.patch("time.sleep", return_value=time.sleep(0))
+@mock.patch(
+    "mozperftest.system.android_startup.MOZILLA_PRODUCTS",
+    ["app_name"],
+)
+@mock.patch(
+    "mozperftest.system.android_startup.PROD_TO_CHANNEL_TO_PKGID",
+    {"app_name": {"nightly": "not_installed_name"}},
+)
 def test_app_not_found_CI(*mocked):
-    ARGS["AndroidStartUp-product"] = "geckoview_example"
+    ARGS["AndroidStartUp-product"] = "app_name"
     mach_cmd, metadata, env = running_env(
         tests=[str(EXAMPLE_ANDROID_STARTUP_TEST)], **ARGS
     )
@@ -160,12 +143,8 @@ def test_app_not_found_CI(*mocked):
     new=FakeDevice,
 )
 @mock.patch("mozperftest.utils.ON_TRY", False)
-@mock.patch(
-    "mozperftest.system.android_startup.AndroidStartUp.get_install_path",
-    return_value="not_installed_name",
-)
 @mock.patch("time.sleep", return_value=time.sleep(0))
-def test_install_failed_local(*mocked):
+def test_not_installed_locally(*mocked):
     ARGS["AndroidStartUp-product"] = "app_name"
     mach_cmd, metadata, env = running_env(
         tests=[str(EXAMPLE_ANDROID_STARTUP_TEST)], **ARGS
@@ -294,8 +273,8 @@ def test_custom_apk_startup(get_measurement_mock, time_sleep_mock, path_mock):
     )
 
     with temp_file(name="user_upload.apk", content="") as sample_apk:
-        sample_apk = pathlib.Path(sample_apk)
-        path_mock.return_value = sample_apk
+        sample_apk_path = pathlib.Path(sample_apk)
+        path_mock.return_value = sample_apk_path
 
         with mock.patch(
             "mozperftest.system.android_startup.AndroidStartUp.run_tests"
