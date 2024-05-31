@@ -404,6 +404,23 @@
       await new Promise(r => setTimeout(r, 0));
       verifyEvents([]);
     });
+
+    // Verify setting iconSrc displays an icon in the radio button.
+    add_task(async function testRadioButtonIcon() {
+      const ICON_SRC = "chrome://global/skin/icons/edit-copy.svg";
+      let { radioButtons } = await renderRadioElements();
+      let [firstRadioButton] = radioButtons;
+
+      ok(!firstRadioButton.icon, "No icon element present if iconSrc isn't set.");
+      firstRadioButton.iconSrc = ICON_SRC;
+      await firstRadioButton.updateComplete;
+      ok(firstRadioButton.icon, "Radio button displays an icon.");
+      is(
+        firstRadioButton.icon.getAttribute("src"),
+        ICON_SRC,
+        "Radio button icon uses the expected source."
+      );
+    });
   </script>
 </head>
 <body>
