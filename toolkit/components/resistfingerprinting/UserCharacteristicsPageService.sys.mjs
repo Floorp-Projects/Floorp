@@ -16,6 +16,12 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
+ChromeUtils.defineLazyGetter(lazy, "contentPrefs", () => {
+  return Cc["@mozilla.org/content-pref/service;1"].getService(
+    Ci.nsIContentPrefService2
+  );
+});
+
 const BACKGROUND_WIDTH = 1024;
 const BACKGROUND_HEIGHT = 768;
 
@@ -184,6 +190,7 @@ export class UserCharacteristicsPageService {
         for (let gamepad of data.output.gamepads) {
           Glean.characteristics.gamepads.add(gamepad);
         }
+        Glean.characteristics.zoomCount.set(await this.populateZoomPrefs());
 
         lazy.console.debug("Unregistering actor");
         Services.obs.notifyObservers(
@@ -194,6 +201,22 @@ export class UserCharacteristicsPageService {
         this._backgroundBrowsers.delete(browser);
       }
     });
+  }
+
+  async populateZoomPrefs() {
+    const zoomPrefsCount = await new Promise(resolve => {
+      lazy.contentPrefs.getByName("browser.content.full-zoom", null, {
+        _result: 0,
+        handleResult(_) {
+          this._result++;
+        },
+        handleCompletion() {
+          resolve(this._result);
+        },
+      });
+    });
+
+    return zoomPrefsCount;
   }
 
   async pageLoaded(browsingContext, data) {
