@@ -9,6 +9,8 @@ extern crate nom;
 use bindgen::callbacks::*;
 use bindgen::*;
 
+use mozbuild::TOPSRCDIR;
+
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until};
 use nom::character::complete::{
@@ -314,11 +316,16 @@ macro_rules! emit_build_error {
 }
 
 fn main() -> std::io::Result<()> {
-    println!("cargo:rerun-if-changed=../../../nss/lib/ckfw/builtins/certdata.txt");
-    println!("cargo:rerun-if-changed=../../../nss/lib/ckfw/builtins/nssckbi.h");
+    let testlib_certdata =
+        TOPSRCDIR.join("security/manager/ssl/tests/unit/test_builtins/certdata.txt");
+    let mozilla_certdata = TOPSRCDIR.join("security/nss/lib/ckfw/builtins/certdata.txt");
+    let nssckbi_header = TOPSRCDIR.join("security/nss/lib/ckfw/builtins/nssckbi.h");
+    println!("cargo:rerun-if-changed={}", testlib_certdata.display());
+    println!("cargo:rerun-if-changed={}", mozilla_certdata.display());
+    println!("cargo:rerun-if-changed={}", nssckbi_header.display());
 
     let bindings = Builder::default()
-        .header("../../../nss/lib/ckfw/builtins/nssckbi.h")
+        .header(nssckbi_header.display().to_string())
         .allowlist_var("NSS_BUILTINS_CRYPTOKI_VERSION_MAJOR")
         .allowlist_var("NSS_BUILTINS_CRYPTOKI_VERSION_MINOR")
         .allowlist_var("NSS_BUILTINS_LIBRARY_VERSION_MAJOR")
@@ -340,8 +347,15 @@ fn main() -> std::io::Result<()> {
         File::create(out_path.join("builtins.rs")).expect("Could not write builtins.rs."),
     );
 
-    let mut input: String = std::fs::read_to_string("../../../nss/lib/ckfw/builtins/certdata.txt")
-        .expect("Unable to read certdata.txt.");
+    // If we are building the test module, use the certdata.txt in the test directory.
+    #[cfg(feature = "testlib")]
+    let mut input =
+        std::fs::read_to_string(testlib_certdata).expect("Unable to read certdata.txt.");
+
+    // Otherwise, use the official certdata.txt for the Mozilla root store.
+    #[cfg(not(feature = "testlib"))]
+    let mut input =
+        std::fs::read_to_string(mozilla_certdata).expect("Unable to read certdata.txt.");
 
     // Add a trailing newline to simplify parsing.
     input.push('\n');
