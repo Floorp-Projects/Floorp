@@ -206,6 +206,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 lazy(LazyThreadSafetyMode.NONE) { components.core.client },
             ),
             enableEventTimestamps = FxNimbus.features.glean.value().enableEventTimestamps,
+            delayPingLifetimeIo = FxNimbus.features.glean.value().delayPingLifetimeIo,
         )
 
         // Set the metric configuration from Nimbus.
