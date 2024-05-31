@@ -325,7 +325,7 @@ bool BrowsingContext::SameOriginWithTop() {
 already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
     BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType,
-    CreateDetachedOptions aOptions) {
+    bool aIsPopupRequested, bool aCreatedDynamically) {
   if (aParent) {
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetWindowContext());
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetBrowsingContext()->mType == aType);
@@ -461,10 +461,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   fields.Get<IDX_AllowJavascript>() =
       inherit ? inherit->GetAllowJavascript() : true;
 
-  fields.Get<IDX_IsPopupRequested>() = aOptions.isPopupRequested;
-
-  fields.Get<IDX_TopLevelCreatedByWebContent>() =
-      aOptions.topLevelCreatedByWebContent;
+  fields.Get<IDX_IsPopupRequested>() = aIsPopupRequested;
 
   if (!parentBC) {
     fields.Get<IDX_ShouldDelayMediaFromStart>() =
@@ -483,7 +480,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   }
 
   context->mEmbeddedByThisProcess = XRE_IsParentProcess() || aParent;
-  context->mCreatedDynamically = aOptions.createdDynamically;
+  context->mCreatedDynamically = aCreatedDynamically;
   if (inherit) {
     context->mPrivateBrowsingId = inherit->mPrivateBrowsingId;
     context->mUseRemoteTabs = inherit->mUseRemoteTabs;
@@ -510,7 +507,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateIndependent(
                         "BCs created in the content process must be related to "
                         "some BrowserChild");
   RefPtr<BrowsingContext> bc(
-      CreateDetached(nullptr, nullptr, nullptr, u""_ns, aType, {}));
+      CreateDetached(nullptr, nullptr, nullptr, u""_ns, aType, false));
   bc->mWindowless = bc->IsContent();
   bc->mEmbeddedByThisProcess = true;
   bc->EnsureAttached();
@@ -3165,8 +3162,8 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_UseGlobalHistory>,
 }
 
 auto BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
-                             const nsString& aUserAgent,
-                             ContentParent* aSource) -> CanSetResult {
+                             const nsString& aUserAgent, ContentParent* aSource)
+    -> CanSetResult {
   if (!IsTop()) {
     return CanSetResult::Deny;
   }
@@ -3175,8 +3172,8 @@ auto BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
 }
 
 auto BrowsingContext::CanSet(FieldIndex<IDX_PlatformOverride>,
-                             const nsString& aPlatform,
-                             ContentParent* aSource) -> CanSetResult {
+                             const nsString& aPlatform, ContentParent* aSource)
+    -> CanSetResult {
   if (!IsTop()) {
     return CanSetResult::Deny;
   }
@@ -3210,8 +3207,8 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_EmbedderElementType>,
 }
 
 auto BrowsingContext::CanSet(FieldIndex<IDX_CurrentInnerWindowId>,
-                             const uint64_t& aValue,
-                             ContentParent* aSource) -> CanSetResult {
+                             const uint64_t& aValue, ContentParent* aSource)
+    -> CanSetResult {
   // Generally allow clearing this. We may want to be more precise about this
   // check in the future.
   if (aValue == 0) {
