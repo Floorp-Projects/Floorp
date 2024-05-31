@@ -2510,10 +2510,38 @@ def ubsan(options, optimize):
 
     checks = options if len(options) else default_checks
 
-    return ",".join(checks)
+    return checks
 
 
-add_old_configure_assignment("MOZ_UBSAN_CHECKS", ubsan)
+@depends(
+    ubsan, c_compiler, compilation_flags, linker_flags, build_environment, when=ubsan
+)
+@imports(_from="__builtin__", _import="open")
+@imports(_from="glob", _import="glob")
+@imports("shutil")
+def ubsan_flags(ubsan_checks, c_compiler, compilation_flags, linker_flags, build_env):
+    ubsan_txt = os.path.join(build_env.topobjdir, "ubsan_blacklist.txt")
+    with open(ubsan_txt, "w") as out_fd:
+        for blacklist in glob(
+            os.path.join(
+                build_env.topsrcdir, "build", "sanitizers", "ubsan_*_blacklist.txt"
+            )
+        ):
+            with open(blacklist) as in_fd:
+                shutil.copyfileobj(in_fd, out_fd)
+
+    joined_ubsan_checks = ",".join(ubsan_checks)
+
+    flags = [
+        f"-fsanitize={joined_ubsan_checks}",
+        f"-fno-sanitize-recover={joined_ubsan_checks}",
+        f"-fsanitize-blacklist={ubsan_txt}",
+    ]
+    compilation_flags.cflags.extend(flags)
+    compilation_flags.cxxflags.extend(flags)
+    if c_compiler.type != "clang-cl":
+        linker_flags.ldflags.extend(["-fsanitize=undefined", "-rdynamic"])
+
 
 option(
     "--enable-signed-overflow-sanitizer",

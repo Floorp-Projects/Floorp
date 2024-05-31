@@ -43,20 +43,6 @@ if test -n "$MOZ_ASAN"; then
 fi
 
 dnl ========================================================
-dnl = Use UndefinedBehavior Sanitizer (with custom checks)
-dnl ========================================================
-if test -n "$MOZ_UBSAN_CHECKS"; then
-    UBSAN_TXT="$_objdir/ubsan_blacklist.txt"
-    cat $_topsrcdir/build/sanitizers/ubsan_*_blacklist.txt > $UBSAN_TXT
-    UBSAN_FLAGS="-fsanitize=$MOZ_UBSAN_CHECKS -fno-sanitize-recover=$MOZ_UBSAN_CHECKS -fsanitize-blacklist=$UBSAN_TXT"
-    CFLAGS="$UBSAN_FLAGS $CFLAGS"
-    CXXFLAGS="$UBSAN_FLAGS $CXXFLAGS"
-    if test -z "$CLANG_CL"; then
-        LDFLAGS="-fsanitize=undefined -rdynamic $LDFLAGS"
-    fi
-fi
-
-dnl ========================================================
 dnl = Use UndefinedBehavior Sanitizer to find integer overflows
 dnl ========================================================
 if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
