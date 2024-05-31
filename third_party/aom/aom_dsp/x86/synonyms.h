@@ -46,6 +46,16 @@ static INLINE __m128i xx_loadu_128(const void *a) {
   return _mm_loadu_si128((const __m128i *)a);
 }
 
+// _mm_loadu_si64 has been introduced in GCC 9, reimplement the function
+// manually on older compilers.
+#if !defined(__clang__) && __GNUC_MAJOR__ < 9
+static INLINE __m128i xx_loadu_2x64(const void *hi, const void *lo) {
+  __m64 hi_, lo_;
+  memcpy(&hi_, hi, sizeof(hi_));
+  memcpy(&lo_, lo, sizeof(lo_));
+  return _mm_set_epi64(hi_, lo_);
+}
+#else
 // Load 64 bits from each of hi and low, and pack into an SSE register
 // Since directly loading as `int64_t`s and using _mm_set_epi64 may violate
 // the strict aliasing rule, this takes a different approach
@@ -53,6 +63,7 @@ static INLINE __m128i xx_loadu_2x64(const void *hi, const void *lo) {
   return _mm_unpacklo_epi64(_mm_loadl_epi64((const __m128i *)lo),
                             _mm_loadl_epi64((const __m128i *)hi));
 }
+#endif
 
 static INLINE void xx_storel_32(void *const a, const __m128i v) {
   const int val = _mm_cvtsi128_si32(v);
