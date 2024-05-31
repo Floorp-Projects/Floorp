@@ -489,6 +489,50 @@ impl PositionAnchor {
     }
 }
 
+/// https://drafts.csswg.org/css-anchor-position-1/#position-try-order-property
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Eq,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum PositionTryOrder {
+    #[default]
+    /// `normal`
+    Normal,
+    /// `most-width`
+    MostWidth,
+    /// `most-height`
+    MostHeight,
+    /// `most-block-size`
+    MostBlockSize,
+    /// `most-inline-size`
+    MostInlineSize,
+}
+
+impl PositionTryOrder {
+    #[inline]
+    /// Return the `auto` value.
+    pub fn normal() -> Self {
+        Self::Normal
+    }
+
+    /// Returns whether this is the `auto` value.
+    pub fn is_normal(&self) -> bool {
+        *self == Self::Normal
+    }
+}
+
 #[derive(
     Clone,
     Copy,

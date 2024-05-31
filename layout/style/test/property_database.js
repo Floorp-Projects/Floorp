@@ -13426,6 +13426,20 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
     invalid_values: ["none", "--foo, auto", "auto, --bar", "foo"],
   };
 
+  gCSSProperties["position-try-order"] = {
+    domProp: "positionTryOrder",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["normal"],
+    other_values: [
+      "most-width",
+      "most-heigh",
+      "most-block-size",
+      "most-inline-size",
+    ],
+    invalid_values: ["auto", "none", "foo"],
+  };
+
   gCSSProperties["position-visibility"] = {
     domProp: "positionVisibility",
     inherited: false,
