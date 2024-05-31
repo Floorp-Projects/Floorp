@@ -13,11 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGElement.h"
-#include "mozilla/gfx/Rect.h"
-#include "nsCoord.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "nsMathUtils.h"
 
 struct GeckoFontMetrics;
 class nsPresContext;
@@ -42,11 +38,14 @@ class UserSpaceMetrics {
   static GeckoFontMetrics DefaultFontMetrics();
   static GeckoFontMetrics GetFontMetrics(const Element* aElement);
   static WritingMode GetWritingMode(const Element* aElement);
+  static float GetZoom(const Element* aElement);
   static CSSSize GetCSSViewportSizeFromContext(const nsPresContext* aContext);
 
   virtual ~UserSpaceMetrics() = default;
 
   virtual float GetEmLength(Type aType) const = 0;
+  virtual float GetZoom() const = 0;
+  virtual float GetRootZoom() const = 0;
   float GetExLength(Type aType) const;
   float GetChSize(Type aType) const;
   float GetIcWidth(Type aType) const;
@@ -66,7 +65,7 @@ class UserSpaceMetricsWithSize : public UserSpaceMetrics {
   float GetAxisLength(uint8_t aCtxType) const override;
 };
 
-class SVGElementMetrics : public UserSpaceMetrics {
+class SVGElementMetrics final : public UserSpaceMetrics {
  public:
   explicit SVGElementMetrics(const SVGElement* aSVGElement,
                              const SVGViewportElement* aCtx = nullptr);
@@ -77,6 +76,8 @@ class SVGElementMetrics : public UserSpaceMetrics {
   float GetAxisLength(uint8_t aCtxType) const override;
   CSSSize GetCSSViewportSize() const override;
   float GetLineHeight(Type aType) const override;
+  float GetZoom() const override;
+  float GetRootZoom() const override;
 
  private:
   bool EnsureCtx() const;
@@ -88,7 +89,7 @@ class SVGElementMetrics : public UserSpaceMetrics {
   mutable const SVGViewportElement* mCtx;
 };
 
-class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
+class NonSVGFrameUserSpaceMetrics final : public UserSpaceMetricsWithSize {
  public:
   explicit NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame);
 
@@ -96,6 +97,8 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
   gfx::Size GetSize() const override;
   CSSSize GetCSSViewportSize() const override;
   float GetLineHeight(Type aType) const override;
+  float GetZoom() const override;
+  float GetRootZoom() const override;
 
  private:
   GeckoFontMetrics GetFontMetricsForType(Type aType) const override;

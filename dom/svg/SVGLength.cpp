@@ -6,9 +6,7 @@
 
 #include "SVGLength.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGElement.h"
-#include "mozilla/dom/SVGSVGElement.h"
 #include "nsCSSValue.h"
 #include "nsTextFormatter.h"
 #include "SVGContentUtils.h"
@@ -163,47 +161,72 @@ float SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
 
 // Helpers:
 
+enum class ZoomType { Self, SelfFromRoot, None };
+
 /*static*/
 float SVGLength::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
                                   uint8_t aUnitType, uint8_t aAxis) {
-  switch (aUnitType) {
-    case SVG_LENGTHTYPE_NUMBER:
-    case SVG_LENGTHTYPE_PX:
-      return 1.0f;
-    case SVG_LENGTHTYPE_PERCENTAGE:
-      return aMetrics.GetAxisLength(aAxis) / 100.0f;
-    case SVG_LENGTHTYPE_EMS:
-      return aMetrics.GetEmLength(UserSpaceMetrics::Type::This);
-    case SVG_LENGTHTYPE_EXS:
-      return aMetrics.GetExLength(UserSpaceMetrics::Type::This);
-    case SVG_LENGTHTYPE_CH:
-      return aMetrics.GetChSize(UserSpaceMetrics::Type::This);
-    case SVG_LENGTHTYPE_REM:
-      return aMetrics.GetEmLength(UserSpaceMetrics::Type::Root);
-    case SVG_LENGTHTYPE_IC:
-      return aMetrics.GetIcWidth(UserSpaceMetrics::Type::This);
-    case SVG_LENGTHTYPE_CAP:
-      return aMetrics.GetCapHeight(UserSpaceMetrics::Type::This);
-    case SVG_LENGTHTYPE_VW:
-      return aMetrics.GetCSSViewportSize().width / 100.f;
-    case SVG_LENGTHTYPE_VH:
-      return aMetrics.GetCSSViewportSize().height / 100.f;
-    case SVG_LENGTHTYPE_VMIN: {
-      auto sz = aMetrics.GetCSSViewportSize();
-      return std::min(sz.width, sz.height) / 100.f;
+  auto zoomType = ZoomType::Self;
+  float value = [&]() -> float {
+    switch (aUnitType) {
+      case SVG_LENGTHTYPE_NUMBER:
+      case SVG_LENGTHTYPE_PX:
+        return 1.0f;
+      case SVG_LENGTHTYPE_PERCENTAGE:
+        zoomType = ZoomType::None;
+        return aMetrics.GetAxisLength(aAxis) / 100.0f;
+      case SVG_LENGTHTYPE_EMS:
+        zoomType = ZoomType::None;
+        return aMetrics.GetEmLength(UserSpaceMetrics::Type::This);
+      case SVG_LENGTHTYPE_EXS:
+        zoomType = ZoomType::None;
+        return aMetrics.GetExLength(UserSpaceMetrics::Type::This);
+      case SVG_LENGTHTYPE_CH:
+        zoomType = ZoomType::None;
+        return aMetrics.GetChSize(UserSpaceMetrics::Type::This);
+      case SVG_LENGTHTYPE_REM:
+        zoomType = ZoomType::SelfFromRoot;
+        return aMetrics.GetEmLength(UserSpaceMetrics::Type::Root);
+      case SVG_LENGTHTYPE_IC:
+        zoomType = ZoomType::None;
+        return aMetrics.GetIcWidth(UserSpaceMetrics::Type::This);
+      case SVG_LENGTHTYPE_CAP:
+        zoomType = ZoomType::None;
+        return aMetrics.GetCapHeight(UserSpaceMetrics::Type::This);
+      case SVG_LENGTHTYPE_VW:
+        return aMetrics.GetCSSViewportSize().width / 100.f;
+      case SVG_LENGTHTYPE_VH:
+        return aMetrics.GetCSSViewportSize().height / 100.f;
+      case SVG_LENGTHTYPE_VMIN: {
+        auto sz = aMetrics.GetCSSViewportSize();
+        return std::min(sz.width, sz.height) / 100.f;
+      }
+      case SVG_LENGTHTYPE_VMAX: {
+        auto sz = aMetrics.GetCSSViewportSize();
+        return std::max(sz.width, sz.height) / 100.f;
+      }
+      case SVG_LENGTHTYPE_LH:
+        zoomType = ZoomType::None;
+        return aMetrics.GetLineHeight(UserSpaceMetrics::Type::This);
+      case SVG_LENGTHTYPE_RLH:
+        zoomType = ZoomType::SelfFromRoot;
+        return aMetrics.GetLineHeight(UserSpaceMetrics::Type::Root);
+      default:
+        MOZ_ASSERT(IsAbsoluteUnit(aUnitType));
+        return GetAbsUnitsPerAbsUnit(SVG_LENGTHTYPE_PX, aUnitType);
     }
-    case SVG_LENGTHTYPE_VMAX: {
-      auto sz = aMetrics.GetCSSViewportSize();
-      return std::max(sz.width, sz.height) / 100.f;
-    }
-    case SVG_LENGTHTYPE_LH:
-      return aMetrics.GetLineHeight(UserSpaceMetrics::Type::This);
-    case SVG_LENGTHTYPE_RLH:
-      return aMetrics.GetLineHeight(UserSpaceMetrics::Type::Root);
-    default:
-      MOZ_ASSERT(IsAbsoluteUnit(aUnitType));
-      return GetAbsUnitsPerAbsUnit(SVG_LENGTHTYPE_PX, aUnitType);
+  }();
+  switch (zoomType) {
+    case ZoomType::None:
+      break;
+    case ZoomType::Self:
+      value *= aMetrics.GetZoom();
+      break;
+    case ZoomType::SelfFromRoot:
+      value *= aMetrics.GetZoom() / aMetrics.GetRootZoom();
+      break;
   }
+  return value;
 }
 
 /* static */

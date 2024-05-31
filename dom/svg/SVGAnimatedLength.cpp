@@ -13,6 +13,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/StaticPresData.h"
+#include "nsPresContextInlines.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "DOMSVGAnimatedLength.h"
@@ -145,6 +146,15 @@ WritingMode UserSpaceMetrics::GetWritingMode(const Element* aElement) {
   return writingMode;
 }
 
+float UserSpaceMetrics::GetZoom(const Element* aElement) {
+  float zoom = 1.0f;
+  SVGGeometryProperty::DoForComputedStyle(
+      aElement, [&](const ComputedStyle* style) {
+        zoom = style->EffectiveZoom().ToFloat();
+      });
+  return zoom;
+}
+
 float UserSpaceMetrics::GetExLength(Type aType) const {
   return GetFontMetricsForType(aType).mXSize.ToCSSPixels();
 }
@@ -204,6 +214,15 @@ GeckoFontMetrics SVGElementMetrics::GetFontMetricsForType(Type aType) const {
 
 WritingMode SVGElementMetrics::GetWritingModeForType(Type aType) const {
   return GetWritingMode(GetElementForType(aType));
+}
+
+float SVGElementMetrics::GetZoom() const {
+  return UserSpaceMetrics::GetZoom(mSVGElement);
+}
+
+float SVGElementMetrics::GetRootZoom() const {
+  return UserSpaceMetrics::GetZoom(
+      mSVGElement ? mSVGElement->OwnerDoc()->GetRootElement() : nullptr);
 }
 
 float SVGElementMetrics::GetAxisLength(uint8_t aCtxType) const {
@@ -292,6 +311,19 @@ WritingMode NonSVGFrameUserSpaceMetrics::GetWritingModeForType(
       MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
       return WritingMode();
   }
+}
+
+float NonSVGFrameUserSpaceMetrics::GetZoom() const {
+  return mFrame->Style()->EffectiveZoom().ToFloat();
+}
+
+float NonSVGFrameUserSpaceMetrics::GetRootZoom() const {
+  return mFrame->PresContext()
+      ->FrameConstructor()
+      ->GetRootElementStyleFrame()
+      ->Style()
+      ->EffectiveZoom()
+      .ToFloat();
 }
 
 gfx::Size NonSVGFrameUserSpaceMetrics::GetSize() const {

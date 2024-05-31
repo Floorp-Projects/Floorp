@@ -2887,7 +2887,7 @@ void CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
   *aValue = value;
 }
 
-class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
+class CanvasUserSpaceMetrics final : public UserSpaceMetricsWithSize {
  public:
   CanvasUserSpaceMetrics(const gfx::IntSize& aSize, const nsFont& aFont,
                          const StyleLineHeight& aLineHeight,
@@ -2902,6 +2902,15 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
         mFontExplicitLanguage(aFontExplicitLanguage),
         mCanvasStyle(aCanvasStyle),
         mPresContext(aPresContext) {}
+
+  float GetZoom() const override {
+    return mCanvasStyle ? mCanvasStyle->EffectiveZoom().ToFloat() : 1.0f;
+  }
+
+  float GetRootZoom() const override {
+    return UserSpaceMetrics::GetZoom(
+        mPresContext->Document()->GetRootElement());
+  }
 
   float GetEmLength(Type aType) const override {
     switch (aType) {
