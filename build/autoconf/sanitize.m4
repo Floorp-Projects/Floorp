@@ -42,31 +42,6 @@ if test -n "$MOZ_ASAN"; then
     fi
 fi
 
-dnl ========================================================
-dnl = Use UndefinedBehavior Sanitizer to find integer overflows
-dnl ========================================================
-if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
-    SANITIZER_BLACKLISTS=""
-    if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE"; then
-        SANITIZER_BLACKLISTS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_signed_overflow_blacklist.txt $SANITIZER_BLACKLISTS"
-        CFLAGS="-fsanitize=signed-integer-overflow $CFLAGS"
-        CXXFLAGS="-fsanitize=signed-integer-overflow $CXXFLAGS"
-        if test -z "$CLANG_CL"; then
-            LDFLAGS="-fsanitize=signed-integer-overflow -rdynamic $LDFLAGS"
-        fi
-    fi
-    if test -n "$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
-        SANITIZER_BLACKLISTS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_unsigned_overflow_blacklist.txt $SANITIZER_BLACKLISTS"
-        CFLAGS="-fsanitize=unsigned-integer-overflow $CFLAGS"
-        CXXFLAGS="-fsanitize=unsigned-integer-overflow $CXXFLAGS"
-        if test -z "$CLANG_CL"; then
-            LDFLAGS="-fsanitize=unsigned-integer-overflow -rdynamic $LDFLAGS"
-        fi
-    fi
-    CFLAGS="$SANITIZER_BLACKLISTS $CFLAGS"
-    CXXFLAGS="$SANITIZER_BLACKLISTS $CXXFLAGS"
-fi
-
 dnl =======================================================
 dnl = Required for stand-alone (sanitizer-less) libFuzzer.
 dnl =======================================================
