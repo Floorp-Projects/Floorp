@@ -76,8 +76,6 @@
     <string name="mozac_feature_addons_version">Versione</string>
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Autore</string>
-    <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Autori</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Ultimo aggiornamento</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -94,8 +92,6 @@
     <string name="mozac_feature_addons_settings">Impostazioni</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Attiva</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Disattivata</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Consenti in navigazione anonima</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -103,13 +99,11 @@
     <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
     <string name="mozac_feature_addons_not_allowed_in_private_browsing">Disattivata in finestre anonime</string>
     <!-- Indicates the add-on is enabled. -->
-    <string name="mozac_feature_addons_enabled">Attivi</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Disattivato</string>
+    <string name="mozac_feature_addons_enabled">Attive</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
-    <string name="mozac_feature_addons_installed_section">Installata</string>
+    <string name="mozac_feature_addons_installed_section">Installate</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
-    <string name="mozac_feature_addons_recommended_section">Consigliati</string>
+    <string name="mozac_feature_addons_recommended_section">Consigliate</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Non ancora supportato</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
@@ -140,16 +134,12 @@
     <string name="mozac_feature_addons_permissions_dialog_deny">Nega</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Annulla</string>
-    <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Installa componente aggiuntivo</string>
     <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_install_addon_content_description_2">Installa %1$s</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Annulla</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
     <string name="mozac_feature_addons_user_rating_count_2">Recensioni: %1$s</string>
-    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
-    <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
     <string name="mozac_feature_addons_rating_content_description_2">Valutazione: %1$.02f su 5</string>
     <!-- This is the title of page where all the add-ons are listed-->
@@ -278,12 +268,8 @@
     <string name="mozac_feature_addons_updater_dialog_status">Stato:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s è stato aggiunto a %2$s</string>
-    <!-- Text shown in the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Apri nel menu</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_description_2">Accedi a %1$s dal menu di %2$s.</string>
-    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">OK</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button_2">OK</string>
     <!-- "Learn more" link displayed below an add-on status message. -->
