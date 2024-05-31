@@ -974,7 +974,8 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   // Create a br.
-  RefPtr<Element> newBRElement = CreateHTMLContent(nsGkAtoms::br);
+  RefPtr<HTMLBRElement> newBRElement =
+      HTMLBRElement::FromNodeOrNull(RefPtr{CreateHTMLContent(nsGkAtoms::br)});
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -982,11 +983,15 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
     return NS_ERROR_FAILURE;
   }
 
-  mPaddingBRElementForEmptyEditor =
-      static_cast<HTMLBRElement*>(newBRElement.get());
+  mPaddingBRElementForEmptyEditor = newBRElement;
 
   // Give it a special attribute.
-  newBRElement->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
+  nsresult rv =
+      UpdateBRElementType(*newBRElement, BRElementType::PaddingForEmptyEditor);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::UpdateBRElementType() failed");
+    return rv;
+  }
 
   // Put the node in the document.
   Result<CreateElementResult, nsresult> insertBRElementResult =
@@ -999,7 +1004,7 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
 
   // Set selection.
   insertBRElementResult.inspect().IgnoreCaretPointSuggestion();
-  nsresult rv = CollapseSelectionToStartOf(*bodyOrDocumentElement);
+  rv = CollapseSelectionToStartOf(*bodyOrDocumentElement);
   if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
     NS_WARNING(
         "EditorBase::CollapseSelectionToStartOf() caused destroying the "
@@ -8698,7 +8703,12 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitParagraphWithTransaction(
       // <br>.
       if (brElement &&
           brElement->GetParentNode() == deepestInlineContainerElement) {
-        brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+        nsresult rv = UpdateBRElementType(
+            *brElement, BRElementType::PaddingForEmptyLastLine);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::UpdateBRElementType() failed");
+          return Err(rv);
+        }
         return SplitNodeResult(std::move(unwrappedSplitDivOrPResult),
                                EditorDOMPoint(brElement));
       }

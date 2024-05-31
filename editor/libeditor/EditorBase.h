@@ -1754,6 +1754,19 @@ class EditorBase : public nsIEditor,
   InsertPaddingBRElementForEmptyLastLineWithTransaction(
       const EditorDOMPoint& aPointToInsert);
 
+  enum class BRElementType {
+    Normal,
+    PaddingForEmptyEditor,
+    PaddingForEmptyLastLine
+  };
+  /**
+   * Updates the type of aBRElement.  If it will be hidden or shown from
+   * IMEContentObserver and ContentEventHandler points of view, this temporarily
+   * removes the node and reconnect to the same position.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  UpdateBRElementType(dom::HTMLBRElement& aBRElement, BRElementType aNewType);
+
   /**
    * CloneAttributesWithTransaction() clones all attributes from
    * aSourceElement to aDestElement after removing all attributes in
