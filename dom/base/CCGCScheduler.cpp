@@ -661,13 +661,8 @@ void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
   }
 
   TimeDuration minimumBudget = TimeDuration::FromMilliseconds(
-      // Divide by 2 because mActiveIntersliceGCBudget is the non-idle slice
-      // time, and previously it was doubled because non-idle time implied that
-      // we are lacking idle time and so should increase the budget. Hopefully
-      // this adjustment can be removed so that the HighRateMultiplier can apply
-      // the same way to both CC and GC times.
       std::max(nsRefreshDriver::HighRateMultiplier() *
-                   mActiveIntersliceGCBudget.ToMilliseconds() / 2,
+                   mActiveIntersliceGCBudget.ToMilliseconds(),
                1.0));
 
   // Wait at most the interslice GC delay before forcing a run.
