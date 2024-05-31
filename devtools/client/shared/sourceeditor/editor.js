@@ -174,7 +174,7 @@ class Editor extends EventEmitter {
   #lineGutterMarkers = new Map();
   #lineContentMarkers = new Map();
   #posContentMarkers = new Map();
-  #lineContentEventHandlers = {};
+  #editorDOMEventHandlers = {};
 
   #updateListener = null;
 
@@ -636,6 +636,7 @@ class Editor extends EventEmitter {
     const lineContentMarkerCompartment = new Compartment();
     const positionContentMarkersCompartment = new Compartment();
     const searchHighlightCompartment = new Compartment();
+    const domEventHandlersCompartment = new Compartment();
 
     this.#compartments = {
       tabSizeCompartment,
@@ -646,6 +647,7 @@ class Editor extends EventEmitter {
       lineContentMarkerCompartment,
       positionContentMarkersCompartment,
       searchHighlightCompartment,
+      domEventHandlersCompartment,
     };
 
     const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
@@ -687,10 +689,9 @@ class Editor extends EventEmitter {
           this.#updateListener(v);
         }
       }),
+      domEventHandlersCompartment.of(EditorView.domEventHandlers({})),
       lineNumberMarkersCompartment.of([]),
-      lineContentMarkerCompartment.of(
-        this.#lineContentMarkersExtension({ lineMarkers: [] })
-      ),
+      lineContentMarkerCompartment.of(this.#lineContentMarkersExtension([])),
       positionContentMarkersCompartment.of(
         this.#positionContentMarkersExtension([])
       ),
@@ -715,12 +716,10 @@ class Editor extends EventEmitter {
    * This creates the extension used to manage the rendering of markers
    * for in editor line content.
    * @param   {Array}             lineMarkers - The current list of markers
-   * @param   {Object}            domEventHandlers - A dictionary of handlers for the DOM events
-   *                                                  See https://codemirror.net/docs/ref/#view.PluginSpec.eventHandlers
    * @returns {Array<ViewPlugin>}  An extension which is an array containing the view
    *                               which manages the rendering of the line content markers.
    */
-  #lineContentMarkersExtension({ lineMarkers, domEventHandlers }) {
+  #lineContentMarkersExtension(lineMarkers) {
     const {
       codemirrorView: { Decoration, ViewPlugin, WidgetType },
       codemirrorState: { RangeSetBuilder, RangeSet },
@@ -781,44 +780,101 @@ class Editor extends EventEmitter {
           }
         }
       },
-      {
-        decorations: v => v.decorations,
-        eventHandlers: domEventHandlers || this.#lineContentEventHandlers,
-      }
+      { decorations: v => v.decorations }
     );
 
     return [lineContentMarkersView];
   }
 
-  /**
-   *
-   * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
-   */
-  setContentEventListeners(domEventHandlers) {
-    const cm = editors.get(this);
-
-    for (const eventName in domEventHandlers) {
-      const handler = domEventHandlers[eventName];
-      domEventHandlers[eventName] = (event, editor) => {
-        // Wait a cycle so the codemirror updates to the current cursor position,
-        // information, TODO: Currently noticed this issue with CM6, not ideal but should
-        // investigate further Bug 1890895.
-        event.target.ownerGlobal.setTimeout(() => {
-          const view = editor.viewState;
-          const head = view.state.selection.main.head;
-          const cursor = view.state.doc.lineAt(head);
-          const column = head - cursor.from;
-          handler(event, view, cursor.number, column);
-        }, 0);
+  #createEventHandlers() {
+    const eventHandlers = {};
+    for (const eventName in this.#editorDOMEventHandlers) {
+      const handlers = this.#editorDOMEventHandlers[eventName];
+      eventHandlers[eventName] = (event, editor) => {
+        for (const handler of handlers) {
+          // Wait a cycle so the codemirror updates to the current cursor position,
+          // information, TODO: Currently noticed this issue with CM6, not ideal but should
+          // investigate further Bug 1890895.
+          event.target.ownerGlobal.setTimeout(() => {
+            const view = editor.viewState;
+            const head = view.state.selection.main.head;
+            const cursor = view.state.doc.lineAt(head);
+            const column = head - cursor.from;
+            handler(event, view, cursor.number, column);
+          }, 0);
+        }
       };
     }
+    return eventHandlers;
+  }
 
-    // Cache the handlers related to the editor content
-    this.#lineContentEventHandlers = domEventHandlers;
+  /**
+   * Adds the DOM event handlers for the editor.
+   * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
+   */
+  addEditorDOMEventListeners(domEventHandlers) {
+    const cm = editors.get(this);
+    const {
+      codemirrorView: { EditorView },
+    } = this.#CodeMirror6;
+
+    // Update the cache of dom event handlers
+    for (const eventName in domEventHandlers) {
+      if (!this.#editorDOMEventHandlers[eventName]) {
+        this.#editorDOMEventHandlers[eventName] = [];
+      }
+      this.#editorDOMEventHandlers[eventName].push(domEventHandlers[eventName]);
+    }
 
     cm.dispatch({
-      effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
-        this.#lineContentMarkersExtension({ domEventHandlers })
+      effects: this.#compartments.domEventHandlersCompartment.reconfigure(
+        EditorView.domEventHandlers(this.#createEventHandlers())
+      ),
+    });
+  }
+
+  /**
+   * Remove specified DOM event handlers for the editor.
+   * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
+   */
+  removeEditorDOMEventListeners(domEventHandlers) {
+    const cm = editors.get(this);
+    const {
+      codemirrorView: { EditorView },
+    } = this.#CodeMirror6;
+
+    for (const eventName in domEventHandlers) {
+      const domEventHandler = domEventHandlers[eventName];
+      const cachedEventHandlers = this.#editorDOMEventHandlers[eventName];
+      if (!domEventHandler || !cachedEventHandlers) {
+        continue;
+      }
+      const index = cachedEventHandlers.findIndex(
+        handler => handler == domEventHandler
+      );
+      this.#editorDOMEventHandlers[eventName].splice(index, 1);
+    }
+
+    cm.dispatch({
+      effects: this.#compartments.domEventHandlersCompartment.reconfigure(
+        EditorView.domEventHandlers(this.#createEventHandlers())
+      ),
+    });
+  }
+
+  /**
+   * Clear the DOM event handlers for the editor.
+   */
+  #clearEditorDOMEventListeners() {
+    const cm = editors.get(this);
+    const {
+      codemirrorView: { EditorView },
+    } = this.#CodeMirror6;
+
+    this.#editorDOMEventHandlers = {};
+    cm.dispatch({
+      effects: this.#compartments.domEventHandlersCompartment.reconfigure(
+        EditorView.domEventHandlers({})
       ),
     });
   }
@@ -840,9 +896,9 @@ class Editor extends EventEmitter {
 
     cm.dispatch({
       effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
-        this.#lineContentMarkersExtension({
-          lineMarkers: Array.from(this.#lineContentMarkers.values()),
-        })
+        this.#lineContentMarkersExtension(
+          Array.from(this.#lineContentMarkers.values())
+        )
       ),
     });
   }
@@ -857,9 +913,9 @@ class Editor extends EventEmitter {
 
     cm.dispatch({
       effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
-        this.#lineContentMarkersExtension({
-          lineMarkers: Array.from(this.#lineContentMarkers.values()),
-        })
+        this.#lineContentMarkersExtension(
+          Array.from(this.#lineContentMarkers.values())
+        )
       ),
     });
   }
@@ -2508,6 +2564,9 @@ class Editor extends EventEmitter {
   }
 
   destroy() {
+    if (this.config.cm6 && this.#CodeMirror6) {
+      this.#clearEditorDOMEventListeners();
+    }
     this.container = null;
     this.config = null;
     this.version = null;
@@ -2515,7 +2574,6 @@ class Editor extends EventEmitter {
     this.#updateListener = null;
     this.#lineGutterMarkers.clear();
     this.#lineContentMarkers.clear();
-    this.#lineContentEventHandlers = {};
 
     if (this.#prefObserver) {
       this.#prefObserver.off(KEYMAP_PREF, this.setKeyMap);
