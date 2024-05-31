@@ -695,7 +695,7 @@
 #if defined(XP_MACOSX) || defined(XP_WIN)
   value: true
 #else
-  value: @IS_NIGHTLY_BUILD@
+  value: false
 #endif
   mirror: always
 
