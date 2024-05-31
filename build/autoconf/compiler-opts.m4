@@ -77,15 +77,6 @@ dnl ========================================================
 dnl = Automatically remove dead symbols
 dnl ========================================================
 
-SANCOV=
-if test -n "$LIBFUZZER"; then
-    case "$LIBFUZZER_FLAGS" in
-    *-fsanitize-coverage*|*-fsanitize=fuzzer*)
-        SANCOV=1
-        ;;
-    esac
-fi
-
 if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS" -a -z "$MOZ_PROFILE_GENERATE" -a -z "$SANCOV"; then
     if test -n "$MOZ_DEBUG_FLAGS"; then
         dnl See bug 670659
