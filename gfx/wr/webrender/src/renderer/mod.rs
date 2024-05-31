@@ -5416,6 +5416,11 @@ impl Renderer {
         report
     }
 
+    /// Provides access to a sender that can communicate with the render backend.
+    pub fn api_sender(&self) -> &Sender<ApiMsg> {
+        &self.api_tx
+    }
+
     // Sets the blend mode. Blend is unconditionally set if the "show overdraw" debugging mode is
     // enabled.
     fn set_blend(&mut self, mut blend: bool, framebuffer_kind: FramebufferKind) {
