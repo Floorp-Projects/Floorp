@@ -3384,12 +3384,6 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
 
   lazy.assert.boolean(oneRealm);
 
-  if (!lazy.MarionettePrefs.setPermissionEnabled) {
-    throw new lazy.error.UnsupportedOperationError(
-      "'Set Permission' is not available"
-    );
-  }
-
   let origin = browsingContext.currentURI.prePath;
 
   // storage-access is a special case.
