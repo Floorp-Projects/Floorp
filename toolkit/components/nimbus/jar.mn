@@ -9,3 +9,4 @@ toolkit.jar:
   res/nimbus/FeatureManifest.sys.mjs (FeatureManifest.sys.mjs)
   res/nimbus/schemas/NimbusEnrollment.schema.json (./schemas/NimbusEnrollment.schema.json)
   res/nimbus/schemas/NimbusExperiment.schema.json (./schemas/NimbusExperiment.schema.json)
+  res/nimbus/schemas/PrefFlipsFeature.schema.json (./schemas/PrefFlipsFeature.schema.json)

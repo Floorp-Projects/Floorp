@@ -62,6 +62,22 @@ nimbus-qa-2:
         pref: nimbus.qa.pref-2
       description: The value to set for the pref.
 
+# Note: this feature is not for general use. If you want to run an experiment
+# that sets prefs, you *must* register your feature in this manifest and specify
+# the prefs you will control.
+prefFlips:
+  description: Flip arbitrary prefs. Controlled by release management.
+  owner: barret@mozilla.com
+  hasExposure: false
+  variables:
+    prefs:
+      type: json
+      description: "The prefs to set."
+  schema:
+    uri: resource://nimbus/schemas/PrefFlipsFeature.schema.json
+    path: toolkit/component/nimbus/schemas/PrefFlipsFeature.schema.json
+
+
 # `search` is for search engine experimentation features which do not require
 # isEarlyStartup to be set.
 search:
