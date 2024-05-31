@@ -554,16 +554,21 @@ parent:
     async ImageLoadComplete(nsresult aResult);
 
     /**
-     * Child informs the parent that a pointer lock has requested/released.
-     */
-    async RequestPointerLock() returns (nsCString error);
-    async ReleasePointerLock();
-
-    /**
      * Child informs the parent that a pointer capture has requested/released.
      */
     async RequestPointerCapture(uint32_t aPointerId) returns (bool aSuccess);
     async ReleasePointerCapture(uint32_t aPointerId);
+
+    /**
+     * Child informs the parent that a pointer lock has requested.
+     */
+    async RequestPointerLock() returns (nsCString error);
+
+both:
+    /**
+     * informs that a pointer lock has released.
+     */
+    async ReleasePointerLock();
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
