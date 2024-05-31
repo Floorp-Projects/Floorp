@@ -117,6 +117,9 @@ export class MerinoClient {
    * @param {string} options.extraResponseHistogram
    *   If specified, the fetch's response will be recorded in this histogram in
    *   addition to the usual Merino response histogram.
+   * @param {object} options.otherParams
+   *   If specified, the otherParams will be added as a query params. Currently
+   *   used for accuweather's location autocomplete endpoint
    * @returns {Array}
    *   The Merino suggestions or null if there's an error or unexpected
    *   response.
@@ -127,6 +130,7 @@ export class MerinoClient {
     timeoutMs = lazy.UrlbarPrefs.get("merinoTimeoutMs"),
     extraLatencyHistogram = null,
     extraResponseHistogram = null,
+    otherParams = {},
   }) {
     this.logger.info(`Fetch starting with query: "${query}"`);
 
@@ -190,6 +194,11 @@ export class MerinoClient {
     // `if (providersString)` here.
     if (typeof providersString == "string") {
       url.searchParams.set(SEARCH_PARAMS.PROVIDERS, providersString);
+    }
+
+    // if otherParams are present add them to the url
+    for (const [param, value] of Object.entries(otherParams)) {
+      url.searchParams.set(param, value);
     }
 
     let details = { query, providers, timeoutMs, url };

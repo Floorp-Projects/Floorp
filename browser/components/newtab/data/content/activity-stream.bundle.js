@@ -239,6 +239,11 @@ for (const type of [
   "WEATHER_LOAD_ERROR",
   "WEATHER_OPEN_PROVIDER_URL",
   "WEATHER_UPDATE",
+  "WEATHER_SEARCH_ACTIVE",
+  "WEATHER_LOCATION_DATA_UPDATE",
+  "WEATHER_QUERY_UPDATE",
+  "WEATHER_LOCATION_SEARCH_UPDATE",
+  "WEATHER_LOCATION_SUGGESTIONS_UPDATE",
   "WEBEXT_CLICK",
   "WEBEXT_DISMISS",
 ]) {
@@ -1760,9 +1765,9 @@ const LinkMenuOptions = {
     isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem(),
   ChangeWeatherLocation: () => ({
     id: "newtab-weather-menu-change-location",
-    action: actionCreators.OnlyToMain({
-      type: actionTypes.CHANGE_WEATHER_LOCATION,
-      data: { url: "https://mozilla.org" },
+    action: actionCreators.BroadcastToContent({
+      type: actionTypes.WEATHER_SEARCH_ACTIVE,
+      data: true,
     }),
   }),
   ChangeWeatherDisplaySimple: () => ({
@@ -5635,10 +5640,19 @@ const INITIAL_STATE = {
     wallpaperList: [],
   },
   Weather: {
-    // do we have the data from WeatherFeed yet?
     initialized: false,
-    suggestions: [],
     lastUpdated: null,
+    query: "",
+    suggestions: [],
+    locationData: {
+      city: "",
+      adminArea: "",
+      country: "",
+    },
+    // Display search input in Weather widget
+    searchActive: false,
+    locationSearchString: "",
+    suggestedLocations: [],
   },
 };
 
@@ -6396,8 +6410,17 @@ function Weather(prevState = INITIAL_STATE.Weather, action) {
         ...prevState,
         suggestions: action.data.suggestions,
         lastUpdated: action.data.date,
+        locationData: action.data.locationData || prevState.locationData,
         initialized: true,
       };
+    case actionTypes.WEATHER_SEARCH_ACTIVE:
+      return { ...prevState, searchActive: action.data };
+    case actionTypes.WEATHER_LOCATION_SEARCH_UPDATE:
+      return { ...prevState, locationSearchString: action.data };
+    case actionTypes.WEATHER_LOCATION_SUGGESTIONS_UPDATE:
+      return { ...prevState, suggestedLocations: action.data };
+    case actionTypes.WEATHER_LOCATION_DATA_UPDATE:
+      return { ...prevState, locationData: action.data };
     default:
       return prevState;
   }
@@ -9622,10 +9645,113 @@ class _Search extends (external_React_default()).PureComponent {
 const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs
 }))(_Search);
+;// CONCATENATED MODULE: ./content-src/components/Weather/LocationSearch.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+function LocationSearch({
+  outerClassName
+}) {
+  // should be the location object from suggestedLocations
+  const [selectedLocation, setSelectedLocation] = (0,external_React_namespaceObject.useState)("");
+  const suggestedLocations = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Weather.suggestedLocations);
+  const locationSearchString = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Weather.locationSearchString);
+  const [userInput, setUserInput] = (0,external_React_namespaceObject.useState)(locationSearchString || "");
+  const inputRef = (0,external_React_namespaceObject.useRef)(null);
+  const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (selectedLocation) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_LOCATION_DATA_UPDATE,
+        data: {
+          city: selectedLocation.localized_name,
+          adminName: selectedLocation.administrative_area,
+          country: selectedLocation.country
+        }
+      }));
+      dispatch(actionCreators.SetPref("weather.query", selectedLocation.key));
+      dispatch(actionCreators.BroadcastToContent({
+        type: actionTypes.WEATHER_SEARCH_ACTIVE,
+        data: false
+      }));
+    }
+  }, [selectedLocation, dispatch]);
+
+  // when component mounts, set focus to input
+  (0,external_React_namespaceObject.useEffect)(() => {
+    inputRef?.current?.focus();
+  }, [inputRef]);
+  function handleChange(event) {
+    const {
+      value
+    } = event.target;
+    setUserInput(value);
+    if (value < 3 && suggestedLocations.length) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_LOCATION_SUGGESTIONS_UPDATE,
+        data: []
+      }));
+    }
+    // find match in suggestedLocation array
+    const match = suggestedLocations?.find(({
+      key
+    }) => key === value);
+    if (match) {
+      setSelectedLocation(match);
+      setUserInput(`${match.localized_name}, ${match.administrative_area.localized_name}`);
+    } else if (value.length >= 3 && !match) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WEATHER_LOCATION_SEARCH_UPDATE,
+        data: value
+      }));
+    }
+  }
+  function handleCloseSearch() {
+    dispatch(actionCreators.BroadcastToContent({
+      type: actionTypes.WEATHER_SEARCH_ACTIVE,
+      data: false
+    }));
+    setUserInput("");
+  }
+  function handleKeyDown(e) {
+    if (e.key === "Escape") {
+      handleCloseSearch();
+    }
+  }
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: `${outerClassName} location-search`
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "location-input-wrapper"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "search-icon"
+  }), /*#__PURE__*/external_React_default().createElement("input", {
+    ref: inputRef,
+    list: "merino-location-list",
+    type: "text",
+    placeholder: "Search location",
+    onChange: handleChange,
+    value: userInput,
+    onKeyDown: handleKeyDown
+  }), /*#__PURE__*/external_React_default().createElement("button", {
+    className: "close-icon",
+    onClick: handleCloseSearch
+  }), /*#__PURE__*/external_React_default().createElement("datalist", {
+    id: "merino-location-list"
+  }, (suggestedLocations || []).map(location => /*#__PURE__*/external_React_default().createElement("option", {
+    value: location.key,
+    key: location.key
+  }, location.localized_name, ",", " ", location.administrative_area.localized_name)))));
+}
+
 ;// CONCATENATED MODULE: ./content-src/components/Weather/Weather.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -9782,26 +9908,30 @@ class _Weather extends (external_React_default()).PureComponent {
     const {
       showContextMenu
     } = this.state;
-    const WEATHER_SUGGESTION = this.props.Weather.suggestions?.[0];
+    const {
+      props
+    } = this;
     const {
       className,
       index,
       dispatch,
       eventSource,
-      shouldSendImpressionStats
-    } = this.props;
-    const {
-      props
-    } = this;
+      shouldSendImpressionStats,
+      Prefs,
+      Weather
+    } = props;
+    const WEATHER_SUGGESTION = Weather.suggestions?.[0];
     const isContextMenuOpen = this.state.activeCard === index;
-    const outerClassName = ["weather", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
-    const showDetailedView = this.props.Prefs.values["weather.display"] === "detailed";
+    const outerClassName = ["weather", className, isContextMenuOpen && !Weather.searchActive && "active", props.placeholder && "placeholder", Weather.searchActive && "search"].filter(v => v).join(" ");
+    const showDetailedView = Prefs.values["weather.display"] === "detailed";
 
     // Note: The temperature units/display options will become secondary menu items
     const WEATHER_SOURCE_CONTEXT_MENU_OPTIONS = [...(this.props.Prefs.values["weather.locationSearchEnabled"] ? ["ChangeWeatherLocation"] : []), ...(this.props.Prefs.values["weather.temperatureUnits"] === "f" ? ["ChangeTempUnitCelsius"] : ["ChangeTempUnitFahrenheit"]), ...(this.props.Prefs.values["weather.display"] === "simple" ? ["ChangeWeatherDisplayDetailed"] : ["ChangeWeatherDisplaySimple"]), "HideWeather", "OpenLearnMoreURL"];
-
-    // Only return the widget if we have data. Otherwise, show error state
-    if (WEATHER_SUGGESTION) {
+    if (Weather.searchActive) {
+      return /*#__PURE__*/external_React_default().createElement(LocationSearch, {
+        outerClassName: outerClassName
+      });
+    } else if (WEATHER_SUGGESTION) {
       return /*#__PURE__*/external_React_default().createElement("div", {
         ref: this.setImpressionRef,
         className: outerClassName
@@ -9827,7 +9957,7 @@ class _Weather extends (external_React_default()).PureComponent {
         className: "weatherCityRow"
       }, /*#__PURE__*/external_React_default().createElement("span", {
         className: "weatherCity"
-      }, WEATHER_SUGGESTION.city_name)), showDetailedView ? /*#__PURE__*/external_React_default().createElement("div", {
+      }, Weather.locationData.city)), showDetailedView ? /*#__PURE__*/external_React_default().createElement("div", {
         className: "weatherDetailedSummaryRow"
       }, /*#__PURE__*/external_React_default().createElement("div", {
         className: "weatherHighLowTemps"
