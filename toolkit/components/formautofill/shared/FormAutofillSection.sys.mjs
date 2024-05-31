@@ -160,6 +160,13 @@ export class FormAutofillSection {
     return this.fieldDetails.find(detail => detail.fieldName == fieldName);
   }
 
+  getFieldDetailByNamePreferVisible(fieldName) {
+    let fieldDetail = this.fieldDetails.find(
+      detail => detail.fieldName == fieldName && detail.isVisible
+    );
+    return fieldDetail || this.getFieldDetailByName(fieldName);
+  }
+
   get allFieldNames() {
     if (!this._cacheValue.allFieldNames) {
       this._cacheValue.allFieldNames = this.fieldDetails.map(
@@ -175,7 +182,7 @@ export class FormAutofillSection {
     }
 
     for (const fieldName in profile) {
-      const fieldDetail = this.getFieldDetailByName(fieldName);
+      const fieldDetail = this.getFieldDetailByNamePreferVisible(fieldName);
       const element = fieldDetail?.element;
 
       if (!HTMLSelectElement.isInstance(element)) {

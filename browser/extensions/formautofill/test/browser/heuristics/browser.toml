@@ -9,6 +9,8 @@ support-files = [
 
 ["browser_autocomplete_off_on_inputs.js"]
 
+["browser_autofill_prefer_visible.js"]
+
 ["browser_basic.js"]
 
 ["browser_capture_name.js"]
