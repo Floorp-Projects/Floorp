@@ -693,9 +693,6 @@ CrashManager.prototype = Object.freeze({
    * @param {object} metadata - the object of Telemetry crash metadata
    */
   _submitGleanCrashPing(reason, type, date, metadata) {
-    if ("UptimeTS" in metadata) {
-      Glean.crash.uptime.setRaw(parseFloat(metadata.UptimeTS) * 1e3);
-    }
     Glean.crash.processType.set(type);
     Glean.crash.time.set(date.getTime() * 1000);
     Glean.crash.startup.set(
