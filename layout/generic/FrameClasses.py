@@ -15,6 +15,7 @@ LEAF = {"Leaf"}
 MATHML = {"MathML"}
 SVG = {"SVG"}
 BFC = {"BlockFormattingContext"}
+LINE_PARTICIPANT = {"LineParticipant"}
 
 BLOCK = COMMON | {"CanContainOverflowContainers"}
 
@@ -31,10 +32,10 @@ SVG_CONTENT = (COMMON - {"SupportsContainLayoutAndPaint"}) | SVG
 SVG_CONTAINER = SVG_CONTENT | {"SVGContainer"}
 
 # NOTE: Intentionally not including "COMMON" here.
-INLINE = {"BidiInlineContainer", "LineParticipant"}
-RUBY_CONTENT = {"LineParticipant"}
+INLINE = LINE_PARTICIPANT | {"BidiInlineContainer"}
+RUBY_CONTENT = LINE_PARTICIPANT
 # FIXME(bug 713387): Shouldn't be Replaced, probably.
-TEXT = COMMON | {"Replaced", "LineParticipant"} | LEAF
+TEXT = COMMON | LINE_PARTICIPANT | {"Replaced"} | LEAF
 
 # See FrameClass.py and GenerateFrameLists.py for implementation details.
 # The following is a list of all the frame classes, followed by the frame type,
@@ -46,7 +47,7 @@ TEXT = COMMON | {"Replaced", "LineParticipant"} | LEAF
 #
 # See bug 1555477 for some related discussion about the whole Type() set-up.
 FRAME_CLASSES = [
-    Frame("BRFrame", "Br", REPLACED | LEAF | {"LineParticipant"}),
+    Frame("BRFrame", "Br", REPLACED | LINE_PARTICIPANT | LEAF),
     Frame("nsBCTableCellFrame", "TableCell", TABLE_CELL),
     Frame("nsBackdropFrame", "Backdrop", COMMON | LEAF),
     Frame("nsBlockFrame", "Block", BLOCK),
@@ -64,7 +65,7 @@ FRAME_CLASSES = [
     Frame("nsFileControlFrame", "FileControl", REPLACED_WITH_BLOCK | LEAF | BFC),
     Frame("FileControlLabelFrame", "Block", BLOCK | LEAF),
     Frame("nsFirstLetterFrame", "Letter", INLINE),
-    Frame("nsFloatingFirstLetterFrame", "Letter", INLINE - {"LineParticipant"}),
+    Frame("nsFloatingFirstLetterFrame", "Letter", INLINE - LINE_PARTICIPANT),
     Frame("nsFirstLineFrame", "Line", INLINE),
     Frame("nsFlexContainerFrame", "FlexContainer", BLOCK),
     Frame("nsIFrame", "None", COMMON),
