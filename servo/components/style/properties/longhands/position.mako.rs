@@ -366,6 +366,18 @@ ${helpers.predefined_type(
     affects="layout",
 )}
 
+${helpers.predefined_type(
+    "position-try-order",
+    "PositionTryOrder",
+    "computed::PositionTryOrder::normal()",
+    engines="gecko",
+    initial_specified_value="specified::PositionTryOrder::normal()",
+    animation_value_type="discrete",
+    gecko_pref="layout.css.anchor-positioning.enabled",
+    spec="https://drafts.csswg.org/css-anchor-position-1/#position-try-order-property",
+    affects="layout",
+)}
+
 ${helpers.single_keyword(
     "box-sizing",
     "content-box border-box",
