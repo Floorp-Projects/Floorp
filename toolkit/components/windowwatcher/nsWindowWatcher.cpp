@@ -1077,13 +1077,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     return rv;
   }
 
-  // Ensure the new content BrowsingContext is marked as created by content
-  // script if it was.
-  if (windowIsNew && targetBC->IsContent() &&
-      !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal)) {
-    (void)targetBC->SetTopLevelCreatedByWebContent(true);
-  }
-
   // If our parent is sandboxed, set it as the one permitted sandboxed navigator
   // on the new window we're opening.
   if (activeDocsSandboxFlags && parentBC) {
