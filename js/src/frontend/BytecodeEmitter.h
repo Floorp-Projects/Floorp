@@ -1071,7 +1071,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] js::UniquePtr<ImmutableScriptData> createImmutableScriptData();
 
-#ifdef ENABLE_DECORATORS
+#if defined(ENABLE_DECORATORS) || defined(ENABLE_EXPLICIT_RESOURCE_MANAGEMENT)
   [[nodiscard]] bool emitCheckIsCallable();
 #endif
 

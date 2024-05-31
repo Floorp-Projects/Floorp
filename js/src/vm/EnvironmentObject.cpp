@@ -31,6 +31,7 @@
 #include "gc/Marking-inl.h"
 #include "gc/StableCellHasher-inl.h"
 #include "vm/BytecodeIterator-inl.h"
+#include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 
@@ -941,12 +942,43 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::create(
     env->initEnclosingEnvironment(enclosing);
   }
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  env->initSlot(LexicalEnvironmentObject::DISPOSABLE_OBJECTS_SLOT,
+                UndefinedValue());
+#endif
+
   return env;
 }
 
 bool LexicalEnvironmentObject::isExtensible() const {
   return NativeObject::isExtensible();
 }
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+bool LexicalEnvironmentObject::addDisposableObject(JSContext* cx,
+                                                   JS::Handle<JS::Value> val) {
+  Value slotData = getReservedSlot(DISPOSABLE_OBJECTS_SLOT);
+  ListObject* disposablesList = nullptr;
+  if (slotData.isUndefined()) {
+    disposablesList = ListObject::create(cx);
+    if (!disposablesList) {
+      return false;
+    }
+    setReservedSlot(DISPOSABLE_OBJECTS_SLOT, ObjectValue(*disposablesList));
+  } else {
+    disposablesList = &slotData.toObject().as<ListObject>();
+  }
+  return disposablesList->append(cx, val);
+}
+
+Value LexicalEnvironmentObject::getDisposables() {
+  return getReservedSlot(DISPOSABLE_OBJECTS_SLOT);
+}
+
+void LexicalEnvironmentObject::clearDisposables() {
+  setReservedSlot(DISPOSABLE_OBJECTS_SLOT, UndefinedValue());
+}
+#endif
 
 /* static */
 BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::create(

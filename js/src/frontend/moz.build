@@ -93,6 +93,11 @@ if CONFIG["ENABLE_DECORATORS"]:
         "DecoratorEmitter.cpp",
     ]
 
+if CONFIG["ENABLE_EXPLICIT_RESOURCE_MANAGEMENT"]:
+    UNIFIED_SOURCES += [
+        "UsingEmitter.cpp",
+    ]
+
 # Parser.cpp cannot be built in unified mode because of explicit
 #   template instantiations.
 SOURCES += [

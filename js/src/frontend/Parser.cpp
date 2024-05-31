@@ -1170,6 +1170,9 @@ static Maybe<ModuleScope::ParserData*> NewModuleScopeData(
   ParserBindingNameVector vars(fc);
   ParserBindingNameVector lets(fc);
   ParserBindingNameVector consts(fc);
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  ParserBindingNameVector usings(fc);
+#endif
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1200,6 +1203,13 @@ static Maybe<ModuleScope::ParserData*> NewModuleScopeData(
           return Nothing();
         }
         break;
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+      case BindingKind::Using:
+        if (!usings.append(binding)) {
+          return Nothing();
+        }
+        break;
+#endif
       default:
         MOZ_CRASH("Bad module scope BindingKind");
     }
@@ -1345,6 +1355,9 @@ static Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
         break;
       case BindingKind::Let:
       case BindingKind::Const:
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+      case BindingKind::Using:
+#endif
         break;
       default:
         MOZ_CRASH("bad function scope BindingKind");
@@ -1468,6 +1481,9 @@ static Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
     ParseContext* pc) {
   ParserBindingNameVector lets(fc);
   ParserBindingNameVector consts(fc);
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  ParserBindingNameVector usings(fc);
+#endif
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1486,6 +1502,13 @@ static Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
           return Nothing();
         }
         break;
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+      case BindingKind::Using:
+        if (!usings.append(binding)) {
+          return Nothing();
+        }
+        break;
+#endif
       case BindingKind::Var:
       case BindingKind::FormalParameter:
         break;
@@ -1496,7 +1519,11 @@ static Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
   }
 
   LexicalScope::ParserData* bindings = nullptr;
-  uint32_t numBindings = lets.length() + consts.length();
+  uint32_t numBindings = lets.length() + consts.length()
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+                         + usings.length()
+#endif
+      ;
 
   if (numBindings > 0) {
     bindings = NewEmptyBindingData<LexicalScope>(fc, alloc, numBindings);
@@ -1506,7 +1533,12 @@ static Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
 
     // The ordering here is important. See comments in LexicalScope.
     InitializeBindingData(bindings, numBindings, lets,
-                          &ParserLexicalScopeSlotInfo::constStart, consts);
+                          &ParserLexicalScopeSlotInfo::constStart, consts
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+                          ,
+                          &ParserLexicalScopeSlotInfo::usingStart, usings
+#endif
+    );
   }
 
   return Some(bindings);

@@ -136,6 +136,8 @@ MSG_DEF(JSMSG_BAD_DERIVED_RETURN,      1, JSEXN_TYPEERR, "derived class construc
 MSG_DEF(JSMSG_BAD_HERITAGE,            2, JSEXN_TYPEERR, "class heritage {0} is {1}")
 MSG_DEF(JSMSG_NOT_OBJORNULL,           1, JSEXN_TYPEERR, "{0} is not an object or null")
 MSG_DEF(JSMSG_CONSTRUCTOR_DISABLED,    1, JSEXN_TYPEERR, "{0} is disabled")
+MSG_DEF(JSMSG_NO_DISPOSE_IN_USING,     0, JSEXN_TYPEERR, "'Symbol.dispose' property is not callable")
+MSG_DEF(JSMSG_DISPOSABLE_NOT_OBJ,      0, JSEXN_TYPEERR, "Value to be disposed is not an object")
 
 // JSON
 MSG_DEF(JSMSG_JSON_BAD_PARSE,          3, JSEXN_SYNTAXERR, "JSON.parse: {0} at line {1} column {2} of the JSON data")

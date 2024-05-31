@@ -638,6 +638,10 @@ bool OptimizeSpreadCall(JSContext* cx, HandleValue arg,
 
 bool OptimizeGetIterator(JSContext* cx, HandleValue arg, bool* result);
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+bool DisposeDisposablesOnScopeLeave(JSContext* cx, JS::Handle<JSObject*> env);
+#endif
+
 ArrayObject* ArrayFromArgumentsObject(JSContext* cx,
                                       Handle<ArgumentsObject*> args);
 

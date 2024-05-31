@@ -20,6 +20,9 @@ enum class CheckIsObjectKind : uint8_t {
 #ifdef ENABLE_DECORATORS
   DecoratorReturn,
 #endif
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  Disposable,
+#endif
 };
 
 }  // namespace js

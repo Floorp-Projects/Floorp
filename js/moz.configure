@@ -239,11 +239,23 @@ set_config(
 
 # JIT support
 # =======================================================
-@depends(target, "--enable-record-tuple", "--enable-portable-baseline-interp")
-def jit_default(target, enable_record_tuple, enable_portable_baseline_interp):
+@depends(
+    target,
+    "--enable-record-tuple",
+    "--enable-portable-baseline-interp",
+    "--enable-explicit-resource-management",
+)
+def jit_default(
+    target,
+    enable_record_tuple,
+    enable_portable_baseline_interp,
+    enable_explicit_resource_management,
+):
     if enable_record_tuple:
         return False
     if enable_portable_baseline_interp:
+        return False
+    if enable_explicit_resource_management:
         return False
     if target.cpu in (
         "x86",
