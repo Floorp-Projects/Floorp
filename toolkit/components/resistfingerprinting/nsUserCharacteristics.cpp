@@ -38,6 +38,7 @@
 #include "prsystem.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
+#  include "mozilla/gfx/DisplayConfigWindows.h"
 #elif defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/java/GeckoAppShellWrappers.h"
 #elif defined(XP_MACOSX)
@@ -326,6 +327,25 @@ void PopulateFontPrefs() {
       Preferences::HasUserValue("font.name-list.emoji"));
 }
 
+void PopulateScaling() {
+  nsCString output = "["_ns;
+
+  auto& screenManager = widget::ScreenManager::GetSingleton();
+  const auto& screens = screenManager.CurrentScreenList();
+  for (const auto& screen : screens) {
+    // Technically, not the same as (display resolution / shown resolution), but
+    // this is the value the fingerprinters can access/compute.
+    output.Append(std::to_string(screen->GetContentsScaleFactor()));
+    if (&screen != &screens.LastElement()) {
+      output.Append(",");
+    }
+  }
+
+  output.Append("]");
+
+  glean::characteristics::scalings.Set(output);
+}
+
 // ==================================================================
 // The current schema of the data. Anytime you add a metric, or change how a
 // metric is set, this variable should be incremented. It'll be a lot. It's
@@ -458,6 +478,7 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     PopulateScreenProperties();
     PopulatePrefs();
     PopulateFontPrefs();
+    PopulateScaling();
 
     glean::characteristics::target_frame_rate.Set(
         gfxPlatform::TargetFrameRate());
