@@ -6,6 +6,7 @@
 #define nsSecurityHeaderParser_h
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -13,8 +14,11 @@
 class nsSecurityHeaderDirective
     : public mozilla::LinkedListElement<nsSecurityHeaderDirective> {
  public:
+  // The name of the directive.
   nsCString mName;
-  nsCString mValue;
+  // The value of the directive, if any. Will be Some if and only if a '='
+  // followed the directive name (the value itself may be the empty string).
+  mozilla::Maybe<nsCString> mValue;
 };
 
 // This class parses security-related HTTP headers like

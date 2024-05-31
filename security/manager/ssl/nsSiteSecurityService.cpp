@@ -610,7 +610,12 @@ static uint32_t ParseSSSHeaders(const nsCString& aHeader,
       SSSLOG(("SSS: found max-age directive"));
       foundMaxAge = true;
 
-      Tokenizer tokenizer(directive->mValue);
+      if (directive->mValue.isNothing()) {
+        SSSLOG(("SSS: max-age directive didn't include value"));
+        return nsISiteSecurityService::ERROR_INVALID_MAX_AGE;
+      }
+
+      Tokenizer tokenizer(*(directive->mValue));
       if (!tokenizer.ReadInteger(&maxAge)) {
         SSSLOG(("SSS: could not parse delta-seconds"));
         return nsISiteSecurityService::ERROR_INVALID_MAX_AGE;
@@ -631,9 +636,9 @@ static uint32_t ParseSSSHeaders(const nsCString& aHeader,
       SSSLOG(("SSS: found includeSubdomains directive"));
       foundIncludeSubdomains = true;
 
-      if (directive->mValue.Length() != 0) {
+      if (directive->mValue.isSome()) {
         SSSLOG(("SSS: includeSubdomains directive unexpectedly had value '%s'",
-                directive->mValue.get()));
+                directive->mValue->get()));
         return nsISiteSecurityService::ERROR_INVALID_INCLUDE_SUBDOMAINS;
       }
     } else {

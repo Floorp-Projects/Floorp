@@ -128,8 +128,13 @@ void nsSecurityHeaderParser::Directive() {
     LWSMultiple();
   }
   mDirectives.insertBack(mDirective);
-  SHPARSERLOG(("read directive name '%s', value '%s'", mDirective->mName.Data(),
-               mDirective->mValue.Data()));
+  if (mDirective->mValue.isSome()) {
+    SHPARSERLOG(("read directive name '%s', value '%s'",
+                 mDirective->mName.Data(), mDirective->mValue->Data()));
+  } else {
+    SHPARSERLOG(
+        ("read valueless directive name '%s'", mDirective->mName.Data()));
+  }
 }
 
 void nsSecurityHeaderParser::DirectiveName() {
@@ -140,24 +145,22 @@ void nsSecurityHeaderParser::DirectiveName() {
 
 void nsSecurityHeaderParser::DirectiveValue() {
   mOutput.Truncate(0);
+  mDirective->mValue.emplace();
   if (Accept(IsTokenSymbol)) {
     Token();
-    mDirective->mValue.Assign(mOutput);
+    mDirective->mValue->Assign(mOutput);
   } else if (Accept('"')) {
     // Accept advances the cursor if successful, which appends a character to
     // mOutput. The " is not part of what we want to capture, so truncate
     // mOutput again.
     mOutput.Truncate(0);
     QuotedString();
-    mDirective->mValue.Assign(mOutput);
+    mDirective->mValue->Assign(mOutput);
     Expect('"');
   }
 }
 
-void nsSecurityHeaderParser::Token() {
-  while (Accept(IsTokenSymbol))
-    ;
-}
+void nsSecurityHeaderParser::Token() { while (Accept(IsTokenSymbol)); }
 
 void nsSecurityHeaderParser::QuotedString() {
   while (true) {
@@ -172,8 +175,7 @@ void nsSecurityHeaderParser::QuotedString() {
 }
 
 void nsSecurityHeaderParser::QuotedText() {
-  while (Accept(IsQuotedTextSymbol))
-    ;
+  while (Accept(IsQuotedTextSymbol));
 }
 
 void nsSecurityHeaderParser::QuotedPair() { Accept(IsQuotedPairSymbol); }
@@ -201,6 +203,5 @@ void nsSecurityHeaderParser::LWSCRLF() {
 void nsSecurityHeaderParser::LWS() {
   // Note that becaue of how we're called, we don't have to check for
   // the mandatory presense of at least one of SP or HT.
-  while (Accept(' ') || Accept('\t'))
-    ;
+  while (Accept(' ') || Accept('\t'));
 }
