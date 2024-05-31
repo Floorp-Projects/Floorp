@@ -220,8 +220,10 @@ async function run() {
     executablePath: binPathExe,
     userDataDir: "./dist/profile/test",
     extraPrefsFirefox: { "browser.newtabpage.enabled": true },
+    defaultViewport: { height: 0, width: 0 },
   });
 
+  // (await browser.pages())[0].setViewport({ width: 0, height: 0 });
   (await browser.pages())[0].goto("about:newtab");
 
   const page = await browser.newPage();
