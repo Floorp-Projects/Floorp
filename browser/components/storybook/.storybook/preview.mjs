@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { setCustomElementsManifest } from "@storybook/web-components";
+import { withActions } from "@storybook/addon-actions/decorator";
 import { css, html } from "lit.all.mjs";
 import { MozLitElement } from "toolkit/content/widgets/lit-utils.mjs";
-import { setCustomElementsManifest } from "@storybook/web-components";
 import customElementsManifest from "../custom-elements.json";
 import { insertFTLIfNeeded, connectFluent } from "./fluent-utils.mjs";
 
@@ -103,6 +104,7 @@ export default {
           .context=${context}
         ></with-common-styles>
       `,
+    withActions,
   ],
   parameters: {
     docs: {
