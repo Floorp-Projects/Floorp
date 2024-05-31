@@ -542,28 +542,25 @@ enum class LayoutFrameClassFlags : uint16_t {
   BidiInlineContainer = 1 << 5,
   // The frame is for a replaced element, such as an image
   Replaced = 1 << 6,
-  // Frame that contains a block but looks like a replaced element from the
-  // outside.
-  ReplacedContainsBlock = 1 << 7,
   // A replaced element that has replaced-element sizing characteristics (i.e.,
   // like images or iframes), as opposed to inline-block sizing characteristics
   // (like form controls).
-  ReplacedSizing = 1 << 8,
+  ReplacedSizing = 1 << 7,
   // A frame that participates in inline reflow, i.e., one that requires
   // ReflowInput::mLineLayout.
-  LineParticipant = 1 << 9,
+  LineParticipant = 1 << 8,
   // Whether this frame is a table part (but not a table or table wrapper).
-  TablePart = 1 << 10,
-  CanContainOverflowContainers = 1 << 11,
+  TablePart = 1 << 9,
+  CanContainOverflowContainers = 1 << 10,
   // Whether the frame supports CSS transforms.
-  SupportsCSSTransforms = 1 << 12,
+  SupportsCSSTransforms = 1 << 11,
   // Whether this frame class supports 'contain: layout' and 'contain: paint'
   // (supporting one is equivalent to supporting the other).
-  SupportsContainLayoutAndPaint = 1 << 13,
+  SupportsContainLayoutAndPaint = 1 << 12,
   // Whether this frame class supports the `aspect-ratio` property.
-  SupportsAspectRatio = 1 << 14,
+  SupportsAspectRatio = 1 << 13,
   // Whether this frame class is always a BFC.
-  BlockFormattingContext = 1 << 15,
+  BlockFormattingContext = 1 << 14,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayoutFrameClassFlags)
@@ -3410,7 +3407,6 @@ class nsIFrame : public nsQueryFrame {
   CLASS_FLAG_METHOD(IsBidiInlineContainer, BidiInlineContainer);
   CLASS_FLAG_METHOD(IsLineParticipant, LineParticipant);
   CLASS_FLAG_METHOD(IsReplaced, Replaced);
-  CLASS_FLAG_METHOD(IsReplacedWithBlock, ReplacedContainsBlock);
   CLASS_FLAG_METHOD(HasReplacedSizing, ReplacedSizing);
   CLASS_FLAG_METHOD(IsTablePart, TablePart);
   CLASS_FLAG_METHOD0(CanContainOverflowContainers)
