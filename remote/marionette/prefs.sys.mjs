@@ -127,16 +127,6 @@ class MarionetteBranch extends Branch {
   set port(newPort) {
     this.set("port", newPort);
   }
-
-  /**
-   * Gets the `marionette.setpermission.enabled` preference, should
-   * only be used for testdriver's set_permission API.
-   *
-   * @returns {boolean}
-   */
-  get setPermissionEnabled() {
-    return this.get("setpermission.enabled", false);
-  }
 }
 
 /** Reads a JSON serialised blob stored in the environment. */
