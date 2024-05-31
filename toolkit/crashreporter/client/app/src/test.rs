@@ -329,6 +329,7 @@ impl AssertFiles {
                         "BuildID": "1234",
                         "ProductName": "Bar",
                         "ReleaseChannel": "release",
+                        "Version": "100.0",
                     }
                 },
                 "application": {
