@@ -107,7 +107,7 @@
           },
           {
             "name": "tab",
-            "$ref": "tags.Tab",
+            "$ref": "tabs.Tab",
             "optional": true,
             "description": "Details of the $(ref:tabs.Tab) where the command was activated."
           }
