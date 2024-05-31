@@ -144,7 +144,8 @@ export let NewTabPagePreloading = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     browser.docShellIsActive = false;
-    browser._urlbarFocused = true;
+
+    window.gURLBar.getBrowserState(browser).urlbarFocused = true;
 
     // Make sure the preloaded browser is loaded with desired zoom level
     let tabURI = Services.io.newURI(window.BROWSER_NEW_TAB_URL);

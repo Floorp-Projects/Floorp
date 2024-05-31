@@ -127,22 +127,6 @@ export class UrlbarInput {
     this._suppressPrimaryAdjustment = false;
     this._untrimmedValue = "";
 
-    // Search modes are per browser and are stored in this map.  For a
-    // browser, search mode can be in preview mode, confirmed, or both.
-    // Typically, search mode is entered in preview mode with a particular
-    // source and is confirmed with the same source once a query starts.  It's
-    // also possible for a confirmed search mode to be replaced with a preview
-    // mode with a different source, and in those cases, we need to re-confirm
-    // search mode when preview mode is exited. In addition, only confirmed
-    // search modes should be restored across sessions. We therefore need to
-    // keep track of both the current confirmed and preview modes, per browser.
-    //
-    // For each browser with a search mode, this maps the browser to an object
-    // like this: { preview, confirmed }.  Both `preview` and `confirmed` are
-    // search mode objects; see the setSearchMode documentation.  Either one may
-    // be undefined if that particular mode is not active for the browser.
-    this._searchModesByBrowser = new WeakMap();
-
     this.QueryInterface = ChromeUtils.generateQI([
       "nsIObserver",
       "nsISupportsWeakReference",
@@ -349,11 +333,7 @@ export class UrlbarInput {
   }
 
   saveSelectionStateForBrowser(browser) {
-    let state = this.#browserStates.get(browser);
-    if (!state) {
-      state = {};
-      this.#browserStates.set(browser, state);
-    }
+    let state = this.getBrowserState(browser);
     state.selection = {
       start: this.selectionStart,
       end: this.selectionEnd,
@@ -365,8 +345,8 @@ export class UrlbarInput {
   restoreSelectionStateForBrowser(browser) {
     // Address bar must be focused to untrim and for selection to make sense.
     this.focus();
-    let state = this.#browserStates.get(browser);
-    if (state?.selection) {
+    let state = this.getBrowserState(browser);
+    if (state.selection) {
       if (state.selection.shouldUntrim) {
         this.#maybeUntrimUrl();
       }
@@ -1797,7 +1777,7 @@ export class UrlbarInput {
    *   is not in search mode, then null is returned.
    */
   getSearchMode(browser, confirmedOnly = false) {
-    let modes = this._searchModesByBrowser.get(browser);
+    let modes = this.getBrowserState(browser).searchModes;
 
     // Return copies so that callers don't modify the stored values.
     if (!confirmedOnly && modes?.preview) {
@@ -1875,6 +1855,8 @@ export class UrlbarInput {
       }
     }
 
+    let state = this.getBrowserState(browser);
+
     if (searchMode) {
       searchMode.isPreview = isPreview;
       if (lazy.UrlbarUtils.SEARCH_MODE_ENTRY.has(entry)) {
@@ -1887,16 +1869,14 @@ export class UrlbarInput {
 
       // Add the search mode to the map.
       if (!searchMode.isPreview) {
-        this._searchModesByBrowser.set(browser, {
-          confirmed: searchMode,
-        });
+        state.searchModes = { confirmed: searchMode };
       } else {
-        let modes = this._searchModesByBrowser.get(browser) || {};
+        let modes = state.searchModes || {};
         modes.preview = searchMode;
-        this._searchModesByBrowser.set(browser, modes);
+        state.searchModes = modes;
       }
     } else {
-      this._searchModesByBrowser.delete(browser);
+      delete state.searchModes;
     }
 
     // Enter search mode if the browser is selected.
@@ -1922,10 +1902,8 @@ export class UrlbarInput {
    * Restores the current browser search mode from a previously stored state.
    */
   restoreSearchModeState() {
-    let modes = this._searchModesByBrowser.get(
-      this.window.gBrowser.selectedBrowser
-    );
-    this.searchMode = modes?.confirmed;
+    let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
+    this.searchMode = state.searchModes?.confirmed;
   }
 
   /**
@@ -1996,6 +1974,15 @@ export class UrlbarInput {
 
   set searchMode(searchMode) {
     this.setSearchMode(searchMode, this.window.gBrowser.selectedBrowser);
+  }
+
+  getBrowserState(browser) {
+    let state = this.#browserStates.get(browser);
+    if (!state) {
+      state = {};
+      this.#browserStates.set(browser, state);
+    }
+    return state;
   }
 
   async updateLayoutBreakout() {
@@ -4289,9 +4276,23 @@ export class UrlbarInput {
     );
   }
 
+  // Search modes are per browser and are stored in the `searchModes` property of this map.
+  // For a browser, search mode can be in preview mode, confirmed, or both.
+  // Typically, search mode is entered in preview mode with a particular
+  // source and is confirmed with the same source once a query starts.  It's
+  // also possible for a confirmed search mode to be replaced with a preview
+  // mode with a different source, and in those cases, we need to re-confirm
+  // search mode when preview mode is exited. In addition, only confirmed
+  // search modes should be restored across sessions. We therefore need to
+  // keep track of both the current confirmed and preview modes, per browser.
+  //
+  // For each browser with a search mode, this maps the browser to an object
+  // like this: { preview, confirmed }.  Both `preview` and `confirmed` are
+  // search mode objects; see the setSearchMode documentation.  Either one may
+  // be undefined if that particular mode is not active for the browser.
+
   /**
    * Tracks a state object per browser.
-   * TODO: Merge _searchModesByBrowser into this.
    */
   #browserStates = new WeakMap();
 
