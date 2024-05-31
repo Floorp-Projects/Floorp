@@ -1,15 +1,15 @@
 diff --git a/aom_dsp/x86/synonyms.h b/aom_dsp/x86/synonyms.h
 --- a/aom_dsp/x86/synonyms.h
 +++ b/aom_dsp/x86/synonyms.h
-@@ -41,22 +41,33 @@ static INLINE __m128i xx_loadl_64(const 
+@@ -41,23 +41,34 @@ static INLINE __m128i xx_loadl_64(const void *a) {
  static INLINE __m128i xx_load_128(const void *a) {
    return _mm_load_si128((const __m128i *)a);
  }
- 
+
  static INLINE __m128i xx_loadu_128(const void *a) {
    return _mm_loadu_si128((const __m128i *)a);
  }
- 
+
 +// _mm_loadu_si64 has been introduced in GCC 9, reimplement the function
 +// manually on older compilers.
 +#if !defined(__clang__) && __GNUC_MAJOR__ < 9
@@ -24,29 +24,30 @@ diff --git a/aom_dsp/x86/synonyms.h b/aom_dsp/x86/synonyms.h
  // Since directly loading as `int64_t`s and using _mm_set_epi64 may violate
  // the strict aliasing rule, this takes a different approach
  static INLINE __m128i xx_loadu_2x64(const void *hi, const void *lo) {
-   return _mm_unpacklo_epi64(_mm_loadu_si64(lo), _mm_loadu_si64(hi));
+   return _mm_unpacklo_epi64(_mm_loadl_epi64((const __m128i *)lo),
+                             _mm_loadl_epi64((const __m128i *)hi));
  }
 +#endif
- 
+
  static INLINE void xx_storel_32(void *const a, const __m128i v) {
    const int val = _mm_cvtsi128_si32(v);
    memcpy(a, &val, sizeof(val));
  }
- 
+
  static INLINE void xx_storel_64(void *const a, const __m128i v) {
    _mm_storel_epi64((__m128i *)a, v);
 diff --git a/aom_dsp/x86/synonyms_avx2.h b/aom_dsp/x86/synonyms_avx2.h
 --- a/aom_dsp/x86/synonyms_avx2.h
 +++ b/aom_dsp/x86/synonyms_avx2.h
-@@ -66,21 +66,36 @@ static INLINE __m256i yy_set1_64_from_32
- 
+@@ -55,21 +55,36 @@ static INLINE __m256i yy_set2_epi16(int16_t a, int16_t b) {
+
  // Some compilers don't have _mm256_set_m128i defined in immintrin.h. We
  // therefore define an equivalent function using a different intrinsic.
  // ([ hi ], [ lo ]) -> [ hi ][ lo ]
  static INLINE __m256i yy_set_m128i(__m128i hi, __m128i lo) {
    return _mm256_insertf128_si256(_mm256_castsi128_si256(lo), hi, 1);
  }
- 
+
 +#define GCC_VERSION (__GNUC__ * 10000 \
 +                     + __GNUC_MINOR__ * 100 \
 +                     + __GNUC_PATCHLEVEL__)
@@ -67,11 +68,11 @@ diff --git a/aom_dsp/x86/synonyms_avx2.h b/aom_dsp/x86/synonyms_avx2.h
 +#endif
 +
 +#undef GCC_VERSION
- 
+
  static INLINE void yy_storeu2_128(void *hi, void *lo, const __m256i a) {
    _mm_storeu_si128((__m128i *)hi, _mm256_extracti128_si256(a, 1));
    _mm_storeu_si128((__m128i *)lo, _mm256_castsi256_si128(a));
  }
- 
+
  static INLINE __m256i yy_roundn_epu16(__m256i v_val_w, int bits) {
    const __m256i v_s_w = _mm256_srli_epi16(v_val_w, bits - 1);
