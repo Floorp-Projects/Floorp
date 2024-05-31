@@ -116,7 +116,6 @@ class VirtualizedList extends HTMLElement {
       let child = visibleLines.get(index);
       if (!child) {
         child = this.createLineElement(index);
-        child.role = "listitem";
 
         if (!child) {
           // Friday fix :-)
@@ -124,6 +123,7 @@ class VirtualizedList extends HTMLElement {
           continue;
         }
 
+        child.role = "listitem";
         child.style.top = `${index * this.lineHeight}px`;
         child.dataset.index = index;
 
