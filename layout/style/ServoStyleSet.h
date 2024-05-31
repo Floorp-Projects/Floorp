@@ -519,7 +519,7 @@ class ServoStyleSet {
    * relative selector it refers to.
    */
   void MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-      const dom::Element*);
+      const dom::Element*, bool aForceRestyleSiblings);
 
   /**
    * Maybe invalidate if a DOM element insertion might require us to restyle

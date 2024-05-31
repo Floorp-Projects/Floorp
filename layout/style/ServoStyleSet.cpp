@@ -1431,12 +1431,12 @@ void ServoStyleSet::MaybeInvalidateRelativeSelectorForNthEdgeDependency(
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-    const Element* aFromSibling) {
-  if (aFromSibling == nullptr) {
+    const Element* aFromSibling, bool aForceRestyleSiblings) {
+  if (!aFromSibling) {
     return;
   }
   Servo_StyleSet_MaybeInvalidateRelativeSelectorNthDependencyFromSibling(
-      mRawData.get(), aFromSibling);
+      mRawData.get(), aFromSibling, aForceRestyleSiblings);
 }
 
 void ServoStyleSet::MaybeInvalidateForElementInsertion(

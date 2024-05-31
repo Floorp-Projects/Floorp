@@ -1501,6 +1501,21 @@ pub extern "C" fn Servo_Element_GetMaybeOutOfDatePseudoStyle(
     }
 }
 
+// Some functions are so hot and main-thread-only that we have to bypass the AtomicRefCell.
+//
+// It would be nice to also assert that we're not in the servo traversal, but this function is
+// called at various intermediate checkpoints when managing the traversal on the Gecko side.
+#[cfg(debug_assertions)]
+unsafe fn borrow_assert_main_thread<T>(cell: &atomic_refcell::AtomicRefCell<T>) -> atomic_refcell::AtomicRef<T> {
+    debug_assert!(is_main_thread());
+    cell.borrow()
+}
+
+#[cfg(not(debug_assertions))]
+unsafe fn borrow_assert_main_thread<T>(cell: &atomic_refcell::AtomicRefCell<T>) -> &T {
+    unsafe { &*cell.as_ptr() }
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_Element_IsDisplayNone(element: &RawGeckoElement) -> bool {
     let element = GeckoElement(element);
@@ -1508,13 +1523,10 @@ pub extern "C" fn Servo_Element_IsDisplayNone(element: &RawGeckoElement) -> bool
         .get_data()
         .expect("Invoking Servo_Element_IsDisplayNone on unstyled element");
 
-    // This function is hot, so we bypass the AtomicRefCell.
-    //
-    // It would be nice to also assert that we're not in the servo traversal,
-    // but this function is called at various intermediate checkpoints when
-    // managing the traversal on the Gecko side.
-    debug_assert!(is_main_thread());
-    unsafe { &*data.as_ptr() }.styles.is_display_none()
+    let is_display_none = unsafe { borrow_assert_main_thread(data) }
+        .styles
+        .is_display_none();
+    is_display_none
 }
 
 #[no_mangle]
@@ -1524,13 +1536,13 @@ pub extern "C" fn Servo_Element_IsDisplayContents(element: &RawGeckoElement) -> 
         .get_data()
         .expect("Invoking Servo_Element_IsDisplayContents on unstyled element");
 
-    debug_assert!(is_main_thread());
-    unsafe { &*data.as_ptr() }
+    let is_display_contents = unsafe { borrow_assert_main_thread(data) }
         .styles
         .primary()
         .get_box()
         .clone_display()
-        .is_contents()
+        .is_contents();
+    is_display_contents
 }
 
 #[no_mangle]
@@ -7258,12 +7270,11 @@ fn invalidate_relative_selector_next_sibling_side_effect(
 }
 
 fn invalidate_relative_selector_ts_dependency(
-    raw_data: &PerDocumentStyleData,
+    stylist: &Stylist,
     element: GeckoElement,
     state: TSStateForInvalidation,
 ) {
-    let data = raw_data.borrow();
-    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let quirks_mode = stylist.quirks_mode();
 
     let invalidator = RelativeSelectorInvalidator {
         element,
@@ -7275,7 +7286,7 @@ fn invalidate_relative_selector_ts_dependency(
     };
 
     invalidator.invalidate_relative_selectors_for_this(
-        &data.stylist,
+        stylist,
         |element, scope, data, quirks_mode, collector| {
             let invalidation_map = data.relative_selector_invalidation_map();
             invalidation_map
@@ -7304,7 +7315,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorEmptyDependency(
     element: &RawGeckoElement,
 ) {
     invalidate_relative_selector_ts_dependency(
-        raw_data,
+        &raw_data.borrow().stylist,
         GeckoElement(element),
         TSStateForInvalidation::EMPTY,
     );
@@ -7316,7 +7327,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorNthEdgeDependenc
     element: &RawGeckoElement,
 ) {
     invalidate_relative_selector_ts_dependency(
-        raw_data,
+        &raw_data.borrow().stylist,
         GeckoElement(element),
         TSStateForInvalidation::NTH_EDGE,
     );
@@ -7326,13 +7337,18 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorNthEdgeDependenc
 pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorNthDependencyFromSibling(
     raw_data: &PerDocumentStyleData,
     element: &RawGeckoElement,
+    force: bool,
 ) {
     let mut element = Some(GeckoElement(element));
+    let data = unsafe { borrow_assert_main_thread(raw_data) };
 
     // Short of doing the actual matching, any of the siblings can match the selector, so we
     // have to try invalidating against all of them.
     while let Some(sibling) = element {
-        invalidate_relative_selector_ts_dependency(raw_data, sibling, TSStateForInvalidation::NTH);
+        if force {
+            unsafe { sibling.note_explicit_hints(RestyleHint::restyle_subtree(), nsChangeHint(0)) };
+        }
+        invalidate_relative_selector_ts_dependency(&data.stylist, sibling, TSStateForInvalidation::NTH);
         element = sibling.next_sibling_element();
     }
 }
@@ -7496,8 +7512,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
     }
     let following_node = following_node.map(GeckoNode);
     let (prev_sibling, next_sibling) = get_siblings_of_element(element, &following_node);
-    let data = raw_data.borrow();
-    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
 
     let inherited =
         inherit_relative_selector_search_direction(element.parent_element(), prev_sibling);
@@ -7505,6 +7519,8 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
         return;
     }
 
+    let data = raw_data.borrow();
+    let quirks_mode = data.stylist.quirks_mode();
     // Same comment as insertion applies.
     match (prev_sibling, next_sibling) {
         (Some(prev_sibling), Some(next_sibling)) => {
