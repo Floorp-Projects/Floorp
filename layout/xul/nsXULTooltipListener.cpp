@@ -73,10 +73,6 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
     return;
   }
 
-#ifdef DEBUG_crap
-  if (mNeedTitletip) return;
-#endif
-
   // check to see if the mouse left the targetNode, and if so,
   // hide the tooltip
   if (currentTooltip) {

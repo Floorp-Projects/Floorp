@@ -806,10 +806,6 @@ nsListControlFrame::DoneAddingChildren(bool aIsDone) {
 
 NS_IMETHODIMP
 nsListControlFrame::AddOption(int32_t aIndex) {
-#ifdef DO_REFLOW_DEBUG
-  printf("---- Id: %d nsLCF %p Added Option %d\n", mReflowId, this, aIndex);
-#endif
-
   if (!mIsAllContentHere) {
     mIsAllContentHere = Select().IsDoneAddingChildren();
     if (!mIsAllContentHere) {

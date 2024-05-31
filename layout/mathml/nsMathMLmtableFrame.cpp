@@ -622,23 +622,6 @@ static void ParseAlignAttribute(nsString& aValue, eAlign& aAlign,
   }
 }
 
-#ifdef DEBUG_rbs_off
-// call ListMathMLTree(mParent) to get the big picture
-static void ListMathMLTree(nsIFrame* atLeast) {
-  // climb up to <math> or <body> if <math> isn't there
-  nsIFrame* f = atLeast;
-  for (; f; f = f->GetParent()) {
-    nsIContent* c = f->GetContent();
-    if (!c || c->IsMathMLElement(nsGkAtoms::math) ||
-        // XXXbaku which kind of body tag?
-        c->NodeInfo()->NameAtom(nsGkAtoms::body))
-      break;
-  }
-  if (!f) f = atLeast;
-  f->List(stdout, 0);
-}
-#endif
-
 // --------
 // implementation of nsMathMLmtableWrapperFrame
 

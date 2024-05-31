@@ -1923,11 +1923,6 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
     if (HasOverflowLines() || HasPushedFloats()) {
       state.mReflowStatus.SetNextInFlowNeedsReflow();
     }
-
-#ifdef DEBUG_kipp
-    ListTag(stdout);
-    printf(": block is not fully complete\n");
-#endif
   }
 
   // Place the ::marker's frame if it is placed next to a block child.
@@ -2337,14 +2332,6 @@ nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
   }
 
   aMetrics.SetSize(wm, finalSize);
-
-#ifdef DEBUG_blocks
-  if ((ABSURD_SIZE(aMetrics.Width()) || ABSURD_SIZE(aMetrics.Height())) &&
-      !GetParent()->IsAbsurdSizeAssertSuppressed()) {
-    ListTag(stdout);
-    printf(": WARNING: desired:%d,%d\n", aMetrics.Width(), aMetrics.Height());
-  }
-#endif
 
   return blockEndEdgeOfChildren;
 }
@@ -8132,15 +8119,6 @@ void nsBlockFrame::CheckFloats(BlockReflowState& aState) {
     NS_ERROR(
         "nsBlockFrame::CheckFloats: Explicit float list is out of sync with "
         "float cache");
-#  if defined(DEBUG_roc)
-    nsIFrame::RootFrameList(PresContext(), stdout, 0);
-    for (i = 0; i < lineFloats.Length(); ++i) {
-      printf("Line float: %p\n", lineFloats.ElementAt(i));
-    }
-    for (i = 0; i < storedFloats.Length(); ++i) {
-      printf("Stored float: %p\n", storedFloats.ElementAt(i));
-    }
-#  endif
   }
 #endif
 
