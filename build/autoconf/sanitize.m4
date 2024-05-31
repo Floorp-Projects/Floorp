@@ -54,17 +54,6 @@ if test -n "$MOZ_MSAN"; then
 fi
 
 dnl ========================================================
-dnl = Use Thread Sanitizer
-dnl ========================================================
-if test -n "$MOZ_TSAN"; then
-    CFLAGS="-fsanitize=thread $CFLAGS"
-    CXXFLAGS="-fsanitize=thread $CXXFLAGS"
-    if test -z "$CLANG_CL"; then
-        LDFLAGS="-fsanitize=thread -rdynamic $LDFLAGS"
-    fi
-fi
-
-dnl ========================================================
 dnl = Use UndefinedBehavior Sanitizer (with custom checks)
 dnl ========================================================
 if test -n "$MOZ_UBSAN_CHECKS"; then
