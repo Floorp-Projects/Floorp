@@ -6,17 +6,11 @@
 #include "mozilla/Casting.h"
 #include "mozilla/intl/ICU4CGlue.h"
 
-#include "unicode/ubidi.h"
-
 namespace mozilla::intl {
 
-bool BidiEmbeddingLevel::IsDefaultLTR() const {
-  return mValue == UBIDI_DEFAULT_LTR;
-};
+bool BidiEmbeddingLevel::IsDefaultLTR() const { return *this == DefaultLTR(); };
 
-bool BidiEmbeddingLevel::IsDefaultRTL() const {
-  return mValue == UBIDI_DEFAULT_RTL;
-};
+bool BidiEmbeddingLevel::IsDefaultRTL() const { return *this == DefaultRTL(); };
 
 bool BidiEmbeddingLevel::IsRTL() const {
   // If the least significant bit is 1, then the embedding level
@@ -37,11 +31,11 @@ BidiEmbeddingLevel BidiEmbeddingLevel::LTR() { return BidiEmbeddingLevel(0); };
 BidiEmbeddingLevel BidiEmbeddingLevel::RTL() { return BidiEmbeddingLevel(1); };
 
 BidiEmbeddingLevel BidiEmbeddingLevel::DefaultLTR() {
-  return BidiEmbeddingLevel(UBIDI_DEFAULT_LTR);
+  return BidiEmbeddingLevel(kDefaultLTR);
 };
 
 BidiEmbeddingLevel BidiEmbeddingLevel::DefaultRTL() {
-  return BidiEmbeddingLevel(UBIDI_DEFAULT_RTL);
+  return BidiEmbeddingLevel(kDefaultRTL);
 };
 
 BidiDirection BidiEmbeddingLevel::Direction() {

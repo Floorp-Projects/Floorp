@@ -107,6 +107,17 @@ class BidiEmbeddingLevel {
 
  private:
   uint8_t mValue = 0;
+
+  /**
+   * Constants indicating that the base direction depends on the first strong
+   * directional character in the text according to the Unicode Bidirectional
+   * Algorithm.
+   * If no strong directional character is present, then set the paragraph level
+   * to 0 (LTR) or 1 (RTL) respectively.
+   * (Compatible with ICU4C's UBIDI_DEFAULT_LTR / UBIDI_DEFAULT_RTL.)
+   */
+  static constexpr uint8_t kDefaultLTR = 0xfe;
+  static constexpr uint8_t kDefaultRTL = 0xff;
 };
 
 }  // namespace mozilla::intl
