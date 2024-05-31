@@ -787,20 +787,46 @@ class Editor extends EventEmitter {
   }
 
   #createEventHandlers() {
+    const cm = editors.get(this);
+    function posToLineColumn(pos, view) {
+      if (!pos) {
+        return { line: null, column: null };
+      }
+      const cursor = view.state.doc.lineAt(pos);
+      const column = pos - cursor.from;
+      return { line: cursor.number, column };
+    }
     const eventHandlers = {};
     for (const eventName in this.#editorDOMEventHandlers) {
       const handlers = this.#editorDOMEventHandlers[eventName];
       eventHandlers[eventName] = (event, editor) => {
+        if (!event.target) {
+          return;
+        }
         for (const handler of handlers) {
           // Wait a cycle so the codemirror updates to the current cursor position,
           // information, TODO: Currently noticed this issue with CM6, not ideal but should
           // investigate further Bug 1890895.
           event.target.ownerGlobal.setTimeout(() => {
             const view = editor.viewState;
-            const head = view.state.selection.main.head;
-            const cursor = view.state.doc.lineAt(head);
-            const column = head - cursor.from;
-            handler(event, view, cursor.number, column);
+            const cursorPos = posToLineColumn(
+              view.state.selection.main.head,
+              view
+            );
+            // For events like mouse over the event postion which gives the line / column on hover.
+            const pos =
+              !event.pageX || !event.pageY
+                ? null
+                : cm.posAtCoords({ x: event.pageX, y: event.pageY });
+            const eventPos = posToLineColumn(pos, view);
+            handler(
+              event,
+              view,
+              cursorPos.line,
+              cursorPos.column,
+              eventPos.line,
+              eventPos.column
+            );
           }, 0);
         }
       };
@@ -811,6 +837,15 @@ class Editor extends EventEmitter {
   /**
    * Adds the DOM event handlers for the editor.
    * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
+   *                                    the handlers are getting called with the following arguments
+   *                                     - {Object} `event`: The DOM event
+   *                                     - {Object} `view`: The codemirror view
+   *                                     - {Number} cursorLine`: The line where the cursor is currently position
+   *                                     - {Number} `cursorColumn`: The column where the cursor is currently position
+   *                                     - {Number} `eventLine`: The line where the event was fired.
+   *                                                             This might be different from the cursor line for mouse events.
+   *                                     - {Number} `eventColumn`: The column where the event was fired.
+   *                                                                This might be different from the cursor column for mouse events.
    */
   addEditorDOMEventListeners(domEventHandlers) {
     const cm = editors.get(this);
@@ -1411,6 +1446,104 @@ class Editor extends EventEmitter {
       return cm.state.doc.sliceString(selection.from, selection.to);
     }
     return cm.getSelection().trim();
+  }
+
+  /**
+   * Returns the token at a specific position in the source
+   *
+   * @param   {Object} cm
+   * @param   {Object} position
+   * @param   {Number} position.line - line in the source
+   * @param   {Number} position.column  - column on a line in the source
+   * @returns {Object|null} token - start position of the token, end position of the token and
+   *                                      the  type of the token. Returns null if no token are
+   *                                      found at the passed coords
+   */
+  #tokenAtCoords(cm, { line, column }) {
+    if (this.config.cm6) {
+      const {
+        codemirrorLanguage: { syntaxTree },
+      } = this.#CodeMirror6;
+      const lineObject = cm.state.doc.line(line);
+      const pos = lineObject.from + column;
+      const token = syntaxTree(cm.state).resolve(pos, 1);
+      if (!token) {
+        return null;
+      }
+      return {
+        startColumn: column,
+        endColumn: token.to - token.from,
+        type: token.type?.name,
+      };
+    }
+    if (line < 0 || line >= cm.lineCount()) {
+      return null;
+    }
+
+    const token = cm.getTokenAt({ line: line - 1, ch: column });
+    if (!token) {
+      return null;
+    }
+
+    return { startColumn: token.start, endColumn: token.end, type: token.type };
+  }
+
+  /**
+   * Returns the expression at the specified position.
+   *
+   * The strategy of querying codeMirror tokens was borrowed
+   * from Chrome's inital implementation in JavaScriptSourceFrame.js#L414
+   *
+   * @param {Object} coord
+   * @param {Number} coord.line - line in the source
+   * @param {Number} coord.column  - column on a line in the source
+   * @return {Object|null} An object with the following properties:
+   *                       - {String} `expression`: The expression at specified coordinate
+   *                       - {Object} `location`: start and end lines/columns of the expression
+   *                       Returns null if no suitable expression could be found at passed coordinates
+   */
+  getExpressionFromCoords(coord) {
+    const cm = editors.get(this);
+    const token = this.#tokenAtCoords(cm, coord);
+    if (!token) {
+      return null;
+    }
+
+    let expressionStart = token.startColumn;
+    const expressionEnd = token.endColumn;
+    const lineNumber = coord.line;
+
+    const lineText = this.config.cm6
+      ? cm.state.doc.line(coord.line).text
+      : cm.doc.getLine(coord.line - 1);
+
+    while (
+      expressionStart > 1 &&
+      lineText.charAt(expressionStart - 1) === "."
+    ) {
+      const tokenBefore = this.#tokenAtCoords(cm, {
+        line: coord.line,
+        column: expressionStart - 2,
+      });
+
+      if (!tokenBefore?.type) {
+        return null;
+      }
+
+      expressionStart = tokenBefore.startColumn;
+    }
+
+    const expression = lineText.substring(expressionStart, expressionEnd) || "";
+
+    if (!expression) {
+      return null;
+    }
+
+    const location = {
+      start: { line: lineNumber, column: expressionStart },
+      end: { line: lineNumber, column: expressionEnd },
+    };
+    return { expression, location };
   }
 
   /**

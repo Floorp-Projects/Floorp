@@ -248,6 +248,7 @@ class Editor extends PureComponent {
         click: (event, cm, line, column) => this.onClick(event, line, column),
         contextmenu: (event, cm, line, column) =>
           this.openMenu(event, line, column),
+        mouseover: onMouseOver(editor),
       });
     }
     this.setState({ editor });
@@ -832,6 +833,15 @@ class Editor extends PureComponent {
         React.Fragment,
         null,
         React.createElement(Breakpoints, { editor }),
+        isPaused &&
+          selectedSource.isOriginal &&
+          !selectedSource.isPrettyPrinted &&
+          !mapScopesEnabled
+          ? null
+          : React.createElement(Preview, {
+              editor,
+              editorRef: this.$editorWrapper,
+            }),
         React.createElement(DebugLine, { editor, selectedSource }),
         React.createElement(HighlightLine, { editor }),
         React.createElement(Exceptions, { editor }),
