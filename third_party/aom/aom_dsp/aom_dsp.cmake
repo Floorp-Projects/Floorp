@@ -58,7 +58,6 @@ list(APPEND AOM_DSP_COMMON_ASM_SSE2
 
 list(APPEND AOM_DSP_COMMON_INTRIN_SSE2
             "${AOM_ROOT}/aom_dsp/x86/aom_convolve_copy_sse2.c"
-            "${AOM_ROOT}/aom_dsp/x86/aom_asm_stubs.c"
             "${AOM_ROOT}/aom_dsp/x86/convolve.h"
             "${AOM_ROOT}/aom_dsp/x86/convolve_sse2.h"
             "${AOM_ROOT}/aom_dsp/x86/fft_sse2.c"

@@ -221,7 +221,8 @@ void av1_compute_stats_highbd_neon(int wiener_win, const uint8_t *dgd8, const ui
 RTCD_EXTERN void (*av1_compute_stats_highbd)(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
 
 void av1_convolve_2d_scale_c(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int x_step_qn, const int subpel_y_qn, const int y_step_qn, ConvolveParams *conv_params);
-#define av1_convolve_2d_scale av1_convolve_2d_scale_c
+void av1_convolve_2d_scale_neon(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int x_step_qn, const int subpel_y_qn, const int y_step_qn, ConvolveParams *conv_params);
+RTCD_EXTERN void (*av1_convolve_2d_scale)(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int x_step_qn, const int subpel_y_qn, const int y_step_qn, ConvolveParams *conv_params);
 
 void av1_convolve_2d_sr_c(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int subpel_y_qn, ConvolveParams *conv_params);
 void av1_convolve_2d_sr_neon(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int subpel_y_qn, ConvolveParams *conv_params);
@@ -687,6 +688,12 @@ void av1_resize_and_extend_frame_c(const YV12_BUFFER_CONFIG *src, YV12_BUFFER_CO
 void av1_resize_and_extend_frame_neon(const YV12_BUFFER_CONFIG *src, YV12_BUFFER_CONFIG *dst, const InterpFilter filter, const int phase, const int num_planes);
 RTCD_EXTERN void (*av1_resize_and_extend_frame)(const YV12_BUFFER_CONFIG *src, YV12_BUFFER_CONFIG *dst, const InterpFilter filter, const int phase, const int num_planes);
 
+void av1_resize_horz_dir_c(const uint8_t *const input, int in_stride, uint8_t *intbuf, int height, int filteredlength, int width2);
+#define av1_resize_horz_dir av1_resize_horz_dir_c
+
+bool av1_resize_vert_dir_c(uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col);
+#define av1_resize_vert_dir av1_resize_vert_dir_c
+
 void av1_round_shift_array_c(int32_t *arr, int size, int bit);
 void av1_round_shift_array_neon(int32_t *arr, int size, int bit);
 RTCD_EXTERN void (*av1_round_shift_array)(int32_t *arr, int size, int bit);
@@ -813,9 +820,6 @@ cfl_subtract_average_fn cfl_get_subtract_average_fn_c(TX_SIZE tx_size);
 cfl_subtract_average_fn cfl_get_subtract_average_fn_neon(TX_SIZE tx_size);
 RTCD_EXTERN cfl_subtract_average_fn (*cfl_get_subtract_average_fn)(TX_SIZE tx_size);
 
-bool resize_vert_dir_c(uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col);
-#define resize_vert_dir resize_vert_dir_c
-
 void av1_rtcd(void);
 
 #include "config/aom_config.h"
@@ -870,6 +874,8 @@ static void setup_rtcd_internal(void)
     if (flags & HAS_NEON) av1_compute_stats = av1_compute_stats_neon;
     av1_compute_stats_highbd = av1_compute_stats_highbd_c;
     if (flags & HAS_NEON) av1_compute_stats_highbd = av1_compute_stats_highbd_neon;
+    av1_convolve_2d_scale = av1_convolve_2d_scale_c;
+    if (flags & HAS_NEON) av1_convolve_2d_scale = av1_convolve_2d_scale_neon;
     av1_convolve_2d_sr = av1_convolve_2d_sr_c;
     if (flags & HAS_NEON) av1_convolve_2d_sr = av1_convolve_2d_sr_neon;
     av1_convolve_2d_sr_intrabc = av1_convolve_2d_sr_intrabc_c;

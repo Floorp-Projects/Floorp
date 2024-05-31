@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include "config/aom_config.h"
+#include "config/av1_rtcd.h"
 
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/arm/aom_neon_sve_bridge.h"
@@ -49,7 +50,7 @@ int64_t av1_block_error_sve(const tran_low_t *coeff, const tran_low_t *dqcoeff,
 }
 
 int64_t av1_block_error_lp_sve(const int16_t *coeff, const int16_t *dqcoeff,
-                               int block_size) {
+                               intptr_t block_size) {
   if (block_size % 32 == 0) {
     int64x2_t error[4] = { vdupq_n_s64(0), vdupq_n_s64(0), vdupq_n_s64(0),
                            vdupq_n_s64(0) };

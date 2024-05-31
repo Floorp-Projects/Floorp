@@ -12,6 +12,7 @@
 #include <arm_neon.h>
 
 #include "aom_dsp/txfm_common.h"
+#include "config/av1_rtcd.h"
 
 static void transpose4x4(int16x8_t in[2], int16x4_t out[4]) {
   int32x4x2_t b0 =

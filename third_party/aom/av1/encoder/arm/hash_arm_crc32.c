@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include "config/aom_config.h"
+#include "config/av1_rtcd.h"
 
 #define CRC_LOOP(op, crc, type, buf, len) \
   while ((len) >= sizeof(type)) {         \

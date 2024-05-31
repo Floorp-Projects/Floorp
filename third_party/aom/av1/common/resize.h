@@ -101,6 +101,9 @@ bool av1_resize_plane_to_half(const uint8_t *const input, int height, int width,
                               int in_stride, uint8_t *output, int height2,
                               int width2, int out_stride);
 
+void down2_symeven(const uint8_t *const input, int length, uint8_t *output,
+                   int start_offset);
+
 bool should_resize_by_half(int height, int width, int height2, int width2);
 
 // Returns 1 if a superres upscaled frame is scaled and 0 otherwise.

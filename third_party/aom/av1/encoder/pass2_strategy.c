@@ -268,9 +268,12 @@ static double calc_correction_factor(double err_per_mb, int q) {
 
 // Similar to find_qindex_by_rate() function in ratectrl.c, but includes
 // calculation of a correction_factor.
-static int find_qindex_by_rate_with_correction(
-    int desired_bits_per_mb, aom_bit_depth_t bit_depth, double error_per_mb,
-    double group_weight_factor, int best_qindex, int worst_qindex) {
+static int find_qindex_by_rate_with_correction(uint64_t desired_bits_per_mb,
+                                               aom_bit_depth_t bit_depth,
+                                               double error_per_mb,
+                                               double group_weight_factor,
+                                               int best_qindex,
+                                               int worst_qindex) {
   assert(best_qindex <= worst_qindex);
   int low = best_qindex;
   int high = worst_qindex;
@@ -279,7 +282,8 @@ static int find_qindex_by_rate_with_correction(
     const int mid = (low + high) >> 1;
     const double q_factor = calc_correction_factor(error_per_mb, mid);
     const double q = av1_convert_qindex_to_q(mid, bit_depth);
-    const int mid_bits_per_mb = (int)((q_factor * group_weight_factor) / q);
+    const uint64_t mid_bits_per_mb =
+        (uint64_t)((q_factor * group_weight_factor) / q);
 
     if (mid_bits_per_mb > desired_bits_per_mb) {
       low = mid + 1;
@@ -328,8 +332,8 @@ static int get_twopass_worst_quality(AV1_COMP *cpi, const double av_frame_err,
                             : cpi->common.mi_params.MBs;
     const int active_mbs = AOMMAX(1, num_mbs - (int)(num_mbs * inactive_zone));
     const double av_err_per_mb = av_frame_err / (1.0 - inactive_zone);
-    const int target_norm_bits_per_mb =
-        (int)((uint64_t)av_target_bandwidth << BPER_MB_NORMBITS) / active_mbs;
+    const uint64_t target_norm_bits_per_mb =
+        ((uint64_t)av_target_bandwidth << BPER_MB_NORMBITS) / active_mbs;
     int rate_err_tol = AOMMIN(rc_cfg->under_shoot_pct, rc_cfg->over_shoot_pct);
 
     // Update bpm correction factor based on previous GOP rate error.

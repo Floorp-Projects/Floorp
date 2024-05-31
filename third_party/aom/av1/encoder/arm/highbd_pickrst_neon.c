@@ -15,7 +15,7 @@
 
 #include "aom_dsp/arm/mem_neon.h"
 #include "aom_dsp/arm/sum_neon.h"
-#include "av1/encoder/arm/neon/pickrst_neon.h"
+#include "av1/encoder/arm/pickrst_neon.h"
 #include "av1/encoder/pickrst.h"
 
 static INLINE void highbd_calc_proj_params_r0_r1_neon(

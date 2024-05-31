@@ -36,8 +36,6 @@ typedef HANDLE pthread_t;
 typedef int pthread_attr_t;
 typedef CRITICAL_SECTION pthread_mutex_t;
 
-#include <errno.h>
-
 #if _WIN32_WINNT < 0x0600
 #error _WIN32_WINNT must target Windows Vista / Server 2008 or newer.
 #endif
@@ -72,6 +70,20 @@ static INLINE int pthread_attr_init(pthread_attr_t *attr) {
 static INLINE int pthread_attr_destroy(pthread_attr_t *attr) {
   (void)attr;
   return 0;
+}
+
+static INLINE int pthread_attr_getstacksize(const pthread_attr_t *attr,
+                                            size_t *stacksize) {
+  (void)attr;
+  (void)stacksize;
+  return EINVAL;
+}
+
+static INLINE int pthread_attr_setstacksize(pthread_attr_t *attr,
+                                            size_t stacksize) {
+  (void)attr;
+  (void)stacksize;
+  return EINVAL;
 }
 
 static INLINE int pthread_create(pthread_t *const thread,

@@ -1325,6 +1325,9 @@ typedef struct macroblock {
   //! Coding block distortion value for uv/color, minimum over the inter modes.
   int64_t min_dist_inter_uv;
 
+  //! Threshold on the number of colors for testing palette mode.
+  int color_palette_thresh;
+
   //! The buffer used by search_tx_type() to swap dqcoeff in macroblockd_plane
   // so we can keep dqcoeff of the best tx_type.
   tran_low_t *dqcoeff_buf;

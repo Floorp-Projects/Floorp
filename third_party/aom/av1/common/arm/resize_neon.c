@@ -16,6 +16,7 @@
 #include "aom_dsp/arm/transpose_neon.h"
 #include "av1/common/resize.h"
 #include "config/av1_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
 #include "config/aom_scale_rtcd.h"
 
 static INLINE int16x4_t convolve8_4(const int16x4_t s0, const int16x4_t s1,

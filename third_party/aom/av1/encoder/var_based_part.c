@@ -27,6 +27,7 @@
 #include "av1/common/blockd.h"
 
 #include "av1/encoder/encodeframe.h"
+#include "av1/encoder/encodeframe_utils.h"
 #include "av1/encoder/var_based_part.h"
 #include "av1/encoder/reconinter_enc.h"
 #include "av1/encoder/rdopt_utils.h"
@@ -1619,6 +1620,17 @@ int av1_choose_var_based_partitioning(AV1_COMP *cpi, const TileInfo *const tile,
   unsigned int y_sad_alt = UINT_MAX;
   unsigned int y_sad_last = UINT_MAX;
   BLOCK_SIZE bsize = is_small_sb ? BLOCK_64X64 : BLOCK_128X128;
+
+  // Force skip encoding for all superblocks on slide change for
+  // non_reference_frames.
+  if (cpi->sf.rt_sf.skip_encoding_non_reference_slide_change &&
+      cpi->rc.high_source_sad && cpi->ppi->rtc_ref.non_reference_frame) {
+    MB_MODE_INFO **mi = cm->mi_params.mi_grid_base +
+                        get_mi_grid_idx(&cm->mi_params, mi_row, mi_col);
+    av1_set_fixed_partitioning(cpi, tile, mi, mi_row, mi_col, bsize);
+    x->force_zeromv_skip_for_sb = 1;
+    return 0;
+  }
 
   // Ref frame used in partitioning.
   MV_REFERENCE_FRAME ref_frame_partition = LAST_FRAME;
