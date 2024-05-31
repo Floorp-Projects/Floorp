@@ -783,8 +783,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void ExcludeHttp2OrHttp3Internal(const nsHttpConnectionInfo* ci);
 
   // State for generating channelIds
-  uint32_t mProcessId{0};
+  uint64_t mUniqueProcessId{0};
   Atomic<uint32_t, Relaxed> mNextChannelId{1};
+
+  // ProcessId used for logging.
+  uint32_t mProcessId{0};
 
   // The last time any of the active tab page load optimization took place.
   // This is accessed on multiple threads, hence a lock is needed.

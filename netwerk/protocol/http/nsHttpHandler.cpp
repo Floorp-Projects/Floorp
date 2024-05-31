@@ -270,6 +270,7 @@ nsHttpHandler::nsHttpHandler()
   runtime = mozilla::components::XULRuntime::Service();
   if (runtime) {
     runtime->GetProcessID(&mProcessId);
+    runtime->GetUniqueProcessID(&mUniqueProcessId);
   }
 }
 
@@ -2524,11 +2525,10 @@ void nsHttpHandler::ShutdownConnectionManager() {
 nsresult nsHttpHandler::NewChannelId(uint64_t& channelId) {
   channelId =
       // channelId is sometimes passed to JavaScript code (e.g. devtools),
-      // and since on Linux PID_MAX_LIMIT is 2^22 we cannot
-      // shift PID more than 31 bits left. Otherwise resulting values
-      // will be exceed safe JavaScript integer range.
-      ((static_cast<uint64_t>(mProcessId) << 31) & 0xFFFFFFFF80000000LL) |
-      mNextChannelId++;
+      // values should not exceed safe JavaScript integer range (2^53 – 1).
+      // Since the uniqueProcessId starts at 0, this should be safe to use
+      // unless we create more than 2^22 processes.
+      ((mUniqueProcessId << 31) & 0xFFFFFFFF80000000LL) | mNextChannelId++;
   return NS_OK;
 }
 
