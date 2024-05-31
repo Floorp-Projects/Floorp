@@ -485,8 +485,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
                                 nsIInterfaceRequestor* aCallbacks,
                                 const OriginAttributes& aOriginAttributes);
 
-  bool UseHTTPSRRAsAltSvcEnabled() const;
-
   bool EchConfigEnabled(bool aIsHttp3 = false) const;
   // When EchConfig is enabled and all records with echConfig are failed, this
   // functon indicate whether we can fallback to the origin server.

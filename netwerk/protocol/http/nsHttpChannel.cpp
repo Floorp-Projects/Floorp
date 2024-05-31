@@ -6605,7 +6605,8 @@ nsresult nsHttpChannel::BeginConnect() {
       !(mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
         mLoadInfo->GetExternalContentPolicyType() !=
             ExtContentPolicy::TYPE_DOCUMENT) &&
-      !mConnectionInfo->UsingConnect() && canUseHTTPSRRonNetwork(&trrEnabled);
+      !mConnectionInfo->UsingConnect() && canUseHTTPSRRonNetwork(&trrEnabled) &&
+      StaticPrefs::network_dns_use_https_rr_as_altsvc();
   if (!httpsRRAllowed) {
     DisallowHTTPSRR(mCaps);
   } else if (trrEnabled) {
@@ -6797,7 +6798,7 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
       mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
     }
 
-    if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled() && !mHTTPSSVCRecord &&
+    if (StaticPrefs::network_dns_use_https_rr_as_altsvc() && !mHTTPSSVCRecord &&
         !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR) && canUseHTTPSRRonNetwork()) {
       MOZ_ASSERT(!mHTTPSSVCRecord);
 

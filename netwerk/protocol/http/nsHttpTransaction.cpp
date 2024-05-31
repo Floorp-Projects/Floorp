@@ -369,7 +369,7 @@ nsresult nsHttpTransaction::Init(
   }
 
   bool forceUseHTTPSRR = StaticPrefs::network_dns_force_use_https_rr();
-  if ((gHttpHandler->UseHTTPSRRAsAltSvcEnabled() &&
+  if ((StaticPrefs::network_dns_use_https_rr_as_altsvc() &&
        !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR)) ||
       forceUseHTTPSRR) {
     nsCOMPtr<nsIEventTarget> target;
