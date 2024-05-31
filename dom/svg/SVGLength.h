@@ -8,8 +8,6 @@
 #define DOM_SVG_SVGLENGTH_H_
 
 #include "nsDebug.h"
-#include "nsMathUtils.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 
