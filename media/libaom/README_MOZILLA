@@ -6,13 +6,13 @@ Any patches or additional configuration to be applied to the
 upstream source should be kept here in the media/libaom
 directory.
 
-To update the library source and build config files, execute
+To update the library source and build config files,
 
-  ./mach vendor media/libaom/moz.yaml
-
-To update to a specific upstream git tag or commit, use
-
-  ./mach vendor media/libaom/moz.yaml -r <commit>
+1. Run `./mach vendor media/libaom/moz.yaml --patch-mode=none`, or
+   `./mach vendor media/libaom/moz.yaml -r <commit>` for a specific
+   commit, to update the sources
+2. Run `./mach vendor media/libaom/moz.yaml --patch-mode=only` to
+   apply the local patches.
 
 The upstream git repository is https://aomedia.googlesource.com/aom
 
