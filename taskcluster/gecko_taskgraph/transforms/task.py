@@ -1340,6 +1340,7 @@ def build_push_addons_payload(config, task, task_def):
             Required("path"): str,
             Required("version-path"): str,
             Optional("l10n-repo-url"): str,
+            Optional("l10n-repo-target-branch"): str,
             Optional("ignore-config"): object,
             Required("platform-configs"): [
                 {
@@ -1412,7 +1413,13 @@ def build_treescript_payload(config, task, task_def):
         for k, v in worker["l10n-bump-info"].items():
             l10n_bump_info[k.replace("-", "_")] = worker["l10n-bump-info"][k]
         task_def["payload"]["l10n_bump_info"] = [l10n_bump_info]
-        actions.append("l10n_bump")
+        if (
+            "l10n_repo_url" in l10n_bump_info
+            and "github.com" in l10n_bump_info["l10n_repo_url"]
+        ):
+            actions.append("l10n_bump_github")
+        else:
+            actions.append("l10n_bump")
 
     if worker.get("merge-info"):
         merge_info = {
