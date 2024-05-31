@@ -204,6 +204,20 @@ user-id = 1281
 user-login = "nical"
 user-name = "Nicolas Silva"
 
+[[publisher.euclid]]
+version = "0.22.9"
+when = "2023-03-25"
+user-id = 1281
+user-login = "nical"
+user-name = "Nicolas Silva"
+
+[[publisher.euclid]]
+version = "0.22.10"
+when = "2024-05-21"
+user-id = 1281
+user-login = "nical"
+user-name = "Nicolas Silva"
+
 [[publisher.flate2]]
 version = "1.0.26"
 when = "2023-04-28"

@@ -16,11 +16,11 @@ use crate::side_offsets::SideOffsets2D;
 use crate::size::Size2D;
 use crate::vector::Vector2D;
 
-use num_traits::{NumCast, Float};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
+use num_traits::{Float, NumCast};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 use core::borrow::Borrow;
 use core::cmp::PartialOrd;
@@ -61,13 +61,9 @@ impl<'a, T, U> arbitrary::Arbitrary<'a> for Rect<T, U>
 where
     T: arbitrary::Arbitrary<'a>,
 {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
-    {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let (origin, size) = arbitrary::Arbitrary::arbitrary(u)?;
-        Ok(Rect {
-            origin,
-            size,
-        })
+        Ok(Rect { origin, size })
     }
 }
 

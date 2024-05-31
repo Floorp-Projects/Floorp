@@ -9,21 +9,22 @@
 
 use crate::approxeq::ApproxEq;
 use crate::trig::Trig;
+
 use core::cmp::{Eq, PartialEq};
 use core::hash::Hash;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
+
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
 use num_traits::real::Real;
 use num_traits::{Float, FloatConst, NumCast, One, Zero};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 /// An angle in radians
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq, PartialOrd, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Angle<T> {
     pub radians: T,
 }
@@ -33,6 +34,23 @@ unsafe impl<T: Zeroable> Zeroable for Angle<T> {}
 
 #[cfg(feature = "bytemuck")]
 unsafe impl<T: Pod> Pod for Angle<T> {}
+
+#[cfg(feature = "arbitrary")]
+impl<'a, T> arbitrary::Arbitrary<'a> for Angle<T>
+where
+    T: arbitrary::Arbitrary<'a>,
+{
+    // This implementation could be derived, but the derive would require an `extern crate std`.
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        Ok(Angle {
+            radians: arbitrary::Arbitrary::arbitrary(u)?,
+        })
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        <T as arbitrary::Arbitrary>::size_hint(depth)
+    }
+}
 
 impl<T> Angle<T> {
     #[inline]
@@ -210,13 +228,13 @@ impl<T: Copy + Add<T, Output = T>> Add<&Self> for Angle<T> {
 }
 
 impl<T: Add + Zero> Sum for Angle<T> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }
 
 impl<'a, T: 'a + Add + Copy + Zero> Sum<&'a Self> for Angle<T> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }

@@ -9,11 +9,13 @@
 //! A one-dimensional length, tagged with its units.
 
 use crate::approxeq::ApproxEq;
+use crate::approxord::{max, min};
 use crate::num::Zero;
 use crate::scale::Scale;
-use crate::approxord::{max, min};
 
 use crate::num::One;
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
@@ -24,8 +26,6 @@ use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 use num_traits::{NumCast, Saturating};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 /// A one-dimensional distance, with value represented by `T` and unit of measurement `Unit`.
 ///
@@ -195,14 +195,14 @@ impl<T: Add + Copy, U> Add<&Self> for Length<T, U> {
 
 // length_iter.copied().sum()
 impl<T: Add<Output = T> + Zero, U> Sum for Length<T, U> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }
 
 // length_iter.sum()
 impl<'a, T: 'a + Add<Output = T> + Copy + Zero, U: 'a> Sum<&'a Self> for Length<T, U> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }

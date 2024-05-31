@@ -14,15 +14,17 @@ use crate::length::Length;
 use crate::num::Zero;
 use crate::scale::Scale;
 use crate::Vector2D;
+
 use core::cmp::{Eq, PartialEq};
 use core::fmt;
 use core::hash::Hash;
 use core::marker::PhantomData;
-use core::ops::{Add, AddAssign, Sub, SubAssign, Div, DivAssign, Mul, MulAssign, Neg};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 /// A group of 2D side offsets, which correspond to top/right/bottom/left for borders, padding,
 /// and margins in CSS, optionally tagged with a unit.
@@ -46,8 +48,7 @@ impl<'a, T, U> arbitrary::Arbitrary<'a> for SideOffsets2D<T, U>
 where
     T: arbitrary::Arbitrary<'a>,
 {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
-    {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let (top, right, bottom, left) = arbitrary::Arbitrary::arbitrary(u)?;
         Ok(SideOffsets2D {
             top,
@@ -193,7 +194,8 @@ impl<T, U> SideOffsets2D<T, U> {
 
     /// Constructor, setting all sides to zero.
     pub fn zero() -> Self
-        where T: Zero,
+    where
+        T: Zero,
     {
         SideOffsets2D::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
     }
@@ -209,26 +211,30 @@ impl<T, U> SideOffsets2D<T, U> {
 
     /// Constructor setting the same value to all sides, taking a scalar value directly.
     pub fn new_all_same(all: T) -> Self
-        where T : Copy
+    where
+        T: Copy,
     {
         SideOffsets2D::new(all, all, all, all)
     }
 
     /// Constructor setting the same value to all sides, taking a typed Length.
     pub fn from_length_all_same(all: Length<T, U>) -> Self
-        where T : Copy
+    where
+        T: Copy,
     {
         SideOffsets2D::new_all_same(all.0)
     }
 
     pub fn horizontal(&self) -> T
-        where T: Copy + Add<T, Output = T>
+    where
+        T: Copy + Add<T, Output = T>,
     {
         self.left + self.right
     }
 
     pub fn vertical(&self) -> T
-        where T: Copy + Add<T, Output = T>
+    where
+        T: Copy + Add<T, Output = T>,
     {
         self.top + self.bottom
     }
@@ -290,7 +296,7 @@ where
 
 impl<T, U> Neg for SideOffsets2D<T, U>
 where
-    T: Neg<Output = T>
+    T: Neg<Output = T>,
 {
     type Output = Self;
     fn neg(self) -> Self {

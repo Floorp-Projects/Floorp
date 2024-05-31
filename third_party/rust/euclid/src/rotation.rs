@@ -11,17 +11,19 @@ use crate::approxeq::ApproxEq;
 use crate::trig::Trig;
 use crate::{point2, point3, vec3, Angle, Point2D, Point3D, Vector2D, Vector3D};
 use crate::{Transform2D, Transform3D, UnknownUnit};
+
 use core::cmp::{Eq, PartialEq};
 use core::fmt;
 use core::hash::Hash;
 use core::marker::PhantomData;
 use core::ops::{Add, Mul, Neg, Sub};
+
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
 use num_traits::real::Real;
 use num_traits::{NumCast, One, Zero};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 /// A transform that can represent rotations in 2d, represented as an angle in radians.
 #[repr(C)]
@@ -190,10 +192,7 @@ impl<T: Real, Src, Dst> Rotation2D<T, Src, Dst> {
 
     /// Returns a rotation representing the other rotation followed by this rotation.
     #[inline]
-    pub fn then<NewSrc>(
-        &self,
-        other: &Rotation2D<T, NewSrc, Src>,
-    ) -> Rotation2D<T, NewSrc, Dst> {
+    pub fn then<NewSrc>(&self, other: &Rotation2D<T, NewSrc, Src>) -> Rotation2D<T, NewSrc, Dst> {
         Rotation2D::radians(self.angle + other.angle)
     }
 
@@ -624,6 +623,7 @@ where
 
     /// Returns the matrix representation of this rotation.
     #[inline]
+    #[rustfmt::skip]
     pub fn to_transform(&self) -> Transform3D<T, Src, Dst>
     where
         T: ApproxEq<T>,
@@ -668,10 +668,7 @@ where
 
     /// Returns a rotation representing this rotation followed by the other rotation.
     #[inline]
-    pub fn then<NewDst>(
-        &self,
-        other: &Rotation3D<T, Dst, NewDst>,
-    ) -> Rotation3D<T, Src, NewDst>
+    pub fn then<NewDst>(&self, other: &Rotation3D<T, Dst, NewDst>) -> Rotation3D<T, Src, NewDst>
     where
         T: ApproxEq<T>,
     {
@@ -826,18 +823,12 @@ fn pre_post() {
     // Check that the order of transformations is correct (corresponds to what
     // we do in Transform3D).
     let p1 = r1.then(&r2).then(&r3).transform_point3d(p);
-    let p2 = t1
-        .then(&t2)
-        .then(&t3)
-        .transform_point3d(p);
+    let p2 = t1.then(&t2).then(&t3).transform_point3d(p);
 
     assert!(p1.approx_eq(&p2.unwrap()));
 
     // Check that changing the order indeed matters.
-    let p3 = t3
-        .then(&t1)
-        .then(&t2)
-        .transform_point3d(p);
+    let p3 = t3.then(&t1).then(&t2).transform_point3d(p);
     assert!(!p1.approx_eq(&p3.unwrap()));
 }
 
