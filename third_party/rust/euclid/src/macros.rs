@@ -19,10 +19,10 @@ macro_rules! mint_vec {
             }
         }
         #[cfg(feature = "mint")]
-        impl<T, U> Into<mint::$std_name<T>> for $name<T, U> {
-            fn into(self) -> mint::$std_name<T> {
+        impl<T, U> From<$name<T, U>> for mint::$std_name<T> {
+            fn from(v: $name<T, U>) -> Self {
                 mint::$std_name {
-                    $( $field: self.$field, )*
+                    $( $field: v.$field, )*
                 }
             }
         }

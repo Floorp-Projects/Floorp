@@ -33,7 +33,7 @@ use num_traits::{Float, NumCast, Signed};
 use serde;
 
 #[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
+use bytemuck::{Pod, Zeroable};
 
 /// A 2d Vector tagged with a unit.
 #[repr(C)]
@@ -96,8 +96,7 @@ impl<'a, T, U> arbitrary::Arbitrary<'a> for Vector2D<T, U>
 where
     T: arbitrary::Arbitrary<'a>,
 {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
-    {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let (x, y) = arbitrary::Arbitrary::arbitrary(u)?;
         Ok(Vector2D {
             x,
@@ -208,6 +207,41 @@ impl<T, U> Vector2D<T, U> {
     #[inline]
     pub fn from_untyped(p: Vector2D<T, UnknownUnit>) -> Self {
         vec2(p.x, p.y)
+    }
+
+    /// Apply the function `f` to each component of this vector.
+    ///
+    /// # Example
+    ///
+    /// This may be used to perform unusual arithmetic which is not already offered as methods.
+    ///
+    /// ```
+    /// use euclid::default::Vector2D;
+    ///
+    /// let p = Vector2D::<u32>::new(5, 11);
+    /// assert_eq!(p.map(|coord| coord.saturating_sub(10)), Vector2D::new(0, 1));
+    /// ```
+    #[inline]
+    pub fn map<V, F: FnMut(T) -> V>(self, mut f: F) -> Vector2D<V, U> {
+        vec2(f(self.x), f(self.y))
+    }
+
+    /// Apply the function `f` to each pair of components of this point and `rhs`.
+    ///
+    /// # Example
+    ///
+    /// This may be used to perform unusual arithmetic which is not already offered as methods.
+    ///
+    /// ```
+    /// use euclid::default::Vector2D;
+    ///
+    /// let a: Vector2D<u8> = Vector2D::new(50, 200);
+    /// let b: Vector2D<u8> = Vector2D::new(100, 100);
+    /// assert_eq!(a.zip(b, u8::saturating_add), Vector2D::new(150, 255));
+    /// ```
+    #[inline]
+    pub fn zip<V, F: FnMut(T, T) -> V>(self, rhs: Self, mut f: F) -> Vector2D<V, U> {
+        vec2(f(self.x, rhs.x), f(self.y, rhs.y))
     }
 
     /// Computes the vector with absolute values of each component.
@@ -740,13 +774,13 @@ impl<T: Add + Copy, U> Add<&Self> for Vector2D<T, U> {
 }
 
 impl<T: Add<Output = T> + Zero, U> Sum for Vector2D<T, U> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }
 
 impl<'a, T: 'a + Add<Output = T> + Copy + Zero, U: 'a> Sum<&'a Self> for Vector2D<T, U> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }
@@ -876,9 +910,9 @@ impl<T: ApproxEq<T>, U> ApproxEq<Vector2D<T, U>> for Vector2D<T, U> {
     }
 }
 
-impl<T, U> Into<[T; 2]> for Vector2D<T, U> {
-    fn into(self) -> [T; 2] {
-        [self.x, self.y]
+impl<T, U> From<Vector2D<T, U>> for [T; 2] {
+    fn from(v: Vector2D<T, U>) -> Self {
+        [v.x, v.y]
     }
 }
 
@@ -888,9 +922,9 @@ impl<T, U> From<[T; 2]> for Vector2D<T, U> {
     }
 }
 
-impl<T, U> Into<(T, T)> for Vector2D<T, U> {
-    fn into(self) -> (T, T) {
-        (self.x, self.y)
+impl<T, U> From<Vector2D<T, U>> for (T, T) {
+    fn from(v: Vector2D<T, U>) -> Self {
+        (v.x, v.y)
     }
 }
 
@@ -901,8 +935,8 @@ impl<T, U> From<(T, T)> for Vector2D<T, U> {
 }
 
 impl<T, U> From<Size2D<T, U>> for Vector2D<T, U> {
-    fn from(size: Size2D<T, U>) -> Self {
-        vec2(size.width, size.height)
+    fn from(s: Size2D<T, U>) -> Self {
+        vec2(s.width, s.height)
     }
 }
 
@@ -1065,6 +1099,41 @@ impl<T, U> Vector3D<T, U> {
     #[inline]
     pub fn from_untyped(p: Vector3D<T, UnknownUnit>) -> Self {
         vec3(p.x, p.y, p.z)
+    }
+
+    /// Apply the function `f` to each component of this vector.
+    ///
+    /// # Example
+    ///
+    /// This may be used to perform unusual arithmetic which is not already offered as methods.
+    ///
+    /// ```
+    /// use euclid::default::Vector3D;
+    ///
+    /// let p = Vector3D::<u32>::new(5, 11, 15);
+    /// assert_eq!(p.map(|coord| coord.saturating_sub(10)), Vector3D::new(0, 1, 5));
+    /// ```
+    #[inline]
+    pub fn map<V, F: FnMut(T) -> V>(self, mut f: F) -> Vector3D<V, U> {
+        vec3(f(self.x), f(self.y), f(self.z))
+    }
+
+    /// Apply the function `f` to each pair of components of this point and `rhs`.
+    ///
+    /// # Example
+    ///
+    /// This may be used to perform unusual arithmetic which is not already offered as methods.
+    ///
+    /// ```
+    /// use euclid::default::Vector3D;
+    ///
+    /// let a: Vector3D<u8> = Vector3D::new(50, 200, 10);
+    /// let b: Vector3D<u8> = Vector3D::new(100, 100, 0);
+    /// assert_eq!(a.zip(b, u8::saturating_add), Vector3D::new(150, 255, 10));
+    /// ```
+    #[inline]
+    pub fn zip<V, F: FnMut(T, T) -> V>(self, rhs: Self, mut f: F) -> Vector3D<V, U> {
+        vec3(f(self.x, rhs.x), f(self.y, rhs.y), f(self.z, rhs.z))
     }
 
     /// Computes the vector with absolute values of each component.
@@ -1614,13 +1683,13 @@ impl<'a, T: 'a + Add + Copy, U: 'a> Add<&Self> for Vector3D<T, U> {
 }
 
 impl<T: Add<Output = T> + Zero, U> Sum for Vector3D<T, U> {
-    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }
 
 impl<'a, T: 'a + Add<Output = T> + Copy + Zero, U: 'a> Sum<&'a Self> for Vector3D<T, U> {
-    fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.fold(Self::zero(), Add::add)
     }
 }
@@ -1653,11 +1722,7 @@ impl<T: Copy + Mul, U> Mul<T> for Vector3D<T, U> {
 
     #[inline]
     fn mul(self, scale: T) -> Self::Output {
-        vec3(
-            self.x * scale,
-            self.y * scale,
-            self.z * scale,
-        )
+        vec3(self.x * scale, self.y * scale, self.z * scale)
     }
 }
 
@@ -1673,11 +1738,7 @@ impl<T: Copy + Mul, U1, U2> Mul<Scale<T, U1, U2>> for Vector3D<T, U1> {
 
     #[inline]
     fn mul(self, scale: Scale<T, U1, U2>) -> Self::Output {
-        vec3(
-            self.x * scale.0,
-            self.y * scale.0,
-            self.z * scale.0,
-        )
+        vec3(self.x * scale.0, self.y * scale.0, self.z * scale.0)
     }
 }
 
@@ -1695,11 +1756,7 @@ impl<T: Copy + Div, U> Div<T> for Vector3D<T, U> {
 
     #[inline]
     fn div(self, scale: T) -> Self::Output {
-        vec3(
-            self.x / scale,
-            self.y / scale,
-            self.z / scale,
-        )
+        vec3(self.x / scale, self.y / scale, self.z / scale)
     }
 }
 
@@ -1715,11 +1772,7 @@ impl<T: Copy + Div, U1, U2> Div<Scale<T, U1, U2>> for Vector3D<T, U2> {
 
     #[inline]
     fn div(self, scale: Scale<T, U1, U2>) -> Self::Output {
-        vec3(
-            self.x / scale.0,
-            self.y / scale.0,
-            self.z / scale.0,
-        )
+        vec3(self.x / scale.0, self.y / scale.0, self.z / scale.0)
     }
 }
 
@@ -1774,9 +1827,9 @@ impl<T: ApproxEq<T>, U> ApproxEq<Vector3D<T, U>> for Vector3D<T, U> {
     }
 }
 
-impl<T, U> Into<[T; 3]> for Vector3D<T, U> {
-    fn into(self) -> [T; 3] {
-        [self.x, self.y, self.z]
+impl<T, U> From<Vector3D<T, U>> for [T; 3] {
+    fn from(v: Vector3D<T, U>) -> Self {
+        [v.x, v.y, v.z]
     }
 }
 
@@ -1786,9 +1839,9 @@ impl<T, U> From<[T; 3]> for Vector3D<T, U> {
     }
 }
 
-impl<T, U> Into<(T, T, T)> for Vector3D<T, U> {
-    fn into(self) -> (T, T, T) {
-        (self.x, self.y, self.z)
+impl<T, U> From<Vector3D<T, U>> for (T, T, T) {
+    fn from(v: Vector3D<T, U>) -> Self {
+        (v.x, v.y, v.z)
     }
 }
 
@@ -2229,7 +2282,7 @@ mod vector2d {
         let vecs = [
             Vector2DMm::new(1.0, 2.0),
             Vector2DMm::new(3.0, 4.0),
-            Vector2DMm::new(5.0, 6.0)
+            Vector2DMm::new(5.0, 6.0),
         ];
         let sum = Vector2DMm::new(9.0, 12.0);
         assert_eq!(vecs.iter().sum::<Vector2DMm<_>>(), sum);
@@ -2244,7 +2297,7 @@ mod vector2d {
     }
 
     #[test]
-    pub fn test_tpyed_scalar_mul() {
+    pub fn test_typed_scalar_mul() {
         let p1 = Vector2DMm::new(1.0, 2.0);
         let cm_per_mm = Scale::<f32, Mm, Cm>::new(0.1);
 
@@ -2294,7 +2347,7 @@ mod vector3d {
         let vecs = [
             Vec3::new(1.0, 2.0, 3.0),
             Vec3::new(4.0, 5.0, 6.0),
-            Vec3::new(7.0, 8.0, 9.0)
+            Vec3::new(7.0, 8.0, 9.0),
         ];
         let sum = Vec3::new(12.0, 15.0, 18.0);
         assert_eq!(vecs.iter().sum::<Vec3>(), sum);

@@ -15,17 +15,17 @@ use crate::scale::Scale;
 use crate::size::Size3D;
 use crate::vector::Vector3D;
 
-use num_traits::{NumCast, Float};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
+use num_traits::{Float, NumCast};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 use core::borrow::Borrow;
 use core::cmp::PartialOrd;
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Sub, Range};
+use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Range, Sub};
 
 /// An axis aligned 3D box represented by its minimum and maximum coordinates.
 #[repr(C)]
@@ -84,9 +84,28 @@ impl<T, U> Box3D<T, U> {
         Box3D { min, max }
     }
 
+    /// Constructor.
+    #[inline]
+    pub fn from_origin_and_size(origin: Point3D<T, U>, size: Size3D<T, U>) -> Self
+    where
+        T: Copy + Add<T, Output = T>,
+    {
+        Box3D {
+            min: origin,
+            max: point3(
+                origin.x + size.width,
+                origin.y + size.height,
+                origin.z + size.depth,
+            ),
+        }
+    }
+
     /// Creates a Box3D of the given size, at offset zero.
     #[inline]
-    pub fn from_size(size: Size3D<T, U>) -> Self where T: Zero {
+    pub fn from_size(size: Size3D<T, U>) -> Self
+    where
+        T: Zero,
+    {
         Box3D {
             min: Point3D::zero(),
             max: point3(size.width, size.height, size.depth),
@@ -123,17 +142,29 @@ where
             && self.max.z > other.min.z
     }
 
-    /// Returns `true` if this box3d contains the point. Points are considered
-    /// in the box3d if they are on the front, left or top faces, but outside if they
-    /// are on the back, right or bottom faces.
+    /// Returns `true` if this box3d contains the point `p`. A point is considered
+    /// in the box3d if it lies on the front, left or top faces, but outside if it lies
+    /// on the back, right or bottom faces.
     #[inline]
     pub fn contains(&self, other: Point3D<T, U>) -> bool {
-        self.min.x <= other.x
-            && other.x < self.max.x
-            && self.min.y <= other.y
-            && other.y < self.max.y
-            && self.min.z <= other.z
-            && other.z < self.max.z
+        (self.min.x <= other.x)
+            & (other.x < self.max.x)
+            & (self.min.y <= other.y)
+            & (other.y < self.max.y)
+            & (self.min.z <= other.z)
+            & (other.z < self.max.z)
+    }
+
+    /// Returns `true` if this box3d contains the point `p`. A point is considered
+    /// in the box3d if it lies on any face of the box3d.
+    #[inline]
+    pub fn contains_inclusive(&self, other: Point3D<T, U>) -> bool {
+        (self.min.x <= other.x)
+            & (other.x <= self.max.x)
+            & (self.min.y <= other.y)
+            & (other.y <= self.max.y)
+            & (self.min.z <= other.z)
+            & (other.z <= self.max.z)
     }
 
     /// Returns `true` if this box3d contains the interior of the other box3d. Always
@@ -142,12 +173,12 @@ where
     #[inline]
     pub fn contains_box(&self, other: &Self) -> bool {
         other.is_empty()
-            || (self.min.x <= other.min.x
-                && other.max.x <= self.max.x
-                && self.min.y <= other.min.y
-                && other.max.y <= self.max.y
-                && self.min.z <= other.min.z
-                && other.max.z <= self.max.z)
+            || ((self.min.x <= other.min.x)
+                & (other.max.x <= self.max.x)
+                & (self.min.y <= other.min.y)
+                & (other.max.y <= self.max.y)
+                & (self.min.z <= other.min.z)
+                & (other.max.z <= self.max.z))
     }
 }
 
@@ -919,6 +950,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn test_nan_empty_or_negative() {
         use std::f32::NAN;
         assert!(Box3D { min: point3(NAN, 2.0, 1.0), max: point3(1.0, 3.0, 5.0) }.is_empty());

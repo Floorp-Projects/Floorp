@@ -17,17 +17,17 @@ use crate::side_offsets::SideOffsets2D;
 use crate::size::Size2D;
 use crate::vector::{vec2, Vector2D};
 
-use num_traits::{NumCast, Float};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
+use num_traits::{Float, NumCast};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 use core::borrow::Borrow;
 use core::cmp::PartialOrd;
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Sub, Range};
+use core::ops::{Add, Div, DivAssign, Mul, MulAssign, Range, Sub};
 
 /// A 2d axis aligned rectangle represented by its minimum and maximum coordinates.
 ///
@@ -116,9 +116,9 @@ impl<T, U> Box2D<T, U> {
 
     /// Constructor.
     #[inline]
-    pub fn from_origin_and_size(origin: Point2D<T, U>, size: Size2D<T, U>) -> Self 
+    pub fn from_origin_and_size(origin: Point2D<T, U>, size: Size2D<T, U>) -> Self
     where
-        T: Copy + Add<T, Output = T>
+        T: Copy + Add<T, Output = T>,
     {
         Box2D {
             min: origin,
@@ -128,7 +128,10 @@ impl<T, U> Box2D<T, U> {
 
     /// Creates a Box2D of the given size, at offset zero.
     #[inline]
-    pub fn from_size(size: Size2D<T, U>) -> Self where T: Zero {
+    pub fn from_size(size: Size2D<T, U>) -> Self
+    where
+        T: Zero,
+    {
         Box2D {
             min: Point2D::zero(),
             max: point2(size.width, size.height),
@@ -158,18 +161,28 @@ where
     /// Returns `true` if the two boxes intersect.
     #[inline]
     pub fn intersects(&self, other: &Self) -> bool {
-        self.min.x < other.max.x
-            && self.max.x > other.min.x
-            && self.min.y < other.max.y
-            && self.max.y > other.min.y
+        // Use bitwise and instead of && to avoid emitting branches.
+        (self.min.x < other.max.x)
+            & (self.max.x > other.min.x)
+            & (self.min.y < other.max.y)
+            & (self.max.y > other.min.y)
     }
 
-    /// Returns `true` if this box contains the point. Points are considered
-    /// in the box if they are on the front, left or top faces, but outside if they
-    /// are on the back, right or bottom faces.
+    /// Returns `true` if this box2d contains the point `p`. A point is considered
+    /// in the box2d if it lies on the left or top edges, but outside if it lies
+    /// on the right or bottom edges.
     #[inline]
     pub fn contains(&self, p: Point2D<T, U>) -> bool {
-        self.min.x <= p.x && p.x < self.max.x && self.min.y <= p.y && p.y < self.max.y
+        // Use bitwise and instead of && to avoid emitting branches.
+        (self.min.x <= p.x) & (p.x < self.max.x) & (self.min.y <= p.y) & (p.y < self.max.y)
+    }
+
+    /// Returns `true` if this box contains the point `p`. A point is considered
+    /// in the box2d if it lies on any edge of the box2d.
+    #[inline]
+    pub fn contains_inclusive(&self, p: Point2D<T, U>) -> bool {
+        // Use bitwise and instead of && to avoid emitting branches.
+        (self.min.x <= p.x) & (p.x <= self.max.x) & (self.min.y <= p.y) & (p.y <= self.max.y)
     }
 
     /// Returns `true` if this box contains the interior of the other box. Always
@@ -178,10 +191,10 @@ where
     #[inline]
     pub fn contains_box(&self, other: &Self) -> bool {
         other.is_empty()
-            || (self.min.x <= other.min.x
-                && other.max.x <= self.max.x
-                && self.min.y <= other.min.y
-                && other.max.y <= self.max.y)
+            || ((self.min.x <= other.min.x)
+                & (other.max.x <= self.max.x)
+                & (self.min.y <= other.min.y)
+                & (other.max.y <= self.max.y))
     }
 }
 
@@ -874,6 +887,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn test_nan_empty() {
         use std::f32::NAN;
         assert!(Box2D { min: point2(NAN, 2.0), max: point2(1.0, 3.0) }.is_empty());

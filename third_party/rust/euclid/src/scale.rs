@@ -10,17 +10,20 @@
 
 use crate::num::One;
 
-use crate::{Point2D, Point3D, Rect, Size2D, Vector2D, Box2D, Box3D};
+use crate::approxord::{max, min};
+use crate::{Box2D, Box3D, Point2D, Point3D, Rect, Size2D, Vector2D};
+
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use core::ops::{Add, Div, Mul, Sub};
+
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 /// A scaling factor between two different units of measurement.
 ///
@@ -62,7 +65,7 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
     #[inline]
     pub fn identity() -> Self
     where
-        T: One
+        T: One,
     {
         Scale::new(T::one())
     }
@@ -118,7 +121,7 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
         Vector2D::new(vec.x * self.0, vec.y * self.0)
     }
 
-    /// Returns the given vector transformed by this scale.
+    /// Returns the given size transformed by this scale.
     ///
     /// # Example
     ///
@@ -237,6 +240,30 @@ impl<T, Src, Dst> Scale<T, Src, Dst> {
     {
         let one: T = One::one();
         Scale::new(one / self.0)
+    }
+}
+
+impl<T: PartialOrd, Src, Dst> Scale<T, Src, Dst> {
+    #[inline]
+    pub fn min(self, other: Self) -> Self {
+        Self::new(min(self.0, other.0))
+    }
+
+    #[inline]
+    pub fn max(self, other: Self) -> Self {
+        Self::new(max(self.0, other.0))
+    }
+
+    /// Returns the point each component of which clamped by corresponding
+    /// components of `start` and `end`.
+    ///
+    /// Shortcut for `self.max(start).min(end)`.
+    #[inline]
+    pub fn clamp(self, start: Self, end: Self) -> Self
+    where
+        T: Copy,
+    {
+        self.max(start).min(end)
     }
 }
 
@@ -424,5 +451,13 @@ mod tests {
         assert_eq!(a, a.clone());
         assert_eq!(a.clone() + b.clone(), Scale::new(5));
         assert_eq!(a - b, Scale::new(-1));
+
+        // Clamp
+        assert_eq!(Scale::identity().clamp(a, b), a);
+        assert_eq!(Scale::new(5).clamp(a, b), b);
+        let a = Scale::<f32, Inch, Inch>::new(2.0);
+        let b = Scale::<f32, Inch, Inch>::new(3.0);
+        let c = Scale::<f32, Inch, Inch>::new(2.5);
+        assert_eq!(c.clamp(a, b), c);
     }
 }

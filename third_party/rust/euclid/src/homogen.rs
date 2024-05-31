@@ -12,6 +12,8 @@ use crate::vector::{Vector2D, Vector3D};
 
 use crate::num::{One, Zero};
 
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
 use core::cmp::{Eq, PartialEq};
 use core::fmt;
 use core::hash::Hash;
@@ -19,8 +21,6 @@ use core::marker::PhantomData;
 use core::ops::Div;
 #[cfg(feature = "serde")]
 use serde;
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 /// Homogeneous vector in 3D space.
 #[repr(C)]

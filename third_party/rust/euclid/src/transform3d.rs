@@ -7,32 +7,34 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
+#![allow(clippy::just_underscores_and_digits)]
 
-use super::{UnknownUnit, Angle};
+use super::{Angle, UnknownUnit};
 use crate::approxeq::ApproxEq;
-use crate::homogen::HomogeneousVector;
-#[cfg(feature = "mint")]
-use mint;
-use crate::trig::Trig;
-use crate::point::{Point2D, point2, Point3D, point3};
-use crate::vector::{Vector2D, Vector3D, vec2, vec3};
-use crate::rect::Rect;
 use crate::box2d::Box2D;
 use crate::box3d::Box3D;
-use crate::transform2d::Transform2D;
-use crate::scale::Scale;
+use crate::homogen::HomogeneousVector;
 use crate::num::{One, Zero};
-use core::ops::{Add, Mul, Sub, Div, Neg};
-use core::marker::PhantomData;
-use core::fmt;
+use crate::point::{point2, point3, Point2D, Point3D};
+use crate::rect::Rect;
+use crate::scale::Scale;
+use crate::transform2d::Transform2D;
+use crate::trig::Trig;
+use crate::vector::{vec2, vec3, Vector2D, Vector3D};
+
 use core::cmp::{Eq, PartialEq};
-use core::hash::{Hash};
+use core::fmt;
+use core::hash::Hash;
+use core::marker::PhantomData;
+use core::ops::{Add, Div, Mul, Neg, Sub};
+
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Pod, Zeroable};
+#[cfg(feature = "mint")]
+use mint;
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "bytemuck")]
-use bytemuck::{Zeroable, Pod};
 
 /// A 3d transform stored as a column-major 4 by 4 matrix.
 ///
@@ -63,6 +65,7 @@ use bytemuck::{Zeroable, Pod};
     feature = "serde",
     serde(bound(serialize = "T: Serialize", deserialize = "T: Deserialize<'de>"))
 )]
+#[rustfmt::skip]
 pub struct Transform3D<T, Src, Dst> {
     pub m11: T, pub m12: T, pub m13: T, pub m14: T,
     pub m21: T, pub m22: T, pub m23: T, pub m24: T,
@@ -72,14 +75,12 @@ pub struct Transform3D<T, Src, Dst> {
     pub _unit: PhantomData<(Src, Dst)>,
 }
 
-
 #[cfg(feature = "arbitrary")]
 impl<'a, T, Src, Dst> arbitrary::Arbitrary<'a> for Transform3D<T, Src, Dst>
 where
     T: arbitrary::Arbitrary<'a>,
 {
-    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self>
-    {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         let (m11, m12, m13, m14) = arbitrary::Arbitrary::arbitrary(u)?;
         let (m21, m22, m23, m24) = arbitrary::Arbitrary::arbitrary(u)?;
         let (m31, m32, m33, m34) = arbitrary::Arbitrary::arbitrary(u)?;
@@ -142,30 +143,32 @@ impl<T: Clone, Src, Dst> Clone for Transform3D<T, Src, Dst> {
 impl<T, Src, Dst> Eq for Transform3D<T, Src, Dst> where T: Eq {}
 
 impl<T, Src, Dst> PartialEq for Transform3D<T, Src, Dst>
-    where T: PartialEq
+where
+    T: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.m11 == other.m11 &&
-            self.m12 == other.m12 &&
-            self.m13 == other.m13 &&
-            self.m14 == other.m14 &&
-            self.m21 == other.m21 &&
-            self.m22 == other.m22 &&
-            self.m23 == other.m23 &&
-            self.m24 == other.m24 &&
-            self.m31 == other.m31 &&
-            self.m32 == other.m32 &&
-            self.m33 == other.m33 &&
-            self.m34 == other.m34 &&
-            self.m41 == other.m41 &&
-            self.m42 == other.m42 &&
-            self.m43 == other.m43 &&
-            self.m44 == other.m44
+        self.m11 == other.m11
+            && self.m12 == other.m12
+            && self.m13 == other.m13
+            && self.m14 == other.m14
+            && self.m21 == other.m21
+            && self.m22 == other.m22
+            && self.m23 == other.m23
+            && self.m24 == other.m24
+            && self.m31 == other.m31
+            && self.m32 == other.m32
+            && self.m33 == other.m33
+            && self.m34 == other.m34
+            && self.m41 == other.m41
+            && self.m42 == other.m42
+            && self.m43 == other.m43
+            && self.m44 == other.m44
     }
 }
 
 impl<T, Src, Dst> Hash for Transform3D<T, Src, Dst>
-    where T: Hash
+where
+    T: Hash,
 {
     fn hash<H: core::hash::Hasher>(&self, h: &mut H) {
         self.m11.hash(h);
@@ -187,7 +190,6 @@ impl<T, Src, Dst> Hash for Transform3D<T, Src, Dst>
     }
 }
 
-
 impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// Create a transform specifying all of it's component as a 4 by 4 matrix.
     ///
@@ -207,7 +209,8 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// );
     /// ```
     #[inline]
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+    #[allow(clippy::too_many_arguments)]
+    #[rustfmt::skip]
     pub const fn new(
         m11: T, m12: T, m13: T, m14: T,
         m21: T, m22: T, m23: T, m24: T,
@@ -227,7 +230,7 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// of a 2 by 3 matrix transformation.
     ///
     /// Components follow the column-major-column-vector notation (m41 and m42
-    /// representating the translation terms).
+    /// representing the translation terms).
     ///
     /// ```text
     /// m11  m12   0   0
@@ -236,6 +239,7 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// m41  m42   0   1
     /// ```
     #[inline]
+    #[rustfmt::skip]
     pub fn new_2d(m11: T, m12: T, m21: T, m22: T, m41: T, m42: T) -> Self
     where
         T: Zero + One,
@@ -251,7 +255,6 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
        )
     }
 
-
     /// Returns `true` if this transform can be represented with a `Transform2D`.
     ///
     /// See <https://drafts.csswg.org/css-transforms/#2d-transform>
@@ -261,11 +264,16 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
         T: Zero + One + PartialEq,
     {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
-        self.m31 == _0 && self.m32 == _0 &&
-        self.m13 == _0 && self.m23 == _0 &&
-        self.m43 == _0 && self.m14 == _0 &&
-        self.m24 == _0 && self.m34 == _0 &&
-        self.m33 == _1 && self.m44 == _1
+        self.m31 == _0
+            && self.m32 == _0
+            && self.m13 == _0
+            && self.m23 == _0
+            && self.m43 == _0
+            && self.m14 == _0
+            && self.m24 == _0
+            && self.m34 == _0
+            && self.m33 == _1
+            && self.m44 == _1
     }
 }
 
@@ -279,6 +287,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// For example the translation terms are found on the
     /// 13th, 14th and 15th slots of the array.
     #[inline]
+    #[rustfmt::skip]
     pub fn to_array(&self) -> [T; 16] {
         [
             self.m11, self.m12, self.m13, self.m14,
@@ -297,6 +306,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// For example the translation terms are found at indices 3, 7 and 11
     /// of the array.
     #[inline]
+    #[rustfmt::skip]
     pub fn to_array_transposed(&self) -> [T; 16] {
         [
             self.m11, self.m21, self.m31, self.m41,
@@ -309,24 +319,26 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Equivalent to `to_array` with elements packed four at a time
     /// in an array of arrays.
     #[inline]
+    #[rustfmt::skip]
     pub fn to_arrays(&self) -> [[T; 4]; 4] {
         [
             [self.m11, self.m12, self.m13, self.m14],
             [self.m21, self.m22, self.m23, self.m24],
             [self.m31, self.m32, self.m33, self.m34],
-            [self.m41, self.m42, self.m43, self.m44]
+            [self.m41, self.m42, self.m43, self.m44],
         ]
     }
 
     /// Equivalent to `to_array_transposed` with elements packed
     /// four at a time in an array of arrays.
     #[inline]
+    #[rustfmt::skip]
     pub fn to_arrays_transposed(&self) -> [[T; 4]; 4] {
         [
             [self.m11, self.m21, self.m31, self.m41],
             [self.m12, self.m22, self.m32, self.m42],
             [self.m13, self.m23, self.m33, self.m43],
-            [self.m14, self.m24, self.m34, self.m44]
+            [self.m14, self.m24, self.m34, self.m44],
         ]
     }
 
@@ -337,6 +349,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// column-major-column-vector matrix notation (the same order
     /// as `Transform3D::new`).
     #[inline]
+    #[rustfmt::skip]
     pub fn from_array(array: [T; 16]) -> Self {
         Self::new(
             array[0],  array[1],  array[2],  array[3],
@@ -353,6 +366,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// column-major-column-vector matrix notation (the same order
     /// as `Transform3D::new`).
     #[inline]
+    #[rustfmt::skip]
     pub fn from_arrays(array: [[T; 4]; 4]) -> Self {
         Self::new(
             array[0][0], array[0][1], array[0][2], array[0][3],
@@ -364,6 +378,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
 
     /// Tag a unitless value with units.
     #[inline]
+    #[rustfmt::skip]
     pub fn from_untyped(m: &Transform3D<T, UnknownUnit, UnknownUnit>) -> Self {
         Transform3D::new(
             m.m11, m.m12, m.m13, m.m14,
@@ -375,6 +390,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
 
     /// Drop the units, preserving only the numeric value.
     #[inline]
+    #[rustfmt::skip]
     pub fn to_untyped(&self) -> Transform3D<T, UnknownUnit, UnknownUnit> {
         Transform3D::new(
             self.m11, self.m12, self.m13, self.m14,
@@ -386,6 +402,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
 
     /// Returns the same transform with a different source unit.
     #[inline]
+    #[rustfmt::skip]
     pub fn with_source<NewSrc>(&self) -> Transform3D<T, NewSrc, Dst> {
         Transform3D::new(
             self.m11, self.m12, self.m13, self.m14,
@@ -397,6 +414,7 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
 
     /// Returns the same transform with a different destination unit.
     #[inline]
+    #[rustfmt::skip]
     pub fn with_destination<NewDst>(&self) -> Transform3D<T, Src, NewDst> {
         Transform3D::new(
             self.m11, self.m12, self.m13, self.m14,
@@ -413,15 +431,11 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     ///
     /// [`self.is_2d()`]: #method.is_2d
     pub fn to_2d(&self) -> Transform2D<T, Src, Dst> {
-        Transform2D::new(
-            self.m11, self.m12,
-            self.m21, self.m22,
-            self.m41, self.m42
-        )
+        Transform2D::new(self.m11, self.m12, self.m21, self.m22, self.m41, self.m42)
     }
 }
 
-impl <T, Src, Dst> Transform3D<T, Src, Dst>
+impl<T, Src, Dst> Transform3D<T, Src, Dst>
 where
     T: Zero + One,
 {
@@ -452,6 +466,7 @@ where
     /// Create a 2d skew transform.
     ///
     /// See <https://drafts.csswg.org/css-transforms/#funcdef-skew>
+    #[rustfmt::skip]
     pub fn skew(alpha: Angle<T>, beta: Angle<T>) -> Self
     where
         T: Trig,
@@ -486,17 +501,28 @@ where
         let _1 = || T::one();
 
         Self::new(
-            _1(), _0(), _0(),  _0(),
-            _0(), _1(), _0(),  _0(),
-            _0(), _0(), _1(), -_1() / d,
-            _0(), _0(), _0(),  _1(),
+            _1(),
+            _0(),
+            _0(),
+            _0(),
+            _0(),
+            _1(),
+            _0(),
+            _0(),
+            _0(),
+            _0(),
+            _1(),
+            -_1() / d,
+            _0(),
+            _0(),
+            _0(),
+            _1(),
         )
     }
 }
 
-
 /// Methods for combining generic transformations
-impl <T, Src, Dst> Transform3D<T, Src, Dst>
+impl<T, Src, Dst> Transform3D<T, Src, Dst>
 where
     T: Copy + Add<Output = T> + Mul<Output = T>,
 {
@@ -505,6 +531,7 @@ where
     ///
     /// Assuming row vectors, this is equivalent to self * mat
     #[must_use]
+    #[rustfmt::skip]
     pub fn then<NewDst>(&self, other: &Transform3D<T, Dst, NewDst>) -> Transform3D<T, Src, NewDst> {
         Transform3D::new(
             self.m11 * other.m11  +  self.m12 * other.m21  +  self.m13 * other.m31  +  self.m14 * other.m41,
@@ -531,7 +558,7 @@ where
 }
 
 /// Methods for creating and combining translation transformations
-impl <T, Src, Dst> Transform3D<T, Src, Dst>
+impl<T, Src, Dst> Transform3D<T, Src, Dst>
 where
     T: Zero + One,
 {
@@ -544,6 +571,7 @@ where
     /// x y z 1
     /// ```
     #[inline]
+    #[rustfmt::skip]
     pub fn translation(x: T, y: T, z: T) -> Self {
         let _0 = || T::zero();
         let _1 = || T::one();
@@ -578,10 +606,18 @@ where
 /// Methods for creating and combining rotation transformations
 impl<T, Src, Dst> Transform3D<T, Src, Dst>
 where
-    T: Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + Zero + One + Trig,
+    T: Copy
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + Zero
+        + One
+        + Trig,
 {
     /// Create a 3d rotation transform from an angle / axis.
     /// The supplied axis must be normalized.
+    #[rustfmt::skip]
     pub fn rotation(x: T, y: T, z: T, theta: Angle<T>) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
         let _2 = _1 + _1;
@@ -645,6 +681,7 @@ where
     /// 0 0 0 1
     /// ```
     #[inline]
+    #[rustfmt::skip]
     pub fn scale(x: T, y: T, z: T) -> Self {
         let _0 = || T::zero();
         let _1 = || T::one();
@@ -659,6 +696,7 @@ where
 
     /// Returns a transform with a scale applied before self's transformation.
     #[must_use]
+    #[rustfmt::skip]
     pub fn pre_scale(&self, x: T, y: T, z: T) -> Self
     where
         T: Copy + Add<Output = T> + Mul<Output = T>,
@@ -690,6 +728,7 @@ where
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
     #[inline]
+    #[rustfmt::skip]
     pub fn transform_point2d_homogeneous(
         &self, p: Point2D<T, Src>
     ) -> HomogeneousVector<T, Dst> {
@@ -737,9 +776,7 @@ where
     ///
     /// The input point must be use the unit Src, and the returned point has the unit Dst.
     #[inline]
-    pub fn transform_point3d_homogeneous(
-        &self, p: Point3D<T, Src>
-    ) -> HomogeneousVector<T, Dst> {
+    pub fn transform_point3d_homogeneous(&self, p: Point3D<T, Src>) -> HomogeneousVector<T, Dst> {
         let x = p.x * self.m11 + p.y * self.m21 + p.z * self.m31 + self.m41;
         let y = p.x * self.m12 + p.y * self.m22 + p.z * self.m32 + self.m42;
         let z = p.x * self.m13 + p.y * self.m23 + p.z * self.m33 + self.m43;
@@ -821,18 +858,20 @@ where
     }
 }
 
-
-impl <T, Src, Dst> Transform3D<T, Src, Dst>
-where T: Copy +
-         Add<T, Output=T> +
-         Sub<T, Output=T> +
-         Mul<T, Output=T> +
-         Div<T, Output=T> +
-         Neg<Output=T> +
-         PartialOrd +
-         One + Zero {
-
+impl<T, Src, Dst> Transform3D<T, Src, Dst>
+where
+    T: Copy
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
+        + Div<T, Output = T>
+        + Neg<Output = T>
+        + PartialOrd
+        + One
+        + Zero,
+{
     /// Create an orthogonal projection transform.
+    #[rustfmt::skip]
     pub fn ortho(left: T, right: T,
                  bottom: T, top: T,
                  near: T, far: T) -> Self {
@@ -852,6 +891,7 @@ where T: Copy +
 
     /// Check whether shapes on the XY plane with Z pointing towards the
     /// screen transformed by this matrix would be facing back.
+    #[rustfmt::skip]
     pub fn is_backface_visible(&self) -> bool {
         // inverse().m33 < 0;
         let det = self.determinant();
@@ -878,6 +918,7 @@ where T: Copy +
 
         // todo(gw): this could be made faster by special casing
         // for simpler transform types.
+        #[rustfmt::skip]
         let m = Transform3D::new(
             self.m23*self.m34*self.m42 - self.m24*self.m33*self.m42 +
             self.m24*self.m32*self.m43 - self.m22*self.m34*self.m43 -
@@ -949,6 +990,7 @@ where T: Copy +
     }
 
     /// Compute the determinant of the transform.
+    #[rustfmt::skip]
     pub fn determinant(&self) -> T {
         self.m14 * self.m23 * self.m32 * self.m41 -
         self.m13 * self.m24 * self.m32 * self.m41 -
@@ -978,6 +1020,7 @@ where T: Copy +
 
     /// Multiplies all of the transform's component by a scalar and returns the result.
     #[must_use]
+    #[rustfmt::skip]
     pub fn mul_s(&self, x: T) -> Self {
         Transform3D::new(
             self.m11 * x, self.m12 * x, self.m13 * x, self.m14 * x,
@@ -993,7 +1036,7 @@ where T: Copy +
     }
 }
 
-impl <T, Src, Dst> Transform3D<T, Src, Dst>
+impl<T, Src, Dst> Transform3D<T, Src, Dst>
 where
     T: Copy + Mul<Output = T> + Div<Output = T> + Zero + One + PartialEq,
 {
@@ -1020,14 +1063,14 @@ where
         // a true 2D matrix by normalizing out the scaling effect of m44 on
         // the remaining components ahead of time.
         if self.m14 == _0 && self.m24 == _0 && self.m44 != _0 && self.m44 != _1 {
-           let scale = _1 / self.m44;
-           result.m11 = result.m11 * scale;
-           result.m12 = result.m12 * scale;
-           result.m21 = result.m21 * scale;
-           result.m22 = result.m22 * scale;
-           result.m41 = result.m41 * scale;
-           result.m42 = result.m42 * scale;
-           result.m44 = _1;
+            let scale = _1 / self.m44;
+            result.m11 = result.m11 * scale;
+            result.m12 = result.m12 * scale;
+            result.m21 = result.m21 * scale;
+            result.m22 = result.m22 * scale;
+            result.m41 = result.m41 * scale;
+            result.m42 = result.m42 * scale;
+            result.m44 = _1;
         }
 
         result
@@ -1042,6 +1085,7 @@ impl<T: NumCast + Copy, Src, Dst> Transform3D<T, Src, Dst> {
     }
 
     /// Fallible cast from one numeric representation to another, preserving the units.
+    #[rustfmt::skip]
     pub fn try_cast<NewT: NumCast>(&self) -> Option<Transform3D<NewT, Src, Dst>> {
         match (NumCast::from(self.m11), NumCast::from(self.m12),
                NumCast::from(self.m13), NumCast::from(self.m14),
@@ -1056,9 +1100,9 @@ impl<T: NumCast + Copy, Src, Dst> Transform3D<T, Src, Dst> {
              Some(m31), Some(m32), Some(m33), Some(m34),
              Some(m41), Some(m42), Some(m43), Some(m44)) => {
                 Some(Transform3D::new(m11, m12, m13, m14,
-                                                 m21, m22, m23, m24,
-                                                 m31, m32, m33, m34,
-                                                 m41, m42, m43, m44))
+                                      m21, m22, m23, m24,
+                                      m31, m32, m33, m34,
+                                      m41, m42, m43, m44))
             },
             _ => None
         }
@@ -1089,11 +1133,13 @@ impl<T: ApproxEq<T>, Src, Dst> Transform3D<T, Src, Dst> {
     }
 }
 
-
 impl<T: ApproxEq<T>, Src, Dst> ApproxEq<T> for Transform3D<T, Src, Dst> {
     #[inline]
-    fn approx_epsilon() -> T { T::approx_epsilon() }
+    fn approx_epsilon() -> T {
+        T::approx_epsilon()
+    }
 
+    #[rustfmt::skip]
     fn approx_eq_eps(&self, other: &Self, eps: &T) -> bool {
         self.m11.approx_eq_eps(&other.m11, eps) && self.m12.approx_eq_eps(&other.m12, eps) &&
         self.m13.approx_eq_eps(&other.m13, eps) && self.m14.approx_eq_eps(&other.m14, eps) &&
@@ -1106,8 +1152,9 @@ impl<T: ApproxEq<T>, Src, Dst> ApproxEq<T> for Transform3D<T, Src, Dst> {
     }
 }
 
-impl <T, Src, Dst> Default for Transform3D<T, Src, Dst>
-    where T: Zero + One
+impl<T, Src, Dst> Default for Transform3D<T, Src, Dst>
+where
+    T: Zero + One,
 {
     /// Returns the [identity transform](#method.identity).
     fn default() -> Self {
@@ -1116,9 +1163,9 @@ impl <T, Src, Dst> Default for Transform3D<T, Src, Dst>
 }
 
 impl<T, Src, Dst> fmt::Debug for Transform3D<T, Src, Dst>
-where T: Copy + fmt::Debug +
-         PartialEq +
-         One + Zero {
+where
+    T: Copy + fmt::Debug + PartialEq + One + Zero,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.is_identity() {
             write!(f, "[I]")
@@ -1130,6 +1177,7 @@ where T: Copy + fmt::Debug +
 
 #[cfg(feature = "mint")]
 impl<T, Src, Dst> From<mint::RowMatrix4<T>> for Transform3D<T, Src, Dst> {
+    #[rustfmt::skip]
     fn from(m: mint::RowMatrix4<T>) -> Self {
         Transform3D {
             m11: m.x.x, m12: m.x.y, m13: m.x.z, m14: m.x.w,
@@ -1141,31 +1189,33 @@ impl<T, Src, Dst> From<mint::RowMatrix4<T>> for Transform3D<T, Src, Dst> {
     }
 }
 #[cfg(feature = "mint")]
-impl<T, Src, Dst> Into<mint::RowMatrix4<T>> for Transform3D<T, Src, Dst> {
-    fn into(self) -> mint::RowMatrix4<T> {
+impl<T, Src, Dst> From<Transform3D<T, Src, Dst>> for mint::RowMatrix4<T> {
+    #[rustfmt::skip]
+    fn from(t: Transform3D<T, Src, Dst>) -> Self {
         mint::RowMatrix4 {
-            x: mint::Vector4 { x: self.m11, y: self.m12, z: self.m13, w: self.m14 },
-            y: mint::Vector4 { x: self.m21, y: self.m22, z: self.m23, w: self.m24 },
-            z: mint::Vector4 { x: self.m31, y: self.m32, z: self.m33, w: self.m34 },
-            w: mint::Vector4 { x: self.m41, y: self.m42, z: self.m43, w: self.m44 },
+            x: mint::Vector4 { x: t.m11, y: t.m12, z: t.m13, w: t.m14 },
+            y: mint::Vector4 { x: t.m21, y: t.m22, z: t.m23, w: t.m24 },
+            z: mint::Vector4 { x: t.m31, y: t.m32, z: t.m33, w: t.m34 },
+            w: mint::Vector4 { x: t.m41, y: t.m42, z: t.m43, w: t.m44 },
         }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::approxeq::ApproxEq;
     use super::*;
-    use crate::{point2, point3};
+    use crate::approxeq::ApproxEq;
     use crate::default;
+    use crate::{point2, point3};
 
     use core::f32::consts::{FRAC_PI_2, PI};
 
     type Mf32 = default::Transform3D<f32>;
 
     // For convenience.
-    fn rad(v: f32) -> Angle<f32> { Angle::radians(v) }
+    fn rad(v: f32) -> Angle<f32> {
+        Angle::radians(v)
+    }
 
     #[test]
     pub fn test_translation() {
@@ -1175,13 +1225,22 @@ mod tests {
         assert_eq!(t1, t2);
         assert_eq!(t1, t3);
 
-        assert_eq!(t1.transform_point3d(point3(1.0, 1.0, 1.0)), Some(point3(2.0, 3.0, 4.0)));
-        assert_eq!(t1.transform_point2d(point2(1.0, 1.0)), Some(point2(2.0, 3.0)));
+        assert_eq!(
+            t1.transform_point3d(point3(1.0, 1.0, 1.0)),
+            Some(point3(2.0, 3.0, 4.0))
+        );
+        assert_eq!(
+            t1.transform_point2d(point2(1.0, 1.0)),
+            Some(point2(2.0, 3.0))
+        );
 
         assert_eq!(t1.then(&t1), Mf32::translation(2.0, 4.0, 6.0));
 
         assert!(!t1.is_2d());
-        assert_eq!(Mf32::translation(1.0, 2.0, 3.0).to_2d(), Transform2D::translation(1.0, 2.0));
+        assert_eq!(
+            Mf32::translation(1.0, 2.0, 3.0).to_2d(),
+            Transform2D::translation(1.0, 2.0)
+        );
     }
 
     #[test]
@@ -1192,10 +1251,18 @@ mod tests {
         assert_eq!(r1, r2);
         assert_eq!(r1, r3);
 
-        assert!(r1.transform_point3d(point3(1.0, 2.0, 3.0)).unwrap().approx_eq(&point3(-2.0, 1.0, 3.0)));
-        assert!(r1.transform_point2d(point2(1.0, 2.0)).unwrap().approx_eq(&point2(-2.0, 1.0)));
+        assert!(r1
+            .transform_point3d(point3(1.0, 2.0, 3.0))
+            .unwrap()
+            .approx_eq(&point3(-2.0, 1.0, 3.0)));
+        assert!(r1
+            .transform_point2d(point2(1.0, 2.0))
+            .unwrap()
+            .approx_eq(&point2(-2.0, 1.0)));
 
-        assert!(r1.then(&r1).approx_eq(&Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2*2.0))));
+        assert!(r1
+            .then(&r1)
+            .approx_eq(&Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2 * 2.0))));
 
         assert!(r1.is_2d());
         assert!(r1.to_2d().approx_eq(&Transform2D::rotation(rad(FRAC_PI_2))));
@@ -1209,15 +1276,23 @@ mod tests {
         assert_eq!(s1, s2);
         assert_eq!(s1, s3);
 
-        assert!(s1.transform_point3d(point3(2.0, 2.0, 2.0)).unwrap().approx_eq(&point3(4.0, 6.0, 8.0)));
-        assert!(s1.transform_point2d(point2(2.0, 2.0)).unwrap().approx_eq(&point2(4.0, 6.0)));
+        assert!(s1
+            .transform_point3d(point3(2.0, 2.0, 2.0))
+            .unwrap()
+            .approx_eq(&point3(4.0, 6.0, 8.0)));
+        assert!(s1
+            .transform_point2d(point2(2.0, 2.0))
+            .unwrap()
+            .approx_eq(&point2(4.0, 6.0)));
 
         assert_eq!(s1.then(&s1), Mf32::scale(4.0, 9.0, 16.0));
 
         assert!(!s1.is_2d());
-        assert_eq!(Mf32::scale(2.0, 3.0, 0.0).to_2d(), Transform2D::scale(2.0, 3.0));
+        assert_eq!(
+            Mf32::scale(2.0, 3.0, 0.0).to_2d(),
+            Transform2D::scale(2.0, 3.0)
+        );
     }
-
 
     #[test]
     pub fn test_pre_then_scale() {
@@ -1226,8 +1301,8 @@ mod tests {
         assert_eq!(m.then(&s), m.then_scale(2.0, 3.0, 4.0));
     }
 
-
     #[test]
+    #[rustfmt::skip]
     pub fn test_ortho() {
         let (left, right, bottom, top) = (0.0f32, 1.0f32, 0.1f32, 1.0f32);
         let (near, far) = (-1.0f32, 1.0f32);
@@ -1249,6 +1324,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     pub fn test_new_2d() {
         let m1 = Mf32::new_2d(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
         let m2 = Mf32::new(
@@ -1314,8 +1390,12 @@ mod tests {
 
     #[test]
     pub fn test_pre_post() {
-        let m1 = default::Transform3D::identity().then_scale(1.0, 2.0, 3.0).then_translate(vec3(1.0, 2.0, 3.0));
-        let m2 = default::Transform3D::identity().pre_translate(vec3(1.0, 2.0, 3.0)).pre_scale(1.0, 2.0, 3.0);
+        let m1 = default::Transform3D::identity()
+            .then_scale(1.0, 2.0, 3.0)
+            .then_translate(vec3(1.0, 2.0, 3.0));
+        let m2 = default::Transform3D::identity()
+            .pre_translate(vec3(1.0, 2.0, 3.0))
+            .pre_scale(1.0, 2.0, 3.0);
         assert!(m1.approx_eq(&m2));
 
         let r = Mf32::rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
@@ -1323,28 +1403,46 @@ mod tests {
 
         let a = point3(1.0, 1.0, 1.0);
 
-        assert!(r.then(&t).transform_point3d(a).unwrap().approx_eq(&point3(1.0, 4.0, 1.0)));
-        assert!(t.then(&r).transform_point3d(a).unwrap().approx_eq(&point3(-4.0, 3.0, 1.0)));
-        assert!(t.then(&r).transform_point3d(a).unwrap().approx_eq(&r.transform_point3d(t.transform_point3d(a).unwrap()).unwrap()));
+        assert!(r
+            .then(&t)
+            .transform_point3d(a)
+            .unwrap()
+            .approx_eq(&point3(1.0, 4.0, 1.0)));
+        assert!(t
+            .then(&r)
+            .transform_point3d(a)
+            .unwrap()
+            .approx_eq(&point3(-4.0, 3.0, 1.0)));
+        assert!(t.then(&r).transform_point3d(a).unwrap().approx_eq(
+            &r.transform_point3d(t.transform_point3d(a).unwrap())
+                .unwrap()
+        ));
     }
 
     #[test]
     fn test_size_of() {
         use core::mem::size_of;
-        assert_eq!(size_of::<default::Transform3D<f32>>(), 16*size_of::<f32>());
-        assert_eq!(size_of::<default::Transform3D<f64>>(), 16*size_of::<f64>());
+        assert_eq!(
+            size_of::<default::Transform3D<f32>>(),
+            16 * size_of::<f32>()
+        );
+        assert_eq!(
+            size_of::<default::Transform3D<f64>>(),
+            16 * size_of::<f64>()
+        );
     }
 
     #[test]
+    #[rustfmt::skip]
     pub fn test_transform_associativity() {
         let m1 = Mf32::new(3.0, 2.0, 1.5, 1.0,
-                                 0.0, 4.5, -1.0, -4.0,
-                                 0.0, 3.5, 2.5, 40.0,
-                                 0.0, 3.0, 0.0, 1.0);
+                           0.0, 4.5, -1.0, -4.0,
+                           0.0, 3.5, 2.5, 40.0,
+                           0.0, 3.0, 0.0, 1.0);
         let m2 = Mf32::new(1.0, -1.0, 3.0, 0.0,
-                                 -1.0, 0.5, 0.0, 2.0,
-                                 1.5, -2.0, 6.0, 0.0,
-                                 -2.5, 6.0, 1.0, 1.0);
+                           -1.0, 0.5, 0.0, 2.0,
+                           1.5, -2.0, 6.0, 0.0,
+                           -2.5, 6.0, 1.0, 1.0);
 
         let p = point3(1.0, 3.0, 5.0);
         let p1 = m1.then(&m2).transform_point3d(p).unwrap();
@@ -1396,6 +1494,7 @@ mod tests {
 
     #[test]
     pub fn test_homogeneous() {
+        #[rustfmt::skip]
         let m = Mf32::new(
             1.0, 2.0, 0.5, 5.0,
             3.0, 4.0, 0.25, 6.0,
