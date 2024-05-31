@@ -575,18 +575,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "buildid_reader"
-version = "0.1.0"
-dependencies = [
- "goblin 0.8.1",
- "libc",
- "log",
- "nserror",
- "nsstring",
- "scroll",
-]
-
-[[package]]
 name = "builtins-static"
 version = "0.1.0"
 dependencies = [
@@ -2267,7 +2255,6 @@ dependencies = [
  "binary_http",
  "bitsdownload",
  "bookmark_sync",
- "buildid_reader",
  "cascade_bloom_filter",
  "cert_storage",
  "chardetng_c",
@@ -2466,14 +2453,14 @@ dependencies = [
 name = "goblin"
 version = "0.7.999"
 dependencies = [
- "goblin 0.8.1",
+ "goblin 0.8.0",
 ]
 
 [[package]]
 name = "goblin"
-version = "0.8.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ce2dfb858618fd40cafc83efadd02705adf6ffba765098736bd950c3c945fe0"
+checksum = "bb07a4ffed2093b118a525b1d8f5204ae274faed5604537caf7135d0f18d9887"
 dependencies = [
  "log",
  "plain",
@@ -3655,7 +3642,7 @@ dependencies = [
  "byteorder",
  "cfg-if",
  "crash-context",
- "goblin 0.8.1",
+ "goblin 0.8.0",
  "libc",
  "log",
  "mach2",
@@ -6182,7 +6169,7 @@ dependencies = [
  "cargo_metadata",
  "fs-err",
  "glob",
- "goblin 0.8.1",
+ "goblin 0.8.0",
  "heck",
  "once_cell",
  "paste",

@@ -17,7 +17,8 @@ use super::{section_table::SectionTable, PE};
 static PADDING: [u8; 7] = [0; 7];
 
 impl PE<'_> {
-    /// Returns the various ranges of the binary that are relevant for signature.
+    /// [`authenticode_ranges`] returns the various ranges of the binary that are relevant for
+    /// signature.
     pub fn authenticode_ranges(&self) -> ExcludedSectionsIter<'_> {
         ExcludedSectionsIter {
             pe: self,
