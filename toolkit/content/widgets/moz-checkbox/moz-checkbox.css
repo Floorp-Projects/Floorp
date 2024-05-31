@@ -15,9 +15,31 @@ label {
 }
 
 input {
-  margin: calc((1lh - var(--checkbox-size)) / 2) 0;
   min-width: var(--checkbox-size);
   height: var(--checkbox-size);
   accent-color: var(--color-accent-primary);
   font-size: inherit;
+}
+
+input,
+.icon {
+  margin: calc((1lh - var(--checkbox-size)) / 2) 0;
+}
+
+.label-content {
+  display: flex;
+  position: relative;
+}
+
+.icon {
+  -moz-context-properties: fill, fill-opacity, stroke;
+  fill: currentColor;
+  stroke: currentColor;
+  width: var(--icon-size-default);
+  height: var(--icon-size-default);
+  position: absolute;
+
+  & + .text {
+    text-indent: calc(var(--checkbox-size) + var(--space-small));
+  }
 }

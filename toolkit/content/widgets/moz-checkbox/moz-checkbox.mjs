@@ -20,6 +20,7 @@ import "chrome://global/content/elements/moz-label.mjs";
 export default class MozCheckbox extends MozLitElement {
   static properties = {
     label: { type: String },
+    iconSrc: { type: String },
     checked: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
   };
@@ -28,6 +29,7 @@ export default class MozCheckbox extends MozLitElement {
     return {
       checkboxEl: "#moz-checkbox",
       labelEl: "label",
+      icon: ".icon",
     };
   }
 
@@ -68,6 +70,13 @@ export default class MozCheckbox extends MozLitElement {
     this.dispatchEvent(newEvent);
   }
 
+  iconTemplate() {
+    if (this.iconSrc) {
+      return html`<img src=${this.iconSrc} role="presentation" class="icon" />`;
+    }
+    return "";
+  }
+
   render() {
     return html`
       <link
@@ -83,7 +92,10 @@ export default class MozCheckbox extends MozLitElement {
           @change=${this.redispatchEvent}
           .disabled=${this.disabled}
         />
-        ${this.label}
+        <span class="label-content">
+          ${this.iconTemplate()}
+          <span class="text">${this.label}</span>
+        </span>
       </label>
     `;
   }
