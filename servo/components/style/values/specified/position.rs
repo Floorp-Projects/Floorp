@@ -10,7 +10,6 @@
 use crate::parser::{Parse, ParserContext};
 use crate::selector_map::PrecomputedHashMap;
 use crate::str::HTML_SPACE_CHARACTERS;
-use crate::values::DashedIdent;
 use crate::values::computed::LengthPercentage as ComputedLengthPercentage;
 use crate::values::computed::{Context, Percentage, ToComputedValue};
 use crate::values::generics::position::AspectRatio as GenericAspectRatio;
@@ -19,6 +18,7 @@ use crate::values::generics::position::PositionComponent as GenericPositionCompo
 use crate::values::generics::position::PositionOrAuto as GenericPositionOrAuto;
 use crate::values::generics::position::ZIndex as GenericZIndex;
 use crate::values::specified::{AllowQuirks, Integer, LengthPercentage, NonNegativeNumber};
+use crate::values::DashedIdent;
 use crate::{Atom, Zero};
 use cssparser::Parser;
 use selectors::parser::SelectorParseErrorKind;
@@ -26,9 +26,9 @@ use servo_arc::Arc;
 use smallvec::{smallvec, SmallVec};
 use std::collections::hash_map::Entry;
 use std::fmt::{self, Write};
+use style_traits::arc_slice::ArcSlice;
 use style_traits::values::specified::AllowedNumericType;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
-use style_traits::arc_slice::ArcSlice;
 
 /// The specified value of a CSS `<position>`
 pub type Position = GenericPosition<HorizontalPosition, VerticalPosition>;
@@ -354,7 +354,11 @@ impl<S: Side> PositionComponent<S> {
     ToShmem,
 )]
 #[css(comma)]
-pub struct AnchorName(#[css(iterable, if_empty = "none")] #[ignore_malloc_size_of = "Arc"] pub crate::ArcSlice<DashedIdent>);
+pub struct AnchorName(
+    #[css(iterable, if_empty = "none")]
+    #[ignore_malloc_size_of = "Arc"]
+    pub crate::ArcSlice<DashedIdent>,
+);
 
 impl AnchorName {
     /// Return the `none` value.
@@ -380,10 +384,8 @@ impl Parse for AnchorName {
         }
         // The common case is probably just to have a single anchor name, so
         // space for four on the stack should be plenty.
-        let mut idents: SmallVec<[DashedIdent; 4]> = smallvec![DashedIdent::from_ident(
-            location,
-            first,
-        )?];
+        let mut idents: SmallVec<[DashedIdent; 4]> =
+            smallvec![DashedIdent::from_ident(location, first,)?];
         while input.try_parse(|input| input.expect_comma()).is_ok() {
             idents.push(DashedIdent::parse(context, input)?);
         }
@@ -445,10 +447,8 @@ impl Parse for AnchorScope {
         }
         // Authors using more than a handful of anchored elements is likely
         // uncommon, so we only pre-allocate for 8 on the stack here.
-        let mut idents: SmallVec<[DashedIdent; 8]> = smallvec![DashedIdent::from_ident(
-            location,
-            first,
-        )?];
+        let mut idents: SmallVec<[DashedIdent; 8]> =
+            smallvec![DashedIdent::from_ident(location, first,)?];
         while input.try_parse(|input| input.expect_comma()).is_ok() {
             idents.push(DashedIdent::parse(context, input)?);
         }
@@ -923,7 +923,10 @@ impl Side for VerticalPositionKeyword {
     ToResolvedValue,
     ToShmem,
 )]
-#[css(bitflags(mixed = "row,column,dense", validate_mixed = "Self::validate_and_simplify"))]
+#[css(bitflags(
+    mixed = "row,column,dense",
+    validate_mixed = "Self::validate_and_simplify"
+))]
 #[repr(C)]
 pub struct GridAutoFlow(u8);
 bitflags! {

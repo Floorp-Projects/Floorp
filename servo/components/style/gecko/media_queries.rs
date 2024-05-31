@@ -189,7 +189,8 @@ impl Device {
 
     /// Set the line height of the root element (for rlh), in zoom-independent CSS pixels.
     pub fn set_root_line_height(&self, size: f32) {
-        self.root_line_height.store(size.to_bits(), Ordering::Relaxed);
+        self.root_line_height
+            .store(size.to_bits(), Ordering::Relaxed);
     }
 
     /// The quirks mode of the document.
@@ -501,11 +502,11 @@ impl Device {
     pub fn forced_colors(&self) -> ForcedColors {
         if self.document().mIsBeingUsedAsImage() {
             // SVG images never force colors.
-            return ForcedColors::None
+            return ForcedColors::None;
         }
         let prefs = self.pref_sheet_prefs();
         if !prefs.mUseDocumentColors {
-            return ForcedColors::Active
+            return ForcedColors::Active;
         }
         // On Windows, having a high contrast theme also means that the OS is requesting the
         // colors to be forced. This is mostly convenience for the front-end, which wants to

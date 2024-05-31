@@ -208,7 +208,8 @@ pub enum GenericBasicShape<
     PathOrShape(
         #[animation(field_bound)]
         #[css(field_bound)]
-        GenericPathOrShapeFunction<Angle, LengthPercentage>),
+        GenericPathOrShapeFunction<Angle, LengthPercentage>,
+    ),
 }
 
 pub use self::GenericBasicShape as BasicShape;

@@ -21,9 +21,10 @@ use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
 use std::mem;
 use std::num::Wrapping;
-use style_traits::{Comma, CssWriter, OneOrMoreSeparated, ParseError,
-StyleParseErrorKind, ToCss,
-KeywordsCollectFn, SpecifiedValueInfo};
+use style_traits::{
+    Comma, CssWriter, KeywordsCollectFn, OneOrMoreSeparated, ParseError, SpecifiedValueInfo,
+    StyleParseErrorKind, ToCss,
+};
 
 /// https://drafts.csswg.org/css-counter-styles/#typedef-symbols-type
 #[allow(missing_docs)]
@@ -54,7 +55,9 @@ pub enum SymbolsType {
 ///
 /// Note that 'none' is not a valid name, but we include this (along with String) for space
 /// efficiency when storing list-style-type.
-#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToCss, ToResolvedValue, ToShmem,
+)]
 #[repr(u8)]
 pub enum CounterStyle {
     /// The 'none' value.
@@ -144,7 +147,8 @@ impl CounterStyle {
                     let symbols = Symbols::parse(context, input)?;
                     // There must be at least two symbols for alphabetic or
                     // numeric system.
-                    if (symbols_type == SymbolsType::Alphabetic || symbols_type == SymbolsType::Numeric) &&
+                    if (symbols_type == SymbolsType::Alphabetic ||
+                        symbols_type == SymbolsType::Numeric) &&
                         symbols.0.len() < 2
                     {
                         return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
@@ -153,7 +157,10 @@ impl CounterStyle {
                     if symbols.0.iter().any(|sym| !sym.is_allowed_in_symbols()) {
                         return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
                     }
-                    Ok(Self::Symbols { ty: symbols_type, symbols })
+                    Ok(Self::Symbols {
+                        ty: symbols_type,
+                        symbols,
+                    })
                 })
             },
             t => Err(location.new_unexpected_token_error(t.clone())),
@@ -177,13 +184,11 @@ impl SpecifiedValueInfo for CounterStyle {
     }
 }
 
-
 fn parse_counter_style_name<'i>(input: &mut Parser<'i, '_>) -> Result<CustomIdent, ParseError<'i>> {
     let location = input.current_source_location();
     let ident = input.expect_ident()?;
     counter_style_name_from_ident(ident, location)
 }
-
 
 /// This allows the reserved counter style names "decimal" and "disc".
 fn counter_style_name_from_ident<'i>(
@@ -741,7 +746,11 @@ impl Parse for Fallback {
     Clone, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToCss, ToShmem,
 )]
 #[repr(C)]
-pub struct Symbols(#[css(iterable)] #[ignore_malloc_size_of = "Arc"] pub crate::ArcSlice<Symbol>);
+pub struct Symbols(
+    #[css(iterable)]
+    #[ignore_malloc_size_of = "Arc"]
+    pub crate::ArcSlice<Symbol>,
+);
 
 impl Parse for Symbols {
     fn parse<'i, 't>(

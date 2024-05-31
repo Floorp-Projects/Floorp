@@ -170,7 +170,10 @@ impl<'a, E: TElement> OptimizationContext<'a, E> {
             // element we're mutating.
             // e.g. Given `:has(... .a ~ .b ...)`, we're the mutating element matching `... .a`,
             // if we find a sibling that matches the `... .a`, it can stand in for us.
-            debug_assert!(dependency.parent.is_some(), "No relative selector outer dependency?");
+            debug_assert!(
+                dependency.parent.is_some(),
+                "No relative selector outer dependency?"
+            );
             return dependency.parent.as_ref().map_or(false, |par| {
                 // ... However, if the standin sibling can be the anchor, we can't skip it, since
                 // that sibling should be invlidated to become the anchor.
@@ -179,7 +182,7 @@ impl<'a, E: TElement> OptimizationContext<'a, E> {
                     par.selector_offset,
                     None,
                     &sibling,
-                    &mut matching_context
+                    &mut matching_context,
                 )
             });
         }
@@ -499,18 +502,16 @@ where
             },
             None => (),
         });
-        element.each_custom_state(|v| {
-            match map.map.custom_state_affecting_selectors.get(v) {
-                Some(v) => {
-                    for dependency in v {
-                        if !operation.accept(dependency, element) {
-                            continue;
-                        }
-                        self.add_dependency(dependency, element, scope);
+        element.each_custom_state(|v| match map.map.custom_state_affecting_selectors.get(v) {
+            Some(v) => {
+                for dependency in v {
+                    if !operation.accept(dependency, element) {
+                        continue;
                     }
-                },
-                None => (),
-            }
+                    self.add_dependency(dependency, element, scope);
+                }
+            },
+            None => (),
         });
         element.each_attr_name(
             |v| match map.map.other_attribute_affecting_selectors.get(v) {
@@ -548,12 +549,16 @@ where
             element,
             quirks_mode,
             None,
-            &[], ElementState::empty(),
+            &[],
+            ElementState::empty(),
             |dependency| {
                 if !operation.accept(&dependency.dep, element) {
                     return true;
                 }
-                if dependency.state.avoid_blanket_invalidation_on_dom_mutation() {
+                if dependency
+                    .state
+                    .avoid_blanket_invalidation_on_dom_mutation()
+                {
                     // We assume here that these dependencies are handled elsewhere,
                     // in a more constrained manner.
                     return true;
@@ -814,7 +819,9 @@ where
 
     /// Is this element in the direction of the given relative selector search path?
     fn in_search_direction(element: &E, desired: ElementSelectorFlags) -> bool {
-        element.relative_selector_search_direction().intersects(desired)
+        element
+            .relative_selector_search_direction()
+            .intersects(desired)
     }
 
     /// Handle a potential relative selector anchor.
@@ -878,7 +885,9 @@ where
                 return false;
             }
         }
-        outer_dependency.selector.is_rightmost(outer_dependency.selector_offset)
+        outer_dependency
+            .selector
+            .is_rightmost(outer_dependency.selector_offset)
     }
 }
 
@@ -945,10 +954,7 @@ where
             let mut d = self.dependency;
             loop {
                 debug_assert!(
-                    matches!(
-                        d.invalidation_kind(),
-                        DependencyInvalidationKind::Normal(_)
-                    ),
+                    matches!(d.invalidation_kind(), DependencyInvalidationKind::Normal(_)),
                     "Unexpected outer relative dependency"
                 );
                 if !dependency_may_be_relevant(d, &element, false) {
@@ -978,7 +984,7 @@ where
                     invalidation,
                     invalidation_kind,
                     descendant_invalidations,
-                    sibling_invalidations
+                    sibling_invalidations,
                 );
             }
         };

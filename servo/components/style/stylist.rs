@@ -29,10 +29,12 @@ use crate::properties_and_values::registry::{
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
-use crate::sharing::RevalidationResult;
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, SelectorMap, SelectorMapEntry};
-use crate::selector_parser::{PerPseudoElementMap, PseudoElement, SelectorImpl, NonTSPseudoClass, SnapshotMap};
+use crate::selector_parser::{
+    NonTSPseudoClass, PerPseudoElementMap, PseudoElement, SelectorImpl, SnapshotMap,
+};
 use crate::shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
+use crate::sharing::RevalidationResult;
 use crate::stylesheet_set::{DataValidity, DocumentStylesheetSet, SheetRebuildKind};
 use crate::stylesheet_set::{DocumentStylesheetFlusher, SheetCollectionFlusher};
 use crate::stylesheets::container_rule::ContainerCondition;

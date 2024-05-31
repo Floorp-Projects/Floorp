@@ -21,10 +21,10 @@ use crate::properties::PropertyDeclarationBlock;
 use crate::rule_tree::{CascadeLevel, StrongRuleNode};
 use crate::selector_parser::{PseudoElement, RestyleDamage};
 use crate::shared_lock::Locked;
-use crate::style_resolver::{PseudoElementResolution, ResolvedElementStyles};
 #[cfg(feature = "gecko")]
 use crate::style_resolver::ResolvedStyle;
 use crate::style_resolver::StyleResolverForElement;
+use crate::style_resolver::{PseudoElementResolution, ResolvedElementStyles};
 use crate::stylesheets::layer_rule::LayerOrder;
 use crate::stylist::RuleInclusion;
 use crate::traversal_flags::TraversalFlags;
@@ -387,10 +387,7 @@ trait PrivateMatchMethods: TElement {
     }
 
     #[cfg(feature = "gecko")]
-    fn resolve_starting_style(
-        &self,
-        context: &mut StyleContext<Self>,
-    ) -> ResolvedStyle {
+    fn resolve_starting_style(&self, context: &mut StyleContext<Self>) -> ResolvedStyle {
         use selectors::matching::IncludeStartingStyle;
 
         // Compute after-change style for the parent and the layout parent.
@@ -455,16 +452,16 @@ trait PrivateMatchMethods: TElement {
         // 1. If we didn't see any starting-style rules for this given element during full matching.
         // 2. If there is no transitions specified.
         // We don't have to resolve starting style.
-        if !new_styles.may_have_starting_style()
-            || !new_styles.primary_style().get_ui().specifies_transitions()
+        if !new_styles.may_have_starting_style() ||
+            !new_styles.primary_style().get_ui().specifies_transitions()
         {
             return None;
         }
 
         // We resolve starting style only if we don't have before-change-style, or we change from
         // display:none.
-        if old_values.is_some()
-            && !new_styles
+        if old_values.is_some() &&
+            !new_styles
                 .primary_style()
                 .is_display_property_changed_from_none(old_values.map(|s| &**s))
         {
@@ -566,15 +563,31 @@ trait PrivateMatchMethods: TElement {
         let mut tasks = UpdateAnimationsTasks::empty();
 
         if old_values.as_deref().map_or_else(
-            || new_styles.primary_style().get_ui().specifies_scroll_timelines(),
-            |old| !old.get_ui().scroll_timelines_equals(new_styles.primary_style().get_ui()),
+            || {
+                new_styles
+                    .primary_style()
+                    .get_ui()
+                    .specifies_scroll_timelines()
+            },
+            |old| {
+                !old.get_ui()
+                    .scroll_timelines_equals(new_styles.primary_style().get_ui())
+            },
         ) {
             tasks.insert(UpdateAnimationsTasks::SCROLL_TIMELINES);
         }
 
         if old_values.as_deref().map_or_else(
-            || new_styles.primary_style().get_ui().specifies_view_timelines(),
-            |old| !old.get_ui().view_timelines_equals(new_styles.primary_style().get_ui()),
+            || {
+                new_styles
+                    .primary_style()
+                    .get_ui()
+                    .specifies_view_timelines()
+            },
+            |old| {
+                !old.get_ui()
+                    .view_timelines_equals(new_styles.primary_style().get_ui())
+            },
         ) {
             tasks.insert(UpdateAnimationsTasks::VIEW_TIMELINES);
         }
@@ -1095,9 +1108,16 @@ pub trait MatchMethods: TElement {
             if old_line_height != Some(new_line_height) {
                 if is_root {
                     debug_assert!(self.owner_doc_matches_for_testing(device));
-                    device.set_root_line_height(new_primary_style.effective_zoom.unzoom(new_line_height.px()));
+                    device.set_root_line_height(
+                        new_primary_style
+                            .effective_zoom
+                            .unzoom(new_line_height.px()),
+                    );
                     if device.used_root_line_height() {
-                        restyle_requirement = std::cmp::max(restyle_requirement, ChildRestyleRequirement::MustCascadeDescendants);
+                        restyle_requirement = std::cmp::max(
+                            restyle_requirement,
+                            ChildRestyleRequirement::MustCascadeDescendants,
+                        );
                     }
                 }
 

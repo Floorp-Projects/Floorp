@@ -9,8 +9,8 @@ use crate::selector_map::{
     MaybeCaseInsensitiveHashMap, PrecomputedHashMap, SelectorMap, SelectorMapEntry,
 };
 use crate::selector_parser::{NonTSPseudoClass, SelectorImpl};
-use crate::AllocErr;
 use crate::values::AtomIdent;
+use crate::AllocErr;
 use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded};
 use dom::{DocumentState, ElementState};
 use selectors::attr::NamespaceConstraint;
@@ -570,7 +570,10 @@ fn add_attr_dependency<C: Collector>(name: LocalName, collector: &mut C) -> Resu
     add_local_name(name, dependency, map)
 }
 
-fn add_custom_state_dependency<C: Collector>(name: AtomIdent, collector: &mut C) -> Result<(), AllocErr> {
+fn add_custom_state_dependency<C: Collector>(
+    name: AtomIdent,
+    collector: &mut C,
+) -> Result<(), AllocErr> {
     let dependency = collector.dependency();
     let map = collector.custom_state_map();
     map.try_reserve(1)?;
@@ -1145,20 +1148,22 @@ enum ComponentVisitResult {
 fn on_simple_selector<C: Collector>(
     s: &Component<SelectorImpl>,
     quirks_mode: QuirksMode,
-    collector: &mut C
+    collector: &mut C,
 ) -> Result<ComponentVisitResult, AllocErr> {
     match *s {
         Component::ID(..) | Component::Class(..) => {
             on_id_or_class(s, quirks_mode, collector)?;
-            Ok(ComponentVisitResult::Handled(TSStateForInvalidation::empty()))
+            Ok(ComponentVisitResult::Handled(
+                TSStateForInvalidation::empty(),
+            ))
         },
         Component::NonTSPseudoClass(ref pc) => {
             on_pseudo_class(pc, collector)?;
-            Ok(ComponentVisitResult::Handled(TSStateForInvalidation::empty()))
+            Ok(ComponentVisitResult::Handled(
+                TSStateForInvalidation::empty(),
+            ))
         },
-        Component::Empty => {
-            Ok(ComponentVisitResult::Handled(TSStateForInvalidation::EMPTY))
-        },
+        Component::Empty => Ok(ComponentVisitResult::Handled(TSStateForInvalidation::EMPTY)),
         Component::Nth(data) => {
             let kind = if data.is_simple_edge() {
                 TSStateForInvalidation::NTH_EDGE
@@ -1224,7 +1229,7 @@ impl<'a> SelectorVisitor for RelativeSelectorDependencyCollector<'a> {
             Err(err) => {
                 *self.alloc_error = Some(err.into());
                 false
-            }
+            },
         }
     }
 
@@ -1429,7 +1434,7 @@ impl<'a, 'b> SelectorVisitor for RelativeSelectorInnerDependencyCollector<'a, 'b
             Err(err) => {
                 *self.alloc_error = Some(err.into());
                 false
-            }
+            },
         }
     }
 

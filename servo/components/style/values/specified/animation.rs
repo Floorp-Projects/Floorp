@@ -151,7 +151,9 @@ impl TransitionBehavior {
 }
 
 /// https://drafts.csswg.org/css-animations/#animation-iteration-count
-#[derive(Copy, Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem)]
+#[derive(
+    Copy, Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem,
+)]
 pub enum AnimationIterationCount {
     /// A `<number>` value.
     Number(NonNegativeNumber),
@@ -226,7 +228,19 @@ impl Parse for AnimationName {
 }
 
 /// https://drafts.csswg.org/css-animations/#propdef-animation-direction
-#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum AnimationDirection {
@@ -248,7 +262,19 @@ impl AnimationDirection {
 }
 
 /// https://drafts.csswg.org/css-animations/#animation-play-state
-#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum AnimationPlayState {
@@ -268,7 +294,19 @@ impl AnimationPlayState {
 }
 
 /// https://drafts.csswg.org/css-animations/#propdef-animation-fill-mode
-#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum AnimationFillMode {
@@ -291,7 +329,19 @@ impl AnimationFillMode {
 }
 
 /// https://drafts.csswg.org/css-animations-2/#animation-composition
-#[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum AnimationComposition {

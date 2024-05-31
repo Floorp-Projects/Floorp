@@ -36,7 +36,7 @@ impl NestingContext {
         Self {
             rule_types,
             parse_relative: parse_nested_rule_type
-                .map_or(ParseRelative::No, Self::parse_relative_for)
+                .map_or(ParseRelative::No, Self::parse_relative_for),
         }
     }
 

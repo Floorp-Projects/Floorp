@@ -175,11 +175,7 @@ impl_simple_arc_ffi!(
     Servo_AnimationValue_AddRef,
     Servo_AnimationValue_Release
 );
-impl_simple_arc_ffi!(
-    ScopeRule,
-    Servo_ScopeRule_AddRef,
-    Servo_ScopeRule_Release
-);
+impl_simple_arc_ffi!(ScopeRule, Servo_ScopeRule_AddRef, Servo_ScopeRule_Release);
 impl_simple_arc_ffi!(
     StartingStyleRule,
     Servo_StartingStyleRule_AddRef,

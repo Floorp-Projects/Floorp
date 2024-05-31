@@ -11,9 +11,9 @@ use super::{FeatureFlags, FeatureType, QueryFeatureExpression};
 use crate::values::computed;
 use crate::{error_reporting::ContextualParseError, parser::ParserContext};
 use cssparser::{Parser, Token};
+use selectors::kleene_value::KleeneValue;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
-use selectors::kleene_value::KleeneValue;
 
 /// A binary `and` or `or` operator.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, ToCss, ToShmem)]

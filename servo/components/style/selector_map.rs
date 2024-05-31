@@ -341,7 +341,13 @@ impl SelectorMap<Rule> {
             stylist: &Stylist,
             include_starting_style: bool,
         ) {
-            if !matches_selector(&rule.selector, 0, Some(&rule.hashes), &element, matching_context) {
+            if !matches_selector(
+                &rule.selector,
+                0,
+                Some(&rule.hashes),
+                &element,
+                matching_context,
+            ) {
                 return;
             }
 
@@ -376,8 +382,10 @@ impl SelectorMap<Rule> {
 
         use selectors::matching::IncludeStartingStyle;
 
-        let include_starting_style =
-            matches!(matching_context.include_starting_style, IncludeStartingStyle::Yes);
+        let include_starting_style = matches!(
+            matching_context.include_starting_style,
+            IncludeStartingStyle::Yes
+        );
         for rule in rules {
             if rule.scope_condition_id == ScopeConditionId::none() {
                 add_rule_if_matching(
@@ -389,7 +397,7 @@ impl SelectorMap<Rule> {
                     cascade_level,
                     cascade_data,
                     stylist,
-                    include_starting_style
+                    include_starting_style,
                 );
             } else {
                 // First element contains the closest matching scope, but the selector may match
@@ -406,7 +414,7 @@ impl SelectorMap<Rule> {
                 // We had to gather scope roots first, since the scope element must change before the rule's
                 // selector is tested. Candidates are sorted in proximity.
                 for candidate in scopes {
-                    matching_context.nest_for_scope(Some(candidate.root), |context|
+                    matching_context.nest_for_scope(Some(candidate.root), |context| {
                         add_rule_if_matching(
                             element,
                             candidate.proximity,
@@ -416,9 +424,9 @@ impl SelectorMap<Rule> {
                             cascade_level,
                             cascade_data,
                             stylist,
-                            include_starting_style
+                            include_starting_style,
                         )
-                    );
+                    });
                     // Given rule may match with a scope root of further proximity - Can't just break here.
                 }
             }
@@ -491,10 +499,7 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
 
         let bucket = {
             let mut disjoint_buckets = SmallVec::new();
-            let bucket = find_bucket(
-                entry.selector(),
-                &mut disjoint_buckets,
-            );
+            let bucket = find_bucket(entry.selector(), &mut disjoint_buckets);
 
             // See if inserting this selector in multiple entries in the
             // selector map would be worth it. Consider a case like:
@@ -775,11 +780,9 @@ fn specific_bucket_for<'a>(
         Component::Root => Bucket::Root,
         Component::ID(ref id) => Bucket::ID(id),
         Component::Class(ref class) => Bucket::Class(class),
-        Component::AttributeInNoNamespace { ref local_name, .. } => {
-            Bucket::Attribute {
-                name: local_name,
-                lower_name: local_name,
-            }
+        Component::AttributeInNoNamespace { ref local_name, .. } => Bucket::Attribute {
+            name: local_name,
+            lower_name: local_name,
         },
         Component::AttributeInNoNamespaceExists {
             ref local_name,
@@ -817,12 +820,8 @@ fn specific_bucket_for<'a>(
         //
         // So inserting `span` in the rule hash makes sense since we want to
         // match the slotted <span>.
-        Component::Slotted(ref selector) => {
-            find_bucket(selector.iter(), disjoint_buckets)
-        },
-        Component::Host(Some(ref selector)) => {
-            find_bucket(selector.iter(), disjoint_buckets)
-        },
+        Component::Slotted(ref selector) => find_bucket(selector.iter(), disjoint_buckets),
+        Component::Host(Some(ref selector)) => find_bucket(selector.iter(), disjoint_buckets),
         Component::Is(ref list) | Component::Where(ref list) => {
             if list.len() == 1 {
                 find_bucket(list.slice()[0].iter(), disjoint_buckets)

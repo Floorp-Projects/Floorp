@@ -8,7 +8,9 @@ use crate::parser::{Parse, ParserContext};
 use crate::properties::longhands::writing_mode::computed_value::T as SpecifiedWritingMode;
 use crate::values::computed::text::TextEmphasisStyle as ComputedTextEmphasisStyle;
 use crate::values::computed::{Context, ToComputedValue};
-use crate::values::generics::text::{GenericInitialLetter, GenericTextDecorationLength, GenericTextIndent, Spacing};
+use crate::values::generics::text::{
+    GenericInitialLetter, GenericTextDecorationLength, GenericTextIndent, Spacing,
+};
 use crate::values::specified::length::{Length, LengthPercentage};
 use crate::values::specified::{AllowQuirks, Integer, Number};
 use cssparser::Parser;

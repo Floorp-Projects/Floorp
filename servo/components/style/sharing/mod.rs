@@ -503,11 +503,7 @@ impl<Candidate> SharingCacheBase<Candidate> {
 }
 
 impl<E: TElement> SharingCache<E> {
-    fn insert(
-        &mut self,
-        element: E,
-        validation_data_holder: Option<&mut StyleSharingTarget<E>>,
-    ) {
+    fn insert(&mut self, element: E, validation_data_holder: Option<&mut StyleSharingTarget<E>>) {
         let validation_data = match validation_data_holder {
             Some(v) => v.take_validation_data(),
             None => ValidationData::default(),
@@ -680,10 +676,7 @@ impl<E: TElement> StyleSharingCache<E> {
             self.clear();
             self.dom_depth = dom_depth;
         }
-        self.cache_mut().insert(
-            *element,
-            validation_data_holder,
-        );
+        self.cache_mut().insert(*element, validation_data_holder);
     }
 
     /// Clear the style sharing candidate cache.

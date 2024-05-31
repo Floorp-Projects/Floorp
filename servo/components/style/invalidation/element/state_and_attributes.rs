@@ -18,14 +18,14 @@ use crate::invalidation::element::restyle_hints::RestyleHint;
 use crate::selector_map::SelectorMap;
 use crate::selector_parser::Snapshot;
 use crate::stylesheets::origin::OriginSet;
-use crate::{Atom, WeakAtom};
 use crate::values::AtomIdent;
+use crate::{Atom, WeakAtom};
 use dom::ElementState;
 use selectors::attr::CaseSensitivity;
 use selectors::kleene_value::KleeneValue;
 use selectors::matching::{
     matches_selector_kleene, IncludeStartingStyle, MatchingContext, MatchingForInvalidation,
-    MatchingMode, NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode
+    MatchingMode, NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode,
 };
 use smallvec::SmallVec;
 
@@ -467,7 +467,11 @@ where
             }
         }
 
-        for state in self.custom_states_added.iter().chain(self.custom_states_removed.iter()) {
+        for state in self
+            .custom_states_added
+            .iter()
+            .chain(self.custom_states_removed.iter())
+        {
             if let Some(deps) = map.custom_state_affecting_selectors.get(state) {
                 for dep in deps {
                     self.scan_dependency(dep);

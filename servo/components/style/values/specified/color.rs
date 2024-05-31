@@ -626,7 +626,7 @@ impl Color {
                             &right,
                             mix.right_percentage.to_percentage(),
                             mix.flags,
-                        ))
+                        ));
                     }
                 }
             },

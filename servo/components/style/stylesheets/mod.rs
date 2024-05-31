@@ -14,11 +14,11 @@ pub mod import_rule;
 pub mod keyframes_rule;
 pub mod layer_rule;
 mod loader;
+mod margin_rule;
 mod media_rule;
 mod namespace_rule;
 pub mod origin;
 mod page_rule;
-mod margin_rule;
 mod property_rule;
 mod rule_list;
 mod rule_parser;
@@ -321,12 +321,12 @@ impl CssRule {
             },
             CssRule::StartingStyle(ref arc) => {
                 arc.unconditional_shallow_size_of(ops) + arc.size_of(guard, ops)
-            }
+            },
             // TODO(emilio): Add memory reporting for these rules.
             CssRule::LayerBlock(_) | CssRule::LayerStatement(_) => 0,
             CssRule::Scope(ref rule) => {
                 rule.unconditional_shallow_size_of(ops) + rule.size_of(guard, ops)
-            }
+            },
         }
     }
 }
@@ -488,7 +488,7 @@ impl CssRule {
         // Override the nesting context with existing data.
         context.nesting_context = NestingContext::new(
             insert_rule_context.containing_rule_types,
-            insert_rule_context.parse_relative_rule_type
+            insert_rule_context.parse_relative_rule_type,
         );
 
         let state = if !insert_rule_context.containing_rule_types.is_empty() {

@@ -45,9 +45,9 @@ pub use self::align::{
 pub use self::align::{AlignSelf, JustifySelf};
 pub use self::angle::Angle;
 pub use self::animation::{
-    AnimationIterationCount, AnimationName, AnimationTimeline, AnimationPlayState,
-    AnimationFillMode, AnimationComposition, AnimationDirection, ScrollAxis,
-    ScrollTimelineName, TransitionBehavior, TransitionProperty, ViewTimelineInset
+    AnimationComposition, AnimationDirection, AnimationFillMode, AnimationIterationCount,
+    AnimationName, AnimationPlayState, AnimationTimeline, ScrollAxis, ScrollTimelineName,
+    TransitionBehavior, TransitionProperty, ViewTimelineInset,
 };
 pub use self::background::{BackgroundRepeat, BackgroundSize};
 pub use self::basic_shape::FillRule;
@@ -90,13 +90,13 @@ pub use self::page::{PageName, PageOrientation, PageSize, PageSizeOrientation, P
 pub use self::percentage::{NonNegativePercentage, Percentage};
 pub use self::position::AnchorName;
 pub use self::position::AnchorScope;
+pub use self::position::AspectRatio;
 pub use self::position::PositionAnchor;
 pub use self::position::PositionVisibility;
-pub use self::position::{InsetArea, InsetAreaKeyword};
-pub use self::position::AspectRatio;
 pub use self::position::{
     GridAutoFlow, GridTemplateAreas, MasonryAutoFlow, Position, PositionOrAuto, ZIndex,
 };
+pub use self::position::{InsetArea, InsetAreaKeyword};
 pub use self::ratio::Ratio;
 pub use self::rect::NonNegativeLengthOrNumberRect;
 pub use self::resolution::Resolution;

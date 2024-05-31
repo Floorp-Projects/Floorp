@@ -14,10 +14,10 @@ use crate::values::specified::{Integer, Length, Number, Resolution};
 use crate::values::{AtomString, CSSFloat};
 use crate::{Atom, Zero};
 use cssparser::{Parser, Token};
+use selectors::kleene_value::KleeneValue;
 use std::cmp::Ordering;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
-use selectors::kleene_value::KleeneValue;
 
 /// Whether we're parsing a media or container query feature.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToShmem)]

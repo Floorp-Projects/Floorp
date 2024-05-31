@@ -485,7 +485,7 @@ pub enum FontSizeKeyword {
     XXXLarge,
     /// Indicate whether to apply font-size: math is specified so that extra
     /// scaling due to math-depth changes is applied during the cascade.
-    #[cfg(feature="gecko")]
+    #[cfg(feature = "gecko")]
     Math,
     #[css(skip)]
     None,
@@ -1248,10 +1248,23 @@ impl Parse for FontVariantAlternates {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    Parse,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[css(bitflags(
     single = "normal",
-    mixed="jis78,jis83,jis90,jis04,simplified,traditional,full-width,proportional-width,ruby",
+    mixed = "jis78,jis83,jis90,jis04,simplified,traditional,full-width,proportional-width,ruby",
     validate_mixed = "Self::validate_mixed_flags",
 ))]
 #[repr(C)]
@@ -1303,10 +1316,23 @@ impl FontVariantEastAsian {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    Parse,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[css(bitflags(
     single = "normal,none",
-    mixed="common-ligatures,no-common-ligatures,discretionary-ligatures,no-discretionary-ligatures,historical-ligatures,no-historical-ligatures,contextual,no-contextual",
+    mixed = "common-ligatures,no-common-ligatures,discretionary-ligatures,no-discretionary-ligatures,historical-ligatures,no-historical-ligatures,contextual,no-contextual",
     validate_mixed = "Self::validate_mixed_flags",
 ))]
 #[repr(C)]
@@ -1355,10 +1381,23 @@ impl FontVariantLigatures {
 }
 
 /// Variants of numeric values
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    Parse,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[css(bitflags(
     single = "normal",
-    mixed="lining-nums,oldstyle-nums,proportional-nums,tabular-nums,diagonal-fractions,stacked-fractions,ordinal,slashed-zero",
+    mixed = "lining-nums,oldstyle-nums,proportional-nums,tabular-nums,diagonal-fractions,stacked-fractions,ordinal,slashed-zero",
     validate_mixed = "Self::validate_mixed_flags",
 ))]
 #[repr(C)]
