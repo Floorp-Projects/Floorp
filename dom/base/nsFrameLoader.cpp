@@ -130,10 +130,7 @@
 
 #include "mozilla/ContentPrincipal.h"
 
-#include "buildid_section.h"
-#include "mozilla/toolkit/library/buildid_reader_ffi.h"
-#include "nsXPCOMPrivate.h"  // for XUL_DLL
-
+#include "nsSystemInfo.h"
 #include "nsXULPopupManager.h"
 
 #ifdef NS_PRINTING
@@ -3660,22 +3657,26 @@ static mozilla::Result<bool, nsresult> BuildIDMismatchMemoryAndDisk() {
   }
 #endif
 
-  rv = NS_GetSpecialDirectory(NS_GRE_BIN_DIR, getter_AddRefs(file));
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
   MOZ_TRY(rv);
 
-  rv = file->Append(XUL_DLL u""_ns);
+  rv = file->AppendNative("platform.ini"_ns);
   MOZ_TRY(rv);
 
-  nsAutoString xul;
-  rv = file->GetPath(xul);
+  nsCOMPtr<nsIINIParserFactory> iniFactory =
+      do_GetService("@mozilla.org/xpcom/ini-parser-factory;1", &rv);
   MOZ_TRY(rv);
 
-  nsCString installedBuildID;
-  nsCString section_name(MOZ_BUILDID_SECTION_NAME);
-  rv = read_toolkit_buildid_from_file(&xul, &section_name, &installedBuildID);
+  nsCOMPtr<nsIINIParser> parser;
+  rv = iniFactory->CreateINIParser(file, getter_AddRefs(parser));
   MOZ_TRY(rv);
 
-  return (installedBuildID != PlatformBuildID());
+  nsAutoCString installedBuildID;
+  rv = parser->GetString("Build"_ns, "BuildID"_ns, installedBuildID);
+  MOZ_TRY(rv);
+
+  nsDependentCString runningBuildID(PlatformBuildID());
+  return (installedBuildID != runningBuildID);
 }
 
 void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,

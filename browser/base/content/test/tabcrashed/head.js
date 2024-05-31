@@ -171,6 +171,15 @@ function getEventPromise(eventName, eventKind) {
   });
 }
 
+async function ensureBuildID() {
+  let profD = Services.dirsvc.get("GreD", Ci.nsIFile);
+  let platformIniOrig = await IOUtils.readUTF8(
+    PathUtils.join(profD.path, "platform.ini")
+  );
+  let buildID = Services.appinfo.platformBuildID;
+  return platformIniOrig.indexOf(buildID) > 0;
+}
+
 async function openNewTab(forceCrash) {
   const PAGE =
     "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";

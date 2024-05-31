@@ -600,7 +600,6 @@ LOCAL_INCLUDES += [
     "/security/manager/ssl",
     "/third_party/xsimd/include",
     "/widget",
-    "/xpcom/build",
     "/xpcom/ds",
 ]
 

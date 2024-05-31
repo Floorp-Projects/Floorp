@@ -229,7 +229,6 @@ pub enum Hint {
     Mach(HintData),
     MachFat(usize),
     PE,
-    TE,
     COFF,
     Archive,
     Unknown(u64),
@@ -237,7 +236,7 @@ pub enum Hint {
 
 macro_rules! if_everything {
     ($($i:item)*) => ($(
-        #[cfg(all(feature = "endian_fd", feature = "elf64", feature = "elf32", feature = "pe64", feature = "pe32", feature = "te", feature = "mach64", feature = "mach32", feature = "archive"))]
+        #[cfg(all(feature = "endian_fd", feature = "elf64", feature = "elf32", feature = "pe64", feature = "pe32", feature = "mach64", feature = "mach32", feature = "archive"))]
         $i
     )*)
 }
@@ -263,7 +262,6 @@ if_everything! {
         } else {
             match *&bytes[0..2].pread_with::<u16>(0, LE)? {
                 pe::header::DOS_MAGIC => Ok(Hint::PE),
-                pe::header::TE_MAGIC => Ok(Hint::TE),
                 pe::header::COFF_MACHINE_X86 |
                 pe::header::COFF_MACHINE_X86_64 |
                 pe::header::COFF_MACHINE_ARM64 => Ok(Hint::COFF),
@@ -292,8 +290,6 @@ if_everything! {
         Elf(elf::Elf<'a>),
         /// A PE32/PE32+!
         PE(pe::PE<'a>),
-        /// A TE!
-        TE(pe::TE<'a>),
         /// A COFF
         COFF(pe::Coff<'a>),
         /// A 32/64-bit Mach-o binary _OR_ it is a multi-architecture binary container!
@@ -313,7 +309,6 @@ if_everything! {
                     Hint::Mach(_) | Hint::MachFat(_) => Ok(Object::Mach(mach::Mach::parse(bytes)?)),
                     Hint::Archive => Ok(Object::Archive(archive::Archive::parse(bytes)?)),
                     Hint::PE => Ok(Object::PE(pe::PE::parse(bytes)?)),
-                    Hint::TE => Ok(Object::TE(pe::TE::parse(bytes)?)),
                     Hint::COFF => Ok(Object::COFF(pe::Coff::parse(bytes)?)),
                     Hint::Unknown(magic) => Ok(Object::Unknown(magic)),
                 }

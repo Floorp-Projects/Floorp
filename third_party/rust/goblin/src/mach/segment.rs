@@ -467,26 +467,6 @@ impl<'a> Segment<'a> {
         offset: usize,
         ctx: container::Ctx,
     ) -> Result<Self, error::Error> {
-        Self::from_32_impl(bytes, segment, offset, ctx, false)
-    }
-
-    /// Convert the raw C 32-bit segment command to a generalized version
-    pub fn from_32_lossy(
-        bytes: &'a [u8],
-        segment: &SegmentCommand32,
-        offset: usize,
-        ctx: container::Ctx,
-    ) -> Result<Self, error::Error> {
-        Self::from_32_impl(bytes, segment, offset, ctx, true)
-    }
-
-    pub(crate) fn from_32_impl(
-        bytes: &'a [u8],
-        segment: &SegmentCommand32,
-        offset: usize,
-        ctx: container::Ctx,
-        lossy: bool,
-    ) -> Result<Self, error::Error> {
         Ok(Segment {
             cmd: segment.cmd,
             cmdsize: segment.cmdsize,
@@ -499,47 +479,22 @@ impl<'a> Segment<'a> {
             initprot: segment.initprot,
             nsects: segment.nsects,
             flags: segment.flags,
-            data: match segment_data(
+            data: segment_data(
                 bytes,
                 u64::from(segment.fileoff),
                 u64::from(segment.filesize),
-            ) {
-                Ok(v) => v,
-                Err(_) if lossy => &[],
-                Err(e) => return Err(e),
-            },
+            )?,
             offset,
             raw_data: bytes,
             ctx,
         })
     }
-
     /// Convert the raw C 64-bit segment command to a generalized version
     pub fn from_64(
         bytes: &'a [u8],
         segment: &SegmentCommand64,
         offset: usize,
         ctx: container::Ctx,
-    ) -> Result<Self, error::Error> {
-        Self::from_64_impl(bytes, segment, offset, ctx, false)
-    }
-
-    /// Convert the raw C 64-bit segment command to a generalized version
-    pub fn from_64_lossy(
-        bytes: &'a [u8],
-        segment: &SegmentCommand64,
-        offset: usize,
-        ctx: container::Ctx,
-    ) -> Result<Self, error::Error> {
-        Self::from_64_impl(bytes, segment, offset, ctx, true)
-    }
-
-    pub(crate) fn from_64_impl(
-        bytes: &'a [u8],
-        segment: &SegmentCommand64,
-        offset: usize,
-        ctx: container::Ctx,
-        lossy: bool,
     ) -> Result<Self, error::Error> {
         Ok(Segment {
             cmd: segment.cmd,
@@ -553,11 +508,7 @@ impl<'a> Segment<'a> {
             initprot: segment.initprot,
             nsects: segment.nsects,
             flags: segment.flags,
-            data: match segment_data(bytes, segment.fileoff, segment.filesize) {
-                Ok(v) => v,
-                Err(_) if lossy => &[],
-                Err(e) => return Err(e),
-            },
+            data: segment_data(bytes, segment.fileoff, segment.filesize)?,
             offset,
             raw_data: bytes,
             ctx,
