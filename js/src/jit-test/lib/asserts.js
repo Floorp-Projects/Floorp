@@ -85,3 +85,12 @@ if (typeof assertRangeErrorMessage === 'undefined') {
       assertErrorMessage(f, RangeError, test);
     };
 }
+
+if (typeof assertArrayEq === 'undefined') {
+  var assertArrayEq = function assertArrayEq(a,b) {
+    assertEq(a.length, b.length);
+    for (var i = 0; i < a.length; i++) {
+      assertEq(a[i], b[i]);
+    }
+  };
+}

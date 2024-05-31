@@ -50,6 +50,10 @@ const char* js::BindingKindString(BindingKind kind) {
       return "synthetic";
     case BindingKind::PrivateMethod:
       return "private method";
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    case BindingKind::Using:
+      return "using";
+#endif
   }
   MOZ_CRASH("Bad BindingKind");
 }

@@ -4874,6 +4874,20 @@ bool BaselineCodeGen<Handler>::emit_LeaveWith() {
   return callVM<Fn, jit::LeaveWith>();
 }
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_AddDisposable() {
+  // TODO: AddDisposable to be implemented for Baseline (Bug 1899500)
+  MOZ_CRASH("AddDisposable has not been implemented for baseline");
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_DisposeDisposables() {
+  // TODO: DisposeDisposables to be implemented for Baseline (Bug 1899500)
+  MOZ_CRASH("DisposeDisposables has not been implemented for baseline");
+}
+#endif
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Exception() {
   prepareVMCall();

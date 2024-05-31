@@ -75,6 +75,7 @@
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/List-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
 #include "vm/PlainObject-inl.h"  // js::CopyInitializerObject, js::CreateThis
@@ -1635,6 +1636,82 @@ void js::ReportInNotObjectError(JSContext* cx, HandleValue lref,
                             InformalValueTypeName(rref));
 }
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+bool js::DisposeDisposablesOnScopeLeave(JSContext* cx,
+                                        JS::Handle<JSObject*> env) {
+  if (!env->is<LexicalEnvironmentObject>()) {
+    return true;
+  }
+
+  Value maybeDisposables = env->as<LexicalEnvironmentObject>().getDisposables();
+
+  MOZ_ASSERT(maybeDisposables.isObject() || maybeDisposables.isUndefined());
+
+  if (maybeDisposables.isObject()) {
+    JS::Rooted<ListObject*> disposables(
+        cx, &maybeDisposables.toObject().as<ListObject>());
+
+    uint32_t index = disposables->length();
+
+    bool hadError = false;
+
+    // Explicit Resource Management Proposal
+    // DisposeResources ( disposeCapability, completion )
+    // https://arai-a.github.io/ecma262-compare/?pr=3000&id=sec-disposeresources
+    // Step 1. For each element resource of
+    // disposeCapability.[[DisposableResourceStack]], in reverse list order, do
+    JS::Rooted<JS::Value> latestException(cx);
+    while (index) {
+      --index;
+      Value val = disposables->get(index);
+
+      MOZ_ASSERT(val.isObject() || val.isUndefined());
+
+      if (val.isObject()) {
+        JS::Rooted<JSObject*> obj(cx, &val.toObject());
+        JS::Rooted<JS::Value> disposeProp(cx);
+        JS::Rooted<JS::PropertyKey> id(
+            cx, PropertyKey::Symbol(cx->wellKnownSymbols().dispose));
+
+        // TODO: This call during disposal is observable by user code
+        // this is not as per spec and must be fixed (Bug 1899717)
+        if (!GetProperty(cx, obj, obj, id, &disposeProp)) {
+          return false;
+        }
+        // Step 1.a. Let result be
+        // Completion(Dispose(resource.[[ResourceValue]], resource.[[Hint]],
+        // resource.[[DisposeMethod]])).
+        JS::Rooted<JS::Value> rval(cx);
+        if (!Call(cx, disposeProp, obj, &rval)) {
+          // Step 1.b. If result is a throw completion, then
+          // TODO: Suppressed Error Object and subsequent steps in the spec need
+          // to be implemented (Bug 1899870). For now, we just keep track of the
+          // latest exception and continue with the disposal.
+          hadError = true;
+          if (cx->isExceptionPending()) {
+            cx->getPendingException(&latestException);
+            cx->clearPendingException();
+          }
+        }
+      }
+    }
+
+    // Step 3. Set disposeCapability.[[DisposableResourceStack]] to
+    // a new empty List.
+    env->as<LexicalEnvironmentObject>().clearDisposables();
+
+    // 4. Return ? completion.
+    if (hadError) {
+      cx->clearPendingException();
+      cx->setPendingException(latestException, ShouldCaptureStack::Maybe);
+      return false;
+    }
+  }
+
+  return true;
+}
+#endif
+
 bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
                                                            RunState& state) {
 /*
@@ -1644,8 +1721,7 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
  */
 #define INTERPRETER_LOOP()
 #define CASE(OP) label_##OP:
-#define DEFAULT() \
-  label_default:
+#define DEFAULT() label_default:
 #define DISPATCH_TO(OP) goto* addresses[(OP)]
 
 #define LABEL(X) (&&label_##X)
@@ -1980,6 +2056,35 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       REGS.fp()->popOffEnvironmentChain<WithEnvironmentObject>();
     }
     END_CASE(LeaveWith)
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    CASE(AddDisposable) {
+      ReservedRooted<JSObject*> env(&rootObject0,
+                                    REGS.fp()->environmentChain());
+
+      // https://arai-a.github.io/ecma262-compare/?pr=3000&id=sec-createdisposableresource
+      // Step 1.a.i. Set V to undefined.
+      // Step 1.a.ii. Set method to undefined.
+      ReservedRooted<Value> val(&rootValue0, REGS.sp[-1].isNullOrUndefined()
+                                                 ? UndefinedValue()
+                                                 : REGS.sp[-1]);
+
+      if (!env->as<LexicalEnvironmentObject>().addDisposableObject(cx, val)) {
+        goto error;
+      }
+    }
+    END_CASE(AddDisposable)
+
+    CASE(DisposeDisposables) {
+      ReservedRooted<JSObject*> env(&rootObject0,
+                                    REGS.fp()->environmentChain());
+
+      if (!DisposeDisposablesOnScopeLeave(cx, env)) {
+        goto error;
+      }
+    }
+    END_CASE(DisposeDisposables)
+#endif
 
     CASE(Return) {
       POP_RETURN_VALUE();
@@ -5228,6 +5333,12 @@ bool js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind) {
     case CheckIsObjectKind::DecoratorReturn:
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_DECORATOR_INVALID_RETURN_TYPE);
+      break;
+#endif
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    case CheckIsObjectKind::Disposable:
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DISPOSABLE_NOT_OBJ);
       break;
 #endif
     default:

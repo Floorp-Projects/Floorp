@@ -525,6 +525,11 @@ class LexicalScope : public Scope {
     //   lets - [0, constStart)
     // consts - [constStart, length)
     uint32_t constStart = 0;
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    // consts - [constStart, usingStart)
+    // usings - [usingStart, length)
+    uint32_t usingStart = 0;
+#endif
   };
 
   using RuntimeData = RuntimeScopeData<SlotInfo>;
@@ -1001,6 +1006,11 @@ class ModuleScope : public Scope {
     uint32_t varStart = 0;
     uint32_t letStart = 0;
     uint32_t constStart = 0;
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    // consts - [constStart, usingStart)
+    // usings - [usingStart, length)
+    uint32_t usingStart = 0;
+#endif
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData

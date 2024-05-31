@@ -733,10 +733,18 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   // Since the two sets are disjoint, we only use one slot to save space.
   static constexpr uint32_t THIS_VALUE_OR_SCOPE_SLOT = 1;
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  static constexpr uint32_t DISPOSABLE_OBJECTS_SLOT = 2;
+#endif
+
  public:
   static const JSClass class_;
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  static constexpr uint32_t RESERVED_SLOTS = 3;
+#else
   static constexpr uint32_t RESERVED_SLOTS = 2;
+#endif
 
  protected:
   static LexicalEnvironmentObject* create(JSContext* cx,
@@ -755,6 +763,18 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   // Is this a syntactic (i.e. corresponds to a source text) lexical
   // environment?
   bool isSyntactic() const { return !isExtensible() || isGlobal(); }
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  bool addDisposableObject(JSContext* cx, JS::Handle<JS::Value> val);
+
+  // Used to get the Disposable objects within the
+  // lexical scope, it returns a ListObject* if there
+  // is a non empty list of Disposables, else
+  // UndefinedValue.
+  Value getDisposables();
+
+  void clearDisposables();
+#endif
 };
 
 // A non-extensible lexical environment.

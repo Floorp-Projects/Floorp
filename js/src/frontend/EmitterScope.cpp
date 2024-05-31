@@ -926,12 +926,22 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody:
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+      if (hasDisposables()) {
+        if (!bce->emit1(JSOp::DisposeDisposables)) {
+          return false;
+        }
+      }
+#endif
+
       if (bce->sc->isFunctionBox() &&
           bce->sc->asFunctionBox()->needsClearSlotsOnExit()) {
         if (!deadZoneFrameSlots(bce)) {
           return false;
         }
       }
+
       if (!bce->emit1(hasEnvironment() ? JSOp::PopLexicalEnv
                                        : JSOp::DebugLeaveLexicalEnv)) {
         return false;

@@ -862,6 +862,11 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
             break;
           }
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+          // TODO: Optimize cache population for `using` bindings. (Bug 1899502)
+          case BindingKind::Using:
+            break;
+#endif
           case BindingKind::Const: {
             InputName binding(scope_ref, bi.name());
             if (!addToEnclosingLexicalBindingCache(

@@ -308,7 +308,8 @@
   MACRO_(InterpretGeneratorResume, "InterpretGeneratorResume")                 \
   MACRO_(Invalid_Date_, "Invalid Date")                                        \
   MACRO_(isBreakpoint, "isBreakpoint")                                         \
-  IF_DECORATORS(MACRO_(IsCallable, "IsCallable"))                              \
+  IF_EXPLICIT_RESOURCE_MANAGEMENT_OR_DECORATORS(                               \
+      MACRO_(IsCallable, "IsCallable"))                                        \
   MACRO_(isDisjointFrom, "isDisjointFrom")                                     \
   MACRO_(isEntryPoint, "isEntryPoint")                                         \
   MACRO_(isExtensible, "isExtensible")                                         \

@@ -58,6 +58,7 @@
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "frontend/TDZCheckCache.h"                // TDZCheckCache
 #include "frontend/TryEmitter.h"                   // TryEmitter
+#include "frontend/UsingEmitter.h"                 // UsingEmitter
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
 #include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::ColumnNumberOffset
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
@@ -2513,7 +2514,7 @@ BytecodeEmitter::createImmutableScriptData() {
       bytecodeSection().tryNoteList().span());
 }
 
-#ifdef ENABLE_DECORATORS
+#if defined(ENABLE_DECORATORS) || defined(ENABLE_EXPLICIT_RESOURCE_MANAGEMENT)
 bool BytecodeEmitter::emitCheckIsCallable() {
   // This emits code to check if the value at the top of the stack is
   // callable. The value is left on the stack.
@@ -4243,10 +4244,23 @@ bool BytecodeEmitter::emitSingleDeclaration(ListNode* declList, NameNode* decl,
       return false;
     }
   }
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  if (declList->isKind(ParseNodeKind::UsingDecl)) {
+    UsingEmitter uem(this);
+
+    if (!uem.prepareForAssignment(UsingEmitter::Kind::Sync)) {
+      //            [stack] ENV? V
+      return false;
+    }
+  }
+#endif
+
   if (!noe.emitAssignment()) {
     //              [stack] V
     return false;
   }
+
   if (!emit1(JSOp::Pop)) {
     //              [stack]
     return false;
@@ -12736,6 +12750,13 @@ bool BytecodeEmitter::emitTree(
         return false;
       }
       break;
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    case ParseNodeKind::UsingDecl:
+      if (!emitDeclarationList(&pn->as<ListNode>())) {
+        return false;
+      }
+      break;
+#endif
 
     case ParseNodeKind::ImportDecl:
       MOZ_ASSERT(sc->isModuleContext());
