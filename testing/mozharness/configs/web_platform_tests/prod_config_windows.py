@@ -14,6 +14,9 @@ DISABLE_SCREEN_SAVER = False
 ADJUST_MOUSE_AND_SCREEN = True
 #####
 
+REQUIRE_GPU = False
+if "REQUIRE_GPU" in os.environ:
+    REQUIRE_GPU = os.environ["REQUIRE_GPU"] == "1"
 
 config = {
     "options": [
@@ -53,6 +56,18 @@ config = {
             "architectures": ["32bit"],
             "halt_on_failure": True,
             "enabled": ADJUST_MOUSE_AND_SCREEN,
+        },
+        {
+            "name": "ensure proper graphics driver",
+            "cmd": [
+                "powershell",
+                "-command",
+                'if (-Not ((Get-CimInstance win32_VideoController).InstalledDisplayDrivers | Out-String).contains("nvgrid")) { echo "Missing nvgrid driver: " + (Get-CimInstance win32_VideoController).InstalledDisplayDrivers; exit 4; }',
+            ],
+            "architectures": ["32bit", "64bit"],
+            "halt_on_failure": True,
+            "enabled": True if REQUIRE_GPU else False,
+            "fatal_exit_code": 4,
         },
     ],
 }
