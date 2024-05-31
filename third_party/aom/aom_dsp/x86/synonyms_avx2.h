@@ -60,11 +60,26 @@ static INLINE __m256i yy_set_m128i(__m128i hi, __m128i lo) {
   return _mm256_insertf128_si256(_mm256_castsi128_si256(lo), hi, 1);
 }
 
+#define GCC_VERSION (__GNUC__ * 10000 \
+                     + __GNUC_MINOR__ * 100 \
+                     + __GNUC_PATCHLEVEL__)
+
+// _mm256_loadu2_m128i has been introduced in GCC 10.1
+#if !defined(__clang__) && GCC_VERSION < 101000
+static INLINE __m256i yy_loadu2_128(const void *hi, const void *lo) {
+  __m128i mhi = _mm_loadu_si128((const __m128i *)(hi));
+  __m128i mlo = _mm_loadu_si128((const __m128i *)(lo));
+  return _mm256_set_m128i(mhi, mlo);
+}
+#else
 static INLINE __m256i yy_loadu2_128(const void *hi, const void *lo) {
   __m128i mhi = _mm_loadu_si128((const __m128i *)(hi));
   __m128i mlo = _mm_loadu_si128((const __m128i *)(lo));
   return yy_set_m128i(mhi, mlo);
 }
+#endif
+
+#undef GCC_VERSION
 
 static INLINE void yy_storeu2_128(void *hi, void *lo, const __m256i a) {
   _mm_storeu_si128((__m128i *)hi, _mm256_extracti128_si256(a, 1));
