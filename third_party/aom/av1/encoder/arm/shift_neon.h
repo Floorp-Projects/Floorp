@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_AV1_ENCODER_ARM_NEON_SHIFT_NEON_H_
-#define AOM_AV1_ENCODER_ARM_NEON_SHIFT_NEON_H_
+#ifndef AOM_AV1_ENCODER_ARM_SHIFT_NEON_H_
+#define AOM_AV1_ENCODER_ARM_SHIFT_NEON_H_
 
 #include <arm_neon.h>
 
@@ -46,4 +46,4 @@ SHIFT_LOOP_HELPER(shift_right_1_round_s32_x4, int32x4_t, vrhaddq_s32,
 
 #undef SHIFT_LOOP_HELPER
 
-#endif  // AOM_AV1_ENCODER_ARM_NEON_SHIFT_NEON_H_
+#endif  // AOM_AV1_ENCODER_ARM_SHIFT_NEON_H_

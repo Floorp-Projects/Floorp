@@ -470,7 +470,7 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
       add_proto qw/int64_t av1_highbd_pixel_proj_error/, "const uint8_t *src8, int width, int height, int src_stride, const uint8_t *dat8, int dat_stride, int32_t *flt0, int flt0_stride, int32_t *flt1, int flt1_stride, int xq[2], const sgr_params_type *params";
       specialize qw/av1_highbd_pixel_proj_error sse4_1 avx2 neon/;
       add_proto qw/void av1_compute_stats_highbd/,  "int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth";
-      specialize qw/av1_compute_stats_highbd sse4_1 avx2 neon/;
+      specialize qw/av1_compute_stats_highbd sse4_1 avx2 neon sve/;
     }
   }
 
@@ -554,8 +554,13 @@ if (aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
   specialize qw/av1_highbd_warp_affine sse4_1 avx2 neon sve/;
 }
 
-add_proto qw/bool resize_vert_dir/, "uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col";
-specialize qw/resize_vert_dir avx2/;
+add_proto qw/bool av1_resize_vert_dir/, "uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col";
+specialize qw/av1_resize_vert_dir sse2 avx2/;
+
+add_proto qw/void av1_resize_horz_dir/, "const uint8_t *const input, int in_stride, uint8_t *intbuf, int height, int filteredlength, int width2";
+# TODO(https://crbug.com/aomedia/3575): Restore sse2 after SSE2/AV1ResizeXTest
+# passes under 32-bit valgrind.
+specialize qw/av1_resize_horz_dir avx2/;
 
 add_proto qw/void av1_warp_affine/, "const int32_t *mat, const uint8_t *ref, int width, int height, int stride, uint8_t *pred, int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x, int subsampling_y, ConvolveParams *conv_params, int16_t alpha, int16_t beta, int16_t gamma, int16_t delta";
 specialize qw/av1_warp_affine sse4_1 avx2 neon neon_i8mm sve/;
@@ -597,13 +602,13 @@ if(aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
 
   add_proto qw/void av1_convolve_2d_scale/, "const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int x_step_qn, const int subpel_y_qn, const int y_step_qn, ConvolveParams *conv_params";
 
-  specialize qw/av1_convolve_2d_sr sse2 avx2 neon neon_dotprod neon_i8mm/;
+  specialize qw/av1_convolve_2d_sr sse2 avx2 neon neon_dotprod neon_i8mm sve2/;
   specialize qw/av1_convolve_2d_sr_intrabc neon/;
   specialize qw/av1_convolve_x_sr sse2 avx2 neon neon_dotprod neon_i8mm/;
   specialize qw/av1_convolve_x_sr_intrabc neon/;
-  specialize qw/av1_convolve_y_sr sse2 avx2 neon/;
+  specialize qw/av1_convolve_y_sr sse2 avx2 neon neon_dotprod neon_i8mm/;
   specialize qw/av1_convolve_y_sr_intrabc neon/;
-  specialize qw/av1_convolve_2d_scale sse4_1/;
+  specialize qw/av1_convolve_2d_scale sse4_1 neon/;
   specialize qw/av1_dist_wtd_convolve_2d ssse3 avx2 neon neon_dotprod neon_i8mm/;
   specialize qw/av1_dist_wtd_convolve_2d_copy sse2 avx2 neon/;
   specialize qw/av1_dist_wtd_convolve_x sse2 avx2 neon neon_dotprod neon_i8mm/;

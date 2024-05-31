@@ -16,7 +16,7 @@
 
 #include "aom_dsp/arm/sum_neon.h"
 #include "av1/common/restoration.h"
-#include "av1/encoder/arm/neon/pickrst_neon.h"
+#include "av1/encoder/arm/pickrst_neon.h"
 #include "av1/encoder/pickrst.h"
 
 int64_t av1_lowbd_pixel_proj_error_neon(

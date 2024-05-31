@@ -156,16 +156,18 @@ static int reset(AVxWorker *const worker) {
       // See: https://crbug.com/aomedia/3379
 #if defined(AOM_ADDRESS_SANITIZER) && defined(__APPLE__) && AOM_ARCH_ARM && \
     !defined(NDEBUG)
+    const size_t kMinStackSize = 1024 * 1024;
+#else
+    const size_t kMinStackSize = 256 * 1024;
+#endif
     size_t stacksize;
     if (!pthread_attr_getstacksize(&attr, &stacksize)) {
-      const size_t kMinStackSize = 1 << 20;  // 1 MiB
       if (stacksize < kMinStackSize &&
           pthread_attr_setstacksize(&attr, kMinStackSize)) {
         pthread_attr_destroy(&attr);
         goto Error2;
       }
     }
-#endif
     pthread_mutex_lock(&worker->impl_->mutex_);
     ok = !pthread_create(&worker->impl_->thread_, &attr, thread_loop, worker);
     if (ok) worker->status_ = AVX_WORKER_STATUS_OK;

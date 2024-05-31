@@ -674,6 +674,7 @@ static aom_codec_err_t validate_config(aom_codec_alg_priv_t *ctx,
   RANGE_CHECK(cfg, g_timebase.num, 1, cfg->g_timebase.den);
   RANGE_CHECK_HI(cfg, g_profile, MAX_PROFILES - 1);
 
+  RANGE_CHECK_HI(cfg, rc_target_bitrate, 2000000);
   RANGE_CHECK_HI(cfg, rc_max_quantizer, 63);
   RANGE_CHECK_HI(cfg, rc_min_quantizer, cfg->rc_max_quantizer);
   RANGE_CHECK_BOOL(extra_cfg, lossless);
@@ -1034,39 +1035,22 @@ static void set_encoder_config(AV1EncoderConfig *oxcf,
   }
 
   TuneCfg *const tune_cfg = &oxcf->tune_cfg;
-
   FrameDimensionCfg *const frm_dim_cfg = &oxcf->frm_dim_cfg;
-
   TileConfig *const tile_cfg = &oxcf->tile_cfg;
-
   ResizeCfg *const resize_cfg = &oxcf->resize_cfg;
-
   GFConfig *const gf_cfg = &oxcf->gf_cfg;
-
   PartitionCfg *const part_cfg = &oxcf->part_cfg;
-
   IntraModeCfg *const intra_mode_cfg = &oxcf->intra_mode_cfg;
-
   TxfmSizeTypeCfg *const txfm_cfg = &oxcf->txfm_cfg;
-
   CompoundTypeCfg *const comp_type_cfg = &oxcf->comp_type_cfg;
-
   SuperResCfg *const superres_cfg = &oxcf->superres_cfg;
-
   KeyFrameCfg *const kf_cfg = &oxcf->kf_cfg;
-
   DecoderModelCfg *const dec_model_cfg = &oxcf->dec_model_cfg;
-
   RateControlCfg *const rc_cfg = &oxcf->rc_cfg;
-
   QuantizationCfg *const q_cfg = &oxcf->q_cfg;
-
   ColorCfg *const color_cfg = &oxcf->color_cfg;
-
   InputCfg *const input_cfg = &oxcf->input_cfg;
-
   AlgoCfg *const algo_cfg = &oxcf->algo_cfg;
-
   ToolCfg *const tool_cfg = &oxcf->tool_cfg;
 
   const int is_vbr = cfg->rc_end_usage == AOM_VBR;
@@ -1610,37 +1594,42 @@ static aom_codec_err_t ctrl_get_baseline_gf_interval(aom_codec_alg_priv_t *ctx,
   return AOM_CODEC_OK;
 }
 
+static aom_codec_err_t update_encoder_cfg(aom_codec_alg_priv_t *ctx) {
+  set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
+  av1_check_fpmt_config(ctx->ppi, &ctx->oxcf);
+  bool is_sb_size_changed = false;
+  av1_change_config_seq(ctx->ppi, &ctx->oxcf, &is_sb_size_changed);
+  for (int i = 0; i < ctx->ppi->num_fp_contexts; i++) {
+    AV1_COMP *const cpi = ctx->ppi->parallel_cpi[i];
+    struct aom_internal_error_info *const error = cpi->common.error;
+    if (setjmp(error->jmp)) {
+      error->setjmp = 0;
+      return error->error_code;
+    }
+    error->setjmp = 1;
+    av1_change_config(cpi, &ctx->oxcf, is_sb_size_changed);
+    error->setjmp = 0;
+  }
+  if (ctx->ppi->cpi_lap != NULL) {
+    AV1_COMP *const cpi_lap = ctx->ppi->cpi_lap;
+    struct aom_internal_error_info *const error = cpi_lap->common.error;
+    if (setjmp(error->jmp)) {
+      error->setjmp = 0;
+      return error->error_code;
+    }
+    error->setjmp = 1;
+    av1_change_config(cpi_lap, &ctx->oxcf, is_sb_size_changed);
+    error->setjmp = 0;
+  }
+  return AOM_CODEC_OK;
+}
+
 static aom_codec_err_t update_extra_cfg(aom_codec_alg_priv_t *ctx,
                                         const struct av1_extracfg *extra_cfg) {
   const aom_codec_err_t res = validate_config(ctx, &ctx->cfg, extra_cfg);
   if (res == AOM_CODEC_OK) {
     ctx->extra_cfg = *extra_cfg;
-    set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
-    av1_check_fpmt_config(ctx->ppi, &ctx->oxcf);
-    bool is_sb_size_changed = false;
-    av1_change_config_seq(ctx->ppi, &ctx->oxcf, &is_sb_size_changed);
-    for (int i = 0; i < ctx->ppi->num_fp_contexts; i++) {
-      AV1_COMP *const cpi = ctx->ppi->parallel_cpi[i];
-      struct aom_internal_error_info *const error = cpi->common.error;
-      if (setjmp(error->jmp)) {
-        error->setjmp = 0;
-        return error->error_code;
-      }
-      error->setjmp = 1;
-      av1_change_config(cpi, &ctx->oxcf, is_sb_size_changed);
-      error->setjmp = 0;
-    }
-    if (ctx->ppi->cpi_lap != NULL) {
-      AV1_COMP *const cpi_lap = ctx->ppi->cpi_lap;
-      struct aom_internal_error_info *const error = cpi_lap->common.error;
-      if (setjmp(error->jmp)) {
-        error->setjmp = 0;
-        return error->error_code;
-      }
-      error->setjmp = 1;
-      av1_change_config(cpi_lap, &ctx->oxcf, is_sb_size_changed);
-      error->setjmp = 0;
-    }
+    return update_encoder_cfg(ctx);
   }
   return res;
 }
@@ -3343,7 +3332,7 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
       if (ppi->cpi->oxcf.pass != 1) {
         ppi->total_time_compress_data += cpi->time_compress_data;
         ppi->total_recode_hits += cpi->frame_recode_hits;
-        ppi->total_bytes += cpi->bytes;
+        ppi->total_bytes += (uint64_t)cpi->bytes;
         for (int i = 0; i < MAX_MODES; i++) {
           ppi->total_mode_chosen_counts[i] += cpi->mode_chosen_counts[i];
         }
@@ -3611,11 +3600,23 @@ static aom_codec_err_t ctrl_set_scale_mode(aom_codec_alg_priv_t *ctx,
   aom_scaling_mode_t *const mode = va_arg(args, aom_scaling_mode_t *);
 
   if (mode) {
-    const int res = av1_set_internal_size(
-        &ctx->ppi->cpi->oxcf, &ctx->ppi->cpi->resize_pending_params,
-        mode->h_scaling_mode, mode->v_scaling_mode);
-    av1_check_fpmt_config(ctx->ppi, &ctx->ppi->cpi->oxcf);
-    return (res == 0) ? AOM_CODEC_OK : AOM_CODEC_INVALID_PARAM;
+    AV1EncoderConfig *const oxcf =
+        ctx->ppi->seq_params_locked ? &ctx->ppi->cpi->oxcf : &ctx->oxcf;
+    const int res =
+        av1_set_internal_size(oxcf, &ctx->ppi->cpi->resize_pending_params,
+                              mode->h_scaling_mode, mode->v_scaling_mode);
+    if (res == 0) {
+      // update_encoder_cfg() is somewhat costly and this control may be called
+      // multiple times, so update_encoder_cfg() is only called to ensure frame
+      // and superblock sizes are updated before they're fixed by the first
+      // encode call.
+      if (ctx->ppi->seq_params_locked) {
+        av1_check_fpmt_config(ctx->ppi, &ctx->ppi->cpi->oxcf);
+        return AOM_CODEC_OK;
+      }
+      return update_encoder_cfg(ctx);
+    }
+    return AOM_CODEC_INVALID_PARAM;
   } else {
     return AOM_CODEC_INVALID_PARAM;
   }
@@ -3636,6 +3637,13 @@ static aom_codec_err_t ctrl_set_number_spatial_layers(aom_codec_alg_priv_t *ctx,
   if (number_spatial_layers > MAX_NUM_SPATIAL_LAYERS)
     return AOM_CODEC_INVALID_PARAM;
   ctx->ppi->number_spatial_layers = number_spatial_layers;
+  // update_encoder_cfg() is somewhat costly and this control may be called
+  // multiple times, so update_encoder_cfg() is only called to ensure frame and
+  // superblock sizes are updated before they're fixed by the first encode
+  // call.
+  if (!ctx->ppi->seq_params_locked) {
+    return update_encoder_cfg(ctx);
+  }
   return AOM_CODEC_OK;
 }
 
@@ -3653,8 +3661,6 @@ static aom_codec_err_t ctrl_set_svc_params(aom_codec_alg_priv_t *ctx,
                                            va_list args) {
   AV1_PRIMARY *const ppi = ctx->ppi;
   AV1_COMP *const cpi = ppi->cpi;
-  AV1_COMMON *const cm = &cpi->common;
-  AV1EncoderConfig *oxcf = &cpi->oxcf;
   aom_svc_params_t *const params = va_arg(args, aom_svc_params_t *);
   int64_t target_bandwidth = 0;
   ppi->number_spatial_layers = params->number_spatial_layers;
@@ -3694,19 +3700,38 @@ static aom_codec_err_t ctrl_set_svc_params(aom_codec_alg_priv_t *ctx,
           target_bandwidth += lc->layer_target_bitrate;
       }
     }
-    if (cm->current_frame.frame_number == 0) {
-      if (!cpi->ppi->seq_params_locked) {
-        SequenceHeader *const seq_params = &ppi->seq_params;
-        seq_params->operating_points_cnt_minus_1 =
-            ppi->number_spatial_layers * ppi->number_temporal_layers - 1;
-        av1_init_seq_coding_tools(ppi, &cpi->oxcf, 1);
-      }
+
+    if (ppi->seq_params_locked) {
+      AV1EncoderConfig *const oxcf = &cpi->oxcf;
+      // Keep ctx->oxcf in sync in case further codec controls are made prior
+      // to encoding.
+      ctx->oxcf.rc_cfg.target_bandwidth = oxcf->rc_cfg.target_bandwidth =
+          target_bandwidth;
+      set_primary_rc_buffer_sizes(oxcf, ppi);
+      av1_update_layer_context_change_config(cpi, target_bandwidth);
+      check_reset_rc_flag(cpi);
+    } else {
+      // Note av1_init_layer_context() relies on cpi->oxcf. The order of that
+      // call and the ones in the other half of this block (which
+      // update_encoder_cfg() transitively makes) is important. So we keep
+      // ctx->oxcf and cpi->oxcf in sync here as update_encoder_cfg() will
+      // overwrite cpi->oxcf with ctx->oxcf.
+      ctx->oxcf.rc_cfg.target_bandwidth = cpi->oxcf.rc_cfg.target_bandwidth =
+          target_bandwidth;
+      SequenceHeader *const seq_params = &ppi->seq_params;
+      seq_params->operating_points_cnt_minus_1 =
+          ppi->number_spatial_layers * ppi->number_temporal_layers - 1;
+
       av1_init_layer_context(cpi);
+      // update_encoder_cfg() is somewhat costly and this control may be called
+      // multiple times, so update_encoder_cfg() is only called to ensure frame
+      // and superblock sizes are updated before they're fixed by the first
+      // encode call.
+      return update_encoder_cfg(ctx);
     }
-    oxcf->rc_cfg.target_bandwidth = target_bandwidth;
-    set_primary_rc_buffer_sizes(oxcf, cpi->ppi);
-    av1_update_layer_context_change_config(cpi, target_bandwidth);
-    check_reset_rc_flag(cpi);
+  } else if (!ppi->seq_params_locked) {
+    // Ensure frame and superblock sizes are updated.
+    return update_encoder_cfg(ctx);
   }
   av1_check_fpmt_config(ctx->ppi, &ctx->ppi->cpi->oxcf);
   return AOM_CODEC_OK;

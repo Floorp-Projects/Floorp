@@ -13,6 +13,7 @@
 #include <assert.h>
 
 #include "config/aom_config.h"
+#include "config/av1_rtcd.h"
 
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/arm/mem_neon.h"
@@ -63,7 +64,7 @@ int64_t av1_block_error_neon(const tran_low_t *coeff, const tran_low_t *dqcoeff,
 }
 
 int64_t av1_block_error_lp_neon(const int16_t *coeff, const int16_t *dqcoeff,
-                                int block_size) {
+                                intptr_t block_size) {
   uint64x2_t err_u64 = vdupq_n_u64(0);
 
   assert(block_size >= 16);

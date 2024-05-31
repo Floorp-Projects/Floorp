@@ -26,6 +26,7 @@
 
 #include "av1/common/cdef.h"
 #include "av1/common/cfl.h"
+#include "av1/common/debugmodes.h"
 #include "av1/common/entropy.h"
 #include "av1/common/entropymode.h"
 #include "av1/common/entropymv.h"
@@ -3520,9 +3521,6 @@ static uint32_t write_tile_group_header(uint8_t *const dst, int start_tile,
   size = aom_wb_bytes_written(&wb);
   return size;
 }
-
-extern void av1_print_uncompressed_frame_header(const uint8_t *data, int size,
-                                                const char *filename);
 
 typedef struct {
   uint32_t tg_hdr_size;

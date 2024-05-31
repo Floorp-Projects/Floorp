@@ -12,6 +12,7 @@
 #include <arm_neon.h>
 
 #include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
 
 #include "aom_dsp/txfm_common.h"
 #include "aom_dsp/arm/mem_neon.h"
@@ -115,6 +116,7 @@ void aom_fdct4x4_lp_neon(const int16_t *input, int16_t *final_output,
   vst1q_s16(final_output + 1 * 8, out_23);
 }
 
+#if CONFIG_INTERNAL_STATS
 void aom_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
   // stage 1
   int16x8_t input_0 = vshlq_n_s16(vld1q_s16(&input[0 * stride]), 2);
@@ -302,3 +304,4 @@ void aom_fdct8x8_neon(const int16_t *input, int16_t *final_output, int stride) {
     vst1q_s16(&final_output[7 * 8], input_7);
   }
 }
+#endif  // CONFIG_INTERNAL_STATS

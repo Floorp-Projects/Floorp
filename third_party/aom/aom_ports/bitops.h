@@ -15,7 +15,6 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include "aom_ports/msvc.h"
 #include "config/aom_config.h"
 
 #ifdef _MSC_VER

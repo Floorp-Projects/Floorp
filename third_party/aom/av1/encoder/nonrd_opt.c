@@ -10,6 +10,7 @@
  */
 
 #include "config/aom_dsp_rtcd.h"
+#include "config/av1_rtcd.h"
 
 #include "av1/common/reconinter.h"
 

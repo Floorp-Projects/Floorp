@@ -41,6 +41,7 @@
 #endif  // CONFIG_BITSTREAM_DEBUG
 
 #include "av1/common/alloccommon.h"
+#include "av1/common/debugmodes.h"
 #include "av1/common/filter.h"
 #include "av1/common/idct.h"
 #include "av1/common/reconinter.h"
@@ -178,6 +179,7 @@ int av1_set_active_map(AV1_COMP *cpi, unsigned char *new_map_16x16, int rows,
       }
       cpi->active_map.enabled = 1;
       cpi->active_map.update = 1;
+      assert(num_samples);
       cpi->rc.percent_blocks_inactive =
           (num_blocks_inactive * 100) / num_samples;
     }
@@ -3552,9 +3554,6 @@ static void calculate_frame_avg_haar_energy(AV1_COMP *cpi) {
       log1p((double)frame_avg_wavelet_energy / num_mbs);
 }
 #endif
-
-extern void av1_print_frame_contexts(const FRAME_CONTEXT *fc,
-                                     const char *filename);
 
 /*!\brief Run the final pass encoding for 1-pass/2-pass encoding mode, and pack
  * the bitstream

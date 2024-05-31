@@ -551,7 +551,7 @@ unsigned int aom_highbd_sad128x128_avg_avx2(const uint8_t *src, int src_stride,
 static INLINE void get_4d_sad_from_mm256_epi32(const __m256i *v,
                                                uint32_t *res) {
   __m256i u0, u1, u2, u3;
-  const __m256i mask = yy_set1_64_from_32i(~0);
+  const __m256i mask = _mm256_set1_epi64x(~0u);
   __m128i sad;
 
   // 8 32-bit summation

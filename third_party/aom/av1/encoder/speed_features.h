@@ -1629,6 +1629,15 @@ typedef struct REAL_TIME_SPEED_FEATURES {
   // 2 : use rd for bsize < 16x16 and src var >= 101, nonrd otherwise
   int hybrid_intra_pickmode;
 
+  // Filter blocks by certain criteria such as SAD, source variance, such that
+  // fewer blocks will go through the palette search.
+  // For nonrd encoding path, enable this feature reduces encoding time when
+  // palette mode is used. Disabling it leads to better compression efficiency.
+  // 0: off
+  // 1: less aggressive pruning mode
+  // 2: more aggressive pruning mode
+  int prune_palette_search_nonrd;
+
   // Compute variance/sse on source difference, prior to encoding superblock.
   int source_metrics_sb_nonrd;
 
@@ -1754,14 +1763,13 @@ typedef struct REAL_TIME_SPEED_FEATURES {
   // Must be off for lossless mode.
   int use_rtc_tf;
 
-  // Prune the use of the identity transform in nonrd_pickmode,
-  // used for screen content mode: only for smaller blocks
-  // and higher spatial variance, and when skip_txfm is not
-  // already set.
-  int prune_idtx_nonrd;
+  // Use of the identity transform in nonrd_pickmode,
+  int use_idtx_nonrd;
 
-  // Prune the use of paletter mode in nonrd pickmode.
-  int prune_palette_nonrd;
+  // Prune the use of the identity transform in nonrd_pickmode:
+  // only for smaller blocks and higher spatial variance, and when skip_txfm
+  // is not already set.
+  int prune_idtx_nonrd;
 
   // Force to only use dct for palette search in nonrd pickmode.
   int dct_only_palette_nonrd;
@@ -1902,6 +1910,15 @@ typedef struct REAL_TIME_SPEED_FEATURES {
   // This generally leads to better coding efficiency but with some speed loss.
   // Only used for screen content and for nonrd_pickmode.
   bool increase_color_thresh_palette;
+
+  // Flag to indicate selecting of higher threshold for scenee change detection.
+  int higher_thresh_scene_detection;
+
+  // FLag to indicate skip testing of NEWMV for flat blocks.
+  int skip_newmv_flat_blocks_screen;
+
+  // Flag to force skip encoding for non_reference_frame on slide/scene changes.
+  int skip_encoding_non_reference_slide_change;
 } REAL_TIME_SPEED_FEATURES;
 
 /*!\endcond */

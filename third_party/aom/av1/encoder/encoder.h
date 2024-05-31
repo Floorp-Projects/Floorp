@@ -2793,7 +2793,7 @@ typedef struct AV1_PRIMARY {
   double total_blockiness;
   double worst_blockiness;
 
-  int total_bytes;
+  uint64_t total_bytes;
   double summed_quality;
   double summed_weights;
   double summed_quality_hbd;

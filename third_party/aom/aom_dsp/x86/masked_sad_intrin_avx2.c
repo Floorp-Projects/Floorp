@@ -9,7 +9,7 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <tmmintrin.h>
+#include <immintrin.h>
 
 #include "config/aom_config.h"
 #include "config/aom_dsp_rtcd.h"

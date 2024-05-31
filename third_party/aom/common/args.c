@@ -17,7 +17,6 @@
 #include <limits.h>
 
 #include "aom/aom_integer.h"
-#include "aom_ports/msvc.h"
 #include "aom/aom_codec.h"
 #include "common/tools_common.h"
 

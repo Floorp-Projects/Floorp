@@ -1578,14 +1578,24 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
       sf->rt_sf.part_early_exit_zeromv = 1;
       sf->rt_sf.nonrd_aggressive_skip = 1;
       sf->rt_sf.thresh_active_maps_skip_lf_cdef = 90;
+      sf->rt_sf.hybrid_intra_pickmode = 0;
+      sf->rt_sf.dct_only_palette_nonrd = 1;
+      sf->rt_sf.prune_palette_search_nonrd = 1;
+      sf->rt_sf.prune_intra_mode_using_best_sad_so_far = true;
     }
     if (speed >= 11) {
       sf->rt_sf.skip_lf_screen = 2;
       sf->rt_sf.skip_cdef_sb = 2;
       sf->rt_sf.part_early_exit_zeromv = 2;
-      sf->rt_sf.prune_palette_nonrd = 1;
+      sf->rt_sf.prune_palette_search_nonrd = 2;
       sf->rt_sf.increase_color_thresh_palette = 0;
+      sf->rt_sf.prune_h_pred_using_best_mode_so_far = true;
+      sf->rt_sf.enable_intra_mode_pruning_using_neighbors = true;
     }
+    sf->rt_sf.skip_encoding_non_reference_slide_change = 1;
+    sf->rt_sf.skip_newmv_flat_blocks_screen = 1;
+    sf->rt_sf.use_idtx_nonrd = 1;
+    sf->rt_sf.higher_thresh_scene_detection = 0;
     sf->rt_sf.use_nonrd_altref_frame = 0;
     sf->rt_sf.use_rtc_tf = 0;
     sf->rt_sf.use_comp_ref_nonrd = 0;
@@ -1606,6 +1616,12 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
          cpi->svc.last_layer_dropped[0])) {
       sf->mv_sf.search_method = NSTEP;
       sf->rt_sf.fullpel_search_step_param = 2;
+    }
+    if (cpi->rc.high_source_sad && cpi->ppi->rtc_ref.non_reference_frame) {
+      sf->rt_sf.use_idtx_nonrd = 0;
+      sf->rt_sf.prefer_large_partition_blocks = 1;
+      sf->mv_sf.subpel_search_method = SUBPEL_TREE_PRUNED_MORE;
+      sf->rt_sf.fullpel_search_step_param = 10;
     }
     sf->rt_sf.partition_direct_merging = 0;
     sf->hl_sf.accurate_bit_estimate = 0;
@@ -2246,6 +2262,7 @@ static AOM_INLINE void init_rt_sf(REAL_TIME_SPEED_FEATURES *rt_sf) {
   rt_sf->use_nonrd_filter_search = 0;
   rt_sf->use_simple_rd_model = 0;
   rt_sf->hybrid_intra_pickmode = 0;
+  rt_sf->prune_palette_search_nonrd = 0;
   rt_sf->source_metrics_sb_nonrd = 0;
   rt_sf->overshoot_detection_cbr = NO_DETECTION;
   rt_sf->check_scene_detection = 0;
@@ -2270,8 +2287,8 @@ static AOM_INLINE void init_rt_sf(REAL_TIME_SPEED_FEATURES *rt_sf) {
   rt_sf->var_part_split_threshold_shift = 7;
   rt_sf->gf_refresh_based_on_qp = 0;
   rt_sf->use_rtc_tf = 0;
+  rt_sf->use_idtx_nonrd = 0;
   rt_sf->prune_idtx_nonrd = 0;
-  rt_sf->prune_palette_nonrd = 0;
   rt_sf->dct_only_palette_nonrd = 0;
   rt_sf->part_early_exit_zeromv = 0;
   rt_sf->sse_early_term_inter_search = EARLY_TERM_DISABLED;
@@ -2299,6 +2316,9 @@ static AOM_INLINE void init_rt_sf(REAL_TIME_SPEED_FEATURES *rt_sf) {
   rt_sf->increase_color_thresh_palette = false;
   rt_sf->selective_cdf_update = 0;
   rt_sf->force_only_last_ref = 0;
+  rt_sf->higher_thresh_scene_detection = 1;
+  rt_sf->skip_newmv_flat_blocks_screen = 0;
+  rt_sf->skip_encoding_non_reference_slide_change = 0;
 }
 
 static fractional_mv_step_fp

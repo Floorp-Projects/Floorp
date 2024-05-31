@@ -474,7 +474,7 @@ class ConvolveTestBase : public ::testing::TestWithParam<ConvolveParam> {
       ref = CONVERT_TO_BYTEPTR(ref16_);
     }
     int subpel_search;
-    for (subpel_search = USE_4_TAPS; subpel_search <= USE_8_TAPS;
+    for (subpel_search = USE_2_TAPS; subpel_search <= USE_8_TAPS;
          ++subpel_search) {
       for (int filter_bank = 0; filter_bank < kNumFilterBanks; ++filter_bank) {
         const InterpFilter filter = (InterpFilter)filter_bank;
@@ -555,7 +555,7 @@ class ConvolveTestBase : public ::testing::TestWithParam<ConvolveParam> {
         }
         if (axis) seed_val += 8;
         int subpel_search;
-        for (subpel_search = USE_4_TAPS; subpel_search <= USE_8_TAPS;
+        for (subpel_search = USE_2_TAPS; subpel_search <= USE_8_TAPS;
              ++subpel_search) {
           for (int filter_bank = 0; filter_bank < kNumFilterBanks;
                ++filter_bank) {
@@ -687,7 +687,7 @@ TEST_P(LowbdConvolveTest, GuardBlocks) { CheckGuardBlocks(); }
 
 void FiltersWontSaturateWhenAddedPairwise() {
   int subpel_search;
-  for (subpel_search = USE_4_TAPS; subpel_search <= USE_8_TAPS;
+  for (subpel_search = USE_2_TAPS; subpel_search <= USE_8_TAPS;
        ++subpel_search) {
     for (int filter_bank = 0; filter_bank < kNumFilterBanks; ++filter_bank) {
       const InterpFilter filter = (InterpFilter)filter_bank;

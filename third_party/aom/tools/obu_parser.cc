@@ -20,6 +20,7 @@
 #include "tools/obu_parser.h"
 
 namespace aom_tools {
+namespace {
 
 // Basic OBU syntax
 // 8 bits: Header
@@ -115,6 +116,8 @@ void PrintObuHeader(const ObuHeader *header) {
         header->temporal_layer_id, header->spatial_layer_id);
   }
 }
+
+}  // namespace
 
 bool DumpObu(const uint8_t *data, int length, int *obu_overhead_bytes) {
   const int kObuHeaderSizeBytes = 1;

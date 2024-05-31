@@ -2550,16 +2550,17 @@ void av1_rc_set_gf_interval_range(const AV1_COMP *const cpi,
 void av1_rc_update_framerate(AV1_COMP *cpi, int width, int height) {
   const AV1EncoderConfig *const oxcf = &cpi->oxcf;
   RATE_CONTROL *const rc = &cpi->rc;
-  int vbr_max_bits;
   const int MBs = av1_get_MBs(width, height);
 
-  rc->avg_frame_bandwidth =
-      (int)round(oxcf->rc_cfg.target_bandwidth / cpi->framerate);
-  rc->min_frame_bandwidth =
-      (int)(rc->avg_frame_bandwidth * oxcf->rc_cfg.vbrmin_section / 100);
+  const double avg_frame_bandwidth =
+      round(oxcf->rc_cfg.target_bandwidth / cpi->framerate);
+  rc->avg_frame_bandwidth = (int)AOMMIN(avg_frame_bandwidth, INT_MAX);
 
-  rc->min_frame_bandwidth =
-      AOMMAX(rc->min_frame_bandwidth, FRAME_OVERHEAD_BITS);
+  int64_t vbr_min_bits =
+      (int64_t)rc->avg_frame_bandwidth * oxcf->rc_cfg.vbrmin_section / 100;
+  vbr_min_bits = AOMMIN(vbr_min_bits, INT_MAX);
+
+  rc->min_frame_bandwidth = AOMMAX((int)vbr_min_bits, FRAME_OVERHEAD_BITS);
 
   // A maximum bitrate for a frame is defined.
   // The baseline for this aligns with HW implementations that
@@ -2568,11 +2569,12 @@ void av1_rc_update_framerate(AV1_COMP *cpi, int width, int height) {
   // a very high rate is given on the command line or the the rate cannnot
   // be acheived because of a user specificed max q (e.g. when the user
   // specifies lossless encode.
-  vbr_max_bits =
-      (int)(((int64_t)rc->avg_frame_bandwidth * oxcf->rc_cfg.vbrmax_section) /
-            100);
+  int64_t vbr_max_bits =
+      (int64_t)rc->avg_frame_bandwidth * oxcf->rc_cfg.vbrmax_section / 100;
+  vbr_max_bits = AOMMIN(vbr_max_bits, INT_MAX);
+
   rc->max_frame_bandwidth =
-      AOMMAX(AOMMAX((MBs * MAX_MB_RATE), MAXRATE_1080P), vbr_max_bits);
+      AOMMAX(AOMMAX((MBs * MAX_MB_RATE), MAXRATE_1080P), (int)vbr_max_bits);
 
   av1_rc_set_gf_interval_range(cpi, rc);
 }
@@ -3073,7 +3075,7 @@ static void rc_scene_detection_onepass_rt(AV1_COMP *cpi,
   }
   int num_zero_temp_sad = 0;
   uint32_t min_thresh = 10000;
-  if (cpi->oxcf.tune_cfg.content != AOM_CONTENT_SCREEN) {
+  if (cpi->sf.rt_sf.higher_thresh_scene_detection) {
     min_thresh = cm->width * cm->height <= 320 * 240 && cpi->framerate < 10.0
                      ? 50000
                      : 100000;

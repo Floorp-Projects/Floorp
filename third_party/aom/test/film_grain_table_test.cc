@@ -20,6 +20,8 @@
 #include "test/util.h"
 #include "test/video_source.h"
 
+namespace {
+
 void grain_equal(const aom_film_grain_t *expected,
                  const aom_film_grain_t *actual) {
   EXPECT_EQ(expected->apply_grain, actual->apply_grain);
@@ -72,6 +74,8 @@ void grain_equal(const aom_film_grain_t *expected,
     EXPECT_EQ(expected->cr_offset, actual->cr_offset);
   }
 }
+
+}  // namespace
 
 TEST(FilmGrainTableTest, AddAndLookupSingleSegment) {
   aom_film_grain_table_t table;

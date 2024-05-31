@@ -197,9 +197,13 @@ void av1_update_temporal_layer_framerate(AV1_COMP *const cpi) {
     const double prev_layer_framerate =
         cpi->framerate / lcprev->framerate_factor;
     const int64_t prev_layer_target_bandwidth = lcprev->layer_target_bitrate;
-    lc->avg_frame_size =
-        (int)round((lc->target_bandwidth - prev_layer_target_bandwidth) /
-                   (lc->framerate - prev_layer_framerate));
+    if (lc->framerate > prev_layer_framerate) {
+      lc->avg_frame_size =
+          (int)round((lc->target_bandwidth - prev_layer_target_bandwidth) /
+                     (lc->framerate - prev_layer_framerate));
+    } else {
+      lc->avg_frame_size = (int)round(lc->target_bandwidth / lc->framerate);
+    }
   }
 }
 
