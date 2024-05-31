@@ -15,5 +15,5 @@ function test(locale, timeZone) {
   assertEq(tzRE.exec(date)[1], timeZone)
 }
 
-test("de-CH", "Koordinierte Weltzeit");
-test("en", "Coordinated Universal Time");
+test("de-CH", "Mittlere Greenwich-Zeit");
+test("en", "Greenwich Mean Time");
