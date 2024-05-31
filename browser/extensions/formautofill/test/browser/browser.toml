@@ -23,6 +23,8 @@ skip-if = [
 
 ["browser_autofill_address_select.js"]
 
+["browser_autofill_address_select_inexact.js"]
+
 ["browser_autofill_duplicate_fields.js"]
 
 ["browser_autofill_sandboxed_iframe.js"]
