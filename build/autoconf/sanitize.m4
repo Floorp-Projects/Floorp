@@ -43,17 +43,6 @@ if test -n "$MOZ_ASAN"; then
 fi
 
 dnl ========================================================
-dnl = Use Memory Sanitizer
-dnl ========================================================
-if test -n "$MOZ_MSAN"; then
-    CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins $CFLAGS"
-    CXXFLAGS="-fsanitize=memory -fsanitize-memory-track-origins $CXXFLAGS"
-    if test -z "$CLANG_CL"; then
-        LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -rdynamic $LDFLAGS"
-    fi
-fi
-
-dnl ========================================================
 dnl = Use UndefinedBehavior Sanitizer (with custom checks)
 dnl ========================================================
 if test -n "$MOZ_UBSAN_CHECKS"; then

@@ -2443,6 +2443,15 @@ def msan():
     return True
 
 
+@depends(c_compiler, compilation_flags, linker_flags, when=msan)
+def msan_flags(c_compiler, compilation_flags, linker_flags):
+    flags = ["-fsanitize=memory", "-fsanitize-memory-track-origins"]
+    compilation_flags.cflags.extend(flags)
+    compilation_flags.cxxflags.extend(flags)
+    if c_compiler.type != "clang-cl":
+        linker_flags.ldflags.extend(flags + ["-rdynamic"])
+
+
 add_old_configure_assignment("MOZ_MSAN", msan)
 set_define("MOZ_MSAN", True, when=msan)
 set_config("MOZ_MSAN", True, when=msan)
