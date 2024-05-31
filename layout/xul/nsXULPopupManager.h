@@ -602,7 +602,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * Return an array of all the open and visible popup frames for
    * menus, in order from top to bottom.
    */
-  void GetVisiblePopups(nsTArray<nsIFrame*>& aPopups);
+  void GetVisiblePopups(nsTArray<nsMenuPopupFrame*>& aPopups);
 
   /**
    * Get the node that last triggered a popup or tooltip in the document
