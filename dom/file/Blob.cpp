@@ -264,6 +264,10 @@ already_AddRefed<Promise> Blob::ArrayBuffer(ErrorResult& aRv) const {
   return ConsumeBody(BodyConsumer::ConsumeType::ArrayBuffer, aRv);
 }
 
+already_AddRefed<Promise> Blob::Bytes(ErrorResult& aRv) const {
+  return ConsumeBody(BodyConsumer::ConsumeType::Bytes, aRv);
+}
+
 already_AddRefed<Promise> Blob::ConsumeBody(
     BodyConsumer::ConsumeType aConsumeType, ErrorResult& aRv) const {
   if (NS_WARN_IF(!mGlobal)) {

@@ -124,6 +124,7 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
                                           ErrorResult& aRv) const;
   already_AddRefed<Promise> Text(ErrorResult& aRv) const;
   already_AddRefed<Promise> ArrayBuffer(ErrorResult& aRv) const;
+  already_AddRefed<Promise> Bytes(ErrorResult& aRv) const;
 
  protected:
   // File constructor should never be used directly. Use Blob::Create instead.
