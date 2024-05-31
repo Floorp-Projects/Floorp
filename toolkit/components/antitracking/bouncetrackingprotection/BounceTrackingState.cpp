@@ -593,11 +593,15 @@ nsresult BounceTrackingState::OnResponseReceived(
   }
 
   // Record should exist by now. It gets created in OnStartNavigation.
-  NS_ENSURE_TRUE(mBounceTrackingRecord, NS_ERROR_FAILURE);
+  // TODO: Bug 1894936
+  if (!mBounceTrackingRecord) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Check if there is still an active timeout. This shouldn't happen since
   // OnStartNavigation already cancels it.
-  if (NS_WARN_IF(mClientBounceDetectionTimeout)) {
+  // TODO: Bug 1894936
+  if (mClientBounceDetectionTimeout) {
     MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
             ("%s: mClientBounceDetectionTimeout->Cancel()", __FUNCTION__));
     mClientBounceDetectionTimeout->Cancel();
@@ -665,7 +669,10 @@ nsresult BounceTrackingState::OnDocumentLoaded(
   }
 
   // Assert: navigable’s bounce tracking record is not null.
-  NS_ENSURE_TRUE(mBounceTrackingRecord, NS_ERROR_FAILURE);
+  // TODO: Bug 1894936
+  if (!mBounceTrackingRecord) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsAutoCString siteHost;
   if (!BounceTrackingState::ShouldTrackPrincipal(aDocumentPrincipal)) {
