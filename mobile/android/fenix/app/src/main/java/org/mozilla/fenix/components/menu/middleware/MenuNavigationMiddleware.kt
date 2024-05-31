@@ -22,6 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.menu.BrowserNavigationParams
 import org.mozilla.fenix.components.menu.MenuDialogFragmentDirections
 import org.mozilla.fenix.components.menu.compose.EXTENSIONS_MENU_ROUTE
@@ -147,6 +148,23 @@ class MenuNavigationMiddleware(
                             BrowserFragmentDirections.actionGlobalBookmarkEditFragment(
                                 guidToEdit = guidToEdit,
                                 requiresSnackbarPaddingForToolbar = true,
+                            ),
+                        )
+                    }
+                }
+
+                is MenuAction.Navigate.SaveToCollection -> {
+                    currentState.browserMenuState?.selectedTab?.let { currentSession ->
+                        navController.nav(
+                            R.id.menuDialogFragment,
+                            MenuDialogFragmentDirections.actionGlobalCollectionCreationFragment(
+                                tabIds = arrayOf(currentSession.id),
+                                selectedTabIds = arrayOf(currentSession.id),
+                                saveCollectionStep = if (action.hasCollection) {
+                                    SaveCollectionStep.SelectCollection
+                                } else {
+                                    SaveCollectionStep.NameCollection
+                                },
                             ),
                         )
                     }

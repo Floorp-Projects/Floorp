@@ -24,6 +24,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.SimpleBrowsingModeManager
+import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.menu.compose.EXTENSIONS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
@@ -257,6 +258,56 @@ class MenuNavigationMiddlewareTest {
         store.dispatch(MenuAction.Navigate.Back).join()
 
         verify { navHostController.popBackStack() }
+    }
+
+    @Test
+    fun `GIVEN there are existing tab collections WHEN navigate to save to collection action is dispatched THEN navigate to select collection creation`() = runTest {
+        val tab = createTab(url = "https://www.mozilla.org")
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = BrowserMenuState(
+                    selectedTab = tab,
+                ),
+            ),
+        )
+
+        store.dispatch(MenuAction.Navigate.SaveToCollection(hasCollection = true)).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalCollectionCreationFragment(
+                    tabIds = arrayOf(tab.id),
+                    selectedTabIds = arrayOf(tab.id),
+                    saveCollectionStep = SaveCollectionStep.SelectCollection,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN there are no existing tab collections WHEN navigate to save to collection action is dispatched THEN navigate to new collection creation`() = runTest {
+        val tab = createTab(url = "https://www.mozilla.org")
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = BrowserMenuState(
+                    selectedTab = tab,
+                ),
+            ),
+        )
+
+        store.dispatch(MenuAction.Navigate.SaveToCollection(hasCollection = false)).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalCollectionCreationFragment(
+                    tabIds = arrayOf(tab.id),
+                    selectedTabIds = arrayOf(tab.id),
+                    saveCollectionStep = SaveCollectionStep.NameCollection,
+                ),
+            )
+        }
     }
 
     @Test
