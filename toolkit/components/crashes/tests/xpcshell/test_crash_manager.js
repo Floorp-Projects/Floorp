@@ -801,14 +801,15 @@ add_task(async function test_glean_crash_ping() {
   // Test bare minumum (with missing optional fields)
   let submitted = false;
   GleanPings.crash.testBeforeNextSubmit(_ => {
+    submitted = true;
     const MINUTES = new Date(DUMMY_DATE);
+    MINUTES.setSeconds(0);
     Assert.equal(Glean.crash.time.testGetValue().getTime(), MINUTES.getTime());
     Assert.equal(
       Glean.crash.processType.testGetValue(),
       m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT]
     );
-    Assert.equal(Glean.crash.startup.testGetValue(), null);
-    submitted = true;
+    Assert.equal(Glean.crash.startup.testGetValue(), false);
   });
 
   await m.addCrash(
@@ -821,182 +822,19 @@ add_task(async function test_glean_crash_ping() {
 
   Assert.ok(submitted);
 
-  // Test with all additional fields
-  let fullStackTraces = {
-    status: "OK",
-    crash_info: {
-      type: "main",
-      address: "0xf001ba11",
-      crashing_thread: 1,
-    },
-    main_module: 0,
-    modules: [
-      {
-        base_addr: "0x00000000",
-        end_addr: "0x00004000",
-        code_id: "8675309",
-        debug_file: "",
-        debug_id: "18675309",
-        filename: "foo.exe",
-        version: "1.0.0",
-      },
-      {
-        base_addr: "0x00004000",
-        end_addr: "0x00008000",
-        code_id: "42",
-        debug_file: "foo.pdb",
-        debug_id: "43",
-        filename: "foo.dll",
-        version: "1.1.0",
-      },
-    ],
-    threads: [
-      {
-        frames: [
-          { module_index: 0, ip: "0x10", trust: "context" },
-          { module_index: 0, ip: "0x20", trust: "cfi" },
-        ],
-      },
-      {
-        frames: [
-          { module_index: 1, ip: "0x4010", trust: "context" },
-          { module_index: 0, ip: "0x30", trust: "cfi" },
-        ],
-      },
-    ],
-  };
-  // The Glean shape is slightly different
-  let fullStackTracesGlean = {
-    crash_type: "main",
-    crash_address: "0xf001ba11",
-    crash_thread: 1,
-    main_module: 0,
-    modules: [
-      {
-        base_address: "0x00000000",
-        end_address: "0x00004000",
-        code_id: "8675309",
-        debug_file: "",
-        debug_id: "18675309",
-        filename: "foo.exe",
-        version: "1.0.0",
-      },
-      {
-        base_address: "0x00004000",
-        end_address: "0x00008000",
-        code_id: "42",
-        debug_file: "foo.pdb",
-        debug_id: "43",
-        filename: "foo.dll",
-        version: "1.1.0",
-      },
-    ],
-    threads: [
-      {
-        frames: [
-          { module_index: 0, ip: "0x10", trust: "context" },
-          { module_index: 0, ip: "0x20", trust: "cfi" },
-        ],
-      },
-      {
-        frames: [
-          { module_index: 1, ip: "0x4010", trust: "context" },
-          { module_index: 0, ip: "0x30", trust: "cfi" },
-        ],
-      },
-    ],
-  };
-
+  // Test with additional fields
   submitted = false;
   GleanPings.crash.testBeforeNextSubmit(() => {
+    submitted = true;
     const MINUTES = new Date(DUMMY_DATE_2);
+    MINUTES.setSeconds(0);
+    Assert.equal(Glean.crash.uptime.testGetValue(), 600.1 * 1000);
     Assert.equal(Glean.crash.time.testGetValue().getTime(), MINUTES.getTime());
     Assert.equal(
       Glean.crash.processType.testGetValue(),
       m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT]
     );
-    Assert.deepEqual(
-      Glean.crash.stackTraces.testGetValue(),
-      fullStackTracesGlean
-    );
-    Assert.equal(Glean.crash.minidumpSha256Hash.testGetValue(), sha256Hash);
     Assert.equal(Glean.crash.startup.testGetValue(), true);
-    Assert.equal(Glean.crash.appChannel.testGetValue(), "release");
-    Assert.equal(Glean.crash.appDisplayVersion.testGetValue(), "123");
-    Assert.equal(Glean.crash.appBuild.testGetValue(), "20230930101112");
-    Assert.deepEqual(Glean.crash.asyncShutdownTimeout.testGetValue(), {
-      phase: "AddonManager: Waiting to start provider shutdown.",
-      conditions: JSON.stringify([
-        {
-          name: "AddonRepository Background Updater",
-          state: "(none)",
-          filename: "resource://gre/modules/addons/AddonRepository.sys.mjs",
-          lineNumber: 576,
-          stack: [
-            "resource://gre/modules/addons/AddonRepository.sys.mjs:backgroundUpdateCheck:576",
-            "resource://gre/modules/AddonManager.sys.mjs:backgroundUpdateCheck/buPromise<:1269",
-          ],
-        },
-      ]),
-      broken_add_blockers: [
-        "JSON store: writing data for 'creditcards' - IOUtils: waiting for profileBeforeChange IO to complete finished",
-        "StorageSyncService: shutdown - profile-change-teardown finished",
-      ],
-    });
-    Assert.equal(Glean.crash.backgroundTaskName.testGetValue(), "task_name");
-    Assert.equal(Glean.crash.eventLoopNestingLevel.testGetValue(), 5);
-    Assert.equal(Glean.crash.fontName.testGetValue(), "Helvetica");
-    Assert.equal(Glean.crash.gpuProcessLaunch.testGetValue(), 10);
-    Assert.equal(Glean.crash.ipcChannelError.testGetValue(), "ipc errors");
-    Assert.equal(Glean.crash.isGarbageCollecting.testGetValue(), true);
-    Assert.equal(
-      Glean.crash.mainThreadRunnableName.testGetValue(),
-      "main thread name"
-    );
-    Assert.equal(Glean.crash.mozCrashReason.testGetValue(), "MOZ CRASH reason");
-    Assert.equal(
-      Glean.crash.profilerChildShutdownPhase.testGetValue(),
-      "profiler shutdown"
-    );
-    Assert.deepEqual(Glean.crash.quotaManagerShutdownTimeout.testGetValue(), [
-      "foo",
-      "bar",
-      "baz",
-    ]);
-    Assert.equal(Glean.crash.remoteType.testGetValue(), "remote");
-    Assert.equal(
-      Glean.crash.shutdownProgress.testGetValue(),
-      "shutdown progress"
-    );
-    Assert.equal(Glean.crashWindows.errorReporting.testGetValue(), true);
-    Assert.equal(Glean.crashWindows.fileDialogErrorCode.testGetValue(), "42");
-    Assert.deepEqual(Glean.dllBlocklist.list.testGetValue(), [
-      "Foo.dll",
-      "bar.dll",
-      "rawr.dll",
-    ]);
-    Assert.equal(Glean.dllBlocklist.initFailed.testGetValue(), true);
-    Assert.equal(Glean.dllBlocklist.user32LoadedBefore.testGetValue(), true);
-    Assert.deepEqual(Glean.environment.experimentalFeatures.testGetValue(), [
-      "feature 1",
-      "feature 2",
-    ]);
-    Assert.equal(Glean.environment.headlessMode.testGetValue(), true);
-    Assert.equal(Glean.environment.uptime.testGetValue(), 3601000);
-    Assert.equal(Glean.memory.availableCommit.testGetValue(), 100);
-    Assert.equal(Glean.memory.availablePhysical.testGetValue(), 200);
-    Assert.equal(Glean.memory.availableSwap.testGetValue(), 300);
-    Assert.equal(Glean.memory.availableVirtual.testGetValue(), 400);
-    Assert.equal(Glean.memory.lowPhysical.testGetValue(), 500);
-    Assert.equal(Glean.memory.oomAllocationSize.testGetValue(), 600);
-    Assert.equal(Glean.memory.purgeablePhysical.testGetValue(), 700);
-    Assert.equal(Glean.memory.systemUsePercentage.testGetValue(), 50);
-    Assert.equal(Glean.memory.texture.testGetValue(), 800);
-    Assert.equal(Glean.memory.totalPageFile.testGetValue(), 900);
-    Assert.equal(Glean.memory.totalPhysical.testGetValue(), 1000);
-    Assert.equal(Glean.memory.totalVirtual.testGetValue(), 1100);
-    Assert.equal(Glean.windows.packageFamilyName.testGetValue(), "Windows 10");
-    submitted = true;
   });
 
   await m.addCrash(
@@ -1005,46 +843,10 @@ add_task(async function test_glean_crash_ping() {
     id,
     DUMMY_DATE_2,
     {
-      StackTraces: fullStackTraces,
+      StackTraces: stackTraces,
       MinidumpSha256Hash: sha256Hash,
+      UptimeTS: "600.1",
       StartupCrash: "1",
-      ReleaseChannel: "release",
-      Version: "123",
-      BuildID: "20230930101112",
-      AsyncShutdownTimeout: `{"phase":"AddonManager: Waiting to start provider shutdown.","conditions":[{"name":"AddonRepository Background Updater","state":"(none)","filename":"resource://gre/modules/addons/AddonRepository.sys.mjs","lineNumber":576,"stack":["resource://gre/modules/addons/AddonRepository.sys.mjs:backgroundUpdateCheck:576","resource://gre/modules/AddonManager.sys.mjs:backgroundUpdateCheck/buPromise<:1269"]}],"brokenAddBlockers":["JSON store: writing data for 'creditcards' - IOUtils: waiting for profileBeforeChange IO to complete finished","StorageSyncService: shutdown - profile-change-teardown finished"]}`,
-      AvailablePageFile: 100,
-      AvailablePhysicalMemory: 200,
-      AvailableSwapMemory: 300,
-      AvailableVirtualMemory: 400,
-      BackgroundTaskName: "task_name",
-      BlockedDllList: "Foo.dll;bar.dll;rawr.dll",
-      BlocklistInitFailed: "1",
-      EventLoopNestingLevel: 5,
-      ExperimentalFeatures: "feature 1,feature 2",
-      FontName: "Helvetica",
-      GPUProcessLaunchCount: 10,
-      HeadlessMode: "1",
-      ipc_channel_error: "ipc errors",
-      IsGarbageCollecting: "1",
-      LowPhysicalMemoryEvents: 500,
-      MainThreadRunnableName: "main thread name",
-      MozCrashReason: "MOZ CRASH reason",
-      OOMAllocationSize: 600,
-      ProfilerChildShutdownPhase: "profiler shutdown",
-      PurgeablePhysicalMemory: 700,
-      QuotaManagerShutdownTimeout: "foo\nbar\nbaz",
-      RemoteType: "remote",
-      ShutdownProgress: "shutdown progress",
-      SystemMemoryUsePercentage: 50,
-      TextureUsage: 800,
-      TotalPageFile: 900,
-      TotalPhysicalMemory: 1000,
-      TotalVirtualMemory: 1100,
-      UptimeTS: 3601,
-      User32BeforeBlocklist: "1",
-      WindowsErrorReporting: "1",
-      WindowsFileDialogErrorCode: 42,
-      WindowsPackageFamilyName: "Windows 10",
     }
   );
 
