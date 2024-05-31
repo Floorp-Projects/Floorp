@@ -245,7 +245,8 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
 }
 
 nsDocShellLoadState::~nsDocShellLoadState() {
-  if (mWasCreatedRemotely && XRE_IsContentProcess()) {
+  if (mWasCreatedRemotely && XRE_IsContentProcess() &&
+      ContentChild::GetSingleton()->CanSend()) {
     ContentChild::GetSingleton()->SendCleanupPendingLoadState(mLoadIdentifier);
   }
 }
