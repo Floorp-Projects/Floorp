@@ -2458,7 +2458,16 @@ def tsan():
     return True
 
 
-add_old_configure_assignment("MOZ_TSAN", tsan)
+@depends(c_compiler, compilation_flags, linker_flags, when=tsan)
+def tsan_flags(c_compiler, compilation_flags, linker_flags):
+    flag = "-fsanitize=thread"
+    compilation_flags.cflags.append(flag)
+    compilation_flags.cxxflags.append(flag)
+    if c_compiler.type != "clang-cl":
+        linker_flags.ldflags.extend(["-fsanitize=thread", "-rdynamic"])
+
+
+add_old_configure_assignment("MOZ_TSAN", tsan)  # still used in js/src/old-configure.in
 set_define("MOZ_TSAN", True, when=tsan)
 set_config("MOZ_TSAN", True, when=tsan)
 
