@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 COUNTED_UNKNOWN_PROPERTIES = [
-    "-webkit-font-smoothing",
     "-webkit-tap-highlight-color",
     "speak",
     "text-size-adjust",
