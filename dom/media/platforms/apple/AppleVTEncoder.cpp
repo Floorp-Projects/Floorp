@@ -57,12 +57,14 @@ static CFDictionaryRef BuildEncoderSpec(const bool aHardwareNotAllowed,
 static void FrameCallback(void* aEncoder, void* aFrameRefCon, OSStatus aStatus,
                           VTEncodeInfoFlags aInfoFlags,
                           CMSampleBufferRef aSampleBuffer) {
+  if (aInfoFlags & kVTEncodeInfo_FrameDropped) {
+    LOGE("frame tagged as dropped");
+    return;
+  }
   if (aStatus != noErr || !aSampleBuffer) {
     LOGE("VideoToolbox encoder returned no data status=%d sample=%p", aStatus,
          aSampleBuffer);
     aSampleBuffer = nullptr;
-  } else if (aInfoFlags & kVTEncodeInfo_FrameDropped) {
-    LOGE("frame tagged as dropped");
     return;
   }
   (static_cast<AppleVTEncoder*>(aEncoder))->OutputFrame(aSampleBuffer);
