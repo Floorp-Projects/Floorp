@@ -18,18 +18,6 @@ function sendMessage(page, msg, data) {
   return MessageChannel.sendMessage(page.browser.messageManager, msg, data);
 }
 
-add_setup(() => {
-  // Make sure to invalidate WebExtensions API schemas that may be cached
-  // in the StartupCache when this test runs with conditioned-profiles.
-  //
-  // These tests are subject to be hitting failures consistently on
-  // landing API schema changes to the WebExtensions API permissions.
-  // or other API schema properties that are explicitly covered by
-  // this tests (e.g. errors expected to be emitted by postprocess
-  // helper functions).
-  Services.obs.notifyObservers(null, "startupcache-invalidate");
-});
-
 add_task(async function test_permissions() {
   function background() {
     browser.webRequest.onBeforeRequest.addListener(
