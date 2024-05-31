@@ -499,25 +499,6 @@ add_test(function test_hugeStringThrows() {
   run_next_test();
 });
 
-add_test(function test_caretNotEscaped() {
-  var url = stringToURL("wss://host/ !\"$%&'()*+,-./:;<=>@[\\]^_{|}~");
-  Assert.equal(
-    url.spec,
-    "wss://host/%20!%22$%&'()*+,-./:;%3C=%3E@[/]^_%7B|%7D~"
-  );
-
-  url = stringToURL("wss://host/abc^.bar");
-  Assert.equal(url.spec, "wss://host/abc^.bar");
-
-  url = stringToURL("wss://host/path/to/something?q=foo^bar");
-  Assert.equal(url.spec, "wss://host/path/to/something?q=foo^bar");
-
-  url = stringToURL("wss://host/#^");
-  Assert.equal(url.spec, "wss://host/#^");
-
-  run_next_test();
-});
-
 add_test(function test_filterWhitespace() {
   let url = stringToURL(
     " \r\n\th\nt\rt\tp://ex\r\n\tample.com/path\r\n\t/\r\n\tto the/fil\r\n\te.e\r\n\txt?que\r\n\try#ha\r\n\tsh \r\n\t "

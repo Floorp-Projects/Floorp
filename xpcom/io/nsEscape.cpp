@@ -278,9 +278,9 @@ static constexpr std::array<uint32_t, 256> BuildEscapeChars() {
   AddUnescapedChars("'.", esc_Username, table);
   AddUnescapedChars("'.", esc_Password, table);
   AddUnescapedChars(".", esc_Host, table);  // Same as esc_Scheme
-  AddUnescapedChars("'./:;=@[]^|", esc_Directory, table);
-  AddUnescapedChars("'.:;=@[]^|", esc_FileBaseName, table);
-  AddUnescapedChars("':;=@[]^|", esc_FileExtension, table);
+  AddUnescapedChars("'./:;=@[]|", esc_Directory, table);
+  AddUnescapedChars("'.:;=@[]|", esc_FileBaseName, table);
+  AddUnescapedChars("':;=@[]|", esc_FileExtension, table);
   AddUnescapedChars(".:;=@[\\]^`{|}", esc_Param, table);
   AddUnescapedChars("./:;=?@[\\]^`{|}", esc_Query, table);
   AddUnescapedChars("#'./:;=?@[\\]^{|}", esc_Ref, table);
