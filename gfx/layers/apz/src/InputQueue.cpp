@@ -26,6 +26,7 @@
 
 static mozilla::LazyLogModule sApzInpLog("apz.inputqueue");
 #define INPQ_LOG(...) MOZ_LOG(sApzInpLog, LogLevel::Debug, (__VA_ARGS__))
+#define INPQ_LOG_TEST() MOZ_LOG_TEST(sApzInpLog, LogLevel::Debug)
 
 namespace mozilla {
 namespace layers {
@@ -1058,6 +1059,36 @@ bool InputQueue::ProcessQueue() {
     InputBlockState* curBlock = mQueuedInputs[0]->Block();
     CancelableBlockState* cancelable = curBlock->AsCancelableBlock();
     if (cancelable && !cancelable->IsReadyForHandling()) {
+      if (MOZ_UNLIKELY(INPQ_LOG_TEST())) {
+        nsAutoCString additionalLog;
+        if (curBlock->AsTouchBlock()) {
+          // touch
+          additionalLog.AppendPrintf(
+              "waiting-long-tap-result: %d allowed-touch-behaviors: %d",
+              curBlock->AsTouchBlock()->IsWaitingLongTapResult(),
+              curBlock->AsTouchBlock()->HasAllowedTouchBehaviors());
+        } else if (curBlock->AsPanGestureBlock()) {
+          // pan gesture
+          additionalLog.AppendPrintf(
+              "waiting-browser-gesture-response: %d waiting-content-response: "
+              "%d",
+              curBlock->AsPanGestureBlock()
+                  ->IsWaitingForBrowserGestureResponse(),
+              curBlock->AsPanGestureBlock()->IsWaitingForContentResponse());
+        } else if (curBlock->AsPinchGestureBlock()) {
+          // pinch gesture
+          additionalLog.AppendPrintf(
+              "waiting-content-response: %d",
+              curBlock->AsPinchGestureBlock()->IsWaitingForContentResponse());
+        }
+
+        INPQ_LOG(
+            "skip processing %s block %p; target-confirmed: %d "
+            "content-responded: %d content-response-expired: %d %s",
+            cancelable->Type(), cancelable, cancelable->IsTargetConfirmed(),
+            cancelable->HasContentResponded(),
+            cancelable->IsContentResponseTimerExpired(), additionalLog.get());
+      }
       break;
     }
 

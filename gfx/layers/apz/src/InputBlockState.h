@@ -162,6 +162,11 @@ class CancelableBlockState : public InputBlockState {
   bool IsContentResponseTimerExpired() const;
 
   /**
+   * Checks if the content has responded.
+   */
+  bool HasContentResponded() const { return mContentResponded; }
+
+  /**
    * @return true iff web content cancelled this block of events.
    */
   bool IsDefaultPrevented() const;
@@ -346,6 +351,13 @@ class PanGestureBlockState : public CancelableBlockState {
     return mAllowedScrollDirections;
   }
 
+  bool IsWaitingForBrowserGestureResponse() const {
+    return mWaitingForBrowserGestureResponse;
+  }
+  bool IsWaitingForContentResponse() const {
+    return mWaitingForContentResponse;
+  }
+
  private:
   bool mInterrupted;
   bool mWaitingForContentResponse;
@@ -377,6 +389,10 @@ class PinchGestureBlockState : public CancelableBlockState {
   bool WasInterrupted() const { return mInterrupted; }
 
   void SetNeedsToWaitForContentResponse(bool aWaitForContentResponse);
+
+  bool IsWaitingForContentResponse() const {
+    return mWaitingForContentResponse;
+  }
 
  private:
   bool mInterrupted;
