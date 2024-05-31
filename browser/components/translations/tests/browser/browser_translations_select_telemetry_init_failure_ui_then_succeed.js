@@ -5,10 +5,10 @@
 
 /**
  * This test case verifies the counts and extra data sent from telemetry events when interacting
- * with the SelectTranslationsPanel's initialization-failure UI states.
+ * with the SelectTranslationsPanel's initialization-failure UI and retrying is successful.
  */
 add_task(
-  async function test_select_translations_panel_telemetry_init_failure_ui() {
+  async function test_select_translations_panel_telemetry_init_failure_then_succeed() {
     const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
       page: SELECT_TEST_PAGE_URL,
       LANGUAGE_PAIRS,
@@ -41,84 +41,6 @@ add_task(
       }
     );
 
-    TranslationsPanelShared.simulateLangListError();
-    await SelectTranslationsTestUtils.waitForPanelPopupEvent(
-      "popupshown",
-      SelectTranslationsTestUtils.clickTryAgainButton,
-      SelectTranslationsTestUtils.assertPanelViewInitFailure
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.tryAgainButton,
-      {
-        expectedEventCount: 1,
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.close,
-      {
-        expectedEventCount: 1,
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.open,
-      {
-        expectedEventCount: 2,
-        expectNewFlowId: false,
-        assertForMostRecentEvent: {
-          document_language: "es",
-          from_language: "es",
-          to_language: "en",
-          top_preferred_language: "en",
-        },
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.initializationFailureMessage,
-      {
-        expectedEventCount: 2,
-      }
-    );
-
-    await SelectTranslationsTestUtils.clickCancelButton();
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.cancelButton,
-      {
-        expectedEventCount: 1,
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.close,
-      {
-        expectedEventCount: 2,
-      }
-    );
-
-    TranslationsPanelShared.simulateLangListError();
-    await SelectTranslationsTestUtils.openPanel(runInPage, {
-      selectSpanishSection: true,
-      openAtSpanishSection: true,
-      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewInitFailure,
-    });
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.open,
-      {
-        expectedEventCount: 3,
-        expectNewFlowId: true,
-        assertForMostRecentEvent: {
-          document_language: "es",
-          from_language: "es",
-          to_language: "en",
-          top_preferred_language: "en",
-        },
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      Glean.translationsSelectTranslationsPanel.initializationFailureMessage,
-      {
-        expectedEventCount: 3,
-      }
-    );
-
     await SelectTranslationsTestUtils.clickTryAgainButton({
       downloadHandler: resolveDownloads,
       viewAssertion: SelectTranslationsTestUtils.assertPanelViewTranslated,
@@ -126,19 +48,19 @@ add_task(
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.tryAgainButton,
       {
-        expectedEventCount: 2,
+        expectedEventCount: 1,
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.close,
       {
-        expectedEventCount: 3,
+        expectedEventCount: 1,
       }
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.open,
       {
-        expectedEventCount: 4,
+        expectedEventCount: 2,
         expectNewFlowId: false,
         assertForMostRecentEvent: {
           document_language: "es",
@@ -178,7 +100,7 @@ add_task(
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.close,
       {
-        expectedEventCount: 4,
+        expectedEventCount: 2,
       }
     );
 
