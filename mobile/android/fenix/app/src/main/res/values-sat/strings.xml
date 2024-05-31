@@ -2329,6 +2329,18 @@
     <string name="review_quality_check_analysis_requested_info_body">ᱟᱞᱮ ᱴᱷᱮᱱ ᱫᱚ ᱱᱚᱶᱟ ᱡᱤᱱᱤᱥ ᱵᱚᱵᱛ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ 24 ᱴᱟᱲᱟᱝ ᱜᱟᱱ ᱞᱟᱣᱟ ᱞᱮᱭᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">ᱟᱞᱮ ᱫᱚ ᱱᱚᱶᱟ ᱵᱟᱞᱮ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ </string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">ᱵᱤᱵᱨᱚᱬ ᱞᱚᱜᱚᱱ ᱜᱮ ᱦᱟᱹᱡᱩᱜ ᱠᱟᱱᱟ</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">ᱟᱞᱮ ᱴᱷᱮᱱ ᱫᱚ ᱱᱚᱶᱟ ᱡᱤᱱᱤᱥ ᱵᱚᱵᱛ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ 24 ᱴᱟᱲᱟᱝ ᱜᱟᱱ ᱞᱟᱣᱟ ᱞᱮᱭᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">ᱯᱚᱨᱚᱠ ᱨᱮᱭᱟᱜ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱴᱷᱤᱠ ᱜᱭᱟ</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">ᱵᱩᱡᱷᱟᱹᱣ ᱠᱮᱫᱟ</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title">ᱱᱤᱛᱚᱜ ᱪᱮᱫ ᱦᱚᱸ ᱵᱤᱵᱨᱚᱬ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱼᱟ</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body">ᱱᱚᱶᱟ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱥᱩᱫᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱠᱟᱹᱢᱤ ᱪᱟᱹᱞᱩ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱛᱟᱭᱚᱢ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱦᱟᱹᱡᱩᱜ ᱢᱮ ᱾</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
     <string name="review_quality_check_highlights_show_less">ᱠᱚᱢ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
