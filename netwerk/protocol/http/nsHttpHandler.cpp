@@ -732,7 +732,8 @@ nsresult nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
 }
 
 // static
-uint8_t nsHttpHandler::UrgencyFromCoSFlags(uint32_t cos) {
+uint8_t nsHttpHandler::UrgencyFromCoSFlags(uint32_t cos,
+                                           int32_t aSupportsPriority) {
   uint8_t urgency;
   if (cos & nsIClassOfService::UrgentStart) {
     // coming from an user interaction => response should be the highest
@@ -756,7 +757,32 @@ uint8_t nsHttpHandler::UrgencyFromCoSFlags(uint32_t cos) {
     // all others get a lower priority than the main html document
     urgency = 4;
   }
-  return urgency;
+
+  int8_t adjustment = 0;
+  if (mozilla::StaticPrefs::network_fetchpriority_adjust_urgency()) {
+    if (aSupportsPriority <= nsISupportsPriority::PRIORITY_HIGHEST) {
+      adjustment = -2;
+    } else if (aSupportsPriority <= nsISupportsPriority::PRIORITY_HIGH) {
+      adjustment = -1;
+    } else if (aSupportsPriority >= nsISupportsPriority::PRIORITY_LOWEST) {
+      adjustment = 2;
+    } else if (aSupportsPriority >= nsISupportsPriority::PRIORITY_LOW) {
+      adjustment = 1;
+    }
+  }
+
+  auto adjustUrgency = [](uint8_t u, int8_t a) -> uint8_t {
+    int16_t result = static_cast<int16_t>(u) + a;
+    if (result <= 0) {
+      return 0;
+    }
+    if (result >= 6) {
+      return 6;
+    }
+    return result;
+  };
+
+  return adjustUrgency(urgency, adjustment);
 }
 
 //-----------------------------------------------------------------------------

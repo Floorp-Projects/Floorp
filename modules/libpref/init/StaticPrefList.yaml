@@ -12176,6 +12176,13 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# When true, the channel's urgency will be adjusted based on the
+# channel's nsISupportsPriority.
+- name: network.fetchpriority.adjust_urgency
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Adjustments to apply to the internal priority of <link rel=preload as=script
 # fetchpriority=low/high/auto> and equivalent Link header with respect to the
 # case when network.fetchpriority is disabled.
