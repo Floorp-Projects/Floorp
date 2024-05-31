@@ -1689,6 +1689,18 @@ networking:
       setPref:
         branch: default
         pref: "network.send_OnDataFinished.cssLoader"
+    enableOffMainThreadStreamDecompression:
+      description: Whether to enable decompression of network streams off-main-thread
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.decompression_off_mainthread"
+    offMainThreadStreamDecompressionThreshold:
+      description: Minimum content length for off-main-thread decompression
+      type: int
+      setPref:
+        branch: default
+        pref: "network.decompression_off_mainthread_min_size"
     httpMaxConnections:
       description: The maximum number of http connections.
       type: int
