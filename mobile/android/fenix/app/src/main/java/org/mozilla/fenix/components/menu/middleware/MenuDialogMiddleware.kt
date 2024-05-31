@@ -25,11 +25,13 @@ import org.mozilla.fenix.components.menu.store.MenuState
  * to query matching bookmarks.
  * @param addBookmarkUseCase The [BookmarksUseCase.AddBookmarksUseCase] for adding the
  * selected tab as a bookmark.
+ * @param onDeleteAndQuit Callback invoked to delete browsing data and quit the browser.
  * @param scope [CoroutineScope] used to launch coroutines.
  */
 class MenuDialogMiddleware(
     private val bookmarksStorage: BookmarksStorage,
     private val addBookmarkUseCase: BookmarksUseCase.AddBookmarksUseCase,
+    private val onDeleteAndQuit: () -> Unit,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Middleware<MenuState, MenuAction> {
 
@@ -41,6 +43,7 @@ class MenuDialogMiddleware(
         when (action) {
             is MenuAction.InitAction -> initialize(context.store)
             is MenuAction.AddBookmark -> addBookmark(context.store)
+            is MenuAction.DeleteBrowsingDataAndQuit -> deleteBrowsingDataAndQuit()
             else -> Unit
         }
 
@@ -80,5 +83,9 @@ class MenuDialogMiddleware(
             url = url,
             title = selectedTab.content.title,
         )
+    }
+
+    private fun deleteBrowsingDataAndQuit() = scope.launch {
+        onDeleteAndQuit()
     }
 }

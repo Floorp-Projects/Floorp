@@ -8,6 +8,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
@@ -36,6 +37,7 @@ class MenuDialogMiddlewareTest {
     private val bookmarksStorage: BookmarksStorage = FakeBookmarksStorage()
     private val addBookmarkUseCase: AddBookmarksUseCase =
         spy(AddBookmarksUseCase(storage = bookmarksStorage))
+    private val onDeleteAndQuit: () -> Unit = mock()
 
     @Test
     fun `GIVEN no selected tab WHEN init action is dispatched THEN browser state is not updated`() = runTestOnMain {
@@ -174,6 +176,20 @@ class MenuDialogMiddlewareTest {
         verify(addBookmarkUseCase, never()).invoke(url = url, title = title)
     }
 
+    @Test
+    fun `WHEN delete browsing data and quit action is dispatched THEN onDeleteAndQuit is invoked`() = runTestOnMain {
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = null,
+            ),
+        )
+
+        store.dispatch(MenuAction.DeleteBrowsingDataAndQuit).join()
+        store.waitUntilIdle()
+
+        verify(onDeleteAndQuit).invoke()
+    }
+
     private fun createStore(
         menuState: MenuState = MenuState(),
     ) = MenuStore(
@@ -182,6 +198,7 @@ class MenuDialogMiddlewareTest {
             MenuDialogMiddleware(
                 bookmarksStorage = bookmarksStorage,
                 addBookmarkUseCase = addBookmarkUseCase,
+                onDeleteAndQuit = onDeleteAndQuit,
                 scope = scope,
             ),
         ),

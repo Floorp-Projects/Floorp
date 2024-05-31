@@ -210,6 +210,16 @@ class MenuTelemetryMiddlewareTest {
         assertEquals("main_flow_browser", snapshot.single().extra?.getValue("item"))
     }
 
+    @Test
+    fun `WHEN deleting browsing data and quitting THEN record the quit browser menu telemetry`() {
+        val store = createStore()
+        assertNull(Events.browserMenuAction.testGetValue())
+
+        store.dispatch(MenuAction.DeleteBrowsingDataAndQuit).joinBlocking()
+
+        assertTelemetryRecorded(Events.browserMenuAction, item = "quit")
+    }
+
     private fun assertTelemetryRecorded(
         event: EventMetricType<Events.BrowserMenuActionExtra>,
         item: String,
