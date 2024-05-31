@@ -6,17 +6,6 @@
 #ifndef nsListControlFrame_h___
 #define nsListControlFrame_h___
 
-#ifdef DEBUG_evaughan
-// #define DEBUG_rods
-#endif
-
-#ifdef DEBUG_rods
-// #define DO_REFLOW_DEBUG
-// #define DO_REFLOW_COUNTER
-// #define DO_UNCONSTRAINED_CHECK
-// #define DO_PIXELS
-#endif
-
 #include "mozilla/Attributes.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPtr.h"
@@ -339,10 +328,6 @@ class nsListControlFrame final : public mozilla::ScrollContainerFrame,
   RefPtr<mozilla::HTMLSelectEventListener> mEventListener;
 
   static nsListControlFrame* mFocused;
-
-#ifdef DO_REFLOW_COUNTER
-  int32_t mReflowId;
-#endif
 };
 
 #endif /* nsListControlFrame_h___ */
