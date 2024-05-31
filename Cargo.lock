@@ -2374,9 +2374,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "60.1.0"
+version = "60.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17dbdd29dcae47b7f8fae9378ae7bf17be18b902cbb490341af2f4d04ead6bbf"
+checksum = "0dc8ff10d489acea6e3e3165bcc5d903f2d4fe88faab6940a3e7de11ff862a5e"
 dependencies = [
  "glean-core",
  "inherent",
@@ -2387,9 +2387,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "60.1.0"
+version = "60.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99bf32010135ab5b1db37fff66096d08b9df4e9dd94c881aa0774df61c122fdf"
+checksum = "0933c00ca50c8b2c10ca9090c5d4a6fbadd4982005699b38e0c5f233983d3cd4"
 dependencies = [
  "android_logger",
  "bincode",

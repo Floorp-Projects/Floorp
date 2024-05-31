@@ -53,6 +53,8 @@ namespace glean {
     boolean glean_set_source_tags(sequence<string> tags);
     void glean_set_log_pings(boolean value);
 
+    void glean_persist_ping_lifetime_data();
+
     void glean_handle_client_active();
     void glean_handle_client_inactive();
 

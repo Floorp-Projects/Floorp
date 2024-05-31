@@ -440,14 +440,6 @@ criteria = "safe-to-deploy"
 version = "2.7.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.fuchsia-zircon]]
-version = "0.3.3"
-criteria = "safe-to-run"
-
-[[exemptions.fuchsia-zircon-sys]]
-version = "0.3.3"
-criteria = "safe-to-run"
-
 [[exemptions.futures-macro]]
 version = "0.3.21"
 criteria = "safe-to-deploy"
@@ -584,21 +576,9 @@ criteria = "safe-to-deploy"
 version = "0.8.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.mio-extras]]
-version = "2.0.6"
-criteria = "safe-to-run"
-
-[[exemptions.miow]]
-version = "0.3.7"
-criteria = "safe-to-run"
-
 [[exemptions.murmurhash3]]
 version = "0.0.5"
 criteria = "safe-to-deploy"
-
-[[exemptions.net2]]
-version = "0.2.37"
-criteria = "safe-to-run"
 
 [[exemptions.nix]]
 version = "0.15.0"
@@ -614,14 +594,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.once_cell]]
 version = "1.12.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.owning_ref]]
-version = "0.4.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.packed_simd]]
-version = "0.3.8"
 criteria = "safe-to-deploy"
 
 [[exemptions.phf]]

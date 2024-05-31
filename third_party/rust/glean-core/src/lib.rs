@@ -693,7 +693,7 @@ pub fn shutdown() {
 /// Only has effect when Glean is configured with `delay_ping_lifetime_io: true`.
 /// If Glean hasn't been initialized this will dispatch and return Ok(()),
 /// otherwise it will block until the persist is done and return its Result.
-pub fn persist_ping_lifetime_data() {
+pub fn glean_persist_ping_lifetime_data() {
     // This is async, we can't get the Error back to the caller.
     crate::launch_with_glean(|glean| {
         let _ = glean.persist_ping_lifetime_data();
@@ -1125,8 +1125,14 @@ pub fn glean_test_destroy_glean(clear_stores: bool, data_path: Option<String>) {
 
         // Only useful if Glean initialization finished successfully
         // and set up the storage.
-        let has_storage =
-            core::with_opt_glean(|glean| glean.storage_opt().is_some()).unwrap_or(false);
+        let has_storage = core::with_opt_glean(|glean| {
+            // We need to flush the ping lifetime data before a full shutdown.
+            glean
+                .storage_opt()
+                .map(|storage| storage.persist_ping_lifetime_data())
+                .is_some()
+        })
+        .unwrap_or(false);
         if has_storage {
             uploader_shutdown();
         }
