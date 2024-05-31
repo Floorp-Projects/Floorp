@@ -430,9 +430,13 @@ static nsresult ParseContentSignatureHeader(
         CSVerifier_LOG(("CSVerifier: found two ContentSignatures"));
         return NS_ERROR_INVALID_SIGNATURE;
       }
+      if (directive->mValue.isNothing()) {
+        CSVerifier_LOG(("CSVerifier: found empty ContentSignature directive"));
+        return NS_ERROR_INVALID_SIGNATURE;
+      }
 
       CSVerifier_LOG(("CSVerifier: found a ContentSignature directive"));
-      aSignature.Assign(directive->mValue);
+      aSignature.Assign(*(directive->mValue));
     }
   }
 
