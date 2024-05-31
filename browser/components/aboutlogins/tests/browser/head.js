@@ -18,6 +18,19 @@ const { OSKeyStore } = ChromeUtils.importESModule(
   "resource://gre/modules/OSKeyStore.sys.mjs"
 );
 
+let { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
+// Always pretend OS Auth is enabled in this dir.
+if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin() && OSKeyStore.canReauth()) {
+  // Enable OS reauth so we can test it.
+  sinon.stub(LoginHelper, "getOSAuthEnabled").returns(true);
+  registerCleanupFunction(() => {
+    sinon.restore();
+  });
+}
+
 var { LoginTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/LoginTestUtils.sys.mjs"
 );

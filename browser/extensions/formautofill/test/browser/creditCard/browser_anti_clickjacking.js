@@ -17,6 +17,9 @@ add_task(async function setup_storage() {
 });
 
 async function disableOSAuthForThisTest() {
+  // Revert head.js change that mocks os auth
+  sinon.restore();
+
   let oldValue = FormAutofillUtils.getOSAuthEnabled(
     FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF
   );
