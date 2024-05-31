@@ -36,7 +36,7 @@ bounce.tracking.protection:
     description: >
       Counts how often we purge trackers. Giving a high level overview about
       the effectivness of bounce tracking protection. Allows determining error
-      rate with failed/success label. When in dry mode, we count the purges
+      rate with failure/success label. When in dry mode, we count the purges
       that would have happened under the dry label.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1890578
@@ -51,7 +51,7 @@ bounce.tracking.protection:
     expires: 134
     labels:
       - success
-      - failed
+      - failure
       - dry
   enabled_at_startup:
     type: boolean
