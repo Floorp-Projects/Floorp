@@ -3174,7 +3174,6 @@ set_define("FUZZING", enable_fuzzing)
 
 set_config("LIBFUZZER", enable_libfuzzer)
 set_define("LIBFUZZER", enable_libfuzzer)
-add_old_configure_assignment("LIBFUZZER", enable_libfuzzer)
 
 set_config("AFLFUZZ", enable_aflfuzzer)
 set_define("AFLFUZZ", enable_aflfuzzer)
@@ -3230,9 +3229,29 @@ def libfuzzer_flags(value, tsan, enable_js_fuzzilli):
     )
 
 
+@depends(libfuzzer_flags, when=enable_libfuzzer)
+def sancov(libfuzzer_flags):
+    return any(
+        flag.startswith(head)
+        for head in ("-fsanitize-coverage", "-fsanitize=fuzzer")
+        for flag in libfuzzer_flags.use_flags
+    )
+
+
+add_old_configure_assignment("SANCOV", sancov)
+
+
 set_config("HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK", libfuzzer_flags.no_link_flag_supported)
 set_config("LIBFUZZER_FLAGS", libfuzzer_flags.use_flags)
-add_old_configure_assignment("LIBFUZZER_FLAGS", libfuzzer_flags.use_flags)
+
+
+# Required for stand-alone (sanitizer-less) libFuzzer.
+# ==============================================================
+@depends(libfuzzer_flags, linker_flags, when=enable_libfuzzer)
+def add_libfuzzer_flags(libfuzzer_flags, linker_flags):
+    linker_flags.ldflags.extend(libfuzzer_flags.use_flags)
+    linker_flags.ldflags.append("-rdynamic")
+
 
 # The LLVM symbolizer is used by all sanitizers
 check_prog(

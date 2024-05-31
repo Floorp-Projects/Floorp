@@ -42,13 +42,6 @@ if test -n "$MOZ_ASAN"; then
     fi
 fi
 
-dnl =======================================================
-dnl = Required for stand-alone (sanitizer-less) libFuzzer.
-dnl =======================================================
-if test -n "$LIBFUZZER"; then
-   LDFLAGS="$LIBFUZZER_FLAGS -rdynamic $LDFLAGS"
-fi
-
 dnl ========================================================
 dnl = Test for whether the compiler is compatible with the
 dnl = given sanitize options.
