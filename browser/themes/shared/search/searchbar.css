@@ -8,6 +8,11 @@
   list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
   -moz-context-properties: fill;
   fill: currentColor;
+
+  /* Apply crisp rendering for favicons at exactly 2dppx resolution */
+  @media (resolution: 2dppx) {
+    image-rendering: -moz-crisp-edges;
+  }
 }
 
 .search-one-offs:not([hidden]) {

@@ -10,6 +10,21 @@
   --urlbar-search-button-width: calc(16px + 2 * var(--urlbar-icon-padding));
 }
 
+#urlbar[actiontype="switchtab"][action-override] > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"], [actiontype="extension"], [searchmode]) > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
+#urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
+#urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([searchmode]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
+#urlbar[breakout-extend] > #urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
+#urlbar-input-container[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
+#identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
+#urlbar[usertyping] > #urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
+#urlbar:not([usertyping]) > #urlbar-input-container > #urlbar-go-button,
+#urlbar:not([focused]) > #urlbar-input-container > #urlbar-go-button {
+  display: none;
+}
+
 /* When rich suggestions are enabled the urlbar identity icon is given extra padding to
  * align the results and urlbar text */
 /* stylelint-disable-next-line media-query-no-invalid */
@@ -31,6 +46,9 @@
 
 #urlbar,
 #searchbar {
+  /* Setting a min-width to let the location & search bars maintain a constant
+   * width in case they haven't been resized manually. (bug 965772) */
+  min-width: 1px;
   min-height: var(--urlbar-min-height);
   text-shadow: none;
   color: var(--toolbar-field-color);
@@ -81,6 +99,65 @@
   margin: 0;
   padding: 0;
   outline: none;
+}
+
+#urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
+}
+
+#urlbar-input {
+  mask-repeat: no-repeat;
+  unicode-bidi: plaintext;
+  text-align: match-parent;
+
+  /* Align URLs to the right in RTL mode. */
+  &:-moz-locale-dir(rtl) {
+    text-align: right !important;
+  }
+
+  /* Make sure that the location bar's alignment changes according
+      to the input box direction if the user switches the text direction using
+      cmd_switchTextDirection (which applies a dir attribute to the <input>). */
+  &[dir=ltr]:-moz-locale-dir(rtl) {
+    text-align: left !important;
+  }
+
+  &[dir=rtl]:-moz-locale-dir(ltr) {
+    text-align: right !important;
+  }
+
+  #urlbar:not([focused])[domaindir="ltr"]> #urlbar-input-container > .urlbar-input-box > & {
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+
+  /* The following rules apply overflow masks to the unfocused urlbar
+    This mask may be overriden when a Contextual Feature Recommendation is shown,
+    see browser/themes/shared/urlbar-searchbar.inc.css for details */
+
+  #urlbar:not([focused])[textoverflow="both"] > #urlbar-input-container > .urlbar-input-box > & {
+    mask-image: linear-gradient(to right, transparent, black 3ch, black calc(100% - 3ch), transparent);
+  }
+  #urlbar:not([focused])[textoverflow="right"] > #urlbar-input-container > .urlbar-input-box > & {
+    mask-image: linear-gradient(to left, transparent, black 3ch);
+  }
+  #urlbar:not([focused])[textoverflow="left"] > #urlbar-input-container > .urlbar-input-box > & {
+    mask-image: linear-gradient(to right, transparent, black 3ch);
+  }
+}
+
+#urlbar-scheme {
+  position: absolute;
+  height: 100%;
+  visibility: hidden;
+  direction: ltr;
+  pointer-events: none;
+}
+
+/* The protocol is visible if there is an RTL domain and we overflow to the left.
+   Uses the required-valid trick to check if it contains a value */
+#urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > #urlbar-scheme:valid {
+  visibility: visible;
 }
 
 #urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background,
@@ -258,17 +335,121 @@
   padding-inline-end: 0;
 }
 
-:root[customizing] .urlbar-input-box {
-  visibility: hidden;
+
+.urlbar-input-box {
+  /* Show the url scheme in a static box when overflowing to the left */
+  position: relative;
+  direction: ltr;
+
+  :root[customizing] & {
+    visibility: hidden;
+  }
 }
 
 #urlbar-container {
   align-items: center;
+  /* We leave 310px plus whatever space the download and unified extensions
+   * buttons will need when they *both* appear. Normally, for each button, this
+   * should be 16px for the icon, plus 2 * 2px padding plus the
+   * toolbarbutton-inner-padding. We're adding 4px to ensure things like rounding
+   * on hidpi don't accidentally result in the buttons going into overflow.
+   */
+  width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
+
+  /* When the download button OR the unified extensions button is shown, we leave
+   * 310px plus the space needed for a single button as described above. */
+  #nav-bar:is([downloadsbuttonshown], [unifiedextensionsbuttonshown]) & {
+    width: calc(310px + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+
+  /* When both the download and unified extensions buttons are visible, we use
+   * the base min-width value. */
+  #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] & {
+    width: 310px;
+  }
+
+  /* Customize mode is difficult to use at moderate window width if the Urlbar
+   * remains 310px wide. */
+  :root[customizing] & {
+    width: 280px;
+  }
 }
 
 #urlbar-container,
 #wrapper-urlbar-container {
   flex: 400 0 auto;
+}
+
+#nav-bar:not([keyNav=true]) #identity-box,
+#nav-bar:not([keyNav=true]) #tracking-protection-icon-container {
+  -moz-user-focus: normal;
+}
+
+#identity-icon-box {
+  max-width: calc(30px + 13em);
+}
+
+@media (max-width: 770px) {
+  #urlbar-container {
+    width: calc(240px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
+  }
+  #nav-bar:is([downloadsbuttonshown], [unifiedextensionsbuttonshown]) #urlbar-container {
+    width: calc(240px + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
+    width: 240px;
+  }
+  :root[customizing] #urlbar-container {
+    width: 245px;
+  }
+  #identity-icon-box {
+    max-width: 80px;
+  }
+  /* Contenxtual identity labels are user-customizable and can be very long,
+     so we only show the colored icon when the window gets small. */
+  #userContext-label {
+    display: none;
+  }
+}
+
+/* The page actions menu is hidden by default, it is only shown in small
+   windows as the overflow target of multiple page action buttons */
+#pageActionButton {
+  visibility: collapse;
+}
+
+/* 680px is just below half of popular 1366px wide screens, so when putting two
+   browser windows next to each other on such a screen, they'll be above this
+   threshold. */
+@media (max-width: 680px) {
+  /* Page action buttons are duplicated in the page action menu so we can
+      safely hide them in small windows. */
+  #pageActionSeparator,
+  #pageActionButton[multiple-children] ~ .urlbar-page-action {
+    display: none;
+  }
+  #pageActionButton[multiple-children] {
+    visibility: visible;
+  }
+}
+
+@media (max-width: 550px) {
+  #urlbar-container {
+    width: calc(176px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
+  }
+  #nav-bar[downloadsbuttonshown] #urlbar-container,
+  #nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
+    width: calc(176px + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
+    width: 176px;
+  }
+  #identity-icon-box {
+    max-width: 70px;
+  }
+  #urlbar-zoom-button {
+    display: none;
+  }
 }
 
 :root[chromehidden~="toolbar"] :is(#urlbar-container, #wrapper-urlbar-container) {
@@ -438,6 +619,39 @@
 #pageActionButton,
 .share-more-button {
   list-style-image: url("chrome://global/skin/icons/more.svg");
+}
+
+/*
+ * Display visual cue that browser is under remote control.
+ * This is to help users visually distinguish a user agent session that
+ * is under remote control from those used for normal browsing sessions.
+ *
+ * Attribute is controlled by browser.js:/gRemoteControl.
+ */
+:root[remotecontrol] {
+  #remote-control-box {
+    visibility: visible;
+    padding-inline: var(--urlbar-icon-padding);
+  }
+
+  #remote-control-icon {
+    list-style-image: url(chrome://browser/content/static-robot.png);
+    width: 16px;
+    height: 16px;
+  }
+
+  #urlbar-background {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 60, 60, 0.25) 0 25px,
+      rgba(175, 0, 0, 0.25) 25px 50px
+    );
+
+    background-attachment: fixed;
+    /* Override the usual breakout animation so the gradient doesn't shift around
+       when the panel opens. */
+    animation: none !important;
+  }
 }
 
 /**
