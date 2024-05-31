@@ -176,6 +176,28 @@ function assertSelectionRegionDimensions(actualDimensions, expectedDimensions) {
   );
 }
 
+add_setup(async function () {
+  let tmpDir = PathUtils.join(
+    PathUtils.tempDir,
+    "testsavedir" + Math.floor(Math.random() * 2 ** 32)
+  );
+  // Create this dir if it doesn't exist (ignores existing dirs)
+  await IOUtils.makeDirectory(tmpDir);
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.start_downloads_in_tmp_dir", true],
+      ["browser.helperApps.deleteTempFileOnExit", true],
+      ["browser.download.folderList", 2],
+      ["browser.download.dir", tmpDir],
+    ],
+  });
+
+  registerCleanupFunction(async () => {
+    Services.prefs.clearUserPref("browser.download.dir");
+    Services.prefs.clearUserPref("browser.download.folderList");
+  });
+});
+
 add_task(async function test_elementSelectedOnEnter() {
   await BrowserTestUtils.withNewTab(
     {
@@ -477,6 +499,138 @@ add_task(async function test_createRegionWithKeyboardWithShift() {
 
       helper.triggerUIFromToolbar();
       await helper.waitForOverlayClosed();
+    }
+  );
+});
+
+add_task(async function test_clickingButtonsWithKeyDown() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let publicDownloads = await Downloads.getList(Downloads.PUBLIC);
+      // First ensure we catch the download finishing.
+      let downloadFinishedPromise = new Promise(resolve => {
+        publicDownloads.addView({
+          onDownloadChanged(download) {
+            info("Download changed!");
+            if (download.succeeded || download.error) {
+              info("Download succeeded or errored");
+              publicDownloads.removeView(this);
+              resolve(download);
+            }
+          },
+        });
+      });
+
+      let helper = new ScreenshotsHelper(browser);
+      let expected = Math.floor(
+        300 * (await getContentDevicePixelRatio(browser))
+      );
+
+      for (let aKey of [" ", "Enter"]) {
+        info(`Running tests with ${aKey} key`);
+
+        info("Testing keydown on crosshairs cancel button");
+        helper.triggerUIFromToolbar();
+        await helper.waitForOverlay();
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.previewCancelButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        // Keydown on crosshairs cancel button
+        key.down(aKey);
+
+        await helper.waitForOverlayClosed();
+
+        info("Testing keydown on cancel button");
+        helper.triggerUIFromToolbar();
+        await helper.waitForOverlay();
+
+        await helper.dragOverlay(100, 100, 400, 400);
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.cancelButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        // Keydown on cancel button
+        key.down(aKey);
+
+        await helper.waitForStateChange("crosshairs");
+
+        info("Testing keydown on copy button");
+
+        await helper.dragOverlay(100, 100, 400, 400);
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.copyButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        let clipboardChanged = helper.waitForRawClipboardChange(
+          expected,
+          expected
+        );
+
+        // Keydown on copy button
+        key.down(aKey);
+
+        await clipboardChanged;
+
+        await helper.waitForOverlayClosed();
+
+        info("Testing keydown on download button");
+
+        helper.triggerUIFromToolbar();
+        await helper.waitForOverlay();
+
+        await helper.dragOverlay(100, 100, 400, 400);
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.downloadButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        let screenshotExit = TestUtils.topicObserved("screenshots-exit");
+
+        // Keydown on download button
+        key.down(aKey);
+
+        await helper.waitForOverlayClosed();
+
+        info("wait for download to finish");
+        let download = await downloadFinishedPromise;
+
+        ok(download.succeeded, "Download should succeed");
+
+        await publicDownloads.removeFinished();
+        await screenshotExit;
+      }
     }
   );
 });
