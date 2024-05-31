@@ -4160,9 +4160,6 @@ pref("extensions.formautofill.loglevel", "Warn");
 // Temporary prefs that we will be removed if the telemetry data (added in Fx123) does not show any problems with the new heuristics.
 pref("extensions.formautofill.heuristics.captureOnFormRemoval", true);
 pref("extensions.formautofill.heuristics.captureOnPageNavigation", true);
-// The interactivityCheckMode pref is only temporary.
-// It will be removed when we decide to only support the `focusability` mode
-pref("extensions.formautofill.heuristics.interactivityCheckMode", "focusability");
 
 pref("toolkit.osKeyStore.loglevel", "Warn");
 
