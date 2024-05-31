@@ -2360,63 +2360,6 @@ main section {
   content: url("chrome://browser/skin/weather/night-mostly-cloudy-with-flurries.svg");
 }
 
-.location-input-wrapper {
-  background-color: light-dark(var(--color-white), var(--newtab-background-color-secondary));
-  color: var(--newtab-text-primary-color);
-  border-radius: var(--border-radius-medium);
-  padding: 8px;
-  position: relative;
-}
-.lightWallpaper .location-input-wrapper, .darkWallpaper .location-input-wrapper {
-  background-color: var(--newtab-weather-background-color);
-}
-.lightWallpaper .location-input-wrapper:hover, .darkWallpaper .location-input-wrapper:hover {
-  background-color: var(--newtab-button-static-hover-background);
-}
-.lightWallpaper .location-input-wrapper:hover:active, .darkWallpaper .location-input-wrapper:hover:active {
-  background-color: var(--newtab-button-static-active-background);
-}
-@media (prefers-contrast) {
-  .lightWallpaper .location-input-wrapper, .darkWallpaper .location-input-wrapper {
-    background-color: var(--background-color-box);
-  }
-}
-.location-input-wrapper .search-icon {
-  content: url("chrome://global/skin/icons/search-glass.svg");
-  -moz-context-properties: fill;
-  fill: light-dark(var(--color-gray-70), var(--color-gray-05));
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  inset-inline-start: 18px;
-}
-.location-input-wrapper .close-icon {
-  background-image: url("chrome://global/skin/icons/close.svg");
-  -moz-context-properties: fill;
-  fill: light-dark(var(--color-gray-70), var(--color-gray-05));
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  inset-inline-end: 18px;
-  width: var(--size-item-small);
-  height: var(--size-item-small);
-  appearance: none;
-  border: none;
-}
-.location-input-wrapper .close-icon:focus-visible {
-  outline: 1px solid var(--focus-outline-color);
-}
-.location-input-wrapper input {
-  border-radius: var(--border-radius-medium);
-  background-color: light-dark(var(--color-white), var(--newtab-background-color-secondary));
-  padding-block: 8px;
-  padding-inline: 30px;
-  border: 1px solid var(--newtab-border-color);
-}
-.location-input-wrapper input:focus-visible {
-  outline: 2px solid var(--focus-outline-color);
-}
-
 /* stylelint-disable max-nesting-depth */
 .card-outer {
   background: var(--newtab-background-color-secondary);

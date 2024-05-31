@@ -60,11 +60,6 @@ add_task(async function test_onAction_INIT() {
   });
 
   let feed = new WeatherFeed();
-  let locationData = {
-    city: "testcity",
-    adminArea: "",
-    country: "",
-  };
 
   Services.prefs.setBoolPref(WEATHER_ENABLED, true);
   Services.prefs.setBoolPref(SYS_WEATHER_ENABLED, true);
@@ -73,19 +68,9 @@ add_task(async function test_onAction_INIT() {
 
   sandbox.stub(feed, "fetchHelper");
   feed.suggestions = [WEATHER_SUGGESTION];
-  feed.locationData = locationData;
+
   feed.store = {
     dispatch: sinon.spy(),
-    getState() {
-      return this.state;
-    },
-    state: {
-      Prefs: {
-        values: {
-          "weather.query": "348794",
-        },
-      },
-    },
   };
 
   info("WeatherFeed.onAction INIT should initialize Weather");
@@ -102,7 +87,6 @@ add_task(async function test_onAction_INIT() {
         data: {
           suggestions: [WEATHER_SUGGESTION],
           lastUpdated: dateNowTestValue,
-          locationData,
         },
         meta: {
           isStartup: true,
