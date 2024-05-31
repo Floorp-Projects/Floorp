@@ -11562,21 +11562,30 @@ PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
     // REVIEW: these are the frame types that set up clipping.
     LayoutFrameType type = Type();
     switch (type) {
+      case LayoutFrameType::CheckboxRadio:
+      case LayoutFrameType::ColorControl:
+      case LayoutFrameType::ComboboxControl:
+      case LayoutFrameType::DateTimeControl:
+      case LayoutFrameType::FileControl:
+      case LayoutFrameType::GfxButtonControl:
+      case LayoutFrameType::HTMLButtonControl:
+      case LayoutFrameType::ListControl:
+      case LayoutFrameType::Meter:
+      case LayoutFrameType::Progress:
+      case LayoutFrameType::Range:
+      case LayoutFrameType::SubDocument:
+      case LayoutFrameType::SVGForeignObject:
+      case LayoutFrameType::SVGInnerSVG:
+      case LayoutFrameType::SVGOuterSVG:
+      case LayoutFrameType::SVGSymbol:
       case LayoutFrameType::Table:
       case LayoutFrameType::TableCell:
-      case LayoutFrameType::SVGOuterSVG:
-      case LayoutFrameType::SVGInnerSVG:
-      case LayoutFrameType::SVGSymbol:
-      case LayoutFrameType::SVGForeignObject:
         return kPhysicalAxesBoth;
+      case LayoutFrameType::TextInput:
+        // It has an anonymous scroll container frame that handles any overflow.
+        return PhysicalAxes();
       default:
-        if (IsReplacedWithBlock()) {
-          if (type == mozilla::LayoutFrameType::TextInput) {
-            // It has an anonymous scroll frame that handles any overflow.
-            return PhysicalAxes();
-          }
-          return kPhysicalAxesBoth;
-        }
+        break;
     }
   }
 

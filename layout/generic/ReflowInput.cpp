@@ -387,7 +387,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
     return;
   }
 
-  mFlags.mIsReplaced = mFrame->IsReplaced() || mFrame->IsReplacedWithBlock();
+  mFlags.mIsReplaced = mFrame->IsReplaced();
 
   InitConstraints(aPresContext, aContainingBlockSize, aBorder, aPadding, type);
 
