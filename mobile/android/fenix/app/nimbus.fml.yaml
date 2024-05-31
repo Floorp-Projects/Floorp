@@ -248,6 +248,7 @@ features:
 
   glean:
     description: "A feature that provides server-side configurations for Glean metrics (aka Server Knobs)."
+    allow-coenrollment: true
     variables:
       metrics-enabled:
         description: "A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric."
@@ -257,6 +258,10 @@ features:
         description: "Enables precise event timestamps for Glean events"
         type: Boolean
         default: false
+      delay-ping-lifetime-io:
+        description: "Glean will delay io for ping lifetime metrics"
+        type: Boolean
+        default: true
 
   splash-screen:
     description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."
