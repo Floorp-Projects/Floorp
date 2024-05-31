@@ -13078,21 +13078,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
     applies_to_cue: true,
     applies_to_marker: true,
     initial_values: ["auto"],
-    other_values: ["grayscale", "subpixel-antialiased", "antialiased"],
-    invalid_values: ["none"],
-  };
-
-  gCSSProperties["-webkit-font-smoothing"] = {
-    domProp: "webkitFontSmoothing",
-    inherited: true,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    applies_to_cue: true,
-    applies_to_marker: true,
-    alias_for: "-moz-osx-font-smoothing",
-    subproperties: ["-moz-osx-font-smoothing"],
+    other_values: ["grayscale"],
+    invalid_values: ["none", "subpixel-antialiased", "antialiased"],
   };
 }
 
