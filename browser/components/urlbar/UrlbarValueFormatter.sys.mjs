@@ -140,18 +140,19 @@ export class UrlbarValueFormatter {
       return null;
     }
     let browser = this.window.gBrowser.selectedBrowser;
+    let browserState = this.urlbarInput.getBrowserState(browser);
 
     // Since doing a full URIFixup and offset calculations is expensive, we
     // keep the metadata cached in the browser itself, so when switching tabs
     // we can skip most of this.
     if (
-      browser._urlMetaData &&
-      browser._urlMetaData.inputValue == inputValue &&
-      browser._urlMetaData.untrimmedValue == this.urlbarInput.untrimmedValue
+      browserState.urlMetaData &&
+      browserState.urlMetaData.inputValue == inputValue &&
+      browserState.urlMetaData.untrimmedValue == this.urlbarInput.untrimmedValue
     ) {
-      return browser._urlMetaData.data;
+      return browserState.urlMetaData.data;
     }
-    browser._urlMetaData = {
+    browserState.urlMetaData = {
       inputValue,
       untrimmedValue: this.urlbarInput.untrimmedValue,
       data: null,
@@ -244,7 +245,7 @@ export class UrlbarValueFormatter {
       }
     }
 
-    return (browser._urlMetaData.data = {
+    return (browserState.urlMetaData.data = {
       domain,
       origin: uriInfo.fixedURI.host,
       preDomain,

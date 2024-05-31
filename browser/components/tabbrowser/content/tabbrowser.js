@@ -1455,7 +1455,7 @@
       let oldBrowser = oldTab.linkedBrowser;
       let newBrowser = newTab.linkedBrowser;
 
-      oldBrowser._urlbarFocused = gURLBar && gURLBar.focused;
+      gURLBar.getBrowserState(oldBrowser).urlbarFocused = gURLBar.focused;
 
       if (this._asyncTabSwitching) {
         newBrowser._userTypedValueAtBeforeTabSwitch = newBrowser.userTypedValue;
@@ -1481,7 +1481,9 @@
         // and the new browser's previous focus wasn't in the url bar but focus is
         // there now, we need to adjust focus further.
         let keepFocusOnUrlBar =
-          newBrowser && newBrowser._urlbarFocused && gURLBar && gURLBar.focused;
+          newBrowser &&
+          gURLBar.getBrowserState(newBrowser).urlbarFocused &&
+          gURLBar.focused;
         if (!keepFocusOnUrlBar) {
           // Clear focus so that _adjustFocusAfterTabSwitch can detect if
           // some element has been focused and respect that.
@@ -1505,7 +1507,7 @@
       // Focus the location bar if it was previously focused for that tab.
       // In full screen mode, only bother making the location bar visible
       // if the tab is a blank one.
-      if (newBrowser._urlbarFocused && gURLBar) {
+      if (gURLBar.getBrowserState(newBrowser).urlbarFocused) {
         let selectURL = () => {
           if (this._asyncTabSwitching) {
             // Set _awaitingSetURI flag to suppress popup notification
@@ -2769,7 +2771,7 @@
         }));
 
         if (focusUrlBar) {
-          b._urlbarFocused = true;
+          gURLBar.getBrowserState(b).urlbarFocused = true;
         }
 
         // If the caller opts in, create a lazy browser.
