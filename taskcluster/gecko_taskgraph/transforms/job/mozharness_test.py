@@ -229,6 +229,12 @@ def mozharness_test_on_docker(config, job, taskdesc):
         env["MOZHARNESS_TEST_PATHS"] = json.dumps(
             {test["suite"]: test["test-manifests"]}, sort_keys=True
         )
+    elif "MOZHARNESS_TEST_TAG" in config.params["try_task_config"].get("env", {}):
+        command.append(
+            "--tag={}".format(
+                config.params["try_task_config"]["env"]["MOZHARNESS_TEST_TAG"]
+            )
+        )
 
     # TODO: remove the need for run['chunked']
     elif mozharness.get("chunked") or test["chunks"] > 1:
@@ -438,6 +444,12 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     if test.get("test-manifests"):
         env["MOZHARNESS_TEST_PATHS"] = json.dumps(
             {test["suite"]: test["test-manifests"]}, sort_keys=True
+        )
+    elif "MOZHARNESS_TEST_TAG" in config.params["try_task_config"].get("env", {}):
+        mh_command.append(
+            "--tag={}".format(
+                config.params["try_task_config"]["env"]["MOZHARNESS_TEST_TAG"]
+            )
         )
 
     # TODO: remove the need for run['chunked']

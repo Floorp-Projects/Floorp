@@ -236,6 +236,29 @@ class Path(TryConfig):
         }
 
 
+class Tag(TryConfig):
+    arguments = [
+        [
+            ["--tag"],
+            {
+                "action": "append",
+                "default": [],
+                "help": "Run tests matching the specified tag.",
+            },
+        ],
+    ]
+
+    def try_config(self, tag, **kwargs):
+        if not tag:
+            return
+
+        return {
+            "env": {
+                "MOZHARNESS_TEST_TAG": tag[0],
+            }
+        }
+
+
 class Environment(TryConfig):
     arguments = [
         [
@@ -649,6 +672,7 @@ all_task_configs = {
     "gecko-profile": GeckoProfile,
     "new-test-config": NewConfig,
     "path": Path,
+    "test-tag": Tag,
     "pernosco": Pernosco,
     "rebuild": Rebuild,
     "routes": Routes,

@@ -378,6 +378,13 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
             )
         )
 
+        test_env = parameters["try_task_config"].get("env", {})
+        if test_env.get("MOZHARNESS_TEST_PATHS", "") or test_env.get(
+            "MOZHARNESS_TEST_TAG", ""
+        ):
+            # This is sort of a hack, as we are filtering, we might filter out all test jobs
+            missing_tests_allowed = True
+
         exceptions = []
         for task in taskgraph.tasks.values():
             if task.kind == "build" and not task.attributes.get(

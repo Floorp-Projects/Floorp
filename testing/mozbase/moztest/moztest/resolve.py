@@ -1031,7 +1031,11 @@ class TestResolver(MozbuildObject):
 
             # Now look for file/directory matches in the TestResolver.
             relpath = self._wrap_path_argument(entry).relpath()
+            # since either path or tag can be defined (but not both), here we assume
+            # one or none are defined, but not both
             tests = list(self.resolve_tests(paths=[relpath]))
+            if not tests:
+                tests = list(self.resolve_tests(tags=entry))
             run_tests.extend(tests)
 
             if not tests:

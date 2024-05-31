@@ -118,6 +118,7 @@ class FuzzyParser(BaseTryParser):
         "gecko-profile",
         "new-test-config",
         "path",
+        "test-tag",
         "pernosco",
         "rebuild",
         "routes",
@@ -137,6 +138,7 @@ def run(
     dry_run=False,
     message="{msg}",
     test_paths=None,
+    test_tag=None,
     exact=False,
     closed_tree=False,
     show_estimates=False,
@@ -187,8 +189,8 @@ def run(
         if not all_tasks:
             return 1
 
-    if test_paths:
-        all_tasks = filter_tasks_by_paths(all_tasks, test_paths)
+    if test_paths or test_tag:
+        all_tasks = filter_tasks_by_paths(all_tasks, test_paths, tag=test_tag)
         if not all_tasks:
             return 1
 
