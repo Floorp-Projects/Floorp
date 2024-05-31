@@ -47,6 +47,21 @@ const NIMBUS_APPID_PREF = "nimbus.appId";
 
 const STUDIES_ENABLED_CHANGED = "nimbus:studies-enabled-changed";
 
+const SECURE_EXPERIMENTS_COLLECTION_ID = "nimbus-secure-experiments";
+
+const EXPERIMENTS_COLLECTION = "experiments";
+const SECURE_EXPERIMENTS_COLLECTION = "secureExperiments";
+
+const RS_COLLECTION_OPTIONS = {
+  [EXPERIMENTS_COLLECTION]: {
+    disallowedFeatureIds: ["prefFlips"],
+  },
+
+  [SECURE_EXPERIMENTS_COLLECTION]: {
+    allowedFeatureIds: ["prefFlips"],
+  },
+};
+
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "COLLECTION_ID",
@@ -86,9 +101,21 @@ export class _RemoteSettingsExperimentLoader {
     // Make it possible to override for testing
     this.manager = lazy.ExperimentManager;
 
-    ChromeUtils.defineLazyGetter(this, "remoteSettingsClient", () => {
-      return lazy.RemoteSettings(lazy.COLLECTION_ID);
-    });
+    this.remoteSettingsClients = {};
+    ChromeUtils.defineLazyGetter(
+      this.remoteSettingsClients,
+      EXPERIMENTS_COLLECTION,
+      () => {
+        return lazy.RemoteSettings(lazy.COLLECTION_ID);
+      }
+    );
+    ChromeUtils.defineLazyGetter(
+      this.remoteSettingsClients,
+      SECURE_EXPERIMENTS_COLLECTION,
+      () => {
+        return lazy.RemoteSettings(SECURE_EXPERIMENTS_COLLECTION_ID);
+      }
+    );
 
     Services.obs.addObserver(this, STUDIES_ENABLED_CHANGED);
 
@@ -153,50 +180,24 @@ export class _RemoteSettingsExperimentLoader {
   }
 
   /**
-   * Get all recipes from remote settings
-   * @param {string} trigger   What caused the update to occur?
-   * @param {Object} options            additional options.
-   * @param {bool}   options.forceSync  force Remote Settings to sync recipe collection
-   *                                    before updating recipes; throw if sync fails.
-   * @return {Promise}                  which resolves after recipes are updated.
+   * Get all recipes from remote settings and update enrollments.
+   *
+   * @param {string} trigger - What caused the update to occur?
+   * @param {object} options
+   * @param {boolean}   options.forceSync - Force Remote Settings to sync recipe
+   *                                     collection before updating recipes.
    */
-  async updateRecipes(trigger, options = {}) {
+  async updateRecipes(trigger, { forceSync = false } = {}) {
     if (this._updating || !this._initialized) {
       return;
     }
 
-    const { forceSync = false } = options;
+    this._updating = true;
 
     // Since this method is async, the enabled pref could change between await
     // points. We don't want to half validate experiments, so we cache this to
     // keep it consistent throughout updating.
     const validationEnabled = this.validationEnabled;
-
-    this._updating = true;
-
-    lazy.log.debug(
-      "Updating recipes" + (trigger ? ` with trigger ${trigger}` : "")
-    );
-
-    let recipes;
-    let loadingError = false;
-
-    try {
-      recipes = await this.remoteSettingsClient.get({
-        forceSync,
-        // Throw instead of returning an empty list.
-        emptyListFallback: false,
-      });
-      lazy.log.debug(`Got ${recipes.length} recipes from Remote Settings`);
-    } catch (e) {
-      lazy.log.debug("Error getting recipes from remote settings.");
-      loadingError = true;
-      console.error(e);
-    }
-
-    recipes?.sort(
-      (a, b) => new Date(a.publishedDate ?? 0) - new Date(b.publishedDate ?? 0)
-    );
 
     let recipeValidator;
 
@@ -205,6 +206,39 @@ export class _RemoteSettingsExperimentLoader {
         await SCHEMAS.NimbusExperiment
       );
     }
+
+    lazy.log.debug(`Updating recipes with trigger "${trigger ?? ""}`);
+
+    const recipes = [];
+    let loadingError = false;
+
+    const experiments = await this.getRecipesFromCollection({
+      forceSync,
+      client: this.remoteSettingsClients[EXPERIMENTS_COLLECTION],
+      ...RS_COLLECTION_OPTIONS[EXPERIMENTS_COLLECTION],
+    });
+
+    if (experiments !== null) {
+      recipes.push(...experiments);
+    } else {
+      loadingError = true;
+    }
+
+    const secureExperiments = await this.getRecipesFromCollection({
+      forceSync,
+      client: this.remoteSettingsClients[SECURE_EXPERIMENTS_COLLECTION],
+      ...RS_COLLECTION_OPTIONS[SECURE_EXPERIMENTS_COLLECTION],
+    });
+
+    if (secureExperiments !== null) {
+      recipes.push(...secureExperiments);
+    } else {
+      loadingError = true;
+    }
+
+    recipes.sort(
+      (a, b) => new Date(a.publishedDate ?? 0) - new Date(b.publishedDate ?? 0)
+    );
 
     const enrollmentsCtx = new EnrollmentsContext(
       this.manager,
@@ -235,6 +269,72 @@ export class _RemoteSettingsExperimentLoader {
     this._updating = false;
 
     this.recordIsReady();
+  }
+
+  /**
+   * Return the recipes from a given collection.
+   *
+   * @param {object} options
+   * @param {RemoteSettings} options.client
+   *        The RemoteSettings client that will be used to fetch recipes.
+   * @param {boolean} options.forceSync
+   *        Force the RemoteSettings client to sync the collection before retrieving recipes.
+   * @param {string[] | null} options.allowedFeatureIds
+   *        If non-null, any recipe that uses a feature ID not in this list will
+   *        be rejected.
+   * @param {string[]} options.disallowedFeatureIds
+   *        If a recipe uses any features in this list, it will be rejected.
+   *
+   * @returns {object[] | null}
+   *          Recipes from the collection, filtered to match the allowed and
+   *          disallowed feature IDs, or null if there was an error syncing the
+   *          collection.
+   */
+  async getRecipesFromCollection({
+    client,
+    forceSync = false,
+    allowedFeatureIds = null,
+    disallowedFeatureIds = [],
+  } = {}) {
+    let recipes;
+    try {
+      recipes = await client.get({
+        forceSync,
+        emptyListFallback: false, // Throw instead of returning an empty list.
+      });
+      lazy.log.debug(
+        `Got ${recipes.length} recipes from ${client.collectionName}`
+      );
+    } catch (e) {
+      lazy.log.debug(
+        `Error getting recipes from Remote Settings collection ${client.collectionName}`
+      );
+      console.error(e);
+
+      return null;
+    }
+
+    return recipes.filter(recipe => {
+      for (const featureId of recipe.featureIds) {
+        if (allowedFeatureIds !== null) {
+          if (!allowedFeatureIds.includes(featureId)) {
+            lazy.log.warn(
+              `Recipe ${recipe.slug} not returned from collection ${client.collectionName} because it contains feature ${featureId}, which is disallowed for that collection.`
+            );
+            return false;
+          }
+        }
+
+        if (disallowedFeatureIds.includes(featureId)) {
+          lazy.log.warn(
+            `Recipe ${recipe.slug} not returned from collection ${client.collectionName} because it contains feature ${featureId}, which is disallowed for that collection.`
+          );
+          return false;
+        }
+      }
+
+      return true;
+    });
   }
 
   async optInToExperiment({
