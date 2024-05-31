@@ -1038,7 +1038,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   // It's a cross site load
   mHasBeenCrossSite = true;
 
-  if (mIsRedirect) {
+  if (mIsRedirect || StaticPrefs::network_cors_preflight_block_userpass_uri()) {
     // https://fetch.spec.whatwg.org/#http-redirect-fetch
     // Step 9. If request’s mode is "cors", locationURL includes credentials,
     // and request’s origin is not same origin with locationURL’s origin,
