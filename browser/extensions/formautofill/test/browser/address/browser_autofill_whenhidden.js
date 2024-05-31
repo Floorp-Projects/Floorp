@@ -95,6 +95,11 @@ add_task(async function check_autofill_verify_state() {
 
   await openPopupOn(browser, "#fname");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+  await SpecialPowers.spawn(browser, [], () => {
+    return ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("fname").previewValue == "John";
+    }, "Preview happens");
+  });
 
   await compareFillStates(
     browser,
@@ -119,6 +124,7 @@ add_task(async function check_autofill_verify_state() {
 
   await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
   await closePopup(browser);
+  await waitForAutofill(browser, "#fname", "John");
 
   await compareFillStates(
     browser,
