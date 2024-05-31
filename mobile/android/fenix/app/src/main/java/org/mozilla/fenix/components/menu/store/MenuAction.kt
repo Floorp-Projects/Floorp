@@ -34,6 +34,11 @@ sealed class MenuAction : Action {
     data class UpdateBookmarkState(val bookmarkState: BookmarkState) : MenuAction()
 
     /**
+     * [MenuAction] dispatched to delete browsing data and quit the browser.
+     */
+    data object DeleteBrowsingDataAndQuit : MenuAction()
+
+    /**
      * [MenuAction] dispatched when a navigation event occurs for a specific destination.
      */
     sealed class Navigate : MenuAction() {

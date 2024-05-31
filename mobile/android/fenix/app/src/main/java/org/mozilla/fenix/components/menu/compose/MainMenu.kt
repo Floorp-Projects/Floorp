@@ -31,6 +31,8 @@ internal const val MAIN_MENU_ROUTE = "main_menu"
  * @param account [Account] information available for a synced account.
  * @param accountState The [AccountState] of a Mozilla account.
  * @param isPrivate Whether or not the browsing mode is in private mode.
+ * @param showQuitMenu Whether or not the button to delete browsing data and quit
+ * should be visible.
  * @param onMozillaAccountButtonClick Invoked when the user clicks on Mozilla account button.
  * @param onHelpButtonClick Invoked when the user clicks on the help button.
  * @param onSettingsButtonClick Invoked when the user clicks on the settings button.
@@ -49,6 +51,7 @@ internal const val MAIN_MENU_ROUTE = "main_menu"
  * @param onCustomizeHomepageMenuClick Invoked when the user clicks on the customize
  * homepage menu item.
  * @param onNewInFirefoxMenuClick Invoked when the user clicks on the release note menu item.
+ * @param onQuitMenuClick Invoked when the user clicks on the quit menu item.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -57,6 +60,7 @@ internal fun MainMenu(
     account: Account?,
     accountState: AccountState,
     isPrivate: Boolean,
+    showQuitMenu: Boolean,
     onMozillaAccountButtonClick: () -> Unit,
     onHelpButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
@@ -73,6 +77,7 @@ internal fun MainMenu(
     onPasswordsMenuClick: () -> Unit,
     onCustomizeHomepageMenuClick: () -> Unit,
     onNewInFirefoxMenuClick: () -> Unit,
+    onQuitMenuClick: () -> Unit,
 ) {
     MenuScaffold(
         header = {
@@ -114,6 +119,26 @@ internal fun MainMenu(
                 onNewInFirefoxMenuClick = onNewInFirefoxMenuClick,
             )
         }
+
+        if (showQuitMenu) {
+            QuitMenuGroup(
+                onQuitMenuClick = onQuitMenuClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuitMenuGroup(
+    onQuitMenuClick: () -> Unit,
+) {
+    MenuGroup {
+        MenuItem(
+            label = stringResource(id = R.string.delete_browsing_data_on_quit_action),
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_cross_circle_fill_24),
+            state = MenuItemState.WARNING,
+            onClick = onQuitMenuClick,
+        )
     }
 }
 
@@ -293,6 +318,7 @@ private fun MenuDialogPreview() {
                 account = null,
                 accountState = NotAuthenticated,
                 isPrivate = false,
+                showQuitMenu = true,
                 onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
@@ -309,6 +335,7 @@ private fun MenuDialogPreview() {
                 onPasswordsMenuClick = {},
                 onCustomizeHomepageMenuClick = {},
                 onNewInFirefoxMenuClick = {},
+                onQuitMenuClick = {},
             )
         }
     }
@@ -327,6 +354,7 @@ private fun MenuDialogPrivatePreview() {
                 account = null,
                 accountState = NotAuthenticated,
                 isPrivate = false,
+                showQuitMenu = true,
                 onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
@@ -343,6 +371,7 @@ private fun MenuDialogPrivatePreview() {
                 onPasswordsMenuClick = {},
                 onCustomizeHomepageMenuClick = {},
                 onNewInFirefoxMenuClick = {},
+                onQuitMenuClick = {},
             )
         }
     }

@@ -28,6 +28,7 @@ private fun reducer(state: MenuState, action: MenuAction): MenuState {
     return when (action) {
         is MenuAction.InitAction,
         is MenuAction.AddBookmark,
+        is MenuAction.DeleteBrowsingDataAndQuit,
         is MenuAction.Navigate,
         -> state
 

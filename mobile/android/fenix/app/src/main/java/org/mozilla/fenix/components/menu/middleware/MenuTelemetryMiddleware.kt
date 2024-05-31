@@ -124,6 +124,12 @@ class MenuTelemetryMiddleware(
                 )
             }
 
+            MenuAction.DeleteBrowsingDataAndQuit -> Events.browserMenuAction.record(
+                Events.BrowserMenuActionExtra(
+                    item = "quit",
+                ),
+            )
+
             MenuAction.InitAction,
             MenuAction.Navigate.Back,
             MenuAction.Navigate.DiscoverMoreExtensions,
