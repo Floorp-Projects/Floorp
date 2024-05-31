@@ -9,6 +9,7 @@ support-files = [
   "ocsp_certs/**",
   "test_baseline_requirements/**",
   "test_broken_fips/**",
+  "test_builtins/**",
   "test_cert_eku/**",
   "test_cert_embedded_null/**",
   "test_cert_keyUsage/**",
@@ -70,6 +71,8 @@ skip-if = [
   "os == 'android'",
   "os == 'linux'"
 ]
+
+["test_builtins.js"]
 
 ["test_certDB_export_pkcs12.js"]
 

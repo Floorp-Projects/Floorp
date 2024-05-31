@@ -579,6 +579,7 @@ name = "builtins-static"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.69.4",
+ "mozbuild",
  "mozilla-central-workspace-hack",
  "nom",
  "pkcs11-bindings",
@@ -5678,6 +5679,18 @@ dependencies = [
 [[package]]
 name = "terminal_size"
 version = "0.3.999"
+
+[[package]]
+name = "test-builtins-static"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.69.4",
+ "mozbuild",
+ "mozilla-central-workspace-hack",
+ "nom",
+ "pkcs11-bindings",
+ "smallvec",
+]
 
 [[package]]
 name = "textwrap"
