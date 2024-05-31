@@ -3428,9 +3428,11 @@ void JSObject::traceChildren(JSTracer* trc) {
 
   // Step 7.
   if (IsConstructor(s)) {
-    ReportUsageCounter(cx, defaultCtor,
-                       SUBCLASSING_DETERMINE_THROUGH_CONSTRUCTOR,
-                       SUBCLASSING_TYPE_III);
+    if (&s.toObject() != ctorObj) {
+      ReportUsageCounter(cx, defaultCtor,
+                         SUBCLASSING_DETERMINE_THROUGH_CONSTRUCTOR,
+                         SUBCLASSING_TYPE_III);
+    }
     return &s.toObject();
   }
 

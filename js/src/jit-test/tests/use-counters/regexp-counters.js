@@ -14,6 +14,8 @@ function test_function_for_use_counter_integration(fn, counter, expected_growth 
     }
 }
 
+class Sentinel extends RegExp { }
+
 function R() { }
 Object.setPrototypeOf(R, RegExp);
 Object.setPrototypeOf(R.prototype, RegExp.prototype);
@@ -28,6 +30,18 @@ Object.defineProperty(R.prototype, "dotAll", { value: false });
 Object.defineProperty(R.prototype, "unicode", { value: false });
 Object.defineProperty(R.prototype, "unicodeSets", { value: false });
 Object.defineProperty(R.prototype, "sticky", { value: false });
+Object.defineProperty(R.prototype, "source", { value: false });
+
+// Need a Symbol.species getter for Type III Subclassing.
+Object.defineProperty(R, Symbol.species, {
+    get() {
+        return Sentinel;
+    },
+    configurable: true,
+    enumerable: true
+});
+
+assertEq(R[Symbol.species], Sentinel);
 
 function test_regexp_matchall() {
     "some".matchAll(/foo/g);
@@ -50,7 +64,9 @@ function test_regexp_split_type_iii() {
     let r = /r/;
 
     class B extends RegExp {
-        x = "this";
+        static get [Symbol.species]() {
+            return Sentinel;
+        }
     }
 
     let b = new B("R");
@@ -67,6 +83,23 @@ function test_regexp_split_type_iii() {
 
 test_function_for_use_counter_integration(test_regexp_split, "SubclassingRegExpTypeIII", false)
 test_function_for_use_counter_integration(test_regexp_split_type_iii, "SubclassingRegExpTypeIII", true)
+
+function test_regexp_split_type_iii_default_exception() {
+    let r = /r/;
+
+    class B extends RegExp {
+        static get [Symbol.species]() {
+            return this;
+        }
+    }
+
+    let b = new B("R");
+
+    let split = r[Symbol.split];
+    split.call(b, "split");
+}
+
+test_function_for_use_counter_integration(test_regexp_split_type_iii_default_exception, "SubclassingRegExpTypeIII", false)
 
 function test_regexp_exec() {
     let r = /r/;

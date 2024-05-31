@@ -2,14 +2,15 @@ function test_function_for_use_counter_integration(fn, counter, expected_growth 
     let before = getUseCounterResults();
     assertEq(counter in before, true);
 
+    console.log(fn.name)
     fn();
 
     let after = getUseCounterResults();
     if (expected_growth) {
-        console.log("Yes Increase: Before ", before[counter], " After", after[counter]);
+        console.log(`Yes Increase ${counter}: Before `, before[counter], " After", after[counter]);
         assertEq(after[counter] > before[counter], true);
     } else {
-        console.log("No Increase: Before ", before[counter], " After", after[counter]);
+        console.log(`No Increase ${counter}: Before `, before[counter], " After", after[counter]);
         assertEq(after[counter] == before[counter], true);
     }
 }
@@ -123,3 +124,32 @@ function promise_then_subclassing_type_iii() {
 
 test_function_for_use_counter_integration(promise_then, "SubclassingPromiseTypeIII", /* expected_growth = */ false);
 test_function_for_use_counter_integration(promise_then_subclassing_type_iii, "SubclassingPromiseTypeIII", /* expected_growth = */ true);
+
+
+class MyDefaultPromiseBase extends Promise {
+    static get [Symbol.species]() {
+        return Promise;
+    }
+}
+
+function promise_then_subclassing_type_iii_default_base() {
+    var p = MyDefaultPromiseBase.resolve().then(() => { });
+    assertEq(p instanceof Promise, true);
+}
+
+test_function_for_use_counter_integration(promise_then_subclassing_type_iii_default_base, "SubclassingPromiseTypeIII", /* expected_growth = */ true);
+
+
+
+class MyDefaultPromise extends Promise {
+    static get [Symbol.species]() {
+        return this;
+    }
+}
+
+function promise_then_subclassing_type_iii_default_exception() {
+    var p = MyDefaultPromise.resolve().then(() => { });
+    assertEq(p instanceof MyDefaultPromise, true);
+}
+
+test_function_for_use_counter_integration(promise_then_subclassing_type_iii_default_exception, "SubclassingPromiseTypeIII", /* expected_growth = */ false);
