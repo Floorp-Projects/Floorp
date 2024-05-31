@@ -2,7 +2,7 @@
 skip-if = ["os == 'android'"] # bug 1730213
 head = "head.js"
 firefox-appdir = "browser"
-tags = "webextensions condprof"
+tags = "webextensions"
 dupe-manifest = ""
 
 ["test_ext_bookmarks.js"]

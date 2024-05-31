@@ -8,7 +8,7 @@ support-files = [
   "head_dnr_static_rules.js",
   "xpcshell-content.toml",
 ]
-tags = "webextensions in-process-webextensions condprof"
+tags = "webextensions in-process-webextensions"
 
 # Make sure that loading the default settings for url-classifier-skip-urls
 # doesn't interfere with running our tests while IDB operations are in
