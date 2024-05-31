@@ -239,11 +239,14 @@ defaults pref(layout.css.font-variations.enabled,false)
 == variation-format-hint-1c.html variation-format-hint-1A-ref.html
 == variation-format-hint-1d.html variation-format-hint-1A-ref.html
 defaults pref(layout.css.font-variations.enabled,true)
-# Currently Windows 7 and macOS all fail on 
-# treeherder because our OS versions are too old to support variation fonts
 == variation-format-hint-1a.html variation-format-hint-1B-ttf-ref.html
 == variation-format-hint-1b.html variation-format-hint-1B-otf-ref.html
 == variation-format-hint-1c.html variation-format-hint-1B-woff-ref.html
 == variation-format-hint-1d.html variation-format-hint-1B-woff2-ref.html
+
+# Check that -webkit-font-smoothing affects rendering (macOS only)...
+skip-if(!cocoaWidget) != font-smoothing-antialiased.html font-smoothing-antialiased-notref.html
+# ...but has no effect on other platforms
+skip-if(cocoaWidget) == font-smoothing-antialiased.html font-smoothing-antialiased-notref.html
 
 defaults
