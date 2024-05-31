@@ -216,6 +216,26 @@
 
       verifyEvents([]);
     });
+
+    // Verify setting iconSrc displays an icon in the checkbox.
+    add_task(async function testCheckboxIcon() {
+      const ICON_SRC = "chrome://global/skin/icons/edit-copy.svg";
+      const mozCheckbox1 = document.getElementById("moz-checkbox-1");
+
+      ok(!mozCheckbox1.icon, "No icon element present if iconSrc isn't set");
+      mozCheckbox1.iconSrc = ICON_SRC;
+      await mozCheckbox1.updateComplete;
+      ok(mozCheckbox1.icon, "Checkbox displays an icon");
+      is(
+        mozCheckbox1.icon.getAttribute("src"),
+        ICON_SRC,
+        "Checkbox icon uses the expected source"
+      );
+
+      mozCheckbox1.iconSrc = null;
+      await mozCheckbox1.updateComplete;
+      ok(!mozCheckbox1.icon, "Checkbox icon can be removed");
+    });
   </script>
 </pre>
 </body>

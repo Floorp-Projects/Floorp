@@ -18,12 +18,13 @@ moz-checkbox-label =
   },
 };
 
-const Template = ({ l10nId, checked, label, disabled }) => html`
+const Template = ({ l10nId, checked, label, disabled, iconSrc }) => html`
   <moz-checkbox
     ?checked=${checked}
     .label=${label}
     data-l10n-id=${ifDefined(l10nId)}
     data-l10n-attrs="label"
+    .iconSrc=${iconSrc}
     ?disabled=${disabled}
   ></moz-checkbox>
 `;
@@ -34,6 +35,13 @@ Default.args = {
   checked: false,
   label: "",
   disabled: false,
+  iconSrc: "",
+};
+
+export const WithIcon = Template.bind({});
+WithIcon.args = {
+  ...Default.args,
+  iconSrc: "chrome://global/skin/icons/highlights.svg",
 };
 
 export const CheckedByDefault = Template.bind({});
