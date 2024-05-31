@@ -58,23 +58,27 @@ bitflags! {
 impl RestyleHint {
     /// Creates a new `RestyleHint` indicating that the current element and all
     /// its descendants must be fully restyled.
+    #[inline]
     pub fn restyle_subtree() -> Self {
         RestyleHint::RESTYLE_SELF | RestyleHint::RESTYLE_DESCENDANTS
     }
 
     /// Creates a new `RestyleHint` indicating that the current element and all
     /// its descendants must be recascaded.
+    #[inline]
     pub fn recascade_subtree() -> Self {
         RestyleHint::RECASCADE_SELF | RestyleHint::RECASCADE_DESCENDANTS
     }
 
     /// Returns whether this hint invalidates the element and all its
     /// descendants.
+    #[inline]
     pub fn contains_subtree(&self) -> bool {
         self.contains(Self::restyle_subtree())
     }
 
     /// Returns whether we'll recascade all of the descendants.
+    #[inline]
     pub fn will_recascade_subtree(&self) -> bool {
         self.contains_subtree() || self.contains(Self::recascade_subtree())
     }

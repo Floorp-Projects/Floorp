@@ -134,7 +134,8 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
                        nsChangeHint(0));
       if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
         StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-            containerElement->GetFirstElementChild());
+            containerElement->GetFirstElementChild(),
+            /* aForceRestyleSiblings = */ false);
       }
     } else {
       RestylePreviousSiblings(aFirstNewContent);
@@ -398,7 +399,8 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
                        nsChangeHint(0));
       if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
         StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-            containerElement->GetFirstElementChild());
+            containerElement->GetFirstElementChild(),
+            /* aForceRestyleSiblings = */ false);
       }
     } else {
       RestylePreviousSiblings(aChild);
@@ -410,10 +412,11 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
 
   if (selectorFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
     // Restyle all later siblings.
-    RestyleSiblingsStartingWith(aChild->GetNextSibling());
     if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
       StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-          aChild->GetNextElementSibling());
+          aChild->GetNextElementSibling(), /* aForceRestyleSiblings = */ true);
+    } else {
+      RestyleSiblingsStartingWith(aChild->GetNextSibling());
     }
   }
 
@@ -488,7 +491,8 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
                        nsChangeHint(0));
       if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
         StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-            containerElement->GetFirstElementChild());
+            containerElement->GetFirstElementChild(),
+            /* aForceRestyleSiblings = */ false);
       }
     } else {
       RestylePreviousSiblings(aOldChild);
@@ -500,7 +504,6 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
 
   if (selectorFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
     // Restyle all later siblings.
-    RestyleSiblingsStartingWith(aFollowingSibling);
     if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
       Element* nextSibling =
           aFollowingSibling ? aFollowingSibling->IsElement()
@@ -508,7 +511,9 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
                                   : aFollowingSibling->GetNextElementSibling()
                             : nullptr;
       StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-          nextSibling);
+          nextSibling, /* aForceRestyleSiblings = */ true);
+    } else {
+      RestyleSiblingsStartingWith(aFollowingSibling);
     }
   }
 
