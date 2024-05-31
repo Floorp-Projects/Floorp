@@ -20,10 +20,12 @@ const ReferrerInfo = Components.Constructor(
   "init"
 );
 
+let h2Port;
+
 add_setup(async function setup() {
   trr_test_setup();
 
-  let h2Port = Services.env.get("MOZHTTP2_PORT");
+  h2Port = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
@@ -349,4 +351,16 @@ add_task(async function testHTTPSRRUpgradeWithOriginHeader() {
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
   Assert.equal(buf, originURL);
+});
+
+// See bug 1899841. Test the case when network.dns.use_https_rr_as_altsvc
+// is disabled.
+add_task(async function testPrefDisabled() {
+  Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", false);
+
+  let chan = makeChan(`https://test.httpssvc.com:${h2Port}/server-timing`);
+  let [req] = await channelOpenPromise(chan);
+
+  req.QueryInterface(Ci.nsIHttpChannel);
+  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 });

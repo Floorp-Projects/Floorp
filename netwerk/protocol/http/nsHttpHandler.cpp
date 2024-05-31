@@ -2803,10 +2803,6 @@ void nsHttpHandler::MaybeAddAltSvcForTesting(
   }
 }
 
-bool nsHttpHandler::UseHTTPSRRAsAltSvcEnabled() const {
-  return StaticPrefs::network_dns_use_https_rr_as_altsvc();
-}
-
 bool nsHttpHandler::EchConfigEnabled(bool aIsHttp3) const {
   if (mParentalControlEnabled) {
     return false;
