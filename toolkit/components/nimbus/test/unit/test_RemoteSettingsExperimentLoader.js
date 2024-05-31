@@ -115,7 +115,7 @@ add_task(async function test_updateRecipes() {
   sinon.spy(loader, "updateRecipes");
 
   sinon
-    .stub(loader.remoteSettingsClient, "get")
+    .stub(loader.remoteSettingsClients.experiments, "get")
     .resolves([PASS_FILTER_RECIPE, FAIL_FILTER_RECIPE]);
   sinon.stub(loader.manager, "onRecipe").resolves();
   sinon.stub(loader.manager, "onFinalize");
@@ -147,7 +147,7 @@ add_task(async function test_updateRecipes_someMismatch() {
   sinon.spy(loader, "updateRecipes");
 
   sinon
-    .stub(loader.remoteSettingsClient, "get")
+    .stub(loader.remoteSettingsClients.experiments, "get")
     .resolves([PASS_FILTER_RECIPE, FAIL_FILTER_RECIPE]);
   sinon.stub(loader.manager, "onRecipe").resolves();
   sinon.stub(loader.manager, "onFinalize");
@@ -181,7 +181,9 @@ add_task(async function test_updateRecipes_forFirstStartup() {
   const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
     targeting: "isFirstStartup",
   });
-  sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
+  sinon
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([PASS_FILTER_RECIPE]);
   sinon.stub(loader.manager, "onRecipe").resolves();
   sinon.stub(loader.manager, "onFinalize");
   sinon
@@ -199,7 +201,9 @@ add_task(async function test_updateRecipes_forNoneFirstStartup() {
   const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
     targeting: "isFirstStartup",
   });
-  sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
+  sinon
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([PASS_FILTER_RECIPE]);
   sinon.stub(loader.manager, "onRecipe").resolves();
   sinon.stub(loader.manager, "onFinalize");
   sinon
@@ -270,7 +274,9 @@ add_task(async function test_optIn_debug_disabled() {
   sinon.stub(loader, "updateRecipes").resolves();
 
   const recipe = ExperimentFakes.recipe("foo");
-  sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  sinon
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([recipe]);
 
   Services.prefs.setBoolPref(DEBUG_PREF, false);
   Services.prefs.setBoolPref(UPLOAD_PREF, true);
@@ -301,7 +307,9 @@ add_task(async function test_optIn_studies_disabled() {
   sinon.stub(loader, "updateRecipes").resolves();
 
   const recipe = ExperimentFakes.recipe("foo");
-  sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  sinon
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([recipe]);
 
   Services.prefs.setBoolPref(DEBUG_PREF, true);
 
@@ -336,7 +344,9 @@ add_task(async function test_enrollment_changed_notification() {
   const enrollmentChanged = TestUtils.topicObserved(
     "nimbus:enrollments-updated"
   );
-  sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
+  sinon
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([PASS_FILTER_RECIPE]);
   sinon.stub(loader.manager, "onRecipe").resolves();
   sinon.stub(loader.manager, "onFinalize");
 

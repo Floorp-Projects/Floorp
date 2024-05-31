@@ -804,7 +804,7 @@ add_task(async function test_forceEnroll() {
   const manager = loader.manager;
 
   sinon
-    .stub(loader.remoteSettingsClient, "get")
+    .stub(loader.remoteSettingsClients.experiments, "get")
     .resolves([experiment1, experiment2, rollout1, rollout2]);
   sinon.stub(loader, "setTimer");
 

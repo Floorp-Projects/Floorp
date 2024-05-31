@@ -327,11 +327,12 @@ export const ExperimentFakes = {
   },
   rsLoader() {
     const loader = new lazy._RemoteSettingsExperimentLoader();
-    // Replace RS client with a fake
-    Object.defineProperty(loader, "remoteSettingsClient", {
+    Object.defineProperty(loader.remoteSettingsClients, "experiments", {
       value: { get: () => Promise.resolve([]) },
     });
-    // Replace xman with a fake
+    Object.defineProperty(loader.remoteSettingsClients, "secureExperiments", {
+      value: { get: () => Promise.resolve([]) },
+    });
     loader.manager = this.manager();
 
     return loader;

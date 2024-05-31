@@ -890,7 +890,9 @@ add_task(async function test_updateRecipes() {
   await manager.onStartup();
   await manager.store.ready();
 
-  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  sandbox
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([recipe]);
   await loader.updateRecipes();
 
   Assert.ok(manager.onRecipe.calledOnce, "Enrolled");
@@ -937,7 +939,9 @@ async function test_updateRecipes_missingLocale({
   await manager.onStartup();
   await manager.store.ready();
 
-  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  sandbox
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([recipe]);
   await loader.updateRecipes();
 
   Assert.ok(!manager.onRecipe.called, "Did not enroll in the recipe");
@@ -1024,7 +1028,9 @@ add_task(async function test_updateRecipes_missingEntry() {
   await manager.onStartup();
   await manager.store.ready();
 
-  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  sandbox
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([recipe]);
   await loader.updateRecipes();
 
   Assert.ok(!manager.onRecipe.called, "Did not enroll in the recipe");
@@ -1144,7 +1150,9 @@ add_task(async function test_updateRecipes_unenroll_missingEntry() {
 
   const badRecipe = { ...recipe, localizations: { "en-US": {} } };
 
-  sandbox.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
+  sandbox
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([badRecipe]);
 
   await loader.updateRecipes();
 
@@ -1300,7 +1308,9 @@ add_task(async function test_updateRecipes_unenroll_missingLocale() {
     localizations: {},
   };
 
-  sandbox.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
+  sandbox
+    .stub(loader.remoteSettingsClients.experiments, "get")
+    .resolves([badRecipe]);
 
   await loader.updateRecipes();
 
