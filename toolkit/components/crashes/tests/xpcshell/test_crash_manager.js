@@ -803,7 +803,6 @@ add_task(async function test_glean_crash_ping() {
   GleanPings.crash.testBeforeNextSubmit(_ => {
     submitted = true;
     const MINUTES = new Date(DUMMY_DATE);
-    MINUTES.setSeconds(0);
     Assert.equal(Glean.crash.time.testGetValue().getTime(), MINUTES.getTime());
     Assert.equal(
       Glean.crash.processType.testGetValue(),
@@ -827,8 +826,6 @@ add_task(async function test_glean_crash_ping() {
   GleanPings.crash.testBeforeNextSubmit(() => {
     submitted = true;
     const MINUTES = new Date(DUMMY_DATE_2);
-    MINUTES.setSeconds(0);
-    Assert.equal(Glean.crash.uptime.testGetValue(), 600.1 * 1000);
     Assert.equal(Glean.crash.time.testGetValue().getTime(), MINUTES.getTime());
     Assert.equal(
       Glean.crash.processType.testGetValue(),
@@ -845,7 +842,6 @@ add_task(async function test_glean_crash_ping() {
     {
       StackTraces: stackTraces,
       MinidumpSha256Hash: sha256Hash,
-      UptimeTS: "600.1",
       StartupCrash: "1",
     }
   );
