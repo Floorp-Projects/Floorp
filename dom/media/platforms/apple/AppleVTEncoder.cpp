@@ -159,8 +159,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
     return InitPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
   }
 
-  if (mConfig.mScalabilityMode != ScalabilityMode::None &&
-      !OSSupportsSVC()) {
+  if (mConfig.mScalabilityMode != ScalabilityMode::None && !OSSupportsSVC()) {
     LOGE("SVC only supported on macOS 11.3 and more recent");
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
