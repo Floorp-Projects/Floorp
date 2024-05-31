@@ -2554,7 +2554,32 @@ def ub_signed_overflow_san():
     return True
 
 
-add_old_configure_assignment("MOZ_SIGNED_OVERFLOW_SANITIZE", ub_signed_overflow_san)
+@depends(
+    c_compiler,
+    compilation_flags,
+    linker_flags,
+    build_environment,
+    when=ub_signed_overflow_san,
+)
+def ub_signed_overflow_san_flags(
+    c_compiler, compilation_flags, linker_flags, build_env
+):
+    sanitizer_blacklist = os.path.join(
+        build_env.topsrcdir,
+        "build",
+        "sanitizers",
+        "ubsan_signed_overflow_blacklist.txt",
+    )
+    flags = [
+        f"-fsanitize=signed-integer-overflow",
+        f"-fsanitize-blacklist={sanitizer_blacklist}",
+    ]
+    compilation_flags.cflags.extend(flags)
+    compilation_flags.cxxflags.extend(flags)
+    if c_compiler.type != "clang-cl":
+        linker_flags.ldflags.extend(["-fsanitize=signed-integer-overflow", "-rdynamic"])
+
+
 set_define("MOZ_SIGNED_OVERFLOW_SANITIZE", True, when=ub_signed_overflow_san)
 set_config("MOZ_SIGNED_OVERFLOW_SANITIZE", True, when=ub_signed_overflow_san)
 
@@ -2570,7 +2595,34 @@ def ub_unsigned_overflow_san():
     return True
 
 
-add_old_configure_assignment("MOZ_UNSIGNED_OVERFLOW_SANITIZE", ub_unsigned_overflow_san)
+@depends(
+    c_compiler,
+    compilation_flags,
+    linker_flags,
+    build_environment,
+    when=ub_unsigned_overflow_san,
+)
+def ub_unsigned_overflow_san_flags(
+    c_compiler, compilation_flags, linker_flags, build_env
+):
+    sanitizer_blacklist = os.path.join(
+        build_env.topsrcdir,
+        "build",
+        "sanitizers",
+        "ubsan_unsigned_overflow_blacklist.txt",
+    )
+    flags = [
+        f"-fsanitize=unsigned-integer-overflow",
+        f"-fsanitize-blacklist={sanitizer_blacklist}",
+    ]
+    compilation_flags.cflags.extend(flags)
+    compilation_flags.cxxflags.extend(flags)
+    if c_compiler.type != "clang-cl":
+        linker_flags.ldflags.extend(
+            ["-fsanitize=unsigned-integer-overflow", "-rdynamic"]
+        )
+
+
 set_define("MOZ_UNSIGNED_OVERFLOW_SANITIZE", True, when=ub_unsigned_overflow_san)
 set_config("MOZ_UNSIGNED_OVERFLOW_SANITIZE", True, when=ub_unsigned_overflow_san)
 
