@@ -48,6 +48,7 @@
   color-scheme: dark;
   --newtab-background-color: #2B2A33;
   --newtab-background-color-secondary: rgb(66, 65, 77);
+  --newtab-text-primary-color: rgb(251, 251, 254);
   --newtab-contextual-text-primary-color: light-dark(rgb(21, 20, 26), var(--newtab-text-primary-color));
   --newtab-primary-action-background-pocket: rgb(0, 221, 255);
   --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);

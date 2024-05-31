@@ -95,6 +95,7 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
     // General styles
     --newtab-background-color: #{$in-content-page-background-dark};
     --newtab-background-color-secondary: #{$newtab-background-secondary-dark};
+    --newtab-text-primary-color: #{$in-content-page-color-dark};
     --newtab-contextual-text-primary-color: light-dark(#{$in-content-page-color}, var(--newtab-text-primary-color));
     --newtab-primary-action-background-pocket: #{$primary-blue-dark};
     --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);

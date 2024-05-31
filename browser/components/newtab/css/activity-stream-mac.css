@@ -83,6 +83,7 @@ input {
   color-scheme: dark;
   --newtab-background-color: #2B2A33;
   --newtab-background-color-secondary: #42414d;
+  --newtab-text-primary-color: #fbfbfe;
   --newtab-contextual-text-primary-color: light-dark(#15141a, var(--newtab-text-primary-color));
   --newtab-primary-action-background-pocket: #00ddff;
   --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
