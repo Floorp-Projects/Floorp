@@ -863,8 +863,11 @@ void GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
 
 bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
                                          jni::String::Param aText) {
-  ALOGIME("IME: IME_REPLACE_TEXT: text=\"%s\"",
-          NS_ConvertUTF16toUTF8(aText->ToString()).get());
+  ALOGIME(
+      "IME: IME_REPLACE_TEXT: aStart=%d, aEnd=%d, aText=\"%s\", "
+      "mIMERanges=%zu, mIMEKeyEvents=%zu",
+      aStart, aEnd, NS_ConvertUTF16toUTF8(aText->ToString()).get(),
+      mIMERanges->Length(), mIMEKeyEvents.Length());
 
   // Return true if processed and we should reply to the OnImeReplaceText
   // event later. Return false if _not_ processed and we should reply to the
@@ -997,6 +1000,23 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
   SendIMEDummyKeyEvent(widget, eKeyDown);
   if (!mDispatcher || widget->Destroyed()) {
     return false;
+  }
+
+  if (!StaticPrefs::intl_ime_use_composition_events_for_insert_text() &&
+      !composing && !mDispatcher->IsComposing() && aStart == aEnd &&
+      !string.IsEmpty()) {
+    // We don't start composition yet and inserting text has no composition.
+    // So we can simply insert text without composition.
+    ALOGIME("IME: Don't use composition event to insert text");
+    WidgetContentCommandEvent insertTextEvent(true, eContentCommandInsertText,
+                                              widget);
+    insertTextEvent.mString = Some(string);
+    widget->DispatchEvent(&insertTextEvent, status);
+    if (!mDispatcher || widget->Destroyed()) {
+      return false;
+    }
+    SendIMEDummyKeyEvent(widget, eKeyUp);
+    return true;
   }
 
   if (needDispatchCompositionStart) {
