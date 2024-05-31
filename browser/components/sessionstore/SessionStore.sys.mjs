@@ -197,14 +197,6 @@ ChromeUtils.defineLazyGetter(lazy, "blankURI", () => {
 var gDebuggingEnabled = false;
 
 /**
- * A global value to tell that fingerprinting resistance is enabled or not.
- * If it's enabled, the session restore won't restore the window's size and
- * size mode.
- * This value is controlled by preference privacy.resistFingerprinting.
- */
-var gResistFingerprintingEnabled = false;
-
-/**
  * @namespace SessionStore
  */
 export var SessionStore = {
@@ -1298,11 +1290,6 @@ var SessionStoreInternal = {
       "sessionstore.restore_on_demand"
     );
     this._prefBranch.addObserver("sessionstore.restore_on_demand", this, true);
-
-    gResistFingerprintingEnabled = Services.prefs.getBoolPref(
-      "privacy.resistFingerprinting"
-    );
-    Services.prefs.addObserver("privacy.resistFingerprinting", this);
   },
 
   /**
@@ -2722,11 +2709,6 @@ var SessionStoreInternal = {
           "sessionstore.max_windows_undo"
         );
         this._capClosedWindows();
-        break;
-      case "privacy.resistFingerprinting":
-        gResistFingerprintingEnabled = Services.prefs.getBoolPref(
-          "privacy.resistFingerprinting"
-        );
         break;
       case "sessionstore.restore_on_demand":
         this._restore_on_demand = this._prefBranch.getBoolPref(
@@ -5766,7 +5748,7 @@ var SessionStoreInternal = {
         aWidth &&
         aHeight &&
         (aWidth != win_("width") || aHeight != win_("height")) &&
-        !gResistFingerprintingEnabled
+        !ChromeUtils.shouldResistFingerprinting("RoundWindowSize", null)
       ) {
         // Don't resize the window if it's currently maximized and we would
         // maximize it again shortly after.
@@ -5779,7 +5761,7 @@ var SessionStoreInternal = {
       if (
         aSizeMode &&
         win_("sizemode") != aSizeMode &&
-        !gResistFingerprintingEnabled
+        !ChromeUtils.shouldResistFingerprinting("RoundWindowSize", null)
       ) {
         switch (aSizeMode) {
           case "maximized":
