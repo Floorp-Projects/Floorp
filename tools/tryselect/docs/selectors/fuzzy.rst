@@ -336,6 +336,50 @@ Inside of these tasks, the reftest harness will only run tests that live under
 ``layout/reftests/reftest-sanity``.
 
 
+Test Tags
+----------
+
+Adding a test tag may be specified as positional arguments. When
+specifying a tag, the list of available tasks to choose from is filtered down such that
+only suites that have tests annotated with the specific tag. Notably, only the first
+chunk of each suite/platform appears. When the tasks are scheduled, only tests that have
+a matching tag in the manifest will be run.
+
+.. note::
+
+    When using tags, be aware that all tests matching the tag will run in the
+    same chunk. This might produce a different ordering from what gets run on production
+    branches, and may yield different results.
+
+    For suites that restart the browser between each manifest (like mochitest), this
+    shouldn't be as big of a concern.
+
+The behavior with using a Tag with Paths is that a logical OR is used so all Paths that match
+and all tests within those paths which have a Tag will match.
+Tags can be used with the interactive ``fzf`` window, or using the ``-q/--query`` argument.
+For example, running:
+
+.. code-block:: shell
+
+    $ mach try fuzzy --tag indexedDB -q "!pgo !cov !asan 'linux64"
+
+Would produce the following ``try_task_config.json``:
+
+.. code-block:: json
+
+    {
+      "env":{
+        "MOZHARNESS_TEST_PATHS":"{\"mochitest\":\"dom/indeedDB/test\"}"
+      },
+      "tasks":[
+        "test-linux64-qr/debug-mochitest-e10s-1",
+        "test-linux64-qr/opt-mochitest-e10s-1",
+        "test-linux64/debug-mochitest-e10s-1",
+        "test-linux64/opt-mochitest-e10s-1",
+      ]
+    }
+
+
 .. _additional-arguments:
 
 Additional Arguments

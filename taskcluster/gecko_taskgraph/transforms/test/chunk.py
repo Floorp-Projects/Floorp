@@ -92,7 +92,9 @@ def set_test_manifests(config, tasks):
             continue
 
         mozinfo = guess_mozinfo_from_task(
-            task, config.params.get("head_repository", "")
+            task,
+            config.params.get("head_repository", ""),
+            config.params.get("try_task_config", {}).get("env", {}),
         )
 
         loader_name = task.pop(
@@ -116,7 +118,10 @@ def set_test_manifests(config, tasks):
                 config.params["try_task_config"]["env"]["MOZHARNESS_TEST_PATHS"]
             )
 
-        if task["attributes"]["unittest_suite"] in mh_test_paths.keys():
+        if (
+            mh_test_paths
+            and task["attributes"]["unittest_suite"] in mh_test_paths.keys()
+        ):
             input_paths = mh_test_paths[task["attributes"]["unittest_suite"]]
             remaining_manifests = []
 
@@ -158,6 +163,14 @@ def set_test_manifests(config, tasks):
 
             if remaining_manifests == []:
                 continue
+
+        elif mh_test_paths:
+            # we have test paths and they are not related to the test suite
+            # this could be the test suite doesn't support test paths
+            continue
+        elif not task["test-manifests"]["active"]:
+            # no MH_TEST_PATHS, but MH_TEST_TAG or other filters
+            continue
 
         # The default loader loads all manifests. If we use a non-default
         # loader, we'll only run some subset of manifests and the hardcoded

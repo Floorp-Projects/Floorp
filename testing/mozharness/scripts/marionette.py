@@ -81,6 +81,15 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                 },
             ],
             [
+                ["--tag"],
+                {
+                    "action": "store",
+                    "dest": "test_tag",
+                    "default": "",
+                    "help": "Tag that identifies how to filter which tests to run.",
+                },
+            ],
+            [
                 ["--total-chunks"],
                 {
                     "action": "store",
@@ -338,6 +347,9 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
         python = self.query_python_path("python")
 
         cmd = [python, "-u", os.path.join(dirs["abs_marionette_dir"], "runtests.py")]
+
+        if self.config.get("test_tag", ""):
+            cmd.extend(["--tag", self.config["test_tag"]])
 
         manifest = os.path.join(
             dirs["abs_marionette_tests_dir"], self.config["test_manifest"]
