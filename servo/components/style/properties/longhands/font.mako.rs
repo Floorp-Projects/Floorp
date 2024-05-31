@@ -474,13 +474,11 @@ pub mod system_font {
 
 ${helpers.single_keyword(
     "-moz-osx-font-smoothing",
-    "auto grayscale subpixel-antialiased",
+    "auto grayscale",
     engines="gecko",
     gecko_constant_prefix="NS_FONT_SMOOTHING",
     gecko_ffi_name="mFont.smoothing",
     gecko_pref="layout.css.osx-font-smoothing.enabled",
-    aliases="-webkit-font-smoothing",
-    gecko_aliases="antialiased=grayscale",
     has_effect_on_gecko_scrollbars=False,
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/font-smooth)",
     animation_value_type="discrete",
