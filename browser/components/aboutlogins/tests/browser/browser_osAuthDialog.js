@@ -15,6 +15,8 @@ const SELECTORS = {
 add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
+  // Undo mocking from head.js
+  sinon.restore();
 });
 
 add_task(async function test_os_auth_enabled_with_checkbox() {

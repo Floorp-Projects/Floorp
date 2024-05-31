@@ -11,6 +11,9 @@ const SELECTORS = {
 requestLongerTimeout(2);
 
 add_setup(async function () {
+  // Revert head.js change that mocks os auth
+  sinon.restore();
+
   // Load in a few credit cards
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.reduceTimerPrecision", false]],
