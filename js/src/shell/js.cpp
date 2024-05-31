@@ -13447,7 +13447,7 @@ bool SetContextGCOptions(JSContext* cx, const OptionParser& op) {
   }
   JS_SetGCParameter(cx, JSGC_PARALLEL_MARKING_ENABLED, parallelMarking);
 
-  JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET_MS, 5);
+  JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET_MS, 10);
 
   JS_SetGCParameter(cx, JSGC_PER_ZONE_GC_ENABLED, true);
 

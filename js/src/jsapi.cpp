@@ -1434,7 +1434,7 @@ JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(
   };
 
   static const JSGCConfig minimal[] = {
-      {JSGC_SLICE_TIME_BUDGET_MS, 5},
+      {JSGC_SLICE_TIME_BUDGET_MS, 10},
       {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
       {JSGC_LARGE_HEAP_SIZE_MIN, 250},
       {JSGC_SMALL_HEAP_SIZE_MAX, 50},
@@ -1448,7 +1448,7 @@ JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(
       {JSGC_URGENT_THRESHOLD_MB, 8}};
 
   static const JSGCConfig nominal[] = {
-      {JSGC_SLICE_TIME_BUDGET_MS, 5},
+      {JSGC_SLICE_TIME_BUDGET_MS, 10},
       {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1000},
       {JSGC_LARGE_HEAP_SIZE_MIN, 500},
       {JSGC_SMALL_HEAP_SIZE_MAX, 100},
