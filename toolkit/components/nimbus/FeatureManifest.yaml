@@ -867,12 +867,6 @@ pocketNewtab:
         pref: browser.newtabpage.activity-stream.newtabWallpapers.enabled
       description: >-
         Turns on and off wallpaper support.
-    weatherLocationSearch:
-      type: boolean
-      fallbackPref: >-
-        browser.newtabpage.activity-stream.weather.locationSearchEnabled
-      description: >-
-        Turns on and off location search for newtab weather widget
     recsPersonalized:
       type: boolean
       fallbackPref: >-

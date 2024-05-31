@@ -17,8 +17,7 @@ import {
 
 const CACHE_KEY = "weather_feed";
 const WEATHER_UPDATE_TIME = 10 * 60 * 1000; // 10 minutes
-const MERINO_PROVIDER = ["accuweather"];
-const MERINO_CLIENT_KEY = "HNT_WEATHER_FEED";
+const MERINO_PROVIDER = "accuweather";
 
 const PREF_WEATHER_QUERY = "weather.query";
 const PREF_SHOW_WEATHER = "showWeather";
@@ -33,7 +32,6 @@ export class WeatherFeed {
     this.merino = null;
     this.suggestions = [];
     this.lastUpdated = null;
-    this.locationData = {};
     this.fetchTimer = null;
     this.fetchIntervalMs = 30 * 60 * 1000; // 30 minutes
     this.timeoutMS = 5000;
@@ -87,8 +85,8 @@ export class WeatherFeed {
     try {
       suggestions = await this.merino.fetch({
         query: weatherQuery || "",
-        providers: weatherQuery ? ["accuweather_city"] : MERINO_PROVIDER,
-        timeoutMs: 7000,
+        providers: [MERINO_PROVIDER],
+        timeoutMs: 5000,
       });
     } catch (error) {
       // We don't need to do anything with this right now.
@@ -103,31 +101,15 @@ export class WeatherFeed {
     // this fetch. If fetching stops or this `Weather` instance is uninitialized
     // during the fetch, `#merino` will be nulled, and the fetch should stop. We
     // can compare `merino` to `this.merino` to tell when this occurs.
-    if (!this.merino) {
-      this.merino = await this.MerinoClient(MERINO_CLIENT_KEY);
-    }
-
+    this.merino = await this.MerinoClient("HNT_WEATHER_FEED");
     await this.fetchHelper();
 
     if (this.suggestions.length) {
-      const hasLocationData =
-        !this.store.getState().Prefs.values[PREF_WEATHER_QUERY];
       this.lastUpdated = this.Date().now();
       await this.cache.set("weather", {
         suggestions: this.suggestions,
         lastUpdated: this.lastUpdated,
       });
-
-      // only calls to merino without the query parameter would return the location data (and only city name)
-      if (hasLocationData) {
-        const [data] = this.suggestions;
-        this.locationData = {
-          city: data.city_name,
-          adminArea: "",
-          country: "",
-        };
-        await this.cache.set("locationData", this.locationData);
-      }
     }
 
     this.update(isStartup);
@@ -135,12 +117,8 @@ export class WeatherFeed {
 
   async loadWeather(isStartup = false) {
     const cachedData = (await this.cache.get()) || {};
-    const { weather, locationData } = cachedData;
+    const { weather } = cachedData;
 
-    // if we have locationData in the cache set it to this.locationData so it is added to the redux store
-    if (locationData.city) {
-      this.locationData = locationData;
-    }
     // If we have nothing in cache, or cache has expired, we can make a fresh fetch.
     if (
       !weather?.lastUpdated ||
@@ -161,7 +139,6 @@ export class WeatherFeed {
         data: {
           suggestions: this.suggestions,
           lastUpdated: this.lastUpdated,
-          locationData: this.locationData,
         },
         meta: {
           isStartup,
@@ -177,35 +154,10 @@ export class WeatherFeed {
     }, ms);
   }
 
-  async fetchLocationAutocomplete() {
-    if (!this.merino) {
-      this.merino = await this.MerinoClient(MERINO_CLIENT_KEY);
-    }
-
-    const query = this.store.getState().Weather.locationSearchString;
-    let response = await this.merino.fetch({
-      query: query || "",
-      providers: ["accuweather_city"],
-      timeoutMs: 5000,
-      otherParams: {
-        request_type: "location",
-      },
-    });
-    const data = response?.[0];
-    if (data?.locations.length) {
-      this.store.dispatch(
-        ac.BroadcastToContent({
-          type: at.WEATHER_LOCATION_SUGGESTIONS_UPDATE,
-          data: data.locations,
-        })
-      );
-    }
-  }
-
   async onPrefChangedAction(action) {
     switch (action.data.name) {
       case PREF_WEATHER_QUERY:
-        await this.fetch();
+        await this.loadWeather();
         break;
       case PREF_SHOW_WEATHER:
       case PREF_SYSTEM_SHOW_WEATHER:
@@ -236,13 +188,6 @@ export class WeatherFeed {
         break;
       case at.PREF_CHANGED:
         await this.onPrefChangedAction(action);
-        break;
-      case at.WEATHER_LOCATION_SEARCH_UPDATE:
-        await this.fetchLocationAutocomplete();
-        break;
-      case at.WEATHER_LOCATION_DATA_UPDATE:
-        await this.cache.set("locationData", action.data);
-        this.locationData = action.data;
         break;
     }
   }

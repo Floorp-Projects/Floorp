@@ -246,7 +246,6 @@
   font-size: var(--font-size-large);
 }
 
-
 // Weather Symbol Icons
 .weatherIconCol {
   width: var(--size-item-large);
@@ -371,70 +370,3 @@
     content: url('chrome://browser/skin/weather/night-mostly-cloudy-with-flurries.svg');
   }
 }
-
-.location-input-wrapper {
-  background-color: light-dark(var(--color-white), var(--newtab-background-color-secondary));
-  color: var(--newtab-text-primary-color);
-  border-radius: var(--border-radius-medium);
-  padding: 8px;
-  position: relative;
-
-  // Contrast fix for users who have wallpapers set
-  .lightWallpaper &,
-  .darkWallpaper & {
-    background-color: var(--newtab-weather-background-color);
-
-    &:hover {
-      background-color: var(--newtab-button-static-hover-background);
-    }
-
-    &:hover:active {
-      background-color: var(--newtab-button-static-active-background);
-    }
-
-    @media (prefers-contrast) {
-      background-color: var(--background-color-box);
-    }
-  }
-
-  .search-icon {
-    content: url('chrome://global/skin/icons/search-glass.svg');
-    -moz-context-properties: fill;
-    fill: light-dark(var(--color-gray-70), var(--color-gray-05));
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    inset-inline-start: 18px;
-  }
-
-  .close-icon {
-    background-image: url('chrome://global/skin/icons/close.svg');
-    -moz-context-properties: fill;
-    fill: light-dark(var(--color-gray-70), var(--color-gray-05));
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    inset-inline-end: 18px;
-    width: var(--size-item-small);
-    height: var(--size-item-small);
-    appearance: none;
-    border: none;
-
-    &:focus-visible {
-      outline: 1px solid var(--focus-outline-color);
-    }
-  }
-
-  input {
-    border-radius: var(--border-radius-medium);
-    background-color: light-dark(var(--color-white), var(--newtab-background-color-secondary));
-    padding-block: 8px;
-    padding-inline: 30px;
-    border: $border-primary;
-
-    &:focus-visible {
-      outline: 2px solid var(--focus-outline-color);
-    }
-  }
-}
-
