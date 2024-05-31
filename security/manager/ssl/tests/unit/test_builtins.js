@@ -6,6 +6,9 @@
 
 // Ensure that the appropriate initialization has happened.
 do_get_profile();
+const gCertDb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
 add_setup(function load_nssckbi_testlib() {
   let moduleName = "Mock Builtins";
@@ -30,5 +33,50 @@ add_setup(function load_nssckbi_testlib() {
     testModuleSlotNames,
     expectedSlotNames,
     "Actual and expected slot names should be equal"
+  );
+});
+
+add_task(async function test_distrust_after() {
+  let ee_pre_distrust_cert = addCertFromFile(
+    gCertDb,
+    "test_builtins/ee-notBefore-2021.pem",
+    ",,"
+  );
+  notEqual(
+    ee_pre_distrust_cert,
+    null,
+    "EE cert should have successfully loaded"
+  );
+
+  let ee_post_distrust_cert = addCertFromFile(
+    gCertDb,
+    "test_builtins/ee-notBefore-2023.pem",
+    ",,"
+  );
+  notEqual(
+    ee_post_distrust_cert,
+    null,
+    "EE cert should have successfully loaded"
+  );
+
+  let int_cert = addCertFromFile(gCertDb, "test_builtins/int.pem", ",,");
+  notEqual(int_cert, null, "Intermediate cert should have successfully loaded");
+
+  // A certificate with a notBefore before the distrustAfter date
+  // should verify.
+  await checkCertErrorGeneric(
+    gCertDb,
+    ee_pre_distrust_cert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer
+  );
+
+  // A certificate with a notBefore after the distrustAfter date
+  // should not verify.
+  await checkCertErrorGeneric(
+    gCertDb,
+    ee_post_distrust_cert,
+    SEC_ERROR_UNTRUSTED_ISSUER,
+    certificateUsageSSLServer
   );
 });

@@ -438,6 +438,7 @@ PK11_PubEncryptPKCS1
 PK11_PubUnwrapSymKey
 PK11_PubWrapSymKey
 PK11_RandomUpdate
+PK11_ReadDistrustAfterAttribute
 PK11_ReadRawAttribute
 PK11_ReferenceSlot
 PK11_ReferenceSymKey
