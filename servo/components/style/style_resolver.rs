@@ -292,11 +292,8 @@ where
         parent_style: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
     ) -> ResolvedElementStyles {
-        let primary_style = self.resolve_primary_style(
-            parent_style,
-            layout_parent_style,
-            IncludeStartingStyle::No,
-        );
+        let primary_style =
+            self.resolve_primary_style(parent_style, layout_parent_style, IncludeStartingStyle::No);
 
         let mut pseudo_styles = EagerPseudoStyles::default();
 

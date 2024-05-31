@@ -27,10 +27,10 @@ use cssparser::{Parser, SourceLocation};
 use euclid::default::Size2D;
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
+use selectors::kleene_value::KleeneValue;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, ToCss};
-use selectors::kleene_value::KleeneValue;
 
 /// A container rule.
 #[derive(Debug, ToShmem)]

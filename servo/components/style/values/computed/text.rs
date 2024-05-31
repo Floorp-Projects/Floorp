@@ -8,7 +8,9 @@
 use crate::properties::StyleBuilder;
 use crate::values::computed::length::{Length, LengthPercentage};
 use crate::values::computed::{Context, ToComputedValue};
-use crate::values::generics::text::{GenericInitialLetter, GenericTextDecorationLength, GenericTextIndent, Spacing};
+use crate::values::generics::text::{
+    GenericInitialLetter, GenericTextDecorationLength, GenericTextIndent, Spacing,
+};
 use crate::values::specified::text as specified;
 use crate::values::specified::text::{TextEmphasisFillMode, TextEmphasisShapeKeyword};
 use crate::values::{CSSFloat, CSSInteger};

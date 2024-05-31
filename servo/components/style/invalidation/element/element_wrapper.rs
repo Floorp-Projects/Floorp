@@ -73,7 +73,6 @@ pub trait ElementSnapshot: Sized {
     where
         F: FnMut(&AtomIdent);
 
-
     /// If this snapshot contains CustomStateSet information.
     fn has_custom_states(&self) -> bool;
 
@@ -226,9 +225,7 @@ where
             },
 
             // CustomStateSet should match against the snapshot before element
-            NonTSPseudoClass::CustomState(ref state) => {
-                return self.has_custom_state(&state.0)
-            },
+            NonTSPseudoClass::CustomState(ref state) => return self.has_custom_state(&state.0),
 
             _ => {},
         }

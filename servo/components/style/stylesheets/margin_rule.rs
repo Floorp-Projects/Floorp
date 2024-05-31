@@ -154,8 +154,7 @@ impl MarginRule {
     #[cfg(feature = "gecko")]
     pub fn size_of(&self, guard: &SharedRwLockReadGuard, ops: &mut MallocSizeOfOps) -> usize {
         // Measurement of other fields may be added later.
-        self.block.unconditional_shallow_size_of(ops) +
-            self.block.read_with(guard).size_of(ops)
+        self.block.unconditional_shallow_size_of(ops) + self.block.read_with(guard).size_of(ops)
     }
     /// Gets the name for this margin rule.
     #[inline]

@@ -90,7 +90,9 @@ impl<L, N, P, LP, C, Image, U, Integer, A, T, R, Transform>
 }
 
 /// A generic enum used for both specified value components and computed value components.
-#[derive(Animate, Clone, ToCss, ToComputedValue, ToResolvedValue, Debug, MallocSizeOf, PartialEq)]
+#[derive(
+    Animate, Clone, ToCss, ToComputedValue, ToResolvedValue, Debug, MallocSizeOf, PartialEq,
+)]
 #[animation(no_bound(Image, Url))]
 pub enum GenericValueComponent<
     Length,
@@ -233,7 +235,9 @@ impl<Component> Value<Component> {
 }
 
 /// A specified registered custom property value.
-#[derive(Animate, ToComputedValue, ToResolvedValue, ToCss, Clone, Debug, MallocSizeOf, PartialEq)]
+#[derive(
+    Animate, ToComputedValue, ToResolvedValue, ToCss, Clone, Debug, MallocSizeOf, PartialEq,
+)]
 pub enum ValueInner<Component> {
     /// A single specified component value whose syntax descriptor component did not have a
     /// multiplier.

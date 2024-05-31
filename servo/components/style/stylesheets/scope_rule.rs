@@ -6,8 +6,8 @@
 //!
 //! [scope]: https://drafts.csswg.org/css-cascade-6/#scoped-styles
 
-use crate::dom::TElement;
 use crate::applicable_declarations::ScopeProximity;
+use crate::dom::TElement;
 use crate::parser::ParserContext;
 use crate::selector_parser::{SelectorImpl, SelectorParser};
 use crate::shared_lock::{
@@ -17,7 +17,9 @@ use crate::str::CssStringWriter;
 use crate::stylesheets::CssRules;
 use cssparser::{Parser, SourceLocation, ToCss};
 #[cfg(feature = "gecko")]
-use malloc_size_of::{MallocSizeOfOps, MallocUnconditionalSizeOf, MallocUnconditionalShallowSizeOf};
+use malloc_size_of::{
+    MallocSizeOfOps, MallocUnconditionalShallowSizeOf, MallocUnconditionalSizeOf,
+};
 use selectors::context::MatchingContext;
 use selectors::matching::matches_selector;
 use selectors::parser::{AncestorHashes, ParseRelative, Selector, SelectorList};
@@ -95,8 +97,14 @@ pub struct ScopeBounds {
 impl ScopeBounds {
     #[cfg(feature = "gecko")]
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        fn bound_size_of(bound: &Option<SelectorList<SelectorImpl>>, ops: &mut MallocSizeOfOps) -> usize {
-            bound.as_ref().map(|list| list.unconditional_size_of(ops)).unwrap_or(0)
+        fn bound_size_of(
+            bound: &Option<SelectorList<SelectorImpl>>,
+            ops: &mut MallocSizeOfOps,
+        ) -> usize {
+            bound
+                .as_ref()
+                .map(|list| list.unconditional_size_of(ops))
+                .unwrap_or(0)
         }
         bound_size_of(&self.start, ops) + bound_size_of(&self.end, ops)
     }
@@ -106,39 +114,40 @@ fn parse_scope<'a>(
     context: &ParserContext,
     input: &mut Parser<'a, '_>,
     in_style_rule: bool,
-    for_end: bool
+    for_end: bool,
 ) -> Option<SelectorList<SelectorImpl>> {
-    input.try_parse(|input| {
-        if for_end {
-            input.expect_ident_matching("to")?;
-        }
-        input.expect_parenthesis_block()?;
-        input.parse_nested_block(|input| {
-            if input.is_exhausted() {
-                return Ok(None);
+    input
+        .try_parse(|input| {
+            if for_end {
+                input.expect_ident_matching("to")?;
             }
-            let selector_parser = SelectorParser {
-                stylesheet_origin: context.stylesheet_origin,
-                namespaces: &context.namespaces,
-                url_data: context.url_data,
-                for_supports_rule: false,
-            };
-            let parse_relative = if for_end {
-                ParseRelative::ForScope
-            } else if in_style_rule {
-                ParseRelative::ForNesting
-            } else {
-                ParseRelative::No
-            };
-            Ok(Some(SelectorList::parse_forgiving(
-                &selector_parser,
-                input,
-                parse_relative,
-            )?))
+            input.expect_parenthesis_block()?;
+            input.parse_nested_block(|input| {
+                if input.is_exhausted() {
+                    return Ok(None);
+                }
+                let selector_parser = SelectorParser {
+                    stylesheet_origin: context.stylesheet_origin,
+                    namespaces: &context.namespaces,
+                    url_data: context.url_data,
+                    for_supports_rule: false,
+                };
+                let parse_relative = if for_end {
+                    ParseRelative::ForScope
+                } else if in_style_rule {
+                    ParseRelative::ForNesting
+                } else {
+                    ParseRelative::No
+                };
+                Ok(Some(SelectorList::parse_forgiving(
+                    &selector_parser,
+                    input,
+                    parse_relative,
+                )?))
+            })
         })
-    })
-    .ok()
-    .flatten()
+        .ok()
+        .flatten()
 }
 
 impl ScopeBounds {
@@ -148,19 +157,9 @@ impl ScopeBounds {
         input: &mut Parser<'a, '_>,
         in_style_rule: bool,
     ) -> Self {
-        let start = parse_scope(
-            context,
-            input,
-            in_style_rule,
-            false
-        );
+        let start = parse_scope(context, input, in_style_rule, false);
 
-        let end = parse_scope(
-            context,
-            input,
-            in_style_rule,
-            true
-        );
+        let end = parse_scope(context, input, in_style_rule, true);
         Self { start, end }
     }
 }
@@ -191,9 +190,7 @@ impl ImplicitScopeRoot {
     /// Return the scope root element, given the element to be styled.
     pub fn element(&self, current_host: Option<OpaqueElement>) -> Option<OpaqueElement> {
         match self {
-            Self::InLightTree(e) |
-            Self::InShadowTree(e) |
-            Self::ShadowHost(e) => Some(*e),
+            Self::InLightTree(e) | Self::InShadowTree(e) | Self::ShadowHost(e) => Some(*e),
             Self::Constructed => current_host,
         }
     }
@@ -216,14 +213,16 @@ impl<'a> ScopeTarget<'a> {
         context: &mut MatchingContext<E::Impl>,
     ) -> bool {
         match self {
-            Self::Selector(list, hashes_list) => context.nest_for_scope_condition(scope, |context| {
-                for (selector, hashes) in list.slice().iter().zip(hashes_list.iter()) {
-                    if matches_selector(selector, 0, Some(hashes), &element, context) {
-                        return true;
+            Self::Selector(list, hashes_list) => {
+                context.nest_for_scope_condition(scope, |context| {
+                    for (selector, hashes) in list.slice().iter().zip(hashes_list.iter()) {
+                        if matches_selector(selector, 0, Some(hashes), &element, context) {
+                            return true;
+                        }
                     }
-                }
-                false
-            }),
+                    false
+                })
+            },
             Self::Element(e) => element.opaque() == *e,
         }
     }

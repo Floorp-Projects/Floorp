@@ -1034,7 +1034,9 @@ impl<'le> TElement for GeckoElement<'le> {
             unsafe {
                 let mut iter = std::mem::MaybeUninit::<structs::StyleChildrenIterator>::uninit();
                 bindings::Gecko_ConstructStyleChildrenIterator(self.0, iter.as_mut_ptr());
-                return LayoutIterator(GeckoChildrenIterator::GeckoIterator(std::mem::ManuallyDrop::new(iter.assume_init())));
+                return LayoutIterator(GeckoChildrenIterator::GeckoIterator(
+                    std::mem::ManuallyDrop::new(iter.assume_init()),
+                ));
             }
         }
 
@@ -2062,9 +2064,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozAutofillPreview |
             NonTSPseudoClass::MozRevealed |
             NonTSPseudoClass::MozValueEmpty => self.state().intersects(pseudo_class.state_flag()),
-            NonTSPseudoClass::Dir(ref dir) => {
-                self.state().intersects(dir.element_state())
-            },
+            NonTSPseudoClass::Dir(ref dir) => self.state().intersects(dir.element_state()),
             NonTSPseudoClass::AnyLink => self.is_link(),
             NonTSPseudoClass::Link => {
                 self.is_link() && context.visited_handling().matches_unvisited()
@@ -2120,8 +2120,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 bindings::Gecko_IsSelectListBox(self.0)
             },
             NonTSPseudoClass::MozIsHTML => self.as_node().owner_doc().is_html_document(),
-            NonTSPseudoClass::MozLocaleDir(..) |
-            NonTSPseudoClass::MozWindowInactive => {
+            NonTSPseudoClass::MozLocaleDir(..) | NonTSPseudoClass::MozWindowInactive => {
                 let state_bit = pseudo_class.document_state_flag();
                 if state_bit.is_empty() {
                     debug_assert!(

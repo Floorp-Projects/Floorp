@@ -6,11 +6,11 @@
 
 #[cfg(feature = "servo")]
 use crate::computed_values::list_style_type::T as ListStyleType;
+#[cfg(feature = "gecko")]
+use crate::counter_style::CounterStyle;
 use crate::parser::{Parse, ParserContext};
 use crate::values::generics::counters as generics;
 use crate::values::generics::counters::CounterPair;
-#[cfg(feature = "gecko")]
-use crate::counter_style::CounterStyle;
 use crate::values::specified::image::Image;
 use crate::values::specified::Attr;
 use crate::values::specified::Integer;

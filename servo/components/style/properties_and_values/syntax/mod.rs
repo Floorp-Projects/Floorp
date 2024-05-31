@@ -91,7 +91,10 @@ impl Descriptor {
             // 5. Repeatedly consume the next input code point from stream.
             parser.parse()?;
         }
-        Ok(Self { components, specified })
+        Ok(Self {
+            components,
+            specified,
+        })
     }
 
     /// Returns the dependent types this syntax might contain.

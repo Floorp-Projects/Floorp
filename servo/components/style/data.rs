@@ -556,6 +556,7 @@ impl ElementData {
     /// transitions.
     #[inline]
     pub fn may_have_starting_style(&self) -> bool {
-        self.flags.contains(ElementDataFlags::MAY_HAVE_STARTING_STYLE)
+        self.flags
+            .contains(ElementDataFlags::MAY_HAVE_STARTING_STYLE)
     }
 }

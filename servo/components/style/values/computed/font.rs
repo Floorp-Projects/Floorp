@@ -1349,11 +1349,16 @@ impl ToResolvedValue for LineHeight {
             return self;
         }
         let wm = context.style.writing_mode;
-        Self::Length(context.device.calc_line_height(
-            context.style.get_font(),
-            wm,
-            Some(context.element_info.element),
-        ).to_resolved_value(context))
+        Self::Length(
+            context
+                .device
+                .calc_line_height(
+                    context.style.get_font(),
+                    wm,
+                    Some(context.element_info.element),
+                )
+                .to_resolved_value(context),
+        )
     }
 
     #[inline]

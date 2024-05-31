@@ -182,9 +182,9 @@ impl ElementSnapshot for GeckoElementSnapshot {
     #[inline]
     fn has_custom_state(&self, state: &AtomIdent) -> bool {
         unsafe {
-            self.mCustomStates.iter().any(|setstate| {
-                AtomIdent::with(setstate.mRawPtr, |setstate| state == setstate)
-            })
+            self.mCustomStates
+                .iter()
+                .any(|setstate| AtomIdent::with(setstate.mRawPtr, |setstate| state == setstate))
         }
     }
 
@@ -199,5 +199,4 @@ impl ElementSnapshot for GeckoElementSnapshot {
             }
         }
     }
-
 }

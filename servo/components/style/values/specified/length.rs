@@ -357,7 +357,10 @@ impl FontRelativeLength {
                 let reference_size = if context.builder.is_root_element || context.in_media_query {
                     reference_font_size.computed_size()
                 } else {
-                    context.device().root_font_size().zoom(context.builder.effective_zoom)
+                    context
+                        .device()
+                        .root_font_size()
+                        .zoom(context.builder.effective_zoom)
                 };
                 (reference_size, length)
             },
@@ -805,7 +808,9 @@ impl ToComputedValue for AbsoluteLength {
     type ComputedValue = CSSPixelLength;
 
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
-        CSSPixelLength::new(self.to_px()).zoom(context.builder.effective_zoom).finite()
+        CSSPixelLength::new(self.to_px())
+            .zoom(context.builder.effective_zoom)
+            .finite()
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {

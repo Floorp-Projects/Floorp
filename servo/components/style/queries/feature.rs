@@ -9,9 +9,9 @@ use crate::values::computed::{self, CSSPixelLength, Ratio, Resolution};
 use crate::values::AtomString;
 use crate::Atom;
 use cssparser::Parser;
+use selectors::kleene_value::KleeneValue;
 use std::fmt;
 use style_traits::ParseError;
-use selectors::kleene_value::KleeneValue;
 
 /// A generic discriminant for an enum value.
 pub type KeywordDiscriminant = u8;
@@ -92,7 +92,7 @@ macro_rules! keyword_evaluator {
             // back to us is the ones that `parse` produces.
             let value: Option<$keyword_type> =
                 value.map(|kw| ::num_traits::cast::FromPrimitive::from_u8(kw).unwrap());
-                selectors::kleene_value::KleeneValue::from($actual_evaluator(context, value))
+            selectors::kleene_value::KleeneValue::from($actual_evaluator(context, value))
         }
 
         $crate::queries::feature::Evaluator::Enumerated {

@@ -183,7 +183,9 @@ impl fmt::Debug for PropertyDeclaration {
 }
 
 /// A longhand or shorthand property.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToComputedValue, ToResolvedValue, ToShmem, MallocSizeOf)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, ToComputedValue, ToResolvedValue, ToShmem, MallocSizeOf,
+)]
 #[repr(C)]
 pub struct NonCustomPropertyId(u16);
 
@@ -693,7 +695,10 @@ fn parse_non_custom_property_declaration_value_into<'i>(
     context: &ParserContext,
     input: &mut Parser<'i, '_>,
     start: &cssparser::ParserState,
-    parse_entirely_into: impl FnOnce(&mut SourcePropertyDeclaration, &mut Parser<'i, '_>) -> Result<(), ParseError<'i>>,
+    parse_entirely_into: impl FnOnce(
+        &mut SourcePropertyDeclaration,
+        &mut Parser<'i, '_>,
+    ) -> Result<(), ParseError<'i>>,
     parsed_wide_keyword: impl FnOnce(&mut SourcePropertyDeclaration, CSSWideKeyword),
     parsed_custom: impl FnOnce(&mut SourcePropertyDeclaration, custom_properties::VariableValue),
 ) -> Result<(), ParseError<'i>> {
@@ -859,7 +864,8 @@ impl PropertyDeclaration {
                     input,
                     &start,
                     |declarations, input| {
-                        let decl = input.parse_entirely(|input| longhand_id.parse_value(context, input))?;
+                        let decl = input
+                            .parse_entirely(|input| longhand_id.parse_value(context, input))?;
                         declarations.push(decl);
                         Ok(())
                     },
@@ -874,7 +880,7 @@ impl PropertyDeclaration {
                                 from_shorthand: None,
                             }),
                         }))
-                    }
+                    },
                 )?;
             },
             Err(shorthand_id) => {
@@ -891,7 +897,8 @@ impl PropertyDeclaration {
                             declarations.all_shorthand = AllShorthand::CSSWideKeyword(wk)
                         } else {
                             for longhand in shorthand_id.longhands() {
-                                declarations.push(PropertyDeclaration::css_wide_keyword(longhand, wk));
+                                declarations
+                                    .push(PropertyDeclaration::css_wide_keyword(longhand, wk));
                             }
                         }
                     },
@@ -912,7 +919,7 @@ impl PropertyDeclaration {
                                 ))
                             }
                         }
-                    }
+                    },
                 )?;
             },
         }

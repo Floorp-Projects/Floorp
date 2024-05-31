@@ -4,9 +4,9 @@
 
 //! `list` specified values.
 
-use crate::parser::{Parse, ParserContext};
 #[cfg(feature = "gecko")]
 use crate::counter_style::{CounterStyle, CounterStyleParsingFlags};
+use crate::parser::{Parse, ParserContext};
 use cssparser::{Parser, Token};
 use style_traits::{ParseError, StyleParseErrorKind};
 
@@ -65,7 +65,6 @@ impl ListStyleType {
             _ => unreachable!("Unknown counter style keyword value"),
         })))
     }
-
 
     /// Is this a bullet? (i.e. `list-style-type: disc|circle|square|disclosure-closed|disclosure-open`)
     #[inline]
