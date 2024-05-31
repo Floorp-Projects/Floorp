@@ -480,3 +480,110 @@ add_task(async function test_createRegionWithKeyboardWithShift() {
     }
   );
 });
+
+add_task(async function test_clickingButtonsWithKeyDown() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+      let expected = Math.floor(
+        300 * (await getContentDevicePixelRatio(browser))
+      );
+
+      for (let aKey of [" ", "Enter"]) {
+        info(`Running tests with ${aKey} key`);
+
+        info("Testing keydown on crosshairs cancel button");
+        helper.triggerUIFromToolbar();
+        await helper.waitForOverlay();
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.previewCancelButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        // Keydown on crosshairs cancel button
+        key.down(aKey);
+
+        await helper.waitForOverlayClosed();
+
+        info("Testing keydown on cancel button");
+        helper.triggerUIFromToolbar();
+        await helper.waitForOverlay();
+
+        await helper.dragOverlay(100, 100, 400, 400);
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.cancelButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        // Keydown on cancel button
+        key.down(aKey);
+
+        await helper.waitForStateChange("crosshairs");
+
+        info("Testing keydown on copy button");
+
+        await helper.dragOverlay(100, 100, 400, 400);
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.copyButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        let clipboardChanged = helper.waitForRawClipboardChange(
+          expected,
+          expected
+        );
+
+        // Keydown on copy button
+        key.down(aKey);
+
+        await clipboardChanged;
+
+        await helper.waitForOverlayClosed();
+
+        info("Testing keydown on download button");
+
+        helper.triggerUIFromToolbar();
+        await helper.waitForOverlay();
+
+        await helper.dragOverlay(100, 100, 400, 400);
+
+        await SpecialPowers.spawn(browser, [], () => {
+          let screenshotsChild = content.windowGlobalChild.getActor(
+            "ScreenshotsComponent"
+          );
+
+          screenshotsChild.overlay.downloadButton.focus({
+            focusVisible: true,
+          });
+        });
+
+        // Keydown on download button
+        key.down(aKey);
+
+        await helper.waitForOverlayClosed();
+      }
+    }
+  );
+});

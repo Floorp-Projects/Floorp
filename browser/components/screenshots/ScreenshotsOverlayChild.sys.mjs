@@ -549,7 +549,6 @@ export class ScreenshotsOverlay {
               case "mover-bottomRight":
               case "mover-topLeft":
               case "mover-topRight":
-                event.preventDefault();
                 this.#setState(STATES.SELECTED, { doNotMoveFocus: true });
                 break;
             }
@@ -585,13 +584,13 @@ export class ScreenshotsOverlay {
         return;
       case "Enter":
         if (this.hoverElementRegion.isRegionValid) {
-          event.preventDefault();
           this.draggingReadyStart();
           this.draggingReadyDragEnd();
           return;
         }
       // eslint-disable-next-line no-fallthrough
       case " ": {
+        this.handleKeyDownOnButton(event);
         if (Services.appinfo.isWayland) {
           return;
         }
@@ -600,7 +599,6 @@ export class ScreenshotsOverlay {
           return;
         }
 
-        event.preventDefault();
         // The left and top coordinates from cursorRegion are relative to
         // the client window so we need to add the scroll offset of the page to
         // get the correct coordinates.
@@ -617,12 +615,7 @@ export class ScreenshotsOverlay {
         this.#setState(STATES.DRAGGING);
         break;
       }
-      default:
-        return;
     }
-
-    // Prevent scrolling with arrow keys
-    event.preventDefault();
   }
 
   /**
@@ -645,7 +638,6 @@ export class ScreenshotsOverlay {
         break;
       case "Enter":
       case " ":
-        event.preventDefault();
         this.#setState(STATES.SELECTED);
         return;
       default:
@@ -704,20 +696,17 @@ export class ScreenshotsOverlay {
       case "Tab":
         this.maybeLockFocus(event);
         break;
+      case "Enter":
       case " ":
-        if (!event.originalTarget.closest("#buttons-container")) {
-          event.preventDefault();
-        }
+        this.handleKeyDownOnButton(event);
         break;
       case this.copyKey.toLowerCase():
         if (this.state === "selected" && this.getAccelKey(event)) {
-          event.preventDefault();
           this.copySelectedRegion();
         }
         break;
       case this.downloadKey.toLowerCase():
         if (this.state === "selected" && this.getAccelKey(event)) {
-          event.preventDefault();
           this.downloadSelectedRegion();
         }
         break;
@@ -798,11 +787,7 @@ export class ScreenshotsOverlay {
           }
         }
         break;
-      default:
-        return;
     }
-
-    event.preventDefault();
   }
 
   /**
@@ -879,11 +864,7 @@ export class ScreenshotsOverlay {
           }
         }
         break;
-      default:
-        return;
     }
-
-    event.preventDefault();
   }
 
   /**
@@ -963,11 +944,7 @@ export class ScreenshotsOverlay {
           }
         }
         break;
-      default:
-        return;
     }
-
-    event.preventDefault();
   }
 
   /**
@@ -1040,11 +1017,7 @@ export class ScreenshotsOverlay {
           }
         }
         break;
-      default:
-        return;
     }
-
-    event.preventDefault();
   }
 
   /**
@@ -1053,8 +1026,6 @@ export class ScreenshotsOverlay {
    * @param {Event} event The keydown event
    */
   maybeLockFocus(event) {
-    event.preventDefault();
-
     switch (this.#state) {
       case STATES.CROSSHAIRS:
         if (event.shiftKey) {
@@ -1098,6 +1069,27 @@ export class ScreenshotsOverlay {
       this.copyButton.focus({ focusVisible: true, preventScroll: true });
     } else {
       this.downloadButton.focus({ focusVisible: true, preventScroll: true });
+    }
+  }
+
+  /**
+   * We prevent all events in ScreenshotsComponentChild so we need to
+   * explicitly handle keydown events on buttons here.
+   *
+   * @param {KeyEvent} event The keydown event
+   */
+  handleKeyDownOnButton(event) {
+    switch (event.originalTarget) {
+      case this.cancelButton:
+      case this.previewCancelButton:
+        this.maybeCancelScreenshots();
+        break;
+      case this.copyButton:
+        this.copySelectedRegion();
+        break;
+      case this.downloadButton:
+        this.downloadSelectedRegion();
+        break;
     }
   }
 
