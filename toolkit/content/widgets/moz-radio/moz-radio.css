@@ -8,14 +8,36 @@
 
 input {
   font-size: inherit;
-  margin: calc((1lh - var(--radio-size)) / 2) 0;
   min-height: var(--radio-size);
   min-width: var(--radio-size);
   flex-shrink: 0;
+}
+
+input,
+.icon {
+  margin: calc((1lh - var(--radio-size)) / 2) 0;
 }
 
 label {
   display: flex;
   align-items: flex-start;
   gap: var(--space-small);
+}
+
+.label-content {
+  display: flex;
+  position: relative;
+}
+
+.icon {
+  -moz-context-properties: fill, fill-opacity, stroke;
+  fill: currentColor;
+  stroke: currentColor;
+  width: var(--icon-size-default);
+  height: var(--icon-size-default);
+  position: absolute;
+
+  & + .text {
+    text-indent: calc(var(--radio-size) + var(--space-small));
+  }
 }

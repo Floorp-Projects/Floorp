@@ -213,6 +213,7 @@ export class MozRadio extends MozLitElement {
 
   static properties = {
     checked: { type: Boolean, reflect: true },
+    iconSrc: { type: String },
     label: { type: String },
     name: { type: String, attribute: false },
     inputTabIndex: { type: Number, state: true },
@@ -222,23 +223,24 @@ export class MozRadio extends MozLitElement {
   static queries = {
     radioButton: "#radio-button",
     labelEl: "label",
+    icon: ".icon",
   };
 
   constructor() {
     super();
     this.checked = false;
-
-    let hostRadioGroup = this.parentElement || this.getRootNode().host;
-    if (!(hostRadioGroup instanceof MozRadioGroup)) {
-      throw new Error("moz-radio can only be used in moz-radio-group element.");
-    }
-
-    this.#controller = hostRadioGroup;
   }
 
   connectedCallback() {
     super.connectedCallback();
     this.dataset.l10nAttrs = "label";
+
+    let hostRadioGroup = this.parentElement || this.getRootNode().host;
+    if (!(hostRadioGroup instanceof MozRadioGroup)) {
+      console.error("moz-radio can only be used in moz-radio-group element.");
+    }
+
+    this.#controller = hostRadioGroup;
   }
 
   willUpdate(changedProperties) {
@@ -284,6 +286,13 @@ export class MozRadio extends MozLitElement {
     this.radioButton.focus();
   }
 
+  iconTemplate() {
+    if (this.iconSrc) {
+      return html`<img src=${this.iconSrc} role="presentation" class="icon" />`;
+    }
+    return "";
+  }
+
   render() {
     return html`
       <link
@@ -302,7 +311,10 @@ export class MozRadio extends MozLitElement {
           @click=${this.handleClick}
           @change=${this.handleChange}
         />
-        ${this.label || html`<slot></slot>`}
+        <span class="label-content">
+          ${this.iconTemplate()}
+          <span class="text"> ${this.label || html`<slot></slot>`} </span>
+        </span>
       </label>
     `;
   }
