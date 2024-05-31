@@ -661,8 +661,13 @@ void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
   }
 
   TimeDuration minimumBudget = TimeDuration::FromMilliseconds(
+      // Divide by 2 because mActiveIntersliceGCBudget is the non-idle slice
+      // time, and previously it was doubled because non-idle time implied that
+      // we are lacking idle time and so should increase the budget. Hopefully
+      // this adjustment can be removed so that the HighRateMultiplier can apply
+      // the same way to both CC and GC times.
       std::max(nsRefreshDriver::HighRateMultiplier() *
-                   mActiveIntersliceGCBudget.ToMilliseconds(),
+                   mActiveIntersliceGCBudget.ToMilliseconds() / 2,
                1.0));
 
   // Wait at most the interslice GC delay before forcing a run.
@@ -821,18 +826,18 @@ js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
 
 js::SliceBudget CCGCScheduler::ComputeInterSliceGCBudget(TimeStamp aDeadline,
                                                          TimeStamp aNow) {
-  // We use longer budgets when the CC has been locked out but the CC has
-  // tried to run since that means we may have a significant amount of
-  // garbage to collect and it's better to GC in several longer slices than
-  // in a very long one.
   TimeDuration budget =
-      aDeadline.IsNull() ? mActiveIntersliceGCBudget * 2 : aDeadline - aNow;
+      aDeadline.IsNull() ? mActiveIntersliceGCBudget : aDeadline - aNow;
   if (!mCCBlockStart) {
     return CreateGCSliceBudget(budget, !aDeadline.IsNull(), false);
   }
 
+  // Use longer budgets when the CC has tried to run but been locked out, since
+  // that means we may have a significant amount of garbage to collect and it's
+  // better to GC in multiple longer slices than one very long one.
+
   TimeDuration blockedTime = aNow - mCCBlockStart;
-  TimeDuration maxSliceGCBudget = mActiveIntersliceGCBudget * 10;
+  TimeDuration maxSliceGCBudget = mActiveIntersliceGCBudget * 5;
   double percentOfBlockedTime =
       std::min(blockedTime / kMaxCCLockedoutTime, 1.0);
   TimeDuration extendedBudget =

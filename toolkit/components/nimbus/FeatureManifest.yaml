@@ -2078,7 +2078,7 @@ gc:
         branch: user
         pref: "javascript.options.mem.incremental_weakmap"
     gc_incremental_slice_ms:
-      description: Max milliseconds to spend in an incremental GC slice.
+      description: Max milliseconds to spend in a non-idle incremental GC slice.
       type: int
       setPref:
         branch: user
