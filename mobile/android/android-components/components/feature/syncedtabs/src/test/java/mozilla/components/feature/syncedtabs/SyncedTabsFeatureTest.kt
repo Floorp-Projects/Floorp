@@ -6,6 +6,7 @@ package mozilla.components.feature.syncedtabs
 
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
+import mozilla.components.feature.syncedtabs.commands.SyncedTabsCommands
 import mozilla.components.feature.syncedtabs.interactor.SyncedTabsInteractor
 import mozilla.components.feature.syncedtabs.presenter.SyncedTabsPresenter
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
@@ -19,6 +20,7 @@ class SyncedTabsFeatureTest {
 
     private val context: Context = mock()
     private val storage: SyncedTabsStorage = mock()
+    private val commands: SyncedTabsCommands = mock()
     private val accountManager: FxaAccountManager = mock()
     private val view: SyncedTabsView = mock()
     private val lifecycleOwner: LifecycleOwner = mock()
@@ -29,6 +31,7 @@ class SyncedTabsFeatureTest {
         SyncedTabsFeature(
             context,
             storage,
+            commands,
             accountManager,
             view,
             lifecycleOwner,

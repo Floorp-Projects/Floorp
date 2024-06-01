@@ -182,7 +182,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
-            closeSyncedTabsUseCases = CloseTabsUseCases(requireComponents.backgroundServices.accountManager),
+            closeSyncedTabsUseCases = CloseTabsUseCases(
+                requireComponents.backgroundServices.syncedTabsCommands,
+            ),
             bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
             ioDispatcher = Dispatchers.IO,
             collectionStorage = requireComponents.core.tabCollectionStorage,
@@ -572,6 +574,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 context = requireContext(),
                 navController = findNavController(),
                 storage = requireComponents.backgroundServices.syncedTabsStorage,
+                commands = requireComponents.backgroundServices.syncedTabsCommands,
                 accountManager = requireComponents.backgroundServices.accountManager,
                 lifecycleOwner = this,
             ),

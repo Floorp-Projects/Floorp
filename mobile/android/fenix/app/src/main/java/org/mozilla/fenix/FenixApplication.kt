@@ -47,6 +47,7 @@ import mozilla.components.feature.autofill.AutofillUseCases
 import mozilla.components.feature.fxsuggest.GlobalFxSuggestDependencyProvider
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
+import mozilla.components.feature.syncedtabs.commands.GlobalSyncedTabsCommandsProvider
 import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.crash.CrashReporter
@@ -270,6 +271,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             // it is needed while the app is not running and WorkManager wakes up the app
             // for the periodic task.
             GlobalPlacesDependencyProvider.initialize(components.core.historyStorage)
+
+            GlobalSyncedTabsCommandsProvider.initialize(lazy { components.backgroundServices.syncedTabsCommands })
 
             restoreBrowserState()
             restoreDownloads()
