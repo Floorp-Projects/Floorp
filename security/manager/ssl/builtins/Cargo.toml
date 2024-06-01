@@ -12,7 +12,6 @@ mozilla-central-workspace-hack = { version = "0.1", features = ["builtins-static
 
 [build-dependencies]
 bindgen = { default-features = false, features = ["runtime"], version = "0.69" }
-mozbuild = "0.1"
 nom = "7.1.1"
 
 [lib]
