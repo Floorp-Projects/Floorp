@@ -86,13 +86,17 @@ nsresult BackgroundEventTarget::Init() {
   rv = pool->SetIdleThreadLimit(1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Leave threads alive for up to 5 minutes
+  // Leave the base idle thread alive for up to 5 minutes
   rv = pool->SetIdleThreadMaximumTimeout(300000);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Leave excess idle threads alive for up to 1 second
+  rv = pool->SetIdleThreadGraceTimeout(1000);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the background I/O event target.
   nsCOMPtr<nsIThreadPool> ioPool(new nsThreadPool());
-  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(ioPool, NS_ERROR_FAILURE);
 
   // The io pool spends a lot of its time blocking on io, so we want to offload
   // these jobs on a lower priority if available.
@@ -108,14 +112,22 @@ nsresult BackgroundEventTarget::Init() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Thread limit of 4 makes deadlock during synchronous dispatch less likely.
+  // TODO: This pool is meant to host blocking (file, network) IO, so we might
+  // want to configure an even higher limit to allow more parallel operations
+  // to find another thread. But first we should audit the existing uses of
+  // NS_DISPATCH_EVENT_MAY_BLOCK if they are not just CPU heavy runnables.
   rv = ioPool->SetThreadLimit(4);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ioPool->SetIdleThreadLimit(1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Leave threads alive for up to 5 minutes
+  // Leave allowed idle threads alive for up to 5 minutes
   rv = ioPool->SetIdleThreadMaximumTimeout(300000);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Leave excess idle threads alive for up to 500ms seconds
+  rv = ioPool->SetIdleThreadGraceTimeout(500);
   NS_ENSURE_SUCCESS(rv, rv);
 
   pool.swap(mPool);
