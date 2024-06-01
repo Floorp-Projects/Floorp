@@ -289,7 +289,7 @@ class CycleCollectedJSRuntime {
   static void* BeforeWaitCallback(uint8_t* aMemory);
   static void AfterWaitCallback(void* aCookie);
 
-  virtual void TraceNativeBlackRoots(JSTracer* aTracer){};
+  virtual void TraceNativeBlackRoots(JSTracer* aTracer) {};
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   void TraceAllNativeGrayRoots(JSTracer* aTracer);
@@ -414,7 +414,7 @@ class CycleCollectedJSRuntime {
   // storage), because we do not want to keep it alive.  nsWrapperCache handles
   // this for us via its "object moved" handling.
   void NurseryWrapperAdded(nsWrapperCache* aCache);
-  void JSObjectsTenured();
+  void JSObjectsTenured(JS::GCContext* aGCContext);
 
   void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                         DeferredFinalizeFunction aFunc, void* aThing);
