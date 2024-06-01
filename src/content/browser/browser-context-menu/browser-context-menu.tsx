@@ -3,29 +3,37 @@ import { ContextMenu } from "./context-menu";
 import type { JSXElement } from "solid-js";
 
 class gFloorpContextMenuServices {
-  initialized = false;
-  checkItems: (() => void)[] = [];
-  contextMenuObserver: MutationObserver = new MutationObserver(() => {
+  private static instance: gFloorpContextMenuServices;
+  private initialized = false;
+  private checkItems: (() => void)[] = [];
+  private contextMenuObserver: MutationObserver = new MutationObserver(() => {
     this.contextMenuObserverFunc();
   });
 
-  get windowModalDialogElem() {
+  static getInstance(): gFloorpContextMenuServices {
+    if (!gFloorpContextMenuServices.instance) {
+      gFloorpContextMenuServices.instance = new gFloorpContextMenuServices();
+    }
+    return gFloorpContextMenuServices.instance;
+  }
+
+  private get windowModalDialogElem() {
     return document.getElementById("window-modal-dialog") as XULElement;
   }
-  get screenShotContextMenuItems() {
+  private get screenShotContextMenuItems() {
     return document.getElementById("context-take-screenshot") as XULElement;
   }
-  get contentAreaContextMenu() {
+  private get contentAreaContextMenu() {
     return document.getElementById("contentAreaContextMenu") as XULElement;
   }
-  get pdfjsContextMenuSeparator() {
+  private get pdfjsContextMenuSeparator() {
     return document.getElementById("context-sep-pdfjs-selectall") as XULElement;
   }
-  get contextMenuSeparators(): NodeListOf<XULElement> {
+  private get contextMenuSeparators(): NodeListOf<XULElement> {
     return document.querySelectorAll("#contentAreaContextMenu > menuseparator");
   }
 
-  init() {
+  public init() {
     if (this.initialized) {
       return;
     }
@@ -35,7 +43,7 @@ class gFloorpContextMenuServices {
     this.initialized = true;
   }
 
-  addContextBox(
+  public addContextBox(
     id: string,
     l10n: string,
     insertElementId: string,
@@ -55,17 +63,17 @@ class gFloorpContextMenuServices {
     this.contextMenuObserverFunc();
   }
 
-  contextMenuObserverFunc() {
+  private contextMenuObserverFunc() {
     for (const checkItem of this.checkItems) {
       checkItem();
     }
   }
 
-  addToolbarContentMenuPopupSet(JSXElem: JSXElement) {
+  public addToolbarContentMenuPopupSet(JSXElem: JSXElement) {
     insert(document.body, JSXElem, this.windowModalDialogElem);
   }
 
-  onPopupShowing() {
+  private onPopupShowing() {
     if (!this.screenShotContextMenuItems.hidden) {
       this.pdfjsContextMenuSeparator.hidden = false;
 
@@ -91,4 +99,4 @@ class gFloorpContextMenuServices {
   }
 }
 
-export const gFloorpContextMenu = new gFloorpContextMenuServices();
+export const gFloorpContextMenu = gFloorpContextMenuServices.getInstance();
