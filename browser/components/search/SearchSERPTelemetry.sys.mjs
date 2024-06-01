@@ -1120,10 +1120,15 @@ class TelemetryHandler {
       browser.contentPrincipal.originAttributes.privateBrowsingId > 0;
 
     let isSignedIn = false;
-    if (searchProviderInfo.accountCookies) {
-      isSignedIn = searchProviderInfo.accountCookies.some(cookieObj => {
+    // Signed-in status should not be recorded when the client is in a private
+    // window.
+    if (!isPrivate && searchProviderInfo.signedInCookies) {
+      isSignedIn = searchProviderInfo.signedInCookies.some(cookieObj => {
         return Services.cookies
-          .getCookiesFromHost(cookieObj.host, {})
+          .getCookiesFromHost(
+            cookieObj.host,
+            browser.contentPrincipal.originAttributes
+          )
           .some(c => c.name == cookieObj.name);
       });
     }

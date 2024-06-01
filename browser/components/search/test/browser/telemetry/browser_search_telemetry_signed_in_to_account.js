@@ -14,7 +14,7 @@ const TEST_PROVIDER_INFO = [
     searchPageRegexp:
       /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetry(?:Ad)?/,
     queryParamNames: ["s"],
-    accountCookies: [
+    signedInCookies: [
       {
         host: "accounts.google.com",
         name: "SID",
@@ -33,7 +33,18 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-function simulateGoogleAccountSignIn() {
+async function openTabInUserContext(uri, userContextId) {
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
+
+  gBrowser.selectedTab = tab;
+  tab.ownerGlobal.focus();
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+  return { tab, browser };
+}
+
+function simulateGoogleAccountSignIn(originAttributes = {}) {
   // Manually set the cookie that is present when the client is signed in to a
   // Google account.
   Services.cookies.add(
@@ -45,7 +56,7 @@ function simulateGoogleAccountSignIn() {
     false,
     false,
     Date.now() + 1000 * 60 * 60,
-    {},
+    originAttributes,
     Ci.nsICookie.SAMESITE_NONE,
     Ci.nsICookie.SCHEME_HTTPS
   );
@@ -183,5 +194,191 @@ add_task(async function test_toggle_google_account_signed_in_status() {
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
   BrowserTestUtils.removeTab(tab3);
+  resetTelemetry();
+});
+
+add_task(async function test_containers() {
+  info("Loading SERP from a container tab - not signed in to Google account.");
+  let url = getSERPUrl("searchTelemetry.html");
+  let { tab: tab1, browser } = await openTabInUserContext(url, 1);
+
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
+    },
+  ]);
+
+  resetTelemetry();
+
+  info("Signing in to Google account.");
+  simulateGoogleAccountSignIn(browser.contentPrincipal.originAttributes);
+
+  info("Loading SERP in a container after signing in to Google account.");
+  let { tab: tab2 } = await openTabInUserContext(url, 1);
+
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "true",
+      },
+    },
+  ]);
+
+  Services.cookies.removeAll();
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  resetTelemetry();
+});
+
+add_task(async function test_containers_across_contexts() {
+  info("Loading SERP from a container tab.");
+  let url = getSERPUrl("searchTelemetry.html");
+  let { tab: containerTab1 } = await openTabInUserContext(url, 1);
+
+  resetTelemetry();
+
+  info("Signing in to Google account.");
+  // By NOT passing in originAttributes, this call will sign the client in in
+  // a normal (non-container) context.
+  simulateGoogleAccountSignIn();
+
+  info(
+    "Loading SERP in a container after signing in to Google account in a different container."
+  );
+  let { tab: containerTab2 } = await openTabInUserContext(url, 1);
+
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
+    },
+  ]);
+
+  Services.cookies.removeAll();
+  BrowserTestUtils.removeTab(containerTab1);
+  BrowserTestUtils.removeTab(containerTab2);
+  resetTelemetry();
+});
+
+add_task(async function test_private_windows() {
+  info("Loading SERP from a private window - not signed in to Google account.");
+  let url = getSERPUrl("searchTelemetry.html");
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, url);
+
+  // Private windows should always report "is_signed_in" as false, whether the
+  // client is signed in to a Google account or not at the time of SERP load.
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "true",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
+    },
+  ]);
+
+  resetTelemetry();
+
+  info("Signing in to Google account.");
+  let originAttributes = privateWin.gBrowser.contentPrincipal.originAttributes;
+  simulateGoogleAccountSignIn(originAttributes);
+
+  info(
+    "Loading SERP in private browsing mode after signing in to Google account."
+  );
+  await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, url);
+
+  // Private windows should always report "is_signed_in" as false, whether the
+  // client is signed in to a Google account or not at the time of SERP load.
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "true",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
+    },
+  ]);
+
+  Services.cookies.removeAll();
+  BrowserTestUtils.closeWindow(privateWin);
+  resetTelemetry();
+});
+
+add_task(async function test_private_windows_across_contexts() {
+  info("Loading SERP from a private window.");
+  let url = getSERPUrl("searchTelemetry.html");
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, url);
+  resetTelemetry();
+
+  info("Signing in to Google account.");
+  // By NOT passing in originAttributes, this call will sign the client in in
+  // a normal (non-private) context.
+  simulateGoogleAccountSignIn();
+
+  info(
+    "Loading SERP in private browsing mode after signing in to Google account in a separate context."
+  );
+  await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, url);
+
+  // Private windows should always report "is_signed_in" as false, even if the
+  // client is signed in to a Google account in another context.
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "true",
+        shopping_tab_displayed: "false",
+        is_signed_in: "false",
+      },
+    },
+  ]);
+
+  Services.cookies.removeAll();
+  BrowserTestUtils.closeWindow(privateWin);
   resetTelemetry();
 });
