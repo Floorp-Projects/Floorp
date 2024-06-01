@@ -160,9 +160,6 @@ skip-if = ["os == 'win'"] # Bug 1775761
 
 ["browser_cookie_sync_across_tabs.js"]
 
-["browser_display_plaintext_types.js"]
-support-files = ["res_hello_h1.sjs"]
-
 ["browser_dns_prefetch_link_header.js"]
 
 ["browser_fetch_lnk.js"]

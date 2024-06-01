@@ -1081,13 +1081,21 @@ nsresult ExternalResourceMap::PendingLoad::SetupViewer(
       new LoadgroupCallbacks(callbacks);
   newLoadGroup->SetNotificationCallbacks(newCallbacks);
 
+  // This is some serious hackery cribbed from docshell
+  nsCOMPtr<nsICategoryManager> catMan =
+      do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(catMan, NS_ERROR_NOT_AVAILABLE);
+  nsCString contractId;
+  nsresult rv =
+      catMan->GetCategoryEntry("Gecko-Content-Viewers", type, contractId);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
-      nsContentUtils::FindInternalDocumentViewer(type);
+      do_GetService(contractId.get());
   NS_ENSURE_TRUE(docLoaderFactory, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIDocumentViewer> viewer;
   nsCOMPtr<nsIStreamListener> listener;
-  nsresult rv = docLoaderFactory->CreateInstance(
+  rv = docLoaderFactory->CreateInstance(
       "external-resource", chan, newLoadGroup, type, nullptr, nullptr,
       getter_AddRefs(listener), getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);
