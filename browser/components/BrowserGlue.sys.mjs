@@ -4477,7 +4477,7 @@ BrowserGlue.prototype = {
       if (!AppConstants.NIGHTLY_BUILD) {
         const hasRunBetaMigration = Services.prefs
           .getCharPref("browser.startup.homepage_override.mstone", "")
-          .startsWith("127.0b");
+          .startsWith("127.0");
 
         // Version 146 UI migration wrote to a wrong `creditcards` pref when
         // the feature was disabled, instead it should have used `creditCards`.

@@ -87,7 +87,7 @@ add_task(
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION - 1);
     Services.prefs.setCharPref(
       "browser.startup.homepage_override.mstone",
-      "127.0b6"
+      "127.0"
     );
     FormAutofillUtils.setOSAuthEnabled(CC_TYPO_PREF, false);
 
@@ -106,7 +106,7 @@ add_task(
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION - 1);
     Services.prefs.setCharPref(
       "browser.startup.homepage_override.mstone",
-      "127.0b6"
+      "127.0"
     );
     FormAutofillUtils.setOSAuthEnabled(CC_TYPO_PREF, true);
 
@@ -125,7 +125,7 @@ add_task(
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION - 1);
     Services.prefs.setCharPref(
       "browser.startup.homepage_override.mstone",
-      "127.0b8"
+      "127.0"
     );
     FormAutofillUtils.setOSAuthEnabled(CC_NEW_PREF, false);
 
@@ -144,7 +144,7 @@ add_task(
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION - 1);
     Services.prefs.setCharPref(
       "browser.startup.homepage_override.mstone",
-      "127.0b8"
+      "127.0"
     );
     FormAutofillUtils.setOSAuthEnabled(CC_NEW_PREF, true);
 
