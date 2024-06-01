@@ -510,7 +510,7 @@ typedef bool (*JSGrayRootsTracer)(JSTracer* trc, js::SliceBudget& budget,
 
 typedef enum JSGCStatus { JSGC_BEGIN, JSGC_END } JSGCStatus;
 
-typedef void (*JSObjectsTenuredCallback)(JSContext* cx, void* data);
+typedef void (*JSObjectsTenuredCallback)(JS::GCContext* gcx, void* data);
 
 typedef enum JSFinalizeStatus {
   /**
@@ -1373,20 +1373,13 @@ namespace gc {
 extern JS_PUBLIC_API JSObject* NewMemoryInfoObject(JSContext* cx);
 
 /*
- * Return whether |obj| is a dead nursery object during a minor GC.
- */
-JS_PUBLIC_API bool IsDeadNurseryObject(JSObject* obj);
-
-/*
- * Run the finalizer of a nursery-allocated JSObject that is known to be dead.
+ * Get the GCContext for the current context.
  *
- * This is a dangerous operation - only use this if you know what you're doing!
- *
- * This is used by the browser to implement nursery-allocated wrapper cached
- * wrappers.
+ * This is here to allow the browser to call finalizers for dead nursery
+ * objects. This is a dangerous operation - only use this if you know what
+ * you're doing!
  */
-extern JS_PUBLIC_API void FinalizeDeadNurseryObject(JSContext* cx,
-                                                    JSObject* obj);
+extern JS_PUBLIC_API JS::GCContext* GetGCContext(JSContext* cx);
 
 } /* namespace gc */
 } /* namespace js */

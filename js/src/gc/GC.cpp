@@ -1597,7 +1597,7 @@ void GCRuntime::callObjectsTenuredCallback() {
   JS::AutoSuppressGCAnalysis nogc;
   const auto& callback = tenuredCallback.ref();
   if (callback.op) {
-    callback.op(rt->mainContextFromOwnThread(), callback.data);
+    callback.op(&mainThreadContext.ref(), callback.data);
   }
 }
 

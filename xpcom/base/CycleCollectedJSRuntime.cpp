@@ -466,8 +466,8 @@ void TraversalTracer::onChild(JS::GCCellPtr aThing, const char* name) {
 // CycleCollectedJSRuntime. It should never be used directly.
 static const JSZoneParticipant sJSZoneCycleCollectorGlobal;
 
-static void JSObjectsTenuredCb(JSContext* aContext, void* aData) {
-  static_cast<CycleCollectedJSRuntime*>(aData)->JSObjectsTenured();
+static void JSObjectsTenuredCb(JS::GCContext* aGCContext, void* aData) {
+  static_cast<CycleCollectedJSRuntime*>(aData)->JSObjectsTenured(aGCContext);
 }
 
 static void MozCrashWarningReporter(JSContext*, JSErrorReport*) {
@@ -1546,9 +1546,7 @@ void CycleCollectedJSRuntime::GarbageCollect(JS::GCOptions aOptions,
   JS::NonIncrementalGC(cx, aOptions, aReason);
 }
 
-void CycleCollectedJSRuntime::JSObjectsTenured() {
-  JSContext* cx = CycleCollectedJSContext::Get()->Context();
-
+void CycleCollectedJSRuntime::JSObjectsTenured(JS::GCContext* aGCContext) {
   NurseryObjectsVector objects;
   std::swap(objects, mNurseryObjects);
 
@@ -1557,17 +1555,16 @@ void CycleCollectedJSRuntime::JSObjectsTenured() {
     JSObject* wrapper = cache->GetWrapperMaybeDead();
     MOZ_DIAGNOSTIC_ASSERT(wrapper);
 
-    if (!js::gc::IsInsideNursery(wrapper)) {
-      continue;
-    }
-
-    if (js::gc::IsDeadNurseryObject(wrapper)) {
+    if (js::gc::InCollectedNurseryRegion(wrapper)) {
       MOZ_ASSERT(!cache->PreservingWrapper());
-      js::gc::FinalizeDeadNurseryObject(cx, wrapper);
+      const JSClass* jsClass = JS::GetClass(wrapper);
+      jsClass->doFinalize(aGCContext, wrapper);
       continue;
     }
 
-    mNurseryObjects.InfallibleAppend(cache);
+    if (js::gc::IsInsideNursery(wrapper)) {
+      mNurseryObjects.InfallibleAppend(cache);
+    }
   }
 }
 

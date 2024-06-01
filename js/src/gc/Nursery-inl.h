@@ -40,8 +40,7 @@ inline bool js::Nursery::shouldTenure(gc::Cell* cell) {
 }
 
 inline bool js::Nursery::inCollectedRegion(gc::Cell* cell) const {
-  gc::ChunkBase* chunk = gc::detail::GetCellChunkBase(cell);
-  return chunk->getKind() == gc::ChunkKind::NurseryFromSpace;
+  return gc::InCollectedNurseryRegion(cell);
 }
 
 inline bool js::Nursery::inCollectedRegion(void* ptr) const {
