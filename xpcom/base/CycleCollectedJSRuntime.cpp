@@ -698,17 +698,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
   JS_SetGCCallback(aCx, GCCallback, this);
   mPrevGCSliceCallback = JS::SetGCSliceCallback(aCx, GCSliceCallback);
 
-  if (NS_IsMainThread()) {
-    // We would like to support all threads here, but the way timeline consumers
-    // are set up currently, you can either add a marker for one specific
-    // docshell, or for every consumer globally. We would like to add a marker
-    // for every consumer observing anything on this thread, but that is not
-    // currently possible. For now, add global markers only when we are on the
-    // main thread, since the UI for this tracing data only displays data
-    // relevant to the main-thread.
-    JS::AddGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback,
-                                       nullptr);
-  }
+  JS::AddGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback, this);
 
   JS_SetObjectsTenuredCallback(aCx, JSObjectsTenuredCb, this);
   JS::SetOutOfMemoryCallback(aCx, OutOfMemoryCallback, this);
@@ -769,10 +759,7 @@ void CycleCollectedJSRuntime::Shutdown(JSContext* aCx) {
 
   JS_SetDestroyZoneCallback(aCx, nullptr);
 
-  if (NS_IsMainThread()) {
-    JS::RemoveGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback,
-                                          nullptr);
-  }
+  JS::RemoveGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback, this);
 }
 
 CycleCollectedJSRuntime::~CycleCollectedJSRuntime() {
@@ -1134,9 +1121,8 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
 void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
     JSContext* aContext, JS::GCNurseryProgress aProgress, JS::GCReason aReason,
     void* data) {
-  CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
-  MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
-  MOZ_ASSERT(NS_IsMainThread());
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(data);
+  MOZ_ASSERT(self->GetContext()->Context() == aContext);
 
   TimeStamp now = TimeStamp::Now();
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {
@@ -1684,8 +1670,7 @@ void IncrementalFinalizeRunnable::ReleaseNow(bool aLimited) {
           break;
         }
       } else {
-        while (!function.run(UINT32_MAX, function.data))
-          ;
+        while (!function.run(UINT32_MAX, function.data));
         ++mFinalizeFunctionToRun;
       }
     } while (mFinalizeFunctionToRun < mDeferredFinalizeFunctions.Length());
