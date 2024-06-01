@@ -1,7 +1,8 @@
-/* eslint max-len: ["error", 80] */
-
 const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
+);
+const { Management } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 const { ExtensionPermissions } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"
@@ -15,14 +16,28 @@ AddonTestUtils.initMochitest(this);
 
 async function background() {
   browser.permissions.onAdded.addListener(perms => {
-    browser.test.sendMessage("permission-added", perms);
+    if (localStorage.getItem("listening")) {
+      browser.test.sendMessage("permission-added", perms);
+    } else {
+      browser.test.log(
+        `permissions-added before listening ${JSON.stringify({
+          id: browser.runtime.id,
+          perms,
+        })}`
+      );
+    }
   });
   browser.permissions.onRemoved.addListener(perms => {
     browser.test.sendMessage("permission-removed", perms);
   });
+
+  browser.test.onMessage.addListener(async _ => {
+    localStorage.setItem("listening", true);
+    browser.test.sendMessage("ready");
+  });
 }
 
-async function getExtensions({ manifest_version = 2 } = {}) {
+async function getExtensions({ manifest_version = 2, expectGranted } = {}) {
   let extensions = {
     "addon0@mochi.test": ExtensionTestUtils.loadExtension({
       manifest: {
@@ -144,8 +159,36 @@ async function getExtensions({ manifest_version = 2 } = {}) {
       useAddonManager: "temporary",
     }),
   };
-  for (let ext of Object.values(extensions)) {
+  for (let [id, ext] of Object.entries(extensions)) {
+    let promiseGranted;
+
+    // We need to start listening for changes only after we get the first
+    // `change-permissions` event to avoid intermittent events from initial
+    // granting of origin permissions in mv3 on startup.
+
+    // This can happen because we're not awaiting in _setupStartupPermissions:
+    // https://searchfox.org/mozilla-central/rev/55944eaee1/toolkit/components/extensions/Extension.sys.mjs#3694-3697
+
+    if (manifest_version >= 3 && expectGranted && id === "addon1@mochi.test") {
+      promiseGranted = new Promise(resolve => {
+        info(`Waiting for ${id} host permissions to be granted.`);
+        Management.on("change-permissions", function listener(_, e) {
+          info(`Got change-permissions event: ${JSON.stringify(e)}`);
+          if (e.extensionId === id && e.added?.origins?.length) {
+            Management.off("change-permissions", listener);
+            resolve();
+          }
+        });
+      });
+    }
+
     await ext.startup();
+    await promiseGranted;
+
+    if (id !== "other@mochi.test") {
+      ext.sendMessage("init");
+      await ext.awaitMessage("ready");
+    }
   }
   return extensions;
 }
@@ -434,7 +477,7 @@ async function testPermissionsView({
     origins: [],
   });
 
-  let extensions = await getExtensions({ manifest_version });
+  let extensions = await getExtensions({ manifest_version, expectGranted });
 
   info("Check add-on with required permissions");
   if (manifest_version < 3) {
@@ -703,6 +746,8 @@ add_task(async function test_OneOfMany_AllSites_toggle() {
     useAddonManager: "permanent",
   });
   await extension.startup();
+  extension.sendMessage("init");
+  await extension.awaitMessage("ready");
 
   // Grant the second "all sites" permission as listed in the manifest.
   await ExtensionPermissions.add("addon9@mochi.test", {
