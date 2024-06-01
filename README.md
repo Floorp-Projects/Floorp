@@ -108,13 +108,13 @@ brew install --cask floorp
 ```md
 1. PPA (Ubuntu, Linux Mint, etc.)       "https://ppa.floorp.app"
 
-2. Flatpak (All Linux Distributions)    "https://flathub.org/apps/one.ablaze.floorp"
+2. Flatpak (Most Linux Distributions)    "https://flathub.org/apps/one.ablaze.floorp"
 
-3. tarball (All Linux Distributions)    "https://GitHub.com/Floorp-Projects/Floorp/releases/latest"
+3. tarball (Most Linux Distributions)    "https://GitHub.com/Floorp-Projects/Floorp/releases/latest"
 
-4. AUR bin (Arch-based distributions)        "https://aur.archlinux.org/packages/floorp-bin/" **Unofficial**
+4. AUR bin (Arch-based Distributions)        "https://aur.archlinux.org/packages/floorp-bin/" **Unofficial**
 
-5. AUR (Arch-based distributions)        "https://aur.archlinux.org/packages/floorp/" **Unofficial**
+5. AUR (Arch-based Distributions)        "https://aur.archlinux.org/packages/floorp/" **Unofficial**
 ```
 
 ### 📥 Download & 📦 Install
