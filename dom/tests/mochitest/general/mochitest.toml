@@ -158,9 +158,6 @@ scheme = "https"
 
 ["test_navigation_timing.html"]
 
-["test_network_events.html"]
-skip-if = ["true"] # Disable this test until bug 795711 is fixed.
-
 ["test_offsets.html"]
 support-files = ["test_offsets.js"]
 
