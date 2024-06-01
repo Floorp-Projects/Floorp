@@ -66,6 +66,7 @@ UNIFIED_SOURCES += [
     "TestTaskQueue.cpp",
     "TestTextFormatter.cpp",
     "TestThreadManager.cpp",
+    "TestThreadPoolIdleTimeout.cpp",
     "TestThreadPoolListener.cpp",
     "TestThreadUtils.cpp",
     "TestThrottledEventQueue.cpp",
