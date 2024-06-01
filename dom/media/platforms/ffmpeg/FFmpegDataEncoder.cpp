@@ -230,6 +230,10 @@ AVCodec* FFmpegDataEncoder<LIBAV_VER>::InitCommon() {
 
 MediaResult FFmpegDataEncoder<LIBAV_VER>::FinishInitCommon(AVCodec* aCodec) {
   mCodecContext->bit_rate = static_cast<FFmpegBitRate>(mConfig.mBitrate);
+  if (mConfig.mBitrateMode == BitrateMode::Constant) {
+    mCodecContext->rc_max_rate = static_cast<FFmpegBitRate>(mConfig.mBitrate);
+    mCodecContext->rc_min_rate = static_cast<FFmpegBitRate>(mConfig.mBitrate);
+  }
 #if LIBAVCODEC_VERSION_MAJOR >= 60
   mCodecContext->flags |= AV_CODEC_FLAG_FRAME_DURATION;
 #endif
