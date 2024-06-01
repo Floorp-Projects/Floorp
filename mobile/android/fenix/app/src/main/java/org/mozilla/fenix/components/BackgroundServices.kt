@@ -16,6 +16,7 @@ import mozilla.components.browser.storage.sync.RemoteTabsStorage
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceCapability
+import mozilla.components.concept.sync.DeviceCommandQueue
 import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
@@ -23,6 +24,8 @@ import mozilla.components.feature.accounts.push.CloseTabsFeature
 import mozilla.components.feature.accounts.push.FxaPushSupportFeature
 import mozilla.components.feature.accounts.push.SendTabFeature
 import mozilla.components.feature.syncedtabs.SyncedTabsAutocompleteProvider
+import mozilla.components.feature.syncedtabs.commands.SyncedTabsCommands
+import mozilla.components.feature.syncedtabs.commands.SyncedTabsCommandsFlushScheduler
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.PeriodicSyncConfig
@@ -155,6 +158,14 @@ class BackgroundServices(
     val syncedTabsAutocompleteProvider by lazyMonitored {
         SyncedTabsAutocompleteProvider(syncedTabsStorage)
     }
+    val syncedTabsCommands by lazyMonitored {
+        SyncedTabsCommands(accountManager, remoteTabsStorage.value).apply {
+            register(SyncedTabsCommandsObserver(syncedTabsCommandsFlushScheduler))
+        }
+    }
+    val syncedTabsCommandsFlushScheduler by lazyMonitored {
+        SyncedTabsCommandsFlushScheduler(context)
+    }
 
     @VisibleForTesting(otherwise = PRIVATE)
     fun makeAccountManager(
@@ -275,4 +286,18 @@ internal class TelemetryAccountObserver(
         SyncAuth.signOut.record(NoExtras())
         context.settings().signedInFxaAccount = false
     }
+}
+
+internal class SyncedTabsCommandsObserver(
+    private val flushScheduler: SyncedTabsCommandsFlushScheduler,
+) : DeviceCommandQueue.Observer {
+    override fun onAdded() {
+        flushScheduler.requestFlush()
+    }
+
+    // We don't cancel any scheduled flushes in `onRemoved`, because we should
+    // still flush if N commands were added, but N - 1 commands were removed.
+    // If the queue is empty when the worker runs, that's OK; the worker
+    // won't do anything, and won't run again until the next call to `onAdded`.
+    override fun onRemoved() = Unit
 }

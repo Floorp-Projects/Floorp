@@ -14,6 +14,22 @@ permalink: /changelog/
 * **browser-state**, **browser-engine-gecko**
     * Added a new parameter `adjustPriority` to `onCheckForFormData`, `UpdateHasFormDataAction` and `checkForFormData` to specify whether or not to adjust session priority after checking from data. [Bug 1893846](https://bugzilla.mozilla.org/show_bug.cgi?id=1893846)
 
+* **concept-sync**
+  * 🆕 New `DeviceCommandQueue` interface for implementing a queue that holds device commands until they're ready to be sent.
+
+* **browser-storage-sync**
+  * 🆕 New `RemoteTabsCommandQueue` class for persisting outgoing remote tabs commands.
+
+* **feature-syncedtabs**
+  * 🆕 New `SyncedTabsCommands` class that sends synced tabs commands to other devices when flushed.
+  * 🆕 New `SyncedTabsCommandsFlushScheduler` class for scheduling a `SyncedTabsCommandsFlushWorker` to flush the `SyncedTabsCommands` queue.
+  * 🆕 New `GlobalSyncedTabsCommandsProvider` object for providing the `SyncedTabsCommands` queue to the `SyncedTabsCommandsFlushWorker`.
+  * ⚠️ **Breaking change**: `SyncedTabsFeature` now takes the `SyncedTabsCommands` queue as an argument, and registers an observer to refresh the synced tabs list when the queue changes.
+
+* **feature-accounts-push**
+  * ⚠️ **Breaking change**: `CloseTabsUseCases()` now takes a generic remote tabs command queue as its argument.
+  * ⚠️ **Breaking change**: `CloseTabsUseCases.close()` no longer returns a value.
+
 # 127.0
 
 * **feature-prompts** **browser-storage-sync**

@@ -10,6 +10,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.feature.syncedtabs.commands.SyncedTabsCommands
 import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
@@ -29,6 +30,7 @@ class DefaultPresenterTest {
 
     private val context: Context = testContext
     private val controller: SyncedTabsController = mock()
+    private val commands: SyncedTabsCommands = mock()
     private val accountManager: FxaAccountManager = mock()
     private val view: SyncedTabsView = mock()
     private val lifecycleOwner: LifecycleOwner = mock()
@@ -40,6 +42,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -55,6 +58,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -74,6 +78,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -92,6 +97,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -112,6 +118,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -132,6 +139,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -148,6 +156,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -164,6 +173,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -180,6 +190,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -196,6 +207,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -213,6 +225,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -228,6 +241,7 @@ class DefaultPresenterTest {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -239,10 +253,11 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `GIVEN the presenter is started WHEN it is stopped THEN unregister the account and sync events observers`() {
+    fun `GIVEN the presenter is started WHEN it is stopped THEN all observers should be unregistered`() {
         val presenter = DefaultPresenter(
             context,
             controller,
+            commands,
             accountManager,
             view,
             lifecycleOwner,
@@ -252,5 +267,78 @@ class DefaultPresenterTest {
 
         verify(accountManager).unregisterForSyncEvents(presenter.eventObserver)
         verify(accountManager).unregister(presenter.accountObserver)
+        verify(commands).unregister(presenter.commandsObserver)
+    }
+
+    @Test
+    fun `GIVEN a presenter AND tabs sync is enabled WHEN a command is added to the synced tabs command queue THEN the synced tabs list should be refreshed`() {
+        val presenter = DefaultPresenter(
+            context,
+            controller,
+            commands,
+            accountManager,
+            view,
+            lifecycleOwner,
+        )
+
+        presenter.commandsObserver.onAdded()
+        shadowOf(getMainLooper()).idle()
+
+        verify(controller).refreshSyncedTabs()
+    }
+
+    @Test
+    fun `GIVEN a presenter AND tabs sync is enabled WHEN a command is removed from the synced tabs command queue THEN the synced tabs list should be refreshed`() {
+        val presenter = DefaultPresenter(
+            context,
+            controller,
+            commands,
+            accountManager,
+            view,
+            lifecycleOwner,
+        )
+
+        presenter.commandsObserver.onRemoved()
+        shadowOf(getMainLooper()).idle()
+
+        verify(controller).refreshSyncedTabs()
+    }
+
+    @Test
+    fun `GIVEN a presenter AND tabs sync is disabled WHEN a command is added to the synced tabs command queue THEN an error should be shown`() {
+        val presenter = DefaultPresenter(
+            context,
+            controller,
+            commands,
+            accountManager,
+            view,
+            lifecycleOwner,
+        )
+        prefs.edit().putBoolean("tabs", false).apply()
+
+        presenter.commandsObserver.onAdded()
+        shadowOf(getMainLooper()).idle()
+
+        verifyNoInteractions(controller)
+        verify(view).onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
+    }
+
+    @Test
+    fun `GIVEN a presenter AND tabs sync is disabled WHEN a command is removed from the synced tabs command queue THEN an error should be shown`() {
+        val presenter = DefaultPresenter(
+            context,
+            controller,
+            commands,
+            accountManager,
+            view,
+            lifecycleOwner,
+        )
+        prefs.edit().putBoolean("tabs", false).apply()
+
+        presenter.commandsObserver.onRemoved()
+        shadowOf(getMainLooper()).idle()
+
+        verifyNoInteractions(controller)
+        verify(view).onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
     }
 }

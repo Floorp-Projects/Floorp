@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.storage.sync.Tab
+import mozilla.components.feature.syncedtabs.commands.SyncedTabsCommands
 import mozilla.components.feature.syncedtabs.controller.DefaultController
 import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.interactor.DefaultInteractor
@@ -25,6 +26,7 @@ import kotlin.coroutines.CoroutineContext
  * the Firefox Sync account.
  *
  * @param storage The synced tabs storage that stores the current device's and remote device tabs.
+ * @param commands The queue used to send synced tabs commands to other devices.
  * @param accountManager Firefox Account Manager that holds a Firefox Sync account.
  * @param view An implementor of [SyncedTabsView] that will be notified of changes.
  * @param lifecycleOwner Android Lifecycle Owner to bind observers onto.
@@ -34,9 +36,11 @@ import kotlin.coroutines.CoroutineContext
  * @param presenter See [SyncedTabsPresenter].
  * @param interactor See [SyncedTabsInteractor].
  */
+@Suppress("LongParameterList")
 class SyncedTabsFeature(
     context: Context,
     storage: SyncedTabsStorage,
+    commands: SyncedTabsCommands,
     accountManager: FxaAccountManager,
     view: SyncedTabsView,
     lifecycleOwner: LifecycleOwner,
@@ -51,6 +55,7 @@ class SyncedTabsFeature(
     private val presenter: SyncedTabsPresenter = DefaultPresenter(
         context,
         controller,
+        commands,
         accountManager,
         view,
         lifecycleOwner,

@@ -12,7 +12,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.concept.sync.DeviceCommandQueue
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.feature.syncedtabs.commands.SyncedTabsCommands
 import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
@@ -36,6 +38,7 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
 internal class DefaultPresenter(
     private val context: Context,
     override val controller: SyncedTabsController,
+    private val commands: SyncedTabsCommands,
     override val accountManager: FxaAccountManager,
     override val view: SyncedTabsView,
     private val lifecycleOwner: LifecycleOwner,
@@ -47,6 +50,9 @@ internal class DefaultPresenter(
     @VisibleForTesting
     internal val accountObserver = SyncedTabsAccountObserver(view, controller)
 
+    @VisibleForTesting
+    internal val commandsObserver = SyncedTabsCommandsObserver(context, view, controller)
+
     override fun start() {
         accountManager.registerForSyncEvents(
             observer = eventObserver,
@@ -56,6 +62,12 @@ internal class DefaultPresenter(
 
         accountManager.register(
             observer = accountObserver,
+            owner = lifecycleOwner,
+            autoPause = true,
+        )
+
+        commands.register(
+            observer = commandsObserver,
             owner = lifecycleOwner,
             autoPause = true,
         )
@@ -84,6 +96,7 @@ internal class DefaultPresenter(
     override fun stop() {
         accountManager.unregisterForSyncEvents(eventObserver)
         accountManager.unregister(accountObserver)
+        commands.unregister(commandsObserver)
     }
 
     companion object {
@@ -113,6 +126,23 @@ internal class DefaultPresenter(
         override fun onAuthenticationProblems() {
             CoroutineScope(Dispatchers.Main).launch {
                 view.onError(ErrorType.SYNC_NEEDS_REAUTHENTICATION)
+            }
+        }
+    }
+
+    internal class SyncedTabsCommandsObserver(
+        private val context: Context,
+        private val view: SyncedTabsView,
+        private val controller: SyncedTabsController,
+    ) : DeviceCommandQueue.Observer {
+        override fun onAdded() = refresh()
+        override fun onRemoved() = refresh()
+
+        private fun refresh() {
+            if (isSyncedTabsEngineEnabled(context)) {
+                controller.refreshSyncedTabs()
+            } else {
+                view.onError(ErrorType.SYNC_ENGINE_UNAVAILABLE)
             }
         }
     }

@@ -59,7 +59,7 @@ sealed class DeviceCommandOutgoing {
     class SendTab(val title: String, val url: String) : DeviceCommandOutgoing()
 
     /** A command to close one or more tabs that are open on another device */
-    class CloseTab(val urls: List<String>) : DeviceCommandOutgoing()
+    class CloseTab(val urls: List<String>) : DeviceCommandOutgoing(), DeviceCommandQueue.Type.RemoteTabs
 }
 
 /**
