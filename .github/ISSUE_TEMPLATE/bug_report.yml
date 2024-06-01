@@ -30,7 +30,7 @@ body:
         - label: I am using the latest supported version of the browser.
         - label: I have tried disabling all browser extensions/add-ons to rule out interference from these.
         - label: I have tried clearing the browser cache and cookies.
-        - label: I have checked with the new profile and the issue still occurs.
+        - label: I have checked with a new profile and the issue still occurs.
         - label: I have provided detailed step-by-step instructions on how to reproduce the issue.
         - label: I have included relevant screenshots or console outputs.
         - label: I have checked this problem is not occurring in the latest version of Firefox ESR.
