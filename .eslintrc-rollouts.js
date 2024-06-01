@@ -1711,7 +1711,6 @@ const rollouts = [
       "dom/tests/mochitest/fetch/test_response.js",
       "dom/tests/mochitest/general/resource_timing_cross_origin.html",
       "dom/tests/mochitest/general/test_frameElementWrapping.html",
-      "dom/tests/mochitest/general/test_network_events.html",
       "dom/tests/mochitest/general/window_clipboard_events.html",
       "dom/tests/mochitest/localstorage/test_keySync.html",
       "dom/tests/mochitest/localstorage/test_localStorageFromChrome.xhtml",
