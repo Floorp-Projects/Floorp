@@ -1843,6 +1843,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Aseqdec aneggaru</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Umuɣ n usmizwer n wawalen n uεeddi</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Taččart tawurmant</string>
@@ -1850,6 +1853,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_addresses">Tansiwin</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Tarrayin n uxelleṣ</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Sekles syen ččar tarrayin n uxelleṣ</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s yettewgellih akk tarrayin n uxelleṣ i teskelseḍ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Mtawi tikarḍiwin gar yibenkan</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1905,6 +1912,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="credit_cards_name_on_card_validation_error_message_2">Rnu isem</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Kkes asekkeṛ i wakken ad twaliḍ tikerḍiwin-ik·im yettwaskelsen</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2">Seɣles tarrayin-ik n uxelleṣ i yettwaskelsen</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3">Sbadu taneɣruft n usekkeṛ n yibenk, tangalt PIN neq awal uffir i ummesten n tarrayin-ik·im n usmad yettwaskelsen ticki yella win ikecmen ɣer yibenk-inek·inem.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Sbadu tura</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1912,6 +1923,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Serreḥ i ibenk-inek·inem</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Kkes asekkeṛ tarrayin-ik n uxelleṣ i yettwaskelsen</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Rnu tansa</string>
     <!-- Title of the "Edit address" screen -->
@@ -2043,12 +2056,20 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="login_menu_delete_button">Kkes</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Ẓreg</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2">D tidet tebɣiḍ ad tekkseḍ awal-a n uεeddi?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Kkes</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Sefsex</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Tixtiṛiyin n wawal uffir</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3">Urti n uḍris yettusenfal i tansa n usmel  web.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3">Urti n uḍris yettusenfal i yisem n useqdac.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2">Urti n uḍris yettusenfal i wawal n uεeddi.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Sekles isenfal.</string>
     <!--  The page title for editing a saved password. -->
