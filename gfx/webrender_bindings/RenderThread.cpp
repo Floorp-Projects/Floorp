@@ -599,8 +599,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender,
   if (aTrackedFrame) {
     DecPendingFrameCount(aWindowId);
   }
-
-  CheckInactiveRenderers();
 }
 
 void RenderThread::HandleFrameOneDocInner(wr::WindowId aWindowId, bool aRender,
@@ -890,12 +888,6 @@ bool RenderThread::Resume(wr::WindowId aWindowId) {
   UpdateActiveRendererCount();
 
   return resumed;
-}
-
-void RenderThread::CheckInactiveRenderers() {
-  for (auto& renderer : mRenderers) {
-    renderer.second->CheckInactive();
-  }
 }
 
 bool RenderThread::TooManyPendingFrames(wr::WindowId aWindowId) {
