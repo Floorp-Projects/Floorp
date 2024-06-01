@@ -67,22 +67,28 @@ interface nsIThreadPool : nsIEventTarget
 
   /**
    * Get/set the maximum number of idle threads kept alive.
+   *
+   * Note that after idleThreadMaximumTimeout ms even these threads will
+   * go away. The default is 1.
+   * If this is 0, no idle thread will be kept longer than the grace timeout.
    */
   attribute unsigned long idleThreadLimit;
 
   /**
    * Get/set the amount of time in milliseconds before an idle thread is
-   * destroyed.
+   * destroyed if the pool exceeds idleThreadLimit.
+   *
+   * This should not be very long, the default value is 100ms.
    */
-  attribute unsigned long idleThreadTimeout;
+  attribute unsigned long idleThreadGraceTimeout;
 
   /**
-   * If set to true the idle timeout will be calculated as idleThreadTimeout
-   * divideded by the number of idle threads at the moment.  This may help
-   * save memory allocations but still keep reasonable amount of idle threads.
-   * Default is false, use |idleThreadTimeout| for all threads.
+   * Get/set the amount of time in milliseconds before an idle thread is
+   * destroyed. UINT32_MAX means "forever".
+   *
+   * This should not be very short, the default value is 60 seconds.
    */
-  attribute boolean idleThreadTimeoutRegressive;
+  attribute unsigned long idleThreadMaximumTimeout;
 
   /**
    * Get/set the number of bytes reserved for the stack of all threads in

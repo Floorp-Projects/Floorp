@@ -142,7 +142,7 @@ TEST(ThreadPoolListener, Test)
   rv = pool->SetIdleThreadLimit(NUMBER_OF_THREADS);
   ASSERT_NS_SUCCEEDED(rv);
 
-  rv = pool->SetIdleThreadTimeout(IDLE_THREAD_TIMEOUT);
+  rv = pool->SetIdleThreadMaximumTimeout(IDLE_THREAD_TIMEOUT);
   ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIThreadPoolListener> listener = new Listener();

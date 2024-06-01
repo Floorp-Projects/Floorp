@@ -87,7 +87,7 @@ nsresult BackgroundEventTarget::Init() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Leave threads alive for up to 5 minutes
-  rv = pool->SetIdleThreadTimeout(300000);
+  rv = pool->SetIdleThreadMaximumTimeout(300000);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the background I/O event target.
@@ -115,7 +115,7 @@ nsresult BackgroundEventTarget::Init() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Leave threads alive for up to 5 minutes
-  rv = ioPool->SetIdleThreadTimeout(300000);
+  rv = ioPool->SetIdleThreadMaximumTimeout(300000);
   NS_ENSURE_SUCCESS(rv, rv);
 
   pool.swap(mPool);

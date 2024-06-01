@@ -262,8 +262,7 @@ nsresult nsStreamTransportService::Init() {
   mPool->SetName("StreamTrans"_ns);
   mPool->SetThreadLimit(25);
   mPool->SetIdleThreadLimit(5);
-  mPool->SetIdleThreadTimeoutRegressive(true);
-  mPool->SetIdleThreadTimeout(PR_SecondsToInterval(30));
+  mPool->SetIdleThreadMaximumTimeout(PR_SecondsToInterval(30));
   MOZ_POP_THREAD_SAFETY
 
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();

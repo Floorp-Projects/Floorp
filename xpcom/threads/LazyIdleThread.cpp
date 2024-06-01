@@ -30,7 +30,8 @@ LazyIdleThread::LazyIdleThread(uint32_t aIdleTimeoutMS, const char* aName,
   // for managing the thread's lifetime.
   MOZ_ALWAYS_SUCCEEDS(mThreadPool->SetThreadLimit(1));
   MOZ_ALWAYS_SUCCEEDS(mThreadPool->SetIdleThreadLimit(1));
-  MOZ_ALWAYS_SUCCEEDS(mThreadPool->SetIdleThreadTimeout(aIdleTimeoutMS));
+  MOZ_ALWAYS_SUCCEEDS(mThreadPool->SetIdleThreadGraceTimeout(0));
+  MOZ_ALWAYS_SUCCEEDS(mThreadPool->SetIdleThreadMaximumTimeout(aIdleTimeoutMS));
   MOZ_ALWAYS_SUCCEEDS(mThreadPool->SetName(nsDependentCString(aName)));
 
   if (aShutdownMethod == ShutdownMethod::AutomaticShutdown &&

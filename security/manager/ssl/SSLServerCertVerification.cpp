@@ -164,7 +164,7 @@ void InitializeSSLServerCertVerificationThreads() {
   NS_ADDREF(gCertVerificationThreadPool);
 
   (void)gCertVerificationThreadPool->SetIdleThreadLimit(5);
-  (void)gCertVerificationThreadPool->SetIdleThreadTimeout(30 * 1000);
+  (void)gCertVerificationThreadPool->SetIdleThreadMaximumTimeout(30 * 1000);
   (void)gCertVerificationThreadPool->SetThreadLimit(5);
   (void)gCertVerificationThreadPool->SetName("SSL Cert"_ns);
 }
