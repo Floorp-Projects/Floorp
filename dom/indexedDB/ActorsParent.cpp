@@ -299,12 +299,21 @@ const uint32_t kMaxConnectionThreadCount = 20;
 
 static_assert(kMaxConnectionThreadCount, "Must have at least one thread!");
 
-// The maximum number of threads to keep when idle. Threads that become idle in
-// excess of this number will be shut down immediately.
-const uint32_t kMaxIdleConnectionThreadCount = 2;
+// The maximum number of threads to keep when idle. Until we switch to the STS
+// pool, we can reduce the number of idle threads kept around thanks to the
+// grace timeout.
+const uint32_t kMaxIdleConnectionThreadCount = 1;
 
 static_assert(kMaxConnectionThreadCount >= kMaxIdleConnectionThreadCount,
               "Idle thread limit must be less than total thread limit!");
+
+// The length of time that wanted idle threads will stay alive before being shut
+// down.
+const uint32_t kConnectionThreadMaxIdleMS = 30 * 1000;  // 30 seconds
+
+// The length of time that excess idle threads will stay alive before being shut
+// down.
+const uint32_t kConnectionThreadGraceIdleMS = 500;  // 0.5 seconds
 
 // The length of time that database connections will be held open after all
 // transactions have completed before doing idle maintenance. Please keep in
@@ -314,9 +323,6 @@ const uint32_t kConnectionIdleMaintenanceMS = 2 * 1000;  // 2 seconds
 // The length of time that database connections will be held open after all
 // transactions and maintenance have completed.
 const uint32_t kConnectionIdleCloseMS = 10 * 1000;  // 10 seconds
-
-// The length of time that idle threads will stay alive before being shut down.
-const uint32_t kConnectionThreadIdleMS = 30 * 1000;  // 30 seconds
 
 #define SAVEPOINT_CLAUSE "SAVEPOINT sp;"_ns
 
@@ -6576,7 +6582,10 @@ already_AddRefed<nsIThreadPool> MakeConnectionIOTarget() {
       threadPool->SetIdleThreadLimit(kMaxIdleConnectionThreadCount));
 
   MOZ_ALWAYS_SUCCEEDS(
-      threadPool->SetIdleThreadMaximumTimeout(kConnectionThreadIdleMS));
+      threadPool->SetIdleThreadMaximumTimeout(kConnectionThreadMaxIdleMS));
+
+  MOZ_ALWAYS_SUCCEEDS(
+      threadPool->SetIdleThreadGraceTimeout(kConnectionThreadGraceIdleMS));
 
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("IndexedDB IO"_ns));
 
