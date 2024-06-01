@@ -200,6 +200,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Tilføjelser</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Udvidelser</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Håndter udvidelser</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Opdag flere udvidelser</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontooplysninger</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -218,6 +222,8 @@
     <string name="browser_menu_open_in_regular_tab">Åbn i almindeligt faneblad</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Føj til startskærm</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Føj til startskærm…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installer</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -229,9 +235,13 @@
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Oversæt side</string>
     <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Gem til samling…</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Gem til samling</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Del</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Del…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Åbn i %1$s</string>
@@ -283,6 +293,24 @@
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">Gem</string>
+
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Bogmærk denne side</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Rediger bogmærke</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Gem som PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Slå læsevisning til</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Slå læsevisning fra</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Oversæt side…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Oversat til %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Udskriv…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -380,8 +408,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Privatlivserklæring for Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Læs mere i vores privatlivserklæring</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Vi elsker at holde dig sikker</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -590,7 +616,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Sprog</string>
     <!-- Preference for translation -->
-    <string name="preferences_translation">Oversættelse</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Oversættelse</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Oversættelser</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Valg for data</string>
     <!-- Preference for data collection -->
@@ -662,10 +690,6 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Påkrævede</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Valgfrie</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Læse og ændre webstedsdata</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Slet websted</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Tillad for alle websteder</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -790,8 +814,6 @@
     <string name="preferences_sync_history">Historik</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Bogmærker</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Logins</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Adgangskoder</string>
     <!-- Preference for syncing tabs -->
@@ -818,8 +840,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s på %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Betalingskort</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Betalingsmetoder</string>
     <!-- Preference for syncing addresses -->
@@ -834,6 +854,14 @@
     <string name="fxa_tab_received_notification_name">Modtaget faneblad</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Faneblad fra %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">%1$s-faneblade lukket: %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Vis nyligt lukkede faneblade</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -1756,11 +1784,7 @@
     <string name="add_to_homescreen_description_2">Du kan nemt føje dette websted til din enheds startskærm for at have hurtig adgang til det og browse hurtigere med en app-lignende oplevelse.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Logins og adgangskoder</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Adgangskoder</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Gem logins og adgangskoder</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Gem adgangskoder</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1776,47 +1800,28 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Udfyld brugernavne og adgangskoder i andre apps på din enhed.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Tilføj login</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Tilføj adgangskode</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Synkroniser logins</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Synkroniser adgangskoder</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Synkroniser logins på tværs af enheder</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">Synkroniser adgangskoder på tværs af enheder</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Gemte logins</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Gemte adgangskoder</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">De logins, du gemmer eller synkroniserer til %s, vises her.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">Adgangskoderne, du gemmer i eller synkroniserer med %s vil blive vist her. Alle dine gemte adgangskoder bliver krypteret.
 </string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Læs mere om Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Læs mere om synkronisering</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Undtagelser</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Logins og adgangskoder, der ikke er gemt, vises her.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s gemmer ikke adgangskoder til websteder vist her.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Logins og adgangskoder vil ikke blive gemt for disse websteder.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s gemmer ikke adgangskoder til disse websteder.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Slet alle undtagelser</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Søg efter logins</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Søg efter adgangskoder</string>
     <!-- The header for the site that a login is for -->
@@ -1845,16 +1850,10 @@
     <string name="saved_login_reveal_password">Vis adgangskode</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Skjul adgangskode</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Lås op for at se dine gemte logins</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">Lås op for at se dine gemte adgangskoder</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Gør dine logins og adgangskoder sikre</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Gør dine gemte adgangskoder sikre</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte logins og adgangskoder, hvis de har adgang til din enhed.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte  adgangskoder, hvis de har adgang til din enhed.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1873,9 +1872,6 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Senest brugt</string>
 
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Sortér menuen logins</string>
-
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Menuen sorter adgangskoder</string>
 
@@ -1884,40 +1880,26 @@
     <string name="preferences_autofill">Autofyld</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adresser</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Betalingskort</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Betalingsmetoder</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Gem og autofyld betalingskort</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Gem og udfyld betalingsmetoder</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Data er krypteret</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s krypterer alle betalingsmetoder, du gemmer</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkroniser kort på tværs af enheder</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Synkroniser kort</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Tilføj betalingskort</string>
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Tilføj kort</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Håndter gemte kort</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Håndter kort</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Tilføj adresse</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Håndter adresser</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Gem og autofyld adresser</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Gem og udfyld adresser</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Inkluderer oplysninger såsom telefonnumre, mail- og forsendelsesadresser</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Inkluderer telefonnumre og mailadresser</string>
@@ -1941,8 +1923,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Slet kort</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Er du sikker på, at du vil slette dette betalingskort?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Slet kort?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Slet</string>
@@ -1956,23 +1936,14 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Gemte kort</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Indtast et gyldigt betalingskortnummer</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Indtast et gyldigt kortnummer</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Udfyld dette felt</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Tilføj navn</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Lås op for at se dine gemte betalingskort</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Beskyt dine betalingskort</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">Gør dine gemte betalingsmetoder sikre</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte betalingskort, hvis de har adgang til din enhed.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">Indstil en pinkode, en adgangskode eller et låsemønster på din enhed for at forhindre, at andre mennesker får adgang til dine gemte betalingsmetoder, hvis de har adgang til din enhed.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1981,8 +1952,6 @@
     <string name="credit_cards_warning_dialog_later">Senere</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Lås din enhed op</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Lås op for at anvende gemte informationer om betalingskort</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">Lås op for at bruge gemte betalingsmetoder</string>
@@ -1992,12 +1961,6 @@
     <string name="addresses_edit_address">Rediger adresse</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Håndter adresser</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Fornavn</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Mellemnavn</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Efternavn</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Navn</string>
     <!-- The header for the street address of an address -->
@@ -2022,8 +1985,6 @@
     <string name="addresses_cancel_button">Annuller</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Slet adresse</string>
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Er du sikker på, at du vil slette denne adresse?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Slet denne adresse?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2123,48 +2084,28 @@
     <string name="login_menu_delete_button">Slet</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Rediger</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Er du sikker på, at du vil slette dette login?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">Er du sikker på, at du vil slette denne adgangskode?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Slet</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Annuller</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Login-indstillinger</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Adgangskode-indstillinger</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Det redigerbare tekstfelt for login’ets webadresse.</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">Det redigerbare tekstfelt for webadressen.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Det redigerbare tekstfelt for login’ets brugernavn.</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">Det redigerbare tekstfelt for brugernavnet.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Det redigerbare tekstfelt for login’ets adgangskode.</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">Det redigerbare tekstfelt for adgangskoden.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Gem ændringer til login.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Gem ændringer.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Rediger</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Rediger adgangskode</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Tilføj nyt login</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Tilføj adgangskode</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Adgangskode påkrævet</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Indtast en adgangskode</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Brugernavn påkrævet</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Indtast et brugernavn</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2574,6 +2515,9 @@
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">Luk oversættelsesoversigten</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">Nogle indstillinger er midlertidigt utilgængelige.</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">Oversættelser</string>
@@ -2595,6 +2539,9 @@
     <string name="automatic_translation_toolbar_title_preference">Automatisk oversættelse</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">Vælg et sprog for at håndtere indstillingerne ”oversæt altid“ og ”oversæt aldrig“.</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">Kunne ikke indlæse sprog. Prøv igen senere.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2619,6 +2566,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Fjern %1$s</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">Kunne ikke indlæse websteder. Prøv igen senere.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Slet %1$s?</string>
@@ -2704,7 +2653,9 @@
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Antal faneblade</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Aktive</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Aktive</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Aktive</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inaktive</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2715,6 +2666,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">Værktøj til oprettelse af faneblade</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Antal faneblade, der skal oprettes</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Tekstfeltet er tomt</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Indtast kun positive heltal</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Indtast et tal større end nul</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Overskredet det maksimale antal faneblade (%1$s), der kan oprettes i én operation</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Føj til aktive faneblade</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2731,11 +2692,11 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Privatlivserklæring</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Indsend</string>
+    <string name="micro_survey_submit_button_label">Indsend</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">Luk</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Luk</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Tak for tilbagemeldingen!</string>
+    <string name="micro_survey_feedback_confirmation">Tak for tilbagemeldingen!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Meget tilfreds</string>
     <!-- Option for likert scale -->
@@ -2746,6 +2707,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">Utilfreds</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Meget utilfreds</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Åbn undersøgelse</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Luk undersøgelse</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Luk</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
