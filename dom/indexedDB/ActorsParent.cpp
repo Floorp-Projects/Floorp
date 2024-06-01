@@ -6576,7 +6576,7 @@ already_AddRefed<nsIThreadPool> MakeConnectionIOTarget() {
       threadPool->SetIdleThreadLimit(kMaxIdleConnectionThreadCount));
 
   MOZ_ALWAYS_SUCCEEDS(
-      threadPool->SetIdleThreadTimeout(kConnectionThreadIdleMS));
+      threadPool->SetIdleThreadMaximumTimeout(kConnectionThreadIdleMS));
 
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("IndexedDB IO"_ns));
 
@@ -11979,7 +11979,8 @@ nsThreadPool* QuotaClient::GetOrCreateThreadPool() {
     MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(1));
 
     // Don't keep idle threads alive very long.
-    MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadTimeout(5 * PR_MSEC_PER_SEC));
+    MOZ_ALWAYS_SUCCEEDS(
+        threadPool->SetIdleThreadMaximumTimeout(5 * PR_MSEC_PER_SEC));
 
     MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("IndexedDB Mnt"_ns));
 

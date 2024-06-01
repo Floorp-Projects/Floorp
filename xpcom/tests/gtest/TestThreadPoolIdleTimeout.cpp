@@ -177,7 +177,10 @@ TEST(ThreadPoolIdleTimeout, Test)
   rv = pool->SetIdleThreadLimit(NUMBER_OF_IDLE_THREADS);
   ASSERT_NS_SUCCEEDED(rv);
 
-  rv = pool->SetIdleThreadTimeout(IDLE_THREAD_MAX_TIMEOUT);
+  rv = pool->SetIdleThreadGraceTimeout(IDLE_THREAD_GRACE_TIMEOUT);
+  ASSERT_NS_SUCCEEDED(rv);
+
+  rv = pool->SetIdleThreadMaximumTimeout(IDLE_THREAD_MAX_TIMEOUT);
   ASSERT_NS_SUCCEEDED(rv);
 
   pool->SetName("IdleTest"_ns);
@@ -268,10 +271,10 @@ TEST(ThreadPoolIdleTimeout, Test)
     }
     EXPECT_EQ(numberOfThreads, (uint32_t)NUMBER_OF_IDLE_THREADS);
     if (deviationPerc < 10) {
-      // TODO: This condition shows how we kill threads immediately and not
-      // after IDLE_THREAD_GRACE_TIMEOUT.
+      EXPECT_GE(graceTime,
+                TimeDuration::FromMilliseconds(IDLE_THREAD_GRACE_TIMEOUT * .9));
       EXPECT_LE(graceTime, TimeDuration::FromMilliseconds(
-                               IDLE_THREAD_GRACE_TIMEOUT * 0.1));
+                               IDLE_THREAD_GRACE_TIMEOUT * 1.5));
     } else {
       printf(
           "Encountered flaky timers (deviation=%.2f), skipping grace timeout "
@@ -340,16 +343,12 @@ TEST(ThreadPoolIdleTimeout, Test)
       timer->Cancel();
     }
 
-    // TODO: This condition shows how we kill threads immediately and create
-    // new threads for each burst of events.
-    // With perfect timing we expect 10 burst to have created 6 + 9*3 threads.
-    // Let's be a bit less strict to account for sloppy timings on slow
-    // machines.
+    // We expect only 6 initial threads to be created and kept alive by the
+    // grace timeout.
     printf("%u Found %u threads created.\n",
            (uint32_t)(TimeStamp::Now() - execStart).ToMilliseconds(),
            (uint32_t)numberOfThreadsCreated);
-    EXPECT_LE(NUMBER_OF_MAX_THREADS + NUMBER_OF_IDLE_THREADS * 8,
-              (uint32_t)numberOfThreadsCreated);
+    EXPECT_EQ(NUMBER_OF_MAX_THREADS, (uint32_t)numberOfThreadsCreated);
   }
 
   // 3rd Test: After an initial burst, see how low noise of repeated single
@@ -436,12 +435,15 @@ TEST(ThreadPoolIdleTimeout, Test)
 
     if (deviationPerc < 10) {
       // We would expect the idle threads to have gone back to
-      // NUMBER_OF_IDLE_THREADS. Thanks to the immediate killing this is
-      // the case.
+      // NUMBER_OF_IDLE_THREADS.
+      // But due to the same MRU thread being used all the time we can
+      // find NUMBER_OF_IDLE_THREADS + 1 if none of the other threads waiting
+      // with IDLE_THREAD_MAX_TIMEOUT expired, yet.
       printf("%u End of low noise, found %u threads alive.\n",
              (uint32_t)(TimeStamp::Now() - execStart).ToMilliseconds(),
              (uint32_t)numberOfThreads);
-      EXPECT_EQ(NUMBER_OF_IDLE_THREADS, (uint32_t)numberOfThreads);
+      EXPECT_LE(NUMBER_OF_IDLE_THREADS, (uint32_t)numberOfThreads);
+      EXPECT_GE(NUMBER_OF_IDLE_THREADS + 1, (uint32_t)numberOfThreads);
     } else {
       printf(
           "Encountered flaky timers (deviation=%.2f), skipping low noise "

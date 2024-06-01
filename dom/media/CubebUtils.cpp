@@ -806,7 +806,8 @@ bool SandboxEnabled() {
 already_AddRefed<SharedThreadPool> GetCubebOperationThread() {
   RefPtr<SharedThreadPool> pool = SharedThreadPool::Get("CubebOperation"_ns, 1);
   const uint32_t kIdleThreadTimeoutMs = 2000;
-  pool->SetIdleThreadTimeout(PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
+  pool->SetIdleThreadMaximumTimeout(
+      PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
   return pool.forget();
 }
 
