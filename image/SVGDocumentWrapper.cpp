@@ -283,14 +283,20 @@ nsresult SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
   NS_ENSURE_TRUE(newLoadGroup, NS_ERROR_OUT_OF_MEMORY);
   newLoadGroup->SetLoadGroup(loadGroup);
 
+  nsCOMPtr<nsICategoryManager> catMan =
+      do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(catMan, NS_ERROR_NOT_AVAILABLE);
+  nsCString contractId;
+  nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", IMAGE_SVG_XML,
+                                         contractId);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
-      nsContentUtils::FindInternalDocumentViewer(
-          nsLiteralCString(IMAGE_SVG_XML));
+      do_GetService(contractId.get());
   NS_ENSURE_TRUE(docLoaderFactory, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIDocumentViewer> viewer;
   nsCOMPtr<nsIStreamListener> listener;
-  nsresult rv = docLoaderFactory->CreateInstance(
+  rv = docLoaderFactory->CreateInstance(
       "external-resource", chan, newLoadGroup, nsLiteralCString(IMAGE_SVG_XML),
       nullptr, nullptr, getter_AddRefs(listener), getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);
