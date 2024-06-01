@@ -264,10 +264,19 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
 #endif
   LOG(("Native HTTPS records supported=%d", bool(sNativeHTTPSSupported)));
 
+  // The ThreadFunc has its own loop and will live very long and block one
+  // thread from the thread pool's point of view, such that the timeouts are
+  // less important here. The pool is mostly used to provide an easy way to
+  // create and shutdown those threads.
+  // TODO: It seems, the ThreadFunc resembles some quite similar timeout and
+  // wait for events logic as the pool offers, maybe we could simplify this
+  // a bit, see bug 1478732 for a previous attempt.
   nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(MaxResolverThreads()));
-  MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(MaxResolverThreads()));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(
+      std::max(MaxResolverThreads() / 4, (uint32_t)1)));
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadMaximumTimeout(poolTimeoutMs));
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadGraceTimeout(100));
   MOZ_ALWAYS_SUCCEEDS(
       threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("DNS Resolver"_ns));
