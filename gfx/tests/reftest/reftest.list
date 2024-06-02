@@ -46,4 +46,3 @@ random-if(gtkWidget) fuzzy-if(Android,0-125,0-106) == 1845828-1.html 1845828-1-r
 fuzzy-if(!winWidget,0-1,0-4) fuzzy-if(winWidget,14-14,245-314) == 1853216-1.html 1853216-1-ref.html
 fuzzy-if(winWidget,0-1,0-13) == 1873708-emoji-canvas-filter.html 1873708-emoji-canvas-filter-ref.html
 != 1870240-colrv1-cycle.html 1870240-colrv1-cycle-notref.html
-print 1900028-text-mask-pdf.html 1900028-text-mask-pdf-ref.html
