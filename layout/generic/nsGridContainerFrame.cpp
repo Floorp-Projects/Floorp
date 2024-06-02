@@ -5436,47 +5436,6 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
 }
 
 /**
- * Reflow aChild in the given aAvailableSize, using aNewContentBoxSize as its
- * computed size in aChildAxis.
- */
-static void PostReflowStretchChild(
-    nsIFrame* aChild, const ReflowInput& aReflowInput,
-    const LogicalSize& aAvailableSize, const LogicalSize& aCBSize,
-    LogicalAxis aChildAxis, const nscoord aNewContentBoxSize,
-    nscoord aIMinSizeClamp = NS_MAXSIZE, nscoord aBMinSizeClamp = NS_MAXSIZE) {
-  nsPresContext* pc = aChild->PresContext();
-  ComputeSizeFlags csFlags;
-  if (aIMinSizeClamp != NS_MAXSIZE) {
-    csFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
-  }
-  if (aBMinSizeClamp != NS_MAXSIZE) {
-    csFlags += ComputeSizeFlag::BClampMarginBoxMinSize;
-    aChild->SetProperty(nsIFrame::BClampMarginBoxMinSizeProperty(),
-                        aBMinSizeClamp);
-  } else {
-    aChild->RemoveProperty(nsIFrame::BClampMarginBoxMinSizeProperty());
-  }
-  ReflowInput ri(pc, aReflowInput, aChild, aAvailableSize, Some(aCBSize), {},
-                 {}, csFlags);
-  if (aChildAxis == LogicalAxis::Block) {
-    ri.SetComputedBSize(ri.ApplyMinMaxBSize(aNewContentBoxSize));
-  } else {
-    ri.SetComputedISize(ri.ApplyMinMaxISize(aNewContentBoxSize));
-  }
-  ReflowOutput childSize(ri);
-  nsReflowStatus childStatus;
-  const nsIFrame::ReflowChildFlags flags =
-      nsIFrame::ReflowChildFlags::NoMoveFrame |
-      nsIFrame::ReflowChildFlags::NoDeleteNextInFlowChild;
-  auto wm = aChild->GetWritingMode();
-  nsContainerFrame* parent = aChild->GetParent();
-  parent->ReflowChild(aChild, pc, childSize, ri, wm, LogicalPoint(wm), nsSize(),
-                      flags, childStatus);
-  nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &ri, wm,
-                                      LogicalPoint(wm), nsSize(), flags);
-}
-
-/**
  * Return the accumulated margin+border+padding in aAxis for aFrame (a subgrid)
  * and its ancestor subgrids.
  */
@@ -6293,12 +6252,7 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselinesInMasonryAxis(
         continue;
       }
     }
-    auto trackAlign =
-        aState.mGridStyle
-            ->UsedTracksAlignment(
-                mAxis, area.LineRangeForAxis(GetOrthogonalAxis(mAxis)).mStart)
-            .primary;
-    if (!aSet.MatchTrackAlignment(trackAlign)) {
+    if (!aSet.MatchTrackAlignment(StyleAlignFlags::START)) {
       continue;
     }
 
@@ -7348,6 +7302,13 @@ void nsGridContainerFrame::GridReflowInput::AlignJustifyContentInMasonryAxis(
   }
 }
 
+// XXX This function was gutted when the 'align-tracks' and 'justify-tracks'
+// properties were removed in
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1900195
+// Possibly the current design of the Masonry code doesn't make much sense now
+// without those properties, or at the very least this function should be
+// renamed?
+//
 // Note: this is called after all items have been positioned/reflowed.
 // The masonry-axis tracks have the size of the "masonry box" at this point
 // and are positioned according to 'align/justify-content'.
@@ -7356,173 +7317,29 @@ void nsGridContainerFrame::GridReflowInput::AlignJustifyTracksInMasonryAxis(
   auto& masonryAxisTracks = mRows.mIsMasonry ? mRows : mCols;
   MOZ_ASSERT(masonryAxisTracks.mSizes.Length() == 2,
              "unexpected masonry axis tracks");
+  // The offset to the "masonry box" from our content-box start edge.
+  const nscoord masonryBoxOffset = masonryAxisTracks.mSizes[0].mPosition;
+  if (masonryBoxOffset == 0) {
+    return;
+  }
+
   const auto masonryAxis = masonryAxisTracks.mAxis;
   auto gridAxis = GetOrthogonalAxis(masonryAxis);
   auto& gridAxisTracks = TracksFor(gridAxis);
-  AutoTArray<TrackSize, 32> savedSizes;
-  savedSizes.AppendElements(masonryAxisTracks.mSizes);
   auto wm = mWM;
-  nscoord contentAreaStart = mBorderPadding.Start(masonryAxis, wm);
-  // The offset to the "masonry box" from our content-box start edge.
-  nscoord masonryBoxOffset = masonryAxisTracks.mSizes[0].mPosition;
-  nscoord alignmentContainerSize = masonryAxisTracks.mSizes[0].mBase;
 
   for (auto i : IntegerRange(gridAxisTracks.mSizes.Length())) {
-    auto tracksAlignment = mGridStyle->UsedTracksAlignment(masonryAxis, i);
-    if (tracksAlignment.primary != StyleAlignFlags::START) {
-      masonryAxisTracks.mSizes.ClearAndRetainStorage();
-      for (const auto& item : mGridItems) {
-        if (item.mArea.LineRangeForAxis(gridAxis).mStart == i) {
-          const auto* child = item.mFrame;
-          LogicalRect rect = child->GetLogicalRect(wm, aContainerSize);
-          TrackSize sz = {0, 0, 0, {0, 0}, TrackSize::StateBits{0}};
-          const auto& margin = child->GetLogicalUsedMargin(wm);
-          sz.mPosition = rect.Start(masonryAxis, wm) -
-                         margin.Start(masonryAxis, wm) - contentAreaStart;
-          sz.mBase =
-              rect.Size(masonryAxis, wm) + margin.StartEnd(masonryAxis, wm);
-          // Account for a align-self baseline offset on the end side.
-          // XXXmats hmm, it seems it would be a lot simpler to just store
-          // these baseline adjustments into the UsedMarginProperty instead
-          auto state = item.mState[masonryAxis];
-          if ((state & ItemState::eSelfBaseline) &&
-              (state & ItemState::eEndSideBaseline)) {
-            sz.mBase += item.mBaselineOffset[masonryAxis];
-          }
-          if (tracksAlignment.primary == StyleAlignFlags::STRETCH) {
-            const auto* pos = child->StylePosition();
-            auto itemAlignment =
-                pos->UsedSelfAlignment(masonryAxis, mFrame->Style());
-            if (child->StyleMargin()->HasAuto(masonryAxis, wm)) {
-              sz.mState |= TrackSize::eAutoMaxSizing;
-              sz.mState |= TrackSize::eItemHasAutoMargin;
-            } else if (pos->Size(masonryAxis, wm).IsAuto() &&
-                       (itemAlignment == StyleAlignFlags::NORMAL ||
-                        itemAlignment == StyleAlignFlags::STRETCH)) {
-              sz.mState |= TrackSize::eAutoMaxSizing;
-              sz.mState |= TrackSize::eItemStretchSize;
-              const auto& max = pos->MaxSize(masonryAxis, wm);
-              if (max.ConvertsToLength()) {  // XXX deal with percentages
-                // XXX add in baselineOffset ? use actual frame size - content
-                // size?
-                nscoord boxSizingAdjust =
-                    child->GetLogicalUsedBorderAndPadding(wm).StartEnd(
-                        masonryAxis, wm);
-                if (pos->mBoxSizing == StyleBoxSizing::Border) {
-                  boxSizingAdjust = 0;
-                }
-                sz.mLimit = nsLayoutUtils::ComputeBSizeValue(
-                    aContentSize.Size(masonryAxis, wm), boxSizingAdjust,
-                    max.AsLengthPercentage());
-                sz.mLimit += margin.StartEnd(masonryAxis, wm);
-                sz.mState |= TrackSize::eClampToLimit;
-              }
-            }
-          }
-          masonryAxisTracks.mSizes.AppendElement(std::move(sz));
-        }
+    // TODO move placeholders too
+    auto delta = masonryBoxOffset;
+    LogicalPoint logicalDelta(wm);
+    logicalDelta.Pos(masonryAxis, wm) = delta;
+    for (const auto& item : mGridItems) {
+      if (item.mArea.LineRangeForAxis(gridAxis).mStart != i) {
+        continue;
       }
-      masonryAxisTracks.AlignJustifyContent(mGridStyle, tracksAlignment, wm,
-                                            alignmentContainerSize, false);
-      auto iter = mGridItems.begin();
-      auto end = mGridItems.end();
-      // We limit the loop to the number of items we found in the current
-      // grid-axis axis track (in the outer loop) as an optimization.
-      for (auto r : IntegerRange(masonryAxisTracks.mSizes.Length())) {
-        GridItemInfo* item = nullptr;
-        auto& sz = masonryAxisTracks.mSizes[r];
-        // Find the next item in the current grid-axis axis track.
-        for (; iter != end; ++iter) {
-          if (iter->mArea.LineRangeForAxis(gridAxis).mStart == i) {
-            item = &*iter;
-            ++iter;
-            break;
-          }
-        }
-        nsIFrame* child = item->mFrame;
-        const auto childWM = child->GetWritingMode();
-        auto masonryChildAxis =
-            childWM.IsOrthogonalTo(wm) ? gridAxis : masonryAxis;
-        LogicalMargin margin = child->GetLogicalUsedMargin(childWM);
-        bool forceReposition = false;
-        if (sz.mState & TrackSize::eItemStretchSize) {
-          auto size = child->GetLogicalSize().Size(masonryChildAxis, childWM);
-          auto newSize = sz.mBase - margin.StartEnd(masonryChildAxis, childWM);
-          if (size != newSize) {
-            // XXX need to pass aIMinSizeClamp aBMinSizeClamp ?
-            LogicalSize cb =
-                ContainingBlockFor(item->mArea).Size(wm).ConvertTo(childWM, wm);
-            LogicalSize availableSize = cb;
-            cb.Size(masonryChildAxis, childWM) = alignmentContainerSize;
-            availableSize.Size(LogicalAxis::Block, childWM) =
-                NS_UNCONSTRAINEDSIZE;
-            const auto& bp = child->GetLogicalUsedBorderAndPadding(childWM);
-            newSize -= bp.StartEnd(masonryChildAxis, childWM);
-            ::PostReflowStretchChild(child, *mReflowInput, availableSize, cb,
-                                     masonryChildAxis, newSize);
-            if (childWM.IsPhysicalRTL()) {
-              // The NormalPosition of this child is frame-size dependent so we
-              // need to reset its stored position below.
-              forceReposition = true;
-            }
-          }
-        } else if (sz.mState & TrackSize::eItemHasAutoMargin) {
-          // Re-compute the auto-margin(s) in the masonry axis.
-          auto size = child->GetLogicalSize().Size(masonryChildAxis, childWM);
-          auto spaceToFill = sz.mBase - size;
-          if (spaceToFill > nscoord(0)) {
-            const auto& marginStyle = child->StyleMargin();
-            if (marginStyle->mMargin.Start(masonryChildAxis, childWM)
-                    .IsAuto()) {
-              if (marginStyle->mMargin.End(masonryChildAxis, childWM)
-                      .IsAuto()) {
-                nscoord half;
-                nscoord roundingError = NSCoordDivRem(spaceToFill, 2, &half);
-                margin.Start(masonryChildAxis, childWM) = half;
-                margin.End(masonryChildAxis, childWM) = half + roundingError;
-              } else {
-                margin.Start(masonryChildAxis, childWM) = spaceToFill;
-              }
-            } else {
-              MOZ_ASSERT(
-                  marginStyle->mMargin.End(masonryChildAxis, childWM).IsAuto());
-              margin.End(masonryChildAxis, childWM) = spaceToFill;
-            }
-            nsMargin* propValue =
-                child->GetProperty(nsIFrame::UsedMarginProperty());
-            if (propValue) {
-              *propValue = margin.GetPhysicalMargin(childWM);
-            } else {
-              child->AddProperty(
-                  nsIFrame::UsedMarginProperty(),
-                  new nsMargin(margin.GetPhysicalMargin(childWM)));
-            }
-          }
-        }
-        nscoord newPos = contentAreaStart + masonryBoxOffset + sz.mPosition +
-                         margin.Start(masonryChildAxis, childWM);
-        LogicalPoint pos = child->GetLogicalNormalPosition(wm, aContainerSize);
-        auto delta = newPos - pos.Pos(masonryAxis, wm);
-        if (delta != 0 || forceReposition) {
-          LogicalPoint logicalDelta(wm);
-          logicalDelta.Pos(masonryAxis, wm) = delta;
-          child->MovePositionBy(wm, logicalDelta);
-        }
-      }
-    } else if (masonryBoxOffset != nscoord(0)) {
-      // TODO move placeholders too
-      auto delta = masonryBoxOffset;
-      LogicalPoint logicalDelta(wm);
-      logicalDelta.Pos(masonryAxis, wm) = delta;
-      for (const auto& item : mGridItems) {
-        if (item.mArea.LineRangeForAxis(gridAxis).mStart != i) {
-          continue;
-        }
-        item.mFrame->MovePositionBy(wm, logicalDelta);
-      }
+      item.mFrame->MovePositionBy(wm, logicalDelta);
     }
   }
-  masonryAxisTracks.mSizes = std::move(savedSizes);
 }
 
 /**

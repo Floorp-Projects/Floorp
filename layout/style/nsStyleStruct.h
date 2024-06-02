@@ -722,18 +722,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   inline mozilla::StyleContentDistribution UsedContentAlignment(
       LogicalAxis aAxis) const;
 
-  /**
-   * Return the used value for 'align-tracks'/'justify-tracks' for a track
-   * in the given axis.
-   * (defined in WritingModes.h since we need the full LogicalAxis type)
-   */
-  inline mozilla::StyleContentDistribution UsedTracksAlignment(
-      LogicalAxis aAxis, uint32_t aIndex) const;
-
-  // Each entry has the same encoding as *-content, see below.
-  mozilla::StyleAlignTracks mAlignTracks;
-  mozilla::StyleJustifyTracks mJustifyTracks;
-
   Position mObjectPosition;
   StyleRect<LengthPercentageOrAuto> mOffset;
   StyleSize mWidth;

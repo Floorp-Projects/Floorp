@@ -1092,9 +1092,7 @@ nsStylePosition::nsStylePosition()
 }
 
 nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
-    : mAlignTracks(aSource.mAlignTracks),
-      mJustifyTracks(aSource.mJustifyTracks),
-      mObjectPosition(aSource.mObjectPosition),
+    : mObjectPosition(aSource.mObjectPosition),
       mOffset(aSource.mOffset),
       mWidth(aSource.mWidth),
       mMinWidth(aSource.mMinWidth),
@@ -1196,9 +1194,7 @@ nsChangeHint nsStylePosition::CalcDifference(
   }
 
   if (mAlignItems != aNewData.mAlignItems ||
-      mAlignSelf != aNewData.mAlignSelf ||
-      mJustifyTracks != aNewData.mJustifyTracks ||
-      mAlignTracks != aNewData.mAlignTracks) {
+      mAlignSelf != aNewData.mAlignSelf) {
     return hint | nsChangeHint_AllReflowHints;
   }
 

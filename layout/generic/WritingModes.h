@@ -2200,25 +2200,4 @@ inline mozilla::StyleContentDistribution nsStylePosition::UsedContentAlignment(
   return aAxis == mozilla::LogicalAxis::Block ? mAlignContent : mJustifyContent;
 }
 
-inline mozilla::StyleContentDistribution nsStylePosition::UsedTracksAlignment(
-    mozilla::LogicalAxis aAxis, uint32_t aIndex) const {
-  using T = mozilla::StyleAlignFlags;
-  const auto& tracksAlignment =
-      aAxis == mozilla::LogicalAxis::Block ? mAlignTracks : mJustifyTracks;
-  if (MOZ_LIKELY(tracksAlignment.IsEmpty())) {
-    // An empty array encodes the initial value, 'normal', which behaves as
-    // 'start' for Grid containers.
-    return mozilla::StyleContentDistribution{T::START};
-  }
-
-  // If there are fewer values than tracks, then the last value is used for all
-  // the remaining tracks.
-  const auto& ta = tracksAlignment.AsSpan();
-  auto align = ta[std::min<size_t>(aIndex, ta.Length() - 1)];
-  if (align.primary == T::NORMAL) {
-    align = mozilla::StyleContentDistribution{T::START};
-  }
-  return align;
-}
-
 #endif  // WritingModes_h_
