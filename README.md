@@ -18,6 +18,3 @@ Thank you [@CutterKnife](https://github.com/CutterKnife) for the logo!
 
 ## LICENSE
 Mozilla Public License 2.0
-
-You are not granted rights or licenses to the Noraneko logo for publishing, commercial use, etc.  
-The logo is protected by copyright.
