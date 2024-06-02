@@ -1084,7 +1084,7 @@ bool SVGUtils::GetNonScalingStrokeTransform(const nsIFrame* aFrame,
   *aUserToOuterSVG = ThebesMatrix(
       SVGContentUtils::GetCTM(static_cast<SVGElement*>(aFrame->GetContent())));
 
-  return aUserToOuterSVG->HasNonTranslation();
+  return aUserToOuterSVG->HasNonTranslation() && !aUserToOuterSVG->IsSingular();
 }
 
 // The logic here comes from _cairo_stroke_style_max_distance_from_path
