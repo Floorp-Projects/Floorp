@@ -13,3 +13,8 @@ Noraneko Browser is currently testbed of modern JS environment for Floorp.
 Star me!
 
 How to build will be added when noraneko's build stablized.
+
+Thank you [@CutterKnife](https://github.com/CutterKnife) for the logo!
+
+## LICENSE
+Mozilla Public License 2.0
