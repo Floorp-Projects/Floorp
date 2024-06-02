@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node ./build.js",
-    "dev": "node ./build.js --run"
+    "build": "tsx ./build.js",
+    "dev": "tsx ./build.js --run"
   },
   "keywords": [],
   "author": "",

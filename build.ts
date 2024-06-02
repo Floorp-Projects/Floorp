@@ -11,22 +11,20 @@ import chokidar from "chokidar";
 import { build } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import tsconfigPaths from "vite-tsconfig-paths";
-//import { remote } from "webdriverio";
-import { injectManifest } from "./scripts/injectmanifest.js";
-import { injectXHTML } from "./scripts/injectxhtml.js";
+import { injectManifest } from "./scripts/inject/manifest.js";
+import { injectXHTML } from "./scripts/inject/xhtml.js";
 import puppeteer from "puppeteer-core";
 import { exit } from "node:process";
-import { Browser } from "puppeteer-core";
-import { $ } from "execa";
+import type { Browser } from "puppeteer-core";
 import { injectJavascript } from "./scripts/inject/javascript.js";
 
 const VERSION = "000";
 
-const r = (/** @type {string} */ dir) => {
+const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
 
-const isExists = async (/** @type {string} */ path) => {
+const isExists = async (path: string) => {
   return await fs
     .access(path)
     .then(() => true)
@@ -194,8 +192,7 @@ async function run() {
     // 可能性はある、まだ必要はない
   } catch {}
 
-  /** @type Browser | null */
-  let browser = null;
+  let browser: Browser | null = null;
   let watch_running = false;
 
   let intended_close = false;
