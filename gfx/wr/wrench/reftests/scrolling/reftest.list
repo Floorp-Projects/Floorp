@@ -23,3 +23,4 @@
 == scroll-generation-2.yaml scroll-generation-ref.yaml
 == scroll-generation-3.yaml scroll-generation-ref.yaml
 == scroll-generation-4.yaml scroll-generation-ref.yaml
+== ext-scroll-offset-rounded-clip.yaml ext-scroll-offset-rounded-clip-ref.yaml

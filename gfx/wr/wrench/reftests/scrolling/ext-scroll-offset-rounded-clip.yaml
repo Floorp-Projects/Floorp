@@ -1,0 +1,19 @@
+# Test that items with an external scroll offset correctly
+# apply that offset to rounded rect clips
+root:
+  items:
+    - type: scroll-frame
+      bounds: [0, 0, 100, 100]
+      content-size: [100, 1000]
+      scroll-offset: [0, 0]
+      external-scroll-offset: [0, 50]
+      items:
+        - type: clip
+          id: 3
+          complex:
+            - rect: [0, 50, 100, 100]
+              radius: 32
+        - type: rect
+          color: green
+          bounds: [0, 50, 100, 100]
+          clip-chain: [3]
