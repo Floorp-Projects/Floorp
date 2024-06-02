@@ -684,55 +684,6 @@ CairoQuartzCreateGradientFunction (const cairo_gradient_pattern_t *gradient,
 			     &gradient_callbacks);
 }
 
-static CGImageRef
-CairoQuartzCreateCGImageMask (cairo_format_t format,
-			      unsigned int width,
-			      unsigned int height,
-			      unsigned int stride,
-			      void *data,
-			      cairo_bool_t interpolate,
-			      CGDataProviderReleaseDataCallback releaseCallback,
-			      void *releaseInfo)
-{
-    CGImageRef image = NULL;
-    CGDataProviderRef dataProvider = NULL;
-    int bitsPerComponent = 8, bitsPerPixel = 8;
-
-    if (format != CAIRO_FORMAT_A8)
-	return NULL;
-
-    dataProvider = CGDataProviderCreateWithData (releaseInfo,
-						 data,
-						 height * stride,
-						 releaseCallback);
-
-    if (unlikely (!dataProvider)) {
-	// manually release
-	if (releaseCallback)
-	    releaseCallback (releaseInfo, data, height * stride);
-	goto FINISH;
-    }
-
-    cairo_quartz_float_t decode[] = {1.0, 0.0};
-    image = CGImageMaskCreate (width, height,
-			       bitsPerComponent,
-			       bitsPerPixel,
-			       stride,
-			       dataProvider,
-			       decode,
-			       interpolate);
-
-FINISH:
-    CGDataProviderRelease (dataProvider);
-    return image;
-}
-
-static void
-DataProviderReleaseCallback (void *info, const void *data, size_t size)
-{
-    free (info);
-}
-
 static cairo_status_t
 _cairo_surface_to_cgimage (cairo_surface_t       *source,
 			   cairo_rectangle_int_t *extents,
@@ -791,48 +742,13 @@ _cairo_surface_to_cgimage (cairo_surface_t       *source,
 						      &image_extra);
 	if (unlikely (status))
 	    return status;
-
-	if (surface->format == CAIRO_FORMAT_A8) {
-	    /* cairo_quartz_image_surface_create doesn't handle CAIRO_FORMAT_A8,
-	     * so we create a CGImage manually here for masking operations.
-	     */
-	    void* image_data = _cairo_malloc_ab (surface->height, surface->stride);
-	    if (unlikely (!image_data))
-	    {
-		_cairo_surface_release_source_image (source, surface, image_extra);
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    }
-
-	    /* The last row of data may have less than stride bytes so make sure we
-	     * only copy the minimum amount required from that row.
-	     */
-	    memcpy (image_data, surface->data,
-		    (surface->height - 1) * surface->stride +
-		    cairo_format_stride_for_width (surface->format,
-						   surface->width));
-	    *image_out = CairoQuartzCreateCGImageMask (surface->format,
-						       surface->width,
-						       surface->height,
-						       surface->stride,
-						       image_data,
-						       TRUE,
-						       DataProviderReleaseCallback,
-						       image_data);
-	    /* TODO: differentiate memory error and unsupported surface type */
-	    if (unlikely (*image_out == NULL))
-		status = CAIRO_INT_STATUS_UNSUPPORTED;
-
+	image_surface =
+	    (cairo_quartz_image_surface_t*)cairo_quartz_image_surface_create (&surface->base);
+	status = image_surface->base.status;
+	if (status)
 	    _cairo_surface_release_source_image (source, surface, image_extra);
-	    return status;
-	} else {
-	    image_surface =
-		(cairo_quartz_image_surface_t*)cairo_quartz_image_surface_create (&surface->base);
-	    status = image_surface->base.status;
-	    if (status)
-		_cairo_surface_release_source_image (source, surface, image_extra);
-	    else
-		acquired = TRUE;
-	}
+	else
+	    acquired = TRUE;
     }
 
     *image_out = NULL;
