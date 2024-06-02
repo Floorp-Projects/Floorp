@@ -583,7 +583,6 @@ impl PositionVisibility {
     Clone,
     Copy,
     Debug,
-    Default,
     Eq,
     MallocSizeOf,
     Parse,
@@ -599,7 +598,6 @@ impl PositionVisibility {
 /// Possible values for the `inset-area` preperty's keywords.
 /// https://drafts.csswg.org/css-anchor-position-1/#propdef-inset-area
 pub enum InsetAreaKeyword {
-    #[default]
     None,
 
     // Common (shared) keywords:
@@ -666,6 +664,12 @@ pub enum InsetAreaKeyword {
     SelfEnd,
     SpanSelfStart,
     SpanSelfEnd,
+}
+
+impl Default for InsetAreaKeyword {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 #[allow(missing_docs)]
