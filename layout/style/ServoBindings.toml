@@ -574,8 +574,6 @@ cbindgen-types = [
     { gecko = "StyleJustifySelf", servo = "crate::values::computed::JustifySelf" },
     { gecko = "StyleAlignSelf", servo = "crate::values::computed::AlignSelf" },
     { gecko = "StyleAlignContent", servo = "crate::values::computed::align::AlignContent" },
-    { gecko = "StyleJustifyTracks", servo = "crate::values::computed::align::JustifyTracks" },
-    { gecko = "StyleAlignTracks", servo = "crate::values::computed::align::AlignTracks" },
     { gecko = "StyleJustifyContent", servo = "crate::values::computed::align::JustifyContent" },
     { gecko = "StyleComputedValueFlags", servo = "crate::computed_value_flags::ComputedValueFlags" },
     { gecko = "StyleImage", servo = "crate::values::computed::Image" },

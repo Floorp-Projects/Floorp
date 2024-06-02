@@ -101,18 +101,6 @@ ${helpers.single_keyword(
         servo_restyle_damage="reflow",
         affects="layout",
     )}
-
-    ${helpers.predefined_type(
-        "justify-tracks",
-        "JustifyTracks",
-        "specified::JustifyTracks::default()",
-        engines="gecko",
-        gecko_pref="layout.css.grid-template-masonry-value.enabled",
-        animation_value_type="discrete",
-        servo_restyle_damage="reflow",
-        spec="https://github.com/w3c/csswg-drafts/issues/4650",
-        affects="layout",
-    )}
 % endif
 
 % if engine == "servo":
@@ -151,18 +139,6 @@ ${helpers.single_keyword(
         extra_prefixes="webkit",
         animation_value_type="discrete",
         servo_restyle_damage="reflow",
-        affects="layout",
-    )}
-
-    ${helpers.predefined_type(
-        "align-tracks",
-        "AlignTracks",
-        "specified::AlignTracks::default()",
-        engines="gecko",
-        gecko_pref="layout.css.grid-template-masonry-value.enabled",
-        animation_value_type="discrete",
-        servo_restyle_damage="reflow",
-        spec="https://github.com/w3c/csswg-drafts/issues/4650",
         affects="layout",
     )}
 
