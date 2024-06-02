@@ -18,6 +18,7 @@ import puppeteer from "puppeteer-core";
 import { exit } from "node:process";
 import { Browser } from "puppeteer-core";
 import { $ } from "execa";
+import { injectJavascript } from "./scripts/inject/javascript.js";
 
 const VERSION = "000";
 
@@ -111,9 +112,13 @@ async function compile() {
 
       assetsDir: "content/assets",
     },
+    css: {
+      transformer: "lightningcss",
+    },
 
     plugins: [
       tsconfigPaths(),
+
       solidPlugin({
         solid: {
           generate: "universal",
@@ -175,6 +180,7 @@ async function run() {
   console.log("inject");
   await injectManifest();
   await injectXHTML();
+  await injectJavascript();
   //await injectUserJS(`noraneko${VERSION}`);
 
   try {
