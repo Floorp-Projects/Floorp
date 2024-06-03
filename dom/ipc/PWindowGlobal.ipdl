@@ -223,6 +223,9 @@ parent:
   // once per window lifetime to avoid redundant IPC.
   async OnInitialStorageAccess();
 
+  // User activation notifications for BounceTrackingProtection.
+  async RecordUserActivationForBTP();
+
 child:
   async NotifyPermissionChange(nsCString type, uint32_t permission);
 };

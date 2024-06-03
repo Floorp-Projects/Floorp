@@ -285,6 +285,12 @@ nsresult BounceTrackingProtection::RecordUserActivation(
   MOZ_ASSERT(XRE_IsParentProcess());
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
+  RefPtr<BounceTrackingProtection> btp = GetSingleton();
+  // May be nullptr if feature is disabled.
+  if (!btp) {
+    return NS_OK;
+  }
+
   if (!BounceTrackingState::ShouldTrackPrincipal(aPrincipal)) {
     return NS_OK;
   }
@@ -297,7 +303,7 @@ nsresult BounceTrackingProtection::RecordUserActivation(
           ("%s: siteHost: %s", __FUNCTION__, siteHost.get()));
 
   RefPtr<BounceTrackingStateGlobal> globalState =
-      mStorage->GetOrCreateStateGlobal(aPrincipal);
+      btp->mStorage->GetOrCreateStateGlobal(aPrincipal);
   MOZ_ASSERT(globalState);
 
   // aActivationTime defaults to current time if no value is provided.
