@@ -142,8 +142,8 @@
       {
         "id": "ExecutionWorld",
         "type": "string",
-        "enum": ["ISOLATED"],
-        "description": "The JavaScript world for a script to execute within. We currently only support the <code>'ISOLATED'</code> world."
+        "enum": ["ISOLATED", "MAIN"],
+        "description": "The JavaScript world for a script to execute within. <code>ISOLATED</code> is the default execution environment of content scripts, <code>MAIN</code> is the web page's execution environment."
       },
       {
         "id": "RegisteredContentScript",

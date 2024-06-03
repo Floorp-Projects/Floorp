@@ -1,0 +1,257 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.executeScript() with world option</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+const MOCHITEST_HOST_PERMISSIONS = [
+  "*://mochi.test/",
+  "*://mochi.xorigin-test/",
+  "*://test1.example.com/",
+];
+
+const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["scripting"],
+      host_permissions: [
+        ...MOCHITEST_HOST_PERMISSIONS,
+        "https://example.com/",
+        // Used in `file_contains_iframe.html`
+        "https://example.org/",
+      ],
+      granted_host_permissions: true,
+      ...manifestProps,
+    },
+    useAddonManager: "temporary",
+    ...otherProps,
+  });
+};
+
+add_task(async function test_executeScript_main_world_files() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      let results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["main.js"],
+        world: "MAIN",
+      });
+      browser.test.assertEq(undefined, results[0].error?.message, "No error");
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
+      browser.test.assertDeepEq(
+        {
+          varInPageReadByExt: "varInPage",
+          thisIsGlobalThis: true,
+          thisIsWindow: true,
+          browserIsUndefined: true,
+        },
+        results[0].result,
+        "executeScript with world:MAIN should run in the page's context"
+      );
+
+      browser.test.notifyPass("background-done");
+    },
+    files: {
+      "main.js": () => {
+        return {
+          // varInPage is defined in file_simple_inline_script.html
+          varInPageReadByExt: window.varInPage,
+          thisIsGlobalThis: this === globalThis,
+          thisIsWindow: this === window,
+          browserIsUndefined: typeof browser == "undefined",
+        };
+      },
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_simple_inline_script.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("background-done");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_executeScript_main_world_func() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      let results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => {
+          return {
+            // varInPage is defined in file_simple_inline_script.html
+            varInPageReadByExt: window.varInPage,
+            thisIsGlobalThis: this === globalThis,
+            thisIsWindow: this === window,
+            browserIsUndefined: typeof browser == "undefined",
+          };
+        },
+        world: "MAIN",
+      });
+      browser.test.assertEq(undefined, results[0].error?.message, "No error");
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
+      browser.test.assertDeepEq(
+        {
+          varInPageReadByExt: "varInPage",
+          thisIsGlobalThis: true,
+          thisIsWindow: true,
+          browserIsUndefined: true,
+        },
+        results[0].result,
+        "executeScript with world:MAIN should run in the page's context"
+      );
+
+      browser.test.notifyPass("background-done");
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_simple_inline_script.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("background-done");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_executeScript_invalid_world() {
+  let extension = makeExtension({
+    async background() {
+      browser.test.assertThrows(
+        () => {
+          browser.scripting.executeScript({
+            target: { tabId: 123 },
+            func: () => {},
+            world: "USER_SCRIPT",
+          });
+        },
+        /world: Invalid enumeration value "USER_SCRIPT"/,
+        "executeScript should throw when an invalid world is passed"
+      );
+
+      browser.test.notifyPass("background-done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("background-done");
+  await extension.unload();
+});
+
+add_task(async function test_executeScript_isolated_world() {
+  let extension = makeExtension({
+    manifest: {
+      browser_specific_settings: {
+        gecko: { id: "@isolated-addon-id" },
+      },
+    },
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      let results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => {
+          globalThis.defaultWorldVar = browser.runtime.id;
+          return "default world";
+        },
+      });
+
+      browser.test.assertEq(
+        1,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(
+        "default world",
+        results[0].result,
+        "got expected return value"
+      );
+
+      results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => {
+          return `isolated: ${browser.runtime.id}; existing default var: ${typeof defaultWorldVar}`;
+        },
+        world: "ISOLATED",
+      });
+
+      browser.test.assertEq(
+        1,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(
+        "isolated: @isolated-addon-id; existing default var: string",
+        results[0].result,
+        "got expected return value"
+      );
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_execution_world_constants() {
+  let extension = makeExtension({
+    async background() {
+      browser.test.assertDeepEq(
+        {
+          ISOLATED: "ISOLATED",
+          MAIN: "MAIN",
+        },
+        browser.scripting.ExecutionWorld,
+        "expected scripting.ExecutionWorld to be defined"
+      );
+
+      browser.test.notifyPass("background-done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("background-done");
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>
