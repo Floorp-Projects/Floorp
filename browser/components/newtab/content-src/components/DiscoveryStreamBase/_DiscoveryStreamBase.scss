@@ -57,13 +57,13 @@ $ds-width: 936px;
 .collapsible-section.ds-layout {
   margin: auto;
 
-  .section-top-bar {
-    .learn-more-link a {
+  .section-top-bar .learn-more-link {
+    // Contrast fix for users who have wallpapers set
+    @include wallpaper-contrast-fix;
+
+    a {
       color: var(--newtab-primary-action-background);
       font-weight: 500;
-
-      // Contrast fix for users who have wallpapers set
-      @include wallpaper-contrast-fix;
 
       &:is(:focus, :hover) {
         text-decoration: none;
