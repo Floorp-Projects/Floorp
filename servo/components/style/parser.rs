@@ -178,6 +178,9 @@ impl<'a> ParserContext<'a> {
 ///  * `#[parse(condition = "function")]` can be used to make the parsing of the
 ///    value conditional on `function`, which needs to fulfill
 ///    `fn(&ParserContext) -> bool`.
+///
+///  * `#[parse(parse_fn = "function")]` can be used to specify a function other than Parser::parse
+///    for a particular variant.
 pub trait Parse: Sized {
     /// Parse a value of this type.
     ///
