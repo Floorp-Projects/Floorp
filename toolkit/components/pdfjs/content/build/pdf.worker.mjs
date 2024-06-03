@@ -1052,6 +1052,18 @@ class BaseStream {
   getBytes(length) {
     unreachable("Abstract method `getBytes` called");
   }
+  async getImageData(length, ignoreColorSpace) {
+    return this.getBytes(length, ignoreColorSpace);
+  }
+  async asyncGetBytes() {
+    unreachable("Abstract method `asyncGetBytes` called");
+  }
+  get isAsync() {
+    return false;
+  }
+  get canAsyncDecodeImageFromBuffer() {
+    return false;
+  }
   peekByte() {
     const peekedByte = this.getByte();
     if (peekedByte !== -1) {
@@ -3161,6 +3173,13 @@ class DecodeStream extends BaseStream {
     this.pos = end;
     return this.buffer.subarray(pos, end);
   }
+  async getImageData(length, ignoreColorSpace = false) {
+    if (!this.canAsyncDecodeImageFromBuffer) {
+      return this.getBytes(length, ignoreColorSpace);
+    }
+    const data = await this.stream.asyncGetBytes();
+    return this.decodeImage(data, ignoreColorSpace);
+  }
   reset() {
     this.pos = 0;
   }
@@ -3897,6 +3916,7 @@ class CCITTFaxStream extends DecodeStream {
 ;// CONCATENATED MODULE: ./src/core/flate_stream.js
 
 
+
 const codeLenCodeMap = new Int32Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
 const lengthDecode = new Int32Array([0x00003, 0x00004, 0x00005, 0x00006, 0x00007, 0x00008, 0x00009, 0x0000a, 0x1000b, 0x1000d, 0x1000f, 0x10011, 0x20013, 0x20017, 0x2001b, 0x2001f, 0x30023, 0x3002b, 0x30033, 0x3003b, 0x40043, 0x40053, 0x40063, 0x40073, 0x50083, 0x500a3, 0x500c3, 0x500e3, 0x00102, 0x00102, 0x00102]);
 const distDecode = new Int32Array([0x00001, 0x00002, 0x00003, 0x00004, 0x10005, 0x10007, 0x20009, 0x2000d, 0x30011, 0x30019, 0x40021, 0x40031, 0x50041, 0x50061, 0x60081, 0x600c1, 0x70101, 0x70181, 0x80201, 0x80301, 0x90401, 0x90601, 0xa0801, 0xa0c01, 0xb1001, 0xb1801, 0xc2001, 0xc3001, 0xd4001, 0xd6001]);
@@ -3923,6 +3943,43 @@ class FlateStream extends DecodeStream {
     }
     this.codeSize = 0;
     this.codeBuf = 0;
+  }
+  async getImageData(length, _ignoreColorSpace) {
+    const data = await this.asyncGetBytes();
+    return data?.subarray(0, length) || this.getBytes(length);
+  }
+  async asyncGetBytes() {
+    this.str.reset();
+    const bytes = this.str.getBytes();
+    try {
+      const {
+        readable,
+        writable
+      } = new DecompressionStream("deflate");
+      const writer = writable.getWriter();
+      writer.write(bytes);
+      writer.close();
+      const chunks = [];
+      let totalLength = 0;
+      for await (const chunk of readable) {
+        chunks.push(chunk);
+        totalLength += chunk.byteLength;
+      }
+      const data = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        data.set(chunk, offset);
+        offset += chunk.byteLength;
+      }
+      return data;
+    } catch {
+      this.str = new Stream(bytes, 2, bytes.length, this.str.dict);
+      this.reset();
+      return null;
+    }
+  }
+  get isAsync() {
+    return true;
   }
   getBits(bits) {
     const str = this.str;
@@ -6236,9 +6293,13 @@ class Jbig2Stream extends DecodeStream {
   }
   ensureBuffer(requested) {}
   readBlock() {
+    this.decodeImage();
+  }
+  decodeImage(bytes) {
     if (this.eof) {
-      return;
+      return this.buffer;
     }
+    bytes ||= this.bytes;
     const jbig2Image = new Jbig2Image();
     const chunks = [];
     if (this.params instanceof Dict) {
@@ -6253,9 +6314,9 @@ class Jbig2Stream extends DecodeStream {
       }
     }
     chunks.push({
-      data: this.bytes,
+      data: bytes,
       start: 0,
-      end: this.bytes.length
+      end: bytes.length
     });
     const data = jbig2Image.parseChunks(chunks);
     const dataLength = data.length;
@@ -6265,6 +6326,10 @@ class Jbig2Stream extends DecodeStream {
     this.buffer = data;
     this.bufferLength = dataLength;
     this.eof = true;
+    return this.buffer;
+  }
+  get canAsyncDecodeImageFromBuffer() {
+    return this.stream.isAsync;
   }
 }
 
@@ -7454,13 +7519,6 @@ class JpegImage {
 
 class JpegStream extends DecodeStream {
   constructor(stream, maybeLength, params) {
-    let ch;
-    while ((ch = stream.getByte()) !== -1) {
-      if (ch === 0xff) {
-        stream.skip(-1);
-        break;
-      }
-    }
     super(maybeLength);
     this.stream = stream;
     this.dict = stream.dict;
@@ -7472,8 +7530,20 @@ class JpegStream extends DecodeStream {
   }
   ensureBuffer(requested) {}
   readBlock() {
+    this.decodeImage();
+  }
+  decodeImage(bytes) {
     if (this.eof) {
-      return;
+      return this.buffer;
+    }
+    bytes ||= this.bytes;
+    for (let i = 0, ii = bytes.length - 1; i < ii; i++) {
+      if (bytes[i] === 0xff && bytes[i + 1] === 0xd8) {
+        if (i > 0) {
+          bytes = bytes.subarray(i);
+        }
+        break;
+      }
     }
     const jpegOptions = {
       decodeTransform: undefined,
@@ -7504,7 +7574,7 @@ class JpegStream extends DecodeStream {
       }
     }
     const jpegImage = new JpegImage(jpegOptions);
-    jpegImage.parse(this.bytes);
+    jpegImage.parse(bytes);
     const data = jpegImage.getData({
       width: this.drawWidth,
       height: this.drawHeight,
@@ -7515,6 +7585,10 @@ class JpegStream extends DecodeStream {
     this.buffer = data;
     this.bufferLength = data.length;
     this.eof = true;
+    return this.buffer;
+  }
+  get canAsyncDecodeImageFromBuffer() {
+    return this.stream.isAsync;
   }
 }
 
@@ -8046,12 +8120,20 @@ class JpxStream extends DecodeStream {
   }
   ensureBuffer(requested) {}
   readBlock(ignoreColorSpace) {
+    this.decodeImage(null, ignoreColorSpace);
+  }
+  decodeImage(bytes, ignoreColorSpace) {
     if (this.eof) {
-      return;
+      return this.buffer;
     }
-    this.buffer = JpxImage.decode(this.bytes, ignoreColorSpace);
+    bytes ||= this.bytes;
+    this.buffer = JpxImage.decode(bytes, ignoreColorSpace);
     this.bufferLength = this.buffer.length;
     this.eof = true;
+    return this.buffer;
+  }
+  get canAsyncDecodeImageFromBuffer() {
+    return this.stream.isAsync;
   }
 }
 
@@ -29216,7 +29298,7 @@ class PDFImage {
     }
     return output;
   }
-  fillOpacity(rgbaBuf, width, height, actualHeight, image) {
+  async fillOpacity(rgbaBuf, width, height, actualHeight, image) {
     const smask = this.smask;
     const mask = this.mask;
     let alphaBuf, sw, sh, i, ii, j;
@@ -29224,7 +29306,7 @@ class PDFImage {
       sw = smask.width;
       sh = smask.height;
       alphaBuf = new Uint8ClampedArray(sw * sh);
-      smask.fillGrayBuffer(alphaBuf);
+      await smask.fillGrayBuffer(alphaBuf);
       if (sw !== width || sh !== height) {
         alphaBuf = resizeImageMask(alphaBuf, smask.bpc, sw, sh, width, height);
       }
@@ -29234,7 +29316,7 @@ class PDFImage {
         sh = mask.height;
         alphaBuf = new Uint8ClampedArray(sw * sh);
         mask.numComps = 1;
-        mask.fillGrayBuffer(alphaBuf);
+        await mask.fillGrayBuffer(alphaBuf);
         for (i = 0, ii = sw * sh; i < ii; ++i) {
           alphaBuf[i] = 255 - alphaBuf[i];
         }
@@ -29319,7 +29401,7 @@ class PDFImage {
         kind = ImageKind.RGB_24BPP;
       }
       if (kind && !this.smask && !this.mask && drawWidth === originalWidth && drawHeight === originalHeight) {
-        const data = this.getImageBytes(originalHeight * rowBytes, {});
+        const data = await this.getImageBytes(originalHeight * rowBytes, {});
         if (isOffscreenCanvasSupported) {
           if (mustBeResized) {
             return ImageResizer.createImage({
@@ -29361,7 +29443,7 @@ class PDFImage {
               break;
           }
           if (isHandled) {
-            const rgba = this.getImageBytes(imageLength, {
+            const rgba = await this.getImageBytes(imageLength, {
               drawWidth,
               drawHeight,
               forceRGBA: true
@@ -29375,7 +29457,7 @@ class PDFImage {
             case "DeviceRGB":
             case "DeviceCMYK":
               imgData.kind = ImageKind.RGB_24BPP;
-              imgData.data = this.getImageBytes(imageLength, {
+              imgData.data = await this.getImageBytes(imageLength, {
                 drawWidth,
                 drawHeight,
                 forceRGB: true
@@ -29388,7 +29470,7 @@ class PDFImage {
         }
       }
     }
-    const imgArray = this.getImageBytes(originalHeight * rowBytes, {
+    const imgArray = await this.getImageBytes(originalHeight * rowBytes, {
       internal: true
     });
     const actualHeight = 0 | imgArray.length / rowBytes * drawHeight / originalHeight;
@@ -29419,7 +29501,7 @@ class PDFImage {
       }
       alpha01 = 1;
       maybeUndoPreblend = true;
-      this.fillOpacity(data, drawWidth, drawHeight, actualHeight, comps);
+      await this.fillOpacity(data, drawWidth, drawHeight, actualHeight, comps);
     }
     if (this.needsDecode) {
       this.decodeBuffer(comps);
@@ -29445,7 +29527,7 @@ class PDFImage {
     }
     return imgData;
   }
-  fillGrayBuffer(buffer) {
+  async fillGrayBuffer(buffer) {
     const numComps = this.numComps;
     if (numComps !== 1) {
       throw new FormatError(`Reading gray scale from a color image: ${numComps}`);
@@ -29454,7 +29536,7 @@ class PDFImage {
     const height = this.height;
     const bpc = this.bpc;
     const rowBytes = width * numComps * bpc + 7 >> 3;
-    const imgArray = this.getImageBytes(height * rowBytes, {
+    const imgArray = await this.getImageBytes(height * rowBytes, {
       internal: true
     });
     const comps = this.getComponents(imgArray);
@@ -29508,7 +29590,7 @@ class PDFImage {
       interpolate: this.interpolate
     };
   }
-  getImageBytes(length, {
+  async getImageBytes(length, {
     drawWidth,
     drawHeight,
     forceRGBA = false,
@@ -29520,7 +29602,7 @@ class PDFImage {
     this.image.drawHeight = drawHeight || this.height;
     this.image.forceRGBA = !!forceRGBA;
     this.image.forceRGB = !!forceRGB;
-    const imageBytes = this.image.getBytes(length, this.ignoreColorSpace);
+    const imageBytes = await this.image.getImageData(length, this.ignoreColorSpace);
     if (internal || this.image instanceof DecodeStream) {
       return imageBytes;
     }
@@ -49596,38 +49678,19 @@ function getQuadPoints(dict, rect) {
   if (!isNumberArray(quadPoints, null) || quadPoints.length === 0 || quadPoints.length % 8 > 0) {
     return null;
   }
-  const quadPointsLists = [];
-  for (let i = 0, ii = quadPoints.length / 8; i < ii; i++) {
-    let minX = Infinity,
-      maxX = -Infinity,
-      minY = Infinity,
-      maxY = -Infinity;
-    for (let j = i * 8, jj = i * 8 + 8; j < jj; j += 2) {
-      const x = quadPoints[j];
-      const y = quadPoints[j + 1];
-      minX = Math.min(x, minX);
-      maxX = Math.max(x, maxX);
-      minY = Math.min(y, minY);
-      maxY = Math.max(y, maxY);
-    }
+  const newQuadPoints = new Float32Array(quadPoints.length);
+  for (let i = 0, ii = quadPoints.length; i < ii; i += 8) {
+    const [x1, y1, x2, y2, x3, y3, x4, y4] = quadPoints.slice(i, i + 8);
+    const minX = Math.min(x1, x2, x3, x4);
+    const maxX = Math.max(x1, x2, x3, x4);
+    const minY = Math.min(y1, y2, y3, y4);
+    const maxY = Math.max(y1, y2, y3, y4);
     if (rect !== null && (minX < rect[0] || maxX > rect[2] || minY < rect[1] || maxY > rect[3])) {
       return null;
     }
-    quadPointsLists.push([{
-      x: minX,
-      y: maxY
-    }, {
-      x: maxX,
-      y: maxY
-    }, {
-      x: minX,
-      y: minY
-    }, {
-      x: maxX,
-      y: minY
-    }]);
+    newQuadPoints.set([minX, maxY, maxX, maxY, minX, minY, maxX, minY], i);
   }
-  return quadPointsLists;
+  return newQuadPoints;
 }
 function getTransformMatrix(rect, bbox, matrix) {
   const [minX, minY, maxX, maxY] = Util.getAxialAlignedBoundingBox(bbox, matrix);
@@ -50230,22 +50293,10 @@ class MarkupAnnotation extends Annotation {
     }
     let pointsArray = this.data.quadPoints;
     if (!pointsArray) {
-      pointsArray = [[{
-        x: this.rectangle[0],
-        y: this.rectangle[3]
-      }, {
-        x: this.rectangle[2],
-        y: this.rectangle[3]
-      }, {
-        x: this.rectangle[0],
-        y: this.rectangle[1]
-      }, {
-        x: this.rectangle[2],
-        y: this.rectangle[1]
-      }]];
+      pointsArray = Float32Array.from([this.rectangle[0], this.rectangle[3], this.rectangle[2], this.rectangle[3], this.rectangle[0], this.rectangle[1], this.rectangle[2], this.rectangle[1]]);
     }
-    for (const points of pointsArray) {
-      const [mX, MX, mY, MY] = pointsCallback(buffer, points);
+    for (let i = 0, ii = pointsArray.length; i < ii; i += 8) {
+      const [mX, MX, mY, MY] = pointsCallback(buffer, pointsArray.subarray(i, i + 8));
       minX = Math.min(minX, mX);
       maxX = Math.max(maxX, MX);
       minY = Math.min(minY, mY);
@@ -51894,7 +51945,7 @@ class LineAnnotation extends MarkupAnnotation {
         fillAlpha,
         pointsCallback: (buffer, points) => {
           buffer.push(`${lineCoordinates[0]} ${lineCoordinates[1]} m`, `${lineCoordinates[2]} ${lineCoordinates[3]} l`, "S");
-          return [points[0].x - borderWidth, points[1].x + borderWidth, points[3].y - borderWidth, points[1].y + borderWidth];
+          return [points[0] - borderWidth, points[2] + borderWidth, points[7] - borderWidth, points[3] + borderWidth];
         }
       });
     }
@@ -51927,17 +51978,17 @@ class SquareAnnotation extends MarkupAnnotation {
         strokeAlpha,
         fillAlpha,
         pointsCallback: (buffer, points) => {
-          const x = points[2].x + this.borderStyle.width / 2;
-          const y = points[2].y + this.borderStyle.width / 2;
-          const width = points[3].x - points[2].x - this.borderStyle.width;
-          const height = points[1].y - points[3].y - this.borderStyle.width;
+          const x = points[4] + this.borderStyle.width / 2;
+          const y = points[5] + this.borderStyle.width / 2;
+          const width = points[6] - points[4] - this.borderStyle.width;
+          const height = points[3] - points[7] - this.borderStyle.width;
           buffer.push(`${x} ${y} ${width} ${height} re`);
           if (fillColor) {
             buffer.push("B");
           } else {
             buffer.push("S");
           }
-          return [points[0].x, points[1].x, points[3].y, points[1].y];
+          return [points[0], points[2], points[7], points[3]];
         }
       });
     }
@@ -51969,10 +52020,10 @@ class CircleAnnotation extends MarkupAnnotation {
         strokeAlpha,
         fillAlpha,
         pointsCallback: (buffer, points) => {
-          const x0 = points[0].x + this.borderStyle.width / 2;
-          const y0 = points[0].y - this.borderStyle.width / 2;
-          const x1 = points[3].x - this.borderStyle.width / 2;
-          const y1 = points[3].y + this.borderStyle.width / 2;
+          const x0 = points[0] + this.borderStyle.width / 2;
+          const y0 = points[1] - this.borderStyle.width / 2;
+          const x1 = points[6] - this.borderStyle.width / 2;
+          const y1 = points[7] + this.borderStyle.width / 2;
           const xMid = x0 + (x1 - x0) / 2;
           const yMid = y0 + (y1 - y0) / 2;
           const xOffset = (x1 - x0) / 2 * controlPointsDistance;
@@ -51983,7 +52034,7 @@ class CircleAnnotation extends MarkupAnnotation {
           } else {
             buffer.push("S");
           }
-          return [points[0].x, points[1].x, points[3].y, points[1].y];
+          return [points[0], points[2], points[7], points[3]];
         }
       });
     }
@@ -51999,28 +52050,23 @@ class PolylineAnnotation extends MarkupAnnotation {
     this.data.annotationType = AnnotationType.POLYLINE;
     this.data.hasOwnCanvas = this.data.noRotate;
     this.data.noHTML = false;
-    this.data.vertices = [];
+    this.data.vertices = null;
     const rawVertices = dict.getArray("Vertices");
     if (!isNumberArray(rawVertices, null)) {
       return;
     }
-    for (let i = 0, ii = rawVertices.length; i < ii; i += 2) {
-      this.data.vertices.push({
-        x: rawVertices[i],
-        y: rawVertices[i + 1]
-      });
-    }
+    const vertices = this.data.vertices = Float32Array.from(rawVertices);
     if (!this.appearance) {
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
       const strokeAlpha = dict.get("CA");
       const borderWidth = this.borderStyle.width || 1,
         borderAdjust = 2 * borderWidth;
       const bbox = [Infinity, Infinity, -Infinity, -Infinity];
-      for (const vertex of this.data.vertices) {
-        bbox[0] = Math.min(bbox[0], vertex.x - borderAdjust);
-        bbox[1] = Math.min(bbox[1], vertex.y - borderAdjust);
-        bbox[2] = Math.max(bbox[2], vertex.x + borderAdjust);
-        bbox[3] = Math.max(bbox[3], vertex.y + borderAdjust);
+      for (let i = 0, ii = vertices.length; i < ii; i += 2) {
+        bbox[0] = Math.min(bbox[0], vertices[i] - borderAdjust);
+        bbox[1] = Math.min(bbox[1], vertices[i + 1] - borderAdjust);
+        bbox[2] = Math.max(bbox[2], vertices[i] + borderAdjust);
+        bbox[3] = Math.max(bbox[3], vertices[i + 1] + borderAdjust);
       }
       if (!Util.intersect(this.rectangle, bbox)) {
         this.rectangle = bbox;
@@ -52031,12 +52077,11 @@ class PolylineAnnotation extends MarkupAnnotation {
         strokeColor,
         strokeAlpha,
         pointsCallback: (buffer, points) => {
-          const vertices = this.data.vertices;
-          for (let i = 0, ii = vertices.length; i < ii; i++) {
-            buffer.push(`${vertices[i].x} ${vertices[i].y} ${i === 0 ? "m" : "l"}`);
+          for (let i = 0, ii = vertices.length; i < ii; i += 2) {
+            buffer.push(`${vertices[i]} ${vertices[i + 1]} ${i === 0 ? "m" : "l"}`);
           }
           buffer.push("S");
-          return [points[0].x, points[1].x, points[3].y, points[1].y];
+          return [points[0], points[2], points[7], points[3]];
         }
       });
     }
@@ -52070,18 +52115,17 @@ class InkAnnotation extends MarkupAnnotation {
       return;
     }
     for (let i = 0, ii = rawInkLists.length; i < ii; ++i) {
-      this.data.inkLists.push([]);
       if (!Array.isArray(rawInkLists[i])) {
         continue;
       }
+      const inkList = new Float32Array(rawInkLists[i].length);
+      this.data.inkLists.push(inkList);
       for (let j = 0, jj = rawInkLists[i].length; j < jj; j += 2) {
         const x = xref.fetchIfRef(rawInkLists[i][j]),
           y = xref.fetchIfRef(rawInkLists[i][j + 1]);
         if (typeof x === "number" && typeof y === "number") {
-          this.data.inkLists[i].push({
-            x,
-            y
-          });
+          inkList[j] = x;
+          inkList[j + 1] = y;
         }
       }
     }
@@ -52091,12 +52135,12 @@ class InkAnnotation extends MarkupAnnotation {
       const borderWidth = this.borderStyle.width || 1,
         borderAdjust = 2 * borderWidth;
       const bbox = [Infinity, Infinity, -Infinity, -Infinity];
-      for (const inkLists of this.data.inkLists) {
-        for (const vertex of inkLists) {
-          bbox[0] = Math.min(bbox[0], vertex.x - borderAdjust);
-          bbox[1] = Math.min(bbox[1], vertex.y - borderAdjust);
-          bbox[2] = Math.max(bbox[2], vertex.x + borderAdjust);
-          bbox[3] = Math.max(bbox[3], vertex.y + borderAdjust);
+      for (const inkList of this.data.inkLists) {
+        for (let i = 0, ii = inkList.length; i < ii; i += 2) {
+          bbox[0] = Math.min(bbox[0], inkList[i] - borderAdjust);
+          bbox[1] = Math.min(bbox[1], inkList[i + 1] - borderAdjust);
+          bbox[2] = Math.max(bbox[2], inkList[i] + borderAdjust);
+          bbox[3] = Math.max(bbox[3], inkList[i + 1] + borderAdjust);
         }
       }
       if (!Util.intersect(this.rectangle, bbox)) {
@@ -52109,12 +52153,12 @@ class InkAnnotation extends MarkupAnnotation {
         strokeAlpha,
         pointsCallback: (buffer, points) => {
           for (const inkList of this.data.inkLists) {
-            for (let i = 0, ii = inkList.length; i < ii; i++) {
-              buffer.push(`${inkList[i].x} ${inkList[i].y} ${i === 0 ? "m" : "l"}`);
+            for (let i = 0, ii = inkList.length; i < ii; i += 2) {
+              buffer.push(`${inkList[i]} ${inkList[i + 1]} ${i === 0 ? "m" : "l"}`);
             }
             buffer.push("S");
           }
-          return [points[0].x, points[1].x, points[3].y, points[1].y];
+          return [points[0], points[2], points[7], points[3]];
         }
       });
     }
@@ -52276,8 +52320,8 @@ class HighlightAnnotation extends MarkupAnnotation {
           blendMode: "Multiply",
           fillAlpha,
           pointsCallback: (buffer, points) => {
-            buffer.push(`${points[0].x} ${points[0].y} m`, `${points[1].x} ${points[1].y} l`, `${points[3].x} ${points[3].y} l`, `${points[2].x} ${points[2].y} l`, "f");
-            return [points[0].x, points[1].x, points[3].y, points[1].y];
+            buffer.push(`${points[0]} ${points[1]} m`, `${points[2]} ${points[3]} l`, `${points[6]} ${points[7]} l`, `${points[4]} ${points[5]} l`, "f");
+            return [points[0], points[2], points[7], points[3]];
           }
         });
       }
@@ -52379,8 +52423,8 @@ class UnderlineAnnotation extends MarkupAnnotation {
           strokeColor,
           strokeAlpha,
           pointsCallback: (buffer, points) => {
-            buffer.push(`${points[2].x} ${points[2].y + 1.3} m`, `${points[3].x} ${points[3].y + 1.3} l`, "S");
-            return [points[0].x, points[1].x, points[3].y, points[1].y];
+            buffer.push(`${points[4]} ${points[5] + 1.3} m`, `${points[6]} ${points[7] + 1.3} l`, "S");
+            return [points[0], points[2], points[7], points[3]];
           }
         });
       }
@@ -52408,11 +52452,11 @@ class SquigglyAnnotation extends MarkupAnnotation {
           strokeColor,
           strokeAlpha,
           pointsCallback: (buffer, points) => {
-            const dy = (points[0].y - points[2].y) / 6;
+            const dy = (points[1] - points[5]) / 6;
             let shift = dy;
-            let x = points[2].x;
-            const y = points[2].y;
-            const xEnd = points[3].x;
+            let x = points[4];
+            const y = points[5];
+            const xEnd = points[6];
             buffer.push(`${x} ${y + shift} m`);
             do {
               x += 2;
@@ -52420,7 +52464,7 @@ class SquigglyAnnotation extends MarkupAnnotation {
               buffer.push(`${x} ${y + shift} l`);
             } while (x < xEnd);
             buffer.push("S");
-            return [points[2].x, xEnd, y - 2 * dy, y + 2 * dy];
+            return [points[4], xEnd, y - 2 * dy, y + 2 * dy];
           }
         });
       }
@@ -52448,8 +52492,8 @@ class StrikeOutAnnotation extends MarkupAnnotation {
           strokeColor,
           strokeAlpha,
           pointsCallback: (buffer, points) => {
-            buffer.push(`${(points[0].x + points[2].x) / 2} ` + `${(points[0].y + points[2].y) / 2} m`, `${(points[1].x + points[3].x) / 2} ` + `${(points[1].y + points[3].y) / 2} l`, "S");
-            return [points[0].x, points[1].x, points[3].y, points[1].y];
+            buffer.push(`${(points[0] + points[4]) / 2} ` + `${(points[1] + points[5]) / 2} m`, `${(points[2] + points[6]) / 2} ` + `${(points[3] + points[7]) / 2} l`, "S");
+            return [points[0], points[2], points[7], points[3]];
           }
         });
       }
@@ -55485,7 +55529,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.3.138";
+    const workerVersion = "4.4.10";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -56048,8 +56092,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.3.138";
-const pdfjsBuild = "24e12d515";
+const pdfjsVersion = "4.4.10";
+const pdfjsBuild = "5c51d5622";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
