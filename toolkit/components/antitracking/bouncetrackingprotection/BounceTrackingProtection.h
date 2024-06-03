@@ -52,8 +52,11 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
       BounceTrackingStateGlobal* aStateGlobal = nullptr);
 
  private:
-  BounceTrackingProtection();
+  BounceTrackingProtection() = default;
   ~BounceTrackingProtection() = default;
+
+  // Initializes the singleton instance of BounceTrackingProtection.
+  [[nodiscard]] nsresult Init();
 
   // Keeps track of whether the feature is enabled based on pref state.
   // Initialized on first call of GetSingleton.

@@ -42,6 +42,7 @@ NS_IMPL_ISUPPORTS(BounceTrackingProtection, nsIBounceTrackingProtection);
 LazyLogModule gBounceTrackingProtectionLog("BounceTrackingProtection");
 
 static StaticRefPtr<BounceTrackingProtection> sBounceTrackingProtection;
+static bool sInitFailed = false;
 
 // Keeps track of whether the feature is enabled based on pref state.
 // Initialized on first call of GetSingleton.
@@ -60,6 +61,11 @@ static constexpr uint32_t TRACKER_PURGE_FLAGS =
 already_AddRefed<BounceTrackingProtection>
 BounceTrackingProtection::GetSingleton() {
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  // Init previously failed, don't try again.
+  if (sInitFailed) {
+    return nullptr;
+  }
 
   // First call to GetSingleton, check main feature pref and record telemetry.
   if (sFeatureIsEnabled.isNothing()) {
@@ -90,14 +96,19 @@ BounceTrackingProtection::GetSingleton() {
   // Feature is enabled, lazily create singleton instance.
   if (!sBounceTrackingProtection) {
     sBounceTrackingProtection = new BounceTrackingProtection();
-
     RunOnShutdown([] { sBounceTrackingProtection = nullptr; });
+
+    nsresult rv = sBounceTrackingProtection->Init();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      sInitFailed = true;
+      return nullptr;
+    }
   }
 
   return do_AddRef(sBounceTrackingProtection);
 }
 
-BounceTrackingProtection::BounceTrackingProtection() {
+nsresult BounceTrackingProtection::Init() {
   MOZ_LOG(
       gBounceTrackingProtectionLog, LogLevel::Info,
       ("Init BounceTrackingProtection. Config: enableDryRunMode: %d, "
@@ -121,11 +132,7 @@ BounceTrackingProtection::BounceTrackingProtection() {
   mStorage = new BounceTrackingProtectionStorage();
 
   nsresult rv = mStorage->Init();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Error,
-            ("storage init failed"));
-    return;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = MaybeMigrateUserInteractionPermissions();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -140,14 +147,14 @@ BounceTrackingProtection::BounceTrackingProtection() {
 
   // The pref can be set to 0 to disable interval purging.
   if (purgeTimerPeriod == 0) {
-    return;
+    return NS_OK;
   }
 
   MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
           ("Scheduling mBounceTrackingPurgeTimer. Interval: %d seconds.",
            purgeTimerPeriod));
 
-  rv = NS_NewTimerWithCallback(
+  return NS_NewTimerWithCallback(
       getter_AddRefs(mBounceTrackingPurgeTimer),
       [](auto) {
         if (!sBounceTrackingProtection) {
@@ -164,9 +171,6 @@ BounceTrackingProtection::BounceTrackingProtection() {
       },
       purgeTimerPeriod * PR_MSEC_PER_SEC, nsITimer::TYPE_REPEATING_SLACK,
       "mBounceTrackingPurgeTimer");
-
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Failed to schedule timer for RunPurgeBounceTrackers.");
 }
 
 nsresult BounceTrackingProtection::RecordStatefulBounces(
