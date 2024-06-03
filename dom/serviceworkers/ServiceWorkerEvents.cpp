@@ -1100,6 +1100,16 @@ already_AddRefed<mozilla::dom::Blob> PushMessageData::Blob(ErrorResult& aRv) {
   return nullptr;
 }
 
+void PushMessageData::Bytes(JSContext* cx, JS::MutableHandle<JSObject*> aRetval,
+                            ErrorResult& aRv) {
+  uint8_t* data = GetContentsCopy();
+  if (data) {
+    UniquePtr<uint8_t[], JS::FreePolicy> dataPtr(data);
+    BodyUtil::ConsumeBytes(cx, aRetval, mBytes.Length(), std::move(dataPtr),
+                           aRv);
+  }
+}
+
 nsresult PushMessageData::EnsureDecodedText() {
   if (mBytes.IsEmpty() || !mDecodedText.IsEmpty()) {
     return NS_OK;

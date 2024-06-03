@@ -130,6 +130,7 @@ http://creativecommons.org/licenses/publicdomain/
     );
     isDeeply(new Uint8Array(message.data.arrayBuffer), typedArray,
       "Wrong array buffer message data");
+    isDeeply(message.data.bytes, typedArray, "Wrong bytes message data");
 
     message = await waitForMessage(
       pushSubscription,
