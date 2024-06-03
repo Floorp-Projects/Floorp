@@ -9,11 +9,15 @@
 <body>
 
 <script type="application/javascript">
-function runTestInIframe() {
+async function runTestInIframe() {
   if (!SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported()) {
     SimpleTest.finish();
     return;
   }
+
+  // Log to test that JS::SetWarningReporter() setup is done for bug 1898684.
+  await SpecialPowers.pushPrefEnv(
+    {"set": [["javascript.options.wasm_verbose", true]]});
 
   ok(window.isSecureContext, "Test should run in secure context");
   var audioContext = new AudioContext();
