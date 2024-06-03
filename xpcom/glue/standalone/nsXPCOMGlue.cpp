@@ -16,6 +16,10 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 
+#if defined(XP_WIN) && defined(_M_X64) && defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+#  include "mozilla/WindowsDiagnostics.h"
+#endif  // XP_WIN && _M_X64 && MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
 using namespace mozilla;
 
 #define XPCOM_DEPENDENT_LIBS_LIST "dependentlibs.list"
@@ -400,7 +404,51 @@ BootstrapResult GetBootstrap(const char* aXPCOMFile,
 
   // Detect bug 1816848 ahead of the usual crash location.
   uint32_t xulTlsIndex = 0;
-  MOZ_DIAGNOSTIC_ASSERT(check(&xulTlsIndex));
+  if (!check(&xulTlsIndex)) {
+    // Unload xul, then load it again while recording single-step data.
+    XPCOMGlueUnload();
+
+    static constexpr int kMaxStepsNtdll = 0xc000;
+    static constexpr int kMaxErrorStatesNtdll = 0x200;
+    using NtdllSingleStepData =
+        ModuleSingleStepData<kMaxStepsNtdll, kMaxErrorStatesNtdll>;
+
+    XPCOMGlueLoadResult result = Err(AsVariant(NS_ERROR_FAILURE));
+    WindowsDiagnosticsError rv = CollectModuleSingleStepData<
+        kMaxStepsNtdll, kMaxErrorStatesNtdll>(
+        L"ntdll.dll",
+        [&result, &file, aLibLoadingStrategy]() {
+          result = XPCOMGlueLoad(file.get(), aLibLoadingStrategy);
+        },
+        [&result, xulTlsIndex](const NtdllSingleStepData& aData) {
+          bool didReload = false;
+          bool isStillBroken = false;
+          uint32_t newXulTlsIndex = 0;
+          if (result.isOk() && sTop) {
+            auto check =
+                reinterpret_cast<decltype(&XRE_CheckBlockScopeStaticVarInit)>(
+                    GetSymbol(sTop->libHandle,
+                              "XRE_CheckBlockScopeStaticVarInit"));
+            if (check) {
+              didReload = true;
+              isStillBroken = !check(&newXulTlsIndex);
+            }
+          }
+
+          // Crashing here gives access to the single-step data on stack.
+          MOZ_CRASH_UNSAFE_PRINTF(
+              "Detected lack of initialization of block-scope static variables "
+              "in xul, got single-step data (didReload=%d, isStillBroken=%d, "
+              "xulTlsIndex=%u, newXulTlsIndex=%u)",
+              didReload, isStillBroken, xulTlsIndex, newXulTlsIndex);
+        },
+        InstructionFilter::CallRet);
+
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "Detected lack of initialization of block-scope static variables in "
+        "xul, failed to collect single-step data (rv=%d)",
+        static_cast<int>(rv));
+  }
 #endif  // XP_WIN && _M_X64 && MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   GetBootstrapType func =
