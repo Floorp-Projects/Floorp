@@ -132,9 +132,7 @@ The example below demonstrates how to disable test_main_ping2:
 Who to contact for help
 -----------------------
 
-- The test cases are owned by Chris Hutten-Czapski (chutten on matrix) from the Firefox Telemetry team
-  (`#telemetry <https://chat.mozilla.org/#/room/#telemetry:mozilla.org>`__ on matrix)
-- The test harness is owned by Raphael Pierzina (raphael on matrix) from the Ecosystem Test Engineering team
+- The test harness and cases are owned by Chris Hutten-Czapski (chutten on matrix) from the Firefox Telemetry team
   (`#telemetry <https://chat.mozilla.org/#/room/#telemetry:mozilla.org>`__ on matrix)
 
 Bugzilla
