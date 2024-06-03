@@ -10,29 +10,12 @@
   --card-background-color: var(--background-color-box);
   --card-focus-outline: var(--focus-outline);
   --card-box-shadow: var(--box-shadow-10);
-  /* Bug 1791816, 1839523: replace with spacing tokens */
-  --card-padding: 1em;
+  --card-padding: var(--space-large);
   --card-gap: var(--card-padding);
-  --card-article-gap: 0.45em;
+  --card-article-gap: var(--space-small);
 
-  /* Bug 1791816: replace with button tokens */
   @media (prefers-contrast) {
-    --button-border-color: var(--border-color-interactive);
-    --button-border-color-hover: var(--border-color-interactive-hover);
-    --button-border-color-active: var(--border-color-interactive-active);
     --card-border-color: color-mix(in srgb, currentColor 41%, transparent);
-  }
-  /* Bug 1791816: replace with button tokens */
-  @media (forced-colors) {
-    --button-background-color: ButtonFace;
-    --button-background-color-hover: SelectedItemText;
-    --button-background-color-active: SelectedItemText;
-    --button-border-color: var(--border-color-interactive);
-    --button-border-color-hover: var(--border-color-interactive-hover);
-    --button-border-color-active: var(--border-color-interactive-active);
-    --button-text-color: ButtonText;
-    --button-text-color-hover: SelectedItem;
-    --button-text-color-active: SelectedItem;
   }
 }
 
