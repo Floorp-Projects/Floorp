@@ -360,7 +360,8 @@ IdentityCredential::CollectFromCredentialStoreInMainProcess(
   }
 
   CopyableTArray<mozilla::dom::IPCIdentityCredential> fromStore;
-  rv = icStorageService->GetIdentityCredentials(idpPrincipals, fromStore);
+  rv = icStorageService->GetIdentityCredentials(idpPrincipals,
+                                                fromStore);
   if (NS_FAILED(rv)) {
     return GetIPCIdentityCredentialsPromise::CreateAndReject(rv, __func__);
   }
@@ -452,7 +453,7 @@ RefPtr<GenericPromise> IdentityCredential::StoreInMainProcess(
   if (NS_WARN_IF(!icStorageService)) {
     return GenericPromise::CreateAndReject(error, __func__);
   }
-  error = icStorageService->StoreIdentityCredential(nullptr, aCredential);
+  error = icStorageService->StoreIdentityCredential(aCredential);
   if (NS_FAILED(error)) {
     return GenericPromise::CreateAndReject(error, __func__);
   }
