@@ -206,6 +206,9 @@ class RTCRtpSender : public nsISupports,
   bool mHaveLoggedOtherFec = false;
   bool mHaveLoggedVideoPreferredCodec = false;
   bool mHaveLoggedAudioPreferredCodec = false;
+  // Used to detect cases where getParameters is called too long after
+  // setParameters, and log a better warning.
+  Maybe<nsString> mLastTransactionId;
 
   RefPtr<dom::RTCDTMFSender> mDtmf;
 

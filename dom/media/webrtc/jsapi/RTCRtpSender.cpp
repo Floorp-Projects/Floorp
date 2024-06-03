@@ -599,8 +599,16 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // If sender.[[LastReturnedParameters]] is null, return a promise rejected
   // with a newly created InvalidStateError.
   if (!mLastReturnedParameters.isSome()) {
-    nsCString error(
-        "Cannot call setParameters without first calling getParameters");
+    nsCString error;
+    if (mLastTransactionId.isSome() && paramsCopy.mTransactionId.WasPassed() &&
+        *mLastTransactionId == paramsCopy.mTransactionId.Value()) {
+      error =
+          "Event loop was relinquished between getParameters and setParameters "
+          "calls";
+    } else {
+      error = "Cannot call setParameters without first calling getParameters";
+    }
+
     if (mAllowOldSetParameters) {
       if (!mHaveWarnedBecauseNoGetParameters) {
         mHaveWarnedBecauseNoGetParameters = true;
@@ -725,11 +733,13 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
 #endif
     }
     WarnAboutBadSetParameters(error);
-  } else if (oldParams->mTransactionId != paramsCopy.mTransactionId) {
+  } else if (oldParams->mTransactionId.WasPassed() &&
+             oldParams->mTransactionId != paramsCopy.mTransactionId) {
     // Any parameter in parameters is marked as a Read-only parameter (such as
     // RID) and has a value that is different from the corresponding parameter
     // value in sender.[[LastReturnedParameters]]. Note that this also applies
     // to transactionId.
+    // Don't throw this error if letting the "stale getParameters" case slide.
     nsCString error(
         "Cannot change transaction id: call getParameters, modify the result, "
         "and then call setParameters");
@@ -977,6 +987,9 @@ void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
 
   // Set sender.[[LastReturnedParameters]] to result.
   mLastReturnedParameters = Some(aParameters);
+
+  // Used to help with warning strings
+  mLastTransactionId = Some(aParameters.mTransactionId.Value());
 
   // Queue a task that sets sender.[[LastReturnedParameters]] to null.
   GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
