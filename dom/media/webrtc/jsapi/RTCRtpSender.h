@@ -167,6 +167,7 @@ class RTCRtpSender : public nsISupports,
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
   bool mSenderTrackSetByAddTrack = false;
+  // Houses [[SendEncodings]] and [[SendCodecs]]
   RTCRtpSendParameters mParameters;
   Maybe<RTCRtpSendParameters> mPendingParameters;
   uint32_t mNumSetParametersCalls = 0;
@@ -257,6 +258,7 @@ class RTCRtpSender : public nsISupports,
   void UpdateBaseConfig(BaseConfig* aConfig);
   void ApplyVideoConfig(const VideoConfig& aConfig);
   void ApplyAudioConfig(const AudioConfig& aConfig);
+  void UpdateParametersCodecs();
 
   Canonical<Ssrcs> mSsrcs;
   Canonical<Ssrcs> mVideoRtxSsrcs;

@@ -2347,8 +2347,9 @@ void PeerConnectionImpl::GetCapabilities(
 
   const bool redUlpfecEnabled =
       Preferences::GetBool("media.navigator.video.red_ulpfec_enabled", false);
+  bool haveAddedRtx = false;
 
-  // Use the codecs for kind to fill out the RTCRtpCodecCapability
+  // Use the codecs for kind to fill out the RTCRtpCodec
   for (const auto& codec : codecs) {
     // To avoid misleading information on codec capabilities skip those
     // not signaled for audio/video (webrtc-datachannel)
@@ -2359,37 +2360,28 @@ void PeerConnectionImpl::GetCapabilities(
       continue;
     }
 
-    dom::RTCRtpCodecCapability capability;
-    capability.mMimeType = aKind + NS_ConvertASCIItoUTF16("/" + codec->mName);
-    capability.mClockRate = codec->mClock;
-
-    if (codec->mChannels) {
-      capability.mChannels.Construct(codec->mChannels);
-    }
-
-    UniquePtr<SdpFmtpAttributeList::Parameters> params;
-    codec->ApplyConfigToFmtp(params);
-
-    if (params != nullptr) {
-      std::ostringstream paramsString;
-      params->Serialize(paramsString);
-      nsTString<char16_t> fmtp;
-      fmtp.AssignASCII(paramsString.str());
-      capability.mSdpFmtpLine.Construct(fmtp);
-    }
+    dom::RTCRtpCodec capability;
+    RTCRtpTransceiver::ToDomRtpCodec(*codec, &capability);
 
     if (!aResult.SetValue().mCodecs.AppendElement(capability, fallible)) {
       mozalloc_handle_oom(0);
     }
-  }
 
-  // We need to manually add rtx for video.
-  if (mediaType == JsepMediaType::kVideo) {
-    dom::RTCRtpCodecCapability capability;
-    capability.mMimeType = aKind + NS_ConvertASCIItoUTF16("/rtx");
-    capability.mClockRate = 90000;
-    if (!aResult.SetValue().mCodecs.AppendElement(capability, fallible)) {
-      mozalloc_handle_oom(0);
+    // We need to manually add rtx for video.
+    // Spec says: There will only be a single entry in codecs for
+    // retransmission via RTX, with sdpFmtpLine not present.
+    if (mediaType == JsepMediaType::kVideo && !haveAddedRtx) {
+      const JsepVideoCodecDescription& videoCodec =
+          static_cast<JsepVideoCodecDescription&>(*codec);
+      if (videoCodec.mRtxEnabled) {
+        dom::RTCRtpCodec rtx;
+        RTCRtpTransceiver::ToDomRtpCodecRtx(videoCodec, &rtx);
+        rtx.mSdpFmtpLine.Reset();
+        if (!aResult.SetValue().mCodecs.AppendElement(rtx, fallible)) {
+          mozalloc_handle_oom(0);
+        }
+        haveAddedRtx = true;
+      }
     }
   }
 

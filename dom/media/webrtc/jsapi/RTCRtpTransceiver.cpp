@@ -885,6 +885,74 @@ void RTCRtpTransceiver::NegotiatedDetailsToVideoCodecConfigs(
   }
 }
 
+/* static */
+void RTCRtpTransceiver::ToDomRtpCodec(const JsepCodecDescription& aCodec,
+                                      RTCRtpCodec* aDomCodec) {
+  MOZ_ASSERT(aCodec.Type() == SdpMediaSection::kAudio ||
+             aCodec.Type() == SdpMediaSection::kVideo);
+  if (aCodec.Type() == SdpMediaSection::kAudio) {
+    aDomCodec->mChannels.Construct(aCodec.mChannels);
+  }
+  aDomCodec->mClockRate = aCodec.mClock;
+  std::string mimeType =
+      aCodec.Type() == SdpMediaSection::kAudio ? "audio/" : "video/";
+  mimeType += aCodec.mName;
+  aDomCodec->mMimeType = NS_ConvertASCIItoUTF16(mimeType);
+
+  if (aCodec.mSdpFmtpLine) {
+    // The RTCRtpParameters.codecs case; just use what we parsed out of the SDP
+    if (!aCodec.mSdpFmtpLine->empty()) {
+      aDomCodec->mSdpFmtpLine.Construct(
+          NS_ConvertASCIItoUTF16(aCodec.mSdpFmtpLine->c_str()));
+    }
+  } else {
+    // The getCapabilities case; serialize what we would put in an offer.
+    UniquePtr<SdpFmtpAttributeList::Parameters> params;
+    aCodec.ApplyConfigToFmtp(params);
+
+    if (params != nullptr) {
+      std::ostringstream paramsString;
+      params->Serialize(paramsString);
+      nsTString<char16_t> fmtp;
+      fmtp.AssignASCII(paramsString.str());
+      aDomCodec->mSdpFmtpLine.Construct(fmtp);
+    }
+  }
+}
+
+/* static */
+void RTCRtpTransceiver::ToDomRtpCodecParameters(
+    const JsepCodecDescription& aCodec,
+    RTCRtpCodecParameters* aDomCodecParameters) {
+  ToDomRtpCodec(aCodec, aDomCodecParameters);
+  uint16_t pt;
+  if (SdpHelper::GetPtAsInt(aCodec.mDefaultPt, &pt)) {
+    aDomCodecParameters->mPayloadType = pt;
+  }
+}
+
+/* static */
+void RTCRtpTransceiver::ToDomRtpCodecRtx(
+    const JsepVideoCodecDescription& aCodec, RTCRtpCodec* aDomCodec) {
+  MOZ_ASSERT(aCodec.Type() == SdpMediaSection::kVideo);
+  aDomCodec->mClockRate = aCodec.mClock;
+  aDomCodec->mMimeType = NS_ConvertASCIItoUTF16("video/rtx");
+  std::ostringstream apt;
+  apt << "apt=" << aCodec.mDefaultPt;
+  aDomCodec->mSdpFmtpLine.Construct(NS_ConvertASCIItoUTF16(apt.str().c_str()));
+}
+
+/* static */
+void RTCRtpTransceiver::ToDomRtpCodecParametersRtx(
+    const JsepVideoCodecDescription& aCodec,
+    RTCRtpCodecParameters* aDomCodecParameters) {
+  ToDomRtpCodecRtx(aCodec, aDomCodecParameters);
+  uint16_t pt;
+  if (SdpHelper::GetPtAsInt(aCodec.mRtxPayloadType, &pt)) {
+    aDomCodecParameters->mPayloadType = pt;
+  }
+}
+
 void RTCRtpTransceiver::Stop(ErrorResult& aRv) {
   if (mPc->IsClosed()) {
     aRv.ThrowInvalidStateError("Peer connection is closed");

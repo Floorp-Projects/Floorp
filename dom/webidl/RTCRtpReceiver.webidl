@@ -13,6 +13,7 @@ interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack   track;
   readonly attribute RTCDtlsTransport?  transport;
   static RTCRtpCapabilities? getCapabilities(DOMString kind);
+  RTCRtpReceiveParameters getParameters();
   sequence<RTCRtpContributingSource>    getContributingSources();
   sequence<RTCRtpSynchronizationSource> getSynchronizationSources();
   [NewObject]
