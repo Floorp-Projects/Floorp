@@ -597,8 +597,11 @@ TextPropertyEditor.prototype = {
       baseURI: this.sheetHref,
       unmatchedVariableClass: "ruleview-unmatched-variable",
       matchedVariableClass: "ruleview-variable",
-      getVariableValue: varName =>
-        this.rule.elementStyle.getVariable(varName, this.rule.pseudoElement),
+      getVariableData: varName =>
+        this.rule.elementStyle.getVariableData(
+          varName,
+          this.rule.pseudoElement
+        ),
     };
     const frag = outputParser.parseCssProperty(name, val, parserOptions);
 

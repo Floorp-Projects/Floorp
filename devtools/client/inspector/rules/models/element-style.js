@@ -844,30 +844,34 @@ class ElementStyle {
   }
 
   /**
-   * Returns the current value of a CSS variable; or its initial value if the
-   * variable is registered but not defined; or null if it's not registered and not defined.
+   * Returns data about a CSS variable.
    *
    * @param  {String} name
    *         The name of the variable.
    * @param  {String} pseudo
    *         The pseudo-element name of the rule.
-   * @return {String|null} the variable's value (or initial value) or null if the variable
-   *         is not defined and not registered.
+   * @return {Object} An object with the following properties:
+   *         - {String|undefined} value: The variable's value. Undefined if variable is not set.
+   *         - {RegisteredPropertyResource|undefined} registeredProperty: The registered
+   *           property data (syntax, initial value, inherits). Undefined if the variable
+   *           is not a registered property.
    */
-  getVariable(name, pseudo = "") {
+  getVariableData(name, pseudo = "") {
     const variables = this.variablesMap.get(pseudo);
-
-    if (variables && variables.has(name)) {
-      return variables.get(name);
-    }
-
-    // If the variable wasn't defined, we want to check if it is a registered custom
-    // properties so we can get its initial value
     const registeredPropertiesMap =
       this.ruleView.getRegisteredPropertiesForSelectedNodeTarget();
-    return registeredPropertiesMap && registeredPropertiesMap.has(name)
-      ? registeredPropertiesMap.get(name).initialValue
-      : null;
+
+    const data = {};
+    if (variables?.has(name)) {
+      // XXX Check what to do in case the value doesn't match the registered property syntax.
+      // Will be handled in Bug 1866712
+      data.value = variables.get(name);
+    }
+    if (registeredPropertiesMap?.has(name)) {
+      data.registeredProperty = registeredPropertiesMap.get(name);
+    }
+
+    return data;
   }
 
   /**

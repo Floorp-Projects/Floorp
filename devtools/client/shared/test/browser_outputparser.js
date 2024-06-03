@@ -816,15 +816,67 @@ function testParseVariable(doc, parser) {
           `, 0, 0` +
         `)`,
     },
+    {
+      text: "var(--registered)",
+      variables: {
+        "--registered": {
+          value: "chartreuse",
+          registeredProperty: {
+            syntax: "<color>",
+            inherits: true,
+            initialValue: "hotpink",
+          },
+        },
+      },
+      expected:
+        // prettier-ignore
+        '<span data-color="chartreuse">' +
+          "<span>var(" +
+            '<span ' +
+              'data-variable="--registered = chartreuse" ' +
+              'data-registered-property-initial-value="hotpink" ' +
+              'data-registered-property-syntax="<color>" ' +
+              'data-registered-property-inherits="true"' +
+            '>--registered</span>)' +
+          "</span>" +
+        "</span>",
+    },
+    {
+      text: "var(--registered-universal)",
+      variables: {
+        "--registered-universal": {
+          value: "chartreuse",
+          registeredProperty: {
+            syntax: "*",
+            inherits: false,
+          },
+        },
+      },
+      expected:
+        // prettier-ignore
+        '<span data-color="chartreuse">' +
+          "<span>var(" +
+            '<span ' +
+              'data-variable="--registered-universal = chartreuse" ' +
+              'data-registered-property-syntax="*" ' +
+              'data-registered-property-inherits="false"' +
+            '>--registered-universal</span>)' +
+          "</span>" +
+        "</span>",
+    },
   ];
 
   for (const test of TESTS) {
-    const getValue = function (varName) {
-      return test.variables[varName];
+    const getData = function (varName) {
+      if (typeof test.variables[varName] === "string") {
+        return { value: test.variables[varName] };
+      }
+
+      return test.variables[varName] || {};
     };
 
     const frag = parser.parseCssProperty("color", test.text, {
-      getVariableValue: getValue,
+      getVariableData: getData,
       unmatchedVariableClass: "unmatched-class",
       ...(test.parserExtraOptions || {}),
     });
@@ -975,7 +1027,7 @@ function testParseFontFamily(doc, parser) {
     "font-family",
     "var(--family, Georgia, serif)",
     {
-      getVariableValue: () => {},
+      getVariableData: () => ({}),
       unmatchedVariableClass: "unmatched-class",
       fontFamilyClass: "ruleview-font-family",
     }

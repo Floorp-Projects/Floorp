@@ -228,7 +228,7 @@ class OutputParser {
       } else if (
         token.tokenType === "Function" &&
         token.value === "var" &&
-        options.getVariableValue
+        options.getVariableData
       ) {
         sawVariable = true;
         const { node, value, fallbackValue } = this.#parseVariable(
@@ -245,7 +245,7 @@ class OutputParser {
       if (
         token.tokenType !== "Function" ||
         token.value !== "var" ||
-        !options.getVariableValue
+        !options.getVariableData
       ) {
         functionData.push(text.substring(token.startOffset, token.endOffset));
       }
@@ -296,12 +296,17 @@ class OutputParser {
     const firstOpts = {};
     const secondOpts = {};
 
+    let varData;
     let varValue;
     let varFallbackValue;
 
     // Get the variable value if it is in use.
     if (tokens && tokens.length === 1) {
-      varValue = options.getVariableValue(tokens[0].text);
+      varData = options.getVariableData(tokens[0].text);
+      varValue =
+        typeof varData.value === "string"
+          ? varData.value
+          : varData.registeredProperty?.initialValue;
     }
 
     // Get the variable name.
@@ -317,8 +322,15 @@ class OutputParser {
       );
       firstOpts.class = options.matchedVariableClass;
       secondOpts.class = options.unmatchedVariableClass;
+      if (varData.registeredProperty) {
+        const { initialValue, syntax, inherits } = varData.registeredProperty;
+        firstOpts["data-registered-property-initial-value"] = initialValue;
+        firstOpts["data-registered-property-syntax"] = syntax;
+        // createNode does not handle `false`, let's stringify the boolean.
+        firstOpts["data-registered-property-inherits"] = `${inherits}`;
+      }
     } else {
-      // The variable name is not valid, mark it unmatched.
+      // The variable is not set and does not have an initial value, mark it unmatched.
       firstOpts.class = options.unmatchedVariableClass;
       firstOpts["data-variable"] = STYLE_INSPECTOR_L10N.getFormatStr(
         "rule.variableUnset",
@@ -437,7 +449,7 @@ class OutputParser {
             ++parenDepth;
           } else if (
             lowerCaseFunctionName === "var" &&
-            options.getVariableValue
+            options.getVariableData
           ) {
             const { node: variableNode, value } = this.#parseVariable(
               token,
@@ -2027,9 +2039,13 @@ class OutputParser {
    *        a `var(…)` that is not in use.
    * @param {Boolean} overrides.supportsColor: Does the CSS property support colors?
    * @param {String} overrides.baseURI: A string used to resolve relative links.
-   * @param {Function} overrides.getVariableValue: A function taking a single argument,
-   *        the name of a variable. This should return the variable's value,
-   *        if it is in use; or null.
+   * @param {Function} overrides.getVariableData: A function taking a single argument,
+   *        the name of a variable. This should return an object with the following properties:
+   *          - {String|undefined} value: The variable's value. Undefined if variable is
+   *            not set.
+   *          - {RegisteredPropertyResource|undefined} registeredProperty: The registered
+   *            property data (syntax, initial value, inherits). Undefined if the variable
+   *            is not a registered property.
    * @return {Object} Overridden options object
    */
   #mergeOptions(overrides) {
@@ -2051,7 +2067,7 @@ class OutputParser {
       urlClass: "",
       fontFamilyClass: "",
       baseURI: undefined,
-      getVariableValue: null,
+      getVariableData: null,
       unmatchedVariableClass: null,
     };
 

@@ -166,6 +166,11 @@ function getNodeInfo(node, elementStyle) {
       sheetHref: rule.domRule.href,
       textProperty: declaration,
       variable: node.dataset.variable,
+      registeredProperty: {
+        initialValue: node.dataset.registeredPropertyInitialValue,
+        syntax: node.dataset.registeredPropertySyntax,
+        inherits: node.dataset.registeredPropertyInherits,
+      },
     };
   } else if (
     declaration &&

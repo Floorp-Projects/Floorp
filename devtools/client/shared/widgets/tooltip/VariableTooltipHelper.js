@@ -17,11 +17,41 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  * @param  {String} text
  *         Text to display in tooltip.
  */
-function setVariableTooltip(tooltip, doc, text) {
+function setVariableTooltip(tooltip, doc, text, registeredProperty) {
   // Create tooltip content
   const div = doc.createElementNS(XHTML_NS, "div");
   div.classList.add("devtools-monospace", "devtools-tooltip-css-variable");
-  div.textContent = text;
+
+  const valueEl = doc.createElementNS(XHTML_NS, "section");
+  valueEl.classList.add("variable-value");
+  valueEl.append(doc.createTextNode(text));
+  div.appendChild(valueEl);
+
+  // A registered property always have a non-falsy syntax
+  if (registeredProperty?.syntax) {
+    const dl = doc.createElementNS(XHTML_NS, "dl");
+    dl.classList.add("registered-property");
+    const addProperty = (label, value, lineBreak = true) => {
+      const dt = doc.createElementNS(XHTML_NS, "dt");
+      dt.append(doc.createTextNode(label));
+      const dd = doc.createElementNS(XHTML_NS, "dd");
+      dd.append(doc.createTextNode(value));
+      dl.append(dt, dd);
+      if (lineBreak) {
+        dl.append(doc.createElementNS(XHTML_NS, "br"));
+      }
+    };
+
+    const hasInitialValue = !!registeredProperty.initialValue;
+
+    addProperty("syntax:", `"${registeredProperty.syntax}"`);
+    addProperty("inherits:", registeredProperty.inherits, hasInitialValue);
+    if (hasInitialValue) {
+      addProperty("initial-value:", registeredProperty.initialValue, false);
+    }
+
+    div.appendChild(dl);
+  }
 
   tooltip.panel.innerHTML = "";
   tooltip.panel.appendChild(div);
