@@ -185,9 +185,7 @@ impl AggregateDevice {
         let (lock, cvar) = &*condvar_pair;
         let guard = lock.lock().unwrap();
         let (_guard, timeout_res) = cvar
-            .wait_timeout_while(guard, waiting_time, |()| {
-                !audiounit_get_devices().contains(&device)
-            })
+            .wait_timeout_while(guard, waiting_time, |()| !get_devices().contains(&device))
             .unwrap();
         if timeout_res.timed_out() {
             cubeb_log!(
@@ -396,8 +394,8 @@ impl AggregateDevice {
         assert_ne!(input_id, output_id);
         debug_assert_running_serially();
 
-        let output_sub_devices = Self::get_sub_devices(output_id)?;
-        let input_sub_devices = Self::get_sub_devices(input_id)?;
+        let output_sub_devices = Self::get_sub_devices_or_self(output_id)?;
+        let input_sub_devices = Self::get_sub_devices_or_self(input_id)?;
 
         unsafe {
             let sub_devices = CFArrayCreateMutable(ptr::null(), 0, &kCFTypeArrayCallBacks);
@@ -445,15 +443,9 @@ impl AggregateDevice {
         let mut size: usize = 0;
         let status = audio_object_get_property_data_size(device_id, &address, &mut size);
 
-        if status == kAudioHardwareUnknownPropertyError as OSStatus {
-            // Return a vector containing the device itself if the device has no sub devices.
-            sub_devices.push(device_id);
-            return Ok(sub_devices);
-        } else if status != NO_ERR {
+        if status != NO_ERR {
             return Err(Error::from(status));
         }
-
-        assert_ne!(size, 0);
 
         let count = size / mem::size_of::<AudioObjectID>();
         sub_devices = allocate_array(count);
@@ -469,6 +461,17 @@ impl AggregateDevice {
         } else {
             Err(Error::from(status))
         }
+    }
+
+    pub fn get_sub_devices_or_self(
+        device_id: AudioDeviceID,
+    ) -> std::result::Result<Vec<AudioObjectID>, Error> {
+        AggregateDevice::get_sub_devices(device_id).or_else(|e| match e {
+            Error::OS(status) if status == kAudioHardwareUnknownPropertyError as OSStatus => {
+                Ok(vec![device_id])
+            }
+            _ => Err(e),
+        })
     }
 
     pub fn get_master_device_uid(device_id: AudioDeviceID) -> std::result::Result<String, Error> {
@@ -515,7 +518,7 @@ impl AggregateDevice {
         };
 
         // The master device will be the 1st sub device of the primary device.
-        let output_sub_devices = Self::get_sub_devices(primary_id)?;
+        let output_sub_devices = Self::get_sub_devices_or_self(primary_id)?;
         assert!(!output_sub_devices.is_empty());
         let master_sub_device_uid = get_device_global_uid(output_sub_devices[0]).unwrap();
         let master_sub_device = master_sub_device_uid.get_raw();
