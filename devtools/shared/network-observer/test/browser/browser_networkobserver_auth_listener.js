@@ -344,6 +344,12 @@ async function testAuthRequestWithCredentialsListener({ earlyEvents }) {
   gBrowser.removeTab(tab);
 }
 add_task(async function () {
+  // TODO: Bug 1898750: introducing the early events option makes this test
+  // fail when earlyEvents is false on late beta or later.
+  // Force use_redirect_for_retries on all channels for this specific test.
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.auth.use_redirect_for_retries", true]],
+  });
   await testAuthRequestWithCredentialsListener({ earlyEvents: false });
   await testAuthRequestWithCredentialsListener({ earlyEvents: true });
 });
