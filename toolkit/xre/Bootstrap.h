@@ -173,6 +173,10 @@ inline BootstrapResult GetBootstrap(
 }
 #endif
 
+#if defined(XP_WIN) && defined(_M_X64) && defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+extern "C" NS_EXPORT bool XRE_CheckBlockScopeStaticVarInit(uint32_t* aTlsIndex);
+#endif  // XP_WIN && _M_X64 && MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
 }  // namespace mozilla
 
 #endif  // mozilla_Bootstrap_h
