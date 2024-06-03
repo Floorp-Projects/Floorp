@@ -31,8 +31,12 @@ class IdentityCredential final : public Credential {
   // capture an early step's result into a callback for a subsequent promise.
   typedef MozPromise<RefPtr<IdentityCredential>, nsresult, true>
       GetIdentityCredentialPromise;
+  typedef MozPromise<nsTArray<RefPtr<IdentityCredential>>, nsresult, true>
+      GetIdentityCredentialsPromise;
   typedef MozPromise<IPCIdentityCredential, nsresult, true>
       GetIPCIdentityCredentialPromise;
+  typedef MozPromise<CopyableTArray<IPCIdentityCredential>, nsresult, true>
+      GetIPCIdentityCredentialsPromise;
   typedef MozPromise<IdentityProviderConfig, nsresult, true>
       GetIdentityProviderConfigPromise;
   typedef MozPromise<bool, nsresult, true> ValidationPromise;
@@ -91,6 +95,20 @@ class IdentityCredential final : public Credential {
 
   // Get the Origin of this credential's identity provider
   void GetOrigin(nsACString& aOrigin, ErrorResult& aError) const;
+
+  static RefPtr<GetIdentityCredentialsPromise> CollectFromCredentialStore(
+      nsPIDOMWindowInner* aParent, const CredentialRequestOptions& aOptions,
+      bool aSameOriginWithAncestors);
+
+  static RefPtr<GenericPromise> AllowedToCollectCredential(
+      nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
+      const IdentityCredentialRequestOptions& aOptions,
+      IPCIdentityCredential aCredential);
+
+  static RefPtr<GetIPCIdentityCredentialsPromise>
+  CollectFromCredentialStoreInMainProcess(
+      nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
+      const IdentityCredentialRequestOptions& aOptions);
 
   static RefPtr<GenericPromise> Store(nsPIDOMWindowInner* aParent,
                                       const IdentityCredential* aCredential,
