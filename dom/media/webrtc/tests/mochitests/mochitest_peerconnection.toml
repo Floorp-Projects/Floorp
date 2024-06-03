@@ -227,6 +227,8 @@ skip-if = [
 ]
 scheme = "http"
 
+["test_peerConnection_getParameters.html"]
+
 ["test_peerConnection_glean.html"]
 disabled = "bug 1832459"
 
@@ -344,6 +346,8 @@ skip-if = ["os == 'linux' && tsan"] #Bug 1838736
 ["test_peerConnection_setLocalOfferInHaveRemoteOffer.html"]
 
 ["test_peerConnection_setParameters.html"]
+
+["test_peerConnection_setParametersCompatMode.html"]
 
 ["test_peerConnection_setParameters_maxFramerate.html"]
 
