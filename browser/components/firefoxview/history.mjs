@@ -7,11 +7,7 @@ import {
   ifDefined,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import {
-  escapeHtmlEntities,
-  isSearchEnabled,
-  navigateToLink,
-} from "./helpers.mjs";
+import { escapeHtmlEntities, navigateToLink } from "./helpers.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/migration/migration-wizard.mjs";
@@ -439,18 +435,15 @@ class HistoryInView extends ViewPage {
       <div class="sticky-container bottom-fade">
         <h2 class="page-header" data-l10n-id="firefoxview-history-header"></h2>
         <div class="history-sort-options">
-          ${when(
-            isSearchEnabled(),
-            () => html` <div class="history-sort-option">
-              <fxview-search-textbox
-                data-l10n-id="firefoxview-search-text-box-history"
-                data-l10n-attrs="placeholder"
-                .size=${this.searchTextboxSize}
-                pageName=${this.recentBrowsing ? "recentbrowsing" : "history"}
-                @fxview-search-textbox-query=${this.onSearchQuery}
-              ></fxview-search-textbox>
-            </div>`
-          )}
+          <div class="history-sort-option">
+            <fxview-search-textbox
+              data-l10n-id="firefoxview-search-text-box-history"
+              data-l10n-attrs="placeholder"
+              .size=${this.searchTextboxSize}
+              pageName=${this.recentBrowsing ? "recentbrowsing" : "history"}
+              @fxview-search-textbox-query=${this.onSearchQuery}
+            ></fxview-search-textbox>
+          </div>
           <div class="history-sort-option">
             <input
               type="radio"

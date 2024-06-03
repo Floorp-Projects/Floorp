@@ -11,7 +11,6 @@ import {
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import {
   getLogger,
-  isSearchEnabled,
   placeLinkOnClipboard,
   MAX_TABS_FOR_RECENT_BROWSING,
 } from "./helpers.mjs";
@@ -225,18 +224,15 @@ class OpenTabsInView extends ViewPage {
       <div class="sticky-container bottom-fade">
         <h2 class="page-header" data-l10n-id="firefoxview-opentabs-header"></h2>
         <div class="open-tabs-options">
-          ${when(
-            isSearchEnabled(),
-            () => html`<div>
-              <fxview-search-textbox
-                data-l10n-id="firefoxview-search-text-box-opentabs"
-                data-l10n-attrs="placeholder"
-                @fxview-search-textbox-query=${this.onSearchQuery}
-                .size=${this.searchTextboxSize}
-                pageName=${this.recentBrowsing ? "recentbrowsing" : "opentabs"}
-              ></fxview-search-textbox>
-            </div>`
-          )}
+          <div>
+            <fxview-search-textbox
+              data-l10n-id="firefoxview-search-text-box-opentabs"
+              data-l10n-attrs="placeholder"
+              @fxview-search-textbox-query=${this.onSearchQuery}
+              .size=${this.searchTextboxSize}
+              pageName=${this.recentBrowsing ? "recentbrowsing" : "opentabs"}
+            ></fxview-search-textbox>
+          </div>
           <div class="open-tabs-sort-wrapper">
             <div class="open-tabs-sort-option">
               <input

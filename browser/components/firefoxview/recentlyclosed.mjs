@@ -8,7 +8,7 @@ import {
   ifDefined,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { isSearchEnabled, MAX_TABS_FOR_RECENT_BROWSING } from "./helpers.mjs";
+import { MAX_TABS_FOR_RECENT_BROWSING } from "./helpers.mjs";
 import { searchTabList } from "./search-helpers.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
@@ -359,20 +359,17 @@ class RecentlyClosedTabsInView extends ViewPage {
             class="page-header"
             data-l10n-id="firefoxview-recently-closed-header"
           ></h2>
-          ${when(
-            isSearchEnabled(),
-            () => html`<div>
-              <fxview-search-textbox
-                data-l10n-id="firefoxview-search-text-box-recentlyclosed"
-                data-l10n-attrs="placeholder"
-                @fxview-search-textbox-query=${this.onSearchQuery}
-                .size=${this.searchTextboxSize}
-                pageName=${this.recentBrowsing
-                  ? "recentbrowsing"
-                  : "recentlyclosed"}
-              ></fxview-search-textbox>
-            </div>`
-          )}
+          <div>
+            <fxview-search-textbox
+              data-l10n-id="firefoxview-search-text-box-recentlyclosed"
+              data-l10n-attrs="placeholder"
+              @fxview-search-textbox-query=${this.onSearchQuery}
+              .size=${this.searchTextboxSize}
+              pageName=${this.recentBrowsing
+                ? "recentbrowsing"
+                : "recentlyclosed"}
+            ></fxview-search-textbox>
+          </div>
         </div>`
       )}
       <div class=${classMap({ "cards-container": this.selectedTab })}>

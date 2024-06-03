@@ -16,15 +16,6 @@ ChromeUtils.defineLazyGetter(lazy, "relativeTimeFormat", () => {
   return new Services.intl.RelativeTimeFormat(undefined, { style: "narrow" });
 });
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "searchEnabledPref",
-  "browser.firefox-view.search.enabled"
-);
-
 // Cutoff of 1.5 minutes + 1 second to determine what text string to display
 export const NOW_THRESHOLD_MS = 91000;
 
@@ -114,15 +105,6 @@ export function placeLinkOnClipboard(title, uri) {
   });
 
   Services.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
-}
-
-/**
- * Check the user preference to enable search functionality in Firefox View.
- *
- * @returns {boolean} The preference value.
- */
-export function isSearchEnabled() {
-  return lazy.searchEnabledPref;
 }
 
 /**

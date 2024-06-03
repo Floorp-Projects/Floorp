@@ -166,9 +166,6 @@ function createHistoryEntries() {
 }
 
 add_setup(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.firefox-view.search.enabled", true]],
-  });
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
     await PlacesUtils.history.clear();

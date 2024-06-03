@@ -30,9 +30,6 @@ add_task(async function search_open_tabs() {
   await NonPrivateTabs.readyWindowsPromise;
   await BrowserTestUtils.openNewForegroundTab(win2.gBrowser, TEST_URL);
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.firefox-view.search.enabled", true]],
-  });
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
     await navigateToOpenTabs(browser);
@@ -119,9 +116,6 @@ add_task(async function search_open_tabs_recent_browsing() {
   for (let i = 0; i < NUMBER_OF_TABS; i++) {
     await BrowserTestUtils.openNewForegroundTab(win2.gBrowser, TEST_URL);
   }
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.firefox-view.search.enabled", true]],
-  });
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
     await navigateToViewAndWait(browser.contentDocument, "recentbrowsing");
