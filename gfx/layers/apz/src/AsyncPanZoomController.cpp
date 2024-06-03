@@ -581,7 +581,7 @@ bool AsyncPanZoomController::FuzzyGreater(ParentLayerCoord aCoord1,
   return (aCoord1 - aCoord2) / zoom > COORDINATE_EPSILON;
 }
 
-class MOZ_STACK_CLASS StateChangeNotificationBlocker final {
+class StateChangeNotificationBlocker final {
  public:
   explicit StateChangeNotificationBlocker(AsyncPanZoomController* aApzc)
       : mApzc(aApzc) {
@@ -590,7 +590,17 @@ class MOZ_STACK_CLASS StateChangeNotificationBlocker final {
     mApzc->mNotificationBlockers++;
   }
 
+  StateChangeNotificationBlocker(const StateChangeNotificationBlocker&) =
+      delete;
+  StateChangeNotificationBlocker(StateChangeNotificationBlocker&& aOther)
+      : mApzc(aOther.mApzc), mInitialState(aOther.mInitialState) {
+    aOther.mApzc = nullptr;
+  }
+
   ~StateChangeNotificationBlocker() {
+    if (!mApzc) {  // moved-from
+      return;
+    }
     AsyncPanZoomController::PanZoomState newState;
     {
       RecursiveMutexAutoLock lock(mApzc->mRecursiveMutex);
