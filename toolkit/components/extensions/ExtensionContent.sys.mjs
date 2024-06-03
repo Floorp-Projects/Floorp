@@ -318,9 +318,9 @@ class Script {
    * @param {WebExtensionContentScript|object} matcher
    *        An object with a "matchesWindowGlobal" method and content script
    *        execution details. This is usually a plain WebExtensionContentScript
-   *        except when the script is run via `tabs.executeScript`. In this
-   *        case, the object may have some extra properties:
-   *        wantReturnValue, removeCSS, cssOrigin, jsCode
+   *        except when the script is run via `tabs.executeScript` or
+   *        `scripting.executeScript`. In this case, the object may have some
+   *        extra properties: wantReturnValue, removeCSS, cssOrigin
    */
   constructor(extension, matcher) {
     this.scriptType = "content_script";
@@ -330,6 +330,8 @@ class Script {
     this.runAt = this.matcher.runAt;
     this.world = this.matcher.world;
     this.js = this.matcher.jsPaths;
+    this.jsCode = null; // tabs/scripting.executeScript + ISOLATED world.
+    this.jsCodeCompiledScript = null; // scripting.executeScript + MAIN world.
     this.css = this.matcher.cssPaths.slice();
     this.cssCodeHash = null;
 
@@ -370,6 +372,35 @@ class Script {
 
     // Cache and preload the cssCode stylesheet.
     this.cssCodeCache.addCSSCode(this.cssCodeHash, cssCode);
+  }
+
+  addJSCode(jsCode) {
+    if (!jsCode) {
+      return;
+    }
+    if (this.world === "MAIN") {
+      // To support the scripting.executeScript API, we would like to execute a
+      // string in the context of the web page in #injectIntoMainWorld().
+      // To do so without being blocked by the web page's CSP, we convert
+      // jsCode to a PrecompiledScript, which is then executed by the logic
+      // that is usually used for file-based execution.
+      // TODO bug 1900410: Replace data:-URL with something that does not
+      // reveal the extension source to the web page.
+      const dataUrl = `data:text/javascript,${encodeURIComponent(jsCode)}`;
+      const options = {
+        hasReturnValue: this.matcher.wantReturnValue,
+      };
+      // Note: this logic is similar to this.scriptCaches.get(...), but we are
+      // not using scriptCaches because we don't want the URL to be cached.
+      let promise = ChromeUtils.compileScript(dataUrl, options);
+      promise.then(script => {
+        promise.script = script;
+      });
+      this.jsCodeCompiledScript = promise;
+    } else {
+      // this.world === "ISOLATED".
+      this.jsCode = jsCode;
+    }
   }
 
   compileScripts() {
@@ -563,6 +594,8 @@ class Script {
       // compiled script is cached in the process, and preloading to compile
       // starts as soon as the network request for the document has been
       // received (see ExtensionPolicyService::CheckRequest).
+      // getCompiledScripts() uses blockParsing() for document_start scripts to
+      // ensure that the DOM remains blocked when scripts are still compiling.
       scripts = await scripts;
     }
 
@@ -601,9 +634,9 @@ class Script {
       result = script.executeInGlobal(context.cloneScope, { reportExceptions });
     }
 
-    if (this.matcher.jsCode) {
+    if (this.jsCode) {
       result = Cu.evalInSandbox(
-        this.matcher.jsCode,
+        this.jsCode,
         context.cloneScope,
         "latest",
         "sandbox eval code",
@@ -626,10 +659,11 @@ class Script {
       });
     }
 
-    if (this.matcher.jsCode) {
-      // TODO: This does not work if the web page's CSP blocks eval.
-      result = context.contentWindow.eval(this.matcher.jsCode);
-    }
+    // Note: string-based code execution (=our implementation of func+args in
+    // scripting.executeScript) is not handled here, because we compile it in
+    // addJSCode() and include it in the scripts array via getCompiledScripts().
+    // We cannot use context.contentWindow.eval() here because the web page's
+    // CSP may block it.
 
     return result;
   }
@@ -647,6 +681,9 @@ class Script {
    */
   getCompiledScripts(context) {
     let scriptPromises = this.compileScripts();
+    if (this.jsCodeCompiledScript) {
+      scriptPromises.push(this.jsCodeCompiledScript);
+    }
     let scripts = scriptPromises.map(promise => promise.script);
 
     // If not all scripts are already available in the cache, block
@@ -1261,9 +1298,13 @@ export var ExtensionContent = {
       wantReturnValue: options.wantReturnValue,
       removeCSS: options.removeCSS,
       cssOrigin: options.cssOrigin,
-      jsCode: options.jsCode,
     });
     let script = contentScripts.get(matcher);
+
+    if (options.jsCode) {
+      script.addJSCode(options.jsCode);
+      delete options.jsCode;
+    }
 
     // Add the cssCode to the script, so that it can be converted into a cached URL.
     await script.addCSSCode(options.cssCode);
