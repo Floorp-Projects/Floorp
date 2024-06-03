@@ -58,6 +58,7 @@ add_task(async function test_executeScript_main_world_files() {
           thisIsGlobalThis: true,
           thisIsWindow: true,
           browserIsUndefined: true,
+          evalBlockedMessage: "call to eval() blocked by CSP",
         },
         results[0].result,
         "executeScript with world:MAIN should run in the page's context"
@@ -67,12 +68,20 @@ add_task(async function test_executeScript_main_world_files() {
     },
     files: {
       "main.js": () => {
+        let evalBlockedMessage = "unexpectedly not blocked???";
+        try {
+          // eslint-disable-next-line no-eval
+          eval("// CSP of file_simple_inline_script.html should block eval.");
+        } catch (e) {
+          evalBlockedMessage = e.message;
+        }
         return {
           // varInPage is defined in file_simple_inline_script.html
           varInPageReadByExt: window.varInPage,
           thisIsGlobalThis: this === globalThis,
           thisIsWindow: this === window,
           browserIsUndefined: typeof browser == "undefined",
+          evalBlockedMessage,
         };
       },
     },
@@ -100,12 +109,20 @@ add_task(async function test_executeScript_main_world_func() {
       let results = await browser.scripting.executeScript({
         target: { tabId: tabs[0].id },
         func: () => {
+          let evalBlockedMessage = "unexpectedly not blocked???";
+          try {
+            // eslint-disable-next-line no-eval
+            eval("// CSP of file_simple_inline_script.html should block eval.");
+          } catch (e) {
+            evalBlockedMessage = e.message;
+          }
           return {
             // varInPage is defined in file_simple_inline_script.html
             varInPageReadByExt: window.varInPage,
             thisIsGlobalThis: this === globalThis,
             thisIsWindow: this === window,
             browserIsUndefined: typeof browser == "undefined",
+            evalBlockedMessage,
           };
         },
         world: "MAIN",
@@ -118,6 +135,7 @@ add_task(async function test_executeScript_main_world_func() {
           thisIsGlobalThis: true,
           thisIsWindow: true,
           browserIsUndefined: true,
+          evalBlockedMessage: "call to eval() blocked by CSP",
         },
         results[0].result,
         "executeScript with world:MAIN should run in the page's context"

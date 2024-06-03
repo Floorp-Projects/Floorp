@@ -3,11 +3,12 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="script-src 'nonce-myNonce'">
 <title>file simple inline script</title>
 </head>
 <body>
 
-<script>
+<script nonce="myNonce">
 "use strict";
 // This file defines a global variable that tests can use to confirm that the
 // script they are running is running in the context of the page.
