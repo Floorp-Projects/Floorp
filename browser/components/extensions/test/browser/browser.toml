@@ -330,6 +330,8 @@ https_first_disabled = true
 
 ["browser_ext_originControls.js"]
 
+["browser_ext_overflow_underflow_events.js"]
+
 ["browser_ext_pageAction_activeTab.js"]
 
 ["browser_ext_pageAction_click_types.js"]
