@@ -441,6 +441,30 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     return codec;
   }
 
+  static UniquePtr<JsepVideoCodecDescription> CreateDefaultH264Baseline_0(
+      bool aUseRtx) {
+    auto codec = MakeUnique<JsepVideoCodecDescription>("103", "H264", 90000);
+    codec->mPacketizationMode = 0;
+    // Defaults for mandatory params
+    codec->mProfileLevelId = 0x42001F;
+    if (aUseRtx) {
+      codec->EnableRtx("104");
+    }
+    return codec;
+  }
+
+  static UniquePtr<JsepVideoCodecDescription> CreateDefaultH264Baseline_1(
+      bool aUseRtx) {
+    auto codec = MakeUnique<JsepVideoCodecDescription>("105", "H264", 90000);
+    codec->mPacketizationMode = 1;
+    // Defaults for mandatory params
+    codec->mProfileLevelId = 0x42001F;
+    if (aUseRtx) {
+      codec->EnableRtx("106");
+    }
+    return codec;
+  }
+
   static UniquePtr<JsepVideoCodecDescription> CreateDefaultUlpFec() {
     return MakeUnique<JsepVideoCodecDescription>(
         "123",     // payload type
@@ -1165,7 +1189,7 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   }
 
   void ApplyConfigToFmtp(
-      UniquePtr<SdpFmtpAttributeList::Parameters>& aFmtp) const override{};
+      UniquePtr<SdpFmtpAttributeList::Parameters>& aFmtp) const override {};
 
   uint16_t mLocalPort;
   uint32_t mLocalMaxMessageSize;

@@ -358,7 +358,9 @@ var sdputils = {
       if (testOptions.h264) {
         ok(
           desc.sdp.includes("a=rtpmap:126 H264/90000") ||
-            desc.sdp.includes("a=rtpmap:97 H264/90000"),
+            desc.sdp.includes("a=rtpmap:97 H264/90000") ||
+            desc.sdp.includes("a=rtpmap:103 H264/90000") ||
+            desc.sdp.includes("a=rtpmap:105 H264/90000"),
           "H.264 codec is present in SDP"
         );
       } else {
