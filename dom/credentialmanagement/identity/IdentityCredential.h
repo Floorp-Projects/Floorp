@@ -91,6 +91,14 @@ class IdentityCredential final : public Credential {
 
   // Get the Origin of this credential's identity provider
   void GetOrigin(nsACString& aOrigin, ErrorResult& aError) const;
+
+  static RefPtr<GenericPromise> Store(nsPIDOMWindowInner* aParent,
+                                      const IdentityCredential* aCredential,
+                                      bool aSameOriginWithAncestors);
+
+  static RefPtr<GenericPromise> StoreInMainProcess(
+      nsIPrincipal* aPrincipal, const IPCIdentityCredential& aCredential);
+
   static RefPtr<GetIdentityCredentialPromise> Create(
       nsPIDOMWindowInner* aParent, const CredentialCreationOptions& aOptions,
       bool aSameOriginWithAncestors);
