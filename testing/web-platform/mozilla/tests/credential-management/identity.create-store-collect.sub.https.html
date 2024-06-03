@@ -16,7 +16,8 @@ const ccs = SpecialPowers.Cc[
 
 promise_test(async t => {
   let initData = {
-    id : "id1"
+    id : "id1",
+    token: "token1",
   };
 
   let result1 = await navigator.credentials.create({
@@ -25,12 +26,14 @@ promise_test(async t => {
   assert_not_equals(result1, undefined, "A credential is returned from the CredentialContainer.");
   assert_equals(result1.type, "identity", "The credential is an IdentityCredential");
   assert_equals(result1.id, "id1", "The identity matches the argument");
+  assert_equals(result1.token, "token1", "The token matches the argument");
 
 
   let result2 = new IdentityCredential(initData);
   assert_not_equals(result2, undefined, "A credential is returned from new.");
   assert_equals(result2.type, "identity", "The credential is an IdentityCredential");
   assert_equals(result2.id, "id1", "The identity matches the argument");
+  assert_equals(result2.token, "token1", "The token matches the argument");
 }, "Basic valid credential creation");
 
 

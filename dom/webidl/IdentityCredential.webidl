@@ -49,6 +49,7 @@ dictionary IdentityCredentialUserData {
 
 dictionary IdentityCredentialInit {
   required DOMString id;
+  UTF8String token;
   sequence<UTF8String> effectiveOrigins;
   UTF8String effectiveQueryURL;
   IdentityCredentialUserData uiHint;
