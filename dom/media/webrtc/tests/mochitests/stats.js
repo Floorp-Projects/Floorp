@@ -1121,8 +1121,11 @@ function pedanticChecks(report) {
           break;
         case "video/H264":
           ok(
-            stat.payloadType == 97 || stat.payloadType == 126,
-            `codec.payloadType for H264 was ${stat.payloadType}, exp. 97 or 126`
+            stat.payloadType == 97 ||
+              stat.payloadType == 126 ||
+              stat.payloadType == 103 ||
+              stat.payloadType == 105,
+            `codec.payloadType for H264 was ${stat.payloadType}, exp. 97, 126, 103, or 105`
           );
           break;
         default:
