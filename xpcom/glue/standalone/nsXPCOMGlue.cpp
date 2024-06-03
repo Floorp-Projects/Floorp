@@ -392,6 +392,17 @@ BootstrapResult GetBootstrap(const char* aXPCOMFile,
   if (!sTop) {
     return Err(AsVariant(NS_ERROR_NOT_AVAILABLE));
   }
+
+#if defined(XP_WIN) && defined(_M_X64) && defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+  auto check = reinterpret_cast<decltype(&XRE_CheckBlockScopeStaticVarInit)>(
+      GetSymbol(sTop->libHandle, "XRE_CheckBlockScopeStaticVarInit"));
+  MOZ_DIAGNOSTIC_ASSERT(check);
+
+  // Detect bug 1816848 ahead of the usual crash location.
+  uint32_t xulTlsIndex = 0;
+  MOZ_DIAGNOSTIC_ASSERT(check(&xulTlsIndex));
+#endif  // XP_WIN && _M_X64 && MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
   GetBootstrapType func =
       (GetBootstrapType)GetSymbol(sTop->libHandle, "XRE_GetBootstrap");
   if (!func) {
