@@ -293,7 +293,7 @@ pub fn get_timestamp_ms() -> u64 {
 /// If Glean hasn't been initialized this will dispatch and return Ok(()),
 /// otherwise it will block until the persist is done and return its Result.
 pub fn persist_ping_lifetime_data() {
-    glean_core::persist_ping_lifetime_data();
+    glean_core::glean_persist_ping_lifetime_data();
 }
 
 #[cfg(test)]
