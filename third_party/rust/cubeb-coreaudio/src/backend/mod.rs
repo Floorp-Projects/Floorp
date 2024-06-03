@@ -1620,77 +1620,17 @@ fn get_channel_count(
     assert_ne!(devid, kAudioObjectUnknown);
     debug_assert_running_serially();
 
-    let mut streams = get_device_streams(devid, devtype)?;
-    let model_uid =
-        get_device_model_uid(devid, devtype).map_or_else(|_| String::new(), |s| s.into_string());
-
-    if devtype == DeviceType::INPUT {
-        // With VPIO, output devices will/may get a Tap that appears as input channels on the
-        // output device id. One could check for whether the output device has a tap enabled,
-        // but it is impossible to distinguish an output-only device from an input+output
-        // device. There have also been corner cases observed, where the device does NOT have
-        // a Tap enabled, but it still has the extra input channels from the Tap.
-        // We can check the terminal type of the input stream instead, the VPIO type is
-        // INPUT_UNDEFINED or an output type, we explicitly ignore those and keep all other cases.
-        streams.retain(|stream| {
-            let terminal_type = get_stream_terminal_type(*stream);
-            if terminal_type.is_err() {
-                return true;
-            }
-
-            #[allow(non_upper_case_globals)]
-            match terminal_type.unwrap() {
-                kAudioStreamTerminalTypeMicrophone
-                | kAudioStreamTerminalTypeHeadsetMicrophone
-                | kAudioStreamTerminalTypeReceiverMicrophone => true,
-                kAudioStreamTerminalTypeUnknown => {
-                    cubeb_log!("Unknown TerminalType for input stream. Ignoring its channels.");
-                    false
-                }
-                t if [
-                    kAudioStreamTerminalTypeSpeaker,
-                    kAudioStreamTerminalTypeHeadphones,
-                    kAudioStreamTerminalTypeLFESpeaker,
-                    kAudioStreamTerminalTypeReceiverSpeaker,
-                ]
-                .contains(&t) =>
-                {
-                    cubeb_log!(
-                        "Output TerminalType {:#06X} for input stream. Ignoring its channels.",
-                        t
-                    );
-                    false
-                }
-                INPUT_UNDEFINED => {
-                    cubeb_log!(
-                        "INPUT_UNDEFINED TerminalType for input stream. Ignoring its channels."
-                    );
-                    false
-                }
-                // The input tap stream on the Studio Display Speakers has a terminal type that
-                // is not clearly output-specific. We special-case it here.
-                EXTERNAL_DIGITAL_AUDIO_INTERFACE
-                    if model_uid.contains(APPLE_STUDIO_DISPLAY_USB_ID) =>
-                {
-                    false
-                }
-                // Note INPUT_UNDEFINED is 0x200 and INPUT_MICROPHONE is 0x201
-                t if (INPUT_MICROPHONE..OUTPUT_UNDEFINED).contains(&t) => true,
-                t if (OUTPUT_UNDEFINED..BIDIRECTIONAL_UNDEFINED).contains(&t) => false,
-                t if (BIDIRECTIONAL_UNDEFINED..TELEPHONY_UNDEFINED).contains(&t) => true,
-                t if (TELEPHONY_UNDEFINED..EXTERNAL_UNDEFINED).contains(&t) => true,
-                t => {
-                    cubeb_log!("Unknown TerminalType {:#06X} for input stream.", t);
-                    true
-                }
-            }
-        });
-    }
-
-    let mut count = 0;
-    for stream in streams {
-        if let Ok(format) = get_stream_virtual_format(stream) {
-            count += format.mChannelsPerFrame;
+    let devstreams = get_device_streams(devid, devtype)?;
+    let mut count: u32 = 0;
+    for ds in devstreams {
+        if devtype == DeviceType::INPUT
+            && CoreStreamData::should_force_vpio_for_input_device(ds.device)
+        {
+            count += 1;
+        } else {
+            count += get_stream_virtual_format(ds.stream)
+                .map(|f| f.mChannelsPerFrame)
+                .unwrap_or(0);
         }
     }
     Ok(count)
@@ -1736,8 +1676,8 @@ fn get_fixed_latency(devid: AudioObjectID, devtype: DeviceType) -> u32 {
         }
     };
 
-    let stream_latency = get_device_streams(devid, devtype).and_then(|streams| {
-        if streams.is_empty() {
+    let stream_latency = get_device_streams(devid, devtype).and_then(|devstreams| {
+        if devstreams.is_empty() {
             cubeb_log!(
                 "No stream on device {} in {:?} scope!",
                 devid,
@@ -1745,7 +1685,7 @@ fn get_fixed_latency(devid: AudioObjectID, devtype: DeviceType) -> u32 {
             );
             Ok(0) // default stream latency
         } else {
-            get_stream_latency(streams[0])
+            get_stream_latency(devstreams[0].stream)
         }
     }).map_err(|e| {
         cubeb_log!(
@@ -2031,37 +1971,11 @@ fn destroy_cubeb_device_info(device: &mut ffi::cubeb_device_info) {
     }
 }
 
-fn audiounit_get_devices() -> Vec<AudioObjectID> {
-    debug_assert_running_serially();
-    let mut size: usize = 0;
-    let address = get_property_address(
-        Property::HardwareDevices,
-        DeviceType::INPUT | DeviceType::OUTPUT,
-    );
-    let mut ret =
-        audio_object_get_property_data_size(kAudioObjectSystemObject, &address, &mut size);
-    if ret != NO_ERR {
-        return Vec::new();
-    }
-    // Total number of input and output devices.
-    let mut devices: Vec<AudioObjectID> = allocate_array_by_size(size);
-    ret = audio_object_get_property_data(
-        kAudioObjectSystemObject,
-        &address,
-        &mut size,
-        devices.as_mut_ptr(),
-    );
-    if ret != NO_ERR {
-        return Vec::new();
-    }
-    devices
-}
-
 fn audiounit_get_devices_of_type(devtype: DeviceType) -> Vec<AudioObjectID> {
     assert!(devtype.intersects(DeviceType::INPUT | DeviceType::OUTPUT));
     debug_assert_running_serially();
 
-    let mut devices = audiounit_get_devices();
+    let mut devices = get_devices();
 
     // Remove the aggregate device from the list of devices (if any).
     devices.retain(|&device| {
@@ -3304,14 +3218,15 @@ impl<'ctx> CoreStreamData<'ctx> {
     }
 
     #[allow(non_upper_case_globals)]
-    fn should_force_vpio_for_input_device(&self, in_device: &device_info) -> bool {
-        assert!(in_device.id != kAudioObjectUnknown);
-        self.debug_assert_is_on_stream_queue();
-        match get_device_transport_type(in_device.id, DeviceType::INPUT) {
+    fn should_force_vpio_for_input_device(id: AudioDeviceID) -> bool {
+        assert!(id != kAudioObjectUnknown);
+        debug_assert_running_serially();
+        match get_device_transport_type(id, DeviceType::INPUT) {
             Ok(kAudioDeviceTransportTypeBuiltIn) => {
                 cubeb_log!(
-                    "Forcing VPIO because input device is built in, and its volume \
-                     is known to be very low without VPIO whenever VPIO is hooked up to it elsewhere."
+                    "Input device {} is on the VPIO force list because it is built in, \
+                     and its volume is known to be very low without VPIO whenever VPIO \
+                     is hooked up to it elsewhere."
                 );
                 true
             }
@@ -3388,7 +3303,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 .input_stream_params
                 .prefs()
                 .contains(StreamPrefs::VOICE)
-                || self.should_force_vpio_for_input_device(&self.input_device))
+                || CoreStreamData::should_force_vpio_for_input_device(self.input_device.id))
             && !self.should_block_vpio_for_device_pair(&self.input_device, &self.output_device)
             && macos_kernel_major_version() != Ok(MACOS_KERNEL_MAJOR_VERSION_MONTEREY);
 

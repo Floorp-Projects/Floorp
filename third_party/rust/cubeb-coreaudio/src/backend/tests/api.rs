@@ -1134,6 +1134,98 @@ fn test_get_channel_count_of_unknwon_type() {
     }
 }
 
+fn is_vpio(id: AudioObjectID) -> bool {
+    debug_assert_running_serially();
+    get_device_global_uid(id)
+        .map(|uid| uid.into_string())
+        .map(|uid| uid.contains(VOICEPROCESSING_AGGREGATE_DEVICE_NAME))
+        .unwrap_or(false)
+}
+
+fn get_nonvpio_input_channel_counts() -> Vec<u32> {
+    debug_assert_running_serially();
+    get_devices()
+        .into_iter()
+        .filter(|&id| !is_vpio(id))
+        .filter_map(|id| get_channel_count(id, DeviceType::INPUT).ok())
+        .collect()
+}
+
+#[test]
+#[ignore]
+fn test_get_channel_count_of_input_devices_with_vpio() {
+    let non_vpio_channel_counts =
+        run_serially_forward_panics(|| get_nonvpio_input_channel_counts());
+
+    let queue = Queue::new_with_target(
+        "test_get_channel_count_of_input_devices_with_vpio",
+        get_serial_queue_singleton(),
+    );
+    let mut shared = SharedVoiceProcessingUnitManager::new(queue.clone());
+    let _vpio = queue.run_sync(|| shared.take_or_create()).unwrap().unwrap();
+
+    let vpio_channel_counts = run_serially_forward_panics(|| get_nonvpio_input_channel_counts());
+    assert_eq!(non_vpio_channel_counts, vpio_channel_counts);
+}
+
+#[test]
+#[ignore]
+fn test_get_channel_count_of_input_devices_with_aggregate_device_and_vpio() {
+    let input_device = test_get_default_device(Scope::Input);
+    let output_device = test_get_default_device(Scope::Output);
+    if input_device.is_none() || output_device.is_none() || input_device == output_device {
+        println!("No input or output device to create an aggregate device.");
+        return;
+    }
+
+    #[derive(Default)]
+    struct State {
+        aggr: Option<AggregateDevice>,
+        vpio_mgr: Option<SharedVoiceProcessingUnitManager>,
+        vpio: Option<OwningHandle<VoiceProcessingUnit>>,
+    }
+    impl Drop for State {
+        fn drop(&mut self) {
+            let mut aggr = self.aggr.take();
+            let mut vpio = self.vpio.take();
+            run_serially_forward_panics(move || {
+                aggr.take();
+                vpio.take();
+            });
+        }
+    }
+    let state = Arc::new(Mutex::new(State::default()));
+
+    // Set up an AggregateDevice with input and output.
+    let initial_channel_counts = run_serially_forward_panics(|| get_nonvpio_input_channel_counts());
+    let s1 = state.clone();
+    let aggr_channel_counts = run_serially_forward_panics(|| {
+        let mut state = s1.lock().unwrap();
+        state.aggr =
+            Some(AggregateDevice::new(input_device.unwrap(), output_device.unwrap()).unwrap());
+
+        get_nonvpio_input_channel_counts()
+    });
+    assert_eq!(initial_channel_counts.len() + 1, aggr_channel_counts.len());
+
+    let queue = Queue::new_with_target(
+        "test_get_channel_count_of_input_devices_with_aggregate_device_and_vpio",
+        get_serial_queue_singleton(),
+    );
+    {
+        let mut s = state.lock().unwrap();
+        s.vpio_mgr = Some(SharedVoiceProcessingUnitManager::new(queue.clone()));
+    }
+    let s2 = state.clone();
+    let aggr_vpio_channel_counts = run_serially_forward_panics(|| {
+        let mut state = s2.lock().unwrap();
+        state.vpio = state.vpio_mgr.as_mut().map(|m| m.take_or_create().unwrap());
+
+        get_nonvpio_input_channel_counts()
+    });
+    assert_eq!(aggr_channel_counts, aggr_vpio_channel_counts);
+}
+
 // get_range_of_sample_rates
 // ------------------------------------
 #[test]

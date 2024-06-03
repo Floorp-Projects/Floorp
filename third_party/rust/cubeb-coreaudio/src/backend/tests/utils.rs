@@ -293,6 +293,7 @@ fn test_enable_audiounit_in_scope(
 
 pub enum DeviceFilter {
     ExcludeCubebAggregateAndVPIO,
+    ExcludeVPIO,
     IncludeAll,
 }
 pub fn test_get_all_devices(filter: DeviceFilter) -> Vec<AudioObjectID> {
@@ -349,6 +350,16 @@ pub fn test_get_all_devices(filter: DeviceFilter) -> Vec<AudioObjectID> {
                         let uid = uid.into_string();
                         !uid.contains(PRIVATE_AGGREGATE_DEVICE_NAME)
                             && !uid.contains(VOICEPROCESSING_AGGREGATE_DEVICE_NAME)
+                    } else {
+                        true
+                    }
+                });
+            }
+            DeviceFilter::ExcludeVPIO => {
+                devices.retain(|&device| {
+                    if let Ok(uid) = get_device_global_uid(device) {
+                        let uid = uid.into_string();
+                        !uid.contains(VOICEPROCESSING_AGGREGATE_DEVICE_NAME)
                     } else {
                         true
                     }
