@@ -3168,15 +3168,15 @@ main section {
 .collapsible-section.ds-layout {
   margin: auto;
 }
+.lightWallpaper .collapsible-section.ds-layout .section-top-bar .learn-more-link {
+  color-scheme: light;
+}
+.darkWallpaper .collapsible-section.ds-layout .section-top-bar .learn-more-link {
+  color-scheme: dark;
+}
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
   color: var(--newtab-primary-action-background);
   font-weight: 500;
-}
-.lightWallpaper .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
-  color-scheme: light;
-}
-.darkWallpaper .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
-  color-scheme: dark;
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
   text-decoration: none;
