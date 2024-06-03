@@ -17,7 +17,6 @@ support-files = [
 skip-if = ["os == 'android'"]
 
 ["test_AbuseReporter.js"]
-skip-if = ["os == 'android'"]
 
 ["test_AddonRepository.js"]
 skip-if = ["os == 'android'"]

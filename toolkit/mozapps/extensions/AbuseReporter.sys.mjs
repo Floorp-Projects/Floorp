@@ -230,7 +230,7 @@ export const AbuseReporter = {
 
     data.client_id = await lazy.ClientID.getClientIdHash();
 
-    data.app = Services.appinfo.name.toLowerCase();
+    data.app = AppConstants.platform === "android" ? "android" : "firefox";
     data.appversion = Services.appinfo.version;
     data.lang = Services.locale.appLocaleAsBCP47;
     data.operating_system = AppConstants.platform;
