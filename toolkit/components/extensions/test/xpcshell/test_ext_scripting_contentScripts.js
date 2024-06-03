@@ -213,6 +213,67 @@ add_task(async function test_registerContentScripts_runAt() {
   await extension.unload();
 });
 
+add_task(async function test_registerContentScripts_world_MAIN() {
+  let extension = makeExtension({
+    async background() {
+      await browser.scripting.registerContentScripts([
+        {
+          id: "main-script-start",
+          js: ["main_start.js"],
+          matches: ["http://*/*/file_simple_inline_script.html"],
+          runAt: "document_start",
+          world: "MAIN",
+          persistAcrossSessions: false,
+        },
+        {
+          id: "main-script-end",
+          js: ["main_end.js"],
+          matches: ["http://*/*/file_simple_inline_script.html"],
+          runAt: "document_end",
+          world: "MAIN",
+          persistAcrossSessions: false,
+        },
+      ]);
+
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq("MAIN", scripts[0]?.world, "registered world:MAIN");
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "main_start.js": () => {
+        // Sanity check: dynamically registered content script can run at
+        // document_start, at which point varInPage should still be undefined.
+        globalThis.varInPageAtDocumentStart = this.varInPage === "varInPage";
+      },
+      "main_end.js": () => {
+        // varInPage defined by file_simple_inline_script.html.
+        globalThis.varInPageAtDocumentEnd = this.varInPage === "varInPage";
+      },
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_simple_inline_script.html`
+  );
+  let result = await contentPage.spawn([], () => {
+    const pageGlobal = content.wrappedJSObject;
+    return {
+      varInPageAtDocumentStart: pageGlobal.varInPageAtDocumentStart,
+      varInPageAtDocumentEnd: pageGlobal.varInPageAtDocumentEnd,
+    };
+  });
+  Assert.deepEqual(
+    result,
+    { varInPageAtDocumentStart: false, varInPageAtDocumentEnd: true },
+    "Expected MAIN world script to run"
+  );
+  await contentPage.close();
+  await extension.unload();
+});
+
 add_task(async function test_register_and_unregister() {
   let extension = makeExtension({
     async background() {

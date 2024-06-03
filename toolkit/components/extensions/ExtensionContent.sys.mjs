@@ -626,6 +626,11 @@ class Script {
       });
     }
 
+    if (this.matcher.jsCode) {
+      // TODO: This does not work if the web page's CSP blocks eval.
+      result = context.contentWindow.eval(this.matcher.jsCode);
+    }
+
     return result;
   }
 
