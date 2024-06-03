@@ -23,7 +23,7 @@ struct ParamTraits<mozilla::dom::IdentityProviderConfig> {
     WriteParam(aWriter, aParam.mOrigin);
     WriteParam(aWriter, aParam.mLoginURL);
     WriteParam(aWriter, aParam.mLoginTarget);
-    WriteParam(aWriter, aParam.mDynamicViaCORS);
+    WriteParam(aWriter, aParam.mEffectiveQueryURL);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -33,7 +33,7 @@ struct ParamTraits<mozilla::dom::IdentityProviderConfig> {
            ReadParam(aReader, &aResult->mOrigin) &&
            ReadParam(aReader, &aResult->mLoginURL) &&
            ReadParam(aReader, &aResult->mLoginTarget) &&
-           ReadParam(aReader, &aResult->mDynamicViaCORS);
+           ReadParam(aReader, &aResult->mEffectiveQueryURL);
   }
 };
 
