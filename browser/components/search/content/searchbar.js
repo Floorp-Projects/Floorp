@@ -795,6 +795,10 @@
           this.textbox.selectedButton.open = !this.textbox.selectedButton.open;
           return true;
         }
+        // Ignore blank search, see bug 1894910.
+        if (!this.textbox.value) {
+          return true;
+        }
         // Otherwise, "call super": do what the autocomplete binding's
         // handleEnter implementation does.
         return this.textbox.mController.handleEnter(false, event || null);

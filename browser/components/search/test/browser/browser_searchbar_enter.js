@@ -123,7 +123,7 @@ add_task(async function keyupEnterWhilePressingMeta() {
 
   info("Keydown Meta+Enter");
   searchBar.textbox.focus();
-  searchBar.textbox.value = "";
+  searchBar.textbox.value = "a";
   EventUtils.synthesizeKey(
     "KEY_Enter",
     { type: "keydown", metaKey: true },
@@ -144,6 +144,32 @@ add_task(async function keyupEnterWhilePressingMeta() {
 
   info("Check whether we can input on the search bar");
   searchBar.textbox.focus();
+  EventUtils.synthesizeKey("a", {}, win);
+  is(searchBar.textbox.value, "aa", "Can input a char");
+
+  // Cleanup.
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function enterOnEmptySearchBar() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const browser = win.gBrowser.selectedBrowser;
+  const searchBar = win.BrowserSearch.searchBar;
+
+  // Enter should be ignored if the searchbar is empty.
+  info("Pressing Enter");
+  searchBar.textbox.focus();
+  searchBar.textbox.value = "";
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+
+  await TestUtils.waitForTick();
+  is(
+    browser.ownerDocument.activeElement,
+    searchBar.textbox,
+    "Focus stays in the searchbar"
+  );
+
+  info("Check whether we can input on the search bar");
   EventUtils.synthesizeKey("a", {}, win);
   is(searchBar.textbox.value, "a", "Can input a char");
 
