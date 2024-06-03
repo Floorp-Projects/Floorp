@@ -1492,6 +1492,11 @@ class nsContentUtils {
   static bool IsChromeDoc(const Document* aDocument);
 
   /**
+   * Returns true if aDocument is an addon document
+   */
+  static bool IsAddonDoc(const Document* aDocument);
+
+  /**
    * Returns true if aDocument is in a docshell whose parent is the same type
    */
   static bool IsChildOfSameType(Document* aDoc);

@@ -4619,6 +4619,11 @@ bool nsContentUtils::IsChromeDoc(const Document* aDocument) {
   return aDocument && aDocument->NodePrincipal() == sSystemPrincipal;
 }
 
+bool nsContentUtils::IsAddonDoc(const Document* aDocument) {
+  return aDocument &&
+         aDocument->NodePrincipal()->GetIsAddonOrExpandedAddonPrincipal();
+}
+
 bool nsContentUtils::IsChildOfSameType(Document* aDoc) {
   if (BrowsingContext* bc = aDoc->GetBrowsingContext()) {
     return bc->GetParent();
