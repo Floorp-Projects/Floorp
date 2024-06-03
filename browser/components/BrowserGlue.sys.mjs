@@ -3810,7 +3810,7 @@ BrowserGlue.prototype = {
   _migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 147;
+    const UI_VERSION = 148;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4520,6 +4520,24 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref(
         "extensions.formautofill.creditcards.reauth.optout"
       );
+    }
+
+    if (currentUIVersion < 148) {
+      // The Firefox Translations addon is now a built-in Firefox feature.
+      let addonPromise;
+      try {
+        addonPromise = lazy.AddonManager.getAddonByID(
+          "firefox-translations-addon@mozilla.org"
+        );
+      } catch (error) {
+        // This always throws in xpcshell as the AddonManager is not initialized.
+        if (!Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+          console.error(
+            "Could not access the AddonManager to upgrade the profile."
+          );
+        }
+      }
+      addonPromise?.then(addon => addon?.uninstall()).catch(console.error);
     }
 
     // Update the migration version.
