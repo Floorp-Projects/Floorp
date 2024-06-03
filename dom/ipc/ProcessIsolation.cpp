@@ -317,7 +317,7 @@ static IsolationBehavior IsolationBehaviorForURI(nsIURI* aURI, bool aIsSubframe,
 
   // Protocols used by Thunderbird to display email messages.
   if (scheme == "imap"_ns || scheme == "mailbox"_ns || scheme == "news"_ns ||
-      scheme == "nntp"_ns || scheme == "snews"_ns) {
+      scheme == "nntp"_ns || scheme == "snews"_ns || scheme == "x-moz-ews"_ns) {
     return IsolationBehavior::Parent;
   }
 

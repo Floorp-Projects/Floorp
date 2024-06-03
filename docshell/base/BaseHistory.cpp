@@ -27,7 +27,7 @@ static constexpr nsLiteralCString kDisallowedSchemes[] = {
     "chrome"_ns,        "data"_ns,           "imap"_ns,
     "javascript"_ns,    "mailbox"_ns,        "news"_ns,
     "page-icon"_ns,     "resource"_ns,       "view-source"_ns,
-    "moz-extension"_ns, "moz-page-thumb"_ns,
+    "moz-extension"_ns, "moz-page-thumb"_ns, "x-moz-ews"_ns,
 };
 
 bool BaseHistory::CanStore(nsIURI* aURI) {
