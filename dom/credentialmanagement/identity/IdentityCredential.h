@@ -91,6 +91,9 @@ class IdentityCredential final : public Credential {
 
   // Get the Origin of this credential's identity provider
   void GetOrigin(nsACString& aOrigin, ErrorResult& aError) const;
+  static RefPtr<GetIdentityCredentialPromise> Create(
+      nsPIDOMWindowInner* aParent, const CredentialCreationOptions& aOptions,
+      bool aSameOriginWithAncestors);
 
   // This is the main static function called when a credential needs to be
   // fetched from the IDP. Called in the content process.
