@@ -74,11 +74,12 @@ void IdentityCredential::CopyValuesFrom(const IPCIdentityCredential& aOther) {
   if (aOther.iconURL().isSome()) {
     userData.mIconURL = aOther.iconURL()->Data();
   }
-  if (aOther.infoExpires().isSome()) {
-    userData.mExpires.Construct(aOther.infoExpires()->get());
+  if (aOther.infoExpiresAt().isSome()) {
+    userData.mExpiresAfter.Construct(std::max<uint64_t>(
+        aOther.infoExpiresAt().value() - PR_Now() / PR_USEC_PER_MSEC, 0));
   }
   if (aOther.name().isSome() || aOther.iconURL().isSome() ||
-      aOther.infoExpires().isSome()) {
+      aOther.infoExpiresAt().isSome()) {
     creationOptions.mUiHint.Construct(userData);
   }
   this->mCreationOptions = Some(creationOptions);
@@ -110,9 +111,10 @@ IPCIdentityCredential IdentityCredential::MakeIPCIdentityCredential() const {
       result.name() = Some(this->mCreationOptions->mUiHint.Value().mName);
     }
     if (this->mCreationOptions->mUiHint.WasPassed() &&
-        this->mCreationOptions->mUiHint.Value().mExpires.WasPassed()) {
-      result.infoExpires() =
-          Some(this->mCreationOptions->mUiHint.Value().mExpires.Value());
+        this->mCreationOptions->mUiHint.Value().mExpiresAfter.WasPassed()) {
+      result.infoExpiresAt() =
+          Some(PR_Now() / PR_USEC_PER_MSEC +
+               this->mCreationOptions->mUiHint.Value().mExpiresAfter.Value());
     }
   }
 
@@ -360,8 +362,7 @@ IdentityCredential::CollectFromCredentialStoreInMainProcess(
   }
 
   CopyableTArray<mozilla::dom::IPCIdentityCredential> fromStore;
-  rv = icStorageService->GetIdentityCredentials(idpPrincipals,
-                                                fromStore);
+  rv = icStorageService->GetIdentityCredentials(idpPrincipals, fromStore);
   if (NS_FAILED(rv)) {
     return GetIPCIdentityCredentialsPromise::CreateAndReject(rv, __func__);
   }
