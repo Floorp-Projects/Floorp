@@ -42,7 +42,10 @@ pub mod ffi;
 mod ffi_converter_impls;
 mod ffi_converter_traits;
 pub mod metadata;
+mod oneshot;
 
+#[cfg(feature = "scaffolding-ffi-buffer-fns")]
+pub use ffi::ffiserialize::FfiBufferElement;
 pub use ffi::*;
 pub use ffi_converter_traits::{
     ConvertError, FfiConverter, FfiConverterArc, HandleAlloc, Lift, LiftRef, LiftReturn, Lower,
@@ -58,7 +61,6 @@ pub mod deps {
     pub use async_compat;
     pub use bytes;
     pub use log;
-    pub use oneshot;
     pub use static_assertions;
 }
 

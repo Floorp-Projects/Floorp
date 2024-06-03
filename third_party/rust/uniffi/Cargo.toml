@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi"
-version = "0.27.1"
+version = "0.27.3"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -42,18 +42,18 @@ features = [
 optional = true
 
 [dependencies.uniffi_bindgen]
-version = "=0.27.1"
+version = "=0.27.3"
 optional = true
 
 [dependencies.uniffi_build]
-version = "=0.27.1"
+version = "=0.27.3"
 optional = true
 
 [dependencies.uniffi_core]
-version = "=0.27.1"
+version = "=0.27.3"
 
 [dependencies.uniffi_macros]
-version = "=0.27.1"
+version = "=0.27.3"
 
 [dev-dependencies.trybuild]
 version = "1"
@@ -69,4 +69,8 @@ cli = [
     "dep:camino",
 ]
 default = []
+scaffolding-ffi-buffer-fns = [
+    "uniffi_core/scaffolding-ffi-buffer-fns",
+    "uniffi_macros/scaffolding-ffi-buffer-fns",
+]
 tokio = ["uniffi_core/tokio"]

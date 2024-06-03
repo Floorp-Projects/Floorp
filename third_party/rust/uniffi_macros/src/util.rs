@@ -110,7 +110,6 @@ pub fn create_metadata_items(
     let const_ident =
         format_ident!("UNIFFI_META_CONST_{crate_name_upper}_{kind_upper}_{name_upper}");
     let static_ident = format_ident!("UNIFFI_META_{crate_name_upper}_{kind_upper}_{name_upper}");
-
     let checksum_fn = checksum_fn_name.map(|name| {
         let ident = Ident::new(&name, Span::call_site());
         quote! {

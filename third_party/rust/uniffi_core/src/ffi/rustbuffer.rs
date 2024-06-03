@@ -53,12 +53,12 @@ use crate::ffi::{rust_call, ForeignBytes, RustCallStatus};
 pub struct RustBuffer {
     /// The allocated capacity of the underlying `Vec<u8>`.
     /// In Rust this is a `usize`, but we use an `u64` to keep the foreign binding code simple.
-    capacity: u64,
+    pub(crate) capacity: u64,
     /// The occupied length of the underlying `Vec<u8>`.
     /// In Rust this is a `usize`, but we use an `u64` to keep the foreign binding code simple.
-    len: u64,
+    pub(crate) len: u64,
     /// The pointer to the allocated buffer of the `Vec<u8>`.
-    data: *mut u8,
+    pub(crate) data: *mut u8,
 }
 
 // Mark `RustBuffer` as safe to send between threads, despite the `u8` pointer.  The only mutable
@@ -103,6 +103,12 @@ impl RustBuffer {
     /// in which the `len` field is negative.
     pub fn len(&self) -> usize {
         self.len
+            .try_into()
+            .expect("buffer length negative or overflowed")
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.capacity
             .try_into()
             .expect("buffer length negative or overflowed")
     }
