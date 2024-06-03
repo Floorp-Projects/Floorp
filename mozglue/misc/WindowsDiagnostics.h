@@ -165,6 +165,41 @@ struct ModuleSingleStepState {
         mData{} {}
 };
 
+namespace InstructionFilter {
+
+// These functions return true if the instruction behind aInstructionPointer
+// should be recorded during single-stepping.
+
+inline bool All(const uint8_t* aInstructionPointer) { return true; }
+
+// Note: This filter does *not* currently identify all call/ret instructions.
+//       For example, prefixed instructions are not recognized.
+inline bool CallRet(const uint8_t* aInstructionPointer) {
+  auto firstByte = aInstructionPointer[0];
+  // E8: CALL rel. Call near, relative.
+  if (firstByte == 0xe8) {
+    return true;
+  }
+  // FF /2: CALL r.	Call near, absolute indirect.
+  else if (firstByte == 0xff) {
+    auto secondByte = aInstructionPointer[1];
+    if ((secondByte & 0x38) == 0x10) {
+      return true;
+    }
+  }
+  // C3: RET. Near return.
+  else if (firstByte == 0xc3) {
+    return true;
+  }
+  // C2: RET imm. Near return and pop imm bytes.
+  else if (firstByte == 0xc2) {
+    return true;
+  }
+  return false;
+}
+
+}  // namespace InstructionFilter
+
 // This function runs aCallbackToRun instruction by instruction, recording
 // information about the paths taken within a specific module given by
 // aModulePath. It then calls aPostCollectionCallback with the collected data.
@@ -172,18 +207,22 @@ struct ModuleSingleStepState {
 // We store the collected data in stack, so that it is available in crash
 // reports in case we decide to crash from aPostCollectionCallback. Remember to
 // carefully estimate the stack usage when choosing NMaxSteps and
-// NMaxErrorStates.
+// NMaxErrorStates. Consider using an InstructionFilter if you need to reduce
+// the number of steps that get recorded.
 //
 // This function is typically useful on known-to-crash paths, where we can
 // replace the crash by a new single-stepped attempt at doing the operation
 // that just failed. If the operation fails while single-stepped, we'll be able
 // to produce a crash report that contains single step data, which may prove
 // useful to understand why the operation failed.
-template <int NMaxSteps, int NMaxErrorStates, typename CallbackToRun,
-          typename PostCollectionCallback>
+template <
+    int NMaxSteps, int NMaxErrorStates, typename CallbackToRun,
+    typename PostCollectionCallback,
+    typename InstructionFilterCallback = decltype(&InstructionFilter::All)>
 WindowsDiagnosticsError CollectModuleSingleStepData(
     const wchar_t* aModulePath, CallbackToRun aCallbackToRun,
-    PostCollectionCallback aPostCollectionCallback) {
+    PostCollectionCallback aPostCollectionCallback,
+    InstructionFilterCallback aInstructionFilter = InstructionFilter::All) {
   HANDLE mod = ::GetModuleHandleW(aModulePath);
   if (!mod) {
     return WindowsDiagnosticsError::ModuleNotFound;
@@ -202,12 +241,14 @@ WindowsDiagnosticsError CollectModuleSingleStepData(
 
   WindowsDiagnosticsError rv = CollectSingleStepData(
       std::move(aCallbackToRun),
-      [](void* aState, CONTEXT* aContextRecord) -> bool {
+      [&aInstructionFilter](void* aState, CONTEXT* aContextRecord) -> bool {
         auto& state = *reinterpret_cast<State*>(aState);
         auto instructionPointer = aContextRecord->Rip;
         // Record data for the current step, if in module
         if (state.mModuleStart <= instructionPointer &&
-            instructionPointer < state.mModuleEnd) {
+            instructionPointer < state.mModuleEnd &&
+            aInstructionFilter(
+                reinterpret_cast<const uint8_t*>(instructionPointer))) {
           // We record the instruction pointer
           if (state.mSteps < NMaxSteps) {
             state.mData.mStepsLog[state.mSteps] =
