@@ -54,8 +54,8 @@ resolver = "2"
 
 [workspace.dependencies]
 # Shared across multiple UniFFI consumers.
-uniffi = "0.27.1"
-uniffi_bindgen = "0.27.1"
+uniffi = "0.27.3"
+uniffi_bindgen = "0.27.3"
 # Shared across multiple application-services consumers.
 rusqlite = "0.31.0"
 

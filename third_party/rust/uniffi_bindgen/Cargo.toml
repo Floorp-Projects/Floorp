@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi_bindgen"
-version = "0.27.1"
+version = "0.27.3"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (codegen and cli tooling)"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -72,15 +72,17 @@ features = ["derive"]
 
 [dependencies.textwrap]
 version = "0.16"
+features = ["smawk"]
+default-features = false
 
 [dependencies.toml]
 version = "0.5"
 
 [dependencies.uniffi_meta]
-version = "=0.27.1"
+version = "=0.27.3"
 
 [dependencies.uniffi_testing]
-version = "=0.27.1"
+version = "=0.27.3"
 
 [dependencies.uniffi_udl]
-version = "=0.27.1"
+version = "=0.27.3"

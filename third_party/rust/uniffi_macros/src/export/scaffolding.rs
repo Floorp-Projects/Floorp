@@ -244,6 +244,12 @@ pub(super) fn gen_ffi_function(
     let return_impl = &sig.lower_return_impl();
 
     Ok(if !sig.is_async {
+        let scaffolding_fn_ffi_buffer_version = ffi_buffer_scaffolding_fn(
+            &ffi_ident,
+            &quote! { <#return_ty as ::uniffi::LowerReturn<crate::UniFfiTag>>::ReturnType },
+            &param_types,
+            true,
+        );
         quote! {
             #[doc(hidden)]
             #[no_mangle]
@@ -267,12 +273,16 @@ pub(super) fn gen_ffi_function(
                     )
                 })
             }
+
+            #scaffolding_fn_ffi_buffer_version
         }
     } else {
         let mut future_expr = rust_fn_call;
         if matches!(ar, Some(AsyncRuntime::Tokio(_))) {
             future_expr = quote! { ::uniffi::deps::async_compat::Compat::new(#future_expr) }
         }
+        let scaffolding_fn_ffi_buffer_version =
+            ffi_buffer_scaffolding_fn(&ffi_ident, &quote! { ::uniffi::Handle}, &param_types, false);
 
         quote! {
             #[doc(hidden)]
@@ -300,6 +310,71 @@ pub(super) fn gen_ffi_function(
                     },
                 }
             }
+
+            #scaffolding_fn_ffi_buffer_version
         }
     })
+}
+
+#[cfg(feature = "scaffolding-ffi-buffer-fns")]
+fn ffi_buffer_scaffolding_fn(
+    fn_ident: &Ident,
+    return_type: &TokenStream,
+    param_types: &[TokenStream],
+    has_rust_call_status: bool,
+) -> TokenStream {
+    let fn_name = fn_ident.to_string();
+    let ffi_buffer_fn_name = uniffi_meta::ffi_buffer_symbol_name(&fn_name);
+    let ident = Ident::new(&ffi_buffer_fn_name, proc_macro2::Span::call_site());
+    let type_list: Vec<_> = param_types.iter().map(|ty| quote! { #ty }).collect();
+    if has_rust_call_status {
+        quote! {
+            #[doc(hidden)]
+            #[no_mangle]
+            pub unsafe extern "C" fn #ident(
+                arg_ptr: *mut ::uniffi::FfiBufferElement,
+                return_ptr: *mut ::uniffi::FfiBufferElement,
+            ) {
+                let mut arg_buf = unsafe { ::std::slice::from_raw_parts(arg_ptr, ::uniffi::ffi_buffer_size!(#(#type_list),*)) };
+                let mut return_buf = unsafe { ::std::slice::from_raw_parts_mut(return_ptr, ::uniffi::ffi_buffer_size!(#return_type, ::uniffi::RustCallStatus)) };
+                let mut out_status = ::uniffi::RustCallStatus::default();
+
+                let return_value = #fn_ident(
+                    #(
+                        <#type_list as ::uniffi::FfiSerialize>::read(&mut arg_buf),
+                    )*
+                    &mut out_status,
+                );
+                <#return_type as ::uniffi::FfiSerialize>::write(&mut return_buf, return_value);
+                <::uniffi::RustCallStatus as ::uniffi::FfiSerialize>::write(&mut return_buf, out_status);
+            }
+        }
+    } else {
+        quote! {
+            #[doc(hidden)]
+            #[no_mangle]
+            pub unsafe extern "C" fn #ident(
+                arg_ptr: *mut ::uniffi::FfiBufferElement,
+                return_ptr: *mut ::uniffi::FfiBufferElement,
+            ) {
+                let mut arg_buf = unsafe { ::std::slice::from_raw_parts(arg_ptr, ::uniffi::ffi_buffer_size!(#(#type_list),*)) };
+                let mut return_buf = unsafe { ::std::slice::from_raw_parts_mut(return_ptr, ::uniffi::ffi_buffer_size!(#return_type)) };
+
+                let return_value = #fn_ident(#(
+                    <#type_list as ::uniffi::FfiSerialize>::read(&mut arg_buf),
+                )*);
+                <#return_type as ::uniffi::FfiSerialize>::put(&mut return_buf, return_value);
+            }
+        }
+    }
+}
+
+#[cfg(not(feature = "scaffolding-ffi-buffer-fns"))]
+fn ffi_buffer_scaffolding_fn(
+    _fn_ident: &Ident,
+    _return_type: &TokenStream,
+    _param_types: &[TokenStream],
+    _add_rust_call_status: bool,
+) -> TokenStream {
+    quote! {}
 }

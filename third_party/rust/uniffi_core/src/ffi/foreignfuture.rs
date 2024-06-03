@@ -4,7 +4,7 @@
 
 //! This module defines a Rust Future that wraps an async foreign function call.
 //!
-//! The general idea is to create a [oneshot::Channel], hand the sender to the foreign side, and
+//! The general idea is to create a oneshot channel, hand the sender to the foreign side, and
 //! await the receiver side on the Rust side.
 //!
 //! The foreign side should:
@@ -17,7 +17,7 @@
 //!   * Wait for the [ForeignFutureHandle::free] function to be called to free the task object.
 //!     If this is called before the task completes, then the task will be cancelled.
 
-use crate::{LiftReturn, RustCallStatus, UnexpectedUniFFICallbackError};
+use crate::{oneshot, LiftReturn, RustCallStatus};
 
 /// Handle for a foreign future
 pub type ForeignFutureHandle = u64;
@@ -69,15 +69,8 @@ where
     // The important thing is that the ForeignFuture will be dropped when this Future is.
     let _foreign_future =
         call_scaffolding_function(foreign_future_complete::<T, UT>, sender.into_raw() as u64);
-    match receiver.await {
-        Ok(result) => T::lift_foreign_return(result.return_value, result.call_status),
-        Err(e) => {
-            // This shouldn't happen in practice, but we can do our best to recover
-            T::handle_callback_unexpected_error(UnexpectedUniFFICallbackError::new(format!(
-                "Error awaiting foreign future: {e}"
-            )))
-        }
-    }
+    let result = receiver.await;
+    T::lift_foreign_return(result.return_value, result.call_status)
 }
 
 pub extern "C" fn foreign_future_complete<T: LiftReturn<UT>, UT>(
@@ -85,10 +78,7 @@ pub extern "C" fn foreign_future_complete<T: LiftReturn<UT>, UT>(
     result: ForeignFutureResult<T::ReturnType>,
 ) {
     let channel = unsafe { oneshot::Sender::from_raw(oneshot_handle as *mut ()) };
-    // Ignore errors in send.
-    //
-    // Error means the receiver was already dropped which will happen when the future is cancelled.
-    let _ = channel.send(result);
+    channel.send(result);
 }
 
 #[cfg(test)]

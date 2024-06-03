@@ -106,6 +106,20 @@ pub enum RustCallStatusCode {
     Cancelled = 3,
 }
 
+impl TryFrom<i8> for RustCallStatusCode {
+    type Error = i8;
+
+    fn try_from(value: i8) -> Result<Self, i8> {
+        match value {
+            0 => Ok(Self::Success),
+            1 => Ok(Self::Error),
+            2 => Ok(Self::UnexpectedError),
+            3 => Ok(Self::Cancelled),
+            n => Err(n),
+        }
+    }
+}
+
 /// Handle a scaffolding calls
 ///
 /// `callback` is responsible for making the actual Rust call and returning a special result type:
