@@ -1227,6 +1227,18 @@ static const struct EVInfo kEVInfos[] = {
     "IDIwMjM=",
     "IZxULej27HF3+k7ow3BXlw==",
   },
+  {
+    // CN=FIRMAPROFESIONAL CA ROOT-A WEB,OID.2.5.4.97=VATES-A62634068,O=Firmaprofesional SA,C=ES
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xBE, 0xF2, 0x56, 0xDA, 0xF2, 0x6E, 0x9C, 0x69, 0xBD, 0xEC, 0x16,
+      0x02, 0x35, 0x97, 0x98, 0xF3, 0xCA, 0xF7, 0x18, 0x21, 0xA0, 0x3E,
+      0x01, 0x82, 0x57, 0xC5, 0x3C, 0x65, 0x61, 0x7F, 0x3D, 0x4A },
+    "MG4xCzAJBgNVBAYTAkVTMRwwGgYDVQQKDBNGaXJtYXByb2Zlc2lvbmFsIFNBMRgw"
+    "FgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxJzAlBgNVBAMMHkZJUk1BUFJPRkVTSU9O"
+    "QUwgQ0EgUk9PVC1BIFdFQg==",
+    "MZch7a+JQn81QYehZ1ZMbQ==",
+  },
     // clang-format on
 };
 
