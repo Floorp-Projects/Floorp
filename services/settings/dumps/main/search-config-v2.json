@@ -2524,10 +2524,10 @@
         }
       },
       "id": "8111d157-e064-40fa-993d-e1d972534754",
-      "identifier": "mercadolibre",
-      "last_modified": 1702906502289,
+      "identifier": "mercadolibre-ar",
+      "last_modified": 1717416922456,
       "recordType": "engine",
-      "schema": 1702901827142,
+      "schema": 1717411267717,
       "variants": [
         {
           "environment": {
@@ -7219,10 +7219,10 @@
         }
       },
       "id": "7c9d2fc3-1e6b-40f6-80ad-080bd94fe24b",
-      "identifier": "wiktionary",
-      "last_modified": 1702906502251,
+      "identifier": "wiktionary-oc",
+      "last_modified": 1717416922458,
       "recordType": "engine",
-      "schema": 1702901835738,
+      "schema": 1717411323291,
       "variants": [
         {
           "environment": {
@@ -7420,5 +7420,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1715090108535
+  "timestamp": 1717416922458
 }
