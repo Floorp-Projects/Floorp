@@ -461,9 +461,6 @@ add_task(async function search_synced_tabs() {
   sandbox.stub(SyncedTabs, "getTabClients").callsFake(() => {
     return Promise.resolve(syncedTabsData1);
   });
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.firefox-view.search.enabled", true]],
-  });
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
@@ -669,9 +666,6 @@ add_task(async function search_synced_tabs_recent_browsing() {
     .resolves(getMockTabData(tabClients));
   sandbox.stub(SyncedTabs, "getTabClients").resolves(tabClients);
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.firefox-view.search.enabled", true]],
-  });
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     await navigateToViewAndWait(document, "recentbrowsing");

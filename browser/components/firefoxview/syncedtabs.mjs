@@ -19,7 +19,6 @@ import {
 import { ViewPage } from "./viewpage.mjs";
 import {
   escapeHtmlEntities,
-  isSearchEnabled,
   MAX_TABS_FOR_RECENT_BROWSING,
   navigateToLink,
 } from "./helpers.mjs";
@@ -400,45 +399,37 @@ class SyncedTabsInView extends ViewPage {
           class="page-header"
           data-l10n-id="firefoxview-synced-tabs-header"
         ></h2>
-        ${when(
-          isSearchEnabled() || this.controller.currentSetupStateIndex === 4,
-          () => html`<div class="syncedtabs-header">
-            ${when(
-              isSearchEnabled(),
-              () => html`<div>
-                <fxview-search-textbox
-                  data-l10n-id="firefoxview-search-text-box-syncedtabs"
-                  data-l10n-attrs="placeholder"
-                  @fxview-search-textbox-query=${this.onSearchQuery}
-                  .size=${this.searchTextboxSize}
-                  pageName=${this.recentBrowsing
-                    ? "recentbrowsing"
-                    : "syncedtabs"}
-                ></fxview-search-textbox>
-              </div>`
-            )}
-            ${when(
-              this.controller.currentSetupStateIndex === 4,
-              () => html`
-                <button
-                  class="small-button"
+        <div class="syncedtabs-header">
+          <div>
+            <fxview-search-textbox
+              data-l10n-id="firefoxview-search-text-box-syncedtabs"
+              data-l10n-attrs="placeholder"
+              @fxview-search-textbox-query=${this.onSearchQuery}
+              .size=${this.searchTextboxSize}
+              pageName=${this.recentBrowsing ? "recentbrowsing" : "syncedtabs"}
+            ></fxview-search-textbox>
+          </div>
+          ${when(
+            this.controller.currentSetupStateIndex === 4,
+            () => html`
+              <button
+                class="small-button"
+                data-action="add-device"
+                @click=${e => this.controller.handleEvent(e)}
+              >
+                <img
+                  class="icon"
+                  role="presentation"
+                  src="chrome://global/skin/icons/plus.svg"
+                  alt="plus sign"
+                /><span
+                  data-l10n-id="firefoxview-syncedtabs-connect-another-device"
                   data-action="add-device"
-                  @click=${e => this.controller.handleEvent(e)}
-                >
-                  <img
-                    class="icon"
-                    role="presentation"
-                    src="chrome://global/skin/icons/plus.svg"
-                    alt="plus sign"
-                  /><span
-                    data-l10n-id="firefoxview-syncedtabs-connect-another-device"
-                    data-action="add-device"
-                  ></span>
-                </button>
-              `
-            )}
-          </div>`
-        )}
+                ></span>
+              </button>
+            `
+          )}
+        </div>
       </div>`);
     }
 

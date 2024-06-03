@@ -8,7 +8,6 @@ ChromeUtils.defineESModuleGetters(globalThis, {
 });
 
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
-const SEARCH_ENABLED_PREF = "browser.firefox-view.search.enabled";
 const RECENTLY_CLOSED_EVENT = [
   ["firefoxview_next", "recently_closed", "tabs", undefined],
 ];
@@ -180,9 +179,6 @@ async function recentlyClosedDismissTelemetry() {
 }
 
 add_setup(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [[SEARCH_ENABLED_PREF, true]],
-  });
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
     clearHistory();
