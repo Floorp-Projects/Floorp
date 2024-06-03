@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="sdpUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1401592",
+    title: "Test that setParameters compat mode works",
+    visible: true
+  });
+
+  function compareCodecParam(observed, expected) {
+    info(`Comparing ${JSON.stringify(observed)} to ${JSON.stringify(expected)}`);
+    is(observed.payloadType, expected.payloadType);
+    is(observed.clockRate, expected.clockRate);
+    is(observed.channels, expected.channels);
+    is(observed.mimeType.toLowerCase(), expected.mimeType.toLowerCase());
+    if (expected.hasOwnProperty('sdpFmtpLine')) {
+      is(observed.sdpFmtpLine, expected.sdpFmtpLine);
+    }
+  }
+
+  function compareCodecParams(observed, expected) {
+    is(observed.length, expected.length);
+    if (observed.length == expected.length) {
+      for (let i = 0; i < observed.length; ++i) {
+        compareCodecParam(observed[i], expected[i]);
+      }
+    }
+  }
+
+  const tests = [
+    async function checkNoGetParameters() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc = new RTCPeerConnection();
+          const { sender } = pc.addTransceiver('video', {
+            sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+          });
+          await sender.setParameters({ encodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }] });
+        }
+      );
+    },
+
+    async function checkLengthChanged() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc = new RTCPeerConnection();
+          const { sender } = pc.addTransceiver('video', {
+            sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+          });
+
+          const params = sender.getParameters();
+          params.encodings.pop();
+          await sender.setParameters(params);
+        }
+      );
+    },
+
+    async function checkNoTransactionId() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc = new RTCPeerConnection();
+          const { sender } = pc.addTransceiver('video', {
+            sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+          });
+
+          const params = sender.getParameters();
+          delete params.transactionId;
+          await sender.setParameters(params);
+        }
+      );
+    },
+
+    async function checkCodecsUndefined() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          const { sender } = pc1.addTransceiver('video');
+          await pc1.setLocalDescription();
+          await pc2.setRemoteDescription(pc1.localDescription);
+          await pc1.setRemoteDescription(await pc2.createAnswer());
+          let params = sender.getParameters();
+          const codecsCopy = [...params.codecs];
+          delete params.codecs;
+          await sender.setParameters(params);
+          params = sender.getParameters();
+          compareCodecParams(params.codecs, codecsCopy);
+        }
+      );
+    },
+
+    async function checkCodecsExtended() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          const { sender } = pc1.addTransceiver('video');
+          await pc1.setLocalDescription();
+          await pc2.setRemoteDescription(pc1.localDescription);
+          await pc1.setRemoteDescription(await pc2.createAnswer());
+          let params = sender.getParameters();
+          const codecsCopy = [...params.codecs];
+          params.codecs.push({payloadType: 2, mimeType: 'video/flarglblurp', clockRate: 1000});
+          await sender.setParameters(params);
+          params = sender.getParameters();
+          compareCodecParams(params.codecs, codecsCopy);
+        }
+      );
+    },
+
+    async function checkCodecsTruncated() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          const { sender } = pc1.addTransceiver('video');
+          await pc1.setLocalDescription();
+          await pc2.setRemoteDescription(pc1.localDescription);
+          await pc1.setRemoteDescription(await pc2.createAnswer());
+          let params = sender.getParameters();
+          const codecsCopy = [...params.codecs];
+          params.codecs.pop();
+          await sender.setParameters(params);
+          params = sender.getParameters();
+          compareCodecParams(params.codecs, codecsCopy);
+        }
+      );
+    },
+
+    async function checkCodecsReordered() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          const { sender } = pc1.addTransceiver('video');
+          await pc1.setLocalDescription();
+          await pc2.setRemoteDescription(pc1.localDescription);
+          await pc1.setRemoteDescription(await pc2.createAnswer());
+          let params = sender.getParameters();
+          const codecsCopy = [...params.codecs];
+          params.codecs.reverse();
+          await sender.setParameters(params);
+          params = sender.getParameters();
+          compareCodecParams(params.codecs, codecsCopy);
+        }
+      );
+    },
+  ];
+
+  runNetworkTest(async () => {
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      await test();
+      info(`Done running test: ${test.name}`);
+    }
+  });
+
+</script>
+</pre>
+</body>
+</html>
