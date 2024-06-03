@@ -272,6 +272,13 @@ class InspectorUtils {
       nsTArray<InspectorCSSPropertyDefinition>& aResult);
 
   /**
+   * Returns whether or not a CSS property value is valid for the passed syntax
+   */
+  static bool ValueMatchesSyntax(GlobalObject&, Document& aDocument,
+                                 const nsACString& aValue,
+                                 const nsACString& aSyntax);
+
+  /**
    * Get the rule body text within aInitialText
    */
   static void GetRuleBodyText(GlobalObject&, const nsACString& aInitialText,

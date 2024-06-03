@@ -88,3 +88,5 @@ skip-if = ["os == 'android'"]
 ["test_selectormatcheselement.html"]
 
 ["test_supports.html"]
+
+["test_valueMatchesSyntax.html"]
