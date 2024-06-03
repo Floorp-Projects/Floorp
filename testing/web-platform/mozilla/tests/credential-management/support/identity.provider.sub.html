@@ -1,0 +1,48 @@
+<!doctype html>
+<head>
+<title>Helper to create 'identity' credentials</title>
+</head>
+<script>
+'use strict';
+
+async function createCredentials() {
+  await navigator.credentials.store(await navigator.credentials.create({
+    identity: {
+      id: "no-options",
+    }
+  }));
+
+  await navigator.credentials.store(await navigator.credentials.create({
+    identity: {
+      id: "allow-alt",
+      originAllowlist: ["https://{{hosts[alt][]}}:{{ports[https][0]}}"],
+    }
+  }));
+
+  await navigator.credentials.store(await navigator.credentials.create({
+    identity: {
+      id: "allow-primary",
+      originAllowlist: ["https://{{hosts[][]}}:{{ports[https][0]}}"],
+    }
+  }));
+
+  await navigator.credentials.store(await navigator.credentials.create({
+    identity: {
+      id: "allow-cors-success",
+      dynamicViaCORS: [`${window.origin}/_mozilla/credential-management/support/cors.py`]
+    }
+  }));
+
+  await navigator.credentials.store(await navigator.credentials.create({
+    identity: {
+      id: "allow-cors-failure",
+      dynamicViaCORS: [`${window.origin}/_mozilla/credential-management/support/no-cors.py`]
+    }
+  }));
+}
+
+createCredentials().then(() => {
+  window.opener.postMessage("created", "*");
+})
+
+</script>
