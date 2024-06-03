@@ -155,7 +155,11 @@ static bool FindHandle(const ComparatorFnT& aComparator) {
   return false;
 }
 
-static void GetUiaClientPidsWin11(nsTArray<DWORD>& aPids) {
+class GetUiaClientPidsWin11 {
+ public:
+  static void Run(nsTArray<DWORD>& aPids);
+
+ private:
   struct HandleAndPid {
     explicit HandleAndPid(HANDLE aHandle) : mHandle(aHandle) {}
     HANDLE mHandle;
@@ -167,6 +171,33 @@ static void GetUiaClientPidsWin11(nsTArray<DWORD>& aPids) {
   // allow for some extra.
   using HandlesAndPids = AutoTArray<HandleAndPid, 128>;
 
+  struct ThreadData {
+    explicit ThreadData(HandlesAndPids& aHandlesAndPids)
+        : mHandlesAndPids(aHandlesAndPids) {}
+    HandlesAndPids& mHandlesAndPids;
+    // Keeps track of the current index in mHandlesAndPids that is being
+    // queried. When the thread is (re)started, it starts querying from this
+    // index.
+    size_t mCurrentIndex = 0;
+  };
+
+  static DWORD WINAPI QueryThreadProc(LPVOID aParameter) {
+    // WARNING! Because this thread may be terminated unexpectedly due to a
+    // hang, it must not do anything which acquires resources, allocates memory,
+    // non-atomically modifies state, etc. It may not get a chance to clean up.
+    auto& data = *(ThreadData*)aParameter;
+    for (; data.mCurrentIndex < data.mHandlesAndPids.Length();
+         ++data.mCurrentIndex) {
+      auto& entry = data.mHandlesAndPids[data.mCurrentIndex];
+      // Counter-intuitively, for UIA pipes, we're the client and the remote
+      // process is the server.
+      ::GetNamedPipeServerProcessId(entry.mHandle, &entry.mPid);
+    }
+    return 0;
+  };
+};
+
+void GetUiaClientPidsWin11::Run(nsTArray<DWORD>& aPids) {
   // 1. Get all handles of interest in our process.
   HandlesAndPids handlesAndPids;
   const DWORD ourPid = ::GetCurrentProcessId();
@@ -185,35 +216,12 @@ static void GetUiaClientPidsWin11(nsTArray<DWORD>& aPids) {
   // the process id of the remote end. We must use a background thread to query
   // pipes because this can hang on some pipes and there's no way to prevent
   // this other than terminating the thread. See bug 1899211 for more details.
-  struct ThreadData {
-    explicit ThreadData(HandlesAndPids& aHandlesAndPids)
-        : mHandlesAndPids(aHandlesAndPids) {}
-    HandlesAndPids& mHandlesAndPids;
-    // Keeps track of the current index in mHandlesAndPids that is being
-    // queried. When the thread is (re)started, it starts querying from this
-    // index.
-    size_t mCurrentIndex = 0;
-  };
   ThreadData threadData(handlesAndPids);
-  auto queryThreadProc = [](LPVOID aParameter) -> DWORD {
-    // WARNING! Because this thread may be terminated unexpectedly due to a
-    // hang, it must not do anything which acquires resources, allocates memory,
-    // non-atomically modifies state, etc. It may not get a chance to clean up.
-    auto& data = *(ThreadData*)aParameter;
-    for (; data.mCurrentIndex < data.mHandlesAndPids.Length();
-         ++data.mCurrentIndex) {
-      auto& entry = data.mHandlesAndPids[data.mCurrentIndex];
-      // Counter-intuitively, for UIA pipes, we're the client and the remote
-      // process is the server.
-      ::GetNamedPipeServerProcessId(entry.mHandle, &entry.mPid);
-    }
-    return 0;
-  };
   while (threadData.mCurrentIndex < handlesAndPids.Length()) {
     // We use CreateThread here rather than Gecko's threading support because
     // we may terminate this thread and we must be certain it hasn't acquired
     // any resources which need to be cleaned up.
-    nsAutoHandle thread(::CreateThread(nullptr, 0, queryThreadProc,
+    nsAutoHandle thread(::CreateThread(nullptr, 0, QueryThreadProc,
                                        (LPVOID)&threadData, 0, nullptr));
     if (!thread) {
       return;
@@ -403,7 +411,7 @@ void Compatibility::GetUiaClientPids(nsTArray<DWORD>& aPids) {
   }
   Telemetry::AutoTimer<Telemetry::A11Y_UIA_DETECTION_TIMING_MS> timer;
   if (IsWin11OrLater()) {
-    GetUiaClientPidsWin11(aPids);
+    GetUiaClientPidsWin11::Run(aPids);
   } else {
     if (DWORD pid = GetUiaClientPidWin10()) {
       aPids.AppendElement(pid);
