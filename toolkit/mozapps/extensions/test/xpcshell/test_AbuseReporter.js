@@ -10,7 +10,6 @@ const { ClientID } = ChromeUtils.importESModule(
   "resource://gre/modules/ClientID.sys.mjs"
 );
 
-const APPNAME = "XPCShell";
 const APPVERSION = "1";
 const ADDON_ID = "test-addon@tests.mozilla.org";
 const FAKE_INSTALL_INFO = {
@@ -81,7 +80,11 @@ async function assertBaseReportData({ reportData, addon }) {
     await ClientID.getClientIdHash(),
     "Got the expected 'client_id'"
   );
-  equal(reportData.app, APPNAME.toLowerCase(), "Got expected 'app'");
+  equal(
+    reportData.app,
+    AppConstants.platform === "android" ? "android" : "firefox",
+    "Got expected 'app'"
+  );
   equal(reportData.appversion, APPVERSION, "Got expected 'appversion'");
   equal(
     reportData.lang,
