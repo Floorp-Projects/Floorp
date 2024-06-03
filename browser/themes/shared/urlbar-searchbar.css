@@ -49,9 +49,11 @@
   /* Setting a min-width to let the location & search bars maintain a constant
    * width in case they haven't been resized manually. (bug 965772) */
   min-width: 1px;
+
   min-height: var(--urlbar-min-height);
   text-shadow: none;
   color: var(--toolbar-field-color);
+
   /**
    * System colors and widgets are set based on toolbar color. Since toolbar
    * fields can be styled differently from the toolbar, we need to use the
@@ -101,10 +103,6 @@
   outline: none;
 }
 
-#urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
-  mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
-}
-
 #urlbar-input {
   mask-repeat: no-repeat;
   unicode-bidi: plaintext;
@@ -116,8 +114,8 @@
   }
 
   /* Make sure that the location bar's alignment changes according
-      to the input box direction if the user switches the text direction using
-      cmd_switchTextDirection (which applies a dir attribute to the <input>). */
+     to the input box direction if the user switches the text direction using
+     cmd_switchTextDirection (which applies a dir attribute to the <input>). */
   &[dir=ltr]:-moz-locale-dir(rtl) {
     text-align: left !important;
   }
@@ -132,9 +130,7 @@
   }
 
   /* The following rules apply overflow masks to the unfocused urlbar
-    This mask may be overriden when a Contextual Feature Recommendation is shown,
-    see browser/themes/shared/urlbar-searchbar.inc.css for details */
-
+     This mask may be overriden when a Contextual Feature Recommendation is shown. */
   #urlbar:not([focused])[textoverflow="both"] > #urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent, black 3ch, black calc(100% - 3ch), transparent);
   }
@@ -144,6 +140,9 @@
   #urlbar:not([focused])[textoverflow="left"] > #urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent, black 3ch);
   }
+  #urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > & {
+    mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
+  }
 }
 
 #urlbar-scheme {
@@ -152,18 +151,19 @@
   visibility: hidden;
   direction: ltr;
   pointer-events: none;
-}
 
-/* The protocol is visible if there is an RTL domain and we overflow to the left.
-   Uses the required-valid trick to check if it contains a value */
-#urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > #urlbar-scheme:valid {
-  visibility: visible;
+  /* The protocol is visible if there is an RTL domain and we overflow to the left.
+     Uses the required-valid trick to check if it contains a value */
+  #urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > &:valid {
+    visibility: visible;
+  }
 }
 
 #urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background,
 #searchbar:focus-within {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
+
   /* We used --focus-outline above to inherit its width and style properties,
      but we still want to use the theme's border-color.
      --toolbar-field-focus-border-color is set equal to --focus-outline-color
@@ -476,14 +476,14 @@
   align-items: center;
   border-radius: var(--urlbar-icon-border-radius);
   padding-inline: 8px 6px;
-}
 
-#urlbar[focused="true"] #urlbar-search-mode-indicator {
-  background-color: var(--urlbar-box-focus-bgcolor);
-}
+  #urlbar[focused="true"] > #urlbar-input-container > & {
+    background-color: var(--urlbar-box-focus-bgcolor);
+  }
 
-#urlbar[searchmode] > #urlbar-input-container > #urlbar-search-mode-indicator {
-  display: inline-flex;
+  #urlbar[searchmode] > #urlbar-input-container > & {
+    display: inline-flex;
+  }
 }
 
 #urlbar[searchmode] > #urlbar-input-container > #urlbar-label-box {
@@ -499,20 +499,19 @@
   fill-opacity: 0.6;
   fill: currentColor;
   border-radius: var(--urlbar-icon-border-radius);
-}
 
-#urlbar-search-mode-indicator-close:hover {
-  background-color: var(--urlbar-box-hover-bgcolor);
-  color: var(--urlbar-box-hover-text-color);
-}
-#urlbar-search-mode-indicator-close:hover:active {
-  background-color: var(--urlbar-box-active-bgcolor);
-  color: var(--urlbar-box-hover-text-color);
-}
-
-@media (prefers-contrast) {
-  #urlbar-search-mode-indicator-close {
+  @media (prefers-contrast) {
     fill-opacity: 1.0;
+  }
+
+  &:hover {
+    background-color: var(--urlbar-box-hover-bgcolor);
+    color: var(--urlbar-box-hover-text-color);
+
+    &:active {
+      background-color: var(--urlbar-box-active-bgcolor);
+      color: var(--urlbar-box-hover-text-color);
+    }
   }
 }
 
@@ -529,11 +528,12 @@
 #pageAction-panel-bookmark,
 #star-button {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+
+  &[starred] {
+    list-style-image: url("chrome://browser/skin/bookmark.svg");
+  }
 }
-#pageAction-panel-bookmark[starred],
-#star-button[starred] {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-}
+
 #star-button[starred] {
   fill-opacity: 1;
   fill: var(--toolbarbutton-icon-fill-attention);
@@ -584,21 +584,17 @@
   border-radius: var(--urlbar-icon-border-radius);
   padding: var(--urlbar-icon-padding);
   color: inherit;
-}
 
-.urlbar-page-action:not([disabled]):hover,
-#urlbar-go-button:hover,
-.search-go-button:hover {
-  background-color: var(--urlbar-box-hover-bgcolor);
-  color: var(--urlbar-box-hover-text-color);
-}
+  &:not([disabled]):hover {
+    background-color: var(--urlbar-box-hover-bgcolor);
+    color: var(--urlbar-box-hover-text-color);
+  }
 
-.urlbar-page-action:not([disabled])[open],
-.urlbar-page-action:not([disabled]):hover:active,
-#urlbar-go-button:hover:active,
-.search-go-button:hover:active {
-  background-color: var(--urlbar-box-active-bgcolor);
-  color: var(--urlbar-box-hover-text-color);
+  &:not([disabled])[open],
+  &:not([disabled]):hover:active {
+    background-color: var(--urlbar-box-active-bgcolor);
+    color: var(--urlbar-box-hover-text-color);
+  }
 }
 
 .urlbar-page-action:focus-visible {
@@ -609,11 +605,10 @@
 #urlbar-go-button,
 .search-go-button {
   list-style-image: url("chrome://browser/skin/forward.svg");
-}
 
-#urlbar-go-button:-moz-locale-dir(rtl),
-.search-go-button:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+  &:-moz-locale-dir(rtl) {
+    transform: scaleX(-1);
+  }
 }
 
 #pageActionButton,
@@ -682,60 +677,62 @@
   width: 28px;
   margin-inline-start: 0;
   transition: margin-inline-start step-end var(--cfr-animation-duration);
-}
-#contextual-feature-recommendation[data-cfr-icon="recommendations-icon"] {
-  width: auto;
 
-  #cfr-button {
-    height: auto;
-    align-items: center;
+  #urlbar[cfr-recommendation-state="expanded"] & {
+    margin-inline-start: calc(var(--cfr-label-width) * -1);
+    transition: margin-inline-start step-start var(--cfr-animation-duration);
   }
-}
 
-#urlbar[cfr-recommendation-state="expanded"] #contextual-feature-recommendation {
-  margin-inline-start: calc(var(--cfr-label-width) * -1);
-  transition: margin-inline-start step-start var(--cfr-animation-duration);
+  &[data-cfr-icon="recommendations-icon"] {
+    width: auto;
+
+    #cfr-button {
+      list-style-image: var(--cfr-button-features-icon);
+      height: auto;
+      align-items: center;
+    }
+  }
+
+  &[data-cfr-icon="highlights-icon"] {
+    width: auto;
+
+    #cfr-button {
+      list-style-image: var(--cfr-button-highlights-icon);
+      height: auto;
+      align-items: center;
+    }
+  }
+
+  &[data-cfr-icon="webextensions-icon"] #cfr-button {
+    list-style-image: var(--cfr-button-addons-icon);
+  }
 }
 
 #cfr-button {
   transition-property: fill, fill-opacity, transform;
   transition-timing-function: ease-in-out;
   transition-duration: var(--cfr-animation-duration);
-}
 
-#contextual-feature-recommendation[data-cfr-icon="webextensions-icon"] #cfr-button {
-  list-style-image: var(--cfr-button-addons-icon);
-}
+  #urlbar[cfr-recommendation-state="expanded"] & {
+    background-color: transparent;
+    transform: translateX(calc(var(--cfr-label-width) * -1));
 
-#contextual-feature-recommendation[data-cfr-icon="recommendations-icon"] #cfr-button {
-  list-style-image: var(--cfr-button-features-icon);
-}
+    &:-moz-locale-dir(rtl) {
+      transform: translateX(calc(var(--cfr-label-width)));
+    }
 
-#contextual-feature-recommendation[data-cfr-icon="highlights-icon"] {
-  width: auto;
-}
+    &,
+    .urlbar-icon {
+      fill: var(--cfr-active-text-color);
+      fill-opacity: 1;
+    }
+  }
 
-#contextual-feature-recommendation[data-cfr-icon="highlights-icon"] #cfr-button {
-  list-style-image: var(--cfr-button-highlights-icon);
-  height: auto;
-  align-items: center;
-}
-
-
-#urlbar[cfr-recommendation-state="expanded"] #cfr-button {
-  background-color: transparent;
-  transform: translateX(calc(var(--cfr-label-width) * -1));
-
-  &,
-  .urlbar-icon {
-    fill: var(--cfr-active-text-color);
-    fill-opacity: 1;
+  #urlbar[cfr-recommendation-state="collapsed"] & {
+    animation: cfr-button-fade-through-active-color calc(3 * var(--cfr-animation-duration));
   }
 }
 
-#urlbar[cfr-recommendation-state="expanded"] #cfr-button:-moz-locale-dir(rtl) {
-  transform: translateX(calc(var(--cfr-label-width)));
-}
 @keyframes cfr-button-fade-through-active-color {
   33% {
     fill-opacity: 1;
@@ -745,9 +742,6 @@
     fill-opacity: 1;
     fill: var(--cfr-active-color);
   }
-}
-#urlbar[cfr-recommendation-state="collapsed"] #cfr-button {
-  animation: cfr-button-fade-through-active-color calc(3 * var(--cfr-animation-duration));
 }
 
 #cfr-label-container {
@@ -763,17 +757,18 @@
   transition-duration: var(--cfr-animation-duration);
   align-items: center;
   margin-block: calc((var(--urlbar-min-height) - var(--urlbar-container-padding) - 2px /* border */ - 24px) / 2);
-}
-#cfr-label-container:-moz-locale-dir(rtl) {
-  mask-position-x: calc(var(--cfr-label-width) * -1);
-}
 
-#urlbar[cfr-recommendation-state="expanded"] #cfr-label-container {
-  width: calc(var(--cfr-label-width) + 28px);
-  background-color: var(--cfr-active-color);
-  margin-inline-end: -28px;
-  mask-position-x: 0;
-  transition-timing-function: ease-in-out, ease-in-out, step-start, step-start;
+  &:-moz-locale-dir(rtl) {
+    mask-position-x: calc(var(--cfr-label-width) * -1);
+  }
+
+  #urlbar[cfr-recommendation-state="expanded"] & {
+    width: calc(var(--cfr-label-width) + 28px);
+    background-color: var(--cfr-active-color);
+    margin-inline-end: -28px;
+    mask-position-x: 0;
+    transition-timing-function: ease-in-out, ease-in-out, step-start, step-start;
+  }
 }
 
 #cfr-label {
@@ -785,12 +780,14 @@
   mask-position-x: var(--cfr-label-width);
   mask-repeat: no-repeat;
   transition: mask-position-x ease-in-out var(--cfr-animation-duration);
-}
-#cfr-label:-moz-locale-dir(rtl) {
-  mask-position-x: calc(var(--cfr-label-width) * -1);
-}
-#urlbar[cfr-recommendation-state="expanded"] #cfr-label {
-  mask-position-x: 0;
+
+  &:-moz-locale-dir(rtl) {
+    mask-position-x: calc(var(--cfr-label-width) * -1);
+  }
+
+  #urlbar[cfr-recommendation-state="expanded"] & {
+    mask-position-x: 0;
+  }
 }
 
 /* Shift the url-bar text fading to stop the recommendation overlapping */
@@ -801,15 +798,17 @@
      url bar may be obscured without overflow). */
   mask-image: linear-gradient(to left, transparent, black 3ch);
   transition: mask-position-x ease-in-out var(--cfr-animation-duration);
-}
-#urlbar[cfr-recommendation-state] #urlbar-input:-moz-locale-dir(rtl) {
-  mask-image: linear-gradient(to right, transparent, black 3ch);
+
+  &:-moz-locale-dir(rtl) {
+    mask-image: linear-gradient(to right, transparent, black 3ch);
+  }
 }
 #urlbar[cfr-recommendation-state="expanded"] #urlbar-input {
   mask-position-x: calc(var(--cfr-label-width) * -1);
-}
-#urlbar[cfr-recommendation-state="expanded"] #urlbar-input:-moz-locale-dir(rtl) {
-  mask-position-x: calc(var(--cfr-label-width));
+
+  &:-moz-locale-dir(rtl) {
+    mask-position-x: calc(var(--cfr-label-width));
+  }
 }
 
 /* Reader mode icon */
@@ -854,11 +853,11 @@
   /* The translation icon's right letter is 1px too long, so account for that here.
      Don't use margin-inline-end as this is adjusting the art of the icon. */
   margin-right: -1px;
-}
 
-#translations-button[translationsactive] > #translations-button-icon {
-  fill: var(--toolbarbutton-icon-fill-attention);
-  fill-opacity: 1;
+  #translations-button[translationsactive] > & {
+    fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
+  }
 }
 
 #translations-button-circle-arrows {
@@ -919,20 +918,38 @@
   color: var(--urlbar-box-text-color);
   margin-block: calc((var(--urlbar-min-height) - 20px) / 2 - 1px /* border */ - var(--urlbar-container-padding));
   overflow: hidden;
-}
 
-#urlbar[focused="true"] #urlbar-zoom-button:not(:hover) {
-  background-color: var(--urlbar-box-focus-bgcolor);
-}
+  :where(#urlbar[focused="true"]) & {
+    background-color: var(--urlbar-box-focus-bgcolor);
+  }
 
-#urlbar-zoom-button:hover {
-  background-color: var(--urlbar-box-hover-bgcolor);
-  color: var(--urlbar-box-hover-text-color);
-}
+  &:hover {
+    background-color: var(--urlbar-box-hover-bgcolor);
+    color: var(--urlbar-box-hover-text-color);
 
-#urlbar-zoom-button:hover:active {
-  background-color: var(--urlbar-box-active-bgcolor);
-  color: var(--urlbar-box-hover-text-color);
+    &:active {
+      background-color: var(--urlbar-box-active-bgcolor);
+      color: var(--urlbar-box-hover-text-color);
+    }
+  }
+
+  &[animate="true"] {
+    animation-name: urlbar-zoom-reset-pulse;
+    animation-duration: 250ms;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-inset);
+  }
+
+  > .toolbarbutton-text {
+    display: flex;
+  }
+
+  > .toolbarbutton-icon {
+    display: none;
+  }
 }
 
 @keyframes urlbar-zoom-reset-pulse {
@@ -945,24 +962,6 @@
   100% {
     transform: scale(1.0);
   }
-}
-
-#urlbar-zoom-button[animate="true"] {
-  animation-name: urlbar-zoom-reset-pulse;
-  animation-duration: 250ms;
-}
-
-#urlbar-zoom-button:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-inset);
-}
-
-#urlbar-zoom-button > .toolbarbutton-text {
-  display: flex;
-}
-
-#urlbar-zoom-button > .toolbarbutton-icon {
-  display: none;
 }
 
 /* Shopping Sidebar icon */
@@ -985,33 +984,33 @@
 
 /* Search bar */
 
-#search-container {
-  min-width: 125px;
-  width: 125px;
-}
-
 #search-container,
 #wrapper-search-container {
   flex: 175 175 auto;
 }
 
-#search-container[width] {
-  /* Take something closer to the explicit width when requested. Also important
-   * to use flex-basis auto so that the width is actually honored. */
-  flex: 1 auto;
-}
+#search-container {
+  min-width: 125px;
+  width: 125px;
 
-.widget-overflow-list > #search-container {
-  margin: var(--arrowpanel-menuitem-margin);
-  width: auto;
+  &[width] {
+    /* Take something closer to the explicit width when requested. Also important
+     * to use flex-basis auto so that the width is actually honored. */
+    flex: 1 auto;
+  }
 
-  :root[lwtheme] & > #searchbar {
-    /* Theme authors usually only consider contrast against the toolbar when
-       picking a border color for the search bar. Since the search bar can be
-       dragged into the overflow panel, we need to show a high-contrast border
-       around the searchbar in case the searchbar and panel background are the
-       same color. */
-    border-color: var(--panel-separator-color);
+  .widget-overflow-list > & {
+    margin: var(--arrowpanel-menuitem-margin);
+    width: auto;
+
+    :root[lwtheme] & > #searchbar {
+      /* Theme authors usually only consider contrast against the toolbar when
+         picking a border color for the search bar. Since the search bar can be
+         dragged into the overflow panel, we need to show a high-contrast border
+         around the searchbar in case the searchbar and panel background are the
+         same color. */
+      border-color: var(--panel-separator-color);
+    }
   }
 }
 
@@ -1035,30 +1034,30 @@
 
 .searchbar-search-icon-overlay {
   pointer-events: none;
-}
 
-.searchbar-search-button[addengines=true] > .searchbar-search-icon-overlay {
-  list-style-image: url(chrome://browser/skin/search-indicator-badge-add.svg);
-  margin-inline: -15px 4px;
-  margin-top: -10px;
-  width: 11px;
-  height: 11px;
-}
+  .searchbar-search-button[addengines=true] > & {
+    list-style-image: url(chrome://browser/skin/search-indicator-badge-add.svg);
+    margin-inline: -15px 4px;
+    margin-top: -10px;
+    width: 11px;
+    height: 11px;
 
-.searchbar-search-button[addengines=true] > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
-  margin-inline: -25px 14px;
-}
+    &:-moz-locale-dir(rtl) {
+      margin-inline: -25px 14px;
+    }
+  }
 
-.searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay {
-  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
-  -moz-context-properties: fill;
-  margin-inline: -8px 2px;
-  width: 6px;
-  height: 6px;
-}
+  .searchbar-search-button:hover:not([addengines=true]) > & {
+    list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+    -moz-context-properties: fill;
+    margin-inline: -8px 2px;
+    width: 6px;
+    height: 6px;
 
-.searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
-  margin-inline: -26px 20px;
+    &:-moz-locale-dir(rtl) {
+      margin-inline: -26px 20px;
+    }
+  }
 }
 
 .searchbar-engine-one-off-add-engine:not([image]),
