@@ -190,6 +190,7 @@ export const makeInternalContentScript = (
       originAttributesPatterns: null,
       persistAcrossSessions: options.persistAcrossSessions,
       runAt: options.runAt || "document_idle",
+      world: options.world || "ISOLATED",
     },
   };
 };
@@ -215,6 +216,7 @@ export const makePublicContentScript = (extension, internalScript) => {
     matches: internalScript.matches,
     matchOriginAsFallback: internalScript.matchOriginAsFallback,
     runAt: internalScript.runAt,
+    world: internalScript.world,
     persistAcrossSessions: internalScript.persistAcrossSessions,
   };
 
