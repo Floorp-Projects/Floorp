@@ -125,7 +125,7 @@ with the thread flavor Gecko prefers on Windows (win32, not pthreads).
 - Run ffmpeg's `./configure` with the options needed:
 
 > ./configure --disable-all --enable-avcodec --enable-decoder=vp8,vp9,mp3,flac
-              --enable-parser=vp8,vp9 --disable-static --enable-shared 
+              --enable-parser=vp8,vp9 --disable-static --enable-shared
               --disable-autodetect --enable-w32threads --toolchain=msvc
 
 - Copy `config.h` and `config.asm` as `config_win64.h` and `config_win64.asm`.
@@ -165,4 +165,4 @@ Finally, apply the patches:
 - no-unicode-stdio.patch to avoid passing the infity symbol in unicode to an
   stdio.h function, that causes bug 1879740 issue on Windows.
 - opusenc-dtx.patch to allow enabling DTX in the opus encoder.
-
+- libaomenc-svc.patch to allow configuring SVC in the libaom encoder.
