@@ -156,50 +156,118 @@ static bool FindHandle(const ComparatorFnT& aComparator) {
 }
 
 static void GetUiaClientPidsWin11(nsTArray<DWORD>& aPids) {
+  struct HandleAndPid {
+    explicit HandleAndPid(HANDLE aHandle) : mHandle(aHandle) {}
+    HANDLE mHandle;
+    ULONG mPid = 0;
+  };
+  // Some local testing showed that we get around 40 handles when Firefox has
+  // been started with a few tabs open for ~30 seconds before starting a UIA
+  // client. That might increase with a longer duration, more tabs, etc., so
+  // allow for some extra.
+  using HandlesAndPids = AutoTArray<HandleAndPid, 128>;
+
+  // 1. Get all handles of interest in our process.
+  HandlesAndPids handlesAndPids;
   const DWORD ourPid = ::GetCurrentProcessId();
   FindHandle([&](auto aInfo, auto aHandle) {
-    if (aInfo.mPid != ourPid) {
-      // We're only interested in handles in our own process.
-      return true;
+    // UIA pipes always have granted access 0x0012019F. Pipes with this access
+    // can still hang, but this at least narrows down the handles we need to
+    // check.
+    if (aInfo.mPid == ourPid && aInfo.mGrantedAccess == 0x0012019F) {
+      handlesAndPids.AppendElement(HandleAndPid(aHandle));
     }
-    // UIA creates a named pipe between the client and server processes. We want
-    // to find our handle to that pipe (if any). If this is a named pipe, get
-    // the process id of the remote end. We do this first because querying the
-    // name of the handle might hang in some cases. Counter-intuitively, for UIA
-    // pipes, we're the client and the remote process is the server.
-    ULONG pid = 0;
-    ::GetNamedPipeServerProcessId(aHandle, &pid);
-    if (!pid) {
-      return true;
+    return true;
+  });
+
+  // 2. UIA creates a named pipe between the client and server processes. We
+  // want to find our handle to those pipes (if any). For all named pipes, get
+  // the process id of the remote end. We must use a background thread to query
+  // pipes because this can hang on some pipes and there's no way to prevent
+  // this other than terminating the thread. See bug 1899211 for more details.
+  struct ThreadData {
+    explicit ThreadData(HandlesAndPids& aHandlesAndPids)
+        : mHandlesAndPids(aHandlesAndPids) {}
+    HandlesAndPids& mHandlesAndPids;
+    // Keeps track of the current index in mHandlesAndPids that is being
+    // queried. When the thread is (re)started, it starts querying from this
+    // index.
+    size_t mCurrentIndex = 0;
+  };
+  ThreadData threadData(handlesAndPids);
+  auto queryThreadProc = [](LPVOID aParameter) -> DWORD {
+    // WARNING! Because this thread may be terminated unexpectedly due to a
+    // hang, it must not do anything which acquires resources, allocates memory,
+    // non-atomically modifies state, etc. It may not get a chance to clean up.
+    auto& data = *(ThreadData*)aParameter;
+    for (; data.mCurrentIndex < data.mHandlesAndPids.Length();
+         ++data.mCurrentIndex) {
+      auto& entry = data.mHandlesAndPids[data.mCurrentIndex];
+      // Counter-intuitively, for UIA pipes, we're the client and the remote
+      // process is the server.
+      ::GetNamedPipeServerProcessId(entry.mHandle, &entry.mPid);
     }
-    // We know this is a named pipe and we have the pid. Now, get the name of
-    // the handle and check whether it's a UIA pipe.
+    return 0;
+  };
+  while (threadData.mCurrentIndex < handlesAndPids.Length()) {
+    // We use CreateThread here rather than Gecko's threading support because
+    // we may terminate this thread and we must be certain it hasn't acquired
+    // any resources which need to be cleaned up.
+    nsAutoHandle thread(::CreateThread(nullptr, 0, queryThreadProc,
+                                       (LPVOID)&threadData, 0, nullptr));
+    if (!thread) {
+      return;
+    }
+    if (::WaitForSingleObject(thread, 50) == WAIT_OBJECT_0) {
+      // We're done querying the handles.
+      MOZ_ASSERT(threadData.mCurrentIndex == handlesAndPids.Length());
+      break;
+    }
+    // The thread hung. Terminate it.
+    ::TerminateThread(thread, 1);
+    // The thread probably hung on threadData.mCurrentIndex, so skip this
+    // handle. In the next iteration of this loop, we'll create another thread
+    // and resume from that point. This could result in us skipping a handle if
+    // the thread didn't actually hang, but took too long and was terminated
+    // after incrementing but before querying the handle. At worst, we might
+    // miss a UIA client in this case, but this should be very rare and it's an
+    // acceptable compromise to avoid a main thread hang.
+    ++threadData.mCurrentIndex;
+  }
+
+  // 3. Now that we have pids for all named pipes, get the name of those handles
+  // and check whether they are UIA pipes. We can't do this in the thread above
+  // because it allocates memory and that might not get cleaned up if the thread
+  // is terminated.
+  for (auto& entry : handlesAndPids) {
+    if (!entry.mPid) {
+      continue;  // Not a named pipe.
+    }
     ULONG objNameBufLen;
     NTSTATUS ntStatus = ::NtQueryObject(
-        aHandle, (OBJECT_INFORMATION_CLASS)ObjectNameInformation, nullptr, 0,
-        &objNameBufLen);
+        entry.mHandle, (OBJECT_INFORMATION_CLASS)ObjectNameInformation, nullptr,
+        0, &objNameBufLen);
     if (ntStatus != STATUS_INFO_LENGTH_MISMATCH) {
-      return true;
+      continue;
     }
     auto objNameBuf = MakeUnique<std::byte[]>(objNameBufLen);
-    ntStatus = ::NtQueryObject(aHandle,
+    ntStatus = ::NtQueryObject(entry.mHandle,
                                (OBJECT_INFORMATION_CLASS)ObjectNameInformation,
                                objNameBuf.get(), objNameBufLen, &objNameBufLen);
     if (!NT_SUCCESS(ntStatus)) {
-      return true;
+      continue;
     }
     auto objNameInfo =
         reinterpret_cast<OBJECT_NAME_INFORMATION*>(objNameBuf.get());
     if (!objNameInfo->Name.Length) {
-      return true;
+      continue;
     }
     nsDependentString objName(objNameInfo->Name.Buffer,
                               objNameInfo->Name.Length / sizeof(wchar_t));
     if (StringBeginsWith(objName, u"\\Device\\NamedPipe\\UIA_PIPE_"_ns)) {
-      aPids.AppendElement(pid);
+      aPids.AppendElement(entry.mPid);
     }
-    return true;
-  });
+  }
 }
 
 static DWORD GetUiaClientPidWin10() {
