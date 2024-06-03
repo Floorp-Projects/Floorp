@@ -113,7 +113,7 @@
       XPCOMUtils.defineLazyPreferenceGetter(
         this,
         "_showTabCardPreview",
-        "browser.tabs.cardPreview.enabled",
+        "browser.tabs.hoverPreview.enabled",
         true
       );
       XPCOMUtils.defineLazyPreferenceGetter(

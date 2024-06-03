@@ -38,7 +38,7 @@ export default class TabHoverPreviewPanel {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_prefDisplayThumbnail",
-      "browser.tabs.cardPreview.showThumbnails",
+      "browser.tabs.hoverPreview.showThumbnails",
       false
     );
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -111,7 +111,6 @@ export default class TabHoverPreviewPanel {
       this._panel.openPopup(this._tab, POPUP_OPTIONS);
     }, this._prefPreviewDelay);
     this._win.addEventListener("TabSelect", this);
-    this._win.addEventListener("blur", this);
     this._panel.addEventListener("popupshowing", this);
   }
 
@@ -150,9 +149,6 @@ export default class TabHoverPreviewPanel {
           this._thumbnailElement.remove();
           this._thumbnailElement = null;
         }
-        break;
-      case "blur":
-        this.deactivate();
         break;
     }
   }
@@ -243,7 +239,7 @@ export default class TabHoverPreviewPanel {
   }
 
   get _displayURI() {
-    if (!this._tab) {
+    if (!this._tab || !this._tab.linkedBrowser) {
       return "";
     }
     return this.getPrettyURI(this._tab.linkedBrowser.currentURI.spec);
@@ -260,6 +256,6 @@ export default class TabHoverPreviewPanel {
   }
 
   get _displayActiveness() {
-    return this._tab.linkedBrowser.docShellIsActive ? "[A]" : "";
+    return this._tab?.linkedBrowser?.docShellIsActive ? "[A]" : "";
   }
 }

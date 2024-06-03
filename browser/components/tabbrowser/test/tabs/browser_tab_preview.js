@@ -38,8 +38,8 @@ async function closePreviews(win = window) {
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.tabs.cardPreview.enabled", true],
-      ["browser.tabs.cardPreview.showThumbnails", false],
+      ["browser.tabs.hoverPreview.enabled", true],
+      ["browser.tabs.hoverPreview.showThumbnails", false],
       ["browser.tabs.tooltipsShowPidAndActiveness", false],
       ["ui.tooltip.delay_ms", 0],
     ],
@@ -99,7 +99,7 @@ add_task(async function hoverTests() {
     resolved = true;
   });
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  let timeoutPromise = new Promise(resolve => setTimeout(resolve, 100));
+  let timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
   await Promise.race([openPreviewPromise, timeoutPromise]);
   Assert.ok(!resolved, "preview does not open from background window");
   Assert.ok(
@@ -213,12 +213,12 @@ add_task(async function pidAndActivenessTests() {
 
 /**
  * Verify that non-selected tabs display a thumbnail in their preview
- * when browser.tabs.cardPreview.showThumbnails is set to true,
+ * when browser.tabs.hoverPreview.showThumbnails is set to true,
  * while the currently selected tab never displays a thumbnail in its preview.
  */
 add_task(async function thumbnailTests() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.cardPreview.showThumbnails", true]],
+    set: [["browser.tabs.hoverPreview.showThumbnails", true]],
   });
   const tabUrl1 = "about:blank";
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);

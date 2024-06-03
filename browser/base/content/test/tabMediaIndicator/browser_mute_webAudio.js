@@ -50,8 +50,7 @@ add_task(async function mute_web_audio() {
 
   info("- mute browser -");
   ok(!tab.linkedBrowser.audioMuted, "Audio should not be muted by default");
-  let tabContent = tab.querySelector(".tab-content");
-  await hoverIcon(tabContent);
+  await hoverIcon(tab.overlayIcon);
   await clickIcon(tab.overlayIcon);
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");
 
@@ -63,7 +62,7 @@ add_task(async function mute_web_audio() {
 
   info("- unmute browser -");
   ok(tab.linkedBrowser.audioMuted, "Audio should be muted now");
-  await hoverIcon(tabContent);
+  await hoverIcon(tab.overlayIcon);
   await clickIcon(tab.overlayIcon);
   ok(!tab.linkedBrowser.audioMuted, "Audio should be unmuted now");
 
