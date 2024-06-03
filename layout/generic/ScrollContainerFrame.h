@@ -187,12 +187,6 @@ class ScrollContainerFrame : public nsContainerFrame,
   ScrollStyles GetScrollStyles() const;
 
   /**
-   * Returns whether this scroll frame is for a text control element with no
-   * scrollbars (for <input>, basically).
-   */
-  bool IsForTextControlWithNoScrollbars() const;
-
-  /**
    * Returns whether we already have anonymous content nodes for all our needed
    * scrollbar parts (or a superset thereof).
    */
