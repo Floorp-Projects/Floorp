@@ -359,6 +359,7 @@ pref(intl.icu4x.segmenter.enabled,false) == ethiopic-wordspace.html ethiopic-wor
 != webkit-text-security-5.html?circle webkit-text-security-5.html?none
 != webkit-text-security-5.html?disc   webkit-text-security-5.html?circle
 != webkit-text-security-5.html?square webkit-text-security-5.html?circle
+== webkit-text-security-placeholder.html webkit-text-security-placeholder-ref.html
 
 # Reset default prefs.
 defaults
