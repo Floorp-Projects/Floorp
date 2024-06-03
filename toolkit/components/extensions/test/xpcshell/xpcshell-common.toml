@@ -164,6 +164,8 @@ skip-if = ["tsan"] # Bug 1683730
 
 ["test_ext_contentscript_unregister_during_loadContentScript.js"]
 
+["test_ext_contentscript_world.js"]
+
 ["test_ext_contentscript_xml_prettyprint.js"]
 
 ["test_ext_contextual_identities.js"]

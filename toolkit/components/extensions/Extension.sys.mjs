@@ -1883,6 +1883,7 @@ export class ExtensionData {
           matchOriginAsFallback: match_origin_as_fallback,
           frameID: options.frame_id,
           runAt: options.run_at,
+          world: options.world,
 
           matches: options.matches,
           excludeMatches: options.exclude_matches || [],
