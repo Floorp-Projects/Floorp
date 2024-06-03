@@ -149,15 +149,9 @@ input, textarea, select, button, ::file-selector-button {
 ::placeholder,
 ::-moz-text-control-preview {
   /*
-   * Changing display to inline can leads to broken behaviour and will assert.
-   */
-  display: inline-block;
-
-  /*
    * Changing resize would display a broken behaviour and will assert.
    */
   resize: none;
-
   overflow: hidden;
 
   /*
@@ -187,6 +181,8 @@ input, textarea, select, button, ::file-selector-button {
 input::placeholder,
 input::-moz-text-control-editing-root,
 input::-moz-text-control-preview {
+  scrollbar-width: none;
+  resize: none;
   word-wrap: normal;
   white-space: pre;
   /* Make the line-height equal to the available height */
