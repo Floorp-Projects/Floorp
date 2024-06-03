@@ -160,7 +160,7 @@
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('126.!') >= 0) && (language in ['en'])))",
       "startDate": "2024-04-30",
-      "enrollmentEndDate": null,
+      "enrollmentEndDate": "2024-05-30",
       "endDate": null,
       "proposedDuration": 42,
       "proposedEnrollment": 14,

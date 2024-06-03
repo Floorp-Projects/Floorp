@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1717192455323,
+      "derHash": "158fDIFBgEs50EslktV6/r50+UYGVK/0kUkNu3xaLXQ=",
+      "subject": "CN=XinChaCha Trust EV TLS G2 R34 CA,O=Beijing Xinchacha Credit Management Co.\\, Ltd.,C=CN",
+      "subjectDN": "MHAxCzAJBgNVBAYTAkNOMTYwNAYDVQQKDC1CZWlqaW5nIFhpbmNoYWNoYSBDcmVkaXQgTWFuYWdlbWVudCBDby4sIEx0ZC4xKTAnBgNVBAMMIFhpbkNoYUNoYSBUcnVzdCBFViBUTFMgRzIgUjM0IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "cf9549b1295f7f5940d1eecd85224fe71746a9062b3324375a1ba76e6d1076db",
+        "size": 2393,
+        "filename": "-NirAYepPYxIIKyEoNgiZNqhl8nplSzI0S3gILMyP48=.pem",
+        "location": "security-state-staging/intermediates/3304fe4e-f870-45ba-8df0-81b2a42b4266.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "+NirAYepPYxIIKyEoNgiZNqhl8nplSzI0S3gILMyP48=",
+      "crlite_enrolled": false,
+      "id": "6b1982a7-6538-4496-a5ea-475ad795dca4",
+      "last_modified": 1717192623098
+    },
+    {
+      "schema": 1717192454914,
+      "derHash": "tch6CyI52v4KUoXjQGJiaayl6Q9XSSw46QUMpdGLwho=",
+      "subject": "CN=XinChaCha Trust DV TLS G2 R34 CA,O=Beijing Xinchacha Credit Management Co.\\, Ltd.,C=CN",
+      "subjectDN": "MHAxCzAJBgNVBAYTAkNOMTYwNAYDVQQKDC1CZWlqaW5nIFhpbmNoYWNoYSBDcmVkaXQgTWFuYWdlbWVudCBDby4sIEx0ZC4xKTAnBgNVBAMMIFhpbkNoYUNoYSBUcnVzdCBEViBUTFMgRzIgUjM0IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "46a17eb3357831af3e72dd3e752ae9d06b7ab5c7e2bde38c552efac33da3c3e7",
+        "size": 2393,
+        "filename": "ia3jA8mRz8AVBO57iULX9U3eGAXK9KzaSydFhjkVQp8=.pem",
+        "location": "security-state-staging/intermediates/d7185123-3b86-4d58-897d-92ce9c326347.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ia3jA8mRz8AVBO57iULX9U3eGAXK9KzaSydFhjkVQp8=",
+      "crlite_enrolled": false,
+      "id": "0c74406b-6c55-4aa5-a137-e7f059e08b40",
+      "last_modified": 1717192623095
+    },
+    {
+      "schema": 1717192454523,
+      "derHash": "tdRtwCcTDlztO+UIPrNAKN2SMPTVo2rRkk0hwO+YTLo=",
+      "subject": "CN=XinChaCha Trust OV TLS G2 R34 CA,O=Beijing Xinchacha Credit Management Co.\\, Ltd.,C=CN",
+      "subjectDN": "MHAxCzAJBgNVBAYTAkNOMTYwNAYDVQQKDC1CZWlqaW5nIFhpbmNoYWNoYSBDcmVkaXQgTWFuYWdlbWVudCBDby4sIEx0ZC4xKTAnBgNVBAMMIFhpbkNoYUNoYSBUcnVzdCBPViBUTFMgRzIgUjM0IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f3b04dbb9ce45e317a43dd7e0bb1f2d617cf950b6c4f4dcd9041ba8c29903ca9",
+        "size": 2393,
+        "filename": "BTYzRPrLbl9bgC2AezB8r8c6OQbO2yNxAWm2wTdHcPM=.pem",
+        "location": "security-state-staging/intermediates/5b4a4976-5c36-4f3c-ad2c-c646050b9449.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "BTYzRPrLbl9bgC2AezB8r8c6OQbO2yNxAWm2wTdHcPM=",
+      "crlite_enrolled": false,
+      "id": "6ab4c9cc-76f0-46fa-a224-955f948b8672",
+      "last_modified": 1717192623093
+    },
+    {
+      "schema": 1717192453960,
+      "derHash": "UJq7uShkwsRNfLxGa2OVDjUBZe53KjA3roFo6SImpG8=",
+      "subject": "CN=Shoper DV TLS G2 R34 CA,O=Shoper S.A.,C=PL",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlBMMRQwEgYDVQQKDAtTaG9wZXIgUy5BLjEgMB4GA1UEAwwXU2hvcGVyIERWIFRMUyBHMiBSMzQgQ0E=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "89370aee0f5144d748f03671a40cd353d07ebc3e624152b697c93eac8414ae0c",
+        "size": 2337,
+        "filename": "-g6X50iw1KjEyqdAsOvTe7IZ3ChaEo_P0UMuuNWHp4s=.pem",
+        "location": "security-state-staging/intermediates/90e3e772-6b7e-49ca-ad56-1ad21d0e3c6b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "+g6X50iw1KjEyqdAsOvTe7IZ3ChaEo/P0UMuuNWHp4s=",
+      "crlite_enrolled": false,
+      "id": "9de0322b-3852-44e0-a52c-20c5398fb224",
+      "last_modified": 1717192623090
+    },
+    {
       "schema": 1714791237384,
       "derHash": "5b/O2dIW66faNjSBn7U0+5zroez55jee2DWD0usXfBs=",
       "subject": "CN=CrowdStrike TLS RSA CA G5,O=CrowdStrike\\, Inc.,C=US",
@@ -30907,5 +30979,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1715637423088
+  "timestamp": 1717192623098
 }

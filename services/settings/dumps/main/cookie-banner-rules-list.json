@@ -2,6 +2,96 @@
   "data": [
     {
       "click": {
+        "optIn": "custom-button#consentAccept",
+        "presence": "main[data-consent-main]"
+      },
+      "schema": 1717015159283,
+      "domains": [
+        "rp-online.de"
+      ],
+      "id": "06ae9b8e-909a-4f50-be66-0046a1a75ddf",
+      "last_modified": 1717071078321
+    },
+    {
+      "click": {
+        "optIn": ".cookie-consent-banner__btn-primary",
+        "presence": "#cookie-consent-banner"
+      },
+      "schema": 1717015159283,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "__tnw_cookieConsent",
+            "value": "{%22ad_storage%22:%22denied%22%2C%22analytics_storage%22:%22denied%22}"
+          }
+        ]
+      },
+      "domains": [
+        "thenextweb.com"
+      ],
+      "id": "02c3c5e1-03a6-426a-b00b-fa34f62322fd",
+      "last_modified": 1717071078318
+    },
+    {
+      "click": {
+        "optIn": "div[data-tracking-opt-in-accept=\"true\"]",
+        "optOut": "div[data-tracking-opt-in-reject=\"true\"]",
+        "presence": "div[data-tracking-opt-in-overlay=\"true\"]"
+      },
+      "schema": 1717015159283,
+      "domains": [
+        "fandom.com"
+      ],
+      "id": "D168AF87-F481-4AD7-BE78-28A59F798406",
+      "last_modified": 1717071078313
+    },
+    {
+      "schema": 1717015159283,
+      "cookies": {
+        "optIn": [
+          {
+            "name": "d_prefs",
+            "value": "MToxLGNvbnNlbnRfdmVyc2lvbjoyLHRleHRfdmVyc2lvbjoxMDAw"
+          }
+        ],
+        "optOut": [
+          {
+            "name": "d_prefs",
+            "value": "MjoxLGNvbnNlbnRfdmVyc2lvbjoyLHRleHRfdmVyc2lvbjoxMDAw"
+          },
+          {
+            "name": "twtr_pixel_opt_in",
+            "value": "N"
+          }
+        ]
+      },
+      "domains": [
+        "twitter.com",
+        "x.com"
+      ],
+      "id": "05b3b417-c4c7-4ed0-a3cf-43053e8b33ab",
+      "last_modified": 1717071078310
+    },
+    {
+      "click": {
+        "optIn": "[data-cookiebanner=\"accept_button\"]",
+        "optOut": "[data-cookiebanner=\"accept_only_essential_button\"]",
+        "presence": "[data-testid=\"cookie-policy-manage-dialog\"]"
+      },
+      "schema": 1717015159283,
+      "domains": [
+        "facebook.com",
+        "instagram.com",
+        "messenger.com",
+        "meta.com",
+        "oculus.com",
+        "workplace.com"
+      ],
+      "id": "d1d8ba36-ced7-4453-8b17-2e051e0ab1eb",
+      "last_modified": 1717071078306
+    },
+    {
+      "click": {
         "optIn": "#shopify-pc__banner__btn-accept",
         "optOut": "#shopify-pc__banner__btn-decline",
         "presence": "#shopify-pc__banner"
@@ -1368,32 +1458,6 @@
       "last_modified": 1714811639827
     },
     {
-      "schema": 1714780808679,
-      "cookies": {
-        "optIn": [
-          {
-            "name": "d_prefs",
-            "value": "MToxLGNvbnNlbnRfdmVyc2lvbjoyLHRleHRfdmVyc2lvbjoxMDAw"
-          }
-        ],
-        "optOut": [
-          {
-            "name": "d_prefs",
-            "value": "MjoxLGNvbnNlbnRfdmVyc2lvbjoyLHRleHRfdmVyc2lvbjoxMDAw"
-          },
-          {
-            "name": "twtr_pixel_opt_in",
-            "value": "N"
-          }
-        ]
-      },
-      "domains": [
-        "twitter.com"
-      ],
-      "id": "05b3b417-c4c7-4ed0-a3cf-43053e8b33ab",
-      "last_modified": 1714811639824
-    },
-    {
       "click": {
         "optIn": "button#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll",
         "optOut": "button#CybotCookiebotDialogBodyButtonDecline",
@@ -2179,22 +2243,6 @@
       ],
       "id": "3c0e4924-29ee-4d9a-99ec-e4805a7ffed9",
       "last_modified": 1710331175385
-    },
-    {
-      "click": {
-        "optIn": "[data-cookiebanner=\"accept_button\"]",
-        "optOut": "[data-cookiebanner=\"accept_only_essential_button\"]",
-        "presence": "[data-testid=\"cookie-policy-manage-dialog\"]"
-      },
-      "schema": 1710174339269,
-      "domains": [
-        "facebook.com",
-        "messenger.com",
-        "oculus.com",
-        "workplace.com"
-      ],
-      "id": "d1d8ba36-ced7-4453-8b17-2e051e0ab1eb",
-      "last_modified": 1710331175381
     },
     {
       "click": {
@@ -4210,18 +4258,6 @@
       ],
       "id": "A04DD123-A10F-4665-9C2B-2FB5CC293F42",
       "last_modified": 1697710931635
-    },
-    {
-      "click": {
-        "optIn": "div[data-tracking-opt-in-accept=\"true\"]",
-        "presence": "div[data-tracking-opt-in-overlay=\"true\"]"
-      },
-      "schema": 1697557061727,
-      "domains": [
-        "fandom.com"
-      ],
-      "id": "D168AF87-F481-4AD7-BE78-28A59F798406",
-      "last_modified": 1697710931628
     },
     {
       "schema": 1697557061727,
@@ -10115,5 +10151,5 @@
       "last_modified": 1670498155651
     }
   ],
-  "timestamp": 1714811640008
+  "timestamp": 1717071078321
 }
