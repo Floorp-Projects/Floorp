@@ -15,28 +15,28 @@ async function createCredentials() {
   await navigator.credentials.store(await navigator.credentials.create({
     identity: {
       id: "allow-alt",
-      originAllowlist: ["https://{{hosts[alt][]}}:{{ports[https][0]}}"],
+      effectiveOrigins: ["https://{{hosts[alt][]}}:{{ports[https][0]}}"],
     }
   }));
 
   await navigator.credentials.store(await navigator.credentials.create({
     identity: {
       id: "allow-primary",
-      originAllowlist: ["https://{{hosts[][]}}:{{ports[https][0]}}"],
+      effectiveOrigins: ["https://{{hosts[][]}}:{{ports[https][0]}}"],
     }
   }));
 
   await navigator.credentials.store(await navigator.credentials.create({
     identity: {
       id: "allow-cors-success",
-      dynamicViaCORS: [`${window.origin}/_mozilla/credential-management/support/cors.py`]
+      effectiveQueryURL: [`${window.origin}/_mozilla/credential-management/support/cors.py`]
     }
   }));
 
   await navigator.credentials.store(await navigator.credentials.create({
     identity: {
       id: "allow-cors-failure",
-      dynamicViaCORS: [`${window.origin}/_mozilla/credential-management/support/no-cors.py`]
+      effectiveQueryURL: [`${window.origin}/_mozilla/credential-management/support/no-cors.py`]
     }
   }));
 }

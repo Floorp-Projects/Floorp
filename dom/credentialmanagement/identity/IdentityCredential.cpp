@@ -59,12 +59,13 @@ void IdentityCredential::CopyValuesFrom(const IPCIdentityCredential& aOther) {
     this->SetToken(aOther.token().value());
   }
   IdentityCredentialInit creationOptions;
-  if (aOther.dynamicViaCors().isSome()) {
-    creationOptions.mDynamicViaCORS.Construct(aOther.dynamicViaCors().value());
+  if (aOther.effectiveQueryURL().isSome()) {
+    creationOptions.mEffectiveQueryURL.Construct(
+        aOther.effectiveQueryURL().value());
   }
-  if (aOther.originAllowlist().Length() > 0) {
-    creationOptions.mOriginAllowlist.Construct(
-        Sequence(aOther.originAllowlist().Clone()));
+  if (aOther.effectiveOrigins().Length() > 0) {
+    creationOptions.mEffectiveOrigins.Construct(
+        Sequence(aOther.effectiveOrigins().Clone()));
   }
   creationOptions.mId = aOther.id();
   IdentityCredentialUserData userData;
@@ -94,13 +95,13 @@ IPCIdentityCredential IdentityCredential::MakeIPCIdentityCredential() const {
     result.token() = Some(this->mToken);
   }
   if (this->mCreationOptions.isSome()) {
-    if (this->mCreationOptions->mDynamicViaCORS.WasPassed()) {
-      result.dynamicViaCors() =
-          Some(this->mCreationOptions->mDynamicViaCORS.Value());
+    if (this->mCreationOptions->mEffectiveQueryURL.WasPassed()) {
+      result.effectiveQueryURL() =
+          Some(this->mCreationOptions->mEffectiveQueryURL.Value());
     }
-    if (this->mCreationOptions->mOriginAllowlist.WasPassed()) {
-      result.originAllowlist() =
-          this->mCreationOptions->mOriginAllowlist.Value();
+    if (this->mCreationOptions->mEffectiveOrigins.WasPassed()) {
+      result.effectiveOrigins() =
+          this->mCreationOptions->mEffectiveOrigins.Value();
     }
     if (this->mCreationOptions->mUiHint.WasPassed() &&
         !this->mCreationOptions->mUiHint.Value().mIconURL.IsEmpty()) {
@@ -211,7 +212,7 @@ RefPtr<GenericPromise> IdentityCredential::AllowedToCollectCredential(
     IPCIdentityCredential aCredential) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aPrincipal);
-  for (const nsCString& origin : aCredential.originAllowlist()) {
+  for (const nsCString& origin : aCredential.effectiveOrigins()) {
     nsCOMPtr<nsIURI> allowURI;
     nsresult rv = NS_NewURI(getter_AddRefs(allowURI), origin);
     if (NS_SUCCEEDED(rv)) {
@@ -220,12 +221,12 @@ RefPtr<GenericPromise> IdentityCredential::AllowedToCollectCredential(
       }
     }
   }
-  if (aCredential.dynamicViaCors().isSome()) {
+  if (aCredential.effectiveQueryURL().isSome()) {
     // Make the url to test, returning the default resolved to false promise if
     // it fails
     nsCOMPtr<nsIURI> dynamicURI;
     nsresult rv = NS_NewURI(getter_AddRefs(dynamicURI),
-                            aCredential.dynamicViaCors().value());
+                            aCredential.effectiveQueryURL().value());
     if (NS_SUCCEEDED(rv) && aOptions.mProviders.WasPassed()) {
       // at this point we need to run through the providers passed as an
       // argument to "navigator.credentials.get" and see if any meet the
@@ -235,9 +236,9 @@ RefPtr<GenericPromise> IdentityCredential::AllowedToCollectCredential(
       for (const auto& provider : aOptions.mProviders.Value()) {
         // We only issue requests if the provider provided by the RP has the
         // same URL as the credential that was stored by the IDP.
-        if (!provider.mDynamicViaCORS.WasPassed() ||
-            !provider.mDynamicViaCORS.Value().Equals(
-                aCredential.dynamicViaCors().value())) {
+        if (!provider.mEffectiveQueryURL.WasPassed() ||
+            !provider.mEffectiveQueryURL.Value().Equals(
+                aCredential.effectiveQueryURL().value())) {
           continue;
         }
 
