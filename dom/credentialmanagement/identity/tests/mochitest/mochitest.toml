@@ -1,6 +1,7 @@
 [DEFAULT]
 prefs = [
   "dom.security.credentialmanagement.identity.enabled=true",
+  "dom.security.credentialmanagement.identity.heavyweight.enabled=true",
   "dom.security.credentialmanagement.identity.select_first_in_ui_lists=true",
   "dom.security.credentialmanagement.identity.reject_delay.enabled=false",
   "privacy.antitracking.enableWebcompat=false", # disables opener heuristic
