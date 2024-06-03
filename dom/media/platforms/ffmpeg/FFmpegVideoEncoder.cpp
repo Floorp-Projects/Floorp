@@ -639,26 +639,17 @@ FFmpegVideoEncoder<LIBAV_VER>::GetSVCSettings() {
 
   // Check if the number of temporal layers in codec specific settings matches
   // the number of layers for the given scalability mode.
-
-  auto GetNumTemporalLayers = [&]() -> uint8_t {
-    uint8_t layers = 0;
-    if (mConfig.mCodecSpecific) {
-      if (mConfig.mCodecSpecific->is<VP8Specific>()) {
-        layers = mConfig.mCodecSpecific->as<VP8Specific>().mNumTemporalLayers;
-        MOZ_ASSERT(layers > 0);
-      } else if (mConfig.mCodecSpecific->is<VP9Specific>()) {
-        layers = mConfig.mCodecSpecific->as<VP9Specific>().mNumTemporalLayers;
-        MOZ_ASSERT(layers > 0);
-      }
+  if (mConfig.mCodecSpecific) {
+    if (mConfig.mCodecSpecific->is<VP8Specific>()) {
+      MOZ_ASSERT(mConfig.mCodecSpecific->as<VP8Specific>().mNumTemporalLayers ==
+                 svc->mNumberLayers);
+    } else if (mConfig.mCodecSpecific->is<VP9Specific>()) {
+      MOZ_ASSERT(mConfig.mCodecSpecific->as<VP9Specific>().mNumTemporalLayers ==
+                 svc->mNumberLayers);
     }
-    return layers;
-  };
-
-  DebugOnly<uint8_t> numTemporalLayers = GetNumTemporalLayers();
-  MOZ_ASSERT_IF(numTemporalLayers > 0, numTemporalLayers == svc->mNumberLayers);
+  }
 
   // Form an SVC setting string for libvpx.
-
   nsPrintfCString parameters("ts_layering_mode=%u", svc->mLayeringMode);
   parameters.Append(":ts_target_bitrate=");
   for (size_t i = 0; i < svc->mTargetBitrates.Length(); ++i) {
