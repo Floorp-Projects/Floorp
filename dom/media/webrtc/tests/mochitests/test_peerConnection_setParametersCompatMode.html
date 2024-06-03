@@ -48,6 +48,20 @@
       );
     },
 
+    async function checkStaleGetParameters() {
+      await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
+        async () => {
+          const pc = new RTCPeerConnection();
+          const { sender } = pc.addTransceiver('video', {
+            sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+          });
+          const params = sender.getParameters();
+          await new Promise(r => setTimeout(r, 10));
+          await sender.setParameters(params);
+        }
+      );
+    },
+
     async function checkLengthChanged() {
       await withPrefs([["media.peerconnection.allow_old_setParameters", true]],
         async () => {
