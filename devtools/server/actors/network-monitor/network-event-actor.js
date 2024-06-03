@@ -210,8 +210,6 @@ class NetworkEventActor extends Actor {
       // This is used specifically in the browser toolbox console to distinguish privileged
       // resources from the parent process from those from the contet
       chromeContext: lazy.NetworkUtils.isChannelFromSystemPrincipal(channel),
-      fromCache: networkEventOptions.fromCache,
-      fromServiceWorker: networkEventOptions.fromServiceWorker,
       innerWindowId: this._innerWindowId,
       isNavigationRequest: this._isNavigationRequest,
       isFileRequest: channel instanceof Ci.nsIFileChannel,

@@ -524,24 +524,15 @@ export class NetworkObserver {
       // there never was a request event so we need to construct one here
       // so the frontend gets all the expected events.
       this.#createNetworkEvent(httpActivity);
-    } else if (this.#createEarlyEvents) {
-      // However if we already created an event because the NetworkObserver
-      // is using early events, simply forward the cache details to the
-      // event owner.
-      if (typeof httpActivity.owner.addCacheDetails == "function") {
-        httpActivity.owner.addCacheDetails({
-          fromCache: httpActivity.fromCache,
-          fromServiceWorker: httpActivity.fromServiceWorker,
-        });
-      } else {
-        console.error(
-          "NetworkObserver was created with earlyEvents:true, but " +
-            "network event owner does not implement 'addCacheDetails'."
-        );
-      }
-    } else {
-      // XXX: Find what kind of requests end up here.
     }
+
+    // However if we already created an event because the NetworkObserver
+    // is using early events, simply forward the cache details to the
+    // event owner.
+    httpActivity.owner.addCacheDetails({
+      fromCache: httpActivity.fromCache,
+      fromServiceWorker: httpActivity.fromServiceWorker,
+    });
 
     // We need to send the request body to the frontend for
     // the faked (cached/service worker request) event.
@@ -824,8 +815,6 @@ export class NetworkObserver {
     httpActivity.owner = this.#onNetworkEvent(
       {
         timestamp,
-        fromCache: httpActivity.fromCache,
-        fromServiceWorker: httpActivity.fromServiceWorker,
         blockedReason,
         blockingExtension,
         discardRequestBody: !this.#saveRequestAndResponseBodies,
