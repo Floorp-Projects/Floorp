@@ -338,6 +338,8 @@ static bool DispatchToEventLoop(void* aClosure,
               return;
             }
 
+            AutoJSAPI jsapi;
+            jsapi.Init();
             aDispatchable->run(wjc->Context(),
                                JS::Dispatchable::NotShuttingDown);
           }),
