@@ -55,10 +55,12 @@ IdentityCredential::IdentityCredential(nsPIDOMWindowInner* aParent,
 void IdentityCredential::CopyValuesFrom(const IPCIdentityCredential& aOther) {
   this->SetId(aOther.id());
   this->SetType(u"identity"_ns);
-  if (aOther.token().isSome()) {
-    this->SetToken(aOther.token().value());
-  }
   IdentityCredentialInit creationOptions;
+  if (aOther.token().isSome()) {
+    this->mToken = aOther.token().value();
+    creationOptions.mToken.Construct(
+        NS_ConvertUTF16toUTF8(aOther.token().value()));
+  }
   if (aOther.effectiveQueryURL().isSome()) {
     creationOptions.mEffectiveQueryURL.Construct(
         aOther.effectiveQueryURL().value());
@@ -91,9 +93,6 @@ IPCIdentityCredential IdentityCredential::MakeIPCIdentityCredential() const {
   IPCIdentityCredential result;
   result.identityProvider() = mIdentityProvider;
   this->GetId(result.id());
-  if (!this->mToken.IsEmpty()) {
-    result.token() = Some(this->mToken);
-  }
   if (this->mCreationOptions.isSome()) {
     if (this->mCreationOptions->mEffectiveQueryURL.WasPassed()) {
       result.effectiveQueryURL() =
@@ -117,6 +116,13 @@ IPCIdentityCredential IdentityCredential::MakeIPCIdentityCredential() const {
           Some(PR_Now() / PR_USEC_PER_MSEC +
                this->mCreationOptions->mUiHint.Value().mExpiresAfter.Value());
     }
+    if (this->mCreationOptions->mToken.WasPassed()) {
+      result.token() =
+          Some(NS_ConvertUTF8toUTF16(this->mCreationOptions->mToken.Value()));
+    }
+  }
+  if (!this->mToken.IsEmpty()) {
+    result.token() = Some(this->mToken);
   }
 
   return result;
@@ -137,6 +143,9 @@ already_AddRefed<IdentityCredential> IdentityCredential::Constructor(
   result->SetType(u"identity"_ns);
   result->mCreationOptions.emplace(aInit);
   result->mIdentityProvider = global->PrincipalOrNull();
+  if (aInit.mToken.WasPassed()) {
+    result->mToken = NS_ConvertUTF8toUTF16(aInit.mToken.Value());
+  }
   return result.forget();
 }
 
@@ -145,6 +154,9 @@ void IdentityCredential::GetToken(nsAString& aToken) const {
 }
 void IdentityCredential::SetToken(const nsAString& aToken) {
   mToken.Assign(aToken);
+  if (mCreationOptions.isSome()) {
+    mCreationOptions->mToken.Construct(NS_ConvertUTF16toUTF8(aToken));
+  }
 }
 
 void IdentityCredential::GetOrigin(nsACString& aOrigin,
@@ -475,6 +487,9 @@ IdentityCredential::Create(nsPIDOMWindowInner* aParent,
   result->SetId(init.mId);
   result->SetType(u"identity"_ns);
   result->mCreationOptions.emplace(init);
+  if (init.mToken.WasPassed()) {
+    result->mToken = NS_ConvertUTF8toUTF16(init.mToken.Value());
+  }
   return GetIdentityCredentialPromise::CreateAndResolve(result.forget(),
                                                         __func__);
 }
