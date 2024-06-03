@@ -417,8 +417,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">ਸਾਡੀ ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ ਵਿੱਚ ਹੋਰ ਜਾਣਕਾਰੀ ਲਵੋ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">ਅਸੀਂ ਤੁਹਾਨੂੰ ਸੁਰੱਖਿਅਤ ਰੱਖਣਾ ਚਾਹੁੰਦੇ ਹਾਂ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -706,10 +704,6 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">ਲੋੜੀਂਦਾ</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">ਚੋਣਵਾਂ</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">ਵੈੱਬਸਾਈਟ ਡਾਟਾ ਪੜ੍ਹਨ ਅਤੇ ਬਦਲਣ</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">ਵੈੱਬਸਾਈਟ ਨੂੰ ਹਟਾਉਣ</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">ਸਭ ਸਾਈਟਾਂ ਲਈ ਮਨਜ਼ੂਰੀ</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -836,8 +830,6 @@
     <string name="preferences_sync_history">ਅਤੀਤ</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">ਬੁੱਕਮਾਰਕ</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">ਪਾਸਵਰਡ</string>
     <!-- Preference for syncing tabs -->
@@ -865,8 +857,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$s ਉੱਤੇ %1$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ਕਰੈਡਿਟ ਕਾਰਡ</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">ਭੁਗਤਾਨ ਦੇ ਢੰਗ</string>
     <!-- Preference for syncing addresses -->
@@ -1827,11 +1817,7 @@
 ਮੁੱਖ ਸਕਰੀਨ ਉੱਤੇ ਸੌਖੀ ਤਰ੍ਹਾਂ ਜੋੜ ਸਕਦੇ ਹੋ।</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡ</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">ਪਾਸਵਰਡ</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡ ਸੰਭਾਲੋ</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">ਪਾਸਵਰਡਾਂ ਨੂੰ ਸੰਭਾਲੋ</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1847,46 +1833,28 @@
 
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਉੱਤੇ ਹੋਰ ਐਪਾਂ ਵਿੱਚ ਵਰਤੋਂਕਾਰ-ਨਾਂ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ।</string>
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਜੋੜੋ</string>
 
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">ਪਾਸਵਰਡ ਜੋੜੋ</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਸਿੰਕ ਕਰੋ</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">ਪਾਸਵਰਡ ਸਿੰਕ ਕਰੋ</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਲਾਗਇਨਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">ਪਾਸਵਰਡ ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਸਿੰਕ ਕਰੋ</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਲਾਗਇਨ</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡ</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਵਲੋਂ ਸੰਭਾਲੇ ਲਾਗਇਨ ਜਾਂ %s ਨਾਲ ਸਿੰਕ ਕੀਤੇ ਇੱਥੇ ਵੇਖਾਏ ਜਾਣਗੇ।</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">ਤੁਹਾਡੇ ਵਲੋਂ %s ਵਿੱਚ ਸੰਭਾਲੇ ਜਾਂ ਸਿੰਕ ਕੀਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਇੱਥੇ ਦਿਖਾਇਆ ਜਾਵੇਗਾ। ਤੁਹਾਡੇ ਸਾਰੇ ਸੰਭਾਲੇ ਪਾਸਵਰਡ ਇੰਕ੍ਰਿਪਟ ਕੀਤੇ ਹੁੰਦੇ ਹਨ।</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">ਸਿੰਕ ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">ਸਿੰਕ ਬਾਰੇ ਹੋਰ ਜਾਣੋ</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ਛੋਟਾਂ</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">ਨਾ ਸੰਭਾਲੇ ਹੋਏ ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਇੱਥੇ ਸੰਭਾਲਿਆ ਜਾਵੇਗਾ।</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s ਇੱਥੇ ਦਿੱਤੀਆਂ ਹੋਈਆਂ ਸਾਈਟਾਂ ਲਈ ਪਾਸਵਰਡ ਨਹੀਂ ਸੰਭਾਲੇਗਾ।</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ਇਹਨਾਂ ਸਾਈਟਾਂ ਲਈ ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡ ਨਹੀਂ ਸੰਭਾਲੇ ਜਾਣਗੇ।</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s ਇਹਨਾਂ ਸਾਈਟਾਂ ਲਈ ਪਾਸਵਰਡ ਨਹੀਂ ਸੰਭਾਲੇਗਾ।</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ਸਾਰੀਆਂ ਛੋਟਾਂ ਹਟਾ ਦਿਓ</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਖੋਜੋ</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">ਪਾਸਵਰਡ ਖੋਜੋ</string>
     <!-- The header for the site that a login is for -->
@@ -1915,16 +1883,10 @@
     <string name="saved_login_reveal_password">ਪਾਸਵਰਡ ਵੇਖਾਓ</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">ਪਾਸਵਰਡ ਲੁਕਾਓ</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ਆਪਣੇ ਸੰਭਾਲੇ ਲਾਗਇਨ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">ਆਪਣੇ ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡ ਸੁਰੱਖਿਅਤ ਕਰੋ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡਾਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਕਰੋ</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ਆਪਣੇ ਲਾਗਇਨਾਂ ਅਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਨੂੰ ਰੱਖਣ ਵਾਲੇ ਕਿਸੇ ਦੀ ਪਹੁੰਚ ਤੋਂ ਸੁਰੱਖਿਅਤ ਰੱਖਣ ਲਈ ਡਿਵਾਈਸ ਲਾਕ ਪੈਟਰਨ, ਪਿੰਨ ਜਾਂ ਪਾਸਵਰਡ ਸੈਟ ਅੱਪ ਕਰੋ।</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡਾਂ ਨੂੰ ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਉੱਤੇ ਕਿਸੇ ਹੋਰ ਵੱਲੋਂ ਪਹੁੰਚ ਕਰਨ ਤੋਂ ਬਚਾਉਣ ਤੋਂ ਸੁਰੱਖਿਅਤ ਕਰਨ ਲਈ ਡਿਵਾਈਸ ਲਾਕ ਪੈਟਰਨ, ਪਿੰਨ ਜਾਂ ਪਾਸਵਰਡ ਸੈੱਟ ਕਰੋ।</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1943,8 +1905,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">ਨਾਂ (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">ਆਖਰੀ ਵਰਤੋਂ</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਲੜੀਬਧ ਮੇਨੂ</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">ਪਾਸਵਰਡ ਮੇਨੂ ਨੂੰ ਲੜੀਬੱਧ ਕਰੋ</string>
@@ -1954,40 +1914,26 @@
     <string name="preferences_autofill">ਆਪੇ-ਭਰੋ</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">ਸਿਰਨਾਵੇਂ</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ਕਰੈਡਿਟ ਕਾਰਡ</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">ਭੁਗਤਾਨ ਦੇ ਢੰਗ</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ਕਾਰਡ ਸੰਭਾਲੋ ਅਤੇ ਆਪਣੇ-ਆਪ ਭਰੋ</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">ਭੁਗਤਾਨ ਦੇ ਢੰਗ ਸੰਭਾਲੋ ਅਤੇ ਭਰੋ</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ਡਾਟਾ ਇੰਕ੍ਰਿਪਟ ਕੀਤਾ ਹੈ</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s ਤੁਹਾਡੇ ਵਲੋਂ ਸੰਭਾਲੇ ਸਾਰੇ ਭੁਗਤਾਨ ਢੰਗਾਂ ਨੂੰ ਇੰਕ੍ਰਿਪਟ ਕਰਦਾ ਹੈ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਕਾਰਡਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">ਕਾਰਡ ਸਿੰਕ ਕਰੋ</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">ਕਰੈਡਿਟ ਕਾਰਡ ਜੋੜੋ</string>
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">ਕਾਰਡ ਜੋੜੋ</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">ਸਿਰਨਾਵਾਂ ਜੋੜੋ</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">ਸਿਰਨਾਵੇਂ ਸੰਭਾਲੋ ਅਤੇ ਆਪਣੇ-ਆਪ ਭਰੋ</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸੰਭਾਲੋ ਅਤੇ ਭਰੋ</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ਨੰਬਰ, ਈਮੇਲ ਅਤੇ ਭੇਜਣ ਵਾਲੇ ਸਿਰਨਾਵਿਆਂ ਸਮੇਤ ਜਾਣਕਾਰੀ</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">ਫ਼ੋਨ ਨੰਬਰਾਂ ਅਤੇ ਈਮੇਲ ਸਿਰਨਾਵਿਆਂ ਸਮੇਤ</string>
@@ -2011,8 +1957,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">ਕਾਰਡ ਨੂੰ ਹਟਾਓ</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">ਕੀ ਤੁਸੀਂ ਇਹ ਕਰੈਡਿਟ ਕਾਰਡ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">ਕਾਰਡ ਨੂੰ ਹਟਾਉਣਾ ਹੈ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ਹਟਾਓ</string>
@@ -2026,23 +1970,14 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡ</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ਵਾਜਬ ਕਰੈਡਿਟ ਕਾਰਡ ਨੰਬਰ ਦਿਓ ਜੀ</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">ਵਾਜਬ ਕਾਰਡ ਨੰਬਰ ਭਰੋ</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ਇਹ ਖੇਤਰ ਭਰੋ</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">ਨਾਂ ਜੋੜੋ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">ਆਪਣੇ ਕਰੈਡਿਟ ਕਾਰਡ ਸੁਰੱਖਿਅਤ ਕਰੋ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਭੁਗਤਾਨ ਢੰਗਾਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਕਰੋ</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ਆਪਣੀ ਡਿਵਾਇਸ ਲਈ ਲਾਕ ਪੈਟਰਨ, ਪਿੰਨ, ਜਾਂ ਪਾਸਵਰਡ ਸੈੱਟ ਕਰੋ ਤਾਂ ਜੋ ਕਿਸੇ ਹੋਰ ਹੱਥ ਤੁਹਾਡਾ ਡਿਵਾਇਸ ਹੋਣ ਉੱਤੇ ਤੁਹਾਡੇ ਸੰਭਾਲੇ ਪਾਸਵਰਡ ਸੁਰੱਖਿਅਤ ਰਹਿਣ।</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡ ਢੰਗਾਂ ਨੂੰ ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਉੱਤੇ ਕਿਸੇ ਹੋਰ ਵੱਲੋਂ ਪਹੁੰਚ ਕਰਨ ਤੋਂ ਬਚਾਉਣ ਤੋਂ ਸੁਰੱਖਿਅਤ ਕਰਨ ਲਈ ਡਿਵਾਈਸ ਲਾਕ ਪੈਟਰਨ, ਪਿੰਨ ਜਾਂ ਪਾਸਵਰਡ ਸੈੱਟ ਕਰੋ।</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2051,8 +1986,6 @@
     <string name="credit_cards_warning_dialog_later">ਬਾਦ \'ਚ</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">ਆਪਣਾ ਡਿਵਾਇਸ ਅਣ-ਲਾਕ ਕਰੋ</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ਸੰਭਾਲੀ ਕਰੈਡਿਟ ਕਾਰਡ ਜਾਣਕਾਰੀ ਵਰਤਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">ਸੰਭਾਲੇ ਹੋਏ ਭੁਗਤਾਨ ਢੰਗਾਂ ਨੂੰ ਵਰਤਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
@@ -2062,12 +1995,6 @@
     <string name="addresses_edit_address">ਸਿਰਨਾਵੇਂ ਨੂੰ ਸੋਧੋ</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">ਨਾਂ ਦਾ ਪਹਿਲਾਂ ਹਿੱਸਾ</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">ਮੱਧ ਨਾਂ</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">ਨਾਂ ਦਾ ਆਖਰੀ ਹਿੱਸਾ</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">ਨਾਂ</string>
     <!-- The header for the street address of an address -->
@@ -2093,8 +2020,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">ਸਿਰਨਾਵੇਂ ਨੂੰ ਹਟਾਓ</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ਕੀ ਤੁਸੀਂ ਇਹ ਸਿਰਨਾਵੇਂ ਨੂੰ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">ਇਹ ਸਿਰਨਾਵੇਂ ਨੂੰ ਹਟਾਉਣਾ ਹੈ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2193,8 +2118,6 @@
     <string name="login_menu_delete_button">ਹਟਾਓ</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">ਸੋਧੋ</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">ਕੀ ਤੁਸੀਂ ਇਹ ਲਾਗਇਨ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">ਕੀ ਤੁਸੀਂ ਇਸ ਪਾਸਵਰਡ ਨੂੰ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Positive action of a dialog asking to delete  -->
@@ -2202,40 +2125,22 @@
 
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ਰੱਦ ਕਰੋ</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਚੋਣਾਂ</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">ਪਾਸਵਰਡ ਚੋਣਾਂ</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਦੇ ਵੈੱਬ ਐਡਰੈਸ ਲਈ ਸੋਧਣਯੋਗ ਲਿਖਤ ਖੇਤਰ ਹੈ।</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">ਵੈੱਬਸਾਈਟ ਸਿਰਨਾਵਿਆਂ ਲਈ ਸੋਧ ਕਰਨ ਯੋਗ ਲਿਖਤ ਖੇਤਰ।</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਦੇ ਵਰਤੋਂਕਾਰ-ਨਾਂ ਲਈ ਸੋਧਣਯੋਗ ਲਿਖਤ ਖੇਤਰ ਹੈ।</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਲਈ ਸੋਧ ਕਰਨ ਯੋਗ ਲਿਖਤ ਖੇਤਰ।</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਦੇ ਪਾਸਵਰਡ ਲਈ ਸੋਧਣਯੋਗ ਲਿਖਤ ਖੇਤਰ ਹੈ।</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">ਪਾਸਵਰਡ ਲਈ ਸੋਧ ਕਰਨ ਯੋਗ ਲਿਖਤ ਖੇਤਰ।</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">ਤਬਦੀਲੀਆਂ ਨੂੰ ਲਾਗਇਨ ਲਈ ਸੰਭਾਲੋ।</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">ਤਬਦੀਲੀਆਂ ਨੂੰ ਸੰਭਾਲੋ।</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">ਸੋਧੋ</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">ਪਾਸਵਰਡ ਨੂੰ ਸੋਧੋ</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">ਨਵਾਂ ਲਾਗਇਨ ਜੋੜੋ</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">ਪਾਸਵਰਡ ਜੋੜੋ</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ਪਾਸਵਰਡ ਚਾਹੀਦਾ ਹੈ</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">ਪਾਸਵਰਡ ਦਿਓ</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਚਾਹੀਦਾ ਹੈ</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਦਿਓ</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2643,6 +2548,9 @@
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">ਉਲੱਥਾ ਸ਼ੀਟ ਬੰਦ ਕਰੋ</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">ਕੁਝ ਸੈਟਿੰਗਾਂ ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਮੌਜੂਦ ਨਹੀਂ ਹਨ।</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">ਉਲੱਥੇ</string>
@@ -2664,6 +2572,9 @@
     <string name="automatic_translation_toolbar_title_preference">ਆਪਣੇ-ਆਪ ਉਲੱਥਾ</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">”ਹਮੇਸ਼ਾ ਟਰਾਂਸਲੇਟ ਕਰੋ“ ਅਤੇ &quot;ਕਦੇ ਟਰਾਂਸਲੇਟ ਨਾ ਕਰੋ&quot; ਪਸੰਦਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰਨ ਲਈ ਭਾਸ਼ਾ ਚੁਣੋ।</string>
+
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">ਭਾਸ਼ਾਵਾਂ ਨੂੰ ਲੋਡ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ। ਬਾਅਦ ਵਿੱਚ ਮੁੜ ਜਾਂਚੋ।</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2687,6 +2598,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">%1$s ਨੂੰ ਹਟਾਓ</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">ਸਾਈਟਾਂ ਨੂੰ ਲੋਡ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ। ਬਾਅਦ ਵਿੱਚ ਮੁੜ ਜਾਂਚੋ।</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">%1$s ਨੂੰ ਹਟਾਉਣਾ ਹੈ?</string>
@@ -2788,6 +2701,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">ਟੈਬ ਬਣਾਉਣ ਵਾਲਾ ਟੂਲ</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">bਣਾਉਣ ਲਈ ਟੈਬਾਂ ਦੀ ਗਿਣਤੀ</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">ਲਿਖਤ ਖੇਤਰ ਖਾਲੀ ਹੈ</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">ਸਿਰਫ਼ ਸਕਰਾਤਮਕ ਮੁੱਲ ਹੀ ਭਰੋ</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">ਸਿਫ਼ਰ ਤੋਂ ਵੱਡਾ ਨੰਬਰ ਭਰੋ</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">ਇੱਕ ਕਾਰਵਾਈ ਰਾਹੀਂ ਵੱਧ ਤੋਂ ਵੱਧ ਤਿਆਰ ਹੋਣ ਵਾਲੀਆਂ ਟੈਬਾਂ (%1$s) ਦੀ ਗਿਣਤੀ ਅੱਪੜ ਗਈ ਹੈ</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">ਸਰਗਰਮ ਟੈਬਾਂ ਵਿੱਚ ਜੋੜੋ</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2804,11 +2727,11 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">ਭੇਜੋ</string>
+    <string name="micro_survey_submit_button_label">ਭੇਜੋ</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">ਬੰਦ ਕਰੋ</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">ਬੰਦ ਕਰੋ</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">ਤੁਹਾਡੀ ਫ਼ੀਡਬੈਕ ਲਈ ਤੁਹਾਡਾ ਧੰਨਵਾਦ ਹੈ!</string>
+    <string name="micro_survey_feedback_confirmation">ਤੁਹਾਡੀ ਫ਼ੀਡਬੈਕ ਲਈ ਤੁਹਾਡਾ ਧੰਨਵਾਦ ਹੈ!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">ਬਹੁਤ ਸੰਤੁਸ਼ਟ</string>
     <!-- Option for likert scale -->
@@ -2819,6 +2742,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">ਅਸੰਤੁਸ਼ਟ</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">ਬਹੁਤ ਅਸੰਤੁਸ਼ਟ</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">ਸਰਵੇਖਣ ਨੂੰ ਖੋਲ੍ਹੋ</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">ਸਰਵੇਖਣ ਨੂੰ ਬੰਦ ਕਰੋ</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">ਬੰਦ ਕਰੋ</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
