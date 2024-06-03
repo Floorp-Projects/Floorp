@@ -75,7 +75,7 @@ prefFlips:
       description: "The prefs to set."
   schema:
     uri: resource://nimbus/schemas/PrefFlipsFeature.schema.json
-    path: toolkit/component/nimbus/schemas/PrefFlipsFeature.schema.json
+    path: toolkit/components/nimbus/schemas/PrefFlipsFeature.schema.json
 
 
 # `search` is for search engine experimentation features which do not require
