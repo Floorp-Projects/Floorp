@@ -44,7 +44,7 @@ dictionary IdentityProviderConfig {
 dictionary IdentityCredentialUserData {
   required UTF8String name;
   required UTF8String iconURL;
-  UTF8String expires;
+  unsigned long long expiresAfter;
 };
 
 dictionary IdentityCredentialInit {
