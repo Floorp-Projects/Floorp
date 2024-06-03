@@ -85,13 +85,40 @@ strong {
 /* Tooltip: CSS variables tooltip */
 
 .devtools-tooltip-css-variable {
+  --block-padding: 8px;
   color: var(--theme-body-color);
-  padding: 2px 8px;
+  padding: var(--block-padding) 8px;
   direction: ltr;
   /* Try to show the content of the tooltip on a single line */
   inline-size: max-content;
   word-break: break-word;
   max-inline-size: 100vw;
+
+  .variable-value:has(+ .registered-property) {
+    padding-block-end: var(--block-padding);
+  }
+
+  .registered-property {
+    border-block-start: 1px solid var(--theme-splitter-color);
+    margin: 0;
+    padding: 0;
+    padding-block-start: var(--block-padding);
+
+    dt,dd {
+      display: inline;
+    }
+
+    dt {
+      color: var(--theme-highlight-blue);
+      padding-inline-end: 4px;
+    }
+
+    dd {
+      color: var(--theme-highlight-red);
+      margin: 0;
+      padding: 0;
+    }
+  }
 }
 
 
