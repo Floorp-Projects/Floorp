@@ -532,6 +532,7 @@ add_task(async function test_contentscripts_register_all_options() {
       allFrames: true,
       matchAboutBlank: true,
       runAt: "document_start",
+      world: "MAIN",
     });
 
     browser.test.sendMessage("background-ready", window.location.origin);
@@ -572,6 +573,7 @@ add_task(async function test_contentscripts_register_all_options() {
     matchAboutBlank,
     matchOriginAsFallback,
     runAt,
+    world,
     originAttributesPatterns,
   } = script;
 
@@ -583,6 +585,7 @@ add_task(async function test_contentscripts_register_all_options() {
       matchAboutBlank,
       matchOriginAsFallback,
       runAt,
+      world,
       originAttributesPatterns,
     },
     {
@@ -592,6 +595,7 @@ add_task(async function test_contentscripts_register_all_options() {
       matchAboutBlank: true,
       matchOriginAsFallback: false, // Default value when not specified.
       runAt: "document_start",
+      world: "MAIN",
       originAttributesPatterns: null,
     },
     "Got the expected content script properties"

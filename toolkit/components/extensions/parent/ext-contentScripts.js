@@ -94,6 +94,7 @@ class ContentScriptParent {
       matchAboutBlank: details.matchAboutBlank,
       matchOriginAsFallback: details.matchOriginAsFallback,
       runAt: details.runAt || "document_idle",
+      world: details.world || "ISOLATED",
       jsPaths: [],
       cssPaths: [],
       originAttributesPatterns: null,
