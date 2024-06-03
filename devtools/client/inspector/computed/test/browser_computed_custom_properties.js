@@ -7,6 +7,26 @@
 
 const TEST_URI = `
   <style type="text/css">
+    @property --registered-color {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: rgb(0, 100, 200);
+    }
+
+    @property --registered-length {
+      syntax: '<length>';
+      inherits: false;
+      initial-value: 10px;
+    }
+
+    /* This property should not be used. It shares the same suffix than previous property
+       names to assert our check isn't too loose */
+    @property --registered {
+      syntax: '<length>';
+      inherits: false;
+      initial-value: 10px;
+    }
+
     body {
       --global-custom-property: red;
     }
@@ -22,6 +42,7 @@ const TEST_URI = `
     #match-2 {
       --global-custom-property: gold;
       --custom-property-2: cyan;
+      border: var(--registered-length) solid var( /* color */ --registered-color );
     }
   </style>
   <h1 id="match-1">Hello</h1>
@@ -66,6 +87,14 @@ add_task(async function () {
     {
       name: "--global-custom-property",
       value: "gold",
+    },
+    {
+      name: "--registered-color",
+      value: "rgb(0, 100, 200)",
+    },
+    {
+      name: "--registered-length",
+      value: "10px",
     },
   ]);
 
