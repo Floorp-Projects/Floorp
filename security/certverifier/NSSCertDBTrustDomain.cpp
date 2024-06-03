@@ -31,6 +31,7 @@
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozpkix/Result.h"
 #include "mozpkix/pkix.h"
+#include "mozpkix/pkixcheck.h"
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixutil.h"
 #include "nsCRTGlue.h"
@@ -1265,20 +1266,6 @@ Result NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   return rv;
 }
 
-SECStatus GetCertDistrustAfterValue(const SECItem* distrustItem,
-                                    PRTime& distrustTime) {
-  if (!distrustItem || !distrustItem->data || distrustItem->len != 13) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
-  }
-  return DER_DecodeTimeChoice(&distrustTime, distrustItem);
-}
-
-SECStatus GetCertNotBeforeValue(const CERTCertificate* cert,
-                                PRTime& distrustTime) {
-  return DER_DecodeTimeChoice(&distrustTime, &cert->validity.notBefore);
-}
-
 nsresult isDistrustedCertificateChain(
     const nsTArray<nsTArray<uint8_t>>& certArray,
     const SECTrustType certDBTrustType, bool& isDistrusted) {
@@ -1289,93 +1276,94 @@ nsresult isDistrustedCertificateChain(
   // Set the default result to be distrusted.
   isDistrusted = true;
 
-  // There is no distrust to set if the certDBTrustType is not SSL or Email.
-  if (certDBTrustType != trustSSL && certDBTrustType != trustEmail) {
+  CK_ATTRIBUTE_TYPE attrType;
+  switch (certDBTrustType) {
+    case trustSSL:
+      attrType = CKA_NSS_SERVER_DISTRUST_AFTER;
+      break;
+    case trustEmail:
+      attrType = CKA_NSS_EMAIL_DISTRUST_AFTER;
+      break;
+    default:
+      // There is no distrust to set if the certDBTrustType is not SSL or Email.
+      isDistrusted = false;
+      return NS_OK;
+  }
+
+  Input endEntityDER;
+  mozilla::pkix::Result rv = endEntityDER.Init(
+      certArray.ElementAt(0).Elements(), certArray.ElementAt(0).Length());
+  if (rv != Success) {
+    return NS_ERROR_FAILURE;
+  }
+
+  BackCert endEntityBackCert(endEntityDER, EndEntityOrCA::MustBeEndEntity,
+                             nullptr);
+  rv = endEntityBackCert.Init();
+  if (rv != Success) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Time endEntityNotBefore(Time::uninitialized);
+  rv = ParseValidity(endEntityBackCert.GetValidity(), &endEntityNotBefore,
+                     nullptr);
+  if (rv != Success) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Input rootDER;
+  rv = rootDER.Init(certArray.LastElement().Elements(),
+                    certArray.LastElement().Length());
+  if (rv != Success) {
+    return NS_ERROR_FAILURE;
+  }
+  SECItem rootDERItem(UnsafeMapInputToSECItem(rootDER));
+
+  PRBool distrusted;
+  PRTime distrustAfter;  // time since epoch in microseconds
+  bool foundDistrust = false;
+
+  // This strategy for searching for the builtins module is borrowed
+  // from CertVerifier::IsCertBuiltInRoot. See the comment on that
+  // function for more information.
+  AutoSECMODListReadLock lock;
+  for (SECMODModuleList* list = SECMOD_GetDefaultModuleList();
+       list && !foundDistrust; list = list->next) {
+    for (int i = 0; i < list->module->slotCount; i++) {
+      PK11SlotInfo* slot = list->module->slots[i];
+      if (!PK11_IsPresent(slot) || !PK11_HasRootCerts(slot)) {
+        continue;
+      }
+      CK_OBJECT_HANDLE handle =
+          PK11_FindEncodedCertInSlot(slot, &rootDERItem, nullptr);
+      if (handle == CK_INVALID_HANDLE) {
+        continue;
+      }
+      // Distrust attributes are only set on builtin roots, so ensure this
+      // certificate has the CKA_NSS_MOZILLA_CA_POLICY attribute.
+      if (!PK11_HasAttributeSet(slot, handle, CKA_NSS_MOZILLA_CA_POLICY,
+                                false)) {
+        continue;
+      }
+      SECStatus srv = PK11_ReadDistrustAfterAttribute(
+          slot, handle, attrType, &distrusted, &distrustAfter);
+      if (srv == SECSuccess) {
+        foundDistrust = true;
+      }
+    }
+  }
+
+  if (!foundDistrust || distrusted == PR_FALSE) {
     isDistrusted = false;
     return NS_OK;
   }
 
-  SECStatus runnableRV = SECFailure;
-
-  RefPtr<Runnable> isDistrustedChainTask =
-      NS_NewRunnableFunction("isDistrustedCertificateChain", [&]() {
-        if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
-          runnableRV = SECFailure;
-          return;
-        }
-        // Allocate objects and retreive the root and end-entity certificates.
-        CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());
-        const nsTArray<uint8_t>& certRootDER = certArray.LastElement();
-        SECItem certRootDERItem = {
-            siBuffer, const_cast<unsigned char*>(certRootDER.Elements()),
-            AssertedCast<unsigned int>(certRootDER.Length())};
-        UniqueCERTCertificate certRoot(CERT_NewTempCertificate(
-            certDB, &certRootDERItem, nullptr, false, true));
-        if (!certRoot) {
-          runnableRV = SECFailure;
-          return;
-        }
-        const nsTArray<uint8_t>& certLeafDER = certArray.ElementAt(0);
-        SECItem certLeafDERItem = {
-            siBuffer, const_cast<unsigned char*>(certLeafDER.Elements()),
-            AssertedCast<unsigned int>(certLeafDER.Length())};
-        UniqueCERTCertificate certLeaf(CERT_NewTempCertificate(
-            certDB, &certLeafDERItem, nullptr, false, true));
-        if (!certLeaf) {
-          runnableRV = SECFailure;
-          return;
-        }
-
-        // Set isDistrusted to false if there is no distrust for the root.
-        if (!certRoot->distrust) {
-          isDistrusted = false;
-          runnableRV = SECSuccess;
-          return;
-        }
-
-        // Create a pointer to refer to the selected distrust struct.
-        SECItem* distrustPtr = nullptr;
-        if (certDBTrustType == trustSSL) {
-          distrustPtr = &certRoot->distrust->serverDistrustAfter;
-        }
-        if (certDBTrustType == trustEmail) {
-          distrustPtr = &certRoot->distrust->emailDistrustAfter;
-        }
-
-        // Get validity for the current end-entity certificate
-        // and get the distrust field for the root certificate.
-        PRTime certRootDistrustAfter;
-        PRTime certLeafNotBefore;
-
-        runnableRV =
-            GetCertDistrustAfterValue(distrustPtr, certRootDistrustAfter);
-        if (runnableRV != SECSuccess) {
-          return;
-        }
-
-        runnableRV = GetCertNotBeforeValue(certLeaf.get(), certLeafNotBefore);
-        if (runnableRV != SECSuccess) {
-          return;
-        }
-
-        // Compare the validity of the end-entity certificate with
-        // the distrust value of the root.
-        if (certLeafNotBefore <= certRootDistrustAfter) {
-          isDistrusted = false;
-        }
-
-        runnableRV = SECSuccess;
-      });
-  nsCOMPtr<nsIEventTarget> socketThread(
-      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID));
-  if (!socketThread) {
-    return NS_ERROR_FAILURE;
+  Time distrustAfterTime =
+      mozilla::pkix::TimeFromEpochInSeconds(distrustAfter / PR_USEC_PER_SEC);
+  if (endEntityNotBefore <= distrustAfterTime) {
+    isDistrusted = false;
   }
-  nsresult rv =
-      SyncRunnable::DispatchToThread(socketThread, isDistrustedChainTask);
-  if (NS_FAILED(rv) || runnableRV != SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
+
   return NS_OK;
 }
 
