@@ -328,6 +328,7 @@ class Script {
     this.matcher = matcher;
 
     this.runAt = this.matcher.runAt;
+    this.world = this.matcher.world;
     this.js = this.matcher.jsPaths;
     this.css = this.matcher.cssPaths.slice();
     this.cssCodeHash = null;
@@ -570,8 +571,6 @@ class Script {
       await cssPromise;
     }
 
-    let result;
-
     const { extension } = context;
 
     // The evaluations below may throw, in which case the promise will be
@@ -581,26 +580,50 @@ class Script {
       context
     );
     try {
-      for (let script of scripts) {
-        result = script.executeInGlobal(context.cloneScope, {
-          reportExceptions,
-        });
+      if (this.world === "MAIN") {
+        return this.#injectIntoMainWorld(context, scripts, reportExceptions);
       }
-
-      if (this.matcher.jsCode) {
-        result = Cu.evalInSandbox(
-          this.matcher.jsCode,
-          context.cloneScope,
-          "latest",
-          "sandbox eval code",
-          1
-        );
-      }
+      return this.#injectIntoIsolatedWorld(context, scripts, reportExceptions);
     } finally {
       lazy.ExtensionTelemetry.contentScriptInjection.stopwatchFinish(
         extension,
         context
       );
+    }
+  }
+
+  #injectIntoIsolatedWorld(context, scripts, reportExceptions) {
+    let result;
+
+    // Note: every script execution can potentially destroy the context, in
+    // which case context.cloneScope becomes null (bug 1403505).
+    for (let script of scripts) {
+      result = script.executeInGlobal(context.cloneScope, { reportExceptions });
+    }
+
+    if (this.matcher.jsCode) {
+      result = Cu.evalInSandbox(
+        this.matcher.jsCode,
+        context.cloneScope,
+        "latest",
+        "sandbox eval code",
+        1
+      );
+    }
+
+    return result;
+  }
+
+  #injectIntoMainWorld(context, scripts, reportExceptions) {
+    let result;
+
+    // Note: every script execution can potentially destroy the context or
+    // navigate the window, in which case context.contentWindow will be null,
+    // which would cause an error to be thrown (bug 1403505).
+    for (let script of scripts) {
+      result = script.executeInGlobal(context.contentWindow, {
+        reportExceptions,
+      });
     }
 
     return result;

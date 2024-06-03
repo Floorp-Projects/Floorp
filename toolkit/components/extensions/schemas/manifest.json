@@ -760,6 +760,12 @@
             "optional": true,
             "default": "document_idle",
             "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
+          },
+          "world": {
+            "$ref": "extensionTypes.ExecutionWorld",
+            "optional": true,
+            "default": "ISOLATED",
+            "description": "The JavaScript world for a script to execute within. Defaults to \"ISOLATED\"."
           }
         }
       },

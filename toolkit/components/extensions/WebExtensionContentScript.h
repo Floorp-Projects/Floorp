@@ -187,12 +187,14 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
 class WebExtensionContentScript final : public MozDocumentMatcher {
  public:
   using RunAtEnum = dom::ContentScriptRunAt;
+  using ExecutionWorld = dom::ContentScriptExecutionWorld;
 
   static already_AddRefed<WebExtensionContentScript> Constructor(
       dom::GlobalObject& aGlobal, WebExtensionPolicy& aExtension,
       const ContentScriptInit& aInit, ErrorResult& aRv);
 
   RunAtEnum RunAt() const { return mRunAt; }
+  ExecutionWorld World() const { return mWorld; }
 
   void GetCssPaths(nsTArray<nsString>& aPaths) const {
     aPaths.AppendElements(mCssPaths);
@@ -218,6 +220,7 @@ class WebExtensionContentScript final : public MozDocumentMatcher {
   nsTArray<nsString> mJsPaths;
 
   RunAtEnum mRunAt;
+  ExecutionWorld mWorld;
 };
 
 }  // namespace extensions

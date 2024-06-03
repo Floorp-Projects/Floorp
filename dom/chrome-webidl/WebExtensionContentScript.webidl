@@ -146,6 +146,23 @@ enum ContentScriptRunAt {
   "document_idle",
 };
 
+/**
+ * Describes the world where a script should run.
+ */
+enum ContentScriptExecutionWorld {
+  /**
+   * The default execution environment of content scripts.
+   * The name refers to "isolated world", which is a concept from Chromium and
+   * WebKit, used to enforce isolation of the JavaScript execution environments
+   * of content scripts and web pages.
+   */
+  "ISOLATED",
+  /**
+   * The execution environment of the web page.
+   */
+  "MAIN",
+};
+
 [ChromeOnly, Exposed=Window]
 interface WebExtensionContentScript : MozDocumentMatcher {
   [Throws]
@@ -164,6 +181,12 @@ interface WebExtensionContentScript : MozDocumentMatcher {
   readonly attribute ContentScriptRunAt runAt;
 
   /**
+   * The world where the script should run.
+   */
+  [Constant]
+  readonly attribute ContentScriptExecutionWorld world;
+
+  /**
    * A set of paths, relative to the extension root, of CSS sheets to inject
    * into matching pages.
    */
@@ -180,6 +203,8 @@ interface WebExtensionContentScript : MozDocumentMatcher {
 
 dictionary WebExtensionContentScriptInit : MozDocumentMatcherInit {
   ContentScriptRunAt runAt = "document_idle";
+
+  ContentScriptExecutionWorld world = "ISOLATED";
 
   sequence<DOMString> cssPaths = [];
 

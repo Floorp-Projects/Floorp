@@ -56,6 +56,12 @@
         "description": "The soonest that the JavaScript or CSS will be injected into the tab."
       },
       {
+        "id": "ExecutionWorld",
+        "type": "string",
+        "enum": ["ISOLATED", "MAIN"],
+        "description": "The JavaScript world for a script to execute within. <code>ISOLATED</code> is the default execution environment of content scripts, <code>MAIN</code> is the web page's execution environment."
+      },
+      {
         "id": "CSSOrigin",
         "type": "string",
         "enum": ["user", "author"],
