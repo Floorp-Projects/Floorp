@@ -4,7 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ["tlsserver", "test_builtins", "test_signed_apps"]
+DIRS += ["dynamic-library"]
 
-if not CONFIG["MOZ_NO_SMART_CARDS"]:
-    DIRS += ["pkcs11testmodule"]
+OS_LIBS += CONFIG["DL_LIBS"]
+
+RustLibrary("test-builtins-static")

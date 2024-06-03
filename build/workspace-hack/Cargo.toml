@@ -224,3 +224,4 @@ jsrust = ["dep:arrayvec", "dep:cc", "dep:env_logger", "dep:getrandom", "dep:hash
 mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:once_cell", "dep:serde_json", "dep:uuid", "dep:windows-sys"]
 nmhproxy = ["dep:bitflags", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:smallvec", "dep:unicode-bidi", "dep:url", "dep:windows-sys"]
 osclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:core-foundation-sys", "dep:env_logger", "dep:itertools", "dep:log", "dep:memchr", "dep:nom", "dep:regex"]
+test-builtins-static = ["dep:bindgen", "dep:bitflags", "dep:itertools", "dep:memchr", "dep:nom", "dep:regex", "dep:smallvec"]

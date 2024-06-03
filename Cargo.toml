@@ -10,6 +10,7 @@ members = [
   "js/src/rust",
   "netwerk/test/http3server",
   "security/manager/ssl/builtins",
+  "security/manager/ssl/tests/unit/test_builtins",
   "security/manager/ssl/ipcclientcerts",
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
