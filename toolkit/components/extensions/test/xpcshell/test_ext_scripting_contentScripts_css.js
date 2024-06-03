@@ -37,6 +37,7 @@ add_task(async function test_registerContentScripts_css() {
         matches: ["http://*/*/*.html"],
         matchOriginAsFallback: false,
         runAt: "document_idle",
+        world: "ISOLATED",
         persistAcrossSessions: false,
         js: ["check-applied-styles.js"],
       };
@@ -141,6 +142,7 @@ add_task(async function test_registerContentScripts_css() {
           matchOriginAsFallback: false,
           // TODO: Bug 1759117 - runAt should not affect css injection
           runAt: "document_start",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css"],
         },
@@ -157,6 +159,7 @@ add_task(async function test_registerContentScripts_css() {
           matchOriginAsFallback: false,
           // TODO: Bug 1759117 - runAt should not affect css injection
           runAt: "document_start",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css"],
         },
@@ -173,6 +176,7 @@ add_task(async function test_registerContentScripts_css() {
           matchOriginAsFallback: false,
           // TODO: Bug 1759117 - runAt should not affect css injection
           runAt: "document_start",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css"],
         },
@@ -189,6 +193,7 @@ add_task(async function test_registerContentScripts_css() {
           matchOriginAsFallback: false,
           // TODO: Bug 1759117 - runAt should not affect css injection
           runAt: "document_start",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css"],
           excludeMatches: ["http://*/*/file_with_iframe.html"],
@@ -206,6 +211,7 @@ add_task(async function test_registerContentScripts_css() {
           matchOriginAsFallback: false,
           // TODO: Bug 1759117 - runAt should not affect css injection
           runAt: "document_start",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css", "style-2.css"],
         },
@@ -221,6 +227,7 @@ add_task(async function test_registerContentScripts_css() {
           matches: ["http://*/*/*.html"],
           matchOriginAsFallback: false,
           runAt: "document_end",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css"],
         },
@@ -230,6 +237,7 @@ add_task(async function test_registerContentScripts_css() {
           matches: ["http://*/*/*.html"],
           matchOriginAsFallback: false,
           runAt: "document_start",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-2.css"],
         },
@@ -248,6 +256,7 @@ add_task(async function test_registerContentScripts_css() {
           matches: ["http://*/*/*.html"],
           matchOriginAsFallback: false,
           runAt: "document_start",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-3.css"],
           // Inject the check script last to be able to send a message back to
@@ -271,6 +280,7 @@ add_task(async function test_registerContentScripts_css() {
           matches: ["http://*/*/*.html"],
           matchOriginAsFallback: false,
           runAt: "document_end",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css"],
           // Inject the check script last to be able to send a message back to
@@ -291,6 +301,7 @@ add_task(async function test_registerContentScripts_css() {
           matches: ["http://*/*/*.html"],
           matchOriginAsFallback: false,
           runAt: "document_idle",
+          world: "ISOLATED",
           persistAcrossSessions: false,
           css: ["style-1.css"],
           // Inject the check script last to be able to send a message back to
