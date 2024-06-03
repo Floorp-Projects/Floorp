@@ -1,4 +1,4 @@
-use std::fmt::{self, Display};
+use core::fmt::{self, Display};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

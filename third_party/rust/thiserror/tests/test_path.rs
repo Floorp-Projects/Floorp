@@ -1,5 +1,5 @@
+use core::fmt::Display;
 use ref_cast::RefCast;
-use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 

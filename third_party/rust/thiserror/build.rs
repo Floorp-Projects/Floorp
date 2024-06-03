@@ -7,6 +7,9 @@ use std::process::{self, Command, Stdio};
 fn main() {
     println!("cargo:rerun-if-changed=build/probe.rs");
 
+    println!("cargo:rustc-check-cfg=cfg(error_generic_member_access)");
+    println!("cargo:rustc-check-cfg=cfg(thiserror_nightly_testing)");
+
     let error_generic_member_access;
     let consider_rustc_bootstrap;
     if compile_probe(false) {

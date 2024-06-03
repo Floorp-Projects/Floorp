@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::fmt::{self, Display};
+use core::fmt::{self, Display};
 use std::io;
 use thiserror::Error;
 

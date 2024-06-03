@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use core::fmt::Display;
 use std::path::{self, Path, PathBuf};
 
 #[doc(hidden)]

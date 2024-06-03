@@ -959,14 +959,29 @@ pub fn replay_compute_pass<A: HalApi>(
     global: &Global,
     id: CommandEncoderId,
     src_pass: &RecordedComputePass,
-) -> Result<(), wgc::command::ComputePassError> {
-    let mut dst_pass = global.command_encoder_create_compute_pass::<A>(
+    mut error_buf: crate::error::ErrorBuffer,
+) {
+    let (mut dst_pass, err) = global.command_encoder_create_compute_pass::<A>(
         id,
         &wgc::command::ComputePassDescriptor {
             label: src_pass.base.label.as_ref().map(|s| s.as_str().into()),
             timestamp_writes: src_pass.timestamp_writes.as_ref(),
         },
     );
+    if let Some(err) = err {
+        error_buf.init(err);
+        return;
+    }
+    if let Err(err) = replay_compute_pass_impl::<A>(global, src_pass, &mut dst_pass) {
+        error_buf.init(err);
+    }
+}
+
+fn replay_compute_pass_impl<A: HalApi>(
+    global: &Global,
+    src_pass: &RecordedComputePass,
+    dst_pass: &mut wgc::command::ComputePass<A>,
+) -> Result<(), wgc::command::ComputePassError> {
     let mut dynamic_offsets = src_pass.base.dynamic_offsets.as_slice();
     let mut dynamic_offsets = |len| {
         let offsets;
@@ -987,55 +1002,51 @@ pub fn replay_compute_pass<A: HalApi>(
                 bind_group_id,
             } => {
                 let offsets = dynamic_offsets(num_dynamic_offsets);
-                global.compute_pass_set_bind_group(&mut dst_pass, index, bind_group_id, offsets)?;
+                global.compute_pass_set_bind_group(dst_pass, index, bind_group_id, offsets)?;
             }
             ComputeCommand::SetPipeline(pipeline_id) => {
-                global.compute_pass_set_pipeline(&mut dst_pass, pipeline_id)?;
+                global.compute_pass_set_pipeline(dst_pass, pipeline_id)?;
             }
             ComputeCommand::Dispatch([x, y, z]) => {
-                global.compute_pass_dispatch_workgroups(&mut dst_pass, x, y, z);
+                global.compute_pass_dispatch_workgroups(dst_pass, x, y, z)?;
             }
             ComputeCommand::DispatchIndirect { buffer_id, offset } => {
-                global.compute_pass_dispatch_workgroups_indirect(
-                    &mut dst_pass,
-                    buffer_id,
-                    offset,
-                )?;
+                global.compute_pass_dispatch_workgroups_indirect(dst_pass, buffer_id, offset)?;
             }
             ComputeCommand::PushDebugGroup { color, len } => {
                 let label = strings(len);
                 let label = std::str::from_utf8(label).unwrap();
-                global.compute_pass_push_debug_group(&mut dst_pass, label, color);
+                global.compute_pass_push_debug_group(dst_pass, label, color)?;
             }
             ComputeCommand::PopDebugGroup => {
-                global.compute_pass_pop_debug_group(&mut dst_pass);
+                global.compute_pass_pop_debug_group(dst_pass)?;
             }
             ComputeCommand::InsertDebugMarker { color, len } => {
                 let label = strings(len);
                 let label = std::str::from_utf8(label).unwrap();
-                global.compute_pass_insert_debug_marker(&mut dst_pass, label, color);
+                global.compute_pass_insert_debug_marker(dst_pass, label, color)?;
             }
             ComputeCommand::WriteTimestamp {
                 query_set_id,
                 query_index,
             } => {
-                global.compute_pass_write_timestamp(&mut dst_pass, query_set_id, query_index)?;
+                global.compute_pass_write_timestamp(dst_pass, query_set_id, query_index)?;
             }
             ComputeCommand::BeginPipelineStatisticsQuery {
                 query_set_id,
                 query_index,
             } => {
                 global.compute_pass_begin_pipeline_statistics_query(
-                    &mut dst_pass,
+                    dst_pass,
                     query_set_id,
                     query_index,
                 )?;
             }
             ComputeCommand::EndPipelineStatisticsQuery => {
-                global.compute_pass_end_pipeline_statistics_query(&mut dst_pass);
+                global.compute_pass_end_pipeline_statistics_query(dst_pass)?;
             }
         }
     }
 
-    global.command_encoder_run_compute_pass(&dst_pass)
+    global.compute_pass_end(dst_pass)
 }

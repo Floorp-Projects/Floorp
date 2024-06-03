@@ -952,13 +952,11 @@ impl Global {
                 base,
                 timestamp_writes,
             } => {
-                if let Err(err) = self
-                    .command_encoder_run_compute_pass_with_unresolved_commands::<A>(
-                        self_id,
-                        base.as_ref(),
-                        timestamp_writes.as_ref(),
-                    )
-                {
+                if let Err(err) = self.compute_pass_end_with_unresolved_commands::<A>(
+                    self_id,
+                    base,
+                    timestamp_writes.as_ref(),
+                ) {
                     error_buf.init(err);
                 }
             }
@@ -997,7 +995,7 @@ impl Global {
                 timestamp_writes,
                 occlusion_query_set_id,
             } => {
-                if let Err(err) = self.command_encoder_run_render_pass_impl::<A>(
+                if let Err(err) = self.render_pass_end_impl::<A>(
                     self_id,
                     base.as_ref(),
                     &target_colors,
@@ -1094,7 +1092,7 @@ pub unsafe extern "C" fn wgpu_server_compute_pass(
     global: &Global,
     encoder_id: id::CommandEncoderId,
     byte_buf: &ByteBuf,
-    mut error_buf: ErrorBuffer,
+    error_buf: ErrorBuffer,
 ) {
     let src_pass = bincode::deserialize(byte_buf.as_slice()).unwrap();
 
@@ -1103,8 +1101,8 @@ pub unsafe extern "C" fn wgpu_server_compute_pass(
             &self,
             encoder_id: id::CommandEncoderId,
             src_pass: &RecordedComputePass,
-        ) -> Result<(), wgc::command::ComputePassError>
-        where
+            error_buf: ErrorBuffer,
+        ) where
             A: wgc::hal_api::HalApi;
     }
     impl ReplayComputePass for Global {
@@ -1112,17 +1110,15 @@ pub unsafe extern "C" fn wgpu_server_compute_pass(
             &self,
             encoder_id: id::CommandEncoderId,
             src_pass: &RecordedComputePass,
-        ) -> Result<(), wgc::command::ComputePassError>
-        where
+            error_buf: ErrorBuffer,
+        ) where
             A: wgc::hal_api::HalApi,
         {
-            crate::command::replay_compute_pass::<A>(self, encoder_id, src_pass)
+            crate::command::replay_compute_pass::<A>(self, encoder_id, src_pass, error_buf);
         }
     }
 
-    if let Err(err) = gfx_select!(encoder_id => global.replay_compute_pass(encoder_id, &src_pass)) {
-        error_buf.init(err);
-    }
+    gfx_select!(encoder_id => global.replay_compute_pass(encoder_id, &src_pass, error_buf));
 }
 
 #[no_mangle]
