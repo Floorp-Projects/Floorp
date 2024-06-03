@@ -457,7 +457,12 @@ export class MegalistView extends MozLitElement {
       },
       { capture: true }
     );
-    popup.addEventListener("mousedown", e => e.preventDefault());
+    popup.addEventListener("mousedown", e => {
+      e.preventDefault();
+      if (e.target.classList != "menuItem") {
+        closeMenu();
+      }
+    });
     for (const command of snapshotData.commands) {
       if (command == "-") {
         const separator = this.ownerDocument.createElement("div");
@@ -468,6 +473,7 @@ export class MegalistView extends MozLitElement {
 
       const menuItem = this.ownerDocument.createElement("button");
       menuItem.setAttribute("role", "menuitem");
+      menuItem.classList.add("menuItem");
       menuItem.setAttribute("data-l10n-id", command.label);
       menuItem.addEventListener("click", e => {
         this.#messageToViewModel("Command", {
