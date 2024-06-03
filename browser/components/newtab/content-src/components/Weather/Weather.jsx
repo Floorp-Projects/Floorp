@@ -4,6 +4,7 @@
 
 import { connect } from "react-redux";
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
+import { LocationSearch } from "content-src/components/Weather/LocationSearch";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import React from "react";
 
@@ -192,7 +193,7 @@ export class _Weather extends React.PureComponent {
 
     const { showContextMenu } = this.state;
 
-    const WEATHER_SUGGESTION = this.props.Weather.suggestions?.[0];
+    const { props } = this;
 
     const {
       className,
@@ -200,21 +201,24 @@ export class _Weather extends React.PureComponent {
       dispatch,
       eventSource,
       shouldSendImpressionStats,
-    } = this.props;
-    const { props } = this;
+      Prefs,
+      Weather,
+    } = props;
+
+    const WEATHER_SUGGESTION = Weather.suggestions?.[0];
     const isContextMenuOpen = this.state.activeCard === index;
 
     const outerClassName = [
       "weather",
       className,
-      isContextMenuOpen && "active",
+      isContextMenuOpen && !Weather.searchActive && "active",
       props.placeholder && "placeholder",
+      Weather.searchActive && "search",
     ]
       .filter(v => v)
       .join(" ");
 
-    const showDetailedView =
-      this.props.Prefs.values["weather.display"] === "detailed";
+    const showDetailedView = Prefs.values["weather.display"] === "detailed";
 
     // Note: The temperature units/display options will become secondary menu items
     const WEATHER_SOURCE_CONTEXT_MENU_OPTIONS = [
@@ -231,8 +235,9 @@ export class _Weather extends React.PureComponent {
       "OpenLearnMoreURL",
     ];
 
-    // Only return the widget if we have data. Otherwise, show error state
-    if (WEATHER_SUGGESTION) {
+    if (Weather.searchActive) {
+      return <LocationSearch outerClassName={outerClassName} />;
+    } else if (WEATHER_SUGGESTION) {
       return (
         <div ref={this.setImpressionRef} className={outerClassName}>
           <div className="weatherCard">
@@ -261,7 +266,7 @@ export class _Weather extends React.PureComponent {
                 </div>
                 <div className="weatherCityRow">
                   <span className="weatherCity">
-                    {WEATHER_SUGGESTION.city_name}
+                    {Weather.locationData.city}
                   </span>
                 </div>
                 {showDetailedView ? (

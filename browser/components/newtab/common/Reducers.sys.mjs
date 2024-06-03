@@ -105,10 +105,19 @@ export const INITIAL_STATE = {
     wallpaperList: [],
   },
   Weather: {
-    // do we have the data from WeatherFeed yet?
     initialized: false,
-    suggestions: [],
     lastUpdated: null,
+    query: "",
+    suggestions: [],
+    locationData: {
+      city: "",
+      adminArea: "",
+      country: "",
+    },
+    // Display search input in Weather widget
+    searchActive: false,
+    locationSearchString: "",
+    suggestedLocations: [],
   },
 };
 
@@ -866,8 +875,17 @@ function Weather(prevState = INITIAL_STATE.Weather, action) {
         ...prevState,
         suggestions: action.data.suggestions,
         lastUpdated: action.data.date,
+        locationData: action.data.locationData || prevState.locationData,
         initialized: true,
       };
+    case at.WEATHER_SEARCH_ACTIVE:
+      return { ...prevState, searchActive: action.data };
+    case at.WEATHER_LOCATION_SEARCH_UPDATE:
+      return { ...prevState, locationSearchString: action.data };
+    case at.WEATHER_LOCATION_SUGGESTIONS_UPDATE:
+      return { ...prevState, suggestedLocations: action.data };
+    case at.WEATHER_LOCATION_DATA_UPDATE:
+      return { ...prevState, locationData: action.data };
     default:
       return prevState;
   }

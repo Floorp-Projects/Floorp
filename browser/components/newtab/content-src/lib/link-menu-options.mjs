@@ -308,9 +308,9 @@ export const LinkMenuOptions = {
     isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem(),
   ChangeWeatherLocation: () => ({
     id: "newtab-weather-menu-change-location",
-    action: ac.OnlyToMain({
-      type: at.CHANGE_WEATHER_LOCATION,
-      data: { url: "https://mozilla.org" },
+    action: ac.BroadcastToContent({
+      type: at.WEATHER_SEARCH_ACTIVE,
+      data: true,
     }),
   }),
   ChangeWeatherDisplaySimple: () => ({
