@@ -366,7 +366,7 @@ export class NetworkObserver {
       // Additional details about the event will be provided using the various
       // callbacks on the network event owner.
       const httpActivity = this.#createOrGetActivityObject(channel);
-      this.#createNetworkEvent(channel, { httpActivity });
+      this.#createNetworkEvent(httpActivity);
     }
   );
 
@@ -404,16 +404,14 @@ export class NetworkObserver {
         // Do not pass any blocked reason, as this request is just fine.
         // Bug 1489217 - Prevent watching for this request response content,
         // as this request is already running, this is too late to watch for it.
-        this.#createNetworkEvent(channel, {
-          httpActivity,
+        this.#createNetworkEvent(httpActivity, {
           inProgressRequest: true,
         });
       } else {
         // Handles any early blockings e.g by Web Extensions or by CORS
         const { blockingExtension, blockedReason } =
           lazy.NetworkUtils.getBlockedReason(channel, httpActivity.fromCache);
-        this.#createNetworkEvent(channel, {
-          httpActivity,
+        this.#createNetworkEvent(httpActivity, {
           blockedReason,
           blockingExtension,
         });
@@ -525,7 +523,7 @@ export class NetworkObserver {
       // If this is a cached response (which are also emitted by service worker requests),
       // there never was a request event so we need to construct one here
       // so the frontend gets all the expected events.
-      this.#createNetworkEvent(channel, { httpActivity });
+      this.#createNetworkEvent(httpActivity);
     } else if (this.#createEarlyEvents) {
       // However if we already created an event because the NetworkObserver
       // is using early events, simply forward the cache details to the
@@ -573,8 +571,7 @@ export class NetworkObserver {
       httpActivity.fromCache
     );
 
-    this.#createNetworkEvent(channel, {
-      httpActivity,
+    this.#createNetworkEvent(httpActivity, {
       blockedReason,
     });
   }
@@ -811,19 +808,16 @@ export class NetworkObserver {
    * - Register listener to record response content
    */
   #createNetworkEvent(
-    channel,
-    {
-      httpActivity,
-      timestamp,
-      blockedReason,
-      blockingExtension,
-      inProgressRequest,
-    } = {}
+    httpActivity,
+    { timestamp, blockedReason, blockingExtension, inProgressRequest } = {}
   ) {
-    if (blockedReason === undefined && this.#shouldBlockChannel(channel)) {
+    if (
+      blockedReason === undefined &&
+      this.#shouldBlockChannel(httpActivity.channel)
+    ) {
       // Check the request URL with ones manually blocked by the user in DevTools.
       // If it's meant to be blocked, we cancel the request and annotate the event.
-      channel.cancel(Cr.NS_BINDING_ABORTED);
+      httpActivity.channel.cancel(Cr.NS_BINDING_ABORTED);
       blockedReason = "devtools";
     }
 
@@ -837,7 +831,7 @@ export class NetworkObserver {
         discardRequestBody: !this.#saveRequestAndResponseBodies,
         discardResponseBody: !this.#saveRequestAndResponseBodies,
       },
-      channel
+      httpActivity.channel
     );
 
     // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
@@ -847,7 +841,7 @@ export class NetworkObserver {
     }
 
     if (this.#authPromptListenerEnabled) {
-      new lazy.NetworkAuthListener(channel, httpActivity.owner);
+      new lazy.NetworkAuthListener(httpActivity.channel, httpActivity.owner);
     }
   }
 
@@ -885,8 +879,7 @@ export class NetworkObserver {
     if (!httpActivity.owner) {
       // If we are not creating events using the early platform notification
       // this should be the first time we are notified about this channel.
-      this.#createNetworkEvent(channel, {
-        httpActivity,
+      this.#createNetworkEvent(httpActivity, {
         timestamp,
       });
     }
