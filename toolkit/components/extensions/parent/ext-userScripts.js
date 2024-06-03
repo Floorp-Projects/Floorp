@@ -48,6 +48,8 @@ class UserScriptParent {
       // superseded by the new one in bug 1875475.
       matchOriginAsFallback: false,
       runAt: details.runAt || "document_idle",
+      // "world" option is unsupported in the old userScripts API. The new one
+      // (bug 1875475) will support "USER_SCRIPT" (default) and "MAIN".
       jsPaths: details.js,
       userScriptOptions: {
         scriptMetadata: details.scriptMetadata,
