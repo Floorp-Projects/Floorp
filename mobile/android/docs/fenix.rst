@@ -19,15 +19,28 @@ From the root mozilla-central directory, you can run an emulator with the follow
 
     ./mach android-emulator
 
-From the `mobile/android/fenix` working directory, build, install and launch Fenix with:
+Before building, set the paths to your Java installation and Android SDK
+
+**macOS**
+
+.. code-block:: shell
+
+    export JAVA_HOME=$HOME/.mozbuild/jdk/jdk-<latest-version>/Contents/Home
+    export ANDROID_HOME=$HOME/.mozbuild/android-sdk-<os_name>
+
+**non-macOS**
 
 .. code-block:: shell
 
     export JAVA_HOME=$HOME/.mozbuild/jdk/jdk-<latest-version>
     export ANDROID_HOME=$HOME/.mozbuild/android-sdk-<os_name>
+
+From the `mobile/android/fenix` working directory, build, install and launch Fenix:
+
+.. code-block:: shell
+
     ./gradlew :app:installFenixDebug
     "$ANDROID_HOME/platform-tools/adb" shell am start -n org.mozilla.fenix.debug/org.mozilla.fenix.debug.App
-
 
 Run Fenix tests
 -------------------
