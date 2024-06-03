@@ -14,7 +14,9 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageFunction.h"
+#include "mozilla/dom/IPCIdentityCredential.h"
 #include "nsIAsyncShutdown.h"
+#include "nsIFile.h"
 #include "nsIIdentityCredentialStorageService.h"
 #include "nsIObserver.h"
 #include "nsISupports.h"
@@ -83,6 +85,8 @@ class IdentityCredentialStorageService final
   // Grab all data from the disk database and insert it into the memory
   // database/ This is used at start up
   nsresult LoadMemoryTableFromDisk();
+  nsresult LoadLightweightMemoryTableFromDisk();
+  nsresult LoadHeavyweightMemoryTableFromDisk();
 
   // Used to (thread-safely) track how many operations have been launched to the
   // worker thread so that we can wait for it to hit zero before close the disk
@@ -112,6 +116,14 @@ class IdentityCredentialStorageService final
 
   static nsresult ClearData(mozIStorageConnection* aDatabaseConnection);
 
+  static nsresult UpsertLightweightData(
+      mozIStorageConnection* aDatabaseConnection,
+      const dom::IPCIdentityCredential& aData);
+
+  static nsresult DeleteLightweightData(
+      mozIStorageConnection* aDatabaseConnection,
+      const dom::IPCIdentityCredential& aData);
+
   static nsresult DeleteDataFromOriginAttributesPattern(
       mozIStorageConnection* aDatabaseConnection,
       OriginAttributesPattern const& aOriginAttributesPattern);
@@ -140,8 +152,8 @@ class IdentityCredentialStorageService final
   // The database file handle. We can only create this in the main thread and
   // need it in the worker to perform blocking disk IO. So we put it on this,
   // since we pass this to the worker anyway
-  nsCOMPtr<nsIFile> mDatabaseFile;  // initialized in the main thread, read-only
-                                    // in worker thread
+  RefPtr<nsIFile> mDatabaseFile;  // initialized in the main thread, read-only
+                                  // in worker thread
 
   // Service state management. We protect these variables with a monitor. This
   // monitor is also used to signal the completion of initialization and
