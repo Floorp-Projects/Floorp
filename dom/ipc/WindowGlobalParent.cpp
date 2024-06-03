@@ -1454,33 +1454,6 @@ IPCResult WindowGlobalParent::RecvDiscoverIdentityCredentialFromExternalSource(
   return IPC_OK();
 }
 
-IPCResult WindowGlobalParent::RecvCollectIdentityCredentialFromCredentialStore(
-    const IdentityCredentialRequestOptions& aOptions,
-    const CollectIdentityCredentialFromCredentialStoreResolver& aResolver) {
-  IdentityCredential::CollectFromCredentialStoreInMainProcess(
-      DocumentPrincipal(), BrowsingContext(), aOptions)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aResolver](const nsTArray<IPCIdentityCredential>& aResult) {
-            aResolver(aResult);
-          },
-          [aResolver](nsresult aErr) {
-            aResolver(nsTArray<IPCIdentityCredential>());
-          });
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalParent::RecvStoreIdentityCredential(
-    const IPCIdentityCredential& aCredential,
-    const StoreIdentityCredentialResolver& aResolver) {
-  IdentityCredential::StoreInMainProcess(DocumentPrincipal(), aCredential)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aResolver](const bool& aResult) { aResolver(NS_OK); },
-          [aResolver](nsresult aErr) { aResolver(aErr); });
-  return IPC_OK();
-}
-
 IPCResult WindowGlobalParent::RecvGetStorageAccessPermission(
     GetStorageAccessPermissionResolver&& aResolve) {
   WindowGlobalParent* top = TopWindowContext();

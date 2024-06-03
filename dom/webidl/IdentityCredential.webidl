@@ -12,10 +12,8 @@
  Pref="dom.security.credentialmanagement.identity.enabled"]
 interface IdentityCredential : Credential {
  readonly attribute USVString? token;
- [Throws, Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- readonly attribute UTF8String origin;
- [Throws, Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- constructor(IdentityCredentialInit init);
+ [Throws]
+ static Promise<undefined> logoutRPs(sequence<IdentityCredentialLogoutRPsRequest> logoutRequests);
 };
 
 dictionary IdentityCredentialRequestOptions {
@@ -24,38 +22,10 @@ dictionary IdentityCredentialRequestOptions {
 
 [GenerateConversionToJS]
 dictionary IdentityProviderConfig {
- UTF8String configURL;
- UTF8String clientId;
+ required UTF8String configURL;
+ required UTF8String clientId;
  UTF8String nonce;
- [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- UTF8String origin;
- [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- UTF8String loginURL;
- [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- UTF8String loginTarget;
- [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- UTF8String effectiveQueryURL;
- [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- UTF8String data;
 };
-
-// Lightweight only
-
-dictionary IdentityCredentialUserData {
-  required UTF8String name;
-  required UTF8String iconURL;
-  unsigned long long expiresAfter;
-};
-
-dictionary IdentityCredentialInit {
-  required DOMString id;
-  UTF8String token;
-  sequence<UTF8String> effectiveOrigins;
-  UTF8String effectiveQueryURL;
-  IdentityCredentialUserData uiHint;
-};
-
-// Heavyweight only
 
 // https://fedidcg.github.io/FedCM/#dictdef-identityproviderwellknown
 [GenerateInit]
@@ -114,4 +84,10 @@ dictionary IdentityProviderClientMetadata {
 [GenerateInit]
 dictionary IdentityProviderToken {
   required USVString token;
+};
+
+// https://fedidcg.github.io/FedCM/#dictdef-identitycredentiallogoutrpsrequest
+dictionary IdentityCredentialLogoutRPsRequest {
+  required UTF8String url;
+  required UTF8String accountId;
 };

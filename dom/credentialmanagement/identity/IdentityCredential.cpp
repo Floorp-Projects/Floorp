@@ -37,116 +37,24 @@ JSObject* IdentityCredential::WrapObject(JSContext* aCx,
 }
 
 IdentityCredential::IdentityCredential(nsPIDOMWindowInner* aParent)
-    : Credential(aParent) {
-  if (aParent && aParent->GetBrowsingContext() &&
-      aParent->GetBrowsingContext()->Top() &&
-      aParent->GetBrowsingContext()->Top()->GetDocument()) {
-    this->mIdentityProvider =
-        aParent->GetBrowsingContext()->Top()->GetDocument()->GetPrincipal();
-  }
-}
-
-IdentityCredential::IdentityCredential(nsPIDOMWindowInner* aParent,
-                                       const IPCIdentityCredential& aOther)
-    : Credential(aParent) {
-  CopyValuesFrom(aOther);
-}
+    : Credential(aParent) {}
 
 void IdentityCredential::CopyValuesFrom(const IPCIdentityCredential& aOther) {
+  this->SetToken(aOther.token());
   this->SetId(aOther.id());
-  this->SetType(u"identity"_ns);
-  IdentityCredentialInit creationOptions;
-  if (aOther.token().isSome()) {
-    this->mToken = aOther.token().value();
-    creationOptions.mToken.Construct(
-        NS_ConvertUTF16toUTF8(aOther.token().value()));
-  }
-  if (aOther.effectiveQueryURL().isSome()) {
-    creationOptions.mEffectiveQueryURL.Construct(
-        aOther.effectiveQueryURL().value());
-  }
-  if (aOther.effectiveOrigins().Length() > 0) {
-    creationOptions.mEffectiveOrigins.Construct(
-        Sequence(aOther.effectiveOrigins().Clone()));
-  }
-  creationOptions.mId = aOther.id();
-  IdentityCredentialUserData userData;
-  if (aOther.name().isSome()) {
-    userData.mName = aOther.name()->Data();
-  }
-  if (aOther.iconURL().isSome()) {
-    userData.mIconURL = aOther.iconURL()->Data();
-  }
-  if (aOther.infoExpiresAt().isSome()) {
-    userData.mExpiresAfter.Construct(std::max<uint64_t>(
-        aOther.infoExpiresAt().value() - PR_Now() / PR_USEC_PER_MSEC, 0));
-  }
-  if (aOther.name().isSome() || aOther.iconURL().isSome() ||
-      aOther.infoExpiresAt().isSome()) {
-    creationOptions.mUiHint.Construct(userData);
-  }
-  this->mCreationOptions = Some(creationOptions);
-  this->mIdentityProvider = aOther.identityProvider();
+  this->SetType(aOther.type());
 }
 
-IPCIdentityCredential IdentityCredential::MakeIPCIdentityCredential() const {
+IPCIdentityCredential IdentityCredential::MakeIPCIdentityCredential() {
+  nsString token, id, type;
+  GetToken(token);
+  GetId(id);
+  GetType(type);
   IPCIdentityCredential result;
-  result.identityProvider() = mIdentityProvider;
-  this->GetId(result.id());
-  if (this->mCreationOptions.isSome()) {
-    if (this->mCreationOptions->mEffectiveQueryURL.WasPassed()) {
-      result.effectiveQueryURL() =
-          Some(this->mCreationOptions->mEffectiveQueryURL.Value());
-    }
-    if (this->mCreationOptions->mEffectiveOrigins.WasPassed()) {
-      result.effectiveOrigins() =
-          this->mCreationOptions->mEffectiveOrigins.Value();
-    }
-    if (this->mCreationOptions->mUiHint.WasPassed() &&
-        !this->mCreationOptions->mUiHint.Value().mIconURL.IsEmpty()) {
-      result.iconURL() = Some(this->mCreationOptions->mUiHint.Value().mIconURL);
-    }
-    if (this->mCreationOptions->mUiHint.WasPassed() &&
-        !this->mCreationOptions->mUiHint.Value().mName.IsEmpty()) {
-      result.name() = Some(this->mCreationOptions->mUiHint.Value().mName);
-    }
-    if (this->mCreationOptions->mUiHint.WasPassed() &&
-        this->mCreationOptions->mUiHint.Value().mExpiresAfter.WasPassed()) {
-      result.infoExpiresAt() =
-          Some(PR_Now() / PR_USEC_PER_MSEC +
-               this->mCreationOptions->mUiHint.Value().mExpiresAfter.Value());
-    }
-    if (this->mCreationOptions->mToken.WasPassed()) {
-      result.token() =
-          Some(NS_ConvertUTF8toUTF16(this->mCreationOptions->mToken.Value()));
-    }
-  }
-  if (!this->mToken.IsEmpty()) {
-    result.token() = Some(this->mToken);
-  }
-
+  result.token() = token;
+  result.id() = id;
+  result.type() = type;
   return result;
-}
-
-// static
-already_AddRefed<IdentityCredential> IdentityCredential::Constructor(
-    const GlobalObject& aGlobal, const IdentityCredentialInit& aInit,
-    ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!global || !global->GetAsInnerWindow() || !global->PrincipalOrNull()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  RefPtr<IdentityCredential> result =
-      new IdentityCredential(global->GetAsInnerWindow());
-  result->SetId(aInit.mId);
-  result->SetType(u"identity"_ns);
-  result->mCreationOptions.emplace(aInit);
-  result->mIdentityProvider = global->PrincipalOrNull();
-  if (aInit.mToken.WasPassed()) {
-    result->mToken = NS_ConvertUTF8toUTF16(aInit.mToken.Value());
-  }
-  return result.forget();
 }
 
 void IdentityCredential::GetToken(nsAString& aToken) const {
@@ -154,344 +62,6 @@ void IdentityCredential::GetToken(nsAString& aToken) const {
 }
 void IdentityCredential::SetToken(const nsAString& aToken) {
   mToken.Assign(aToken);
-  if (mCreationOptions.isSome()) {
-    mCreationOptions->mToken.Construct(NS_ConvertUTF16toUTF8(aToken));
-  }
-}
-
-void IdentityCredential::GetOrigin(nsACString& aOrigin,
-                                   ErrorResult& aError) const {
-  nsresult rv = mIdentityProvider->GetWebExposedOriginSerialization(aOrigin);
-  if (NS_FAILED(rv)) {
-    aOrigin.SetLength(0);
-    aError.Throw(rv);
-  }
-}
-
-// static
-RefPtr<IdentityCredential::GetIdentityCredentialsPromise>
-IdentityCredential::CollectFromCredentialStore(
-    nsPIDOMWindowInner* aParent, const CredentialRequestOptions& aOptions,
-    bool aSameOriginWithAncestors) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_ASSERT(aParent);
-  // Prevent origin confusion by requiring no cross domain iframes
-  // in this one's ancestry
-  if (!aSameOriginWithAncestors) {
-    return IdentityCredential::GetIdentityCredentialsPromise::CreateAndReject(
-        NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
-  }
-
-  Document* parentDocument = aParent->GetExtantDoc();
-  if (!parentDocument) {
-    return IdentityCredential::GetIdentityCredentialsPromise::CreateAndReject(
-        NS_ERROR_FAILURE, __func__);
-  }
-
-  // Kick the request off to the main process and translate the result to the
-  // expected type when we get a result.
-  MOZ_ASSERT(aOptions.mIdentity.WasPassed());
-  RefPtr<WindowGlobalChild> wgc = aParent->GetWindowGlobalChild();
-  MOZ_ASSERT(wgc);
-  return wgc
-      ->SendCollectIdentityCredentialFromCredentialStore(
-          aOptions.mIdentity.Value())
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [wgc](const WindowGlobalChild::
-                    CollectIdentityCredentialFromCredentialStorePromise::
-                        ResolveValueType& aResult) {
-            nsTArray<RefPtr<IdentityCredential>> resultDOMArray;
-            for (const IPCIdentityCredential& ipcResult : aResult) {
-              resultDOMArray.AppendElement(
-                  new IdentityCredential(wgc->GetWindowGlobal(), ipcResult));
-            }
-            return IdentityCredential::GetIdentityCredentialsPromise::
-                CreateAndResolve(std::move(resultDOMArray), __func__);
-          },
-          [](const WindowGlobalChild::
-                 CollectIdentityCredentialFromCredentialStorePromise::
-                     RejectValueType& aResult) {
-            return IdentityCredential::GetIdentityCredentialsPromise::
-                CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
-          });
-}
-
-// static
-RefPtr<GenericPromise> IdentityCredential::AllowedToCollectCredential(
-    nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
-    const IdentityCredentialRequestOptions& aOptions,
-    IPCIdentityCredential aCredential) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(aPrincipal);
-  for (const nsCString& origin : aCredential.effectiveOrigins()) {
-    nsCOMPtr<nsIURI> allowURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(allowURI), origin);
-    if (NS_SUCCEEDED(rv)) {
-      if (aPrincipal->IsSameOrigin(allowURI)) {
-        return GenericPromise::CreateAndResolve(true, __func__);
-      }
-    }
-  }
-  if (aCredential.effectiveQueryURL().isSome()) {
-    // Make the url to test, returning the default resolved to false promise if
-    // it fails
-    nsCOMPtr<nsIURI> dynamicURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(dynamicURI),
-                            aCredential.effectiveQueryURL().value());
-    if (NS_SUCCEEDED(rv) && aOptions.mProviders.WasPassed()) {
-      // at this point we need to run through the providers passed as an
-      // argument to "navigator.credentials.get" and see if any meet the
-      // conditions to effectively query for aCredential based on an HTTP+CORS
-      // endpoint. This gives the IDP control over what origins can use each
-      // credential they store.
-      for (const auto& provider : aOptions.mProviders.Value()) {
-        // We only issue requests if the provider provided by the RP has the
-        // same URL as the credential that was stored by the IDP.
-        if (!provider.mEffectiveQueryURL.WasPassed() ||
-            !provider.mEffectiveQueryURL.Value().Equals(
-                aCredential.effectiveQueryURL().value())) {
-          continue;
-        }
-
-        // We are going to do some work here, so build the promise to return
-        RefPtr<GenericPromise::Private> resultPromise =
-            new GenericPromise::Private(__func__);
-        // Create the JS global for use by the fetch, tied to the RP principal
-        nsIXPConnect* xpc = nsContentUtils::XPConnect();
-        MOZ_ASSERT(xpc, "This should never be null!");
-        nsCOMPtr<nsIGlobalObject> global;
-        AutoJSAPI jsapi;
-        jsapi.Init();
-        JSContext* cx = jsapi.cx();
-        JS::Rooted<JSObject*> sandbox(cx);
-        rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          resultPromise->Reject(rv, __func__);
-          return resultPromise;
-        }
-        MOZ_ASSERT(JS_IsGlobalObject(sandbox));
-        global = xpc::NativeGlobal(sandbox);
-        if (NS_WARN_IF(!global)) {
-          resultPromise->Reject(NS_ERROR_FAILURE, __func__);
-          return resultPromise;
-        }
-        // Construct the HTTP+CORS request to be made.
-        constexpr auto fragment = ""_ns;
-        auto internalRequest = MakeSafeRefPtr<InternalRequest>(
-            provider.mEffectiveQueryURL.Value(), fragment);
-        internalRequest->SetCredentialsMode(RequestCredentials::Omit);
-        internalRequest->SetMode(RequestMode::Cors);
-        internalRequest->OverrideContentPolicyType(
-            nsContentPolicyType::TYPE_WEB_IDENTITY);
-        internalRequest->SetHeaders(
-            new InternalHeaders(HeadersGuardEnum::Request));
-        RefPtr<Request> request =
-            new Request(global, std::move(internalRequest), nullptr);
-        RequestOrUTF8String fetchInput;
-        fetchInput.SetAsRequest() = request;
-        RootedDictionary<RequestInit> requestInit(RootingCx());
-        ErrorResult error;
-        // Issue the fetch and define the callbacks
-        RefPtr<Promise> fetchPromise =
-            FetchRequest(request->GetParentObject(), fetchInput, requestInit,
-                         CallerType::System, error);
-        if (NS_WARN_IF(error.Failed())) {
-          resultPromise->Reject(error.StealNSResult(), __func__);
-          return resultPromise;
-        }
-        fetchPromise->AddCallbacksWithCycleCollectedArgs(
-            [resultPromise](JSContext* aCx, JS::Handle<JS::Value> aValue,
-                            ErrorResult&) {
-              // Get the Response object from the argument to the callback
-              if (NS_WARN_IF(!aValue.isObject())) {
-                resultPromise->Reject(NS_ERROR_FAILURE, __func__);
-                return;
-              }
-              JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
-              MOZ_ASSERT(obj);
-              Response* response = nullptr;
-              if (NS_WARN_IF(
-                      NS_FAILED(UNWRAP_OBJECT(Response, &obj, response)))) {
-                resultPromise->Reject(NS_ERROR_FAILURE, __func__);
-                return;
-              }
-              // Resolve whether or not the request was a success
-              resultPromise->Resolve(response->Ok(), __func__);
-            },
-            [resultPromise](JSContext*, JS::Handle<JS::Value> aValue,
-                            ErrorResult&) {
-              resultPromise->Reject(
-                  Promise::TryExtractNSResultFromRejectionValue(aValue),
-                  __func__);
-            });
-        return resultPromise;
-      }
-    }
-  }
-
-  return GenericPromise::CreateAndResolve(false, __func__);
-}
-
-// static
-RefPtr<IdentityCredential::GetIPCIdentityCredentialsPromise>
-IdentityCredential::CollectFromCredentialStoreInMainProcess(
-    nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
-    const IdentityCredentialRequestOptions& aOptions) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(aPrincipal);
-  nsresult rv;
-  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
-      mozilla::components::IdentityCredentialStorageService::Service(&rv);
-  if (NS_WARN_IF(!icStorageService)) {
-    return IdentityCredential::GetIPCIdentityCredentialsPromise::
-        CreateAndReject(rv, __func__);
-  }
-  nsTArray<RefPtr<nsIPrincipal>> idpPrincipals;
-  if (aOptions.mProviders.WasPassed()) {
-    for (const auto& idpConfig : aOptions.mProviders.Value()) {
-      if (idpConfig.mOrigin.WasPassed()) {
-        RefPtr<nsIURI> idpURI;
-        rv = NS_NewURI(getter_AddRefs(idpURI), idpConfig.mOrigin.Value());
-        if (NS_FAILED(rv)) {
-          continue;
-        }
-        RefPtr<nsIPrincipal> idpPrincipal =
-            BasePrincipal::CreateContentPrincipal(
-                idpURI, aPrincipal->OriginAttributesRef());
-        idpPrincipals.AppendElement(idpPrincipal);
-      } else if (idpConfig.mLoginURL.WasPassed()) {
-        RefPtr<nsIURI> idpURI;
-        rv = NS_NewURI(getter_AddRefs(idpURI), idpConfig.mLoginURL.Value());
-        if (NS_FAILED(rv)) {
-          continue;
-        }
-        RefPtr<nsIPrincipal> idpPrincipal =
-            BasePrincipal::CreateContentPrincipal(
-                idpURI, aPrincipal->OriginAttributesRef());
-        idpPrincipals.AppendElement(idpPrincipal);
-      }
-    }
-  }
-
-  CopyableTArray<mozilla::dom::IPCIdentityCredential> fromStore;
-  rv = icStorageService->GetIdentityCredentials(idpPrincipals, fromStore);
-  if (NS_FAILED(rv)) {
-    return GetIPCIdentityCredentialsPromise::CreateAndReject(rv, __func__);
-  }
-
-  RefPtr<GetIPCIdentityCredentialsPromise::Private> resultPromise =
-      new GetIPCIdentityCredentialsPromise::Private(__func__);
-  nsTArray<RefPtr<GenericPromise>> promises;
-  for (const IPCIdentityCredential& cred : fromStore) {
-    promises.AppendElement(AllowedToCollectCredential(
-        aPrincipal, aBrowsingContext, aOptions, cred));
-  }
-  GenericPromise::AllSettled(GetCurrentSerialEventTarget(), promises)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [resultPromise, fromStore](
-              const GenericPromise::AllSettledPromiseType::ResolveValueType&
-                  aResults) {
-            if (aResults.Length() != fromStore.Length()) {
-              resultPromise->Reject(NS_ERROR_FAILURE, __func__);
-              return;
-            }
-            CopyableTArray<mozilla::dom::IPCIdentityCredential> result;
-            for (size_t i = 0; i < aResults.Length(); i++) {
-              if (aResults.ElementAt(i).IsResolve() &&
-                  aResults.ElementAt(i).ResolveValue()) {
-                result.AppendElement(fromStore.ElementAt(i));
-              }
-            }
-            resultPromise->Resolve(result, __func__);
-          },
-          [resultPromise](
-              const GenericPromise::AllSettledPromiseType::RejectValueType&
-                  aResult) {
-            resultPromise->Reject(NS_ERROR_FAILURE, __func__);
-          });
-
-  return resultPromise;
-}
-
-// static
-RefPtr<GenericPromise> IdentityCredential::Store(
-    nsPIDOMWindowInner* aParent, const IdentityCredential* aCredential,
-    bool aSameOriginWithAncestors) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_ASSERT(aParent);
-  MOZ_ASSERT(aCredential);
-  // Prevent origin confusion by requiring no cross domain iframes
-  // in this one's ancestry
-  if (!aSameOriginWithAncestors) {
-    return GenericPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR,
-                                           __func__);
-  }
-
-  Document* parentDocument = aParent->GetExtantDoc();
-  if (!parentDocument) {
-    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-  }
-
-  // Kick the request off to the main process and translate the result to the
-  // expected type when we get a result.
-  RefPtr<WindowGlobalChild> wgc = aParent->GetWindowGlobalChild();
-  MOZ_ASSERT(wgc);
-  return wgc
-      ->SendStoreIdentityCredential(aCredential->MakeIPCIdentityCredential())
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [](const WindowGlobalChild::StoreIdentityCredentialPromise::
-                 ResolveValueType& aResult) {
-            return GenericPromise::CreateAndResolve(true, __func__);
-          },
-          [](const WindowGlobalChild::StoreIdentityCredentialPromise::
-                 RejectValueType& aResult) {
-            return GenericPromise::CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR,
-                                                   __func__);
-          });
-}
-
-// static
-RefPtr<GenericPromise> IdentityCredential::StoreInMainProcess(
-    nsIPrincipal* aPrincipal, const IPCIdentityCredential& aCredential) {
-  if (!aCredential.identityProvider() ||
-      !aCredential.identityProvider()->Equals(aPrincipal)) {
-    return GenericPromise::CreateAndReject(nsresult::NS_ERROR_FAILURE,
-                                           __func__);
-  }
-  nsresult error;
-  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
-      mozilla::components::IdentityCredentialStorageService::Service(&error);
-  if (NS_WARN_IF(!icStorageService)) {
-    return GenericPromise::CreateAndReject(error, __func__);
-  }
-  error = icStorageService->StoreIdentityCredential(aCredential);
-  if (NS_FAILED(error)) {
-    return GenericPromise::CreateAndReject(error, __func__);
-  }
-
-  return GenericPromise::CreateAndReject(nsresult::NS_ERROR_FAILURE, __func__);
-}
-
-// static
-RefPtr<IdentityCredential::GetIdentityCredentialPromise>
-IdentityCredential::Create(nsPIDOMWindowInner* aParent,
-                           const CredentialCreationOptions& aOptions,
-                           bool aSameOriginWithAncestors) {
-  MOZ_ASSERT(aOptions.mIdentity.WasPassed());
-  MOZ_ASSERT(aParent);
-  const IdentityCredentialInit& init = aOptions.mIdentity.Value();
-  RefPtr<IdentityCredential> result = new IdentityCredential(aParent);
-  result->SetId(init.mId);
-  result->SetType(u"identity"_ns);
-  result->mCreationOptions.emplace(init);
-  if (init.mToken.WasPassed()) {
-    result->mToken = NS_ConvertUTF8toUTF16(init.mToken.Value());
-  }
-  return GetIdentityCredentialPromise::CreateAndResolve(result.forget(),
-                                                        __func__);
 }
 
 // static
@@ -556,19 +126,6 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
   // Make sure we have providers.
   if (!aOptions.mProviders.WasPassed() ||
       aOptions.mProviders.Value().Length() < 1) {
-    return IdentityCredential::GetIPCIdentityCredentialPromise::CreateAndReject(
-        NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
-  }
-
-  // Make sure we support the set of features needed for this request
-  RequestType requestType = DetermineRequestType(aOptions);
-  if ((!StaticPrefs::
-           dom_security_credentialmanagement_identity_heavyweight_enabled() &&
-       requestType == HEAVYWEIGHT) ||
-      (!StaticPrefs::
-           dom_security_credentialmanagement_identity_lightweight_enabled() &&
-       requestType == LIGHTWEIGHT) ||
-      requestType == INVALID) {
     return IdentityCredential::GetIPCIdentityCredentialPromise::CreateAndReject(
         NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
   }
@@ -657,9 +214,8 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
             IdentityProviderAPIConfig manifest;
             IdentityProviderConfig provider;
             std::tie(provider, manifest) = providerAndManifest;
-            return IdentityCredential::
-                CreateHeavyweightCredentialDuringDiscovery(
-                    principal, browsingContext, provider, manifest);
+            return IdentityCredential::CreateCredential(
+                principal, browsingContext, provider, manifest);
           },
           [](nsresult error) {
             return IdentityCredential::GetIPCIdentityCredentialPromise::
@@ -687,7 +243,7 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
 
 // static
 RefPtr<IdentityCredential::GetIPCIdentityCredentialPromise>
-IdentityCredential::CreateHeavyweightCredentialDuringDiscovery(
+IdentityCredential::CreateCredential(
     nsIPrincipal* aPrincipal, BrowsingContext* aBrowsingContext,
     const IdentityProviderConfig& aProvider,
     const IdentityProviderAPIConfig& aManifest) {
@@ -760,8 +316,9 @@ IdentityCredential::CreateHeavyweightCredentialDuringDiscovery(
             IdentityProviderAccount account;
             std::tie(token, account) = promiseResult;
             IPCIdentityCredential credential;
-            credential.token() = Some(token.mToken);
+            credential.token() = token.mToken;
             credential.id() = account.mId;
+            credential.type() = u"identity"_ns;
             return IdentityCredential::GetIPCIdentityCredentialPromise::
                 CreateAndResolve(credential, __func__);
           },
@@ -785,7 +342,7 @@ IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
   }
 
   // Build the URL
-  nsCString configLocation = aProvider.mConfigURL.Value();
+  nsCString configLocation = aProvider.mConfigURL;
   nsCOMPtr<nsIURI> configURI;
   nsresult rv = NS_NewURI(getter_AddRefs(configURI), configLocation);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -850,8 +407,7 @@ IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
 
         // Resolve whether or not that provider URL is the one we were
         // passed as an argument.
-        bool correctURL =
-            manifest.mProvider_urls[0] == aProvider.mConfigURL.Value();
+        bool correctURL = manifest.mProvider_urls[0] == aProvider.mConfigURL;
         return IdentityCredential::ValidationPromise::CreateAndResolve(
             correctURL, __func__);
       },
@@ -867,7 +423,7 @@ IdentityCredential::FetchInternalManifest(
     nsIPrincipal* aPrincipal, const IdentityProviderConfig& aProvider) {
   MOZ_ASSERT(XRE_IsParentProcess());
   // Build the URL
-  nsCString configLocation = aProvider.mConfigURL.Value();
+  nsCString configLocation = aProvider.mConfigURL;
 
   // Create the global
   RefPtr<NullPrincipal> nullPrincipal =
@@ -916,8 +472,7 @@ IdentityCredential::FetchAccountList(
   MOZ_ASSERT(XRE_IsParentProcess());
   // Build the URL
   nsCOMPtr<nsIURI> baseURI;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(baseURI), aProvider.mConfigURL.Value());
+  nsresult rv = NS_NewURI(getter_AddRefs(baseURI), aProvider.mConfigURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IdentityCredential::GetAccountListPromise::CreateAndReject(rv,
                                                                       __func__);
@@ -1005,7 +560,7 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
   MOZ_ASSERT(XRE_IsParentProcess());
   // Build the URL
   nsCOMPtr<nsIURI> baseURI;
-  nsCString baseURIString = aProvider.mConfigURL.Value();
+  nsCString baseURIString = aProvider.mConfigURL;
   nsresult rv = NS_NewURI(getter_AddRefs(baseURI), baseURIString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IdentityCredential::GetTokenPromise::CreateAndReject(rv, __func__);
@@ -1048,7 +603,7 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
   internalRequest->SetMethod("POST"_ns);
   URLParams bodyValue;
   bodyValue.Set("account_id"_ns, NS_ConvertUTF16toUTF8(aAccount.mId));
-  bodyValue.Set("client_id"_ns, aProvider.mClientId.Value());
+  bodyValue.Set("client_id"_ns, aProvider.mClientId);
   if (aProvider.mNonce.WasPassed()) {
     bodyValue.Set("nonce"_ns, aProvider.mNonce.Value());
   }
@@ -1103,7 +658,7 @@ IdentityCredential::FetchMetadata(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipal);
   // Build the URL
   nsCOMPtr<nsIURI> baseURI;
-  nsCString baseURIString = aProvider.mConfigURL.Value();
+  nsCString baseURIString = aProvider.mConfigURL;
   nsresult rv = NS_NewURI(getter_AddRefs(baseURI), baseURIString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IdentityCredential::GetMetadataPromise::CreateAndReject(rv,
@@ -1359,7 +914,7 @@ IdentityCredential::PromptUserWithPolicy(
   }
 
   // Check the storage bit
-  nsCString configLocation = aProvider.mConfigURL.Value();
+  nsCString configLocation = aProvider.mConfigURL;
   nsCOMPtr<nsIURI> idpURI;
   error = NS_NewURI(getter_AddRefs(idpURI), configLocation);
   if (NS_WARN_IF(NS_FAILED(error))) {
@@ -1493,20 +1048,66 @@ void IdentityCredential::CloseUserInterface(BrowsingContext* aBrowsingContext) {
 }
 
 // static
-IdentityCredential::RequestType IdentityCredential::DetermineRequestType(
-    const IdentityCredentialRequestOptions& aOptions) {
-  if (!aOptions.mProviders.WasPassed()) {
-    return INVALID;
+already_AddRefed<Promise> IdentityCredential::LogoutRPs(
+    GlobalObject& aGlobal,
+    const Sequence<IdentityCredentialLogoutRPsRequest>& aLogoutRequests,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::CreateResolvedWithUndefined(global, aRv);
+  NS_ENSURE_FALSE(aRv.Failed(), nullptr);
+  nsresult rv;
+  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
+      components::IdentityCredentialStorageService::Service(&rv);
+  if (NS_WARN_IF(!icStorageService)) {
+    aRv.Throw(rv);
+    return nullptr;
   }
-  for (const IdentityProviderConfig& provider : aOptions.mProviders.Value()) {
-    if (provider.mConfigURL.WasPassed()) {
-      return HEAVYWEIGHT;
+
+  RefPtr<nsIPrincipal> rpPrincipal = global->PrincipalOrNull();
+  for (const auto& request : aLogoutRequests) {
+    // Get the current state
+    nsCOMPtr<nsIURI> idpURI;
+    rv = NS_NewURI(getter_AddRefs(idpURI), request.mUrl);
+    if (NS_FAILED(rv)) {
+      aRv.ThrowTypeError<MSG_INVALID_URL>(request.mUrl);
+      return nullptr;
     }
-    if (!provider.mOrigin.WasPassed() && !provider.mLoginURL.WasPassed()) {
-      return INVALID;
+    nsCOMPtr<nsIPrincipal> idpPrincipal = BasePrincipal::CreateContentPrincipal(
+        idpURI, rpPrincipal->OriginAttributesRef());
+    bool registered, allowLogout;
+    icStorageService->GetState(rpPrincipal, idpPrincipal, request.mAccountId,
+                               &registered, &allowLogout);
+
+    // Ignore this request if it isn't permitted
+    if (!(registered && allowLogout)) {
+      continue;
     }
+
+    // Issue the logout request
+    constexpr auto fragment = ""_ns;
+    auto internalRequest =
+        MakeSafeRefPtr<InternalRequest>(request.mUrl, fragment);
+    internalRequest->SetRedirectMode(RequestRedirect::Error);
+    internalRequest->SetCredentialsMode(RequestCredentials::Include);
+    internalRequest->SetReferrerPolicy(ReferrerPolicy::Strict_origin);
+    internalRequest->SetMode(RequestMode::Cors);
+    internalRequest->SetCacheMode(RequestCache::No_cache);
+    internalRequest->OverrideContentPolicyType(
+        nsContentPolicyType::TYPE_WEB_IDENTITY);
+    RefPtr<Request> domRequest =
+        new Request(global, std::move(internalRequest), nullptr);
+    RequestOrUTF8String fetchInput;
+    fetchInput.SetAsRequest() = domRequest;
+    RootedDictionary<RequestInit> requestInit(RootingCx());
+    IgnoredErrorResult error;
+    RefPtr<Promise> fetchPromise = FetchRequest(global, fetchInput, requestInit,
+                                                CallerType::System, error);
+
+    // Change state to disallow more logout requests
+    icStorageService->SetState(rpPrincipal, idpPrincipal, request.mAccountId,
+                               true, false);
   }
-  return LIGHTWEIGHT;
+  return promise.forget();
 }
 
 }  // namespace mozilla::dom
