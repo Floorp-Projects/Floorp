@@ -9,7 +9,7 @@
 // This is loaded into all browser windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const TAB_PREVIEW_PREF = "browser.tabs.cardPreview.enabled";
+  const TAB_PREVIEW_PREF = "browser.tabs.hoverPreview.enabled";
 
   class MozTabbrowserTabs extends MozElements.TabsBase {
     constructor() {

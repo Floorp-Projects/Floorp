@@ -2768,7 +2768,7 @@ tabPreview:
       type: boolean
       setPref:
         branch: default
-        pref: browser.tabs.cardPreview.enabled
+        pref: browser.tabs.hoverPreview.enabled
       description: >-
         When true, users will see the new card preview when hovering a tab, instead of the standard tooltip
 

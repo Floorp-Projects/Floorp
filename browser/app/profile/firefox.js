@@ -935,8 +935,12 @@ pref("browser.tabs.tooltipsShowPidAndActiveness", true);
 pref("browser.tabs.tooltipsShowPidAndActiveness", false);
 #endif
 
-pref("browser.tabs.cardPreview.enabled", false);
-pref("browser.tabs.cardPreview.showThumbnails", true);
+#ifdef NIGHTLY_BUILD
+pref("browser.tabs.hoverPreview.enabled", true);
+#else
+pref("browser.tabs.hoverPreview.enabled", false);
+#endif
+pref("browser.tabs.hoverPreview.showThumbnails", true);
 
 pref("browser.tabs.firefox-view.logLevel", "Warn");
 

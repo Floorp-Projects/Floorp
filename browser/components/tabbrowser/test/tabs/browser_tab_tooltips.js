@@ -31,6 +31,12 @@ function closeTooltip(node, tooltip) {
   return tooltipHiddenPromise;
 }
 
+add_setup(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.hoverPreview.enabled", false]],
+  });
+});
+
 // This test verifies that the tab tooltip appears at the correct location, aligned
 // with the bottom of the tab, and that the tooltip appears near the close button.
 add_task(async function () {
