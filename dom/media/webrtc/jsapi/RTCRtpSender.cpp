@@ -158,6 +158,8 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
     MaybeGetJsepRids();
   }
 
+  mParameters.mCodecs.Construct();
+
   if (mDtmf) {
     mWatchManager.Watch(mTransmitting, &RTCRtpSender::UpdateDtmfSender);
   }
@@ -760,10 +762,18 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
     paramsCopy.mEncodings = oldParams->mEncodings;
   }
 
+  if (!(oldParams->mCodecs == paramsCopy.mCodecs)) {
+    nsCString error("RTCRtpParameters.codecs is a read-only parameter");
+    if (!mAllowOldSetParameters) {
+      p->MaybeRejectWithInvalidModificationError(error);
+      return p.forget();
+    }
+    WarnAboutBadSetParameters(error);
+  }
+
   // TODO: Verify remaining read-only parameters
   // headerExtensions (bug 1765851)
   // rtcp (bug 1765852)
-  // codecs (bug 1534687)
 
   // CheckAndRectifyEncodings handles the following steps:
   // If transceiver kind is "audio", remove the scaleResolutionDownBy member
@@ -822,7 +832,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
         // Set sender.[[LastReturnedParameters]] to null.
         mLastReturnedParameters = Nothing();
         // Set sender.[[SendEncodings]] to parameters.encodings.
-        mParameters = paramsCopy;
+        mParameters.mEncodings = paramsCopy.mEncodings;
         UpdateRestorableEncodings(mParameters.mEncodings);
         // Only clear mPendingParameters if it matches; there could have been
         // back-to-back calls to setParameters, and we only want to clear this
@@ -953,9 +963,6 @@ void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
   // TODO(bug 1765851): We do not support this yet
   // aParameters.mHeaderExtensions.Construct();
 
-  // codecs is set to the value of the [[SendCodecs]] internal slot
-  // TODO(bug 1534687): We do not support this yet
-
   // rtcp.cname is set to the CNAME of the associated RTCPeerConnection.
   // rtcp.reducedSize is set to true if reduced-size RTCP has been negotiated
   // for sending, and false otherwise.
@@ -964,7 +971,9 @@ void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
   aParameters.mRtcp.Value().mCname.Construct();
   aParameters.mRtcp.Value().mReducedSize.Construct(false);
   aParameters.mHeaderExtensions.Construct();
-  aParameters.mCodecs.Construct();
+  if (mParameters.mCodecs.WasPassed()) {
+    aParameters.mCodecs.Construct(mParameters.mCodecs.Value());
+  }
 
   // Set sender.[[LastReturnedParameters]] to result.
   mLastReturnedParameters = Some(aParameters);
@@ -1371,6 +1380,35 @@ void RTCRtpSender::MaybeUpdateConduit() {
   }
 }
 
+void RTCRtpSender::UpdateParametersCodecs() {
+  mParameters.mCodecs.Reset();
+  mParameters.mCodecs.Construct();
+
+  if (GetJsepTransceiver().mSendTrack.GetNegotiatedDetails()) {
+    const JsepTrackNegotiatedDetails details(
+        *GetJsepTransceiver().mSendTrack.GetNegotiatedDetails());
+    if (details.GetEncodingCount()) {
+      for (const auto& jsepCodec : details.GetEncoding(0).GetCodecs()) {
+        RTCRtpCodecParameters codec;
+        RTCRtpTransceiver::ToDomRtpCodecParameters(*jsepCodec, &codec);
+        Unused << mParameters.mCodecs.Value().AppendElement(codec, fallible);
+        if (jsepCodec->Type() == SdpMediaSection::kVideo) {
+          const JsepVideoCodecDescription& videoJsepCodec =
+              static_cast<JsepVideoCodecDescription&>(*jsepCodec);
+          // In our JSEP implementation, RTX is an addon to an existing codec,
+          // not a codec object in its own right. webrtc-pc treats RTX as a
+          // separate codec, however.
+          if (videoJsepCodec.mRtxEnabled) {
+            RTCRtpCodecParameters rtx;
+            RTCRtpTransceiver::ToDomRtpCodecParametersRtx(videoJsepCodec, &rtx);
+            Unused << mParameters.mCodecs.Value().AppendElement(rtx, fallible);
+          }
+        }
+      }
+    }
+  }
+}
+
 void RTCRtpSender::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {
   if (!mSimulcastEnvelopeSet) {
     // JSEP is establishing the simulcast envelope for the first time, right now
@@ -1396,6 +1434,7 @@ void RTCRtpSender::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {
       MOZ_ASSERT(mParameters.mEncodings.Length());
     }
   }
+  UpdateParametersCodecs();
 
   MaybeUpdateConduit();
 }

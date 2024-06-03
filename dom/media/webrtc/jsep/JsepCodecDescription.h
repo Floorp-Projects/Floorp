@@ -357,6 +357,11 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       opusParams.maxFrameSizeMs = mMaxFrameSizeMs;
       opusParams.useCbr = mCbrEnabled;
       aFmtp.reset(opusParams.Clone());
+    } else if (mName == "telephone-event") {
+      if (!aFmtp) {
+        // We only use the default right now
+        aFmtp.reset(new SdpFmtpAttributeList::TelephoneEventParameters);
+      }
     }
   };
 

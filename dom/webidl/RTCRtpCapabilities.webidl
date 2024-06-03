@@ -8,13 +8,11 @@
  */
 
 dictionary RTCRtpCapabilities {
-  required sequence<RTCRtpCodecCapability> codecs;
+  required sequence<RTCRtpCodec> codecs;
   required sequence<RTCRtpHeaderExtensionCapability> headerExtensions;
 };
 
-dictionary RTCRtpCodecCapability : RTCRtpCodec {
-};
-
+[GenerateEqualityOperator]
 dictionary RTCRtpCodec {
   required DOMString mimeType;
   required unsigned long clockRate;
