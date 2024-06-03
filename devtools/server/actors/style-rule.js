@@ -400,6 +400,11 @@ class StyleRuleActor extends Actor {
       const quirks =
         !userAgent && el && el.ownerDocument.compatMode == "BackCompat";
       const supportsOptions = { userAgent, chrome, quirks };
+
+      const targetDocument =
+        this.pageStyle.inspector.targetActor.window.document;
+      let registeredProperties;
+
       form.declarations = declarations.map(decl => {
         // InspectorUtils.supports only supports the 1-arg version, but that's
         // what we want to do anyways so that we also accept !important in the
@@ -418,6 +423,35 @@ class StyleRuleActor extends Actor {
 
         if (SharedCssLogic.isCssVariable(decl.name)) {
           decl.isCustomProperty = true;
+
+          // If the variable is a registered property, we check if the variable is
+          // invalid at computed-value time (e.g. if the declaration value matches
+          // the `syntax` defined in the registered property)
+          if (!registeredProperties) {
+            registeredProperties =
+              InspectorUtils.getCSSRegisteredProperties(targetDocument);
+          }
+          const registeredProperty = registeredProperties.find(
+            prop => prop.name === decl.name
+          );
+          if (
+            registeredProperty &&
+            // For now, we don't handle variable based on top of other variables. This would
+            // require to build some kind of dependency tree and check the validity for
+            // all the leaves.
+            !decl.value.includes("var(") &&
+            !InspectorUtils.valueMatchesSyntax(
+              targetDocument,
+              decl.value,
+              registeredProperty.syntax
+            )
+          ) {
+            // if the value doesn't match the syntax, it's invalid
+            decl.invalidAtComputedValueTime = true;
+            // pass the syntax down to the client so it can easily be used in a warning message
+            decl.syntax = registeredProperty.syntax;
+          }
+
           // We only compute `inherits` for css variable declarations.
           // For "regular" declaration, we use `CssPropertiesFront.isInherited`,
           // which doesn't depend on the state of the document (a given property will

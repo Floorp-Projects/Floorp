@@ -390,6 +390,45 @@ class TextProperty {
   }
 
   /**
+   * Returns whether the property is invalid at computed-value time.
+   * For now, it's only computed on the server for declarations of
+   * registered properties.
+   *
+   * @return {Boolean}
+   */
+  isInvalidAtComputedValueTime() {
+    const declaration = this.#getDomRuleDeclaration();
+    // When adding a new property in the rule-view, the TextProperty object is
+    // created right away before the rule gets updated on the server, so we're
+    // not going to find the corresponding declaration object yet. Default to
+    // false.
+    if (!declaration) {
+      return false;
+    }
+
+    return declaration.invalidAtComputedValueTime;
+  }
+
+  /**
+   * Returns the expected syntax for this property.
+   * For now, it's only sent from the server for invalid at computed-value time declarations.
+   *
+   * @return {String|null} The expected syntax, or null.
+   */
+  getExpectedSyntax() {
+    const declaration = this.#getDomRuleDeclaration();
+    // When adding a new property in the rule-view, the TextProperty object is
+    // created right away before the rule gets updated on the server, so we're
+    // not going to find the corresponding declaration object yet. Default to
+    // null.
+    if (!declaration) {
+      return null;
+    }
+
+    return declaration.syntax;
+  }
+
+  /**
    * Returns true if the property value is a CSS variables and contains the given variable
    * name, and false otherwise.
    *

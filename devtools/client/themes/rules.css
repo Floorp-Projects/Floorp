@@ -200,13 +200,16 @@
 }
 
 .ruleview-computedlist,
-.ruleview-expandable-container[hidden],
-.ruleview-overridden-items[hidden],
-.ruleview-overridden-rule-filter[hidden],
-.ruleview-warning[hidden],
-.ruleview-unused-warning[hidden],
-.ruleview-compatibility-warning[hidden],
-.ruleview-used[hidden],
+[hidden]:is(
+  .ruleview-expandable-container,
+  .ruleview-overridden-items,
+  .ruleview-overridden-rule-filter,
+  .ruleview-warning,
+  .ruleview-unused-warning,
+  .ruleview-compatibility-warning,
+  .ruleview-used,
+  .ruleview-invalid-at-computed-value-time-warning,
+),
 .ruleview-overridden .ruleview-grid {
   display: none;
 }
@@ -476,7 +479,8 @@
 
 .ruleview-warning,
 .ruleview-unused-warning,
-.ruleview-compatibility-warning {
+.ruleview-compatibility-warning,
+.ruleview-invalid-at-computed-value-time-warning {
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -489,6 +493,12 @@
   background-image: url(resource://devtools-shared-images/alert-small.svg);
   fill: var(--yellow-60);
 }
+
+.ruleview-invalid-at-computed-value-time-warning {
+    background-image: url(resource://devtools-shared-images/error-small.svg);
+    fill: var(--theme-highlight-red);
+}
+
 
 .ruleview-unused-warning {
   background-image: url(resource://devtools-shared-images/info-small.svg);
@@ -840,7 +850,8 @@
     only with colors, so let's add a line-through line */
 :is(
   .ruleview-selector.unmatched,
-  .ruleview-unmatched-variable
+  .ruleview-unmatched-variable,
+  .ruleview-invalid-at-computed-value-time
 ):not(
   /* don't show the strike through when the element is hovered so it's more legible */
   :hover

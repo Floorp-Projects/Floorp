@@ -66,9 +66,19 @@ const TEST_URI = `https://example.org/document-builder.sjs?html=${encodeURICompo
       text-decoration-color: var(--js-not-defined, blue);
       caret-color: var(--css-dynamic-registered, turquoise);
     }
+
+    aside {
+     /* registered property has <color> syntax, this declaration is invalid at computed-value time */
+      --css-inherit: dashed;
+      /* valid, complex value */
+      --js-no-inherit: calc(100px * cos(45deg));
+      /* based on another property */
+      --css-dynamic-registered: var(--css-no-inherit);
+    }
   </style>
   <main>
     <h1>Hello world</h1>
+    <aside>fries</aside>
     <iframe src="https://example.com/document-builder.sjs?html=iframe"></iframe>
   </main>
 `)}`;
@@ -426,7 +436,69 @@ add_task(async function () {
       },
     ].sort((a, b) => (a.header < b.header ? -1 : 1))
   );
+
+  await selectNode("aside", inspector);
+
+  info(
+    "Check that the invalid at computed-value time icon is displayed when needed"
+  );
+  checkInvalidAtComputedValueTime(view, {
+    ruleIndex: 1,
+    declaration: { "--css-inherit": "dashed" },
+    invalid: true,
+    syntax: `<color>`,
+  });
+
+  info(
+    "Check that the invalid at computed-value time icon is not displayed for valid properties"
+  );
+  checkInvalidAtComputedValueTime(view, {
+    ruleIndex: 1,
+    declaration: { "--js-no-inherit": "calc(100px * cos(45deg))" },
+    invalid: false,
+  });
+
+  info(
+    "Declaration of variable based on other variable are not marked as invalid"
+  );
+  checkInvalidAtComputedValueTime(view, {
+    ruleIndex: 1,
+    declaration: { "--css-dynamic-registered": "var(--css-no-inherit)" },
+    invalid: false,
+  });
 });
+
+function checkInvalidAtComputedValueTime(
+  view,
+  { ruleIndex, declaration, invalid, syntax }
+) {
+  const prop = getTextProperty(view, ruleIndex, declaration);
+  const warningIcon = prop.editor.element.querySelector(
+    ".ruleview-invalid-at-computed-value-time-warning:not([hidden])"
+  );
+  if (invalid) {
+    ok(
+      !!warningIcon,
+      `invalid at computed-value time icon is displayed for ${JSON.stringify(
+        declaration
+      )}`
+    );
+    is(
+      warningIcon?.title,
+      `Property value does not match expected "${syntax}" syntax`,
+      `invalid at computed-value time icon has expected title for ${JSON.stringify(
+        declaration
+      )}`
+    );
+  } else {
+    ok(
+      !warningIcon,
+      `invalid at computed-value time icon is not displayed for ${JSON.stringify(
+        declaration
+      )}`
+    );
+  }
+}
 
 function getRegisteredPropertiesContainer(view) {
   return view.styleDocument.querySelector("#registered-properties-container");
