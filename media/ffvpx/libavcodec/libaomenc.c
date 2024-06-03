@@ -30,6 +30,7 @@
 #include <aom/aomcx.h>
 
 #include "libavutil/avassert.h"
+#include "libavutil/avstring.h"
 #include "libavutil/base64.h"
 #include "libavutil/common.h"
 #include "libavutil/cpu.h"
@@ -135,6 +136,7 @@ typedef struct AOMEncoderContext {
     int enable_diff_wtd_comp;
     int enable_dist_wtd_comp;
     int enable_dual_filter;
+    AVDictionary *svc_parameters;
     AVDictionary *aom_params;
 } AOMContext;
 
@@ -215,6 +217,7 @@ static const char *const ctlidstr[] = {
     [AV1E_GET_TARGET_SEQ_LEVEL_IDX]     = "AV1E_GET_TARGET_SEQ_LEVEL_IDX",
 #endif
     [AV1_GET_NEW_FRAME_IMAGE]           = "AV1_GET_NEW_FRAME_IMAGE",
+    [AV1E_SET_SVC_PARAMS]               = "AV1E_SET_SVC_PARAMS",
 };
 
 static av_cold void log_encoder_error(AVCodecContext *avctx, const char *desc)
@@ -386,6 +389,31 @@ static av_cold int codecctl_imgp(AVCodecContext *avctx,
     snprintf(buf, sizeof(buf), "%s:", ctlidstr[id]);
 
     res = aom_codec_control(&ctx->encoder, id, img);
+    if (res != AOM_CODEC_OK) {
+        snprintf(buf, sizeof(buf), "Failed to get %s codec control",
+                 ctlidstr[id]);
+        log_encoder_error(avctx, buf);
+        return AVERROR(EINVAL);
+    }
+
+    return 0;
+}
+
+static av_cold int codecctl_svcp(AVCodecContext *avctx,
+#ifdef UENUM1BYTE
+                                 aome_enc_control_id id,
+#else
+                                 enum aome_enc_control_id id,
+#endif
+                                 aom_svc_params_t *svc_params)
+{
+    AOMContext *ctx = avctx->priv_data;
+    char buf[80];
+    int res;
+
+    snprintf(buf, sizeof(buf), "%s:", ctlidstr[id]);
+
+    res = aom_codec_control(&ctx->encoder, id, svc_params);
     if (res != AOM_CODEC_OK) {
         snprintf(buf, sizeof(buf), "Failed to get %s codec control",
                  ctlidstr[id]);
@@ -683,6 +711,18 @@ static int choose_tiling(AVCodecContext *avctx,
     }
 
     return 0;
+}
+
+static void aom_svc_parse_int_array(int *dest, char *value, int max_entries)
+{
+    int dest_idx = 0;
+    char *saveptr = NULL;
+    char *token = av_strtok(value, ",", &saveptr);
+
+    while (token && dest_idx < max_entries) {
+        dest[dest_idx++] = strtoul(token, NULL, 10);
+        token = av_strtok(NULL, ",", &saveptr);
+    }
 }
 
 static av_cold int aom_init(AVCodecContext *avctx,
@@ -997,6 +1037,41 @@ static av_cold int aom_init(AVCodecContext *avctx,
     if (ctx->enable_intrabc >= 0)
         codecctl_int(avctx, AV1E_SET_ENABLE_INTRABC, ctx->enable_intrabc);
 #endif
+
+    if (enccfg.rc_end_usage == AOM_CBR) {
+        aom_svc_params_t svc_params = {};
+        svc_params.framerate_factor[0] = 1;
+        svc_params.number_spatial_layers = 1;
+        svc_params.number_temporal_layers = 1;
+
+        AVDictionaryEntry *en = NULL;
+        while ((en = av_dict_get(ctx->svc_parameters, "", en, AV_DICT_IGNORE_SUFFIX))) {
+            if (!strlen(en->value))
+                return AVERROR(EINVAL);
+
+            if (!strcmp(en->key, "number_spatial_layers"))
+                svc_params.number_spatial_layers = strtoul(en->value, NULL, 10);
+            else if (!strcmp(en->key, "number_temporal_layers"))
+                svc_params.number_temporal_layers = strtoul(en->value, NULL, 10);
+            else if (!strcmp(en->key, "max_quantizers"))
+                aom_svc_parse_int_array(svc_params.max_quantizers, en->value, AOM_MAX_LAYERS);
+            else if (!strcmp(en->key, "min_quantizers"))
+                aom_svc_parse_int_array(svc_params.min_quantizers, en->value, AOM_MAX_LAYERS);
+            else if (!strcmp(en->key, "scaling_factor_num"))
+                aom_svc_parse_int_array(svc_params.scaling_factor_num, en->value, AOM_MAX_SS_LAYERS);
+            else if (!strcmp(en->key, "scaling_factor_den"))
+                aom_svc_parse_int_array(svc_params.scaling_factor_den, en->value, AOM_MAX_SS_LAYERS);
+            else if (!strcmp(en->key, "layer_target_bitrate"))
+                aom_svc_parse_int_array(svc_params.layer_target_bitrate, en->value, AOM_MAX_LAYERS);
+            else if (!strcmp(en->key, "framerate_factor"))
+                aom_svc_parse_int_array(svc_params.framerate_factor, en->value, AOM_MAX_TS_LAYERS);
+        }
+
+        res = codecctl_svcp(avctx, AV1E_SET_SVC_PARAMS, &svc_params);
+        if (res < 0)
+            return res;
+    }
+
 
 #if AOM_ENCODER_ABI_VERSION >= 23
     {
@@ -1530,6 +1605,7 @@ static const AVOption options[] = {
     { "enable-masked-comp",           "Enable masked compound",                            OFFSET(enable_masked_comp),           AV_OPT_TYPE_BOOL, {.i64 = -1}, -1, 1, VE},
     { "enable-interintra-comp",       "Enable interintra compound",                        OFFSET(enable_interintra_comp),       AV_OPT_TYPE_BOOL, {.i64 = -1}, -1, 1, VE},
     { "enable-smooth-interintra",     "Enable smooth interintra mode",                     OFFSET(enable_smooth_interintra),     AV_OPT_TYPE_BOOL, {.i64 = -1}, -1, 1, VE},
+    { "svc-parameters", "SVC configuration using a :-separated list of key=value parameters (only applied in CBR mode)", OFFSET(svc_parameters), AV_OPT_TYPE_DICT, { 0 }, 0, 0, VE},
 #if AOM_ENCODER_ABI_VERSION >= 23
     { "aom-params",                   "Set libaom options using a :-separated list of key=value pairs", OFFSET(aom_params), AV_OPT_TYPE_DICT, { 0 }, 0, 0, VE },
 #endif
