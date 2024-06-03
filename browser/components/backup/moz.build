@@ -22,6 +22,8 @@ FINAL_TARGET_FILES.actors += [
 ]
 
 EXTRA_JS_MODULES.backup += [
+    "ArchiveEncryptionState.sys.mjs",
+    "ArchiveUtils.sys.mjs",
     "BackupResources.sys.mjs",
     "BackupService.sys.mjs",
     "resources/AddonsBackupResource.sys.mjs",
