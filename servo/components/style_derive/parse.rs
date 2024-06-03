@@ -14,6 +14,7 @@ use synstructure::{Structure, VariantInfo};
 pub struct ParseVariantAttrs {
     pub aliases: Option<String>,
     pub condition: Option<Path>,
+    pub parse_fn: Option<Path>,
 }
 
 #[derive(Default, FromField)]
@@ -109,6 +110,7 @@ fn parse_non_keyword_variant(
 
     if let Some(ref bitflags) = variant_attrs.bitflags {
         assert!(skip_try, "Should be the only variant");
+        assert!(parse_attrs.parse_fn.is_none(), "should not be needed");
         assert!(
             parse_attrs.condition.is_none(),
             "Should be the only variant"
@@ -118,18 +120,25 @@ fn parse_non_keyword_variant(
     }
 
     let field_attrs = cg::parse_field_attrs::<ParseFieldAttrs>(binding_ast);
+
     if field_attrs.field_bound {
         cg::add_predicate(where_clause, parse_quote!(#ty: crate::parser::Parse));
     }
 
-    let mut parse = if skip_try {
+    let mut parse = if let Some(ref parse_fn) = parse_attrs.parse_fn {
+        quote! { #parse_fn(context, input) }
+    } else {
+        quote! { <#ty as crate::parser::Parse>::parse(context, input) }
+    };
+
+    parse = if skip_try {
         quote! {
-            let v = <#ty as crate::parser::Parse>::parse(context, input)?;
+            let v = #parse?;
             return Ok(#name::#variant_name(v));
         }
     } else {
         quote! {
-            if let Ok(v) = input.try(|i| <#ty as crate::parser::Parse>::parse(context, i)) {
+            if let Ok(v) = input.try(|input| #parse) {
                 return Ok(#name::#variant_name(v));
             }
         }
@@ -187,6 +196,8 @@ pub fn derive(mut input: DeriveInput) -> TokenStream {
             non_keywords.push((variant, css_variant_attrs, parse_attrs));
             continue;
         }
+
+        assert!(parse_attrs.parse_fn.is_none());
 
         let identifier = cg::to_css_identifier(
             &css_variant_attrs
