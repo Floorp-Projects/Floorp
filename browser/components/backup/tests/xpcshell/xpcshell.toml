@@ -8,6 +8,8 @@ prefs = [
 
 ["test_AddonsBackupResource.js"]
 
+["test_ArchiveEncryptionState.js"]
+
 ["test_BackupResource.js"]
 support-files = ["data/test_xulstore.json"]
 
