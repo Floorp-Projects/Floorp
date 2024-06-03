@@ -1434,9 +1434,12 @@ criteria = "safe-to-deploy"
 delta = "0.19.0 -> 0.20.0"
 
 [[audits.d3d12]]
-who = "Erich Gubler <erichdongubler@gmail.com>"
+who = [
+    "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:18b758e3889bdd6ffa769085de15e2b96a0c1eb5"
+delta = "0.20.0 -> 0.20.0@git:c7458638d14921c7562e4197ddeefa17be413587"
 importable = false
 
 [[audits.darling]]
@@ -2877,9 +2880,12 @@ criteria = "safe-to-deploy"
 delta = "0.19.2 -> 0.20.0"
 
 [[audits.naga]]
-who = "Erich Gubler <erichdongubler@gmail.com>"
+who = [
+    "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:18b758e3889bdd6ffa769085de15e2b96a0c1eb5"
+delta = "0.20.0 -> 0.20.0@git:c7458638d14921c7562e4197ddeefa17be413587"
 importable = false
 
 [[audits.net2]]
@@ -4772,9 +4778,12 @@ criteria = "safe-to-deploy"
 delta = "0.19.3 -> 0.20.0"
 
 [[audits.wgpu-core]]
-who = "Erich Gubler <erichdongubler@gmail.com>"
+who = [
+    "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:18b758e3889bdd6ffa769085de15e2b96a0c1eb5"
+delta = "0.20.0 -> 0.20.0@git:c7458638d14921c7562e4197ddeefa17be413587"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4836,9 +4845,12 @@ criteria = "safe-to-deploy"
 delta = "0.19.3 -> 0.20.0"
 
 [[audits.wgpu-hal]]
-who = "Erich Gubler <erichdongubler@gmail.com>"
+who = [
+    "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:18b758e3889bdd6ffa769085de15e2b96a0c1eb5"
+delta = "0.20.0 -> 0.20.0@git:c7458638d14921c7562e4197ddeefa17be413587"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4900,9 +4912,12 @@ criteria = "safe-to-deploy"
 delta = "0.19.2 -> 0.20.0"
 
 [[audits.wgpu-types]]
-who = "Erich Gubler <erichdongubler@gmail.com>"
+who = [
+    "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+]
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:18b758e3889bdd6ffa769085de15e2b96a0c1eb5"
+delta = "0.20.0 -> 0.20.0@git:c7458638d14921c7562e4197ddeefa17be413587"
 importable = false
 
 [[audits.whatsys]]
@@ -5334,7 +5349,7 @@ end = "2024-05-05"
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-03-01"
-end = "2024-04-25"
+end = "2025-05-31"
 
 [[trusted.serde_bytes]]
 criteria = "safe-to-deploy"
@@ -5346,7 +5361,7 @@ end = "2024-04-25"
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-03-01"
-end = "2024-04-25"
+end = "2025-05-31"
 
 [[trusted.serde_json]]
 criteria = "safe-to-deploy"
@@ -5388,13 +5403,13 @@ end = "2024-05-03"
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-10-09"
-end = "2024-04-25"
+end = "2025-05-31"
 
 [[trusted.thiserror-impl]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-10-09"
-end = "2024-04-25"
+end = "2025-05-31"
 
 [[trusted.threadbound]]
 criteria = "safe-to-deploy"

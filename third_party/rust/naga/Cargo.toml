@@ -47,7 +47,7 @@ bit-set = "0.5"
 bitflags = "2.5"
 log = "0.4"
 rustc-hash = "1.1.0"
-thiserror = "1.0.59"
+thiserror = "1.0.61"
 
 [dependencies.arbitrary]
 version = "1.3"
@@ -74,7 +74,7 @@ version = "0.2.1"
 optional = true
 
 [dependencies.serde]
-version = "1.0.200"
+version = "1.0.202"
 features = ["derive"]
 optional = true
 

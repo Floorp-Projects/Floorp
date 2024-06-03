@@ -510,6 +510,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.serde]]
+version = "1.0.203"
+when = "2024-05-25"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.serde_bytes]]
 version = "0.11.9"
 when = "2023-02-05"
@@ -520,6 +527,13 @@ user-name = "David Tolnay"
 [[publisher.serde_derive]]
 version = "1.0.198"
 when = "2024-04-16"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.serde_derive]]
+version = "1.0.203"
+when = "2024-05-25"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -573,9 +587,23 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.thiserror]]
+version = "1.0.61"
+when = "2024-05-17"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.thiserror-impl]]
 version = "1.0.59"
 when = "2024-04-20"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.thiserror-impl]]
+version = "1.0.61"
+when = "2024-05-17"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
