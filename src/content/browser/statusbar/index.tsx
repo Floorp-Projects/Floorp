@@ -17,6 +17,5 @@ export function initStatusbar() {
   );
 
   // Initialize statusbar
-  window.gFloorpStatusBar = gFloorpStatusBar;
-  gFloorpStatusBar.init();
+  gFloorpStatusBar.getInstance();
 }
