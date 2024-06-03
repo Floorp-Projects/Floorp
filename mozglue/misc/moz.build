@@ -77,6 +77,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "DynamicallyLinkedFunctionPtr.h",
         "ImportDir.h",
         "NativeNt.h",
+        "WindowsDiagnostics.h",
         "WindowsDpiInitialization.h",
         "WindowsEnumProcessModules.h",
         "WindowsMapRemoteView.h",
@@ -90,6 +91,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
         "GetKnownFolderPath.cpp",
         "TimeStamp_windows.cpp",
+        "WindowsDiagnostics.cpp",
         "WindowsDllMain.cpp",
         "WindowsDpiInitialization.cpp",
         "WindowsMapRemoteView.cpp",
