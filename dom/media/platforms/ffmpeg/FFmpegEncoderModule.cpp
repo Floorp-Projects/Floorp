@@ -20,10 +20,16 @@ bool FFmpegEncoderModule<V>::Supports(const EncoderConfig& aConfig) const {
   if (!CanLikelyEncode(aConfig)) {
     return false;
   }
-  // We only support L1T2 and L1T3 ScalabilityMode in VP8 and VP9 encoders via
-  // libvpx for now.
+  // We only support L1T2 and L1T3 ScalabilityMode in VPX and AV1 encoders via
+  // libvpx and libaom for now.
   if ((aConfig.mScalabilityMode != ScalabilityMode::None)) {
-    if (aConfig.mCodec != CodecType::VP8 && aConfig.mCodec != CodecType::VP9) {
+    if (aConfig.mCodec == CodecType::AV1) {
+      // libaom only supports SVC in CBR mode.
+      if (aConfig.mBitrateMode != BitrateMode::Constant) {
+        return false;
+      }
+    } else if (aConfig.mCodec != CodecType::VP8 &&
+               aConfig.mCodec != CodecType::VP9) {
       return false;
     }
   }

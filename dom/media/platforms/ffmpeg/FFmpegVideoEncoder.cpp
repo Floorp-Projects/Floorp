@@ -6,6 +6,8 @@
 
 #include "FFmpegVideoEncoder.h"
 
+#include <aom/aomcx.h>
+
 #include "BufferReader.h"
 #include "FFmpegLog.h"
 #include "FFmpegUtils.h"
@@ -146,17 +148,25 @@ static Maybe<H264Setting> GetH264Level(const H264_LEVEL& aLevel) {
   return Some(H264Setting{val, str});
 }
 
-struct VPXSVCSetting {
+struct VPXSVCAppendix {
   uint8_t mLayeringMode;
-  size_t mNumberLayers;
-  uint8_t mPeriodicity;
-  nsTArray<uint8_t> mLayerIds;
-  nsTArray<uint8_t> mRateDecimators;
-  nsTArray<uint32_t> mTargetBitrates;
 };
 
-static Maybe<VPXSVCSetting> GetVPXSVCSetting(const ScalabilityMode& aMode,
-                                             uint32_t aBitPerSec) {
+struct SVCLayerSettings {
+  using CodecAppendix = Variant<VPXSVCAppendix, aom_svc_params_t>;
+  size_t mNumberSpatialLayers;
+  size_t mNumberTemporalLayers;
+  uint8_t mPeriodicity;
+  nsTArray<uint8_t> mLayerIds;
+  // libvpx: ts_rate_decimator, libaom: framerate_factor
+  nsTArray<uint8_t> mRateDecimators;
+  nsTArray<uint32_t> mTargetBitrates;
+  Maybe<CodecAppendix> mCodecAppendix;
+};
+
+static Maybe<SVCLayerSettings> GetSVCLayerSettings(CodecType aCodec,
+                                                   const ScalabilityMode& aMode,
+                                                   uint32_t aBitPerSec) {
   if (aMode == ScalabilityMode::None) {
     return Nothing();
   }
@@ -164,14 +174,16 @@ static Maybe<VPXSVCSetting> GetVPXSVCSetting(const ScalabilityMode& aMode,
   // TODO: Apply more sophisticated bitrate allocation, like SvcRateAllocator:
   // https://searchfox.org/mozilla-central/rev/3bd65516eb9b3a9568806d846ba8c81a9402a885/third_party/libwebrtc/modules/video_coding/svc/svc_rate_allocator.h#26
 
-  uint8_t mode = 0;
   size_t layers = 0;
-  uint32_t kbps = aBitPerSec / 1000;  // ts_target_bitrate requies kbps.
+  const uint32_t kbps = aBitPerSec / 1000;  // ts_target_bitrate requies kbps.
 
   uint8_t periodicity;
   nsTArray<uint8_t> layerIds;
   nsTArray<uint8_t> rateDecimators;
   nsTArray<uint32_t> bitrates;
+
+  Maybe<SVCLayerSettings::CodecAppendix> appendix;
+
   if (aMode == ScalabilityMode::L1T2) {
     // Two temporal layers. 0-1...
     //
@@ -179,7 +191,6 @@ static Maybe<VPXSVCSetting> GetVPXSVCSetting(const ScalabilityMode& aMode,
     // Layer 0: |0| |2| |4| |6| |8|
     // Layer 1: | |1| |3| |5| |7| |
 
-    mode = 2;  // VP9E_TEMPORAL_LAYERING_MODE_0101
     layers = 2;
 
     // 2 frames per period.
@@ -196,6 +207,12 @@ static Maybe<VPXSVCSetting> GetVPXSVCSetting(const ScalabilityMode& aMode,
     // Bitrate allocation: L0 - 60%, L1 - 40%.
     bitrates.AppendElement(kbps * 3 / 5);
     bitrates.AppendElement(kbps);
+
+    if (aCodec == CodecType::VP8 || aCodec == CodecType::VP9) {
+      appendix.emplace(VPXSVCAppendix{
+          .mLayeringMode = 2 /* VP9E_TEMPORAL_LAYERING_MODE_0101 */
+      });
+    }
   } else {
     MOZ_ASSERT(aMode == ScalabilityMode::L1T3);
     // Three temporal layers. 0-2-1-2...
@@ -205,7 +222,6 @@ static Maybe<VPXSVCSetting> GetVPXSVCSetting(const ScalabilityMode& aMode,
     // Layer 1: | | |2| | | |6| | | |10|  |  |
     // Layer 2: | |1| |3| |5| |7| |9|  |11|  |
 
-    mode = 3;  // VP9E_TEMPORAL_LAYERING_MODE_0212
     layers = 3;
 
     // 4 frames per period
@@ -226,12 +242,19 @@ static Maybe<VPXSVCSetting> GetVPXSVCSetting(const ScalabilityMode& aMode,
     bitrates.AppendElement(kbps / 2);
     bitrates.AppendElement(kbps * 7 / 10);
     bitrates.AppendElement(kbps);
+
+    if (aCodec == CodecType::VP8 || aCodec == CodecType::VP9) {
+      appendix.emplace(VPXSVCAppendix{
+          .mLayeringMode = 3 /* VP9E_TEMPORAL_LAYERING_MODE_0212 */
+      });
+    }
   }
 
   MOZ_ASSERT(layers == bitrates.Length(),
              "Bitrate must be assigned to each layer");
-  return Some(VPXSVCSetting{mode, layers, periodicity, std::move(layerIds),
-                            std::move(rateDecimators), std::move(bitrates)});
+  return Some(SVCLayerSettings{1, layers, periodicity, std::move(layerIds),
+                               std::move(rateDecimators), std::move(bitrates),
+                               appendix});
 }
 
 uint8_t FFmpegVideoEncoder<LIBAV_VER>::SVCInfo::UpdateTemporalLayerId() {
@@ -301,6 +324,12 @@ nsresult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
   }
 
   if (Maybe<SVCSettings> settings = GetSVCSettings()) {
+    if (mCodecName == "libaom-av1") {
+      if (mConfig.mBitrateMode != BitrateMode::Constant) {
+        return NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR;
+      }
+    }
+
     SVCSettings s = settings.extract();
     mLib->av_opt_set(mCodecContext->priv_data, s.mSettingKeyValue.first.get(),
                      s.mSettingKeyValue.second.get(), 0);
@@ -623,49 +652,91 @@ Maybe<FFmpegVideoEncoder<LIBAV_VER>::SVCSettings>
 FFmpegVideoEncoder<LIBAV_VER>::GetSVCSettings() {
   MOZ_ASSERT(!mCodecName.IsEmpty());
 
-  // TODO: Add support for AV1 and H264.
-  if (mCodecName != "libvpx" && mCodecName != "libvpx-vp9") {
+  CodecType codecType = CodecType::Unknown;
+  if (mCodecName == "libvpx") {
+    codecType = CodecType::VP8;
+  } else if (mCodecName == "libvpx-vp9") {
+    codecType = CodecType::VP9;
+  } else if (mCodecName == "libaom-av1") {
+    codecType = CodecType::AV1;
+  }
+
+  if (codecType == CodecType::Unknown) {
     FFMPEGV_LOG("SVC setting is not implemented for %s codec",
                 mCodecName.get());
     return Nothing();
   }
 
-  Maybe<VPXSVCSetting> svc =
-      GetVPXSVCSetting(mConfig.mScalabilityMode, mConfig.mBitrate);
+  Maybe<SVCLayerSettings> svc = GetSVCLayerSettings(
+      codecType, mConfig.mScalabilityMode, mConfig.mBitrate);
   if (!svc) {
     FFMPEGV_LOG("No SVC settings obtained. Skip");
     return Nothing();
   }
 
-  // Check if the number of temporal layers in codec specific settings matches
-  // the number of layers for the given scalability mode.
-  if (mConfig.mCodecSpecific) {
-    if (mConfig.mCodecSpecific->is<VP8Specific>()) {
-      MOZ_ASSERT(mConfig.mCodecSpecific->as<VP8Specific>().mNumTemporalLayers ==
-                 svc->mNumberLayers);
-    } else if (mConfig.mCodecSpecific->is<VP9Specific>()) {
-      MOZ_ASSERT(mConfig.mCodecSpecific->as<VP9Specific>().mNumTemporalLayers ==
-                 svc->mNumberLayers);
+  nsAutoCString name;
+  nsAutoCString parameters;
+
+  if (codecType == CodecType::VP8 || codecType == CodecType::VP9) {
+    // Check if the number of temporal layers in codec specific settings
+    // matches
+    // the number of layers for the given scalability mode.
+    if (mConfig.mCodecSpecific) {
+      if (mConfig.mCodecSpecific->is<VP8Specific>()) {
+        MOZ_ASSERT(
+            mConfig.mCodecSpecific->as<VP8Specific>().mNumTemporalLayers ==
+            svc->mNumberTemporalLayers);
+      } else if (mConfig.mCodecSpecific->is<VP9Specific>()) {
+        MOZ_ASSERT(
+            mConfig.mCodecSpecific->as<VP9Specific>().mNumTemporalLayers ==
+            svc->mNumberTemporalLayers);
+      }
     }
+
+    // Form an SVC setting string for libvpx.
+    name = "ts-parameters"_ns;
+    parameters.AppendPrintf(
+        "ts_layering_mode=%u",
+        svc->mCodecAppendix->as<VPXSVCAppendix>().mLayeringMode);
+    parameters.Append(":ts_target_bitrate=");
+    for (size_t i = 0; i < svc->mTargetBitrates.Length(); ++i) {
+      if (i > 0) {
+        parameters.Append(",");
+      }
+      parameters.AppendPrintf("%d", svc->mTargetBitrates[i]);
+    }
+
+    // TODO: Set ts_number_layers, ts_periodicity, ts_layer_id and
+    // ts_rate_decimator if they are different from the preset values in
+    // ts_layering_mode.
   }
 
-  // Form an SVC setting string for libvpx.
-  nsPrintfCString parameters("ts_layering_mode=%u", svc->mLayeringMode);
-  parameters.Append(":ts_target_bitrate=");
-  for (size_t i = 0; i < svc->mTargetBitrates.Length(); ++i) {
-    if (i > 0) {
-      parameters.Append(",");
+  if (codecType == CodecType::AV1) {
+    // Form an SVC setting string for libaom.
+    name = "svc-parameters"_ns;
+    parameters.AppendPrintf("number_spatial_layers=%zu",
+                            svc->mNumberSpatialLayers);
+    parameters.AppendPrintf(":number_temporal_layers=%zu",
+                            svc->mNumberTemporalLayers);
+    parameters.Append(":framerate_factor=");
+    for (size_t i = 0; i < svc->mRateDecimators.Length(); ++i) {
+      if (i > 0) {
+        parameters.Append(",");
+      }
+      parameters.AppendPrintf("%d", svc->mRateDecimators[i]);
     }
-    parameters.AppendPrintf("%d", svc->mTargetBitrates[i]);
+    parameters.Append(":layer_target_bitrate=");
+    for (size_t i = 0; i < svc->mTargetBitrates.Length(); ++i) {
+      if (i > 0) {
+        parameters.Append(",");
+      }
+      parameters.AppendPrintf("%d", svc->mTargetBitrates[i]);
+    }
   }
-
-  // TODO: Set ts_number_layers, ts_periodicity, ts_layer_id and
-  // ts_rate_decimator if they are different from the preset values in
-  // ts_layering_mode.
 
   return Some(
       SVCSettings{std::move(svc->mLayerIds),
-                  std::make_pair("ts-parameters"_ns, std::move(parameters))});
+                  std::make_pair(std::move(name), std::move(parameters))});
 }
 
 FFmpegVideoEncoder<LIBAV_VER>::H264Settings FFmpegVideoEncoder<
