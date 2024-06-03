@@ -9113,6 +9113,40 @@ pub extern "C" fn Servo_GetRegisteredCustomProperties(
     }
 }
 
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_Value_Matches_Syntax(
+    value: &nsACString,
+    syntax: &nsACString,
+    extra_data: *mut URLExtraData,
+) -> bool {
+    use style::properties_and_values::syntax::Descriptor;
+    use style::properties_and_values::value::{
+        AllowComputationallyDependent,
+        SpecifiedValue,
+    };
+
+    // Attempt to consume a syntax definition from syntax.
+    let syntax = unsafe { syntax.as_str_unchecked() };
+    let Ok(syntax) = Descriptor::from_str(syntax, /* preserve_specified = */ false) else {
+        return false;
+    };
+
+    let css_text = unsafe { value.as_str_unchecked() };
+    let mut input = ParserInput::new(css_text);
+    let mut input = Parser::new(&mut input);
+    input.skip_whitespace();
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&extra_data) };
+
+    SpecifiedValue::parse(
+        &mut input,
+        &syntax,
+        url_data,
+        AllowComputationallyDependent::Yes,
+    ).is_ok()
+}
+
+
 #[repr(C)]
 pub struct SelectorWarningData {
     /// Index to the selector generating the warning.

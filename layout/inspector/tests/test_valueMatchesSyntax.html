@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test InspectorUtils.valueMatchesSyntax</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<code>InspectorUtils.valueMatchesSyntax</code>
+
+<script>
+add_task(async function() {
+  const test = (value, syntax, expected) =>
+    is(
+      SpecialPowers.InspectorUtils.valueMatchesSyntax(document, value, syntax),
+      expected,
+      `"${value}" ${expected ? "matches" : "does not match"} "${syntax}"`
+    );
+
+  test("red", "<color>", true);
+  test("10px", "<color>", false);
+  test("10px", "<color> | <length>", true);
+  test("10px 1em", "<length>+", true);
+  test("10px, 1em", "<length>+", false);
+  test("10px, 1em", "<length>#", true);
+  test("10px 1em", "<length>#", false);
+  test("calc(100% - 20px)", "<length>", false);
+  test("calc(100% - 20px)", "<length-percentage>", true);
+  test("big", "big | bigger | BIGGER", true);
+  test("bigger", "big | bigger | BIGGER", true);
+  test("BIGGER", "big | bigger | BIGGER", true);
+  test("BIG", "big | bigger | BIGGER", false);
+  test("red", "<invalid-syntax>", false);
+  test("whatever 10px, 1em red", "*", true);
+});
+</script>
+</body>
+</html>

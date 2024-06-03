@@ -90,6 +90,7 @@ namespace InspectorUtils {
   [NewObject] NodeList getOverflowingChildrenOfElement(Element element);
   sequence<DOMString> getRegisteredCssHighlights(Document document, optional boolean activeOnly = false);
   sequence<InspectorCSSPropertyDefinition> getCSSRegisteredProperties(Document document);
+  boolean valueMatchesSyntax(Document document, UTF8String value, UTF8String syntax);
 
   // Get the first rule body text within initialText
   // Consider the following example:
