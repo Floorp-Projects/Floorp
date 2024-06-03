@@ -443,11 +443,12 @@ static nsIFrame* GetIBContainingBlockFor(nsIFrame* aFrame) {
     // ComputedStyle -- they're not the frames we're looking for!  In
     // particular, they may be hiding a real parent that _is_ in an ib-split.
     if (!IsFramePartOfIBSplit(parentFrame) &&
-        !parentFrame->Style()->IsPseudoOrAnonBox())
+        !parentFrame->Style()->IsPseudoOrAnonBox()) {
       break;
+    }
 
     aFrame = parentFrame;
-  } while (1);
+  } while (true);
 
   // post-conditions
   NS_ASSERTION(parentFrame,
@@ -481,16 +482,6 @@ static nsContainerFrame* GetMultiColumnContainingBlockFor(nsIFrame* aFrame) {
              "No multicol containing block in a valid column hierarchy?");
 
   return current;
-}
-
-// This is a bit slow, but sometimes we need it.
-static bool ParentIsWrapperAnonBox(nsIFrame* aParent) {
-  nsIFrame* maybeAnonBox = aParent;
-  if (maybeAnonBox->Style()->GetPseudoType() == PseudoStyleType::cellContent) {
-    // The thing that would maybe be a wrapper anon box is the cell.
-    maybeAnonBox = maybeAnonBox->GetParent();
-  }
-  return maybeAnonBox->Style()->IsWrapperAnonBox();
 }
 
 static bool InsertSeparatorBeforeAccessKey() {
@@ -1975,33 +1966,41 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
 // will be the one we can examine to see whether the wrapper was a pseudo-frame.
 static bool IsTablePseudo(nsIFrame* aFrame) {
   auto pseudoType = aFrame->Style()->GetPseudoType();
-  return pseudoType != PseudoStyleType::NotPseudo &&
-         (pseudoType == PseudoStyleType::table ||
-          pseudoType == PseudoStyleType::inlineTable ||
-          pseudoType == PseudoStyleType::tableColGroup ||
-          pseudoType == PseudoStyleType::tableRowGroup ||
-          pseudoType == PseudoStyleType::tableRow ||
-          pseudoType == PseudoStyleType::tableCell ||
-          (pseudoType == PseudoStyleType::cellContent &&
-           aFrame->GetParent()->Style()->GetPseudoType() ==
-               PseudoStyleType::tableCell) ||
-          (pseudoType == PseudoStyleType::tableWrapper &&
-           (aFrame->PrincipalChildList()
-                    .FirstChild()
-                    ->Style()
-                    ->GetPseudoType() == PseudoStyleType::table ||
-            aFrame->PrincipalChildList()
-                    .FirstChild()
-                    ->Style()
-                    ->GetPseudoType() == PseudoStyleType::inlineTable)));
+  if (pseudoType == PseudoStyleType::NotPseudo) {
+    return false;
+  }
+  return pseudoType == PseudoStyleType::table ||
+         pseudoType == PseudoStyleType::inlineTable ||
+         pseudoType == PseudoStyleType::tableColGroup ||
+         pseudoType == PseudoStyleType::tableRowGroup ||
+         pseudoType == PseudoStyleType::tableRow ||
+         pseudoType == PseudoStyleType::tableCell ||
+         (pseudoType == PseudoStyleType::cellContent &&
+          aFrame->GetParent()->Style()->GetPseudoType() ==
+              PseudoStyleType::tableCell) ||
+         (pseudoType == PseudoStyleType::tableWrapper &&
+          aFrame->PrincipalChildList()
+              .FirstChild()
+              ->Style()
+              ->IsPseudoOrAnonBox());
 }
 
 static bool IsRubyPseudo(nsIFrame* aFrame) {
   return RubyUtils::IsRubyPseudo(aFrame->Style()->GetPseudoType());
 }
 
-static bool IsTableOrRubyPseudo(nsIFrame* aFrame) {
-  return IsTablePseudo(aFrame) || IsRubyPseudo(aFrame);
+// Note that this is (subtly) different to ParentIsWrapperAnonBox, since
+// ParentIsWrapperAnonBox is really just about restyles, but there are wrapper
+// anon boxes that don't need to return true for that...
+// FIXME(emilio): This should be less complicated, ParentIsWrapperAnonBox should
+// probably be renamed to something else, and this should just use
+// IsWrapperAnonBox or similar...
+static bool IsWrapperPseudo(nsIFrame* aFrame) {
+  auto pseudoType = aFrame->Style()->GetPseudoType();
+  if (!PseudoStyle::IsAnonBox(pseudoType)) {
+    return false;
+  }
+  return PseudoStyle::IsWrapperAnonBox(pseudoType) || IsTablePseudo(aFrame);
 }
 
 /* static */
@@ -6351,6 +6350,16 @@ nsIFrame* nsCSSFrameConstructor::FindNextSiblingForAppend(
   return SlowPath();
 }
 
+// This is a bit slow, but sometimes we need it.
+static bool ParentIsWrapperAnonBox(nsIFrame* aParent) {
+  nsIFrame* maybeAnonBox = aParent;
+  if (maybeAnonBox->Style()->GetPseudoType() == PseudoStyleType::cellContent) {
+    // The thing that would maybe be a wrapper anon box is the cell.
+    maybeAnonBox = maybeAnonBox->GetParent();
+  }
+  return maybeAnonBox->Style()->IsWrapperAnonBox();
+}
+
 void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
                                             InsertionKind aInsertionKind) {
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
@@ -7160,6 +7169,38 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 #endif
 }
 
+static bool IsWhitespaceFrame(const nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame, "invalid argument");
+  return aFrame->IsTextFrame() && aFrame->GetContent()->TextIsOnlyWhitespace();
+}
+
+static bool IsOnlyNonWhitespaceFrameInList(const nsFrameList& aFrameList,
+                                           const nsIFrame* aFrame) {
+  for (const nsIFrame* f : aFrameList) {
+    if (f != aFrame && !IsWhitespaceFrame(f)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool IsOnlyMeaningfulChildOfWrapperPseudo(nsIFrame* aFrame,
+                                                 nsIFrame* aParent) {
+  MOZ_ASSERT(IsWrapperPseudo(aParent));
+  if (IsOnlyNonWhitespaceFrameInList(aParent->PrincipalChildList(), aFrame)) {
+    return true;
+  }
+  if (aFrame->IsTableColGroupFrame()) {
+    return IsOnlyNonWhitespaceFrameInList(
+        aParent->GetChildList(FrameChildListID::ColGroup), aFrame);
+  }
+  if (aFrame->IsTableCaption()) {
+    return IsOnlyNonWhitespaceFrameInList(
+        aParent->GetChildList(FrameChildListID::Caption), aFrame);
+  }
+  return false;
+}
+
 bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
                                            nsIContent* aOldNextSibling,
                                            RemoveFlags aFlags) {
@@ -7408,6 +7449,15 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
       parentFrame = childFrame->GetParent();
     }
 
+    // Take care of wrapper anonymous boxes that we might need to remove while
+    // at it. Note that MaybeRecreateContainerForFrameRemoval takes care of
+    // harder cases (merging sibling anonymous boxes etc).
+    while (IsWrapperPseudo(parentFrame) &&
+           IsOnlyMeaningfulChildOfWrapperPseudo(childFrame, parentFrame)) {
+      childFrame = parentFrame;
+      parentFrame = childFrame->GetParent();
+    }
+
     DestroyContext context(mPresShell);
     RemoveFrame(context, nsLayoutUtils::GetChildListNameFor(childFrame),
                 childFrame);
@@ -7430,12 +7480,8 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
 
     // If we're just reconstructing frames for the element, then the
     // following ContentInserted notification on the element will
-    // take care of fixing up any adjacent text nodes.  We don't need
-    // to do this if the table parent type of our parent type is not
-    // eTypeBlock, though, because in that case the whitespace isn't
-    // being suppressed due to us anyway.
-    if (aOldNextSibling && aFlags == REMOVE_CONTENT &&
-        GetParentType(parentType) == eTypeBlock) {
+    // take care of fixing up any adjacent text nodes.
+    if (aOldNextSibling && aFlags == REMOVE_CONTENT) {
       MOZ_ASSERT(aChild->GetParentNode(),
                  "How did we have a sibling without a parent?");
       // Adjacent whitespace-only text nodes might have been suppressed if
@@ -7448,9 +7494,6 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
       // and hence it's adjacent to a block end.
       // If aOldNextSibling is null, then the text node before the node being
       // removed is the last node, and we don't need to worry about it.
-      //
-      // FIXME(emilio): This should probably use the lazy frame construction
-      // bits if possible instead of reframing it in place.
       nsIContent* prevSibling = aOldNextSibling->GetPreviousSibling();
       if (prevSibling && prevSibling->GetPreviousSibling()) {
         LAYOUT_PHASE_TEMP_EXIT();
@@ -8036,14 +8079,6 @@ static bool IsWhitespaceFrame(nsIFrame* aFrame) {
   return aFrame->IsTextFrame() && aFrame->GetContent()->TextIsOnlyWhitespace();
 }
 
-static nsIFrame* FindFirstNonWhitespaceChild(nsIFrame* aParentFrame) {
-  nsIFrame* f = aParentFrame->PrincipalChildList().FirstChild();
-  while (f && IsWhitespaceFrame(f)) {
-    f = f->GetNextSibling();
-  }
-  return f;
-}
-
 static nsIFrame* FindNextNonWhitespaceSibling(nsIFrame* aFrame) {
   nsIFrame* f = aFrame;
   do {
@@ -8144,48 +8179,26 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
     return true;
   }
 
-  // Now check for possibly needing to reconstruct due to a pseudo parent
-  // For the case of ruby pseudo parent, effectively, only pseudo rb/rt frame
-  // need to be checked here, since all other types of parent will be catched
-  // by "Check ruby containers" section below.
-  if (IsTableOrRubyPseudo(parent)) {
-    if (FindFirstNonWhitespaceChild(parent) == inFlowFrame ||
-        !FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation()) ||
-        // If it is a whitespace, and is the only child of the parent, the
-        // pseudo parent was created for the space, and should now be removed.
-        (IsWhitespaceFrame(aFrame) &&
-         parent->PrincipalChildList().OnlyChild()) ||
-        // If we're a table-column-group, then the OnlyChild check above is
-        // not going to catch cases when we're the first child.
-        (inFlowFrame->IsTableColGroupFrame() &&
-         parent->GetChildList(FrameChildListID::ColGroup).FirstChild() ==
-             inFlowFrame) ||
-        // Similar if we're a table-caption.
-        (inFlowFrame->IsTableCaption() &&
-         parent->GetChildList(FrameChildListID::Caption).FirstChild() ==
-             inFlowFrame)) {
-      TRACE("Table or ruby pseudo parent");
-      RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
-      return true;
-    }
-  }
-
   // Might need to reconstruct things if this frame's nextSibling is a table
   // or ruby pseudo, since removal of this frame might mean that this pseudo
   // needs to get merged with the frame's prevSibling if that's also a table
   // or ruby pseudo.
   nsIFrame* nextSibling =
       FindNextNonWhitespaceSibling(inFlowFrame->LastContinuation());
-  NS_ASSERTION(!IsTableOrRubyPseudo(inFlowFrame), "Shouldn't happen here");
+  NS_ASSERTION(!IsWrapperPseudo(inFlowFrame),
+               "Shouldn't happen here (we start removals from primary frames)");
   // Effectively, for the ruby pseudo sibling case, only pseudo <ruby> frame
   // need to be checked here, since all other types of such frames will have
   // a ruby container parent, and be catched by "Check ruby containers" below.
-  if (nextSibling && IsTableOrRubyPseudo(nextSibling)) {
+  if (nextSibling && IsWrapperPseudo(nextSibling)) {
     nsIFrame* prevSibling = FindPreviousNonWhitespaceSibling(inFlowFrame);
-    if (prevSibling && IsTableOrRubyPseudo(prevSibling)) {
-      TRACE("Table or ruby pseudo sibling");
+    if (prevSibling && IsWrapperPseudo(prevSibling)) {
+      TRACE("Pseudo sibling");
       // Good enough to recreate frames for aFrame's parent's content; even if
       // aFrame's parent is a pseudo, that'll be the right content node.
+      // FIXME(emilio): Consider doing a more subtle check here like, only if
+      // prevSibling and nextSibling share frame type. Or even consider just
+      // moving the frames around and destroying nextSibling?
       RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
       return true;
     }
@@ -8204,34 +8217,6 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
     //    whether a pseudo ruby base container should exist.
     TRACE("Ruby container");
     RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
-    return true;
-  }
-
-  // Might need to reconstruct things if the removed frame's nextSibling is an
-  // anonymous flex item.  The removed frame might've been what divided two
-  // runs of inline content into two anonymous flex items, which would now
-  // need to be merged.
-  // NOTE: It's fine that we've advanced nextSibling past whitespace (up above);
-  // we're only interested in anonymous flex items here, and those can never
-  // be adjacent to whitespace, since they absorb contiguous runs of inline
-  // non-replaced content (including whitespace).
-  if (nextSibling && IsAnonymousItem(nextSibling)) {
-    AssertAnonymousFlexOrGridItemParent(nextSibling, parent);
-    TRACE("Anon flex or grid item next sibling");
-    // Recreate frames for the flex container (the removed frame's parent)
-    RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
-    return true;
-  }
-
-  // Might need to reconstruct things if the removed frame's nextSibling is
-  // null and its parent is an anonymous flex item. (This might be the last
-  // remaining child of that anonymous flex item, which can then go away.)
-  if (!nextSibling && IsAnonymousItem(parent)) {
-    AssertAnonymousFlexOrGridItemParent(parent, parent->GetParent());
-    TRACE("Anon flex or grid item parent");
-    // Recreate frames for the flex container (the removed frame's grandparent)
-    RecreateFramesForContent(parent->GetParent()->GetContent(),
-                             InsertionKind::Async);
     return true;
   }
 
@@ -11546,7 +11531,7 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
 
     // We might have some inline kids for this block.  Just fall out of the
     // loop and reconstruct.
-  } while (0);
+  } while (false);
 
   // If we don't have a containing block, start with aFrame and look for one.
   if (!aContainingBlock) {
