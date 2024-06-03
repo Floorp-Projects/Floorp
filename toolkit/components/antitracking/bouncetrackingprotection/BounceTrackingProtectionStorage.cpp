@@ -297,8 +297,11 @@ BounceTrackingProtectionStorage::DeleteDBEntriesByOriginAttributesPattern(
 NS_IMETHODIMP BounceTrackingProtectionStorage::BlockShutdown(
     nsIAsyncShutdownClient* aClient) {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = WaitForInitialization();
-  NS_ENSURE_SUCCESS(rv, rv);
+  DebugOnly<nsresult> rv = WaitForInitialization();
+  // If init failed log a warning. This isn't an early return since we still
+  // need to try to tear down, including removing the shutdown blocker. A
+  // failure state shouldn't cause a shutdown hang.
+  NS_WARNING_ASSERTION(NS_FAILED(rv), "BlockShutdown: Init failed");
 
   MonitorAutoLock lock(mMonitor);
   mShuttingDown.Flip();
@@ -313,16 +316,20 @@ NS_IMETHODIMP BounceTrackingProtectionStorage::BlockShutdown(
             MOZ_ASSERT(self->mPendingWrites == 0);
 
             if (self->mDatabaseConnection) {
-              Unused << self->mDatabaseConnection->Close();
+              DebugOnly<nsresult> rv = self->mDatabaseConnection->Close();
+              NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                   "Failed to close database connection");
               self->mDatabaseConnection = nullptr;
             }
 
             self->mFinalized.Flip();
             self->mMonitor.NotifyAll();
-            NS_DispatchToMainThread(NS_NewRunnableFunction(
+
+            nsresult rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
                 "BounceTrackingProtectionStorage::BlockShutdown "
                 "- mainthread callback",
                 [self]() { self->Finalize(); }));
+            NS_ENSURE_SUCCESS_VOID(rv);
           }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
 
@@ -425,6 +432,7 @@ nsresult BounceTrackingProtectionStorage::Init() {
   if (closed || NS_WARN_IF(NS_FAILED(rv))) {
     MonitorAutoLock lock(mMonitor);
     mShuttingDown.Flip();
+    mMonitor.NotifyAll();
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
