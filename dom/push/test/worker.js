@@ -73,6 +73,7 @@ function handlePush(event) {
         arrayBuffer: event.data.arrayBuffer(),
         json: getJSON(event.data),
         blob: event.data.blob(),
+        bytes: event.data.bytes(),
       };
     }
     broadcast(event, message);

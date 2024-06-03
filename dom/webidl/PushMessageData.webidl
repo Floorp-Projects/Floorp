@@ -16,6 +16,8 @@ interface PushMessageData
     [Throws]
     Blob        blob();
     [Throws]
+    Uint8Array  bytes();
+    [Throws]
     any         json();
     USVString   text();
 };

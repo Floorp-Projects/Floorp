@@ -215,6 +215,8 @@ class PushMessageData final : public nsISupports, public nsWrapperCache {
   void ArrayBuffer(JSContext* cx, JS::MutableHandle<JSObject*> aRetval,
                    ErrorResult& aRv);
   already_AddRefed<mozilla::dom::Blob> Blob(ErrorResult& aRv);
+  void Bytes(JSContext* cx, JS::MutableHandle<JSObject*> aRetval,
+             ErrorResult& aRv);
 
   PushMessageData(nsIGlobalObject* aOwner, nsTArray<uint8_t>&& aBytes);
 
