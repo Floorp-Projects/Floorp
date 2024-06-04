@@ -26,6 +26,18 @@ HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_CXXFLAGS="${HOST_CXXFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
+dnl Propagate extra android flags
+dnl =============================
+case "$target" in
+*-android*|*-linuxandroid*)
+    LDFLAGS="$ANDROID_LDFLAGS $LDFLAGS"
+    CFLAGS="$ANDROID_CFLAGS $CFLAGS"
+    CXXFLAGS="$ANDROID_CXXFLAGS $CXXFLAGS"
+    ASFLAGS="$ANDROID_ASFLAGS -DANDROID $ASFLAGS"
+    ;;
+esac
+
+
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 W32API_VERSION=3.14
@@ -39,8 +51,6 @@ fi
 AC_SUBST(autoconfmk)
 
 jsconfdefs=$_objdir/js/src/js-confdefs.h
-
-MOZ_ANDROID_NDK
 
 dnl ========================================================
 dnl Checks for compilers.
