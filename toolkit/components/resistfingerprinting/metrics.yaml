@@ -1334,6 +1334,134 @@ characteristics:
     data_sensitivity:
       - technical
 
+  outer_height:
+    type: quantity
+    unit: int
+    description: >
+      Outer height of user's browser.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177#c4
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  inner_height:
+    type: quantity
+    unit: int
+    description: >
+      Inner height of user's browser.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177#c4
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  outer_width:
+    type: quantity
+    unit: int
+    description: >
+      Outer width of user's browser.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177#c4
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  inner_width:
+    type: quantity
+    unit: int
+    description: >
+      Inner width of user's browser.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177#c4
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  posx:
+    type: quantity
+    unit: int
+    description: >
+      window.screen.left value. Provides us the position of the browser
+      and the width of any possible task/menu bar
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177#c4
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  posy:
+    type: quantity
+    unit: int
+    description: >
+      window.screen.top value. Provides us the position of the browser
+      and the height of any possible task/menu bar
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177#c4
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  size_mode:
+    type: quantity
+    unit: int
+    description: >
+      Whether window is maximized, minimized, normal or fullscreen
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886177#c4
+    expires: never
+    data_sensitivity:
+      - interaction
+
   avail_width:
     type: quantity
     unit: int
