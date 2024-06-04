@@ -14,6 +14,7 @@ extern crate authrs_bridge;
 extern crate bitsdownload;
 #[cfg(feature = "moz_places")]
 extern crate bookmark_sync;
+extern crate buildid_reader;
 extern crate cascade_bloom_filter;
 extern crate cert_storage;
 extern crate chardetng_c;
