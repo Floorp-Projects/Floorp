@@ -26,7 +26,7 @@ interface nsIDOMWindowUtils;
 interface nsIPrintSettings;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[Global, LegacyUnenumerableNamedProperties, NeedResolve,
+[Global=Window, LegacyUnenumerableNamedProperties, NeedResolve,
  Exposed=Window,
  InstrumentedProps=(AbsoluteOrientationSensor,
                     Accelerometer,

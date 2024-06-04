@@ -4,7 +4,7 @@ import WebIDL
 def WebIDLTest(parser, harness):
     parser.parse(
         """
-      [Global, Exposed=Foo] interface Foo {};
+      [Global=Foo, Exposed=Foo] interface Foo {};
       [Global=(Bar, Bar1,Bar2), Exposed=Bar] interface Bar {};
       [Global=(Baz, Baz2), Exposed=Baz] interface Baz {};
 
@@ -70,7 +70,7 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-      [Global, Exposed=Foo] interface Foo {};
+      [Global=Foo, Exposed=Foo] interface Foo {};
       [Global=(Bar, Bar1, Bar2), Exposed=Bar] interface Bar {};
       [Global=(Baz, Baz2), Exposed=Baz] interface Baz {};
 
@@ -108,7 +108,7 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-      [Global, Exposed=Foo] interface Foo {};
+      [Global=Foo, Exposed=Foo] interface Foo {};
       [Global=(Bar, Bar1, Bar2), Exposed=Bar] interface Bar {};
       [Global=(Baz, Baz2), Exposed=Baz] interface Baz {};
 
@@ -226,8 +226,8 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [Global, Exposed=Foo] interface Foo {};
-            [Global, Exposed=Bar] interface Bar {};
+            [Global=Foo, Exposed=Foo] interface Foo {};
+            [Global=Bar, Exposed=Bar] interface Bar {};
 
             [Exposed=Foo]
             interface Baz {
@@ -248,8 +248,8 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-        [Global, Exposed=Foo] interface Foo {};
-        [Global, Exposed=Bar] interface Bar {};
+        [Global=Foo, Exposed=Foo] interface Foo {};
+        [Global=Bar, Exposed=Bar] interface Bar {};
 
         [Exposed=Foo]
         interface Baz {
@@ -294,8 +294,8 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-        [Global, Exposed=Foo] interface Foo {};
-        [Global, Exposed=Bar] interface Bar {};
+        [Global=Foo, Exposed=Foo] interface Foo {};
+        [Global=Bar, Exposed=Bar] interface Bar {};
 
         [Exposed=*]
         interface Baz {
@@ -342,8 +342,8 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [Global, Exposed=Foo] interface Foo {};
-            [Global, Exposed=Bar] interface Bar {};
+            [Global=Foo, Exposed=Foo] interface Foo {};
+            [Global=Bar, Exposed=Bar] interface Bar {};
 
             [Exposed=Foo]
             interface Baz {
@@ -366,8 +366,8 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [Global, Exposed=Foo] interface Foo {};
-            [Global, Exposed=Bar] interface Bar {};
+            [Global=Foo, Exposed=Foo] interface Foo {};
+            [Global=Bar, Exposed=Bar] interface Bar {};
 
             [Exposed=(Foo,*)]
             interface Baz {
