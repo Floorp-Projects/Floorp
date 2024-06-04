@@ -201,16 +201,6 @@ void HTMLSelectElement::ShowPicker(ErrorResult& aRv) {
   }
 
   // Step 5. Show the picker, if applicable, for this.
-  // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
-  // To show the picker, if applicable for an input element element:
-  // We already checked if mutable and user activation earlier, so skip 1 & 2.
-
-  // Step 3. Consume user activation given element's relevant global object.
-  OwnerDoc()->ConsumeTransientUserGestureActivation();
-
-  // Step 5. Otherwise, the user agent should show any relevant user interface
-  // for selecting a value for element, in the way it normally would when the
-  // user interacts with the control.
 #if !defined(ANDROID)
   if (!IsCombobox()) {
     return;
