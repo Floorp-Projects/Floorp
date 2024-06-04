@@ -1130,10 +1130,9 @@ void ReflowInput::CalculateBorderPaddingMargin(
     paddingStartEnd = padding.Side(startSide) + padding.Side(endSide);
   } else {
     // We have to compute the start and end values
-    nscoord start, end;
-    start = nsLayoutUtils::ComputeCBDependentValue(
+    const nscoord start = nsLayoutUtils::ComputeCBDependentValue(
         aContainingBlockSize, stylePadding->mPadding.Get(startSide));
-    end = nsLayoutUtils::ComputeCBDependentValue(
+    const nscoord end = nsLayoutUtils::ComputeCBDependentValue(
         aContainingBlockSize, stylePadding->mPadding.Get(endSide));
     paddingStartEnd = start + end;
   }
@@ -1142,26 +1141,13 @@ void ReflowInput::CalculateBorderPaddingMargin(
   if (nsMargin margin; mStyleMargin->GetMargin(margin)) {
     marginStartEnd = margin.Side(startSide) + margin.Side(endSide);
   } else {
-    nscoord start, end;
-    // We have to compute the start and end values
-    if (mStyleMargin->mMargin.Get(startSide).IsAuto()) {
-      // We set this to 0 for now, and fix it up later in
-      // InitAbsoluteConstraints (which is caller of this function, via
-      // CalculateHypotheticalPosition).
-      start = 0;
-    } else {
-      start = nsLayoutUtils::ComputeCBDependentValue(
-          aContainingBlockSize, mStyleMargin->mMargin.Get(startSide));
-    }
-    if (mStyleMargin->mMargin.Get(endSide).IsAuto()) {
-      // We set this to 0 for now, and fix it up later in
-      // InitAbsoluteConstraints (which is caller of this function, via
-      // CalculateHypotheticalPosition).
-      end = 0;
-    } else {
-      end = nsLayoutUtils::ComputeCBDependentValue(
-          aContainingBlockSize, mStyleMargin->mMargin.Get(endSide));
-    }
+    // If the margin is 'auto', ComputeCBDependentValue() will return 0. The
+    // correct margin value will be computed later in InitAbsoluteConstraints
+    // (which is caller of this function, via CalculateHypotheticalPosition).
+    const nscoord start = nsLayoutUtils::ComputeCBDependentValue(
+        aContainingBlockSize, mStyleMargin->mMargin.Get(startSide));
+    const nscoord end = nsLayoutUtils::ComputeCBDependentValue(
+        aContainingBlockSize, mStyleMargin->mMargin.Get(endSide));
     marginStartEnd = start + end;
   }
 
@@ -2901,16 +2887,10 @@ bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
       aPercentBasis = 0;
     }
     LogicalMargin m(aCBWM);
-    m.IStart(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetIStart(aCBWM));
-    m.IEnd(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetIEnd(aCBWM));
-
-    m.BStart(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetBStart(aCBWM));
-    m.BEnd(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetBEnd(aCBWM));
-
+    for (const LogicalSide side : LogicalSides::All) {
+      m.Side(side, aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
+          aPercentBasis, styleMargin->mMargin.Get(side, aCBWM));
+    }
     SetComputedLogicalMargin(aCBWM, m);
   } else {
     SetComputedLogicalMargin(mWritingMode, LogicalMargin(mWritingMode, margin));
@@ -2952,20 +2932,11 @@ bool SizeComputationInput::ComputePadding(WritingMode aCBWM,
       aPercentBasis = 0;
     }
     LogicalMargin p(aCBWM);
-    p.IStart(aCBWM) = std::max(
-        0, nsLayoutUtils::ComputeCBDependentValue(
-               aPercentBasis, stylePadding->mPadding.GetIStart(aCBWM)));
-    p.IEnd(aCBWM) =
-        std::max(0, nsLayoutUtils::ComputeCBDependentValue(
-                        aPercentBasis, stylePadding->mPadding.GetIEnd(aCBWM)));
-
-    p.BStart(aCBWM) = std::max(
-        0, nsLayoutUtils::ComputeCBDependentValue(
-               aPercentBasis, stylePadding->mPadding.GetBStart(aCBWM)));
-    p.BEnd(aCBWM) =
-        std::max(0, nsLayoutUtils::ComputeCBDependentValue(
-                        aPercentBasis, stylePadding->mPadding.GetBEnd(aCBWM)));
-
+    for (const LogicalSide side : LogicalSides::All) {
+      p.Side(side, aCBWM) = std::max(
+          0, nsLayoutUtils::ComputeCBDependentValue(
+                 aPercentBasis, stylePadding->mPadding.Get(side, aCBWM)));
+    }
     SetComputedLogicalPadding(aCBWM, p);
   } else {
     SetComputedLogicalPadding(mWritingMode,
