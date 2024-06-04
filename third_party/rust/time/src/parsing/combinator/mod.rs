@@ -2,6 +2,8 @@
 
 pub(crate) mod rfc;
 
+use num_conv::prelude::*;
+
 use crate::format_description::modifier::Padding;
 use crate::parsing::shim::{Integer, IntegerParseBytes};
 use crate::parsing::ParsedItem;
@@ -135,7 +137,7 @@ pub(crate) fn n_to_m_digits_padded<'a, const N: u8, const M: u8, T: Integer>(
                     None => break,
                 }
             }
-            let pad_width = (orig_input.len() - input.len()) as u8;
+            let pad_width = (orig_input.len() - input.len()).truncate::<u8>();
 
             orig_input = input;
             for _ in 0..(N - pad_width) {

@@ -38,4 +38,7 @@ pub enum Component {
     Ignore(modifier::Ignore),
     /// A Unix timestamp.
     UnixTimestamp(modifier::UnixTimestamp),
+    /// The end of input. Parsing this component will fail if there is any input remaining. This
+    /// component neither affects formatting nor consumes any input when parsing.
+    End(modifier::End),
 }

@@ -10,18 +10,18 @@ macro_rules! to_tokens {
         $struct_vis:vis struct $struct_name:ident {$(
             $(#[$field_attr:meta])*
             $field_vis:vis $field_name:ident : $field_ty:ty
-        ),+ $(,)?}
+        ),* $(,)?}
     ) => {
         $(#[$struct_attr])*
         $struct_vis struct $struct_name {$(
             $(#[$field_attr])*
             $field_vis $field_name: $field_ty
-        ),+}
+        ),*}
 
         impl ToTokenTree for $struct_name {
             fn into_token_tree(self) -> TokenTree {
                 let mut tokens = TokenStream::new();
-                let Self {$($field_name),+} = self;
+                let Self {$($field_name),*} = self;
 
                 quote_append! { tokens
                     let mut value = ::time::format_description::modifier::$struct_name::default();
@@ -30,7 +30,7 @@ macro_rules! to_tokens {
                     quote_append!(tokens value.$field_name =);
                     $field_name.append_to(&mut tokens);
                     quote_append!(tokens ;);
-                )+
+                )*
                 quote_append!(tokens value);
 
                 proc_macro::TokenTree::Group(proc_macro::Group::new(
@@ -244,4 +244,8 @@ to_tokens! {
         pub(crate) precision: UnixTimestampPrecision,
         pub(crate) sign_is_mandatory: bool,
     }
+}
+
+to_tokens! {
+    pub(crate) struct End {}
 }

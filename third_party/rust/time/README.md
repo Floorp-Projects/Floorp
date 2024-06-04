@@ -1,6 +1,6 @@
 # time
 
-[![minimum rustc: 1.65](https://img.shields.io/badge/minimum%20rustc-1.65-yellowgreen?logo=rust&style=flat-square)](https://www.whatrustisit.com)
+[![minimum rustc: 1.67](https://img.shields.io/badge/minimum%20rustc-1.67-yellowgreen?logo=rust&style=flat-square)](https://www.whatrustisit.com)
 [![version](https://img.shields.io/crates/v/time?color=blue&logo=rust&style=flat-square)](https://crates.io/crates/time)
 [![build status](https://img.shields.io/github/actions/workflow/status/time-rs/time/build.yaml?branch=main&style=flat-square)](https://github.com/time-rs/time/actions)
 [![codecov](https://codecov.io/gh/time-rs/time/branch/main/graph/badge.svg?token=yt4XSmQNKQ)](https://codecov.io/gh/time-rs/time)

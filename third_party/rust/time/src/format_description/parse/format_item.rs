@@ -6,6 +6,7 @@ use core::num::NonZeroU16;
 use core::str::{self, FromStr};
 
 use super::{ast, unused, Error, Span, Spanned};
+use crate::internal_macros::bug;
 
 /// Parse an AST iterator into a sequence of format items.
 pub(super) fn parse<'a>(
@@ -101,7 +102,7 @@ impl Item<'_> {
     }
 }
 
-impl<'a> TryFrom<Item<'a>> for crate::format_description::FormatItem<'a> {
+impl<'a> TryFrom<Item<'a>> for crate::format_description::BorrowedFormatItem<'a> {
     type Error = Error;
 
     fn try_from(item: Item<'a>) -> Result<Self, Self::Error> {
@@ -148,14 +149,9 @@ impl From<Item<'_>> for crate::format_description::OwnedFormatItem {
 impl<'a> From<Box<[Item<'a>]>> for crate::format_description::OwnedFormatItem {
     fn from(items: Box<[Item<'a>]>) -> Self {
         let items = items.into_vec();
-        if items.len() == 1 {
-            if let Ok([item]) = <[_; 1]>::try_from(items) {
-                item.into()
-            } else {
-                bug!("the length was just checked to be 1")
-            }
-        } else {
-            Self::Compound(items.into_iter().map(Self::from).collect())
+        match <[_; 1]>::try_from(items) {
+            Ok([item]) => item.into(),
+            Err(vec) => Self::Compound(vec.into_iter().map(Into::into).collect()),
         }
     }
 }
@@ -190,6 +186,8 @@ macro_rules! component_definition {
                 _component_span: Span,
             ) -> Result<Self, Error>
             {
+                // rustc will complain if the modifier is empty.
+                #[allow(unused_mut)]
                 let mut this = Self {
                     $($field: None),*
                 };
@@ -280,6 +278,7 @@ component_definition! {
         Day = "day" {
             padding = "padding": Option<Padding> => padding,
         },
+        End = "end" {},
         Hour = "hour" {
             padding = "padding": Option<Padding> => padding,
             base = "repr": Option<HourBase> => is_12_hour_clock,

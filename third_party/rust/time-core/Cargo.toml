@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.65.0"
+rust-version = "1.67.0"
 name = "time-core"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
     "Jacob Pratt <open-source@jhpratt.dev>",
     "Time contributors",
@@ -28,5 +28,8 @@ keywords = [
 categories = ["date-and-time"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/time-rs/time"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [dependencies]

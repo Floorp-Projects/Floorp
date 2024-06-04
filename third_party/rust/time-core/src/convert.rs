@@ -1,88 +1,104 @@
-#![allow(clippy::missing_docs_in_private_items)] // TODO temporary
+//! Conversion between units of time.
 
-macro_rules! declare_structs {
-    ($($t:ident)*) => {$(
-        #[derive(Debug, Copy, Clone)]
+use self::sealed::Per;
+
+mod sealed {
+    /// A trait for defining the ratio of two units of time.
+    ///
+    /// This trait is used to implement the `per` method on the various structs.
+    pub trait Per<T> {
+        /// The smallest unsigned integer type that can represent [`VALUE`](Self::VALUE).
+        type Output;
+
+        /// The number of one unit of time in the other.
+        const VALUE: Self::Output;
+    }
+}
+
+/// Declare and implement `Per` for all relevant types. Identity implementations are automatic.
+macro_rules! impl_per {
+    ($($t:ident ($str:literal) per {$(
+        $larger:ident : $output:ty = $value:expr
+    )*})*) => {$(
+        #[doc = concat!("A unit of time representing exactly one ", $str, ".")]
+        #[derive(Debug, Clone, Copy)]
         pub struct $t;
 
         impl $t {
-            pub const fn per<T>(self, _: T) -> <(Self, T) as Per>::Output
+            #[doc = concat!("Obtain the number of times `", stringify!($t), "` can fit into `T`.")]
+            #[doc = concat!("If `T` is smaller than `", stringify!($t), "`, the code will fail to")]
+            /// compile. The return type is the smallest unsigned integer type that can represent
+            /// the value.
+            ///
+            /// Valid calls:
+            ///
+            #[doc = concat!("  - `", stringify!($t), "::per(", stringify!($t), ")` (returns `u8`)")]
+            $(#[doc = concat!("  - `", stringify!($t), "::per(", stringify!($larger), ")` (returns `", stringify!($output), "`)")])*
+            pub const fn per<T>(_larger: T) -> <Self as Per<T>>::Output
             where
-                (Self, T): Per,
+                Self: Per<T>,
                 T: Copy,
             {
-                <(Self, T)>::VALUE
+                Self::VALUE
             }
         }
-    )*};
-}
 
-declare_structs! {
-    Nanosecond
-    Microsecond
-    Millisecond
-    Second
-    Minute
-    Hour
-    Day
-    Week
-}
+        impl Per<$t> for $t {
+            type Output = u8;
 
-mod sealed {
-    pub trait Sealed {}
-}
-
-pub trait Per: sealed::Sealed {
-    type Output;
-
-    const VALUE: Self::Output;
-}
-
-macro_rules! impl_per {
-    ($($t:ty : $x:ident in $y:ident = $val:expr)*) => {$(
-        impl sealed::Sealed for ($x, $y) {}
-
-        impl Per for ($x, $y) {
-            type Output = $t;
-
-            const VALUE: $t = $val;
+            const VALUE: u8 = 1;
         }
+
+        $(impl Per<$larger> for $t {
+            type Output = $output;
+
+            const VALUE: $output = $value;
+        })*
     )*};
 }
 
 impl_per! {
-    u16: Nanosecond in Microsecond = 1_000
-    u32: Nanosecond in Millisecond = 1_000_000
-    u32: Nanosecond in Second = 1_000_000_000
-    u64: Nanosecond in Minute = 60_000_000_000
-    u64: Nanosecond in Hour = 3_600_000_000_000
-    u64: Nanosecond in Day = 86_400_000_000_000
-    u64: Nanosecond in Week = 604_800_000_000_000
-
-    u16: Microsecond in Millisecond = 1_000
-    u32: Microsecond in Second = 1_000_000
-    u32: Microsecond in Minute = 60_000_000
-    u32: Microsecond in Hour = 3_600_000_000
-    u64: Microsecond in Day = 86_400_000_000
-    u64: Microsecond in Week = 604_800_000_000
-
-    u16: Millisecond in Second = 1_000
-    u16: Millisecond in Minute = 60_000
-    u32: Millisecond in Hour = 3_600_000
-    u32: Millisecond in Day = 86_400_000
-    u32: Millisecond in Week = 604_800_000
-
-    u8: Second in Minute = 60
-    u16: Second in Hour = 3_600
-    u32: Second in Day = 86_400
-    u32: Second in Week = 604_800
-
-    u8: Minute in Hour = 60
-    u16: Minute in Day = 1_440
-    u16: Minute in Week = 10_080
-
-    u8: Hour in Day = 24
-    u8: Hour in Week = 168
-
-    u8: Day in Week = 7
+    Nanosecond ("nanosecond") per {
+        Microsecond: u16 = 1_000
+        Millisecond: u32 = 1_000_000
+        Second: u32 = 1_000_000_000
+        Minute: u64 = 60_000_000_000
+        Hour: u64 = 3_600_000_000_000
+        Day: u64 = 86_400_000_000_000
+        Week: u64 = 604_800_000_000_000
+    }
+    Microsecond ("microsecond") per {
+        Millisecond: u16 = 1_000
+        Second: u32 = 1_000_000
+        Minute: u32 = 60_000_000
+        Hour: u32 = 3_600_000_000
+        Day: u64 = 86_400_000_000
+        Week: u64 = 604_800_000_000
+    }
+    Millisecond ("millisecond") per {
+        Second: u16 = 1_000
+        Minute: u16 = 60_000
+        Hour: u32 = 3_600_000
+        Day: u32 = 86_400_000
+        Week: u32 = 604_800_000
+    }
+    Second ("second") per {
+        Minute: u8 = 60
+        Hour: u16 = 3_600
+        Day: u32 = 86_400
+        Week: u32 = 604_800
+    }
+    Minute ("minute") per {
+        Hour: u8 = 60
+        Day: u16 = 1_440
+        Week: u16 = 10_080
+    }
+    Hour ("hour") per {
+        Day: u8 = 24
+        Week: u8 = 168
+    }
+    Day ("day") per {
+        Week: u8 = 7
+    }
+    Week ("week") per {}
 }

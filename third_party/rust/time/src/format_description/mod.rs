@@ -15,7 +15,9 @@ mod owned_format_item;
 #[cfg(feature = "alloc")]
 mod parse;
 
-pub use borrowed_format_item::BorrowedFormatItem as FormatItem;
+pub use borrowed_format_item::BorrowedFormatItem;
+#[allow(deprecated)]
+pub use borrowed_format_item::FormatItem;
 #[cfg(feature = "alloc")]
 pub use owned_format_item::OwnedFormatItem;
 

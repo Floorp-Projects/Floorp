@@ -2,12 +2,14 @@
 
 pub(crate) mod formattable;
 mod iso8601;
-
 use core::num::NonZeroU8;
 use std::io;
 
+use num_conv::prelude::*;
+
 pub use self::formattable::Formattable;
 use crate::convert::*;
+use crate::ext::DigitCount;
 use crate::format_description::{modifier, Component};
 use crate::{error, Date, OffsetDateTime, Time, UtcOffset};
 
@@ -37,86 +39,6 @@ const WEEKDAY_NAMES: [&[u8]; 7] = [
     b"Saturday",
     b"Sunday",
 ];
-
-// region: extension trait
-/// A trait that indicates the formatted width of the value can be determined.
-///
-/// Note that this should not be implemented for any signed integers. This forces the caller to
-/// write the sign if desired.
-pub(crate) trait DigitCount {
-    /// The number of digits in the stringified value.
-    fn num_digits(self) -> u8;
-}
-impl DigitCount for u8 {
-    fn num_digits(self) -> u8 {
-        // Using a lookup table as with u32 is *not* faster in standalone benchmarks.
-        if self < 10 {
-            1
-        } else if self < 100 {
-            2
-        } else {
-            3
-        }
-    }
-}
-impl DigitCount for u16 {
-    fn num_digits(self) -> u8 {
-        // Using a lookup table as with u32 is *not* faster in standalone benchmarks.
-        if self < 10 {
-            1
-        } else if self < 100 {
-            2
-        } else if self < 1_000 {
-            3
-        } else if self < 10_000 {
-            4
-        } else {
-            5
-        }
-    }
-}
-
-impl DigitCount for u32 {
-    fn num_digits(self) -> u8 {
-        /// Lookup table
-        const TABLE: &[u64] = &[
-            0x0001_0000_0000,
-            0x0001_0000_0000,
-            0x0001_0000_0000,
-            0x0001_FFFF_FFF6,
-            0x0002_0000_0000,
-            0x0002_0000_0000,
-            0x0002_FFFF_FF9C,
-            0x0003_0000_0000,
-            0x0003_0000_0000,
-            0x0003_FFFF_FC18,
-            0x0004_0000_0000,
-            0x0004_0000_0000,
-            0x0004_0000_0000,
-            0x0004_FFFF_D8F0,
-            0x0005_0000_0000,
-            0x0005_0000_0000,
-            0x0005_FFFE_7960,
-            0x0006_0000_0000,
-            0x0006_0000_0000,
-            0x0006_FFF0_BDC0,
-            0x0007_0000_0000,
-            0x0007_0000_0000,
-            0x0007_0000_0000,
-            0x0007_FF67_6980,
-            0x0008_0000_0000,
-            0x0008_0000_0000,
-            0x0008_FA0A_1F00,
-            0x0009_0000_0000,
-            0x0009_0000_0000,
-            0x0009_C465_3600,
-            0x000A_0000_0000,
-            0x000A_0000_0000,
-        ];
-        ((self as u64 + TABLE[31_u32.saturating_sub(self.leading_zeros()) as usize]) >> 32) as _
-    }
-}
-// endregion extension trait
 
 /// Write all bytes to the output, returning the number of bytes written.
 pub(crate) fn write(output: &mut impl io::Write, bytes: &[u8]) -> io::Result<usize> {
@@ -151,14 +73,14 @@ pub(crate) fn format_float(
 ) -> io::Result<usize> {
     match digits_after_decimal {
         Some(digits_after_decimal) => {
-            let digits_after_decimal = digits_after_decimal.get() as usize;
-            let width = digits_before_decimal as usize + 1 + digits_after_decimal;
+            let digits_after_decimal = digits_after_decimal.get().extend();
+            let width = digits_before_decimal.extend::<usize>() + 1 + digits_after_decimal;
             write!(output, "{value:0>width$.digits_after_decimal$}")?;
             Ok(width)
         }
         None => {
             let value = value.trunc() as u64;
-            let width = digits_before_decimal as usize;
+            let width = digits_before_decimal.extend();
             write!(output, "{value:0>width$}")?;
             Ok(width)
         }
@@ -250,7 +172,19 @@ pub(crate) fn format_component(
         (UnixTimestamp(modifier), Some(date), Some(time), Some(offset)) => {
             fmt_unix_timestamp(output, date, time, offset, modifier)?
         }
-        _ => return Err(error::Format::InsufficientTypeInformation),
+        (End(modifier::End {}), ..) => 0,
+
+        // This is functionally the same as a wildcard arm, but it will cause an error if a new
+        // component is added. This is to avoid a bug where a new component, the code compiles, and
+        // formatting fails.
+        // Allow unreachable patterns because some branches may be fully matched above.
+        #[allow(unreachable_patterns)]
+        (
+            Day(_) | Month(_) | Ordinal(_) | Weekday(_) | WeekNumber(_) | Year(_) | Hour(_)
+            | Minute(_) | Period(_) | Second(_) | Subsecond(_) | OffsetHour(_) | OffsetMinute(_)
+            | OffsetSecond(_) | Ignore(_) | UnixTimestamp(_) | End(_),
+            ..,
+        ) => return Err(error::Format::InsufficientTypeInformation),
     })
 }
 
@@ -275,9 +209,17 @@ fn fmt_month(
     }: modifier::Month,
 ) -> Result<usize, io::Error> {
     match repr {
-        modifier::MonthRepr::Numerical => format_number::<2>(output, date.month() as u8, padding),
-        modifier::MonthRepr::Long => write(output, MONTH_NAMES[date.month() as usize - 1]),
-        modifier::MonthRepr::Short => write(output, &MONTH_NAMES[date.month() as usize - 1][..3]),
+        modifier::MonthRepr::Numerical => {
+            format_number::<2>(output, u8::from(date.month()), padding)
+        }
+        modifier::MonthRepr::Long => write(
+            output,
+            MONTH_NAMES[u8::from(date.month()).extend::<usize>() - 1],
+        ),
+        modifier::MonthRepr::Short => write(
+            output,
+            &MONTH_NAMES[u8::from(date.month()).extend::<usize>() - 1][..3],
+        ),
     }
 }
 
@@ -303,20 +245,20 @@ fn fmt_weekday(
     match repr {
         modifier::WeekdayRepr::Short => write(
             output,
-            &WEEKDAY_NAMES[date.weekday().number_days_from_monday() as usize][..3],
+            &WEEKDAY_NAMES[date.weekday().number_days_from_monday().extend::<usize>()][..3],
         ),
         modifier::WeekdayRepr::Long => write(
             output,
-            WEEKDAY_NAMES[date.weekday().number_days_from_monday() as usize],
+            WEEKDAY_NAMES[date.weekday().number_days_from_monday().extend::<usize>()],
         ),
         modifier::WeekdayRepr::Sunday => format_number::<1>(
             output,
-            date.weekday().number_days_from_sunday() + one_indexed as u8,
+            date.weekday().number_days_from_sunday() + u8::from(one_indexed),
             modifier::Padding::None,
         ),
         modifier::WeekdayRepr::Monday => format_number::<1>(
             output,
-            date.weekday().number_days_from_monday() + one_indexed as u8,
+            date.weekday().number_days_from_monday() + u8::from(one_indexed),
             modifier::Padding::None,
         ),
     }
@@ -515,10 +457,7 @@ fn fmt_unix_timestamp(
         sign_is_mandatory,
     }: modifier::UnixTimestamp,
 ) -> Result<usize, io::Error> {
-    let date_time = date
-        .with_time(time)
-        .assume_offset(offset)
-        .to_offset(UtcOffset::UTC);
+    let date_time = OffsetDateTime::new_in_offset(date, time, offset).to_offset(UtcOffset::UTC);
 
     if date_time < OffsetDateTime::UNIX_EPOCH {
         write(output, b"-")?;
@@ -532,11 +471,15 @@ fn fmt_unix_timestamp(
         }
         modifier::UnixTimestampPrecision::Millisecond => format_number_pad_none(
             output,
-            (date_time.unix_timestamp_nanos() / Nanosecond.per(Millisecond) as i128).unsigned_abs(),
+            (date_time.unix_timestamp_nanos()
+                / Nanosecond::per(Millisecond).cast_signed().extend::<i128>())
+            .unsigned_abs(),
         ),
         modifier::UnixTimestampPrecision::Microsecond => format_number_pad_none(
             output,
-            (date_time.unix_timestamp_nanos() / Nanosecond.per(Microsecond) as i128).unsigned_abs(),
+            (date_time.unix_timestamp_nanos()
+                / Nanosecond::per(Microsecond).cast_signed().extend::<i128>())
+            .unsigned_abs(),
         ),
         modifier::UnixTimestampPrecision::Nanosecond => {
             format_number_pad_none(output, date_time.unix_timestamp_nanos().unsigned_abs())

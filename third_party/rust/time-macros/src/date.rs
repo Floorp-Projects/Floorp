@@ -1,5 +1,6 @@
 use std::iter::Peekable;
 
+use num_conv::Truncate;
 use proc_macro::{token_stream, TokenTree};
 use time_core::util::{days_in_year, weeks_in_year};
 
@@ -93,7 +94,7 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<Date
                 span_end: Some(month_span),
             });
         }
-        let month = month as _;
+        let month = month.truncate();
         if day == 0 || day > days_in_year_month(year, month) {
             return Err(Error::InvalidComponent {
                 name: "day",
@@ -127,10 +128,12 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<Date
 impl ToTokenTree for Date {
     fn into_token_tree(self) -> TokenTree {
         quote_group! {{
-            const DATE: ::time::Date = ::time::Date::__from_ordinal_date_unchecked(
-                #(self.year),
-                #(self.ordinal),
-            );
+            const DATE: ::time::Date = unsafe {
+                ::time::Date::__from_ordinal_date_unchecked(
+                    #(self.year),
+                    #(self.ordinal),
+                )
+            };
             DATE
         }}
     }

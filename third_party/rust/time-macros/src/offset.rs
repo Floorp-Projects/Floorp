@@ -1,5 +1,6 @@
 use std::iter::Peekable;
 
+use num_conv::prelude::*;
 use proc_macro::{token_stream, Span, TokenTree};
 use time_core::convert::*;
 
@@ -52,21 +53,21 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<Offs
         }
     }
 
-    if hours >= 24 {
+    if hours > 25 {
         Err(Error::InvalidComponent {
             name: "hour",
             value: hours.to_string(),
             span_start: Some(hours_span),
             span_end: Some(hours_span),
         })
-    } else if minutes >= Minute.per(Hour) as _ {
+    } else if minutes >= Minute::per(Hour).cast_signed() {
         Err(Error::InvalidComponent {
             name: "minute",
             value: minutes.to_string(),
             span_start: Some(minutes_span),
             span_end: Some(minutes_span),
         })
-    } else if seconds >= Second.per(Minute) as _ {
+    } else if seconds >= Second::per(Minute).cast_signed() {
         Err(Error::InvalidComponent {
             name: "second",
             value: seconds.to_string(),
@@ -85,11 +86,13 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<Offs
 impl ToTokenTree for Offset {
     fn into_token_tree(self) -> TokenTree {
         quote_group! {{
-            const OFFSET: ::time::UtcOffset = ::time::UtcOffset::__from_hms_unchecked(
-                #(self.hours),
-                #(self.minutes),
-                #(self.seconds),
-            );
+            const OFFSET: ::time::UtcOffset = unsafe {
+                ::time::UtcOffset::__from_hms_unchecked(
+                    #(self.hours),
+                    #(self.minutes),
+                    #(self.seconds),
+                )
+            };
             OFFSET
         }}
     }

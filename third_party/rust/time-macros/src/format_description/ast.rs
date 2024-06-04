@@ -1,4 +1,3 @@
-use std::boxed::Box;
 use std::iter;
 
 use super::{lexer, unused, Error, Location, Spanned, SpannedValue, Unused};
