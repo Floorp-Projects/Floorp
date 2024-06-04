@@ -7,6 +7,7 @@
 @import url("chrome://browser/skin/downloads/indicator.css");
 @import url("chrome://browser/skin/tabbrowser/content-area.css");
 @import url("chrome://browser/skin/tabbrowser/ctrlTab.css");
+@import url("chrome://browser/skin/tabbrowser/fullscreen-and-pointerlock.css");
 @import url("chrome://browser/skin/tabbrowser/tabs.css");
 @import url("chrome://browser/skin/tabbrowser/tab-hover-preview.css");
 @import url("chrome://browser/skin/toolbarbuttons.css");
@@ -22,7 +23,6 @@
 @import url("chrome://browser/skin/places/editBookmarkPanel.css");
 @import url("chrome://browser/skin/searchbar.css");
 @import url("chrome://browser/skin/sidebar.css");
-@import url("chrome://browser/skin/fullscreen/warning.css");
 @import url("chrome://browser/skin/customizableui/customizeMode.css");
 @import url("chrome://browser/skin/UITour.css");
 @import url("chrome://browser/skin/formautofill-notification.css");
