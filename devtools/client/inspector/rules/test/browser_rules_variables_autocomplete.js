@@ -123,9 +123,9 @@ async function checkCssVariableAutocomplete(
 
   info("Close the popup");
   const onPopupClosed = once(editor.popup, "popup-closed");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  await onPopupClosed;
   onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
-  view.debounce.flush();
   await onRuleViewChanged;
-  await onPopupClosed;
 }

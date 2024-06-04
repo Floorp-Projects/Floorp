@@ -50,11 +50,15 @@ async function testCompletion(view, target, isExpectedOpenPopup) {
 
   if (editor.popup.isOpen) {
     info("Close the suggest completion popup");
-    const closingEvents = [
-      view.once("ruleview-changed"),
-      once(view.popup, "popup-closed"),
-    ];
+    const onPopupClosed = once(view.popup, "popup-closed");
     EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
-    await Promise.all(closingEvents);
+    await onPopupClosed;
+    ok(true, "popup was closed");
+
+    info("And hit Escape again to cancel the change");
+    const onRuleViewChanged = view.once("ruleview-changed");
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+    await onRuleViewChanged;
+    ok(true, "Got ruleview-changed event");
   }
 }
