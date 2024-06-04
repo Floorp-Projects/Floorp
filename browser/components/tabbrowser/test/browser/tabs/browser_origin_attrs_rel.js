@@ -8,11 +8,11 @@
 loadTestSubscript("helper_origin_attrs_testing.js");
 
 const PATH =
-  "browser/browser/components/tabbrowser/test/tabs/file_rel_opener_noopener.html";
+  "browser/browser/components/tabbrowser/test/browser/tabs/file_rel_opener_noopener.html";
 const URI_EXAMPLECOM =
-  "https://example.com/browser/browser/components/tabbrowser/test/tabs/blank.html";
+  "https://example.com/browser/browser/components/tabbrowser/test/browser/tabs/blank.html";
 const URI_EXAMPLEORG =
-  "https://example.org/browser/browser/components/tabbrowser/test/tabs/blank.html";
+  "https://example.org/browser/browser/components/tabbrowser/test/browser/tabs/blank.html";
 var TEST_CASES = ["https://example.com/" + PATH, "https://example.org/" + PATH];
 // How many times we navigate (exclude going back)
 const NUM_NAVIGATIONS = 5;

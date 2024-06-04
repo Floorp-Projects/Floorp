@@ -275,7 +275,7 @@
     "browser/components/ssb/tests/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "browser/components/tabbrowser/test/tabs/browser.toml": [
+    "browser/components/tabbrowser/test/browser/tabs/browser.toml": [
       "test-windows11-64-2009-asan/opt-*",
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
@@ -1967,7 +1967,7 @@
     "browser/components/shell/test/browser.toml": 0.95,
     "browser/components/shell/test/chrome.toml": 0.79,
     "browser/components/ssb/tests/browser/browser.toml": 0.81,
-    "browser/components/tabbrowser/test/tabs/browser.toml": 0.81,
+    "browser/components/tabbrowser/test/browser/tabs/browser.toml": 0.81,
     "browser/components/tests/browser/browser.toml": 0.67,
     "browser/components/tests/browser/whats_new_page/browser.toml": 0.56,
     "browser/components/tests/unit/xpcshell.toml": 0.82,

@@ -191,9 +191,9 @@ browser/components/sessionstore/test/browser_423132_sample.html
 browser/components/sessionstore/test/browser_485482_sample.html
 browser/components/sessionstore/test/browser_frametree_sample_frameset.html
 browser/components/sessionstore/test/browser_scrollPositions_sample_frameset.html
-browser/components/tabbrowser/test/tabs/dummy_page.html
-browser/components/tabbrowser/test/tabs/file_anchor_elements.html
-browser/components/tabbrowser/test/tabs/tab_that_closes.html
+browser/components/tabbrowser/test/browser/tabs/dummy_page.html
+browser/components/tabbrowser/test/browser/tabs/file_anchor_elements.html
+browser/components/tabbrowser/test/browser/tabs/tab_that_closes.html
 browser/components/textrecognition/textrecognition.html
 browser/components/urlbar/content/quicksuggestOnboarding.html
 browser/components/urlbar/tests/browser/dummy_page.html

@@ -10,8 +10,10 @@ const { UrlbarProviderOpenTabs } = ChromeUtils.importESModule(
 
 const PATH = "browser/browser/components/sessionstore/test/empty.html";
 
-/* import-globals-from ../../tabbrowser/test/tabs/helper_origin_attrs_testing.js */
-loadTestSubscript("../../tabbrowser/test/tabs/helper_origin_attrs_testing.js");
+/* import-globals-from ../../tabbrowser/test/browser/tabs/helper_origin_attrs_testing.js */
+loadTestSubscript(
+  "../../tabbrowser/test/browser/tabs/helper_origin_attrs_testing.js"
+);
 
 var TEST_CASES = [
   "https://example.com/" + PATH,
