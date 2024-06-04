@@ -867,13 +867,6 @@ pocketNewtab:
         pref: browser.newtabpage.activity-stream.newtabWallpapers.enabled
       description: >-
         Turns on and off wallpaper support.
-    wallpapersV2:
-      type: boolean
-      setPref:
-        branch: user
-        pref: browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled
-      description: >-
-        Turns on and off updated wallpaper experience.
     weatherLocationSearch:
       type: boolean
       fallbackPref: >-

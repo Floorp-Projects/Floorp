@@ -73,7 +73,7 @@ add_task(async function test_onAction_INIT() {
     type: at.INIT,
   });
 
-  Assert.ok(feed.store.dispatch.calledThrice);
+  Assert.ok(feed.store.dispatch.calledTwice);
   Assert.ok(
     feed.store.dispatch.firstCall.calledWith(
       ac.BroadcastToContent({
