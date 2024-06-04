@@ -19,6 +19,9 @@ const PREF_WALLPAPERS_ENABLED =
 const PREF_WALLPAPERS_HIGHLIGHT_SEEN_COUNTER =
   "browser.newtabpage.activity-stream.newtabWallpapers.highlightSeenCounter";
 
+const PREF_WALLPAPERS_V2_ENABLED =
+  "browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled";
+
 export class WallpaperFeed {
   constructor() {
     this.loaded = false;
@@ -48,8 +51,13 @@ export class WallpaperFeed {
       PREF_WALLPAPERS_ENABLED
     );
 
-    if (wallpapersEnabled) {
+    const wallpapersV2Enabled = Services.prefs.getBoolPref(
+      PREF_WALLPAPERS_V2_ENABLED
+    );
+
+    if (wallpapersEnabled || wallpapersV2Enabled) {
       if (!this.wallpaperClient) {
+        // getting collection
         this.wallpaperClient = this.RemoteSettings("newtab-wallpapers");
       }
 
@@ -73,6 +81,7 @@ export class WallpaperFeed {
   }
 
   async updateWallpapers(isStartup = false) {
+    // retrieving all records in collection
     const records = await this.wallpaperClient.get();
     if (!records?.length) {
       return;
@@ -85,13 +94,28 @@ export class WallpaperFeed {
       return {
         ...record,
         wallpaperUrl: `${this.baseAttachmentURL}${record.attachment.location}`,
+        category: record.category || "other",
       };
     });
+
+    const categories = [
+      ...new Set(wallpapers.map(wallpaper => wallpaper.category)),
+    ];
 
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.WALLPAPERS_SET,
         data: wallpapers,
+        meta: {
+          isStartup,
+        },
+      })
+    );
+
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.WALLPAPERS_CATEGORY_SET,
+        data: categories,
         meta: {
           isStartup,
         },

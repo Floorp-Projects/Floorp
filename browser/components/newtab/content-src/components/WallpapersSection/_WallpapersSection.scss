@@ -1,3 +1,59 @@
+.category-list {
+  border: none;
+  display: grid;
+  gap: 16px;
+  grid-auto-rows: 86px;
+  grid-template-columns: 1fr 1fr 1fr;
+
+  button {
+    background-clip: content-box;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 1px 2px 0 #3A394433;
+    cursor: pointer;
+    height: 86px;
+    width: 116px;
+  }
+}
+
+.wallpaper-input {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  height: 86px;
+  width: 100%;
+  box-shadow: $shadow-secondary;
+  border-radius: 8px;
+  background-clip: content-box;
+  background-repeat: no-repeat;
+  background-size: cover;
+  cursor: pointer;
+  outline: 2px solid transparent;
+
+  $wallpapers: dark-landscape, dark-color, dark-mountain, dark-panda, dark-sky, dark-beach, light-beach, light-color, light-landscape, light-mountain, light-panda, light-sky;
+
+  @each $wallpaper in $wallpapers {
+    &.#{$wallpaper} {
+      background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/#{$wallpaper}.avif')
+    }
+  }
+
+  &:checked {
+    outline-color: var(--color-accent-primary-active);
+  }
+
+  &:focus-visible {
+    outline-color: var(--newtab-primary-action-background);
+  }
+
+  &:hover {
+    filter: brightness(55%);
+    outline-color: transparent;
+  }
+}
+
 .wallpaper-list {
   display: grid;
   gap: 16px;
@@ -6,6 +62,49 @@
   margin: 16px 0;
   padding: 0;
   border: none;
+
+  &.category {
+    background-color: var(--newtab-background-color-secondary);
+    color: var(--newtab-text-primary-color);
+    display: unset;
+    gap: unset;
+    grid-auto-rows: unset;
+    grid-template-columns: unset;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    visibility: none;
+    width: 370px; // TODO: check this
+    z-index: 2;
+
+    fieldset {
+      border: none;
+      display: grid;
+      gap: 16px;
+      grid-auto-rows: 86px;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      &.wallpaper-list-enter {
+        transform: translateX(100%);
+      }
+
+      &.wallpaper-list-enter-active {
+        transform: translateX(0);
+        transition: transform 300ms;
+      }
+
+      &.wallpaper-list-exit {
+        transform: translateX(0);
+      }
+
+      &.wallpaper-list-exit-active {
+        transform: translateX(100%);
+        transition: transform 300ms;
+      }
+    }
+  }
 
   &:not(.ignore-color-mode) .wallpaper-input,
   &:not(.ignore-color-mode) .sr-only {
@@ -23,42 +122,6 @@
       @include dark-theme-only {
         display: inline-block;
       }
-    }
-  }
-
-  .wallpaper-input {
-    appearance: none;
-    margin: 0;
-    padding: 0;
-    height: 86px;
-    width: 100%;
-    box-shadow: $shadow-secondary;
-    border-radius: 8px;
-    background-clip: content-box;
-    background-repeat: no-repeat;
-    background-size: cover;
-    cursor: pointer;
-    outline: 2px solid transparent;
-
-    $wallpapers: dark-landscape, dark-color, dark-mountain, dark-panda, dark-sky, dark-beach, light-beach, light-color, light-landscape, light-mountain, light-panda, light-sky;
-
-    @each $wallpaper in $wallpapers {
-      &.#{$wallpaper} {
-        background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/#{$wallpaper}.avif')
-      }
-    }
-
-    &:checked {
-      outline-color: var(--color-accent-primary-active);
-    }
-
-    &:focus-visible {
-      outline-color: var(--newtab-primary-action-background);
-    }
-
-    &:hover {
-      filter: brightness(55%);
-      outline-color: transparent;
     }
   }
 
@@ -85,3 +148,4 @@
     text-decoration: none;
   }
 }
+
