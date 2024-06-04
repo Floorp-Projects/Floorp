@@ -201,6 +201,6 @@ Metrics starting with VP9/H264 give the number of frames dropped, and painted.
 
   * **Aliases**: H264, VP9
   * **Tests using it**:
-     * **Benchmarks**: `youtube-playback <raptor.html#youtube-playback-b>`__, `youtube-playback-hfr <raptor.html#youtube-playback-hfr-b>`__
+     * **Benchmarks**: `youtube-playback-hfr <raptor.html#youtube-playback-hfr-b>`__
 
 

@@ -181,7 +181,6 @@ suites:
             wasm-misc-optimizing: ""
             wasm-misc: ""
             webaudio: ""
-            youtube-playback: ""
             youtube-playback-av1-sfr: ""
             youtube-playback-h264-1080p30: ""
             youtube-playback-h264-1080p60: ""
