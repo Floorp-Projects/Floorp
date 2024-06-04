@@ -79,6 +79,10 @@
   browser[type=content] {
     color-scheme: env(-moz-content-preferred-color-scheme);
   }
+
+  browser[tabDialogShowing] {
+    -moz-user-focus: none !important;
+  }
 }
 
 /* Status panel */
@@ -171,4 +175,178 @@
     }
     margin-left: 1em;
   }
+}
+
+/**
+ * Dialogs
+ */
+
+.dialogStack {
+  z-index: var(--browser-stack-z-index-dialog-stack);
+  position: absolute;
+  inset: 0;
+
+  /* Hide tab-modal dialogs when a window-modal one is up. */
+  :root[window-modal-open] .browserStack > &,
+  /* For some printing use cases we need to visually hide the dialog before
+   * actually closing it / make it disappear from the frame tree. */
+  &.temporarilyHidden {
+    visibility: hidden;
+  }
+}
+
+.dialogOverlay {
+  align-items: center;
+  visibility: hidden;
+
+  &[topmost="true"] {
+    z-index: 1;
+  }
+
+  .content-prompt-dialog > & {
+    display: grid;
+    align-items: unset;
+    place-content: center;
+    /* 90% for 5% top/bottom margins, the document height so that
+     * smaller dialogs don't become too big. */
+    grid-auto-rows: min(90%, var(--doc-height-px));
+  }
+}
+
+.dialogBox {
+  background-clip: content-box;
+  display: flex;
+  margin: 0 3vw;
+  padding: 0;
+  overflow-x: auto;
+
+  &:not(.spotlightBox) {
+    box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+  }
+
+  /*
+   * In High Contrast Mode, this prevents a dialog from visually bleeding into
+   * the window behind it, which looks jarring.
+   */
+  @media (prefers-contrast) {
+    outline: 1px solid WindowText;
+  }
+
+  &[resizable="true"] {
+    resize: both;
+    overflow: hidden;
+    min-height: 20em;
+  }
+
+  &[sizeto="available"] {
+    --box-top-px: 0px; /* Overridden using inline style */
+    --box-inline-margin: 4px;
+    --box-block-margin: 4px;
+    --box-ideal-width: 1000;
+    --box-ideal-height: 650;
+    --box-max-width-margin: calc(100vw - 2 * var(--box-inline-margin));
+    --box-max-height-margin: calc(100vh - var(--box-top-px) - var(--box-block-margin));
+    --box-max-width-ratio: 70vw;
+    --box-max-height-ratio: calc(var(--box-ideal-height) / var(--box-ideal-width) * var(--box-max-width-ratio));
+    --box-max-height-requested: 100vh;
+    --box-max-width-requested: 100vw;
+    --box-max-height-remaining: calc(100vh - var(--box-top-px));
+
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+
+    @media (min-width: 550px) {
+      --box-inline-margin: min(calc(4px + (100vw - 550px) / 4), 16px);
+    }
+
+    @media (min-width: 800px) {
+      --box-inline-margin: min(calc(16px + (100vw - 800px) / 4), 32px);
+    }
+
+    @media (min-height: 350px) {
+      --box-block-margin: min(calc(4px + (100vh - 350px) / 4), 16px);
+    }
+
+    @media (min-height: 550px) {
+      --box-block-margin: min(calc(16px + (100vh - 550px) / 4), 32px);
+    }
+
+    &:not(.spotlightBox) {
+      max-width: min(max(var(--box-ideal-width) * 1px, var(--box-max-width-ratio)), var(--box-max-width-margin), var(--box-max-width-requested));
+      max-height: min(max(var(--box-ideal-height) * 1px, var(--box-max-height-ratio)), var(--box-max-height-margin), var(--box-max-height-requested), var(--box-max-height-remaining));
+    }
+
+    .dialogStack &.spotlightBox {
+      /* Tab modal: subtract the navigator toolbox height from the dialog height. */
+      height: calc(100vh - var(--box-top-px));
+    }
+  }
+
+  :not(.content-prompt-dialog) > .dialogOverlay > &:not(.spotlightBox) {
+    /* Make dialogs overlap with upper chrome UI. Not necessary for Spotlight
+    dialogs that are intended to be centered above the window or content area. */
+    margin-top: -5px;
+  }
+
+  /* For window-modal dialogs, we allow overlapping the urlbar if the window is
+   * small enough. */
+  #window-modal-dialog > .dialogOverlay > &:not(.spotlightBox) {
+    /* Do not go below 3px (as otherwise the top of the dialog would be
+     * adjacent to or clipped by the top of the window), or above the window
+     * size. */
+    margin-top: clamp(
+      3px,
+      var(--chrome-offset, 20px) - 5px,
+      calc(100vh - var(--subdialog-inner-height) - 5px)
+    );
+  }
+}
+
+#window-modal-dialog {
+  overflow: visible;
+  padding: 0;
+  /* Override default <html:dialog> styles */
+  border-width: 0;
+  background-color: transparent;
+  /* This makes the dialog top-aligned by default (the dialog box will move via
+   * margin-top above) */
+  bottom: auto;
+  /* When showModal() is called on a <dialog>, the <dialog> itself will be
+   * focused when there's no content, hence the focus ring. However, this
+   * focus ring is not needed because we always setup the content of the dialog
+   * after its opened and manually focus an element within it.
+   */
+  outline: none;
+
+  &.spotlight {
+    /* Spotlight window modal dialogs should be equal in size to the window. */
+    bottom: revert;
+    max-height: 100%;
+    max-width: 100%;
+  }
+}
+
+.dialogFrame {
+  margin: 0;
+  flex: 1;
+  /* Default dialog dimensions */
+  width: 34em;
+}
+
+.dialogOverlay[topmost="true"],
+#window-modal-dialog::backdrop {
+  background-color: rgba(28, 27, 34, 0.45);
+}
+
+.dialogOverlay[hideContent="true"][topmost="true"] {
+  background-color: var(--tabpanel-background-color);
+}
+
+/* For the window-modal dialog, the background is supplied by the HTML dialog
+ * backdrop, so the dialogOverlay background above "double backgrounds" - so
+ * we remove it here: */
+#window-modal-dialog > .dialogOverlay[topmost="true"] {
+  background-color: transparent;
 }
