@@ -777,7 +777,8 @@ CrashManager.prototype = Object.freeze({
       // FIXME: Glean should probably accept an empty object here. Some tests
       // pass { status: "OK" }, which ends up being removed by the above logic.
       if (Object.keys(stackTraces).length) {
-        Glean.crash.stackTraces.set(stackTraces);
+        // FIXME: ?. a temporary workaround for bug 1900442
+        Glean.crash.stackTraces?.set(stackTraces);
       }
     }
 
@@ -905,7 +906,8 @@ CrashManager.prototype = Object.freeze({
               // `object` metric transformation
               metaValue = type(metaValue);
             }
-            root[key].set(metaValue);
+            // FIXME: ?. a temporary workaround for bug 1900442
+            root[key]?.set(metaValue);
           }
         } else {
           gleanSet(root[key], value);
