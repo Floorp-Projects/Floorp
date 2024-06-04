@@ -154,25 +154,17 @@ BackgroundEventTarget::IsOnCurrentThread(bool* aValue) {
 NS_IMETHODIMP
 BackgroundEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                                 uint32_t aFlags) {
-  // We need to be careful here, because if an event is getting dispatched here
-  // from within TaskQueue::Runner::Run, it will be dispatched with
-  // NS_DISPATCH_AT_END, but we might not be running the event on the same
-  // pool, depending on which pool we were on and the dispatch flags.  If we
-  // dispatch an event with NS_DISPATCH_AT_END to the wrong pool, the pool
-  // may not process the event in a timely fashion, which can lead to deadlock.
-  uint32_t flags = aFlags & ~NS_DISPATCH_EVENT_MAY_BLOCK;
+  // Select the right destination and clear the special flag.
   bool mayBlock = bool(aFlags & NS_DISPATCH_EVENT_MAY_BLOCK);
   nsCOMPtr<nsIThreadPool>& pool = mayBlock ? mIOPool : mPool;
+  uint32_t flags = aFlags & ~NS_DISPATCH_EVENT_MAY_BLOCK;
 
-  // If we're already running on the pool we want to dispatch to, we can
-  // unconditionally add NS_DISPATCH_AT_END to indicate that we shouldn't spin
-  // up a new thread.
-  //
-  // Otherwise, we should remove NS_DISPATCH_AT_END so we don't run into issues
-  // like those in the above comment.
-  if (pool->IsOnCurrentThread()) {
-    flags |= NS_DISPATCH_AT_END;
-  } else {
+  // If an event is dispatched with NS_DISPATCH_AT_END, it is intended to run
+  // on the same thread on the same pool it is dispatched from, but we might
+  // not want to run the event on the same pool depending on the above choice.
+  // If we dispatch an event with NS_DISPATCH_AT_END to the wrong pool, the
+  // pool may not process the event in a timely fashion or even deadlock.
+  if (flags & NS_DISPATCH_AT_END && !pool->IsOnCurrentThread()) {
     flags &= ~NS_DISPATCH_AT_END;
   }
 
