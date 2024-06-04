@@ -627,4 +627,73 @@ where
             has_starting_style: false, // We don't care.
         })
     }
+
+    /// Resolve the starting style.
+    pub fn resolve_starting_style(&mut self) -> ResolvedStyle {
+        // Compute after-change style for the parent and the layout parent.
+        // Per spec, starting style inherits from the parent’s after-change style just like
+        // after-change style does.
+        let parent_el = self.element.inheritance_parent();
+        let parent_data = parent_el.as_ref().and_then(|e| e.borrow_data());
+        let parent_style = parent_data.as_ref().map(|d| d.styles.primary());
+        let parent_after_change_style =
+            parent_style.and_then(|s| self.after_change_style(s));
+        let parent_values = parent_after_change_style
+            .as_ref()
+            .or(parent_style)
+            .map(|x| &**x);
+
+        let mut layout_parent_el = parent_el.clone();
+        let layout_parent_data;
+        let layout_parent_after_change_style;
+        let layout_parent_values = if parent_style.map_or(false, |s| s.is_display_contents()) {
+            layout_parent_el = Some(layout_parent_el.unwrap().layout_parent());
+            layout_parent_data = layout_parent_el.as_ref().unwrap().borrow_data().unwrap();
+            let layout_parent_style = Some(layout_parent_data.styles.primary());
+            layout_parent_after_change_style =
+                layout_parent_style.and_then(|s| self.after_change_style(s));
+            layout_parent_after_change_style
+                .as_ref()
+                .or(layout_parent_style)
+                .map(|x| &**x)
+        } else {
+            parent_values
+        };
+
+        self.resolve_primary_style(
+            parent_values,
+            layout_parent_values,
+            IncludeStartingStyle::Yes,
+        )
+        .style
+    }
+
+    /// If there is no transition rule in the ComputedValues, it returns None.
+    pub fn after_change_style(
+        &mut self,
+        primary_style: &Arc<ComputedValues>,
+    ) -> Option<Arc<ComputedValues>> {
+        let rule_node = primary_style.rules();
+        let without_transition_rules = self.context
+            .shared
+            .stylist
+            .rule_tree()
+            .remove_transition_rule_if_applicable(rule_node);
+        if without_transition_rules == *rule_node {
+            // We don't have transition rule in this case, so return None to let
+            // the caller use the original ComputedValues.
+            return None;
+        }
+
+        // FIXME(bug 868975): We probably need to transition visited style as
+        // well.
+        let inputs = CascadeInputs {
+            rules: Some(without_transition_rules),
+            visited_rules: primary_style.visited_rules().cloned(),
+            flags: primary_style.flags.for_cascade_inputs(),
+        };
+
+        let style = self.cascade_style_and_visited_with_default_parents(inputs);
+        Some(style.0)
+    }
 }

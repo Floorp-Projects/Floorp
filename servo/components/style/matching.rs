@@ -8,7 +8,7 @@
 #![deny(missing_docs)]
 
 use crate::computed_value_flags::ComputedValueFlags;
-use crate::context::{CascadeInputs, ElementCascadeInputs, QuirksMode};
+use crate::context::{ElementCascadeInputs, QuirksMode};
 use crate::context::{SharedStyleContext, StyleContext};
 use crate::data::{ElementData, ElementStyles};
 use crate::dom::TElement;
@@ -21,8 +21,6 @@ use crate::properties::PropertyDeclarationBlock;
 use crate::rule_tree::{CascadeLevel, StrongRuleNode};
 use crate::selector_parser::{PseudoElement, RestyleDamage};
 use crate::shared_lock::Locked;
-#[cfg(feature = "gecko")]
-use crate::style_resolver::ResolvedStyle;
 use crate::style_resolver::StyleResolverForElement;
 use crate::style_resolver::{PseudoElementResolution, ResolvedElementStyles};
 use crate::stylesheets::layer_rule::LayerOrder;
@@ -216,36 +214,14 @@ trait PrivateMatchMethods: TElement {
         context: &mut StyleContext<Self>,
         primary_style: &Arc<ComputedValues>,
     ) -> Option<Arc<ComputedValues>> {
-        let rule_node = primary_style.rules();
-        let without_transition_rules = context
-            .shared
-            .stylist
-            .rule_tree()
-            .remove_transition_rule_if_applicable(rule_node);
-        if without_transition_rules == *rule_node {
-            // We don't have transition rule in this case, so return None to let
-            // the caller use the original ComputedValues.
-            return None;
-        }
-
-        // FIXME(bug 868975): We probably need to transition visited style as
-        // well.
-        let inputs = CascadeInputs {
-            rules: Some(without_transition_rules),
-            visited_rules: primary_style.visited_rules().cloned(),
-            flags: primary_style.flags.for_cascade_inputs(),
-        };
-
         // Actually `PseudoElementResolution` doesn't really matter.
-        let style = StyleResolverForElement::new(
+        StyleResolverForElement::new(
             *self,
             context,
             RuleInclusion::All,
             PseudoElementResolution::IfApplicable,
         )
-        .cascade_style_and_visited_with_default_parents(inputs);
-
-        Some(style.0)
+        .after_change_style(primary_style)
     }
 
     fn needs_animations_update(
@@ -387,61 +363,6 @@ trait PrivateMatchMethods: TElement {
     }
 
     #[cfg(feature = "gecko")]
-    fn resolve_starting_style(&self, context: &mut StyleContext<Self>) -> ResolvedStyle {
-        use selectors::matching::IncludeStartingStyle;
-
-        // Compute after-change style for the parent and the layout parent.
-        // Per spec, starting style inherits from the parent’s after-change style just like
-        // after-change style does.
-        let parent_el = self.inheritance_parent();
-        let parent_data = parent_el.as_ref().and_then(|e| e.borrow_data());
-        let parent_style = parent_data.as_ref().map(|d| d.styles.primary());
-        let parent_after_change_style =
-            parent_style.and_then(|s| self.after_change_style(context, s));
-        let parent_values = parent_after_change_style
-            .as_ref()
-            .or(parent_style)
-            .map(|x| &**x);
-
-        let mut layout_parent_el = parent_el.clone();
-        let layout_parent_data;
-        let layout_parent_after_change_style;
-        let layout_parent_values = if parent_style.map_or(false, |s| s.is_display_contents()) {
-            layout_parent_el = Some(layout_parent_el.unwrap().layout_parent());
-            layout_parent_data = layout_parent_el.as_ref().unwrap().borrow_data().unwrap();
-            let layout_parent_style = Some(layout_parent_data.styles.primary());
-            layout_parent_after_change_style =
-                layout_parent_style.and_then(|s| self.after_change_style(context, s));
-            layout_parent_after_change_style
-                .as_ref()
-                .or(layout_parent_style)
-                .map(|x| &**x)
-        } else {
-            parent_values
-        };
-
-        // Note: Basically, we have to remove transition rules because the starting style for an
-        // element is the after-change style with @starting-style rules applied in addition.
-        // However, we expect there is no transition rules for this element when calling this
-        // function because we do this only when we don't have before-change style or we change
-        // from display:none. In these cases, it's unlikely to have running transitions on this
-        // element.
-        let mut resolver = StyleResolverForElement::new(
-            *self,
-            context,
-            RuleInclusion::All,
-            PseudoElementResolution::IfApplicable,
-        );
-        resolver
-            .resolve_primary_style(
-                parent_values,
-                layout_parent_values,
-                IncludeStartingStyle::Yes,
-            )
-            .style
-    }
-
-    #[cfg(feature = "gecko")]
     fn maybe_resolve_starting_style(
         &self,
         context: &mut StyleContext<Self>,
@@ -468,7 +389,20 @@ trait PrivateMatchMethods: TElement {
             return None;
         }
 
-        let starting_style = self.resolve_starting_style(context);
+        // Note: Basically, we have to remove transition rules because the starting style for an
+        // element is the after-change style with @starting-style rules applied in addition.
+        // However, we expect there is no transition rules for this element when calling this
+        // function because we do this only when we don't have before-change style or we change
+        // from display:none. In these cases, it's unlikely to have running transitions on this
+        // element.
+        let mut resolver = StyleResolverForElement::new(
+            *self,
+            context,
+            RuleInclusion::All,
+            PseudoElementResolution::IfApplicable,
+        );
+
+        let starting_style = resolver.resolve_starting_style();
         if starting_style.style().clone_display().is_none() {
             return None;
         }
