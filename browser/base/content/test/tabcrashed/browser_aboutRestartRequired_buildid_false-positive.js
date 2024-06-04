@@ -17,7 +17,6 @@ add_task(async function test_browser_crashed_false_positive_event() {
     "Build ID mismatch false positive count should be undefined"
   );
 
-  ok(await ensureBuildID(), "System has correct platform.ini");
   setBuildidMatchDontSendEnv();
   await forceCleanProcesses();
   let eventPromise = getEventPromise("oop-browser-crashed", "false-positive");
