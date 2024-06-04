@@ -229,41 +229,37 @@ void InspectorUtils::GetChildrenForNode(nsINode& aNode,
   }
 }
 
-/* static */
-void InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
-                                      Element& aElement,
-                                      const nsAString& aPseudo,
-                                      bool aIncludeVisitedStyle,
-                                      nsTArray<RefPtr<CSSStyleRule>>& aResult) {
-  auto [type, functionalPseudoParameter] =
-      nsCSSPseudoElements::ParsePseudoElement(aPseudo,
-                                              CSSEnabledState::ForAllContent);
-  if (!type) {
-    return;
+static already_AddRefed<const ComputedStyle> GetStartingStyle(
+    Element& aElement) {
+  // If this element is unstyled, or it doesn't have matched rules in
+  // @starting-style, we return.
+  if (!Servo_Element_MayHaveStartingStyle(&aElement)) {
+    return nullptr;
   }
 
-  RefPtr<const ComputedStyle> computedStyle = GetCleanComputedStyleForElement(
-      &aElement, *type, functionalPseudoParameter);
-  if (!computedStyle) {
-    // This can fail for elements that are not in the document or
-    // if the document they're in doesn't have a presshell.  Bail out.
-    return;
+  const PresShell* presShell = aElement.OwnerDoc()->GetPresShell();
+  if (!presShell) {
+    return nullptr;
   }
 
-  if (aIncludeVisitedStyle) {
-    if (auto* styleIfVisited = computedStyle->GetStyleIfVisited()) {
-      computedStyle = styleIfVisited;
-    }
+  ServoStyleSet* styleSet = presShell->StyleSet();
+  if (!styleSet) {
+    return nullptr;
   }
 
-  Document* doc = aElement.OwnerDoc();
-  PresShell* presShell = doc->GetPresShell();
+  return styleSet->ResolveStartingStyle(aElement);
+}
+
+static void GetCSSStyleRulesFromComputedValue(
+    Element& aElement, const ComputedStyle* aComputedStyle,
+    nsTArray<RefPtr<CSSStyleRule>>& aResult) {
+  const PresShell* presShell = aElement.OwnerDoc()->GetPresShell();
   if (!presShell) {
     return;
   }
 
   AutoTArray<const StyleLockedStyleRule*, 8> rawRuleList;
-  Servo_ComputedValues_GetStyleRuleList(computedStyle, &rawRuleList);
+  Servo_ComputedValues_GetStyleRuleList(aComputedStyle, &rawRuleList);
 
   AutoTArray<ServoStyleRuleMap*, 8> maps;
   {
@@ -313,7 +309,7 @@ void InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
 #ifdef DEBUG
       aElement.Dump();
       printf_stderr("\n\n----\n\n");
-      computedStyle->DumpMatchedRules();
+      aComputedStyle->DumpMatchedRules();
       nsAutoCString str;
       Servo_StyleRule_Debug(rawRule, &str);
       printf_stderr("\n\n----\n\n");
@@ -325,6 +321,48 @@ void InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
 #endif
     }
   }
+}
+
+/* static */
+void InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
+                                      Element& aElement,
+                                      const nsAString& aPseudo,
+                                      bool aIncludeVisitedStyle,
+                                      bool aWithStartingStyle,
+                                      nsTArray<RefPtr<CSSStyleRule>>& aResult) {
+  auto [type, functionalPseudoParameter] =
+      nsCSSPseudoElements::ParsePseudoElement(aPseudo,
+                                              CSSEnabledState::ForAllContent);
+  if (!type) {
+    return;
+  }
+
+  RefPtr<const ComputedStyle> computedStyle;
+  if (aWithStartingStyle) {
+    computedStyle = GetStartingStyle(aElement);
+  }
+
+  // Note: GetStartingStyle() return nullptr if this element doesn't have rules
+  // inside @starting-style. For this case, we would like to return the primay
+  // rules of this element.
+  if (!computedStyle) {
+    computedStyle = GetCleanComputedStyleForElement(&aElement, *type,
+                                                    functionalPseudoParameter);
+  }
+
+  if (!computedStyle) {
+    // This can fail for elements that are not in the document or
+    // if the document they're in doesn't have a presshell.  Bail out.
+    return;
+  }
+
+  if (aIncludeVisitedStyle) {
+    if (const auto* styleIfVisited = computedStyle->GetStyleIfVisited()) {
+      computedStyle = styleIfVisited;
+    }
+  }
+
+  GetCSSStyleRulesFromComputedValue(aElement, computedStyle, aResult);
 }
 
 /* static */

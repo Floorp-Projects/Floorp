@@ -629,7 +629,7 @@ where
     }
 
     /// Resolve the starting style.
-    pub fn resolve_starting_style(&mut self) -> ResolvedStyle {
+    pub fn resolve_starting_style(&mut self) -> PrimaryStyle {
         // Compute after-change style for the parent and the layout parent.
         // Per spec, starting style inherits from the parent’s after-change style just like
         // after-change style does.
@@ -665,7 +665,6 @@ where
             layout_parent_values,
             IncludeStartingStyle::Yes,
         )
-        .style
     }
 
     /// If there is no transition rule in the ComputedValues, it returns None.

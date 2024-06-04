@@ -598,6 +598,18 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveXULTreePseudoStyle(
       .Consume();
 }
 
+already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStartingStyle(
+    dom::Element& aElement) {
+  nsPresContext* pc = GetPresContext();
+  if (!pc) {
+    return nullptr;
+  }
+
+  return Servo_ResolveStartingStyle(
+             &aElement, &pc->RestyleManager()->Snapshots(), mRawData.get())
+      .Consume();
+}
+
 // manage the set of style sheets in the style set
 void ServoStyleSet::AppendStyleSheet(StyleSheet& aSheet) {
   MOZ_ASSERT(aSheet.IsApplicable());

@@ -1555,6 +1555,17 @@ pub extern "C" fn Servo_Element_IsPrimaryStyleReusedViaRuleNode(element: &RawGec
         .contains(data::ElementDataFlags::PRIMARY_STYLE_REUSED_VIA_RULE_NODE)
 }
 
+#[no_mangle]
+pub extern "C" fn Servo_Element_MayHaveStartingStyle(element: &RawGeckoElement) -> bool {
+    let element = GeckoElement(element);
+    let data = match element.borrow_data() {
+        Some(d) => d,
+        None => return false,
+    };
+    data.flags
+        .contains(data::ElementDataFlags::MAY_HAVE_STARTING_STYLE)
+}
+
 fn mode_to_origin(mode: SheetParsingMode) -> Origin {
     match mode {
         SheetParsingMode::eAuthorSheetFeatures => Origin::Author,
@@ -6092,6 +6103,42 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     finish(&styles, /* is_probe = */ false)
         .expect("We're not probing, so we should always get a style back")
         .into()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ResolveStartingStyle(
+    element: &RawGeckoElement,
+    snapshots: *const ServoElementSnapshotTable,
+    raw_data: &PerDocumentStyleData,
+) -> Strong<ComputedValues> {
+    use style::style_resolver::{PseudoElementResolution, StyleResolverForElement};
+
+    let doc_data = raw_data.borrow();
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let shared = create_shared_context(
+        &global_style_data,
+        &guard,
+        &doc_data.stylist,
+        TraversalFlags::empty(),
+        unsafe { &*snapshots },
+    );
+    let mut tlc = ThreadLocalStyleContext::new();
+    let mut context = StyleContext {
+        shared: &shared,
+        thread_local: &mut tlc,
+    };
+
+    let element = GeckoElement(element);
+    let mut resolver = StyleResolverForElement::new(
+        element,
+        &mut context,
+        RuleInclusion::All,
+        PseudoElementResolution::IfApplicable,
+    );
+
+    let starting_style = resolver.resolve_starting_style();
+    starting_style.style.0.into()
 }
 
 #[no_mangle]
