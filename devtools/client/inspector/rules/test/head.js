@@ -241,9 +241,11 @@ var openCubicBezierAndChangeCoords = async function (
  *        The value for the new property
  * @param {Object=} options
  * @param {String=} options.commitValueWith
- *        Which key should be used to commit the new value. VK_RETURN is used by
+ *        Which key should be used to commit the new value. VK_TAB is used by
  *        default, but tests might want to use another key to test cancelling
  *        for exemple.
+ *        If set to null, no keys will be hit, so the input will still be focused
+ *        at the end of this function
  * @param {Boolean=} options.blurNewProperty
  *        After the new value has been added, a new property would have been
  *        focused. This parameter is true by default, and that causes the new
@@ -344,9 +346,13 @@ var addProperty = async function (
   view.debounce.flush();
   await onPreview;
 
-  const onValueAdded = view.once("ruleview-changed");
+  if (commitValueWith === null) {
+    return textProp;
+  }
+
+  const onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey(commitValueWith, {}, view.styleWindow);
-  await onValueAdded;
+  await onRuleViewChanged;
 
   info(
     "Waiting for DOM mutations in case the property was added to the element style"
