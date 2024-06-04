@@ -645,7 +645,7 @@ fn prepare_interned_prim_for_render(
                     }
                 };
 
-                quad::push_quad(
+                quad::prepare_quad(
                     &pattern,
                     &prim_data.common.prim_rect,
                     prim_instance_index,
@@ -827,7 +827,7 @@ fn prepare_interned_prim_for_render(
                     &mut frame_state.frame_gpu_data,
                 );
 
-                quad::push_quad(
+                quad::prepare_quad(
                     &pattern,
                     &prim_data.common.prim_rect,
                     prim_instance_index,
@@ -891,7 +891,7 @@ fn prepare_interned_prim_for_render(
                     &mut frame_state.frame_gpu_data,
                 );
 
-                quad::push_quad(
+                quad::prepare_quad(
                     &pattern,
                     &prim_data.common.prim_rect,
                     prim_instance_index,
