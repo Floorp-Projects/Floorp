@@ -129,7 +129,7 @@ class SettingsSubMenuAboutRobot {
         Log.i(TAG, "verifySupport: Clicked the \"Support\" link")
 
         browserScreen {
-            verifyUrl("support.mozilla.org")
+            verifyHelpUrl()
         }
     }
 

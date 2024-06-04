@@ -110,24 +110,64 @@ class BrowserRobot {
     }
 
     fun verifyHelpUrl() {
-        verifyUrl("support.mozilla.org/")
+        try {
+            verifyUrl("support.mozilla.org/en-US/products/mobile")
+        } catch (e: AssertionError) {
+            Log.i(TAG, "verifyHelpUrl: AssertionError caught, checking redirect URL")
+            verifyUrl(
+                SupportUtils.getSumoURLForTopic(
+                    appContext,
+                    SupportUtils.SumoTopic.HELP,
+                ).replace("https://", ""),
+            )
+        }
     }
 
     fun verifyWhatsNewURL() {
-        verifyUrl("mozilla.org/")
+        try {
+            verifyUrl("/releaseNotes")
+        } catch (e: AssertionError) {
+            Log.i(TAG, "verifyWhatsNewURL: AssertionError caught, checking redirect URL")
+            verifyUrl(SupportUtils.WHATS_NEW_URL)
+        }
     }
 
     fun verifyRateOnGooglePlayURL() {
         verifyUrl("play.google.com/store/apps/details?id=org.mozilla.fenix")
     }
 
+    fun verifyCustomSearchEngineLearnMoreURL() {
+        try {
+            verifyUrl("support.mozilla.org/en-US/kb/manage-my-default-search-engines-firefox-android")
+        } catch (e: AssertionError) {
+            Log.i(TAG, "verifyCustomSearchEngineLearnMoreLink: AssertionError caught, checking redirect URL")
+            verifyUrl(
+                SupportUtils.getSumoURLForTopic(
+                    appContext,
+                    SupportUtils.SumoTopic.CUSTOM_SEARCH_ENGINES,
+                ).replace("https://", ""),
+            )
+        }
+    }
+
     fun verifyETPLearnMoreURL() {
         try {
             verifyUrl("support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-android")
         } catch (e: AssertionError) {
-            Log.i(TAG, "verifyETPURL: AssertionError caught, executing fallback methods")
+            Log.i(TAG, "verifyETPURL: AssertionError caught, checking redirect URL")
             verifyUrl(
                 SupportUtils.getSumoURLForTopic(appContext, SupportUtils.SumoTopic.TOTAL_COOKIE_PROTECTION).replace("https://", ""),
+            )
+        }
+    }
+
+    fun verifySponsoredShortcutsLearnMoreURL() {
+        try {
+            verifyUrl("support.mozilla.org/en-US/kb/sponsor-privacy")
+        } catch (e: AssertionError) {
+            Log.i(TAG, "verifySponsoredShortcutsURL: AssertionError caught, checking redirect URL")
+            verifyUrl(
+                SupportUtils.getSumoURLForTopic(appContext, SupportUtils.SumoTopic.SPONSOR_PRIVACY).replace("https://", ""),
             )
         }
     }

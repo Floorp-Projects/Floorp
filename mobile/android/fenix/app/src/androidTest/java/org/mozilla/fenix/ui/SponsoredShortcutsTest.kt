@@ -72,7 +72,7 @@ class SponsoredShortcutsTest : TestSetup() {
             sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
         }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
         }.clickSponsorsAndPrivacyButton {
-            verifyUrl("support.mozilla.org/en-US/kb/sponsor-privacy")
+            verifySponsoredShortcutsLearnMoreURL()
         }
     }
 
