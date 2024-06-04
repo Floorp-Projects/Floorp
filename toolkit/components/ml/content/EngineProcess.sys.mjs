@@ -337,16 +337,14 @@ export class EngineProcess {
    * Destroy the specified engine and maybe the entire hidden frame as well if no engines
    * are remaining.
    */
-  static #destroyEngine({ id, keyName }) {
+  static async #destroyEngine({ id, keyName }) {
     ChromeUtils.addProfilerMarker(
       "EngineProcess",
       {},
       `Destroying the "${id}" engine`
     );
 
-    const actorShutdown = this.forceActorShutdown(id, keyName).catch(
-      error => void console.error(error)
-    );
+    let actorShutdown = this.forceActorShutdown(id, keyName);
 
     this[keyName] = null;
 
@@ -355,7 +353,7 @@ export class EngineProcess {
       EngineProcess.#hiddenFrame = null;
 
       // Both actors are destroyed, also destroy the hidden frame.
-      actorShutdown.then(() => {
+      actorShutdown = actorShutdown.then(() => {
         // Double check a race condition that no new actors have been created during
         // shutdown.
         if (this.translationsEngineParent && this.mlEngineParent) {
@@ -373,8 +371,12 @@ export class EngineProcess {
       });
     }
 
-    // Infallibly resolve the promise even if there are errors.
-    return Promise.resolve();
+    // Infallibly resolve this promise even if there are errors.
+    try {
+      await actorShutdown;
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   /**
