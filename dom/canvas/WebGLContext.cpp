@@ -1982,7 +1982,6 @@ const char* WebGLContext::FuncName() const {
   if (MOZ_LIKELY(mFuncScope)) {
     ret = mFuncScope->mFuncName;
   } else {
-    NS_WARNING("FuncScope not on stack!");
     ret = "<unknown function>";
   }
   return ret;
