@@ -1216,8 +1216,12 @@ static Maybe<ModuleScope::ParserData*> NewModuleScopeData(
   }
 
   ModuleScope::ParserData* bindings = nullptr;
-  uint32_t numBindings =
-      imports.length() + vars.length() + lets.length() + consts.length();
+  uint32_t numBindings = imports.length() + vars.length() + lets.length() +
+                         consts.length()
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+                         + usings.length()
+#endif
+      ;
 
   if (numBindings > 0) {
     bindings = NewEmptyBindingData<ModuleScope>(fc, alloc, numBindings);
@@ -1229,7 +1233,12 @@ static Maybe<ModuleScope::ParserData*> NewModuleScopeData(
     InitializeBindingData(bindings, numBindings, imports,
                           &ParserModuleScopeSlotInfo::varStart, vars,
                           &ParserModuleScopeSlotInfo::letStart, lets,
-                          &ParserModuleScopeSlotInfo::constStart, consts);
+                          &ParserModuleScopeSlotInfo::constStart, consts
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+                          ,
+                          &ParserModuleScopeSlotInfo::usingStart, usings
+#endif
+    );
   }
 
   return Some(bindings);

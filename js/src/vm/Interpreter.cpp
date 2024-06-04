@@ -1639,11 +1639,15 @@ void js::ReportInNotObjectError(JSContext* cx, HandleValue lref,
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
 bool js::DisposeDisposablesOnScopeLeave(JSContext* cx,
                                         JS::Handle<JSObject*> env) {
-  if (!env->is<LexicalEnvironmentObject>()) {
+  if (!env->is<LexicalEnvironmentObject>() &&
+      !env->is<ModuleEnvironmentObject>()) {
     return true;
   }
 
-  Value maybeDisposables = env->as<LexicalEnvironmentObject>().getDisposables();
+  Value maybeDisposables =
+      env->is<LexicalEnvironmentObject>()
+          ? env->as<LexicalEnvironmentObject>().getDisposables()
+          : env->as<ModuleEnvironmentObject>().getDisposables();
 
   MOZ_ASSERT(maybeDisposables.isObject() || maybeDisposables.isUndefined());
 
@@ -1698,7 +1702,11 @@ bool js::DisposeDisposablesOnScopeLeave(JSContext* cx,
 
     // Step 3. Set disposeCapability.[[DisposableResourceStack]] to
     // a new empty List.
-    env->as<LexicalEnvironmentObject>().clearDisposables();
+    if (env->is<LexicalEnvironmentObject>()) {
+      env->as<LexicalEnvironmentObject>().clearDisposables();
+    } else {
+      env->as<ModuleEnvironmentObject>().clearDisposables();
+    }
 
     // 4. Return ? completion.
     if (hadError) {
@@ -2069,8 +2077,14 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
                                                  ? UndefinedValue()
                                                  : REGS.sp[-1]);
 
-      if (!env->as<LexicalEnvironmentObject>().addDisposableObject(cx, val)) {
-        goto error;
+      if (env->is<LexicalEnvironmentObject>()) {
+        if (!env->as<LexicalEnvironmentObject>().addDisposableObject(cx, val)) {
+          goto error;
+        }
+      } else if (env->is<ModuleEnvironmentObject>()) {
+        if (!env->as<ModuleEnvironmentObject>().addDisposableObject(cx, val)) {
+          goto error;
+        }
       }
     }
     END_CASE(AddDisposable)

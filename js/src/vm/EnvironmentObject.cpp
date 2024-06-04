@@ -414,8 +414,49 @@ ModuleEnvironmentObject* ModuleEnvironmentObject::create(
   MOZ_ASSERT(!env->inDictionaryMode());
 #endif
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  env->initSlot(ModuleEnvironmentObject::DISPOSABLE_OBJECTS_SLOT,
+                UndefinedValue());
+#endif
+
   return env;
 }
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+// TODO: at the time of unflagging ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+// consider having a common base class for LexicalEnvironmentObject and
+// ModuleEnvironmentObject containing all the common code.
+static bool addDisposableObjectHelper(JS::Handle<EnvironmentObject*> env,
+                                      uint32_t slot, JSContext* cx,
+                                      JS::Handle<JS::Value> val) {
+  Value slotData = env->getReservedSlot(slot);
+  ListObject* disposablesList = nullptr;
+  if (slotData.isUndefined()) {
+    disposablesList = ListObject::create(cx);
+    if (!disposablesList) {
+      return false;
+    }
+    env->setReservedSlot(slot, ObjectValue(*disposablesList));
+  } else {
+    disposablesList = &slotData.toObject().as<ListObject>();
+  }
+  return disposablesList->append(cx, val);
+}
+
+bool ModuleEnvironmentObject::addDisposableObject(JSContext* cx,
+                                                  JS::Handle<JS::Value> val) {
+  Rooted<ModuleEnvironmentObject*> env(cx, this);
+  return addDisposableObjectHelper(env, DISPOSABLE_OBJECTS_SLOT, cx, val);
+}
+
+Value ModuleEnvironmentObject::getDisposables() {
+  return getReservedSlot(DISPOSABLE_OBJECTS_SLOT);
+}
+
+void ModuleEnvironmentObject::clearDisposables() {
+  setReservedSlot(DISPOSABLE_OBJECTS_SLOT, UndefinedValue());
+}
+#endif
 
 /* static */
 ModuleEnvironmentObject* ModuleEnvironmentObject::createSynthetic(
@@ -957,18 +998,8 @@ bool LexicalEnvironmentObject::isExtensible() const {
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
 bool LexicalEnvironmentObject::addDisposableObject(JSContext* cx,
                                                    JS::Handle<JS::Value> val) {
-  Value slotData = getReservedSlot(DISPOSABLE_OBJECTS_SLOT);
-  ListObject* disposablesList = nullptr;
-  if (slotData.isUndefined()) {
-    disposablesList = ListObject::create(cx);
-    if (!disposablesList) {
-      return false;
-    }
-    setReservedSlot(DISPOSABLE_OBJECTS_SLOT, ObjectValue(*disposablesList));
-  } else {
-    disposablesList = &slotData.toObject().as<ListObject>();
-  }
-  return disposablesList->append(cx, val);
+  Rooted<LexicalEnvironmentObject*> env(cx, this);
+  return addDisposableObjectHelper(env, DISPOSABLE_OBJECTS_SLOT, cx, val);
 }
 
 Value LexicalEnvironmentObject::getDisposables() {
