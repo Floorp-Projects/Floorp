@@ -21,7 +21,7 @@ use neqo_crypto::{
     TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE,
     TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT,
     TLS_GRP_EC_SECP256R1, TLS_GRP_EC_SECP384R1, TLS_GRP_EC_SECP521R1, TLS_GRP_EC_X25519,
-    TLS_VERSION_1_3,
+    TLS_GRP_KEM_XYBER768D00, TLS_VERSION_1_3,
 };
 
 use crate::{
@@ -76,20 +76,36 @@ impl Crypto {
             TLS_AES_256_GCM_SHA384,
             TLS_CHACHA20_POLY1305_SHA256,
         ])?;
-        agent.set_groups(&[
-            TLS_GRP_EC_X25519,
-            TLS_GRP_EC_SECP256R1,
-            TLS_GRP_EC_SECP384R1,
-            TLS_GRP_EC_SECP521R1,
-        ])?;
-        agent.send_additional_key_shares(1)?;
+        match &mut agent {
+            Agent::Server(c) => {
+                // Clients do not send xyber shares by default, but servers should accept them.
+                c.set_groups(&[
+                    TLS_GRP_KEM_XYBER768D00,
+                    TLS_GRP_EC_X25519,
+                    TLS_GRP_EC_SECP256R1,
+                    TLS_GRP_EC_SECP384R1,
+                    TLS_GRP_EC_SECP521R1,
+                ])?;
+            }
+            Agent::Client(c) => {
+                c.set_groups(&[
+                    TLS_GRP_EC_X25519,
+                    TLS_GRP_EC_SECP256R1,
+                    TLS_GRP_EC_SECP384R1,
+                    TLS_GRP_EC_SECP521R1,
+                ])?;
+
+                // Configure clients to send both X25519 and P256 to reduce
+                // the rate of HRRs.
+                c.send_additional_key_shares(1)?;
+
+                // Always enable 0-RTT on the client, but the server needs
+                // more configuration passed to server_enable_0rtt.
+                c.enable_0rtt()?;
+            }
+        }
         agent.set_alpn(&protocols)?;
         agent.disable_end_of_early_data()?;
-        // Always enable 0-RTT on the client, but the server needs
-        // more configuration passed to server_enable_0rtt.
-        if let Agent::Client(c) = &mut agent {
-            c.enable_0rtt()?;
-        }
         let extension = match version {
             Version::Version2 | Version::Version1 => 0x39,
             Version::Draft29 | Version::Draft30 | Version::Draft31 | Version::Draft32 => 0xffa5,

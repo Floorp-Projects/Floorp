@@ -1029,8 +1029,7 @@ impl Connection {
             let rtt = path.rtt();
             let pto = rtt.pto(PacketNumberSpace::ApplicationData);
 
-            let keep_alive = self.streams.need_keep_alive();
-            let idle_time = self.idle_timeout.expiry(now, pto, keep_alive);
+            let idle_time = self.idle_timeout.expiry(now, pto);
             qtrace!([self], "Idle/keepalive timer {:?}", idle_time);
             delays.push(idle_time);
 

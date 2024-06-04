@@ -706,8 +706,12 @@ impl Path {
 
     /// Make a datagram.
     pub fn datagram<V: Into<Vec<u8>>>(&mut self, payload: V) -> Datagram {
+        // Make sure to use the TOS value from before calling EcnInfo::on_packet_sent, which may
+        // update the ECN state and can hence change it - this packet should still be sent
+        // with the current value.
+        let tos = self.tos();
         self.ecn_info.on_packet_sent();
-        Datagram::new(self.local, self.remote, self.tos(), Some(self.ttl), payload)
+        Datagram::new(self.local, self.remote, tos, Some(self.ttl), payload)
     }
 
     /// Get local address as `SocketAddr`

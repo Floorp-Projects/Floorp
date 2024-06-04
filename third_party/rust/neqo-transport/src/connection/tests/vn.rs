@@ -43,7 +43,7 @@ fn server_receive_unknown_first_packet() {
     unknown_version_packet.resize(MIN_INITIAL_PACKET_SIZE, 0x0);
 
     assert_eq!(
-        server.process(Some(&datagram(unknown_version_packet,)), now(),),
+        server.process(Some(&datagram(unknown_version_packet)), now()),
         Output::None
     );
 

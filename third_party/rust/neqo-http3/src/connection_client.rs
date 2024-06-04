@@ -2620,7 +2620,7 @@ mod tests {
         force_idle(&mut client, &mut server);
 
         let idle_timeout = ConnectionParameters::default().get_idle_timeout();
-        assert_eq!(client.process_output(now()).callback(), idle_timeout / 2);
+        assert_eq!(client.process_output(now()).callback(), idle_timeout);
     }
 
     // Helper function: read response when a server sends HTTP_RESPONSE_2.
@@ -5115,7 +5115,7 @@ mod tests {
         assert!(!fin);
 
         force_idle(&mut client, &mut server);
-        assert_eq!(client.process_output(now()).callback(), idle_timeout / 2);
+        assert_eq!(client.process_output(now()).callback(), idle_timeout);
     }
 
     #[test]

@@ -50,7 +50,7 @@ pub(crate) struct WebTransportSession {
 
 impl ::std::fmt::Display for WebTransportSession {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "WebTransportSession session={}", self.session_id,)
+        write!(f, "WebTransportSession session={}", self.session_id)
     }
 }
 
