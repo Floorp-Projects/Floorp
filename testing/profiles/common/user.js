@@ -75,6 +75,8 @@ user_pref("browser.tabs.unloadOnLowMemory", false);
 user_pref("browser.topsites.contile.enabled", false);
 // Don't pull sponsored Top Sites content from the network
 user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+// Don't pull weather data from the network
+user_pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "");
 // Default Glean to "record but don't report" mode. Docs:
 // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/preferences.html
 user_pref("telemetry.fog.test.localhost_port", -1);
