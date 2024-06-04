@@ -48,6 +48,10 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
     $ hg addremove
 
+== May 30, 2024 ==
+
+* Fixed bug 1898606.
+
 == May 9, 2024 (libjpeg-turbo v3.0.3 7fa4b5b762c9a99b46b0b7838f5fd55071b92ea5 2024-05-08) ==
 
 * Updated to v3.0.3 release.
