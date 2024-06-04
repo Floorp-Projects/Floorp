@@ -255,31 +255,23 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
 }
 
 template <typename SizeOrMaxSize>
-inline nscoord SizeComputationInput::ComputeISizeValue(
-    const WritingMode aWM, const LogicalSize& aContainingBlockSize,
-    const LogicalSize& aContentEdgeToBoxSizing, nscoord aBoxSizingToMarginEdge,
-    const SizeOrMaxSize& aSize) const {
-  return mFrame
-      ->ComputeISizeValue(mRenderingContext, aWM, aContainingBlockSize,
-                          aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
-                          aSize)
-      .mISize;
-}
-
-template <typename SizeOrMaxSize>
 nscoord SizeComputationInput::ComputeISizeValue(
     const LogicalSize& aContainingBlockSize, StyleBoxSizing aBoxSizing,
     const SizeOrMaxSize& aSize) const {
   WritingMode wm = GetWritingMode();
   const auto borderPadding = ComputedLogicalBorderPadding(wm);
-  LogicalSize inside = aBoxSizing == StyleBoxSizing::Border
-                           ? borderPadding.Size(wm)
-                           : LogicalSize(wm);
-  nscoord outside =
-      borderPadding.IStartEnd(wm) + ComputedLogicalMargin(wm).IStartEnd(wm);
-  outside -= inside.ISize(wm);
+  const LogicalSize contentEdgeToBoxSizing =
+      aBoxSizing == StyleBoxSizing::Border ? borderPadding.Size(wm)
+                                           : LogicalSize(wm);
+  const nscoord boxSizingToMarginEdgeISize =
+      borderPadding.IStartEnd(wm) + ComputedLogicalMargin(wm).IStartEnd(wm) -
+      contentEdgeToBoxSizing.ISize(wm);
 
-  return ComputeISizeValue(wm, aContainingBlockSize, inside, outside, aSize);
+  return mFrame
+      ->ComputeISizeValue(mRenderingContext, wm, aContainingBlockSize,
+                          contentEdgeToBoxSizing, boxSizingToMarginEdgeISize,
+                          aSize)
+      .mISize;
 }
 
 nscoord SizeComputationInput::ComputeBSizeValue(
@@ -1273,17 +1265,18 @@ void ReflowInput::CalculateHypotheticalPosition(
     // border/padding/margin that the element would have had if it had
     // been in the flow. Note that we ignore any 'auto' and 'inherit'
     // values
-    nscoord insideBoxISizing, outsideBoxISizing;
-    CalculateBorderPaddingMargin(LogicalAxis::Inline,
-                                 blockContentSize.ISize(wm), &insideBoxISizing,
-                                 &outsideBoxISizing);
+    nscoord contentEdgeToBoxSizingISize, boxSizingToMarginEdgeISize;
+    CalculateBorderPaddingMargin(
+        LogicalAxis::Inline, blockContentSize.ISize(wm),
+        &contentEdgeToBoxSizingISize, &boxSizingToMarginEdgeISize);
 
     if (mFlags.mIsReplaced && isAutoISize) {
       // It's a replaced element with an 'auto' inline size so the box inline
       // size is its intrinsic size plus any border/padding/margin
       if (intrinsicSize) {
         boxISize.emplace(LogicalSize(wm, *intrinsicSize).ISize(wm) +
-                         outsideBoxISizing + insideBoxISizing);
+                         contentEdgeToBoxSizingISize +
+                         boxSizingToMarginEdgeISize);
       }
     } else if (isAutoISize) {
       // The box inline size is the containing block inline size
@@ -1292,15 +1285,20 @@ void ReflowInput::CalculateHypotheticalPosition(
       // We need to compute it. It's important we do this, because if it's
       // percentage based this computed value may be different from the computed
       // value calculated using the absolute containing block width
-      nscoord insideBoxBSizing, dummy;
+      nscoord contentEdgeToBoxSizingBSize, dummy;
       CalculateBorderPaddingMargin(LogicalAxis::Block,
                                    blockContentSize.ISize(wm),
-                                   &insideBoxBSizing, &dummy);
-      boxISize.emplace(
-          ComputeISizeValue(wm, blockContentSize,
-                            LogicalSize(wm, insideBoxISizing, insideBoxBSizing),
-                            outsideBoxISizing, styleISize) +
-          insideBoxISizing + outsideBoxISizing);
+                                   &contentEdgeToBoxSizingBSize, &dummy);
+
+      const auto contentISize =
+          mFrame
+              ->ComputeISizeValue(mRenderingContext, wm, blockContentSize,
+                                  LogicalSize(wm, contentEdgeToBoxSizingISize,
+                                              contentEdgeToBoxSizingBSize),
+                                  boxSizingToMarginEdgeISize, styleISize)
+              .mISize;
+      boxISize.emplace(contentISize + contentEdgeToBoxSizingISize +
+                       boxSizingToMarginEdgeISize);
     }
   }
 
