@@ -1126,6 +1126,9 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
         boundary = searchFrom.FindParagraphSameAcc(aDirection, includeOrigin,
                                                    ignoreListItemMarker);
         break;
+      case nsIAccessibleText::BOUNDARY_CLUSTER:
+        boundary = searchFrom.FindClusterSameAcc(aDirection, includeOrigin);
+        break;
       default:
         MOZ_ASSERT_UNREACHABLE();
         break;
@@ -1364,6 +1367,62 @@ TextLeafPoint TextLeafPoint::FindParagraphSameAcc(
     prevLeaf->AppendTextTo(text, nsAccUtils::TextLength(prevLeaf) - 1, 1);
     if (text.CharAt(0) == '\n') {
       return TextLeafPoint(mAcc, 0);
+    }
+  }
+  return TextLeafPoint();
+}
+
+TextLeafPoint TextLeafPoint::FindClusterSameAcc(nsDirection aDirection,
+                                                bool aIncludeOrigin) const {
+  // We don't support clusters which cross nodes. We can live with that because
+  // editor doesn't seem to fully support this either.
+  if (aIncludeOrigin && mOffset == 0) {
+    // Since we don't cross nodes, offset 0 always begins a cluster.
+    return *this;
+  }
+  if (aDirection == eDirPrevious) {
+    if (mOffset == 0) {
+      // We can't go back any further.
+      return TextLeafPoint();
+    }
+    if (!aIncludeOrigin && mOffset == 1) {
+      // Since we don't cross nodes, offset 0 always begins a cluster. We can't
+      // take this fast path if aIncludeOrigin is true because offset 1 might
+      // start a cluster, but we don't know that yet.
+      return TextLeafPoint(mAcc, 0);
+    }
+  }
+  nsAutoString text;
+  mAcc->AppendTextTo(text);
+  if (text.IsEmpty()) {
+    return TextLeafPoint();
+  }
+  if (aDirection == eDirNext &&
+      mOffset == static_cast<int32_t>(text.Length())) {
+    return TextLeafPoint();
+  }
+  // There is GraphemeClusterBreakReverseIteratorUtf16, but it "doesn't
+  // handle conjoining Jamo and emoji". Therefore, we must use
+  // GraphemeClusterBreakIteratorUtf16 even when moving backward.
+  // GraphemeClusterBreakIteratorUtf16::Seek() always starts from the beginning
+  // and repeatedly calls Next(), regardless of the seek offset. The best we
+  // can do is call Next() until we find the offset we need.
+  intl::GraphemeClusterBreakIteratorUtf16 iter(text);
+  // Since we don't cross nodes, offset 0 always begins a cluster.
+  int32_t prevCluster = 0;
+  while (Maybe<uint32_t> next = iter.Next()) {
+    int32_t cluster = static_cast<int32_t>(*next);
+    if (aIncludeOrigin && cluster == mOffset) {
+      return *this;
+    }
+    if (aDirection == eDirPrevious) {
+      if (cluster >= mOffset) {
+        return TextLeafPoint(mAcc, prevCluster);
+      }
+      prevCluster = cluster;
+    } else if (cluster > mOffset) {
+      MOZ_ASSERT(aDirection == eDirNext);
+      return TextLeafPoint(mAcc, cluster);
     }
   }
   return TextLeafPoint();

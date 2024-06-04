@@ -9,6 +9,7 @@ const BOUNDARY_WORD_END = nsIAccessibleText.BOUNDARY_WORD_END;
 const BOUNDARY_LINE_START = nsIAccessibleText.BOUNDARY_LINE_START;
 const BOUNDARY_LINE_END = nsIAccessibleText.BOUNDARY_LINE_END;
 const BOUNDARY_PARAGRAPH = nsIAccessibleText.BOUNDARY_PARAGRAPH;
+const BOUNDARY_CLUSTER = nsIAccessibleText.BOUNDARY_CLUSTER;
 
 const kTextEndOffset = nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT;
 const kCaretOffset = nsIAccessibleText.TEXT_OFFSET_CARET;

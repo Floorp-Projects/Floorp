@@ -333,3 +333,31 @@ addAccessibleTask(
     remoteIframe: true,
   }
 );
+
+/**
+ * Test cluster offsets.
+ */
+addAccessibleTask(
+  `<p id="clusters">À2🤦‍♂️🤦🏼‍♂️5x͇͕̦̍͂͒7È</p>`,
+  async function testCluster(browser, docAcc) {
+    const clusters = findAccessibleChildByID(docAcc, "clusters");
+    testCharacterCount(clusters, 26);
+    testTextAtOffset(clusters, BOUNDARY_CLUSTER, [
+      [0, 1, "À", 0, 2],
+      [2, 2, "2", 2, 3],
+      [3, 7, "🤦‍♂️", 3, 8],
+      [8, 14, "🤦🏼‍♂️", 8, 15],
+      [15, 15, "5", 15, 16],
+      [16, 22, "x͇͕̦̍͂͒", 16, 23],
+      [23, 23, "7", 23, 24],
+      [24, 25, "È", 24, 26],
+      [26, 26, "", 26, 26],
+    ]);
+    // Ensure that BOUNDARY_CHAR returns single Unicode characters.
+    testTextAtOffset(clusters, BOUNDARY_CHAR, [
+      [0, 0, "A", 0, 1],
+      [1, 1, "̀", 1, 2],
+    ]);
+  },
+  { chrome: true, topLevel: true }
+);
