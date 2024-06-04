@@ -819,12 +819,25 @@ export const ContentAnalysis = {
           }
           body = this.l10n.formatValueSync(bodyId);
         }
-        await Services.prompt.asyncAlert(
-          aBrowsingContext,
-          Ci.nsIPromptService.MODAL_TYPE_TAB,
-          this.l10n.formatValueSync(titleId),
-          body
-        );
+        if (aBrowsingContext.embedderElement?.getAttribute("printpreview")) {
+          // If we're in a print preview window, the window itself is about to close
+          // (because of the thrown NS_ERROR_CONTENT_BLOCKED), so using an async
+          // call would just immediately make the dialog disappear. Instead, use
+          // a blocking version. (see bug 1899714)
+          Services.prompt.alertBC(
+            aBrowsingContext,
+            Ci.nsIPromptService.MODAL_TYPE_TAB,
+            this.l10n.formatValueSync(titleId),
+            body
+          );
+        } else {
+          await Services.prompt.asyncAlert(
+            aBrowsingContext,
+            Ci.nsIPromptService.MODAL_TYPE_TAB,
+            this.l10n.formatValueSync(titleId),
+            body
+          );
+        }
         return null;
       }
       case Ci.nsIContentAnalysisResponse.eUnspecified:
