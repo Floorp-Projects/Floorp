@@ -3134,13 +3134,21 @@ class nsIFrame : public nsQueryFrame {
   //
   bool HasView() const { return !!(mState & NS_FRAME_HAS_VIEW); }
 
+  template <typename SizeOrMaxSize>
+  static inline bool IsIntrinsicKeyword(const SizeOrMaxSize& aSize) {
+    // All keywords other than auto/none/-moz-available depend on intrinsic
+    // sizes.
+    return aSize.IsMaxContent() || aSize.IsMinContent() ||
+           aSize.IsFitContent() || aSize.IsFitContentFunction();
+  }
+
   // Returns true iff this frame's computed block-size property is one of the
   // intrinsic-sizing keywords.
   bool HasIntrinsicKeywordForBSize() const {
     const auto& bSize = StylePosition()->BSize(GetWritingMode());
-    return bSize.IsFitContent() || bSize.IsMinContent() ||
-           bSize.IsMaxContent() || bSize.IsFitContentFunction();
+    return IsIntrinsicKeyword(bSize);
   }
+
   /**
    * Helper method to create a view for a frame.  Only used by a few sub-classes
    * that need a view.

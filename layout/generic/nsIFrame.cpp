@@ -2411,13 +2411,6 @@ already_AddRefed<ComputedStyle> nsIFrame::ComputeTargetTextStyle() const {
       *element, PseudoStyleType::targetText, nullptr, Style());
 }
 
-template <typename SizeOrMaxSize>
-static inline bool IsIntrinsicKeyword(const SizeOrMaxSize& aSize) {
-  // All keywords other than auto/none/-moz-available depend on intrinsic sizes.
-  return aSize.IsMaxContent() || aSize.IsMinContent() || aSize.IsFitContent() ||
-         aSize.IsFitContentFunction();
-}
-
 bool nsIFrame::CanBeDynamicReflowRoot() const {
   const auto& display = *StyleDisplay();
   if (IsLineParticipant() || display.mDisplay.IsRuby() ||
