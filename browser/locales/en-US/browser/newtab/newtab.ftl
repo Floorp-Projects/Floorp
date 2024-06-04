@@ -297,6 +297,18 @@ newtab-wallpaper-dark-city = Purple city landscape
 #   $author_string (String) - The name of the creator of the photo.
 #   $webpage_string (String) - The name of the webpage where the photo is located.
 newtab-wallpaper-attribution = Photo by <a data-l10n-name="name-link">{ $author_string }</a> on <a data-l10n-name="webpage-link">{ $webpage_string }</a>
+newtab-wallpaper-feature-highlight-header = Try a splash of color
+newtab-wallpaper-feature-highlight-content = Give your New Tab a fresh look with wallpapers.
+newtab-wallpaper-feature-highlight-button = Got it
+# newtab-wallpaper-feature-highlight-dismiss = Close
+# Tooltip for dismiss button
+feature-highlight-dismiss-button =
+    .title = Dismiss
+    .aria-label = Close popup
+# Tooltip for dismiss button
+feature-highlight-wallpaper =
+    .title = { -newtab-wallpaper-feature-highlight-header }
+    .aria-label = { -newtab-wallpaper-feature-highlight-content }
 
 ## New Tab Weather
 

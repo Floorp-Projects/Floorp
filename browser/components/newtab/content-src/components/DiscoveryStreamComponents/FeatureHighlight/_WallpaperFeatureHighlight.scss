@@ -1,0 +1,77 @@
+// Custom font sizing for feature highlight
+:root {
+  --newtab-feature-highlight-content-font-size: 11px;
+}
+
+// Default overrides from Feature Highlight
+.wallpaper-feature-highlight {
+  .icon.icon-dismiss {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+  }
+
+  .feature-highlight .feature-highlight-modal {
+    width: 248px;
+
+    &.inset-inline-start {
+      inset-inline-end: calc(var(--space-medium) * -1);
+
+      &::after {
+        inset-inline-end: calc(var(--space-xxlarge) - 14px);
+      }
+    }
+
+    &.inset-block-end {
+      margin-top: var(--space-medium);
+
+      &::after {
+        inset-block-start: -6px;
+      }
+    }
+
+    p {
+      font-size: var(--newtab-feature-highlight-content-font-size);
+    }
+
+    // Message Arrow Pointer
+    &::after {
+      height: 12px;
+      width: 12px;
+    }
+  }
+}
+
+.paintbrush-icon {
+  background-image: url('chrome://activity-stream/content/data/content/assets/glyph-paintbrush-16.svg');
+  background-size: var(--icon-size-default);
+  height: var(--icon-size-default);
+  width: var(--icon-size-default);
+}
+
+.highlightHeader {
+  font-weight: var(--font-weight-bold);
+  margin-block-end: var(--space-small);
+}
+
+.highlight-Content {
+  margin-block-end: var(--space-xsmall);
+}
+
+.wallpaper-feature-highlight-content {
+  padding-inline-end: var(--space-large);
+
+  span {
+    display: block;
+  }
+
+  button {
+    appearance: none;
+    border-radius: var(--border-radius-small);
+    padding: var(--space-xsmall) var(--space-large);
+    border-color: transparent;
+    display: block;
+    margin-inline-start: auto;
+    background-color: var(--button-background-color);
+  }
+}

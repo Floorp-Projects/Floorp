@@ -103,6 +103,7 @@ export const INITIAL_STATE = {
   },
   Wallpapers: {
     wallpaperList: [],
+    highlightSeenCounter: 0,
   },
   Weather: {
     initialized: false,
@@ -862,7 +863,15 @@ function Search(prevState = INITIAL_STATE.Search, action) {
 function Wallpapers(prevState = INITIAL_STATE.Wallpapers, action) {
   switch (action.type) {
     case at.WALLPAPERS_SET:
-      return { wallpaperList: action.data };
+      return {
+        ...prevState,
+        wallpaperList: action.data,
+      };
+    case at.WALLPAPERS_FEATURE_HIGHLIGHT_COUNTER_INCREMENT:
+      return {
+        ...prevState,
+        highlightSeenCounter: action.data,
+      };
     default:
       return prevState;
   }

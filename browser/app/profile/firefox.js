@@ -1720,6 +1720,11 @@ pref("browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled", false);
 pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper-light", "");
 pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper-dark", "");
 
+// Preference to show feature highlight about wallpaper on new tab page
+pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightEnabled", false);
+pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightDismissed", false);
+pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightSeenCounter", 0);
+
 pref("browser.newtabpage.activity-stream.newNewtabExperience.colors", "#0090ED,#FF4F5F,#2AC3A2,#FF7139,#A172FF,#FFA437,#FF2A8A");
 
 // Activity Stream prefs that control to which page to redirect

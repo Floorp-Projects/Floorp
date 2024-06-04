@@ -303,6 +303,28 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "newtabWallpapers.highlightEnabled",
+    {
+      title: "Boolean flag to show the highlight about the Wallpaper feature",
+      value: false,
+    },
+  ],
+  [
+    "newtabWallpapers.highlightDismissed",
+    {
+      title:
+        "Boolean flag to remember if the user has seen the feature highlight",
+      value: false,
+    },
+  ],
+  [
+    "newtabWallpapers.highlightSeenCounter",
+    {
+      title: "Count the number of times a user has seen the feature highlight",
+      value: 0,
+    },
+  ],
+  [
     "newtabWallpapers.wallpaper-light",
     {
       title: "Currently set light wallpaper",

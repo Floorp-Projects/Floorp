@@ -1689,26 +1689,34 @@ main section {
   z-index: 11002;
 }
 
+.personalizeButtonWrapper {
+  margin: 0;
+  padding: 0;
+}
 @media (height < 700px) {
-  .personalize-button {
+  .personalizeButtonWrapper {
     position: absolute;
-    top: 16px;
-    inset-inline-end: 16px;
+    top: var(--space-xlarge);
+    inset-inline-end: var(--space-xlarge);
   }
 }
 @media (height >= 700px) {
-  .personalize-button {
+  .personalizeButtonWrapper {
     position: fixed;
-    top: 16px;
-    inset-inline-end: 16px;
+    top: var(--space-xlarge);
+    inset-inline-end: var(--space-xlarge);
     z-index: 1000;
   }
 }
+
 .personalize-button {
   border: 0;
   border-radius: 4px;
   background-color: transparent;
   padding: 15px;
+  position: relative;
+  background-size: var(--icon-size-default);
+  background-position: center;
 }
 .lightWallpaper .personalize-button:not(:hover, :active) {
   color-scheme: light;
@@ -2809,7 +2817,7 @@ main section {
 .discoverystream-admin-toggle {
   position: fixed;
   top: 50px;
-  inset-inline-end: 15px;
+  inset-inline-end: var(--space-xlarge);
   border: 0;
   background: none;
   z-index: 1;
@@ -5001,6 +5009,9 @@ main section {
   border: none;
   padding: 0;
 }
+.feature-highlight .toggle-button.isHidden {
+  display: none;
+}
 
 .sponsored-content-highlight {
   float: inline-end;
@@ -5030,6 +5041,70 @@ main section {
 }
 .sponsored-content-highlight .feature-highlight-modal.inset-inline-end::after {
   margin-inline-start: 9px;
+}
+
+:root {
+  --newtab-feature-highlight-content-font-size: 11px;
+}
+
+.wallpaper-feature-highlight .icon.icon-dismiss {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal {
+  width: 248px;
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal.inset-inline-start {
+  inset-inline-end: calc(var(--space-medium) * -1);
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal.inset-inline-start::after {
+  inset-inline-end: calc(var(--space-xxlarge) - 14px);
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal.inset-block-end {
+  margin-top: var(--space-medium);
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal.inset-block-end::after {
+  inset-block-start: -6px;
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal p {
+  font-size: var(--newtab-feature-highlight-content-font-size);
+}
+.wallpaper-feature-highlight .feature-highlight .feature-highlight-modal::after {
+  height: 12px;
+  width: 12px;
+}
+
+.paintbrush-icon {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-paintbrush-16.svg");
+  background-size: var(--icon-size-default);
+  height: var(--icon-size-default);
+  width: var(--icon-size-default);
+}
+
+.highlightHeader {
+  font-weight: var(--font-weight-bold);
+  margin-block-end: var(--space-small);
+}
+
+.highlight-Content {
+  margin-block-end: var(--space-xsmall);
+}
+
+.wallpaper-feature-highlight-content {
+  padding-inline-end: var(--space-large);
+}
+.wallpaper-feature-highlight-content span {
+  display: block;
+}
+.wallpaper-feature-highlight-content button {
+  appearance: none;
+  border-radius: var(--border-radius-small);
+  padding: var(--space-xsmall) var(--space-large);
+  border-color: transparent;
+  display: block;
+  margin-inline-start: auto;
+  background-color: var(--button-background-color);
 }
 
 .ASRouterButton {

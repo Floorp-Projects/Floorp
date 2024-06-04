@@ -16,6 +16,9 @@ import {
 const PREF_WALLPAPERS_ENABLED =
   "browser.newtabpage.activity-stream.newtabWallpapers.enabled";
 
+const PREF_WALLPAPERS_HIGHLIGHT_SEEN_COUNTER =
+  "browser.newtabpage.activity-stream.newtabWallpapers.highlightSeenCounter";
+
 export class WallpaperFeed {
   constructor() {
     this.loaded = false;
@@ -96,10 +99,53 @@ export class WallpaperFeed {
     );
   }
 
+  initHighlightCounter() {
+    let counter = Services.prefs.getIntPref(
+      PREF_WALLPAPERS_HIGHLIGHT_SEEN_COUNTER
+    );
+
+    this.store.dispatch(
+      ac.AlsoToPreloaded({
+        type: at.WALLPAPERS_FEATURE_HIGHLIGHT_COUNTER_INCREMENT,
+        data: {
+          value: counter,
+        },
+      })
+    );
+  }
+
+  wallpaperSeenEvent() {
+    let counter = Services.prefs.getIntPref(
+      PREF_WALLPAPERS_HIGHLIGHT_SEEN_COUNTER
+    );
+
+    const newCount = counter + 1;
+
+    this.store.dispatch(
+      ac.OnlyToMain({
+        type: at.SET_PREF,
+        data: {
+          name: "newtabWallpapers.highlightSeenCounter",
+          value: newCount,
+        },
+      })
+    );
+
+    this.store.dispatch(
+      ac.AlsoToPreloaded({
+        type: at.WALLPAPERS_FEATURE_HIGHLIGHT_COUNTER_INCREMENT,
+        data: {
+          value: newCount,
+        },
+      })
+    );
+  }
+
   async onAction(action) {
     switch (action.type) {
       case at.INIT:
         await this.wallpaperSetup(true /* isStartup */);
+        this.initHighlightCounter();
         break;
       case at.UNINIT:
         break;
@@ -109,8 +155,15 @@ export class WallpaperFeed {
         if (action.data.name === "newtabWallpapers.enabled") {
           await this.wallpaperSetup(false /* isStartup */);
         }
+        if (action.data.name === "newtabWallpapers.highlightSeenCounter") {
+          // Reset redux highlight counter to pref
+          this.initHighlightCounter();
+        }
         break;
       case at.WALLPAPERS_SET:
+        break;
+      case at.WALLPAPERS_FEATURE_HIGHLIGHT_SEEN:
+        this.wallpaperSeenEvent();
         break;
     }
   }

@@ -1,25 +1,30 @@
-@media (height < 700px) {
-  .personalize-button {
-    position: absolute;
-    top: 16px;
-    inset-inline-end: 16px;
-  }
-}
+.personalizeButtonWrapper {
+  margin: 0;
+  padding: 0;
 
-@media (height >= 700px) {
-  .personalize-button {
+  @media (height < 700px) {
+    position: absolute;
+    top: var(--space-xlarge);
+    inset-inline-end: var(--space-xlarge);
+  }
+
+  @media (height >=700px) {
     position: fixed;
-    top: 16px;
-    inset-inline-end: 16px;
+    top: var(--space-xlarge);
+    inset-inline-end: var(--space-xlarge);
     z-index: 1000;
   }
 }
+
 
 .personalize-button {
   border: 0;
   border-radius: 4px;
   background-color: transparent;
   padding: 15px;
+  position: relative;
+  background-size: var(--icon-size-default);
+  background-position: center;
 
   // Contrast fix for users who have wallpapers set
   &:not(:hover, :active) {
