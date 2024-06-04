@@ -93,8 +93,15 @@ function setCookieAndInitTest() {
   cookieImage.src =  tests[curTest].imgSRC;
 }
 
-// fire up the test
-setCookieAndInitTest();
+// Setup the prefs and fire up the test.
+// Note that we need to explicitly enable Always Partition Storage. Otherwise,
+// we will have an issue when CHIPS enabled in xorigin tests. See Bug 1899570
+// for more details.
+SpecialPowers.pushPrefEnv({
+    "set": [
+      ["privacy.partition.always_partition_third_party_non_cookie_storage", true],
+	  ]
+  }, setCookieAndInitTest);
 
 </script>
 </body>
