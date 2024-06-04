@@ -78,8 +78,6 @@ else
     AC_PROG_CXX
 fi
 
-MOZ_TOOL_VARIABLES
-
 dnl Special win32 checks
 dnl ========================================================
 

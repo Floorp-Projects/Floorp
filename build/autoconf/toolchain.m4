@@ -35,31 +35,6 @@ if test "$CC_TYPE" = "clang-cl"; then
 fi
 ])
 
-AC_DEFUN([MOZ_TOOL_VARIABLES],
-[
-GNU_CC=
-GNU_CXX=
-if test "$CC_TYPE" = "gcc"; then
-    GNU_CC=1
-    GNU_CXX=1
-fi
-
-CLANG_CC=
-CLANG_CXX=
-CLANG_CL=
-if test "$CC_TYPE" = "clang"; then
-    GNU_CC=1
-    GNU_CXX=1
-    CLANG_CC=1
-    CLANG_CXX=1
-fi
-if test "$CC_TYPE" = "clang-cl"; then
-    CLANG_CL=1
-fi
-
-AC_SUBST(CLANG_CXX)
-AC_SUBST(CLANG_CL)
-])
 
 AC_DEFUN([MOZ_CROSS_COMPILER],
 [
