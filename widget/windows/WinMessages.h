@@ -25,9 +25,6 @@
 #define MOZ_WM_HSCROLL (WM_APP + 0x0313)
 #define MOZ_WM_MOUSEWHEEL_FIRST MOZ_WM_MOUSEVWHEEL
 #define MOZ_WM_MOUSEWHEEL_LAST MOZ_WM_HSCROLL
-// If a popup window is being activated, we try to reactivate the previous
-// window with this message.
-#define MOZ_WM_REACTIVATE (WM_APP + 0x0314)
 // If TSFTextStore needs to notify TSF/TIP of layout change later, this
 // message is posted.
 #define MOZ_WM_NOTIY_TSF_OF_LAYOUT_CHANGE (WM_APP + 0x0315)
