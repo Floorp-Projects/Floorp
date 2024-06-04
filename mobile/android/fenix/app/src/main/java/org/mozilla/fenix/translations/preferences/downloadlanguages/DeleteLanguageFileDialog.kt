@@ -30,9 +30,9 @@ import java.util.Locale
  */
 @Composable
 fun DeleteLanguageFileDialog(
-    language: String,
+    language: String? = null,
     isAllLanguagesItemType: Boolean,
-    fileSize: Long,
+    fileSize: Long? = null,
     onConfirmDelete: () -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -43,24 +43,28 @@ fun DeleteLanguageFileDialog(
             shape = RoundedCornerShape(8.dp),
         ),
         title = {
-            val title: String = if (isAllLanguagesItemType) {
+            val title: String? = if (isAllLanguagesItemType) {
                 stringResource(
                     id = R.string.delete_language_all_languages_file_dialog_title,
-                    fileSize.toMegabyteOrKilobyteString(),
+                    fileSize?.toMegabyteOrKilobyteString() ?: 0L,
                 )
             } else {
-                stringResource(
-                    id = R.string.delete_language_file_dialog_title,
-                    language,
-                    fileSize.toMegabyteOrKilobyteString(),
-                )
+                language?.let {
+                    stringResource(
+                        id = R.string.delete_language_file_dialog_title,
+                        it,
+                        fileSize?.toMegabyteOrKilobyteString() ?: 0L,
+                    )
+                }
             }
 
-            Text(
-                text = title,
-                color = FirefoxTheme.colors.textPrimary,
-                style = FirefoxTheme.typography.headline7,
-            )
+            title?.let {
+                Text(
+                    text = it,
+                    color = FirefoxTheme.colors.textPrimary,
+                    style = FirefoxTheme.typography.headline7,
+                )
+            }
         },
         text = {
             val message: String = if (isAllLanguagesItemType) {

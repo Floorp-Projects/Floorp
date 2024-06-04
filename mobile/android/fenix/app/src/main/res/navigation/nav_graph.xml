@@ -1519,16 +1519,22 @@
             android:id="@+id/downloadLanguagesDialogPreferenceFragment"
             android:name="org.mozilla.fenix.translations.preferences.downloadlanguages.LanguageDialogPreferenceFragment">
             <argument
-                android:name="downloadLanguageItemStatePreference"
-                app:argType="org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguageItemStatePreference" />
+                android:name="modelState"
+                app:argType="mozilla.components.concept.engine.translate.ModelState" />
             <argument
-                android:name="languageNamePreference"
-                app:argType="string"
-                app:nullable="false" />
+                android:name="itemType"
+                app:argType="org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguageItemTypePreference" />
             <argument
-                android:name="itemFileSizePreference"
-                app:argType="long"
-                app:nullable="false" />
+                android:name="languageCode"
+                app:nullable="true"
+                app:argType="string" />
+            <argument
+                android:name="languageDisplayName"
+                app:nullable="true"
+                app:argType="string" />
+            <argument
+                android:name="modelSize"
+                app:argType="long" />
         </dialog>
     </navigation>
 

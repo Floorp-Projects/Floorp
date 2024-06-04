@@ -40,5 +40,6 @@ enum class BrowserDirection(@IdRes val fragmentId: Int) {
     FromReviewQualityCheck(R.id.reviewQualityCheckFragment),
     FromAddonsManagementFragment(R.id.addonsManagementFragment),
     FromTranslationsDialogFragment(R.id.translationsDialogFragment),
+    FromDownloadLanguagesPreferenceFragment(R.id.downloadLanguagesPreferenceFragment),
     FromMenuDialogFragment(R.id.menuDialogFragment),
 }

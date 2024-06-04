@@ -4,32 +4,21 @@
 
 package org.mozilla.fenix.translations.preferences.downloadlanguages
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-import org.mozilla.geckoview.TranslationsController
+import mozilla.components.concept.engine.translate.LanguageModel
 
 /**
  * DownloadLanguageItemPreference that will appear on [DownloadLanguagesPreferenceFragment] screen.
  *
  * @property languageModel The object comes from the translation engine.
- * @property state State of the [languageModel].
+ * @property type The type of the language item.
+ * @property enabled Whether the item is enabled or not.
+ *
  */
 data class DownloadLanguageItemPreference(
-    val languageModel: TranslationsController.RuntimeTranslation.LanguageModel,
-    val state: DownloadLanguageItemStatePreference,
-)
-
-/**
- * DownloadLanguageItemStatePreference the state of the [DownloadLanguageItemPreference]
- *
- * @property type The type of the language item.
- * @property status State of the language file.
- */
-@Parcelize
-data class DownloadLanguageItemStatePreference(
+    val languageModel: LanguageModel,
     val type: DownloadLanguageItemTypePreference,
-    val status: DownloadLanguageItemStatusPreference,
-) : Parcelable
+    val enabled: Boolean = true,
+)
 
 /**
  * DownloadLanguageItemTypePreference the type of the [DownloadLanguageItemPreference]
@@ -38,14 +27,4 @@ enum class DownloadLanguageItemTypePreference {
     PivotLanguage,
     AllLanguages,
     GeneralLanguage,
-}
-
-/**
- * DownloadLanguageItemStatusPreference the status of the [DownloadLanguageItemPreference]
- */
-enum class DownloadLanguageItemStatusPreference {
-    Downloaded,
-    NotDownloaded,
-    DownloadInProgress,
-    Selected,
 }
