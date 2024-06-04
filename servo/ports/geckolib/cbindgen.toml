@@ -119,6 +119,7 @@ include = [
   "DisplayMode",
   "Platform",
   "PositionAnchor",
+  "PositionTryOptions",
   "PositionTryOrder",
   "PositionVisibility",
   "GtkThemeFamily",

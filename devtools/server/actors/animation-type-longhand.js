@@ -143,6 +143,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "pointer-events",
       "position",
       "position-anchor",
+      "position-try-options",
       "position-try-order",
       "position-visibility",
       "print-color-adjust",

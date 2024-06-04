@@ -343,6 +343,18 @@ ${helpers.predefined_type(
 )}
 
 ${helpers.predefined_type(
+    "position-try-options",
+    "PositionTryOptions",
+    "computed::PositionTryOptions::none()",
+    engines="gecko",
+    initial_specified_value="specified::PositionTryOptions::none()",
+    animation_value_type="discrete",
+    gecko_pref="layout.css.anchor-positioning.enabled",
+    spec="https://drafts.csswg.org/css-anchor-position-1/#position-try-options",
+    affects="layout",
+)}
+
+${helpers.predefined_type(
     "position-try-order",
     "PositionTryOrder",
     "computed::PositionTryOrder::normal()",

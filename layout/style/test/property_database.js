@@ -13430,6 +13430,31 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
     invalid_values: ["none", "--foo, auto", "auto, --bar", "foo"],
   };
 
+  gCSSProperties["position-try-options"] = {
+    domProp: "positionTryOptions",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: [
+      "--foo",
+      "flip-block",
+      "flip-inline",
+      "flip-start",
+      "left",
+      "span-y-start",
+      "span-block-start inline-end",
+      "span-all self-block-end",
+      "end span-start",
+      "center span-all",
+    ],
+    invalid_values: [
+      "foo",
+      "none none",
+      "span-y-start self-block-end",
+      "flip-block flip-start",
+    ],
+  };
+
   gCSSProperties["position-try-order"] = {
     domProp: "positionTryOrder",
     inherited: false,
