@@ -6,8 +6,7 @@
 // How to run this file:
 // 1. [obtain firefox source code]
 // 2. [build/obtain firefox binaries]
-// 3. run `[path to]/run-mozilla.sh [path to]/xpcshell genRootCAHashes.js \
-//                                  [absolute path to]/RootHashes.inc'
+// 3. run `[path to]/firefox -xpcshell genRootCAHashes.js [absolute path to]/RootHashes.inc'
 
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const CertDb = Cc[nsX509CertDB].getService(Ci.nsIX509CertDB);

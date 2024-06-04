@@ -398,10 +398,6 @@ endif # ! relativesrcdir
 MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
 MERGE_RELATIVE_FILE = $(call EXPAND_LOCALE_SRCDIR,$(2))/$(1)
 
-ifneq (WINNT,$(OS_ARCH))
-RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
-endif # ! WINNT
-
 # Enable verbose logs when not using `make -s`
 ifeq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
 export BUILD_VERBOSE_LOG = 1

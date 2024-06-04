@@ -4,7 +4,7 @@
 // How to run this file:
 // 1. [obtain firefox source code]
 // 2. [build/obtain firefox binaries]
-// 3. run `[path to]/run-mozilla.sh [path to]/xpcshell [path to]/getHSTSPreloadlist.js [absolute path to]/nsSTSPreloadlist.inc'
+// 3. run `[path to]/firefox -xpcshell [path to]/getHSTSPreloadlist.js [absolute path to]/nsSTSPreloadlist.inc'
 // Note: Running this file outputs a new nsSTSPreloadlist.inc in the current
 //       working directory.
 
