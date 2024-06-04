@@ -276,7 +276,7 @@ case "$target" in
 
 *-mingw*)
     DSO_PIC_CFLAGS=
-    if test -n "$CC_TYPE" != clang-cl ; then
+    if test "$CC_TYPE" != clang-cl ; then
         # != clang-cl will match gcc and clang
         if test "$CC_TYPE" = gcc ; then
             AC_MSG_ERROR(Firefox cannot be built with mingw-gcc and requires a mingw-clang toolchain to work)
