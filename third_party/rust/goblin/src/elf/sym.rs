@@ -541,6 +541,18 @@ if_alloc! {
             self.count
         }
 
+        /// The offset of symbol table in elf
+        #[inline]
+        pub fn offset(&self) -> usize {
+            self.start
+        }
+
+        /// The ctx of symbol table
+        #[inline]
+        pub fn ctx(&self) -> &Ctx {
+            &self.ctx
+        }
+
         /// Returns true if table has no symbols.
         #[inline]
         pub fn is_empty(&self) -> bool {

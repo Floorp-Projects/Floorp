@@ -147,7 +147,17 @@ impl<'a> MachO<'a> {
         }
     }
     /// Parses the Mach-o binary from `bytes` at `offset`
-    pub fn parse(bytes: &'a [u8], mut offset: usize) -> error::Result<MachO<'a>> {
+    pub fn parse(bytes: &'a [u8], offset: usize) -> error::Result<MachO<'a>> {
+        Self::parse_impl(bytes, offset, false)
+    }
+
+    /// Parses the Mach-o binary from `bytes` at `offset` in lossy mode
+    pub fn parse_lossy(bytes: &'a [u8], offset: usize) -> error::Result<MachO<'a>> {
+        Self::parse_impl(bytes, offset, true)
+    }
+
+    /// Parses the Mach-o binary from `bytes` at `offset` in `lossy` mode
+    fn parse_impl(bytes: &'a [u8], mut offset: usize, lossy: bool) -> error::Result<MachO<'a>> {
         let (magic, maybe_ctx) = parse_magic_and_ctx(bytes, offset)?;
         let ctx = if let Some(ctx) = maybe_ctx {
             ctx
@@ -183,27 +193,42 @@ impl<'a> MachO<'a> {
             let cmd = load_command::LoadCommand::parse(bytes, offset, ctx.le)?;
             debug!("{} - {:?}", i, cmd);
             match cmd.command {
-                load_command::CommandVariant::Segment32(command) => {
-                    // FIXME: we may want to be less strict about failure here, and just return an empty segment to allow parsing to continue?
-                    segments.push(segment::Segment::from_32(bytes, &command, cmd.offset, ctx)?)
-                }
-                load_command::CommandVariant::Segment64(command) => {
-                    segments.push(segment::Segment::from_64(bytes, &command, cmd.offset, ctx)?)
-                }
+                load_command::CommandVariant::Segment32(command) => segments.push(
+                    segment::Segment::from_32_impl(bytes, &command, cmd.offset, ctx, lossy)?,
+                ),
+                load_command::CommandVariant::Segment64(command) => segments.push(
+                    segment::Segment::from_64_impl(bytes, &command, cmd.offset, ctx, lossy)?,
+                ),
                 load_command::CommandVariant::Symtab(command) => {
-                    symbols = Some(symbols::Symbols::parse(bytes, &command, ctx)?);
+                    match symbols::Symbols::parse(bytes, &command, ctx) {
+                        Ok(s) => symbols = Some(s),
+                        Err(e) if lossy => {
+                            debug!("CommandVariant::Symtab failed: {e}");
+                        }
+                        Err(e) => return Err(e),
+                    }
                 }
                 load_command::CommandVariant::LoadDylib(command)
                 | load_command::CommandVariant::LoadUpwardDylib(command)
                 | load_command::CommandVariant::ReexportDylib(command)
                 | load_command::CommandVariant::LoadWeakDylib(command)
                 | load_command::CommandVariant::LazyLoadDylib(command) => {
-                    let lib = bytes.pread::<&str>(cmd.offset + command.dylib.name as usize)?;
-                    libs.push(lib);
+                    match bytes.pread::<&str>(cmd.offset + command.dylib.name as usize) {
+                        Ok(lib) => libs.push(lib),
+                        Err(e) if lossy => {
+                            debug!("CommandVariant::Load/Reexport Dylib failed: {e}");
+                        }
+                        Err(e) => return Err(e.into()),
+                    }
                 }
                 load_command::CommandVariant::Rpath(command) => {
-                    let rpath = bytes.pread::<&str>(cmd.offset + command.path as usize)?;
-                    rpaths.push(rpath);
+                    match bytes.pread::<&str>(cmd.offset + command.path as usize) {
+                        Ok(rpath) => rpaths.push(rpath),
+                        Err(e) if lossy => {
+                            debug!("CommandVariant::Rpath failed: {e}");
+                        }
+                        Err(e) => return Err(e.into()),
+                    }
                 }
                 load_command::CommandVariant::DyldInfo(command)
                 | load_command::CommandVariant::DyldInfoOnly(command) => {
@@ -229,9 +254,16 @@ impl<'a> MachO<'a> {
                     }
                 }
                 load_command::CommandVariant::IdDylib(command) => {
-                    let id = bytes.pread::<&str>(cmd.offset + command.dylib.name as usize)?;
-                    libs[0] = id;
-                    name = Some(id);
+                    match bytes.pread::<&str>(cmd.offset + command.dylib.name as usize) {
+                        Ok(id) => {
+                            libs[0] = id;
+                            name = Some(id);
+                        }
+                        Err(e) if lossy => {
+                            debug!("CommandVariant::IdDylib failed: {e}");
+                        }
+                        Err(e) => return Err(e.into()),
+                    }
                 }
                 _ => (),
             }
@@ -502,6 +534,16 @@ pub enum Mach<'a> {
 impl<'a> Mach<'a> {
     /// Parse from `bytes` either a multi-arch binary or a regular mach-o binary
     pub fn parse(bytes: &'a [u8]) -> error::Result<Self> {
+        Self::parse_impl(bytes, false)
+    }
+
+    /// Parse from `bytes` either a multi-arch binary or a regular mach-o binary in lossy mode
+    pub fn parse_lossy(bytes: &'a [u8]) -> error::Result<Self> {
+        Self::parse_impl(bytes, true)
+    }
+
+    /// Parse from `bytes` either a multi-arch binary or a regular mach-o binary
+    fn parse_impl(bytes: &'a [u8], lossy: bool) -> error::Result<Self> {
         let size = bytes.len();
         if size < 4 {
             let error = error::Error::Malformed("size is smaller than a magical number".into());
@@ -515,7 +557,7 @@ impl<'a> Mach<'a> {
             }
             // we might be a regular binary
             _ => {
-                let binary = MachO::parse(bytes, 0)?;
+                let binary = MachO::parse_impl(bytes, 0, lossy)?;
                 Ok(Mach::Binary(binary))
             }
         }

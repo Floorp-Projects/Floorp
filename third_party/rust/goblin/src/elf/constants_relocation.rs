@@ -498,7 +498,7 @@ pub const R_ARM_GOT32: u32 = 26;
 pub const R_ARM_PLT32: u32 = 27;
 /// PC relative 24 bit (BL, BLX)
 pub const R_ARM_CALL: u32 = 28;
-/// PC relative 24 bit (B, BL<cond>)
+/// PC relative 24 bit (B, BL&lt;cond&gt;)
 pub const R_ARM_JUMP24: u32 = 29;
 /// PC relative 24 bit (Thumb32 B.W)
 pub const R_ARM_THM_JUMP24: u32 = 30;
@@ -539,7 +539,7 @@ pub const R_ARM_THM_MOVT_ABS: u32 = 48;
 pub const R_ARM_THM_MOVW_PREL_NC: u32 = 49;
 /// PC relative high 16 bit (Thumb32 MOVT)
 pub const R_ARM_THM_MOVT_PREL: u32 = 50;
-/// PC relative 20 bit (Thumb32 B<cond>.W)
+/// PC relative 20 bit (Thumb32 B&lt;cond&gt;.W)
 pub const R_ARM_THM_JUMP19: u32 = 51;
 /// PC relative X & 0x7E (Thumb16 CBZ, CBNZ)
 pub const R_ARM_THM_JUMP6: u32 = 52;
@@ -636,7 +636,7 @@ pub const R_ARM_GNU_VTENTRY: u32 = 100;
 pub const R_ARM_GNU_VTINHERIT: u32 = 101;
 /// PC relative & 0xFFE (Thumb16 B)
 pub const R_ARM_THM_PC11: u32 = 102;
-/// PC relative & 0x1FE (Thumb16 B/B<cond>)
+/// PC relative & 0x1FE (Thumb16 B/B&lt;cond&gt;)
 pub const R_ARM_THM_PC9: u32 = 103;
 /// PC-rel 32 bit for global dynamic thread local data
 pub const R_ARM_TLS_GD32: u32 = 104;

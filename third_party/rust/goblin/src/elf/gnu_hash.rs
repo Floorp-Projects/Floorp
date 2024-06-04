@@ -13,9 +13,9 @@
 //!  4. shift2
 //!
 //! See more:
-//!  * http://www.linker-aliens.org/blogs/ali/entry/gnu_hash_elf_sections
-//!    or https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
-//!  * https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/
+//!  * <http://www.linker-aliens.org/blogs/ali/entry/gnu_hash_elf_sections>
+//!    or <https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2>
+//!  * <https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/>
 
 /// GNU hash function: accepts a symbol name and returns a value that may be
 /// used to compute a bucket index.
