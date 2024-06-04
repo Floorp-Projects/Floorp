@@ -2228,7 +2228,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
 #ifdef DEBUG
   {
     for (const auto side : LogicalSides::All) {
-      if (styleMargin->mMargin.Get(mCBWM, side).IsAuto()) {
+      if (styleMargin->mMargin.Get(side, mCBWM).IsAuto()) {
         MOZ_ASSERT(GetMarginComponentForSide(side) == 0,
                    "Someone else tried to resolve our auto margin");
       }
@@ -2450,7 +2450,7 @@ uint32_t FlexItem::NumAutoMarginsInAxis(LogicalAxis aAxis) const {
   const auto& styleMargin = mFrame->StyleMargin()->mMargin;
   for (const auto edge : {LogicalEdge::Start, LogicalEdge::End}) {
     const auto side = MakeLogicalSide(aAxis, edge);
-    if (styleMargin.Get(mCBWM, side).IsAuto()) {
+    if (styleMargin.Get(side, mCBWM).IsAuto()) {
       numAutoMargins++;
     }
   }
@@ -3531,7 +3531,7 @@ void MainAxisPositionTracker::ResolveAutoMarginsInMainAxis(FlexItem& aItem) {
   if (mNumAutoMarginsInMainAxis) {
     const auto& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
     for (const auto side : {StartSide(), EndSide()}) {
-      if (styleMargin.Get(mWM, side).IsAuto()) {
+      if (styleMargin.Get(side, mWM).IsAuto()) {
         // NOTE: This integer math will skew the distribution of remainder
         // app-units towards the end, which is fine.
         nscoord curAutoMarginSize =
@@ -3926,7 +3926,7 @@ void SingleLineCrossAxisPositionTracker::ResolveAutoMarginsInCrossAxis(
   // Give each auto margin a share of the space.
   const auto& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
   for (const auto side : {StartSide(), EndSide()}) {
-    if (styleMargin.Get(mWM, side).IsAuto()) {
+    if (styleMargin.Get(side, mWM).IsAuto()) {
       MOZ_ASSERT(aItem.GetMarginComponentForSide(side) == 0,
                  "Expecting auto margins to have value '0' before we "
                  "update them");

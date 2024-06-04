@@ -2029,69 +2029,65 @@ class LogicalRect {
 };
 
 template <typename T>
-const T& StyleRect<T>::Get(WritingMode aWM, LogicalSide aSide) const {
+const T& StyleRect<T>::Get(LogicalSide aSide, WritingMode aWM) const {
   return Get(aWM.PhysicalSide(aSide));
 }
 
 template <typename T>
 const T& StyleRect<T>::GetIStart(WritingMode aWM) const {
-  return Get(aWM, LogicalSide::IStart);
+  return Get(LogicalSide::IStart, aWM);
 }
 
 template <typename T>
 const T& StyleRect<T>::GetBStart(WritingMode aWM) const {
-  return Get(aWM, LogicalSide::BStart);
+  return Get(LogicalSide::BStart, aWM);
 }
 
 template <typename T>
 const T& StyleRect<T>::GetIEnd(WritingMode aWM) const {
-  return Get(aWM, LogicalSide::IEnd);
+  return Get(LogicalSide::IEnd, aWM);
 }
 
 template <typename T>
 const T& StyleRect<T>::GetBEnd(WritingMode aWM) const {
-  return Get(aWM, LogicalSide::BEnd);
+  return Get(LogicalSide::BEnd, aWM);
 }
 
 template <typename T>
-T& StyleRect<T>::Get(WritingMode aWM, LogicalSide aSide) {
+T& StyleRect<T>::Get(LogicalSide aSide, WritingMode aWM) {
   return Get(aWM.PhysicalSide(aSide));
 }
 
 template <typename T>
 T& StyleRect<T>::GetIStart(WritingMode aWM) {
-  return Get(aWM, LogicalSide::IStart);
+  return Get(LogicalSide::IStart, aWM);
 }
 
 template <typename T>
 T& StyleRect<T>::GetBStart(WritingMode aWM) {
-  return Get(aWM, LogicalSide::BStart);
+  return Get(LogicalSide::BStart, aWM);
 }
 
 template <typename T>
 T& StyleRect<T>::GetIEnd(WritingMode aWM) {
-  return Get(aWM, LogicalSide::IEnd);
+  return Get(LogicalSide::IEnd, aWM);
 }
 
 template <typename T>
 T& StyleRect<T>::GetBEnd(WritingMode aWM) {
-  return Get(aWM, LogicalSide::BEnd);
+  return Get(LogicalSide::BEnd, aWM);
 }
 
 template <typename T>
 const T& StyleRect<T>::Start(mozilla::LogicalAxis aAxis,
                              mozilla::WritingMode aWM) const {
-  return Get(aWM, aAxis == mozilla::LogicalAxis::Inline
-                      ? mozilla::LogicalSide::IStart
-                      : mozilla::LogicalSide::BStart);
+  return aAxis == LogicalAxis::Inline ? GetIStart(aWM) : GetBStart(aWM);
 }
 
 template <typename T>
 const T& StyleRect<T>::End(mozilla::LogicalAxis aAxis,
                            mozilla::WritingMode aWM) const {
-  return Get(aWM, aAxis == mozilla::LogicalAxis::Inline
-                      ? mozilla::LogicalSide::IEnd
-                      : mozilla::LogicalSide::BEnd);
+  return aAxis == LogicalAxis::Inline ? GetIEnd(aWM) : GetBEnd(aWM);
 }
 
 inline AspectRatio AspectRatio::ConvertToWritingMode(
