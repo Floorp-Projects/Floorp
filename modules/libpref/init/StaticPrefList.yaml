@@ -3165,15 +3165,6 @@
   value: true
   mirror: always
 
-# Whether we disable triggering mutation events for changes to style
-# attribute via CSSOM.
-# NOTE: This preference is used in unit tests. If it is removed or its default
-# value changes, please update test_sharedMap_static_prefs.js accordingly.
-- name: dom.mutation-events.cssom.disabled
-  type: bool
-  value: true
-  mirror: always
-
 # Limit of location change caused by content scripts in a time span per
 # BrowsingContext. This includes calls to History and Location APIs.
 - name: dom.navigation.locationChangeRateLimit.count
