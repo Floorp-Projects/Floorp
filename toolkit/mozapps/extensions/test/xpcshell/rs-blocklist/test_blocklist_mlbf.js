@@ -78,7 +78,7 @@ add_task(async function signed_xpi_initially_unblocked() {
     await Blocklist.getAddonBlocklistEntry(addon),
     {
       state: Ci.nsIBlocklistService.STATE_BLOCKED,
-      url: `https://addons.mozilla.org/en-US/xpcshell/blocked-addon/${SIGNED_ADDON_ID}/${SIGNED_ADDON_VERSION}/`,
+      url: `https://addons.mozilla.org/en-US/firefox/blocked-addon/${SIGNED_ADDON_ID}/${SIGNED_ADDON_VERSION}/`,
     },
     "Blocked addon should have blocked entry"
   );

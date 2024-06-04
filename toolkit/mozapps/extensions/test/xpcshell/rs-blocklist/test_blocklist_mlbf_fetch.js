@@ -94,7 +94,7 @@ add_task(async function public_api_uses_mlbf() {
     await Blocklist.getAddonBlocklistEntry(blockedAddon),
     {
       state: Ci.nsIBlocklistService.STATE_BLOCKED,
-      url: "https://addons.mozilla.org/en-US/xpcshell/blocked-addon/@blocked/1/",
+      url: "https://addons.mozilla.org/en-US/firefox/blocked-addon/@blocked/1/",
     },
     "Blocked addon should have blocked entry"
   );
