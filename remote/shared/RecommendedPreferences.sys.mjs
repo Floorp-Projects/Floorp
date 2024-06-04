@@ -109,6 +109,9 @@ const COMMON_PREFERENCES = new Map([
     "",
   ],
 
+  // Make sure newtab wallpapers don't hit the network to retrieve wallpaper data.
+  ["browser.newtabpage.activity-stream.newtabWallpapers.enabled", false],
+
   // Make sure Topsites doesn't hit the network to retrieve sponsored tiles.
   ["browser.newtabpage.activity-stream.showSponsoredTopSites", false],
 

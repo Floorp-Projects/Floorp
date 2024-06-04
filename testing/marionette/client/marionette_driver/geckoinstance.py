@@ -47,6 +47,8 @@ class GeckoInstance(object):
         "apz.content_response_timeout": 60000,
         # Don't pull weather data from the network
         "browser.newtabpage.activity-stream.discoverystream.region-weather-config": "",
+        # Don't pull wallpaper content from the network
+        "browser.newtabpage.activity-stream.newtabWallpapers.enabled": False,
         # Don't pull sponsored Top Sites content from the network
         "browser.newtabpage.activity-stream.showSponsoredTopSites": False,
         # Disable geolocation ping (#1)
