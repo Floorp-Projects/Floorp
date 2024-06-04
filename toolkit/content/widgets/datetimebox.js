@@ -12,17 +12,29 @@
  * according to the value of the "type" property.
  */
 this.DateTimeBoxWidget = class {
-  constructor(shadowRoot) {
+  constructor(shadowRoot, prefs) {
     this.shadowRoot = shadowRoot;
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
+    // When undefined, DOMLocalization will use the app locales.
+    let locales;
+    if (prefs["privacy.resistFingerprinting"]) {
+      locales = [...this.window.getWebExposedLocales()];
+      // Make sure to always include en-US, in case the web exposed languages do
+      // not include a translation for the widget.
+      if (!locales.includes("en-US")) {
+        locales.push("en-US");
+      }
+    }
     // The DOMLocalization instance needs to allow for sync methods so that
     // the placeholder value may be determined and set during the
     // createEditFieldAndAppend() call.
     this.l10n = new this.window.DOMLocalization(
       ["toolkit/global/datetimebox.ftl"],
-      /* aSync = */ true
+      /* aSync = */ true,
+      undefined,
+      locales
     );
   }
 
