@@ -38,7 +38,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
         CLANG_LDFLAGS="-lclangASTMatchers"
     fi
 
-    if test -n "$CLANG_CL"; then
+    if test "$CC_TYPE" = clang-cl ; then
         dnl The llvm-config coming with clang-cl may give us arguments in the
         dnl /ARG form, which in msys will be interpreted as a path name.  So we
         dnl need to split the args and convert the leading slashes that we find
