@@ -6,7 +6,3 @@
 
 if CONFIG["USE_ELF_HACK"] or CONFIG["RELRHACK"]:
     DIRS += ["elfhack"]
-
-FINAL_TARGET_FILES += [
-    "run-mozilla.sh",
-]

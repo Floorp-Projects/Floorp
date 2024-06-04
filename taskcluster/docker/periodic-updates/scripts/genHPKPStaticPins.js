@@ -5,10 +5,9 @@
 // How to run this file:
 // 1. [obtain firefox source code]
 // 2. [build/obtain firefox binaries]
-// 3. run `[path to]/run-mozilla.sh [path to]/xpcshell \
-//                                  [path to]/genHPKPStaticpins.js \
-//                                  [absolute path to]/PreloadedHPKPins.json \
-//                                  [absolute path to]/StaticHPKPins.h
+// 3. run `[path to]/fireffox -xpcshell [path to]/genHPKPStaticpins.js \
+//                                      [absolute path to]/PreloadedHPKPins.json \
+//                                      [absolute path to]/StaticHPKPins.h
 "use strict";
 
 if (arguments.length != 2) {
