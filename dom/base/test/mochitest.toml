@@ -1485,6 +1485,8 @@ scheme = "https"
 
 ["test_reentrant_flush.html"]
 
+["test_reportPatternFailure.html"]
+
 ["test_root_iframe.html"]
 
 ["test_sandbox_and_document_uri.html"]
