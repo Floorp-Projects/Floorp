@@ -50,7 +50,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Suppress("LongMethod")
 fun DownloadLanguageFileDialog(
     downloadLanguageDialogType: DownloadLanguageFileDialogType,
-    fileSize: Long,
+    fileSize: Long? = null,
     isCheckBoxEnabled: Boolean,
     isCacheMessage: Boolean = false,
     onSavingModeStateChange: (Boolean) -> Unit,
@@ -70,12 +70,12 @@ fun DownloadLanguageFileDialog(
                 if (downloadLanguageDialogType is DownloadLanguageFileDialogType.TranslationRequest) {
                     stringResource(
                         R.string.translations_download_language_file_dialog_title,
-                        fileSize.toMegabyteOrKilobyteString(),
+                        fileSize?.toMegabyteOrKilobyteString() ?: 0L,
                     )
                 } else {
                     stringResource(
                         R.string.download_language_file_dialog_title,
-                        fileSize.toMegabyteOrKilobyteString(),
+                        fileSize?.toMegabyteOrKilobyteString() ?: 0L,
                     )
                 }
             Text(
@@ -90,11 +90,15 @@ fun DownloadLanguageFileDialog(
                 downloadLanguageDialogType is DownloadLanguageFileDialogType.TranslationRequest
             ) {
                 Text(
-                    text = if (isCacheMessage) { stringResource(
-                        R.string.download_language_file_dialog_message_all_languages,
-                    ) } else { stringResource(
-                        R.string.download_language_file_dialog_message_all_languages_no_cache,
-                    ) },
+                    text = if (isCacheMessage) {
+                        stringResource(
+                            R.string.download_language_file_dialog_message_all_languages,
+                        )
+                    } else {
+                        stringResource(
+                            R.string.download_language_file_dialog_message_all_languages_no_cache,
+                        )
+                    },
                     modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
                     style = FirefoxTheme.typography.body2,
                     color = FirefoxTheme.colors.textPrimary,

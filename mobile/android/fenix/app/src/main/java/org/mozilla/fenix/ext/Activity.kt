@@ -55,6 +55,7 @@ import org.mozilla.fenix.shopping.ReviewQualityCheckFragmentDirections
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
 import org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragmentDirections
 import org.mozilla.fenix.translations.TranslationsDialogFragmentDirections
+import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguagesPreferenceFragmentDirections
 import java.security.InvalidParameterException
 
 /**
@@ -326,6 +327,9 @@ private fun getHomeNavDirections(
     BrowserDirection.FromTranslationsDialogFragment -> TranslationsDialogFragmentDirections.actionGlobalBrowser()
 
     BrowserDirection.FromMenuDialogFragment -> MenuDialogFragmentDirections.actionGlobalBrowser()
+
+    BrowserDirection.FromDownloadLanguagesPreferenceFragment ->
+        DownloadLanguagesPreferenceFragmentDirections.actionGlobalBrowser()
 }
 
 const val REQUEST_CODE_BROWSER_ROLE = 1
