@@ -4,8 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
-"""Localization.
-"""
+"""Localization."""
 
 import os
 import pprint
@@ -22,7 +21,6 @@ class LocalesMixin(object):
         """
         self.abs_dirs = None
         self.locales = None
-        self.gecko_locale_revisions = None
         self.l10n_revisions = {}
 
     def query_locales(self):
@@ -145,11 +143,6 @@ class LocalesMixin(object):
         if parent_dir is None:
             parent_dir = self.query_abs_dirs()["abs_l10n_dir"]
         self.mkdir_p(parent_dir)
-        # This block is to allow for pulling buildbot-configs in Fennec
-        # release builds, since we don't pull it in MBF anymore.
-        if c.get("l10n_repos"):
-            repos = c.get("l10n_repos")
-            self.vcs_checkout_repos(repos, tag_override=c.get("tag_override"))
         # Pull locales
         locales = self.query_locales()
         locale_repos = []
@@ -160,12 +153,10 @@ class LocalesMixin(object):
             locale_repos.append(
                 {"repo": "%s/%s" % (hg_l10n_base, locale), "branch": tag, "vcs": vcs}
             )
-        revs = self.vcs_checkout_repos(
+        self.vcs_checkout_repos(
             repo_list=locale_repos,
             parent_dir=parent_dir,
-            tag_override=c.get("tag_override"),
         )
-        self.gecko_locale_revisions = revs
 
 
 # __main__ {{{1
