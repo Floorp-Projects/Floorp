@@ -16,7 +16,7 @@ export function ShareModeElement() {
         label="Toggle Share Mode"
         type="checkbox"
         id="toggle_sharemode"
-        checked={false}
+        checked={shareModeEnabled()}
         onCommand={() => setShareModeEnabled((prev) => !prev)}
         accesskey="S"
       />
