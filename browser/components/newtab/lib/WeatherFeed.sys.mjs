@@ -87,7 +87,7 @@ export class WeatherFeed {
     try {
       suggestions = await this.merino.fetch({
         query: weatherQuery || "",
-        providers: weatherQuery ? ["accuweather_city"] : MERINO_PROVIDER,
+        providers: MERINO_PROVIDER,
         timeoutMs: 7000,
       });
     } catch (error) {
@@ -185,8 +185,8 @@ export class WeatherFeed {
     const query = this.store.getState().Weather.locationSearchString;
     let response = await this.merino.fetch({
       query: query || "",
-      providers: ["accuweather_city"],
-      timeoutMs: 5000,
+      providers: MERINO_PROVIDER,
+      timeoutMs: 7000,
       otherParams: {
         request_type: "location",
       },
