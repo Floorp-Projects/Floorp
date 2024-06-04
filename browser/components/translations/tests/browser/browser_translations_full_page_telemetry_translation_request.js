@@ -87,6 +87,13 @@ add_task(async function test_translations_telemetry_manual_translation() {
     expectedEventCount: 1,
     expectNewFlowId: false,
   });
+  await TestTranslationsTelemetry.assertLabeledCounter(
+    Glean.translations.requestCount,
+    [
+      ["full_page", 1],
+      ["select", 0],
+    ]
+  );
   await TestTranslationsTelemetry.assertEvent(
     Glean.translations.translationRequest,
     {
@@ -98,7 +105,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
         auto_translate: false,
         document_language: "es",
         top_preferred_language: "en",
-        request_target: "full-page",
+        request_target: "full_page",
       },
     }
   );
@@ -152,6 +159,13 @@ add_task(async function test_translations_telemetry_auto_translation() {
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
     expectedEventCount: 0,
   });
+  await TestTranslationsTelemetry.assertLabeledCounter(
+    Glean.translations.requestCount,
+    [
+      ["full_page", 1],
+      ["select", 0],
+    ]
+  );
   await TestTranslationsTelemetry.assertEvent(
     Glean.translations.translationRequest,
     {
@@ -163,7 +177,7 @@ add_task(async function test_translations_telemetry_auto_translation() {
         auto_translate: true,
         document_language: "es",
         top_preferred_language: "en",
-        request_target: "full-page",
+        request_target: "full_page",
       },
     }
   );

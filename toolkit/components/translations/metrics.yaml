@@ -25,7 +25,25 @@ translations:
       - technical
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
+    expires: 139
+
+  request_count:
+    type: labeled_counter
+    labels:
+      - full_page
+      - select
+    description: >
+      The count of translation requests, along with their type.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900432
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900432
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
     expires: never
+
 
   error_rate:
     type: rate
@@ -47,7 +65,7 @@ translations:
   error:
     type: event
     description: >
-      The specific translations error that caused a full-page translation failure.
+      The specific translations error that caused a full_page translation failure.
     extra_keys:
       flow_id: &flow_id
         type: string
@@ -93,7 +111,7 @@ translations:
         type: string
         description: >
           The target of the translation request, whether it is
-          "full-page" or "select".
+          "full_page" or "select".
       source_text_code_units:
         type: quantity
         description: The length of the source text to be translated in code units.

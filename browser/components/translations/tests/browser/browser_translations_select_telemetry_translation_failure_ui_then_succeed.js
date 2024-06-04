@@ -38,6 +38,13 @@ add_task(
         },
       }
     );
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 0],
+        ["select", 1],
+      ]
+    );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
@@ -77,6 +84,13 @@ add_task(
       {
         expectedEventCount: 1,
       }
+    );
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 0],
+        ["select", 2],
+      ]
     );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,

@@ -1284,6 +1284,24 @@ class TestTranslationsTelemetry {
   }
 
   /**
+   * Asserts that a counter with the given label matches the expected count for that label.
+   *
+   * @param {object} counter - The Glean counter object.
+   * @param {Array<Array<string | number>>} expectations - An array of string/number pairs for the label and expected count.
+   */
+  static async assertLabeledCounter(counter, expectations) {
+    for (const [label, expectedCount] of expectations) {
+      await Services.fog.testFlushAllChildren();
+      const count = counter[label].testGetValue() ?? 0;
+      is(
+        count,
+        expectedCount,
+        `Telemetry counter with label ${label} should have expected count.`
+      );
+    }
+  }
+
+  /**
    * Asserts qualities about an event telemetry metric.
    *
    * @param {object} event - The Glean event object.

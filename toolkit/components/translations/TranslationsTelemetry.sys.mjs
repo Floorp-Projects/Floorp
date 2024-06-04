@@ -120,6 +120,7 @@ export class TranslationsTelemetry {
       sourceTextWordCount,
     } = data;
     Glean.translations.requestsCount.add(1);
+    Glean.translations.requestCount[requestTarget ?? "full_page"].add(1);
     Glean.translations.translationRequest.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       from_language: fromLanguage,
@@ -127,7 +128,7 @@ export class TranslationsTelemetry {
       auto_translate: autoTranslate,
       document_language: docLangTag,
       top_preferred_language: topPreferredLanguage,
-      request_target: requestTarget,
+      request_target: requestTarget ?? "full_page",
       source_text_code_units: sourceTextCodeUnits,
       source_text_word_count: sourceTextWordCount,
     });

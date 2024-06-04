@@ -2133,7 +2133,7 @@ export class TranslationsParent extends JSWindowActorParent {
         toLanguage,
         topPreferredLanguage,
         autoTranslate: reportAsAutoTranslate,
-        requestTarget: "full-page",
+        requestTarget: "full_page",
       });
 
       this.sendAsyncMessage(
