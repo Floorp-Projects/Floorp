@@ -3273,7 +3273,6 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
       }
 
       case StyleTextAlign::Start:
-      case StyleTextAlign::Char:
         // Default alignment is to start edge so do nothing, except to apply
         // any "reverse-hang" amount resulting from reversed-direction trailing
         // space.

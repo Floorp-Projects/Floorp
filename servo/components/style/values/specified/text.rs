@@ -404,9 +404,6 @@ pub enum TextAlignKeyword {
     Right,
     Center,
     Justify,
-    #[css(skip)]
-    #[cfg(feature = "gecko")]
-    Char,
     End,
     #[parse(aliases = "-webkit-center")]
     MozCenter,

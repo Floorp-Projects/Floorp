@@ -1222,9 +1222,11 @@ bool nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
 //----------------------------------------
 
 static const nsAttrValue::EnumTable kTableHAlignTable[] = {
-    {"left", StyleTextAlign::Left},       {"right", StyleTextAlign::Right},
-    {"center", StyleTextAlign::Center},   {"char", StyleTextAlign::Char},
-    {"justify", StyleTextAlign::Justify}, {nullptr, 0}};
+    {"left", StyleTextAlign::Left},
+    {"right", StyleTextAlign::Right},
+    {"center", StyleTextAlign::Center},
+    {"justify", StyleTextAlign::Justify},
+    {nullptr, 0}};
 
 bool nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                                  nsAttrValue& aResult) {
@@ -1238,7 +1240,6 @@ static const nsAttrValue::EnumTable kTableCellHAlignTable[] = {
     {"left", StyleTextAlign::MozLeft},
     {"right", StyleTextAlign::MozRight},
     {"center", StyleTextAlign::MozCenter},
-    {"char", StyleTextAlign::Char},
     {"justify", StyleTextAlign::Justify},
     {"middle", StyleTextAlign::MozCenter},
     {"absmiddle", StyleTextAlign::Center},
