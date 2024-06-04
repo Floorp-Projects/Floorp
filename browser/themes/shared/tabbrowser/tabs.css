@@ -731,6 +731,12 @@
   pointer-events: none;
 }
 
+.dragfeedback-tab {
+  appearance: none;
+  opacity: 0.65;
+  -moz-window-shadow: none;
+}
+
 /* Drag space */
 
 .titlebar-spacer[type="pre-tabs"],

@@ -696,12 +696,6 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   white-space: pre-line;
 }
 
-.dragfeedback-tab {
-  appearance: none;
-  opacity: 0.65;
-  -moz-window-shadow: none;
-}
-
 /* Page action buttons */
 .pageAction-panel-button > .toolbarbutton-icon,
 .urlbar-page-action {
