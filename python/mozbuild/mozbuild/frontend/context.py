@@ -484,7 +484,7 @@ class LinkFlags(BaseCompileFlags):
         if all(
             [
                 self._context.config.substs.get("OS_ARCH") == "WINNT",
-                not self._context.config.substs.get("GNU_CC"),
+                self._context.config.substs.get("CC_TYPE") == "clang-cl",
                 not self._context.config.substs.get("MOZ_DEBUG"),
             ]
         ):

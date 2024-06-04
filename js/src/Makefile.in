@@ -79,10 +79,10 @@ CFLAGS += $(MOZ_ZLIB_CFLAGS)
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(TARGET_CPU),sparc)
 
-ifdef GNU_CC
+ifneq ($(CC_TYPE),clang-cl)
 CFLAGS   += -mcpu=v9
 CXXFLAGS += -mcpu=v9
-endif # GNU_CC
+endif # !clang-cl
 
 endif
 endif

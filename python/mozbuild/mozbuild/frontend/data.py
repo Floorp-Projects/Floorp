@@ -870,10 +870,10 @@ class SharedLibrary(Library):
                     + self.symbols_file
                 )
             elif os_target == "WINNT":
-                if context.config.substs.get("GNU_CC"):
-                    self.symbols_link_arg = self.symbols_file
-                else:
+                if context.config.substs.get("CC_TYPE") == "clang-cl":
                     self.symbols_link_arg = "-DEF:" + self.symbols_file
+                else:
+                    self.symbols_link_arg = self.symbols_file
             elif context.config.substs.get("GCC_USE_GNU_LD"):
                 self.symbols_link_arg = "-Wl,--version-script," + self.symbols_file
 
