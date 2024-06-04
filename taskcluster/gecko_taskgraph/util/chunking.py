@@ -35,7 +35,7 @@ WPT_SUBSUITES = {
 }
 
 
-def guess_mozinfo_from_task(task, repo="", env={}):
+def guess_mozinfo_from_task(task, repo=""):
     """Attempt to build a mozinfo dict from a task definition.
 
     This won't be perfect and many values used in the manifests will be missing. But
@@ -136,8 +136,6 @@ def guess_mozinfo_from_task(task, repo="", env={}):
             info[tag] = True
         else:
             info[tag] = False
-
-    info["tag"] = env.get("MOZHARNESS_TEST_TAG", "")
     return info
 
 
@@ -270,12 +268,9 @@ class DefaultLoader(BaseManifestLoader):
 
         manifests = {chunk_by_runtime.get_manifest(t) for t in tests}
 
-        filters = []
+        filters = None
         if mozinfo["condprof"]:
-            filters.extend([tags(["condprof"])])
-
-        if mozinfo["tag"]:
-            filters.extend([tags([mozinfo["tag"]])])
+            filters = [tags(["condprof"])]
 
         # Compute  the active tests.
         m = TestManifest()
