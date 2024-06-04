@@ -1522,10 +1522,10 @@ class nsLayoutUtils {
    */
   static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
                                          const LengthPercentage& aCoord) {
-    NS_ASSERTION(
-        aPercentBasis != NS_UNCONSTRAINEDSIZE,
-        "have unconstrained width or height; this should only result from very "
-        "large sizes, not attempts at intrinsic size calculation");
+    NS_ASSERTION(aPercentBasis != NS_UNCONSTRAINEDSIZE || !aCoord.HasPercent(),
+                 "Have unconstrained percentage basis when percentage "
+                 "resolution needed; this should only result from very "
+                 "large sizes, not attempts at intrinsic size calculation");
     return aCoord.Resolve(aPercentBasis);
   }
   static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
@@ -1535,9 +1535,6 @@ class nsLayoutUtils {
     }
     return ComputeCBDependentValue(aPercentBasis, aCoord.AsLengthPercentage());
   }
-
-  static nscoord ComputeBSizeDependentValue(nscoord aContainingBlockBSize,
-                                            const LengthPercentageOrAuto&);
 
   static nscoord ComputeBSizeValue(nscoord aContainingBlockBSize,
                                    nscoord aContentEdgeToBoxSizingBoxEdge,
