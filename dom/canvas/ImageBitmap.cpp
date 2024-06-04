@@ -288,7 +288,9 @@ static already_AddRefed<DataSourceSurface> CropAndCopyDataSourceSurface(
  */
 static already_AddRefed<DataSourceSurface> ScaleDataSourceSurface(
     DataSourceSurface* aSurface, const ImageBitmapOptions& aOptions) {
-  MOZ_ASSERT(aSurface);
+  if (NS_WARN_IF(!aSurface)) {
+    return nullptr;
+  }
 
   const SurfaceFormat format = aSurface->GetFormat();
   const int bytesPerPixel = BytesPerPixel(format);
