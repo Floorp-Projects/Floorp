@@ -73,7 +73,7 @@ add_setup(async function test_setup() {
     set: [
       [
         "extensions.abuseReport.amoFormURL",
-        "https://example.org/%LOCALE%/%APP%/feedback/addon/%addonID%/",
+        "https://example.org/%LOCALE%/firefox/feedback/addon/%addonID%/",
       ],
     ],
   });
