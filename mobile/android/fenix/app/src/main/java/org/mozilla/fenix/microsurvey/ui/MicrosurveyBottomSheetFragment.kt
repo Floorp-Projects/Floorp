@@ -33,8 +33,8 @@ class MicrosurveyBottomSheetFragment : BottomSheetDialogFragment() {
                 val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
                 val behavior = BottomSheetBehavior.from(bottomSheet)
-                behavior.peekHeight = resources.displayMetrics.heightPixels
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior.setPeekHeightToHalfScreenHeight()
+                behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
             }
         }
 
@@ -62,5 +62,9 @@ class MicrosurveyBottomSheetFragment : BottomSheetDialogFragment() {
                 )
             }
         }
+    }
+
+    private fun BottomSheetBehavior<View>.setPeekHeightToHalfScreenHeight() {
+        peekHeight = resources.displayMetrics.heightPixels / 2
     }
 }

@@ -56,7 +56,6 @@ fun MicrosurveyBottomSheet(
     ) {
         Column(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
                 .padding(
                     vertical = 8.dp,
                     horizontal = 16.dp,
@@ -77,26 +76,28 @@ fun MicrosurveyBottomSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (isSubmitted) {
-                MicrosurveyCompleted()
-            } else {
-                MicroSurveyContent(
-                    question = question,
-                    icon = icon,
-                    answers = answers,
-                    selectedAnswer = selectedAnswer,
-                    onSelectionChange = { selectedAnswer = it },
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                if (isSubmitted) {
+                    MicrosurveyCompleted()
+                } else {
+                    MicroSurveyContent(
+                        question = question,
+                        icon = icon,
+                        answers = answers,
+                        selectedAnswer = selectedAnswer,
+                        onSelectionChange = { selectedAnswer = it },
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                MicroSurveyFooter(
+                    isSubmitted = isSubmitted,
+                    isContentAnswerSelected = selectedAnswer != null,
+                    onLinkClick = {}, // todo add privacy policy link and open new tab FXDROID-1876.
+                    onButtonClick = { isSubmitted = true },
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            MicroSurveyFooter(
-                isSubmitted = isSubmitted,
-                isContentAnswerSelected = selectedAnswer != null,
-                onLinkClick = {}, // todo add privacy policy link and open new tab FXDROID-1876.
-                onButtonClick = { isSubmitted = true },
-            )
         }
     }
 }
