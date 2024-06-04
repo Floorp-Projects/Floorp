@@ -119,8 +119,10 @@ support-files = [
 ["test_engine_old_selector_application.js"]
 
 ["test_engine_old_selector_application_distribution.js"]
+skip-if = ["true"] # Will be permanently removed as part of bug 1870686
 
 ["test_engine_old_selector_application_name.js"]
+skip-if = ["true"] # Will be permanently removed as part of bug 1870686
 
 ["test_engine_old_selector_order.js"]
 
@@ -181,6 +183,7 @@ tags = "remotesettings searchmain"
 
 ["test_missing_engine.js"]
 prefs = ["browser.search.newSearchConfig.enabled=false"]
+skip-if = ["true"] # Will be permanently removed as part of bug 1870686
 
 ["test_nodb_pluschanges.js"]
 
@@ -268,7 +271,7 @@ support-files = [
 
 ["test_search_config_v2_nimbus.js"]
 prefs = ["browser.search.newSearchConfig.enabled=false"]
-skip-if = ["appname == 'thunderbird'"] # Test relies on normandy.
+skip-if = ["true"] # Will be permanently removed as part of bug 1870686
 
 ["test_selectedEngine.js"]
 

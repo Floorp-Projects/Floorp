@@ -111,6 +111,10 @@ class LoadListener {
 }
 
 export var SearchUtils = {
+  // Permanently enable the new search configuration until we remove the old
+  // code as part of bug 1870686.
+  newSearchConfigEnabled: true,
+
   BROWSER_SEARCH_PREF,
 
   /**
@@ -430,13 +434,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   BROWSER_SEARCH_PREF + "log",
   false
 );
-
-ChromeUtils.defineLazyGetter(SearchUtils, "newSearchConfigEnabled", () => {
-  return Services.prefs.getBoolPref(
-    "browser.search.newSearchConfig.enabled",
-    false
-  );
-});
 
 // Can't use defineLazyPreferenceGetter because we want the value
 // from the default branch
