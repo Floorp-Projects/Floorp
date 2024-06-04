@@ -33,6 +33,12 @@
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/widget/ScreenManager.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/Document.h"
+#include "nsPIDOMWindow.h"
+#include "nsIAppWindow.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIBaseWindow.h"
 
 #include "gfxPlatformFontList.h"
 #include "prsystem.h"
@@ -171,7 +177,38 @@ void PopulateScreenProperties() {
   glean::characteristics::screen_height.Set(rect.Height());
   glean::characteristics::screen_width.Set(rect.Width());
 
+  nsCOMPtr<nsPIDOMWindowInner> innerWindow =
+      do_QueryInterface(dom::GetEntryGlobal());
+
+  double outerHeight, outerWidth;
+  innerWindow->GetInnerHeight(&outerHeight);
+
+  innerWindow->GetInnerWidth(&outerWidth);
+  glean::characteristics::outer_height.Set(static_cast<int64_t>(outerHeight));
+  glean::characteristics::outer_width.Set(static_cast<int64_t>(outerWidth));
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  innerWindow->GetDocShell()->GetTreeOwner(getter_AddRefs(treeOwner));
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
+
+  LayoutDeviceIntSize contentSize;
+  treeOwner->GetPrimaryContentSize(&contentSize.width, &contentSize.height);
+
+  CSSToLayoutDeviceScale cssToDevScale =
+      treeOwnerAsWin->UnscaledDevicePixelsPerCSSPixel();
+  CSSIntSize contentSizeCSS = RoundedToInt(contentSize / cssToDevScale);
+  glean::characteristics::inner_height.Set(contentSizeCSS.height);
+  glean::characteristics::inner_width.Set(contentSizeCSS.width);
+
   glean::characteristics::video_dynamic_range.Set(screen->GetIsHDR());
+
+  glean::characteristics::posx.Set(rect.X());
+  glean::characteristics::posy.Set(rect.Y());
+
+  nsCOMPtr<nsIWidget> mainWidget;
+  treeOwnerAsWin->GetMainWidget(getter_AddRefs(mainWidget));
+  nsSizeMode sizeMode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
+  glean::characteristics::size_mode.Set(sizeMode);
 
   mozilla::glean::characteristics::screen_orientation.Set(
       (int)screen->GetOrientationType());
