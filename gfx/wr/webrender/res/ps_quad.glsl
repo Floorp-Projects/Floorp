@@ -37,9 +37,13 @@
 #include shared,rect,transform,render_task,gpu_buffer
 
 flat varying mediump vec4 v_color;
+// z: is_mask
 // w: has edge flags
-// x,y,z are avaible for patterns to use.
+// x,y are avaible for patterns to use.
 flat varying lowp ivec4 v_flags;
+#define v_flags_is_mask v_flags.z
+#define v_flags_has_edge_mask v_flags.w
+
 
 #ifndef SWGL_ANTIALIAS
 varying highp vec2 vLocalPos;
@@ -63,7 +67,7 @@ varying highp vec2 vLocalPos;
 #define QF_APPLY_DEVICE_CLIP    2
 #define QF_IGNORE_DEVICE_SCALE  4
 #define QF_USE_AA_SEGMENTS      8
-#define QF_SAMPLE_AS_MASK       16
+#define QF_IS_MASK              16
 
 #define INVALID_SEGMENT_INDEX   0xff
 
@@ -363,15 +367,22 @@ void antialiasing_vertex(PrimitiveInfo prim) {
     vLocalPos = prim.local_pos;
 
     if (prim.edge_flags == 0) {
-        v_flags.w = 0;
+        v_flags_has_edge_mask = 0;
     } else {
-        v_flags.w = 1;
+        v_flags_has_edge_mask = 1;
     }
 #endif
 }
 
 void main() {
     PrimitiveInfo prim = quad_primive_info();
+
+    if ((prim.quad_flags & QF_IS_MASK) != 0) {
+        v_flags_is_mask = 1;
+    } else {
+        v_flags_is_mask = 0;
+    }
+
     antialiasing_vertex(prim);
     pattern_vertex(prim);
 }
@@ -383,7 +394,7 @@ vec4 pattern_fragment(vec4 base_color);
 float antialiasing_fragment() {
     float alpha = 1.0;
 #ifndef SWGL_ANTIALIAS
-    if (v_flags.w != 0) {
+    if (v_flags_has_edge_mask != 0) {
         alpha = init_transform_fs(vLocalPos);
     }
 #endif
@@ -393,7 +404,13 @@ float antialiasing_fragment() {
 void main() {
     vec4 base_color = v_color;
     base_color *= antialiasing_fragment();
-    oFragColor = pattern_fragment(base_color);
+    vec4 output_color = pattern_fragment(base_color);
+
+    if (v_flags_is_mask != 0) {
+        output_color = output_color.rrrr;
+    }
+
+    oFragColor = output_color;
 }
 
 #endif

@@ -1220,7 +1220,7 @@ fn build_mask_tasks(
                 );
 
                 let clip_needs_scissor_rect = !is_same_coord_system;
-                let mut quad_flags = QuadFlags::SAMPLE_AS_MASK;
+                let mut quad_flags = QuadFlags::IS_MASK;
 
                 if is_same_coord_system {
                     quad_flags |= QuadFlags::APPLY_RENDER_TASK_CLIP;

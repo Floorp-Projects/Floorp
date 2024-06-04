@@ -7,7 +7,6 @@
 #include ps_quad,sample_color0
 
 #define v_flags_textured v_flags.x
-#define v_flags_sample_as_mask v_flags.y
 
 #ifdef WR_VERTEX_SHADER
 
@@ -24,12 +23,6 @@ void pattern_vertex(PrimitiveInfo info) {
         // Solid color
         v_flags_textured = 0;
     }
-
-    if ((info.quad_flags & QF_SAMPLE_AS_MASK) != 0) {
-        v_flags_sample_as_mask = 1;
-    } else {
-        v_flags_sample_as_mask = 0;
-    }
 }
 
 #endif
@@ -39,9 +32,6 @@ void pattern_vertex(PrimitiveInfo info) {
 vec4 pattern_fragment(vec4 color) {
     if (v_flags_textured != 0) {
         vec4 texel = fs_sample_color0();
-        if (v_flags_sample_as_mask != 0) {
-            texel = texel.rrrr;
-        }
         color *= texel;
     }
 
@@ -51,7 +41,7 @@ vec4 pattern_fragment(vec4 color) {
 #if defined(SWGL_DRAW_SPAN)
 void swgl_drawSpanRGBA8() {
     if (v_flags_textured != 0) {
-        if (v_flags_sample_as_mask != 0) {
+        if (v_flags_is_mask != 0) {
             // Fall back to fragment shader as we don't specialize for mask yet. Perhaps
             // we can use an existing swgl commit or add a new one though?
         } else {
