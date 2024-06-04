@@ -189,6 +189,7 @@ toolkit/components/normandy/vendor/
 toolkit/components/passwordmgr/PasswordRulesParser.sys.mjs
 toolkit/components/protobuf/
 toolkit/components/reader/readability/
+toolkit/components/resistfingerprinting/content/gl-matrix.js
 toolkit/components/translation/cld2/
 toolkit/components/translations/bergamot-translator/thirdparty
 toolkit/components/translations/bergamot-translator/bergamot-translator.js

@@ -1,0 +1,20 @@
+schema: 1
+
+bugzilla:
+  product: "Core"
+  component: "Privacy: Anti-Tracking"
+
+origin:
+  name: "gl-matrix"
+  description: "High performance matrix and vector operations"
+
+  url: "https://github.com/toji/gl-matrix/tree/master"
+  license: "MIT"
+  license-file: "gl-matrix.LICENSE"
+
+  release: 2.7.0
+  revision: b836df92c5a959ebf766b53d50148123d0844db4
+
+  notes: >
+    This library is not exposed to attacker input and indeed only given fixed input from usercharacteristics.js
+    so although it is out of date, this is not a concern.

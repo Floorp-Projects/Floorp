@@ -196,7 +196,31 @@
           </tr>
         </table>
       </div>
+      <div>
+        <h3>WebGL Canvas</h3>
+        <canvas
+          class="testcanvas"
+          width="250"
+          height="250"
+          id="glcanvas"
+        ></canvas>
+        <table>
+          <tr>
+            <td>ImageData:</td>
+            <td>
+              <input
+                type="text"
+                name="glcanvasdata"
+                id="glcanvasdata"
+                readonly
+              />
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
+
+    <script src="chrome://global/content/usercharacteristics/gl-matrix.js"></script>
     <script src="chrome://global/content/usercharacteristics/usercharacteristics.js"></script>
   </body>
 </html>
