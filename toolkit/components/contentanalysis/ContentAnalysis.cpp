@@ -881,7 +881,7 @@ ContentAnalysis::UrlFilterResult ContentAnalysis::FilterByUrlLists(
   std::string url = urlString.BeginReading();
   size_t count = 0;
   for (const auto& denyFilter : mDenyUrlList) {
-    if (std::regex_search(url, denyFilter)) {
+    if (std::regex_match(url, denyFilter)) {
       LOGD("Denying CA request : Deny filter %zu matched url %s", count,
            url.c_str());
       return UrlFilterResult::eDeny;
@@ -921,7 +921,7 @@ ContentAnalysis::UrlFilterResult ContentAnalysis::FilterByUrlLists(
     std::string url = NS_ConvertUTF16toUTF8(nsUrl).get();
     count = 0;
     for (auto& denyFilter : mDenyUrlList) {
-      if (std::regex_search(url, denyFilter)) {
+      if (std::regex_match(url, denyFilter)) {
         LOGD(
             "Denying CA request : Deny filter %zu matched download resource "
             "at url %s",
@@ -934,7 +934,7 @@ ContentAnalysis::UrlFilterResult ContentAnalysis::FilterByUrlLists(
     count = 0;
     bool removed = false;
     for (auto& allowFilter : mAllowUrlList) {
-      if (std::regex_search(url, allowFilter)) {
+      if (std::regex_match(url, allowFilter)) {
         LOGD(
             "CA request : Allow filter %zu matched download resource "
             "at url %s",
