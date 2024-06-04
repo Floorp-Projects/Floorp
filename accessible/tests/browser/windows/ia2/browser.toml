@@ -9,3 +9,5 @@ support-files = ["head.js"]
 ["browser_osPicker.js"]
 
 ["browser_role.js"]
+
+["browser_text.js"]

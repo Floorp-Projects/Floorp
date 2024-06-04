@@ -434,7 +434,7 @@ AccessibleTextBoundary ia2AccessibleText::GetGeckoTextBoundary(
     enum IA2TextBoundaryType aBoundaryType) {
   switch (aBoundaryType) {
     case IA2_TEXT_BOUNDARY_CHAR:
-      return nsIAccessibleText::BOUNDARY_CHAR;
+      return nsIAccessibleText::BOUNDARY_CLUSTER;
     case IA2_TEXT_BOUNDARY_WORD:
       return nsIAccessibleText::BOUNDARY_WORD_START;
     case IA2_TEXT_BOUNDARY_LINE:
