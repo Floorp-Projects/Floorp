@@ -1456,12 +1456,13 @@ impl<'a> SceneBuilder<'a> {
 
                 let spatial_node_index = self.get_space(info.spatial_id);
                 let current_offset = self.current_external_scroll_offset(spatial_node_index);
-                let unsnapped_rect = info.rect.translate(current_offset);
 
-                let rect = self.snap_rect(
-                    &unsnapped_rect,
+                let mut rect = self.snap_rect(
+                    &info.rect,
                     spatial_node_index,
                 );
+
+                rect = rect.translate(current_offset);
 
                 let layout = LayoutPrimitiveInfo {
                     rect,
