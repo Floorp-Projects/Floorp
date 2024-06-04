@@ -2,7 +2,7 @@
 
 const example_base =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  "http://example.com/browser/browser/components/tabbrowser/test/tabs/";
+  "http://example.com/browser/browser/components/tabbrowser/test/browser/tabs/";
 
 add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   let url = example_base + "test_bug1358314.html";

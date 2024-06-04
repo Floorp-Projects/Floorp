@@ -7,7 +7,7 @@
 // The hostname for the test URIs.
 const TEST_HOSTNAME = "https://example.com";
 const DUMMY_PAGE_PATH =
-  "/browser/components/tabbrowser/test/tabs/dummy_page.html";
+  "/browser/components/tabbrowser/test/browser/tabs/dummy_page.html";
 
 add_task(async function tab_manager_visibility_preference_on() {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", true);

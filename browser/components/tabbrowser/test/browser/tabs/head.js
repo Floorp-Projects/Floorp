@@ -50,7 +50,7 @@ async function addTabTo(
 
 async function addMediaTab() {
   const PAGE =
-    "https://example.com/browser/browser/components/tabbrowser/test/tabs/file_mediaPlayback.html";
+    "https://example.com/browser/browser/components/tabbrowser/test/browser/tabs/file_mediaPlayback.html";
   const tab = BrowserTestUtils.addTab(gBrowser, PAGE, { skipAnimation: true });
   const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
