@@ -248,6 +248,9 @@ get_sof(j_decompress_ptr cinfo, boolean is_prog, boolean is_lossless,
   jpeg_component_info *compptr;
   INPUT_VARS(cinfo);
 
+  if (cinfo->marker->saw_SOF)
+    ERREXIT(cinfo, JERR_SOF_DUPLICATE);
+
   cinfo->progressive_mode = is_prog;
   cinfo->master->lossless = is_lossless;
   cinfo->arith_code = is_arith;
@@ -264,9 +267,6 @@ get_sof(j_decompress_ptr cinfo, boolean is_prog, boolean is_lossless,
   TRACEMS4(cinfo, 1, JTRC_SOF, cinfo->unread_marker,
            (int)cinfo->image_width, (int)cinfo->image_height,
            cinfo->num_components);
-
-  if (cinfo->marker->saw_SOF)
-    ERREXIT(cinfo, JERR_SOF_DUPLICATE);
 
   /* We don't support files in which the image height is initially specified */
   /* as 0 and is later redefined by DNL.  As long as we have to check that,  */
