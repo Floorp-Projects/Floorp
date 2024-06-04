@@ -48,10 +48,13 @@ namespace mozilla::dom {
 
 class Credential;
 
+enum class WebAuthnTransactionType { Create, Get };
+
 class WebAuthnTransaction {
  public:
-  explicit WebAuthnTransaction(const RefPtr<Promise>& aPromise)
-      : mPromise(aPromise), mId(NextId()) {
+  explicit WebAuthnTransaction(const RefPtr<Promise>& aPromise,
+                               WebAuthnTransactionType aType)
+      : mPromise(aPromise), mId(NextId()), mType(aType) {
     MOZ_ASSERT(mId > 0);
   }
 
@@ -60,6 +63,8 @@ class WebAuthnTransaction {
 
   // Unique transaction id.
   uint64_t mId;
+
+  WebAuthnTransactionType mType;
 
  private:
   // Generates a probabilistically unique ID for the new transaction. IDs are 53
@@ -124,16 +129,13 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
     RejectTransaction(aReason);
   }
 
+  // Resolve the promise with the given credential.
+  void ResolveTransaction(const RefPtr<PublicKeyCredential>& aCredential);
+
   // Reject the promise with the given reason (an nsresult or JS::Value), and
   // clear the transaction.
   template <typename T>
-  void RejectTransaction(const T& aReason) {
-    if (!NS_WARN_IF(mTransaction.isNothing())) {
-      mTransaction.ref().mPromise->MaybeReject(aReason);
-    }
-
-    ClearTransaction();
-  }
+  void RejectTransaction(const T& aReason);
 
   // Send a Cancel message to the parent.
   void CancelParent();

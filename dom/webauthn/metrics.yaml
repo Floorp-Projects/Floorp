@@ -1,0 +1,113 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: DOM: Web Authentication'
+
+webauthn_create:
+  success:
+    type: counter
+    description:
+      The total number of successful calls to navigator.credentials.create.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
+  failure:
+    type: counter
+    description:
+      The total number of failed calls to navigator.credentials.create.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
+  authenticator_attachment:
+    type: labeled_counter
+    description:
+      The number of successfully created credentials by authenticator attachment modality.
+    labels:
+      - cross-platform
+      - platform
+      - unknown
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
+  passkey:
+    type: counter
+    description:
+      The number of client-side discoverable credentials (passkeys) created.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
+
+webauthn_get:
+  success:
+    type: counter
+    description:
+      The total number of successful calls to navigator.credentials.get.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
+  failure:
+    type: counter
+    description:
+      The total number of failed calls to navigator.credentials.get.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
+  authenticator_attachment:
+    type: labeled_counter
+    description:
+      The number of successfully asserted credentials by authenticator attachment modality.
+    labels:
+      - cross-platform
+      - platform
+      - unknown
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900133
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
