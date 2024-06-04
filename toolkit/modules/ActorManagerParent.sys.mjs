@@ -370,6 +370,7 @@ let JSWINDOWACTORS = {
       esModuleURI: "resource://gre/modules/LoginManagerChild.sys.mjs",
       events: {
         "form-submission-detected": { createActor: false },
+        "before-form-submission": { createActor: false },
         DOMFormHasPassword: {},
         DOMFormHasPossibleUsername: {},
         DOMInputPasswordAdded: {},

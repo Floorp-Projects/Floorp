@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * The FormHandler actor pair implements the logic for detecting and
- * notifying of form submissions. Currently the components FormAutofill
- * and LoginManager are listening for the "form-submission-detected"
- * event that is dispatched by the FormHandlerChild.
+ * The FormHandler actor pair implements the logic of detecting
+ * form submissions and notifies of a form submission by
+ * dispatching the event "form-submission-detected"
  */
 
 export const FORM_SUBMISSION_REASON = {
@@ -14,6 +13,7 @@ export const FORM_SUBMISSION_REASON = {
   FORM_REMOVAL_AFTER_FETCH: "form-removal-after-fetch",
   IFRAME_PAGEHIDE: "iframe-pagehide",
   PAGE_NAVIGATION: "page-navigation",
+  PASSWORD_REMOVAL_AFTER_FETCH: "password-removal-after-fetch",
 };
 
 export class FormHandlerChild extends JSWindowActorChild {
@@ -32,6 +32,12 @@ export class FormHandlerChild extends JSWindowActorChild {
    */
   #hasRegisteredFormSubmissionInterest = false;
 
+  /**
+   * Tracks the actors that are interested in form or password field removals from DOM
+   * If this set is empty, FormHandlerChild can unregister the form removal event listeners
+   */
+  #actorsListeningForFormRemoval = new Set();
+
   handleEvent(event) {
     if (!event.isTrusted) {
       return;
@@ -42,9 +48,19 @@ export class FormHandlerChild extends JSWindowActorChild {
     }
 
     switch (event.type) {
+      case "DOMDocFetchSuccess":
+        this.processDOMDocFetchSuccessEvent();
+        break;
       case "DOMFormBeforeSubmit":
         this.processDOMFormBeforeSubmitEvent(event);
         break;
+      case "DOMFormRemoved":
+        this.processDOMFormRemovedEvent(event);
+        break;
+      case "DOMInputPasswordRemoved": {
+        this.processDOMInputPasswordRemovedEvent(event);
+        break;
+      }
       default:
         throw new Error("Unexpected event type");
     }
@@ -78,8 +94,60 @@ export class FormHandlerChild extends JSWindowActorChild {
     this.#dispatchFormSubmissionEvent(form, formSubmissionReason);
   }
 
-  // handle form-removal-after-fetch
-  processFormRemovalAfterFetch(_params) {}
+  /**
+   * Process the DOMDocFetchSuccess event that is dispatched
+   * after a successfull xhr/fetch request and start listening for
+   * the events DOMFormRemoved and DOMInputPasswordRemoved
+   */
+  processDOMDocFetchSuccessEvent() {
+    this.document.setNotifyFormOrPasswordRemoved(true);
+    this.docShell.chromeEventHandler.addEventListener(
+      "DOMFormRemoved",
+      this,
+      true
+    );
+    this.docShell.chromeEventHandler.addEventListener(
+      "DOMInputPasswordRemoved",
+      this,
+      true
+    );
+
+    this.document.setNotifyFetchSuccess(false);
+    this.docShell.chromeEventHandler.removeEventListener(
+      "DOMDocFetchSuccess",
+      this
+    );
+
+    this.#dispatchPrepareFormSubmissionEvent();
+  }
+
+  /**
+   * Process the DOMFormRemoved event that is dispatched
+   * after a form was removed from the DOM.
+   *
+   * @param {Event} event DOMFormRemoved
+   */
+  processDOMFormRemovedEvent(event) {
+    const form = event.target;
+    const formSubmissionReason =
+      FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH;
+
+    this.#dispatchFormSubmissionEvent(form, formSubmissionReason);
+  }
+
+  /**
+   * Process the DOMInputPasswordRemoved event that is dispatched
+   * after a password input was removed from the DOM.
+   *
+   * @param {Event} event DOMInputPasswordRemoved
+   */
+  processDOMInputPasswordRemovedEvent(event) {
+    const form = event.target;
+    const formSubmissionReason =
+      FORM_SUBMISSION_REASON.PASSWORD_REMOVAL_AFTER_FETCH;
+
+    this.#dispatchFormSubmissionEvent(form, formSubmissionReason);
+  }
 
   /**
    * This or the page of a parent browsing context was navigated,
@@ -115,6 +183,21 @@ export class FormHandlerChild extends JSWindowActorChild {
   }
 
   /**
+   * Dispatch the before-form-submission event after receiving
+   * a DOMDocFetchSuccess event. This gives the listening actors a chance to
+   * save observed fields before they are removed from the DOM.
+   */
+  #dispatchPrepareFormSubmissionEvent() {
+    const parepareFormSubmissionEvent = new CustomEvent(
+      "before-form-submission",
+      {
+        bubbles: true,
+      }
+    );
+    this.document.dispatchEvent(parepareFormSubmissionEvent);
+  }
+
+  /**
    * A page navigation was observed in this window or in the subtree.
    * If somebody in this window is interested in form submissions, process it here.
    * Additionally, inform the parent of the navigation so that all FormHandler
@@ -139,39 +222,96 @@ export class FormHandlerChild extends JSWindowActorChild {
   }
 
   /**
-   * Create the corresponding parent of the current child, because the existence
-   * of the FormHandlerParent is the condition for being notified of a page navigation.
-   * If the current process is not the process root, we create the FormHandlerChild in
-   * the process root. The progress listener is registered after creating the child.
-   * If the current process is in a cross-origin frame, we notify the parent
-   * to register the progress listener also with the top level's process root.
+   * Set up needed listeners in order to detect form submissions after an actor indicated their interest
+   *
+   * 1. Register listeners relevant to form / password input removal heuristic
+   *    - Set up 'DOMDocFetchSuccess' event listener (by calling setNotifyFetchSuccess)
+   *
+   * 2. Set up listeners relevant to page navigation heuristic
+   *    - Create the corresponding parent of the current child, because the existence
+   *      of the FormHandlerParent is the condition for being notified of a page navigation.
+   *      If the current process is not the process root, we create the FormHandlerChild in
+   *      the process root. The progress listener is registered after creating the child.
+   *      If the current process is in a cross-origin frame, we notify the parent
+   *      to register the progress listener also with the top level's process root.
+   *
+   * @param {JSWindowActorChild} interestedActor
+   * @param {boolean} includesFormRemoval
    */
-  registerFormSubmissionInterest() {
+  registerFormSubmissionInterest(
+    interestedActor,
+    { includesFormRemoval = true, includesPageNavigation = true } = {}
+  ) {
+    if (includesFormRemoval) {
+      if (!this.#actorsListeningForFormRemoval.size) {
+        // The list of actors interest in form removals is empty when this is the
+        // first time an actor registered to be notified of form removals or when all actors
+        // processed their forms previously and unregistered their interest again. In both
+        // cases we need to set up the listener for the event 'DOMDocFetchSuccess' here.
+        this.document.setNotifyFetchSuccess(true);
+        this.docShell.chromeEventHandler.addEventListener(
+          "DOMDocFetchSuccess",
+          this,
+          true
+        );
+      }
+      this.#actorsListeningForFormRemoval.add(interestedActor);
+    }
+
     if (this.#hasRegisteredFormSubmissionInterest) {
+      // If an actor in this window has already registered their interest
+      // in form submissions, then the page navigation listeners are already set up
       return;
     }
 
-    // We use the existence of the FormHandlerParent on the parent side
-    // to determine whether to notify the corresponding FormHandleChild
-    // when a page is navigated. So we explicitly create the parent actor
-    // by sending a dummy message here
-    this.sendAsyncMessage("FormHandler:EnsureParentExists");
+    if (includesPageNavigation) {
+      // We use the existence of the FormHandlerParent on the parent side
+      // to determine whether to notify the corresponding FormHandleChild
+      // when a page is navigated. So we explicitly create the parent actor
+      // by sending a dummy message here
+      this.sendAsyncMessage("FormHandler:EnsureParentExists");
 
-    if (!this.manager.isProcessRoot) {
-      // The progress listener is registered after the
-      // FormHandlerChild is created in the process root
-      this.document.ownerGlobal.windowRoot.ownerGlobal.windowGlobalChild.getActor(
-        "FormHandler"
-      );
+      if (!this.manager.isProcessRoot) {
+        // The progress listener is registered after the
+        // FormHandlerChild is created in the process root
+        this.document.ownerGlobal.windowRoot.ownerGlobal.windowGlobalChild.getActor(
+          "FormHandler"
+        );
+      }
+
+      if (!this.manager.sameOriginWithTop) {
+        // If the top level is navigated, that also effects the current cross-origin frame.
+        // So we notify the parent to set up the progress listeners at the top as well.
+        this.sendAsyncMessage("FormHandler:RegisterProgressListenerAtTopLevel");
+      }
+      this.#hasRegisteredFormSubmissionInterest = true;
     }
+  }
 
-    if (!this.manager.sameOriginWithTop) {
-      // If the top level is navigated, that also effects the current cross-origin frame.
-      // So we notify the parent to set up the progress listeners at the top as well.
-      this.sendAsyncMessage("FormHandler:RegisterProgressListenerAtTopLevel");
+  /**
+   * The actors that are interested in form submissions explicitly unregister their interest
+   * in form removals here. This way we can keep track if there is any interested actor left
+   * so that we don't remove the form removal event listeners too early, but we also don't
+   * listen to the form removal events for too long unnecessarily.
+   *
+   * @param {JSWindowActorChild} interestedActor
+   */
+  unregisterFormRemovalInterest(interestedActor) {
+    this.#actorsListeningForFormRemoval.delete(interestedActor);
+
+    if (this.#actorsListeningForFormRemoval.size) {
+      // Other actors are still interested in form removals
+      return;
     }
-
-    this.#hasRegisteredFormSubmissionInterest = true;
+    this.document.setNotifyFormOrPasswordRemoved(false);
+    this.docShell.chromeEventHandler.removeEventListener(
+      "DOMFormRemoved",
+      this
+    );
+    this.docShell.chromeEventHandler.removeEventListener(
+      "DOMInputPasswordRemoved",
+      this
+    );
   }
 
   /**

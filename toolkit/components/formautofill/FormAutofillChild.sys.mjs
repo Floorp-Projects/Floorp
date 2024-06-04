@@ -125,11 +125,12 @@ export class FormAutofillChild extends JSWindowActorChild {
         this._markAsAutofillField(detail.element)
       );
       if (validDetails.length) {
-        if (lazy.FormAutofill.captureOnFormRemoval) {
-          this.registerDOMDocFetchSuccessEventListener();
-        }
-
-        this.manager.getActor("FormHandler").registerFormSubmissionInterest();
+        this.manager
+          .getActor("FormHandler")
+          .registerFormSubmissionInterest(this, {
+            includesFormRemoval: lazy.FormAutofill.captureOnFormRemoval,
+            includesPageNavigation: lazy.FormAutofill.captureOnPageNavigation,
+          });
       }
 
       this._hasPendingTask = false;
@@ -170,56 +171,21 @@ export class FormAutofillChild extends JSWindowActorChild {
   }
 
   /**
-   * After a focusin event and after we identify formautofill fields,
-   * we set up an event listener for the DOMDocFetchSuccess event
+   * We received a form-submission-detected event because
+   * a form was removed from the DOM after a successful
+   * xhr/fetch request
+   *
+   * @param {Event} form form to be submitted
    */
-  registerDOMDocFetchSuccessEventListener() {
-    this.document.setNotifyFetchSuccess(true);
+  onFormRemoval(form) {
+    if (!lazy.FormAutofill.captureOnFormRemoval) {
+      return;
+    }
 
-    // Is removed after a DOMDocFetchSuccess event (bug 1864855)
-    /* eslint-disable mozilla/balanced-listeners */
-    this.docShell.chromeEventHandler.addEventListener(
-      "DOMDocFetchSuccess",
-      this,
-      true
-    );
-  }
-
-  /**
-   * After a DOMDocFetchSuccess event, we register an event listener for the DOMFormRemoved event
-   */
-  registerDOMFormRemovedEventListener() {
-    this.document.setNotifyFormOrPasswordRemoved(true);
-
-    // Is removed after a DOMFormRemoved event (bug 1864855)
-    /* eslint-disable mozilla/balanced-listeners */
-    this.docShell.chromeEventHandler.addEventListener(
-      "DOMFormRemoved",
-      this,
-      true
-    );
-  }
-
-  /**
-   * After a DOMDocFetchSuccess event we remove the DOMDocFetchSuccess event listener
-   */
-  unregisterDOMDocFetchSuccessEventListener() {
-    this.document.setNotifyFetchSuccess(false);
-    this.docShell.chromeEventHandler.removeEventListener(
-      "DOMDocFetchSuccess",
-      this
-    );
-  }
-
-  /**
-   * After a DOMFormRemoved event we remove the DOMFormRemoved event listener
-   */
-  unregisterDOMFormRemovedEventListener() {
-    this.document.setNotifyFormOrPasswordRemoved(false);
-    this.docShell.chromeEventHandler.removeEventListener(
-      "DOMFormRemoved",
-      this
-    );
+    const formSubmissionReason =
+      lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH;
+    this.formSubmitted(form, formSubmissionReason);
+    this.manager.getActor("FormHandler").unregisterFormRemovalInterest(this);
   }
 
   shouldIgnoreFormAutofillEvent(event) {
@@ -246,14 +212,6 @@ export class FormAutofillChild extends JSWindowActorChild {
         if (lazy.FormAutofill.isAutofillEnabled) {
           this.onFocusIn(evt);
         }
-        break;
-      }
-      case "DOMFormRemoved": {
-        this.onDOMFormRemoved(evt);
-        break;
-      }
-      case "DOMDocFetchSuccess": {
-        this.onDOMDocFetchSuccess();
         break;
       }
       case "form-submission-detected": {
@@ -316,36 +274,10 @@ export class FormAutofillChild extends JSWindowActorChild {
       case lazy.FORM_SUBMISSION_REASON.FORM_SUBMIT_EVENT:
         this.formSubmitted(form, reason);
         break;
-      default:
-        throw new Error("Unknown submission reason");
+      case lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH:
+        this.onFormRemoval(form);
+        break;
     }
-  }
-
-  /**
-   * Handle the DOMFormRemoved event.
-   *
-   * Infers a form submission when the form is removed
-   * after a successful fetch or XHR request.
-   *
-   * @param {Event} evt DOMFormRemoved
-   */
-  onDOMFormRemoved(evt) {
-    const formSubmissionReason =
-      lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH;
-
-    this.formSubmitted(evt.target, formSubmissionReason);
-  }
-
-  /**
-   * Handle the DOMDocFetchSuccess event.
-   *
-   * Sets up an event listener for the DOMFormRemoved event
-   * and unregisters the event listener for DOMDocFetchSuccess event.
-   */
-  onDOMDocFetchSuccess() {
-    this.registerDOMFormRemovedEventListener();
-
-    this.unregisterDOMDocFetchSuccessEventListener();
   }
 
   async receiveMessage(message) {
@@ -432,11 +364,6 @@ export class FormAutofillChild extends JSWindowActorChild {
       this.debug("Form element could not map to an existing handler");
       return;
     }
-
-    // Unregister the form submission listeners after handling a form submission
-    this.debug("Unregistering form submission listeners");
-    this.unregisterDOMDocFetchSuccessEventListener();
-    this.unregisterDOMFormRemovedEventListener();
 
     // After a form submit event follows (most likely) a page navigation, so we set this flag
     // to not handle the following one as form submission in order to avoid re-submitting the same form.
