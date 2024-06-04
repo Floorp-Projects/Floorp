@@ -618,6 +618,10 @@ class VarEnvironmentObject : public EnvironmentObject {
 class ModuleEnvironmentObject : public EnvironmentObject {
   static constexpr uint32_t MODULE_SLOT = 1;
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  static constexpr uint32_t DISPOSABLE_OBJECTS_SLOT = 2;
+#endif
+
   static const ObjectOps objectOps_;
   static const JSClassOps classOps_;
 
@@ -626,7 +630,12 @@ class ModuleEnvironmentObject : public EnvironmentObject {
 
   static const JSClass class_;
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  static constexpr uint32_t RESERVED_SLOTS = 3;
+#else
   static constexpr uint32_t RESERVED_SLOTS = 2;
+#endif
+
   static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible,
                                                ObjectFlag::QualifiedVarObj};
 
@@ -654,6 +663,18 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   static ModuleEnvironmentObject* find(JSObject* env);
 
   uint32_t firstSyntheticValueSlot() { return RESERVED_SLOTS; }
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  bool addDisposableObject(JSContext* cx, JS::Handle<JS::Value> val);
+
+  // Used to get the Disposable objects within the
+  // lexical scope, it returns a ListObject* if there
+  // is a non empty list of Disposables, else
+  // UndefinedValue.
+  Value getDisposables();
+
+  void clearDisposables();
+#endif
 
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
