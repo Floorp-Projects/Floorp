@@ -28,6 +28,7 @@ pub struct HttpServer {
     write_state: HashMap<StreamId, HttpStreamState>,
     read_state: HashMap<StreamId, Vec<u8>>,
     is_qns_test: bool,
+    regex: Regex,
 }
 
 impl HttpServer {
@@ -60,11 +61,17 @@ impl HttpServer {
             qinfo!("ECHConfigList: {}", hex(cfg));
         }
 
+        let is_qns_test = args.shared.qns_test.is_some();
         Ok(Self {
             server,
             write_state: HashMap::new(),
             read_state: HashMap::new(),
-            is_qns_test: args.shared.qns_test.is_some(),
+            is_qns_test,
+            regex: if is_qns_test {
+                Regex::new(r"GET +/(\S+)(?:\r)?\n").unwrap()
+            } else {
+                Regex::new(r"GET +/(\d+)(?:\r)?\n").unwrap()
+            },
         })
     }
 
@@ -144,12 +151,7 @@ impl HttpServer {
             return;
         };
 
-        let re = if self.is_qns_test {
-            Regex::new(r"GET +/(\S+)(?:\r)?\n").unwrap()
-        } else {
-            Regex::new(r"GET +/(\d+)(?:\r)?\n").unwrap()
-        };
-        let m = re.captures(msg);
+        let m = self.regex.captures(msg);
         let Some(path) = m.and_then(|m| m.get(1)) else {
             self.save_partial(stream_id, buf, conn);
             return;

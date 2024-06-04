@@ -207,8 +207,8 @@ impl EcnInfo {
         } else if ecn_diff[IpTosEcn::Ect1] > 0 {
             qwarn!("ECN validation failed, ACK counted ECT(1) marks that were never sent");
             self.state = EcnValidationState::Failed;
-        } else {
-            qinfo!("ECN validation succeeded, path is capable",);
+        } else if self.state != EcnValidationState::Capable {
+            qinfo!("ECN validation succeeded, path is capable");
             self.state = EcnValidationState::Capable;
         }
         self.baseline = ack_ecn;
