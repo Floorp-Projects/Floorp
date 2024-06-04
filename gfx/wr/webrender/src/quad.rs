@@ -58,7 +58,7 @@ enum QuadRenderStrategy {
     }
 }
 
-pub fn push_quad(
+pub fn prepare_quad(
     pattern: &Pattern,
     local_rect: &LayoutRect,
     prim_instance_index: PrimitiveInstanceIndex,
