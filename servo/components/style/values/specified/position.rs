@@ -489,6 +489,169 @@ impl PositionAnchor {
     }
 }
 
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[css(bitflags(mixed = "flip-block,flip-inline,flip-start"))]
+#[repr(C)]
+/// https://drafts.csswg.org/css-anchor-position-1/#typedef-position-try-options-try-tactic
+/// <try-tactic>
+pub struct PositionTryOptionsTryTactic(u8);
+bitflags! {
+    impl PositionTryOptionsTryTactic: u8 {
+        /// `flip-block`
+        const FLIP_BLOCK = 1 << 0;
+        /// `flip-inline`
+        const FLIP_INLINE = 1 << 1;
+        /// `flip-start`
+        const FLIP_START = 1 << 2;
+    }
+}
+
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C)]
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-position-try-options
+/// <dashed-ident> || <try-tactic>
+pub struct DashedIdentAndOrTryTactic {
+    /// `<dashed-ident>`
+    pub ident: DashedIdent,
+    /// `<try-tactic>`
+    pub try_tactic: PositionTryOptionsTryTactic,
+}
+
+impl Parse for DashedIdentAndOrTryTactic {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        let mut result = Self {
+            ident: DashedIdent::empty(),
+            try_tactic: PositionTryOptionsTryTactic::empty(),
+        };
+
+        loop {
+            if result.ident.is_empty() {
+                if let Ok(ident) = input.try_parse(|i| DashedIdent::parse(context, i)) {
+                    result.ident = ident;
+                    continue;
+                }
+            }
+            if result.try_tactic.is_empty() {
+                if let Ok(try_tactic) =
+                    input.try_parse(|i| PositionTryOptionsTryTactic::parse(context, i))
+                {
+                    result.try_tactic = try_tactic;
+                    continue;
+                }
+            }
+            break;
+        }
+
+        if result.ident.is_empty() && result.try_tactic.is_empty() {
+            return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+        }
+        return Ok(result);
+    }
+}
+
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-position-try-options
+/// [ [<dashed-ident> || <try-tactic>] | <'inset-area'> ]
+pub enum PositionTryOptionsItem {
+    /// `<dashed-ident> || <try-tactic>`
+    IdentAndOrTactic(DashedIdentAndOrTryTactic),
+    #[parse(parse_fn = "InsetArea::parse_except_none")]
+    /// `<inset-area>`
+    InsetArea(InsetArea),
+}
+
+#[derive(
+    Clone,
+    Debug,
+    Default,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[css(comma)]
+#[repr(C)]
+/// https://drafts.csswg.org/css-anchor-position-1/#position-try-options
+pub struct PositionTryOptions(
+    #[css(iterable, if_empty = "none")]
+    #[ignore_malloc_size_of = "Arc"]
+    pub crate::ArcSlice<PositionTryOptionsItem>,
+);
+
+impl PositionTryOptions {
+    #[inline]
+    /// Return the `none` value.
+    pub fn none() -> Self {
+        Self(Default::default())
+    }
+
+    /// Returns whether this is the `none` value.
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+impl Parse for PositionTryOptions {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        if input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
+            return Ok(Self::none());
+        }
+        // The common case is unlikely to include many alternate positioning
+        // styles, so space for four on the stack should typically be enough.
+        let mut items: SmallVec<[PositionTryOptionsItem; 4]> =
+            smallvec![PositionTryOptionsItem::parse(context, input)?];
+        while input.try_parse(|input| input.expect_comma()).is_ok() {
+            items.push(PositionTryOptionsItem::parse(context, input)?);
+        }
+        Ok(Self(ArcSlice::from_iter(items.drain(..))))
+    }
+}
+
 /// https://drafts.csswg.org/css-anchor-position-1/#position-try-order-property
 #[derive(
     Clone,
@@ -845,19 +1008,29 @@ impl InsetArea {
     pub fn is_none(&self) -> bool {
         self.first.is_none()
     }
-}
 
-impl Parse for InsetArea {
-    fn parse<'i, 't>(
-        _context: &ParserContext,
+    pub fn parse_except_none<'i, 't>(
+        context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
+        Self::parse_internal(context, input, /*allow_none*/ false)
+    }
+
+    fn parse_internal<'i, 't>(
+        _context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+        allow_none: bool,
+    ) -> Result<Self, ParseError<'i>> {
+        let mut location = input.current_source_location();
         let mut first = InsetAreaKeyword::parse(input)?;
         if first.is_none() {
-            return Ok(Self::none());
+            if allow_none {
+                return Ok(Self::none());
+            }
+            return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
         }
 
-        let location = input.current_source_location();
+        location = input.current_source_location();
         let second = input.try_parse(InsetAreaKeyword::parse);
         if let Ok(InsetAreaKeyword::None) = second {
             // `none` is only allowed as a single value
@@ -911,6 +1084,15 @@ impl Parse for InsetArea {
         }
 
         Ok(Self { first, second })
+    }
+}
+
+impl Parse for InsetArea {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        Self::parse_internal(context, input, /*allow_none*/ true)
     }
 }
 

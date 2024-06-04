@@ -1051,6 +1051,7 @@ nsStylePosition::nsStylePosition()
       mMaxHeight(StyleMaxSize::None()),
       mPositionAnchor(StylePositionAnchor::Auto()),
       mPositionVisibility(StylePositionVisibility::ALWAYS),
+      mPositionTryOptions(StylePositionTryOptions()),
       mPositionTryOrder(StylePositionTryOrder::Normal),
       mInsetArea(StyleInsetArea{StyleInsetAreaKeyword::None,
                                 StyleInsetAreaKeyword::None}),
@@ -1102,6 +1103,7 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
       mMaxHeight(aSource.mMaxHeight),
       mPositionAnchor(aSource.mPositionAnchor),
       mPositionVisibility(aSource.mPositionVisibility),
+      mPositionTryOptions(aSource.mPositionTryOptions),
       mPositionTryOrder(aSource.mPositionTryOrder),
       mInsetArea(aSource.mInsetArea),
       mFlexBasis(aSource.mFlexBasis),
@@ -1287,6 +1289,7 @@ nsChangeHint nsStylePosition::CalcDifference(
   }
 
   if (mPositionVisibility != aNewData.mPositionVisibility ||
+      mPositionTryOptions != aNewData.mPositionTryOptions ||
       mPositionTryOrder != aNewData.mPositionTryOrder ||
       mInsetArea != aNewData.mInsetArea) {
     hint |= nsChangeHint_NeutralChange;

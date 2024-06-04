@@ -611,6 +611,16 @@ impl DashedIdent {
         }
         Ok(Self(Atom::from(ident.as_ref())))
     }
+
+    /// Special value for internal use. Useful where we can't use Option<>.
+    pub fn empty() -> Self {
+        Self(atom!(""))
+    }
+
+    /// Check for special internal value.
+    pub fn is_empty(&self) -> bool {
+        self.0 == atom!("")
+    }
 }
 
 impl Parse for DashedIdent {
