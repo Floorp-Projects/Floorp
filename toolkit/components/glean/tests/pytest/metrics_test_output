@@ -371,12 +371,15 @@ pub mod test_nested {
         pub type AnObjectObject = Vec<AnObjectObjectItem>;
 
         #[derive(Debug, Hash, Eq, PartialEq, ::glean::traits::__serde::Serialize, ::glean::traits::__serde::Deserialize)]
+    #[allow(non_snake_case)]
     #[serde(deny_unknown_fields)]
     pub struct AnObjectObjectItem {
           #[serde(skip_serializing_if = "Option::is_none")]
           pub colour: Option<String>,
           #[serde(skip_serializing_if = "Option::is_none")]
           pub diameter: Option<i64>,
+          #[serde(skip_serializing_if = "Option::is_none")]
+          pub CamelCasedParameter: Option<i64>,
     }
 
     #[allow(non_upper_case_globals)]

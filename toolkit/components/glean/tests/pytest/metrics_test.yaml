@@ -430,3 +430,5 @@ test.nested:
             type: string
           diameter:
             type: number
+          CamelCasedParameter:
+            type: number
