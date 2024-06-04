@@ -1335,21 +1335,23 @@ def build_push_addons_payload(config, task, task_def):
         Optional("push"): bool,
         Optional("source-repo"): str,
         Optional("ssh-user"): str,
-        Optional("l10n-bump-info"): {
-            Required("name"): str,
-            Required("path"): str,
-            Required("version-path"): str,
-            Optional("l10n-repo-url"): str,
-            Optional("l10n-repo-target-branch"): str,
-            Optional("ignore-config"): object,
-            Required("platform-configs"): [
-                {
-                    Required("platforms"): [str],
-                    Required("path"): str,
-                    Optional("format"): str,
-                }
-            ],
-        },
+        Optional("l10n-bump-info"): [
+            {
+                Required("name"): str,
+                Required("path"): str,
+                Required("version-path"): str,
+                Optional("l10n-repo-url"): str,
+                Optional("l10n-repo-target-branch"): str,
+                Optional("ignore-config"): object,
+                Required("platform-configs"): [
+                    {
+                        Required("platforms"): [str],
+                        Required("path"): str,
+                        Optional("format"): str,
+                    }
+                ],
+            }
+        ],
         Optional("merge-info"): object,
         Optional("android-l10n-import-info"): {
             Required("from-repo-url"): str,
@@ -1409,17 +1411,26 @@ def build_treescript_payload(config, task, task_def):
         actions.append("version_bump")
 
     if worker.get("l10n-bump-info"):
-        l10n_bump_info = {}
-        for k, v in worker["l10n-bump-info"].items():
-            l10n_bump_info[k.replace("-", "_")] = worker["l10n-bump-info"][k]
-        task_def["payload"]["l10n_bump_info"] = [l10n_bump_info]
-        if (
-            "l10n_repo_url" in l10n_bump_info
-            and "github.com" in l10n_bump_info["l10n_repo_url"]
-        ):
-            actions.append("l10n_bump_github")
-        else:
-            actions.append("l10n_bump")
+        l10n_bump_info = []
+        l10n_repo_urls = set()
+        for lbi in worker["l10n-bump-info"]:
+            new_lbi = {}
+            if "l10n-repo-url" in lbi:
+                l10n_repo_urls.add(lbi["l10n-repo-url"])
+            for k, v in lbi.items():
+                new_lbi[k.replace("-", "_")] = lbi[k]
+            l10n_bump_info.append(new_lbi)
+
+        task_def["payload"]["l10n_bump_info"] = l10n_bump_info
+        if len(l10n_repo_urls) > 1:
+            raise Exception(
+                "Must use the same l10n-repo-url for all files in the same task!"
+            )
+        elif len(l10n_repo_urls) == 1:
+            if "github.com" in l10n_repo_urls.pop():
+                actions.append("l10n_bump_github")
+            else:
+                actions.append("l10n_bump")
 
     if worker.get("merge-info"):
         merge_info = {
