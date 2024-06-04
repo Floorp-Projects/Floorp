@@ -127,7 +127,7 @@ void main(void) {
     uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
     uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
 
-    float in_shadow_rect = init_transform_rough_fs(vLocalPos.xy / vLocalPos.w);
+    float in_shadow_rect = rectangle_aa_rough_fragment(vLocalPos.xy / vLocalPos.w);
 
     float texel = TEX_SAMPLE(sColor0, uv).r;
 
@@ -244,7 +244,7 @@ void swgl_drawSpanR8() {
             uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
             uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
 
-            float in_shadow_rect = init_transform_rough_fs(local_pos);
+            float in_shadow_rect = rectangle_aa_rough_fragment(local_pos);
 
             float texel = TEX_SAMPLE(sColor0, uv).r;
 

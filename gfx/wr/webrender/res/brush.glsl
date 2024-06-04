@@ -151,7 +151,7 @@ void brush_shader_main_vs(
         //           effect. We can tidy this up as we move
         //           more items to be brush shaders.
 #if defined(WR_FEATURE_ALPHA_PASS) && !defined(SWGL_ANTIALIAS)
-        init_transform_vs(vec4(vec2(-1.0e16), vec2(1.0e16)));
+        rectangle_aa_vertex(vec4(vec2(-1.0e16), vec2(1.0e16)));
 #endif
     }
 
@@ -226,7 +226,7 @@ void main(void) {
 
 float antialias_brush() {
 #if (defined(WR_FEATURE_ALPHA_PASS) || defined(WR_FEATURE_ANTIALIASING)) && !defined(SWGL_ANTIALIAS)
-    return init_transform_fs(v_local_pos);
+    return rectangle_aa_fragment(v_local_pos);
 #else
     return 1.0;
 #endif

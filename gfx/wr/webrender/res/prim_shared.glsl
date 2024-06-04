@@ -155,7 +155,7 @@ RectWithEndpoint clip_and_init_antialiasing(RectWithEndpoint segment_rect,
     // vector bitwise-and followed by conversion to bvec4 causes shader
     // compilation crashes on some Adreno devices. See bug 1715746.
     bvec4 clip_edge_mask = bvec4(bool(edge_flags & 1), bool(edge_flags & 2), bool(edge_flags & 4), bool(edge_flags & 8));
-    init_transform_vs(mix(
+    rectangle_aa_vertex(mix(
         vec4(vec2(-1e16), vec2(1e16)),
         vec4(segment_rect.p0, segment_rect.p1),
         clip_edge_mask

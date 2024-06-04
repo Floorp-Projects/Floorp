@@ -395,7 +395,7 @@ float antialiasing_fragment() {
     float alpha = 1.0;
 #ifndef SWGL_ANTIALIAS
     if (v_flags_has_edge_mask != 0) {
-        alpha = init_transform_fs(vLocalPos);
+        alpha = rectangle_aa_fragment(vLocalPos);
     }
 #endif
     return alpha;
