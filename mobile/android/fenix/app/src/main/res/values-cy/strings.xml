@@ -2547,7 +2547,7 @@
     <string name="automatic_translation_header_preference">Dewiswch iaith i reoli dewisiadau ”cyfieithu bob tro“ a ”peidio â chyfieithu“.</string>
 
     <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
-    <string name="automatic_translation_error_warning_text">Methu llwytho ieithoedd. Gwiriwch yn ôl yn nes ymlaen.</string>
+    <string name="automatic_translation_error_warning_text">Methu llwytho ieithoedd. Dewch nôl yn nes ymlaen.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2572,7 +2572,7 @@
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Tynnu %1$s</string>
     <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
-    <string name="never_translate_site_error_warning_text">Methu llwytho gwefannau. Gwiriwch yn ôl yn nes ymlaen.</string>
+    <string name="never_translate_site_error_warning_text">Methu llwytho gwefannau. Dewch nôl yn nes ymlaen.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Dileu %1$s?</string>
@@ -2673,7 +2673,7 @@
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Nifer y tabiau i\'w creu</string>
     <!-- The error message of the text field in the tab creation tool when the text field is empty -->
-    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Mae maes testun yn wag</string>
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Mae\'r maes testun yn wag</string>
     <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
     <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Rhowch gyfanrifau positif yn unig</string>
     <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
@@ -2681,7 +2681,7 @@
     <!-- The error message of the text field in the tab creation tool when the text field is a
         quantity greater than the max tabs. The first parameter is the maximum number of tabs
         that can be generated in one operation.-->
-    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Wedi mynd y tu hwnt i uchafswm nifer y tabiau (%1$s) y gellir eu cynhyrchu mewn un gweithrediad</string>
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Wedi mynd y tu hwnt i uchafswm nifer y tabiau (%1$s) y mae modd eu cynhyrchu mewn un gweithrediad</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Ychwanegu at y tabiau gweithredol</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
