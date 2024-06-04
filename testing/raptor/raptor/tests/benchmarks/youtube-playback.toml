@@ -21,49 +21,21 @@ preferences = [
   "media.block-autoplay-until-in-foreground=false",
 ]
 
-["youtube-playback"]
-alert_on = [
-  "H264.1080p30@1X_dropped_frames",
-  "H264.1080p60@1X_dropped_frames",
-  "H264.1440p30@1X_dropped_frames",
-  "H264.144p15@1X_dropped_frames",
-  "H264.2160p30@1X_dropped_frames",
-  "H264.240p30@1X_dropped_frames",
-  "H264.360p30@1X_dropped_frames",
-  "H264.480p30@1X_dropped_frames",
-  "H264.720p30@1X_dropped_frames",
-  "H264.720p60@1X_dropped_frames",
-  "VP9.1080p30@1X_dropped_frames",
-  "VP9.1080p60@1X_dropped_frames",
-  "VP9.1440p30@1X_dropped_frames",
-  "VP9.1440p60@1X_dropped_frames",
-  "VP9.144p30@1X_dropped_frames",
-  "VP9.2160p30@1X_dropped_frames",
-  "VP9.2160p60@1X_dropped_frames",
-  "VP9.240p30@1X_dropped_frames",
-  "VP9.360p30@1X_dropped_frames",
-  "VP9.480p30@1X_dropped_frames",
-  "VP9.720p30@1X_dropped_frames",
-  "VP9.720p60@1X_dropped_frames",
-]
-apps = "firefox, geckoview, fenix, refbrow, chrome"
-test_url = "http://yttest.prod.mozaws.net/2019/main.html?test_type=playbackperf-test&raptor=true&command=run&exclude=1,2&muted=true"
-
 ["youtube-playback-av1-sfr"]
 apps = "firefox, geckoview, fenix, refbrow, chrome"
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run"
 
 ["youtube-playback-h264-1080p30"]
 apps = "firefox"
 page_cycles = 20
 gather_cpuTime = true
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&exclude=1,2"
 
 ["youtube-playback-h264-1080p60"]
 apps = "firefox"
 page_cycles = 20
 gather_cpuTime = true
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&exclude=1,2"
 
 ["youtube-playback-h264-full-1080p30"]
 apps = "firefox"
@@ -78,7 +50,7 @@ preferences = [
   "full-screen-api.allow-trusted-requests-only=false",
   "full-screen-api.warning.timeout=0",
 ]
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&fullscreen=true&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&fullscreen=true&exclude=1,2"
 
 ["youtube-playback-h264-full-1080p60"]
 apps = "firefox"
@@ -93,11 +65,11 @@ preferences = [
   "full-screen-api.allow-trusted-requests-only=false",
   "full-screen-api.warning.timeout=0",
 ]
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&fullscreen=true&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&fullscreen=true&exclude=1,2"
 
 ["youtube-playback-h264-sfr"]
 apps = "firefox, geckoview, fenix, refbrow, chrome"
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run"
 
 ["youtube-playback-hfr"]
 alert_on = [
@@ -105,19 +77,19 @@ alert_on = [
   "H264720p60fps@1X_dropped_frames",
 ]
 apps = "firefox, geckoview, fenix, refbrow, chrome"
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run"
 
 ["youtube-playback-v9-1080p30"]
 apps = "firefox"
 page_cycles = 20
 gather_cpuTime = true
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&exclude=1,2"
 
 ["youtube-playback-v9-1080p60"]
 apps = "firefox"
 page_cycles = 20
 gather_cpuTime = true
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&exclude=1,2"
 
 ["youtube-playback-v9-full-1080p30"]
 apps = "firefox"
@@ -132,7 +104,7 @@ preferences = [
   "full-screen-api.allow-trusted-requests-only=false",
   "full-screen-api.warning.timeout=0",
 ]
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&fullscreen=true&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&fullscreen=true&exclude=1,2"
 
 ["youtube-playback-v9-full-1080p60"]
 apps = "firefox"
@@ -147,11 +119,11 @@ preferences = [
   "full-screen-api.allow-trusted-requests-only=false",
   "full-screen-api.warning.timeout=0",
 ]
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&fullscreen=true&exclude=1,2"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&fullscreen=true&exclude=1,2"
 
 ["youtube-playback-vp9-sfr"]
 apps = "firefox, geckoview, fenix, refbrow, chrome"
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run"
 
 ["youtube-playback-widevine-h264-sfr"]
 apps = "firefox, geckoview, fenix, refbrow, chrome"
@@ -165,7 +137,7 @@ preferences = [
   "media.gmp-manager.updateEnabled=true",
   "media.eme.require-app-approval=false",
 ]
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-widevine-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run"
 
 ["youtube-playback-widevine-hfr"]
 apps = "firefox, geckoview, fenix, refbrow, chrome"
@@ -179,7 +151,7 @@ preferences = [
   "media.gmp-manager.updateEnabled=true",
   "media.eme.require-app-approval=false",
 ]
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-hfr-test&raptor=true&exclude=1,2&muted=true&command=run"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-widevine-hfr-test&raptor=true&exclude=1,2&muted=true&command=run"
 
 ["youtube-playback-widevine-vp9-sfr"]
 apps = "firefox, geckoview, fenix, refbrow, chrome"
@@ -193,4 +165,4 @@ preferences = [
   "media.gmp-manager.updateEnabled=true",
   "media.eme.require-app-approval=false",
 ]
-test_url = "https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-widevine-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run"
+test_url = "https://prod.youtube-test.prod.webservices.mozgcp.net/main.html?test_type=playbackperf-widevine-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run"
