@@ -63,13 +63,20 @@ add_task(async function test_translations_telemetry_auto_translate() {
     expectedEventCount: 1,
     expectNewFlowId: false,
   });
+  await TestTranslationsTelemetry.assertLabeledCounter(
+    Glean.translations.requestCount,
+    [
+      ["full_page", 1],
+      ["select", 0],
+    ]
+  );
   await TestTranslationsTelemetry.assertEvent(
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
       assertForMostRecentEvent: {
-        request_target: "full-page",
+        request_target: "full_page",
       },
     }
   );

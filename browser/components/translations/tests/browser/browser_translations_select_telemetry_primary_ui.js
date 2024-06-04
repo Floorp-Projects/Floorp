@@ -49,6 +49,13 @@ add_task(
         },
       }
     );
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 0],
+        ["select", 1],
+      ]
+    );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
@@ -79,6 +86,13 @@ add_task(
       downloadHandler: resolveDownloads,
       onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 0],
+        ["select", 2],
+      ]
+    );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
@@ -139,6 +153,13 @@ add_task(
         },
       }
     );
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 0],
+        ["select", 3],
+      ]
+    );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
@@ -162,6 +183,13 @@ add_task(
       downloadHandler: resolveDownloads,
       onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 0],
+        ["select", 4],
+      ]
+    );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
@@ -200,6 +228,13 @@ add_task(
         expectedEventCount: 2,
       }
     );
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 1],
+        ["select", 4],
+      ]
+    );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
@@ -209,7 +244,7 @@ add_task(
           from_language: "es",
           to_language: "fa",
           top_preferred_language: "en",
-          request_target: "full-page",
+          request_target: "full_page",
           auto_translate: false,
         },
       }

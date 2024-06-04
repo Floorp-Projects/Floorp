@@ -107,6 +107,13 @@ add_task(
         reason: "Error: Intentionally rejecting downloads.",
       },
     });
+    await TestTranslationsTelemetry.assertLabeledCounter(
+      Glean.translations.requestCount,
+      [
+        ["full_page", 1],
+        ["select", 0],
+      ]
+    );
     await TestTranslationsTelemetry.assertEvent(
       Glean.translations.translationRequest,
       {
@@ -118,7 +125,7 @@ add_task(
           auto_translate: false,
           document_language: "es",
           top_preferred_language: "en",
-          request_target: "full-page",
+          request_target: "full_page",
         },
       }
     );
@@ -179,6 +186,13 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
       reason: "Error: Intentionally rejecting downloads.",
     },
   });
+  await TestTranslationsTelemetry.assertLabeledCounter(
+    Glean.translations.requestCount,
+    [
+      ["full_page", 1],
+      ["select", 0],
+    ]
+  );
   await TestTranslationsTelemetry.assertEvent(
     Glean.translations.translationRequest,
     {
@@ -190,7 +204,7 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
         auto_translate: true,
         document_language: "es",
         top_preferred_language: "en",
-        request_target: "full-page",
+        request_target: "full_page",
       },
     }
   );
