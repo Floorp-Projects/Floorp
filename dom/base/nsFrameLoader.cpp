@@ -134,7 +134,6 @@
 #include "mozilla/toolkit/library/buildid_reader_ffi.h"
 #include "nsXPCOMPrivate.h"  // for XUL_DLL
 
-#include "nsSystemInfo.h"
 #include "nsXULPopupManager.h"
 
 #ifdef NS_PRINTING
