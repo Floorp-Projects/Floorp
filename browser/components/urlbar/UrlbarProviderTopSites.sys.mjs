@@ -39,6 +39,18 @@ const TOP_SITES_ENABLED_PREFS = [
   "browser.newtabpage.activity-stream.feeds.system.topsites",
 ];
 
+// Helper function to compare 2 URLs without refs.
+function sameUrlIgnoringRef(url1, url2) {
+  if (!url1 || !url2) {
+    return false;
+  }
+
+  let cleanUrl1 = url1.replace(/#.*$/, "");
+  let cleanUrl2 = url2.replace(/#.*$/, "");
+
+  return cleanUrl1 == cleanUrl2;
+}
+
 /**
  * A provider that returns the Top Sites shown on about:newtab.
  */
@@ -238,7 +250,19 @@ class ProviderTopSites extends UrlbarProvider {
               ...(tabUrlsToContextIds.get(site.url.replace(/#.*$/, "")) ?? []),
             ]);
             if (tabUserContextIds.size) {
+              let switchToTabResultAdded = false;
               for (let userContextId of tabUserContextIds) {
+                // Normally we could skip the whole for loop, but if searchAllContainers
+                // is set then the current page userContextId may differ, then we should
+                // allow switching to other ones.
+                if (
+                  sameUrlIgnoringRef(queryContext.currentPage, site.url) &&
+                  (!lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") ||
+                    queryContext.userContextId == userContextId)
+                ) {
+                  // Don't suggest switching to the current tab.
+                  continue;
+                }
                 payload.userContextId = userContextId;
                 let result = new lazy.UrlbarResult(
                   UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
@@ -249,8 +273,12 @@ class ProviderTopSites extends UrlbarProvider {
                   )
                 );
                 addCallback(this, result);
+                switchToTabResultAdded = true;
               }
-              break;
+              // Avoid adding url result if Switch to Tab result was added.
+              if (switchToTabResultAdded) {
+                break;
+              }
             }
           }
 
