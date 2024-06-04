@@ -109,6 +109,14 @@ class RemoteGTests(object):
         # TODO -- consider packaging the gtest libxul.so in an apk
         self.device.push(libxul_path, self.remote_libdir)
 
+        for buildid in ["correct", "broken", "missing"]:
+            libxul_buildid_name = "libxul_{}_buildid.so".format(buildid)
+            libxul_buildid_path = os.path.join(
+                os.path.dirname(libxul_path), libxul_buildid_name
+            )
+            if os.path.isfile(libxul_buildid_path):
+                self.device.push(libxul_buildid_path, self.remote_libdir)
+
         # Push support files to device. Avoid sub-directories so that libxul.so
         # is not included.
         for f in glob.glob(os.path.join(test_dir, "*")):

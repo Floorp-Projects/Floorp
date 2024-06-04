@@ -11,6 +11,20 @@ if CONFIG["ENABLE_TESTS"]:
         "gkrust-gtest",
     ]
 
+    DIRS += [
+        "libxul_broken_buildid",
+        "libxul_correct_buildid",
+        "libxul_missing_buildid",
+    ]
+
+    UNIFIED_SOURCES = [
+        "TestBuildIDReader.cpp",
+    ]
+
+    LOCAL_INCLUDES += [
+        "/xpcom/build",
+    ]
+
 USE_LIBS += [
     "static:xul",
 ]

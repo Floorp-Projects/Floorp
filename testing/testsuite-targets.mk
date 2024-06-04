@@ -213,6 +213,7 @@ ifdef STRIP_COMPILED_TESTS
 else
 	cp -RL $(DIST)/bin/gtest $(PKG_STAGE)/gtest/gtest_bin
 endif
+	cp -RL $(DIST)/bin/gtest/*buildid.* $(PKG_STAGE)/gtest/gtest_bin/gtest
 	cp -RL $(DEPTH)/_tests/gtest $(PKG_STAGE)
 	cp $(topsrcdir)/testing/gtest/rungtests.py $(PKG_STAGE)/gtest
 	cp $(topsrcdir)/testing/gtest/remotegtests.py $(PKG_STAGE)/gtest
