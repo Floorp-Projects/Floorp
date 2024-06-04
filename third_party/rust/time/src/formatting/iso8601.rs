@@ -2,6 +2,8 @@
 
 use std::io;
 
+use num_conv::prelude::*;
+
 use crate::convert::*;
 use crate::format_description::well_known::iso8601::{
     DateKind, EncodedConfig, OffsetPrecision, TimePrecision,
@@ -26,10 +28,10 @@ pub(super) fn format_date<const CONFIG: EncodedConfig>(
             } else if !(0..=9999).contains(&year) {
                 return Err(error::Format::InvalidComponent("year"));
             } else {
-                bytes += format_number_pad_zero::<4>(output, year as u32)?;
+                bytes += format_number_pad_zero::<4>(output, year.cast_unsigned())?;
             }
             bytes += write_if(output, Iso8601::<CONFIG>::USE_SEPARATORS, b"-")?;
-            bytes += format_number_pad_zero::<2>(output, month as u8)?;
+            bytes += format_number_pad_zero::<2>(output, u8::from(month))?;
             bytes += write_if(output, Iso8601::<CONFIG>::USE_SEPARATORS, b"-")?;
             bytes += format_number_pad_zero::<2>(output, day)?;
         }
@@ -41,7 +43,7 @@ pub(super) fn format_date<const CONFIG: EncodedConfig>(
             } else if !(0..=9999).contains(&year) {
                 return Err(error::Format::InvalidComponent("year"));
             } else {
-                bytes += format_number_pad_zero::<4>(output, year as u32)?;
+                bytes += format_number_pad_zero::<4>(output, year.cast_unsigned())?;
             }
             bytes += write_if_else(output, Iso8601::<CONFIG>::USE_SEPARATORS, b"-W", b"W")?;
             bytes += format_number_pad_zero::<2>(output, week)?;
@@ -56,7 +58,7 @@ pub(super) fn format_date<const CONFIG: EncodedConfig>(
             } else if !(0..=9999).contains(&year) {
                 return Err(error::Format::InvalidComponent("year"));
             } else {
-                bytes += format_number_pad_zero::<4>(output, year as u32)?;
+                bytes += format_number_pad_zero::<4>(output, year.cast_unsigned())?;
             }
             bytes += write_if(output, Iso8601::<CONFIG>::USE_SEPARATORS, b"-")?;
             bytes += format_number_pad_zero::<3>(output, day)?;
@@ -85,17 +87,17 @@ pub(super) fn format_time<const CONFIG: EncodedConfig>(
     match Iso8601::<CONFIG>::TIME_PRECISION {
         TimePrecision::Hour { decimal_digits } => {
             let hours = (hours as f64)
-                + (minutes as f64) / Minute.per(Hour) as f64
-                + (seconds as f64) / Second.per(Hour) as f64
-                + (nanoseconds as f64) / Nanosecond.per(Hour) as f64;
+                + (minutes as f64) / Minute::per(Hour) as f64
+                + (seconds as f64) / Second::per(Hour) as f64
+                + (nanoseconds as f64) / Nanosecond::per(Hour) as f64;
             format_float(output, hours, 2, decimal_digits)?;
         }
         TimePrecision::Minute { decimal_digits } => {
             bytes += format_number_pad_zero::<2>(output, hours)?;
             bytes += write_if(output, Iso8601::<CONFIG>::USE_SEPARATORS, b":")?;
             let minutes = (minutes as f64)
-                + (seconds as f64) / Second.per(Minute) as f64
-                + (nanoseconds as f64) / Nanosecond.per(Minute) as f64;
+                + (seconds as f64) / Second::per(Minute) as f64
+                + (nanoseconds as f64) / Nanosecond::per(Minute) as f64;
             bytes += format_float(output, minutes, 2, decimal_digits)?;
         }
         TimePrecision::Second { decimal_digits } => {
@@ -103,7 +105,7 @@ pub(super) fn format_time<const CONFIG: EncodedConfig>(
             bytes += write_if(output, Iso8601::<CONFIG>::USE_SEPARATORS, b":")?;
             bytes += format_number_pad_zero::<2>(output, minutes)?;
             bytes += write_if(output, Iso8601::<CONFIG>::USE_SEPARATORS, b":")?;
-            let seconds = (seconds as f64) + (nanoseconds as f64) / Nanosecond.per(Second) as f64;
+            let seconds = (seconds as f64) + (nanoseconds as f64) / Nanosecond::per(Second) as f64;
             bytes += format_float(output, seconds, 2, decimal_digits)?;
         }
     }

@@ -1,7 +1,5 @@
 //! Parser for format descriptions.
 
-use std::vec::Vec;
-
 macro_rules! version {
     ($range:expr) => {
         $range.contains(&VERSION)
@@ -17,7 +15,7 @@ pub(crate) fn parse_with_version(
     version: Option<crate::FormatDescriptionVersion>,
     s: &[u8],
     proc_span: proc_macro::Span,
-) -> Result<Vec<crate::format_description::public::OwnedFormatItem>, crate::Error> {
+) -> Result<Vec<public::OwnedFormatItem>, crate::Error> {
     match version {
         Some(crate::FormatDescriptionVersion::V1) | None => parse::<1>(s, proc_span),
         Some(crate::FormatDescriptionVersion::V2) => parse::<2>(s, proc_span),
@@ -27,7 +25,7 @@ pub(crate) fn parse_with_version(
 fn parse<const VERSION: u8>(
     s: &[u8],
     proc_span: proc_macro::Span,
-) -> Result<Vec<crate::format_description::public::OwnedFormatItem>, crate::Error> {
+) -> Result<Vec<public::OwnedFormatItem>, crate::Error> {
     let mut lexed = lexer::lex::<VERSION>(s, proc_span);
     let ast = ast::parse::<_, VERSION>(&mut lexed);
     let format_items = format_item::parse(ast);

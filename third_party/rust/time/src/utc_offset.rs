@@ -1,14 +1,21 @@
 //! The [`UtcOffset`] struct and its associated `impl`s.
 
+#[cfg(feature = "formatting")]
+use alloc::string::String;
 use core::fmt;
 use core::ops::Neg;
 #[cfg(feature = "formatting")]
 use std::io;
 
+use deranged::{RangedI32, RangedI8};
+use powerfmt::ext::FormatterExt;
+use powerfmt::smart_display::{self, FormatterOptions, Metadata, SmartDisplay};
+
 use crate::convert::*;
 use crate::error;
 #[cfg(feature = "formatting")]
 use crate::formatting::Formattable;
+use crate::internal_macros::ensure_ranged;
 #[cfg(feature = "parsing")]
 use crate::parsing::Parsable;
 #[cfg(feature = "local-offset")]
@@ -16,19 +23,39 @@ use crate::sys::local_offset_at;
 #[cfg(feature = "local-offset")]
 use crate::OffsetDateTime;
 
+/// The type of the `hours` field of `UtcOffset`.
+type Hours = RangedI8<-25, 25>;
+/// The type of the `minutes` field of `UtcOffset`.
+type Minutes = RangedI8<{ -(Minute::per(Hour) as i8 - 1) }, { Minute::per(Hour) as i8 - 1 }>;
+/// The type of the `seconds` field of `UtcOffset`.
+type Seconds = RangedI8<{ -(Second::per(Minute) as i8 - 1) }, { Second::per(Minute) as i8 - 1 }>;
+/// The type capable of storing the range of whole seconds that a `UtcOffset` can encompass.
+type WholeSeconds = RangedI32<
+    {
+        Hours::MIN.get() as i32 * Second::per(Hour) as i32
+            + Minutes::MIN.get() as i32 * Second::per(Minute) as i32
+            + Seconds::MIN.get() as i32
+    },
+    {
+        Hours::MAX.get() as i32 * Second::per(Hour) as i32
+            + Minutes::MAX.get() as i32 * Second::per(Minute) as i32
+            + Seconds::MAX.get() as i32
+    },
+>;
+
 /// An offset from UTC.
 ///
-/// This struct can store values up to ±23:59:59. If you need support outside this range, please
+/// This struct can store values up to ±25:59:59. If you need support outside this range, please
 /// file an issue with your use case.
 // All three components _must_ have the same sign.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct UtcOffset {
     #[allow(clippy::missing_docs_in_private_items)]
-    hours: i8,
+    hours: Hours,
     #[allow(clippy::missing_docs_in_private_items)]
-    minutes: i8,
+    minutes: Minutes,
     #[allow(clippy::missing_docs_in_private_items)]
-    seconds: i8,
+    seconds: Seconds,
 }
 
 impl UtcOffset {
@@ -39,34 +66,30 @@ impl UtcOffset {
     /// # use time_macros::offset;
     /// assert_eq!(UtcOffset::UTC, offset!(UTC));
     /// ```
-    pub const UTC: Self = Self::__from_hms_unchecked(0, 0, 0);
+    pub const UTC: Self = Self::from_whole_seconds_ranged(WholeSeconds::new_static::<0>());
 
     // region: constructors
     /// Create a `UtcOffset` representing an offset of the hours, minutes, and seconds provided, the
     /// validity of which must be guaranteed by the caller. All three parameters must have the same
     /// sign.
+    ///
+    /// # Safety
+    ///
+    /// - Hours must be in the range `-25..=25`.
+    /// - Minutes must be in the range `-59..=59`.
+    /// - Seconds must be in the range `-59..=59`.
+    ///
+    /// While the signs of the parameters are required to match to avoid bugs, this is not a safety
+    /// invariant.
     #[doc(hidden)]
-    pub const fn __from_hms_unchecked(hours: i8, minutes: i8, seconds: i8) -> Self {
-        if hours < 0 {
-            debug_assert!(minutes <= 0);
-            debug_assert!(seconds <= 0);
-        } else if hours > 0 {
-            debug_assert!(minutes >= 0);
-            debug_assert!(seconds >= 0);
-        }
-        if minutes < 0 {
-            debug_assert!(seconds <= 0);
-        } else if minutes > 0 {
-            debug_assert!(seconds >= 0);
-        }
-        debug_assert!(hours.unsigned_abs() < 24);
-        debug_assert!(minutes.unsigned_abs() < Minute.per(Hour));
-        debug_assert!(seconds.unsigned_abs() < Second.per(Minute));
-
-        Self {
-            hours,
-            minutes,
-            seconds,
+    pub const unsafe fn __from_hms_unchecked(hours: i8, minutes: i8, seconds: i8) -> Self {
+        // Safety: The caller must uphold the safety invariants.
+        unsafe {
+            Self::from_hms_ranged_unchecked(
+                Hours::new_unchecked(hours),
+                Minutes::new_unchecked(minutes),
+                Seconds::new_unchecked(seconds),
+            )
         }
     }
 
@@ -84,29 +107,71 @@ impl UtcOffset {
     /// ```
     pub const fn from_hms(
         hours: i8,
-        mut minutes: i8,
-        mut seconds: i8,
+        minutes: i8,
+        seconds: i8,
     ) -> Result<Self, error::ComponentRange> {
-        ensure_value_in_range!(hours in -23 => 23);
-        ensure_value_in_range!(
-            minutes in -(Minute.per(Hour) as i8 - 1) => Minute.per(Hour) as i8 - 1
-        );
-        ensure_value_in_range!(
-            seconds in -(Second.per(Minute) as i8 - 1) => Second.per(Minute) as i8 - 1
-        );
+        Ok(Self::from_hms_ranged(
+            ensure_ranged!(Hours: hours),
+            ensure_ranged!(Minutes: minutes),
+            ensure_ranged!(Seconds: seconds),
+        ))
+    }
 
-        if (hours > 0 && minutes < 0) || (hours < 0 && minutes > 0) {
-            minutes *= -1;
+    /// Create a `UtcOffset` representing an offset of the hours, minutes, and seconds provided. All
+    /// three parameters must have the same sign.
+    ///
+    /// While the signs of the parameters are required to match, this is not a safety invariant.
+    pub(crate) const fn from_hms_ranged_unchecked(
+        hours: Hours,
+        minutes: Minutes,
+        seconds: Seconds,
+    ) -> Self {
+        if hours.get() < 0 {
+            debug_assert!(minutes.get() <= 0);
+            debug_assert!(seconds.get() <= 0);
+        } else if hours.get() > 0 {
+            debug_assert!(minutes.get() >= 0);
+            debug_assert!(seconds.get() >= 0);
         }
-        if (hours > 0 && seconds < 0)
-            || (hours < 0 && seconds > 0)
-            || (minutes > 0 && seconds < 0)
-            || (minutes < 0 && seconds > 0)
+        if minutes.get() < 0 {
+            debug_assert!(seconds.get() <= 0);
+        } else if minutes.get() > 0 {
+            debug_assert!(seconds.get() >= 0);
+        }
+
+        Self {
+            hours,
+            minutes,
+            seconds,
+        }
+    }
+
+    /// Create a `UtcOffset` representing an offset by the number of hours, minutes, and seconds
+    /// provided.
+    ///
+    /// The sign of all three components should match. If they do not, all smaller components will
+    /// have their signs flipped.
+    pub(crate) const fn from_hms_ranged(
+        hours: Hours,
+        mut minutes: Minutes,
+        mut seconds: Seconds,
+    ) -> Self {
+        if (hours.get() > 0 && minutes.get() < 0) || (hours.get() < 0 && minutes.get() > 0) {
+            minutes = minutes.neg();
+        }
+        if (hours.get() > 0 && seconds.get() < 0)
+            || (hours.get() < 0 && seconds.get() > 0)
+            || (minutes.get() > 0 && seconds.get() < 0)
+            || (minutes.get() < 0 && seconds.get() > 0)
         {
-            seconds *= -1;
+            seconds = seconds.neg();
         }
 
-        Ok(Self::__from_hms_unchecked(hours, minutes, seconds))
+        Self {
+            hours,
+            minutes,
+            seconds,
+        }
     }
 
     /// Create a `UtcOffset` representing an offset by the number of seconds provided.
@@ -117,15 +182,31 @@ impl UtcOffset {
     /// # Ok::<_, time::Error>(())
     /// ```
     pub const fn from_whole_seconds(seconds: i32) -> Result<Self, error::ComponentRange> {
-        ensure_value_in_range!(
-            seconds in -24 * Second.per(Hour) as i32 - 1 => 24 * Second.per(Hour) as i32 - 1
-        );
-
-        Ok(Self::__from_hms_unchecked(
-            (seconds / Second.per(Hour) as i32) as _,
-            ((seconds % Second.per(Hour) as i32) / Minute.per(Hour) as i32) as _,
-            (seconds % Second.per(Minute) as i32) as _,
+        Ok(Self::from_whole_seconds_ranged(
+            ensure_ranged!(WholeSeconds: seconds),
         ))
+    }
+
+    /// Create a `UtcOffset` representing an offset by the number of seconds provided.
+    // ignore because the function is crate-private
+    /// ```rust,ignore
+    /// # use time::UtcOffset;
+    /// # use deranged::RangedI32;
+    /// assert_eq!(
+    ///     UtcOffset::from_whole_seconds_ranged(RangedI32::new_static::<3_723>()).as_hms(),
+    ///     (1, 2, 3)
+    /// );
+    /// # Ok::<_, time::Error>(())
+    /// ```
+    pub(crate) const fn from_whole_seconds_ranged(seconds: WholeSeconds) -> Self {
+        // Safety: The type of `seconds` guarantees that all values are in range.
+        unsafe {
+            Self::__from_hms_unchecked(
+                (seconds.get() / Second::per(Hour) as i32) as _,
+                ((seconds.get() % Second::per(Hour) as i32) / Minute::per(Hour) as i32) as _,
+                (seconds.get() % Second::per(Minute) as i32) as _,
+            )
+        }
     }
     // endregion constructors
 
@@ -139,6 +220,13 @@ impl UtcOffset {
     /// assert_eq!(offset!(-1:02:03).as_hms(), (-1, -2, -3));
     /// ```
     pub const fn as_hms(self) -> (i8, i8, i8) {
+        (self.hours.get(), self.minutes.get(), self.seconds.get())
+    }
+
+    /// Obtain the UTC offset as its hours, minutes, and seconds. The sign of all three components
+    /// will always match. A positive value indicates an offset to the east; a negative to the west.
+    #[cfg(feature = "quickcheck")]
+    pub(crate) const fn as_hms_ranged(self) -> (Hours, Minutes, Seconds) {
         (self.hours, self.minutes, self.seconds)
     }
 
@@ -151,7 +239,7 @@ impl UtcOffset {
     /// assert_eq!(offset!(-1:02:03).whole_hours(), -1);
     /// ```
     pub const fn whole_hours(self) -> i8 {
-        self.hours
+        self.hours.get()
     }
 
     /// Obtain the number of whole minutes the offset is from UTC. A positive value indicates an
@@ -163,7 +251,7 @@ impl UtcOffset {
     /// assert_eq!(offset!(-1:02:03).whole_minutes(), -62);
     /// ```
     pub const fn whole_minutes(self) -> i16 {
-        self.hours as i16 * Minute.per(Hour) as i16 + self.minutes as i16
+        self.hours.get() as i16 * Minute::per(Hour) as i16 + self.minutes.get() as i16
     }
 
     /// Obtain the number of minutes past the hour the offset is from UTC. A positive value
@@ -175,7 +263,7 @@ impl UtcOffset {
     /// assert_eq!(offset!(-1:02:03).minutes_past_hour(), -2);
     /// ```
     pub const fn minutes_past_hour(self) -> i8 {
-        self.minutes
+        self.minutes.get()
     }
 
     /// Obtain the number of whole seconds the offset is from UTC. A positive value indicates an
@@ -189,9 +277,9 @@ impl UtcOffset {
     // This may be useful for anyone manually implementing arithmetic, as it
     // would let them construct a `Duration` directly.
     pub const fn whole_seconds(self) -> i32 {
-        self.hours as i32 * Second.per(Hour) as i32
-            + self.minutes as i32 * Second.per(Minute) as i32
-            + self.seconds as i32
+        self.hours.get() as i32 * Second::per(Hour) as i32
+            + self.minutes.get() as i32 * Second::per(Minute) as i32
+            + self.seconds.get() as i32
     }
 
     /// Obtain the number of seconds past the minute the offset is from UTC. A positive value
@@ -203,7 +291,7 @@ impl UtcOffset {
     /// assert_eq!(offset!(-1:02:03).seconds_past_minute(), -3);
     /// ```
     pub const fn seconds_past_minute(self) -> i8 {
-        self.seconds
+        self.seconds.get()
     }
     // endregion getters
 
@@ -218,7 +306,7 @@ impl UtcOffset {
     /// assert!(offset!(UTC).is_utc());
     /// ```
     pub const fn is_utc(self) -> bool {
-        self.hours == 0 && self.minutes == 0 && self.seconds == 0
+        self.hours.get() == 0 && self.minutes.get() == 0 && self.seconds.get() == 0
     }
 
     /// Check if the offset is positive, or east of UTC.
@@ -230,7 +318,7 @@ impl UtcOffset {
     /// assert!(!offset!(UTC).is_positive());
     /// ```
     pub const fn is_positive(self) -> bool {
-        self.hours > 0 || self.minutes > 0 || self.seconds > 0
+        self.hours.get() > 0 || self.minutes.get() > 0 || self.seconds.get() > 0
     }
 
     /// Check if the offset is negative, or west of UTC.
@@ -242,7 +330,7 @@ impl UtcOffset {
     /// assert!(!offset!(UTC).is_negative());
     /// ```
     pub const fn is_negative(self) -> bool {
-        self.hours < 0 || self.minutes < 0 || self.seconds < 0
+        self.hours.get() < 0 || self.minutes.get() < 0 || self.seconds.get() < 0
     }
     // endregion is_{sign}
 
@@ -326,16 +414,50 @@ impl UtcOffset {
     }
 }
 
+mod private {
+    #[non_exhaustive]
+    #[derive(Debug, Clone, Copy)]
+    pub struct UtcOffsetMetadata;
+}
+use private::UtcOffsetMetadata;
+
+impl SmartDisplay for UtcOffset {
+    type Metadata = UtcOffsetMetadata;
+
+    fn metadata(&self, _: FormatterOptions) -> Metadata<Self> {
+        let sign = if self.is_negative() { '-' } else { '+' };
+        let width = smart_display::padded_width_of!(
+            sign,
+            self.hours.abs() => width(2),
+            ":",
+            self.minutes.abs() => width(2),
+            ":",
+            self.seconds.abs() => width(2),
+        );
+        Metadata::new(width, self, UtcOffsetMetadata)
+    }
+
+    fn fmt_with_metadata(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+        metadata: Metadata<Self>,
+    ) -> fmt::Result {
+        f.pad_with_width(
+            metadata.unpadded_width(),
+            format_args!(
+                "{}{:02}:{:02}:{:02}",
+                if self.is_negative() { '-' } else { '+' },
+                self.hours.abs(),
+                self.minutes.abs(),
+                self.seconds.abs(),
+            ),
+        )
+    }
+}
+
 impl fmt::Display for UtcOffset {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{:02}:{:02}:{:02}",
-            if self.is_negative() { '-' } else { '+' },
-            self.hours.abs(),
-            self.minutes.abs(),
-            self.seconds.abs()
-        )
+        SmartDisplay::fmt(self, f)
     }
 }
 
@@ -350,6 +472,6 @@ impl Neg for UtcOffset {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self::__from_hms_unchecked(-self.hours, -self.minutes, -self.seconds)
+        Self::from_hms_ranged(self.hours.neg(), self.minutes.neg(), self.seconds.neg())
     }
 }

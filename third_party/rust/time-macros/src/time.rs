@@ -73,21 +73,21 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<Time
         (hour, Period::Pm) => hour + 12,
     };
 
-    if hour >= Hour.per(Day) {
+    if hour >= Hour::per(Day) {
         Err(Error::InvalidComponent {
             name: "hour",
             value: hour.to_string(),
             span_start: Some(hour_span),
             span_end: Some(period_span.unwrap_or(hour_span)),
         })
-    } else if minute >= Minute.per(Hour) {
+    } else if minute >= Minute::per(Hour) {
         Err(Error::InvalidComponent {
             name: "minute",
             value: minute.to_string(),
             span_start: Some(minute_span),
             span_end: Some(minute_span),
         })
-    } else if second >= Second.per(Minute) as _ {
+    } else if second >= Second::per(Minute) as _ {
         Err(Error::InvalidComponent {
             name: "second",
             value: second.to_string(),
@@ -99,7 +99,7 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<Time
             hour,
             minute,
             second: second.trunc() as _,
-            nanosecond: (second.fract() * Nanosecond.per(Second) as f64).round() as _,
+            nanosecond: (second.fract() * Nanosecond::per(Second) as f64).round() as _,
         })
     }
 }
@@ -107,12 +107,14 @@ pub(crate) fn parse(chars: &mut Peekable<token_stream::IntoIter>) -> Result<Time
 impl ToTokenTree for Time {
     fn into_token_tree(self) -> TokenTree {
         quote_group! {{
-            const TIME: ::time::Time = ::time::Time::__from_hms_nanos_unchecked(
-                #(self.hour),
-                #(self.minute),
-                #(self.second),
-                #(self.nanosecond),
-            );
+            const TIME: ::time::Time = unsafe {
+                ::time::Time::__from_hms_nanos_unchecked(
+                    #(self.hour),
+                    #(self.minute),
+                    #(self.second),
+                    #(self.nanosecond),
+                )
+            };
             TIME
         }}
     }

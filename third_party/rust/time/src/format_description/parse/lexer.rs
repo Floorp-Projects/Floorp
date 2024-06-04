@@ -7,7 +7,7 @@ use super::{unused, Error, Location, Spanned, SpannedValue};
 /// An iterator over the lexed tokens.
 pub(super) struct Lexed<I: Iterator> {
     /// The internal iterator.
-    iter: core::iter::Peekable<I>,
+    iter: iter::Peekable<I>,
 }
 
 impl<I: Iterator> Iterator for Lexed<I> {

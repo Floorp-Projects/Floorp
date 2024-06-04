@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.65.0"
+rust-version = "1.67.0"
 name = "time-macros"
-version = "0.2.10"
+version = "0.2.18"
 authors = [
     "Jacob Pratt <open-source@jhpratt.dev>",
     "Time contributors",
@@ -32,14 +32,104 @@ categories = ["date-and-time"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/time-rs/time"
 
+[package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
+
 [lib]
 proc-macro = true
 
+[dependencies.num-conv]
+version = "0.1.0"
+
 [dependencies.time-core]
-version = "=0.1.1"
+version = "=0.1.2"
 
 [features]
 formatting = []
 large-dates = []
 parsing = []
 serde = []
+
+[lints.clippy]
+all = "warn"
+alloc-instead-of-core = "deny"
+dbg-macro = "warn"
+decimal-literal-representation = "warn"
+explicit-auto-deref = "warn"
+get-unwrap = "warn"
+manual-let-else = "warn"
+missing-docs-in-private-items = "warn"
+missing-enforced-import-renames = "warn"
+nursery = "warn"
+obfuscated-if-else = "warn"
+print-stdout = "warn"
+semicolon-outside-block = "warn"
+std-instead-of-core = "deny"
+todo = "warn"
+undocumented-unsafe-blocks = "deny"
+unimplemented = "warn"
+uninlined-format-args = "warn"
+unnested-or-patterns = "warn"
+unwrap-in-result = "warn"
+unwrap-used = "warn"
+use-debug = "warn"
+
+[lints.clippy.option-if-let-else]
+level = "allow"
+priority = 1
+
+[lints.clippy.redundant-pub-crate]
+level = "allow"
+priority = 1
+
+[lints.rust]
+ambiguous-glob-reexports = "deny"
+clashing-extern-declarations = "deny"
+const-item-mutation = "deny"
+deref-nullptr = "deny"
+drop-bounds = "deny"
+future-incompatible = "deny"
+hidden-glob-reexports = "deny"
+improper-ctypes = "deny"
+improper-ctypes-definitions = "deny"
+invalid-from-utf8 = "deny"
+invalid-macro-export-arguments = "deny"
+invalid-nan-comparisons = "deny"
+invalid-reference-casting = "deny"
+invalid-value = "deny"
+keyword-idents = "warn"
+let-underscore = "warn"
+macro-use-extern-crate = "warn"
+meta-variable-misuse = "warn"
+missing-abi = "warn"
+missing-copy-implementations = "warn"
+missing-debug-implementations = "warn"
+missing-docs = "warn"
+named-arguments-used-positionally = "deny"
+non-ascii-idents = "deny"
+noop-method-call = "warn"
+opaque-hidden-inferred-bound = "deny"
+overlapping-range-endpoints = "deny"
+single-use-lifetimes = "warn"
+suspicious-double-ref-op = "deny"
+temporary-cstring-as-ptr = "deny"
+trivial-casts = "warn"
+trivial-numeric-casts = "warn"
+unconditional-recursion = "deny"
+unnameable-test-items = "deny"
+unreachable-pub = "warn"
+unsafe-op-in-unsafe-fn = "deny"
+unstable-syntax-pre-expansion = "deny"
+unused = "warn"
+unused-import-braces = "warn"
+unused-lifetimes = "warn"
+unused-qualifications = "warn"
+variant-size-differences = "warn"
+
+[lints.rust.unstable-name-collisions]
+level = "warn"
+priority = 1
+
+[lints.rustdoc]
+private-doc-tests = "warn"
+unescaped-backticks = "warn"

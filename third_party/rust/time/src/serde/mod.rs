@@ -22,6 +22,8 @@ pub mod rfc3339;
 pub mod timestamp;
 mod visitor;
 
+#[cfg(feature = "serde-human-readable")]
+use alloc::string::ToString;
 use core::marker::PhantomData;
 
 #[cfg(feature = "serde-human-readable")]
@@ -117,9 +119,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
     doc = "use ::serde::Deserialize;"
 )]
 /// use time::serde;
-/// use time::format_description::FormatItem;
+/// use time::format_description::BorrowedFormatItem;
 ///
-/// const DATE_TIME_FORMAT: &[FormatItem<'_>] = time::macros::format_description!(
+/// const DATE_TIME_FORMAT: &[BorrowedFormatItem<'_>] = time::macros::format_description!(
 ///     "hour=[hour], minute=[minute]"
 /// );
 ///
@@ -206,18 +208,18 @@ pub use time_macros::serde_format_description as format_description;
 
 use self::visitor::Visitor;
 #[cfg(feature = "parsing")]
-use crate::format_description::{modifier, Component, FormatItem};
+use crate::format_description::{modifier, BorrowedFormatItem, Component};
 use crate::{Date, Duration, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset, Weekday};
 
 // region: Date
 /// The format used when serializing and deserializing a human-readable `Date`.
 #[cfg(feature = "parsing")]
-const DATE_FORMAT: &[FormatItem<'_>] = &[
-    FormatItem::Component(Component::Year(modifier::Year::default())),
-    FormatItem::Literal(b"-"),
-    FormatItem::Component(Component::Month(modifier::Month::default())),
-    FormatItem::Literal(b"-"),
-    FormatItem::Component(Component::Day(modifier::Day::default())),
+const DATE_FORMAT: &[BorrowedFormatItem<'_>] = &[
+    BorrowedFormatItem::Component(Component::Year(modifier::Year::default())),
+    BorrowedFormatItem::Literal(b"-"),
+    BorrowedFormatItem::Component(Component::Month(modifier::Month::default())),
+    BorrowedFormatItem::Literal(b"-"),
+    BorrowedFormatItem::Component(Component::Day(modifier::Day::default())),
 ];
 
 impl Serialize for Date {
@@ -275,12 +277,12 @@ impl<'a> Deserialize<'a> for Duration {
 // region: OffsetDateTime
 /// The format used when serializing and deserializing a human-readable `OffsetDateTime`.
 #[cfg(feature = "parsing")]
-const OFFSET_DATE_TIME_FORMAT: &[FormatItem<'_>] = &[
-    FormatItem::Compound(DATE_FORMAT),
-    FormatItem::Literal(b" "),
-    FormatItem::Compound(TIME_FORMAT),
-    FormatItem::Literal(b" "),
-    FormatItem::Compound(UTC_OFFSET_FORMAT),
+const OFFSET_DATE_TIME_FORMAT: &[BorrowedFormatItem<'_>] = &[
+    BorrowedFormatItem::Compound(DATE_FORMAT),
+    BorrowedFormatItem::Literal(b" "),
+    BorrowedFormatItem::Compound(TIME_FORMAT),
+    BorrowedFormatItem::Literal(b" "),
+    BorrowedFormatItem::Compound(UTC_OFFSET_FORMAT),
 ];
 
 impl Serialize for OffsetDateTime {
@@ -322,10 +324,10 @@ impl<'a> Deserialize<'a> for OffsetDateTime {
 // region: PrimitiveDateTime
 /// The format used when serializing and deserializing a human-readable `PrimitiveDateTime`.
 #[cfg(feature = "parsing")]
-const PRIMITIVE_DATE_TIME_FORMAT: &[FormatItem<'_>] = &[
-    FormatItem::Compound(DATE_FORMAT),
-    FormatItem::Literal(b" "),
-    FormatItem::Compound(TIME_FORMAT),
+const PRIMITIVE_DATE_TIME_FORMAT: &[BorrowedFormatItem<'_>] = &[
+    BorrowedFormatItem::Compound(DATE_FORMAT),
+    BorrowedFormatItem::Literal(b" "),
+    BorrowedFormatItem::Compound(TIME_FORMAT),
 ];
 
 impl Serialize for PrimitiveDateTime {
@@ -364,14 +366,14 @@ impl<'a> Deserialize<'a> for PrimitiveDateTime {
 // region: Time
 /// The format used when serializing and deserializing a human-readable `Time`.
 #[cfg(feature = "parsing")]
-const TIME_FORMAT: &[FormatItem<'_>] = &[
-    FormatItem::Component(Component::Hour(<modifier::Hour>::default())),
-    FormatItem::Literal(b":"),
-    FormatItem::Component(Component::Minute(<modifier::Minute>::default())),
-    FormatItem::Literal(b":"),
-    FormatItem::Component(Component::Second(<modifier::Second>::default())),
-    FormatItem::Literal(b"."),
-    FormatItem::Component(Component::Subsecond(<modifier::Subsecond>::default())),
+const TIME_FORMAT: &[BorrowedFormatItem<'_>] = &[
+    BorrowedFormatItem::Component(Component::Hour(modifier::Hour::default())),
+    BorrowedFormatItem::Literal(b":"),
+    BorrowedFormatItem::Component(Component::Minute(modifier::Minute::default())),
+    BorrowedFormatItem::Literal(b":"),
+    BorrowedFormatItem::Component(Component::Second(modifier::Second::default())),
+    BorrowedFormatItem::Literal(b"."),
+    BorrowedFormatItem::Component(Component::Subsecond(modifier::Subsecond::default())),
 ];
 
 impl Serialize for Time {
@@ -402,14 +404,20 @@ impl<'a> Deserialize<'a> for Time {
 // region: UtcOffset
 /// The format used when serializing and deserializing a human-readable `UtcOffset`.
 #[cfg(feature = "parsing")]
-const UTC_OFFSET_FORMAT: &[FormatItem<'_>] = &[
-    FormatItem::Component(Component::OffsetHour(modifier::OffsetHour::default())),
-    FormatItem::Optional(&FormatItem::Compound(&[
-        FormatItem::Literal(b":"),
-        FormatItem::Component(Component::OffsetMinute(modifier::OffsetMinute::default())),
-        FormatItem::Optional(&FormatItem::Compound(&[
-            FormatItem::Literal(b":"),
-            FormatItem::Component(Component::OffsetSecond(modifier::OffsetSecond::default())),
+const UTC_OFFSET_FORMAT: &[BorrowedFormatItem<'_>] = &[
+    BorrowedFormatItem::Component(Component::OffsetHour({
+        let mut m = modifier::OffsetHour::default();
+        m.sign_is_mandatory = true;
+        m
+    })),
+    BorrowedFormatItem::Optional(&BorrowedFormatItem::Compound(&[
+        BorrowedFormatItem::Literal(b":"),
+        BorrowedFormatItem::Component(Component::OffsetMinute(modifier::OffsetMinute::default())),
+        BorrowedFormatItem::Optional(&BorrowedFormatItem::Compound(&[
+            BorrowedFormatItem::Literal(b":"),
+            BorrowedFormatItem::Component(Component::OffsetSecond(
+                modifier::OffsetSecond::default(),
+            )),
         ])),
     ])),
 ];
@@ -479,7 +487,7 @@ impl Serialize for Month {
             return self.to_string().serialize(serializer);
         }
 
-        (*self as u8).serialize(serializer)
+        u8::from(*self).serialize(serializer)
     }
 }
 

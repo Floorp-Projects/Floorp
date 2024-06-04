@@ -51,8 +51,8 @@ pub use time_macros::date;
 pub use time_macros::datetime;
 /// Equivalent of performing [`format_description::parse()`] at compile time.
 ///
-/// Using the macro instead of the function results in a static slice rather than a [`Vec`],
-/// such that it can be used in `#![no_alloc]` situations.
+/// Using the macro instead of the function results in a static slice rather than a
+/// [`Vec`](alloc::vec::Vec), such that it can be used in `#![no_alloc]` situations.
 ///
 /// The resulting expression can be used in `const` or `static` declarations, and implements
 /// the sealed traits required for both formatting and parsing.

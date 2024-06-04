@@ -3,17 +3,11 @@
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 
-use crate::convert::*;
 use crate::{Date, Duration, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset, Weekday};
 
 impl Distribution<Time> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Time {
-        Time::__from_hms_nanos_unchecked(
-            rng.gen_range(0..Hour.per(Day)),
-            rng.gen_range(0..Minute.per(Hour)),
-            rng.gen_range(0..Second.per(Minute)),
-            rng.gen_range(0..Nanosecond.per(Second)),
-        )
+        Time::from_hms_nanos_ranged(rng.gen(), rng.gen(), rng.gen(), rng.gen())
     }
 }
 
@@ -27,12 +21,7 @@ impl Distribution<Date> for Standard {
 
 impl Distribution<UtcOffset> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> UtcOffset {
-        let seconds = rng.gen_range(-(Second.per(Day) as i32 - 1)..=(Second.per(Day) as i32 - 1));
-        UtcOffset::__from_hms_unchecked(
-            (seconds / Second.per(Hour) as i32) as _,
-            ((seconds % Second.per(Hour) as i32) / Minute.per(Hour) as i32) as _,
-            (seconds % Second.per(Minute) as i32) as _,
-        )
+        UtcOffset::from_hms_ranged(rng.gen(), rng.gen(), rng.gen())
     }
 }
 
@@ -51,9 +40,7 @@ impl Distribution<OffsetDateTime> for Standard {
 
 impl Distribution<Duration> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Duration {
-        Duration::nanoseconds_i128(
-            rng.gen_range(Duration::MIN.whole_nanoseconds()..=Duration::MAX.whole_nanoseconds()),
-        )
+        Duration::new_ranged(rng.gen(), rng.gen())
     }
 }
 
