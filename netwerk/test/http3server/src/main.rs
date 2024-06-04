@@ -180,10 +180,19 @@ impl Http3TestServer {
 
 impl HttpServer for Http3TestServer {
     fn process(&mut self, dgram: Option<&Datagram>, now: Instant) -> Output {
-        let mut output = self.server.process(dgram, now);
-        if let Output::Callback(callback) = output {
-            if let Some(next) = self.sessions_to_close.keys().min() {
-                output = Output::Callback(min(*next - Instant::now(), callback));
+        let output = self.server.process(dgram, now);
+
+        let output = if self.sessions_to_close.is_empty() {
+            output
+        } else {
+            // In case there are pending sessions to close, use a shorter
+            // timeout to make process_events() to be called earlier.
+            const MIN_INTERVAL: Duration = Duration::from_millis(100);
+
+            match output {
+                Output::None => Output::Callback(MIN_INTERVAL),
+                o @ Output::Datagram(_) => o,
+                Output::Callback(d) => Output::Callback(min(d, MIN_INTERVAL)),
             }
         };
 
