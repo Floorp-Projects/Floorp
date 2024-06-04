@@ -1369,12 +1369,11 @@ class InplaceEditor extends EventEmitter {
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
         this.#hideAutocompletePopup();
-      } else {
-        this.cancelled = true;
-        this.#apply();
-        this.#clear();
       }
       prevent = true;
+      this.cancelled = true;
+      this.#apply();
+      this.#clear();
       event.stopPropagation();
     } else if (isKeyIn(key, "SPACE")) {
       // No need for leading spaces here.  This is particularly
