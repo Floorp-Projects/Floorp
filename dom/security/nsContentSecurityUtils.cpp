@@ -1332,19 +1332,20 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // This allowlist contains about: pages that are permanently allowed to
   // render without a CSP applied.
   static nsLiteralCString sAllowedAboutPagesWithNoCSP[] = {
-    // about:blank is a special about page -> no CSP
-    "about:blank"_ns,
-    // about:srcdoc is a special about page -> no CSP
-    "about:srcdoc"_ns,
-    // about:sync-log displays plain text only -> no CSP
-    "about:sync-log"_ns,
-    // about:logo just displays the firefox logo -> no CSP
-    "about:logo"_ns,
-    // about:sync is a special mozilla-signed developer addon with low usage ->
-    // no CSP
-    "about:sync"_ns,
+      // about:blank is a special about page -> no CSP
+      "about:blank"_ns,
+      // about:srcdoc is a special about page -> no CSP
+      "about:srcdoc"_ns,
+      // about:sync-log displays plain text only -> no CSP
+      "about:sync-log"_ns,
+      // about:logo just displays the firefox logo -> no CSP
+      "about:logo"_ns,
+      // about:sync is a special mozilla-signed developer addon with low usage
+      // ->
+      // no CSP
+      "about:sync"_ns,
 #  if defined(ANDROID)
-    "about:config"_ns,
+      "about:config"_ns,
 #  endif
   };
 
