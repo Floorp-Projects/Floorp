@@ -3,5 +3,6 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
+  content/global/usercharacteristics/usercharacteristics.css (content/usercharacteristics.css)
   content/global/usercharacteristics/usercharacteristics.html (content/usercharacteristics.html)
   content/global/usercharacteristics/usercharacteristics.js (content/usercharacteristics.js)
