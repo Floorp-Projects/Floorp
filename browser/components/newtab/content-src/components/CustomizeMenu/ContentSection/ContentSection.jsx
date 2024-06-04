@@ -6,6 +6,7 @@ import React from "react";
 import { actionCreators as ac } from "common/Actions.mjs";
 import { SafeAnchor } from "../../DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
 import { WallpapersSection } from "../../WallpapersSection/WallpapersSection";
+import { WallpaperCategories } from "../../WallpapersSection/WallpaperCategories";
 
 export class ContentSection extends React.PureComponent {
   constructor(props) {
@@ -101,6 +102,7 @@ export class ContentSection extends React.PureComponent {
       openPreferences,
       spocMessageVariant,
       wallpapersEnabled,
+      wallpapersV2Enabled,
       activeWallpaper,
       setPref,
     } = this.props;
@@ -119,8 +121,15 @@ export class ContentSection extends React.PureComponent {
       <div className="home-section">
         {wallpapersEnabled && (
           <div className="wallpapers-section">
-            <h2 data-l10n-id="newtab-wallpaper-title"></h2>
             <WallpapersSection
+              setPref={setPref}
+              activeWallpaper={activeWallpaper}
+            />
+          </div>
+        )}
+        {wallpapersV2Enabled && (
+          <div className="wallpapers-section">
+            <WallpaperCategories
               setPref={setPref}
               activeWallpaper={activeWallpaper}
             />
