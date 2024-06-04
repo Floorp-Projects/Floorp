@@ -2623,12 +2623,17 @@ class SelectTranslationsTestUtils {
     const documentRoleElement = panel.querySelector('[role="document"]');
     ok(documentRoleElement, "The document-role element can be found.");
 
-    const label = document.getElementById(
+    const ariaDescription = document.getElementById(
+      documentRoleElement.getAttribute("aria-describedby")
+    );
+    ok(ariaDescription, "The a11y description for the panel can be found.");
+
+    const ariaLabel = document.getElementById(
       documentRoleElement.getAttribute("aria-labelledby")
     );
-    ok(label, "The a11y label for the panel view can be found.");
+    ok(ariaLabel, "The a11y label for the panel can be found.");
 
-    assertVisibility({ visible: { label } });
+    assertVisibility({ visible: { ariaLabel } });
   }
 
   /**
