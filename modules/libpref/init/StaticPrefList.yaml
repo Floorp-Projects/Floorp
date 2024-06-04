@@ -14743,7 +14743,7 @@
 # residentKey support when using Android platform API
 - name: security.webauthn.webauthn_enable_android_fido2.residentkey
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Dispatch WebAuthn requests to the macOS platform API
