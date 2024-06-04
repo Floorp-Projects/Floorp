@@ -16,6 +16,7 @@ Jinja2 template is not. Please file bugs! #}
 
 {% elif struct.type == "object" %}
     #[derive(Debug, Hash, Eq, PartialEq, ::glean::traits::__serde::Serialize, ::glean::traits::__serde::Deserialize)]
+    #[allow(non_snake_case)]
     #[serde(deny_unknown_fields)]
     pub struct {{ name }} {
         {% for itemname, val in struct.properties.items() %}

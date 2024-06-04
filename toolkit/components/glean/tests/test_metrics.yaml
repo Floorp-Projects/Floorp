@@ -424,6 +424,8 @@ test_only:
             type: string
           diameter:
             type: number
+          CamelCasedParameter:
+            type: number
 
   crash_stack:
     type: object
