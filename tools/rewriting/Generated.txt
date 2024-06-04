@@ -21,6 +21,7 @@ devtools/client/debugger/node_modules/
 dom/base/use_counter_metrics.yaml
 dom/tests/ajax/jquery/
 dom/tests/ajax/mochikit/
+gradle/wrapper/
 intl/components/src/UnicodeScriptCodes.h
 intl/unicharutil/util/nsSpecialCasingData.cpp
 intl/unicharutil/util/nsUnicodePropertyData.cpp
@@ -68,11 +69,14 @@ mobile/android/android-components/components/support/ktx/src/main/res/
 mobile/android/android-components/components/support/utils/src/main/res/
 mobile/android/android-components/components/ui/tabcounter/src/main/res/
 mobile/android/android-components/components/ui/widgets/src/main/res/
+mobile/android/android-components/gradle/wrapper/
 mobile/android/android-components/samples/glean/src/main/res/raw/initial_experiments.json
 mobile/android/fenix/app/src/debug/res/raw/initial_experiments.json
 mobile/android/fenix/app/src/main/res/
 mobile/android/fenix/app/src/main/res/raw/initial_experiments.json
+mobile/android/fenix/gradle/wrapper/
 mobile/android/focus-android/app/src/main/res/
+mobile/android/focus-android/gradle/wrapper/
 mobile/locales/l10n-changesets.json
 mobile/locales/l10n-onchange-changesets.json
 node_modules/
