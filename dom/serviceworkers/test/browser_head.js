@@ -26,8 +26,11 @@ const SWM = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
 
 // The expected minimum usage for an origin that has any Cache API storage in
 // use. Currently, the DB uses a page size of 4k and a minimum growth size of
-// 32k and has enough tables/indices for this to round up to 64k.
-const kMinimumOriginUsageBytes = 65536;
+// 32k and has enough tables/indices for this to use 15 pages (61440) which
+// rounds up to 64k.  However, we also have to allow for the incremental
+// vacuum heuristic only firing if we have more than the growth increment's
+// worth of free pages, so we need to set the threshold at 32k * 3.
+const kMinimumOriginUsageBytes = 98304;
 
 function getPrincipal(url, attrs) {
   const uri = Services.io.newURI(url);
@@ -62,9 +65,10 @@ async function get_qm_origin_usage(origin) {
   return new Promise(resolve => {
     const principal =
       Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
-    Services.qms.getUsageForPrincipal(principal, request =>
-      resolve(request.result.usage)
-    );
+    Services.qms.getUsageForPrincipal(principal, request => {
+      info(`QM says usage of ${origin} is ${request.result.usage}`);
+      resolve(request.result.usage);
+    });
   });
 }
 
