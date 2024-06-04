@@ -461,8 +461,8 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-        [Global, Exposed=Window] interface Window {};
-        [Global, Exposed=Worker] interface Worker {};
+        [Global=Window, Exposed=Window] interface Window {};
+        [Global=Worker, Exposed=Worker] interface Worker {};
         [Exposed=Window]
         interface Base {};
         interface mixin Mixin {
@@ -483,8 +483,8 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-        [Global, Exposed=Window] interface Window {};
-        [Global, Exposed=Worker] interface Worker {};
+        [Global=Window, Exposed=Window] interface Window {};
+        [Global=Worker, Exposed=Worker] interface Worker {};
         [Exposed=Window]
         interface Base {};
         [Exposed=Window]
@@ -504,8 +504,8 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-        [Global, Exposed=Window] interface Window {};
-        [Global, Exposed=Worker] interface Worker {};
+        [Global=Window, Exposed=Window] interface Window {};
+        [Global=Worker, Exposed=Worker] interface Worker {};
         [Exposed=Window]
         interface Base1 {};
         [Exposed=Worker]

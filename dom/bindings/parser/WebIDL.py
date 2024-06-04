@@ -2056,7 +2056,10 @@ class IDLInterface(IDLInterfaceOrNamespace):
                 elif attr.hasArgs():
                     self.globalNames = attr.args()
                 else:
-                    self.globalNames = [self.identifier.name]
+                    raise WebIDLError(
+                        "[Global] must either take an identifier or take an identifier list",
+                        [attr.location, self.location],
+                    )
                 self.parentScope.addIfaceGlobalNames(
                     self.identifier.name, self.globalNames
                 )

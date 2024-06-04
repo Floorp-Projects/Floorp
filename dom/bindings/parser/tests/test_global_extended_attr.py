@@ -4,7 +4,7 @@ import WebIDL
 def WebIDLTest(parser, harness):
     parser.parse(
         """
-      [Global, Exposed=Foo]
+      [Global=Foo, Exposed=Foo]
       interface Foo : Bar {
         getter any(DOMString name);
       };
@@ -29,7 +29,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-          [Global, Exposed=Foo]
+          [Global=Foo, Exposed=Foo]
           interface Foo {
             getter any(DOMString name);
             setter undefined(DOMString name, any arg);
@@ -50,7 +50,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-          [Global, Exposed=Foo]
+          [Global=Foo, Exposed=Foo]
           interface Foo {
             getter any(DOMString name);
             deleter undefined(DOMString name);
@@ -71,7 +71,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-          [Global, LegacyOverrideBuiltIns, Exposed=Foo]
+          [Global=Foo, LegacyOverrideBuiltIns, Exposed=Foo]
           interface Foo {
           };
         """
@@ -91,7 +91,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-          [Global, Exposed=Foo]
+          [Global=Foo, Exposed=Foo]
           interface Foo : Bar {
           };
           [LegacyOverrideBuiltIns, Exposed=Foo]
@@ -114,7 +114,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-          [Global, Exposed=Foo]
+          [Global=Foo, Exposed=Foo]
           interface Foo {
           };
           [Exposed=Foo]
@@ -129,4 +129,23 @@ def WebIDLTest(parser, harness):
     harness.ok(
         threw,
         "Should have thrown for [Global] used on an interface with a " "descendant",
+    )
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse(
+            """
+          [Global, Exposed=Foo]
+          interface Foo {
+          };
+        """
+        )
+        parser.finish()
+    except WebIDL.WebIDLError:
+        threw = True
+
+    harness.ok(
+        threw,
+        "Should have thrown for [Global] without a right hand side value",
     )

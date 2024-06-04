@@ -358,7 +358,7 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-        [Global, Exposed=Window] interface Window {};
+        [Global=Window, Exposed=Window] interface Window {};
         [Exposed=Window, LegacyWindowAlias=A]
         interface B {};
         [Exposed=Window, LegacyWindowAlias=(C, D)]
@@ -406,7 +406,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [Global, Exposed=Window] interface Window {};
+            [Global=Window, Exposed=Window] interface Window {};
             [Exposed=Window]
             interface A {};
             [Exposed=Window, LegacyWindowAlias=A]
@@ -425,7 +425,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [Global, Exposed=Window] interface Window {};
+            [Global=Window, Exposed=Window] interface Window {};
             [Exposed=Window, LegacyWindowAlias=A]
             interface B {};
             [Exposed=Window]
@@ -444,7 +444,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [Global, Exposed=Window] interface Window {};
+            [Global=Window, Exposed=Window] interface Window {};
             [Exposed=Window, LegacyWindowAlias=A]
             interface B {};
             [Exposed=Window, LegacyWindowAlias=A]
