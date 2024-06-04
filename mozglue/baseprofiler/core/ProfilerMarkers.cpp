@@ -320,6 +320,8 @@ Span<const char> MarkerSchema::FormatToStringSpan(
       return mozilla::MakeStringSpan("url");
     case Format::FilePath:
       return mozilla::MakeStringSpan("file-path");
+    case Format::SanitizedString:
+      return mozilla::MakeStringSpan("sanitized-string");
     case Format::String:
       return mozilla::MakeStringSpan("string");
     case Format::UniqueString:

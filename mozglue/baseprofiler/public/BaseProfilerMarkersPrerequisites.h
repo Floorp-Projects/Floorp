@@ -736,6 +736,8 @@ class MarkerSchema {
     Url,
     // Show the file path, and handle PII sanitization.
     FilePath,
+    // Show arbitrary string and handle PII sanitization
+    SanitizedString,
     // Important, do not put URL or file path information here, as it will not
     // be sanitized. Please be careful with including other types of PII here as
     // well.
