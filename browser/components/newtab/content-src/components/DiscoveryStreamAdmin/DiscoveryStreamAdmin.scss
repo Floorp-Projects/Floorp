@@ -3,7 +3,7 @@
 .discoverystream-admin-toggle {
   position: fixed;
   top: 50px;
-  inset-inline-end: 15px;
+  inset-inline-end: var(--space-xlarge);
   border: 0;
   background: none;
   z-index: 1;

@@ -15,14 +15,19 @@ export function FeatureHighlight({
   feature = "FEATURE_HIGHLIGHT_DEFAULT",
   dispatch = () => {},
   windowObj = global,
+  openedOverride = false,
+  showButtonIcon = true,
+  dismissCallback = () => {},
+  outsideClickCallback = () => {},
 }) {
-  const [opened, setOpened] = useState(false);
+  const [opened, setOpened] = useState(openedOverride);
   const ref = useRef(null);
 
   useEffect(() => {
     const handleOutsideClick = e => {
       if (!ref?.current?.contains(e.target)) {
         setOpened(false);
+        outsideClickCallback();
       }
     };
 
@@ -30,7 +35,7 @@ export function FeatureHighlight({
     return () => {
       windowObj.document.removeEventListener("click", handleOutsideClick);
     };
-  }, [windowObj]);
+  }, [windowObj, outsideClickCallback]);
 
   const onToggleClick = useCallback(() => {
     if (!opened) {
@@ -47,6 +52,12 @@ export function FeatureHighlight({
     setOpened(!opened);
   }, [dispatch, feature, opened]);
 
+  const onDismissClick = useCallback(() => {
+    setOpened(false);
+    dismissCallback();
+  }, [dismissCallback]);
+
+  const hideButtonClass = showButtonIcon ? `` : `isHidden`;
   const openedClassname = opened ? `opened` : `closed`;
   return (
     <div ref={ref} className="feature-highlight">
@@ -54,7 +65,7 @@ export function FeatureHighlight({
         title={title}
         aria-haspopup="true"
         aria-label={ariaLabel}
-        className="toggle-button"
+        className={`toggle-button ${hideButtonClass}`}
         onClick={onToggleClick}
       >
         {toggle}
@@ -63,10 +74,9 @@ export function FeatureHighlight({
         <div className="message-icon">{icon}</div>
         <p>{message}</p>
         <button
-          title="Dismiss"
-          aria-label="Close sponsored content more info popup"
+          data-l10n-id="feature-highlight-dismiss-button"
           className="icon icon-dismiss"
-          onClick={() => setOpened(false)}
+          onClick={onDismissClick}
         ></button>
       </div>
     </div>

@@ -13,9 +13,12 @@ import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
 import { Weather } from "content-src/components/Weather/Weather";
+import { WallpaperFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/WallpaperFeatureHighlight";
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
+const WALLPAPER_HIGHLIGHT_DISMISSED_PREF =
+  "newtabWallpapers.highlightDismissed";
 
 export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
@@ -111,6 +114,8 @@ export class BaseContent extends React.PureComponent {
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
+    this.shouldShowWallpapersHighlight =
+      this.shouldShowWallpapersHighlight.bind(this);
     this.updateWallpaper = this.updateWallpaper.bind(this);
     this.prefersDarkQuery = null;
     this.handleColorModeChange = this.handleColorModeChange.bind(this);
@@ -297,6 +302,49 @@ export class BaseContent extends React.PureComponent {
     }
   }
 
+  // Contains all the logic to show the wallpapers Feature Highlight
+  shouldShowWallpapersHighlight() {
+    const prefs = this.props.Prefs.values;
+
+    // If wallpapers are not enabled, don't show the highlight.
+    const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
+    if (!wallpapersEnabled) {
+      return false;
+    }
+
+    // If user has interacted/dismissed the highlight, don't show
+    const wallpapersHighlightDismissed =
+      prefs[WALLPAPER_HIGHLIGHT_DISMISSED_PREF];
+    if (wallpapersHighlightDismissed) {
+      return false;
+    }
+
+    // If the user has selected a wallpaper, don't show the pop-up
+    const activeWallpaperLight = prefs[`newtabWallpapers.wallpaper-light`];
+    const activeWallpaperDark = prefs[`newtabWallpapers.wallpaper-dark`];
+    if (activeWallpaperLight || activeWallpaperDark) {
+      this.props.dispatch(ac.SetPref(WALLPAPER_HIGHLIGHT_DISMISSED_PREF, true));
+      return false;
+    }
+
+    // If the user has seen* the highlight more than three times
+    // *Seen means they loaded HNT page and the highlight was observed for more than 3 seconds
+    const { highlightSeenCounter } = this.props.Wallpapers;
+    if (highlightSeenCounter.value > 3) {
+      return false;
+    }
+
+    // Show the highlight if available
+    const wallpapersHighlightEnabled =
+      prefs["newtabWallpapers.highlightEnabled"];
+    if (wallpapersHighlightEnabled) {
+      return true;
+    }
+
+    // Default return value
+    return false;
+  }
+
   render() {
     const { props } = this;
     const { App } = props;
@@ -366,21 +414,30 @@ export class BaseContent extends React.PureComponent {
 
     return (
       <div>
-        <CustomizeMenu
-          onClose={this.closeCustomizationMenu}
-          onOpen={this.openCustomizationMenu}
-          openPreferences={this.openPreferences}
-          setPref={this.setPref}
-          enabledSections={enabledSections}
-          wallpapersEnabled={wallpapersEnabled}
-          activeWallpaper={activeWallpaper}
-          pocketRegion={pocketRegion}
-          mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-          mayHaveSponsoredStories={mayHaveSponsoredStories}
-          mayHaveWeather={mayHaveWeather}
-          spocMessageVariant={spocMessageVariant}
-          showing={customizeMenuVisible}
-        />
+        {/* Floating menu for customize menu toggle */}
+        <menu className="personalizeButtonWrapper">
+          <CustomizeMenu
+            onClose={this.closeCustomizationMenu}
+            onOpen={this.openCustomizationMenu}
+            openPreferences={this.openPreferences}
+            setPref={this.setPref}
+            enabledSections={enabledSections}
+            wallpapersEnabled={wallpapersEnabled}
+            activeWallpaper={activeWallpaper}
+            pocketRegion={pocketRegion}
+            mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
+            mayHaveSponsoredStories={mayHaveSponsoredStories}
+            mayHaveWeather={mayHaveWeather}
+            spocMessageVariant={spocMessageVariant}
+            showing={customizeMenuVisible}
+          />
+          {this.shouldShowWallpapersHighlight() && (
+            <WallpaperFeatureHighlight
+              position="inset-block-end inset-inline-start"
+              dispatch={this.props.dispatch}
+            />
+          )}
+        </menu>
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
         <div className={outerClassName} onClick={this.closeCustomizationMenu}>
           <main>

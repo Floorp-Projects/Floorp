@@ -94,5 +94,9 @@
   .toggle-button {
     border: none;
     padding: 0;
+
+    &.isHidden {
+      display: none;
+    }
   }
 }
