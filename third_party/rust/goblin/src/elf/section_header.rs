@@ -406,7 +406,7 @@ if_alloc! {
     }
 
     impl SectionHeader {
-        /// Return the size of the underlying program header, given a `container`
+        /// Return the size of the underlying section header, given a `Ctx`
         #[inline]
         pub fn size(ctx: Ctx) -> usize {
             use scroll::ctx::SizeWith;
@@ -442,18 +442,25 @@ if_alloc! {
             self.sh_addr as usize..(self.sh_addr as usize).saturating_add(self.sh_size as usize)
         }
         /// Parse `count` section headers from `bytes` at `offset`, using the given `ctx`
+        /// Assuming this is read from the whole file, it will check offset.
         #[cfg(feature = "endian_fd")]
-        pub fn parse(bytes: &[u8], mut offset: usize, mut count: usize, ctx: Ctx) -> error::Result<Vec<SectionHeader>> {
-            use scroll::Pread;
+        pub fn parse(bytes: &[u8], offset: usize, count: usize, ctx: Ctx) -> error::Result<Vec<SectionHeader>> {
             // Zero offset means no section headers, not even the null section header.
             if offset == 0 {
                 return Ok(Vec::new());
             }
+            Self::parse_from(bytes, offset, count, ctx)
+        }
+        /// Parse `count` section headers from `bytes` at `offset`, using the given `ctx`
+        /// without performing any offset checking to allow parsing relatively
+        #[cfg(feature = "endian_fd")]
+        pub fn parse_from(bytes: &[u8], mut offset: usize, mut count: usize, ctx: Ctx) -> error::Result<Vec<SectionHeader>> {
+            use scroll::Pread;
             let empty_sh = bytes.gread_with::<SectionHeader>(&mut offset, ctx)?;
             if count == 0 as usize {
-                // Zero count means either no section headers if offset is also zero (checked
-                // above), or the number of section headers overflows SHN_LORESERVE, in which
-                // case the count is stored in the sh_size field of the null section header.
+                // Zero count means either no section headers or the number of section headers
+                // overflows SHN_LORESERVE, in which case the count is stored in the sh_size field
+                // of the null section header.
                 count = empty_sh.sh_size as usize;
             }
 

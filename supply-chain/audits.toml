@@ -2151,6 +2151,12 @@ criteria = "safe-to-deploy"
 delta = "0.7.1 -> 0.8.0"
 notes = "Fairly straightforward feature improvements."
 
+[[audits.goblin]]
+who = "Alexandre Lissy <lissyx+mozillians@lissyx.dyndns.org>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.8.1"
+notes = "Updating goblin to 0.8.1 that includes my fix for Elf SectionHeader parsing"
+
 [[audits.gpu-alloc]]
 who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"

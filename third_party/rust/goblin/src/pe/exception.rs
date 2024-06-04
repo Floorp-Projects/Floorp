@@ -612,7 +612,7 @@ impl<'a> UnwindInfo<'a> {
     /// Returns an iterator over unwind codes in this unwind info.
     ///
     /// Unwind codes are iterated in descending `code_offset` order suitable for unwinding. If the
-    /// optional [`chained_info`] is present, codes of that unwind info should be interpreted
+    /// optional [`chained_info`](Self::chained_info) is present, codes of that unwind info should be interpreted
     /// immediately afterwards.
     pub fn unwind_codes(&self) -> UnwindCodeIterator<'a> {
         UnwindCodeIterator {
