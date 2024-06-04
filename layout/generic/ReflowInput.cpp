@@ -901,8 +901,8 @@ LogicalMargin ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
       offsets.BStart(aWM) = offsets.BEnd(aWM) = 0;
     } else {
       // 'blockEnd' isn't 'auto' so compute its value
-      offsets.BEnd(aWM) = nsLayoutUtils::ComputeBSizeDependentValue(
-          aCBSize.BSize(aWM), blockEnd);
+      offsets.BEnd(aWM) =
+          nsLayoutUtils::ComputeCBDependentValue(aCBSize.BSize(aWM), blockEnd);
 
       // Computed value for 'blockStart' is minus the value of 'blockEnd'
       offsets.BStart(aWM) = -offsets.BEnd(aWM);
@@ -912,8 +912,8 @@ LogicalMargin ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
     NS_ASSERTION(blockEndIsAuto, "unexpected specified constraint");
 
     // 'blockStart' isn't 'auto' so compute its value
-    offsets.BStart(aWM) = nsLayoutUtils::ComputeBSizeDependentValue(
-        aCBSize.BSize(aWM), blockStart);
+    offsets.BStart(aWM) =
+        nsLayoutUtils::ComputeCBDependentValue(aCBSize.BSize(aWM), blockStart);
 
     // Computed value for 'blockEnd' is minus the value of 'blockStart'
     offsets.BEnd(aWM) = -offsets.BStart(aWM);
@@ -1746,13 +1746,13 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   if (bStartIsAuto) {
     offsets.BStart(cbwm) = 0;
   } else {
-    offsets.BStart(cbwm) = nsLayoutUtils::ComputeBSizeDependentValue(
+    offsets.BStart(cbwm) = nsLayoutUtils::ComputeCBDependentValue(
         cbSize.BSize(cbwm), styleOffset.GetBStart(cbwm));
   }
   if (bEndIsAuto) {
     offsets.BEnd(cbwm) = 0;
   } else {
-    offsets.BEnd(cbwm) = nsLayoutUtils::ComputeBSizeDependentValue(
+    offsets.BEnd(cbwm) = nsLayoutUtils::ComputeCBDependentValue(
         cbSize.BSize(cbwm), styleOffset.GetBEnd(cbwm));
   }
 

@@ -5160,27 +5160,6 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
 }
 
 /* static */
-nscoord nsLayoutUtils::ComputeBSizeDependentValue(
-    nscoord aContainingBlockBSize, const LengthPercentageOrAuto& aCoord) {
-  // XXXldb Some callers explicitly check aContainingBlockBSize
-  // against NS_UNCONSTRAINEDSIZE *and* unit against eStyleUnit_Percent or
-  // calc()s containing percents before calling this function.
-  // However, it would be much more likely to catch problems without
-  // the unit conditions.
-  // XXXldb Many callers pass a non-'auto' containing block height when
-  // according to CSS2.1 they should be passing 'auto'.
-  NS_ASSERTION(
-      NS_UNCONSTRAINEDSIZE != aContainingBlockBSize || !aCoord.HasPercent(),
-      "unexpected containing block block-size");
-
-  if (aCoord.IsAuto()) {
-    return 0;
-  }
-
-  return aCoord.AsLengthPercentage().Resolve(aContainingBlockBSize);
-}
-
-/* static */
 void nsLayoutUtils::MarkDescendantsDirty(nsIFrame* aSubtreeRoot) {
   AutoTArray<nsIFrame*, 4> subtrees;
   subtrees.AppendElement(aSubtreeRoot);
