@@ -1223,7 +1223,7 @@ fn build_mask_tasks(
                 let mut quad_flags = QuadFlags::SAMPLE_AS_MASK;
 
                 if is_same_coord_system {
-                    quad_flags |= QuadFlags::APPLY_DEVICE_CLIP;
+                    quad_flags |= QuadFlags::APPLY_RENDER_TASK_CLIP;
                 }
 
                 for tile in clip_store.visible_mask_tiles(&clip_instance) {
@@ -1337,7 +1337,7 @@ fn build_mask_tasks(
         let clip_needs_scissor_rect = !is_same_coord_system;
 
         let quad_flags = if is_same_coord_system {
-            QuadFlags::APPLY_DEVICE_CLIP
+            QuadFlags::APPLY_RENDER_TASK_CLIP
         } else {
             QuadFlags::empty()
         };

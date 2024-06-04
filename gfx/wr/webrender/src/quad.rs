@@ -105,7 +105,7 @@ pub fn push_quad(
     }
     let needs_scissor = !prim_is_2d_scale_translation;
     if !needs_scissor {
-        quad_flags |= QuadFlags::APPLY_DEVICE_CLIP;
+        quad_flags |= QuadFlags::APPLY_RENDER_TASK_CLIP;
     }
 
     // TODO(gw): For now, we don't select per-edge AA at all if the primitive
@@ -643,7 +643,7 @@ fn add_pattern_prim(
     frame_state.set_segments(segments, targets);
 
     let mut quad_flags = QuadFlags::IGNORE_DEVICE_PIXEL_SCALE
-        | QuadFlags::APPLY_DEVICE_CLIP;
+        | QuadFlags::APPLY_RENDER_TASK_CLIP;
 
     if is_opaque {
         quad_flags |= QuadFlags::IS_OPAQUE;
@@ -685,7 +685,7 @@ fn add_composite_prim(
     frame_state.set_segments(segments, targets);
 
     let mut quad_flags = QuadFlags::IGNORE_DEVICE_PIXEL_SCALE
-        | QuadFlags::APPLY_DEVICE_CLIP;
+        | QuadFlags::APPLY_RENDER_TASK_CLIP;
 
     if pattern.is_opaque && !is_masked {
         quad_flags |= QuadFlags::IS_OPAQUE;

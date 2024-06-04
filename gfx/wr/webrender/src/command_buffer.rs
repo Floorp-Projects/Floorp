@@ -76,8 +76,9 @@ bitflags! {
     pub struct QuadFlags : u8 {
         const IS_OPAQUE = 1 << 0;
 
-        /// If true, the prim is 2d and we can apply a clip to the task rect in vertex shader
-        const APPLY_DEVICE_CLIP = 1 << 1;
+        /// If true, the prim is 2d and axis-aligned in device space. The render task rect can
+        /// cheaply be used as a device-space clip in the vertex shader.
+        const APPLY_RENDER_TASK_CLIP = 1 << 1;
 
         /// If true, the device-pixel scale is already applied, so ignore in vertex shaders
         const IGNORE_DEVICE_PIXEL_SCALE = 1 << 2;
