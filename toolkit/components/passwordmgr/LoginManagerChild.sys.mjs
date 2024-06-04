@@ -273,11 +273,13 @@ const observer = {
 
     // Infer form submission only when there has been an user interaction on the form
     // or the formless password field.
-    if (
-      lazy.LoginHelper.formRemovalCaptureEnabled &&
-      (!alreadyModified || !alreadyModifiedFormLessField)
-    ) {
-      loginManagerChild.registerDOMDocFetchSuccessEventListener(ownerDocument);
+    if (!alreadyModified || !alreadyModifiedFormLessField) {
+      const formHandlerChild =
+        ownerDocument.defaultView.windowGlobalChild?.getActor("FormHandler");
+      formHandlerChild.registerFormSubmissionInterest(loginManagerChild, {
+        includesFormRemoval: lazy.LoginHelper.formRemovalCaptureEnabled,
+        includesPageNavigation: lazy.LoginHelper.formlessCaptureEnabled,
+      });
     }
 
     if (
@@ -1501,23 +1503,6 @@ export class LoginManagerChild extends JSWindowActorChild {
     );
   }
 
-  registerDOMDocFetchSuccessEventListener(document) {
-    document.setNotifyFetchSuccess(true);
-    this.docShell.chromeEventHandler.addEventListener(
-      "DOMDocFetchSuccess",
-      this,
-      true
-    );
-  }
-
-  unregisterDOMDocFetchSuccessEventListener(document) {
-    document.setNotifyFetchSuccess(false);
-    this.docShell.chromeEventHandler.removeEventListener(
-      "DOMDocFetchSuccess",
-      this
-    );
-  }
-
   handleEvent(event) {
     if (
       AppConstants.platform == "android" &&
@@ -1532,10 +1517,6 @@ export class LoginManagerChild extends JSWindowActorChild {
     }
 
     switch (event.type) {
-      case "DOMDocFetchSuccess": {
-        this.#onDOMDocFetchSuccess(event);
-        break;
-      }
       case "DOMFormHasPassword": {
         this.#onDOMFormHasPassword(event, this.document.defaultView);
         let formLike = lazy.LoginFormFactory.createFromForm(
@@ -1546,11 +1527,6 @@ export class LoginManagerChild extends JSWindowActorChild {
       }
       case "DOMFormHasPossibleUsername": {
         this.#onDOMFormHasPossibleUsername(event);
-        break;
-      }
-      case "DOMFormRemoved":
-      case "DOMInputPasswordRemoved": {
-        this.#onDOMFormRemoved(event);
         break;
       }
       case "DOMInputPasswordAdded": {
@@ -1565,6 +1541,10 @@ export class LoginManagerChild extends JSWindowActorChild {
         const form = event.detail.form;
         const reason = event.detail.reason;
         this.#onFormSubmission(form, reason);
+        break;
+      }
+      case "before-form-submission": {
+        this.#onPrepareFormSubmission();
         break;
       }
     }
@@ -1631,12 +1611,13 @@ export class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
-   * This method sets up form removal listener for form and password fields that
-   * users have interacted with.
+   * We received a before-form-submission event and are expecting a
+   * form-submission-detected event to follow. So we cache any modified
+   * form or formless login fields in case they are removed from DOM
+   * before we are able to capture them.
    */
-  #onDOMDocFetchSuccess(event) {
-    let document = event.target;
-    let docState = this.stateForDocument(document);
+  #onPrepareFormSubmission() {
+    let docState = this.stateForDocument(this.document);
     let weakModificationsRootElements =
       ChromeUtils.nondeterministicGetWeakMapKeys(
         docState.fieldModificationsByRootElement
@@ -1644,19 +1625,6 @@ export class LoginManagerChild extends JSWindowActorChild {
 
     lazy.log(
       `modificationsByRootElement approx size: ${weakModificationsRootElements.length}.`
-    );
-    // Start to listen to form/password removed event after receiving a fetch/xhr
-    // complete event.
-    document.setNotifyFormOrPasswordRemoved(true);
-    this.docShell.chromeEventHandler.addEventListener(
-      "DOMFormRemoved",
-      this,
-      true
-    );
-    this.docShell.chromeEventHandler.addEventListener(
-      "DOMInputPasswordRemoved",
-      this,
-      true
     );
 
     for (let rootElement of weakModificationsRootElements) {
@@ -1683,63 +1651,47 @@ export class LoginManagerChild extends JSWindowActorChild {
         docState.formLikeByObservedNode.set(passwordField, formLike);
       }
     }
-
-    // Observers have been set up, remove the listener.
-    this.unregisterDOMDocFetchSuccessEventListener(document);
   }
 
-  /*
-   * Trigger capture when a form/formless password is removed from DOM.
-   * This method is used to capture logins for cases where form submit events
-   * are not used.
+  /**
+   * We received a form-submission-detected event because
+   * a form or password input field was removed from the DOM
+   * after a successful xhr/fetch request
    *
-   * The heuristic works as follow:
-   * 1. Set up 'DOMDocFetchSuccess' event listener when users have interacted
-   *    with a form (by calling setNotifyFetchSuccess)
-   * 2. After receiving `DOMDocFetchSuccess`, set up form removal event listener
-   *    (see onDOMDocFetchSuccess)
-   * 3. When a form is removed, onDOMFormRemoved triggers the login capture
-   *    code.
+   * @param {HTMLElement} element form or password input field that was removed from the DOM
    */
-  #onDOMFormRemoved(event) {
-    let document = event.composedTarget.ownerDocument;
-    let docState = this.stateForDocument(document);
-    let formLike = docState.formLikeByObservedNode.get(event.target);
+  #onDOMElementRemoved(element) {
+    if (!lazy.LoginHelper.formRemovalCaptureEnabled) {
+      return;
+    }
+    let docState = this.stateForDocument(this.document);
+    let formLike = docState.formLikeByObservedNode.get(element);
     if (!formLike) {
       return;
     }
 
-    lazy.log("Form is removed.");
     this._onFormSubmit(
       formLike,
       lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH
     );
 
-    docState.formLikeByObservedNode.delete(event.target);
+    docState.formLikeByObservedNode.delete(element);
     let weakObserveredNodes = ChromeUtils.nondeterministicGetWeakMapKeys(
       docState.formLikeByObservedNode
     );
 
     if (!weakObserveredNodes.length) {
-      document.setNotifyFormOrPasswordRemoved(false);
-      this.docShell.chromeEventHandler.removeEventListener(
-        "DOMFormRemoved",
-        this
-      );
-      this.docShell.chromeEventHandler.removeEventListener(
-        "DOMInputPasswordRemoved",
-        this
-      );
+      this.manager.getActor("FormHandler").unregisterFormRemovalInterest(this);
     }
   }
 
   /**
    * Handle form-submission-detected event (dispatched by FormHandlerChild)
    *
-   * Depending on the heuristic that detected the form submission,
-   * the form that is submitted is retrieved differently
+   * Depending on the heuristic that detected the form submission, the
+   * submitted form or the formless login fields are retrieved differently
    *
-   * @param {HTMLFormElement} form that is being submitted
+   * @param {HTMLFormElement | HTMLInputElement | null} form form or formless login fields that is being submitted
    * @param {string} reason heuristic that detected the form submission
    *                        (see FormHandlerChild.FORM_SUBMISSION_REASON)
    */
@@ -1755,6 +1707,10 @@ export class LoginManagerChild extends JSWindowActorChild {
         this._onFormSubmit(formLike, reason);
         break;
       }
+      case lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH:
+      case lazy.FORM_SUBMISSION_REASON.PASSWORD_REMOVAL_AFTER_FETCH:
+        this.#onDOMElementRemoved(form);
+        break;
     }
   }
 
@@ -1806,7 +1762,12 @@ export class LoginManagerChild extends JSWindowActorChild {
     }
 
     if (lazy.LoginHelper.formlessCaptureEnabled) {
-      this.manager.getActor("FormHandler").registerFormSubmissionInterest();
+      this.manager
+        .getActor("FormHandler")
+        .registerFormSubmissionInterest(this, {
+          includesFormRemoval: lazy.LoginHelper.formRemovalCaptureEnabled,
+          includesPageNavigation: lazy.LoginHelper.formlessCaptureEnabled,
+        });
     }
     this.#ensureDocumentRestoredListenerRegistered();
 
@@ -1905,7 +1866,12 @@ export class LoginManagerChild extends JSWindowActorChild {
     }
 
     if (lazy.LoginHelper.formlessCaptureEnabled) {
-      this.manager.getActor("FormHandler").registerFormSubmissionInterest();
+      this.manager
+        .getActor("FormHandler")
+        .registerFormSubmissionInterest(this, {
+          includesFormRemoval: lazy.LoginHelper.formRemovalCaptureEnabled,
+          includesPageNavigation: lazy.LoginHelper.formlessCaptureEnabled,
+        });
     }
     this.#ensureDocumentRestoredListenerRegistered();
 
@@ -2008,7 +1974,12 @@ export class LoginManagerChild extends JSWindowActorChild {
     }
 
     if (lazy.LoginHelper.formlessCaptureEnabled) {
-      this.manager.getActor("FormHandler").registerFormSubmissionInterest();
+      this.manager
+        .getActor("FormHandler")
+        .registerFormSubmissionInterest(this, {
+          includesFormRemoval: lazy.LoginHelper.formRemovalCaptureEnabled,
+          includesPageNavigation: lazy.LoginHelper.formlessCaptureEnabled,
+        });
     }
 
     // set up input event listeners so we know if the user has interacted with these fields
