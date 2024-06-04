@@ -79,9 +79,12 @@ user_pref("browser.newtabpage.activity-stream.discoverystream.region-weather-con
 user_pref("browser.newtabpage.activity-stream.newtabWallpapers.enabled", false);
 // Don't pull sponsored Top Sites content from the network
 user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
-// Default Glean to "record but don't report" mode. Docs:
+// Default Glean to "record but don't report" mode, and to never trigger
+// activity-based ping submission. Docs:
 // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/preferences.html
 user_pref("telemetry.fog.test.localhost_port", -1);
+user_pref("telemetry.fog.test.activity_limit", -1);
+user_pref("telemetry.fog.test.inactivity_limit", -1);
 // Disable overlay scrollbars on GTK for testing. A bunch of tests (specially
 // mochitests) assume scrollbars take space. We disable them on macOS (where
 // overlay is also the default) at the system level as well, so this is

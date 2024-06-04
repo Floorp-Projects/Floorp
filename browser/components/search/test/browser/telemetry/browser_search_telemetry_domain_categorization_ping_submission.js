@@ -82,7 +82,10 @@ add_setup(async function () {
   let promise = waitForDomainToCategoriesUpdate();
   await insertRecordIntoCollectionAndSync();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.serpEventTelemetryCategorization.enabled", true]],
+    set: [
+      ["browser.search.serpEventTelemetryCategorization.enabled", true],
+      ["telemetry.fog.test.activity_limit", 120],
+    ],
   });
   await promise;
 

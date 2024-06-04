@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::convert::TryInto;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::sync::{
@@ -90,7 +91,7 @@ impl UserActivityObserver {
                 .elapsed();
             // We only care after a certain period of inactivity (default 20min).
             let limit = static_prefs::pref!("telemetry.fog.test.inactivity_limit");
-            if inactivity >= Duration::from_secs(limit.into()) {
+            if limit >= 0 && inactivity >= Duration::from_secs(limit.try_into().unwrap_or(0)) {
                 log::info!(
                     "User triggers core activity after {}s!",
                     inactivity.as_secs()
@@ -114,7 +115,7 @@ impl UserActivityObserver {
                 .elapsed();
             // We only care after a certain period of activity (default 2min).
             let limit = static_prefs::pref!("telemetry.fog.test.activity_limit");
-            if activity >= Duration::from_secs(limit.into()) {
+            if limit >= 0 && activity >= Duration::from_secs(limit.try_into().unwrap_or(0)) {
                 log::info!(
                     "User triggers core inactivity after {}s!",
                     activity.as_secs()
