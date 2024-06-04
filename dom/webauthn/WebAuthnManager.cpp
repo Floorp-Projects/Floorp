@@ -13,6 +13,7 @@
 #include "WebAuthnTransportIdentifiers.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/AuthenticatorAssertionResponse.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/PublicKeyCredential.h"
@@ -478,7 +479,8 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   }
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(WebAuthnTransaction(promise));
+  mTransaction =
+      Some(WebAuthnTransaction(promise, WebAuthnTransactionType::Create));
   mChild->SendRequestRegister(mTransaction.ref().mId, info);
 
   return promise.forget();
@@ -656,7 +658,8 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   }
 
   MOZ_ASSERT(mTransaction.isNothing());
-  mTransaction = Some(WebAuthnTransaction(promise));
+  mTransaction =
+      Some(WebAuthnTransaction(promise, WebAuthnTransactionType::Get));
   mChild->SendRequestSign(mTransaction.ref().mId, info);
 
   return promise.forget();
@@ -741,7 +744,17 @@ void WebAuthnManager::FinishMakeCredential(
   credential->SetType(u"public-key"_ns);
   credential->SetRawId(aResult.KeyHandle());
   credential->SetAttestationResponse(attestation);
-  credential->SetAuthenticatorAttachment(aResult.AuthenticatorAttachment());
+
+  if (aResult.AuthenticatorAttachment().isSome()) {
+    credential->SetAuthenticatorAttachment(aResult.AuthenticatorAttachment());
+
+    mozilla::glean::webauthn_create::authenticator_attachment
+        .Get(NS_ConvertUTF16toUTF8(aResult.AuthenticatorAttachment().ref()))
+        .Add(1);
+  } else {
+    mozilla::glean::webauthn_get::authenticator_attachment.Get("unknown"_ns)
+        .Add(1);
+  }
 
   // Forward client extension results.
   for (const auto& ext : aResult.Extensions()) {
@@ -749,6 +762,9 @@ void WebAuthnManager::FinishMakeCredential(
         WebAuthnExtensionResult::TWebAuthnExtensionResultCredProps) {
       bool credPropsRk = ext.get_WebAuthnExtensionResultCredProps().rk();
       credential->SetClientExtensionResultCredPropsRk(credPropsRk);
+      if (credPropsRk) {
+        mozilla::glean::webauthn_create::passkey.Add(1);
+      }
     }
     if (ext.type() ==
         WebAuthnExtensionResult::TWebAuthnExtensionResultHmacSecret) {
@@ -758,8 +774,7 @@ void WebAuthnManager::FinishMakeCredential(
     }
   }
 
-  mTransaction.ref().mPromise->MaybeResolve(credential);
-  ClearTransaction();
+  ResolveTransaction(credential);
 }
 
 void WebAuthnManager::FinishGetAssertion(
@@ -795,7 +810,17 @@ void WebAuthnManager::FinishGetAssertion(
   credential->SetType(u"public-key"_ns);
   credential->SetRawId(aResult.KeyHandle());
   credential->SetAssertionResponse(assertion);
-  credential->SetAuthenticatorAttachment(aResult.AuthenticatorAttachment());
+
+  if (aResult.AuthenticatorAttachment().isSome()) {
+    credential->SetAuthenticatorAttachment(aResult.AuthenticatorAttachment());
+
+    mozilla::glean::webauthn_get::authenticator_attachment
+        .Get(NS_ConvertUTF16toUTF8(aResult.AuthenticatorAttachment().ref()))
+        .Add(1);
+  } else {
+    mozilla::glean::webauthn_get::authenticator_attachment.Get("unknown"_ns)
+        .Add(1);
+  }
 
   // Forward client extension results.
   for (const auto& ext : aResult.Extensions()) {
@@ -815,8 +840,7 @@ void WebAuthnManager::FinishGetAssertion(
     }
   }
 
-  mTransaction.ref().mPromise->MaybeResolve(credential);
-  ClearTransaction();
+  ResolveTransaction(credential);
 }
 
 void WebAuthnManager::RequestAborted(const uint64_t& aTransactionId,
@@ -844,6 +868,46 @@ void WebAuthnManager::RunAbortAlgorithm() {
   JS::Rooted<JS::Value> reason(cx);
   Signal()->GetReason(cx, &reason);
   CancelTransaction(reason);
+}
+
+void WebAuthnManager::ResolveTransaction(
+    const RefPtr<PublicKeyCredential>& aCredential) {
+  if (NS_WARN_IF(mTransaction.isNothing())) {
+    ClearTransaction();
+    return;
+  }
+
+  switch (mTransaction.ref().mType) {
+    case WebAuthnTransactionType::Create:
+      mozilla::glean::webauthn_create::success.Add(1);
+      break;
+    case WebAuthnTransactionType::Get:
+      mozilla::glean::webauthn_get::success.Add(1);
+      break;
+  }
+
+  mTransaction.ref().mPromise->MaybeResolve(aCredential);
+  ClearTransaction();
+}
+
+template <typename T>
+void WebAuthnManager::RejectTransaction(const T& aReason) {
+  if (NS_WARN_IF(mTransaction.isNothing())) {
+    ClearTransaction();
+    return;
+  }
+
+  switch (mTransaction.ref().mType) {
+    case WebAuthnTransactionType::Create:
+      mozilla::glean::webauthn_create::failure.Add(1);
+      break;
+    case WebAuthnTransactionType::Get:
+      mozilla::glean::webauthn_get::failure.Add(1);
+      break;
+  }
+
+  mTransaction.ref().mPromise->MaybeReject(aReason);
+  ClearTransaction();
 }
 
 }  // namespace mozilla::dom
