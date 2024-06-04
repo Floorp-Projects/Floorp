@@ -40,6 +40,13 @@ class PretenuringNursery;
 // start of JS::TraceKind.
 static constexpr size_t NurseryTraceKinds = 3;
 
+// The number of nursery allocations at which to pay attention to an allocation
+// site. This must be large enough to ensure we have enough information to infer
+// the lifetime and also large enough to avoid pretenuring low volume allocation
+// sites.
+static constexpr size_t NormalSiteAttentionThreshold = 200;
+static constexpr size_t UnknownSiteAttentionThreshold = 30000;
+
 enum class CatchAllAllocSite { Unknown, Optimized };
 
 // Information about an allocation site.
@@ -75,8 +82,9 @@ class AllocSite {
   uintptr_t scriptAndState = uintptr_t(State::Unknown);
   static constexpr uintptr_t STATE_MASK = BitMask(2);
 
-  // Next pointer forming a linked list of sites at which nursery allocation
-  // happened since the last nursery collection.
+  // Next pointer forming a linked list of sites which will have reached the
+  // allocation threshold and will be processed at the end of the next nursery
+  // collection.
   AllocSite* nextNurseryAllocated = nullptr;
 
   // Bytecode offset of this allocation site. Only valid if hasScript().
@@ -88,10 +96,12 @@ class AllocSite {
 
   uint32_t kind_ : 2;
 
-  // Number of nursery allocations at this site since last nursery collection.
+  // Number of nursery allocations at this site since it was last processed by
+  // processSite().
   uint32_t nurseryAllocCount = 0;
 
-  // Number of nursery allocations that survived. Used during collection.
+  // Number of nursery allocations at this site that were tenured since it was
+  // last processed by processSite().
   uint32_t nurseryPromotedCount : 24;
 
   // Number of times the script has been invalidated.
@@ -134,6 +144,12 @@ class AllocSite {
     MOZ_ASSERT(pcOffset <= MaxValidPCOffset);
     MOZ_ASSERT(pcOffset_ == pcOffset);
     setScript(script);
+  }
+
+  ~AllocSite() {
+    MOZ_ASSERT(!isInAllocatedList());
+    MOZ_ASSERT(nurseryAllocCount < NormalSiteAttentionThreshold);
+    MOZ_ASSERT(nurseryPromotedCount < NormalSiteAttentionThreshold);
   }
 
   void initUnknownSite(JS::Zone* zone, JS::TraceKind traceKind) {

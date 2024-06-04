@@ -678,8 +678,8 @@ void MacroAssembler::updateAllocSite(Register temp, Register result,
   add32(Imm32(1), Address(site, gc::AllocSite::offsetOfNurseryAllocCount()));
 
   branch32(Assembler::NotEqual,
-           Address(site, gc::AllocSite::offsetOfNurseryAllocCount()), Imm32(1),
-           &done);
+           Address(site, gc::AllocSite::offsetOfNurseryAllocCount()),
+           Imm32(js::gc::NormalSiteAttentionThreshold), &done);
 
   loadPtr(AbsoluteAddress(zone->addressOfNurseryAllocatedSites()), temp);
   storePtr(temp, Address(site, gc::AllocSite::offsetOfNextNurseryAllocated()));
@@ -7114,13 +7114,14 @@ void MacroAssembler::wasmBumpPointerAllocate(Register instance, Register result,
 
   int32_t endOffset = Nursery::offsetOfCurrentEndFromPosition();
 
-  // Bail to OOL code if the alloc site needs to be initialized. Keep allocCount
-  // in temp2 for later.
+  // Bail to OOL code if the alloc site needs to be pushed onto the active
+  // list. Keep allocCount in temp2 for later.
   computeEffectiveAddress(
       Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite()),
       temp1);
   load32(Address(temp1, gc::AllocSite::offsetOfNurseryAllocCount()), temp2);
-  branch32(Assembler::Equal, temp2, Imm32(0), fail);
+  branch32(Assembler::Equal, temp2,
+           Imm32(js::gc::NormalSiteAttentionThreshold - 1), fail);
 
   // Bump allocate in the nursery, bailing if there is not enough room.
   loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfNurseryPosition()),
@@ -7166,7 +7167,8 @@ void MacroAssembler::wasmBumpPointerAllocateDynamic(
   load32(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite() +
                                   gc::AllocSite::offsetOfNurseryAllocCount()),
          temp1);
-  branch32(Assembler::Equal, temp1, Imm32(0), fail);
+  branch32(Assembler::Equal, temp1,
+           Imm32(js::gc::NormalSiteAttentionThreshold - 1), fail);
 
   // Bump allocate in the nursery, bailing if there is not enough room.
   loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfNurseryPosition()),

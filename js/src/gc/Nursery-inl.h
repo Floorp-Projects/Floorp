@@ -161,10 +161,12 @@ inline void* js::Nursery::tryAllocateCell(gc::AllocSite* site, size_t size,
   // Update the allocation site. This code is also inlined in
   // MacroAssembler::updateAllocSite.
   uint32_t allocCount = site->incAllocCount();
-  if (allocCount == 1) {
+  if (allocCount == gc::NormalSiteAttentionThreshold) {
     pretenuringNursery.insertIntoAllocatedList(site);
   }
-  MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
+  MOZ_ASSERT_IF(
+      site->isNormal() && allocCount >= gc::NormalSiteAttentionThreshold,
+      site->isInAllocatedList());
 
   gc::gcprobes::NurseryAlloc(cell, kind);
   return cell;
