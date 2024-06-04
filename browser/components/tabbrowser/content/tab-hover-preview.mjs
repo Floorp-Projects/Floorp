@@ -62,24 +62,36 @@ export default class TabHoverPreviewPanel {
     }
   }
 
-  _needsThumbnailFor(tab) {
-    return !tab.selected;
+  _hasValidThumbnailState(tab) {
+    return (
+      tab && tab.linkedBrowser && !tab.getAttribute("pending") && !tab.selected
+    );
   }
 
   _maybeRequestThumbnail() {
-    if (!this._prefDisplayThumbnail) {
-      return;
-    }
-    if (!this._needsThumbnailFor(this._tab)) {
-      return;
-    }
     let tab = this._tab;
-    this._win.tabPreviews.get(tab).then(el => {
-      if (this._tab == tab && this._needsThumbnailFor(tab)) {
-        this._thumbnailElement = el;
-        this._updatePreview();
-      }
-    });
+
+    if (!this._prefDisplayThumbnail || !this._hasValidThumbnailState(tab)) {
+      return;
+    }
+    let thumbnailCanvas = this._win.PageThumbs.createCanvas(this._win);
+    thumbnailCanvas.width = 280;
+    thumbnailCanvas.height = 125;
+    this._win.PageThumbs.captureToCanvas(tab.linkedBrowser, thumbnailCanvas, {
+      fullViewport: true,
+      targetWidth: 280,
+    })
+      .then(() => {
+        // in case we've changed tabs after capture started, ensure we still want to show the thumbnail
+        if (this._tab == tab && this._hasValidThumbnailState(tab)) {
+          this._thumbnailElement = thumbnailCanvas;
+          this._updatePreview();
+        }
+      })
+      .catch(e => {
+        // Most likely the window was killed before capture completed, so just log the error
+        console.error(e);
+      });
   }
 
   activate(tab) {
@@ -145,7 +157,10 @@ export default class TabHoverPreviewPanel {
         this._updatePreview();
         break;
       case "TabSelect":
-        if (this._thumbnailElement && !this._needsThumbnailFor(this._tab)) {
+        if (
+          this._thumbnailElement &&
+          !this._hasValidThumbnailState(this._tab)
+        ) {
           this._thumbnailElement.remove();
           this._thumbnailElement = null;
         }
