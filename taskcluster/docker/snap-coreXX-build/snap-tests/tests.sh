@@ -46,6 +46,14 @@ fi;
 
 sudo snap refresh --hold=24h firefox
 
+while true; do
+  if snap changes 2>&1 | grep -E '(Doing|Undoing|Do\s|restarting)'; then
+    echo wait; sleep 0.5
+  else
+    break
+  fi
+done
+
 sudo snap install --name firefox --dangerous ./firefox.snap
 
 RUNTIME_VERSION=$(snap run firefox --version | awk '{ print $3 }')
