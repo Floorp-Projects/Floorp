@@ -139,6 +139,7 @@ if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CC_TYPE"] not in ("clang", "gcc"):
 
 DIRS += [
     "build",
+    "buildid_reader",
     "gtest",
 ]
 
