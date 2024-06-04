@@ -3221,6 +3221,10 @@ class PresShell final : public nsStubDocumentObserver,
   bool mProcessingReflowCommands : 1;
   bool mPendingDidDoReflow : 1;
 
+  // The last TimeStamp when the keyup event did not exit fullscreen because it
+  // was consumed.
+  TimeStamp mLastConsumedEscapeKeyUpForFullscreen;
+
   struct CapturingContentInfo final {
     CapturingContentInfo()
         : mRemoteTarget(nullptr),
