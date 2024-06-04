@@ -17,7 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">సంకేతపదం</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">భద్రపరచవద్దు</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">భద్రపరచవద్దు</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save_2">ఇప్పుడు కాదు</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">ఎప్పుడూ భద్రపరచవద్దు</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -25,17 +27,21 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">భద్రపరుచు</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">తాజాకరించవద్దు</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">తాజాకరించవద్దు</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update_2">ఇప్పుడు కాదు</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">తాజాకరించు</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">సంకేతపదం ఖాళీగా ఉండకూడదు</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">సంకేతపదం ఖాళీగా ఉండకూడదు</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">ప్రవేశ వివరాలను భద్రపరచలేకపోతున్నాం</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">సంకేతపదం ఇవ్వండి</string>
+    <!-- Error text displayed underneath the login field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">ప్రవేశ వివరాలను భద్రపరచలేకపోతున్నాం</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">ఈ ప్రవేశాన్ని భద్రపరచాలా?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">ఈ ప్రవేశాన్ని భద్రపరచాలా?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">ఈ ప్రవేశాన్ని తాజాకరించాలా?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">ఈ ప్రవేశాన్ని తాజాకరించాలా?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">భద్రపరచిన సంకేతపదానికి వాడుకరి పేరును చేర్చాలా?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -82,13 +88,13 @@
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">డిసెం</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">ప్రవేశాలను నిర్వహించండి</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">ప్రవేశాలను నిర్వహించండి</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">సూచించిన ప్రవేశాలను విస్తరించు</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">సూచించిన ప్రవేశాలను విస్తరించు</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">సూచించిన ప్రవేశాలను కుదించు</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">సూచించిన ప్రవేశాలను కుదించు</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">సూచించిన ప్రవేశాలు</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">సూచించిన ప్రవేశాలు</string>
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">ఈ సైటుకి డేటాని మళ్ళీ పంపాలా?</string>
@@ -97,4 +103,8 @@
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">రద్దుచేయి</string>
 
-    </resources>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">కొనసాగించు</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">రద్దుచేయి</string>
+</resources>

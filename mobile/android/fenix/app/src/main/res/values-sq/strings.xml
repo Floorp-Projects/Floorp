@@ -402,8 +402,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Shënim mbi privatësinë në Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Mësoni më tepër te shënimi ynë mbi privatësinë</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Duam fort t’ju mbajmë të parrezik</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -691,10 +689,6 @@
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Opsionale</string>
 
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Të lexojë dhe ndryshojë të dhëna sajti</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Fshije sajtin</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Lejoje për krejt sajtet</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
@@ -819,8 +813,6 @@
     <string name="preferences_sync_history">Historik</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Faqerojtës</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Kredenciale Hyrjesh</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Fjalëkalime</string>
     <!-- Preference for syncing tabs -->
@@ -848,8 +840,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s në %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Karta krediti</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Metoda pagesash</string>
     <!-- Preference for syncing addresses -->
@@ -1799,11 +1789,7 @@
     <string name="add_to_homescreen_description_2">Këtë sajt mund ta shtoni lehtë te skena Kreu e pajisjes tuaj, që ta hapni në çast dhe të shfletoni më shpejt, si të ish aplikacion.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Kredenciale hyrjesh dhe fjalëkalime</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Fjalëkalime</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Ruaj kredenciale hyrjesh dhe fjalëkalime</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Ruani fjalëkalime</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1820,46 +1806,28 @@
 
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Plotësoni emra përdoruesish dhe fjalëkalime në aplikacione të tjera në pajisjen tuaj.</string>
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Shtoni kredenciale hyrjeje</string>
 
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Shtoni fjalëkalim</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Njëkohëso kredenciale hyrjeje</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Njëkohësoni fjalëkalime</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Njëkohëso kredenciale hyrjesh nëpër pajisje</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">Njëkohësoni fjalëkalime mes pajisjesh</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Kredenciale hyrjesh të ruajtur</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Fjalëkalime të ruajtur</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Këtu do të shfaqen kredencialet e hyrjeve që ruani ose njëkohësoni në %s.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">Këtu do të shfaqen fjalëkalimet që ruani, ose njëkohësoni në %s. Krejt fjalëkalimet që ruani, fshehtëzohen.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Mësoni më tepër mbi Sync-un.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Mësoni më tepër mbi njëkohësimin</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Përjashtime</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Këtu do të shfaqen kredenciale hyrjesh dhe fjalëkalime që nuk janë ruajtur.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s s’do të ruajë fjalëkalime për sajte të radhitur këtu.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Për këto sajte s’do të ruhen kredenciale hyrjesh dhe fjalëkalime.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s s’do të ruajë fjalëkalime për këta sajte.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Fshi krejt përjashtimet</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Kërkoni te kredenciale hyrjesh</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Kërko te fjalëkalimet</string>
     <!-- The header for the site that a login is for -->
@@ -1888,16 +1856,10 @@
     <string name="saved_login_reveal_password">Shfaqe fjalëkalimin</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Fshihe fjalëkalimin</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Që të shihni kredenciale tuajt hyrjesh të ruajtur, shkyçeni</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">Që të shihni fjalëkalimet tuaj të ruajtura, shkyçeni</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Siguroni kredenciale hyrjesh dhe fjalëkalime tuajt</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Siguroni fjalëkalimet tuaj të ruajtur</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kredencialet e hyrjes dhe fjalëkalimet tuaj të ruajtur, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur prej hyrjes në to fjalëkalimet tuaj të ruajtur, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1916,8 +1878,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">Emrash (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Përdorur së fundi</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Renditni menu kredencialesh</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Menu renditjeje fjalëkalimesh</string>
@@ -1927,41 +1887,27 @@
     <string name="preferences_autofill">Vetëplotësime</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adresa</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Karta krediti</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Metoda pagesash</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Ruaj dhe plotëso vetvetiu të dhëna kartash</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Ruaj dhe plotëso metoda pagesash</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Të dhënat janë të fshehtëzuara</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s fshehtëzon krejt metodat e pagesave që ruani</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Njëkohëso të dhëna kartash mes pajisjesh</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Njëkohëso karta</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Shtoni kartë krediti</string>
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Shtoni kartë</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Administroni karta të ruajtura</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Administroni karta</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Shtoni adresë</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Administroni adresa</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Ruaj dhe vetëplotëso adresa</string>
 
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Ruaj dhe vetëplotëso adresa</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Përfshini hollësi të tilla si numra, email dhe adresa dërgimi</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Përfshin numra telefonash dhe adresa email</string>
@@ -1985,8 +1931,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Fshije kartën</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Jeni i sigurt se doni të fshihet kjo kartë krediti?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Të fshihet karta?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Fshije</string>
@@ -1999,23 +1943,15 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Karta të ruajtura</string>
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ju lutemi, jepni një numër të vlefshëm karte krediti</string>
 
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Jepni një numër karte të vlefshme</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ju lutemi, plotësojeni këtë fushë</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Shtoni emër</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Që të shihni kartat tuaja të ruajtura, shkyçeni</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Siguroni kartat tuaja të kreditit</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">Siguroni metodat tuaja të ruajtura të pagesave</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kartat tuaja kreditit të ruajturar, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur prej hyrjes në to hollësitë e ruajtura për metodat tuaja të pagesave, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2024,8 +1960,6 @@
     <string name="credit_cards_warning_dialog_later">Më vonë</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Shkyçni pajisjen tuaj</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Që të përdorni të dhëna karte krediti të depozituara, shkyçeni</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">Që të përdorni metoda të ruajtura pagesash, shkyçeni</string>
@@ -2035,12 +1969,6 @@
     <string name="addresses_edit_address">Përpunoni adresë</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Administroni adresa</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Emër</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Emër i Mesit</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Mbiemër</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Emër</string>
     <!-- The header for the street address of an address -->
@@ -2065,8 +1993,6 @@
     <string name="addresses_cancel_button">Anuloje</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Përzgjidhni adresë</string>
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Jeni i sigurt se doni të fshihet kjo adresë?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Të fshihet kjo adresë?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2165,49 +2091,29 @@
     <string name="login_menu_delete_button">Fshije</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Përpunoni</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Jeni i sigurt se doni të fshihen këto kredenciale hyrjeje?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">Jeni i sigurt se doni të fshihet ky fjalëkalim?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Fshije</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Anuloje</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Mundësi hyrjesh</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Mundësi fjalëkalimesh</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për adresën web të kredencialeve të hyrjes.</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">Fusha e përpunueshme e teksteve për adresën e sajtit.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për emrin e përdoruesit të kredencialeve të hyrjes.</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">Fusha e përpunueshme e teksteve për emrin e përdoruesit.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për fjalëkalimin e kredencialeve të hyrjes.</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">Fusha e përpunueshme e teksteve për fjalëkalimin.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Ruani ndryshimet te kredenciale hyrjesh.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Ruaji ndryshimet.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Përpunoni</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Përpunoni fjalëkalimin</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Shtoni kredenciale hyrjeje të re</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Shtoni fjalëkalim</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Lypset fjalëkalim</string>
 
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Jepni një fjalëkalim</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Emri i përdoruesit është i domosdoshëm</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Jepni emër përdoruesi</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2639,6 +2545,9 @@
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">Që të administroni parapëlqimet ”përkthe përherë“ dhe ”mos përkthe kurrë“, përzgjidhni një gjuhë.</string>
 
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">S’u ngarkuan dot gjuhë. Ju lutemi, rikontrolloni më vonë.</string>
+
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
     <string name="automatic_translation_option_offer_to_translate_title_preference">Ofro përkthim (parazgjedhje)</string>
@@ -2662,6 +2571,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Hiqe %1$s</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">S’u ngarkuan dot sajte. Ju lutemi, rikontrolloni më vonë.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Të fshihet %1$s?</string>
@@ -2761,6 +2672,12 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">Mjet krijimi skedash</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Sasi skedash për t’u krijuar</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Fusha e tekstit është e zbrazët</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Ju lutemi, jepni vetëm numra të plotë pozitivë</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Ju lutemi, jepni një numër më të madh se zero</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Shtoje te skeda aktive</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2777,11 +2694,11 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Shënim Mbi Privatësinë</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Parashtroje</string>
+    <string name="micro_survey_submit_button_label">Parashtroje</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">Mbylle</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Mbylle</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Faleminderit për përshtypjet tuaja!</string>
+    <string name="micro_survey_feedback_confirmation">Faleminderit për përshtypjet tuaja!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Shumë i Kënaqur</string>
     <!-- Option for likert scale -->
@@ -2792,6 +2709,14 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">Jo i kënaqur</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Shumë i Pakënaqur</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Hapni pyetësorin</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Mbylleni pyetësorin</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Mbylle</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->

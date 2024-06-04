@@ -206,6 +206,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_extensions">Isiɣzaf</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Sefrek isiɣzaf</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Snirem ugar n yisiɣzaf</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Talut n umiḍan</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -224,6 +226,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_open_in_regular_tab">Ldi deg yiccer amagnu</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Rnu ɣer ugdil agejdan</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Rnu ɣer ugdil agejdan…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Sebded</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -299,6 +303,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_edit_bookmark">Ẓreg tacreḍt n usebter</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
     <string name="browser_menu_save_as_pdf">Kles d PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Rmed timeẓri n tɣuṛi</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Sens timeẓri n tɣuṛi</string>
     <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
     <string name="browser_menu_translate_page">Suqel asebter…</string>
     <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
@@ -407,6 +415,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="juno_onboarding_privacy_notice_text">Tasertit tabaḍnit n Firefox</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Nḥemmel ad teqqimeḍ d aɣellsan</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Tunigin tusligt s wugar n yifranen</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -679,6 +689,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Sagen tagrumma n yizegrar</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Sagen tagrumma n yisiɣzaf</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">IH</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -690,6 +702,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="customize_addon_collection_user_hint">Bab n tegrumma (ID n useqdac)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Tagrumma n yizegrar tettwabeddel. Ffeɣ seg usnas akken ad ddun  yibeddilen…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Tagrumma n yisiɣzaf tettwabeddel. Ffeɣ seg usnas akken ad ddun  yibeddilen…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -773,6 +788,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Kemml s uzegrir yensa</string>
 
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Kemml s yisiɣzaf yensa</string>
+
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Sefrek amiḍan</string>
@@ -827,6 +845,14 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="fxa_tab_received_notification_name">Iccaren yettwarmesen</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Iccer si %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">%1$s waccaren i yettwamedlen: %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Wali accareni  yettwamedlen melmi kan</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -1788,12 +1814,18 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Mtawi awalen uffiren</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2">Mtawi awalen n uεeddi gar yibenkan</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Awalen uffiren yettwakelsen</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Issin ugar ɣef umtawi</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Tisuraf</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2">%s ur yesseklas ara awalen n uεeddi i yismal i d-yettwabdaren dagi.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2">%s ur yesseklas ara awalen n uεeddi i yismal-a.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Kkes akk tisuraf</string>
     <!-- Hint for search box in passwords list -->
@@ -1824,8 +1856,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="saved_login_reveal_password">Sken awal uffir</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Ffer awal uffir</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2">Kkes asekkeṛ i wakken ad twaliḍ wawalen-ik·im n uεeddi yettwaskelsen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Seɣles awalen-ik·im uffiren i yettwaskelsen</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2">Sbadu taneɣruft n usekkeṛ n yibenk, tangalt PIN neɣ awal uffir i ummesten n wawalen-ik·im n uεeddi yettwaskelsen ticki yella win ikecmen ɣer yibenk-inek·inem.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Ticki</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2242,6 +2278,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_info_grade_info_C">Nettwali iwellihen sdukklen iwellihen inaflasen d yiwellihen arinaflasen.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Issin ugar ɣef %s.</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_info_learn_more_link_2">Amek i yesguccul %s alɣu n tɣara</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Iɣewwaṛen</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
@@ -2296,6 +2334,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_contextual_onboarding_title">Ɛreḍ amnir-nneɣ yettwamanen i timawin n ufaris</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Issin ugar</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">tasertit n tbaḍnit</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">tiwtilin n useqdec</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
@@ -2364,6 +2404,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Suqqel asebter-a?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Asebter yettwasuqqel seg %1$s ɣer %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Ԑreḍ tisuqilin tusligin n %1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
@@ -2424,6 +2468,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">Ismenyifen n tsuqilt</string>
 
+    <!-- Button text for the button that will take the user to the never translate these sites dialog. On the never translate these sites dialog, the user can set if translations should never occur on certain websites. -->
+    <string name="translation_settings_automatic_never_translate_sites">Ur suqqul ara ismal-a</string>
     <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
     <string name="translation_settings_download_language">Sader tutlayin</string>
 
@@ -2502,6 +2548,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="debug_drawer_tab_tools_tab_count_title">Amḍan n waccaren</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Urmid</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Urmid</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Insa</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->

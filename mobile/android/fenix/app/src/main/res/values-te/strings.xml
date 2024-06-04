@@ -13,7 +13,7 @@
     <string name="content_description_private_browsing_button">అంతరంగిక విహరణను చేతనించు</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">అంతరంగిక విహరణను అచేతనించు</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">వెతకండి లేదా చిరునామా ఇవ్వండి</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">మీ తెరిచివున్న ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
@@ -38,9 +38,15 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">ఇటీవల భద్రపరచినవి</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">ఇటీవల భద్రపరచినవి</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">తీసివేయి</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">తీసివేయి</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">ఇష్టాంశాలు</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">తొలగించు</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s‌ని తయారుచేసినది మొజిల్లా.</string>
@@ -83,8 +89,13 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">కొత్త అంతరంగిక ట్యాబు</string>
 
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">సంకేతపదాలు</string>
+
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">అన్నీ చూపించు</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">తొలగించు</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">తీసివేయి</string>
@@ -107,9 +118,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">ఆపివేయి</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">పొడగింతలు</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">పొడగింతలు</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">పొడగింతలు</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">ఖాతా సమాచారం</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">ఇక్కడ పొడగింతలేమీ లేవు</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ఇక్కడ పొడగింతలేమీ లేవు</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">సహాయం</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -123,7 +138,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">ముంగిలి తెరకు చేర్చు</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">స్థాపించు</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">స్థాపించు</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">పేజీలో వెతుకు</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -151,6 +166,19 @@
 
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">మార్చు</string>
+
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">సంకేతపదాలు</string>
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">%1$sలో కొత్తవి</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">డెస్క్‌టాప్ సైటుకి మారండి</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">పనిముట్లు</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">భద్రపరుచు</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -181,14 +209,34 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">చిరునామా పట్టీలో మీరు వ్రాసిన ప్రతిదాన్ని %s మీ అప్రమేయ శోధన యంత్రంతో పంచుకుంటుంది.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">%s‌లో వెతకండి</string>
 
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">వెతుకుడు అమరికలు</string>
 
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">మొదలుపెట్టండి</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">దాటవేయి</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">మూసివేయి</string>
+
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">కొనసాగించు</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">ఇప్పుడు కాదు</string>
+
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ఇప్పుడు కాదు</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ఇప్పుడు కాదు</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ఇప్పుడు కాదు</string>
+
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">ఇప్పుడు కాదు</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -238,6 +286,9 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-మాత్రమే రీతి</string>
 
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">రద్దుచేయి</string>
+
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ఇంకా తెలుసుకోండి</string>
     <!-- Option for the https only setting -->
@@ -262,11 +313,17 @@
     <string name="preferences_gestures">సైగలు</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">అభిమతీకరణ</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">మొజిల్లా ఖాతా</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">సింక్ చేయడాన్ని కొనసాగించడానికి అనుసంధానించండి</string>
     <!-- Preference for language -->
     <string name="preferences_language">భాష</string>
 
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">అనువాదం</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">అనువాదాలు</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">డేటా ఎంపికలు</string>
 
@@ -290,18 +347,23 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">లంకెలను అనువర్తనాల్లో తెరువు</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">ఎల్లప్పుడూ</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">బయటి దింపుకోలు నిర్వాహకి</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">పొడగింతలు</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">పొడగింతలు</string>
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">గమనింపులు</string>
 
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">ఐచ్ఛికం</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">అభిమత పొడగింతల సేకరణ</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">అభిమత పొడగింతల సేకరణ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">సరే</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -312,7 +374,9 @@
     <string name="customize_addon_collection_user_hint">సేకరణ యజమాని (వాడుకరి ID)</string>
 
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">ఇటీవలి ఇష్టాంశాలు</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">ఇటీవలి ఇష్టాంశాలు</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">ఇష్టాంశాలు</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">ఇటీవల చూసినవి</string>
@@ -325,7 +389,6 @@
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">ఇంకా తెలుసుకోండి</string>
 
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ఇప్పుడు సింక్ చేయి</string>
     <!-- Preference category for sync -->
@@ -334,8 +397,8 @@
     <string name="preferences_sync_history">చరిత్ర</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">ఇష్టాంశాలు</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">ప్రవేశాలు</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2">సంకేతపదాలు</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">తెరిచివున్న ట్యాబులు</string>
     <!-- Preference for signing out -->
@@ -360,8 +423,8 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$sలో %1$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">క్రెడిట్ కార్డులు</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2">చెల్లింపు పద్ధతులు</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">చిరునామాలు</string>
 
@@ -452,6 +515,18 @@
     <string name="settings_title">అమరికలు</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">మూసివేయి</string>
+
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">తెరిచివున్న ట్యాబులు</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">రద్దుచేయి</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d పేజీ</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d పేజీలు</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">ఇటీవల మూసిన ట్యాబులు</string>
@@ -566,9 +641,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">సేకరణ పేరు</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">పేరుమార్చు</string>
+    <string name="rename_top_site">పేరుమార్చు</string>
     <!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">తీసివేయి</string>
+    <string name="remove_top_site">తీసివేయి</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">చరిత్ర నుండి తొలగించు</string>
@@ -827,6 +902,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">పంచుకోండి</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">విస్మరించు</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">పరికరానికి పంపించు</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -925,6 +1002,9 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ట్యాబులు</string>
 
+    <!-- Title for the data and history items in Delete browsing data -->
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">విహరణ చరిత్ర</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d చిరునామాలు</string>
@@ -973,9 +1053,11 @@
     <!-- Text for the allow button for the history group dialog -->
     <string name="delete_history_group_prompt_allow">తొలగించు</string>
 
+    <!-- Onboarding -->
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">సింక్ చేతనంగా ఉంది</string>
 
+    <!-- Onboarding theme -->
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">ట్యాబులు పంపబడ్డాయి!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -1145,32 +1227,16 @@
     <string name="add_to_homescreen_text_placeholder">సత్వరమార్గం పేరు</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">ప్రవేశాలు, సంకేతపదాలు</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">ప్రవేశాలను, సంకేతపదాలను భద్రపరచు</string>
+    <string name="preferences_passwords_logins_and_passwords_2">సంకేతపదాలు</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">భద్రపరచమని అడుగు</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">ఎప్పుడూ భద్రపరచవద్దు</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">ప్రవేశాలను సింక్ చేయి</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">భద్రపరచిన ప్రవేశాలు</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">మీరు భద్రపరచిన లేదా %sలో సింక్రనించిన ప్రవేశాలు ఇక్కడ కనిపిస్తాయి.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">సింక్ గురించి మరింత తెలుసుకోండి.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">మినహాయింపులు</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">భద్రపరచని ప్రవేశాలు, సంకేతపదాలు ఇక్కడ కనిపిస్తాయి.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">ఈ సైట్ల ప్రవేశాలు, సంకేతపదాలు భద్రపరచబడవు.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">మినహాయింపులన్నీ తొలగించు</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">ప్రవేశాలను వెతకండి</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">సైటు</string>
     <!-- The header for the username for a login -->
@@ -1197,12 +1263,6 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">సంకేతపదాన్ని దాచు</string>
 
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">భద్రపరచిన మీ ప్రవేశాలను చూడడానికి తాళంతీయండి</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">ప్రవేశాలను, సంకేతపదాలను కాపాడుకోండి</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">మీ ఫోను ఎవరివద్దనైనా ఉన్నప్పుడు మీ ప్రవేశాలను, సంకేతపదాలను చూడకుండా సంరక్షించుకోడానికి పరికరానికి తాళపు సరళిని, పిన్, లేదా సంకేతపదాన్ని అమర్చుకోండి.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">తర్వాత</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1217,24 +1277,13 @@
     <string name="saved_logins_sort_strategy_alphabetically">పేరు (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">చివరి వాడుక</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ప్రవేశాల క్రమబద్ధీకరణ మెనూ</string>
 
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">చిరునామాలు</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">క్రెడిట్ కార్డులు</string>
-    <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">కార్డులను భద్రపరుచు, స్వయంచాలకంగా పూరించు</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">డేటా గుప్తీకరించబడుతుంది
-</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2">చెల్లింపు పద్ధతులు</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">కార్డులను పరికరాల మధ్య సింక్రనించు</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">క్రెడిట్ కార్డును చేర్చు</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">భద్రపరచిన కార్డుల నిర్వహణ</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">చిరునామాను చేర్చు</string>
 
@@ -1256,8 +1305,6 @@
     <string name="credit_cards_menu_delete_card">కార్డును తొలగించు</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">కార్డును తొలగించు</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">మీరు ఈ క్రెడిట్ కార్డును నిజంగానే తొలగించాలనుకుంటున్నారా?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">తొలగించు</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1269,21 +1316,13 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">భద్రపరచిన కార్డులు</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">దయచేసి సరైన క్రెడిట్ కార్డు నెంబరు ఇవ్వండి</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">దయచేసి ఈ ఖాళీని పూరించండి</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">తర్వాత</string>
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">చిరునామాను చేర్చు</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">మొదటి పేరు</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">మధ్య పేరు</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">ఇంటి పేరు</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">పేరు</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">వీధి చిరునామా</string>
     <!-- The header for the city of an address -->
@@ -1305,8 +1344,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">చిరునామాను తొలగించు</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">ఈ చిరునామాను నిజంగానే తొలగించాలనుకుంటున్నారా?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">తొలగించు</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1321,10 +1358,15 @@
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">తొలగించు</string>
 
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label">పేరు</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">వెతుకుడు పదాన్ని “%s”తో పూరించండి. ఉదాహరణ:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">అభిమత శోధన యంత్ర వివరాలు</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button">భద్రపరుచు</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">శోధన యంత్రం పేరును ఇవ్వండి</string>
@@ -1376,29 +1418,11 @@
     <string name="login_menu_delete_button">తొలగించు</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">మార్చు</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">నిజంగానే ఈ ప్రవేశాన్ని తొలగించాలనుకుంటున్నారా?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">తొలగించు</string>
 
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">రద్దుచేయి</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu">ప్రవేశ ఎంపికలు</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">ప్రవేశపు జాల చిరునామా కోసం మార్చదగ్గ పాఠ్య ఖాళీ.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">ప్రవేశపు వాడుకరి పేరు కొరకు మార్చదగ్గ పాఠ్య ఖాళీ.</string>
-    <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">ప్రవేశపు సంకేతపదం కొరకు మార్చదగ్గ పాఠ్య ఖాళీ.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">ప్రవేశంలో మార్పులను భద్రపరుచు.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit">మార్చు</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">సంకేతపదం తప్పనిసరి</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">వాడుకరి పేరు తప్పనిసరి</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">స్వర శోధన</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1431,11 +1455,11 @@
     <string name="top_sites_max_limit_confirmation_button">సరే, అర్థమయ్యింది</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">పేరు</string>
+    <string name="top_sites_rename_dialog_title">పేరు</string>
     <!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">సరే</string>
+    <string name="top_sites_rename_dialog_ok">సరే</string>
     <!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">రద్దుచేయి</string>
+    <string name="top_sites_rename_dialog_cancel">రద్దుచేయి</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">అమరికలు</string>
@@ -1468,7 +1492,77 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">అమరికలకు వెళ్ళు</string>
 
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">అమరికలు</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">ఇంకా తెలుసుకోండి</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">ఇంకా తెలుసుకోండి</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">ఇప్పుడు కాదు</string>
+
+    <!-- Flag showing that the review quality check feature is work in progress. -->
+    <string name="review_quality_check_beta_flag">బీటా</string>
+    <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
+    <string name="review_quality_check_highlights_show_less">కొన్నే చూపించు</string>
+    <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
+    <string name="review_quality_check_highlights_show_more">ఇంకా చూపించు</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">నాణ్యత</string>
+    <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
+    <string name="review_quality_check_highlights_type_price">ధర</string>
+
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">లంకెలు</string>
+
     <!-- Translations feature-->
 
+
+    <!-- Text that links to additional information about the Firefox translations feature. -->
+    <string name="translations_bottom_sheet_info_message_learn_more">ఇంకా తెలుసుకోండి</string>
+    <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button">ఇప్పుడు కాదు</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">పూర్తయింది</string>
+    <!-- Button text on the translations dialog to begin a translation of the website. -->
+    <string name="translations_bottom_sheet_positive_button">అనువదించు</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">మళ్ళీ ప్రయత్నించు</string>
+    <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
+    <string name="translations_bottom_sheet_translating_in_progress">అనువదిస్తోంది</string>
+    <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">అనువాదం జరుగుతోంది</string>
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">ఒక భాషను ఎంచుకోండి</string>
+    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">ఇంకా తెలుసుకోండి</string>
+
+
+    <!-- Translations options dialog -->
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">అనువాద ఎంపికలు</string>
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">అనువాద ఎంపికలు</string>
+
+    <!-- Translation settings dialog -->
+    <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
+    <string name="translation_settings_toolbar_title">అనువాదాలు</string>
+    <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
+    <string name="translation_settings_translation_preference">అనువాద అభిరుచులు</string>
+
+    <!-- The Delete site dialogue title will appear when the user clicks on a list item.
+             The first parameter is web site url (for example:"wikipedia.com") -->
+    <string name="never_translate_site_dialog_title_preference">%1$s‌ని తొలగించాలా?</string>
+    <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
+    <string name="never_translate_site_dialog_confirm_delete_preference">తొలగించు</string>
+    <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
+    <string name="never_translate_site_dialog_cancel_preference">రద్దుచేయి</string>
+
+    <!-- Clickable text from the screen header that links to a website. -->
+    <string name="download_languages_header_learn_more_preference">ఇంకా తెలుసుకోండి</string>
+    <!-- The subhead of the download language preference screen will appear above the pivot language. -->
+    <string name="download_languages_available_languages_preference">అందుబాటులో ఉన్న భాషలు</string>
+
+    <!-- Micro survey -->
 
     </resources>

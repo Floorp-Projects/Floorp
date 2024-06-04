@@ -5,7 +5,11 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">హైలైట్ చేసినవి</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">పొడగింతలు</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">పొడగింతలు</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">పొడగింతలు</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">పొడగింతల నిర్వాహకి</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">పొడగింతల నిర్వాహకి</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">పొడగింతల నిర్వాహకి</string>
     </resources>
