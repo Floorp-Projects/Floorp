@@ -1155,7 +1155,15 @@ void CustomElementRegistry::SetElementCreationCallback(
   }
 
   RefPtr<CustomElementCreationCallback> callback = &aCallback;
-  mElementCreationCallbacks.InsertOrUpdate(nameAtom, std::move(callback));
+
+  if (mCandidatesMap.Contains(nameAtom)) {
+    mElementCreationCallbacksUpgradeCandidatesMap.GetOrInsertNew(nameAtom);
+    RefPtr<Runnable> runnable =
+        new RunCustomElementCreationCallback(this, nameAtom, callback);
+    nsContentUtils::AddScriptRunner(runnable.forget());
+  } else {
+    mElementCreationCallbacks.InsertOrUpdate(nameAtom, std::move(callback));
+  }
 }
 
 void CustomElementRegistry::Upgrade(nsINode& aRoot) {

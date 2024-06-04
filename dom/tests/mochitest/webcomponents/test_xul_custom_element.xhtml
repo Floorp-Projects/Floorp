@@ -344,6 +344,20 @@
       ok(element1 instanceof TestCustomElement5, "Should be an instance of TestCustomElement5");
     }
 
+    function testSetElementCreationCallbackExistsBeforeCall() {
+      class TestCustomElement6 extends XULElement {}
+      document.querySelector("#content").appendChild(parseXULToFragment(`<test-custom-element-6 />`));
+
+      let element = document.querySelector("#content").lastChild;
+      ok(!(element instanceof TestCustomElement6), "Is not a TestCustomElement6 when DOM parsed");
+
+      customElements.setElementCreationCallback(
+        "test-custom-element-6",
+        () => customElements.define("test-custom-element-6", TestCustomElement6)
+      );
+      ok(element instanceof TestCustomElement6, "setElementCreationCallback called automatically to upgrade candidate component");
+    }
+
     function runTest() {
       basicCustomElementCreate();
       parserBasicElementUpgrade();
@@ -366,6 +380,8 @@
 
       testSetElementCreationballbackInDocument();
       setElementCreationCallbackCreate();
+
+      testSetElementCreationCallbackExistsBeforeCall();
 
       SimpleTest.finish();
     }

@@ -142,6 +142,23 @@ function twoElementInnerHTMLTest() {
   is(Object.getPrototypeOf(el2), XObjElement5.prototype, "Created element should have the prototype of the custom type.");
 }
 
+function setElementCreationCallbackUpgradesExistingTest() {
+  class UpdradeDuringSetCallback extends HTMLElement {}
+  let p = document.createElement("p");
+  p.innerHTML = "<upgrade-during-set-callback></upgrade-during-set-callback>";
+  document.body.append(p);
+
+  let element = p.firstChild;
+  ok(!(element instanceof UpdradeDuringSetCallback), "Element defined before type is not upgraded");
+
+  registry.setElementCreationCallback(
+    "upgrade-during-set-callback",
+    () => customElements.define("upgrade-during-set-callback", UpdradeDuringSetCallback)
+  );
+  ok(element instanceof UpdradeDuringSetCallback, "setElementCreationCallback called automatically to upgrade candidate component");
+  p.remove();
+}
+
 function startTest() {
   simpleTest();
   multipleDefinitionTest();
@@ -150,6 +167,7 @@ function startTest() {
   simpleExtendedTest();
   simpleInnerHTMLTest();
   twoElementInnerHTMLTest();
+  setElementCreationCallbackUpgradesExistingTest();
 }
 
 startTest();
