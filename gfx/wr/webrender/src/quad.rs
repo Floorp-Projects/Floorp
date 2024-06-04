@@ -137,6 +137,8 @@ pub fn prepare_quad(
     );
 
     if let QuadRenderStrategy::Direct = strategy {
+        // Render the primitive as a single instance. Coordinates are provided to the
+        // shader in layout space.
         frame_state.push_prim(
             &PrimitiveCommand::quad(
                 pattern.kind,
@@ -163,6 +165,11 @@ pub fn prepare_quad(
     match strategy {
         QuadRenderStrategy::Direct => {}
         QuadRenderStrategy::Indirect => {
+            // Render the primtive as a single instance in a render task, apply a mask
+            // and composite it in the current picture.
+            // The coordinates are provided to the shaders:
+            //  - in layout space for the render task,
+            //  - in device space for the instance that draw into the destination picture.
             let task_id = add_render_task_with_mask(
                 pattern,
                 clipped_surface_rect.size(),
@@ -192,6 +199,12 @@ pub fn prepare_quad(
             );
         }
         QuadRenderStrategy::Tiled { x_tiles, y_tiles } => {
+            // Render the primtive as a grid of tiles decomposed in device space.
+            // Tiles that need it are drawn in a render task and then composited into the
+            // destination picture.
+            // The coordinates are provided to the shaders:
+            //  - in layout space for the render task,
+            //  - in device space for the instances that draw into the destination picture.
             let clip_coverage_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
             let clipped_surface_rect = clipped_surface_rect.to_f32();
@@ -353,6 +366,12 @@ pub fn prepare_quad(
             }
         }
         QuadRenderStrategy::NinePatch { clip_rect, radius } => {
+            // Render the primtive as a nine-patch decomposed in device space.
+            // Nine-patch segments that need it are drawn in a render task and then composited into the
+            // destination picture.
+            // The coordinates are provided to the shaders:
+            //  - in layout space for the render task,
+            //  - in device space for the instances that draw into the destination picture.
             let clip_coverage_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
 
