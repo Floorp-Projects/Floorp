@@ -23,8 +23,8 @@ const Localized = createFactory(FluentReact.Localized);
 class DebugTargetInfo extends PureComponent {
   static get propTypes() {
     return {
-      alwaysOnTop: PropTypes.boolean.isRequired,
-      focusedState: PropTypes.boolean,
+      alwaysOnTop: PropTypes.bool.isRequired,
+      focusedState: PropTypes.bool,
       toggleAlwaysOnTop: PropTypes.func.isRequired,
       debugTargetData: PropTypes.shape({
         connectionType: PropTypes.oneOf(Object.values(CONNECTION_TYPES))
