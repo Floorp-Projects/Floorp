@@ -615,6 +615,8 @@ support-files = ["redundant_font_download.sjs"]
 
 ["test_reframe_pseudo_element.html"]
 
+["test_reframe_table_in_ib_split.html"]
+
 ["test_rem_unit.html"]
 
 ["test_resource_cache.html"]

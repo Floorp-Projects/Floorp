@@ -1,0 +1,146 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+Test for bug 1850834: Replacing the contents of a table should reframe the same amount, regardless of whether it's in an IB split.
+</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div id="content">
+  <!-- Reference case: Table as child of block-level element -->
+  <div>
+    <table id="tableInBlock"></table>
+  </div>
+  <!-- Test case: Table as child of inline-level element (forming IB split) -->
+  <span>
+    aaa
+    <table id="tableInIBSplit"></table>
+    bbb
+  </span>
+</div>
+<script>
+const utils = SpecialPowers.getDOMWindowUtils(window);
+
+/*
+ * This utility function invokes callbackFunc(callbackArg) and returns the
+ * number of frames that are reconstructed in the process.
+ */
+function countReframesForTweak(callbackFunc, callbackArg) {
+  document.documentElement.offsetTop;
+  const previousConstructCount = utils.framesConstructed;
+
+  callbackFunc(callbackArg)
+
+  document.documentElement.offsetTop;
+  return utils.framesConstructed - previousConstructCount;
+}
+
+/*
+ * Helper for expectSameReframesForTweak, to reduce boilerplate.
+ * Sets the provided innerHTML in both tables, and then performs the
+ * dynamic-modification-callback on both tables, and asserts that the
+ * frame construction counts match.
+ */
+function testWithInitialTableContent(callbackFunc, startingInnerHTML, message) {
+  tableInBlock.innerHTML = tableInIBSplit.innerHTML = startingInnerHTML;
+
+  let actual = countReframesForTweak(callbackFunc, tableInIBSplit);
+  let expected = countReframesForTweak(callbackFunc, tableInBlock);
+  is(actual, expected, message);
+}
+
+/*
+ * This utility function runs the provided callback function for both of the
+ * tables, from various starting-conditions. In each case, we check that
+ * the number of frames that are reconstructed is the same, between the
+ * two tables.
+ */
+function expectSameReframesForTweak(callbackFunc, message) {
+  testWithInitialTableContent(callbackFunc, "", /* <-- empty string */
+                              `${message} (starting with empty table)`);
+
+  testWithInitialTableContent(callbackFunc, "  ", /* <-- two space chars */
+                              `${message} (starting with ` +
+                              `empty-aside-from-whitespace table)`);
+
+  testWithInitialTableContent(callbackFunc, "Some text",
+                              `${message} (starting with text node child)`);
+
+  testWithInitialTableContent(callbackFunc, "<caption></caption>",
+                              `${message} (starting with empty caption)`);
+
+  testWithInitialTableContent(callbackFunc, "<tbody></tbody>",
+                              `${message} (starting with empty tbody)`);
+
+  testWithInitialTableContent(callbackFunc, "<tr></tr>",
+                              `${message} (starting with empty tr)`);
+
+  testWithInitialTableContent(callbackFunc, "<td></td>",
+                              `${message} (starting with empty td)`);
+
+  testWithInitialTableContent(callbackFunc,
+                              "<col></col>",
+                              `${message} (starting with an empty col)`);
+
+  testWithInitialTableContent(callbackFunc,
+                              "<colgroup></colgroup>",
+                              `${message} (starting with an empty colgroup)`);
+
+  testWithInitialTableContent(callbackFunc,
+                              "<colgroup><col></col></colgroup>",
+                              `${message} (starting with a colgroup/col)`);
+
+  testWithInitialTableContent(callbackFunc,
+                              "<tbody><tr><td>Contents</td></tr></tbody>",
+                              `${message} (starting with full subtree)`);
+}
+
+// The actual test logic begins here!
+// We invoke expectSameReframesForTweak to compare reframe counts between our
+// two tables, for various types of dynamic modifications:
+expectSameReframesForTweak((elem)=> { elem.textContent = ""; },
+  "Reframe count should be the same when clearing table.textContent"
+);
+
+expectSameReframesForTweak((elem)=> { elem.textContent = " "; },
+  "Reframe count should be the same when setting table.textContent to a space"
+);
+
+expectSameReframesForTweak((elem)=> { elem.textContent = "modified"; },
+   "Reframe count should be the same when setting table.textContent");
+
+expectSameReframesForTweak(
+   (elem) => { elem.innerHTML = "<tbody><tr><td>content</td></tr></tbody>"; },
+   "Reframe count should be the same when setting table.innerHTML to " +
+   "table subtree with full hierarchy specified");
+
+expectSameReframesForTweak(
+   (elem) => { elem.innerHTML = "<caption>caption</caption>" +
+               "<tbody><tr><td>content</td></tr></tbody>"; },
+   "Reframe count should be the same when setting table.innerHTML to " +
+   "table subtree with full hierarchy specified, including a caption");
+
+expectSameReframesForTweak(
+   (elem) => { elem.innerHTML = "<tbody>just a tbody</tbody>"; },
+   "Reframe count should be the same when setting table.innerHTML to " +
+   "just a tbody");
+
+expectSameReframesForTweak(
+   (elem) => { elem.innerHTML = "<tr>just a tr</tr>"; },
+   "Reframe count should be the same when setting table.innerHTML to " +
+   "just a tr");
+
+expectSameReframesForTweak(
+   (elem) => { elem.innerHTML = "<td>just a td</td>"; },
+   "Reframe count should be the same when setting table.innerHTML to " +
+   "just a td");
+
+expectSameReframesForTweak(
+   (elem) => { elem.innerHTML = "<col></col>"; },
+   "Reframe count should be the same when setting table.innerHTML to " +
+   "just a col");
+
+expectSameReframesForTweak(
+   (elem) => { elem.innerHTML = "<colgroup></colgroup>"; },
+   "Reframe count should be the same when setting table.innerHTML to " +
+   "just a colgroup");
+</script>
