@@ -167,15 +167,6 @@ toolbarpaletteitem {
   }
 }
 
-:root[inDOMFullscreen] #navigator-toolbox,
-:root[inDOMFullscreen] #fullscr-toggler,
-:root[inDOMFullscreen] #sidebar-box,
-:root[inDOMFullscreen] #sidebar-splitter,
-:root[inFullscreen]:not([macOSNativeFullscreen]) toolbar:not([fullscreentoolbar=true]),
-:root[inFullscreen] .global-notificationbox {
-  visibility: collapse;
-}
-
 /* Rules to help integrate WebExtension buttons */
 
 .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
@@ -382,68 +373,6 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
 #historySwipeAnimationContainer {
   overflow: hidden;
   pointer-events: none;
-}
-
-/*  Full Screen UI */
-
-#fullscr-toggler {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  position: fixed;
-  z-index: 2147483647;
-}
-
-#fullscreen-and-pointerlock-wrapper {
-  position: fixed;
-  z-index: 2147483647 !important;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  pointer-events: none;
-}
-
-.pointerlockfswarning {
-  position: fixed;
-  visibility: visible;
-  transition: transform 300ms ease-in;
-  /* To center the warning box horizontally,
-     we use left: 50% with translateX(-50%). */
-  top: 0; left: 50%;
-  transform: translate(-50%, -100%);
-  box-sizing: border-box;
-  width: max-content;
-  max-width: 95%;
-  pointer-events: none;
-}
-.pointerlockfswarning:not([hidden]) {
-  display: flex;
-  will-change: transform;
-}
-.pointerlockfswarning[onscreen] {
-  transform: translate(-50%, 50px);
-}
-.pointerlockfswarning[ontop] {
-  /* Use -10px to hide the border and border-radius on the top */
-  transform: translate(-50%, -10px);
-}
-:root[macOSNativeFullscreen] .pointerlockfswarning[ontop] {
-  transform: translate(-50%, 80px);
-}
-
-.pointerlockfswarning-domain-text,
-.pointerlockfswarning-generic-text {
-  word-wrap: break-word;
-  /* We must specify a min-width, otherwise word-wrap:break-word doesn't work. Bug 630864. */
-  min-width: 1px
-}
-.pointerlockfswarning-domain-text:not([hidden]) + .pointerlockfswarning-generic-text {
-  display: none;
-}
-
-#fullscreen-exit-button {
-  pointer-events: auto;
 }
 
 /* notification anchors should only be visible when their associated
