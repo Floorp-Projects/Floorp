@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <script>
+      addEventListener("pageshow", () => {
+        // Let's unblock the synchronous XHR in the opener.
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "bug1769155.sjs?stop", false);
+        xhr.addEventListener("load", () => {
+          opener.postMessage("redirectDone", "*");
+        });
+        xhr.send();
+      });
+    </script>
+  </head>
+</html>

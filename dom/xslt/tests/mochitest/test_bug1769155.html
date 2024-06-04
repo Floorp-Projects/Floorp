@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>XSLT error results shouldn't replace documents loaded during the transform</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    async function runTest() {
+      const crossOriginLocation = "https://example.org/tests/dom/xslt/tests/mochitest/file_bug1769155.html";
+      const sjs = new URL("bug1769155.sjs", location.href);
+      // During the XSLT processing we redirect by setting location and then
+      // spin the event loop using synchronous XHR, so that the location change
+      // happens while we're still processing the XSLT.
+      let xml = `
+        <?xml-stylesheet type="application/xml" href="#sheet"?>
+        <stylesheet id="sheet" version="1.0" xmlns="http://www.w3.org/1999/XSL/Transform">
+          <template match="/">
+            <script xmlns="http://www.w3.org/1999/xhtml">
+              location = "${crossOriginLocation}";
+              let xhr = new XMLHttpRequest();
+              xhr.open("GET", "${sjs.href}", false);
+              xhr.send();
+            <\/script>
+          </template>
+        </stylesheet>`;
+
+      let win = window.open();
+
+      let redirected = new Promise((resolve) => {
+        addEventListener("message", resolve, { once: true });
+      });
+      win.location = URL.createObjectURL(new Blob([ xml ], { type: "application/xml" }));
+      await redirected;
+
+      // At this point the setting of window.location should have redirected us to
+      // a cross-origin site.
+      let threw = false;
+      try {
+        win.document;
+      } catch {
+        threw = true;
+      }
+      ok(threw, "Accessing a property on a cross-origin window should fail.");
+
+      win.close();
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
