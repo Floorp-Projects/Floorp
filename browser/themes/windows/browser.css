@@ -304,7 +304,7 @@
   }
 
   :root:not([lwtheme]) {
-    #urlbar:not([focused="true"]) > #urlbar-background,
+    #urlbar:not([focused]) > #urlbar-background,
     #searchbar:not(:focus-within),
     .findbar-textbox:not(:focus) {
       border-color: ThreeDShadow;

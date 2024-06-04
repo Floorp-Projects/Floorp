@@ -67,7 +67,7 @@
   }
 }
 
-#urlbar[focused="true"],
+#urlbar[focused],
 #searchbar:focus-within {
   :root[lwt-toolbar-field-focus="light"] & {
     color-scheme: light;
@@ -159,7 +159,7 @@
   }
 }
 
-#urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background,
+#urlbar[focused]:not([suppress-focus-border]) > #urlbar-background,
 #searchbar:focus-within {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
@@ -172,7 +172,7 @@
   border-color: transparent;
 }
 
-#urlbar[focused="true"] > #urlbar-background,
+#urlbar[focused] > #urlbar-background,
 #searchbar:focus-within {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
 }
@@ -182,12 +182,12 @@
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.13);
 }
 
-#urlbar:is([focused="true"], [open]),
+#urlbar:is([focused], [open]),
 #searchbar:focus-within {
   color: var(--toolbar-field-focus-color);
 }
 
-#urlbar:is([focused="true"], [open]) > #urlbar-background,
+#urlbar:is([focused], [open]) > #urlbar-background,
 #searchbar:focus-within {
   background-color: var(--toolbar-field-focus-background-color);
 }
@@ -216,7 +216,7 @@
   }
 }
 
-#urlbar:not([focused="true"]) {
+#urlbar:not([focused]) {
   caret-color: transparent;
 }
 
@@ -477,7 +477,7 @@
   border-radius: var(--urlbar-icon-border-radius);
   padding-inline: 8px 6px;
 
-  #urlbar[focused="true"] > .urlbar-input-container > & {
+  #urlbar[focused] > .urlbar-input-container > & {
     background-color: var(--urlbar-box-focus-bgcolor);
   }
 
@@ -550,8 +550,8 @@
  * determine the right color-scheme to use, see bug 1779457.
  */
 .urlbar-addon-page-action[style*=".svg"] > .urlbar-icon {
-  :root[lwt-toolbar-field="dark"] #urlbar:not([focused="true"]) &,
-  :root[lwt-toolbar-field-focus="dark"] #urlbar[focused="true"] & {
+  :root[lwt-toolbar-field="dark"] #urlbar:not([focused]) &,
+  :root[lwt-toolbar-field-focus="dark"] #urlbar[focused] & {
     filter: grayscale(100%) brightness(20%) invert();
   }
 
@@ -919,7 +919,7 @@
   margin-block: calc((var(--urlbar-min-height) - 20px) / 2 - 1px /* border */ - var(--urlbar-container-padding));
   overflow: hidden;
 
-  :where(#urlbar[focused="true"]) & {
+  :where(#urlbar[focused]) & {
     background-color: var(--urlbar-box-focus-bgcolor);
   }
 

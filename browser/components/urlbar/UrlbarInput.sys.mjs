@@ -1754,7 +1754,7 @@ export class UrlbarInput {
   removeHiddenFocus(forceSuppressFocusBorder = false) {
     this._hideFocus = false;
     if (this.focused) {
-      this.setAttribute("focused", "true");
+      this.toggleAttribute("focused", true);
 
       if (forceSuppressFocusBorder) {
         this.toggleAttribute("suppress-focus-border", true);
@@ -3592,7 +3592,7 @@ export class UrlbarInput {
   _on_focus(event) {
     this.logger.debug("Focus Event");
     if (!this._hideFocus) {
-      this.setAttribute("focused", "true");
+      this.toggleAttribute("focused", true);
     }
 
     // When the search term matches the SERP, the URL bar is in a valid
