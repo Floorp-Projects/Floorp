@@ -811,7 +811,7 @@ skip-if = [
   "os == 'android'", # bug 1622901
   "os == 'mac' && !debug",
   "asan",
-  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808048
+  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808048
 ]
 run-sequentially = "node server exceptions dont replay well"
 
