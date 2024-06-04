@@ -1504,6 +1504,31 @@ var snapshotFormatters = {
     );
   },
 
+  remoteSettings(data) {
+    if (!data) {
+      return;
+    }
+    const { isSynchronizationBroken, lastCheck, localTimestamp, history } =
+      data;
+
+    $("support-remote-settings-status-ok").style.display =
+      isSynchronizationBroken ? "none" : "block";
+    $("support-remote-settings-status-broken").style.display =
+      isSynchronizationBroken ? "block" : "none";
+    $("support-remote-settings-last-check").textContent = lastCheck;
+    $("support-remote-settings-local-timestamp").textContent = localTimestamp;
+    $.append(
+      $("support-remote-settings-sync-history-tbody"),
+      history["settings-sync"].map(({ status, datetime, infos }) =>
+        $.new("tr", [
+          $.new("td", [document.createTextNode(status)]),
+          $.new("td", [document.createTextNode(datetime)]),
+          $.new("td", [document.createTextNode(JSON.stringify(infos))]),
+        ])
+      )
+    );
+  },
+
   normandy(data) {
     if (!data) {
       return;

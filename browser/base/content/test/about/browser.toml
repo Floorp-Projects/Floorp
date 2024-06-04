@@ -76,6 +76,7 @@ skip-if = ["tsan"] # Bug 1676326, highly frequent on TSan
 
 ["browser_aboutSupport.js"]
 skip-if = ["os == 'linux' && os_version == '18.04' && asan"] # Bug 1713368
+tags = "remote-settings"
 
 ["browser_aboutSupport_newtab_security_state.js"]
 

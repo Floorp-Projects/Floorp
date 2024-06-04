@@ -490,15 +490,22 @@ function remoteSettingsFunction() {
   /**
    * Returns an object with polling status information and the list of
    * known remote settings collections.
+   * @param {Object} options
+   * @param {boolean?} options.localOnly (optional) If set to `true`, do not contact the server.
    */
-  remoteSettings.inspect = async () => {
-    // Make sure we fetch the latest server info, use a random cache bust value.
-    const randomCacheBust = 99990000 + Math.floor(Math.random() * 9999);
-    const { changes, currentEtag: serverTimestamp } =
-      await lazy.Utils.fetchLatestChanges(lazy.Utils.SERVER_URL, {
-        expected: randomCacheBust,
-      });
+  remoteSettings.inspect = async (options = {}) => {
+    const { localOnly = false } = options;
 
+    let changes = [];
+    let serverTimestamp = null;
+    if (!localOnly) {
+      // Make sure we fetch the latest server info, use a random cache bust value.
+      const randomCacheBust = 99990000 + Math.floor(Math.random() * 9999);
+      ({ changes, currentEtag: serverTimestamp } =
+        await lazy.Utils.fetchLatestChanges(lazy.Utils.SERVER_URL, {
+          expected: randomCacheBust,
+        }));
+    }
     const collections = await Promise.all(
       changes.map(async change => {
         const { bucket, collection, last_modified: serverTimestamp } = change;
@@ -537,6 +544,7 @@ function remoteSettingsFunction() {
       history: {
         [TELEMETRY_SOURCE_SYNC]: await lazy.gSyncHistory.list(),
       },
+      isSynchronizationBroken: await isSynchronizationBroken(),
     };
   };
 
