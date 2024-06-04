@@ -82,9 +82,20 @@ export function getPreview(target, tokenPos, editor) {
       }
     }
 
-    const { result } = await client.evaluate(expression, {
-      frameId: selectedFrame.id,
-    });
+    const { result, hasException, exception } = await client.evaluate(
+      expression,
+      {
+        frameId: selectedFrame.id,
+      }
+    );
+
+    // The evaluation shouldn't return an exception.
+    if (hasException) {
+      const errorClass = exception?.getGrip()?.class || "Error";
+      throw new Error(
+        `Debugger internal exception: Preview for <${expression}> threw a ${errorClass}`
+      );
+    }
 
     const resultGrip = getGrip(result);
 
