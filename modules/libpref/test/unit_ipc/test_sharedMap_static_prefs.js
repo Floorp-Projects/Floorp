@@ -22,7 +22,7 @@
 const PREF1_NAME = "dom.webcomponents.shadowdom.report_usage";
 const PREF1_VALUE = false;
 
-const PREF2_NAME = "dom.mutation-events.cssom.disabled";
+const PREF2_NAME = "full-screen-api.enabled";
 const PREF2_VALUE = true;
 
 const { XPCShellContentUtils } = ChromeUtils.importESModule(

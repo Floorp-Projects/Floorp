@@ -15,7 +15,6 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/InternalMutationEvent.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsServiceManagerUtils.h"
@@ -69,19 +68,8 @@ void nsStyledElement::InlineStyleDeclarationWillChange(
              "Should be inside document update!");
   bool modification = false;
   if (MayHaveStyle()) {
-    bool needsOldValue = !StaticPrefs::dom_mutation_events_cssom_disabled() &&
-                         nsContentUtils::HasMutationListeners(
-                             this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED, this);
-
-    if (!needsOldValue) {
-      CustomElementDefinition* definition = GetCustomElementDefinition();
-      if (definition &&
-          definition->IsInObservedAttributeList(nsGkAtoms::style)) {
-        needsOldValue = true;
-      }
-    }
-
-    if (needsOldValue) {
+    CustomElementDefinition* definition = GetCustomElementDefinition();
+    if (definition && definition->IsInObservedAttributeList(nsGkAtoms::style)) {
       nsAutoString oldValueStr;
       modification = GetAttr(nsGkAtoms::style, oldValueStr);
       if (modification) {
@@ -110,9 +98,8 @@ nsresult nsStyledElement::SetInlineStyleDeclaration(
   MOZ_ASSERT(OwnerDoc()->UpdateNestingLevel(),
              "Should be inside document update!");
 
-  bool hasListeners = !StaticPrefs::dom_mutation_events_cssom_disabled() &&
-                      nsContentUtils::HasMutationListeners(
-                          this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED, this);
+  // Avoid dispatching mutation events for style attribute changes from CSSOM
+  const bool hasMutationEventListeners = false;
 
   nsAttrValue attrValue(do_AddRef(&aDeclaration), nullptr);
   SetMayHaveStyle();
@@ -121,7 +108,7 @@ nsresult nsStyledElement::SetInlineStyleDeclaration(
   mozAutoDocUpdate updateBatch(document, true);
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nullptr,
                           aData.mOldValue.ptrOr(nullptr), attrValue, nullptr,
-                          aData.mModType, hasListeners, true,
+                          aData.mModType, hasMutationEventListeners, true,
                           kDontCallAfterSetAttr, document, updateBatch);
 }
 
