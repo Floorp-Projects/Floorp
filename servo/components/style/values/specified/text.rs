@@ -408,18 +408,12 @@ pub enum TextAlignKeyword {
     #[cfg(feature = "gecko")]
     Char,
     End,
-    #[cfg(feature = "gecko")]
+    #[parse(aliases = "-webkit-center")]
     MozCenter,
-    #[cfg(feature = "gecko")]
+    #[parse(aliases = "-webkit-left")]
     MozLeft,
-    #[cfg(feature = "gecko")]
+    #[parse(aliases = "-webkit-right")]
     MozRight,
-    #[cfg(feature = "servo")]
-    ServoCenter,
-    #[cfg(feature = "servo")]
-    ServoLeft,
-    #[cfg(feature = "servo")]
-    ServoRight,
 }
 
 /// Specified value of text-align property.
