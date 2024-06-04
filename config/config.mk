@@ -262,7 +262,7 @@ export LIB
 endif
 
 ifdef MOZ_USING_CCACHE
-ifdef CLANG_CXX
+ifeq ($(CC_TYPE),clang)
 export CCACHE_CPP2=1
 endif
 endif

@@ -128,7 +128,7 @@ LINK_PDBFILE = $(basename $@).pdb
 endif
 endif
 
-ifndef GNU_CC
+ifeq ($(CC_TYPE),clang-cl)
 
 ifdef SIMPLE_PROGRAMS
 COMPILE_PDB_FLAG ?= -Fd$(basename $(@F)).pdb
@@ -140,7 +140,7 @@ ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
 
-endif # !GNU_CC
+endif # CC_TYPE == clang-cl
 endif # WINNT
 
 ifeq (arm-Darwin,$(TARGET_CPU)-$(OS_TARGET))
@@ -295,7 +295,7 @@ endif
 # MINGW32
 #
 ifeq ($(OS_ARCH),WINNT)
-ifdef GNU_CC
+ifneq ($(CC_TYPE),clang-cl)
 DSO_LDOPTS += -Wl,--out-implib -Wl,$(IMPORT_LIBRARY)
 endif
 endif
@@ -308,11 +308,11 @@ IFLAGS1 = -m 644
 IFLAGS2 = -m 755
 endif
 
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifeq (clang-cl_WINNT,$(CC_TYPE)_$(OS_ARCH))
 OUTOPTION = -Fo# eol
 else
 OUTOPTION = -o # eol
-endif # WINNT && !GNU_CC
+endif # WINNT && clang-cl
 
 ifeq (,$(CROSS_COMPILE))
 HOST_OUTOPTION = $(OUTOPTION)
@@ -419,12 +419,12 @@ endef
 $(PROGRAM): $(PROGOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(call resfile,$(PROGRAM)) $(GLOBAL_DEPS) $(call mkdir_deps,$(FINAL_TARGET))
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Program $(@F))
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifeq (clang-cl_WINNT,$(CC_TYPE)_$(OS_ARCH))
 	$(LINKER) -OUT:$@ -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_OBJS) $(filter %.res,$^) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
-else # !WINNT || GNU_CC
+else # !WINNT || !clang-cl
 	$(call EXPAND_CC_OR_CXX,$@) -o $@ $(COMPUTED_CXX_LDFLAGS) $($(notdir $@)_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
 	$(call py_action,check_binary $(@F),$@)
-endif # WINNT && !GNU_CC
+endif # WINNT && clang-cl
 
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
@@ -437,7 +437,7 @@ endif
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS) $(call mkdir_deps,$(DEPTH)/dist/host/bin)
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Program $(@F))
-ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
+ifeq (clang-cl_WINNT,$(HOST_CC_TYPE)_$(HOST_OS_ARCH))
 	$(HOST_LINKER) -OUT:$@ -PDB:$(HOST_PDBFILE) $($(notdir $@)_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LINKER_LIBPATHS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 ifeq ($(HOST_CPP_PROG_LINK),1)
@@ -464,12 +464,12 @@ $(foreach p,$(SIMPLE_PROGRAMS),$(eval $(call simple_program_deps,$(p))))
 $(SIMPLE_PROGRAMS):
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Program $(@F))
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifeq (clang-cl_WINNT,$(CC_TYPE)_$(OS_ARCH))
 	$(LINKER) -out:$@ -pdb:$(LINK_PDBFILE) $($@_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
 else
 	$(call EXPAND_CC_OR_CXX,$@) $(COMPUTED_CXX_LDFLAGS) -o $@ $($@_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
 	$(call py_action,check_binary $(@F),$@)
-endif # WINNT && !GNU_CC
+endif # WINNT && clang-cl
 
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
@@ -482,7 +482,7 @@ endif
 $(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): $(HOST_LIBS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Program $(@F))
-ifeq (WINNT_,$(HOST_OS_ARCH)_$(GNU_CC))
+ifeq (WINNT_clang-cl,$(HOST_OS_ARCH)_$(HOST_CC_TYPE))
 	$(HOST_LINKER) -OUT:$@ -PDB:$(HOST_PDBFILE) $($(notdir $@)_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LINKER_LIBPATHS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 ifneq (,$(HOST_CPPSRCS)$(USE_HOST_CXX))
@@ -538,10 +538,10 @@ $(SHARED_LIBRARY): $(OBJS) $(call resfile,$(SHARED_LIBRARY)) $(STATIC_LIBS) $(EX
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_SharedLib $@)
 	$(RM) $@
-	$(MKSHLIB) $(if $(filter _WINNT,$(GNU_CC)_$(OS_ARCH)),-IMPLIB:$(basename $(@F)).lib )$($(notdir $@)_OBJS) $(filter %.res,$^) $(RELRHACK_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(OS_LIBS)
+	$(MKSHLIB) $(if $(filter clang-cl_WINNT,$(CC_TYPE)_$(OS_ARCH)),-IMPLIB:$(basename $(@F)).lib )$($(notdir $@)_OBJS) $(filter %.res,$^) $(RELRHACK_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(OS_LIBS)
 	$(call py_action,check_binary,$@)
 
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifeq (clang-cl_WINNT,$(CC_TYPE)_$(OS_ARCH))
 endif	# WINNT && !GCC
 	chmod +x $@
 ifdef ENABLE_STRIP

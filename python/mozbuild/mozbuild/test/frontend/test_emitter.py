@@ -277,7 +277,7 @@ class TestEmitterBasic(unittest.TestCase):
             "link-flags",
             extra_substs={
                 "OS_ARCH": "WINNT",
-                "GNU_CC": "",
+                "CC_TYPE": "clang-cl",
                 "MOZ_OPTIMIZE": "1",
                 "MOZ_DEBUG_LDFLAGS": ["-DEBUG"],
                 "MOZ_DEBUG_SYMBOLS": "1",
@@ -295,7 +295,7 @@ class TestEmitterBasic(unittest.TestCase):
             "link-flags",
             extra_substs={
                 "OS_ARCH": "WINNT",
-                "GNU_CC": "",
+                "CC_TYPE": "clang-cl",
                 "MOZ_DMD": "1",
                 "MOZ_DEBUG_LDFLAGS": ["-DEBUG"],
                 "MOZ_DEBUG_SYMBOLS": "1",
@@ -366,7 +366,12 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_host_rtl_flag(self):
         reader = self.reader(
-            "host-compile-flags", extra_substs={"OS_ARCH": "WINNT", "MOZ_DEBUG": "1"}
+            "host-compile-flags",
+            extra_substs={
+                "OS_ARCH": "WINNT",
+                "MOZ_DEBUG": "1",
+                "CC_TYPE": "clang-cl",
+            },
         )
         sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)

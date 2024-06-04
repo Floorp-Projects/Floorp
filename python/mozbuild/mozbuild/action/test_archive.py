@@ -688,7 +688,10 @@ if buildconfig.substs.get("MOZ_CODE_COVERAGE"):
     )
 
 
-if buildconfig.substs.get("MOZ_ASAN") and buildconfig.substs.get("CLANG_CL"):
+if (
+    buildconfig.substs.get("MOZ_ASAN")
+    and buildconfig.substs.get("CC_TYPE") == "clang-cl"
+):
     asan_dll = {
         "source": buildconfig.topobjdir,
         "base": "dist/bin",
