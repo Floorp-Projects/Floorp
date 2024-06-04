@@ -1332,20 +1332,19 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // This allowlist contains about: pages that are permanently allowed to
   // render without a CSP applied.
   static nsLiteralCString sAllowedAboutPagesWithNoCSP[] = {
-      // about:blank is a special about page -> no CSP
-      "about:blank"_ns,
-      // about:srcdoc is a special about page -> no CSP
-      "about:srcdoc"_ns,
-      // about:sync-log displays plain text only -> no CSP
-      "about:sync-log"_ns,
-      // about:logo just displays the firefox logo -> no CSP
-      "about:logo"_ns,
-      // about:sync is a special mozilla-signed developer addon with low usage
-      // ->
-      // no CSP
-      "about:sync"_ns,
+    // about:blank is a special about page -> no CSP
+    "about:blank"_ns,
+    // about:srcdoc is a special about page -> no CSP
+    "about:srcdoc"_ns,
+    // about:sync-log displays plain text only -> no CSP
+    "about:sync-log"_ns,
+    // about:logo just displays the firefox logo -> no CSP
+    "about:logo"_ns,
+    // about:sync is a special mozilla-signed developer addon with low usage ->
+    // no CSP
+    "about:sync"_ns,
 #  if defined(ANDROID)
-      "about:config"_ns,
+    "about:config"_ns,
 #  endif
   };
 
@@ -1364,20 +1363,20 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
              "about: page must contain a CSP denying object-src");
 
   // preferences and downloads allow legacy inline scripts through hash src.
-  MOZ_ASSERT(
-      !foundScriptSrc || StringBeginsWith(aboutSpec, "about:preferences"_ns) ||
-          StringBeginsWith(aboutSpec, "about:settings"_ns) ||
-          StringBeginsWith(aboutSpec, "about:downloads"_ns) ||
-          StringBeginsWith(aboutSpec, "about:fingerprintingprotection"_ns) ||
-          StringBeginsWith(aboutSpec, "about:asrouter"_ns) ||
-          StringBeginsWith(aboutSpec, "about:newtab"_ns) ||
-          StringBeginsWith(aboutSpec, "about:logins"_ns) ||
-          StringBeginsWith(aboutSpec, "about:compat"_ns) ||
-          StringBeginsWith(aboutSpec, "about:welcome"_ns) ||
-          StringBeginsWith(aboutSpec, "about:profiling"_ns) ||
-          StringBeginsWith(aboutSpec, "about:studies"_ns) ||
-          StringBeginsWith(aboutSpec, "about:home"_ns),
-      "about: page must not contain a CSP including script-src");
+  MOZ_ASSERT(!foundScriptSrc ||
+                 StringBeginsWith(aboutSpec, "about:preferences"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:settings"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:downloads"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:fingerprinting"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:asrouter"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:newtab"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:logins"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:compat"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:welcome"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:profiling"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:studies"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:home"_ns),
+             "about: page must not contain a CSP including script-src");
 
   MOZ_ASSERT(!foundWorkerSrc,
              "about: page must not contain a CSP including worker-src");
