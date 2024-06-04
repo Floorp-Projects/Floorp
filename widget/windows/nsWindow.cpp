@@ -7724,23 +7724,6 @@ bool nsWindow::GetPopupsToRollup(nsIRollupListener* aRollupListener,
   return true;
 }
 
-// static
-bool nsWindow::NeedsToHandleNCActivateDelayed(HWND aWnd) {
-  // While popup is open, popup window might be activated by other application.
-  // At this time, we need to take back focus to the previous window but it
-  // causes flickering its nonclient area because WM_NCACTIVATE comes before
-  // WM_ACTIVATE and we cannot know which window will take focus at receiving
-  // WM_NCACTIVATE. Therefore, we need a hack for preventing the flickerling.
-  //
-  // If non-popup window receives WM_NCACTIVATE at deactivating, default
-  // wndproc shouldn't handle it as deactivating. Instead, at receiving
-  // WM_ACTIVIATE after that, WM_NCACTIVATE should be sent again manually.
-  // This returns true if the window needs to handle WM_NCACTIVATE later.
-
-  nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
-  return window && !window->IsPopup();
-}
-
 static bool IsTouchSupportEnabled(HWND aWnd) {
   nsWindow* topWindow =
       WinUtils::GetNSWindowPtr(WinUtils::GetTopLevelHWND(aWnd, true));
@@ -7794,8 +7777,6 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
     return false;
   }
 
-  static bool sSendingNCACTIVATE = false;
-  static bool sPendingNCACTIVATE = false;
   uint32_t popupsToRollup = UINT32_MAX;
 
   bool consumeRollupEvent = false;
@@ -7888,109 +7869,29 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
       break;
 
     case WM_ACTIVATE: {
+      // This marker should be useless nowadays, but kept just for safety, see
+      // the discussion in D210302. See also bug 1842170.
       WndProcUrgentInvocation::Marker _marker;
 
-      // NOTE: Don't handle WA_INACTIVE for preventing popup taking focus
-      // because we cannot distinguish it's caused by mouse or not.
-      if (LOWORD(aWParam) == WA_ACTIVE && aLParam) {
-        nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
-        if (window && (window->IsPopup() || window->mIsAlert)) {
-          // Cancel notifying widget listeners of deactivating the previous
-          // active window (see WM_KILLFOCUS case in ProcessMessage()).
-          sJustGotDeactivate = false;
-          // Reactivate the window later.
-          ::PostMessageW(aWnd, MOZ_WM_REACTIVATE, aWParam, aLParam);
-          return true;
-        }
-        // Don't rollup the popup when focus moves back to the parent window
-        // from a popup because such case is caused by strange mouse drivers.
-        nsWindow* prevWindow =
-            WinUtils::GetNSWindowPtr(reinterpret_cast<HWND>(aLParam));
-        if (prevWindow && prevWindow->IsPopup()) {
-          // Consume this message here since previous window must not have
-          // been inactivated since we've already stopped accepting the
-          // inactivation below.
-          return true;
-        }
-      } else if (LOWORD(aWParam) == WA_INACTIVE) {
-        nsWindow* activeWindow =
-            WinUtils::GetNSWindowPtr(reinterpret_cast<HWND>(aLParam));
-        if (sPendingNCACTIVATE && NeedsToHandleNCActivateDelayed(aWnd)) {
-          // If focus moves to non-popup widget or focusable popup, the window
-          // needs to update its nonclient area.
-          if (!activeWindow || !activeWindow->IsPopup()) {
-            sSendingNCACTIVATE = true;
-            ::SendMessageW(aWnd, WM_NCACTIVATE, false, 0);
-            sSendingNCACTIVATE = false;
-          }
-          sPendingNCACTIVATE = false;
-        }
-        // If focus moves from/to popup, we don't need to rollup the popup
-        // because such case is caused by strange mouse drivers.  And in
-        // such case, we should consume the message here since we need to
-        // hide this odd focus move from our content.  (If we didn't consume
-        // the message here, ProcessMessage() will notify widget listener of
-        // inactivation and that causes unnecessary reflow for supporting
-        // -moz-window-inactive pseudo class.
-        if (activeWindow) {
-          if (activeWindow->IsPopup()) {
-            return true;
-          }
-          nsWindow* deactiveWindow = WinUtils::GetNSWindowPtr(aWnd);
-          if (deactiveWindow && deactiveWindow->IsPopup()) {
-            return true;
-          }
-        }
-      } else if (LOWORD(aWParam) == WA_CLICKACTIVE) {
-        // If the WM_ACTIVATE message is caused by a click in a popup,
-        // we should not rollup any popups.
-        nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
-        if ((window && window->IsPopup()) ||
-            !GetPopupsToRollup(rollupListener, &popupsToRollup)) {
-          return false;
-        }
+      nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
+      nsWindow* prevWindow =
+          WinUtils::GetNSWindowPtr(reinterpret_cast<HWND>(aLParam));
+      // Don't rollup popups for WM_ACTIVATE from/to a popup.
+      // When we click on a popup (WA_CLICKACTIVE) we don't want to do it.
+      // WA_ACTIVE/WA_INACTIVE shouldn't really happen, but some old
+      // pre-windows-10 drivers used to do this, see bug 953146.
+      // It might be the case that is no longer needed tho, and we can move
+      // this to the WA_CLICKACTIVE condition.
+      if ((window && window->IsPopup()) ||
+          (prevWindow && prevWindow->IsPopup())) {
+        return false;
+      }
+      if (LOWORD(aWParam) == WA_CLICKACTIVE &&
+          !GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+        return false;
       }
       allowAnimations = nsIRollupListener::AllowAnimations::No;
     } break;
-
-    case MOZ_WM_REACTIVATE:
-      // The previous active window should take back focus.
-      if (::IsWindow(reinterpret_cast<HWND>(aLParam))) {
-        // FYI: Even without this API call, you see expected result (e.g., the
-        //      owner window of the popup keeps active without flickering
-        //      the non-client area).  And also this causes initializing
-        //      TSF and it causes using CPU time a lot.  However, even if we
-        //      consume WM_ACTIVE messages, native focus change has already
-        //      been occurred.  I.e., a popup window is active now.  Therefore,
-        //      you'll see some odd behavior if we don't reactivate the owner
-        //      window here.  For example, if you do:
-        //        1. Turn wheel on a bookmark panel.
-        //        2. Turn wheel on another window.
-        //      then, you'll see that the another window becomes active but the
-        //      owner window of the bookmark panel looks still active and the
-        //      bookmark panel keeps open.  The reason is that the first wheel
-        //      operation gives focus to the bookmark panel.  Therefore, when
-        //      the next operation gives focus to the another window, previous
-        //      focus window is the bookmark panel (i.e., a popup window).
-        //      So, in this case, our hack around here prevents to inactivate
-        //      the owner window and roll up the bookmark panel.
-        ::SetForegroundWindow(reinterpret_cast<HWND>(aLParam));
-      }
-      return true;
-
-    case WM_NCACTIVATE:
-      if (!aWParam && !sSendingNCACTIVATE &&
-          NeedsToHandleNCActivateDelayed(aWnd)) {
-        // Don't just consume WM_NCACTIVATE. It doesn't handle only the
-        // nonclient area state change.
-        ::DefWindowProcW(aWnd, aMessage, TRUE, aLParam);
-        // Accept the deactivating because it's necessary to receive following
-        // WM_ACTIVATE.
-        *aResult = TRUE;
-        sPendingNCACTIVATE = true;
-        return true;
-      }
-      return false;
 
     case WM_MOUSEACTIVATE:
       if (!EventIsInsideWindow(popupWindow) &&
