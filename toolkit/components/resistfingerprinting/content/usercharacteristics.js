@@ -456,6 +456,78 @@ function populateWebGLCanvases() {
   document.getElementById("glcanvasdata").value = canvas.toDataURL();
 }
 
+// ==============================================================
+// Fingerprint JS Canvases
+function populateFingerprintJSCanvases() {
+  // fingerprintjs
+  // Their fingerprinting code went to the BSL license from MIT in
+  // https://github.com/fingerprintjs/fingerprintjs/commit/572fd98f9e4f27b4e854137ea0d53231b3b4eb6e
+  // So use the version of the code in the parent commit which is still MIT
+  // https://github.com/fingerprintjs/fingerprintjs/blob/aca79b37f7956eee58018e4a317a2bdf8be62d0f/src/sources/canvas.ts
+
+  function renderTextImage(canvas, context) {
+    context.textBaseline = "alphabetic";
+    context.fillStyle = "#f60";
+    context.fillRect(100, 1, 62, 20);
+
+    context.fillStyle = "#069";
+    // It's important to use explicit built-in fonts in order to exclude the affect of font preferences
+    // (there is a separate entropy source for them).
+    context.font = '11pt "Times New Roman"';
+    // The choice of emojis has a gigantic impact on rendering performance (especially in FF).
+    // Some newer emojis cause it to slow down 50-200 times.
+    // There must be no text to the right of the emoji, see https://github.com/fingerprintjs/fingerprintjs/issues/574
+    // A bare emoji shouldn't be used because the canvas will change depending on the script encoding:
+    // https://github.com/fingerprintjs/fingerprintjs/issues/66
+    // Escape sequence shouldn't be used too because Terser will turn it into a bare unicode.
+    const printedText = `Cwm fjordbank gly ${
+      String.fromCharCode(55357, 56835) /* 😃 */
+    }`;
+    context.fillText(printedText, 2, 15);
+    context.fillStyle = "rgba(102, 204, 0, 0.2)";
+    context.font = "18pt Arial";
+    context.fillText(printedText, 4, 45);
+  }
+
+  function renderGeometryImage(canvas, context) {
+    // Canvas blending
+    // https://web.archive.org/web/20170826194121/http://blogs.adobe.com/webplatform/2013/01/28/blending-features-in-canvas/
+    // http://jsfiddle.net/NDYV8/16/
+    context.globalCompositeOperation = "multiply";
+    for (const [color, x, y] of [
+      ["#f2f", 40, 40],
+      ["#2ff", 80, 40],
+      ["#ff2", 60, 80],
+    ]) {
+      context.fillStyle = color;
+      context.beginPath();
+      context.arc(x, y, 40, 0, Math.PI * 2, true);
+      context.closePath();
+      context.fill();
+    }
+
+    // Canvas winding
+    // https://web.archive.org/web/20130913061632/http://blogs.adobe.com/webplatform/2013/01/30/winding-rules-in-canvas/
+    // http://jsfiddle.net/NDYV8/19/
+    context.fillStyle = "#f9c";
+    context.arc(60, 60, 60, 0, Math.PI * 2, true);
+    context.arc(60, 60, 20, 0, Math.PI * 2, true);
+    context.fill("evenodd");
+  }
+
+  const canvas1 = document.getElementById("fingerprintjscanvas1");
+  const context1 = canvas1.getContext("2d");
+  renderTextImage(canvas1, context1);
+  document.getElementById("fingerprintjscanvas1data").value =
+    canvas1.toDataURL();
+
+  const canvas2 = document.getElementById("fingerprintjscanvas2");
+  const context2 = canvas2.getContext("2d");
+  renderGeometryImage(canvas2, context2);
+  document.getElementById("fingerprintjscanvas2data").value =
+    canvas2.toDataURL();
+}
+
 // =======================================================================
 // Setup & Populating
 
@@ -468,6 +540,7 @@ LocalFiraSans.load().then(font => {
   document.fonts.add(font);
   populateTestCanvases();
   populateWebGLCanvases();
+  populateFingerprintJSCanvases();
 });
 
 debug("Debug Line");
