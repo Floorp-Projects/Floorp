@@ -118,7 +118,7 @@ class _RFPHelper {
           UserCharacteristicsDataDone: { wantUntrusted: true },
         },
       },
-      matches: ["about:fingerprintingprotection"],
+      matches: ["about:fingerprinting"],
       remoteTypes: ["privilegedabout"],
     });
   }
@@ -324,11 +324,6 @@ class _RFPHelper {
   }
 
   _registerLetterboxingActor() {
-    /*
-     * It turns out that this triggers a warning that we're registering a Desktop-only actor
-     * in toolkit (which will also run on mobile.)  It just happens this actor only handles
-     * letterboxing, which isn't used on mobile, but we should resolve this.
-     */
     ChromeUtils.registerWindowActor("RFPHelper", {
       parent: {
         esModuleURI: "resource:///actors/RFPHelperParent.sys.mjs",
