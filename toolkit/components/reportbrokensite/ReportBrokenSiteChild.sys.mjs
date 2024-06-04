@@ -256,7 +256,7 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
     reporterConfig,
     webcompatInfo,
   }) {
-    const extra_labels = [];
+    const extra_labels = reporterConfig?.extra_labels || [];
 
     const message = Object.assign({}, reporterConfig, {
       url: reportUrl,
