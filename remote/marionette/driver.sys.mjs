@@ -231,10 +231,19 @@ GeckoDriver.prototype.handleOpenModalDialog = function (eventName, data) {
 };
 
 /**
- * Get the current visible URL.
+ * Get the current URL.
+ *
+ * @param {object} options
+ * @param {boolean=} options.top
+ *     If set to true return the window's top-level URL,
+ *     otherwise the one from the currently selected frame. Defaults to true.
+ * @see https://w3c.github.io/webdriver/#get-current-url
  */
-GeckoDriver.prototype._getCurrentURL = function () {
-  const browsingContext = this.getBrowsingContext({ top: true });
+GeckoDriver.prototype._getCurrentURL = function (options = {}) {
+  if (options.top === undefined) {
+    options.top = true;
+  }
+  const browsingContext = this.getBrowsingContext(options);
   return new URL(browsingContext.currentURI.spec);
 };
 
@@ -2146,7 +2155,7 @@ GeckoDriver.prototype.addCookie = async function (cmd) {
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
-  let { protocol, hostname } = this._getCurrentURL();
+  let { protocol, hostname } = this._getCurrentURL({ top: false });
 
   const networkSchemes = ["http:", "https:"];
   if (!networkSchemes.includes(protocol)) {
@@ -2176,7 +2185,7 @@ GeckoDriver.prototype.getCookies = async function () {
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
-  let { hostname, pathname } = this._getCurrentURL();
+  let { hostname, pathname } = this._getCurrentURL({ top: false });
   return [...lazy.cookie.iter(hostname, pathname)];
 };
 
@@ -2195,7 +2204,7 @@ GeckoDriver.prototype.deleteAllCookies = async function () {
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
-  let { hostname, pathname } = this._getCurrentURL();
+  let { hostname, pathname } = this._getCurrentURL({ top: false });
   for (let toDelete of lazy.cookie.iter(hostname, pathname)) {
     lazy.cookie.remove(toDelete);
   }
@@ -2216,7 +2225,7 @@ GeckoDriver.prototype.deleteCookie = async function (cmd) {
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
-  let { hostname, pathname } = this._getCurrentURL();
+  let { hostname, pathname } = this._getCurrentURL({ top: false });
   let name = lazy.assert.string(cmd.parameters.name);
   for (let c of lazy.cookie.iter(hostname, pathname)) {
     if (c.name === name) {
