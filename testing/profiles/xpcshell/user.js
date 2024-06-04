@@ -18,7 +18,12 @@ user_pref("geo.provider.network.compare.url", "");
 user_pref("media.gmp-manager.updateEnabled", false);
 user_pref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager.xml");
 user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy");
+// Default Glean to "record but don't report" mode, and to never trigger
+// activity-based ping submission. Docs:
+// https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/preferences.html
 user_pref("telemetry.fog.test.localhost_port", -1);
+user_pref("telemetry.fog.test.activity_limit", -1);
+user_pref("telemetry.fog.test.inactivity_limit", -1);
 // Prevent Remote Settings to issue non local connections.
 user_pref("services.settings.server", "data:,#remote-settings-dummy/v1");
 // Prevent intermediate preloads to be downloaded on Remote Settings polling.

@@ -15343,13 +15343,13 @@
   rust: true
 
 - name: telemetry.fog.test.activity_limit
-  type: RelaxedAtomicUint32
+  type: RelaxedAtomicInt32
   value: 120
   mirror: always
   rust: true
 
 - name: telemetry.fog.test.inactivity_limit
-  type: RelaxedAtomicUint32
+  type: RelaxedAtomicInt32
   value: 1200
   mirror: always
   rust: true

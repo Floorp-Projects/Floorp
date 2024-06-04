@@ -161,6 +161,11 @@ int RunGTestFunc(int* argc, char** argv) {
   // However, at init, Glean may decide to send a ping. So let's first tell FOG
   // that these pings shouldn't actually be uploaded.
   Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
+  // Though the default user-activity limits ought to be longer than a test,
+  // ensure that they don't trigger unnecessary ping submission (which clears
+  // storage, making it hard to test instrumentation).
+  Preferences::SetInt("telemetry.fog.test.activity_limit", -1);
+  Preferences::SetInt("telemetry.fog.test.inactivity_limit", -1);
   const nsCString empty;
   RefPtr<FOG>(FOG::GetSingleton())->InitializeFOG(empty, empty, false);
 

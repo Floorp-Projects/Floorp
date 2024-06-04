@@ -13,7 +13,12 @@ user_pref("browser.cache.disk.smart_size.enabled", true);
 user_pref("extensions.webextensions.warnings-as-errors", false);
 // disable telemetry bug 1639148
 user_pref("toolkit.telemetry.server", "");
+// Default Glean to "record but don't report" mode, and to never trigger
+// activity-based ping submission. Docs:
+// https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/preferences.html
 user_pref("telemetry.fog.test.localhost_port", -1);
+user_pref("telemetry.fog.test.activity_limit", -1);
+user_pref("telemetry.fog.test.inactivity_limit", -1);
 
 // Turn off update
 user_pref("app.update.disabledForTesting", true);

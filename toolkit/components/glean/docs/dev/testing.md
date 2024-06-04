@@ -20,7 +20,7 @@ To run all the things, here's the tl;dr:
 && python3 ./mach python-test toolkit/components/glean/tests/pytest
 && ./mach test toolkit/components/glean/tests/xpcshell
 && ./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"
-&& ./mach test toolkit/components/glean/tests/browser
+&& ./mach test toolkit/components/glean/tests/browser --headless
 `
 
 ## Logging
