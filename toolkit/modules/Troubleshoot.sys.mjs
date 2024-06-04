@@ -1079,6 +1079,25 @@ var dataProviders = {
       nimbusRollouts,
     });
   },
+
+  async remoteSettings(done) {
+    const { RemoteSettings } = ChromeUtils.importESModule(
+      "resource://services-settings/remote-settings.sys.mjs"
+    );
+
+    const inspected = await RemoteSettings.inspect({ localOnly: true });
+
+    // Show last check in standard format.
+    inspected.lastCheck = inspected.lastCheck
+      ? new Date(inspected.lastCheck * 1000).toISOString()
+      : "";
+    // Trim history entries.
+    for (let h of Object.values(inspected.history)) {
+      h.splice(10, Infinity);
+    }
+
+    done(inspected);
+  },
 };
 
 if (AppConstants.MOZ_CRASHREPORTER) {
