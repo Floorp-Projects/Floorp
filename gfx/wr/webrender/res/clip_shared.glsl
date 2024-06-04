@@ -71,7 +71,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithEndpoint local_clip_rect,
 
     gl_Position = uTransform * vertex_pos;
 
-    init_transform_vs(vec4(local_clip_rect.p0, local_clip_rect.p1));
+    rectangle_aa_vertex(vec4(local_clip_rect.p0, local_clip_rect.p1));
 
     ClipVertexInfo vi = ClipVertexInfo(local_pos, local_clip_rect);
     return vi;

@@ -9,7 +9,7 @@ flat varying highp vec4 vTransformBounds;
 #define VECS_PER_TRANSFORM   8U
 uniform HIGHP_SAMPLER_FLOAT sampler2D sTransformPalette;
 
-void init_transform_vs(vec4 local_bounds) {
+void rectangle_aa_vertex(vec4 local_bounds) {
     vTransformBounds = local_bounds;
 }
 
@@ -98,7 +98,7 @@ bool has_valid_transform_bounds() {
     return vTransformBounds.w < 1.0e15;
 }
 
-float init_transform_fs(vec2 local_pos) {
+float rectangle_aa_fragment(vec2 local_pos) {
     // Ideally we want to track distances in screen space after transformation
     // as signed distance calculations lose context about the direction vector
     // to exit the geometry, merely remembering the minimum distance to the
@@ -129,7 +129,7 @@ float init_transform_fs(vec2 local_pos) {
     return distance_aa_xy(aa_range, d);
 }
 
-float init_transform_rough_fs(vec2 local_pos) {
+float rectangle_aa_rough_fragment(vec2 local_pos) {
     return point_inside_rect(
         local_pos,
         vTransformBounds.xy,
