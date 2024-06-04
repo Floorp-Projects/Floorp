@@ -293,7 +293,7 @@ class MOZ_STACK_CLASS WSScanResult final {
   template <typename EditorDOMPointType>
   EditorDOMPointType PointAfterReachedContent() const {
     MOZ_ASSERT(mContent);
-    return PointAtReachedContent<EditorDOMPointType>().template NextPoint();
+    return PointAtReachedContent<EditorDOMPointType>().template NextPoint<>();
   }
 
   /**
