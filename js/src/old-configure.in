@@ -142,7 +142,7 @@ case "$target" in
         if test "$res" != "yes"; then
             AC_MSG_ERROR([w32api version $W32API_VERSION or higher required.])
         fi
-    fi # !GNU_CC
+    fi
 
     AC_DEFINE(_USE_MATH_DEFINES) # Otherwise Windows' math.h doesn't #define M_PI.
 
@@ -161,9 +161,6 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
-AC_SUBST(GNU_CC)
-AC_SUBST(GNU_CXX)
-
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
@@ -178,7 +175,7 @@ MOZ_CONFIG_SANITIZE
 dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
-if test "$GNU_CC"; then
+if test "$CC_TYPE" != clang-cl ; then
     DSO_LDOPTS='-shared'
     if test "$GCC_USE_GNU_LD"; then
         # Some tools like ASan use a runtime library that is only
@@ -198,7 +195,7 @@ if test "$GNU_CC"; then
     _DEFINES_CFLAGS="-include $jsconfdefs -DMOZILLA_CLIENT"
 fi
 
-if test "$GNU_CXX"; then
+if test "$CC_TYPE" != clang-cl ; then
     _DEFINES_CXXFLAGS="-DMOZILLA_CLIENT -include $jsconfdefs"
 fi
 
@@ -262,16 +259,14 @@ case "$target" in
 
 *-android*|*-linuxandroid*)
     MOZ_OPTIMIZE_FLAGS="-O3"
-    if test -z "$CLANG_CC"; then
+    if test "$CC_TYPE" == gcc ; then
        MOZ_OPTIMIZE_FLAGS="-fno-reorder-functions $MOZ_OPTIMIZE_FLAGS"
     fi
     ;;
 
 *-*linux*)
-    if test "$GNU_CC" -o "$GNU_CXX"; then
-        MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-O3"
-    fi
+    MOZ_PGO_OPTIMIZE_FLAGS="-O3"
+    MOZ_OPTIMIZE_FLAGS="-O3"
 
     case "${target_cpu}" in
     alpha*)
@@ -283,9 +278,9 @@ case "$target" in
 
 *-mingw*)
     DSO_PIC_CFLAGS=
-    if test -n "$GNU_CC" -o -n "$CLANG_CC"; then
-        # $GNU_CC will match gcc and clang; while $CLANG_CC will match only clang
-        if test -z "$CLANG_CC"; then
+    if test -n "$CC_TYPE" != clang-cl ; then
+        # != clang-cl will match gcc and clang
+        if test "$CC_TYPE" = gcc ; then
             AC_MSG_ERROR(Firefox cannot be built with mingw-gcc and requires a mingw-clang toolchain to work)
         fi
 
@@ -357,7 +352,7 @@ case "$target" in
 
     case "$target" in
     i*86-*)
-        if test -n "$GNU_CC"; then
+        if test "$CC_TYPE" != clang-cl ; then
             CFLAGS="$CFLAGS -mstackrealign"
             CXXFLAGS="$CXXFLAGS -mstackrealign"
             LDFLAGS="$LDFLAGS -Wl,--large-address-aware"
@@ -446,7 +441,7 @@ dnl ========================================================
 AC_LANG_CPLUSPLUS
 
 ARM_ABI_PREFIX=
-if test "$GNU_CC"; then
+if test "$CC_TYPE" != clang-cl ; then
   if test "$TARGET_CPU" = "arm" ; then
     AC_CACHE_CHECK(for ARM EABI,
         ac_cv_gcc_arm_eabi,
@@ -517,7 +512,7 @@ if test -n "$MOZ_OPTIMIZE"; then
         AC_MSG_ERROR([These compiler flags are invalid: $MOZ_OPTIMIZE_FLAGS])
     fi
     CFLAGS=$_SAVE_CFLAGS
-    if test -n "$MOZ_LTO" -a -n "$CLANG_CC"; then
+    if test -n "$MOZ_LTO" -a "$CC_TYPE" = clang ; then
         # When using llvm-based LTO, non numeric optimization levels are
         # not supported by the linker, so force the linker to use -O2 (
         # which doesn't influence the level compilation units are actually
@@ -675,7 +670,7 @@ else
 JS_LIBRARY_NAME="mozjs"
 fi
 JS_CONFIG_LIBS="$NSPR_LIBS $LIBS"
-if test -n "$GNU_CC"; then
+if test "$CC_TYPE" != clang-cl ; then
 JS_CONFIG_MOZ_JS_LIBS='-L${libdir} -l${JS_LIBRARY_NAME}'
 else
 JS_CONFIG_MOZ_JS_LIBS='${libdir}/${JS_LIBRARY_NAME}.lib'

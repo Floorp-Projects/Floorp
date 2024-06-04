@@ -11,7 +11,7 @@ dnl ========================================================
 dnl = Identical Code Folding
 dnl ========================================================
 
-if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF" -a -z "$DEVELOPER_OPTIONS"; then
+if test "$CC_TYPE" != "clang-cl" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF" -a -z "$DEVELOPER_OPTIONS"; then
     AC_CACHE_CHECK([whether the linker supports Identical Code Folding],
         moz_cv_opt_ld_supports_icf,
         [echo 'int foo() {return 42;}' \
@@ -77,7 +77,7 @@ dnl ========================================================
 dnl = Automatically remove dead symbols
 dnl ========================================================
 
-if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS" -a -z "$MOZ_PROFILE_GENERATE" -a -z "$SANCOV"; then
+if test "$CC_TYPE" != clang-cl -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS" -a -z "$MOZ_PROFILE_GENERATE" -a -z "$SANCOV"; then
     if test -n "$MOZ_DEBUG_FLAGS"; then
         dnl See bug 670659
         AC_CACHE_CHECK([whether removing dead symbols breaks debugging],
@@ -107,7 +107,7 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS" -a -z "$MOZ_PR
     fi
 fi
 
-if test "$GNU_CC$CLANG_CC"; then
+if test "$CC_TYPE" != clang-cl ; then
     case "${OS_TARGET}" in
     Darwin|WASI)
         # It's the default on those targets, and clang complains about -pie

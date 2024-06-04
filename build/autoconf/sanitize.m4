@@ -8,7 +8,7 @@ dnl ========================================================
 dnl = Use Address Sanitizer
 dnl ========================================================
 if test -n "$MOZ_ASAN"; then
-    if test -n "$CLANG_CL"; then
+    if test "$CC_TYPE" = clang-cl ; then
         # Look for the ASan runtime binary
         if test "$TARGET_CPU" = "x86_64"; then
           MOZ_CLANG_RT_ASAN_LIB=clang_rt.asan_dynamic-x86_64.dll
@@ -37,7 +37,7 @@ if test -n "$MOZ_ASAN"; then
     fi
     CFLAGS="$ASAN_FLAGS $CFLAGS"
     CXXFLAGS="$ASAN_FLAGS $CXXFLAGS"
-    if test -z "$CLANG_CL"; then
+    if test "$CC_TYPE" != clang-cl ; then
         LDFLAGS="-fsanitize=address -rdynamic $LDFLAGS"
     fi
 fi
