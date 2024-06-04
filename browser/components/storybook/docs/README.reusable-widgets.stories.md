@@ -113,7 +113,13 @@ by updating [this array](https://searchfox.org/mozilla-central/rev/5c922d8b93b43
 
 Once you've added a new component to `toolkit/content/widgets` and created
 `chrome://` URLs via `toolkit/content/jar.mn` you should be able to start using it
-throughout Firefox. In most cases, you should be able to rely on your custom element getting lazy loaded at the time of first use, provided you are working in a privileged context where `customElements.js` is available.
+throughout Firefox. In most cases, you should be able to rely on your custom
+element getting lazy loaded at the time of first use, provided you are working
+in a privileged context where `customElements.js` is available.
+
+**Note** Since [bug 1896837](https://bugzilla.mozilla.org/show_bug.cgi?id=1896837)
+lazy loaded UI widgets are loaded at the DOMContentLoaded event. Please notify
+the Reusable Components team if you see weirdness due to this.
 
 You can import the component directly into `html`/`xhtml` files via a
 `script` tag with `type="module"`:

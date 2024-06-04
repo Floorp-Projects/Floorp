@@ -805,36 +805,57 @@
         "chrome://global/content/elements/autocomplete-input.js",
       ],
       ["editor", "chrome://global/content/elements/editor.js"],
-      ["moz-button", "chrome://global/content/elements/moz-button.mjs"],
-      [
-        "moz-button-group",
-        "chrome://global/content/elements/moz-button-group.mjs",
-      ],
-      ["moz-card", "chrome://global/content/elements/moz-card.mjs"],
-      ["moz-checkbox", "chrome://global/content/elements/moz-checkbox.mjs"],
-      ["moz-fieldset", "chrome://global/content/elements/moz-fieldset.mjs"],
-      ["moz-five-star", "chrome://global/content/elements/moz-five-star.mjs"],
-      [
-        "moz-message-bar",
-        "chrome://global/content/elements/moz-message-bar.mjs",
-      ],
-      ["moz-page-nav", "chrome://global/content/elements/moz-page-nav.mjs"],
-      ["moz-radio", "chrome://global/content/elements/moz-radio.mjs"],
-      ["moz-radio-group", "chrome://global/content/elements/moz-radio.mjs"],
-      [
-        "moz-support-link",
-        "chrome://global/content/elements/moz-support-link.mjs",
-      ],
-      ["moz-toggle", "chrome://global/content/elements/moz-toggle.mjs"],
     ]) {
       customElements.setElementCreationCallback(tag, () => {
-        if (script.endsWith(".mjs")) {
-          ChromeUtils.importESModule(script, { global: "current" });
-        } else {
-          Services.scriptloader.loadSubScript(script, window);
-        }
+        Services.scriptloader.loadSubScript(script, window);
       });
     }
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        // Only sync-import widgets once the document has loaded. If a widget is
+        // used before DOMContentLoaded it will be imported and upgraded when
+        // registering the customElements.setElementCreationCallback().
+        for (let [tag, script] of [
+          ["moz-button", "chrome://global/content/elements/moz-button.mjs"],
+          [
+            "moz-button-group",
+            "chrome://global/content/elements/moz-button-group.mjs",
+          ],
+          ["moz-card", "chrome://global/content/elements/moz-card.mjs"],
+          ["moz-checkbox", "chrome://global/content/elements/moz-checkbox.mjs"],
+          ["moz-fieldset", "chrome://global/content/elements/moz-fieldset.mjs"],
+          [
+            "moz-five-star",
+            "chrome://global/content/elements/moz-five-star.mjs",
+          ],
+          ["moz-label", "chrome://global/content/elements/moz-label.mjs"],
+          [
+            "moz-message-bar",
+            "chrome://global/content/elements/moz-message-bar.mjs",
+          ],
+          ["moz-page-nav", "chrome://global/content/elements/moz-page-nav.mjs"],
+          ["moz-radio", "chrome://global/content/elements/moz-radio.mjs"],
+          ["moz-radio-group", "chrome://global/content/elements/moz-radio.mjs"],
+          [
+            "moz-support-link",
+            "chrome://global/content/elements/moz-support-link.mjs",
+          ],
+          ["moz-toggle", "chrome://global/content/elements/moz-toggle.mjs"],
+        ]) {
+          if (!customElements.get(tag)) {
+            customElements.setElementCreationCallback(
+              tag,
+              function customElementCreationCallback() {
+                ChromeUtils.importESModule(script, { global: "current" });
+              }
+            );
+          }
+        }
+      },
+      { once: true }
+    );
 
     // Immediately load the following elements
     for (let script of [
