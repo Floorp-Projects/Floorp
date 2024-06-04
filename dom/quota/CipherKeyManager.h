@@ -39,7 +39,7 @@ class CipherKeyManager {
   using CipherKey = typename CipherStrategy::KeyType;
 
  public:
-  explicit CipherKeyManager(const char* aName) : mCipherKeys(aName){};
+  explicit CipherKeyManager(const char* aName) : mCipherKeys(aName) {};
 
   Maybe<CipherKey> Get(const nsACString& aKeyId = "default"_ns) {
     auto lockedCipherKeys = mCipherKeys.Lock();

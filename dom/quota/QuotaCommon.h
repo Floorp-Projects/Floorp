@@ -589,15 +589,13 @@ struct IpcFailCustomRetVal {
 // read slightly better than plain numbers.
 // See also
 // https://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros
-#define QM_TRY_META(...)                                                       \
-  {                                                                            \
-    MOZ_ARG_7(, ##__VA_ARGS__,                                                 \
-              QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP_AND_PREDICATE(__VA_ARGS__),   \
-              QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),                 \
-              QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__),                              \
-              QM_TRY_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
-              QM_MISSING_ARGS(__VA_ARGS__))                                    \
-  }
+#define QM_TRY_META(...)                                                      \
+  {MOZ_ARG_7(, ##__VA_ARGS__,                                                 \
+             QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP_AND_PREDICATE(__VA_ARGS__),   \
+             QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),                 \
+             QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__),                              \
+             QM_TRY_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
+             QM_MISSING_ARGS(__VA_ARGS__))}
 
 // Generates unique variable name. This extra internal macro (along with
 // __COUNTER__) allows nesting of the final macro.
@@ -745,14 +743,12 @@ struct IpcFailCustomRetVal {
 
 // Chooses the final implementation macro for given argument count.
 // See also the comment for QM_TRY_META.
-#define QM_TRY_RETURN_META(...)                                           \
-  {                                                                       \
-    MOZ_ARG_6(, ##__VA_ARGS__,                                            \
-              QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),     \
-              QM_TRY_RETURN_CUSTOM_RET_VAL(__VA_ARGS__),                  \
-              QM_TRY_RETURN_PROPAGATE_ERR(__VA_ARGS__),                   \
-              QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__)) \
-  }
+#define QM_TRY_RETURN_META(...)                                      \
+  {MOZ_ARG_6(, ##__VA_ARGS__,                                        \
+             QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
+             QM_TRY_RETURN_CUSTOM_RET_VAL(__VA_ARGS__),              \
+             QM_TRY_RETURN_PROPAGATE_ERR(__VA_ARGS__),               \
+             QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))}
 
 // Generates unique variable name. This extra internal macro (along with
 // __COUNTER__) allows nesting of the final macro.
@@ -826,12 +822,10 @@ struct IpcFailCustomRetVal {
 
 // Chooses the final implementation macro for given argument count.
 // See also the comment for QM_TRY_META.
-#define QM_REPORTONLY_TRY_META(...)                                         \
-  {                                                                         \
-    MOZ_ARG_6(, ##__VA_ARGS__, QM_REPORTONLY_TRY_WITH_CLEANUP(__VA_ARGS__), \
-              QM_REPORTONLY_TRY(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
-              QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))   \
-  }
+#define QM_REPORTONLY_TRY_META(...)                                        \
+  {MOZ_ARG_6(, ##__VA_ARGS__, QM_REPORTONLY_TRY_WITH_CLEANUP(__VA_ARGS__), \
+             QM_REPORTONLY_TRY(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
+             QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))}
 
 // Generates unique variable name. This extra internal macro (along with
 // __COUNTER__) allows nesting of the final macro.
@@ -1134,8 +1128,8 @@ auto ErrToDefaultOk(const nsresult aValue) -> Result<V, nsresult> {
 }
 
 template <typename MozPromiseType, typename RejectValueT = nsresult>
-auto CreateAndRejectMozPromise(StaticString aFunc, const RejectValueT& aRv)
-    -> decltype(auto) {
+auto CreateAndRejectMozPromise(StaticString aFunc,
+                               const RejectValueT& aRv) -> decltype(auto) {
   if constexpr (std::is_same_v<RejectValueT, nsresult>) {
     return MozPromiseType::CreateAndReject(aRv, aFunc);
   } else if constexpr (std::is_same_v<RejectValueT, QMResult>) {
@@ -1227,8 +1221,8 @@ auto Reduce(Range&& aRange, T aInit, const BinaryOp& aBinaryOp) {
 }
 
 template <typename Range, typename Body>
-auto CollectEachInRange(Range&& aRange, const Body& aBody)
-    -> Result<mozilla::Ok, nsresult> {
+auto CollectEachInRange(Range&& aRange,
+                        const Body& aBody) -> Result<mozilla::Ok, nsresult> {
   for (auto&& element : aRange) {
     MOZ_TRY(aBody(element));
   }
@@ -1624,8 +1618,7 @@ Result<mozilla::Ok, nsresult> CollectEachFile(nsIFile& aDirectory,
 template <typename Body>
 Result<mozilla::Ok, nsresult> CollectEachFile(nsIFile& aDirectory,
                                               const Body& aBody) {
-  return detail::CollectEachFile(
-      aDirectory, [] { return false; }, aBody);
+  return detail::CollectEachFile(aDirectory, [] { return false; }, aBody);
 }
 
 template <typename Body>
