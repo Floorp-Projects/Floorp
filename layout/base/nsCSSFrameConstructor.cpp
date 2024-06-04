@@ -7057,6 +7057,11 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     if (LayoutFrameType::Table == frameType ||
         LayoutFrameType::TableWrapper == frameType) {
       PullOutCaptionFrames(frameList, captionList);
+      if (prevSibling && prevSibling->IsTableCaption()) {
+        // This can happen, but only if the table is empty (otherwise
+        // SafeToInsertPseudoNeedingChildren bails).
+        prevSibling = nullptr;
+      }
     }
   }
 
@@ -11156,6 +11161,25 @@ bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
 #undef TRACE
 }
 
+static bool SafeToInsertPseudoNeedingChildren(nsIFrame* aFrame) {
+  for (auto& [list, listID] : aFrame->ChildLists()) {
+    if (list.IsEmpty()) {
+      continue;
+    }
+    // We have some existing frame, usually it would be unsafe to insert. But
+    // let's make an exception for the synthetic colgroup that tables have,
+    // since that gets created unconditionally.
+    if (listID == FrameChildListID::ColGroup) {
+      if (nsIFrame* f = list.OnlyChild();
+          f && static_cast<nsTableColGroupFrame*>(f)->IsSynthetic()) {
+        continue;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
 bool nsCSSFrameConstructor::WipeContainingBlock(
     nsFrameConstructorState& aState, nsIFrame* aContainingBlock,
     nsIFrame* aFrame, FrameConstructionItemList& aItems, bool aIsAppend,
@@ -11419,7 +11443,10 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
       return false;
     }
 
-    if (!aItems.AllWantParentType(parentType)) {
+    // If aFrame is empty, the insertion process will be able to take care of
+    // creating any needed pseudo-parents.
+    if (!aItems.AllWantParentType(parentType) &&
+        !SafeToInsertPseudoNeedingChildren(aFrame)) {
       // Reframing aFrame->GetContent() is good enough, since the content of
       // table pseudo-frames is the ancestor content.
       TRACE("Pseudo-frames going wrong");
