@@ -597,6 +597,10 @@ class ParseContext : public Nestable<ParseContext> {
     return (scriptId() == 0);
   }
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+  bool isUsingSyntaxAllowed() { return !atGlobalLevel() || atModuleTopLevel(); }
+#endif
+
   void setSuperScopeNeedsHomeObject() {
     MOZ_ASSERT(sc_->allowSuperProperty());
     superScopeNeedsHomeObject_ = true;

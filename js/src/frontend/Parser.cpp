@@ -2566,6 +2566,14 @@ bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon(
       return false;
     }
 
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    if (!this->pc_->isUsingSyntaxAllowed() &&
+        anyChars.currentToken().type == TokenKind::Using) {
+      error(JSMSG_USING_OUTSIDE_BLOCK_OR_MODULE);
+      return false;
+    }
+#endif
+
     /* Advance the scanner for proper error location reporting. */
     tokenStream.consumeKnownToken(tt, modifier);
     error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(tt));
@@ -9661,7 +9669,8 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
           return errorResult();
         }
 
-        if (nextTokUsing == TokenKind::Using) {
+        if (nextTokUsing == TokenKind::Using &&
+            this->pc_->isUsingSyntaxAllowed()) {
           tokenStream.consumeKnownToken(nextTokUsing,
                                         TokenStream::SlashIsRegExp);
           TokenKind nextTokIdentifier = TokenKind::Eof;
@@ -9803,7 +9812,8 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
       if (!tokenStream.peekTokenSameLine(&nextTok)) {
         return errorResult();
       }
-      if (!TokenKindIsPossibleIdentifier(nextTok)) {
+      if (!TokenKindIsPossibleIdentifier(nextTok) ||
+          !this->pc_->isUsingSyntaxAllowed()) {
         if (!tokenStream.peekToken(&nextTok)) {
           return errorResult();
         }
