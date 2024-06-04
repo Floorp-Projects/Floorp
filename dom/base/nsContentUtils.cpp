@@ -7230,19 +7230,9 @@ nsContentUtils::FindInternalDocumentViewer(const nsACString& aType,
 }
 
 static void ReportPatternCompileFailure(nsAString& aPattern,
-                                        const JS::RegExpFlags& aFlags,
                                         const Document* aDocument,
                                         JS::MutableHandle<JS::Value> error,
                                         JSContext* cx) {
-  AutoTArray<nsString, 3> strings;
-
-  strings.AppendElement(aPattern);
-
-  std::stringstream flag_ss;
-  flag_ss << aFlags;
-  nsString* flagstr = strings.AppendElement();
-  AppendUTF8toUTF16(flag_ss.str(), *flagstr);
-
   JS::AutoSaveExceptionState savedExc(cx);
   JS::Rooted<JSObject*> exnObj(cx, &error.toObject());
   JS::Rooted<JS::Value> messageVal(cx);
@@ -7251,13 +7241,16 @@ static void ReportPatternCompileFailure(nsAString& aPattern,
   }
   JS::Rooted<JSString*> messageStr(cx, messageVal.toString());
   MOZ_ASSERT(messageStr);
+
+  AutoTArray<nsString, 2> strings;
+  strings.AppendElement(aPattern);
   if (!AssignJSString(cx, *strings.AppendElement(), messageStr)) {
     return;
   }
 
   nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "DOM"_ns,
                                   aDocument, nsContentUtils::eDOM_PROPERTIES,
-                                  "PatternAttributeCompileFailurev2", strings);
+                                  "PatternAttributeCompileFailure", strings);
   savedExc.drop();
 }
 
@@ -7291,7 +7284,7 @@ Maybe<bool> nsContentUtils::IsPatternMatching(const nsAString& aValue,
   }
 
   if (!error.isUndefined()) {
-    ReportPatternCompileFailure(aPattern, aFlags, aDocument, &error, cx);
+    ReportPatternCompileFailure(aPattern, aDocument, &error, cx);
     return Some(true);
   }
 
