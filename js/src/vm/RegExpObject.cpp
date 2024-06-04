@@ -325,9 +325,6 @@ void ForEachRegExpFlag(JS::RegExpFlags flags, KnownF known, UnknownF unknown) {
       case RegExpFlag::Unicode:
         known("Unicode", "u");
         break;
-      case RegExpFlag::UnicodeSets:
-        known("UnicodeSets", "v");
-        break;
       case RegExpFlag::Sticky:
         known("Sticky", "y");
         break;
