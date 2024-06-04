@@ -659,6 +659,10 @@ browsertime-tp6-live:
         apps: [firefox, chrome, safari]
         test: tp6
         run-visual-metrics: true
+        lull-schedule:
+            by-test-platform:
+                .*shippable.*: 1w
+                default: ""
         subtests:
             by-app:
                 safari:
