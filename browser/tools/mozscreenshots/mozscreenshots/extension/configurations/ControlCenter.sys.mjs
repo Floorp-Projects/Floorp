@@ -11,8 +11,8 @@ import { SitePermissions } from "resource:///modules/SitePermissions.sys.mjs";
 
 import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
 
-const CC_SELECTORS = ["#identity-popup", "#urlbar-input-container"];
-const PP_SELECTORS = ["#protections-popup", "#urlbar-input-container"];
+const CC_SELECTORS = ["#identity-popup", "#urlbar .urlbar-input-container"];
+const PP_SELECTORS = ["#protections-popup", "#urlbar .urlbar-input-container"];
 
 const RESOURCE_PATH =
   "browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/resources/lib/controlCenter";

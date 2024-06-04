@@ -228,7 +228,7 @@ add_task(async () => {
       url: "http://example.com",
     },
     async () => {
-      let input = await getMacAccessible("urlbar-input");
+      let input = await getMacAccessible(gURLBar.inputField);
       is(
         input.getAttributeValue("AXValue"),
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url

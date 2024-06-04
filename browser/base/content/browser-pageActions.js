@@ -448,21 +448,20 @@ var BrowserPageActions = {
     }
 
     // Try each of the following nodes in order, using the first that's visible.
-    let potentialAnchorNodeIDs = [
-      action && action.anchorIDOverride,
-      action && this.urlbarButtonNodeIDForActionID(action.id),
-      this.mainButtonNode.id,
-      "identity-icon",
-      "urlbar-search-button",
+    let potentialAnchorNodes = [
+      document.getElementById(action?.anchorIDOverride),
+      document.getElementById(
+        action && this.urlbarButtonNodeIDForActionID(action.id)
+      ),
+      document.getElementById(this.mainButtonNode.id),
+      document.getElementById("identity-icon"),
+      gURLBar.querySelector(".urlbar-search-button"),
     ];
-    for (let id of potentialAnchorNodeIDs) {
-      if (id) {
-        let node = document.getElementById(id);
-        if (node && !node.hidden) {
-          let bounds = window.windowUtils.getBoundsWithoutFlushing(node);
-          if (bounds.height > 0 && bounds.width > 0) {
-            return node;
-          }
+    for (let node of potentialAnchorNodes) {
+      if (node && !node.hidden) {
+        let bounds = window.windowUtils.getBoundsWithoutFlushing(node);
+        if (bounds.height > 0 && bounds.width > 0) {
+          return node;
         }
       }
     }

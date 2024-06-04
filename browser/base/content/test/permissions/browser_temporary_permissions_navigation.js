@@ -98,7 +98,7 @@ add_task(async function testTempPermissionOnReload() {
     );
 
     // Reload as user via return key in urlbar (should remove the temp permission)
-    let urlBarInput = document.getElementById("urlbar-input");
+    let urlBarInput = gURLBar.inputField;
     await EventUtils.synthesizeMouseAtCenter(urlBarInput, {});
 
     reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);

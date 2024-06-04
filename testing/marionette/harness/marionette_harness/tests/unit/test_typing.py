@@ -45,7 +45,7 @@ class TestTypingChrome(TypingTestCase):
             key_reporter.send_keys(self.mod_key, "x")
             self.assertEqual("", key_reporter.get_property("value"))
 
-        url_bar = self.marionette.find_element(By.ID, "urlbar-input")
+        url_bar = self.marionette.execute_script("return gURLBar.inputField")
 
         # Clear contents first
         url_bar.send_keys(self.mod_key, "a")
