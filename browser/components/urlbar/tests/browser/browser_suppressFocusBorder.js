@@ -268,7 +268,7 @@ add_task(async function clickOnEdgeOfURLBar() {
     () => !win.gURLBar._hideFocus
   );
 
-  const container = win.document.getElementById("urlbar-input-container");
+  const container = win.gURLBar.querySelector(".urlbar-input-container");
   container.click();
 
   await onHiddenFocusRemoved;

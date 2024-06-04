@@ -898,7 +898,9 @@ class TelemetryEvent {
       action = "dismiss";
       skipLegacyTelemetry = true;
     } else if (MouseEvent.isInstance(event)) {
-      action = event.target.id == "urlbar-go-button" ? "go_button" : "click";
+      action = event.target.classList.contains("urlbar-go-button")
+        ? "go_button"
+        : "click";
     } else {
       action = "enter";
     }

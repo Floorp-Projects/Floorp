@@ -10,7 +10,7 @@ import time
 
 import mozinstall
 import pytest
-from marionette_driver import By, keys
+from marionette_driver import keys
 from marionette_driver.addons import Addons
 from marionette_driver.errors import MarionetteException
 from marionette_driver.marionette import Marionette
@@ -233,7 +233,7 @@ class Browser(object):
 
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             self.marionette.execute_script("gURLBar.select();")
-            urlbar = self.marionette.find_element(By.ID, "urlbar-input")
+            urlbar = self.marionette.execute_script("return gURLBar.inputField")
             urlbar.send_keys(keys.Keys.DELETE)
             urlbar.send_keys(text + keys.Keys.ENTER)
 

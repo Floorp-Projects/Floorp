@@ -457,7 +457,7 @@ ChromeUtils.defineLazyGetter(this, "PopupNotifications", () => {
       }
       let fallback = [
         document.getElementById("identity-icon"),
-        document.getElementById("urlbar-search-button"),
+        gURLBar.querySelector(".urlbar-search-button"),
       ];
       return fallback.find(element => element?.checkVisibility()) ?? null;
     };

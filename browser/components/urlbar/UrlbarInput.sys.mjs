@@ -55,7 +55,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
-const SEARCH_BUTTON_ID = "urlbar-search-button";
+const SEARCH_BUTTON_CLASS = "urlbar-search-button";
 
 // The scalar category of TopSites click for Contextual Services
 const SCALAR_CATEGORY_TOPSITES = "contextual.services.topsites.click";
@@ -177,9 +177,9 @@ export class UrlbarInput {
       });
     }
 
-    this.inputField = this.querySelector("#urlbar-input");
-    this._inputContainer = this.querySelector("#urlbar-input-container");
-    this._identityBox = this.querySelector("#identity-box");
+    this.inputField = this.querySelector(".urlbar-input");
+    this._inputContainer = this.querySelector(".urlbar-input-container");
+    this._identityBox = this.querySelector(".identity-box");
     this._searchModeIndicator = this.querySelector(
       "#urlbar-search-mode-indicator"
     );
@@ -1949,7 +1949,7 @@ export class UrlbarInput {
   }
 
   get goButton() {
-    return this.querySelector("#urlbar-go-button");
+    return this.querySelector(".urlbar-go-button");
   }
 
   get value() {
@@ -2073,7 +2073,7 @@ export class UrlbarInput {
 
     this.setAttribute("pageproxystate", state);
     this._inputContainer.setAttribute("pageproxystate", state);
-    this._identityBox.setAttribute("pageproxystate", state);
+    this._identityBox?.setAttribute("pageproxystate", state);
 
     if (state == "valid") {
       this._lastValidURLStr = this.value;
@@ -3561,7 +3561,7 @@ export class UrlbarInput {
     if (
       event.target == this.inputField ||
       event.target == this._inputContainer ||
-      event.target.id == SEARCH_BUTTON_ID
+      event.target.classList.contains(SEARCH_BUTTON_CLASS)
     ) {
       this._maybeSelectAll();
       this.#maybeUntrimUrl();
@@ -3669,7 +3669,7 @@ export class UrlbarInput {
         if (
           event.target != this.inputField &&
           event.target != this._inputContainer &&
-          event.target.id != SEARCH_BUTTON_ID
+          !event.target.classList.contains(SEARCH_BUTTON_CLASS)
         ) {
           break;
         }
@@ -3695,7 +3695,7 @@ export class UrlbarInput {
           this.inputField.setSelectionRange(0, 0);
         }
 
-        if (event.target.id == SEARCH_BUTTON_ID) {
+        if (event.target.classList.contains(SEARCH_BUTTON_CLASS)) {
           this._preventClickSelectsAll = true;
           this.search(lazy.UrlbarTokenizer.RESTRICT.SEARCH);
         } else {

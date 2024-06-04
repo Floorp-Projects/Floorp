@@ -10,18 +10,18 @@
   --urlbar-search-button-width: calc(16px + 2 * var(--urlbar-icon-padding));
 }
 
-#urlbar[actiontype="switchtab"][action-override] > #urlbar-input-container > #urlbar-label-box,
-#urlbar:not([actiontype="switchtab"], [actiontype="extension"], [searchmode]) > #urlbar-input-container > #urlbar-label-box,
-#urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
-#urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
-#urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-label-box,
-#urlbar:not([searchmode]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
-#urlbar[breakout-extend] > #urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
-#urlbar-input-container[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
+#urlbar[actiontype="switchtab"][action-override] > .urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"], [actiontype="extension"], [searchmode]) > .urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
+#urlbar:not([actiontype="extension"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
+#urlbar[searchmode][breakout-extend] > .urlbar-input-container > #urlbar-label-box,
+#urlbar:not([searchmode]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
+#urlbar[breakout-extend] > .urlbar-input-container > #urlbar-label-box > #urlbar-label-search-mode,
+.urlbar-input-container[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
-#urlbar[usertyping] > #urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
-#urlbar:not([usertyping]) > #urlbar-input-container > #urlbar-go-button,
-#urlbar:not([focused]) > #urlbar-input-container > #urlbar-go-button {
+#urlbar[usertyping] > .urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
+#urlbar:not([usertyping]) > .urlbar-input-container > .urlbar-go-button,
+#urlbar:not([focused]) > .urlbar-input-container > .urlbar-go-button {
   display: none;
 }
 
@@ -29,7 +29,7 @@
  * align the results and urlbar text */
 /* stylelint-disable-next-line media-query-no-invalid */
 @media (-moz-bool-pref: "browser.urlbar.richSuggestions.featureGate") {
-  #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] > .identity-box-button {
+  #urlbar:not(.searchButton) > .urlbar-input-container > #identity-box[pageproxystate="invalid"] > .identity-box-button {
     padding-inline: calc(6px + var(--urlbar-icon-padding));
   }
 }
@@ -85,13 +85,13 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-#urlbar-input-container,
+.urlbar-input-container,
 #searchbar {
   border-radius: var(--toolbarbutton-border-radius);
   overflow: clip;
 }
 
-#urlbar-input,
+.urlbar-input,
 #urlbar-scheme,
 .searchbar-textbox {
   flex: 1;
@@ -103,7 +103,7 @@
   outline: none;
 }
 
-#urlbar-input {
+.urlbar-input {
   mask-repeat: no-repeat;
   unicode-bidi: plaintext;
   text-align: match-parent;
@@ -124,23 +124,23 @@
     text-align: right !important;
   }
 
-  #urlbar:not([focused])[domaindir="ltr"]> #urlbar-input-container > .urlbar-input-box > & {
+  #urlbar:not([focused])[domaindir="ltr"]> .urlbar-input-container > .urlbar-input-box > & {
     direction: ltr;
     unicode-bidi: embed;
   }
 
   /* The following rules apply overflow masks to the unfocused urlbar
      This mask may be overriden when a Contextual Feature Recommendation is shown. */
-  #urlbar:not([focused])[textoverflow="both"] > #urlbar-input-container > .urlbar-input-box > & {
+  #urlbar:not([focused])[textoverflow="both"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent, black 3ch, black calc(100% - 3ch), transparent);
   }
-  #urlbar:not([focused])[textoverflow="right"] > #urlbar-input-container > .urlbar-input-box > & {
+  #urlbar:not([focused])[textoverflow="right"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to left, transparent, black 3ch);
   }
-  #urlbar:not([focused])[textoverflow="left"] > #urlbar-input-container > .urlbar-input-box > & {
+  #urlbar:not([focused])[textoverflow="left"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent, black 3ch);
   }
-  #urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > & {
+  #urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > .urlbar-input-container > .urlbar-input-box > & {
     mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
   }
 }
@@ -154,7 +154,7 @@
 
   /* The protocol is visible if there is an RTL domain and we overflow to the left.
      Uses the required-valid trick to check if it contains a value */
-  #urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > &:valid {
+  #urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > .urlbar-input-container > .urlbar-input-box > &:valid {
     visibility: visible;
   }
 }
@@ -192,7 +192,7 @@
   background-color: var(--toolbar-field-focus-background-color);
 }
 
-#urlbar-input::placeholder,
+.urlbar-input::placeholder,
 .searchbar-textbox::placeholder {
   opacity: 0.69;
 }
@@ -204,13 +204,13 @@
 }
 
 :root[lwtheme] {
-  #urlbar-input::selection,
+  .urlbar-input::selection,
   .searchbar-textbox::selection {
     background-color: var(--lwt-toolbar-field-highlight, Highlight);
     color: var(--lwt-toolbar-field-highlight-text, HighlightText);
   }
 
-  #urlbar-input:not(:focus)::selection,
+  .urlbar-input:not(:focus)::selection,
   .searchbar-textbox:not(:focus-within)::selection {
     background-color: var(--lwt-toolbar-field-highlight, text-select-disabled-background);
   }
@@ -220,7 +220,7 @@
   caret-color: transparent;
 }
 
-#urlbar.searchButton > #urlbar-input-container > #urlbar-search-button {
+#urlbar.searchButton > .urlbar-input-container > .urlbar-search-button {
   width: var(--urlbar-search-button-width);
   background-image: url(chrome://global/skin/icons/search-glass.svg);
   background-repeat: no-repeat;
@@ -229,7 +229,7 @@
   fill: var(--toolbarbutton-icon-fill);
 }
 
-#urlbar.searchButton > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-button {
+#urlbar.searchButton > .urlbar-input-container[pageproxystate="invalid"] > .urlbar-search-button {
   margin-inline-end: 6px;
 }
 
@@ -240,7 +240,7 @@
  */
 
 #urlbar,
-#urlbar-input-container,
+.urlbar-input-container,
 .urlbarView {
   position: relative;
 }
@@ -256,7 +256,7 @@
   inset-inline-start: var(--urlbar-search-button-width);
 }
 
-#urlbar-input-container {
+.urlbar-input-container {
   /* Match urlbar-background's border. */
   border: 1px solid transparent;
   padding: var(--urlbar-container-padding);
@@ -273,7 +273,7 @@
   width: 100%;
   height: var(--urlbar-height);
 
-  > #urlbar-input-container {
+  > .urlbar-input-container {
     width: 100%;
     height: 100%;
   }
@@ -297,14 +297,14 @@
   left: calc(-1 * var(--urlbar-margin-inline));
   width: calc(100% + 2 * var(--urlbar-margin-inline));
 
-  > #urlbar-input-container {
+  > .urlbar-input-container {
     height: var(--urlbar-container-height);
     padding-block: calc((var(--urlbar-container-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
     padding-inline: calc(var(--urlbar-margin-inline) + var(--urlbar-container-padding));
   }
 }
 
-#urlbar.searchButton[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-button {
+#urlbar.searchButton[breakout][breakout-extend] > .urlbar-input-container > .urlbar-search-button {
   fill: currentColor;
   fill-opacity: .6;
 }
@@ -477,16 +477,16 @@
   border-radius: var(--urlbar-icon-border-radius);
   padding-inline: 8px 6px;
 
-  #urlbar[focused="true"] > #urlbar-input-container > & {
+  #urlbar[focused="true"] > .urlbar-input-container > & {
     background-color: var(--urlbar-box-focus-bgcolor);
   }
 
-  #urlbar[searchmode] > #urlbar-input-container > & {
+  #urlbar[searchmode] > .urlbar-input-container > & {
     display: inline-flex;
   }
 }
 
-#urlbar[searchmode] > #urlbar-input-container > #urlbar-label-box {
+#urlbar[searchmode] > .urlbar-input-container > #urlbar-label-box {
   display: none;
 }
 
@@ -577,7 +577,7 @@
 }
 
 .urlbar-page-action,
-#urlbar-go-button,
+.urlbar-go-button,
 .search-go-button {
   width: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
   height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
@@ -602,7 +602,7 @@
   outline-offset: var(--focus-outline-inset);
 }
 
-#urlbar-go-button,
+.urlbar-go-button,
 .search-go-button {
   list-style-image: url("chrome://browser/skin/forward.svg");
 
@@ -791,7 +791,7 @@
 }
 
 /* Shift the url-bar text fading to stop the recommendation overlapping */
-#urlbar[cfr-recommendation-state] #urlbar-input {
+#urlbar[cfr-recommendation-state] .urlbar-input {
   /* A mask-image is usually only defined for the url bar when text overflows.
      We need to re-define the mask image here so that it shows up correctly when
      we transition to or from an `expanded` state (in which the right end of the
@@ -803,7 +803,7 @@
     mask-image: linear-gradient(to right, transparent, black 3ch);
   }
 }
-#urlbar[cfr-recommendation-state="expanded"] #urlbar-input {
+#urlbar[cfr-recommendation-state="expanded"] .urlbar-input {
   mask-position-x: calc(var(--cfr-label-width) * -1);
 
   &:-moz-locale-dir(rtl) {

@@ -173,7 +173,7 @@
               focused="true"
               pageproxystate="invalid">
           <hbox id="urlbar-background"/>
-          <hbox id="urlbar-input-container"
+          <hbox class="urlbar-input-container"
                 flex="1"
                 pageproxystate="invalid">
             <box id="remote-control-box"
@@ -181,8 +181,7 @@
                  collapsed="true">
                 <image id="remote-control-icon"/>
             </box>
-            <box id="urlbar-search-button"
-                 class="chromeclass-toolbar-additional"/>
+            <box class="chromeclass-toolbar-additional urlbar-search-button"/>
             <!-- Use onclick instead of normal popup= syntax since the popup
                  code fires onmousedown, and hence eats our favicon drag events. -->
             <box id="tracking-protection-icon-container" align="center"
@@ -200,6 +199,7 @@
               </tooltip>
             </box>
             <box id="identity-box"
+                 class="identity-box"
                  pageproxystate="invalid"
                  ondragstart="gIdentityHandler.onDragStart(event);">
               <box id="identity-icon-box"
@@ -322,6 +322,7 @@
               <html:input id="urlbar-scheme"
                           required="required"/>
               <html:input id="urlbar-input"
+                          class="urlbar-input"
                           anonid="input"
                           aria-controls="urlbar-results"
                           aria-autocomplete="both"
@@ -329,8 +330,7 @@
                           data-l10n-id="urlbar-placeholder"
                           data-l10n-attrs="placeholder"/>
             </moz-input-box>
-            <image id="urlbar-go-button"
-                   class="urlbar-icon"
+            <image class="urlbar-icon urlbar-go-button"
                    role="button"
                    keyNav="false"
                    onclick="gURLBar.handleCommand(event);"
