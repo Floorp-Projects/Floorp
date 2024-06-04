@@ -8669,12 +8669,30 @@ void PresShell::EventHandler::MaybeHandleKeyboardEventBeforeDispatch(
 
     // The event listeners in chrome can prevent this ESC behavior by
     // calling prevent default on the preceding keydown/press events.
-    if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
-        aKeyboardEvent->mMessage == eKeyUp) {
-      // ESC key released while in DOM fullscreen mode.
-      // Fully exit all browser windows and documents from
-      // fullscreen mode.
-      Document::AsyncExitFullscreen(nullptr);
+    if (aKeyboardEvent->mMessage == eKeyUp) {
+      bool shouldExitFullscreen =
+          !mPresShell->mIsLastChromeOnlyEscapeKeyConsumed;
+      if (!shouldExitFullscreen) {
+        if (mPresShell->mLastConsumedEscapeKeyUpForFullscreen &&
+            (aKeyboardEvent->mTimeStamp -
+             mPresShell->mLastConsumedEscapeKeyUpForFullscreen) <=
+                TimeDuration::FromMilliseconds(
+                    StaticPrefs::
+                        dom_fullscreen_force_exit_on_multiple_escape_interval())) {
+          shouldExitFullscreen = true;
+          mPresShell->mLastConsumedEscapeKeyUpForFullscreen = TimeStamp();
+        } else {
+          mPresShell->mLastConsumedEscapeKeyUpForFullscreen =
+              aKeyboardEvent->mTimeStamp;
+        }
+      }
+
+      if (shouldExitFullscreen) {
+        // ESC key released while in DOM fullscreen mode.
+        // Fully exit all browser windows and documents from
+        // fullscreen mode.
+        Document::AsyncExitFullscreen(nullptr);
+      }
     }
   }
 
