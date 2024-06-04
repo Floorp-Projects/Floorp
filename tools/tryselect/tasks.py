@@ -163,17 +163,9 @@ def filter_tasks_by_worker_type(tasks, params):
     return tasks
 
 
-def filter_tasks_by_paths(tasks, paths=[], tag=""):
+def filter_tasks_by_paths(tasks, paths):
     resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
-
-    if paths:
-        run_suites, run_tests = resolver.resolve_metadata(paths)
-    elif not paths and tag:
-        run_tests = list(resolver.resolve_tests(paths=[], tags=tag))
-
-    if not run_tests:
-        return {}
-
+    run_suites, run_tests = resolver.resolve_metadata(paths)
     flavors = {(t["flavor"], t.get("subsuite")) for t in run_tests}
 
     task_regexes = set()

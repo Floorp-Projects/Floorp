@@ -321,9 +321,6 @@ def _try_task_config(full_task_graph, parameters, graph_config):
         if "MOZHARNESS_TEST_PATHS" in parameters["try_task_config"].get("env", {}):
             matched_tasks = [x for x in matched_tasks if x.endswith("-1")]
 
-        if "MOZHARNESS_TEST_TAG" in parameters["try_task_config"].get("env", {}):
-            matched_tasks = [x for x in matched_tasks if x.endswith("-1")]
-
     selected_tasks = set(tasks) | set(matched_tasks)
     missing.update(selected_tasks - set(full_task_graph.tasks))
 
