@@ -34,19 +34,3 @@ def resolve_keys(config, tasks):
                 }
             )
         yield task
-
-
-@transforms.add
-def add_startup_test(config, tasks):
-    for task in tasks:
-        if "nightly" not in task["attributes"].get("build-type", ""):
-            yield task
-            continue
-        for dep_label, dep_task in config.kind_dependencies_tasks.items():
-            if (
-                dep_task.kind == "android-startup-test"
-                and dep_task.attributes["shipping-product"]
-                == task["attributes"]["shipping-product"]
-            ):
-                task["dependencies"]["android-startup-test"] = dep_label
-        yield task

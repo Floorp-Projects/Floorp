@@ -9,6 +9,7 @@ transforms:
     - android_taskgraph.transforms.upstream_artifacts
     - android_taskgraph.transforms.treeherder
     - android_taskgraph.transforms.push_android_app
+    - android_taskgraph.transforms.startup_tests_deps
     - gecko_taskgraph.transforms.task
 
 kind-dependencies:
@@ -19,6 +20,7 @@ jobs:
     push-bundle:
         description: Publish Fenix and Focus AABs
         from-deps:
+            kinds: [signing-bundle]
             with-attributes:
                 build-type:
                     - fenix-nightly
