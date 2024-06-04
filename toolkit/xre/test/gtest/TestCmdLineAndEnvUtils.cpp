@@ -304,11 +304,11 @@ bool TestCommandLineImpl(CommandLine const& cl,
 void TestCommandLine(TestCaseState expectation, CommandLine const& cl,
                      WithOptionalState withOptional) {
   EXPECT_EQ(TestCommandLineImpl<char>(cl, withOptional), expectation)
-      << "cl is: " << cl << std::endl
+      << "cl is: " << cl << "\n"
       << "withOptional is: " << bool(withOptional);
 #ifdef XP_WIN
   EXPECT_EQ(TestCommandLineImpl<wchar_t>(cl, withOptional), expectation)
-      << "cl is: " << cl << std::endl
+      << "cl is: " << cl << "\n"
       << "withOptional is: " << bool(withOptional);
 #endif
 }
