@@ -77,6 +77,10 @@ add_setup(async function () {
     "browser.newtabpage.activity-stream.feeds.system.topstories",
     true
   );
+  Services.prefs.setStringPref(
+    "browser.newtabpage.activity-stream.discoverystream.region-weather-config",
+    ""
+  );
 
   let defaultDSConfig = JSON.parse(
     PREFS_CONFIG.get("discoverystream.config").getValue({

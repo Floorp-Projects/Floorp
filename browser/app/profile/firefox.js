@@ -1706,7 +1706,11 @@ pref("browser.newtabpage.activity-stream.weather.locationSearchEnabled", false);
 pref("browser.newtabpage.activity-stream.weather.temperatureUnits", "f");
 pref("browser.newtabpage.activity-stream.weather.display", "simple");
 // List of regions that get weather by default.
-pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "");
+#ifdef NIGHTLY_BUILD
+  pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "US,CA");
+#else
+  pref("browser.newtabpage.activity-stream.discoverystream.region-weather-config", "");
+#endif
 
 // Preference to enable wallpaper selection in the Customize Menu of new tab page
 pref("browser.newtabpage.activity-stream.newtabWallpapers.enabled", false);

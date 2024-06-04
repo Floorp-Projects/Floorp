@@ -103,6 +103,12 @@ const COMMON_PREFERENCES = new Map([
   // inconsistently.
   ["browser.download.panel.shown", true],
 
+  // Make sure newtab weather doesn't hit the network to retrieve weather data.
+  [
+    "browser.newtabpage.activity-stream.discoverystream.region-weather-config",
+    "",
+  ],
+
   // Make sure Topsites doesn't hit the network to retrieve sponsored tiles.
   ["browser.newtabpage.activity-stream.showSponsoredTopSites", false],
 
