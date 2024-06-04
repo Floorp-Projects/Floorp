@@ -32,10 +32,13 @@ const getReporterConfig = (() => {
             port.onMessage.addListener(message => {
               if ("productName" in message) {
                 androidReporterConfig.productName = message.productName;
+                androidReporterConfig.extra_labels = [
+                  `browser-${message.productName}`,
+                ];
                 resolve(androidReporterConfig);
 
-                // For now, setting the productName is the only use for this port, and that's only happening
-                // once after startup, so let's disconnect the port when we're done.
+                // For now, setting the productName and extra_labels is the only use for this port,
+                // and that's only happening once after startup, so let's disconnect the port when we're done.
                 port.disconnect();
               }
             });
