@@ -40,15 +40,36 @@ export class AboutMessagePreviewParent extends JSWindowActorParent {
     );
   }
 
-  showFeatureCallout(message, browser) {
-    switch (message.trigger.id) {
-      case "featureCalloutCheck":
-        // For messagePreview, force the trigger to be something we can show
-        message.trigger.id = "nthTabClosed";
-        lazy.FeatureCalloutBroker.showFeatureCallout(browser, message);
-        break;
-      default:
-        lazy.FeatureCalloutBroker.showFeatureCallout(browser, message);
+  async showFeatureCallout(message, browser) {
+    // For messagePreview, force the trigger && targeting to be something we can show.
+    message.trigger.id = "nthTabClosed";
+    message.targeting = "true";
+    // Check whether or not the callout is showing already, then
+    // modify the anchor property of the feature callout to
+    // ensure it's something we can show.
+    let showing = await lazy.FeatureCalloutBroker.showFeatureCallout(
+      browser,
+      message
+    );
+    if (!showing) {
+      for (const screen of message.content.screens) {
+        let existingAnchors = screen.anchors;
+        let fallbackAnchor = { selector: "#star-button-box" };
+
+        if (existingAnchors[0].hasOwnProperty("arrow_position")) {
+          fallbackAnchor.arrow_position = "top-center-arrow-end";
+        } else {
+          fallbackAnchor.panel_position = {
+            anchor_attachment: "bottomcenter",
+            callout_attachment: "topright",
+          };
+        }
+
+        screen.anchors = [...existingAnchors, fallbackAnchor];
+        console.log("ANCHORS: ", screen.anchors);
+      }
+      // Try showing again
+      await lazy.FeatureCalloutBroker.showFeatureCallout(browser, message);
     }
   }
 
