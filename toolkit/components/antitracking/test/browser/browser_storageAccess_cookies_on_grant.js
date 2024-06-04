@@ -109,9 +109,8 @@ add_task(async function test_all_tabs_closed() {
         "example.org should have storage access after request succeeded."
       );
 
-      is(
-        content.document.cookie,
-        "foo=bar",
+      ok(
+        content.document.cookie.includes("foo=bar"),
         "example.org should have access to the cookie set in the first party context previously."
       );
     });

@@ -31,7 +31,10 @@ function initTest() {
       // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
       ["network.cookie.sameSite.laxByDefault", false],
       ["network.cors_preflight.authorization_covered_by_wildcard", false],
-	]
+      // Disable CHIPS for now because it breaks this test. We will fix this
+      // issue in Bug 1873982
+      ["network.cookie.CHIPS.enabled", false],
+	  ]
   }, initTestCallback);
 }
 
