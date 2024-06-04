@@ -6,6 +6,7 @@ import { initBrowserContextMenu } from "./browser-context-menu";
 import { initShareMode } from "./browser-share-mode";
 import { initProfileManager } from "./profile-manager";
 import { initUndoClosedTab } from "./undo-closed-tab";
+import { initPrivateContainer } from "./browser-private-container";
 
 export default function initScripts() {
   //@ts-expect-error ii
@@ -21,6 +22,7 @@ export default function initScripts() {
     //window.gBrowserManagerSidebar = CBrowserManagerSidebar.getInstance();
     import("./testButton");
     initStatusbar();
+    initPrivateContainer();
     console.log("csk getinstance");
     CustomShortcutKey.getInstance();
     initSidebar();
