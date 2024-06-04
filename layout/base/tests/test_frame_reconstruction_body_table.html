@@ -20,11 +20,10 @@
 
     const frameCountBeforeReframe = utils.framesConstructed;
 
-    // We expect to construct one newly appended block, and reconstruct the
-    // display:table <body>, which consists of 8 frames including TableWrapper,
-    // Table, TableRowGroup, TableRow, TableColGroup, TableCol, TableCell, and
+    // We expect to construct one newly appended block, and the relevant pseudo
+    // parents: TableRowGroup, TableRow, TableColGroup, TableCol, TableCell, and
     // TableCell's inner block.
-    const expectedFrameConstructionCount = 1 + 8;
+    const expectedFrameConstructionCount = 1 + 6;
 
     let div = document.createElement("div");
     document.body.appendChild(div);
