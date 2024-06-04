@@ -16,8 +16,13 @@ function promiseObserverNotification() {
       GleanPings.userCharacteristics.testBeforeNextSubmit(_ => {
         submitted = true;
 
-        // Did we assign a value we got out of about:fingerprintingprotection?
-        Assert.notEqual("", Glean.characteristics.canvasdata1.testGetValue());
+        // Did we assign a value we got out of about:fingerprinting?
+        // For now, we are sticking the test value in a random telemetry
+        // metric, but once we have a real metric, we'll update this
+        Assert.equal(
+          "Hello World",
+          Glean.characteristics.timezone.testGetValue()
+        );
       });
       GleanPings.userCharacteristics.submit();
 
