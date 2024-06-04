@@ -4,6 +4,7 @@ prefs = [
   "layout.css.basic-shape-shape.enabled=true",
   "layout.css.basic-shape-xywh.enabled=true",
   "layout.css.properties-and-values.enabled=true",
+  "layout.css.starting-style-at-rules.enabled=true",
   "layout.css.transition-behavior.enabled=true",
   "dom.customHighlightAPI.enabled=true",
 ]
@@ -55,6 +56,8 @@ support-files = [
 ["test_getCSSStyleRules_pseudo.html"]
 
 ["test_getCSSStyleRules_slotted.html"]
+
+["test_getCSSStyleRules_starting_style.html"]
 
 ["test_getRegisteredCssHighlights.html"]
 

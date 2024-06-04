@@ -402,7 +402,7 @@ trait PrivateMatchMethods: TElement {
             PseudoElementResolution::IfApplicable,
         );
 
-        let starting_style = resolver.resolve_starting_style();
+        let starting_style = resolver.resolve_starting_style().style;
         if starting_style.style().clone_display().is_none() {
             return None;
         }

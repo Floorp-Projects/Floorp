@@ -17,7 +17,8 @@ namespace InspectorUtils {
   sequence<CSSStyleRule> getCSSStyleRules(
     Element element,
     optional [LegacyNullToEmptyString] DOMString pseudo = "",
-    optional boolean relevantLinkVisited = false);
+    optional boolean relevantLinkVisited = false,
+    optional boolean withStartingStyle = false);
   unsigned long getRuleLine(CSSRule rule);
   unsigned long getRuleColumn(CSSRule rule);
   unsigned long getRelativeRuleLine(CSSRule rule);

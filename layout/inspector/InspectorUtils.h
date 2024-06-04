@@ -44,6 +44,7 @@ class InspectorUtils {
   static void GetCSSStyleRules(GlobalObject& aGlobal, Element& aElement,
                                const nsAString& aPseudo,
                                bool aIncludeVisitedStyle,
+                               bool aWithStartingStyle,
                                nsTArray<RefPtr<CSSStyleRule>>& aResult);
 
   /**

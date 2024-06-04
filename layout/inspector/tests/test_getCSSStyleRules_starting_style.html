@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<title>Test for InspectorUtils.getCSSStyleRules for starting style</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<style>
+  @starting-style {
+    unknowntagname {
+      color: red;
+    }
+  }
+  unknowntagname {
+    color: blue;
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+</style>
+<pre id="log"></pre>
+<unknowntagname></unknowntagname>
+<script>
+/**
+ * This test checks that InspectorUtils.getCSSStyleRules setting
+ * withStartingStyle:true returns correct style set in various cases.
+ * To avoid effects from UA sheets, we use an element with "unknowntagname".
+ */
+
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+add_task(async function runTests() {
+  const styleSheet = document.styleSheets[1];
+  const el = document.querySelector("unknowntagname");
+  let rules = InspectorUtils.getCSSStyleRules(el, "", false, true);
+  is(rules.length, 3, "Expected rules");
+
+  is(
+    rules[0].cssText,
+    styleSheet.cssRules[0].cssRules[0].cssText,
+    "first returned rule is the one in the top-level starting-style rule"
+  );
+
+  is(
+    rules[1].cssText,
+    styleSheet.cssRules[1].cssText,
+    "first returned rule is top-level unknowntagname rule"
+  );
+
+  is(
+    rules[2].cssText,
+    styleSheet.cssRules[1].cssRules[0].cssRules[0].cssText,
+    "second returned rule is the one in the top-level starting-style rule"
+  );
+
+  info(
+    "Check that starting style rules are not returned when withStartingStyle " +
+    "param is false"
+  );
+  rules = InspectorUtils.getCSSStyleRules(el, "", false);
+  is(rules.length, 1, "Expected rules");
+
+  is(
+    rules[0].cssText,
+    styleSheet.cssRules[1].cssText,
+    "Only returned rule is top-level unknowntagname rule"
+  );
+});
+</script>
