@@ -60,6 +60,15 @@ async function testLivePreviewData(data, ruleView, selector) {
 
   const onValueDone = ruleView.once("ruleview-changed");
   if (data.escape) {
+    // First, close the popup
+    await waitFor(() => ruleView.popup && ruleView.popup.isOpen);
+    ok(true, "Popup was opened");
+    const onPopupClosed = once(ruleView.popup, "popup-closed");
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, ruleView.styleWindow);
+    await onPopupClosed;
+    ok(true, "Popup was closed");
+
+    // Then hit escape a second time to cancel the change
     EventUtils.synthesizeKey("KEY_Escape");
   } else {
     EventUtils.synthesizeKey("KEY_Enter");
