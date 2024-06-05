@@ -856,7 +856,7 @@ Result CertVerifier::VerifySSLServerCert(
   }
 
   if (hostname.IsEmpty()) {
-    return Result::ERROR_BAD_CERT_DOMAIN;
+    return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
   // CreateCertErrorRunnable assumes that CheckCertHostname is only called
@@ -958,12 +958,12 @@ Result CertVerifier::VerifySSLServerCert(
 
   rv = CheckCertHostnameHelper(peerCertInput, hostname,
                                isBuiltChainRootBuiltInRootLocal);
+  if ((rv == Success || rv == Result::ERROR_BAD_CERT_DOMAIN) &&
+      isBuiltChainRootBuiltInRoot) {
+    *isBuiltChainRootBuiltInRoot = isBuiltChainRootBuiltInRootLocal;
+  }
   if (rv != Success) {
     return rv;
-  }
-
-  if (isBuiltChainRootBuiltInRoot) {
-    *isBuiltChainRootBuiltInRoot = isBuiltChainRootBuiltInRootLocal;
   }
 
   return Success;

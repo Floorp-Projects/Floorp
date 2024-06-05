@@ -818,7 +818,11 @@ SSLServerCertVerificationJob::Run() {
   mResultTask->Dispatch(
       std::move(builtChainBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      EVStatus::NotEV, false, finalError, overridableErrorCategory, false,
+      EVStatus::NotEV, false, finalError, overridableErrorCategory,
+      // If the certificate verifier returned Result::ERROR_BAD_CERT_DOMAIN, a
+      // chain was built, so isCertChainRootBuiltInRoot is valid and
+      // potentially useful. Otherwise, assume no chain was built.
+      rv == Result::ERROR_BAD_CERT_DOMAIN ? isCertChainRootBuiltInRoot : false,
       mProviderFlags, madeOCSPRequests);
   return NS_OK;
 }
@@ -1117,6 +1121,8 @@ SSLServerCertVerificationResult::Run() {
   }
 
   mSocketControl->SetMadeOCSPRequests(mMadeOCSPRequests);
+  mSocketControl->SetIsBuiltCertChainRootBuiltInRoot(
+      mIsBuiltCertChainRootBuiltInRoot);
 
   if (mSucceeded) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
@@ -1125,9 +1131,6 @@ SSLServerCertVerificationResult::Run() {
     nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
     mSocketControl->SetServerCert(cert, mEVStatus);
     mSocketControl->SetSucceededCertChain(std::move(mBuiltChain));
-
-    mSocketControl->SetIsBuiltCertChainRootBuiltInRoot(
-        mIsBuiltCertChainRootBuiltInRoot);
     mSocketControl->SetCertificateTransparencyStatus(
         mCertificateTransparencyStatus);
   } else {
