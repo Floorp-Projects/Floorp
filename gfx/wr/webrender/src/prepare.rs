@@ -231,12 +231,11 @@ fn prepare_prim_for_render(
                 !prim_data.brush_segments.is_empty() ||
                     may_need_repetition(prim_data.stretch_size, prim_data.common.prim_rect)
             }
-            PrimitiveInstanceKind::ConicGradient { .. } => {
-                // TODO(nical) Enable quad conic gradients.
-                true
-                // let prim_data = &data_stores.conic_grad[*data_handle];
-                // !prim_data.brush_segments.is_empty() ||
-                //     may_need_repetition(prim_data.stretch_size, prim_data.common.prim_rect)
+            // TODO(bug 1899546) Enable quad conic gradients with SWGL.
+            PrimitiveInstanceKind::ConicGradient { data_handle, .. } if !frame_context.fb_config.is_software => {
+                let prim_data = &data_stores.conic_grad[*data_handle];
+                !prim_data.brush_segments.is_empty() ||
+                    may_need_repetition(prim_data.stretch_size, prim_data.common.prim_rect)
             }
             _ => true,
         };
