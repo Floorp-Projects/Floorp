@@ -392,10 +392,6 @@ const TrackingId& MediaEngineRemoteVideoSource::GetTrackingId() const {
   return mTrackingId;
 }
 
-void MediaEngineRemoteVideoSource::OnCaptureEnded() {
-  mCaptureEndedEvent.Notify();
-}
-
 int MediaEngineRemoteVideoSource::DeliverFrame(
     uint8_t* aBuffer, const camera::VideoFrameProperties& aProps) {
   // Cameras IPC thread - take great care with accessing members!
