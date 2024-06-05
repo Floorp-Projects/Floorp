@@ -67,7 +67,6 @@ export class _WallpapersSection extends React.PureComponent {
     } else {
       this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
     }
-    this.props.setPref("newtabWallpapers.wallpaper-color", "");
     this.handleUserEvent({
       selected_wallpaper: "none",
       hadPreviousWallpaper: !!this.props.activeWallpaper,

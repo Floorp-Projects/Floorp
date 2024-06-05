@@ -27,14 +27,10 @@ body {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  background-image:
-    var(--newtab-wallpaper-light, ''),
-    linear-gradient(to right, var(--newtab-wallpaper-color, ''), var(--newtab-wallpaper-color, ''));
+  background-image: var(--newtab-wallpaper-light, '');
 
   @media (prefers-color-scheme: dark) {
-    background-image:
-      var(--newtab-wallpaper-dark, ''),
-      linear-gradient(to right, var(--newtab-wallpaper-color, ''), var(--newtab-wallpaper-color, ''));
+    background-image: var(--newtab-wallpaper-dark, '');
   }
 }
 

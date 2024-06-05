@@ -1726,7 +1726,6 @@ pref("browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled", false);
 // Current new tab page background images.
 pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper-light", "");
 pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper-dark", "");
-pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper-color", "");
 
 // Preference to show feature highlight about wallpaper on new tab page
 pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightEnabled", false);
