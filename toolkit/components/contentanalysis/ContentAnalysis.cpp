@@ -1500,6 +1500,7 @@ ContentAnalysis::CancelContentAnalysisRequest(const nsACString& aRequestToken) {
 
 NS_IMETHODIMP
 ContentAnalysis::CancelAllRequests() {
+  LOGD("CancelAllRequests running");
   mCaClientPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
       [&](std::shared_ptr<content_analysis::sdk::Client> client) {
@@ -1507,6 +1508,31 @@ ContentAnalysis::CancelAllRequests() {
         if (!owner) {
           // May be shutting down
           return;
+        }
+        NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
+            "ContentAnalysis::CancelAllRequests", []() {
+              auto owner = GetContentAnalysisFromService();
+              if (!owner) {
+                // May be shutting down
+                return;
+              }
+              {
+                auto callbackMap = owner->mCallbackMap.Lock();
+                auto keys = callbackMap->Keys();
+                for (const auto& key : keys) {
+                  owner->CancelWithError(nsCString(key),
+                                         NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+                }
+              }
+            }));
+        {
+          auto warnResponseDataMap = owner->mWarnResponseDataMap.Lock();
+          auto keys = warnResponseDataMap->Keys();
+          for (const auto& key : keys) {
+            LOGD("Responding to warn dialog for request %s",
+                 nsCString(key).get());
+            owner->RespondToWarnDialog(key, false);
+          }
         }
         if (!client) {
           LOGE("CancelAllRequests got a null client");

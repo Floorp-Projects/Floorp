@@ -183,6 +183,10 @@ function makeMockContentAnalysis() {
         callback.contentResult(response);
       }, 0);
     },
+
+    cancelAllRequests() {
+      // This is called on exit, no need to do anything
+    },
   };
 }
 
