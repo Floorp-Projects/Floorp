@@ -207,6 +207,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     case ColorID::TargetTextBackground:
     case ColorID::TargetTextForeground:
       aResult = GetStandinForNativeColor(aID, aColorScheme);
+      break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
       aResult = NS_RGB(0xff, 0xff, 0xff);
