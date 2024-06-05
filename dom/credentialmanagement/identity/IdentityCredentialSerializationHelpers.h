@@ -20,12 +20,20 @@ struct ParamTraits<mozilla::dom::IdentityProviderConfig> {
     WriteParam(aWriter, aParam.mConfigURL);
     WriteParam(aWriter, aParam.mClientId);
     WriteParam(aWriter, aParam.mNonce);
+    WriteParam(aWriter, aParam.mOrigin);
+    WriteParam(aWriter, aParam.mLoginURL);
+    WriteParam(aWriter, aParam.mLoginTarget);
+    WriteParam(aWriter, aParam.mDynamicViaCORS);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mConfigURL) &&
            ReadParam(aReader, &aResult->mClientId) &&
-           ReadParam(aReader, &aResult->mNonce);
+           ReadParam(aReader, &aResult->mNonce) &&
+           ReadParam(aReader, &aResult->mOrigin) &&
+           ReadParam(aReader, &aResult->mLoginURL) &&
+           ReadParam(aReader, &aResult->mLoginTarget) &&
+           ReadParam(aReader, &aResult->mDynamicViaCORS);
   }
 };
 
@@ -39,7 +47,6 @@ struct ParamTraits<mozilla::dom::IdentityCredentialRequestOptions> {
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mProviders);
-    ;
   }
 };
 

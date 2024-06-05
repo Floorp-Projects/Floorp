@@ -671,6 +671,11 @@ class PromptDelegateTest : BaseSessionTest(
         )
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
+                "dom.security.credentialmanagement.identity.heavyweight.enabled" to true,
+            ),
+        )
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
                 "dom.security.credentialmanagement.identity.test_ignore_well_known" to true,
             ),
         )
