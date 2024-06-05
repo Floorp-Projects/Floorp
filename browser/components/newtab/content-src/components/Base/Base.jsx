@@ -387,6 +387,7 @@ export class BaseContent extends React.PureComponent {
     const activeWallpaper =
       prefs[`newtabWallpapers.wallpaper-${this.state.colorMode}`];
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
+    const wallpapersV2Enabled = prefs["newtabWallpapers.v2.enabled"];
     const weatherEnabled = prefs.showWeather;
 
     const { pocketConfig } = prefs;
@@ -441,7 +442,7 @@ export class BaseContent extends React.PureComponent {
     ]
       .filter(v => v)
       .join(" ");
-    if (wallpapersEnabled) {
+    if (wallpapersEnabled || wallpapersV2Enabled) {
       this.updateWallpaper();
     }
 
@@ -456,6 +457,7 @@ export class BaseContent extends React.PureComponent {
             setPref={this.setPref}
             enabledSections={enabledSections}
             wallpapersEnabled={wallpapersEnabled}
+            wallpapersV2Enabled={wallpapersV2Enabled}
             activeWallpaper={activeWallpaper}
             pocketRegion={pocketRegion}
             mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
