@@ -667,6 +667,7 @@ var SelectTranslationsPanel = new (class {
       });
     }
 
+    textArea.value = "";
     textArea.style.resize = "none";
     textArea.style.maxHeight = null;
     if (sourceText.length < SelectTranslationsPanel.textLengthThreshold) {
@@ -1288,15 +1289,15 @@ var SelectTranslationsPanel = new (class {
    */
   #maybeFocusMenuList(menuList) {
     if (menuList && !menuList.value) {
-      menuList.focus({ focusVisible: true });
+      menuList.focus({ focusVisible: false });
       return;
     }
 
     const { fromMenuList, toMenuList } = this.elements;
     if (!fromMenuList.value) {
-      fromMenuList.focus({ focusVisible: true });
+      fromMenuList.focus({ focusVisible: false });
     } else if (!toMenuList.value) {
-      toMenuList.focus({ focusVisible: true });
+      toMenuList.focus({ focusVisible: false });
     }
   }
 
@@ -1899,7 +1900,7 @@ var SelectTranslationsPanel = new (class {
       "aria-describedby",
       "select-translations-panel-init-failure-message-bar"
     );
-    tryAgainButton.focus({ focusVisible: true });
+    tryAgainButton.focus({ focusVisible: false });
   }
 
   /**
@@ -1949,7 +1950,7 @@ var SelectTranslationsPanel = new (class {
       "aria-describedby",
       "select-translations-panel-translation-failure-message-bar"
     );
-    tryAgainButton.focus({ focusVisible: true });
+    tryAgainButton.focus({ focusVisible: false });
   }
 
   /**
