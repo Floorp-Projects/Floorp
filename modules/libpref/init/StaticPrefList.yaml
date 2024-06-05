@@ -6599,6 +6599,15 @@
   value: 25
   mirror: once
 
+# When true, we output warning messages when rejecting surface promotion
+# when it has been requested. This is important for color correctness of
+# wide color videos, as well as for GPU performance for all videos.
+- name: gfx.webrender.compositor.surface-promotion.logging
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Number of damage rects we can give to the compositor for a new frame with
 # partial present. This controls whether partial present is used or not.
 - name: gfx.webrender.max-partial-present-rects
