@@ -558,13 +558,25 @@ let testVariations = [
     name: "mode 2",
     [TRR_MODE_PREF]: 2,
     expectedSelectedIndex: ENABLED_OPTION_INDEX,
-    expectedFinalUriPref: "",
+  },
+  {
+    name: "mode 2 and match default uri",
+    [TRR_MODE_PREF]: 2,
+    [TRR_URI_PREF]: "",
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
+    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
   {
     name: "mode 3",
     [TRR_MODE_PREF]: 3,
     expectedSelectedIndex: STRICT_OPTION_INDEX,
-    expectedFinalUriPref: "",
+  },
+  {
+    name: "mode 3 and match default uri",
+    [TRR_URI_PREF]: "",
+    [TRR_MODE_PREF]: 3,
+    expectedSelectedIndex: STRICT_OPTION_INDEX,
+    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
   {
     name: "mode 4",
@@ -582,7 +594,57 @@ let testVariations = [
     [TRR_MODE_PREF]: 77,
     expectedSelectedIndex: OFF_OPTION_INDEX,
   },
-
+  {
+    name: "mode out-of-bounds-negative",
+    [TRR_MODE_PREF]: -1,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
+  },
+  // Changing mode 0 to mode 2 and 3
+  {
+    name: "back to mode 0",
+    [TRR_MODE_PREF]: 0,
+    expectedSelectedIndex: DEFAULT_OPTION_INDEX,
+  },
+  {
+    name: "mode 2 after mode 0",
+    [TRR_MODE_PREF]: 2,
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
+    expectedFinalUriPref: FIRST_RESOLVER_VALUE,
+  },
+  {
+    name: "back to mode 0_2",
+    [TRR_MODE_PREF]: 0,
+    expectedSelectedIndex: DEFAULT_OPTION_INDEX,
+  },
+  {
+    name: "mode 3 after mode 0",
+    [TRR_MODE_PREF]: 3,
+    expectedSelectedIndex: STRICT_OPTION_INDEX,
+    expectedFinalUriPref: FIRST_RESOLVER_VALUE,
+  },
+  // verify the final URI of changing mode 5 to mode 2 and 3
+  {
+    name: "back to mode 5",
+    [TRR_MODE_PREF]: 5,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
+  },
+  {
+    name: "mode 2 after mode 5",
+    [TRR_MODE_PREF]: 2,
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
+    expectedFinalUriPref: FIRST_RESOLVER_VALUE,
+  },
+  {
+    name: "back to mode 5_2",
+    [TRR_MODE_PREF]: 5,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
+  },
+  {
+    name: "mode 3 after mode 5",
+    [TRR_MODE_PREF]: 3,
+    expectedSelectedIndex: STRICT_OPTION_INDEX,
+    expectedFinalUriPref: FIRST_RESOLVER_VALUE,
+  },
   // verify automatic heuristics states
   {
     name: "heuristics on and mode unset",
@@ -615,7 +677,15 @@ let testVariations = [
     clickMode: "dohEnabledRadio",
     expectedModeValue: 2,
     expectedUriValue: "",
-    expectedFinalUriPref: "",
+  },
+  // TRR_URI_PREF should match the expectedFinalUriPref based on the changes made in Bug 1861285
+  {
+    name: "toggle mode on and auto default uri",
+    [TRR_URI_PREF]: "https://stub.com",
+    clickMode: "dohEnabledRadio",
+    expectedModeValue: 2,
+    expectedUriValue: "",
+    expectedFinalUriPref: FIRST_RESOLVER_VALUE,
   },
   {
     name: "toggle mode off",
@@ -655,6 +725,36 @@ let testVariations = [
     expectedResolverListValue: SECOND_RESOLVER_VALUE,
     selectResolver: DEFAULT_RESOLVER_VALUE,
     expectedFinalUriPref: FIRST_RESOLVER_VALUE,
+  },
+  // Attempt to select NextDNS with DoH not enabled
+  // from mode 5 to 3
+  {
+    name: "Select NextDNS as TRR provider in mode 5_2",
+    [TRR_MODE_PREF]: 5,
+    selectResolver: SECOND_RESOLVER_VALUE,
+    expectedFinalUriPref: SECOND_RESOLVER_VALUE,
+  },
+  // should maintain the uri pref set
+  {
+    name: "maintain NextDNS mode 3 from mode 5",
+    [TRR_MODE_PREF]: 3,
+    [TRR_URI_PREF]: SECOND_RESOLVER_VALUE,
+    expectedResolverListValue: SECOND_RESOLVER_VALUE,
+    expectedFinalUriPref: SECOND_RESOLVER_VALUE,
+  },
+  {
+    name: "Select NextDNS as TRR provider in mode 5",
+    [TRR_MODE_PREF]: 5,
+    selectResolver: SECOND_RESOLVER_VALUE,
+    expectedFinalUriPref: SECOND_RESOLVER_VALUE,
+  },
+  // should maintain the uri pref set
+  {
+    name: "maintain NextDNS mode 2 from mode 5",
+    [TRR_MODE_PREF]: 2,
+    [TRR_URI_PREF]: SECOND_RESOLVER_VALUE,
+    expectedResolverListValue: SECOND_RESOLVER_VALUE,
+    expectedFinalUriPref: SECOND_RESOLVER_VALUE,
   },
   // test that selecting Custom, when we have a TRR_CUSTOM_URI_PREF subsequently changes TRR_URI_PREF
   {

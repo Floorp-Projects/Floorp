@@ -826,6 +826,22 @@ var gPrivacyPane = {
       Services.prefs.clearUserPref("doh-rollout.disable-heuristics");
     }
 
+    // Bug 1861285
+    // When the mode is set to 2 or 3, we need to check if network.trr.uri is a empty string.
+    // In this case, we need to update network.trr.uri to default to fallbackProviderURI.
+    // This occurs when the mode is previously set to 0 (Default Protection).
+    if (
+      value == Ci.nsIDNSService.MODE_TRRFIRST ||
+      value == Ci.nsIDNSService.MODE_TRRONLY
+    ) {
+      if (!Services.prefs.getStringPref("network.trr.uri")) {
+        Services.prefs.setStringPref(
+          "network.trr.uri",
+          DoHConfigController.currentConfig.fallbackProviderURI
+        );
+      }
+    }
+
     gPrivacyPane.updateDoHStatus();
   },
 
