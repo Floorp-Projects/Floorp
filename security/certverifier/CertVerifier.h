@@ -135,6 +135,31 @@ class DelegatedCredentialInfo {
   uint32_t authKeyBits;
 };
 
+class SkipInvalidSANsForNonBuiltInRootsPolicy
+    : public pkix::NameMatchingPolicy {
+ public:
+  explicit SkipInvalidSANsForNonBuiltInRootsPolicy(bool rootIsBuiltIn)
+      : mRootIsBuiltIn(rootIsBuiltIn) {}
+
+  virtual pkix::Result FallBackToCommonName(
+      pkix::Time,
+      /*out*/ pkix::FallBackToSearchWithinSubject& fallBackToCommonName)
+      override {
+    fallBackToCommonName = pkix::FallBackToSearchWithinSubject::No;
+    return pkix::Success;
+  }
+
+  virtual pkix::HandleInvalidSubjectAlternativeNamesBy
+  HandleInvalidSubjectAlternativeNames() override {
+    return mRootIsBuiltIn
+               ? pkix::HandleInvalidSubjectAlternativeNamesBy::Halting
+               : pkix::HandleInvalidSubjectAlternativeNamesBy::Skipping;
+  }
+
+ private:
+  bool mRootIsBuiltIn;
+};
+
 class NSSCertDBTrustDomain;
 
 class CertVerifier {

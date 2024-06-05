@@ -232,6 +232,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXULAppAPI.h"
 
+#include "CertVerifier.h"
 #include "ThirdPartyUtil.h"
 #include "GeckoProfiler.h"
 #include "mozilla/NullPrincipal.h"
@@ -5775,12 +5776,6 @@ already_AddRefed<nsIURI> nsDocShell::MaybeFixBadCertDomainErrorURI(
     return nullptr;
   }
 
-  // No point in going further if "www." is included in the hostname
-  // already. That is the only hueristic we're applying in this function.
-  if (StringBeginsWith(host, "www."_ns)) {
-    return nullptr;
-  }
-
   // Return if fixup enable pref is turned off.
   if (!mozilla::StaticPrefs::security_bad_cert_domain_error_url_fix_enabled()) {
     return nullptr;
@@ -5857,27 +5852,45 @@ already_AddRefed<nsIURI> nsDocShell::MaybeFixBadCertDomainErrorURI(
   }
 
   mozilla::pkix::Input serverCertInput;
-  mozilla::pkix::Result rv1 =
+  mozilla::pkix::Result result =
       serverCertInput.Init(certBytes.Elements(), certBytes.Length());
-  if (rv1 != mozilla::pkix::Success) {
+  if (result != mozilla::pkix::Success) {
     return nullptr;
   }
 
-  nsAutoCString newHost("www."_ns);
-  newHost.Append(host);
+  constexpr auto wwwPrefix = "www."_ns;
+  nsAutoCString newHost;
+  if (StringBeginsWith(host, wwwPrefix)) {
+    // Try www.example.com -> example.com
+    newHost.Assign(Substring(host, wwwPrefix.Length()));
+  } else {
+    // Try example.com -> www.example.com
+    newHost.Assign(wwwPrefix);
+    newHost.Append(host);
+  }
 
   mozilla::pkix::Input newHostInput;
-  rv1 = newHostInput.Init(
+  result = newHostInput.Init(
       BitwiseCast<const uint8_t*, const char*>(newHost.BeginReading()),
       newHost.Length());
-  if (rv1 != mozilla::pkix::Success) {
+  if (result != mozilla::pkix::Success) {
     return nullptr;
   }
 
-  // Check if adding a "www." prefix to the request's hostname will
-  // cause the response's certificate to match.
-  rv1 = mozilla::pkix::CheckCertHostname(serverCertInput, newHostInput);
-  if (rv1 != mozilla::pkix::Success) {
+  // Because certificate verification returned Result::ERROR_BAD_CERT_DOMAIN /
+  // SSL_ERROR_BAD_CERT_DOMAIN, a chain was built and we know whether or not
+  // the root was a built-in.
+  bool rootIsBuiltIn;
+  if (NS_FAILED(tsi->GetIsBuiltCertChainRootBuiltInRoot(&rootIsBuiltIn))) {
+    return nullptr;
+  }
+  mozilla::psm::SkipInvalidSANsForNonBuiltInRootsPolicy nameMatchingPolicy(
+      rootIsBuiltIn);
+
+  // Check if the certificate is valid for the new hostname.
+  result = mozilla::pkix::CheckCertHostname(serverCertInput, newHostInput,
+                                            nameMatchingPolicy);
+  if (result != mozilla::pkix::Success) {
     return nullptr;
   }
 
@@ -6062,9 +6075,10 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
     }
   }
 
-  // If we have a SSL_ERROR_BAD_CERT_DOMAIN error, try prefixing the domain name
-  // with www. to see if we can avoid showing the cert error page. For example,
-  // https://example.com -> https://www.example.com.
+  // If we have a SSL_ERROR_BAD_CERT_DOMAIN error, try adding or removing
+  // "www." to/from the beginning of the domain name to see if we can avoid
+  // showing the cert error page. For example, https://example.com ->
+  // https://www.example.com or https://www.example.com -> https://example.com.
   if (aStatus ==
       mozilla::psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_CERT_DOMAIN)) {
     newPostData = nullptr;
