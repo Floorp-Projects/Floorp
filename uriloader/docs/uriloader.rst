@@ -43,4 +43,4 @@ flags passed to the loader service):
 
 For the most part the process ends at step 1 because nsDocShell passes a ``nsDSURIContentListener``
 for the ``nsIURIContentListener`` consulted first and it accepts most of the
-`web content types <https://searchfox.org/mozilla-central/search?q=CONTENTDLF_CATEGORIES&redirect=false>`_.
+`web content types <https://searchfox.org/mozilla-central/source/layout/build/components.conf>`_.
