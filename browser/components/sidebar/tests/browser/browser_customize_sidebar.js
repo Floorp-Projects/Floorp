@@ -110,3 +110,36 @@ add_task(async function test_customize_not_added_in_menubar() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_manage_preferences_navigation() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const { document, SidebarController } = win;
+  const { contentWindow } = SidebarController.browser;
+  const sidebar = document.querySelector("sidebar-main");
+  ok(sidebar, "Sidebar is shown.");
+
+  const button = sidebar.customizeButton;
+  const promiseFocused = BrowserTestUtils.waitForEvent(win, "SidebarFocused");
+  button.click();
+  await promiseFocused;
+  let customizeDocument = win.SidebarController.browser.contentDocument;
+  const customizeComponent =
+    customizeDocument.querySelector("sidebar-customize");
+  let manageSettings =
+    customizeComponent.shadowRoot.getElementById("manage-settings");
+
+  EventUtils.synthesizeMouseAtCenter(manageSettings, {}, contentWindow);
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      win.gBrowser.selectedTab.linkedBrowser.currentURI.spec ==
+      "about:preferences",
+    "Navigated to about:preferences tab"
+  );
+  is(
+    win.gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+    "about:preferences",
+    "Manage Settings link navigates to about:preferences."
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+});

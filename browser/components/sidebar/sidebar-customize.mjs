@@ -75,6 +75,13 @@ export class SidebarCustomize extends SidebarPage {
     return l10nMap.get(view);
   }
 
+  openFirefoxSettings(e) {
+    e.preventDefault();
+    if (e.type == "keydown" && e.code == "Enter") {
+      this.getWindow().openPreferences();
+    }
+  }
+
   inputTemplate(tool) {
     return html`<div class="input-wrapper">
       <input
@@ -181,6 +188,16 @@ export class SidebarCustomize extends SidebarPage {
             </div>
           </div>`
         )}
+        <div id="manage-settings">
+          <span class="icon ghost-icon" role="presentation"></span>
+          <a
+            href="about:preferences"
+            @click=${this.openFirefoxSettings}
+            @keydown=${this.openFirefoxSettings}
+            data-l10n-id="sidebar-customize-firefox-settings"
+          >
+          </a>
+        </div>
       </div>
     `;
   }
