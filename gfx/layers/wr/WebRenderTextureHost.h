@@ -43,7 +43,8 @@ class WebRenderTextureHost : public TextureHost {
   // Please check TextureHost::GetReadFormat().
   gfx::SurfaceFormat GetReadFormat() const override;
 
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface(
+      gfx::DataSourceSurface* aSurface) override;
 
   gfx::ColorDepth GetColorDepth() const override;
   gfx::YUVColorSpace GetYUVColorSpace() const override;
