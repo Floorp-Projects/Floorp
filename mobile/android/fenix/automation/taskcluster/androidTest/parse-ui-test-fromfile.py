@@ -6,7 +6,7 @@ import xml
 from pathlib import Path
 
 from beautifultable import BeautifulTable
-from junitparser import Attr, Failure, JUnitXml, TestSuite
+from junitparser import Attr, Failure, JUnitXml, TestCase, TestSuite
 
 
 def parse_args(cmdln_args):
@@ -26,43 +26,90 @@ class test_suite(TestSuite):
     flakes = Attr()
 
 
+class test_case(TestCase):
+    flaky = Attr()
+
+
 def parse_print_failure_results(results):
+    """
+    Parses the given JUnit test results and prints a formatted table of failures and flaky tests.
+
+    Args:
+        results (JUnitXml): Parsed JUnit XML results.
+
+    Returns:
+        int: The number of test failures.
+
+    The function processes each test suite and each test case within the suite.
+    If a test case has a result that is an instance of Failure, it is added to the table.
+    The test case is marked as 'Flaky' if the flaky attribute is set to "true", otherwise it is marked as 'Failure'.
+
+    Example of possible JUnit XML (FullJUnitReport.xml):
+    <testsuites>
+        <testsuite name="ExampleSuite" tests="2" failures="1" flakes="1" time="0.003">
+            <testcase classname="example.TestClass" name="testSuccess" flaky="true" time="0.001">
+                <failure message="Assertion failed">Expected true but was false</failure>
+            </testcase>
+            <testcase classname="example.TestClass" name="testFailure" time="0.002">
+                <failure message="Assertion failed">Expected true but was false</failure>
+                <failure message="Assertion failed">Expected true but was false</failure>
+            </testcase>
+        </testsuite>
+    </testsuites>
+    """
+
     table = BeautifulTable(maxwidth=256)
     table.columns.header = ["UI Test", "Outcome", "Details"]
     table.columns.alignment = BeautifulTable.ALIGN_LEFT
     table.set_style(BeautifulTable.STYLE_GRID)
 
     failure_count = 0
+
+    # Dictionary to store the last seen failure details for each test case
+    last_seen_failures = {}
+
     for suite in results:
         cur_suite = test_suite.fromelem(suite)
-        if cur_suite.flakes != "0":
-            for case in suite:
-                for entry in case.result:
-                    if case.result:
-                        table.rows.append(
-                            [
-                                "%s#%s" % (case.classname, case.name),
-                                "Flaky",
-                                entry.text.replace("\t", " "),
-                            ]
-                        )
-                        break
-        else:
-            for case in suite:
+        for case in cur_suite:
+            cur_case = test_case.fromelem(case)
+            if cur_case.result:
                 for entry in case.result:
                     if isinstance(entry, Failure):
-                        test_id = "%s#%s" % (case.classname, case.name)
-                        details = entry.text.replace("\t", " ")
-                        table.rows.append(
-                            [
-                                test_id,
-                                "Failure",
-                                details,
-                            ]
-                        )
-                        print(f"TEST-UNEXPECTED-FAIL | {test_id} | {details}")
-                        failure_count += 1
-                        break
+                        flaky_status = getattr(cur_case, "flaky", "false") == "true"
+                        if flaky_status:
+                            test_id = "%s#%s" % (case.classname, case.name)
+                            details = (
+                                entry.text.replace("\t", " ") if entry.text else ""
+                            )
+                            # Check if the current failure details are different from the last seen ones
+                            if details != last_seen_failures.get(test_id, ""):
+                                table.rows.append(
+                                    [
+                                        test_id,
+                                        "Flaky",
+                                        details,
+                                    ]
+                                )
+                            last_seen_failures[test_id] = details
+                        else:
+                            test_id = "%s#%s" % (case.classname, case.name)
+                            details = (
+                                entry.text.replace("\t", " ") if entry.text else ""
+                            )
+                            # Check if the current failure details are different from the last seen ones
+                            if details != last_seen_failures.get(test_id, ""):
+                                table.rows.append(
+                                    [
+                                        test_id,
+                                        "Failure",
+                                        details,
+                                    ]
+                                )
+                                print(f"TEST-UNEXPECTED-FAIL | {test_id} | {details}")
+                                failure_count += 1
+                            # Update the last seen failure details for this test case
+                            last_seen_failures[test_id] = details
+
     print(table)
     return failure_count
 
