@@ -297,8 +297,8 @@ template <typename T>
 class CheckedUnsafePtr;
 
 template <typename T>
-SafeRefPtr(const CheckedUnsafePtr<T>&, const AcquireStrongRefFromRawPtr&)
-    -> SafeRefPtr<T>;
+SafeRefPtr(const CheckedUnsafePtr<T>&,
+           const AcquireStrongRefFromRawPtr&) -> SafeRefPtr<T>;
 
 template <typename T>
 SafeRefPtr<T>::SafeRefPtr(T* aRawPtr, detail::InitialConstructionTag)
