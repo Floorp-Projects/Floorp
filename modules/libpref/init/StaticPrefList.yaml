@@ -13287,6 +13287,18 @@
   mirror: always
   rust: true
 
+# Whether to send a Xyber768 key share in HTTP/3 TLS handshakes.
+# Has no effect unless security.tls.enable_kyber is true.
+- name: network.http.http3.enable_kyber
+  type: RelaxedAtomicBool
+#ifdef ANDROID
+  value: false
+#else
+  value: @IS_NIGHTLY_BUILD@
+#endif
+  mirror: always
+  rust: true
+
 # When true, a http request will be upgraded to https when HTTPS RR is
 # available.
 - name: network.dns.upgrade_with_https_rr
@@ -15052,6 +15064,7 @@
   value: @IS_NIGHTLY_BUILD@
 #endif
   mirror: always
+  rust: true
 
 - name: security.ssl.treat_unsafe_negotiation_as_broken
   type: RelaxedAtomicBool
