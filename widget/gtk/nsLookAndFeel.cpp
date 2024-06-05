@@ -801,6 +801,8 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::Mark:
     case ColorID::Marktext:
     case ColorID::MozAutofillBackground:
+    case ColorID::TargetTextBackground:
+    case ColorID::TargetTextForeground:
       aColor = GetStandinForNativeColor(
           aID, mIsDark ? ColorScheme::Dark : ColorScheme::Light);
       break;

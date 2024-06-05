@@ -43,7 +43,7 @@ void nsLookAndFeel::RefreshImpl() {
   mInitialized = false;
 }
 
-nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
+nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
                                        nscolor& aResult) {
   EnsureInit();
 
@@ -204,6 +204,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
       // which in turn uses systemPurpleColor, so we do the same here.
       aResult = GetColorFromUIColor([UIColor systemPurpleColor]);
       break;
+    case ColorID::TargetTextBackground:
+    case ColorID::TargetTextForeground:
+      aResult = GetStandinForNativeColor(aID, aColorScheme);
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
       aResult = NS_RGB(0xff, 0xff, 0xff);
