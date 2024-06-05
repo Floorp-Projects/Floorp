@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * (https://fetch.spec.whatwg.org/#concept-response).
  */
 export class NetworkRequest {
+  #alreadyCompleted;
   #channel;
   #contextId;
   #navigationId;
@@ -58,6 +59,10 @@ export class NetworkRequest {
 
     this.#contextId = this.#getContextId();
     this.#navigationId = this.#getNavigationId();
+  }
+
+  get alreadyCompleted() {
+    return this.#alreadyCompleted;
   }
 
   get contextId() {
@@ -107,6 +112,10 @@ export class NetworkRequest {
 
   get wrappedChannel() {
     return this.#wrappedChannel;
+  }
+
+  set alreadyCompleted(value) {
+    this.#alreadyCompleted = value;
   }
 
   /**
