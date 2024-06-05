@@ -8,9 +8,9 @@
 #define mozilla_CamerasParent_h
 
 #include "CamerasChild.h"
-#include "VideoEngine.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/camera/PCamerasParent.h"
+#include "mozilla/media/MediaUtils.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ShmemPool.h"
 #include "api/video/video_sink_interface.h"
@@ -28,6 +28,7 @@ class VideoCaptureFactory;
 namespace mozilla::camera {
 
 class CamerasParent;
+class VideoEngine;
 
 class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
@@ -36,10 +37,11 @@ class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
       : mCapEngine(aCapEng),
         mStreamId(aStreamId),
         mTrackingId(CaptureEngineToTrackingSourceStr(aCapEng), aStreamId),
-        mParent(aParent){};
+        mParent(aParent) {};
 
   // These callbacks end up running on the VideoCapture thread.
   // From  VideoCaptureCallback
+  void OnCaptureEnded();
   void OnFrame(const webrtc::VideoFrame& aVideoFrame) override;
 
   friend CamerasParent;
@@ -49,6 +51,8 @@ class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
   const uint32_t mStreamId;
   const TrackingId mTrackingId;
   CamerasParent* const mParent;
+  MediaEventListener mCaptureEndedListener;
+  bool mConnectedToCaptureEnded = false;
 };
 
 class DeliverFrameRunnable;
