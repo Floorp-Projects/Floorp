@@ -13,6 +13,7 @@ config = {
         "populate-webroot",
         "create-virtualenv",
         "install-chrome-android",
+        "install-chromium-android",
         "install-chromium-distribution",
         "run-tests",
     ],

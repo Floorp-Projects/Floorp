@@ -644,6 +644,7 @@ class Raptor(
                 "populate-webroot",
                 "create-virtualenv",
                 "install-chrome-android",
+                "install-chromium-android",
                 "install-chromium-distribution",
                 "install-safari-technology-preview",
                 "install",
@@ -805,7 +806,7 @@ class Raptor(
 
     def install_chrome_android(self):
         """Install Google Chrome for Android in production from tooltool"""
-        if self.app not in ("chrome-m", "cstm-car-m"):
+        if self.app != "chrome-m":
             self.info("Google Chrome for Android not required")
             return
         if self.config.get("run_local"):
@@ -814,9 +815,29 @@ class Raptor(
                 "from tooltool when running locally"
             )
             return
+
         self.info("Fetching and installing Google Chrome for Android")
         self.device.shell_output("cmd package install-existing com.android.chrome")
         self.info("Google Chrome for Android successfully installed")
+
+    def install_chromium_android(self):
+        """Install custom Chromium-as-Release for Android from toolchain fetch"""
+        if self.app != "cstm-car-m":
+            self.info("Chromium-as-Release for Android not required")
+            return
+        if self.config.get("run_local"):
+            self.info(
+                "Chromium-as-Release for Android will not be installed "
+                "when running locally"
+            )
+            return
+
+        self.info("Installing Custom Chromium-as-Release for Android")
+        cstm_car_m_apk = pathlib.Path(
+            os.environ["MOZ_FETCHES_DIR"], "chromium", "apks", "ChromePublic.apk"
+        )
+        self.device.install_app(str(cstm_car_m_apk))
+        self.info("Custom Chromium-as-Release for Android successfully installed")
 
     def download_chrome_android(self):
         # Fetch the APK
@@ -862,25 +883,20 @@ class Raptor(
     def install_chromium_distribution(self):
         """Install Google Chromium distribution in production"""
         linux, mac, win = "linux", "mac", "win"
-        chrome, chromium_release, chromium_release_android = (
+        chrome, chromium_release = (
             "chrome",
             "custom-car",
-            "cstm-car-m",
         )
 
         available_chromium_dists = [
             chrome,
             chromium_release,
-            chromium_release_android,
         ]
         binary_location = {
             chromium_release: {
                 linux: ["chromium", "Default", "chrome"],
                 win: ["chromium", "Default", "chrome.exe"],
                 mac: ["chromium", "Chromium.app", "Contents", "MacOS", "chromium"],
-            },
-            chromium_release_android: {
-                linux: ["chromium", "apks", "ChromePublic.apk"],
             },
         }
 
@@ -989,6 +1005,9 @@ class Raptor(
         elif self.app == "safari-tp" and not self.run_local:
             binary_path = "/Applications/Safari Technology Preview.app/Contents/MacOS/Safari Technology Preview"
             kw_options["binary"] = binary_path
+        # Custom Chromium-as-Release for Android
+        elif self.app == "cstm-car-m":
+            kw_options["binary"] = "org.chromium.chrome"
         # Running on Chromium
         elif not self.run_local:
             # When running locally we already set the Chromium binary above, in init.
