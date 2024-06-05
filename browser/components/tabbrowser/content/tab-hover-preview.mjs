@@ -12,6 +12,8 @@ const POPUP_OPTIONS = {
   y: -2,
 };
 
+const ZERO_DELAY_ACTIVATION_TIME = 300;
+
 /**
  * Detailed preview card that displays when hovering a tab
  */
@@ -47,7 +49,15 @@ export default class TabHoverPreviewPanel {
       "browser.tabs.tooltipsShowPidAndActiveness",
       false
     );
-    this._timer = null;
+
+    this._panelOpener = new TabPreviewPanelTimedFunction(
+      () => {
+        this._panel.openPopup(this._tab, POPUP_OPTIONS);
+      },
+      this._prefPreviewDelay,
+      ZERO_DELAY_ACTIVATION_TIME,
+      this._win
+    );
   }
 
   getPrettyURI(uri) {
@@ -115,13 +125,7 @@ export default class TabHoverPreviewPanel {
     if (this._panel.state == "open") {
       this._updatePreview();
     }
-    if (this._timer) {
-      return;
-    }
-    this._timer = this._win.setTimeout(() => {
-      this._timer = null;
-      this._panel.openPopup(this._tab, POPUP_OPTIONS);
-    }, this._prefPreviewDelay);
+    this._panelOpener.execute();
     this._win.addEventListener("TabSelect", this);
     this._panel.addEventListener("popupshowing", this);
   }
@@ -145,10 +149,7 @@ export default class TabHoverPreviewPanel {
     if (!this._prefDisableAutohide) {
       this._panel.hidePopup();
     }
-    if (this._timer) {
-      this._win.clearTimeout(this._timer);
-      this._timer = null;
-    }
+    this._panelOpener.setZeroDelay();
   }
 
   handleEvent(e) {
@@ -272,5 +273,62 @@ export default class TabHoverPreviewPanel {
 
   get _displayActiveness() {
     return this._tab?.linkedBrowser?.docShellIsActive ? "[A]" : "";
+  }
+}
+
+/**
+ * A wrapper that allows for delayed function execution, but with the
+ * ability to "zero" (i.e. cancel) the delay for a predetermined period
+ */
+class TabPreviewPanelTimedFunction {
+  constructor(target, delay, zeroDelayTime, win) {
+    this._target = target;
+    this._delay = delay;
+    this._zeroDelayTime = zeroDelayTime;
+    this._win = win;
+
+    this._timer = null;
+    this._useZeroDelay = false;
+  }
+
+  execute() {
+    if (this.delayActive) {
+      return;
+    }
+
+    // Always setting a timer, even in the situation where the
+    // delay is zero, seems to prevent a class of race conditions
+    // where multiple tabs are hovered in quick succession
+    this._timer = this._win.setTimeout(
+      () => {
+        this._timer = null;
+        this._target();
+      },
+      this._useZeroDelay ? 0 : this._delay
+    );
+  }
+
+  clear() {
+    if (this._timer) {
+      this._win.clearTimeout(this._timer);
+      this._timer = null;
+    }
+  }
+
+  setZeroDelay() {
+    this.clear();
+
+    if (this._useZeroDelay) {
+      return;
+    }
+
+    this._win.setTimeout(() => {
+      this._useZeroDelay = false;
+    }, this._zeroDelayTime);
+    this._useZeroDelay = true;
+  }
+
+  get delayActive() {
+    return this._timer !== null;
   }
 }
