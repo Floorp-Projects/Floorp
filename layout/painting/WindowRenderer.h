@@ -173,8 +173,6 @@ class WindowRenderer : public FrameRecorder {
    */
   virtual void WaitOnTransactionProcessed() {}
 
-  virtual bool IsCompositingCheap() { return true; }
-
   /**
    * returns the maximum texture size on this layer backend, or INT32_MAX
    * if there is no maximum
@@ -260,8 +258,6 @@ class FallbackRenderer : public WindowRenderer {
   virtual void GetBackendName(nsAString& name) override {
     name.AssignLiteral("Fallback");
   }
-
-  bool IsCompositingCheap() override { return false; }
 
   void EndTransactionWithColor(const nsIntRect& aRect,
                                const gfx::DeviceColor& aColor);

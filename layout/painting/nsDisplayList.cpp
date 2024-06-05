@@ -715,7 +715,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsPaintingToWindow(false),
       mUseHighQualityScaling(false),
       mIsPaintingForWebRender(false),
-      mIsCompositingCheap(false),
       mAncestorHasApzAwareEventHandler(false),
       mHaveScrollableDisplayPort(false),
       mWindowDraggingAllowed(false),
@@ -2265,10 +2264,8 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
       NS_WARNING("Nowhere to paint into");
       return;
     }
-    bool prevIsCompositingCheap = aBuilder->SetIsCompositingCheap(false);
     Paint(aBuilder, aCtx, presContext->AppUnitsPerDevPixel());
 
-    aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
     return;
   }
 
@@ -2286,7 +2283,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
       }
     }
 
-    bool prevIsCompositingCheap = aBuilder->SetIsCompositingCheap(true);
     layerManager->SetTransactionIdAllocator(presContext->RefreshDriver());
 
     bool sent = false;
@@ -2312,7 +2308,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                                             aDisplayListBuildTime.valueOr(0.0));
     }
 
-    aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
     if (presContext->RefreshDriver()->HasScheduleFlush()) {
       presContext->NotifyInvalidation(layerManager->GetLastTransactionId(),
                                       frame->GetRect());
@@ -2331,12 +2326,9 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     }
   }
 
-  bool temp = aBuilder->SetIsCompositingCheap(renderer->IsCompositingCheap());
   fallback->EndTransactionWithList(aBuilder, this,
                                    presContext->AppUnitsPerDevPixel(),
                                    WindowRenderer::END_DEFAULT);
-
-  aBuilder->SetIsCompositingCheap(temp);
 }
 
 void nsDisplayList::DeleteAll(nsDisplayListBuilder* aBuilder) {
