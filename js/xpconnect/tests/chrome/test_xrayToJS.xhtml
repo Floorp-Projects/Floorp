@@ -297,12 +297,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                       "withResolvers", Symbol.species]);
 
   gPrototypeProperties.ArrayBuffer =
-    ["constructor", "byteLength", "detached", "slice", Symbol.toStringTag, "transfer", "transferToFixedLength"];
+    ["constructor", "byteLength", "detached", "slice", Symbol.toStringTag, "transfer", "transferToFixedLength", "maxByteLength", "resizable", "resize"];
   gConstructorProperties.ArrayBuffer =
     constructorProps(["isView", Symbol.species]);
   gStatefulProperties.ArrayBuffer = ["transfer", "transferToFixedLength"]
 
-  gPrototypeProperties.SharedArrayBuffer = ["constructor", "slice", "byteLength", "detached", Symbol.toStringTag, "transfer", "transferToFixedLength"];
+  gPrototypeProperties.SharedArrayBuffer = ["constructor", "slice", "byteLength", "detached", Symbol.toStringTag, "transfer", "transferToFixedLength", "maxByteLength", "growable", "grow"];
   gConstructorProperties.SharedArrayBuffer = constructorProps([Symbol.species]);
   gStatefulProperties.SharedArrayBuffer = ["transfer", "transferToFixedLength"]
 
