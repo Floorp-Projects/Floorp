@@ -139,3 +139,11 @@ be an ``opt`` build in fact), and setting to a TaskCluster index value will
 download from the index. Set it to ``latest`` if you want latest, or explore
 the TaskCluster index for others. Any ``try`` will be pulled from latest
 ``nightly`` while others will be fetched from their respective branches.
+
+How to hack locally
+===================
+
+After a successful build, you can also build a Snap by performing a repackaging
+using the ``mach repackage snap`` tool. This requires a ``snapcraft`` working
+installation relying on ``LXD``, which installation steps are
+`documented upstream <https://snapcraft.io/docs/build-providers>`_.
