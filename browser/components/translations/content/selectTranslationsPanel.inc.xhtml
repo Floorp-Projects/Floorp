@@ -15,7 +15,8 @@
               role="document"
               aria-labelledby="select-translations-panel-header"
               aria-describedby="select-translations-panel-a11y-document-wrapper">
-      <hbox class="panel-header select-translations-panel-header">
+      <hbox id="select-translations-panel-header-row"
+            class="panel-header select-translations-panel-content">
         <html:h1 class="translations-panel-header-wrapper">
           <html:span id="select-translations-panel-header" data-l10n-id="select-translations-panel-header">
           </html:span>
@@ -32,23 +33,26 @@
                        closemenu="none"/>
       </hbox>
       <html:div id="select-translations-panel-init-failure-content"
-                class="translations-panel-content"
                 hidden="true">
-        <html:moz-message-bar id="select-translations-panel-init-failure-message-bar"
-                              type="error"
-                              class="select-translations-panel-message-bar"
-                              data-l10n-id="select-translations-panel-init-failure-message"
-                              data-l10n-attrs="message">
-        </html:moz-message-bar>
+        <hbox class="select-translations-panel-content">
+          <html:moz-message-bar id="select-translations-panel-init-failure-message-bar"
+                                type="error"
+                                class="select-translations-panel-message-bar"
+                                data-l10n-id="select-translations-panel-init-failure-message"
+                                data-l10n-attrs="message">
+          </html:moz-message-bar>
+        </hbox>
       </html:div>
       <html:div id="select-translations-panel-unsupported-language-content" hidden="true">
-        <vbox flex="1" class="select-translations-panel-content">
+        <vbox class="select-translations-panel-content">
           <html:moz-message-bar id="select-translations-panel-unsupported-language-message-bar"
                                 type="info"
                                 class="select-translations-panel-message-bar"
                                 data-l10n-id="select-translations-panel-unsupported-language-message-unknown"
                                 data-l10n-attrs="message">
           </html:moz-message-bar>
+        </vbox>
+        <vbox class="select-translations-panel-content">
           <label id="select-translations-panel-try-another-language-label"
                  class="select-translations-panel-label"
                  data-l10n-id="select-translations-panel-try-another-language-label">
@@ -71,54 +75,52 @@
         </vbox>
       </html:div>
       <html:div id="select-translations-panel-main-content">
-        <vbox class="select-translations-panel-content">
-          <hbox id="select-translations-panel-lang-selection">
-            <vbox flex="1">
-              <label id="select-translations-panel-from-label"
-                     class="select-translations-panel-label"
-                     data-l10n-id="select-translations-panel-from-label">
-              </label>
-              <menulist id="select-translations-panel-from"
-                        flex="1"
-                        value=""
-                        size="large"
-                        data-l10n-id="translations-panel-choose-language"
-                        aria-labelledby="select-translations-panel-from-label"
-                        noinitialselection="true">
-                <menupopup id="select-translations-panel-from-menupopup"
-                           class="translations-panel-language-menupopup-from">
-                  <!-- The list of <menuitem> will be dynamically inserted. -->
-                </menupopup>
-              </menulist>
-            </vbox>
-            <vbox flex="1">
-              <label id="select-translations-panel-to-label"
-                     class="select-translations-panel-label"
-                     data-l10n-id="select-translations-panel-to-label">
-              </label>
-              <menulist id="select-translations-panel-to"
-                        flex="1"
-                        value=""
-                        size="large"
-                        data-l10n-id="translations-panel-choose-language"
-                        aria-labelledby="select-translations-panel-to-label"
-                        noinitialselection="true">
-                <menupopup id="select-translations-panel-to-menupopup"
-                           class="translations-panel-language-menupopup-to">
-                  <!-- The list of <menuitem> will be dynamically inserted. -->
-                </menupopup>
-              </menulist>
-            </vbox>
-          </hbox>
-        </vbox>
+        <hbox id="select-translations-panel-lang-selection" class="select-translations-panel-content">
+          <vbox flex="1">
+            <label id="select-translations-panel-from-label"
+                    class="select-translations-panel-label"
+                    data-l10n-id="select-translations-panel-from-label">
+            </label>
+            <menulist id="select-translations-panel-from"
+                      flex="1"
+                      value=""
+                      size="large"
+                      data-l10n-id="translations-panel-choose-language"
+                      aria-labelledby="select-translations-panel-from-label"
+                      noinitialselection="true">
+              <menupopup id="select-translations-panel-from-menupopup"
+                          class="translations-panel-language-menupopup-from">
+                <!-- The list of <menuitem> will be dynamically inserted. -->
+              </menupopup>
+            </menulist>
+          </vbox>
+          <vbox flex="1">
+            <label id="select-translations-panel-to-label"
+                    class="select-translations-panel-label"
+                    data-l10n-id="select-translations-panel-to-label">
+            </label>
+            <menulist id="select-translations-panel-to"
+                      flex="1"
+                      value=""
+                      size="large"
+                      data-l10n-id="translations-panel-choose-language"
+                      aria-labelledby="select-translations-panel-to-label"
+                      noinitialselection="true">
+              <menupopup id="select-translations-panel-to-menupopup"
+                          class="translations-panel-language-menupopup-to">
+                <!-- The list of <menuitem> will be dynamically inserted. -->
+              </menupopup>
+            </menulist>
+          </vbox>
+        </hbox>
         <vbox class="select-translations-panel-content">
           <html:textarea id="select-translations-panel-text-area"
-                         class="select-translations-panel-text-area"
                          readonly="true"
                          tabindex="0">
           </html:textarea>
           <html:moz-message-bar id="select-translations-panel-translation-failure-message-bar"
                                 type="error"
+                                class="select-translations-panel-message-bar"
                                 hidden="true"
                                 data-l10n-id="select-translations-panel-translation-failure-message"
                                 data-l10n-attrs="message">
@@ -126,7 +128,7 @@
         </vbox>
       </html:div>
       <html:div id="select-translations-panel-footer"
-                class="panel-footer translations-panel-footer">
+                class="panel-footer">
         <button id="select-translations-panel-copy-button"
                 class="footer-button select-translations-panel-copy-button"
                 data-l10n-id="select-translations-panel-copy-button">
