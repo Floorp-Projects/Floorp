@@ -304,11 +304,11 @@ body {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  background-image: var(--newtab-wallpaper-light, "");
+  background-image: var(--newtab-wallpaper-light, ""), linear-gradient(to right, var(--newtab-wallpaper-color, ""), var(--newtab-wallpaper-color, ""));
 }
 @media (prefers-color-scheme: dark) {
   body {
-    background-image: var(--newtab-wallpaper-dark, "");
+    background-image: var(--newtab-wallpaper-dark, ""), linear-gradient(to right, var(--newtab-wallpaper-color, ""), var(--newtab-wallpaper-color, ""));
   }
 }
 
