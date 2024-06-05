@@ -3002,7 +3002,7 @@ def repackage_snap(
         snapdir=snapdir,
         snapcraft=snapcraft,
         appname=snap_name,
-	branchname=branch,
+        branchname=branch,
         arch=arch,
         dry_run=dry_run,
     )
