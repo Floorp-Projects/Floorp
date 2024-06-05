@@ -14,8 +14,7 @@ dictionary DocumentTimelineOptions {
   DOMHighResTimeStamp originTime = 0;
 };
 
-[Func="Document::AreWebAnimationsTimelinesEnabled",
- Exposed=Window]
+[Exposed=Window]
 interface DocumentTimeline : AnimationTimeline {
   [Throws]
   constructor(optional DocumentTimelineOptions options = {});

@@ -4,8 +4,6 @@ prefs = [
   "browser.sessionstore.closedTabsFromAllWindows=true",
   "browser.sessionstore.closedTabsFromClosedWindows=true",
   "dom.ipc.keepProcessesAlive.extension=1", # We don't want to reset this at the end of the test, so that we don't have to spawn a new extension child process for each test unit.
-  "dom.animations-api.core.enabled=true",
-  "dom.animations-api.timelines.enabled=true",
   "javascript.options.asyncstack_capture_debuggee_only=false",
 ]
 support-files = [

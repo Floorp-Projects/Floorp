@@ -1571,17 +1571,6 @@ function runTest() {
 }
 
 W3CTest.runner.expectAssertions(0, 12); // bug 1189015
-setup({explicit_done: true});
-SpecialPowers.pushPrefEnv(
-  {
-    set: [
-      ["dom.animations-api.timelines.enabled", true],
-    ],
-  },
-  function() {
-    runTest();
-    done();
-  }
-);
+runTest();
 
 </script>
