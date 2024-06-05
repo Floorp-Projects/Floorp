@@ -2418,12 +2418,6 @@ class nsLayoutUtils {
       const nsSize& aDisplaySize);
 
   /**
-   * Checks whether we want to use the GPU to scale images when
-   * possible.
-   */
-  static bool GPUImageScalingEnabled();
-
-  /**
    * Unions the overflow areas of the children of aFrame with aOverflowAreas.
    * aSkipChildLists specifies any child lists that should be skipped.
    * FrameChildListID::Popup is always skipped.
