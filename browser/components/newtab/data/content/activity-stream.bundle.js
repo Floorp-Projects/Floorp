@@ -5855,12 +5855,13 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       return Object.assign({}, prevState, { rows: newRows });
     case actionTypes.UPDATE_SEARCH_SHORTCUTS:
       return { ...prevState, searchShortcuts: action.data.searchShortcuts };
-    case actionTypes.SOV_UPDATED:
+    case actionTypes.SOV_UPDATED: {
       const sov = {
         ready: action.data.ready,
         positions: action.data.positions,
       };
       return { ...prevState, sov };
+    }
     default:
       return prevState;
   }
@@ -6254,7 +6255,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           loaded: true,
         },
       };
-    case actionTypes.DISCOVERY_STREAM_FEED_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_FEED_UPDATE: {
       const newData = {};
       newData[action.data.url] = action.data.feed;
       return {
@@ -6267,6 +6268,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           },
         },
       };
+    }
     case actionTypes.DISCOVERY_STREAM_SPOCS_CAPS:
       return {
         ...prevState,
@@ -6323,7 +6325,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
             items.filter(item => item.url !== action.data.url)
           );
 
-    case actionTypes.PLACES_SAVED_TO_POCKET:
+    case actionTypes.PLACES_SAVED_TO_POCKET: {
       const addPocketInfo = item => {
         if (item.url === action.data.url) {
           return Object.assign({}, item, {
@@ -6337,7 +6339,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return isNotReady()
         ? prevState
         : nextState(items => items.map(addPocketInfo));
-
+    }
     case actionTypes.DELETE_FROM_POCKET:
     case actionTypes.ARCHIVE_FROM_POCKET:
       return isNotReady()
@@ -6346,7 +6348,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
             items.filter(item => item.pocket_id !== action.data.pocket_id)
           );
 
-    case actionTypes.PLACES_BOOKMARK_ADDED:
+    case actionTypes.PLACES_BOOKMARK_ADDED: {
       const updateBookmarkInfo = item => {
         if (item.url === action.data.url) {
           const { bookmarkGuid, bookmarkTitle, dateAdded } = action.data;
@@ -6362,8 +6364,8 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return isNotReady()
         ? prevState
         : nextState(items => items.map(updateBookmarkInfo));
-
-    case actionTypes.PLACES_BOOKMARKS_REMOVED:
+    }
+    case actionTypes.PLACES_BOOKMARKS_REMOVED: {
       const removeBookmarkInfo = item => {
         if (action.data.urls.includes(item.url)) {
           const newSite = Object.assign({}, item);
@@ -6380,6 +6382,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return isNotReady()
         ? prevState
         : nextState(items => items.map(removeBookmarkInfo));
+    }
     case actionTypes.PREF_CHANGED:
       if (action.data.name === PREF_COLLECTION_DISMISSIBLE) {
         return {
