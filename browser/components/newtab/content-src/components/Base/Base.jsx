@@ -264,16 +264,17 @@ export class BaseContent extends React.PureComponent {
 
   async updateWallpaper() {
     const prefs = this.props.Prefs.values;
-    const wallpaperLight = prefs["newtabWallpapers.wallpaper-light"];
-    const wallpaperDark = prefs["newtabWallpapers.wallpaper-dark"];
-    const wallpaperColor = prefs["newtabWallpapers.wallpaper-color"];
     const { wallpaperList } = this.props.Wallpapers;
 
     if (wallpaperList) {
       const lightWallpaper =
-        wallpaperList.find(wp => wp.title === wallpaperLight) || "";
+        wallpaperList.find(
+          wp => wp.title === prefs["newtabWallpapers.wallpaper-light"]
+        ) || "";
       const darkWallpaper =
-        wallpaperList.find(wp => wp.title === wallpaperDark) || "";
+        wallpaperList.find(
+          wp => wp.title === prefs["newtabWallpapers.wallpaper-dark"]
+        ) || "";
       global.document?.body.style.setProperty(
         `--newtab-wallpaper-light`,
         `url(${lightWallpaper?.wallpaperUrl || ""})`
@@ -284,35 +285,17 @@ export class BaseContent extends React.PureComponent {
         `url(${darkWallpaper?.wallpaperUrl || ""})`
       );
 
-      global.document?.body.style.setProperty(
-        `--newtab-wallpaper-color`,
-        wallpaperColor || "transparent"
-      );
-
-      let wallpaperTheme = "";
-
-      // If we have a solid colour set, let's see how dark it is.
-      if (wallpaperColor) {
-        const rgbColors = this.getRGBColors(wallpaperColor);
-        const isColorDark = this.isWallpaperColorDark(rgbColors);
-        wallpaperTheme = isColorDark ? "dark" : "light";
-      }
-
       // Grab the contrast of the currently displayed wallpaper.
       const { theme } =
         this.state.colorMode === "light" ? lightWallpaper : darkWallpaper;
 
-      if (theme) {
-        wallpaperTheme = theme;
-      }
-
       // Add helper class to body if user has a wallpaper selected
-      if (wallpaperTheme === "light") {
+      if (theme === "light") {
         global.document?.body.classList.add("lightWallpaper");
         global.document?.body.classList.remove("darkWallpaper");
       }
 
-      if (wallpaperTheme === "dark") {
+      if (theme === "dark") {
         global.document?.body.classList.add("darkWallpaper");
         global.document?.body.classList.remove("lightWallpaper");
       }
@@ -360,22 +343,6 @@ export class BaseContent extends React.PureComponent {
 
     // Default return value
     return false;
-  }
-
-  getRGBColors(input) {
-    if (input.length !== 7) {
-      return [];
-    }
-
-    const r = parseInt(input.substr(1, 2), 16);
-    const g = parseInt(input.substr(3, 2), 16);
-    const b = parseInt(input.substr(5, 2), 16);
-
-    return [r, g, b];
-  }
-
-  isWallpaperColorDark([r, g, b]) {
-    return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
   }
 
   render() {
