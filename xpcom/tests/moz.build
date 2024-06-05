@@ -50,8 +50,4 @@ LOCAL_INCLUDES += [
     "../ds",
 ]
 
-RESOURCE_FILES += [
-    "test.properties",
-]
-
 CRASHTEST_MANIFESTS += ["crashtests/crashtests.list"]

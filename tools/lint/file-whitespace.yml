@@ -133,7 +133,6 @@ file-whitespace:
         - widget/tests
         - widget/windows/tests/TestUrisToValidate.h
         - xpcom/reflect/xptcall/porting.html
-        - xpcom/tests/test.properties
         - xpcom/tests/unit/data/bug121341.properties
         # Excluded below files because tests were failing unexpectedly
         - dom/bindings/test/test_barewordGetsWindow.html
