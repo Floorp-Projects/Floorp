@@ -17,10 +17,9 @@ webidl Document;
 
 /**
  * To get a component that implements nsIDocumentLoaderFactory
- * for a given mimetype, use nsICategoryManager to find an entry
- * with the mimetype as its name in the category "Gecko-Content-Viewers".
- * The value of the entry is the contractid of the component.
- * The component is a service, so use GetService, not CreateInstance to get it.
+ * for a given mimetype, use nsContentUtils::FindInternalDocumentViewer.
+ * This will look up the MIME type within the "Gecko-Content-Viewers" category,
+ * with additional handlers for other content types.
  */
 
 [scriptable, uuid(e795239e-9d3c-47c4-b063-9e600fb3b287)]

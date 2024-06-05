@@ -61,4 +61,7 @@ add_task(async function test_display_plaintext_type() {
   await expectOutcome("application/json", "jsonviewer");
   // NOTE: text/json does not load JSON viewer?
   await expectOutcome("text/json", "text");
+
+  // Unknown text/ types should be loadable as plain text documents.
+  await expectOutcome("text/unknown-type", "text");
 });
