@@ -44,15 +44,6 @@ ChromeUtils.defineLazyGetter(lazy, "_stringBundle", function () {
   );
 });
 
-ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
-  return console.createInstance({
-    prefix: "WindowsJumpLists",
-    maxLogLevel: Services.prefs.getBoolPref("browser.taskbar.log", false)
-      ? "Debug"
-      : "Warn",
-  });
-});
-
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "_idle",
@@ -251,29 +242,30 @@ var Builder = class {
           }
         );
 
-        for (let row of rows) {
+        customDescriptions = rows.map(row => {
           let uri = Services.io.newURI(row.getResultByName("url"));
           let iconPath = "";
           try {
-            iconPath = await this._builder.obtainAndCacheFaviconAsync(uri);
+            iconPath = this._builder.obtainAndCacheFavicon(uri);
           } catch (e) {
-            // obtainAndCacheFaviconAsync may throw NS_ERROR_NOT_AVAILABLE if
-            // the icon doesn't yet exist on the disk, but has been requested.
-            // It might also throw an exception if there was a problem fetching
-            // the favicon from the database and writing it to the disk. Either
-            // case is non-fatal, so we ignore them here.
-            lazy.logConsole.warn("Failed to fetch favicon for ", uri.spec, e);
+            // obtainAndCacheFavicon may throw NS_ERROR_NOT_AVAILABLE if the
+            // icon doesn't yet exist on the disk, but has been requested.
+            // That's not fatal, so we'll just let it pass. Any other errors,
+            // however, we'll abort on.
+            if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+              throw e;
+            }
           }
 
-          customDescriptions.push({
+          return {
             title: row.getResultByName("title"),
             description: row.getResultByName("title"),
             path: selfPath,
             arguments: row.getResultByName("url"),
             fallbackIconIndex: 1,
             iconPath,
-          });
-        }
+          };
+        });
 
         customTitle = _getString("taskbar.frequent.label");
       }
