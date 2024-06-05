@@ -773,6 +773,20 @@ void nsCocoaWindow::Show(bool aState) {
       mPopupContentView->Show(true);
     }
 
+    // We're about to show a window. If we are opening the new window while the
+    // user is in a fullscreen space, for example because the new window is
+    // opened from an existing fullscreen window, then macOS will open the new
+    // window in fullscreen, too. For some windows, this is not desirable. We
+    // want to prevent it for any popup, alert, or alwaysOnTop windows that
+    // aren't already in fullscreen. If the user already got the window into
+    // fullscreen somehow, that's fine, but we don't want the initial display to
+    // be in fullscreen.
+    bool savedValueForSupportsNativeFullscreen = GetSupportsNativeFullscreen();
+    if (!mInFullScreenMode &&
+        ((mWindowType == WindowType::Popup) || mAlwaysOnTop || mIsAlert)) {
+      SetSupportsNativeFullscreen(false);
+    }
+
     if (mWindowType == WindowType::Popup) {
       // For reasons that aren't yet clear, calls to [NSWindow orderFront:] or
       // [NSWindow makeKeyAndOrderFront:] can sometimes trigger "Error (1000)
@@ -836,6 +850,7 @@ void nsCocoaWindow::Show(bool aState) {
       NS_OBJC_END_TRY_IGNORE_BLOCK;
       SendSetZLevelEvent();
     }
+    SetSupportsNativeFullscreen(savedValueForSupportsNativeFullscreen);
   } else {
     // roll up any popups if a top-level window is going away
     if (mWindowType == WindowType::TopLevel ||
@@ -2433,6 +2448,11 @@ void nsCocoaWindow::SetShowsToolbarButton(bool aShow) {
   if (mWindow) [mWindow setShowsToolbarButton:aShow];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
+}
+
+bool nsCocoaWindow::GetSupportsNativeFullscreen() {
+  return mWindow.collectionBehavior &
+         NSWindowCollectionBehaviorFullScreenPrimary;
 }
 
 void nsCocoaWindow::SetSupportsNativeFullscreen(

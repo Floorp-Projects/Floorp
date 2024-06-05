@@ -279,6 +279,7 @@ class nsCocoaWindow final : public nsBaseWidget {
   void SetInputRegion(const InputRegion&) override;
   void SetColorScheme(const mozilla::Maybe<mozilla::ColorScheme>&) override;
   void SetShowsToolbarButton(bool aShow) override;
+  bool GetSupportsNativeFullscreen();
   void SetSupportsNativeFullscreen(bool aShow) override;
   void SetWindowAnimationType(WindowAnimationType aType) override;
   void SetDrawsTitle(bool aDrawTitle) override;
