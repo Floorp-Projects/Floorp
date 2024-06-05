@@ -76,31 +76,27 @@ VideoCaptureFactory::CreateDeviceInfo(
 #endif
 }
 
-VideoCaptureFactory::CreateVideoCaptureResult
+rtc::scoped_refptr<webrtc::VideoCaptureModule>
 VideoCaptureFactory::CreateVideoCapture(
     int32_t aModuleId, const char* aUniqueId,
     mozilla::camera::CaptureDeviceType aType) {
-  CreateVideoCaptureResult result;
   if (aType == mozilla::camera::CaptureDeviceType::Camera) {
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
-    result.mCapturer = webrtc::VideoCaptureFactory::Create(
-        mVideoCaptureOptions.get(), aUniqueId);
+    return webrtc::VideoCaptureFactory::Create(mVideoCaptureOptions.get(),
+                                               aUniqueId);
 #else
-    result.mCapturer = webrtc::VideoCaptureFactory::Create(aUniqueId);
+    return webrtc::VideoCaptureFactory::Create(aUniqueId);
 #endif
   }
 
 #if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
   MOZ_ASSERT("CreateVideoCapture NO DESKTOP CAPTURE IMPL ON ANDROID" ==
              nullptr);
+  return nullptr;
 #else
-  result.mDesktopImpl =
-      webrtc::DesktopCaptureImpl::Create(aModuleId, aUniqueId, aType);
-  result.mCapturer =
-      rtc::scoped_refptr<webrtc::VideoCaptureModule>(result.mDesktopImpl);
+  return rtc::scoped_refptr<webrtc::VideoCaptureModule>(
+      webrtc::DesktopCaptureImpl::Create(aModuleId, aUniqueId, aType));
 #endif
-
-  return result;
 }
 
 auto VideoCaptureFactory::InitCameraBackend()
