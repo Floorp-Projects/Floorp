@@ -690,6 +690,10 @@ export const GeckoViewAutocomplete = {
 
       debug`delegateSelection - filling form`;
 
+      if (selectedOption.hint & SelectOption.Hint.GENERATED) {
+        this.onLoginSave(selectedLogin);
+      }
+
       const actor =
         browsingContext.currentWindowGlobal.getActor("LoginManager");
 

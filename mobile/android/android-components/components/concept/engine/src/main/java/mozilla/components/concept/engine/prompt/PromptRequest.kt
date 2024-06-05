@@ -191,7 +191,7 @@ sealed class PromptRequest(
      * Value type that represents a request for a select login prompt.
      * @property logins a list of logins that are associated with the current domain.
      * @property generatedPassword the suggested strong password that was generated.
-     * @property onConfirm callback that is called when the user wants to save the login.
+     * @property onConfirm callback that is called when the user wants to select the login.
      * @property onDismiss callback to let the page know the user dismissed the dialog.
      */
     data class SelectLoginPrompt(

@@ -53,8 +53,7 @@ class StrongPasswordPromptViewListenerTest {
     private lateinit var suggestStrongPasswordPromptViewListener: StrongPasswordPromptViewListener
     private lateinit var suggestStrongPasswordBar: SuggestStrongPasswordBar
 
-    private val onSaveLoginWithGeneratedPass: (String, String) -> Unit = mock()
-    private val url = "https://www.mozilla.org"
+    private val onGeneratedPasswordPromptClick: () -> Unit = mock()
 
     @Before
     fun setup() {
@@ -79,25 +78,18 @@ class StrongPasswordPromptViewListenerTest {
         whenever(state.customTabs).thenReturn(listOf(customTab))
 
         suggestStrongPasswordPromptViewListener = StrongPasswordPromptViewListener(store, suggestStrongPasswordBar)
-        suggestStrongPasswordPromptViewListener.handleSuggestStrongPasswordRequest(request, url, onSaveLoginWithGeneratedPass)
-        Mockito.verify(suggestStrongPasswordBar).showPrompt(suggestedPassword, url, onSaveLoginWithGeneratedPass)
+        suggestStrongPasswordPromptViewListener.onGeneratedPasswordPromptClick = onGeneratedPasswordPromptClick
+        suggestStrongPasswordPromptViewListener.handleSuggestStrongPasswordRequest()
+        Mockito.verify(suggestStrongPasswordBar).showPrompt()
     }
 
     @Test
     fun `StrongPasswordGenerator shows the suggest strong password bar on a selected tab`() {
         prepareSelectedSession(request)
         suggestStrongPasswordPromptViewListener = StrongPasswordPromptViewListener(store, suggestStrongPasswordBar)
-        suggestStrongPasswordPromptViewListener.handleSuggestStrongPasswordRequest(request, url, onSaveLoginWithGeneratedPass)
-        Mockito.verify(suggestStrongPasswordBar).showPrompt(suggestedPassword, url, onSaveLoginWithGeneratedPass)
-    }
-
-    @Test
-    fun `StrongPasswordGenerator invokes use the suggested password and hides view`() {
-        prepareSelectedSession(request)
-        suggestStrongPasswordPromptViewListener = StrongPasswordPromptViewListener(store, suggestStrongPasswordBar)
-        suggestStrongPasswordPromptViewListener.handleSuggestStrongPasswordRequest(request, "") { _, _ -> }
-        suggestStrongPasswordPromptViewListener.onUseGeneratedPassword(suggestedPassword, "") { _, _ -> }
-        Mockito.verify(suggestStrongPasswordBar).hidePrompt()
+        suggestStrongPasswordPromptViewListener.onGeneratedPasswordPromptClick = onGeneratedPasswordPromptClick
+        suggestStrongPasswordPromptViewListener.handleSuggestStrongPasswordRequest()
+        Mockito.verify(suggestStrongPasswordBar).showPrompt()
     }
 
     @Test
