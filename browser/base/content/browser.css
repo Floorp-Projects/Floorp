@@ -62,10 +62,6 @@ toolbar[customizing] > .overflow-button {
   display: none;
 }
 
-toolbar[customizing] #ion-button {
-  display: none;
-}
-
 :root:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-button,
 #nav-bar[customizing] > .overflow-button {
   display: flex;

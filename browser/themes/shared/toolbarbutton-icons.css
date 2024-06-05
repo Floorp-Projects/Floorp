@@ -449,6 +449,10 @@ toolbarbutton.bookmark-item {
 
 #ion-button {
   list-style-image: url("chrome://browser/skin/ion.svg");
+
+  toolbar[customizing] & {
+    display: none;
+  }
 }
 
 #import-button {
