@@ -630,15 +630,16 @@ nsresult IdentityCredentialStorageService::UpsertLightweightData(
     rv = stmt->BindNullByName("iconDataURL"_ns);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aData.originAllowlist().Length()) {
+  if (aData.effectiveOrigins().Length()) {
     rv = stmt->BindUTF8StringByName(
-        "originAllowlist"_ns, StringJoin("|"_ns, aData.originAllowlist()));
+        "originAllowlist"_ns, StringJoin("|"_ns, aData.effectiveOrigins()));
   } else {
     rv = stmt->BindNullByName("originAllowlist"_ns);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aData.dynamicViaCors().isSome()) {
-    rv = stmt->BindUTF8StringByName("dynamicAllowEndpoint"_ns, aData.dynamicViaCors().value());
+  if (aData.effectiveQueryURL().isSome()) {
+    rv = stmt->BindUTF8StringByName("dynamicAllowEndpoint"_ns,
+                                    aData.effectiveQueryURL().value());
   } else {
     rv = stmt->BindNullByName("dynamicAllowEndpoint"_ns);
   }

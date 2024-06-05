@@ -83,7 +83,7 @@ promise_test(async t => {
 
   let initDataWithOrigin = {
     id : "id1",
-    originAllowlist : [window.origin],
+    effectiveOrigins : [window.origin],
   };
 
   let credential = await navigator.credentials.create({
@@ -115,7 +115,7 @@ promise_test(async t => {
 
   let initDataWithOrigin = {
     id : "id1",
-    dynamicViaCORS : `https://{{hosts[][]}}:{{ports[https][0]}}/_mozilla/credential-management/support/cors.py`,
+    effectiveQueryURL : `https://{{hosts[][]}}:{{ports[https][0]}}/_mozilla/credential-management/support/cors.py`,
   };
 
   let credential = await navigator.credentials.create({
@@ -126,7 +126,7 @@ promise_test(async t => {
   let promise2 = navigator.credentials.get({identity: {providers: [{origin: window.origin}]}});
   assert_true(promise2 instanceof Promise, "The return value of get must be a promise.");
   let result2 = await promise2;
-  assert_equals(result2, null, "A credential is not returned from the CredentialContainer when the dynamicViaCORS is not provided.");
+  assert_equals(result2, null, "A credential is not returned from the CredentialContainer when the effectiveQueryURL is not provided.");
 
 
   await ccs.testMakeChoice(SpecialPowers.wrap(window).browsingContext, "id1");
@@ -137,12 +137,12 @@ promise_test(async t => {
   assert_equals(credentialGotten.type, "identity", "The credential is an IdentityCredential");
   assert_equals(credentialGotten.id, "id1", "The identity matches the argument");
 
-}, "Basic same-origin identity credential collect with dynamicViaCORS suceeds");
+}, "Basic same-origin identity credential collect with effectiveQueryURL suceeds");
 
 promise_test(async t => {
   let initDataWithOrigin = {
     id : "id1",
-    dynamicViaCORS : `https://{{hosts[][]}}:{{ports[https][0]}}/_mozilla/credential-management/support/no-cors.py`,
+    effectiveQueryURL : `https://{{hosts[][]}}:{{ports[https][0]}}/_mozilla/credential-management/support/no-cors.py`,
   };
 
   let credential = await navigator.credentials.create({
@@ -153,16 +153,16 @@ promise_test(async t => {
   let promise2 = navigator.credentials.get({identity: {providers: [{origin: window.origin}]}});
   assert_true(promise2 instanceof Promise, "The return value of get must be a promise.");
   let result2 = await promise2;
-  assert_equals(result2, null, "A credential is not returned from the CredentialContainer when the dynamicViaCORS is not provided.");
+  assert_equals(result2, null, "A credential is not returned from the CredentialContainer when the effectiveQueryURL is not provided.");
 
 
-  let getCredentialPromise = navigator.credentials.get({identity: {providers: [{origin: window.origin, dynamicViaCORS: `https://{{hosts[][]}}:{{ports[https][0]}}/_mozilla/credential-management/support/no-cors.py`}]}});
+  let getCredentialPromise = navigator.credentials.get({identity: {providers: [{origin: window.origin, effectiveQueryURL: `https://{{hosts[][]}}:{{ports[https][0]}}/_mozilla/credential-management/support/no-cors.py`}]}});
   let credentialGotten = await getCredentialPromise;
   assert_not_equals(credentialGotten, undefined, "A credential is returned from the CredentialContainer.");
   assert_equals(credentialGotten.type, "identity", "The credential is an IdentityCredential");
   assert_equals(credentialGotten.id, "id1", "The identity matches the argument");
 
-}, "Basic same-origin identity credential collect with dynamicViaCORS and no ACAO works because CORS is not needed");
+}, "Basic same-origin identity credential collect with effectiveQueryURL and no ACAO works because CORS is not needed");
 
 
 promise_test(async t => {
