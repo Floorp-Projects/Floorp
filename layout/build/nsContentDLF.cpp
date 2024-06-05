@@ -101,8 +101,7 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
                       IsTypeInList(type, gHTMLTypes)) ||
                      nsContentUtils::IsPlainTextType(type) ||
                      IsTypeInList(type, gXMLTypes) ||
-                     IsTypeInList(type, gSVGTypes) ||
-                     IsTypeInList(type, gXMLTypes);
+                     IsTypeInList(type, gSVGTypes);
 
     if (knownType) {
       viewSourceChannel->SetContentType(type);
