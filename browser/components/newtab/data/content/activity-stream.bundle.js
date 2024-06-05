@@ -9067,6 +9067,7 @@ class _WallpapersSection extends (external_React_default()).PureComponent {
     } else {
       this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
     }
+    this.props.setPref("newtabWallpapers.wallpaper-color", "");
     this.handleUserEvent({
       selected_wallpaper: "none",
       hadPreviousWallpaper: !!this.props.activeWallpaper
@@ -10366,26 +10367,41 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
   async updateWallpaper() {
     const prefs = this.props.Prefs.values;
+    const wallpaperLight = prefs["newtabWallpapers.wallpaper-light"];
+    const wallpaperDark = prefs["newtabWallpapers.wallpaper-dark"];
+    const wallpaperColor = prefs["newtabWallpapers.wallpaper-color"];
     const {
       wallpaperList
     } = this.props.Wallpapers;
     if (wallpaperList) {
-      const lightWallpaper = wallpaperList.find(wp => wp.title === prefs["newtabWallpapers.wallpaper-light"]) || "";
-      const darkWallpaper = wallpaperList.find(wp => wp.title === prefs["newtabWallpapers.wallpaper-dark"]) || "";
+      const lightWallpaper = wallpaperList.find(wp => wp.title === wallpaperLight) || "";
+      const darkWallpaper = wallpaperList.find(wp => wp.title === wallpaperDark) || "";
       __webpack_require__.g.document?.body.style.setProperty(`--newtab-wallpaper-light`, `url(${lightWallpaper?.wallpaperUrl || ""})`);
       __webpack_require__.g.document?.body.style.setProperty(`--newtab-wallpaper-dark`, `url(${darkWallpaper?.wallpaperUrl || ""})`);
+      __webpack_require__.g.document?.body.style.setProperty(`--newtab-wallpaper-color`, wallpaperColor || "transparent");
+      let wallpaperTheme = "";
+
+      // If we have a solid colour set, let's see how dark it is.
+      if (wallpaperColor) {
+        const rgbColors = this.getRGBColors(wallpaperColor);
+        const isColorDark = this.isWallpaperColorDark(rgbColors);
+        wallpaperTheme = isColorDark ? "dark" : "light";
+      }
 
       // Grab the contrast of the currently displayed wallpaper.
       const {
         theme
       } = this.state.colorMode === "light" ? lightWallpaper : darkWallpaper;
+      if (theme) {
+        wallpaperTheme = theme;
+      }
 
       // Add helper class to body if user has a wallpaper selected
-      if (theme === "light") {
+      if (wallpaperTheme === "light") {
         __webpack_require__.g.document?.body.classList.add("lightWallpaper");
         __webpack_require__.g.document?.body.classList.remove("darkWallpaper");
       }
-      if (theme === "dark") {
+      if (wallpaperTheme === "dark") {
         __webpack_require__.g.document?.body.classList.add("darkWallpaper");
         __webpack_require__.g.document?.body.classList.remove("lightWallpaper");
       }
@@ -10433,6 +10449,18 @@ class BaseContent extends (external_React_default()).PureComponent {
 
     // Default return value
     return false;
+  }
+  getRGBColors(input) {
+    if (input.length !== 7) {
+      return [];
+    }
+    const r = parseInt(input.substr(1, 2), 16);
+    const g = parseInt(input.substr(3, 2), 16);
+    const b = parseInt(input.substr(5, 2), 16);
+    return [r, g, b];
+  }
+  isWallpaperColorDark([r, g, b]) {
+    return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
   }
   render() {
     const {
