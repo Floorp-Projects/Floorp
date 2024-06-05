@@ -330,7 +330,7 @@ nsresult IdentityCredentialStorageService::EnsureTable(
         ",iconDataURL TEXT"
         ",originAllowlist TEXT"
         ",dynamicAllowEndpoint TEXT"
-        ",userDataExpireTimeStamp TEXT"
+        ",userDataExpireTime INTEGER"
         ",modificationTime INTEGER"
         ",idpBaseDomain TEXT"
         ",PRIMARY KEY (idpOrigin, credentialId)"
@@ -346,13 +346,14 @@ IdentityCredentialStorageService::LoadLightweightMemoryTableFromDisk() {
              "Must not load the table from disk in the main thread.");
   auto constexpr selectAllQuery =
       "SELECT idpOrigin, credentialId, name, iconDataURL, "
-      "originAllowlist, dynamicAllowEndpoint, userDataExpireTimeStamp,"
+      "originAllowlist, dynamicAllowEndpoint, userDataExpireTime,"
       "modificationTime, idpBaseDomain FROM lightweight_identity;"_ns;
   auto constexpr insertQuery =
       "INSERT INTO lightweight_identity(idpOrigin, credentialId, "
       "name, iconDataURL, originAllowlist, dynamicAllowEndpoint, "
-      "userDataExpireTimeStamp,"
-      "modificationTime, idpBaseDomain) VALUES (:idpOrigin, :credentialId, :name, "
+      "userDataExpireTime,"
+      "modificationTime, idpBaseDomain) VALUES (:idpOrigin, :credentialId, "
+      ":name, "
       ":iconDataURL, :originAllowlist, :dynamicAllowEndpoint, :userDataExpireTime, :modificationTime, :idpBaseDomain);"_ns;
 
   nsCOMPtr<mozIStorageStatement> writeStmt;
@@ -367,9 +368,9 @@ IdentityCredentialStorageService::LoadLightweightMemoryTableFromDisk() {
 
   bool hasResult;
   while (NS_SUCCEEDED(readStmt->ExecuteStep(&hasResult)) && hasResult) {
-    int64_t modificationTime;
-    nsCString idpOrigin, credentialId, idpBaseDomain,
-        name, iconDataURL, originAllowlist, dynamicAllowEndpoint, userDataExpireTimeStamp;
+    int64_t modificationTime, userDataExpireTime;
+    nsCString idpOrigin, credentialId, idpBaseDomain, name, iconDataURL,
+        originAllowlist, dynamicAllowEndpoint;
 
     // Read values from disk query
     rv = readStmt->GetUTF8String(0, idpOrigin);
@@ -384,7 +385,7 @@ IdentityCredentialStorageService::LoadLightweightMemoryTableFromDisk() {
     NS_ENSURE_SUCCESS(rv, rv);
     rv = readStmt->GetUTF8String(5, dynamicAllowEndpoint);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = readStmt->GetUTF8String(6, userDataExpireTimeStamp);
+    rv = readStmt->GetInt64(6, &userDataExpireTime);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = readStmt->GetInt64(7, &modificationTime);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -402,9 +403,11 @@ IdentityCredentialStorageService::LoadLightweightMemoryTableFromDisk() {
     NS_ENSURE_SUCCESS(rv, rv);
     rv = writeStmt->BindUTF8StringByName("originAllowlist"_ns, originAllowlist);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = writeStmt->BindUTF8StringByName("dynamicAllowEndpoint"_ns, dynamicAllowEndpoint);
+    rv = writeStmt->BindUTF8StringByName("dynamicAllowEndpoint"_ns,
+                                         dynamicAllowEndpoint);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = writeStmt->BindUTF8StringByName("userDataExpireTimeStamp"_ns, userDataExpireTimeStamp);
+    rv =
+        writeStmt->BindInt64ByName("userDataExpireTime"_ns, userDataExpireTime);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = writeStmt->BindInt64ByName("modificationTime"_ns, modificationTime);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -588,15 +591,17 @@ nsresult IdentityCredentialStorageService::UpsertLightweightData(
   constexpr auto upsertQuery =
       "INSERT INTO lightweight_identity(idpOrigin, credentialId, "
       "name, iconDataURL, originAllowlist, dynamicAllowEndpoint, "
-      "userDataExpireTimeStamp,"
-      "modificationTime, idpBaseDomain) VALUES (:idpOrigin, :credentialId, :name, "
-      ":iconDataURL, :originAllowlist, :dynamicAllowEndpoint, :userDataExpireTime, :modificationTime, :idpBaseDomain)"
+      "userDataExpireTime,"
+      "modificationTime, idpBaseDomain) VALUES (:idpOrigin, :credentialId, "
+      ":name, "
+      ":iconDataURL, :originAllowlist, :dynamicAllowEndpoint, "
+      ":userDataExpireTime, :modificationTime, :idpBaseDomain)"
       "ON CONFLICT(idpOrigin, credentialId)"
       "DO UPDATE SET name=excluded.name, "
       "iconDataURL=excluded.iconDataURL, "
       "originAllowlist=excluded.originAllowlist, "
       "dynamicAllowEndpoint=excluded.dynamicAllowEndpoint, "
-      "userDataExpireTimeStamp=excluded.userDataExpireTimeStamp, "
+      "userDataExpireTime=excluded.userDataExpireTime, "
       "modificationTime=excluded.modificationTime"_ns;
 
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -610,7 +615,8 @@ nsresult IdentityCredentialStorageService::UpsertLightweightData(
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindUTF8StringByName("idpOrigin"_ns, idpOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindUTF8StringByName("credentialId"_ns, NS_ConvertUTF16toUTF8(aData.id()));
+  rv = stmt->BindUTF8StringByName("credentialId"_ns,
+                                  NS_ConvertUTF16toUTF8(aData.id()));
   NS_ENSURE_SUCCESS(rv, rv);
   if (aData.name().isSome()) {
     rv = stmt->BindUTF8StringByName("name"_ns, aData.name().value());
@@ -637,8 +643,11 @@ nsresult IdentityCredentialStorageService::UpsertLightweightData(
     rv = stmt->BindNullByName("dynamicAllowEndpoint"_ns);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aData.infoExpires().isSome()) {
-    rv = stmt->BindInt64ByName("userDataExpireTime"_ns, aData.infoExpires().value());
+  if (aData.infoExpiresAt().isSome() &&
+      aData.infoExpiresAt().value() <= INT64_MAX) {
+    rv = stmt->BindInt64ByName(
+        "userDataExpireTime"_ns,
+        static_cast<int64_t>(aData.infoExpiresAt().value()));
   } else {
     rv = stmt->BindNullByName("userDataExpireTime"_ns);
   }
@@ -945,7 +954,7 @@ NS_IMETHODIMP IdentityCredentialStorageService::
   nsresult rv = WaitForInitialization();
   NS_ENSURE_SUCCESS(rv, rv);
   auto constexpr selectQuery =
-      "SELECT credentialId, name, iconDataURL, userDataExpireTimeStamp, originAllowList, dynamicAllowEndpoint FROM lightweight_identity WHERE idpOrigin=?1"_ns;
+      "SELECT credentialId, name, iconDataURL, userDataExpireTime, originAllowList, dynamicAllowEndpoint FROM lightweight_identity WHERE idpOrigin=?1"_ns;
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = mMemoryDatabaseConnection->CreateStatement(selectQuery,
                                                   getter_AddRefs(stmt));
@@ -965,38 +974,44 @@ NS_IMETHODIMP IdentityCredentialStorageService::
     bool hasResult;
     // For each result, we append it to the array to return
     while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      nsAutoString id, name, iconDataURL, originAllowList, dynamicAllowEndpoint,
-          userDataExpireTimeStamp;
+      nsAutoString id, name, iconDataURL, originAllowList, dynamicAllowEndpoint;
+      int64_t userDataExpireTime;
       rv = stmt->GetString(0, id);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->GetString(1, name);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->GetString(2, iconDataURL);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->GetString(3, userDataExpireTimeStamp);
+      rv = stmt->GetInt64(3, &userDataExpireTime);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->GetString(4, originAllowList);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->GetString(5, dynamicAllowEndpoint);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      Maybe<nsCString> resultName, resultIconDataURL,
+          resultDynamicAllowEndpoint;
       nsTArray<nsCString> allowListArray;
+      Maybe<int64_t> resultUserDataExpireTime;
+      if (!name.IsVoid()) {
+        resultName = Some(NS_ConvertUTF16toUTF8(name));
+      }
+      if (!iconDataURL.IsVoid()) {
+        resultIconDataURL = Some(NS_ConvertUTF16toUTF8(iconDataURL));
+      }
       for (const auto& origin : originAllowList.Split('|')) {
         allowListArray.AppendElement(NS_ConvertUTF16toUTF8(origin));
       }
+      if (!dynamicAllowEndpoint.IsVoid()) {
+        resultDynamicAllowEndpoint =
+            Some(NS_ConvertUTF16toUTF8(dynamicAllowEndpoint));
+      }
+      if (!stmt->IsNull(3) && userDataExpireTime >= 0) {
+        resultUserDataExpireTime = Some(userDataExpireTime);
+      }
       dom::IPCIdentityCredential result(
-          id, Nothing(),
-          name.IsVoid() ? Nothing() : Some(NS_ConvertUTF16toUTF8(name)),
-          iconDataURL.IsVoid() ? Nothing()
-                               : Some(NS_ConvertUTF16toUTF8(iconDataURL)),
-          allowListArray,
-          dynamicAllowEndpoint.IsVoid()
-              ? Nothing()
-              : Some(NS_ConvertUTF16toUTF8(dynamicAllowEndpoint)),
-          userDataExpireTimeStamp.IsVoid()
-              ? Nothing()
-              : Some(NS_ConvertUTF16toUTF8(userDataExpireTimeStamp)),
-          idpPrincipal);
+          id, Nothing(), resultName, resultIconDataURL, allowListArray,
+          resultDynamicAllowEndpoint, resultUserDataExpireTime, idpPrincipal);
       aResult.AppendElement(result);
     }
   }
