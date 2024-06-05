@@ -5,6 +5,9 @@
 // Defined by gl-matrix.js
 /* global mat4 */
 
+// Defined by ssdeep.js
+/* global ssdeep */
+
 // =============================================================
 // Utility Functions
 
@@ -545,6 +548,110 @@ function populateFingerprintJSCanvases() {
   return data;
 }
 
+// ==============================================================
+// Speech Synthesis Voices
+function populateVoiceList() {
+  // Replace long prefixes with short ones to reduce the size of the output.
+  const uriPrefixes = [
+    [/(?:urn:)?moz-tts:.*?:/, "#m:"],
+    [/com\.apple\.speech\.synthesis\.voice\./, "#as:"],
+    [/com\.apple\.voice\.compact./, "#ac:"],
+    [/com\.apple\.eloquence\./, "#ap:"],
+    // Populate with more prefixes as needed.
+  ];
+
+  function trimVoiceURI(uri) {
+    for (const [re, replacement] of uriPrefixes) {
+      uri = uri.replace(re, replacement);
+    }
+    return uri;
+  }
+
+  function sample(voices, count) {
+    const range = voices.length - 1;
+    if (range <= count) {
+      return voices;
+    }
+
+    const sampledVoices = [];
+    const step = Math.floor(range / count);
+    for (let i = 0; i < range; i += step) {
+      sampledVoices.push(voices[i]);
+    }
+    return sampledVoices;
+  }
+
+  async function sha256(message) {
+    const msgUint8 = new TextEncoder().encode(message);
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+    return hashHex;
+  }
+
+  async function stringify(voices) {
+    voices = voices
+      .map(voice => ({
+        voiceURI: trimVoiceURI(voice.voiceURI),
+        default: voice.default,
+        localService: voice.localService,
+      }))
+      .sort((a, b) => a.voiceURI.localeCompare(b.voiceURI));
+
+    const [localServices, nonLocalServices] = voices.reduce(
+      (acc, voice) => {
+        if (voice.localService) {
+          acc[0].push(voice.voiceURI);
+        } else {
+          acc[1].push(voice.voiceURI);
+        }
+        return acc;
+      },
+      [[], []]
+    );
+    const defaultVoice = voices.find(voice => voice.default);
+
+    voices = voices.map(voice => voice.voiceURI);
+
+    return JSON.stringify({
+      count: voices.length,
+      localServices: localServices.length,
+      defaultVoice: defaultVoice ? defaultVoice.voiceURI : null,
+      samples: sample(voices, 5),
+      sha256: await sha256(voices.join("|")),
+      allHash: ssdeep.digest(voices.join("|")),
+      localHash: ssdeep.digest(localServices.join("|")),
+      nonLocalHash: ssdeep.digest(nonLocalServices.join("|")),
+    });
+  }
+
+  function fetchVoices() {
+    const promise = new Promise(resolve => {
+      speechSynthesis.addEventListener("voiceschanged", function () {
+        resolve(speechSynthesis.getVoices());
+      });
+
+      if (speechSynthesis.getVoices().length !== 0) {
+        resolve(speechSynthesis.getVoices());
+      }
+    });
+
+    const timeout = new Promise(resolve => {
+      setTimeout(() => {
+        resolve([]);
+      }, 5000);
+    });
+
+    return Promise.race([promise, timeout]);
+  }
+
+  return {
+    voices: fetchVoices().then(stringify),
+  };
+}
+
 // =======================================================================
 // Setup & Populating
 
@@ -565,6 +672,7 @@ const LocalFiraSans = new FontFace(
     ...populateTestCanvases(),
     ...populateWebGLCanvases(),
     ...populateFingerprintJSCanvases(),
+    ...populateVoiceList(),
   };
 
   debug("Awaiting", Object.keys(data).length, "data promises.");

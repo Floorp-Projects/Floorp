@@ -210,6 +210,7 @@ export class UserCharacteristicsPageService {
           Glean.characteristics.canvasdata13Fingerprintjs2.set(
             data.output.fingerprintjscanvas2data
           );
+          Glean.characteristics.voices.set(data.output.voices);
         } catch (e) {
           // Grab the exception and send it to the console
           // (we don't see it otherwise)

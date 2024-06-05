@@ -4,6 +4,7 @@
 
 toolkit.jar:
   content/global/usercharacteristics/gl-matrix.js (content/gl-matrix.js)
+  content/global/usercharacteristics/ssdeep.js (content/ssdeep.js)
   content/global/usercharacteristics/usercharacteristics.css (content/usercharacteristics.css)
   content/global/usercharacteristics/usercharacteristics.html (content/usercharacteristics.html)
   content/global/usercharacteristics/usercharacteristics.js (content/usercharacteristics.js)
