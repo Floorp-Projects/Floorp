@@ -364,8 +364,11 @@ DefaultAgent::SendPing(const nsAString& aDefaultBrowser,
 NS_IMETHODIMP
 DefaultAgent::SetDefaultBrowserUserChoice(
     const nsAString& aAumid, const nsTArray<nsString>& aExtraFileExtensions) {
+  const bool regRename = Preferences::GetBool(
+      "browser.shell.setDefaultBrowserUserChoice.regRename");
+
   return default_agent::SetDefaultBrowserUserChoice(
-      PromiseFlatString(aAumid).get(), aExtraFileExtensions);
+      PromiseFlatString(aAumid).get(), regRename, aExtraFileExtensions);
 }
 
 NS_IMETHODIMP
@@ -388,6 +391,9 @@ DefaultAgent::SetDefaultBrowserUserChoiceAsync(
   auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
       "SetDefaultBrowserUserChoiceAsync promise", promise);
 
+  const bool regRename = Preferences::GetBool(
+      "browser.shell.setDefaultBrowserUserChoice.regRename");
+
   nsresult result = NS_DispatchBackgroundTask(
       NS_NewRunnableFunction(
           "SetDefaultBrowserUserChoiceAsync",
@@ -395,9 +401,11 @@ DefaultAgent::SetDefaultBrowserUserChoiceAsync(
           // which will go out of scope
           [aumid = nsString(aAumid), promiseHolder = std::move(promiseHolder),
            aExtraFileExtensions =
-               CopyableTArray<nsString>(aExtraFileExtensions)] {
+               CopyableTArray<nsString>(aExtraFileExtensions),
+           regRename] {
             nsresult rv = default_agent::SetDefaultBrowserUserChoice(
-                PromiseFlatString(aumid).get(), aExtraFileExtensions);
+                PromiseFlatString(aumid).get(), regRename,
+                aExtraFileExtensions);
 
             NS_DispatchToMainThread(NS_NewRunnableFunction(
                 "SetDefaultBrowserUserChoiceAsync callback",
@@ -419,8 +427,11 @@ DefaultAgent::SetDefaultBrowserUserChoiceAsync(
 NS_IMETHODIMP
 DefaultAgent::SetDefaultExtensionHandlersUserChoice(
     const nsAString& aAumid, const nsTArray<nsString>& aFileExtensions) {
+  const bool regRename = Preferences::GetBool(
+      "browser.shell.setDefaultBrowserUserChoice.regRename");
+
   return default_agent::SetDefaultExtensionHandlersUserChoice(
-      PromiseFlatString(aAumid).get(), aFileExtensions);
+      PromiseFlatString(aAumid).get(), regRename, aFileExtensions);
 }
 
 NS_IMETHODIMP
