@@ -35,8 +35,12 @@ JSJitFrameIter::JSJitFrameIter(const JitActivation* activation,
       resumePCinCurrentFrame_(nullptr),
       cachedSafepointIndex_(nullptr),
       activation_(activation) {
+  // If we're currently performing a bailout, we have to use the activation's
+  // bailout data when we start iterating over the activation's frames.
+  // Note: JSJitToWasm indicates the activation contains both JS and Wasm frames
+  // and we're resuming iteration of the JS frames.
   MOZ_ASSERT(type_ == FrameType::JSJitToWasm || type_ == FrameType::Exit);
-  if (activation_->bailoutData()) {
+  if (type_ == FrameType::Exit && activation_->bailoutData()) {
     current_ = activation_->bailoutData()->fp();
     type_ = FrameType::Bailout;
   } else {
