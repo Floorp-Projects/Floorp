@@ -34,7 +34,7 @@ dictionary IdentityProviderConfig {
  [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
  UTF8String loginTarget;
  [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
- UTF8String dynamicViaCORS;
+ UTF8String effectiveQueryURL;
  [Pref="dom.security.credentialmanagement.identity.lightweight.enabled"]
  UTF8String data;
 };
@@ -49,8 +49,8 @@ dictionary IdentityCredentialUserData {
 
 dictionary IdentityCredentialInit {
   required DOMString id;
-  sequence<UTF8String> originAllowlist;
-  UTF8String dynamicViaCORS;
+  sequence<UTF8String> effectiveOrigins;
+  UTF8String effectiveQueryURL;
   IdentityCredentialUserData uiHint;
 };
 
