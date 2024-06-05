@@ -6914,77 +6914,14 @@ bool HTMLInputElement::IsPasswordTextControl() const {
   return mType == FormControlType::InputPassword;
 }
 
-Maybe<int32_t> HTMLInputElement::GetNumberInputCols() const {
-  // This logic is ported from WebKit, see
-  // https://github.com/whatwg/html/issues/10390
-  struct RenderSize {
-    uint32_t mBeforeDecimal = 0;
-    uint32_t mAfterDecimal = 0;
-
-    RenderSize Max(const RenderSize& aOther) const {
-      return {std::max(mBeforeDecimal, aOther.mBeforeDecimal),
-              std::max(mAfterDecimal, aOther.mAfterDecimal)};
-    }
-
-    static RenderSize From(const Decimal& aValue) {
-      MOZ_ASSERT(aValue.isFinite());
-      nsAutoCString tmp;
-      tmp.AppendInt(aValue.value().coefficient());
-      const uint32_t sizeOfDigits = tmp.Length();
-      const uint32_t sizeOfSign = aValue.isNegative() ? 1 : 0;
-      const int32_t exponent = aValue.exponent();
-      if (exponent >= 0) {
-        return {sizeOfSign + sizeOfDigits, 0};
-      }
-
-      const int32_t sizeBeforeDecimalPoint = exponent + int32_t(sizeOfDigits);
-      if (sizeBeforeDecimalPoint > 0) {
-        // In case of "123.456"
-        return {sizeOfSign + sizeBeforeDecimalPoint,
-                sizeOfDigits - sizeBeforeDecimalPoint};
-      }
-
-      // In case of "0.00012345"
-      const uint32_t sizeOfZero = 1;
-      const uint32_t numberOfZeroAfterDecimalPoint = -sizeBeforeDecimalPoint;
-      return {sizeOfSign + sizeOfZero,
-              numberOfZeroAfterDecimalPoint + sizeOfDigits};
-    }
-  };
-
-  if (mType != FormControlType::InputNumber) {
-    return {};
-  }
-  Decimal min = GetMinimum();
-  if (!min.isFinite()) {
-    return {};
-  }
-  Decimal max = GetMaximum();
-  if (!max.isFinite()) {
-    return {};
-  }
-  Decimal step = GetStep();
-  if (step == kStepAny) {
-    return {};
-  }
-  MOZ_ASSERT(step.isFinite());
-  RenderSize size = RenderSize::From(min).Max(
-      RenderSize::From(max).Max(RenderSize::From(step)));
-  return Some(size.mBeforeDecimal + size.mAfterDecimal +
-              (size.mAfterDecimal ? 1 : 0));
-}
-
 int32_t HTMLInputElement::GetCols() {
-  if (const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::size);
-      attr && attr->Type() == nsAttrValue::eInteger) {
+  // Else we know (assume) it is an input with size attr
+  const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::size);
+  if (attr && attr->Type() == nsAttrValue::eInteger) {
     int32_t cols = attr->GetIntegerValue();
     if (cols > 0) {
       return cols;
     }
-  }
-
-  if (Maybe<int32_t> cols = GetNumberInputCols(); cols && *cols > 0) {
-    return *cols;
   }
 
   return DEFAULT_COLS;
