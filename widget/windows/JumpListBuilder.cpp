@@ -139,7 +139,7 @@ class NativeJumpListBackend : public JumpListBackend {
   }
 
  protected:
-  virtual ~NativeJumpListBackend() override{};
+  virtual ~NativeJumpListBackend() override {};
 
  private:
   RefPtr<ICustomDestinationList> mWindowsDestList;
