@@ -133,6 +133,16 @@ export class BackupService extends EventTarget {
   #postRecoveryResolver;
 
   /**
+   * The name of the folder within the profile folder where this service reads
+   * and writes state to.
+   *
+   * @type {string}
+   */
+  static get PROFILE_FOLDER_NAME() {
+    return "backups";
+  }
+
+  /**
    * The name of the backup manifest file.
    *
    * @type {string}
@@ -326,7 +336,10 @@ export class BackupService extends EventTarget {
 
       // First, check to see if a `backups` directory already exists in the
       // profile.
-      let backupDirPath = PathUtils.join(profilePath, "backups");
+      let backupDirPath = PathUtils.join(
+        profilePath,
+        BackupService.PROFILE_FOLDER_NAME
+      );
       lazy.logConsole.debug("Creating backups folder");
 
       // ignoreExisting: true is the default, but we're being explicit that it's

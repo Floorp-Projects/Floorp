@@ -111,7 +111,10 @@ async function testCreateBackupHelper(sandbox, taskFn) {
 
   // We expect the staging folder to exist then be renamed under the fakeProfilePath.
   // We should also find a folder for each fake BackupResource.
-  let backupsFolderPath = PathUtils.join(fakeProfilePath, "backups");
+  let backupsFolderPath = PathUtils.join(
+    fakeProfilePath,
+    BackupService.PROFILE_FOLDER_NAME
+  );
   let stagingPath = PathUtils.join(backupsFolderPath, "staging");
 
   // For now, we expect a single backup only to be saved. There should also be
