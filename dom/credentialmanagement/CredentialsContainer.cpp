@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Components.h"
 #include "mozilla/dom/Credential.h"
 #include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
@@ -16,6 +17,8 @@
 #include "mozilla/dom/WindowContext.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
+#include "nsICredentialChooserService.h"
+#include "nsICredentialChosenCallback.h"
 #include "nsIDocShell.h"
 
 namespace mozilla::dom {
@@ -150,6 +153,44 @@ JSObject* CredentialsContainer::WrapObject(JSContext* aCx,
   return CredentialsContainer_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+class CredentialChosenCallback final : public nsICredentialChosenCallback,
+                                       public nsINamed {
+ public:
+  CredentialChosenCallback(Promise* aPromise, CredentialsContainer* aContainer)
+      : mPromise(aPromise), mContainer(aContainer) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD
+  Notify(Credential* aCredential) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (aCredential) {
+      mPromise->MaybeResolve(aCredential);
+    } else {
+      mPromise->MaybeResolve(JS::NullValue());
+    }
+
+    mContainer->mActiveIdentityRequest = false;
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override {
+    aName.AssignLiteral("CredentialChosenCallback");
+    return NS_OK;
+  }
+
+  NS_DECL_ISUPPORTS
+
+ private:
+  ~CredentialChosenCallback() = default;
+  RefPtr<Promise> mPromise;
+  RefPtr<CredentialsContainer> mContainer;
+};
+
+NS_IMPL_ISUPPORTS(CredentialChosenCallback, nsICredentialChosenCallback,
+                  nsINamed)
+
 already_AddRefed<Promise> CredentialsContainer::Get(
     const CredentialRequestOptions& aOptions, ErrorResult& aRv) {
   uint64_t totalOptions = 0;
@@ -214,6 +255,51 @@ already_AddRefed<Promise> CredentialsContainer::Get(
 
     RefPtr<CredentialsContainer> self = this;
 
+    if (StaticPrefs::
+            dom_security_credentialmanagement_identity_lightweight_enabled()) {
+      IdentityCredential::CollectFromCredentialStore(
+          mParent, aOptions, IsSameOriginWithAncestors(mParent))
+          ->Then(
+              GetCurrentSerialEventTarget(), __func__,
+              [self, promise](
+                  const nsTArray<RefPtr<IdentityCredential>>& credentials) {
+                if (credentials.Length() == 0) {
+                  self->mActiveIdentityRequest = false;
+                  promise->MaybeResolve(JS::NullValue());
+                } else {
+                  nsresult rv;
+                  nsCOMPtr<nsICredentialChooserService> ccService =
+                      mozilla::components::CredentialChooserService::Service(
+                          &rv);
+                  if (NS_WARN_IF(!ccService)) {
+                    self->mActiveIdentityRequest = false;
+                    promise->MaybeReject(rv);
+                    return;
+                  }
+                  RefPtr<CredentialChosenCallback> callback =
+                      new CredentialChosenCallback(promise, self);
+                  nsTArray<RefPtr<Credential>> argumentCredential;
+                  for (const RefPtr<IdentityCredential>& cred : credentials) {
+                    argumentCredential.AppendElement(cred);
+                  }
+                  rv = ccService->ShowCredentialChooser(
+                      self->mParent->GetBrowsingContext()->Top(),
+                      argumentCredential, callback);
+                  if (NS_FAILED(rv)) {
+                    self->mActiveIdentityRequest = false;
+                    promise->MaybeReject(rv);
+                    return;
+                  }
+                }
+              },
+              [self, promise](nsresult rv) {
+                self->mActiveIdentityRequest = false;
+                promise->MaybeReject(rv);
+              });
+
+      return promise.forget();
+    }
+
     IdentityCredential::DiscoverFromExternalSource(
         mParent, aOptions, IsSameOriginWithAncestors(mParent))
         ->Then(
@@ -265,6 +351,27 @@ already_AddRefed<Promise> CredentialsContainer::Create(
                                     aOptions.mSignal, aRv);
   }
 
+  if (aOptions.mIdentity.WasPassed() &&
+      StaticPrefs::dom_security_credentialmanagement_identity_enabled() &&
+      StaticPrefs::
+          dom_security_credentialmanagement_identity_lightweight_enabled()) {
+    MOZ_ASSERT(mParent);
+    RefPtr<Promise> promise = CreatePromise(mParent, aRv);
+    if (!promise) {
+      return nullptr;
+    }
+
+    IdentityCredential::Create(mParent, aOptions,
+                               IsSameOriginWithAncestors(mParent))
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [promise](const RefPtr<IdentityCredential>& credential) {
+              promise->MaybeResolve(credential);
+            },
+            [promise](nsresult error) { promise->MaybeReject(error); });
+    return promise.forget();
+  }
+
   return CreateAndRejectWithNotSupported(mParent, aRv);
 }
 
@@ -283,10 +390,24 @@ already_AddRefed<Promise> CredentialsContainer::Store(
   }
 
   if (type.EqualsLiteral("identity") &&
-      StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
-    return CreateAndRejectWithNotSupported(mParent, aRv);
-  }
+      StaticPrefs::dom_security_credentialmanagement_identity_enabled() &&
+      StaticPrefs::
+          dom_security_credentialmanagement_identity_lightweight_enabled()) {
+    MOZ_ASSERT(mParent);
+    RefPtr<Promise> promise = CreatePromise(mParent, aRv);
+    if (!promise) {
+      return nullptr;
+    }
 
+    IdentityCredential::Store(
+        mParent, static_cast<const IdentityCredential*>(&aCredential),
+        IsSameOriginWithAncestors(mParent))
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [promise](bool success) { promise->MaybeResolveWithUndefined(); },
+            [promise](nsresult error) { promise->MaybeReject(error); });
+    return promise.forget();
+  }
   return CreateAndRejectWithNotSupported(mParent, aRv);
 }
 
