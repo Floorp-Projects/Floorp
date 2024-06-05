@@ -60,6 +60,10 @@ interface nsIOpenWindowInfo : nsISupports {
   [infallible]
   readonly attribute boolean isForWindowDotPrint;
 
+  /** Whether this new window creation was prompted by web content */
+  [infallible]
+  readonly attribute boolean isTopLevelCreatedByWebContent;
+
   /** BrowserParent instance to use in the new window */
   [notxpcom, nostdcall]
   BrowserParent getNextRemoteBrowser();

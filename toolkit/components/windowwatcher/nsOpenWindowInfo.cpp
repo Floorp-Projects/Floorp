@@ -37,6 +37,12 @@ NS_IMETHODIMP nsOpenWindowInfo::GetForceNoOpener(bool* aForceNoOpener) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOpenWindowInfo::GetIsTopLevelCreatedByWebContent(
+    bool* aIsTopLevelCreatedByWebContent) {
+  *aIsTopLevelCreatedByWebContent = mIsTopLevelCreatedByWebContent;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOpenWindowInfo::GetScriptableOriginAttributes(
     JSContext* aCx, JS::MutableHandle<JS::Value> aAttrs) {
   bool ok = ToJSValue(aCx, mOriginAttributes, aAttrs);
