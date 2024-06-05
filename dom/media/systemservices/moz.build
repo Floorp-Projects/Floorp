@@ -9,7 +9,6 @@ if CONFIG["MOZ_WEBRTC"]:
     EXPORTS += [
         "CamerasChild.h",
         "CamerasParent.h",
-        "VideoEngine.h",
         "VideoFrameUtils.h",
     ]
     UNIFIED_SOURCES += [

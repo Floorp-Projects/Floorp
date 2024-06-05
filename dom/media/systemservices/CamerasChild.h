@@ -29,6 +29,7 @@ namespace camera {
 
 class FrameRelay {
  public:
+  virtual void OnCaptureEnded() = 0;
   virtual int DeliverFrame(
       uint8_t* buffer, const mozilla::camera::VideoFrameProperties& props) = 0;
 };
@@ -146,6 +147,8 @@ class CamerasChild final : public PCamerasChild {
 
   // IPC messages recevied, received on the PBackground thread
   // these are the actual callbacks with data
+  mozilla::ipc::IPCResult RecvCaptureEnded(const CaptureEngine&,
+                                           const int&) override;
   mozilla::ipc::IPCResult RecvDeliverFrame(
       const CaptureEngine&, const int&, mozilla::ipc::Shmem&&,
       const VideoFrameProperties& prop) override;

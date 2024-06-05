@@ -510,6 +510,8 @@ class DeviceListener : public SupportsWeakPtr {
   // Accessed from MediaTrackGraph thread, MediaManager thread, and MainThread
   // No locking needed as it's set on Activate() and never assigned to again.
   UniquePtr<DeviceState> mDeviceState;
+
+  MediaEventListener mCaptureEndedListener;
 };
 
 /**
@@ -4158,6 +4160,12 @@ void DeviceListener::Activate(RefPtr<LocalMediaDevice> aDevice,
       (aDevice->GetMediaSource() == MediaSourceEnum::Camera &&
        Preferences::GetBool(
            "media.getusermedia.camera.off_while_disabled.enabled", true));
+
+  if (MediaEventSource<void>* event = aDevice->Source()->CaptureEndedEvent()) {
+    mCaptureEndedListener = event->Connect(AbstractThread::MainThread(), this,
+                                           &DeviceListener::Stop);
+  }
+
   mDeviceState = MakeUnique<DeviceState>(
       std::move(aDevice), std::move(aTrackSource), offWhileDisabled);
   mDeviceState->mDeviceMuted = aStartMuted;
@@ -4275,6 +4283,8 @@ void DeviceListener::Stop() {
 
     mWindowListener->ChromeAffectingStateChanged();
   }
+
+  mCaptureEndedListener.DisconnectIfExists();
 
   // Keep a strong ref to the removed window listener.
   RefPtr<GetUserMediaWindowListener> windowListener = mWindowListener;
