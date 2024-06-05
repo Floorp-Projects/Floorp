@@ -100,6 +100,7 @@ def build_dict(config, env=os.environ):
     d["isolated_process"] = (
         substs.get("MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS") == "1"
     )
+    d["automation"] = substs.get("MOZ_AUTOMATION") == "1"
 
     def guess_platform():
         if d["buildapp"] == "browser":
