@@ -80,7 +80,7 @@ class SharedScreenCastStreamPrivate {
 
   // Track damage region updates that were reported since the last time
   // frame was captured
-  DesktopRegion damage_region_;
+  DesktopRegion damage_region_ RTC_GUARDED_BY(&latest_frame_lock_);
 
   uint32_t pw_stream_node_id_ = 0;
 
@@ -90,7 +90,7 @@ class SharedScreenCastStreamPrivate {
   webrtc::Mutex queue_lock_;
   ScreenCaptureFrameQueue<SharedDesktopFrame> queue_
       RTC_GUARDED_BY(&queue_lock_);
-  webrtc::Mutex latest_frame_lock_;
+  webrtc::Mutex latest_frame_lock_ RTC_ACQUIRED_AFTER(queue_lock_);
   SharedDesktopFrame* latest_available_frame_
       RTC_GUARDED_BY(&latest_frame_lock_) = nullptr;
   std::unique_ptr<MouseCursor> mouse_cursor_;
@@ -147,7 +147,6 @@ class SharedScreenCastStreamPrivate {
   void ConvertRGBxToBGRx(uint8_t* frame, uint32_t size);
   void UpdateFrameUpdatedRegions(const spa_buffer* spa_buffer,
                                  DesktopFrame& frame);
-  void NotifyCallbackOfNewFrame(std::unique_ptr<SharedDesktopFrame> frame);
 
   // PipeWire callbacks
   static void OnCoreError(void* data,
@@ -646,6 +645,8 @@ DesktopVector SharedScreenCastStreamPrivate::CaptureCursorPosition() {
 void SharedScreenCastStreamPrivate::UpdateFrameUpdatedRegions(
     const spa_buffer* spa_buffer,
     DesktopFrame& frame) {
+  latest_frame_lock_.AssertHeld();
+
   if (!use_damage_region_) {
     frame.mutable_updated_region()->SetRect(
         DesktopRect::MakeSize(frame.size()));
@@ -672,22 +673,6 @@ void SharedScreenCastStreamPrivate::UpdateFrameUpdatedRegions(
         meta_region->region.position.x, meta_region->region.position.y,
         meta_region->region.size.width, meta_region->region.size.height));
   }
-}
-
-void SharedScreenCastStreamPrivate::NotifyCallbackOfNewFrame(
-    std::unique_ptr<SharedDesktopFrame> frame) {
-  if (!pw_stream_ || !frame->data()) {
-    callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY,
-                               nullptr);
-    return;
-  }
-
-  if (use_damage_region_) {
-    frame->mutable_updated_region()->Swap(&damage_region_);
-    damage_region_.Clear();
-  }
-  callback_->OnCaptureResult(DesktopCapturer::Result::SUCCESS,
-                             std::move(frame));
 }
 
 RTC_NO_SANITIZE("cfi-icall")
@@ -875,22 +860,32 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     observer_->OnDesktopFrameChanged();
   }
 
-  // We have to hold the lock over the latest_frame here already, since
-  // we are going to update damage region, which corresponds to the latest
-  // frame and is accessed in CaptureFrame()
-  webrtc::MutexLock latest_frame_lock(&latest_frame_lock_);
+  std::unique_ptr<SharedDesktopFrame> frame;
+  {
+    webrtc::MutexLock latest_frame_lock(&latest_frame_lock_);
 
-  UpdateFrameUpdatedRegions(spa_buffer, *queue_.current_frame());
-  queue_.current_frame()->set_may_contain_cursor(is_cursor_embedded_);
+    UpdateFrameUpdatedRegions(spa_buffer, *queue_.current_frame());
+    queue_.current_frame()->set_may_contain_cursor(is_cursor_embedded_);
 
-  latest_available_frame_ = queue_.current_frame();
+    latest_available_frame_ = queue_.current_frame();
 
-  if (callback_) {
-    std::unique_ptr<SharedDesktopFrame> frame = queue_.current_frame()->Share();
+    if (!callback_) {
+      return;
+    }
+
+    frame = latest_available_frame_->Share();
     frame->set_capturer_id(DesktopCapturerId::kWaylandCapturerLinux);
     frame->set_capture_time_ms((rtc::TimeNanos() - capture_start_time_nanos) /
                                rtc::kNumNanosecsPerMillisec);
-    NotifyCallbackOfNewFrame(std::move(frame));
+    if (use_damage_region_) {
+      frame->mutable_updated_region()->Swap(&damage_region_);
+      damage_region_.Clear();
+    }
+  }
+
+  if (callback_) {
+    callback_->OnCaptureResult(DesktopCapturer::Result::SUCCESS,
+                               std::move(frame));
   }
 }
 
