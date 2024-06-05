@@ -436,7 +436,8 @@ RefPtr<VoidPromise> PopulateMediaDevices() {
         nsCString json;
         json.AppendPrintf(
             R"({"cameraCount": %u, "microphoneCount": %u, "speakerCount": %u, "groupCount": %zu, "groupCountWoSpeakers": %zu})",
-            cameraCount, microphoneCount, speakerCount, groupIds.size(), groupIdsWoSpeakers.size());
+            cameraCount, microphoneCount, speakerCount, groupIds.size(),
+            groupIdsWoSpeakers.size());
         glean::characteristics::media_devices.Set(json);
         voidPromise->Resolve(void_t(), __func__);
       },
