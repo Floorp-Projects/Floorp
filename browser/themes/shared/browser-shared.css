@@ -472,6 +472,7 @@ toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
   }
 
   .newTabBrowserPanel,
+  #sidebar-main,
   #sidebar-box {
     /* Make room for the bookmarks toolbar so that it won't visibly overlap the
        new tab page and sidebar contents. We do not put this padding on #browser
