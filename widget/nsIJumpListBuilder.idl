@@ -10,6 +10,9 @@ interface nsIURI;
 interface nsIJumpListBuilder : nsISupports
 {
   /**
+   * Note: This method is deprecated in favour of obtainAndCacheFaviconAsync,
+   * which does not use main-thread IO.
+   *
    * Returns the local filesystem path for a favicon for a page hosted at
    * faviconURL if we happen to have written one to disk before. If we have not,
    * then a background thread retrieves the favicon and will write it to disk
@@ -26,6 +29,24 @@ interface nsIJumpListBuilder : nsISupports
    *   In the event that the favicon has never been cached to disk before.
    */
   AString obtainAndCacheFavicon(in nsIURI faviconURL);
+
+  /**
+   * Returns a Promise that resolves with a string representation of a local
+   * file system path for a favicon cache for a page hosted at faviconURL. If
+   * no such cache exists, it will be created before returning the path.
+   * Similarly, if the cache has expired, it will be recreated before returning
+   * the path.
+   *
+   * If the favicon does not match a known favicon within the nsIFaviconService,
+   * the Promise will reject with an NS_ERROR_FAILURE.
+   *
+   * @param {nsIURI} faviconURL
+   *   The URL for the web page for which we would like a filesystem path for
+   *   the favicon.
+   * @returns {Promise<string, nsresult>}
+   */
+  [implicit_jscontext]
+  Promise obtainAndCacheFaviconAsync(in nsIURI faviconURL);
 
   /**
    * Returns a Promise that resolves with whether or not the Jump List backend
