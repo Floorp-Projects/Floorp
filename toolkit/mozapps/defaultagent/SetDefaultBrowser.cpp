@@ -574,29 +574,56 @@ static nsresult SetDefaultExtensionHandlersUserChoiceImplMsix(
   // The following is the start of the script that will be sent to Powershell.
   // In includes a function; calls to the function get appended per file
   // extension, done below.
-  nsString startScript(
+  auto startScript =
       uR"(
 # Force exceptions to stop execution
 $ErrorActionPreference = 'Stop'
 
-function Set-DefaultHandlerRegistry($Path, $ProgID, $Hash) {
-  $Path = "$Path\UserChoice"
-  $CurrentUser = [Microsoft.Win32.Registry]::CurrentUser
+Add-Type -TypeDefinition @"
+ using System;
+ using System.Runtime.InteropServices;
+
+ public static class WinReg
+ {
+   [DllImport("Advapi32.dll")]
+   public static extern Int32 RegRenameKey(
+     IntPtr hKey,
+     [MarshalAs(UnmanagedType.LPWStr)] string lpSubKeyName,
+     [MarshalAs(UnmanagedType.LPWStr)] string lpNewKeyName
+   );
+ }
+"@
+
+function Set-DefaultHandlerRegistry($Association, $Path, $ProgID, $Hash) {
+  $RootKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($Path)
+
+  # Rename the registry key.
+  $TempName = New-Guid
+  $Handle = $RootKey.Handle.DangerousGetHandle()
+  $result = [WinReg]::RegRenameKey($Handle, $null, $TempName.ToString())
+  if ($result -ne 0) {
+    throw "Error renaming association key.`r`nOriginal Name: " + $Association + "`r`nTemporary Name: " + $TempName
+  }
 
   # DeleteSubKey throws if we don't have sufficient permissions to delete key,
   # signaling failure to launching process.
   #
   # Note: DeleteSubKeyTree fails when DENY permissions are set on key, whereas
   # DeleteSubKey succeeds.
-  $CurrentUser.DeleteSubKey($Path, $false)
-  $key = $CurrentUser.CreateSubKey($Path)
+  $RootKey.DeleteSubKey("UserChoice", $false)
+  $UserChoice = $RootKey.CreateSubKey("UserChoice")
 
   $StringType = [Microsoft.Win32.RegistryValueKind]::String
-  $key.SetValue('ProgID', $ProgID, $StringType)
-  $key.SetValue('Hash', $Hash, $StringType)
+  $UserChoice.SetValue('ProgID', $ProgID, $StringType)
+  $UserChoice.SetValue('Hash', $Hash, $StringType)
+
+  $result = [WinReg]::RegRenameKey($Handle, $null, $Association)
+  if ($result -ne 0) {
+    throw "Error reverting rename of association key.`r`nTemporary Name: " + $TempName + "`r`nOriginal Name: " + $Association
+  }
 }
 
-)");  // Newlines in the above powershell script at the end are important!!!
+)"_ns;  // Newlines in the above powershell script at the end are important!!!
 
   // NOTE!!!! CreateProcess / calling things on the command line has a character
   // count limit. For CMD.exe, it's 8K. For CreateProcessW, it's technically
@@ -648,6 +675,8 @@ function Set-DefaultHandlerRegistry($Path, $ProgID, $Hash) {
     for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
       const wchar_t* fileExtension = aFileExtensions[i].get();
 
+      auto association = nsDependentString(fileExtension);
+
       nsAutoString keyPath;
       AppendAssociationKeyPath(fileExtension, keyPath);
 
@@ -659,9 +688,11 @@ function Set-DefaultHandlerRegistry($Path, $ProgID, $Hash) {
       auto hash = nsDependentString(hashWchar.get());
 
       // Append a line to the script buffer in the form:
-      // Set-DefaultHandlerRegistry $RegistryKeyPath $ProgID $UserChoiceHash
-      scriptBuffer += u"Set-DefaultHandlerRegistry "_ns + keyPath + u" "_ns +
-                      progIDs[i / 2] + u" "_ns + hash + u"\n"_ns;
+      // Set-DefaultHandlerRegistry $Association $RegistryKeyPath $ProgID
+      // $UserChoiceHash
+      scriptBuffer += u"Set-DefaultHandlerRegistry "_ns + association +
+                      u" "_ns + keyPath + u" "_ns + progIDs[i / 2] + u" "_ns +
+                      hash + u"\n"_ns;
     }
 
     // The hash changes at the end of each minute, so check that the hash should
