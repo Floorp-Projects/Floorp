@@ -1,10 +1,6 @@
 [DEFAULT]
 head = ""
 
-["test_JumpListBuilder_obtainAndCacheFaviconAsync.js"]
-run-if = ["os == 'win'"]
-support-files = ["favicon.ico"]
-
 ["test_macsharingservice.js"]
 run-if = ["os == 'mac'"]
 
