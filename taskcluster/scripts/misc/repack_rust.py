@@ -412,11 +412,6 @@ def build_src(install_dir, host, targets, patches):
     # `sysconfdir` is overloaded to be relative instead of absolute.
     # This is the default of `install.sh`, but for whatever reason
     # `x.py install` has its own default of `/etc` which we don't want.
-    #
-    # `missing-tools` is set so `rustfmt` is allowed to fail. This means
-    # we can "succeed" at building Rust while failing to build, say, Cargo.
-    # Ideally the build system would have better granularity:
-    # https://github.com/rust-lang/rust/issues/79249
     base_config = textwrap.dedent(
         """
         [build]
@@ -434,9 +429,6 @@ def build_src(install_dir, host, targets, patches):
         [install]
         prefix = "{prefix}"
         sysconfdir = "etc"
-
-        [dist]
-        missing-tools = true
 
         [llvm]
         download-ci-llvm = false
