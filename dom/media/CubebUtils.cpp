@@ -954,8 +954,8 @@ bool EstimatedLatencyDefaultDevices(double* aMean, double* aStdDev,
   *aStdDev = sqrt(variance);
 
   MOZ_LOG(gCubebLog, LogLevel::Debug,
-          ("Default devices latency in seconds %lf (stddev: %lf)",
-           *aMean, *aStdDev));
+          ("Default devices latency in seconds %lf (stddev: %lf)", *aMean,
+           *aStdDev));
 
   cubeb_stream_destroy(stm);
 
