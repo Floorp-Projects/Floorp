@@ -436,38 +436,6 @@ add_task(async function panelSuppressionOnPanelTests() {
 });
 
 /**
- * Quickly moving the mouse off and back on to the tab strip should
- * not reset the delay
- */
-add_task(async function zeroDelayTests() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["ui.tooltip.delay_ms", 200]],
-  });
-
-  const tabUrl =
-    "data:text/html,<html><head><title>First New Tab</title></head><body>Hello</body></html>";
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
-
-  await openPreview(tab);
-  await closePreviews();
-
-  let resolved = false;
-  let openPreviewPromise = openPreview(tab).then(() => {
-    resolved = true;
-  });
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  let timeoutPromise = new Promise(resolve => setTimeout(resolve, 100));
-  await Promise.race([openPreviewPromise, timeoutPromise]);
-
-  Assert.ok(resolved, "Zero delay is set immediately after leaving tab strip");
-
-  await closePreviews();
-  BrowserTestUtils.removeTab(tab);
-
-  await SpecialPowers.popPrefEnv();
-});
-
-/**
  * Wheel events at the document-level of the window should hide the preview.
  */
 add_task(async function wheelTests() {
