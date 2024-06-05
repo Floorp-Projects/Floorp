@@ -2006,6 +2006,18 @@ networkPrioritization:
         branch: default
         pref: "network.fetchpriority.adjustments.images.auto"
 
+networkingAuth:
+  description: "Firefox Networking (Necko) Authentication"
+  owner: vgosu@mozilla.com
+  hasExposure: false
+  variables:
+    redirectForAuthRetriesEnabled:
+      description: Whether to enable redirects for auth retries
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.auth.use_redirect_for_retries"
+
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
   owner: nalexander@mozilla.com
