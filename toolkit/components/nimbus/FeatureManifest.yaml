@@ -1742,6 +1742,54 @@ networking:
         branch: default
         pref: "network.http.speculative-parallel-limit"
 
+networkPrioritization:
+  description: "Network request prioritization"
+  owner: vgosu@mozilla.com
+  hasExposure: false
+  variables:
+    priorityHeader:
+      description: Whether to set the Priority header on each request.
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.http.priority_header.enabled"
+    fetchPriority:
+      description: Whether fetch priority is enabled
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.enabled"
+    h3FetchPriority:
+      description: Whether to send HTTP3 priority frames
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.http.http3.priority"
+    h3BackgroundTabDeprioritization:
+      description: Lowers the priority when the tab is in the background. Potential privacy concerns.
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.http.http3.send_background_tabs_deprioritization"
+    documentPriorityIncremental:
+      description: Sets the incremental flag on the Priority header for document requests
+      type: boolean
+      setPref:
+        branch: default
+        pref: "dom.document_priority.incremental"
+    imagePriorityIncremental:
+      description: Sets the incremental flag on the Priority header for image requests
+      type: boolean
+      setPref:
+        branch: default
+        pref: "image.priority.incremental"
+    imageAdjustLayoutPriority:
+      description: Whether the network request priority should be adjusted according the layout and view frame position of each particular image.
+      type: boolean
+      setPref:
+        branch: default
+        pref: "image.layout_network_priority"
+
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
   owner: nalexander@mozilla.com
