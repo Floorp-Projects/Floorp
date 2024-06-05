@@ -90,6 +90,9 @@ class SharedScreenCastStreamPrivate {
   webrtc::Mutex queue_lock_;
   ScreenCaptureFrameQueue<SharedDesktopFrame> queue_
       RTC_GUARDED_BY(&queue_lock_);
+  webrtc::Mutex latest_frame_lock_;
+  SharedDesktopFrame* latest_available_frame_
+      RTC_GUARDED_BY(&latest_frame_lock_) = nullptr;
   std::unique_ptr<MouseCursor> mouse_cursor_;
   DesktopVector mouse_cursor_position_ = DesktopVector(-1, -1);
 
@@ -613,13 +616,13 @@ void SharedScreenCastStreamPrivate::StopAndCleanupStream() {
 
 std::unique_ptr<SharedDesktopFrame>
 SharedScreenCastStreamPrivate::CaptureFrame() {
-  webrtc::MutexLock lock(&queue_lock_);
+  webrtc::MutexLock latest_frame_lock(&latest_frame_lock_);
 
-  if (!pw_stream_ || !queue_.current_frame()) {
+  if (!pw_stream_ || !latest_available_frame_) {
     return std::unique_ptr<SharedDesktopFrame>{};
   }
 
-  std::unique_ptr<SharedDesktopFrame> frame = queue_.current_frame()->Share();
+  std::unique_ptr<SharedDesktopFrame> frame = latest_available_frame_->Share();
   if (use_damage_region_) {
     frame->mutable_updated_region()->Swap(&damage_region_);
     damage_region_.Clear();
@@ -852,6 +855,8 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     if (observer_) {
       observer_->OnFailedToProcessBuffer();
     }
+    webrtc::MutexLock latest_frame_lock(&latest_frame_lock_);
+    latest_available_frame_ = nullptr;
     return;
   }
 
@@ -870,8 +875,15 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     observer_->OnDesktopFrameChanged();
   }
 
+  // We have to hold the lock over the latest_frame here already, since
+  // we are going to update damage region, which corresponds to the latest
+  // frame and is accessed in CaptureFrame()
+  webrtc::MutexLock latest_frame_lock(&latest_frame_lock_);
+
   UpdateFrameUpdatedRegions(spa_buffer, *queue_.current_frame());
   queue_.current_frame()->set_may_contain_cursor(is_cursor_embedded_);
+
+  latest_available_frame_ = queue_.current_frame();
 
   if (callback_) {
     std::unique_ptr<SharedDesktopFrame> frame = queue_.current_frame()->Share();
