@@ -2098,11 +2098,21 @@ Maybe<int32_t> RemoteAccessible::GetIntARIAAttr(nsAtom* aAttrName) const {
 }
 
 void RemoteAccessible::Language(nsAString& aLocale) {
-  if (!IsHyperText()) {
-    return;
-  }
-  if (auto attrs = GetCachedTextAttributes()) {
-    attrs->GetAttribute(nsGkAtoms::language, aLocale);
+  if (IsHyperText() || IsText()) {
+    if (auto attrs = GetCachedTextAttributes()) {
+      attrs->GetAttribute(nsGkAtoms::language, aLocale);
+    }
+    if (IsText() && aLocale.IsEmpty()) {
+      // If a leaf has the same language as its parent HyperTextAccessible, it
+      // won't be cached in the leaf's text attributes. Check the parent.
+      if (RemoteAccessible* parent = RemoteParent()) {
+        if (auto attrs = parent->GetCachedTextAttributes()) {
+          attrs->GetAttribute(nsGkAtoms::language, aLocale);
+        }
+      }
+    }
+  } else if (mCachedFields) {
+    mCachedFields->GetAttribute(CacheKey::Language, aLocale);
   }
 }
 

@@ -173,6 +173,9 @@ class CacheKey {
   // bool, CacheDomain::Bounds
   // Whether the Accessible is fully clipped.
   static constexpr nsStaticAtom* IsClipped = nsGkAtoms::clip_rule;
+  // nsAtom, CacheDomain::Text
+  // As returned by Accessible::Language.
+  static constexpr nsStaticAtom* Language = nsGkAtoms::language;
   // nsString, CacheUpdateType::Initial
   static constexpr nsStaticAtom* MimeType = nsGkAtoms::headerContentType;
   // double, CacheDomain::Value

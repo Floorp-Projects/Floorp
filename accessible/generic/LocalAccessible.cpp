@@ -3653,6 +3653,19 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     if (HyperTextAccessible* ht = AsHyperText()) {
       RefPtr<AccAttributes> attrs = ht->DefaultTextAttributes();
       fields->SetAttribute(CacheKey::TextAttributes, std::move(attrs));
+    } else if (!IsText()) {
+      // Language is normally cached in text attributes, but Accessibles that
+      // aren't HyperText or Text (e.g. <img>, <input type="radio">) don't have
+      // text attributes. The Text domain isn't a great fit, but the kinds of
+      // clients (e.g. screen readers) that care about language are likely to
+      // care about text as well.
+      nsString language;
+      Language(language);
+      if (!language.IsEmpty()) {
+        fields->SetAttribute(CacheKey::Language, std::move(language));
+      } else if (aUpdateType == CacheUpdateType::Update) {
+        fields->SetAttribute(CacheKey::Language, DeleteEntry());
+      }
     }
   }
 
