@@ -832,25 +832,47 @@ nsFilePicker::CheckContentAnalysisService() {
     return promise;
   };
 
-  nsCOMArray<nsIFile> files;
+  // Since getting the files to analyze might be asynchronous, use a MozPromise
+  // to unify the logic below.
+  RefPtr<mozilla::MozPromise<nsTArray<mozilla::PathString>, nsresult,
+                             true>::Private>
+      getFilesToAnalyzePromise = nullptr;
   if (mMode == modeGetFolder) {
     nsCOMPtr<nsIFile> file;
     nsresult rv = GetFile(getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv) || !file)) {
+      return nsFilePicker::ContentAnalysisResponse::CreateAndReject(rv,
+                                                                    __func__);
+    }
+    // We just need to iterate over the directory, so use the junk scope
+    RefPtr<mozilla::dom::Directory> directory = mozilla::dom::Directory::Create(
+        xpc::NativeGlobal(xpc::PrivilegedJunkScope()), file);
+    if (!directory) {
+      // The directory may have been deleted
+      return nsFilePicker::ContentAnalysisResponse::CreateAndReject(rv,
+                                                                    __func__);
+    }
+    mozilla::dom::OwningFileOrDirectory owningDirectory;
+    owningDirectory.SetAsDirectory() = directory;
+    nsTArray<mozilla::dom::OwningFileOrDirectory> directoryArray{
+        std::move(owningDirectory)};
+
+    mozilla::ErrorResult error;
+    RefPtr<mozilla::dom::GetFilesHelper> helper =
+        mozilla::dom::GetFilesHelper::Create(directoryArray, true, error);
+    rv = error.StealNSResult();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nsFilePicker::ContentAnalysisResponse::CreateAndReject(rv,
                                                                     __func__);
     }
-    nsCOMPtr<nsIDirectoryEnumerator> iter;
-    rv = file->GetDirectoryEntries(getter_AddRefs(iter));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nsFilePicker::ContentAnalysisResponse::CreateAndReject(rv,
-                                                                    __func__);
-    }
-    nsCOMPtr<nsIFile> entry;
-    while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(entry))) && entry) {
-      files.AppendElement(entry);
-    }
+
+    getFilesToAnalyzePromise = mozilla::MakeRefPtr<mozilla::MozPromise<
+        nsTArray<mozilla::PathString>, nsresult, true>::Private>(__func__);
+    auto getFilesCallback = mozilla::MakeRefPtr<GetFilesInDirectoryCallback>(
+        getFilesToAnalyzePromise);
+    helper->AddCallback(getFilesCallback);
   } else {
+    nsCOMArray<nsIFile> files;
     if (!mUnicodeFile.IsEmpty()) {
       nsCOMPtr<nsIFile> file;
       rv = GetFile(getter_AddRefs(file));
@@ -862,13 +884,25 @@ nsFilePicker::CheckContentAnalysisService() {
     } else {
       files.AppendElements(mFiles);
     }
+    nsTArray<mozilla::PathString> paths(files.Length());
+    std::transform(files.begin(), files.end(), MakeBackInserter(paths),
+                   [](auto* entry) { return entry->NativePath(); });
+    getFilesToAnalyzePromise = mozilla::MakeRefPtr<mozilla::MozPromise<
+        nsTArray<mozilla::PathString>, nsresult, true>::Private>(__func__);
+    getFilesToAnalyzePromise->Resolve(std::move(paths), __func__);
   }
-  nsTArray<mozilla::PathString> paths(files.Length());
-  std::transform(files.begin(), files.end(), MakeBackInserter(paths),
-                 [](auto* entry) { return entry->NativePath(); });
 
-  return mozilla::detail::AsyncAll<mozilla::PathString>(std::move(paths),
-                                                        processOneItem);
+  MOZ_ASSERT(getFilesToAnalyzePromise);
+  return getFilesToAnalyzePromise->Then(
+      mozilla::GetMainThreadSerialEventTarget(), __func__,
+      [processOneItem](nsTArray<mozilla::PathString> aPaths) mutable {
+        return mozilla::detail::AsyncAll<mozilla::PathString>(std::move(aPaths),
+                                                              processOneItem);
+      },
+      [](nsresult aError) {
+        return nsFilePicker::ContentAnalysisResponse::CreateAndReject(aError,
+                                                                      __func__);
+      });
 };
 
 ///////////////////////////////////////////////////////////////////////////////
