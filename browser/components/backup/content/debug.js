@@ -17,39 +17,12 @@ let DebugUI = {
   init() {
     let controls = document.querySelector("#controls");
     controls.addEventListener("click", this);
-
-    let encryptionEnabled = document.querySelector("#encryption-enabled");
-    encryptionEnabled.addEventListener("click", this);
-
-    // We use `init` instead of `get` here, since this page might load before
-    // the BackupService has had a chance to initialize itself.
-    let service = BackupService.init();
-    service.addEventListener("BackupService:StateUpdate", this);
-    this.onStateUpdate();
-
-    // Kick-off reading any pre-existing encryption state off of the disk.
-    service.loadEncryptionState();
   },
 
   handleEvent(event) {
-    switch (event.type) {
-      case "BackupService:StateUpdate": {
-        this.onStateUpdate();
-        break;
-      }
-      case "click": {
-        let target = event.target;
-        if (HTMLButtonElement.isInstance(event.target)) {
-          this.onButtonClick(target);
-        } else if (
-          HTMLInputElement.isInstance(event.target) &&
-          event.target.type == "checkbox"
-        ) {
-          event.preventDefault();
-          this.onCheckboxClick(target);
-        }
-        break;
-      }
+    let target = event.target;
+    if (HTMLButtonElement.isInstance(event.target)) {
+      this.onButtonClick(target);
     }
   },
 
@@ -81,10 +54,7 @@ let DebugUI = {
         break;
       }
       case "open-backup-folder": {
-        let backupsDir = PathUtils.join(
-          PathUtils.profileDir,
-          BackupService.PROFILE_FOLDER_NAME
-        );
+        let backupsDir = PathUtils.join(PathUtils.profileDir, "backups");
 
         let nsLocalFile = Components.Constructor(
           "@mozilla.org/file/local;1",
@@ -101,10 +71,7 @@ let DebugUI = {
         break;
       }
       case "recover-from-staging": {
-        let backupsDir = PathUtils.join(
-          PathUtils.profileDir,
-          BackupService.PROFILE_FOLDER_NAME
-        );
+        let backupsDir = PathUtils.join(PathUtils.profileDir, "backups");
         let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
           Ci.nsIFilePicker
         );
@@ -138,50 +105,9 @@ let DebugUI = {
           );
           throw e;
         }
-        break;
       }
     }
-  },
-
-  async onCheckboxClick(checkbox) {
-    if (checkbox.id == "encryption-enabled") {
-      let service = BackupService.get();
-      if (checkbox.checked) {
-        let password = prompt("What's the encryption password? (8 char min)");
-        if (password != null) {
-          try {
-            await service.enableEncryption(password);
-          } catch (e) {
-            console.error(e);
-          }
-        }
-      } else if (confirm("Disable encryption?")) {
-        try {
-          await service.disableEncryption();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-  },
-
-  onStateUpdate() {
-    let service = BackupService.get();
-    let state = service.state;
-
-    let encryptionEnabled = document.querySelector("#encryption-enabled");
-    encryptionEnabled.checked = state.encryptionEnabled;
   },
 };
 
-// Wait until the load event fires before setting up any listeners or updating
-// any of the state of the page. We do this in order to avoid having any of
-// our control states overwritten by SessionStore after a restoration, as
-// restoration of form state occurs _prior_ to the load event firing.
-addEventListener(
-  "load",
-  () => {
-    DebugUI.init();
-  },
-  { once: true }
-);
+DebugUI.init();

@@ -48,7 +48,7 @@ class FakeBackupResource2 extends BackupResource {
     return "fake2";
   }
   static get requiresEncryption() {
-    return false;
+    return true;
   }
   static get priority() {
     return 1;
