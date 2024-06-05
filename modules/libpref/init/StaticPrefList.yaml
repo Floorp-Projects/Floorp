@@ -1202,7 +1202,7 @@
 # and are always permitted.
 - name: browser.contentanalysis.allow_url_regex_list
   type: String
-  value: ""
+  value: "^about:.*"
   mirror: never
 
 # Space-separated list of regexs that are compared to URLs of resources
