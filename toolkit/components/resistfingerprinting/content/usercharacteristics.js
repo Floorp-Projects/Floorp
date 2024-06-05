@@ -35,6 +35,14 @@ function debug(...args) {
   console.log(msg);
 }
 
+async function sha1(message) {
+  const msgUint8 = new TextEncoder().encode(message);
+  const hashBuffer = await window.crypto.subtle.digest("SHA-1", msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  return hashHex;
+}
+
 // ==============================================================
 // Regular Canvases
 
@@ -49,7 +57,7 @@ function populateTestCanvases() {
   var c1 = canvas1.getContext("2d");
   c1.fillStyle = "orange";
   c1.fillRect(100, 100, 50, 50);
-  data.canvas1data = canvas1.toDataURL();
+  data.canvas1data = sha1(canvas1.toDataURL());
 
   // Canvas 2 is a polygon with lines, this fingerprints a little via
   // floating point rounding.
@@ -65,7 +73,7 @@ function populateTestCanvases() {
   c2.strokeStyle = "red";
   c2.lineWidth = 5;
   c2.stroke();
-  data.canvas2data = canvas2.toDataURL();
+  data.canvas2data = sha1(canvas2.toDataURL());
 
   // Canvas 3 renders an image at a reduced resolution, this also
   // fingerprints via floating point rounding.
@@ -77,7 +85,7 @@ function populateTestCanvases() {
     image.src = kImageBlob;
     image.onload = () => {
       c3.drawImage(image, 0, 0, canvas3.width, canvas3.height);
-      resolve(canvas3.toDataURL());
+      sha1(canvas3.toDataURL()).then(resolve);
     };
     image.onerror = e => {
       reject(e);
@@ -94,7 +102,7 @@ function populateTestCanvases() {
   c4.fillRect(0, 0, 50, 50);
   c4.rotate((-15.0 * Math.PI) / 180.0);
   c4.fillRect(0, 0, 50, 50);
-  data.canvas4data = canvas4.toDataURL();
+  data.canvas4data = sha1(canvas4.toDataURL());
 
   // Canvas 5 renders text with a local font the user might have in a pretty standard configuration
   var canvas5 = document.getElementById("canvas5");
@@ -104,7 +112,7 @@ function populateTestCanvases() {
   c5.fillText("The quick brown", 15, 100);
   c5.fillText("fox jumps over", 15, 150);
   c5.fillText("the lazy dog", 15, 200);
-  data.canvas5data = canvas5.toDataURL();
+  data.canvas5data = sha1(canvas5.toDataURL());
 
   // Canvas 6 renders text with a local font the user might have but translated, rotated, and with a blurred shadow
   var canvas6 = document.getElementById("canvas6");
@@ -116,7 +124,7 @@ function populateTestCanvases() {
   c6.shadowBlur = 50;
   c6.font = "italic 40px Georgia";
   c6.fillText("The quick", 0, 0);
-  data.canvas6data = canvas6.toDataURL();
+  data.canvas6data = sha1(canvas6.toDataURL());
 
   // Canvas 7 renders text with a system font.
   var canvas7 = document.getElementById("canvas7");
@@ -126,7 +134,7 @@ function populateTestCanvases() {
   c7.fillText("The quick brown", 15, 100);
   c7.fillText("fox jumps over", 15, 150);
   c7.fillText("the lazy dog", 15, 200);
-  data.canvas7data = canvas7.toDataURL();
+  data.canvas7data = sha1(canvas7.toDataURL());
 
   // Canvas 8 renders text with a system font.
   var canvas8 = document.getElementById("canvas8");
@@ -138,7 +146,7 @@ function populateTestCanvases() {
   c8.shadowBlur = 50;
   c8.font = "italic 40px system-ui";
   c8.fillText("The quick", 0, 0);
-  data.canvas8data = canvas8.toDataURL();
+  data.canvas8data = sha1(canvas8.toDataURL());
 
   // Canvas 9 renders text with a supplied font.
   var canvas9 = document.getElementById("canvas9");
@@ -148,7 +156,7 @@ function populateTestCanvases() {
   c9.fillText("The quick brown", 15, 100);
   c9.fillText("fox jumps over", 15, 150);
   c9.fillText("the lazy dog", 15, 200);
-  data.canvas9data = canvas9.toDataURL();
+  data.canvas9data = sha1(canvas9.toDataURL());
 
   // Canvas 10 renders text with a supplied font.
   var canvas10 = document.getElementById("canvas10");
@@ -160,7 +168,7 @@ function populateTestCanvases() {
   c10.shadowBlur = 50;
   c10.font = "italic 40px LocalFiraSans";
   c10.fillText("The quick", 0, 0);
-  data.canvas10data = canvas10.toDataURL();
+  data.canvas10data = sha1(canvas10.toDataURL());
 
   return data;
 }
@@ -469,7 +477,7 @@ function populateWebGLCanvases() {
   drawScene(gl, programInfo, buffers);
 
   // Write to the fields
-  data.glcanvasdata = canvas.toDataURL();
+  data.glcanvasdata = sha1(canvas.toDataURL());
 
   return data;
 }
@@ -538,12 +546,12 @@ function populateFingerprintJSCanvases() {
   const canvas1 = document.getElementById("fingerprintjscanvas1");
   const context1 = canvas1.getContext("2d");
   renderTextImage(canvas1, context1);
-  data.fingerprintjscanvas1data = canvas1.toDataURL();
+  data.fingerprintjscanvas1data = sha1(canvas1.toDataURL());
 
   const canvas2 = document.getElementById("fingerprintjscanvas2");
   const context2 = canvas2.getContext("2d");
   renderGeometryImage(canvas2, context2);
-  data.fingerprintjscanvas2data = canvas2.toDataURL();
+  data.fingerprintjscanvas2data = sha1(canvas2.toDataURL());
 
   return data;
 }
