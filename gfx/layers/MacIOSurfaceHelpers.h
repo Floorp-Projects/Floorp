@@ -24,7 +24,7 @@ namespace layers {
 // Unlike MacIOSurface::GetAsSurface, this also handles IOSurface formats
 // with multiple planes and does YCbCr to RGB conversion, if necessary.
 already_AddRefed<gfx::SourceSurface> CreateSourceSurfaceFromMacIOSurface(
-    MacIOSurface* aSurface);
+    MacIOSurface* aSurface, gfx::DataSourceSurface* aDataSurface = nullptr);
 
 nsresult CreateSurfaceDescriptorBufferFromMacIOSurface(
     MacIOSurface* aSurface, SurfaceDescriptorBuffer& aSdBuffer,

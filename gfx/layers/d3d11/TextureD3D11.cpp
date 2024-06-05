@@ -921,7 +921,8 @@ bool DXGITextureHostD3D11::LockInternal() {
   return mIsLocked;
 }
 
-already_AddRefed<gfx::DataSourceSurface> DXGITextureHostD3D11::GetAsSurface() {
+already_AddRefed<gfx::DataSourceSurface> DXGITextureHostD3D11::GetAsSurface(
+    gfx::DataSourceSurface* aSurface) {
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
