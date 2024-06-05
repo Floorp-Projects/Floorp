@@ -28,6 +28,23 @@ const { FormAutofillUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
 );
 
+let { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
+// Always pretend OS Auth is enabled in this dir.
+if (
+  gTestPath.includes("browser/creditCard") &&
+  OSKeyStoreTestUtils.canTestOSKeyStoreLogin() &&
+  OSKeyStore.canReauth()
+) {
+  info("Stubbing out getOSAuthEnabled so it always returns true");
+  sinon.stub(FormAutofillUtils, "getOSAuthEnabled").returns(true);
+  registerCleanupFunction(() => {
+    sinon.restore();
+  });
+}
+
 const MANAGE_ADDRESSES_DIALOG_URL =
   "chrome://formautofill/content/manageAddresses.xhtml";
 const MANAGE_CREDIT_CARDS_DIALOG_URL =

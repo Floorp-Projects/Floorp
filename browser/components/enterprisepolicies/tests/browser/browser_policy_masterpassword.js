@@ -7,6 +7,25 @@ let { LoginTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 
+let { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
+let { FormAutofillUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
+);
+
+add_setup(async function () {
+  // Stub these out so we don't end up invoking the MP dialog
+  // in order to decrypt prefs to find out if these are enabled or disabled.
+  sinon.stub(FormAutofillUtils, "getOSAuthEnabled").returns(false);
+  sinon.stub(LoginHelper, "getOSAuthEnabled").returns(false);
+
+  registerCleanupFunction(async function () {
+    sinon.restore();
+  });
+});
+
 // Test that once a password is set, you can't unset it
 add_task(async function test_policy_masterpassword_set() {
   await setupPolicyEngineWithJson({

@@ -4,6 +4,9 @@ support-files = [
   "../../../../dom/security/test/csp/dummy.pdf",
 ]
 
+["browser_browserGlue_os_auth.js"]
+skip-if = ["os == 'linux'"]
+
 ["browser_browserGlue_showModal_trigger.js"]
 
 ["browser_browserGlue_telemetry.js"]
