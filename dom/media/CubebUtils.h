@@ -88,7 +88,7 @@ int CubebStreamInit(cubeb* context, cubeb_stream** stream,
                     uint32_t latency_frames, cubeb_data_callback data_callback,
                     cubeb_state_callback state_callback, void* user_ptr);
 
-enum Side { Input, Output };
+enum Side { Input = 1 << 0, Output = 1 << 1 };
 
 double GetVolumeScale();
 bool GetFirstStream();
@@ -113,7 +113,9 @@ bool RouteOutputAsVoice();
 // default input and output devices. This is for diagnosing purposes, the
 // latency figures are best used directly from the cubeb streams themselves, as
 // the devices being used matter. This is blocking.
-bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev);
+bool EstimatedLatencyDefaultDevices(
+    double* aMean, double* aStdDev,
+    Side aSide = static_cast<Side>(Side::Input | Side::Output));
 
 #  ifdef MOZ_WIDGET_ANDROID
 int32_t AndroidGetAudioOutputSampleRate();

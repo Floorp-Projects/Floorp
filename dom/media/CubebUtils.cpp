@@ -858,13 +858,16 @@ long datacb(cubeb_stream*, void*, const void*, void* out_buffer, long nframes) {
 
 void statecb(cubeb_stream*, void*, cubeb_state) {}
 
-bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
+bool EstimatedLatencyDefaultDevices(double* aMean, double* aStdDev,
+                                    Side aSide) {
   RefPtr<CubebHandle> handle = GetCubeb();
   if (!handle) {
     MOZ_LOG(gCubebLog, LogLevel::Error, ("No cubeb context, bailing."));
     return false;
   }
-  nsTArray<double> roundtripLatencies;
+  bool includeInput = aSide & Side::Input;
+  bool includeOutput = aSide & Side::Output;
+  nsTArray<double> latencies;
   // Create a cubeb stream with the correct latency and default input/output
   // devices (mono/stereo channels). Wait for two seconds, get the latency a few
   // times.
@@ -924,8 +927,10 @@ bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
       continue;
     }
 
-    double roundTrip = static_cast<double>(outputLatency + inputLatency) / rate;
-    roundtripLatencies.AppendElement(roundTrip);
+    double latency = static_cast<double>((includeInput ? inputLatency : 0) +
+                                         (includeOutput ? outputLatency : 0)) /
+                     rate;
+    latencies.AppendElement(latency);
   }
   rv = cubeb_stream_stop(stm);
   if (rv != CUBEB_OK) {
@@ -935,21 +940,21 @@ bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
   *aMean = 0.0;
   *aStdDev = 0.0;
   double variance = 0.0;
-  for (uint32_t i = 0; i < roundtripLatencies.Length(); i++) {
-    *aMean += roundtripLatencies[i];
+  for (uint32_t i = 0; i < latencies.Length(); i++) {
+    *aMean += latencies[i];
   }
 
-  *aMean /= roundtripLatencies.Length();
+  *aMean /= latencies.Length();
 
-  for (uint32_t i = 0; i < roundtripLatencies.Length(); i++) {
-    variance += pow(roundtripLatencies[i] - *aMean, 2.);
+  for (uint32_t i = 0; i < latencies.Length(); i++) {
+    variance += pow(latencies[i] - *aMean, 2.);
   }
-  variance /= roundtripLatencies.Length();
+  variance /= latencies.Length();
 
   *aStdDev = sqrt(variance);
 
   MOZ_LOG(gCubebLog, LogLevel::Debug,
-          ("Default device roundtrip latency in seconds %lf (stddev: %lf)",
+          ("Default devices latency in seconds %lf (stddev: %lf)",
            *aMean, *aStdDev));
 
   cubeb_stream_destroy(stm);

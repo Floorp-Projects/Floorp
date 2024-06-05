@@ -43,6 +43,8 @@
 #include "mozilla/dom/MediaDeviceInfoBinding.h"
 #include "mozilla/MozPromise.h"
 #include "nsThreadUtils.h"
+#include "CubebDeviceEnumerator.h"
+#include "mozilla/media/MediaUtils.h"
 
 #include "gfxPlatformFontList.h"
 #include "prsystem.h"
@@ -444,6 +446,74 @@ RefPtr<VoidPromise> PopulateMediaDevices() {
   return voidPromise;
 }
 
+RefPtr<VoidPromise> PopulateAudioDeviceProperties() {
+  RefPtr<VoidPromise> voidPromise = new VoidPromise(__func__);
+
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction("PopulateAudioDeviceProperties", [=]() {
+        RefPtr<CubebDeviceEnumerator> enumerator =
+            CubebDeviceEnumerator::GetInstance();
+        RefPtr<const CubebDeviceEnumerator::AudioDeviceSet> devices;
+
+        nsCString output = "{"_ns;
+
+        nsCString list = "["_ns;
+        devices = enumerator->EnumerateAudioInputDevices();
+        for (const auto& deviceInfo : *devices) {
+          uint32_t maxChannels;
+          deviceInfo->GetMaxChannels(&maxChannels);
+
+          list.AppendPrintf(R"({"rate":%d,"channels":%d)",
+                            deviceInfo->DefaultRate(), maxChannels);
+          if (deviceInfo->Preferred()) {
+            list.Append(",\"default\":1");
+          }
+          list.Append("}");
+
+          if (&deviceInfo != &devices->LastElement()) {
+            list.Append(',');
+          }
+        }
+        list.Append(']');
+
+        output.AppendPrintf(R"("devices":%s,)", list.get());
+
+        double inputMean, inputStdDev, outputMean, outputStdDev;
+        CubebUtils::EstimatedLatencyDefaultDevices(&inputMean, &inputStdDev,
+                                                   CubebUtils::Side::Input);
+        CubebUtils::EstimatedLatencyDefaultDevices(&outputMean, &outputStdDev,
+                                                   CubebUtils::Side::Output);
+
+        cubeb_stream_params output_params;
+        output_params.format = CUBEB_SAMPLE_FLOAT32NE;
+        output_params.rate = CubebUtils::PreferredSampleRate(false);
+        output_params.channels = 2;
+        output_params.layout = CUBEB_LAYOUT_UNDEFINED;
+        output_params.prefs =
+            CubebUtils::GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_OUTPUT);
+
+        uint32_t latencyFrames =
+            CubebUtils::GetCubebMTGLatencyInFrames(&output_params);
+        RefPtr<AudioDeviceInfo> defaultOutputDevice =
+            enumerator->DefaultDevice(CubebDeviceEnumerator::Side::OUTPUT);
+        output.AppendPrintf(
+            R"("latency":[%f,%f,%f,%f],"latFrames":%d,"rate":%u,"channels":%u)",
+            inputMean, inputStdDev, outputMean, outputStdDev, latencyFrames,
+            defaultOutputDevice->DefaultRate(),
+            defaultOutputDevice->MaxChannels());
+
+        output.Append("}");
+
+        glean::characteristics::audio_devices.Set(output);
+
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "PopulateAudioDeviceProperties",
+            [=]() { voidPromise->Resolve(void_t(), __func__); }));
+      }));
+
+  return voidPromise;
+}
+
 // ==================================================================
 // The current schema of the data. Anytime you add a metric, or change how a
 // metric is set, this variable should be incremented. It'll be a lot. It's
@@ -579,6 +649,7 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     PopulateFontPrefs();
     PopulateScaling();
     promises.AppendElement(PopulateMediaDevices());
+    promises.AppendElement(PopulateAudioDeviceProperties());
 
     glean::characteristics::target_frame_rate.Set(
         gfxPlatform::TargetFrameRate());
