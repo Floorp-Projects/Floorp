@@ -901,7 +901,7 @@ async function checkLoadedScripts({
   }
 
   for (let scriptType in known) {
-    loadedList[scriptType] = Object.keys(loadedInfo[scriptType]).filter(c => {
+    loadedList[scriptType] = [...loadedInfo[scriptType].keys()].filter(c => {
       if (!known[scriptType].has(c)) {
         return true;
       }
@@ -909,7 +909,7 @@ async function checkLoadedScripts({
       return false;
     });
 
-    loadedList[scriptType] = loadedList[scriptType].filter(c => {
+    loadedList[scriptType] = [...loadedList[scriptType]].filter(c => {
       return !intermittent[scriptType].has(c);
     });
 
@@ -927,7 +927,7 @@ async function checkLoadedScripts({
         false,
         `Unexpected ${scriptType} loaded during content process startup: ${script}`,
         undefined,
-        loadedInfo[scriptType][script]
+        loadedInfo[scriptType].get(script)
       );
     }
 
@@ -948,12 +948,10 @@ async function checkLoadedScripts({
 
     if (dumpAllStacks) {
       info(`Stacks for all loaded ${scriptType}:`);
-      for (let file in loadedInfo[scriptType]) {
-        if (loadedInfo[scriptType][file]) {
+      for (let [file, stack] of loadedInfo[scriptType]) {
+        if (stack) {
           info(
-            `${file}\n------------------------------------\n` +
-              loadedInfo[scriptType][file] +
-              "\n"
+            `${file}\n------------------------------------\n` + stack + "\n"
           );
         }
       }
@@ -962,13 +960,13 @@ async function checkLoadedScripts({
 
   for (let scriptType in forbidden) {
     for (let script of forbidden[scriptType]) {
-      let loaded = script in loadedInfo[scriptType];
+      let loaded = loadedInfo[scriptType].has(script);
       if (loaded) {
         record(
           false,
           `Forbidden ${scriptType} loaded during content process startup: ${script}`,
           undefined,
-          loadedInfo[scriptType][script]
+          loadedInfo[scriptType].get(script)
         );
       }
     }
