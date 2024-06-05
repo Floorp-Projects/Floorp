@@ -54,7 +54,10 @@ let DebugUI = {
         break;
       }
       case "open-backup-folder": {
-        let backupsDir = PathUtils.join(PathUtils.profileDir, "backups");
+        let backupsDir = PathUtils.join(
+          PathUtils.profileDir,
+          BackupService.PROFILE_FOLDER_NAME
+        );
 
         let nsLocalFile = Components.Constructor(
           "@mozilla.org/file/local;1",
@@ -71,7 +74,10 @@ let DebugUI = {
         break;
       }
       case "recover-from-staging": {
-        let backupsDir = PathUtils.join(PathUtils.profileDir, "backups");
+        let backupsDir = PathUtils.join(
+          PathUtils.profileDir,
+          BackupService.PROFILE_FOLDER_NAME
+        );
         let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
           Ci.nsIFilePicker
         );
