@@ -8,14 +8,15 @@
 #define mozilla_VideoEngine_h
 
 #include "MediaEngine.h"
+#include "video_engine/video_capture_factory.h"
 #include "VideoFrameUtils.h"
 #include "mozilla/media/MediaUtils.h"
 #include "modules/video_capture/video_capture.h"
 #include <memory>
 #include <functional>
 
-namespace mozilla {
-class VideoCaptureFactory;
+namespace webrtc {
+class DesktopCaptureImpl;
 }
 
 namespace mozilla::camera {
@@ -98,13 +99,16 @@ class VideoEngine {
   class CaptureEntry {
    public:
     CaptureEntry(int32_t aCapnum,
-                 rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture);
+                 rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
+                 webrtc::DesktopCaptureImpl* aDesktopImpl);
     int32_t Capnum() const;
     rtc::scoped_refptr<webrtc::VideoCaptureModule> VideoCapture();
+    mozilla::MediaEventSource<void>* CaptureEndedEvent();
 
    private:
     int32_t mCapnum;
     rtc::scoped_refptr<webrtc::VideoCaptureModule> mVideoCaptureModule;
+    webrtc::DesktopCaptureImpl* mDesktopImpl = nullptr;
     friend class VideoEngine;
   };
 
