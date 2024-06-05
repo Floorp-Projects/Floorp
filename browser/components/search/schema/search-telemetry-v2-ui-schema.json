@@ -19,6 +19,8 @@
     "nonAdsLinkRegexps",
     "shoppingTab",
     "domainExtraction",
+    "accountCookies",
+    "signedInCookies",
     "isSPA",
     "defaultPageQueryParam"
   ]
