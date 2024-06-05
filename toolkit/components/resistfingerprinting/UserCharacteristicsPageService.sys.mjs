@@ -185,12 +185,39 @@ export class UserCharacteristicsPageService {
         lazy.console.debug(`Data:`, data.output);
 
         lazy.console.debug("Populating Glean metrics...");
-        Glean.characteristics.timezone.set(data.output.foo);
 
         for (let gamepad of data.output.gamepads) {
           Glean.characteristics.gamepads.add(gamepad);
         }
+
         Glean.characteristics.zoomCount.set(await this.populateZoomPrefs());
+
+        try {
+          Glean.characteristics.canvasdata1.set(data.output.canvas1data);
+          Glean.characteristics.canvasdata2.set(data.output.canvas2data);
+          Glean.characteristics.canvasdata3.set(data.output.canvas3data);
+          Glean.characteristics.canvasdata4.set(data.output.canvas4data);
+          Glean.characteristics.canvasdata5.set(data.output.canvas5data);
+          Glean.characteristics.canvasdata6.set(data.output.canvas6data);
+          Glean.characteristics.canvasdata7.set(data.output.canvas7data);
+          Glean.characteristics.canvasdata8.set(data.output.canvas8data);
+          Glean.characteristics.canvasdata9.set(data.output.canvas9data);
+          Glean.characteristics.canvasdata10.set(data.output.canvas10data);
+          Glean.characteristics.canvasdata11Webgl.set(data.output.glcanvasdata);
+          Glean.characteristics.canvasdata12Fingerprintjs1.set(
+            data.output.fingerprintjscanvas1data
+          );
+          Glean.characteristics.canvasdata13Fingerprintjs2.set(
+            data.output.fingerprintjscanvas2data
+          );
+
+        } catch (e) {
+          // Grab the exception and send it to the console
+          // (we don't see it otherwise)
+          lazy.console.debug(e);
+          // But still fail
+          throw e;
+        }
 
         lazy.console.debug("Unregistering actor");
         Services.obs.notifyObservers(
