@@ -1877,6 +1877,8 @@ class SchemaAPIManager extends EventEmitter {
       ExtensionAPI,
       ExtensionAPIPersistent,
       ExtensionCommon,
+      Glean,
+      GleanPings,
       IOUtils,
       MatchGlob,
       MatchPattern,

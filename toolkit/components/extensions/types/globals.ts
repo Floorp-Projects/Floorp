@@ -11,6 +11,7 @@ declare global {
   const Cu: nsXPCComponents_Utils & nsIXPCComponents_Utils;
 
   const Glean: GleanImpl;
+  const GleanPings: GleanPingsImpl;
   const Services: JSServices;
   const uneval: (any) => string;
 }
