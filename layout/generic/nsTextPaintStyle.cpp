@@ -226,11 +226,12 @@ void nsTextPaintStyle::GetTargetTextColors(nscolor* aForeColor,
         &nsStyleBackground::mBackgroundColor);
     return;
   }
-  // XXX(:jjaschke): Before shipping this feature, a sensible set of colors must
-  // be set (Bug 1867940).
-  // in the meantime, use the colors of find selection.
-  GetHighlightColors(aForeColor, aBackColor);
+  *aBackColor =
+      LookAndFeel::Color(LookAndFeel::ColorID::TargetTextBackground, mFrame);
+  *aForeColor =
+      LookAndFeel::Color(LookAndFeel::ColorID::TargetTextForeground, mFrame);
 }
+
 bool nsTextPaintStyle::GetCustomHighlightTextColor(nsAtom* aHighlightName,
                                                    nscolor* aForeColor) {
   NS_ASSERTION(aForeColor, "aForeColor is null");

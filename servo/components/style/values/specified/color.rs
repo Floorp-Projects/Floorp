@@ -365,6 +365,10 @@ pub enum SystemColor {
     #[css(skip)]
     TextHighlightForeground,
     #[css(skip)]
+    TargetTextBackground,
+    #[css(skip)]
+    TargetTextForeground,
+    #[css(skip)]
     IMERawInputBackground,
     #[css(skip)]
     IMERawInputForeground,
