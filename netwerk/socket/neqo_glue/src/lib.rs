@@ -12,7 +12,7 @@ use neqo_http3::{
     Http3ClientEvent, Http3Parameters, Http3State, Priority, WebTransportEvent,
 };
 use neqo_transport::{
-    stream_id::StreamType, CongestionControlAlgorithm, ConnectionParameters,
+    stream_id::StreamType, CongestionControlAlgorithm, Connection, ConnectionParameters,
     Error as TransportError, Output, RandomConnectionIdGenerator, StreamId, Version,
 };
 use nserror::*;
@@ -182,17 +182,19 @@ impl NeqoHttp3Conn {
             .webtransport(webtransport)
             .http3_datagram(webtransport);
 
-        let mut conn = match Http3Client::new(
+        let Ok(mut conn) = Connection::new_client(
             origin_conv,
+            &[alpn_conv],
             Rc::new(RefCell::new(RandomConnectionIdGenerator::new(3))),
             local,
             remote,
-            http3_settings,
+            http3_settings.get_connection_parameters().clone(),
             Instant::now(),
-        ) {
-            Ok(c) => c,
-            Err(_) => return Err(NS_ERROR_INVALID_ARG),
+        ) else {
+            return Err(NS_ERROR_INVALID_ARG);
         };
+
+        let mut conn = Http3Client::new_with_conn(conn, http3_settings);
 
         if !qlog_dir.is_empty() {
             let qlog_dir_conv = str::from_utf8(qlog_dir).map_err(|_| NS_ERROR_INVALID_ARG)?;
