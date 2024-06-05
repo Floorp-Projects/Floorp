@@ -77,6 +77,48 @@ add_task(async function test_download_api_can_be_blocked_by_dnr() {
   Assert.equal(downloadReqCount, 0, "Did not expect any download requests");
 });
 
+// This tests verifies which domainType is expected to be set on requests
+// triggered by an extension through the downloads API.
+add_task(async function test_download_api_requests_domainType() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["declarativeNetRequest", "downloads"],
+    },
+    // Not needed, but to rule out downloads being blocked by CSP:
+    allowInsecureRequests: true,
+    background: async function () {
+      await browser.declarativeNetRequest.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: {
+              urlFilter: "|http://example.com/downloadtest",
+              domainType: "thirdParty",
+            },
+            action: { type: "block" },
+          },
+        ],
+      });
+      browser.downloads.onChanged.addListener(delta => {
+        browser.test.assertEq(delta.state.current, "interrupted");
+        browser.test.sendMessage("download:done");
+      });
+
+      await browser.downloads.download({
+        url: "http://example.com/downloadtest",
+        filename: "example.txt",
+      });
+    },
+  });
+
+  downloadReqCount = 0;
+  await extension.startup();
+  await extension.awaitMessage("download:done");
+  await extension.unload();
+  Assert.equal(downloadReqCount, 0, "Did not expect any download requests");
+});
+
 add_task(async function test_download_api_ignores_dnr_from_other_extension() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

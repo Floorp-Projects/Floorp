@@ -1136,6 +1136,149 @@ add_task(async function match_initiator_moz_extension() {
   await extension.unload();
 });
 
+add_task(async function match_domainType() {
+  await runAsDNRExtension({
+    manifest: { browser_specific_settings: { gecko: { id: "other@ext" } } },
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { makeDummyAction, testMatchesRequest } = dnrTestUtils;
+
+      const action = makeDummyAction("block");
+      const firstPartyRule = {
+        id: 1,
+        condition: { domainType: "firstParty" },
+        action,
+      };
+      const thirdPartyRule = {
+        id: 2,
+        condition: { domainType: "thirdParty" },
+        action,
+      };
+      await dnr.updateSessionRules({
+        addRules: [firstPartyRule, thirdPartyRule],
+      });
+      const expectFirstPartyRuleId = [firstPartyRule.id];
+      const expectThirdPartyRuleId = [thirdPartyRule.id];
+
+      const type = "other";
+      await testMatchesRequest(
+        {
+          initiator: `https://bbc.co.uk/`,
+          url: `https://player.bbc.co.uk/`,
+          type,
+        },
+        expectFirstPartyRuleId,
+        "expect firstParty rule matched when the request domain is a subdomain of the initiator domain"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `https://player.bbc.co.uk/`,
+          url: `https://bbc.co.uk/`,
+          type,
+        },
+        expectFirstPartyRuleId,
+        "expect firstParty rule matched when the initiator domain is a subdomain of the request domain"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `http://player.bbc.co.uk/`,
+          url: `https://othersubdomain.bbc.co.uk/`,
+          type,
+        },
+        expectFirstPartyRuleId,
+        "expect firstParty rule matched when the initiator and request domain share the same base domain"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `http://192.168.1.1:8080/`,
+          url: `http://192.168.1.1:3000/`,
+          type,
+        },
+        expectFirstPartyRuleId,
+        "expect firstParty rule matched when the request and initiator urls share the same ipv4 address"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `http://[::1]:4444/`,
+          url: `http://[::1]:6666/`,
+          type,
+        },
+        expectFirstPartyRuleId,
+        "expect firstParty rule matched when the request and initiator urls share the same ipv6 address"
+      );
+
+      await testMatchesRequest(
+        {
+          initiator: `https://developer.mozilla.org/`,
+          url: `https://example.org/`,
+          type,
+        },
+        expectThirdPartyRuleId,
+        "expect third party rule matched when the initiator and request domain are different domains"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `https://someotheruser.github.io/`,
+          url: `https://mozilla.github.io/`,
+          type,
+        },
+        expectThirdPartyRuleId,
+        "expect third party rule matched when the initiator and request domain are different domain sharing the same eTLD"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `https://developer.mozilla.org/`,
+          url: `https://example.org/`,
+          type,
+        },
+        expectThirdPartyRuleId,
+        "expect third party rule matched when the initiator and request domain are different domains"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `http://192.168.1.1/`,
+          url: `http://192.168.1.5/`,
+          type,
+        },
+        expectThirdPartyRuleId,
+        "expect thirdParty rule matched when the request and initiator urls do not share the same ipv4 address"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `http://[::1]/`,
+          url: `http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]/`,
+          type,
+        },
+        expectThirdPartyRuleId,
+        "expect thirdParty rule matched when the request and initiator urls do not share the same ipv6 address"
+      );
+
+      // NOTE: Cover corner cases where Services.eTLD.getBaseDomain is expected to be hitting a NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
+      // on "http://com" URIs.
+      await testMatchesRequest(
+        {
+          initiator: `http://com`,
+          url: `http://com`,
+          type,
+        },
+        expectFirstPartyRuleId,
+        "expect first party rule matched when initial and request domain are the same (insufficient subdomain levels in initiator and url)"
+      );
+      await testMatchesRequest(
+        {
+          initiator: `http://example.com`,
+          url: `http://com`,
+          type,
+        },
+        expectThirdPartyRuleId,
+        "expect third party rule matched when initial and request domain are different (insufficient subdomain levels in url)"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
 // Tests: urlFilter. For more comprehensive tests, see
 // toolkit/components/extensions/test/xpcshell/test_ext_dnr_urlFilter.js
 add_task(async function match_urlFilter() {

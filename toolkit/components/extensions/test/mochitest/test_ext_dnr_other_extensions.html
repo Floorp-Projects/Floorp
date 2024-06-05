@@ -108,6 +108,183 @@ add_task(async function tabs_create_can_be_redirected_by_other_dnr_extension() {
   await extension.unload();
 });
 
+add_task(async function test_tabs_create_request_domainType() {
+  function promiseHttpOnStopRequest(url, msg = `request ${url}`) {
+    const chromeScript = SpecialPowers.loadChromeScript(() => {
+      /* global addMessageListener, sendAsyncMessage */
+      addMessageListener("promiseHttpOnStopRequest", ([url, msg]) => {
+        const {TestUtils} = ChromeUtils.importESModule(
+          "resource://testing-common/TestUtils.sys.mjs"
+        );
+        TestUtils.topicObserved("http-on-stop-request", s => {
+          const chan = s.QueryInterface(Ci.nsIHttpChannel);
+          return chan.URI.spec === url;
+        }).then(([chan]) => {
+            if (!chan.canceled) {
+              const { responseStatus } = chan;
+              info(
+                `Got http-on-stop-request for ${msg}, responseStatus ${responseStatus}`
+              );
+              return { responseStatus };
+            }
+            let blockingReason = chan.loadInfo.requestBlockingReason;
+            info(
+              `Got http-on-stop-request for ${msg}, blockingReason ${blockingReason}`
+            );
+            let addonId;
+            try {
+              const props = chan.QueryInterface(Ci.nsIPropertyBag);
+              addonId = props.getProperty("cancelledByExtension");
+            } catch (err) {
+              // Channel may not have a property bag and chan.QueryInterface.
+            }
+            return { addonId, blockingReason };
+          }).then(res => {
+            sendAsyncMessage("promiseHttpOnStopRequest:resolve", res);
+          });
+      });
+    });
+    const deferred = Promise.withResolvers();
+    chromeScript.addMessageListener("promiseHttpOnStopRequest:resolve", deferred.resolve);
+    chromeScript.sendAsyncMessage("promiseHttpOnStopRequest", [url, msg]);
+
+    return deferred.promise;
+  }
+
+  let dnrExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["declarativeNetRequest"],
+    },
+    async background() {
+      const {id} = browser.runtime;
+      let tab;
+      browser.test.onMessage.addListener(async msg => {
+        switch (msg) {
+          case "create_tab":
+            tab = await browser.tabs.create({
+              url: `https://example.com/?try_to_block_me&fromAddon=${id}`
+            });
+            break;
+          case "remove_tab":
+            await browser.tabs.remove(tab.id);
+            break;
+          default:
+            browser.test.fail(`Got unexpected test message ${msg}`);
+        }
+        browser.test.sendMessage(`${msg}:done`);
+      });
+      await browser.declarativeNetRequest.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: {
+              resourceTypes: ["main_frame"],
+              urlFilter: "?try_to_block_me",
+              domainType: "thirdParty"
+            },
+            action: {
+              type: "block",
+            },
+          },
+        ],
+      });
+      browser.test.sendMessage("bg:ready");
+    },
+  });
+
+  let tabExtension = ExtensionTestUtils.loadExtension({
+    background() {
+      const {id} = browser.runtime;
+      let tab;
+      browser.test.onMessage.addListener(async msg => {
+        switch (msg) {
+          case "create_tab":
+            tab = await browser.tabs.create({
+              url: `https://example.com/?try_to_block_me&fromAddon=${id}`
+            });
+            break;
+          case "remove_tab":
+            await browser.tabs.remove(tab.id);
+            break;
+          default:
+            browser.test.fail(`Got unexpected test message ${msg}`);
+        }
+        browser.test.sendMessage(`${msg}:done`);
+      });
+      browser.test.sendMessage("bg:ready");
+    }
+  });
+
+  info("Test tabs.create originated from the same DNR extension");
+  await dnrExtension.startup();
+  await dnrExtension.awaitMessage("bg:ready");
+
+  {
+    const promiseStopRequest = promiseHttpOnStopRequest(
+      `https://example.com/?try_to_block_me&fromAddon=${dnrExtension.id}`
+    );
+    dnrExtension.sendMessage("create_tab")
+    await dnrExtension.awaitMessage("create_tab:done");
+    const result = await promiseStopRequest;
+    isDeeply(
+      result,
+      {
+        addonId: dnrExtension.id,
+        blockingReason: SpecialPowers.Ci.nsILoadInfo.BLOCKING_REASON_EXTENSION_WEBREQUEST,
+      },
+      "Expect tabs.create originated from DNR extension to be blocked"
+    );
+    dnrExtension.sendMessage("remove_tab")
+    await dnrExtension.awaitMessage("remove_tab:done");
+  }
+
+  info("Test tabs.create originated from another extension");
+  await tabExtension.startup();
+  await tabExtension.awaitMessage("bg:ready");
+
+  {
+    const promiseStopRequest = promiseHttpOnStopRequest(
+      `https://example.com/?try_to_block_me&fromAddon=${tabExtension.id}`
+    );
+    tabExtension.sendMessage("create_tab")
+    await tabExtension.awaitMessage("create_tab:done");
+    const result = await promiseStopRequest;
+    isDeeply(
+      result,
+      {
+        addonId: dnrExtension.id,
+        blockingReason: SpecialPowers.Ci.nsILoadInfo.BLOCKING_REASON_EXTENSION_WEBREQUEST,
+      },
+      "Expect tabs.create originated from other extension to be blocked"
+    );
+    tabExtension.sendMessage("remove_tab")
+    await tabExtension.awaitMessage("remove_tab:done");
+  }
+
+  info("Test tab created by the user through the Browser");
+
+  {
+    const promiseStopRequest = promiseHttpOnStopRequest(
+      `https://example.com/?try_to_block_me&fromUser`
+    );
+    // TODO: use AppTestDelegate.openNewForegroundTab once Bug 1900831 is fixed.
+    const newWin = window.open(`https://example.com/?try_to_block_me&fromUser`);
+    const result = await promiseStopRequest;
+    isDeeply(
+      result,
+      {
+        addonId: dnrExtension.id,
+        blockingReason: SpecialPowers.Ci.nsILoadInfo.BLOCKING_REASON_EXTENSION_WEBREQUEST,
+      },
+      "Expect tab created by the user to be blocked"
+    );
+    newWin.close();
+  }
+
+  await dnrExtension.unload();
+  await tabExtension.unload();
+});
+
 </script>
 </body>
 </html>
