@@ -70,7 +70,7 @@ desktop-frontend:
         stick on central.
     selector: fuzzy
     query:
-        # Runs 64-bit frontend-tests, plus win7. Tries to avoid running
+        # Runs desktop frontend-tests. Tries to avoid running
         # asan/tsan because they're not available as artifact builds, and
         # rarely offer different results from debug/opt. It also avoids running
         # msix/swr/a11y-checks/gpu/nofis/headless variants of otherwise
@@ -78,12 +78,12 @@ desktop-frontend:
         # results for frontend-only changes.
         # This won't run 32-bit debug tests, which seems an acceptable
         # trade-off for query complexity + runtime on infrastructure.
-        - "'browser-chrome                 'windows7 | '64 !spi !asan !tsan !msix !a11y !swr | 'linux"
-        - "'mochitest-chrome               'windows7 | '64 !spi !asan !tsan             !swr !gpu"
-        - "'xpcshell                       'windows7 | '64 !spi !asan !tsan !msix !nofis !condprof !android"
-        - "'browser-a11y | 'mochitest-a11y 'windows7 | '64 !spi !asan !tsan !no-cache   !swr"
-        - "'marionette                     'windows7 | '64      !asan       !source !headless !swr"
-        - "'firefox-ui-functional          'windows7 | '64      !asan !tsan"
+        - "'browser-chrome                 !spi !asan !tsan !msix !a11y !swr | 'linux"
+        - "'mochitest-chrome               !spi !asan !tsan             !swr !gpu"
+        - "'xpcshell                       !spi !asan !tsan !msix !nofis !condprof !android"
+        - "'browser-a11y | 'mochitest-a11y !spi !asan !tsan !no-cache   !swr"
+        - "'marionette                          !asan       !source !headless !swr"
+        - "'firefox-ui-functional               !asan !tsan"
 
 devtools:
     selector: fuzzy
@@ -218,7 +218,7 @@ mochitest-bc:
         tsan, msix, etc.) and some non-default configurations. For frontend
         only changes, use this with --artifact to speed up your trypushes.
     query:
-        - "'browser-chrome 'windows7 | '64 !tsan !asan !msix !spi !a11y !swr | 'linux"
+        - "'browser-chrome !tsan !asan !msix !spi !a11y !swr | 'linux"
     selector: fuzzy
 
 perf:
