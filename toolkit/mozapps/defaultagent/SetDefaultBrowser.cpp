@@ -178,45 +178,77 @@ static bool SetUserChoiceRegistry(const wchar_t* aExt, const wchar_t* aProgID,
   }
   nsAutoRegKey assocKey(rawAssocKey);
 
-  // When Windows creates this key, it is read-only (Deny Set Value), so we need
-  // to delete it first.
-  // We don't set any similar special permissions.
-  ls = ::RegDeleteKeyW(assocKey.get(), L"UserChoice");
+  // Registry keys in the HKCU should be writable by applications run by the
+  // hive owning user and should not be lockable -
+  // https://web.archive.org/web/20230308044345/https://devblogs.microsoft.com/oldnewthing/20090326-00/?p=18703.
+  // Unfortunately some kernel drivers lock a set of protocol and file
+  // association keys; those locks appear to be based on the specific key
+  // names. Renaming a non-locked ancestor is sufficient to fix this.
+  nsAutoString tempName =
+      u""_ns MOZ_APP_DISPLAYNAME u"-"_ns +
+      NS_ConvertASCIItoUTF16(nsID::GenerateUUID().ToString().get());
+  ls = ::RegRenameKey(assocKey.get(), nullptr, tempName.get());
   if (ls != ERROR_SUCCESS) {
     LOG_ERROR(HRESULT_FROM_WIN32(ls));
     return false;
   }
 
-  HKEY rawUserChoiceKey;
-  ls = ::RegCreateKeyExW(assocKey.get(), L"UserChoice", 0, nullptr,
-                         0 /* options */, KEY_READ | KEY_WRITE,
-                         0 /* security attributes */, &rawUserChoiceKey,
-                         nullptr);
+  auto subkeysUpdated = [&] {
+    // Windows file association keys are read-only (Deny Set Value) for the
+    // User, meaning they can not be modified but can be deleted and recreated.
+    // We don't set any similar special permissions. Note: this only applies to
+    // file associations, not URL protocols.
+    if (aExt && aExt[0] == '.') {
+      ls = ::RegDeleteKeyW(assocKey.get(), L"UserChoice");
+      if (ls != ERROR_SUCCESS) {
+        LOG_ERROR(HRESULT_FROM_WIN32(ls));
+        return false;
+      }
+    }
+
+    HKEY rawUserChoiceKey;
+    ls = ::RegCreateKeyExW(assocKey.get(), L"UserChoice", 0, nullptr,
+                           0 /* options */, KEY_READ | KEY_WRITE,
+                           0 /* security attributes */, &rawUserChoiceKey,
+                           nullptr);
+    if (ls != ERROR_SUCCESS) {
+      LOG_ERROR(HRESULT_FROM_WIN32(ls));
+      return false;
+    }
+    nsAutoRegKey userChoiceKey(rawUserChoiceKey);
+
+    DWORD progIdByteCount = (::lstrlenW(aProgID) + 1) * sizeof(wchar_t);
+    ls = ::RegSetValueExW(userChoiceKey.get(), L"ProgID", 0, REG_SZ,
+                          reinterpret_cast<const unsigned char*>(aProgID),
+                          progIdByteCount);
+    if (ls != ERROR_SUCCESS) {
+      LOG_ERROR(HRESULT_FROM_WIN32(ls));
+      return false;
+    }
+
+    DWORD hashByteCount = (::lstrlenW(aHash.get()) + 1) * sizeof(wchar_t);
+    ls = ::RegSetValueExW(userChoiceKey.get(), L"Hash", 0, REG_SZ,
+                          reinterpret_cast<const unsigned char*>(aHash.get()),
+                          hashByteCount);
+    if (ls != ERROR_SUCCESS) {
+      LOG_ERROR(HRESULT_FROM_WIN32(ls));
+      return false;
+    }
+
+    return true;
+  }();
+
+  // Rename back regardless of whether we successfully modified the subkeys to
+  // minimally attempt to return the registry the way we found it. If this
+  // fails the afformetioned kernel drivers have likely changed and there's
+  // little we can do to anticipate what proper recovery should look like.
+  ls = ::RegRenameKey(assocKey.get(), nullptr, aExt);
   if (ls != ERROR_SUCCESS) {
     LOG_ERROR(HRESULT_FROM_WIN32(ls));
     return false;
   }
-  nsAutoRegKey userChoiceKey(rawUserChoiceKey);
 
-  DWORD progIdByteCount = (::lstrlenW(aProgID) + 1) * sizeof(wchar_t);
-  ls = ::RegSetValueExW(userChoiceKey.get(), L"ProgID", 0, REG_SZ,
-                        reinterpret_cast<const unsigned char*>(aProgID),
-                        progIdByteCount);
-  if (ls != ERROR_SUCCESS) {
-    LOG_ERROR(HRESULT_FROM_WIN32(ls));
-    return false;
-  }
-
-  DWORD hashByteCount = (::lstrlenW(aHash.get()) + 1) * sizeof(wchar_t);
-  ls = ::RegSetValueExW(userChoiceKey.get(), L"Hash", 0, REG_SZ,
-                        reinterpret_cast<const unsigned char*>(aHash.get()),
-                        hashByteCount);
-  if (ls != ERROR_SUCCESS) {
-    LOG_ERROR(HRESULT_FROM_WIN32(ls));
-    return false;
-  }
-
-  return true;
+  return subkeysUpdated;
 }
 
 struct LaunchExeErr {};
