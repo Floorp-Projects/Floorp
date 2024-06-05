@@ -238,6 +238,39 @@ JumpListBuilder::ObtainAndCacheFavicon(nsIURI* aFaviconURI,
 }
 
 NS_IMETHODIMP
+JumpListBuilder::ObtainAndCacheFaviconAsync(nsIURI* aFaviconURI, JSContext* aCx,
+                                            Promise** aPromise) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPromise);
+  MOZ_ASSERT(mIOThread);
+
+  ErrorResult result;
+  RefPtr<Promise> promise =
+      Promise::Create(xpc::CurrentNativeGlobal(aCx), result);
+
+  if (MOZ_UNLIKELY(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  nsMainThreadPtrHandle<Promise> promiseHolder(
+      new nsMainThreadPtrHolder<Promise>(
+          "JumpListBuilder::ObtainAndCacheFaviconAsync promise", promise));
+
+  mozilla::widget::FaviconHelper::ObtainCachedIconFileAsync(
+      aFaviconURI, mIOThread,
+      mozilla::widget::FaviconHelper::IconCacheDir::JumpListCacheDir)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise](nsString aIcoFilePath) {
+            promise->MaybeResolve(aIcoFilePath);
+          },
+          [promise](nsresult aResult) { promise->MaybeReject(aResult); });
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 JumpListBuilder::IsAvailable(JSContext* aCx, Promise** aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPromise);
