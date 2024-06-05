@@ -169,7 +169,7 @@ export class UserCharacteristicsPageService {
         };
 
         let userCharacteristicsPageURI = Services.io.newURI(
-          "about:fingerprinting"
+          "about:fingerprintingprotection"
         );
 
         browser.loadURI(userCharacteristicsPageURI, loadURIOptions);
