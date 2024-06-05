@@ -39,7 +39,6 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
 export const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
-const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot", "customScreenshot"];
 const PINNED_FAVICON_PROPS_TO_MIGRATE = [
   "favicon",
   "faviconRef",
@@ -94,7 +93,7 @@ class _TopSites {
     this.frecentCache = new lazy.LinksCache(
       lazy.NewTabUtils.activityStreamLinks,
       "getTopSites",
-      CACHED_LINK_PROPS_TO_MIGRATE,
+      [],
       (oldOptions, newOptions) =>
         // Refresh if no old options or requesting more items
         !(oldOptions.numItems >= newOptions.numItems)
@@ -102,7 +101,7 @@ class _TopSites {
     this.pinnedCache = new lazy.LinksCache(
       lazy.NewTabUtils.pinnedLinks,
       "links",
-      [...CACHED_LINK_PROPS_TO_MIGRATE, ...PINNED_FAVICON_PROPS_TO_MIGRATE]
+      [...PINNED_FAVICON_PROPS_TO_MIGRATE]
     );
     this.faviconFeed = new lazy.FaviconFeed();
     this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
@@ -692,11 +691,7 @@ class _TopSites {
         // Copy all properties from a frecent link and add more
         const finder = other => other.url === link.url;
 
-        // Remove frecent link's screenshot if pinned link has a custom one
         const frecentSite = frecent.find(finder);
-        if (frecentSite && link.customScreenshotURL) {
-          delete frecentSite.screenshot;
-        }
         // If the link is a frecent site, do not copy over 'isDefault', else check
         // if the site is a default site
         const copy = Object.assign(
@@ -897,43 +892,26 @@ class _TopSites {
     // Pinned data changed, so make sure we get latest
     this.pinnedCache.expire();
 
-    // Refresh to update pinned sites with screenshots, trigger deduping, etc.
+    // Refresh to trigger deduping, etc.
     this.refresh();
   }
 
   /**
    * Pin a site at a specific position saving only the desired keys.
    *
-   * @param customScreenshotURL {string} User set URL of preview image for site
    * @param label {string} User set string of custom site name
    */
   // To refactor in Bug 1891997
   /* eslint-enable jsdoc/check-param-names */
-  async _pinSiteAt({ customScreenshotURL, label, url, searchTopSite }, index) {
+  async _pinSiteAt({ label, url, searchTopSite }, index) {
     const toPin = { url };
     if (label) {
       toPin.label = label;
-    }
-    if (customScreenshotURL) {
-      toPin.customScreenshotURL = customScreenshotURL;
     }
     if (searchTopSite) {
       toPin.searchTopSite = searchTopSite;
     }
     lazy.NewTabUtils.pinnedLinks.pin(toPin, index);
-
-    await this._clearLinkCustomScreenshot({ customScreenshotURL, url });
-  }
-
-  async _clearLinkCustomScreenshot(site) {
-    // If screenshot url changed or was removed we need to update the cached link obj
-    if (site.customScreenshotURL !== undefined) {
-      const pinned = await this.pinnedCache.request();
-      const link = pinned.find(pin => pin && pin.url === site.url);
-      if (link && link.customScreenshotURL !== site.customScreenshotURL) {
-        link.__sharedCache.updateLink("screenshot", undefined);
-      }
-    }
   }
 
   /**
@@ -1088,7 +1066,6 @@ class _TopSites {
             TOP_SITES_MAX_SITES_PER_ROW
     );
 
-    await this._clearLinkCustomScreenshot(action.data.site);
     this._broadcastPinnedSitesUpdated();
   }
 
