@@ -13591,7 +13591,9 @@
   mirror: never
 
 # Enable off-main-thread decompression of network streams
-- name: network.decompression_off_mainthread
+# Note:network.decompression_off_mainthread triggered a bug, so
+# we switched to a new pref that can be turned off safely
+- name: network.decompression_off_mainthread2
   type: bool
   value: true
   mirror: always
