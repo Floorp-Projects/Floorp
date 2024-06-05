@@ -41,7 +41,7 @@ http://creativecommons.org/licenses/publicdomain/
     });
     await setPushPermission(true);
 
-    var url = "error_worker.js?" + (Math.random());
+    var url = "error_worker.js?caller=test_error_reporting.html";
     registration = await navigator.serviceWorker.register(url, {scope: "."});
     await waitForActive(registration);
   });

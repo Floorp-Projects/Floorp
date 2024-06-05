@@ -12,7 +12,7 @@ TODO: Move this to WPT when we get test_driver.set_permission (bug 1524074) and 
 <script>
   let registration;
   add_task(async function start() {
-    const url = "worker.js?" + Math.random();
+    const url = "worker.js?caller=test_permission_granted.html";
     registration = await navigator.serviceWorker.register(url, { scope: "." });
     await waitForActive(registration);
   });

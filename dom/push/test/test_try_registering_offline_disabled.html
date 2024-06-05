@@ -28,7 +28,7 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function registerServiceWorker() {
-    return navigator.serviceWorker.register("worker.js?" + (Math.random()), {scope: "."})
+    return navigator.serviceWorker.register("worker.js?caller=test_try_registering_offline_disabled.html", {scope: "."})
       .then(swr => waitForActive(swr));
   }
 

@@ -28,7 +28,7 @@ http://creativecommons.org/licenses/publicdomain/
     await setupPrefsAndMockSocket(new MockWebSocket());
     await setPushPermission(true);
 
-    var url = "worker.js?" + (Math.random());
+    var url = "worker.js?caller=test_subscription_change.html";
     registration = await navigator.serviceWorker.register(url, {scope: "."});
     await waitForActive(registration);
   });
