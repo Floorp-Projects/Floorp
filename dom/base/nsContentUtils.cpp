@@ -4632,8 +4632,8 @@ bool nsContentUtils::IsChildOfSameType(Document* aDoc) {
 }
 
 bool nsContentUtils::IsPlainTextType(const nsACString& aContentType) {
-  // NOTE: if you add a type here, add it to the CONTENTDLF_CATEGORIES
-  // define in nsContentDLF.h as well.
+  // NOTE: if you add a type here, add it to the content_types array in
+  // layout/build/components.conf as well.
   return aContentType.EqualsLiteral(TEXT_PLAIN) ||
          aContentType.EqualsLiteral(TEXT_CSS) ||
          aContentType.EqualsLiteral(TEXT_CACHE_MANIFEST) ||
@@ -4644,7 +4644,8 @@ bool nsContentUtils::IsPlainTextType(const nsACString& aContentType) {
          aContentType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
          aContentType.EqualsLiteral(TEXT_JAVASCRIPT) ||
          aContentType.EqualsLiteral(APPLICATION_JSON) ||
-         aContentType.EqualsLiteral(TEXT_JSON);
+         aContentType.EqualsLiteral(TEXT_JSON) ||
+         aContentType.EqualsLiteral(TEXT_EVENT_STREAM);
 }
 
 bool nsContentUtils::IsUtf8OnlyPlainTextType(const nsACString& aContentType) {
