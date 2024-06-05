@@ -21,7 +21,6 @@ from gen_feature_definitions import (
     FeatureGateException,
     hyphens_to_camel_case,
     main,
-    process_configured_value,
     process_files,
 )
 
@@ -109,8 +108,8 @@ class TestProcessFiles(unittest.TestCase):
                 "preference": "foo.bar.baz",
                 "type": "boolean",
                 "bugNumbers": [1479127],
-                "isPublic": {"default": True},
-                "defaultValue": {"default": False},
+                "isPublicJexl": "true",
+                "defaultValueJexl": "false",
             },
             "minimal-feature": {
                 "id": "minimal-feature",
@@ -120,8 +119,8 @@ class TestProcessFiles(unittest.TestCase):
                 "preference": "features.minimal-feature.enabled",
                 "type": "boolean",
                 "bugNumbers": [1479127],
-                "isPublic": {"default": False},
-                "defaultValue": {"default": None},
+                "isPublicJexl": "false",
+                "defaultValueJexl": None,
             },
         }
 
@@ -210,20 +209,19 @@ class ExpandFeatureTests(unittest.TestCase):
         feature = minimal_definition(type="boolean")
         assert "default-value" not in feature
         assert "defaultValue" not in feature
-        assert expand_feature(feature)["defaultValue"] == {"default": None}
+        assert "default-value-jexl" not in feature
+        assert "defaultValueJexl" not in feature
+        assert expand_feature(feature)["defaultValueJexl"] == None
 
     def test_default_value_override_constant(self):
-        feature = minimal_definition(type="boolean", default_value=True)
-        assert expand_feature(feature)["defaultValue"] == {"default": True}
+        feature = minimal_definition(type="boolean", default_value_jexl="true")
+        assert expand_feature(feature)["defaultValueJexl"] == "true"
 
     def test_default_value_override_configured_value(self):
         feature = minimal_definition(
-            type="boolean", default_value={"default": False, "nightly": True}
+            type="boolean", default_value_jexl="channel == nightly"
         )
-        assert expand_feature(feature)["defaultValue"] == {
-            "default": False,
-            "nightly": True,
-        }
+        assert expand_feature(feature)["defaultValueJexl"] == "channel == nightly"
 
     def test_preference_default(self):
         feature = minimal_definition(type="boolean")
@@ -233,34 +231,6 @@ class ExpandFeatureTests(unittest.TestCase):
     def test_preference_override(self):
         feature = minimal_definition(preference="test.feature.a")
         assert expand_feature(feature)["preference"] == "test.feature.a"
-
-
-class ProcessConfiguredValueTests(unittest.TestCase):
-    def test_expands_single_values(self):
-        for value in [True, False, 2, "features"]:
-            assert process_configured_value("test", value) == {"default": value}
-
-    def test_default_key_is_required(self):
-        with self.assertRaises(FeatureGateException) as context:
-            assert process_configured_value("test", {"nightly": True})
-        assert "has no default" in str(context.exception)
-
-    def test_invalid_keys_rejected(self):
-        with self.assertRaises(FeatureGateException) as context:
-            assert process_configured_value("test", {"default": True, "bogus": True})
-        assert "Unexpected target bogus" in str(context.exception)
-
-    def test_simple_key(self):
-        value = {"nightly": True, "default": False}
-        assert process_configured_value("test", value) == value
-
-    def test_compound_keys(self):
-        value = {"win,nightly": True, "default": False}
-        assert process_configured_value("test", value) == value
-
-    def test_multiple_keys(self):
-        value = {"win": True, "mac": True, "default": False}
-        assert process_configured_value("test", value) == value
 
 
 class MainTests(unittest.TestCase):
@@ -279,8 +249,8 @@ class MainTests(unittest.TestCase):
                 "preference": "foo.bar.baz",
                 "type": "boolean",
                 "bugNumbers": [1479127],
-                "isPublic": {"default": True},
-                "defaultValue": {"default": False},
+                "isPublicJexl": "true",
+                "defaultValueJexl": "false",
             },
             "minimal-feature": {
                 "id": "minimal-feature",
@@ -290,8 +260,8 @@ class MainTests(unittest.TestCase):
                 "preference": "features.minimal-feature.enabled",
                 "type": "boolean",
                 "bugNumbers": [1479127],
-                "isPublic": {"default": False},
-                "defaultValue": {"default": None},
+                "isPublicJexl": "false",
+                "defaultValueJexl": None,
             },
         }
 

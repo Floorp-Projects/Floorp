@@ -27,26 +27,31 @@ add_task(async function testResetAll() {
     {
       id: "test-featureA",
       preference: "test.featureA",
-      defaultValue: false,
+      defaultValueJexl: "false",
     },
     {
       id: "test-featureB",
       preference: "test.featureB",
-      defaultValue: true,
+      defaultValueJexl: "true",
     },
     {
       id: "test-featureC",
       preference: KNOWN_PREF_1,
-      defaultValue: false,
+      defaultValueJexl: "false",
     },
     {
       id: "test-featureD",
       preference: KNOWN_PREF_2,
-      defaultValue: true,
+      defaultValueJexl: "true",
     },
   ];
-  for (let { id, preference, defaultValue } of definitions) {
-    server.addDefinition({ id, preference, defaultValue, isPublic: true });
+  for (let { id, preference, defaultValueJexl } of definitions) {
+    server.addDefinition({
+      id,
+      preference,
+      defaultValueJexl,
+      isPublicJexl: "true",
+    });
   }
 
   await BrowserTestUtils.openNewForegroundTab(

@@ -38,7 +38,6 @@ DIRS += [
     "downloads",
     "enterprisepolicies",
     "extensions",
-    "featuregates",
     "formautofill",
     "finalizationwitness",
     "find",
@@ -95,6 +94,7 @@ if CONFIG["NS_PRINTING"]:
 if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
     DIRS += [
         "aboutconfig",
+        "featuregates",
         "narrate",
         "reader",
         "viaduct",

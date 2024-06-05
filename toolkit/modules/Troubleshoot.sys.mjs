@@ -5,8 +5,6 @@
 import { AddonManager } from "resource://gre/modules/AddonManager.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-import { FeatureGate } from "resource://featuregates/FeatureGate.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -474,6 +472,10 @@ var dataProviders = {
       done();
       return;
     }
+    let { FeatureGate } = ChromeUtils.importESModule(
+      "resource://featuregates/FeatureGate.sys.mjs"
+    );
+
     let gates = await FeatureGate.all();
     done(
       gates.map(gate => {

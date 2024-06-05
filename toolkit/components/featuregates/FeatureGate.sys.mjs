@@ -6,8 +6,17 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  // This is an unfortunate exception where we depend on ASRouter because
+  // Nimbus has this dependency.
+  // This implementation is written in a way where it will avoid requiring
+  // this module if it's not available.
+  ASRouterTargeting:
+    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+    "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   FeatureGateImplementation:
     "resource://featuregates/FeatureGateImplementation.sys.mjs",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "gFeatureDefinitionsPromise", async () => {
@@ -15,17 +24,52 @@ ChromeUtils.defineLazyGetter(lazy, "gFeatureDefinitionsPromise", async () => {
   return fetchFeatureDefinitions(url);
 });
 
+const kCustomTargeting = {
+  // For default values, although something like `channel == 'nightly'` kinda
+  // works, local builds don't have that update channel set in that way so it
+  // doesn't, and then tests fail because the defaults for the FeatureGate
+  // do not match the default value in the prefs code.
+  // We may in future want other things from AppConstants here, too.
+  nightly_build: AppConstants.NIGHTLY_BUILD,
+  thunderbird: AppConstants.MOZ_APP_NAME == "thunderbird",
+};
+
+ChromeUtils.defineLazyGetter(lazy, "defaultContexts", () => {
+  let ASRouterEnv = {};
+  try {
+    ASRouterEnv = lazy.ASRouterTargeting.Environment;
+  } catch (ex) {
+    // No ASRouter; just keep going.
+  }
+  return [
+    kCustomTargeting,
+    lazy.ExperimentManager.createTargetingContext(),
+    ASRouterEnv,
+  ];
+});
+
+function getCombinedContext(...contexts) {
+  let combined = lazy.TargetingContext.combineContexts(
+    ...lazy.defaultContexts,
+    ...contexts
+  );
+  return new lazy.TargetingContext(combined, {
+    source: "featuregate",
+  });
+}
+
 async function fetchFeatureDefinitions(url) {
   const res = await fetch(url);
   let definitionsJson = await res.json();
   return new Map(Object.entries(definitionsJson));
 }
 
-function buildFeatureGateImplementation(definition) {
+async function buildFeatureGateImplementation(definition) {
   const targetValueKeys = ["defaultValue", "isPublic"];
   for (const key of targetValueKeys) {
-    definition[`${key}OriginalValue`] = definition[key];
-    definition[key] = FeatureGate.evaluateTargetedValue(definition[key]);
+    definition[key] = await FeatureGate.evaluateJexlValue(
+      definition[key + "Jexl"]
+    );
   }
   return new lazy.FeatureGateImplementation(definition);
 }
@@ -92,7 +136,7 @@ export class FeatureGate {
     let definitions = [];
     for (let definition of featureDefinitions.values()) {
       // Make a copy of the definition, since we are about to modify it
-      definitions[definitions.length] = buildFeatureGateImplementation(
+      definitions[definitions.length] = await buildFeatureGateImplementation(
         Object.assign({}, definition)
       );
     }
@@ -209,79 +253,27 @@ export class FeatureGate {
     return feature.isEnabled();
   }
 
-  static targetingFacts = new Map([
-    [
-      "release",
-      AppConstants.MOZ_UPDATE_CHANNEL === "release" || AppConstants.IS_ESR,
-    ],
-    ["beta", AppConstants.MOZ_UPDATE_CHANNEL === "beta"],
-    ["early_beta_or_earlier", AppConstants.EARLY_BETA_OR_EARLIER],
-    ["dev-edition", AppConstants.MOZ_DEV_EDITION],
-    ["nightly", AppConstants.NIGHTLY_BUILD],
-    ["win", AppConstants.platform === "win"],
-    ["mac", AppConstants.platform === "macosx"],
-    ["linux", AppConstants.platform === "linux"],
-    ["android", AppConstants.platform === "android"],
-    ["thunderbird", AppConstants.MOZ_APP_NAME === "thunderbird"],
-  ]);
-
   /**
-   * Take a map of conditions to values, and return the value who's conditions
-   * match this browser, or the default value in the map.
+   * Take a jexl expression and evaluate it against the standard Nimbus
+   * context, extended with some additional properties defined in
+   * kCustomTargeting.
    *
-   * @example
-   *   Calling the function as
+   * @param {String} jexlExpression The expression to evaluate.
+   * @param {Object[]?} additionalContexts Any additional context properties
+   *                                    that should be taken into account.
    *
-   *       evaluateTargetedValue({"default": false, "nightly,linux": true})
-   *
-   *   would return true on Nightly on Linux, and false otherwise.
-   *
-   * @param {Object} targetedValue
-   *   An object mapping string conditions to values. The conditions are comma
-   *   separated values specified in `targetingFacts`. A condition "default" is
-   *   required, as the fallback valued. All conditions must be true.
-   *
-   *   If multiple values have conditions that match, then an arbitrary one will
-   *   be returned. Specifically, the one returned first in an `Object.entries`
-   *   iteration of the targetedValue.
-   *
-   * @param {Map} [targetingFacts]
-   *   A map of target facts to use. Defaults to facts about the current browser.
-   *
-   * @param {boolean} [options.mergeFactsWithDefault]
-   *   If set to true, the value passed for `targetingFacts` will be merged with
-   *   the default facts.
-   *
-   * @returns A value from `targetedValue`.
+   * @returns {Promise<boolean>} Resolves to either true or false if successful,
+   *          or null if there was some problem with the jexl expression (which
+   *          will also log an error to the console).
    */
-  static evaluateTargetedValue(
-    targetedValue,
-    targetingFacts = FeatureGate.targetingFacts,
-    { mergeFactsWithDefault = false } = {}
-  ) {
-    if (!Object.hasOwnProperty.call(targetedValue, "default")) {
-      throw new Error(
-        `Targeted value ${JSON.stringify(targetedValue)} has no default key`
-      );
+  static async evaluateJexlValue(jexlExpression, ...additionalContexts) {
+    let result = null;
+    let context = getCombinedContext(...additionalContexts);
+    try {
+      result = !!(await context.evalWithDefault(jexlExpression));
+    } catch (ex) {
+      console.error(ex);
     }
-
-    if (mergeFactsWithDefault) {
-      const combinedFacts = new Map(FeatureGate.targetingFacts);
-      for (const [key, value] of targetingFacts.entries()) {
-        combinedFacts.set(key, value);
-      }
-      targetingFacts = combinedFacts;
-    }
-
-    for (const [key, value] of Object.entries(targetedValue)) {
-      if (key === "default") {
-        continue;
-      }
-      if (key.split(",").every(part => targetingFacts.get(part))) {
-        return value;
-      }
-    }
-
-    return targetedValue.default;
+    return result;
   }
 }

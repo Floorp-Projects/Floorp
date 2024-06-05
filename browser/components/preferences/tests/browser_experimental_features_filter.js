@@ -43,7 +43,7 @@ add_task(async function testFilterFeatures() {
     },
   ];
   for (let { id, preference } of definitions) {
-    server.addDefinition({ id, preference, isPublic: true });
+    server.addDefinition({ id, preference, isPublicJexl: "true" });
   }
 
   await BrowserTestUtils.openNewForegroundTab(
