@@ -204,7 +204,6 @@ extraPrefs = [
     "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
     extraData.RFP_Precision * 1000,
   ],
-  ["dom.animations-api.timelines.enabled", true],
 ];
 
 addAllTests(extraData, extraPrefs);
@@ -219,7 +218,6 @@ extraPrefs = [
     "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
     extraData.RFP_Precision * 1000,
   ],
-  ["dom.animations-api.timelines.enabled", true],
 ];
 
 addAllTests(extraData, extraPrefs);
@@ -231,5 +229,5 @@ extraData = {
   RFP_Precision: RFP_TIME_ATOM_MS,
   Unconditional_Precision: 0.02,
 };
-extraPrefs = [["dom.animations-api.timelines.enabled", true]];
+extraPrefs = [];
 addAllTests(extraData, extraPrefs);

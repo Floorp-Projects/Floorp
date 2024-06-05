@@ -1528,7 +1528,7 @@ interface TestFuncConstructorForInterface {
   constructor();
 };
 
-[Exposed=Window, Func="Document::AreWebAnimationsTimelinesEnabled"]
+[Exposed=Window, Func="Document::IsCallerChromeOrAddon"]
 interface TestFuncConstructorForDifferentFuncInterface {
   // Since the constructor has a different Func attribute from the interface,
   // the generated constructor should still check for its conditional func.

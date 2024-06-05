@@ -784,9 +784,6 @@ static KeyframeEffectParams KeyframeEffectParamsFromUnion(
   const KeyframeEffectOptions& options =
       KeyframeEffectOptionsFromUnion(aOptions);
 
-  // If dom.animations-api.compositing.enabled is turned off,
-  // iterationComposite and composite are the default value 'replace' in the
-  // dictionary.
   result.mIterationComposite = options.mIterationComposite;
   result.mComposite = options.mComposite;
 
@@ -1272,8 +1269,6 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       keyframe.mTimingFunction.ref().AppendToString(keyframeDict.mEasing);
     }  // else if null, leave easing as its default "linear".
 
-    // With the pref off (i.e. dom.animations-api.compositing.enabled:false),
-    // the dictionary-to-JS conversion will skip this member entirely.
     keyframeDict.mComposite = keyframe.mComposite;
 
     JS::Rooted<JS::Value> keyframeJSValue(aCx);

@@ -4,7 +4,6 @@ add_task(async function setup_pref() {
       // To avoid throttling requestAnimationFrame callbacks in invisible
       // iframes
       ["layout.throttled_frame_rate", 60],
-      ["dom.animations-api.timelines.enabled", true],
       // Next two prefs are needed for hit-testing to work
       ["test.events.async.enabled", true],
       ["apz.test.logging_enabled", true],

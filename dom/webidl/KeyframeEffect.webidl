@@ -16,9 +16,7 @@ enum IterationCompositeOperation {
 };
 
 dictionary KeyframeEffectOptions : EffectTiming {
-  [Pref="dom.animations-api.compositing.enabled"]
   IterationCompositeOperation iterationComposite = "replace";
-  [Pref="dom.animations-api.compositing.enabled"]
   CompositeOperation          composite = "replace";
   DOMString?                  pseudoElement = null;
 };
@@ -36,9 +34,7 @@ interface KeyframeEffect : AnimationEffect {
 
   attribute Element?                  target;
   [SetterThrows] attribute DOMString? pseudoElement;
-  [Pref="dom.animations-api.compositing.enabled"]
   attribute IterationCompositeOperation     iterationComposite;
-  [Pref="dom.animations-api.compositing.enabled"]
   attribute CompositeOperation              composite;
   [Throws] sequence<object> getKeyframes();
   [Throws] undefined        setKeyframes(object? keyframes);

@@ -1,7 +1,5 @@
 [DEFAULT]
 prefs = [
-  "dom.animations-api.compositing.enabled=true",
-  "dom.animations-api.timelines.enabled=true",
   "gfx.omta.background-color=true",
   "layout.css.scroll-driven-animations.enabled=true",
   "gfx.font_loader.delay=0",
@@ -12,8 +10,6 @@ support-files = [
   "chrome/file_animate_xrays.html",
   "mozilla/xhr_doc.html",
   "mozilla/file_deferred_start.html",
-  "mozilla/file_disable_animations_api_compositing.html",
-  "mozilla/file_disable_animations_api_timelines.html",
   "mozilla/file_discrete_animations.html",
   "mozilla/file_transition_finish_on_compositor.html",
   "../../../layout/style/test/property_database.js",
@@ -31,10 +27,6 @@ support-files = [
 
 ["mozilla/test_deferred_start.html"]
 skip-if = ["os == 'win' && bits == 64"] # Bug 1363957
-
-["mozilla/test_disable_animations_api_compositing.html"]
-
-["mozilla/test_disable_animations_api_timelines.html"]
 
 ["mozilla/test_disabled_properties.html"]
 

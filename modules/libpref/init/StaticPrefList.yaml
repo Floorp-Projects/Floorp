@@ -2226,18 +2226,6 @@
   value: true
   mirror: always
 
-# Is support for composite operations from the Web Animations API enabled?
-- name: dom.animations-api.compositing.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Is support for timelines from the Web Animations API enabled?
-- name: dom.animations-api.timelines.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for Navigator.getBattery enabled?
 - name: dom.battery.enabled
   type: bool

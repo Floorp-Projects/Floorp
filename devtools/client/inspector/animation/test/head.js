@@ -65,29 +65,6 @@ const closeAnimationInspector = async function () {
 };
 
 /**
- * Some animation features are not enabled by default in release/beta channels
- * yet including parts of the Web Animations API.
- */
-const enableAnimationFeatures = function () {
-  return SpecialPowers.pushPrefEnv({
-    set: [["dom.animations-api.timelines.enabled", true]],
-  });
-};
-
-/**
- * Add a new test tab in the browser and load the given url.
- *
- * @param {String} url
- *        The url to be loaded in the new tab
- * @return a promise that resolves to the tab object when the url is loaded
- */
-const _addTab = addTab;
-addTab = async function (url) {
-  await enableAnimationFeatures();
-  return _addTab(url);
-};
-
-/**
  * Remove animated elements from document except given selectors.
  *
  * @param {Array} selectors
