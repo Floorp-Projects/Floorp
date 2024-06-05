@@ -58,6 +58,9 @@ class BackupTest(MarionetteTestCase):
 
         originalStagingPath = self.marionette.execute_async_script(
             """
+          const { OSKeyStore } = ChromeUtils.importESModule(
+            "resource://gre/modules/OSKeyStore.sys.mjs"
+          );
           const { BackupService } = ChromeUtils.importESModule("resource:///modules/backup/BackupService.sys.mjs");
           let bs = BackupService.init();
           if (!bs) {
@@ -66,6 +69,18 @@ class BackupTest(MarionetteTestCase):
 
           let [outerResolve] = arguments;
           (async () => {
+            // This is some hackery to make it so that OSKeyStore doesn't kick
+            // off an OS authentication dialog in our test, and also to make
+            // sure we don't blow away the _real_ OSKeyStore key for the browser
+            // on the system that this test is running on. Normally, I'd use
+            // OSKeyStoreTestUtils.setup to do this, but apparently the
+            // testing-common modules aren't available in Marionette tests.
+            const ORIGINAL_STORE_LABEL = OSKeyStore.STORE_LABEL;
+            OSKeyStore.STORE_LABEL = "test-" + Math.random().toString(36).substr(2);
+            await bs.enableEncryption("This is a test password");
+            await OSKeyStore.cleanup();
+            OSKeyStore.STORE_LABEL = ORIGINAL_STORE_LABEL;
+
             let { stagingPath } = await bs.createBackup();
             if (!stagingPath) {
               throw new Error("Could not create backup.");
