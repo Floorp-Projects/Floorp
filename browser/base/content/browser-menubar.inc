@@ -140,8 +140,7 @@
                   </menupopup>
                 </menu>
                 <menu id="viewSidebarMenuMenu" data-l10n-id="menu-view-sidebar">
-                  <menupopup id="viewSidebarMenu" onpopupshowing="SidebarController.setMegalistMenubarVisibility(event);">
-                  </menupopup>
+                  <menupopup id="viewSidebarMenu"/>
                 </menu>
                 <menuseparator/>
                 <menu id="viewFullZoomMenu" data-l10n-id="menu-view-full-zoom">

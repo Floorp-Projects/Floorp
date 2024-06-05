@@ -20,6 +20,39 @@ var SidebarController = {
     };
   },
 
+  registerPrefSidebar(pref, commandID, config) {
+    const sidebar = this.makeSidebar(config);
+    this._sidebars.set(commandID, sidebar);
+
+    let switcherMenuitem;
+    const updateMenus = visible => {
+      // Update visibility of View -> Sidebar menu item.
+      const viewItem = document.getElementById(sidebar.menuId);
+      viewItem.hidden = !visible;
+
+      // Add/remove switcher menu item.
+      if (visible) {
+        switcherMenuitem = this.createMenuItem(commandID, sidebar);
+        switcherMenuitem.setAttribute("id", config.elementId);
+        switcherMenuitem.removeAttribute("type");
+        const separator = this._switcherPanel.querySelector("menuseparator");
+        separator.parentNode.insertBefore(switcherMenuitem, separator);
+      } else {
+        switcherMenuitem?.remove();
+      }
+    };
+
+    // Detect pref changes and handle initial state.
+    XPCOMUtils.defineLazyPreferenceGetter(
+      sidebar,
+      "visible",
+      pref,
+      false,
+      (_pref, _prev, val) => updateMenus(val)
+    );
+    this.promiseInitialized.then(() => updateMenus(sidebar.visible));
+  },
+
   get sidebars() {
     if (this._sidebars) {
       return this._sidebars;
@@ -71,18 +104,17 @@ var SidebarController = {
     ]);
 
     if (!this.sidebarRevampEnabled) {
-      if (this.megalistEnabled) {
-        this._sidebars.set(
-          "viewMegalistSidebar",
-          this.makeSidebar({
-            elementId: "sidebar-switcher-megalist",
-            url: "chrome://global/content/megalist/megalist.html",
-            menuId: "menu_megalistSidebar",
-            menuL10nId: "menu-view-megalist-sidebar",
-            revampL10nId: "sidebar-menu-megalist",
-          })
-        );
-      }
+      this.registerPrefSidebar(
+        "browser.megalist.enabled",
+        "viewMegalistSidebar",
+        {
+          elementId: "sidebar-switcher-megalist",
+          url: "chrome://global/content/megalist/megalist.html",
+          menuId: "menu_megalistSidebar",
+          menuL10nId: "menu-view-megalist-sidebar",
+          revampL10nId: "sidebar-menu-megalist",
+        }
+      );
     } else {
       this._sidebars.set("viewCustomizeSidebar", {
         url: "chrome://browser/content/sidebar/sidebar-customize.html",
@@ -201,26 +233,6 @@ var SidebarController = {
     this._initDeferred.resolve();
   },
 
-  toggleMegalistItem() {
-    const sideMenuPopupItem = document.getElementById(
-      "sidebar-switcher-megalist"
-    );
-    sideMenuPopupItem.style.display = this.megalistEnabled ? "" : "none";
-  },
-
-  setMegalistMenubarVisibility(aEvent) {
-    const popup = aEvent.target;
-    if (popup != aEvent.currentTarget) {
-      return;
-    }
-
-    // Show the megalist item if enabled
-    const megalistItem = popup.querySelector("#menu_megalistSidebar");
-    if (megalistItem) {
-      megalistItem.hidden = !this.megalistEnabled;
-    }
-  },
-
   uninit() {
     // If this is the last browser window, persist various values that should be
     // remembered for after a restart / reopening a browser window.
@@ -324,7 +336,6 @@ var SidebarController = {
   },
 
   showSwitcherPanel() {
-    this.toggleMegalistItem();
     this._switcherPanel.addEventListener(
       "popuphiding",
       () => {
@@ -1018,11 +1029,5 @@ XPCOMUtils.defineLazyPreferenceGetter(
   SidebarController,
   "sidebarRevampEnabled",
   "sidebar.revamp",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  SidebarController,
-  "megalistEnabled",
-  "browser.megalist.enabled",
   false
 );
