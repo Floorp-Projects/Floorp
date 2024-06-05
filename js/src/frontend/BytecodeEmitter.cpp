@@ -5803,6 +5803,18 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
       // nothing needs be done.
       MOZ_ASSERT(bytecodeSection().stackDepth() >= 1);
     }
+
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+    if (declarationList->isKind(ParseNodeKind::UsingDecl)) {
+      UsingEmitter uem(this);
+
+      if (!uem.prepareForAssignment(UsingEmitter::Kind::Sync)) {
+        //            [stack] ENV? V
+        return false;
+      }
+    }
+#endif
+
     if (!noe.emitAssignment()) {
       return false;
     }
@@ -5840,7 +5852,14 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
   // Certain builtins (e.g. Array.from) are implemented in self-hosting
   // as for-of loops.
   auto selfHostedIter = getSelfHostedIterFor(forHeadExpr);
-  ForOfEmitter forOf(this, headLexicalEmitterScope, selfHostedIter, iterKind);
+  ForOfEmitter forOf(this, headLexicalEmitterScope, selfHostedIter, iterKind
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+                     ,
+                     forOfHead->kid1()->isKind(ParseNodeKind::UsingDecl)
+                         ? ForOfEmitter::HasUsingDeclarationInHead::Yes
+                         : ForOfEmitter::HasUsingDeclarationInHead::No
+#endif
+  );
 
   if (!forOf.emitIterated()) {
     //              [stack]
@@ -5861,7 +5880,11 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
   if (headLexicalEmitterScope) {
     DebugOnly<ParseNode*> forOfTarget = forOfHead->kid1();
     MOZ_ASSERT(forOfTarget->isKind(ParseNodeKind::LetDecl) ||
-               forOfTarget->isKind(ParseNodeKind::ConstDecl));
+               forOfTarget->isKind(ParseNodeKind::ConstDecl)
+#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
+               || forOfTarget->isKind(ParseNodeKind::UsingDecl)
+#endif
+    );
   }
 
   if (!forOf.emitInitialize(forOfHead->pn_pos.begin)) {
