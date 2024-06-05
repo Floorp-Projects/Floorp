@@ -1789,6 +1789,222 @@ networkPrioritization:
       setPref:
         branch: default
         pref: "image.layout_network_priority"
+    adjustLinkPreloadScriptLow:
+      description: Priority adjustment low for link-preload-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-script.low"
+    adjustLinkPreloadScriptHigh:
+      description: Priority adjustment high for link-preload-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-script.high"
+    adjustLinkPreloadScriptAuto:
+      description: Priority adjustment auto for link-preload-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-script.auto"
+    adjustModuleScriptLow:
+      description: Priority adjustment low for module-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.module-script.low"
+    adjustModuleScriptHigh:
+      description: Priority adjustment high for module-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.module-script.high"
+    adjustModuleScriptAuto:
+      description: Priority adjustment auto for module-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.module-script.auto"
+    adjustAsyncOrDeferScriptLow:
+      description: Priority adjustment low for async-or-defer-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.async-or-defer-script.low"
+    adjustAsyncOrDeferScriptHigh:
+      description: Priority adjustment high for async-or-defer-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.async-or-defer-script.high"
+    adjustAsyncOrDeferScriptAuto:
+      description: Priority adjustment auto for async-or-defer-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.async-or-defer-script.auto"
+    adjustScriptInHeadLow:
+      description: Priority adjustment low for script-in-head
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.script-in-head.low"
+    adjustScriptInHeadHigh:
+      description: Priority adjustment high for script-in-head
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.script-in-head.high"
+    adjustScriptInHeadAuto:
+      description: Priority adjustment auto for script-in-head
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.script-in-head.auto"
+    adjustOtherScriptLow:
+      description: Priority adjustment low for other-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.other-script.low"
+    adjustOtherScriptHigh:
+      description: Priority adjustment high for other-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.other-script.high"
+    adjustOtherScriptAuto:
+      description: Priority adjustment auto for other-script
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.other-script.auto"
+    adjustLinkPreloadFontLow:
+      description: Priority adjustment low for link-preload-font
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-font.low"
+    adjustLinkPreloadFontHigh:
+      description: Priority adjustment high for link-preload-font
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-font.high"
+    adjustLinkPreloadFontAuto:
+      description: Priority adjustment auto for link-preload-font
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-font.auto"
+    adjustLinkPreloadFetchLow:
+      description: Priority adjustment low for link-preload-fetch
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-fetch.low"
+    adjustLinkPreloadFetchHigh:
+      description: Priority adjustment high for link-preload-fetch
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-fetch.high"
+    adjustLinkPreloadFetchAuto:
+      description: Priority adjustment auto for link-preload-fetch
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-fetch.auto"
+    adjustDeferredStyleLow:
+      description: Priority adjustment low for deferred-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.deferred-style.low"
+    adjustDeferredStyleHigh:
+      description: Priority adjustment high for deferred-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.deferred-style.high"
+    adjustDeferredStyleAuto:
+      description: Priority adjustment auto for deferred-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.deferred-style.auto"
+    adjustLinkPreloadStyleLow:
+      description: Priority adjustment low for link-preload-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-style.low"
+    adjustLinkPreloadStyleHigh:
+      description: Priority adjustment high for link-preload-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-style.high"
+    adjustLinkPreloadStyleAuto:
+      description: Priority adjustment auto for link-preload-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.link-preload-style.auto"
+    adjustNonDeferredStyleLow:
+      description: Priority adjustment low for non-deferred-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.non-deferred-style.low"
+    adjustNonDeferredStyleHigh:
+      description: Priority adjustment high for non-deferred-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.non-deferred-style.high"
+    adjustNonDeferredStyleAuto:
+      description: Priority adjustment auto for non-deferred-style
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.non-deferred-style.auto"
+    adjustGlobalFetchApiLow:
+      description: Priority adjustment low for global-fetch-api
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.global-fetch-api.low"
+    adjustGlobalFetchApiHigh:
+      description: Priority adjustment high for global-fetch-api
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.global-fetch-api.high"
+    adjustGlobalFetchApiAuto:
+      description: Priority adjustment auto for global-fetch-api
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.global-fetch-api.auto"
+    adjustImagesLow:
+      description: Priority adjustment low for images
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.images.low"
+    adjustImagesHigh:
+      description: Priority adjustment high for images
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.images.high"
+    adjustImagesAuto:
+      description: Priority adjustment auto for images
+      type: int
+      setPref:
+        branch: default
+        pref: "network.fetchpriority.adjustments.images.auto"
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
