@@ -3103,6 +3103,13 @@ pqcrypto:
         pref: security.tls.enable_kyber
       description: >-
         Whether to enable Xyber768 for TLS.
+    h3EnableXyber:
+      type: boolean
+      setPref:
+        branch: default
+        pref: network.http.http3.enable_kyber
+      description: >-
+        Whether to enable Xyber768 for H3/QUIC.
 
 dtlsWebRTC:
   description: Pref that controls the use of DTLS.
