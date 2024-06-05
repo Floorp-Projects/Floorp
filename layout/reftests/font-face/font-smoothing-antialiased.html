@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/dejavu-sans/DejaVuSans.ttf);
+}
+div {
+  font: 24px test;
+  margin: 6px;
+}
+.test {
+  -webkit-font-smoothing: grayscale;
+}
+.ref {
+  -webkit-font-smoothing: auto;
+}
+.dark {
+  background: black;
+  color: white;
+}
+</style>
+
+<p>The first line should use lighter (grayscale-only) antialiasing:</p>
+<div class="test">abcdef <span class="dark">abcdef</span></div>
+<div class="ref">abcdef <span class="dark">abcdef</span></div>
