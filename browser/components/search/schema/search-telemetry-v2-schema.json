@@ -309,6 +309,42 @@
         }
       }
     },
+    "accountCookies": {
+      "type": "array",
+      "title": "Account Cookies",
+      "description": "An array of cookie details that are used to determine whether a client is signed in to a provider's account. NOTE: This property appears only in Firefox 127 but was renamed to `signedInCookies` for Firefox 128 and beyond. Therefore do not use this property. Please use `signedInCookies` instead.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string",
+            "description": "The host associated with a given cookie."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name associated with a given cookie."
+          }
+        }
+      }
+    },
+    "signedInCookies": {
+      "type": "array",
+      "title": "Signed-in Cookies",
+      "description": "An array of cookie details that are used to determine whether a client is signed in to a provider's account.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string",
+            "description": "The host associated with a given cookie."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name associated with a given cookie."
+          }
+        }
+      }
+    },
     "isSPA": {
       "type": "boolean",
       "title": "Is Single Page App",
