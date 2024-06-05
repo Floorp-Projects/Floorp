@@ -285,30 +285,6 @@ cookie.banners:
         type: string
 
 cookie.banners.click:
-  handle_duration:
-    type: timing_distribution
-    time_unit: millisecond
-    description: >
-      Counts how long it takes to handle cookie banners successfully from
-      DOMContentLoaded until click.
-    bugs:
-      - https://bugzilla.mozilla.org/1797078
-      - https://bugzilla.mozilla.org/1804259
-      - https://bugzilla.mozilla.org/1827765
-      - https://bugzilla.mozilla.org/1850874
-      - https://bugzilla.mozilla.org/1861317
-      - https://bugzilla.mozilla.org/1892152
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797078#c6
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827765#c9
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850874#c7
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861317#c3
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892152#c6
-    notification_emails:
-      - pbz@mozilla.com
-      - tihuang@mozilla.com
-    expires: 134
-    telemetry_mirror: COOKIE_BANNERS_CLICK_HANDLE_DURATION_MS
   # TODO: consider moving this out of "click". It also records cookie injection.
   result:
     type: labeled_counter
@@ -491,22 +467,3 @@ cookie.banners.cmp:
       - fail_button_not_found
       - fail_no_rule_for_mode
       - fail_actor_destroyed
-  handle_duration:
-    type: timing_distribution
-    time_unit: millisecond
-    description: >
-      Counts how long it takes to handle cookie banners successfully using CMP
-      rules from DOMContentLoaded until click. This metric is a variant of the
-      cookieBanners.click.handle_duration.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - pbz@mozilla.com
-      - tihuang@mozilla.com
-    expires: 134

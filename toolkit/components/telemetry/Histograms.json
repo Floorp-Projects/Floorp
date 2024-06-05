@@ -451,17 +451,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether a content process was launched synchronously (unnecessarily delaying UI response)."
   },
-  "COOKIE_BANNERS_CLICK_HANDLE_DURATION_MS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["pbz@mozilla.com", "tihuang@mozilla.com"],
-    "expires_in_version": "128",
-    "bug_numbers": [1797078, 1804259, 1827765, 1850874, 1861317],
-    "kind": "exponential",
-    "high": 600000,
-    "n_buckets": 100,
-    "description": "Counts how long it takes to handle cookie banners successfully from DOMContentLoaded until click."
-  },
   "CYCLE_COLLECTOR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

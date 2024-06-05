@@ -93,8 +93,6 @@ export class CookieBannerChild extends JSWindowActorChild {
     bannerDetectedAfterCookieInjection: false,
     detectedCMP: [],
   };
-  // For measuring the cookie banner handling duration.
-  #gleanBannerHandlingTimer = null;
   // Indicates whether we should stop running the cookie banner handling
   // mechanism because it has been previously executed for the site. So, we can
   // cool down the cookie banner handing to improve performance.
@@ -257,14 +255,6 @@ export class CookieBannerChild extends JSWindowActorChild {
     // we are using global rules if every rule has this property set to true.
     this.#isUsingGlobalRules = rules.every(rule => rule.isGlobalRule);
 
-    if (!this.#isDetectOnly) {
-      // Start a timer to measure how long it takes for the banner to appear and
-      // be handled.
-      this.#gleanBannerHandlingTimer = this.#isUsingGlobalRules
-        ? Glean.cookieBannersCmp.handleDuration.start()
-        : Glean.cookieBannersClick.handleDuration.start();
-    }
-
     let { bannerHandled, bannerDetected, matchedRules } =
       await this.handleCookieBanner();
 
@@ -306,36 +296,9 @@ export class CookieBannerChild extends JSWindowActorChild {
         matchedRules,
       });
 
-      // Stop the timer to record how long it took to handle the banner.
-      lazy.logConsole.debug(
-        "Telemetry timer: stop and accumulate",
-        this.#gleanBannerHandlingTimer
-      );
-
-      if (this.#isUsingGlobalRules) {
-        Glean.cookieBannersCmp.handleDuration.stopAndAccumulate(
-          this.#gleanBannerHandlingTimer
-        );
-      } else {
-        Glean.cookieBannersClick.handleDuration.stopAndAccumulate(
-          this.#gleanBannerHandlingTimer
-        );
-      }
-
       // Avoid dispatching a duplicate "cookiebannerhandled" event.
       if (!dispatchedEventsForCookieInjection) {
         this.sendAsyncMessage("CookieBanner::HandledBanner");
-      }
-    } else if (!this.#isDetectOnly) {
-      // Cancel the timer we didn't handle the banner.
-      if (this.#isUsingGlobalRules) {
-        Glean.cookieBannersCmp.handleDuration.cancel(
-          this.#gleanBannerHandlingTimer
-        );
-      } else {
-        Glean.cookieBannersClick.handleDuration.cancel(
-          this.#gleanBannerHandlingTimer
-        );
       }
     }
 
