@@ -135,7 +135,7 @@ int32_t ScreenDeviceInfoImpl::GetOrientation(const char* aDeviceUniqueIdUTF8,
   return 0;
 }
 
-VideoCaptureModule* DesktopCaptureImpl::Create(const int32_t aModuleId,
+DesktopCaptureImpl* DesktopCaptureImpl::Create(const int32_t aModuleId,
                                                const char* aUniqueId,
                                                const CaptureDeviceType aType) {
   return new rtc::RefCountedObject<DesktopCaptureImpl>(aModuleId, aUniqueId,
@@ -626,6 +626,15 @@ int32_t DesktopCaptureImpl::CaptureSettings(VideoCaptureCapability& aSettings) {
 void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
                                          std::unique_ptr<DesktopFrame> aFrame) {
   RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
+
+  if (aResult == DesktopCapturer::Result::ERROR_PERMANENT) {
+    // This is non-recoverable error, therefore stop asking for frames
+    mCaptureTimer->Cancel();
+    mCaptureTimer = nullptr;
+    mCaptureEndedEvent.Notify();
+    return;
+  }
+
   if (!aFrame) {
     return;
   }
@@ -760,6 +769,13 @@ void DesktopCaptureImpl::CaptureFrameOnThread() {
 
   auto start = mozilla::TimeStamp::Now();
   mCapturer->CaptureFrame();
+
+  // Sync result callback may have canceled the timer in CaptureFrame because of
+  // a permanent error and there is no point to continue.
+  if (!mCaptureTimer) {
+    return;
+  }
+
   auto end = mozilla::TimeStamp::Now();
 
   // Calculate next capture time.
@@ -777,6 +793,10 @@ void DesktopCaptureImpl::CaptureFrameOnThread() {
       &::CaptureFrameOnThread, this,
       std::max(timeUntilRequestedCapture, sleepTime), nsITimer::TYPE_ONE_SHOT,
       "DesktopCaptureImpl::mCaptureTimer");
+}
+
+mozilla::MediaEventSource<void>* DesktopCaptureImpl::CaptureEndedEvent() {
+  return &mCaptureEndedEvent;
 }
 
 }  // namespace webrtc
