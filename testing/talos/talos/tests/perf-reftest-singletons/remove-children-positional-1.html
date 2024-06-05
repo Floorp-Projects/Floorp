@@ -1,0 +1,21 @@
+<!doctype html>
+<script src="util.js"></script>
+<style>
+ :nth-child(2n - 1) {
+   color: green;
+ }
+</style>
+<div id="container"></div>
+<script>
+onload = function() {
+  const kElementCount = 10000;
+  for (let i = 0; i < kElementCount; ++i)
+    container.appendChild(document.createElement("div"));
+  flush_layout();
+  perf_start();
+  while (container.firstChild)
+    container.firstChild.remove();
+  flush_layout();
+  perf_finish();
+};
+</script>
