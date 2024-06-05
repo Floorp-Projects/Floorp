@@ -79,94 +79,6 @@ toolbar[customizing] #ion-button {
   display: none;
 }
 
-/* Hide the TabsToolbar titlebar controls if the menubar is permanently shown.
- * (That is, if the menu bar doesn't autohide, and we're not in a fullscreen or
- * popup window.) */
-:root:not([chromehidden~="menubar"], [inFullscreen]) #toolbar-menubar[autohide="false"] + #TabsToolbar > :is(.titlebar-buttonbox-container, .titlebar-spacer) {
-  display: none;
-}
-
-:root:not([chromemargin], [inFullscreen]) .titlebar-buttonbox-container,
-:root[inFullscreen] .titlebar-spacer,
-:root:not([tabsintitlebar]) .titlebar-spacer {
-  display: none;
-}
-
-@media (-moz-platform: windows) {
-  :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"] {
-    display: none;
-  }
-}
-
-@media (-moz-platform: linux) {
-  @media (-moz-gtk-csd-reversed-placement: 0) {
-    :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
-    :root[gtktiledwindow=true] .titlebar-spacer[type="pre-tabs"] {
-      display: none;
-    }
-  }
-  @media (-moz-gtk-csd-reversed-placement) {
-    :root:not([sizemode=normal]) .titlebar-spacer[type="post-tabs"],
-    :root[gtktiledwindow=true] .titlebar-spacer[type="post-tabs"] {
-      display: none;
-    }
-  }
-}
-
-:root:not([sizemode=maximized], [sizemode=fullscreen]) .titlebar-restore,
-:root:is([sizemode=maximized], [sizemode=fullscreen]) .titlebar-max {
-  display: none;
-}
-
-#toolbar-menubar[autohide="true"]:not([inactive]) + #TabsToolbar > .titlebar-buttonbox-container {
-  visibility: hidden;
-}
-
-:root[tabsintitlebar] .titlebar-buttonbox {
-  position: relative;
-}
-
-:root:not([tabsintitlebar], [sizemode=fullscreen]) .titlebar-buttonbox {
-  display: none;
-}
-
-.titlebar-buttonbox {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-box;
-  position: relative;
-}
-
-#personal-toolbar-empty-description {
-  -moz-window-dragging: no-drag;
-}
-
-#personal-bookmarks {
-  -moz-window-dragging: inherit;
-}
-
-toolbarpaletteitem {
-  -moz-window-dragging: no-drag;
-  justify-content: flex-start;
-}
-
-.titlebar-buttonbox-container {
-  order: 1000;
-}
-
-@media (-moz-platform: macos) {
-  @media not (-moz-mac-rtl) {
-    .titlebar-buttonbox-container:-moz-locale-dir(ltr) {
-      order: -1;
-    }
-  }
-
-  @media (-moz-mac-rtl) {
-    .titlebar-buttonbox-container:-moz-locale-dir(rtl) {
-      order: -1;
-    }
-  }
-}
-
 /* Rules to help integrate WebExtension buttons */
 
 .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
@@ -199,44 +111,6 @@ toolbarpaletteitem {
 
 .webextension-menuitem {
   list-style-image: var(--webextension-menuitem-image, inherit) !important;
-}
-
-toolbarpaletteitem[removable="false"] {
-  opacity: 0.5;
-}
-
-@media not (-moz-platform: macos) {
-  toolbarpaletteitem:is([place="palette"], [place="panel"], [place="toolbar"]) {
-    -moz-user-focus: normal;
-  }
-}
-
-#bookmarks-toolbar-placeholder,
-#bookmarks-toolbar-button,
-toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
-#personal-bookmarks:is([overflowedItem=true], [cui-areatype="panel"]) > #PlacesToolbar {
-  display: none;
-}
-
-toolbarpaletteitem[place="toolbar"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
-toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-button,
-#personal-bookmarks:is([overflowedItem=true], [cui-areatype="panel"]) > #bookmarks-toolbar-button {
-  display: flex;
-}
-
-#personal-bookmarks {
-  position: relative;
-}
-
-#PlacesToolbarDropIndicatorHolder {
-  display: block;
-  position: absolute;
-}
-
-#nav-bar-customization-target > #personal-bookmarks,
-toolbar:not(#TabsToolbar) > #wrapper-personal-bookmarks,
-toolbar:not(#TabsToolbar) > #personal-bookmarks {
-  flex: 1 auto;
 }
 
 #reload-button:not([displaystop]) + #stop-button,

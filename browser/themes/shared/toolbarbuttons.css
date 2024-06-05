@@ -36,6 +36,21 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
+toolbarpaletteitem {
+  -moz-window-dragging: no-drag;
+  justify-content: flex-start;
+
+  &[removable="false"] {
+    opacity: 0.5;
+  }
+
+  @media not (-moz-platform: macos) {
+    &:is([place="palette"], [place="panel"], [place="toolbar"]) {
+      -moz-user-focus: normal;
+    }
+  }
+}
+
 .toolbarbutton-1 {
   :root:not([customizing]) &[disabled] {
     opacity: var(--toolbarbutton-disabled-opacity);
@@ -223,18 +238,6 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   }
 }
 
-/**
- * Ensure that the description is always at least as big as a bookmarks item,
- * where its icon is 16px (which may be more than inline text height);
- */
-#personal-toolbar-empty-description {
-  min-height: calc(16px + 2 * var(--bookmark-block-padding));
-}
-
-#bookmarks-toolbar-placeholder {
-  max-width: unset;
-}
-
 .bookmark-item > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
@@ -242,6 +245,35 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   #PlacesToolbarItems > & {
     margin-inline-end: 0;
   }
+}
+
+#personal-toolbar-empty-description {
+  -moz-window-dragging: no-drag;
+
+  /* Ensure that the description is always at least as big as a bookmarks item,
+   * where its icon is 16px (which may be more than inline text height); */
+  min-height: calc(16px + 2 * var(--bookmark-block-padding));
+}
+
+#bookmarks-toolbar-placeholder {
+  max-width: unset;
+}
+
+#bookmarks-toolbar-placeholder,
+#bookmarks-toolbar-button {
+  display: none;
+}
+
+toolbarpaletteitem[place="toolbar"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-button,
+#personal-bookmarks:is([overflowedItem=true], [cui-areatype="panel"]) > #bookmarks-toolbar-button {
+  display: flex;
+}
+
+#nav-bar-customization-target > #personal-bookmarks,
+toolbar:not(#TabsToolbar) > #wrapper-personal-bookmarks,
+toolbar:not(#TabsToolbar) > #personal-bookmarks {
+  flex: 1 auto;
 }
 
 /* Force the display of the label for bookmarks */
