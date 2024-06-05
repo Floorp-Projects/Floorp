@@ -2426,6 +2426,8 @@ with only_when(compile_environment):
         & jpeg_arm_neon_vld1q_u8_x4,
     )
 
+    set_config("MOZ_SYSTEM_JPEG", True, when="--with-system-jpeg")
+
 
 # PNG
 # ===
