@@ -2708,7 +2708,7 @@ nsDOMWindowUtils::DefaultDevicesRoundTripLatency(Promise** aOutPromise) {
       NS_NewRunnableFunction("DefaultDevicesRoundTripLatency", [p]() {
         double mean, stddev;
         bool success =
-            CubebUtils::EstimatedRoundTripLatencyDefaultDevices(&mean, &stddev);
+            CubebUtils::EstimatedLatencyDefaultDevices(&mean, &stddev);
 
         NS_DispatchToMainThread(NS_NewRunnableFunction(
             "DefaultDevicesRoundTripLatency", [p, success, mean, stddev]() {
