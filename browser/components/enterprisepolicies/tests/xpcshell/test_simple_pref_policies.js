@@ -1115,6 +1115,7 @@ const POLICIES_TESTS = [
       PostQuantumKeyAgreementEnabled: false,
     },
     lockedPrefs: {
+      "network.http.http3.enable_kyber": false,
       "security.tls.enable_kyber": false,
     },
   },
