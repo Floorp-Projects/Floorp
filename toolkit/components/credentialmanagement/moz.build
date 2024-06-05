@@ -18,6 +18,8 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = "xul"
 
 XPIDL_SOURCES += [
+    "nsICredentialChooserService.idl",
+    "nsICredentialChosenCallback.idl",
     "nsIIdentityCredentialPromptService.idl",
     "nsIIdentityCredentialStorageService.idl",
 ]
@@ -25,6 +27,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "dom_identitycredential"
 
 EXTRA_JS_MODULES += [
+    "CredentialChooserService.sys.mjs",
     "IdentityCredentialPromptService.sys.mjs",
 ]
 
