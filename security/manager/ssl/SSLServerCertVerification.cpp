@@ -1063,15 +1063,22 @@ void SSLServerCertVerificationResult::Dispatch(
   mProviderFlags = aProviderFlags;
   mMadeOCSPRequests = aMadeOCSPRequests;
 
-  if (mSucceeded && mBuiltChain.IsEmpty()) {
+  if (mSucceeded &&
+      (mBuiltChain.IsEmpty() || mFinalError != 0 ||
+       mOverridableErrorCategory !=
+           nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET)) {
     MOZ_ASSERT_UNREACHABLE(
-        "if the handshake succeeded, the built chain shouldn't be empty");
+        "if certificate verification succeeded without overridden errors, the "
+        "built chain shouldn't be empty and any error bits should be unset");
     mSucceeded = false;
     mFinalError = SEC_ERROR_LIBRARY_FAILURE;
   }
+  // Note that mSucceeded can be false while mFinalError is 0, in which case
+  // the connection will proceed.
   if (!mSucceeded && mPeerCertChain.IsEmpty()) {
     MOZ_ASSERT_UNREACHABLE(
-        "if the handshake failed, the peer chain shouldn't be empty");
+        "if certificate verification failed, the peer chain shouldn't be "
+        "empty");
     mFinalError = SEC_ERROR_LIBRARY_FAILURE;
   }
 

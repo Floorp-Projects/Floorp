@@ -5,6 +5,7 @@
 #ifndef mozilla_ipc_TransportSecurityInfoUtils_h
 #define mozilla_ipc_TransportSecurityInfoUtils_h
 
+#include "CertVerifier.h"
 #include "ipc/EnumSerializer.h"
 #include "mozilla/RefPtr.h"
 #include "nsITransportSecurityInfo.h"
@@ -37,6 +38,12 @@ struct ParamTraits<nsITransportSecurityInfo::OverridableErrorCategory>
           nsITransportSecurityInfo::OverridableErrorCategory,
           nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
           nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TIME> {};
+
+template <>
+struct ParamTraits<mozilla::psm::EVStatus>
+    : public ContiguousEnumSerializerInclusive<mozilla::psm::EVStatus,
+                                               mozilla::psm::EVStatus::NotEV,
+                                               mozilla::psm::EVStatus::EV> {};
 
 }  // namespace IPC
 
