@@ -1073,6 +1073,12 @@ shellService:
         branch: user
         pref: browser.shell.setDefaultBrowserUserChoice
       description: Should it set as default browser
+    setDefaultBrowserUserChoiceRegRename:
+      type: boolean
+      setPref:
+        branch: user
+        pref: browser.shell.setDefaultBrowserUserChoice.regRename
+      description: When setting default via UserChoice, rename the underlying registry key to prevent kennel driver registry locking.
     setDefaultPDFHandler:
       type: boolean
       fallbackPref: browser.shell.setDefaultPDFHandler

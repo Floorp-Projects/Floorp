@@ -32,6 +32,9 @@ namespace mozilla::default_agent {
  *
  * @param aSid Current user's string SID
  *
+ * @param aRegRename True if we should rename registry keys to prevent
+ * interference from kernel drivers attempting to lock subkeys.
+ *
  * @param aExtraFileExtensions Optional array of extra file association pairs to
  * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
  *
@@ -42,7 +45,7 @@ namespace mozilla::default_agent {
  *          NS_ERROR_FAILURE       Failed to set at least one association.
  */
 static nsresult SetDefaultExtensionHandlersUserChoiceImpl(
-    const wchar_t* aAumi, const wchar_t* const aSid,
+    const wchar_t* aAumi, const wchar_t* const aSid, const bool aRegRename,
     const nsTArray<nsString>& aFileExtensions);
 
 static bool AddMillisecondsToSystemTime(SYSTEMTIME& aSystemTime,
@@ -162,6 +165,7 @@ static bool CheckEqualMinutes(SYSTEMTIME aSystemTime1,
 }
 
 static bool SetUserChoiceRegistry(const wchar_t* aExt, const wchar_t* aProgID,
+                                  const bool aRegRename,
                                   mozilla::UniquePtr<wchar_t[]> aHash) {
   auto assocKeyPath = GetAssociationKeyPath(aExt);
   if (!assocKeyPath) {
@@ -178,19 +182,20 @@ static bool SetUserChoiceRegistry(const wchar_t* aExt, const wchar_t* aProgID,
   }
   nsAutoRegKey assocKey(rawAssocKey);
 
-  // Registry keys in the HKCU should be writable by applications run by the
-  // hive owning user and should not be lockable -
-  // https://web.archive.org/web/20230308044345/https://devblogs.microsoft.com/oldnewthing/20090326-00/?p=18703.
-  // Unfortunately some kernel drivers lock a set of protocol and file
-  // association keys; those locks appear to be based on the specific key
-  // names. Renaming a non-locked ancestor is sufficient to fix this.
-  nsAutoString tempName =
-      u""_ns MOZ_APP_DISPLAYNAME u"-"_ns +
-      NS_ConvertASCIItoUTF16(nsID::GenerateUUID().ToString().get());
-  ls = ::RegRenameKey(assocKey.get(), nullptr, tempName.get());
-  if (ls != ERROR_SUCCESS) {
-    LOG_ERROR(HRESULT_FROM_WIN32(ls));
-    return false;
+  if (aRegRename) {
+    // Registry keys in the HKCU should be writable by applications run by the
+    // hive owning user and should not be lockable -
+    // https://web.archive.org/web/20230308044345/https://devblogs.microsoft.com/oldnewthing/20090326-00/?p=18703.
+    // Unfortunately some kernel drivers lock a set of protocol and file
+    // association keys. Renaming a non-locked ancestor is sufficient to fix
+    // this.
+    nsAutoString tempName =
+        NS_ConvertASCIItoUTF16(nsID::GenerateUUID().ToString().get());
+    ls = ::RegRenameKey(assocKey.get(), nullptr, tempName.get());
+    if (ls != ERROR_SUCCESS) {
+      LOG_ERROR(HRESULT_FROM_WIN32(ls));
+      return false;
+    }
   }
 
   auto subkeysUpdated = [&] {
@@ -238,14 +243,16 @@ static bool SetUserChoiceRegistry(const wchar_t* aExt, const wchar_t* aProgID,
     return true;
   }();
 
-  // Rename back regardless of whether we successfully modified the subkeys to
-  // minimally attempt to return the registry the way we found it. If this
-  // fails the afformetioned kernel drivers have likely changed and there's
-  // little we can do to anticipate what proper recovery should look like.
-  ls = ::RegRenameKey(assocKey.get(), nullptr, aExt);
-  if (ls != ERROR_SUCCESS) {
-    LOG_ERROR(HRESULT_FROM_WIN32(ls));
-    return false;
+  if (aRegRename) {
+    // Rename back regardless of whether we successfully modified the subkeys to
+    // minimally attempt to return the registry the way we found it. If this
+    // fails the afformetioned kernel drivers have likely changed and there's
+    // little we can do to anticipate what proper recovery should look like.
+    ls = ::RegRenameKey(assocKey.get(), nullptr, aExt);
+    if (ls != ERROR_SUCCESS) {
+      LOG_ERROR(HRESULT_FROM_WIN32(ls));
+      return false;
+    }
   }
 
   return subkeysUpdated;
@@ -330,11 +337,14 @@ static bool FindPowershell(mozilla::UniquePtr<wchar_t[]>& powershellPath) {
  * @param aSid      Current user's string SID
  * @param aProgID   ProgID to use for the asociation
  * @param inMsix    Are we running from in an msix package?
+ * @param aRegRename True if we should rename registry keys to prevent
+ * interference from kernel drivers attempting to lock subkeys.
  *
  * @return true if successful, false on error.
  */
 static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
-                          const wchar_t* aProgID, bool inMsix) {
+                          const wchar_t* aProgID, bool inMsix,
+                          const bool aRegRename) {
   if (inMsix) {
     LOG_ERROR_MESSAGE(
         L"SetUserChoice should not be called on MSIX builds. Call "
@@ -373,7 +383,7 @@ static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
   }
 
   // We're outside of an MSIX package and can use the Win32 Registry API.
-  return SetUserChoiceRegistry(aExt, aProgID, std::move(hash));
+  return SetUserChoiceRegistry(aExt, aProgID, aRegRename, std::move(hash));
 }
 
 static bool VerifyUserDefault(const wchar_t* aExt, const wchar_t* aProgID) {
@@ -416,7 +426,8 @@ static bool VerifyUserDefault(const wchar_t* aExt, const wchar_t* aProgID) {
 }
 
 nsresult SetDefaultBrowserUserChoice(
-    const wchar_t* aAumi, const nsTArray<nsString>& aExtraFileExtensions) {
+    const wchar_t* aAumi, const bool aRegRename,
+    const nsTArray<nsString>& aExtraFileExtensions) {
   // Verify that the implementation of UserChoice hashing has not changed by
   // computing the current default hash and comparing with the existing value.
   if (!CheckBrowserUserChoiceHashes()) {
@@ -440,8 +451,8 @@ nsresult SetDefaultBrowserUserChoice(
 
   browserDefaults.AppendElements(aExtraFileExtensions);
 
-  nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(aAumi, sid.get(),
-                                                          browserDefaults);
+  nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(
+      aAumi, sid.get(), aRegRename, browserDefaults);
   if (!NS_SUCCEEDED(rv)) {
     LOG_ERROR_MESSAGE(L"Failed setting default with %s", aAumi);
   }
@@ -453,14 +464,15 @@ nsresult SetDefaultBrowserUserChoice(
 }
 
 nsresult SetDefaultExtensionHandlersUserChoice(
-    const wchar_t* aAumi, const nsTArray<nsString>& aFileExtensions) {
+    const wchar_t* aAumi, const bool aRegRename,
+    const nsTArray<nsString>& aFileExtensions) {
   auto sid = GetCurrentUserStringSid();
   if (!sid) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(aAumi, sid.get(),
-                                                          aFileExtensions);
+  nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(
+      aAumi, sid.get(), aRegRename, aFileExtensions);
   if (!NS_SUCCEEDED(rv)) {
     LOG_ERROR_MESSAGE(L"Failed setting default with %s", aAumi);
   }
@@ -563,7 +575,7 @@ static UINT GetSystemSleepIntervalInMilliseconds(UINT defaultValue) {
  *
  */
 static nsresult SetDefaultExtensionHandlersUserChoiceImplMsix(
-    const wchar_t* aAumi, const wchar_t* const aSid,
+    const wchar_t* aAumi, const wchar_t* const aSid, const bool aRegRename,
     const nsTArray<nsString>& aFileExtensions) {
   mozilla::UniquePtr<wchar_t[]> exePath;
   if (!FindPowershell(exePath)) {
@@ -594,15 +606,17 @@ Add-Type -TypeDefinition @"
  }
 "@
 
-function Set-DefaultHandlerRegistry($Association, $Path, $ProgID, $Hash) {
+function Set-DefaultHandlerRegistry($Association, $Path, $ProgID, $Hash, $RegRename) {
   $RootKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($Path)
 
-  # Rename the registry key.
-  $TempName = New-Guid
-  $Handle = $RootKey.Handle.DangerousGetHandle()
-  $result = [WinReg]::RegRenameKey($Handle, $null, $TempName.ToString())
-  if ($result -ne 0) {
-    throw "Error renaming association key.`r`nOriginal Name: " + $Association + "`r`nTemporary Name: " + $TempName
+  if ($RegRename) {
+    # Rename the registry key.
+    $TempName = New-Guid
+    $Handle = $RootKey.Handle.DangerousGetHandle()
+    $result = [WinReg]::RegRenameKey($Handle, $null, $TempName.ToString())
+    if ($result -ne 0) {
+      throw "Error renaming key to temporary value."
+    }
   }
 
   # DeleteSubKey throws if we don't have sufficient permissions to delete key,
@@ -617,9 +631,11 @@ function Set-DefaultHandlerRegistry($Association, $Path, $ProgID, $Hash) {
   $UserChoice.SetValue('ProgID', $ProgID, $StringType)
   $UserChoice.SetValue('Hash', $Hash, $StringType)
 
-  $result = [WinReg]::RegRenameKey($Handle, $null, $Association)
-  if ($result -ne 0) {
-    throw "Error reverting rename of association key.`r`nTemporary Name: " + $TempName + "`r`nOriginal Name: " + $Association
+  if ($RegRename) {
+    $result = [WinReg]::RegRenameKey($Handle, $null, $Association)
+    if ($result -ne 0) {
+      throw "Error renaming key to association value."
+    }
   }
 }
 
@@ -687,12 +703,14 @@ function Set-DefaultHandlerRegistry($Association, $Path, $ProgID, $Hash) {
       }
       auto hash = nsDependentString(hashWchar.get());
 
+      auto regRename = aRegRename ? u"$TRUE"_ns : u"$FALSE"_ns;
+
       // Append a line to the script buffer in the form:
       // Set-DefaultHandlerRegistry $Association $RegistryKeyPath $ProgID
-      // $UserChoiceHash
+      // $UserChoiceHash $RegRename
       scriptBuffer += u"Set-DefaultHandlerRegistry "_ns + association +
                       u" "_ns + keyPath + u" "_ns + progIDs[i / 2] + u" "_ns +
-                      hash + u"\n"_ns;
+                      hash + u" "_ns + regRename + u"\n"_ns;
     }
 
     // The hash changes at the end of each minute, so check that the hash should
@@ -744,15 +762,15 @@ function Set-DefaultHandlerRegistry($Association, $Path, $ProgID, $Hash) {
 }
 
 nsresult SetDefaultExtensionHandlersUserChoiceImpl(
-    const wchar_t* aAumi, const wchar_t* const aSid,
+    const wchar_t* aAumi, const wchar_t* const aSid, const bool aRegRename,
     const nsTArray<nsString>& aFileExtensions) {
   UINT32 pfnLen = 0;
   bool inMsix =
       GetCurrentPackageFullName(&pfnLen, nullptr) != APPMODEL_ERROR_NO_PACKAGE;
 
   if (inMsix) {
-    return SetDefaultExtensionHandlersUserChoiceImplMsix(aAumi, aSid,
-                                                         aFileExtensions);
+    return SetDefaultExtensionHandlersUserChoiceImplMsix(
+        aAumi, aSid, aRegRename, aFileExtensions);
   }
 
   for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
@@ -776,7 +794,8 @@ nsresult SetDefaultExtensionHandlersUserChoiceImpl(
       }
     }
 
-    if (!SetUserChoice(extraFileExtension, aSid, extraProgID.get(), inMsix)) {
+    if (!SetUserChoice(extraFileExtension, aSid, extraProgID.get(), inMsix,
+                       aRegRename)) {
       return NS_ERROR_FAILURE;
     }
 

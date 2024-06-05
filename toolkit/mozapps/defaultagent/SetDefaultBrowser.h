@@ -23,6 +23,9 @@ namespace mozilla::default_agent {
  *
  * @param aAumi The AUMI of the installation to set as default.
  *
+ * @param aRegRename True if we should rename registry keys to prevent
+ * interference from kernel drivers attempting to lock subkeys.
+ *
  * @param aExtraFileExtensions Optional array of extra file association pairs to
  * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
  *
@@ -40,7 +43,7 @@ namespace mozilla::default_agent {
  *         NS_ERROR_FAILURE         other failure
  */
 nsresult SetDefaultBrowserUserChoice(
-    const wchar_t* aAumi,
+    const wchar_t* aAumi, const bool aRegRename,
     const nsTArray<nsString>& aExtraFileExtensions = nsTArray<nsString>());
 
 /*
@@ -48,6 +51,9 @@ nsresult SetDefaultBrowserUserChoice(
  * the UserChoice registry keys.
  *
  * @param aAumi The AUMI of the installation to set as default.
+ *
+ * @param aRegRename True if we should rename registry keys to prevent
+ * interference from kernel drivers attempting to lock subkeys.
  *
  * @param aExtraFileExtensions Optional array of extra file association pairs to
  * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
@@ -59,7 +65,8 @@ nsresult SetDefaultBrowserUserChoice(
  *          NS_ERROR_FAILURE       Failed to set at least one association.
  */
 nsresult SetDefaultExtensionHandlersUserChoice(
-    const wchar_t* aAumi, const nsTArray<nsString>& aFileExtensions);
+    const wchar_t* aAumi, const bool aRegRename,
+    const nsTArray<nsString>& aFileExtensions);
 
 }  // namespace mozilla::default_agent
 
