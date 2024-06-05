@@ -25,7 +25,14 @@ DEPS = [
 
 
 def repackage_snap(
-    srcdir, objdir, snapdir, snapcraft, appname, branchname="nightly", arch="amd64", dry_run=False
+    srcdir,
+    objdir,
+    snapdir,
+    snapcraft,
+    appname,
+    branchname="nightly",
+    arch="amd64",
+    dry_run=False,
 ):
     pkgsrc = os.path.join(snapdir, "source", "usr", "lib", "firefox")
     os.path.join(pkgsrc, "distribution")
