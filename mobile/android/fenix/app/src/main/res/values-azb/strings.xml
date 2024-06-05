@@ -1516,6 +1516,9 @@
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
     <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">فایرفاکسیْ وارساییلان مورورچو ائله‌یین</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">گیزلی مورورو ایمتیحان ائله</string>
+
     <!-- Translations feature-->
 
 
