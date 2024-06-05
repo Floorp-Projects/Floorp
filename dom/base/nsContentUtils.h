@@ -2769,6 +2769,7 @@ class nsContentUtils {
   static bool IsJavaScriptLanguage(const nsString& aName);
 
   static bool IsJavascriptMIMEType(const nsAString& aMIMEType);
+  static bool IsJavascriptMIMEType(const nsACString& aMIMEType);
 
   static void SplitMimeType(const nsAString& aValue, nsString& aType,
                             nsString& aParams);
