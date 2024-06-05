@@ -1436,7 +1436,7 @@ pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
   #if defined(NIGHTLY_BUILD)
     pref("security.sandbox.content.level", 7);
   #else
-    pref("security.sandbox.content.level", 6);
+    pref("security.sandbox.content.level", 7);
   #endif
 
   // Pref controlling if messages relevant to sandbox violations are logged.
