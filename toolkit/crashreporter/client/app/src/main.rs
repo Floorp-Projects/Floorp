@@ -171,7 +171,7 @@ fn main() {
         crate::std::time::MockCurrentTime,
         time::OffsetDateTime::parse(
             MOCK_CURRENT_TIME,
-            &time::format_description::well_known::Rfc3339,
+            &time::format_description::well_known::Iso8601::DEFAULT,
         )
         .unwrap()
         .into(),
