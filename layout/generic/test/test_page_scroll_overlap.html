@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<head>
+  <title>Test for configurable scrolling overlap when scrolling by pages</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style>
+    #myIframe {
+      width: 400px;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+<iframe id="myIframe"></iframe>
+<script type="text/javascript">
+// This mochitest tests the behavior of two about:config prefs:
+//  toolkit.scrollbox.pagescroll.maxOverlapPercent
+//  toolkit.scrollbox.pagescroll.maxOverlapLines
+// These prefs (added in bug 1783183) determine the amount of overlap between
+// the old and new content in the scrollport when scrolling by pages, e.g. when
+// a user presses PageDown or PageUp, or when we handle a call to
+// window.scrollByPages().
+
+// Kick off the main test function when we've loaded:
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(() => {
+  doTests();
+});
+
+// constants:
+const IFRAME_HEIGHT_IN_PX = 300;  // Needs to match the style for #myIframe
+const LINE_HEIGHT_IN_PX = 50; // Needs to match our chosen Ahem font-size below
+const EPSILON_PER_LINE = 3; // see documentation
+const IFRAME_SRCDOC =
+"<!doctype html>\
+ <meta charset='utf-8'>\
+ <style>\
+ :root{overflow:hidden;scroll-behavior:auto;\
+</style><div style='height:5000px;width:5000px'>";
+
+// This function sets the relevant about:config prefs to `pctVal` and
+// `linesVal` and then checks that paging down (and later up) results in a
+// scrollport that overlaps the previous scrollport by `expectedOverlapInPx`.
+//
+// Callers that are testing a line-count-based amount of overlap should pass
+// `true` for useEpsilon, which then makes us expand the allowable overlap
+// to `expectedOverlapInPx +/- (linesVal * EPSILON_PER_LINE)`.
+async function testPrefVals(pctVal, linesVal, expectedOverlapInPx, useEpsilon) {
+  const win = myIframe.contentWindow;
+  const docElem = myIframe.contentDocument.documentElement;
+
+  // Define a convenience "is()" function that uses either is or isfuzzy
+  // depending on whether we're using an epsilon:
+  let myIs = function(actual, expected, message) {
+    if (useEpsilon) {
+      let epsilon = linesVal * EPSILON_PER_LINE;
+      isfuzzy(actual, expected, epsilon, message);
+    } else {
+      is(actual, expected, message);
+    }
+  };
+
+  // Set the pref values:
+  let prefVals = [];
+  if (pctVal != null) {
+    prefVals.push(["toolkit.scrollbox.pagescroll.maxOverlapPercent", pctVal]);
+  }
+  if (linesVal != null) {
+    prefVals.push(["toolkit.scrollbox.pagescroll.maxOverlapLines", linesVal]);
+  }
+  await SpecialPowers.pushPrefEnv({"set": prefVals});
+
+  // Scroll down by 1 page, and check that the overlap is what we expect:
+  let initialScrollY = docElem.scrollTop;
+  win.scrollByPages(1);
+  let deltaY = docElem.scrollTop - initialScrollY;
+  let overlapY = IFRAME_HEIGHT_IN_PX - deltaY;
+  myIs(overlapY, expectedOverlapInPx,
+     `Should get expected overlap, when paging down ` +
+     `with pref vals ${pctVal}% and ${linesVal}`);
+
+  // Now scroll up by 1 page (from the maximum scroll position),
+  // and check that the overlap is what we expect:
+  docElem.scrollTop = docElem.scrollTopMax;
+  initialScrollY = docElem.scrollTop;
+  win.scrollByPages(-1);
+  deltaY =  initialScrollY - docElem.scrollTop;
+  overlapY = IFRAME_HEIGHT_IN_PX - deltaY;
+  myIs(overlapY, expectedOverlapInPx,
+     `Should get expected overlap, when paging up ` +
+     `with pref vals ${pctVal}% and ${linesVal}`);
+
+  // Undo our pref modifications:
+  await SpecialPowers.popPrefEnv();
+
+  // Restore the initial scroll position to clean up after ourselves:
+  docElem.scrollTop = 0;
+}
+
+async function doTests() {
+  // Toggle a pref to avoid uninteresting off-by-1 test-failures on Android:
+  await SpecialPowers.pushPrefEnv({
+    "set": [["layout.scroll.disable-pixel-alignment", true]]
+  });
+
+  // Load a tall scrollable document in an iframe:
+  let iframeLoad = new Promise(resolve => {
+    myIframe.addEventListener("load", resolve, { once: true });
+  });
+  myIframe.srcdoc = IFRAME_SRCDOC;
+  await iframeLoad;
+
+  // Test pref-combinations that result in no overlap (0) between the old and
+  // new scroll positions. If either pref is 0 [or less than 0, which we clamp
+  // internally when using the pref value], then there should be no overlap.
+  await testPrefVals(0, 0, 0);
+  await testPrefVals(10, 0, 0);
+  await testPrefVals(100, 0, 0);
+  await testPrefVals(0, 10, 0);
+  await testPrefVals(-5, -5, 0);
+  await testPrefVals(-5, 9999, 0);
+  await testPrefVals(200, -5, 0);
+
+  // Test various percent values (with extremely high line-count values which
+  // makes the line count irrelevant, since we use whichever pref produces a
+  // smaller amount of overlap).  Note that the iframe scrollport is 300px
+  // tall, so that's what the percent resolves against.
+  await testPrefVals(1, 9999, 3);     // 1% of 300px is 3px
+  await testPrefVals(10, 9999, 30);   // 10% of 300px is 30px
+  await testPrefVals(50, 9999, 150);  // 50% of 300px is 150px
+  await testPrefVals(80, 9999, 240);  // 80% of 300px is 240px
+  await testPrefVals(99, 9999, 240);  // Values above 80% get clamped to 80%.
+  await testPrefVals(100, 9999, 240); // Values above 80% get clamped to 80%.
+  await testPrefVals(200, 9999, 240); // Values above 80% get clamped to 80%.
+
+  // Test various line-count pref values (with extremely high percent values,
+  // which makes the percent pref irrelevant, since we use whichever pref
+  // produces a smaller amount of overlap). Note that the "lines" here are
+  // sized using the font metrics of the iframe's root scroll frame, which uses
+  // the initial values for all of the CSS font properties.  So our lines here
+  // have whatever line-height gets used for the default font at the default
+  // 16px font-size.  (Unfortunately we can't force a more predictable font
+  // like Ahem here; even if we set that set on the root node, it doesn't
+  // affect the styles on the root scroll frame.)
+  // So: we set our expectations here by assuming that the lines are a little
+  // bit taller than the default font-size (16px), with a few pixels of epsilon
+  // (per line-height) to allow for platform differences.
+  await testPrefVals(200, 1, 18, true);  // 1 line is roughly 18px tall
+  await testPrefVals(200, 2, 36, true);  // 2 lines are roughly 36px tall
+  await testPrefVals(200, 10, 180, true); // 10 lines are roughly 180px tall
+
+  // Test some combinations where both prefs have intermediate values, where
+  // one or the other will "win" (with the lower pixel-value winning and
+  // establishing the expected amount of overlap):
+  // 10% of 300px is 30px, which is less than 5 lines (roughly 5*18 = 90px)
+  await testPrefVals(10, 5, 30);
+  // 20% of 300px is 60px, which is more than 2 lines (roughly 2*18 = 36px)
+  await testPrefVals(20, 2, 36, true);
+  // 50% of 300px is 150px, which is more than 5 lines (roughly 5*18 = 90px)
+  await testPrefVals(50, 5, 90, true);
+
+  SimpleTest.finish();
+}
+</script>
