@@ -3129,6 +3129,26 @@ dtlsWebRTC:
         pref: media.peerconnection.dtls.version.max
       description: >-
         The maximum version of DTLS protocol used in WebRTC (770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3).
+
+certCompression:
+  description: Prefs that control the use of certificate compression decoders.
+  owner: anna.weine@mozilla.com
+  hasExposure: false
+  variables:
+    tlsEnableZlib:
+      type: boolean
+      setPref:
+        branch: default
+        pref: security.tls.enable_certificate_compression_zlib
+      description: >-
+        Whether to enable Zlib for TLS certificate compression.
+    tlsEnableBrotli:
+      type: boolean
+      setPref:
+        branch: default
+        pref: security.tls.enable_certificate_compression_brotli
+      description: >-
+        Whether to enable Brotli for TLS certificate compression.
 bounceTrackingProtection:
   description: Controls the Bounce Tracking Protection feature.
   owner: pbz@mozilla.com
