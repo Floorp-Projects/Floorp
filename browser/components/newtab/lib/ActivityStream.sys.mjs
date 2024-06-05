@@ -339,6 +339,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "newtabWallpapers.wallpaper-color",
+    {
+      title: "Currently set solid color wallpaper",
+      value: "",
+    },
+  ],
+  [
     "improvesearch.noDefaultSearchTile",
     {
       title: "Remove tiles that are the same as the default search",
