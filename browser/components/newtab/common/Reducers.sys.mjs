@@ -104,7 +104,6 @@ export const INITIAL_STATE = {
   Wallpapers: {
     wallpaperList: [],
     highlightSeenCounter: 0,
-    categories: [],
   },
   Weather: {
     initialized: false,
@@ -876,8 +875,6 @@ function Wallpapers(prevState = INITIAL_STATE.Wallpapers, action) {
         ...prevState,
         highlightSeenCounter: action.data,
       };
-    case at.WALLPAPERS_CATEGORY_SET:
-      return { ...prevState, categories: action.data };
     default:
       return prevState;
   }
