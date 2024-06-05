@@ -3116,3 +3116,24 @@ dtlsWebRTC:
         pref: media.peerconnection.dtls.version.max
       description: >-
         The maximum version of DTLS protocol used in WebRTC (770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3).
+bounceTrackingProtection:
+  description: Controls the Bounce Tracking Protection feature.
+  owner: pbz@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      type: boolean
+      setPref:
+        branch: default
+        pref: privacy.bounceTrackingProtection.enabled
+      description: Main flag to enable / disable the feature.
+    enableDryRunMode:
+      type: boolean
+      setPref:
+        branch: default
+        pref: privacy.bounceTrackingProtection.enableDryRunMode
+      description: >-
+        Enables a mode where if bounce tracking protection is enabled it
+        classifies but does not purge trackers. This mode is helpful for testing
+        the feature without risking data loss. Telemetry is still collected
+        normally.
