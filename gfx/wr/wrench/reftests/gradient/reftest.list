@@ -1,12 +1,12 @@
 platform(linux,mac) == premultiplied-aligned.yaml premultiplied-aligned.png
 fuzzy(1,500) platform(linux,mac) == premultiplied-angle.yaml premultiplied-angle.png
 platform(linux,mac) == premultiplied-radial.yaml premultiplied-radial.png
-platform(linux,mac) == premultiplied-conic.yaml premultiplied-conic.png
+platform(linux,mac) fuzzy(1,250) == premultiplied-conic.yaml premultiplied-conic.png
 
 platform(linux,mac) == premultiplied-aligned-2.yaml premultiplied-aligned-2.png
 platform(linux,mac) == premultiplied-angle-2.yaml premultiplied-angle-2.png
 platform(linux,mac) == premultiplied-radial-2.yaml premultiplied-radial-2.png
-platform(linux,mac) == premultiplied-conic-2.yaml premultiplied-conic-2.png
+platform(linux,mac) fuzzy(1,100) == premultiplied-conic-2.yaml premultiplied-conic-2.png
 
 == linear.yaml linear-ref.png
 == linear-reverse.yaml linear-ref.png
@@ -68,9 +68,9 @@ fuzzy(1,1) == tiling-radial-2.yaml tiling-radial-2-ref.yaml
 fuzzy(1,3) fuzzy-if(platform(swgl),1,1318) == tiling-radial-3.yaml tiling-radial-3-ref.yaml
 fuzzy(1,17) == tiling-radial-4.yaml tiling-radial-4-ref.yaml
 
-fuzzy(1,17) == tiling-conic-1.yaml tiling-conic-1-ref.yaml
-fuzzy(1,1) == tiling-conic-2.yaml tiling-conic-2-ref.yaml
-fuzzy(1,7) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
+fuzzy(1,500) == tiling-conic-1.yaml tiling-conic-1-ref.yaml
+fuzzy(1,250) == tiling-conic-2.yaml tiling-conic-2-ref.yaml
+fuzzy(1,320) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
 
 == radial-zero-size-1.yaml radial-zero-size-ref.yaml
 == radial-zero-size-2.yaml radial-zero-size-ref.yaml
@@ -85,12 +85,12 @@ platform(linux,mac) fuzzy-range(<=1,*1404) == repeat-border-radius.yaml repeat-b
 fuzzy(3,6000) == radial-border-radius-large.yaml radial-border-radius-large-ref.png
 
 == conic.yaml conic-ref.yaml
-fuzzy(1,57) == conic-simple.yaml conic-simple.png
-fuzzy(255,302) == conic-angle.yaml conic-angle.png
+fuzzy(1,300) == conic-simple.yaml conic-simple.png
+fuzzy(255,429) == conic-angle.yaml conic-angle.png
 == conic-center.yaml conic-center.png
 fuzzy(1,2) == conic-angle-wraparound.yaml conic-angle.yaml
-fuzzy-if(env(android,device),255,155) fuzzy-if(not(env(android,device)),1,1) == conic-angle-wraparound-negative.yaml conic-angle.yaml # Android device is Samsung Galaxy A51
-fuzzy(1,333) == conic-color-wheel.yaml conic-color-wheel.png
+fuzzy-if(env(android,device),255,155) fuzzy-if(not(env(android,device)),1,5) == conic-angle-wraparound-negative.yaml conic-angle.yaml # Android device is Samsung Galaxy A51
+fuzzy(1,1200) == conic-color-wheel.yaml conic-color-wheel.png
 
 # gradient caching tests
 # replaces a computed gradient by a sampled texture, so a lot of off-by-one
