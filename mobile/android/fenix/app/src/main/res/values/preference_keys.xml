@@ -108,6 +108,8 @@
     <string name="pref_key_sync_credit_cards" translatable="false">pref_key_sync_credit_cards</string>
     <!-- Key for Address sync preference in the account settings fragment -->
     <string name="pref_key_sync_address" translatable="false">pref_key_sync_address</string>
+    <!-- Key for engaging first time with signup -->
+    <string name="pref_key_first_time_engage_with_signup" translatable="false">pref_key_first_time_engage_with_signup</string>
 
     <!-- Search Settings -->
     <string name="pref_key_search_engine_list" translatable="false">pref_key_search_engine_list</string>

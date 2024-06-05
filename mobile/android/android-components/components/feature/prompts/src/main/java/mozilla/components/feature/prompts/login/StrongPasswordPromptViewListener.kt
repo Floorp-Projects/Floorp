@@ -7,7 +7,6 @@ package mozilla.components.feature.prompts.login
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.concept.PasswordPromptView
 import mozilla.components.feature.prompts.consumePromptFrom
 import mozilla.components.support.base.log.logger.Logger
@@ -27,22 +26,14 @@ internal class StrongPasswordPromptViewListener(
     private var sessionId: String? = null,
 ) : PasswordPromptView.Listener {
 
+    var onGeneratedPasswordPromptClick: () -> Unit = { }
+
     init {
         suggestStrongPasswordBar.listener = this
     }
 
-    internal fun handleSuggestStrongPasswordRequest(
-        request: PromptRequest.SelectLoginPrompt,
-        currentUrl: String,
-        onSaveLoginWithStrongPassword: (url: String, password: String) -> Unit,
-    ) {
-        request.generatedPassword?.let {
-            suggestStrongPasswordBar.showPrompt(
-                it,
-                currentUrl,
-                onSaveLoginWithStrongPassword,
-            )
-        }
+    internal fun handleSuggestStrongPasswordRequest() {
+        suggestStrongPasswordBar.showPrompt()
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -71,22 +62,7 @@ internal class StrongPasswordPromptViewListener(
         suggestStrongPasswordBar.hidePrompt()
     }
 
-    override fun onUseGeneratedPassword(
-        generatedPassword: String,
-        url: String,
-        onSaveLoginWithStrongPassword: (url: String, password: String) -> Unit,
-    ) {
-        browserStore.consumePromptFrom<PromptRequest.SelectLoginPrompt>(sessionId) {
-            // Create complete login entry: https://bugzilla.mozilla.org/show_bug.cgi?id=1869575
-            val createdLoginEntryWithPassword = Login(
-                guid = "",
-                origin = url,
-                username = "",
-                password = generatedPassword,
-            )
-            it.onConfirm(createdLoginEntryWithPassword)
-        }
-        onSaveLoginWithStrongPassword.invoke(url, generatedPassword)
-        suggestStrongPasswordBar.hidePrompt()
+    override fun onGeneratedPasswordPromptClick() {
+        onGeneratedPasswordPromptClick.invoke()
     }
 }

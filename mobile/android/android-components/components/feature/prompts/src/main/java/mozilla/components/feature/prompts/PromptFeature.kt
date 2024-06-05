@@ -46,6 +46,7 @@ import mozilla.components.concept.identitycredential.Account
 import mozilla.components.concept.identitycredential.Provider
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardValidationDelegate
+import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.address.AddressDelegate
@@ -86,6 +87,9 @@ import mozilla.components.feature.prompts.identitycredential.SelectProviderDialo
 import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.login.LoginExceptions
 import mozilla.components.feature.prompts.login.LoginPicker
+import mozilla.components.feature.prompts.login.PasswordGeneratorDialogColors
+import mozilla.components.feature.prompts.login.PasswordGeneratorDialogColorsProvider
+import mozilla.components.feature.prompts.login.PasswordGeneratorDialogFragment
 import mozilla.components.feature.prompts.login.StrongPasswordPromptViewListener
 import mozilla.components.feature.prompts.login.SuggestStrongPasswordDelegate
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
@@ -154,6 +158,10 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * feature is enabled or not. If this resolves to 'false', the feature will be hidden.
  * @property onSaveLoginWithStrongPassword A callback invoked to save a new login that uses the
  * generated strong password
+ * @property shouldAutomaticallyShowSuggestedPassword A callback invoked to check whether the user
+ * is engaging with signup for the first time.
+ * @property onFirstTimeEngagedWithSignup A callback invoked when user is engaged with signup for
+ * the first time.
  * @property creditCardDelegate Delegate for credit card picker.
  * @property addressDelegate Delegate for address picker.
  * @property fileUploadsDirCleaner a [FileUploadsDirCleaner] to clean up temporary file uploads.
@@ -161,7 +169,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList", "MaxLineLength")
 class PromptFeature private constructor(
     private val container: PromptContainer,
     private val store: BrowserStore,
@@ -184,7 +192,13 @@ class PromptFeature private constructor(
     private val suggestStrongPasswordDelegate: SuggestStrongPasswordDelegate = object :
         SuggestStrongPasswordDelegate {},
     private val isSuggestStrongPasswordEnabled: Boolean = false,
+    private var shouldAutomaticallyShowSuggestedPassword: () -> Boolean = { false },
+    private val onFirstTimeEngagedWithSignup: () -> Unit = {},
     private val onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
+    private val onSavedGeneratedPassword: () -> Unit = {},
+    private val passwordGeneratorColorsProvider: PasswordGeneratorDialogColorsProvider = PasswordGeneratorDialogColorsProvider {
+        PasswordGeneratorDialogColors.default()
+    },
     private val creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
     private val addressDelegate: AddressDelegate = DefaultAddressDelegate(),
     private val fileUploadsDirCleaner: FileUploadsDirCleaner,
@@ -233,7 +247,13 @@ class PromptFeature private constructor(
         suggestStrongPasswordDelegate: SuggestStrongPasswordDelegate = object :
             SuggestStrongPasswordDelegate {},
         isSuggestStrongPasswordEnabled: Boolean = false,
+        shouldAutomaticallyShowSuggestedPassword: () -> Boolean = { false },
+        onFirstTimeEngagedWithSignup: () -> Unit = {},
         onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
+        onSavedGeneratedPassword: () -> Unit = {},
+        passwordGeneratorColorsProvider: PasswordGeneratorDialogColorsProvider = PasswordGeneratorDialogColorsProvider {
+            PasswordGeneratorDialogColors.default()
+        },
         creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
         addressDelegate: AddressDelegate = DefaultAddressDelegate(),
         fileUploadsDirCleaner: FileUploadsDirCleaner,
@@ -259,7 +279,11 @@ class PromptFeature private constructor(
         loginDelegate = loginDelegate,
         suggestStrongPasswordDelegate = suggestStrongPasswordDelegate,
         isSuggestStrongPasswordEnabled = isSuggestStrongPasswordEnabled,
+        shouldAutomaticallyShowSuggestedPassword = shouldAutomaticallyShowSuggestedPassword,
+        onFirstTimeEngagedWithSignup = onFirstTimeEngagedWithSignup,
         onSaveLoginWithStrongPassword = onSaveLoginWithStrongPassword,
+        onSavedGeneratedPassword = onSavedGeneratedPassword,
+        passwordGeneratorColorsProvider = passwordGeneratorColorsProvider,
         creditCardDelegate = creditCardDelegate,
         addressDelegate = addressDelegate,
     )
@@ -283,7 +307,10 @@ class PromptFeature private constructor(
         suggestStrongPasswordDelegate: SuggestStrongPasswordDelegate = object :
             SuggestStrongPasswordDelegate {},
         isSuggestStrongPasswordEnabled: Boolean = false,
+        shouldAutomaticallyShowSuggestedPassword: () -> Boolean = { false },
+        onFirstTimeEngagedWithSignup: () -> Unit = {},
         onSaveLoginWithStrongPassword: (String, String) -> Unit = { _, _ -> },
+        onSavedGeneratedPassword: () -> Unit = {},
         creditCardDelegate: CreditCardDelegate = object : CreditCardDelegate {},
         addressDelegate: AddressDelegate = DefaultAddressDelegate(),
         fileUploadsDirCleaner: FileUploadsDirCleaner,
@@ -308,7 +335,10 @@ class PromptFeature private constructor(
         loginDelegate = loginDelegate,
         suggestStrongPasswordDelegate = suggestStrongPasswordDelegate,
         isSuggestStrongPasswordEnabled = isSuggestStrongPasswordEnabled,
+        shouldAutomaticallyShowSuggestedPassword = shouldAutomaticallyShowSuggestedPassword,
+        onFirstTimeEngagedWithSignup = onFirstTimeEngagedWithSignup,
         onSaveLoginWithStrongPassword = onSaveLoginWithStrongPassword,
+        onSavedGeneratedPassword = onSavedGeneratedPassword,
         creditCardDelegate = creditCardDelegate,
         addressDelegate = addressDelegate,
     )
@@ -572,14 +602,20 @@ class PromptFeature private constructor(
                         return
                     }
                     if (promptRequest.generatedPassword != null && isSuggestStrongPasswordEnabled) {
-                        val currentUrl =
-                            store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url
-                        if (currentUrl != null) {
-                            strongPasswordPromptViewListener?.handleSuggestStrongPasswordRequest(
+                        if (shouldAutomaticallyShowSuggestedPassword.invoke()) {
+                            onFirstTimeEngagedWithSignup.invoke()
+                            handleDialogsRequest(
                                 promptRequest,
-                                currentUrl,
-                                onSaveLoginWithStrongPassword,
+                                session,
                             )
+                        } else {
+                            strongPasswordPromptViewListener?.onGeneratedPasswordPromptClick = {
+                                handleDialogsRequest(
+                                    promptRequest,
+                                    session,
+                                )
+                            }
+                            strongPasswordPromptViewListener?.handleSuggestStrongPasswordRequest()
                         }
                     } else {
                         loginPicker?.handleSelectLoginRequest(promptRequest)
@@ -694,6 +730,7 @@ class PromptFeature private constructor(
                 is PromptRequest.IdentityCredential.SelectProvider -> it.onConfirm(value as Provider)
                 is PromptRequest.IdentityCredential.SelectAccount -> it.onConfirm(value as Account)
                 is PromptRequest.IdentityCredential.PrivacyPolicy -> it.onConfirm(value as Boolean)
+                is SelectLoginPrompt -> it.onConfirm(value as Login)
                 else -> {
                     // no-op
                 }
@@ -760,6 +797,29 @@ class PromptFeature private constructor(
     ) {
         // Requests that are handled with dialogs
         val dialog = when (promptRequest) {
+            is SelectLoginPrompt -> {
+                val currentUrl =
+                    store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url
+                val generatedPassword = promptRequest.generatedPassword
+
+                if (generatedPassword == null || currentUrl == null) {
+                    logger.debug(
+                        "Ignoring received SelectLogin.onGeneratedPasswordPromptClick" +
+                            " when either the generated password or the currentUrl is null.",
+                    )
+                    dismissDialogRequest(promptRequest, session)
+                    return
+                }
+                PasswordGeneratorDialogFragment.newInstance(
+                    sessionId = session.id,
+                    promptRequestUID = promptRequest.uid,
+                    generatedPassword = generatedPassword,
+                    currentUrl = currentUrl,
+                    onSavedGeneratedPassword = onSavedGeneratedPassword,
+                    colorsProvider = passwordGeneratorColorsProvider,
+                )
+            }
+
             is SaveCreditCard -> {
                 if (!isCreditCardAutofillEnabled.invoke() || creditCardValidationDelegate == null ||
                     !promptRequest.creditCard.isValid
