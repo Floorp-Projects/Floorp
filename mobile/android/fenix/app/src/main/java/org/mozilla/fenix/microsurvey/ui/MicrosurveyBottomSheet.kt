@@ -72,7 +72,7 @@ fun MicrosurveyBottomSheet(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            MicroSurveyHeader(title = stringResource(id = R.string.micro_survey_survey_header)) {}
+            MicroSurveyHeader(title = stringResource(id = R.string.micro_survey_survey_header_2)) {}
 
             Spacer(modifier = Modifier.height(8.dp))
 

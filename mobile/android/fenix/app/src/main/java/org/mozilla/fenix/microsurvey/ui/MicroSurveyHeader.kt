@@ -80,7 +80,7 @@ private fun MicroSurveyHeaderPreview() {
                 .background(color = FirefoxTheme.colors.layer1)
                 .padding(16.dp),
         ) {
-            MicroSurveyHeader(stringResource(R.string.micro_survey_survey_header)) {}
+            MicroSurveyHeader(stringResource(R.string.micro_survey_survey_header_2)) {}
         }
     }
 }
