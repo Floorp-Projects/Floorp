@@ -29,13 +29,16 @@ VerifySSLServerCertChild::VerifySSLServerCertChild(
       mPeerCertChain(std::move(aPeerCertChain)),
       mProviderFlags(aProviderFlags) {}
 
-ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
+ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifySSLServerCertFinished(
     nsTArray<ByteArray>&& aBuiltCertChain,
-    const uint16_t& aCertTransparencyStatus, const uint8_t& aEVStatus,
+    const uint16_t& aCertTransparencyStatus, const EVStatus& aEVStatus,
+    const bool& aSucceeded, int32_t aFinalError,
+    const nsITransportSecurityInfo::OverridableErrorCategory&
+        aOverridableErrorCategory,
     const bool& aIsBuiltCertChainRootBuiltInRoot,
     const bool& aMadeOCSPRequests) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("[%p] VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess",
+          ("[%p] VerifySSLServerCertChild::RecvOnVerifySSLServerCertFinished",
            this));
 
   nsTArray<nsTArray<uint8_t>> certBytesArray;
@@ -43,24 +46,11 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
     certBytesArray.AppendElement(std::move(cert.data()));
   }
 
-  mResultTask->Dispatch(
-      std::move(certBytesArray), std::move(mPeerCertChain),
-      aCertTransparencyStatus, static_cast<EVStatus>(aEVStatus), true, 0,
-      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
-      aIsBuiltCertChainRootBuiltInRoot, mProviderFlags, aMadeOCSPRequests);
-  return IPC_OK();
-}
-
-ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
-    const int32_t& aFinalError, const uint32_t& aOverridableErrorCategory,
-    const bool& aMadeOCSPRequests) {
-  mResultTask->Dispatch(
-      nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
-      nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      EVStatus::NotEV, false, aFinalError,
-      static_cast<nsITransportSecurityInfo::OverridableErrorCategory>(
-          aOverridableErrorCategory),
-      false, mProviderFlags, aMadeOCSPRequests);
+  mResultTask->Dispatch(std::move(certBytesArray), std::move(mPeerCertChain),
+                        aCertTransparencyStatus, aEVStatus, aSucceeded,
+                        aFinalError, aOverridableErrorCategory,
+                        aIsBuiltCertChainRootBuiltInRoot, mProviderFlags,
+                        aMadeOCSPRequests);
   return IPC_OK();
 }
 

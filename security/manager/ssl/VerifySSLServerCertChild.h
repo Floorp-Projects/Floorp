@@ -30,14 +30,13 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
       SSLServerCertVerificationResult* aResultTask,
       nsTArray<nsTArray<uint8_t>>&& aPeerCertChain, uint32_t aProviderFlags);
 
-  ipc::IPCResult RecvOnVerifiedSSLServerCertSuccess(
+  ipc::IPCResult RecvOnVerifySSLServerCertFinished(
       nsTArray<ByteArray>&& aBuiltCertChain,
-      const uint16_t& aCertTransparencyStatus, const uint8_t& aEVStatus,
+      const uint16_t& aCertTransparencyStatus, const EVStatus& aEVStatus,
+      const bool& aSucceeded, int32_t aFinalError,
+      const nsITransportSecurityInfo::OverridableErrorCategory&
+          aOverridableErrorCategory,
       const bool& aIsBuiltCertChainRootBuiltInRoot,
-      const bool& aMadeOCSPRequests);
-
-  ipc::IPCResult RecvOnVerifiedSSLServerCertFailure(
-      const int32_t& aFinalError, const uint32_t& aOverridableErrorCategory,
       const bool& aMadeOCSPRequests);
 
  private:

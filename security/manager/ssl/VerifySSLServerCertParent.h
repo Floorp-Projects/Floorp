@@ -37,13 +37,13 @@ class VerifySSLServerCertParent : public PVerifySSLServerCertParent {
                 const uint32_t& aProviderFlags,
                 const uint32_t& aCertVerifierFlags);
 
-  void OnVerifiedSSLServerCert(const nsTArray<ByteArray>& aBuiltCertChain,
-                               uint16_t aCertificateTransparencyStatus,
-                               uint8_t aEVStatus, bool aSucceeded,
-                               PRErrorCode aFinalError,
-                               uint32_t aOverridableErrorCategory,
-                               bool aIsBuiltCertChainRootBuiltInRoot,
-                               bool aMadeOCSPRequests);
+  void OnVerifiedSSLServerCert(
+      const nsTArray<ByteArray>& aBuiltCertChain,
+      uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
+      bool aSucceeded, PRErrorCode aFinalError,
+      nsITransportSecurityInfo::OverridableErrorCategory
+          aOverridableErrorCategory,
+      bool aIsBuiltCertChainRootBuiltInRoot, bool aMadeOCSPRequests);
 
  private:
   virtual ~VerifySSLServerCertParent();

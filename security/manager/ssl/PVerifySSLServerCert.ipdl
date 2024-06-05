@@ -8,6 +8,8 @@
 include PSMIPCTypes;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using mozilla::psm::EVStatus from "mozilla/ipc/TransportSecurityInfoUtils.h";
+using nsITransportSecurityInfo::OverridableErrorCategory from "mozilla/ipc/TransportSecurityInfoUtils.h";
 
 namespace mozilla {
 namespace psm {
@@ -16,13 +18,20 @@ namespace psm {
 protocol PVerifySSLServerCert
 {
 child:
-  async OnVerifiedSSLServerCertSuccess(ByteArray[] aBuiltCertChain,
-                                       uint16_t aCertTransparencyStatus,
-                                       uint8_t aEVStatus,
-                                       bool isBuiltCertChainRootBuiltInRoot, bool aMadeOCSPRequests);
-
-  async OnVerifiedSSLServerCertFailure(int32_t aFinalError,
-                                       uint32_t aOverridableErrorCategory, bool aMadeOCSPRequests);
+  // This is not an incredibly intuitive order for these arguments, as
+  // `aFinalError` is probably the most salient argument (if it is 0, the
+  // connection will proceed, regardless of the value of, e.g. `aSucceeded`).
+  // However, this ordering matches the order of the related functions in
+  // SSLServerCertVerification.{h,cpp} (minus unnecessary arguments such as
+  // `aPeerCertChain`).
+  async OnVerifySSLServerCertFinished(ByteArray[] aBuiltCertChain,
+                                      uint16_t aCertTransparencyStatus,
+                                      EVStatus aEVStatus,
+                                      bool aSucceeded,
+                                      int32_t aFinalError,
+                                      OverridableErrorCategory aOverridableErrorCategory,
+                                      bool aIsBuiltCertChainRootBuiltInRoot,
+                                      bool aMadeOCSPRequests);
 
   async __delete__();
 };

@@ -28,21 +28,19 @@ VerifySSLServerCertParent::VerifySSLServerCertParent() {}
 
 void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
     const nsTArray<ByteArray>& aBuiltCertChain,
-    uint16_t aCertificateTransparencyStatus, uint8_t aEVStatus, bool aSucceeded,
-    PRErrorCode aFinalError, uint32_t aOverridableErrorCategory,
+    uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
+    bool aSucceeded, PRErrorCode aFinalError,
+    nsITransportSecurityInfo::OverridableErrorCategory
+        aOverridableErrorCategory,
     bool aIsBuiltCertChainRootBuiltInRoot, bool aMadeOCSPRequests) {
   if (!CanSend()) {
     return;
   }
 
-  if (aSucceeded) {
-    Unused << SendOnVerifiedSSLServerCertSuccess(
-        aBuiltCertChain, aCertificateTransparencyStatus, aEVStatus,
-        aIsBuiltCertChainRootBuiltInRoot, aMadeOCSPRequests);
-  } else {
-    Unused << SendOnVerifiedSSLServerCertFailure(
-        aFinalError, aOverridableErrorCategory, aMadeOCSPRequests);
-  }
+  Unused << SendOnVerifySSLServerCertFinished(
+      aBuiltCertChain, aCertificateTransparencyStatus, aEVStatus, aSucceeded,
+      aFinalError, aOverridableErrorCategory, aIsBuiltCertChainRootBuiltInRoot,
+      aMadeOCSPRequests);
 
   Close();
 }
@@ -109,9 +107,8 @@ void IPCServerCertVerificationResult::Dispatch(
               SaveIntermediateCerts(certBytesArray);
             }
             parent->OnVerifiedSSLServerCert(
-                builtCertChain, aCertificateTransparencyStatus,
-                static_cast<uint8_t>(aEVStatus), aSucceeded, aFinalError,
-                static_cast<uint32_t>(aOverridableErrorCategory),
+                builtCertChain, aCertificateTransparencyStatus, aEVStatus,
+                aSucceeded, aFinalError, aOverridableErrorCategory,
                 aIsBuiltCertChainRootBuiltInRoot, aMadeOCSPRequests);
           }),
       NS_DISPATCH_NORMAL);
