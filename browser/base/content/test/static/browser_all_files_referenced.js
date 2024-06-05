@@ -287,10 +287,6 @@ var allowlist = [
 
   // Referenced programmatically
   { file: "chrome://browser/content/backup/BackupManifest.1.schema.json" },
-
-  // These will be referenced once bug 1897278 lands.
-  { file: "resource://app/modules/backup/ArchiveEncryptionState.sys.mjs" },
-  { file: "resource://app/modules/backup/ArchiveUtils.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
