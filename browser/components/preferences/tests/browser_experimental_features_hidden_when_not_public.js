@@ -10,12 +10,16 @@ add_task(async function testNonPublicFeaturesShouldntGetDisplayed() {
 
   const server = new DefinitionServer();
   let definitions = [
-    { id: "test-featureA", isPublic: true, preference: "test.feature.a" },
-    { id: "test-featureB", isPublic: false, preference: "test.feature.b" },
-    { id: "test-featureC", isPublic: true, preference: "test.feature.c" },
+    { id: "test-featureA", isPublicJexl: "true", preference: "test.feature.a" },
+    {
+      id: "test-featureB",
+      isPublicJexl: "false",
+      preference: "test.feature.b",
+    },
+    { id: "test-featureC", isPublicJexl: "true", preference: "test.feature.c" },
   ];
-  for (let { id, isPublic, preference } of definitions) {
-    server.addDefinition({ id, isPublic, preference });
+  for (let { id, isPublicJexl, preference } of definitions) {
+    server.addDefinition({ id, isPublicJexl, preference });
   }
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -25,15 +29,16 @@ add_task(async function testNonPublicFeaturesShouldntGetDisplayed() {
   );
   let doc = gBrowser.contentDocument;
 
+  let firstPublicFeatureId = definitions.find(d => d.isPublicJexl == "true").id;
   await TestUtils.waitForCondition(
-    () => doc.getElementById(definitions.find(d => d.isPublic).id),
+    () => doc.getElementById(firstPublicFeatureId),
     "wait for the first public feature to get added to the DOM"
   );
 
   for (let definition of definitions) {
     is(
       !!doc.getElementById(definition.id),
-      definition.isPublic,
+      definition.isPublicJexl == "true",
       "feature should only be in DOM if it's public: " + definition.id
     );
   }
@@ -52,7 +57,7 @@ add_task(async function testNonPublicFeaturesShouldntGetDisplayed() {
   const server = new DefinitionServer();
   server.addDefinition({
     id: "test-hidden",
-    isPublic: false,
+    isPublicJexl: "false",
     preference: "test.feature.hidden",
   });
   await BrowserTestUtils.openNewForegroundTab(
