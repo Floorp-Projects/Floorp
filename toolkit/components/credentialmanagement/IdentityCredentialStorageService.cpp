@@ -10,6 +10,8 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/IdentityCredential.h"
 #include "mozilla/Components.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Services.h"
@@ -310,10 +312,112 @@ nsresult IdentityCredentialStorageService::EnsureTable(
         ")"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  tableExists = false;
+  aDatabase->TableExists("lightweight_identity"_ns, &tableExists);
+  if (!tableExists) {
+    // Currently there is only one schema version, so we just need to create the
+    // table. The definition uses no explicit rowid column, instead primary
+    // keying on the tuple defined in the spec. We store two bits and some
+    // additional data to make integration with the ClearDataService
+    // easier/possible.
+    nsresult rv = aDatabase->SetSchemaVersion(SCHEMA_VERSION);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDatabase->ExecuteSimpleSQL(
+        "CREATE TABLE lightweight_identity ("
+        "idpOrigin TEXT NOT NULL"
+        ",credentialId TEXT NOT NULL"
+        ",name TEXT"
+        ",iconDataURL TEXT"
+        ",originAllowlist TEXT"
+        ",dynamicAllowEndpoint TEXT"
+        ",userDataExpireTimeStamp TEXT"
+        ",modificationTime INTEGER"
+        ",idpBaseDomain TEXT"
+        ",PRIMARY KEY (idpOrigin, credentialId)"
+        ")"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
-nsresult IdentityCredentialStorageService::LoadMemoryTableFromDisk() {
+nsresult
+IdentityCredentialStorageService::LoadLightweightMemoryTableFromDisk() {
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "Must not load the table from disk in the main thread.");
+  auto constexpr selectAllQuery =
+      "SELECT idpOrigin, credentialId, name, iconDataURL, "
+      "originAllowlist, dynamicAllowEndpoint, userDataExpireTimeStamp,"
+      "modificationTime, idpBaseDomain FROM lightweight_identity;"_ns;
+  auto constexpr insertQuery =
+      "INSERT INTO lightweight_identity(idpOrigin, credentialId, "
+      "name, iconDataURL, originAllowlist, dynamicAllowEndpoint, "
+      "userDataExpireTimeStamp,"
+      "modificationTime, idpBaseDomain) VALUES (:idpOrigin, :credentialId, :name, "
+      ":iconDataURL, :originAllowlist, :dynamicAllowEndpoint, :userDataExpireTime, :modificationTime, :idpBaseDomain);"_ns;
+
+  nsCOMPtr<mozIStorageStatement> writeStmt;
+  nsresult rv = mMemoryDatabaseConnection->CreateStatement(
+      insertQuery, getter_AddRefs(writeStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> readStmt;
+  rv = mDiskDatabaseConnection->CreateStatement(selectAllQuery,
+                                                getter_AddRefs(readStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasResult;
+  while (NS_SUCCEEDED(readStmt->ExecuteStep(&hasResult)) && hasResult) {
+    int64_t modificationTime;
+    nsCString idpOrigin, credentialId, idpBaseDomain,
+        name, iconDataURL, originAllowlist, dynamicAllowEndpoint, userDataExpireTimeStamp;
+
+    // Read values from disk query
+    rv = readStmt->GetUTF8String(0, idpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(1, credentialId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(2, name);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(3, iconDataURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(4, originAllowlist);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(5, dynamicAllowEndpoint);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(6, userDataExpireTimeStamp);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetInt64(7, &modificationTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = readStmt->GetUTF8String(8, idpBaseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Write values to memory database
+    rv = writeStmt->BindUTF8StringByName("idpOrigin"_ns, idpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByName("credentialId"_ns, credentialId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByName("name"_ns, name);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByName("iconDataURL"_ns, iconDataURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByName("originAllowlist"_ns, originAllowlist);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByName("dynamicAllowEndpoint"_ns, dynamicAllowEndpoint);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByName("userDataExpireTimeStamp"_ns, userDataExpireTimeStamp);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindInt64ByName("modificationTime"_ns, modificationTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->BindUTF8StringByName("idpBaseDomain"_ns, idpBaseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = writeStmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult
+IdentityCredentialStorageService::LoadHeavyweightMemoryTableFromDisk() {
   MOZ_ASSERT(!NS_IsMainThread(),
              "Must not load the table from disk in the main thread.");
   auto constexpr selectAllQuery =
@@ -374,6 +478,12 @@ nsresult IdentityCredentialStorageService::LoadMemoryTableFromDisk() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
+}
+
+nsresult IdentityCredentialStorageService::LoadMemoryTableFromDisk() {
+  nsresult rv = LoadHeavyweightMemoryTableFromDisk();
+  NS_ENSURE_SUCCESS(rv, rv);
+  return LoadLightweightMemoryTableFromDisk();
 }
 
 void IdentityCredentialStorageService::IncrementPendingWrites() {
@@ -469,11 +579,111 @@ nsresult IdentityCredentialStorageService::DeleteData(
 }
 
 // static
+nsresult IdentityCredentialStorageService::UpsertLightweightData(
+    mozIStorageConnection* aDatabaseConnection,
+    const dom::IPCIdentityCredential& aData) {
+  NS_ENSURE_ARG_POINTER(aDatabaseConnection);
+  NS_ENSURE_ARG_POINTER(aData.identityProvider());
+  nsresult rv;
+  constexpr auto upsertQuery =
+      "INSERT INTO lightweight_identity(idpOrigin, credentialId, "
+      "name, iconDataURL, originAllowlist, dynamicAllowEndpoint, "
+      "userDataExpireTimeStamp,"
+      "modificationTime, idpBaseDomain) VALUES (:idpOrigin, :credentialId, :name, "
+      ":iconDataURL, :originAllowlist, :dynamicAllowEndpoint, :userDataExpireTime, :modificationTime, :idpBaseDomain)"
+      "ON CONFLICT(idpOrigin, credentialId)"
+      "DO UPDATE SET name=excluded.name, "
+      "iconDataURL=excluded.iconDataURL, "
+      "originAllowlist=excluded.originAllowlist, "
+      "dynamicAllowEndpoint=excluded.dynamicAllowEndpoint, "
+      "userDataExpireTimeStamp=excluded.userDataExpireTimeStamp, "
+      "modificationTime=excluded.modificationTime"_ns;
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aDatabaseConnection->CreateStatement(upsertQuery, getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString idpOrigin;
+  rv = aData.identityProvider()->GetOrigin(idpOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString idpBaseDomain;
+  rv = aData.identityProvider()->GetBaseDomain(idpBaseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName("idpOrigin"_ns, idpOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName("credentialId"_ns, NS_ConvertUTF16toUTF8(aData.id()));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aData.name().isSome()) {
+    rv = stmt->BindUTF8StringByName("name"_ns, aData.name().value());
+  } else {
+    rv = stmt->BindNullByName("name"_ns);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aData.iconURL().isSome()) {
+    rv = stmt->BindUTF8StringByName("iconDataURL"_ns, aData.iconURL().value());
+  } else {
+    rv = stmt->BindNullByName("iconDataURL"_ns);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aData.originAllowlist().Length()) {
+    rv = stmt->BindUTF8StringByName(
+        "originAllowlist"_ns, StringJoin("|"_ns, aData.originAllowlist()));
+  } else {
+    rv = stmt->BindNullByName("originAllowlist"_ns);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aData.dynamicViaCors().isSome()) {
+    rv = stmt->BindUTF8StringByName("dynamicAllowEndpoint"_ns, aData.dynamicViaCors().value());
+  } else {
+    rv = stmt->BindNullByName("dynamicAllowEndpoint"_ns);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aData.infoExpires().isSome()) {
+    rv = stmt->BindInt64ByName("userDataExpireTime"_ns, aData.infoExpires().value());
+  } else {
+    rv = stmt->BindNullByName("userDataExpireTime"_ns);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName("modificationTime"_ns, MODIFIED_NOW);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName("idpBaseDomain"_ns, idpBaseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return stmt->Execute();
+}
+
+// static
+nsresult IdentityCredentialStorageService::DeleteLightweightData(
+    mozIStorageConnection* aDatabaseConnection,
+    const dom::IPCIdentityCredential& aData) {
+  NS_ENSURE_ARG_POINTER(aDatabaseConnection);
+  NS_ENSURE_ARG_POINTER(aData.identityProvider());
+  nsresult rv;
+  constexpr auto deleteQuery =
+      "DELETE FROM lightweight_identity WHERE"
+      "idpOrigin = ?2 AND credentialId = ?3;"_ns;
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aDatabaseConnection->CreateStatement(deleteQuery, getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString idpOrigin;
+  rv = aData.identityProvider()->GetOrigin(idpOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName("idpOrigin"_ns, idpOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName("credentialId"_ns,
+                                  NS_ConvertUTF16toUTF8(aData.id()));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return stmt->Execute();
+}
+
+// static
 nsresult IdentityCredentialStorageService::ClearData(
     mozIStorageConnection* aDatabaseConnection) {
   NS_ENSURE_ARG_POINTER(aDatabaseConnection);
   nsresult rv =
       aDatabaseConnection->ExecuteSimpleSQL("DELETE FROM identity;"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aDatabaseConnection->ExecuteSimpleSQL(
+      "DELETE FROM lightweight_identity;"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -494,6 +704,11 @@ IdentityCredentialStorageService::DeleteDataFromOriginAttributesPattern(
   rv = aDatabaseConnection->ExecuteSimpleSQL(
       "DELETE FROM identity WHERE "
       "ORIGIN_ATTRS_PATTERN_MATCH_ORIGIN(rpOrigin);"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDatabaseConnection->ExecuteSimpleSQL(
+      "DELETE FROM lightweight_identity WHERE "
+      "ORIGIN_ATTRS_PATTERN_MATCH_ORIGIN(idpOrigin);"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDatabaseConnection->RemoveFunction(
@@ -520,7 +735,20 @@ nsresult IdentityCredentialStorageService::DeleteDataFromTimeRange(
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+
+  auto constexpr deleteTimeQueryLightweight =
+      "DELETE FROM lightweight_identity WHERE modificationTime > ?1 and "
+      "modificationTime "
+      "< ?2"_ns;
+  nsCOMPtr<mozIStorageStatement> stmtLightweight;
+  rv = aDatabaseConnection->CreateStatement(deleteTimeQueryLightweight,
+                                            getter_AddRefs(stmtLightweight));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmtLightweight->BindInt64ByIndex(0, aStart);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmtLightweight->BindInt64ByIndex(1, aEnd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return stmtLightweight->Execute();
 }
 
 // static
@@ -529,8 +757,8 @@ nsresult IdentityCredentialStorageService::DeleteDataFromPrincipal(
   NS_ENSURE_ARG_POINTER(aDatabaseConnection);
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
-  nsCString rpOrigin;
-  nsresult rv = aPrincipal->GetOrigin(rpOrigin);
+  nsCString origin;
+  nsresult rv = aPrincipal->GetOrigin(origin);
   NS_ENSURE_SUCCESS(rv, rv);
   auto constexpr deletePrincipalQuery =
       "DELETE FROM identity WHERE rpOrigin=?1"_ns;
@@ -538,11 +766,20 @@ nsresult IdentityCredentialStorageService::DeleteDataFromPrincipal(
   rv = aDatabaseConnection->CreateStatement(deletePrincipalQuery,
                                             getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindUTF8StringByIndex(0, rpOrigin);
+  rv = stmt->BindUTF8StringByIndex(0, origin);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+
+  auto constexpr deletePrincipalQueryLightweight =
+      "DELETE FROM lightweight_identity WHERE idpOrigin=:idpOrigin"_ns;
+  nsCOMPtr<mozIStorageStatement> stmtLightweight;
+  rv = aDatabaseConnection->CreateStatement(deletePrincipalQueryLightweight,
+                                            getter_AddRefs(stmtLightweight));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmtLightweight->BindUTF8StringByName("idpOrigin"_ns, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return stmtLightweight->Execute();
 }
 
 // static
@@ -560,7 +797,16 @@ nsresult IdentityCredentialStorageService::DeleteDataFromBaseDomain(
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+
+  auto constexpr deleteBaseDomainQueryLightweight =
+      "DELETE FROM lightweight_identity WHERE idpBaseDomain=?1"_ns;
+  nsCOMPtr<mozIStorageStatement> stmtLightweight;
+  rv = aDatabaseConnection->CreateStatement(deleteBaseDomainQueryLightweight,
+                                            getter_AddRefs(stmtLightweight));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmtLightweight->BindUTF8StringByIndex(0, aBaseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return stmtLightweight->Execute();
 }
 
 NS_IMETHODIMP IdentityCredentialStorageService::SetState(
@@ -593,8 +839,8 @@ NS_IMETHODIMP IdentityCredentialStorageService::SetState(
                                    self->mDiskDatabaseConnection, rpPrincipal,
                                    idpPrincipal, credentialID, aRegistered,
                                    aAllowLogout);
-                               NS_ENSURE_SUCCESS_VOID(rv);
                                self->DecrementPendingWrites();
+                               NS_ENSURE_SUCCESS_VOID(rv);
                              }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
   return NS_OK;
@@ -682,12 +928,130 @@ NS_IMETHODIMP IdentityCredentialStorageService::Delete(
                                nsresult rv = DeleteData(
                                    self->mDiskDatabaseConnection, rpPrincipal,
                                    idpPrincipal, credentialID);
-                               NS_ENSURE_SUCCESS_VOID(rv);
                                self->DecrementPendingWrites();
+                               NS_ENSURE_SUCCESS_VOID(rv);
                              }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP IdentityCredentialStorageService::
+    IdentityCredentialStorageService::GetIdentityCredentials(
+        nsTArray<RefPtr<nsIPrincipal>> const& aIDPPrincipals,
+        nsTArray<mozilla::dom::IPCIdentityCredential>& aResult) {
+  AssertIsOnMainThread();
+
+  nsresult rv = WaitForInitialization();
+  NS_ENSURE_SUCCESS(rv, rv);
+  auto constexpr selectQuery =
+      "SELECT credentialId, name, iconDataURL, userDataExpireTimeStamp, originAllowList, dynamicAllowEndpoint FROM lightweight_identity WHERE idpOrigin=?1"_ns;
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = mMemoryDatabaseConnection->CreateStatement(selectQuery,
+                                                  getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (const RefPtr<nsIPrincipal>& idpPrincipal : aIDPPrincipals) {
+    rv = IdentityCredentialStorageService::ValidatePrincipal(idpPrincipal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString idpOrigin;
+    rv = idpPrincipal->GetOrigin(idpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = stmt->BindUTF8StringByIndex(0, idpOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool hasResult;
+    // For each result, we append it to the array to return
+    while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      nsAutoString id, name, iconDataURL, originAllowList, dynamicAllowEndpoint,
+          userDataExpireTimeStamp;
+      rv = stmt->GetString(0, id);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->GetString(1, name);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->GetString(2, iconDataURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->GetString(3, userDataExpireTimeStamp);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->GetString(4, originAllowList);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->GetString(5, dynamicAllowEndpoint);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsTArray<nsCString> allowListArray;
+      for (const auto& origin : originAllowList.Split('|')) {
+        allowListArray.AppendElement(NS_ConvertUTF16toUTF8(origin));
+      }
+      dom::IPCIdentityCredential result(
+          id, Nothing(),
+          name.IsVoid() ? Nothing() : Some(NS_ConvertUTF16toUTF8(name)),
+          iconDataURL.IsVoid() ? Nothing()
+                               : Some(NS_ConvertUTF16toUTF8(iconDataURL)),
+          allowListArray,
+          dynamicAllowEndpoint.IsVoid()
+              ? Nothing()
+              : Some(NS_ConvertUTF16toUTF8(dynamicAllowEndpoint)),
+          userDataExpireTimeStamp.IsVoid()
+              ? Nothing()
+              : Some(NS_ConvertUTF16toUTF8(userDataExpireTimeStamp)),
+          idpPrincipal);
+      aResult.AppendElement(result);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP IdentityCredentialStorageService::StoreIdentityCredential(
+    const mozilla::dom::IPCIdentityCredential& aCredential) {
+  AssertIsOnMainThread();
+  NS_ENSURE_ARG_POINTER(aCredential.identityProvider());
+
+  nsresult rv;
+  rv = WaitForInitialization();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = UpsertLightweightData(mMemoryDatabaseConnection, aCredential);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  IncrementPendingWrites();
+  RefPtr<IdentityCredentialStorageService> self = this;
+  return mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction(
+          "IdentityCredentialStorageService::StoreIdentityCredential",
+          [self, aCredential]() {
+            nsresult rv = UpsertLightweightData(self->mDiskDatabaseConnection,
+                                                aCredential);
+            self->DecrementPendingWrites();
+            NS_ENSURE_SUCCESS_VOID(rv);
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+}
+
+NS_IMETHODIMP IdentityCredentialStorageService::DeleteIdentityCredential(
+    const mozilla::dom::IPCIdentityCredential& aCredential) {
+  AssertIsOnMainThread();
+  NS_ENSURE_ARG_POINTER(aCredential.identityProvider());
+  nsresult rv;
+  rv = WaitForInitialization();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = DeleteLightweightData(mMemoryDatabaseConnection, aCredential);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  IncrementPendingWrites();
+  RefPtr<IdentityCredentialStorageService> self = this;
+  return mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction(
+          "IdentityCredentialStorageService::DeleteIdentityCredential",
+          [self, aCredential]() {
+            nsresult rv = DeleteLightweightData(self->mDiskDatabaseConnection,
+                                                aCredential);
+            self->DecrementPendingWrites();
+            NS_ENSURE_SUCCESS_VOID(rv);
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
 }
 
 NS_IMETHODIMP IdentityCredentialStorageService::Clear() {
@@ -704,8 +1068,8 @@ NS_IMETHODIMP IdentityCredentialStorageService::Clear() {
                              [self]() {
                                nsresult rv =
                                    ClearData(self->mDiskDatabaseConnection);
-                               NS_ENSURE_SUCCESS_VOID(rv);
                                self->DecrementPendingWrites();
+                               NS_ENSURE_SUCCESS_VOID(rv);
                              }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
 
@@ -736,8 +1100,8 @@ IdentityCredentialStorageService::DeleteFromOriginAttributesPattern(
           [self, oaPattern]() {
             nsresult rv = DeleteDataFromOriginAttributesPattern(
                 self->mDiskDatabaseConnection, oaPattern);
-            NS_ENSURE_SUCCESS_VOID(rv);
             self->DecrementPendingWrites();
+            NS_ENSURE_SUCCESS_VOID(rv);
           }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
   return NS_OK;
@@ -758,8 +1122,8 @@ NS_IMETHODIMP IdentityCredentialStorageService::DeleteFromTimeRange(
                              [self, aStart, aEnd]() {
                                nsresult rv = DeleteDataFromTimeRange(
                                    self->mDiskDatabaseConnection, aStart, aEnd);
-                               NS_ENSURE_SUCCESS_VOID(rv);
                                self->DecrementPendingWrites();
+                               NS_ENSURE_SUCCESS_VOID(rv);
                              }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
   return NS_OK;
@@ -784,8 +1148,8 @@ NS_IMETHODIMP IdentityCredentialStorageService::
                              [self, principal]() {
                                nsresult rv = DeleteDataFromPrincipal(
                                    self->mDiskDatabaseConnection, principal);
-                               NS_ENSURE_SUCCESS_VOID(rv);
                                self->DecrementPendingWrites();
+                               NS_ENSURE_SUCCESS_VOID(rv);
                              }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
 
@@ -808,8 +1172,8 @@ NS_IMETHODIMP IdentityCredentialStorageService::DeleteFromBaseDomain(
                              [self, baseDomain]() {
                                nsresult rv = DeleteDataFromBaseDomain(
                                    self->mDiskDatabaseConnection, baseDomain);
-                               NS_ENSURE_SUCCESS_VOID(rv);
                                self->DecrementPendingWrites();
+                               NS_ENSURE_SUCCESS_VOID(rv);
                              }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
   return NS_OK;
@@ -833,6 +1197,11 @@ IdentityCredentialStorageService::Observe(nsISupports* aSubject,
       rv = mMemoryDatabaseConnection->ExecuteSimpleSQL(
           "DELETE FROM identity WHERE "
           "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN(rpOrigin);"_ns);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = mMemoryDatabaseConnection->ExecuteSimpleSQL(
+          "DELETE FROM lightweight_identity WHERE "
+          "PRIVATE_BROWSING_PATTERN_MATCH_ORIGIN(idpOrigin);"_ns);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = mMemoryDatabaseConnection->RemoveFunction(

@@ -11,7 +11,9 @@ EXPORTS.mozilla += [
     "IdentityCredentialStorageService.h",
 ]
 
-UNIFIED_SOURCES += ["IdentityCredentialStorageService.cpp"]
+UNIFIED_SOURCES += [
+    "IdentityCredentialStorageService.cpp",
+]
 
 FINAL_LIBRARY = "xul"
 
@@ -32,3 +34,5 @@ XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 XPCOM_MANIFESTS += [
     "components.conf",
 ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
