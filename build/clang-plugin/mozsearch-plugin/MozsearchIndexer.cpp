@@ -1113,6 +1113,14 @@ public:
 
         J.attribute("sym", getMangledName(CurMangleContext, BaseDecl));
 
+        if (Base.isVirtual()) {
+          CharUnits superOffsetBytes = Layout.getVBaseClassOffset(BaseDecl);
+          J.attribute("offsetBytes", superOffsetBytes.getQuantity());
+        } else {
+          CharUnits superOffsetBytes = Layout.getBaseClassOffset(BaseDecl);
+          J.attribute("offsetBytes", superOffsetBytes.getQuantity());
+        }
+
         J.attributeBegin("props");
         J.arrayBegin();
         if (Base.isVirtual()) {
