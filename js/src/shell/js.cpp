@@ -12549,11 +12549,11 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   if (op.getBoolOption("disable-well-formed-unicode-strings")) {
     JS::Prefs::setAtStartup_well_formed_unicode_strings(false);
   }
-#ifdef NIGHTLY_BUILD
   if (op.getBoolOption("enable-arraybuffer-resizable")) {
     JS::Prefs::setAtStartup_experimental_arraybuffer_resizable(true);
     JS::Prefs::setAtStartup_experimental_sharedarraybuffer_growable(true);
   }
+#ifdef NIGHTLY_BUILD
   if (op.getBoolOption("enable-iterator-helpers")) {
     JS::Prefs::setAtStartup_experimental_iterator_helpers(true);
   }
