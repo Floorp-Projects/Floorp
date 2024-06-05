@@ -184,7 +184,7 @@
     <string name="recently_visited_menu_item_remove">Հեռացնել</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description_2">Ցուցադրել բոլոր անցած բացատրությունները</string>
+    <string name="past_explorations_show_all_content_description_2">Ցուցադրել բոլոր անցած հետախուզումները</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -371,7 +371,7 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Դիտեք ձեր անհատականացված գլխավոր էջը: Վերջին ներդիրները, էջանիշները և որոնման արդյունքները կհայտնվեն այստեղ:</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Ծանոթացեք Ձեր անհատականացված տնէջին: Վերջին ներդիրները, էջանիշները և որոնման արդյունքները կհայտնվեն այստեղ:</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Բարի գալուստ ավելի անձնական համացանց</string>
     <!-- Home onboarding dialog welcome screen description text. -->
@@ -1618,7 +1618,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Մուտք գործել Ձեր տեսախցիկով</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Փոխարենը օգտ. էլ. փոստ</string>
+    <string name="sign_in_with_email">Փոխարենը օգտվել էլ. փոստից</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Չունե՞ք հաշիվ: <u>Ստեղծեք նորը</u>՝ Firefox-ը տարբեր սարքերի միջև համաժամեցնելու համար:]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
