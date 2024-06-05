@@ -12,3 +12,5 @@ support-files = ["head.js"]
 ["browser_sidebar_context_menu.js"]
 
 ["browser_toolbar_sidebar_button.js"]
+
+["browser_view_sidebar_menu.js"]
