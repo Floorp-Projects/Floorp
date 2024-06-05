@@ -166,7 +166,7 @@ nsHTTPCompressConv::MaybeRetarget(nsIRequest* request) {
   if (!req) {
     return NS_ERROR_NO_INTERFACE;
   }
-  if (!StaticPrefs::network_decompression_off_mainthread()) {
+  if (!StaticPrefs::network_decompression_off_mainthread2()) {
     return NS_OK;
   }
   nsCOMPtr<nsISerialEventTarget> target;
@@ -667,7 +667,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
             return NS_ERROR_INVALID_CONTENT_ENCODING;
           }
         } /* for */
-      }   /* gzip */
+      } /* gzip */
       break;
 
     case HTTP_COMPRESS_BROTLI: {
@@ -937,7 +937,8 @@ uint32_t nsHTTPCompressConv::check_header(nsIInputStream* iStr,
 
 NS_IMETHODIMP
 nsHTTPCompressConv::CheckListenerChain() {
-  if (XRE_IsContentProcess()) {
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::network_decompression_off_mainthread2()) {
     // handle decompression OMT always.  If the chain needs to be MT,
     // we'll determine that in OnStartRequest and dispatch to MT
     return NS_OK;
