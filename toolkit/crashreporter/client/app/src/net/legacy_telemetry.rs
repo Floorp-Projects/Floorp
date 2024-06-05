@@ -8,6 +8,7 @@
 use anyhow::Context;
 use serde::Serialize;
 use std::collections::BTreeMap;
+use time::format_description::well_known::{iso8601, Iso8601};
 use uuid::Uuid;
 
 const TELEMETRY_VERSION: u64 = 4;
@@ -17,14 +18,28 @@ const PAYLOAD_VERSION: u64 = 1;
 // static PING_ANNOTATIONS: phf::Set<&'static str>;
 include!(concat!(env!("OUT_DIR"), "/ping_annotations.rs"));
 
+// We need a custom time serializer to encode at most 3 decimal digits in the fractions of a second
+// (millisecond precision).
+const TIME_CONFIG: iso8601::EncodedConfig = iso8601::Config::DEFAULT
+    .set_time_precision(iso8601::TimePrecision::Second {
+        // Safety: 3 is non-zero
+        decimal_digits: Some(unsafe { std::num::NonZeroU8::new_unchecked(3) }),
+    })
+    .encode();
+const TIME_FORMAT: Iso8601<TIME_CONFIG> = Iso8601::<TIME_CONFIG>;
+time::serde::format_description!(time_format, OffsetDateTime, TIME_FORMAT);
+
 #[derive(Serialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum Ping<'a> {
-    #[serde(rename_all = "camelCase")]
     Crash {
         id: Uuid,
         version: u64,
-        #[serde(with = "time::serde::rfc3339")]
+        #[serde(with = "time_format")]
         creation_date: time::OffsetDateTime,
         client_id: &'a str,
         #[serde(skip_serializing_if = "serde_json::Value::is_null")]
@@ -43,7 +58,7 @@ pub struct Payload<'a> {
     version: u64,
     #[serde(with = "date_format")]
     crash_date: time::Date,
-    #[serde(with = "time::serde::rfc3339")]
+    #[serde(with = "time_format")]
     crash_time: time::OffsetDateTime,
     has_crash_environment: bool,
     crash_id: &'a str,
