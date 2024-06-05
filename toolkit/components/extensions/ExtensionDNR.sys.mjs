@@ -1349,10 +1349,35 @@ class RequestDetails {
       ? this.#domainFromURI(initiatorURI)
       : null;
 
+    this.domainType = this.#isThirdParty(requestURI, initiatorURI)
+      ? "thirdParty"
+      : "firstParty";
+
     this.requestURIspec = requestURI.spec;
     this.requestDataForUrlFilter = new RequestDataForUrlFilter(
       this.requestURIspec
     );
+  }
+
+  #isThirdParty(requestURI, initiatorURI) {
+    if (!initiatorURI) {
+      // E.g. main_frame request or opaque origin.
+      return true;
+    }
+
+    try {
+      return (
+        Services.eTLD.getBaseDomain(requestURI) !==
+        Services.eTLD.getBaseDomain(initiatorURI)
+      );
+    } catch (err) {
+      // May throw if either domain is an IP address, lacks a public suffix
+      // (e.g. http://localhost or moz-extension://UUID)
+      // or contains characters disallowed in URIs. Fall back:
+      return (
+        this.#domainFromURI(requestURI) !== this.#domainFromURI(initiatorURI)
+      );
+    }
   }
 
   static fromChannelWrapper(channel) {
@@ -1795,7 +1820,9 @@ class RequestEvaluator {
       return false;
     }
 
-    // TODO bug 1797408: domainType
+    if (cond.domainType && cond.domainType !== this.req.domainType) {
+      return false;
+    }
 
     if (cond.requestMethods) {
       if (!cond.requestMethods.includes(this.req.method)) {

@@ -213,6 +213,8 @@ skip-if = [
 
 ["test_ext_dnr_api.js"]
 
+["test_ext_dnr_domainType.js"]
+
 ["test_ext_dnr_download.js"]
 skip-if = ["os == 'android'"] # Android: downloads.download goes through the embedder app instead of Gecko, and cannot be intercepted.
 
