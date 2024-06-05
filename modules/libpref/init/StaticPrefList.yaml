@@ -14367,7 +14367,7 @@
 # Main pref to enable / disable the feature.
 - name: privacy.bounceTrackingProtection.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: once
 
 # How long to wait for a client redirect after a navigation ends.
