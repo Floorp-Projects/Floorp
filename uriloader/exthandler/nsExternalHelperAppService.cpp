@@ -1061,7 +1061,7 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
 
     // Also allow this load if the target is a toplevel BC and contains a
     // non-web-controlled about:blank document
-    if (bc->IsTop() && !bc->HadOriginalOpener() && wgp) {
+    if (bc->IsTop() && !bc->GetTopLevelCreatedByWebContent() && wgp) {
       RefPtr<nsIURI> uri = wgp->GetDocumentURI();
       foundAccessibleFrame =
           uri && uri->GetSpecOrDefault().EqualsLiteral("about:blank");

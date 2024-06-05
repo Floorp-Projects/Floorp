@@ -884,6 +884,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     openWindowInfo->mParent = parentBC;
     openWindowInfo->mIsForPrinting = aPrintKind != PRINT_NONE;
     openWindowInfo->mIsForWindowDotPrint = aPrintKind == PRINT_WINDOW_DOT_PRINT;
+    openWindowInfo->mIsTopLevelCreatedByWebContent =
+        !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal);
 
     // We're going to want the window to be immediately available, meaning we
     // want it to match the current remoteness.
@@ -1076,6 +1078,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   if (!targetBC) {
     return rv;
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(
+      !windowIsNew || !targetBC->IsContent() ||
+          nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) ||
+          targetBC->GetTopLevelCreatedByWebContent(),
+      "New BC not marked as created by web content, but it was");
 
   // If our parent is sandboxed, set it as the one permitted sandboxed navigator
   // on the new window we're opening.

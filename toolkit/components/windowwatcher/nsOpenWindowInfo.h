@@ -22,6 +22,7 @@ class nsOpenWindowInfo : public nsIOpenWindowInfo {
   bool mIsRemote = false;
   bool mIsForPrinting = false;
   bool mIsForWindowDotPrint = false;
+  bool mIsTopLevelCreatedByWebContent = false;
   RefPtr<mozilla::dom::BrowserParent> mNextRemoteBrowser;
   mozilla::OriginAttributes mOriginAttributes;
   RefPtr<mozilla::dom::BrowsingContext> mParent;
