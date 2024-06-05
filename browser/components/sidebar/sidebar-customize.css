@@ -66,3 +66,15 @@
     font-size: 0.9em;
   }
 }
+
+#manage-settings {
+  display: flex;
+  align-items: center;
+  gap: var(--space-medium);
+  margin-block-start: var(--space-xxlarge);
+  font-size: 0.9em;
+
+  .icon {
+    background-image: url("chrome://browser/skin/preferences/category-general.svg");
+  }
+}

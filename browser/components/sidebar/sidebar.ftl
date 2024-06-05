@@ -26,6 +26,7 @@ sidebar-search-results-header =
   .heading = Search results for “{ $query }”
 
 sidebar-customize-firefox-tools = { -brand-product-name } tools
+sidebar-customize-firefox-settings = Manage { -brand-short-name } settings
 
 ## Labels for sidebar context menu items
 
