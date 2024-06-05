@@ -213,6 +213,9 @@ export const ContentAnalysis = {
    * need for communicating something to the user.
    */
   initialize(doc) {
+    if (!lazy.gContentAnalysis.isActive) {
+      return;
+    }
     if (!this.isInitialized) {
       this.isInitialized = true;
       this.initializeDownloadCA();
@@ -227,14 +230,12 @@ export const ContentAnalysis = {
 
     // Do this even if initialized so the icon shows up on new windows, not just the
     // first one.
-    if (lazy.gContentAnalysis.isActive) {
-      doc.l10n.setAttributes(
-        doc.getElementById("content-analysis-indicator"),
-        "content-analysis-indicator-tooltip",
-        { agentName: lazy.agentName }
-      );
-      doc.documentElement.setAttribute("contentanalysisactive", "true");
-    }
+    doc.l10n.setAttributes(
+      doc.getElementById("content-analysis-indicator"),
+      "content-analysis-indicator-tooltip",
+      { agentName: lazy.agentName }
+    );
+    doc.documentElement.setAttribute("contentanalysisactive", "true");
   },
 
   async uninitialize() {
@@ -258,6 +259,7 @@ export const ContentAnalysis = {
   async observe(aSubj, aTopic, _aData) {
     switch (aTopic) {
       case "quit-application-requested": {
+        let quitCancelled = false;
         let pendingRequests =
           this.dlpBusyViewsByTopBrowsingContext.getAllRequests();
         if (pendingRequests.length) {
@@ -291,11 +293,17 @@ export const ContentAnalysis = {
             null,
             { value: 0 }
           );
-          if (buttonSelected === 0) {
-            lazy.gContentAnalysis.cancelAllRequests();
-          } else {
+          if (buttonSelected === 1) {
             aSubj.data = true;
+            quitCancelled = true;
           }
+        }
+        if (!quitCancelled) {
+          // Ideally we would wait until "quit-application" to cancel outstanding
+          // DLP requests, but the "DLP busy" or "DLP blocked" dialog can block the
+          // main thread, thus preventing the "quit-application" from being sent,
+          // which causes a shutdownhang. (bug 1899703)
+          lazy.gContentAnalysis.cancelAllRequests();
         }
         break;
       }
