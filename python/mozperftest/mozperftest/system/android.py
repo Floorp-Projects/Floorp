@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import mozlog
@@ -158,6 +159,7 @@ class AndroidDevice(Layer):
             f"am start-activity -W -a android.intent.action.MAIN --ez "
             f"performancetest true -n {package_id}/org.mozilla.fenix.App"
         )
+        time.sleep(4)  # ensure skip onboarding call has time to propagate.
 
     def setup(self):
         if self.custom_apk_exists():
