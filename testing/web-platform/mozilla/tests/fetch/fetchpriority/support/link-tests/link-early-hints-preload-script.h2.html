@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<script src="/loading/early-hints/resources/early-hints-helpers.sub.js"></script>
+<script>
+  const test_url = "../../../../mozilla/tests/fetch/fetchpriority/support/link-tests/link-header.h2.html";
+  const preloads = [
+      {
+          "url": "dummy.js?1",
+          "as_attr": "script",
+          "fetchpriority_attr": "low",
+      },
+      {
+          "url": "dummy.js?2",
+          "as_attr": "script",
+          "fetchpriority_attr": "high",
+      },
+      {
+          "url": "dummy.js?3",
+          "as_attr": "script",
+          "fetchpriority_attr": "auto",
+      },
+      {
+          "url": "dummy.js?4",
+            "as_attr": "script",
+      },
+  ];
+  navigateToTestWithEarlyHints(test_url, preloads,
+                               /*exclude_preloads_from_ok_response=*/true);
+</script>

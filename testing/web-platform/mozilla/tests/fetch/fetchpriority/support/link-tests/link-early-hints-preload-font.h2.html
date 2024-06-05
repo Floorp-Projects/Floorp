@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<script src="/loading/early-hints/resources/early-hints-helpers.sub.js"></script>
+<script>
+  const test_url = "../../../../mozilla/tests/fetch/fetchpriority/support/link-tests/link-header.h2.html";
+  const preloads = [
+      {
+          "url": "dummy.font?1",
+          "as_attr": "font",
+          "fetchpriority_attr": "low",
+          "crossorigin_attr": "",
+      },
+      {
+          "url": "dummy.font?2",
+          "as_attr": "font",
+          "fetchpriority_attr": "high",
+          "crossorigin_attr": "",
+      },
+      {
+          "url": "dummy.font?3",
+          "as_attr": "font",
+          "fetchpriority_attr": "auto",
+          "crossorigin_attr": "",
+      },
+      {
+          "url": "dummy.font?4",
+          "as_attr": "font",
+          "crossorigin_attr": "",
+      },
+  ];
+  navigateToTestWithEarlyHints(test_url, preloads,
+                               /*exclude_preloads_from_ok_response=*/true);
+</script>
