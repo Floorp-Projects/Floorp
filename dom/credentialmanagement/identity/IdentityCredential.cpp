@@ -154,10 +154,69 @@ void IdentityCredential::GetOrigin(nsACString& aOrigin,
 }
 
 // static
-RefPtr<IdentityCredential::GetIdentityCredentialPromise>
-IdentityCredential::Create(nsPIDOMWindowInner* aParent,
-                           const CredentialCreationOptions& aOptions,
-                           bool aSameOriginWithAncestors) {
+RefPtr<GenericPromise> IdentityCredential::Store(
+    nsPIDOMWindowInner* aParent, const IdentityCredential* aCredential,
+    bool aSameOriginWithAncestors) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(aParent);
+  MOZ_ASSERT(aCredential);
+  // Prevent origin confusion by requiring no cross domain iframes
+  // in this one's ancestry
+  if (!aSameOriginWithAncestors) {
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR,
+                                           __func__);
+  }
+
+  Document* parentDocument = aParent->GetExtantDoc();
+  if (!parentDocument) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  // Kick the request off to the main process and translate the result to the
+  // expected type when we get a result.
+  RefPtr<WindowGlobalChild> wgc = aParent->GetWindowGlobalChild();
+  MOZ_ASSERT(wgc);
+  return wgc
+      ->SendStoreIdentityCredential(aCredential->MakeIPCIdentityCredential())
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [](const WindowGlobalChild::StoreIdentityCredentialPromise::
+                 ResolveValueType& aResult) {
+            return GenericPromise::CreateAndResolve(true, __func__);
+          },
+          [](const WindowGlobalChild::StoreIdentityCredentialPromise::
+                 RejectValueType& aResult) {
+            return GenericPromise::CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR,
+                                                   __func__);
+          });
+}
+
+// static
+RefPtr<GenericPromise> IdentityCredential::StoreInMainProcess(
+    nsIPrincipal* aPrincipal, const IPCIdentityCredential& aCredential) {
+  if (!aCredential.identityProvider() ||
+      !aCredential.identityProvider()->Equals(aPrincipal)) {
+    return GenericPromise::CreateAndReject(nsresult::NS_ERROR_FAILURE,
+                                           __func__);
+  }
+  nsresult error;
+  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
+      mozilla::components::IdentityCredentialStorageService::Service(&error);
+  if (NS_WARN_IF(!icStorageService)) {
+    return GenericPromise::CreateAndReject(error, __func__);
+  }
+  error = icStorageService->StoreIdentityCredential(nullptr, aCredential);
+  if (NS_FAILED(error)) {
+    return GenericPromise::CreateAndReject(error, __func__);
+  }
+
+  return GenericPromise::CreateAndReject(nsresult::NS_ERROR_FAILURE, __func__);
+}
+
+//static
+RefPtr<IdentityCredential::GetIdentityCredentialPromise> IdentityCredential::Create(
+    nsPIDOMWindowInner* aParent, const CredentialCreationOptions& aOptions,
+    bool aSameOriginWithAncestors) {
   MOZ_ASSERT(aOptions.mIdentity.WasPassed());
   MOZ_ASSERT(aParent);
   const IdentityCredentialInit& init = aOptions.mIdentity.Value();
