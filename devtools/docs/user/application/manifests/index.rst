@@ -24,7 +24,7 @@ To get a manifest deployed successfully, you need to include a `<link> <https://
 
 The ``.webmanifest`` extension is recommended in the spec, and should be served with an ``application/manifest+json`` mime type, although browsers generally tend to support manifests with other appropriate extensions like ``.json`` (mime type: ``application/json``).
 
-You also need to make sure the JSON inside the file is of the correct format. You can test this using the `Web Manifest Validator <https://manifest-validator.appspot.com/>`_.
+You also need to make sure the JSON inside the file is of the correct format.
 
 
 Inspecting your manifest
