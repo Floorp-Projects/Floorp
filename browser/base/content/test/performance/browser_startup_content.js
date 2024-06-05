@@ -124,24 +124,26 @@ add_task(async function () {
           "resource://gre/modules/AppConstants.sys.mjs"
         );
         let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
-        let modules = {};
+        let modules = new Map();
         for (let module of Cu.loadedJSModules) {
-          modules[module] = collectStacks
-            ? Cu.getModuleImportStack(module)
-            : "";
+          modules.set(
+            module,
+            collectStacks ? Cu.getModuleImportStack(module) : ""
+          );
         }
         for (let module of Cu.loadedESModules) {
-          modules[module] = collectStacks
-            ? Cu.getModuleImportStack(module)
-            : "";
+          modules.set(
+            module,
+            collectStacks ? Cu.getModuleImportStack(module) : ""
+          );
         }
-        let services = {};
+        let services = new Map();
         for (let contractID of Object.keys(Cc)) {
           try {
             if (
               Cm.isServiceInstantiatedByContractID(contractID, Ci.nsISupports)
             ) {
-              services[contractID] = "";
+              services.set(contractID, "");
             }
           } catch (e) {}
         }
@@ -157,15 +159,15 @@ add_task(async function () {
   let loadedInfo = await promise;
 
   // Gather loaded frame scripts.
-  loadedInfo.frameScripts = {};
+  loadedInfo.frameScripts = new Map();
   for (let [uri] of Services.mm.getDelayedFrameScripts()) {
-    loadedInfo.frameScripts[uri] = "";
+    loadedInfo.frameScripts.set(uri, "");
   }
 
   // Gather loaded process scripts.
-  loadedInfo.processScripts = {};
+  loadedInfo.processScripts = new Map();
   for (let [uri] of Services.ppmm.getDelayedProcessScripts()) {
-    loadedInfo.processScripts[uri] = "";
+    loadedInfo.processScripts.set(uri, "");
   }
 
   await checkLoadedScripts({

@@ -136,9 +136,9 @@ add_task(async function () {
   BrowserTestUtils.removeTab(tab);
 
   // Gather loaded process scripts.
-  loadedInfo.processScripts = {};
+  loadedInfo.processScripts = new Map();
   for (let [uri] of Services.ppmm.getDelayedProcessScripts()) {
-    loadedInfo.processScripts[uri] = "";
+    loadedInfo.processScripts.set(uri, "");
   }
 
   await checkLoadedScripts({
