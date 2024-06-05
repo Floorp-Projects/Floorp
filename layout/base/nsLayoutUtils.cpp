@@ -557,19 +557,6 @@ RetainedDisplayListBuilder* nsLayoutUtils::GetRetainedDisplayListBuilder(
   return displayRootFrame->GetProperty(RetainedDisplayListBuilder::Cached());
 }
 
-bool nsLayoutUtils::GPUImageScalingEnabled() {
-  static bool sGPUImageScalingEnabled;
-  static bool sGPUImageScalingPrefInitialised = false;
-
-  if (!sGPUImageScalingPrefInitialised) {
-    sGPUImageScalingPrefInitialised = true;
-    sGPUImageScalingEnabled =
-        Preferences::GetBool("layout.gpu-image-scaling.enabled", false);
-  }
-
-  return sGPUImageScalingEnabled;
-}
-
 void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
                                        OverflowAreas& aOverflowAreas,
                                        FrameChildListIDs aSkipChildLists) {
