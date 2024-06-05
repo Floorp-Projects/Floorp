@@ -6600,7 +6600,6 @@ dependencies = [
  "ron",
  "serde",
  "smallvec",
- "static_prefs",
  "svg_fmt",
  "swgl",
  "time 0.1.45",
