@@ -2,6 +2,10 @@
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/EventUtils.js */
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 /* eslint-disable no-unused-vars */
+// Despite a use of `spawnChrome` and thus ChromeUtils, we can't use isInstance
+// here as it gets used in plain mochitests which don't have the ChromeOnly
+// APIs for it.
+/* eslint-disable mozilla/use-isInstance */
 
 "use strict";
 
@@ -378,7 +382,21 @@ async function canTestOSKeyStoreLogin() {
 }
 
 async function waitForOSKeyStoreLogin(login = false) {
-  await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", { login });
+  // Need to fetch this from the parent in order for it to be correct.
+  let isOSAuthEnabled = await SpecialPowers.spawnChrome([], () => {
+    // Need to re-import this because we're running in the parent.
+    // eslint-disable-next-line no-shadow
+    const { FormAutofillUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
+    );
+
+    return FormAutofillUtils.getOSAuthEnabled(
+      FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF
+    );
+  });
+  if (isOSAuthEnabled) {
+    await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", { login });
+  }
 }
 
 function patchRecordCCNumber(record) {

@@ -1479,6 +1479,17 @@ BrowserGlue.prototype = {
       lazy.PdfJs.checkIsDefault(this._isNewProfile);
     }
 
+    if (!AppConstants.NIGHTLY_BUILD && this._isNewProfile) {
+      lazy.FormAutofillUtils.setOSAuthEnabled(
+        lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+        false
+      );
+      lazy.LoginHelper.setOSAuthEnabled(
+        lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,
+        false
+      );
+    }
+
     listeners.init();
 
     lazy.SessionStore.init();
@@ -4473,40 +4484,49 @@ BrowserGlue.prototype = {
       }
     }
 
-    // < 147 because 146 migration had a typo issue (was supposed to be 'creditCards' instead of 'creditcards'). This fixes that.
-    // 'creditCards' is now in AUTOFILL_CREDITCARDS_REAUTH_PREF.
+    // Version 146 had a typo issue and thus it has been replaced by 147.
+
     if (currentUIVersion < 147) {
       // We're securing the boolean prefs for OS Authentication.
       // This is achieved by converting them into a string pref and encrypting the values
       // stored inside it.
 
       if (!AppConstants.NIGHTLY_BUILD) {
-        const savedmstone = Services.prefs.getCharPref(
-          "browser.startup.homepage_override.mstone",
-          ""
+        const hasRunBetaMigration = Services.prefs
+          .getCharPref("browser.startup.homepage_override.mstone", "")
+          .startsWith("127.0");
+
+        // Version 146 UI migration wrote to a wrong `creditcards` pref when
+        // the feature was disabled, instead it should have used `creditCards`.
+        // The correct pref name is in AUTOFILL_CREDITCARDS_REAUTH_PREF.
+        // Note that we only wrote prefs if the feature was disabled.
+        let ccTypoDisabled = !lazy.FormAutofillUtils.getOSAuthEnabled(
+          "extensions.formautofill.creditcards.reauth.optout"
+        );
+        let ccCorrectPrefDisabled = !lazy.FormAutofillUtils.getOSAuthEnabled(
+          lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF
+        );
+        let ccPrevReauthPrefValue = Services.prefs.getBoolPref(
+          "extensions.formautofill.reauth.enabled",
+          false
         );
 
-        if (savedmstone.startsWith("127.0b")) {
-          // If the saved milestone starts with "127.0b",  we know that the migration is happened.
-          // Hence, get value from typo pref and store it in the correct pref.
-          const ccPrevReauthPrefValue = lazy.FormAutofillUtils.getOSAuthEnabled(
-            "extensions.formautofill.creditcards.reauth.optout"
-          );
-          lazy.FormAutofillUtils.setOSAuthEnabled(
-            lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-            ccPrevReauthPrefValue
-          );
-        } else {
-          // In other case, migrations has not happened, get values from the old prefs and store in the new correct prefs.
-          const ccPrevReauthPrefValue = Services.prefs.getBoolPref(
-            "extensions.formautofill.reauth.enabled"
-          );
+        let userHadEnabledCreditCardReauth =
+          // If we've run beta migration, and neither typo nor correct pref
+          // indicate disablement, the user enabled the pref:
+          (hasRunBetaMigration && !ccTypoDisabled && !ccCorrectPrefDisabled) ||
+          // Or if we never ran beta migration and the bool pref is set:
+          ccPrevReauthPrefValue;
+
+        lazy.FormAutofillUtils.setOSAuthEnabled(
+          lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+          userHadEnabledCreditCardReauth
+        );
+
+        if (!hasRunBetaMigration) {
           const passwordsPrevReauthPrefValue = Services.prefs.getBoolPref(
-            "signon.management.page.os-auth.enabled"
-          );
-          lazy.FormAutofillUtils.setOSAuthEnabled(
-            lazy.FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-            ccPrevReauthPrefValue
+            "signon.management.page.os-auth.enabled",
+            false
           );
           lazy.LoginHelper.setOSAuthEnabled(
             lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF,

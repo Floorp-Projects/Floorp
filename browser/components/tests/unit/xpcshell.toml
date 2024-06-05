@@ -11,7 +11,7 @@ support-files = ["distribution.ini"]
 ["test_browserGlue_migration_no_errors.js"]
 
 ["test_browserGlue_migration_osauth.js"]
-run-if = ["!nightly_build"]
+skip-if = ["nightly_build", "os == 'linux'"]
 
 ["test_browserGlue_migration_places_xulstore.js"]
 

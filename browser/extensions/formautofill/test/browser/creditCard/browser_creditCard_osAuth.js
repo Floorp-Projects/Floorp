@@ -11,6 +11,9 @@ const SELECTORS = {
 requestLongerTimeout(2);
 
 add_setup(async function () {
+  // Revert head.js change that mocks os auth
+  sinon.restore();
+
   // Load in a few credit cards
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.reduceTimerPrecision", false]],
@@ -25,18 +28,22 @@ add_task(async function test_os_auth_enabled_with_checkbox() {
     async function (browser) {
       await finalPrefPaneLoaded;
 
-      await SpecialPowers.spawn(browser, [SELECTORS], async selectors => {
-        is(
-          content.document.querySelector(selectors.reauthCheckbox).checked,
-          true,
-          "OSReauth for credit cards should be checked"
-        );
-      });
+      await SpecialPowers.spawn(
+        browser,
+        [SELECTORS, AppConstants.NIGHTLY_BUILD],
+        async (selectors, isNightly) => {
+          is(
+            content.document.querySelector(selectors.reauthCheckbox).checked,
+            isNightly,
+            "OSReauth for credit cards should be checked"
+          );
+        }
+      );
       is(
         FormAutofillUtils.getOSAuthEnabled(
           FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF
         ),
-        true,
+        AppConstants.NIGHTLY_BUILD,
         "OSAuth should be enabled."
       );
     }

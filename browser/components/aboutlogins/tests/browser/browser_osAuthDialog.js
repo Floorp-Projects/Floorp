@@ -15,6 +15,8 @@ const SELECTORS = {
 add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
+  // Undo mocking from head.js
+  sinon.restore();
 });
 
 add_task(async function test_os_auth_enabled_with_checkbox() {
@@ -24,16 +26,20 @@ add_task(async function test_os_auth_enabled_with_checkbox() {
     async function (browser) {
       await finalPrefPaneLoaded;
 
-      await SpecialPowers.spawn(browser, [SELECTORS], async selectors => {
-        is(
-          content.document.querySelector(selectors.reauthCheckbox).checked,
-          true,
-          "OSReauth for Passwords should be checked"
-        );
-      });
+      await SpecialPowers.spawn(
+        browser,
+        [SELECTORS, AppConstants.NIGHTLY_BUILD],
+        async (selectors, isNightly) => {
+          is(
+            content.document.querySelector(selectors.reauthCheckbox).checked,
+            isNightly,
+            "OSReauth for Passwords should be checked"
+          );
+        }
+      );
       is(
         LoginHelper.getOSAuthEnabled(PASSWORDS_OS_REAUTH_PREF),
-        true,
+        AppConstants.NIGHTLY_BUILD,
         "OSAuth should be enabled."
       );
     }
