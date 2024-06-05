@@ -1520,6 +1520,26 @@ characteristics:
     data_sensitivity:
       - interaction
 
+  voices:
+    type: text
+    description: >
+      Available speechSynthesis voices.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886387
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886387#c4
+    expires: never
+    data_sensitivity:
+      # Text metrics are _required_ to be web_activity or highly_sensitive, so even though this
+      # is more like 'technical' (per the Data Review), I'm marking highly sensitive.
+      - highly_sensitive
+
   zoom_count:
     type: quantity
     unit: int
