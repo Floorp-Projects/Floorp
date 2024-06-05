@@ -512,6 +512,12 @@ private:
 
   std::string getMangledName(clang::MangleContext *Ctx,
                              const clang::NamedDecl *Decl) {
+    // Main functions will tend to collide because they inherently have similar
+    // signatures, so let's provide a custom location-based signature.
+    if (isa<FunctionDecl>(Decl) && cast<FunctionDecl>(Decl)->isMain()) {
+      return std::string("MF_") + mangleLocation(Decl->getLocation());
+    }
+
     if (isa<FunctionDecl>(Decl) && cast<FunctionDecl>(Decl)->isExternC()) {
       return cast<FunctionDecl>(Decl)->getNameAsString();
     }
