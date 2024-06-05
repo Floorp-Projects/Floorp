@@ -98,6 +98,8 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                     "chrome",
                 ]
             )
+            if self.config["app"] == "cstm-car-m":
+                args_list.extend(["--chrome.android.package", "org.chromium.chrome"])
         else:
             activity = self.config["activity"]
             if self.config["app"] == "fenix":
