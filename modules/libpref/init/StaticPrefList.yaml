@@ -2643,7 +2643,7 @@
 # event as a default action of `beforeinput`.
 - name: dom.events.textevent.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether to expose test interfaces of various sorts
