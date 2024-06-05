@@ -45,12 +45,18 @@ export class NetworkListener {
   #devtoolsNetworkObserver;
   #listening;
   #navigationManager;
+  #networkEventsMap;
 
   constructor(navigationManager) {
     lazy.EventEmitter.decorate(this);
 
     this.#listening = false;
     this.#navigationManager = navigationManager;
+
+    // This map is going to be used in NetworkEventRecord,
+    // but because we need to have one instance of the map per session,
+    // we have to create and store it here (since each session has a dedicated NetworkListener).
+    this.#networkEventsMap = new Map();
   }
 
   destroy() {
@@ -111,7 +117,8 @@ export class NetworkListener {
       networkEvent,
       channel,
       this,
-      this.#navigationManager
+      this.#navigationManager,
+      this.#networkEventsMap
     );
   };
 }
