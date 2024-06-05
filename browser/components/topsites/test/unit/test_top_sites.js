@@ -594,10 +594,11 @@ add_task(async function test_getLinksWithDefaults_no_internal_properties() {
 });
 
 add_task(async function test_getLinksWithDefaults_copy_frecent_screenshot() {
+  // TopSites pulls data from NewTabUtils.activityStreamLinks.getTopSites()
+  // which can still pass screenshots to it if they are available.
   let sandbox = sinon.createSandbox();
   info(
-    "getLinksWithDefaults should copy the screenshot of the frecent site if " +
-      "pinned site doesn't have customScreenshotURL"
+    "getLinksWithDefaults should copy the screenshot of the frecent site if it exists"
   );
 
   let cleanup = stubTopSites(sandbox);
@@ -621,10 +622,13 @@ add_task(async function test_getLinksWithDefaults_copy_frecent_screenshot() {
   await cleanup();
 });
 
-add_task(async function test_getLinksWithDefaults_no_copy_frecent_screenshot() {
+add_task(async function test_getLinksWithDefaults_copies_both_screenshots() {
+  // TopSites pulls data from NewTabUtils.activityStreamLinks.getTopSites()
+  // and NewTabUtils.pinnedLinks which can pass screenshot data to it if they
+  // are available.
   let sandbox = sinon.createSandbox();
   info(
-    "getLinksWithDefaults should not copy the frecent screenshot if " +
+    "getLinksWithDefaults should still copy the frecent screenshot if " +
       "customScreenshotURL is set"
   );
 
@@ -640,7 +644,8 @@ add_task(async function test_getLinksWithDefaults_no_copy_frecent_screenshot() {
 
   let result = await TopSites.getLinksWithDefaults();
 
-  Assert.equal(result[0].screenshot, undefined);
+  Assert.equal(result[0].screenshot, "screenshot");
+  Assert.equal(result[0].customScreenshotURL, "custom");
 
   gGetTopSitesStub.resolves(FAKE_LINKS);
   sandbox.restore();
@@ -1402,7 +1407,6 @@ add_task(async function test_pin_part_1() {
     let site = {
       url: "foo.bar",
       label: "foo",
-      customScreenshotURL: "screenshot",
     };
     Assert.ok(
       TopSites.pinnedCache.request.notCalled,
@@ -1414,52 +1418,6 @@ add_task(async function test_pin_part_1() {
       "NewTabUtils.pinnedLinks.pin called"
     );
     Assert.ok(NewTabUtils.pinnedLinks.pin.calledWith(site, 2));
-    NewTabUtils.pinnedLinks.pin.resetHistory();
-    TopSites.pinnedCache.request.resetHistory();
-  }
-
-  {
-    info(
-      "TopSites.pin should lookup the link object to update the custom " +
-        "screenshot"
-    );
-    let site = {
-      url: "foo.bar",
-      label: "foo",
-      customScreenshotURL: "screenshot",
-    };
-    Assert.ok(
-      TopSites.pinnedCache.request.notCalled,
-      "TopSites.pinnedCache.request not called"
-    );
-    await TopSites.pin({ data: { index: 2, site } });
-    Assert.ok(
-      TopSites.pinnedCache.request.called,
-      "TopSites.pinnedCache.request called"
-    );
-    NewTabUtils.pinnedLinks.pin.resetHistory();
-    TopSites.pinnedCache.request.resetHistory();
-  }
-
-  {
-    info(
-      "TopSites.pin should lookup the link object to update the custom " +
-        "screenshot when the custom screenshot is initially null"
-    );
-    let site = {
-      url: "foo.bar",
-      label: "foo",
-      customScreenshotURL: null,
-    };
-    Assert.ok(
-      TopSites.pinnedCache.request.notCalled,
-      "TopSites.pinnedCache.request not called"
-    );
-    await TopSites.pin({ data: { index: 2, site } });
-    Assert.ok(
-      TopSites.pinnedCache.request.called,
-      "TopSites.pinnedCache.request called"
-    );
     NewTabUtils.pinnedLinks.pin.resetHistory();
     TopSites.pinnedCache.request.resetHistory();
   }
@@ -1547,7 +1505,7 @@ add_task(async function test_pin_part_2() {
 
   {
     info(
-      "TopSites.pin should properly update LinksCache object " +
+      "TopSites.pin should not update LinksCache object with screenshot data" +
         "properties between migrations"
     );
     sandbox
@@ -1562,14 +1520,14 @@ add_task(async function test_pin_part_2() {
     pinnedLinks[0].__sharedCache.updateLink("screenshot", "foo");
 
     pinnedLinks = await TopSites.pinnedCache.request();
-    Assert.equal(pinnedLinks[0].screenshot, "foo");
+    Assert.equal(pinnedLinks[0].screenshot, undefined);
 
     // Force cache expiration in order to trigger a migration of objects
     TopSites.pinnedCache.expire();
     pinnedLinks[0].__sharedCache.updateLink("screenshot", "bar");
 
     pinnedLinks = await TopSites.pinnedCache.request();
-    Assert.equal(pinnedLinks[0].screenshot, "bar");
+    Assert.equal(pinnedLinks[0].screenshot, undefined);
     await cleanup();
   }
 
