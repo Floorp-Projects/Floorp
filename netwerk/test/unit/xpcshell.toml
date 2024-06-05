@@ -703,6 +703,12 @@ skip-if = [
 ]
 run-sequentially = "node server exceptions dont replay well"
 
+["test_http3_kyber.js"]
+skip-if = [
+  "os == 'win'",
+  "os == 'android'",
+]
+
 ["test_http3_large_post.js"]
 skip-if = [
   "os == 'win'",
@@ -717,6 +723,7 @@ disabled = "bug 1771744 - telemetry probe expired"
 #   os == 'win'
 #   os == 'android'
 #   socketprocess_networking
+
 
 ["test_http3_perf.js"]
 skip-if = [

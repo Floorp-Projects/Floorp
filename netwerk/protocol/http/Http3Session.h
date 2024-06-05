@@ -130,7 +130,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   Http3Session();
   nsresult Init(const nsHttpConnectionInfo* aConnInfo, nsINetAddr* selfAddr,
                 nsINetAddr* peerAddr, HttpConnectionUDP* udpConn,
-                uint32_t controlFlags, nsIInterfaceRequestor* callbacks);
+                uint32_t aProviderFlags, nsIInterfaceRequestor* callbacks);
 
   bool IsConnected() const { return mState == CONNECTED; }
   bool CanSendData() const {

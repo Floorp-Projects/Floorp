@@ -315,9 +315,10 @@ interface nsIHttpChannelInternal : nsISupports
 
     /**
      * An opaque flags for non-standard behavior of the TLS system.
-     * It is unlikely this will need to be set outside of telemetry studies
-     * relating to the TLS implementation.
+     * It is unlikely this will need to be set outside of tests or telemetry
+     * studies relating to the TLS implementation.
      */
+    const unsigned long TLS_FLAG_CONFIGURE_AS_RETRY = (1 << 16);
     [must_use] attribute unsigned long tlsFlags;
 
     [must_use] readonly attribute PRTime lastModifiedTime;

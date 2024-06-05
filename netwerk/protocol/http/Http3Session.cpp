@@ -91,7 +91,7 @@ static nsresult RawBytesToNetAddr(uint16_t aFamily, const uint8_t* aRemoteAddr,
 
 nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
                             nsINetAddr* aSelfAddr, nsINetAddr* aPeerAddr,
-                            HttpConnectionUDP* udpConn, uint32_t controlFlags,
+                            HttpConnectionUDP* udpConn, uint32_t aProviderFlags,
                             nsIInterfaceRequestor* callbacks) {
   LOG3(("Http3Session::Init %p", this));
 
@@ -108,7 +108,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   mSocketControl = new QuicSocketControl(
       httpsProxy ? aConnInfo->ProxyInfo()->Host() : aConnInfo->GetOrigin(),
       httpsProxy ? aConnInfo->ProxyInfo()->Port() : aConnInfo->OriginPort(),
-      controlFlags, this);
+      aProviderFlags, this);
 
   NetAddr selfAddr;
   MOZ_ALWAYS_SUCCEEDS(aSelfAddr->GetNetAddr(&selfAddr));
@@ -142,7 +142,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       StaticPrefs::network_http_http3_max_stream_data(),
       StaticPrefs::network_http_http3_version_negotiation_enabled(),
       mConnInfo->GetWebTransport(), gHttpHandler->Http3QlogDir(), datagramSize,
-      StaticPrefs::network_http_http3_max_accumlated_time_ms(),
+      StaticPrefs::network_http_http3_max_accumlated_time_ms(), aProviderFlags,
       getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
     return rv;
