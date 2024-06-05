@@ -75,6 +75,8 @@ pushd "${MOZ_FETCHES_DIR}/symbol-scrapers/${DISTRO}"
   cp wget*.log /builds/worker/artifacts/ || true
 popd
 
-if [ ! -f "/builds/worker/artifacts/target.crashreporter-symbols.zip" ]; then
+zip_files=$(find /builds/worker/artifacts -name "target.crashreporter-symbols.*.zip")
+
+if [ -z "${zip_files}" ]; then
   echo "No symbols zip produced, upload task will fail"
 fi
