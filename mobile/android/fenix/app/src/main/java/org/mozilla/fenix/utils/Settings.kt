@@ -1953,14 +1953,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates first time engaging with signup
-     */
-    var isFirstTimeEngagingWithSignup: Boolean by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_first_time_engage_with_signup),
-        default = true,
-    )
-
-    /**
      * Indicates if the user has chosen to show sponsored search suggestions in the awesomebar.
      * The default value is computed lazily, and based on whether Firefox Suggest is enabled.
      */

@@ -87,8 +87,6 @@ import mozilla.components.feature.prompts.dialog.FullScreenNotificationDialog
 import mozilla.components.feature.prompts.identitycredential.DialogColors
 import mozilla.components.feature.prompts.identitycredential.DialogColorsProvider
 import mozilla.components.feature.prompts.login.LoginDelegate
-import mozilla.components.feature.prompts.login.PasswordGeneratorDialogColors
-import mozilla.components.feature.prompts.login.PasswordGeneratorDialogColorsProvider
 import mozilla.components.feature.prompts.login.SuggestStrongPasswordDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -686,17 +684,6 @@ abstract class BaseBrowserFragment :
             },
         )
 
-        val passwordGeneratorColorsProvider = PasswordGeneratorDialogColorsProvider {
-            PasswordGeneratorDialogColors(
-                title = ThemeManager.resolveAttributeColor(attribute = R.attr.textPrimary),
-                description = ThemeManager.resolveAttributeColor(attribute = R.attr.textSecondary),
-                background = ThemeManager.resolveAttributeColor(attribute = R.attr.layer1),
-                confirmButton = ThemeManager.resolveAttributeColor(attribute = R.attr.actionPrimary),
-                passwordBox = ThemeManager.resolveAttributeColor(attribute = R.attr.layer2),
-                boxBorder = ThemeManager.resolveAttributeColor(attribute = R.attr.textDisabled),
-            )
-        }
-
         val bottomToolbarHeight = context.settings().getBottomToolbarHeight()
 
         downloadFeature.onDownloadStopped = { downloadState, _, downloadJobStatus ->
@@ -842,10 +829,6 @@ abstract class BaseBrowserFragment :
                         get() = binding.suggestStrongPasswordBar
                 },
                 isSuggestStrongPasswordEnabled = context.settings().enableSuggestStrongPassword,
-                shouldAutomaticallyShowSuggestedPassword = { context.settings().isFirstTimeEngagingWithSignup },
-                onFirstTimeEngagedWithSignup = {
-                    context.settings().isFirstTimeEngagingWithSignup = false
-                },
                 onSaveLoginWithStrongPassword = { url, password ->
                     handleOnSaveLoginWithGeneratedStrongPassword(
                         passwordsStorage = context.components.core.passwordsStorage,
@@ -853,10 +836,6 @@ abstract class BaseBrowserFragment :
                         password = password,
                     )
                 },
-                onSavedGeneratedPassword = {
-                    showSnackbarAfterUsingTheGeneratedPassword()
-                },
-                passwordGeneratorColorsProvider = passwordGeneratorColorsProvider,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView
                         get() = binding.creditCardSelectBar
@@ -1090,17 +1069,6 @@ abstract class BaseBrowserFragment :
                 duration = Snackbar.LENGTH_LONG,
             )
         }
-    }
-
-    /**
-     * Show a [Snackbar] when credentials are saved using the generated password.
-     */
-    private fun showSnackbarAfterUsingTheGeneratedPassword() {
-        FenixSnackbarDelegate(binding.dynamicSnackbarContainer).show(
-            snackBarParentView = binding.dynamicSnackbarContainer,
-            text = R.string.mozac_feature_prompts_suggest_strong_password_saved_snackbar_title,
-            duration = Snackbar.LENGTH_LONG,
-        )
     }
 
     /**
