@@ -26,6 +26,10 @@ function debug(...args) {
   let stringifiedArgs = args.map(stringify);
   msg += stringifiedArgs.join(" ");
   debugMsgs.push(msg);
+
+  // Also echo it locally
+  /* eslint-disable-next-line no-console */
+  console.log(msg);
 }
 
 // ==============================================================
@@ -541,10 +545,40 @@ LocalFiraSans.load().then(font => {
   populateTestCanvases();
   populateWebGLCanvases();
   populateFingerprintJSCanvases();
-});
 
-debug("Debug Line");
-debug("Another debug line, with", { an: "object" });
+  let output = {};
+
+  debug("Sizes of canvas extractions:");
+  for (let id of [
+    "canvas1data",
+    "canvas2data",
+    "canvas3data",
+    "canvas4data",
+    "canvas5data",
+    "canvas6data",
+    "canvas7data",
+    "canvas8data",
+    "canvas9data",
+    "canvas10data",
+    "glcanvasdata",
+    "fingerprintjscanvas1data",
+    "fingerprintjscanvas2data",
+  ]) {
+    let obj = document.getElementById(id);
+    debug(id, obj.value.length);
+    output[id] = obj.value;
+  }
+
+  document.dispatchEvent(
+    new CustomEvent("UserCharacteristicsDataDone", {
+      bubbles: true,
+      detail: {
+        debug: debugMsgs,
+        output,
+      },
+    })
+  );
+});
 
 // A hacky way to ensure all GamePad related services are running by the time we
 // want to know about GamePads. This will attach a listener for this window to
@@ -556,18 +590,3 @@ debug("Another debug line, with", { an: "object" });
 // for gamepads attached to the machine. We need to give that background thread
 // time to run so all the data is there when we request it.
 navigator.getGamepads();
-
-// The first time we put a real value in here, please update browser_usercharacteristics.js
-let output = {
-  foo: "Hello World",
-};
-
-document.dispatchEvent(
-  new CustomEvent("UserCharacteristicsDataDone", {
-    bubbles: true,
-    detail: {
-      debug: debugMsgs,
-      output,
-    },
-  })
-);
