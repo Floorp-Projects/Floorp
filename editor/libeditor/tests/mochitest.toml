@@ -381,8 +381,6 @@ skip-if = ["headless"]
 
 ["test_bug1409520.html"]
 
-["test_bug1425997.html"]
-
 ["test_bug1543312.html"]
 
 ["test_bug1568996.html"]
