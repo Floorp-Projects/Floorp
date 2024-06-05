@@ -392,7 +392,22 @@ export const kTestData = [
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPrefetchLinks,
         expectedRequests: kExpectedRequestsOfPrefetch
-    }
+    },
+    {   testFileName: "link-early-hints-preload-font.h2.html",
+         expectedRequests: kExpectedRequestsOfLinkPreloadFont
+    },
+    {   testFileName: "link-early-hints-preload-image.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadImage
+    },
+    {   testFileName: "link-early-hints-preload-fetch.h2.html",
+         expectedRequests: kExpectedRequestsOfLinkPreloadFetch
+    },
+    {   testFileName: "link-early-hints-preload-script.h2.html",
+         expectedRequests: kExpectedRequestsOfPreloadScript
+    },
+    {   testFileName: "link-early-hints-preload-style.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadStyle
+    },
 ];
 
 export const kTestDataDisabled = [
@@ -467,5 +482,20 @@ export const kTestDataDisabled = [
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderModulepreloadLinks,
         expectedRequests: kExpectedRequestsOfModulepreloadDisabled
+    },
+    {   testFileName: "link-early-hints-preload-font.h2.html",
+         expectedRequests: kExpectedRequestsOfLinkPreloadFontDisabled
+    },
+    {   testFileName: "link-early-hints-preload-image.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadImageDisabled
+    },
+    {   testFileName: "link-early-hints-preload-fetch.h2.html",
+         expectedRequests: kExpectedRequestsOfLinkPreloadFetchDisabled
+    },
+    {   testFileName: "link-early-hints-preload-script.h2.html",
+         expectedRequests: kExpectedRequestsOfPreloadScriptDisabled
+    },
+    {   testFileName: "link-early-hints-preload-style.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadStyleDisabled
     },
 ];
