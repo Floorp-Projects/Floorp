@@ -636,13 +636,6 @@ class nsDisplayListBuilder {
   void SetHaveScrollableDisplayPort() { mHaveScrollableDisplayPort = true; }
   void ClearHaveScrollableDisplayPort() { mHaveScrollableDisplayPort = false; }
 
-  bool SetIsCompositingCheap(bool aCompositingCheap) {
-    bool temp = mIsCompositingCheap;
-    mIsCompositingCheap = aCompositingCheap;
-    return temp;
-  }
-
-  bool IsCompositingCheap() const { return mIsCompositingCheap; }
   /**
    * Display the caret if needed.
    */
@@ -1886,7 +1879,6 @@ class nsDisplayListBuilder {
   bool mIsPaintingToWindow;
   bool mUseHighQualityScaling;
   bool mIsPaintingForWebRender;
-  bool mIsCompositingCheap;
   bool mAncestorHasApzAwareEventHandler;
   // True when the first async-scrollable scroll frame for which we build a
   // display list has a display port. An async-scrollable scroll frame is one
