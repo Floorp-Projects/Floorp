@@ -176,7 +176,8 @@ const char* GetSnapInstanceName() {
     if (!snapName) {
       return nullptr;
     }
-    if (g_strcmp0(snapName, MOZ_APP_NAME)) {
+    if (g_strcmp0(snapName, MOZ_APP_NAME) &&
+        g_strcmp0(snapName, MOZ_APP_NAME "-devel")) {
       return nullptr;
     }
     // Intentionally leaked, as keeping a pointer to the environment forever
