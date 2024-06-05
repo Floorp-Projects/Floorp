@@ -2608,18 +2608,27 @@
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Add to private tabs</string>
 
-    <!-- Micro survey -->
-
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Help us make Firefox better. It only takes a minute.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continue</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Complete this survey</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129"  tools:ignore="UnusedResources">Complete this survey</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Please complete survey</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Privacy Notice</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129"  tools:ignore="UnusedResources">Privacy Notice</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Privacy notice</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Submit</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Close</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Survey complete</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Thanks for your feedback!</string>
     <!-- Option for likert scale -->
@@ -2632,8 +2641,9 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">Dissatisfied</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Very Dissatisfied</string>
-
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">I don\'t use it</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Open survey</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
