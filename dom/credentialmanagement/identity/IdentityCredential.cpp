@@ -153,6 +153,21 @@ void IdentityCredential::GetOrigin(nsACString& aOrigin,
   }
 }
 
+// static
+RefPtr<IdentityCredential::GetIdentityCredentialPromise>
+IdentityCredential::Create(nsPIDOMWindowInner* aParent,
+                           const CredentialCreationOptions& aOptions,
+                           bool aSameOriginWithAncestors) {
+  MOZ_ASSERT(aOptions.mIdentity.WasPassed());
+  MOZ_ASSERT(aParent);
+  const IdentityCredentialInit& init = aOptions.mIdentity.Value();
+  RefPtr<IdentityCredential> result = new IdentityCredential(aParent);
+  result->SetId(init.mId);
+  result->SetType(u"identity"_ns);
+  result->mCreationOptions.emplace(init);
+  return GetIdentityCredentialPromise::CreateAndResolve(result.forget(),
+                                                        __func__);
+}
 
 // static
 RefPtr<IdentityCredential::GetIdentityCredentialPromise>
