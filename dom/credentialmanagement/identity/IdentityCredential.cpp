@@ -57,7 +57,7 @@ void IdentityCredential::CopyValuesFrom(const IPCIdentityCredential& aOther) {
   this->SetType(u"identity"_ns);
   if (aOther.token().isSome()) {
     this->SetToken(aOther.token().value());
-}
+  }
   IdentityCredentialInit creationOptions;
   if (aOther.dynamicViaCors().isSome()) {
     creationOptions.mDynamicViaCORS.Construct(aOther.dynamicViaCors().value());
@@ -154,6 +154,253 @@ void IdentityCredential::GetOrigin(nsACString& aOrigin,
 }
 
 // static
+RefPtr<IdentityCredential::GetIdentityCredentialsPromise>
+IdentityCredential::CollectFromCredentialStore(
+    nsPIDOMWindowInner* aParent, const CredentialRequestOptions& aOptions,
+    bool aSameOriginWithAncestors) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(aParent);
+  // Prevent origin confusion by requiring no cross domain iframes
+  // in this one's ancestry
+  if (!aSameOriginWithAncestors) {
+    return IdentityCredential::GetIdentityCredentialsPromise::CreateAndReject(
+        NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
+  }
+
+  Document* parentDocument = aParent->GetExtantDoc();
+  if (!parentDocument) {
+    return IdentityCredential::GetIdentityCredentialsPromise::CreateAndReject(
+        NS_ERROR_FAILURE, __func__);
+  }
+
+  // Kick the request off to the main process and translate the result to the
+  // expected type when we get a result.
+  MOZ_ASSERT(aOptions.mIdentity.WasPassed());
+  RefPtr<WindowGlobalChild> wgc = aParent->GetWindowGlobalChild();
+  MOZ_ASSERT(wgc);
+  return wgc
+      ->SendCollectIdentityCredentialFromCredentialStore(
+          aOptions.mIdentity.Value())
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [wgc](const WindowGlobalChild::
+                    CollectIdentityCredentialFromCredentialStorePromise::
+                        ResolveValueType& aResult) {
+            nsTArray<RefPtr<IdentityCredential>> resultDOMArray;
+            for (const IPCIdentityCredential& ipcResult : aResult) {
+              resultDOMArray.AppendElement(
+                  new IdentityCredential(wgc->GetWindowGlobal(), ipcResult));
+            }
+            return IdentityCredential::GetIdentityCredentialsPromise::
+                CreateAndResolve(std::move(resultDOMArray), __func__);
+          },
+          [](const WindowGlobalChild::
+                 CollectIdentityCredentialFromCredentialStorePromise::
+                     RejectValueType& aResult) {
+            return IdentityCredential::GetIdentityCredentialsPromise::
+                CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+          });
+}
+
+// static
+RefPtr<GenericPromise> IdentityCredential::AllowedToCollectCredential(
+    nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
+    const IdentityCredentialRequestOptions& aOptions,
+    IPCIdentityCredential aCredential) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aPrincipal);
+  for (const nsCString& origin : aCredential.originAllowlist()) {
+    nsCOMPtr<nsIURI> allowURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(allowURI), origin);
+    if (NS_SUCCEEDED(rv)) {
+      if (aPrincipal->IsSameOrigin(allowURI)) {
+        return GenericPromise::CreateAndResolve(true, __func__);
+      }
+    }
+  }
+  if (aCredential.dynamicViaCors().isSome()) {
+    // Make the url to test, returning the default resolved to false promise if
+    // it fails
+    nsCOMPtr<nsIURI> dynamicURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(dynamicURI),
+                            aCredential.dynamicViaCors().value());
+    if (NS_SUCCEEDED(rv) && aOptions.mProviders.WasPassed()) {
+      // at this point we need to run through the providers passed as an
+      // argument to "navigator.credentials.get" and see if any meet the
+      // conditions to effectively query for aCredential based on an HTTP+CORS
+      // endpoint. This gives the IDP control over what origins can use each
+      // credential they store.
+      for (const auto& provider : aOptions.mProviders.Value()) {
+        // We only issue requests if the provider provided by the RP has the
+        // same URL as the credential that was stored by the IDP.
+        if (!provider.mDynamicViaCORS.WasPassed() ||
+            !provider.mDynamicViaCORS.Value().Equals(
+                aCredential.dynamicViaCors().value())) {
+          continue;
+        }
+
+        // We are going to do some work here, so build the promise to return
+        RefPtr<GenericPromise::Private> resultPromise =
+            new GenericPromise::Private(__func__);
+        // Create the JS global for use by the fetch, tied to the RP principal
+        nsIXPConnect* xpc = nsContentUtils::XPConnect();
+        MOZ_ASSERT(xpc, "This should never be null!");
+        nsCOMPtr<nsIGlobalObject> global;
+        AutoJSAPI jsapi;
+        jsapi.Init();
+        JSContext* cx = jsapi.cx();
+        JS::Rooted<JSObject*> sandbox(cx);
+        rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          resultPromise->Reject(rv, __func__);
+          return resultPromise;
+        }
+        MOZ_ASSERT(JS_IsGlobalObject(sandbox));
+        global = xpc::NativeGlobal(sandbox);
+        if (NS_WARN_IF(!global)) {
+          resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+          return resultPromise;
+        }
+        // Construct the HTTP+CORS request to be made.
+        constexpr auto fragment = ""_ns;
+        auto internalRequest = MakeSafeRefPtr<InternalRequest>(
+            provider.mEffectiveQueryURL.Value(), fragment);
+        internalRequest->SetCredentialsMode(RequestCredentials::Omit);
+        internalRequest->SetMode(RequestMode::Cors);
+        internalRequest->OverrideContentPolicyType(
+            nsContentPolicyType::TYPE_WEB_IDENTITY);
+        internalRequest->SetHeaders(
+            new InternalHeaders(HeadersGuardEnum::Request));
+        RefPtr<Request> request =
+            new Request(global, std::move(internalRequest), nullptr);
+        RequestOrUTF8String fetchInput;
+        fetchInput.SetAsRequest() = request;
+        RootedDictionary<RequestInit> requestInit(RootingCx());
+        ErrorResult error;
+        // Issue the fetch and define the callbacks
+        RefPtr<Promise> fetchPromise =
+            FetchRequest(request->GetParentObject(), fetchInput, requestInit,
+                         CallerType::System, error);
+        if (NS_WARN_IF(error.Failed())) {
+          resultPromise->Reject(error.StealNSResult(), __func__);
+          return resultPromise;
+        }
+        fetchPromise->AddCallbacksWithCycleCollectedArgs(
+            [resultPromise](JSContext* aCx, JS::Handle<JS::Value> aValue,
+                            ErrorResult&) {
+              // Get the Response object from the argument to the callback
+              if (NS_WARN_IF(!aValue.isObject())) {
+                resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+                return;
+              }
+              JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+              MOZ_ASSERT(obj);
+              Response* response = nullptr;
+              if (NS_WARN_IF(
+                      NS_FAILED(UNWRAP_OBJECT(Response, &obj, response)))) {
+                resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+                return;
+              }
+              // Resolve whether or not the request was a success
+              resultPromise->Resolve(response->Ok(), __func__);
+            },
+            [resultPromise](JSContext*, JS::Handle<JS::Value> aValue,
+                            ErrorResult&) {
+              resultPromise->Reject(
+                  Promise::TryExtractNSResultFromRejectionValue(aValue),
+                  __func__);
+            });
+        return resultPromise;
+      }
+    }
+  }
+
+  return GenericPromise::CreateAndResolve(false, __func__);
+}
+
+// static
+RefPtr<IdentityCredential::GetIPCIdentityCredentialsPromise>
+IdentityCredential::CollectFromCredentialStoreInMainProcess(
+    nsIPrincipal* aPrincipal, CanonicalBrowsingContext* aBrowsingContext,
+    const IdentityCredentialRequestOptions& aOptions) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aPrincipal);
+  nsresult rv;
+  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
+      mozilla::components::IdentityCredentialStorageService::Service(&rv);
+  if (NS_WARN_IF(!icStorageService)) {
+    return IdentityCredential::GetIPCIdentityCredentialsPromise::
+        CreateAndReject(rv, __func__);
+  }
+  nsTArray<RefPtr<nsIPrincipal>> idpPrincipals;
+  if (aOptions.mProviders.WasPassed()) {
+    for (const auto& idpConfig : aOptions.mProviders.Value()) {
+      if (idpConfig.mOrigin.WasPassed()) {
+        RefPtr<nsIURI> idpURI;
+        rv = NS_NewURI(getter_AddRefs(idpURI), idpConfig.mOrigin.Value());
+        if (NS_FAILED(rv)) {
+          continue;
+        }
+        RefPtr<nsIPrincipal> idpPrincipal =
+            BasePrincipal::CreateContentPrincipal(
+                idpURI, aPrincipal->OriginAttributesRef());
+        idpPrincipals.AppendElement(idpPrincipal);
+      } else if (idpConfig.mLoginURL.WasPassed()) {
+        RefPtr<nsIURI> idpURI;
+        rv = NS_NewURI(getter_AddRefs(idpURI), idpConfig.mLoginURL.Value());
+        if (NS_FAILED(rv)) {
+          continue;
+        }
+        RefPtr<nsIPrincipal> idpPrincipal =
+            BasePrincipal::CreateContentPrincipal(
+                idpURI, aPrincipal->OriginAttributesRef());
+        idpPrincipals.AppendElement(idpPrincipal);
+      }
+    }
+  }
+
+  CopyableTArray<mozilla::dom::IPCIdentityCredential> fromStore;
+  rv = icStorageService->GetIdentityCredentials(idpPrincipals, fromStore);
+  if (NS_FAILED(rv)) {
+    return GetIPCIdentityCredentialsPromise::CreateAndReject(rv, __func__);
+  }
+
+  RefPtr<GetIPCIdentityCredentialsPromise::Private> resultPromise =
+      new GetIPCIdentityCredentialsPromise::Private(__func__);
+  nsTArray<RefPtr<GenericPromise>> promises;
+  for (const IPCIdentityCredential& cred : fromStore) {
+    promises.AppendElement(AllowedToCollectCredential(
+        aPrincipal, aBrowsingContext, aOptions, cred));
+  }
+  GenericPromise::AllSettled(GetCurrentSerialEventTarget(), promises)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [resultPromise, fromStore](
+              const GenericPromise::AllSettledPromiseType::ResolveValueType&
+                  aResults) {
+            if (aResults.Length() != fromStore.Length()) {
+              resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+              return;
+            }
+            CopyableTArray<mozilla::dom::IPCIdentityCredential> result;
+            for (size_t i = 0; i < aResults.Length(); i++) {
+              if (aResults.ElementAt(i).IsResolve() &&
+                  aResults.ElementAt(i).ResolveValue()) {
+                result.AppendElement(fromStore.ElementAt(i));
+              }
+            }
+            resultPromise->Resolve(result, __func__);
+          },
+          [resultPromise](
+              const GenericPromise::AllSettledPromiseType::RejectValueType&
+                  aResult) {
+            resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+          });
+
+  return resultPromise;
+}
+
+// static
 RefPtr<GenericPromise> IdentityCredential::Store(
     nsPIDOMWindowInner* aParent, const IdentityCredential* aCredential,
     bool aSameOriginWithAncestors) {
@@ -213,10 +460,11 @@ RefPtr<GenericPromise> IdentityCredential::StoreInMainProcess(
   return GenericPromise::CreateAndReject(nsresult::NS_ERROR_FAILURE, __func__);
 }
 
-//static
-RefPtr<IdentityCredential::GetIdentityCredentialPromise> IdentityCredential::Create(
-    nsPIDOMWindowInner* aParent, const CredentialCreationOptions& aOptions,
-    bool aSameOriginWithAncestors) {
+// static
+RefPtr<IdentityCredential::GetIdentityCredentialPromise>
+IdentityCredential::Create(nsPIDOMWindowInner* aParent,
+                           const CredentialCreationOptions& aOptions,
+                           bool aSameOriginWithAncestors) {
   MOZ_ASSERT(aOptions.mIdentity.WasPassed());
   MOZ_ASSERT(aParent);
   const IdentityCredentialInit& init = aOptions.mIdentity.Value();
@@ -393,7 +641,7 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
             std::tie(provider, manifest) = providerAndManifest;
             return IdentityCredential::
                 CreateHeavyweightCredentialDuringDiscovery(
-                principal, browsingContext, provider, manifest);
+                    principal, browsingContext, provider, manifest);
           },
           [](nsresult error) {
             return IdentityCredential::GetIPCIdentityCredentialPromise::
