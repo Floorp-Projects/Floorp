@@ -321,11 +321,9 @@ static bool IsSharedArrayBuffer(HandleValue v) {
   return v.isObject() && v.toObject().is<SharedArrayBufferObject>();
 }
 
-#ifdef NIGHTLY_BUILD
 static bool IsGrowableSharedArrayBuffer(HandleValue v) {
   return v.isObject() && v.toObject().is<GrowableSharedArrayBufferObject>();
 }
-#endif
 
 MOZ_ALWAYS_INLINE bool SharedArrayBufferObject::byteLengthGetterImpl(
     JSContext* cx, const CallArgs& args) {
@@ -342,7 +340,6 @@ bool SharedArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc,
                                                                          args);
 }
 
-#ifdef NIGHTLY_BUILD
 /**
  * get SharedArrayBuffer.prototype.maxByteLength
  */
@@ -429,7 +426,6 @@ bool SharedArrayBufferObject::grow(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsGrowableSharedArrayBuffer, growImpl>(cx, args);
 }
-#endif
 
 // ES2024 draft rev 3a773fc9fae58be023228b13dbbd402ac18eeb6b
 // 25.2.3.1 SharedArrayBuffer ( length [ , options ] )
@@ -450,7 +446,6 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
 
   // Step 3.
   mozilla::Maybe<uint64_t> maxByteLength;
-#ifdef NIGHTLY_BUILD
   if (JS::Prefs::experimental_sharedarraybuffer_growable()) {
     // Inline call to GetArrayBufferMaxByteLengthOption.
     if (args.get(1).isObject()) {
@@ -477,7 +472,6 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
       }
     }
   }
-#endif
 
   // Step 4 (Inlined 25.2.2.1 AllocateSharedArrayBuffer).
   // 25.2.2.1, step 5 (Inlined 10.1.13 OrdinaryCreateFromConstructor, step 2).
@@ -747,18 +741,14 @@ static const JSPropertySpec sharedarray_properties[] = {
 
 static const JSFunctionSpec sharedarray_proto_functions[] = {
     JS_SELF_HOSTED_FN("slice", "SharedArrayBufferSlice", 2, 0),
-#ifdef NIGHTLY_BUILD
     JS_FN("grow", SharedArrayBufferObject::grow, 1, 0),
-#endif
     JS_FS_END,
 };
 
 static const JSPropertySpec sharedarray_proto_properties[] = {
     JS_PSG("byteLength", SharedArrayBufferObject::byteLengthGetter, 0),
-#ifdef NIGHTLY_BUILD
     JS_PSG("maxByteLength", SharedArrayBufferObject::maxByteLengthGetter, 0),
     JS_PSG("growable", SharedArrayBufferObject::growableGetter, 0),
-#endif
     JS_STRING_SYM_PS(toStringTag, "SharedArrayBuffer", JSPROP_READONLY),
     JS_PS_END,
 };
