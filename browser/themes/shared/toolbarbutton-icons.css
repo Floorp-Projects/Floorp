@@ -322,46 +322,6 @@
   list-style-image: url("chrome://global/skin/icons/chevron.svg");
 }
 
-#nav-bar-overflow-button[animate] > .toolbarbutton-icon {
-  fill: transparent;
-}
-
-@keyframes overflow-animation {
-  from {
-    transform: translateX(0);
-  }
-  /* Bug 1831300 is on file for this. */
-  /* stylelint-disable-next-line keyframe-block-no-duplicate-selectors */
-  from {
-    transform: translateX(-832px);
-  }
-}
-
-#nav-bar-overflow-button > .toolbarbutton-animatable-box {
-  visibility: hidden;
-  top: calc(50% - 8px); /* Vertically center the 16px tall animatable image */
-  width: 16px; /* Width of each frame within the SVG sprite */
-  height: 16px; /* Height of each frame within the SVG sprite */
-  -moz-context-properties: fill, stroke;
-  fill: var(--toolbarbutton-icon-fill);
-  stroke: var(--toolbarbutton-icon-fill-attention);
-}
-#nav-bar-overflow-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  background-image: url("chrome://browser/skin/chevron-animation.svg");
-  width: 848px;
-  height: 16px;
-  transform: translateX(0);
-}
-
-#nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box {
-  visibility: visible;
-}
-#nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-name: overflow-animation;
-  animation-timing-function: steps(52);
-  animation-duration: calc(52 * 16.667ms);
-}
-
 #unified-extensions-button {
   list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
 }
