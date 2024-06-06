@@ -216,6 +216,9 @@ export class UserCharacteristicsPageService {
             data.output.mediaCapabilities
           );
           this.populateDisabledMediaPrefs();
+          Glean.characteristics.audioFingerprint.set(
+            data.output.audioFingerprint
+          );
         } catch (e) {
           // Grab the exception and send it to the console
           // (we don't see it otherwise)

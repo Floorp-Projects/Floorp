@@ -1890,3 +1890,22 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  audio_fingerprint:
+    type: quantity
+    unit: int
+    description: >
+      Audio fingerprint of the user. A float number multiplied by 10e7.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900801
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=xxx
+    expires: never
+    data_sensitivity:
+      - technical
