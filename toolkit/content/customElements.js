@@ -836,8 +836,11 @@
             "chrome://global/content/elements/moz-message-bar.mjs",
           ],
           ["moz-page-nav", "chrome://global/content/elements/moz-page-nav.mjs"],
-          ["moz-radio", "chrome://global/content/elements/moz-radio.mjs"],
-          ["moz-radio-group", "chrome://global/content/elements/moz-radio.mjs"],
+          ["moz-radio", "chrome://global/content/elements/moz-radio-group.mjs"],
+          [
+            "moz-radio-group",
+            "chrome://global/content/elements/moz-radio-group.mjs",
+          ],
           [
             "moz-support-link",
             "chrome://global/content/elements/moz-support-link.mjs",

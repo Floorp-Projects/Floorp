@@ -5,7 +5,7 @@
   <title>MozRadio and MozRadioGroup Tests</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script type="module" src="chrome://global/content/elements/moz-radio.mjs"></script>
+  <script type="module" src="chrome://global/content/elements/moz-radio-group.mjs"></script>
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script>
     let html, render, renderTarget, defaultTemplate;
@@ -211,6 +211,24 @@
       await keyboardNavigate("left");
       validateActiveElement(secondButton);
 
+      // Validate that disabled buttons get skipped over.
+      thirdButton.disabled = true;
+      await radioGroup.updateComplete;
+
+      await keyboardNavigate("down");
+      validateActiveElement(firstButton);
+
+      await keyboardNavigate("up");
+      validateActiveElement(secondButton);
+
+      thirdButton.checked = true;
+      await radioGroup.updateComplete;
+      is(radioGroup.focusableIndex, -1, "Cannot focus group since checked radio is disabled");
+
+      secondButton.checked = true;
+      thirdButton.disabled = false;
+      await radioGroup.updateComplete;
+
       // Validate left/right keys have opposite effect for RTL locales.
       await SpecialPowers.pushPrefEnv({ set: [["intl.l10n.pseudo", "bidi"]] });
 
@@ -299,6 +317,17 @@
         document.activeElement,
         firstRadioButton,
         "First radio button becomes focusable again."
+      );
+
+      synthesizeKey("KEY_Tab", { shiftKey: true });
+      firstRadioButton.disabled = true;
+      secondRadioButton.disabled = true;
+      await radioGroup.updateComplete;
+      synthesizeKey("KEY_Tab");
+      is(
+        document.activeElement,
+        thirdRadioButton,
+        "First non-disabled radio button is focusable when all buttons are un-checked."
       );
     });
 
@@ -403,6 +432,29 @@
       is(radioGroup.value, secondButton.value, "Radiogroup value is updated.");
       await new Promise(r => setTimeout(r, 0));
       verifyEvents([]);
+
+      // Reset seen events.
+      seenEvents = [];
+
+      // Verify we don't get any events from disabled radio groups or buttons.
+      radioGroup.disabled = true;
+      await radioGroup.updateComplete;
+      synthesizeMouseAtCenter(firstButton.radioButton, {});
+      await new Promise(r => setTimeout(r, 0));
+      verifyEvents([]);
+      radioGroup.disabled = false;
+      await radioGroup.updateComplete;
+
+      // Reset seen events.
+      seenEvents = [];
+
+      thirdButton.disabled = true;
+      await radioGroup.updateComplete;
+      thirdButton.click();
+      await new Promise(r => setTimeout(r, 0));
+      verifyEvents([]);
+      thirdButton.disabled = false;
+      await radioGroup.updateComplete;
     });
 
     // Verify setting iconSrc displays an icon in the radio button.
@@ -420,6 +472,75 @@
         ICON_SRC,
         "Radio button icon uses the expected source."
       );
+    });
+
+    // Verify disabling the group disables all buttons in the group as well as
+    // the ways it's possible to disable/enable individual buttons.
+    add_task(async function testDisablingRadioElements() {
+      let { radioGroup, radioButtons } = await renderRadioElements();
+      let [firstRadioButton, ...otherButtons] = radioButtons;
+
+      function verifyElementStates(state) {
+        let checkElementState = element =>
+          state == "disabled"
+            ? element.hasAttribute("disabled")
+            : !element.hasAttribute("disabled");
+        ok(
+          checkElementState(radioGroup.fieldset),
+          `Radio group fieldset is ${state}.`
+        );
+        radioButtons.forEach(button =>
+          ok(checkElementState(button.radioButton), `All radio buttons are ${state}.`)
+        );
+      }
+
+      // Verify elements are enabled by default.
+      verifyElementStates("enabled");
+
+      // Verify it's possible to disable a single radio button independently.
+      firstRadioButton.disabled = true;
+      await firstRadioButton.updateComplete;
+      ok(
+        firstRadioButton.radioButton.hasAttribute("disabled"),
+        "The first radio button is now disabled."
+      );
+      otherButtons.forEach(button =>
+        ok(
+          !button.radioButton.hasAttribute("disabled"),
+          "All other buttons are still enabled."
+        )
+      );
+
+      // Verify all elements are disabled when radio group state changes.
+      radioGroup.disabled = true;
+      await radioGroup.updateComplete;
+      verifyElementStates("disabled");
+
+      // Verify it's not possible to enable a single radio button when the
+      // parent group is disabled.
+      firstRadioButton.disabled = false;
+      await firstRadioButton.updateComplete;
+      verifyElementStates("disabled");
+
+      // Re-enable the radio group. The independently disabled radio button
+      // should still be disabled.
+      radioGroup.disabled = false;
+      await radioGroup.updateComplete;
+      ok(
+        firstRadioButton.radioButton.hasAttribute("disabled"),
+        "The first radio button is still disabled."
+      );
+      otherButtons.forEach(button =>
+        ok(
+          !button.radioButton.hasAttribute("disabled"),
+          "All other buttons are now enabled."
+        )
+      );
+
+      // Verify it's possible to enable a single radio button independently.
+      firstRadioButton.disabled = false;
+      await firstRadioButton.updateComplete;
+      verifyElementStates("enabled");
     });
   </script>
 </head>
