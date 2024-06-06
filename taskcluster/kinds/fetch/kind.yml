@@ -14,6 +14,7 @@ jobs-from:
     - benchmarks.yml
     - browsertime.yml
     - chromium-fetch.yml
+    - cft-chromedriver-fetch.yml
     - resource-monitor.yml
     - toolchain-clang-tidy-external.yml
     - toolchains.yml
