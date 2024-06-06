@@ -251,7 +251,10 @@ FormAutofillPreferences.prototype = {
       this.refs.creditCardAutofillCheckbox = creditCardAutofillCheckbox;
       this.refs.savedCreditCardsBtn = savedCreditCardsBtn;
 
-      if (lazy.OSKeyStore.canReauth()) {
+      if (
+        lazy.OSKeyStore.canReauth() &&
+        !Services.prefs.getBoolPref("security.nocertdb", false)
+      ) {
         let reauth = document.createXULElement("hbox");
         let reauthCheckboxGroup = document.createXULElement("hbox");
         let reauthCheckbox = document.createXULElement("checkbox");
