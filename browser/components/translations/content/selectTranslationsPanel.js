@@ -1317,6 +1317,7 @@ var SelectTranslationsPanel = new (class {
       // disable overflow before rendering the text, then re-enable it after it renders.
       requestAnimationFrame(() => {
         textArea.style.overflow = overflow;
+        textArea.setSelectionRange(0, 0);
         textArea.scrollTop = 0;
       });
     });
