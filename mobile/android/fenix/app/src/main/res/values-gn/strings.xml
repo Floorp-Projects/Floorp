@@ -802,11 +802,11 @@
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Umi jepysokue ojejoko sapy’ami</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Peteĩ térã hetave tembiporu’i ndoikoéima, péicha rupi apopyvusu ndoku’eporãi. %1$s omoñepyrũsejey tembiporu’i ha ndaikatúi.\n\nUmi tembiporu’i ndoku’emo’ãi ko tembiapo aja.\n\nEipe’a térã embotývo umi tembiporu’i ikatu omyatyrõ ko apañuãi.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Peteĩ térã hetave tembiporu’i ndoikoéima, péicha rupi apopyvusu ndoku’eporãi. %1$s omoñepyrũsejey tembiporu’i ha ndaikatúi.\n\nUmi tembiporu’i ndoku’emo’ãi ko tembiapo aja.\n\nEipe’a térã embotývo umi tembiporu’i ikatu omyatyrõ ko apañuái.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
-    <string name="extension_process_crash_dialog_message">Peteĩ térã hetave jepysokue ndoikovéima, péicha rupi apopyvusu ndoku’eporãi. %1$s omoñepyrũsejey jepysokue ha ndaikatúi.\n\nUmi jepysokue ndoku’emo’ãi ko tembiapo aja.\n\nEipe’a térã embotývo umi jepysokue ikatu omyatyrõ ko apañuãi.</string>
+    <string name="extension_process_crash_dialog_message">Peteĩ térã hetave jepysokue ndoikovéima, péicha rupi apopyvusu ndoku’eporãi. %1$s omoñepyrũsejey jepysokue ha ndaikatúi.\n\nUmi jepysokue ndoku’emo’ãi ko tembiapo aja.\n\nEipe’a térã embotývo umi jepysokue ikatu omyatyrõ ko apañuái.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Emoñepyrũ umi tembiporu’i</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
@@ -1463,6 +1463,7 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Emboty tendayke ñemigua</string>
 
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">¿Emboty tendayke ñemigua?</string>
     <string name="notification_erase_text_android_14">Eikutu ha embosyryry ko marandu’i emboty hag̃ua umi tendayke ñemigua.</string>
@@ -1540,10 +1541,6 @@
     <string name="qr_scanner_dialog_invalid_ok">MONEĨ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">¿Emboguetesépa añetehápe %1$s?</string>
-    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">Emboguetévo ko tendayke omboguéta opaite mbyatypyre. Emoheñoikuaa mbyatypyre pyahu ejapose vove.</string>
-    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title">¿Emboguete %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Mboguete</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
@@ -2398,7 +2395,7 @@
     <!-- Title for error card displayed to the user when an error occurred. -->
     <string name="review_quality_check_generic_error_title">Ndaipóri marandu ko’ág̃aite</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body">Romba’apo opa hag̃ua apañuãi. Ikatúpiko, eha’ãjey ag̃ave.</string>
+    <string name="review_quality_check_generic_error_body">Romba’apo opa hag̃ua apañuái. Ikatúpiko, eha’ãjey ag̃ave.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title">Ndaikatúi eike ñandutípe</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
@@ -2530,7 +2527,7 @@
     <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
     <string name="translations_bottom_sheet_default_dropdown_selection">Eiporavo peteĩ ñe’ẽ</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
-    <string name="translation_error_could_not_translate_warning_text">Iñapañuãi emoñe’ẽasakuévo. Eha’ãjey ag̃amieve.</string>
+    <string name="translation_error_could_not_translate_warning_text">Iñapañuái emoñe’ẽasakuévo. Eha’ãjey ag̃amieve.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
     <string name="translation_error_could_not_load_languages_warning_text">Nahenyhẽkuaái ñe’ẽnguéra. Ehechajey oikópa ne ñanduti ha eha’ãjey ag̃ave.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
@@ -2656,7 +2653,7 @@
     <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">Emboguejy Ñe’ẽ</string>
-    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <!-- All languages list item. When the user presses this item, they can download all languages. -->
     <string name="download_language_all_languages_item_preference">Opaite ñe’ẽ</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">Mboguete</string>
@@ -2665,7 +2662,7 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
     <string name="download_languages_item_content_description_not_downloaded_state">Mboguejy</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
-    <string name="download_languages_item_content_description_selected_state">Poravopyre</string>
+    <string name="download_languages_item_content_description_selected_state" moz:removedIn="127" tools:ignore="UnusedResources">Poravopyre</string>
 
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
@@ -2758,7 +2755,7 @@
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Mondo</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Mboty</string>
+    <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Mboty</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">¡Aguyje nde jehaipyrére!</string>
     <!-- Option for likert scale -->

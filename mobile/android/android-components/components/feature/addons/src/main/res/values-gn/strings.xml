@@ -76,8 +76,6 @@
     <string name="mozac_feature_addons_version">Peteĩchagua</string>
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Apohára</string>
-    <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Apohára</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Mbohekopyahu ramovéva</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -94,8 +92,6 @@
     <string name="mozac_feature_addons_settings">Ñemboheko</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Hendypyre</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Mboguepyre</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Emoneĩ kundahára ñemíme</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -104,8 +100,6 @@
     <string name="mozac_feature_addons_not_allowed_in_private_browsing">Noñemoneĩri ovetã ñemíme</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Myandypyre</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Pe’apyre</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Mohendapyre</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -140,16 +134,12 @@
     <string name="mozac_feature_addons_permissions_dialog_deny">Mbotove</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Heja</string>
-    <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Emohenda moĩmbaha</string>
     <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_install_addon_content_description_2">Emohenda %1$s</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Heja</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
     <string name="mozac_feature_addons_user_rating_count_2">Jehechajey: %1$s</string>
-    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
-    <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
     <string name="mozac_feature_addons_rating_content_description_2">Ehepyme’ẽ: %1$.02f 5-gui</string>
     <!-- This is the title of page where all the add-ons are listed-->
@@ -235,7 +225,7 @@
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ndaikatúi oñemohenda ndojokupytýi rupi %2$s %3$s ndive.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted_1">%1$s ndaikatúi oñemohenda omoapañuãi rupi tuichaháicha tekopyta térã tekorosã</string>
+    <string name="mozac_feature_addons_blocklisted_1">%1$s ndaikatúi oñemohenda omoapañuái rupi tuichaháicha tekopyta térã tekorosã</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s hendýma hekopete</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -278,18 +268,14 @@
     <string name="mozac_feature_addons_updater_dialog_status">Rekotee:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">Oñembojuaju %1$s %2$s rehe</string>
-    <!-- Text shown in the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Embojuruja poravorãme</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_description_2">Eike %1$s-pe %2$s poravorã guive.</string>
-    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Oĩma, aikũmby</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button_2">MONEĨ</string>
     <!-- "Learn more" link displayed below an add-on status message. -->
     <string name="mozac_feature_addons_status_learn_more">Eikuaave</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_status_blocklisted">%1$s oñemboguéma oreko rupi apañuãi tekorosãrã térã tekopyta.</string>
+    <string name="mozac_feature_addons_status_blocklisted">%1$s oñemboguéma oreko rupi apañuái tekorosãrã térã tekopyta.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s ndaikatúi ojehechajey tekorosãramo ha oñemboguéma.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->

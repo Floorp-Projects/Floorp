@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">Rombyasy. %1$s iñapañuãi ha oñemboty.</string>
+    <string name="mozac_lib_crash_dialog_title">Rombyasy. %1$s iñapañuái ha oñemboty.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">Emomarandu jejavygua %1$s-pe</string>
@@ -16,7 +16,7 @@
     <string name="mozac_lib_crash_channel">Jejavy</string>
 
     <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_background_process_notification_title">Ambyasy. Oiko apañuãi %1$s-pe.</string>
+    <string name="mozac_lib_crash_background_process_notification_title">Ambyasy. Oiko apañuái %1$s-pe.</string>
 
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">Momarandu</string>
