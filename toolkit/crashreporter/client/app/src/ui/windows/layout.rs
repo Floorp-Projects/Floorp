@@ -94,7 +94,13 @@ impl<'a> Layout<'a> {
                     ..
                 }) = &content.element_type
                 {
-                    let mut size = inner_size.less_margin(&BUTTON_MARGIN);
+                    let mut size = Size {
+                        // We prefer button text to not wrap, so ignore inner size for width to get
+                        // an unwrapped content_size.
+                        width: max_size.width,
+                        height: inner_size.height,
+                    };
+                    size = size.less_margin(&BUTTON_MARGIN);
                     self.measure_text(text.as_str(), element, &mut size);
                     content_size = Some(size.plus_margin(&BUTTON_MARGIN));
                 }
@@ -380,11 +386,14 @@ impl Size {
     }
 
     pub fn from_content_size(&mut self, style: &ElementStyle, content_size: &Self) {
-        if style.horizontal_size_request.is_none() && style.horizontal_alignment != Alignment::Fill
+        if style.horizontal_size_request < Some(content_size.width)
+            && style.horizontal_alignment != Alignment::Fill
         {
             self.width = content_size.width;
         }
-        if style.vertical_size_request.is_none() && style.vertical_alignment != Alignment::Fill {
+        if style.vertical_size_request < Some(content_size.height)
+            && style.vertical_alignment != Alignment::Fill
+        {
             self.height = content_size.height;
         }
     }
