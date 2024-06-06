@@ -80,10 +80,7 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
   recipe.branches[0].slug = "mochitest-active-foo";
   delete recipe.branches[1];
 
-  let { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(recipe);
-
-  await enrollmentPromise;
+  const doExperimentCleanup = await ExperimentFakes.enrollmentHelper(recipe);
 
   Assert.equal(
     await CONTEXT.evaluateJexl(`"${slug}" in activeExperiments`, FAKE_CONTEXT),
@@ -100,5 +97,5 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
     "should not find an experiment that doesn't exist"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });

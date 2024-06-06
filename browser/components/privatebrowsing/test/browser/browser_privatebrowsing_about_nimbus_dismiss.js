@@ -65,7 +65,7 @@ add_task(async function test_experiment_messaging_system_dismiss() {
 
   await BrowserTestUtils.closeWindow(win1);
   await BrowserTestUtils.closeWindow(win2);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_messaging_show_default_on_dismiss() {
@@ -135,5 +135,5 @@ add_task(async function test_experiment_messaging_show_default_on_dismiss() {
 
   await BrowserTestUtils.closeWindow(win1);
   await BrowserTestUtils.closeWindow(win2);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });

@@ -191,7 +191,7 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
     ).length;
   }, "Waiting for sessions to clean up.");
   // Session ended without a ping being sent. Success!
-  await doEnrollmentCleanup();
+  doEnrollmentCleanup();
   await SpecialPowers.popPrefEnv();
 });
 

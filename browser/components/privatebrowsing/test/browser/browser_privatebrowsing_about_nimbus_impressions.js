@@ -122,5 +122,5 @@ add_task(async function test_experiment_messaging_system_impressions() {
   await BrowserTestUtils.closeWindow(win1);
   await BrowserTestUtils.closeWindow(win2);
   await BrowserTestUtils.closeWindow(win3);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });

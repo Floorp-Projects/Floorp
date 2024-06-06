@@ -1343,5 +1343,5 @@ async function withOnlineExperiment(callback) {
     }
   );
   await callback();
-  await doExperimentCleanup();
+  doExperimentCleanup();
 }

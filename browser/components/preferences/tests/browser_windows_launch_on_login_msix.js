@@ -52,7 +52,7 @@ add_task(async function test_check_uncheck_checkbox() {
   }, "Wait for async get enabled operation to return false");
 
   gBrowser.removeCurrentTab();
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function enable_external_startuptask() {
@@ -76,7 +76,7 @@ add_task(async function enable_external_startuptask() {
   ok(launchOnLoginCheckbox.checked, "Autostart checkbox automatically checked");
 
   gBrowser.removeCurrentTab();
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function disable_external_startuptask() {
@@ -101,5 +101,5 @@ add_task(async function disable_external_startuptask() {
   );
 
   gBrowser.removeCurrentTab();
-  await doCleanup();
+  doCleanup();
 });

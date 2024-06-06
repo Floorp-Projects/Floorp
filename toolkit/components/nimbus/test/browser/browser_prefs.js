@@ -65,7 +65,7 @@ add_task(async function test_prefs_priority() {
     );
 
     for (const cleanup of enrollmentCleanup) {
-      await cleanup();
+      cleanup();
     }
 
     Services.prefs.deleteBranch(pref);

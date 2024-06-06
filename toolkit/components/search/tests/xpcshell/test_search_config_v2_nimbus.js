@@ -69,7 +69,7 @@ add_task(async function test_nimbus_experiment_enabled() {
     "All application provided engines for search-config-v2 should be instances of AppProvidedSearchEngine."
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
 
   Assert.equal(
     Services.prefs.getBoolPref("browser.search.newSearchConfig.enabled"),

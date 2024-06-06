@@ -139,7 +139,7 @@ decorate_task(
   async function testLegacyHeartbeatTrigger({ heartbeatClassStub }) {
     const sandbox = sinon.createSandbox();
 
-    const cleanupEnrollment = await ExperimentFakes.enrollWithFeatureConfig({
+    const doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
       featureId: "legacyHeartbeat",
       value: {
         survey: SURVEY,
@@ -158,7 +158,7 @@ decorate_task(
       );
       assertSurvey(heartbeatClassStub.args[0][1], SURVEY);
 
-      await cleanupEnrollment();
+      doEnrollmentCleanup();
     } finally {
       sandbox.restore();
     }
@@ -170,7 +170,7 @@ decorate_task(
   async function testLegacyHeartbeatPingPayload() {
     const sandbox = sinon.createSandbox();
 
-    const cleanupEnrollment = await ExperimentFakes.enrollWithFeatureConfig({
+    const doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
       featureId: "legacyHeartbeat",
       value: {
         survey: SURVEY,
@@ -215,7 +215,7 @@ decorate_task(
       Assert.ok(result.valid);
       Assert.equal(payload.surveyVersion, "1");
 
-      await cleanupEnrollment();
+      doEnrollmentCleanup();
     } finally {
       ShowHeartbeatAction.overrideHeartbeatForTests();
       sandbox.restore();

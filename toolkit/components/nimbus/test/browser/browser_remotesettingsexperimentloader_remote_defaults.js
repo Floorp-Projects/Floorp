@@ -345,15 +345,7 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
       source: "rs-loader",
     }
   );
-  let stubFoo = sinon.stub().callsFake((...args) => {
-    dump(`
-!!! stubfoo called with ${JSON.stringify(args)}
-
-
-${new Error().stack}
-!!!
-`);
-  });
+  let stubFoo = sinon.stub();
   let stubBar = sinon.stub();
   featureFoo.onUpdate(stubFoo);
   featureBar.onUpdate(stubBar);
@@ -417,7 +409,7 @@ ${new Error().stack}
     "Pref was cleared"
   );
 
-  await fooCleanup();
+  fooCleanup();
   // This will also remove the inactive recipe from the store
   // the previous update (from recipe not seen code path)
   // only sets the recipe as inactive
@@ -586,7 +578,7 @@ add_task(async function remote_defaults_variables_storage() {
     "Test types are returned correctly"
   );
 
-  await doCleanup();
+  doCleanup();
 
   Assert.equal(
     Services.prefs.getIntPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar.storage`, -1),

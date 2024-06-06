@@ -144,7 +144,7 @@ add_task(async function test_ExperimentFeature_getVariable_precedence() {
 
   // Cleanup
   Services.prefs.deleteBranch(TEST_PREF_BRANCH);
-  await doExperimentCleanup();
+  doExperimentCleanup();
   sandbox.restore();
 });
 
@@ -191,6 +191,6 @@ add_task(async function test_ExperimentFeature_getVariable_partial_values() {
   // Cleanup
   Services.prefs.getDefaultBranch("").deleteBranch(TEST_PREF_BRANCH);
   Services.prefs.deleteBranch(TEST_PREF_BRANCH);
-  await doExperimentCleanup();
+  doExperimentCleanup();
   sandbox.restore();
 });

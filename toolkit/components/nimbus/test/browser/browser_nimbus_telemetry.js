@@ -59,7 +59,7 @@ add_task(async function test_experiment_enroll_unenroll_Telemetry() {
     EVENT_FILTER
   );
 
-  await cleanup();
+  cleanup();
 
   TelemetryTestUtils.assertEvents(
     [
@@ -112,7 +112,7 @@ add_task(async function test_experiment_expose_Telemetry() {
     EVENT_FILTER
   );
 
-  await cleanup();
+  cleanup();
 });
 
 add_task(async function test_rollout_expose_Telemetry() {
@@ -154,5 +154,5 @@ add_task(async function test_rollout_expose_Telemetry() {
     EVENT_FILTER
   );
 
-  await cleanup();
+  cleanup();
 });

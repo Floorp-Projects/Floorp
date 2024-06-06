@@ -1292,7 +1292,7 @@ export var UrlbarTestUtils = {
       // If `doCleanup()` has already been called (i.e., by the caller), it will
       // throw an error here.
       try {
-        await doCleanup();
+        doCleanup();
       } catch (error) {}
     });
 

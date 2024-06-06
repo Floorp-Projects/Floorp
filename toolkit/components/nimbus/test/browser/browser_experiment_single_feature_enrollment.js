@@ -76,12 +76,12 @@ const SINGLE_FEATURE_RECIPE = {
 const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
 
 add_task(async function test_TODO() {
-  let { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(SINGLE_FEATURE_RECIPE);
   let sandbox = sinon.createSandbox();
   let stub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
 
-  await enrollmentPromise;
+  const doExperimentCleanup = await ExperimentFakes.enrollmentHelper(
+    SINGLE_FEATURE_RECIPE
+  );
 
   Assert.ok(
     ExperimentAPI.getExperiment({ featureId: "urlbar" }),
@@ -122,7 +122,7 @@ add_task(async function test_TODO() {
     "Should have expected featureId"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   sandbox.restore();
   NimbusFeatures.urlbar._didSendExposureEvent = false;
 });

@@ -820,7 +820,7 @@ class _QuickSuggestTestUtils {
 
     return async () => {
       this.#log("enrollExperiment.cleanup", "Awaiting experiment cleanup");
-      await doExperimentCleanup();
+      doExperimentCleanup();
 
       // The same pref updates will be triggered by unenrollment, so wait for
       // them again.

@@ -635,5 +635,5 @@ async function withExperiment(values, callback) {
     }
   );
   await callback();
-  await doExperimentCleanup();
+  doExperimentCleanup();
 }
