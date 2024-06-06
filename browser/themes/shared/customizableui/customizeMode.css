@@ -309,17 +309,6 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   margin-bottom: -1px;
 }
 
-/* Special-case the overflow and the hamburger button so they show up disabled
-   in customize mode. */
-:is(#nav-bar-overflow-button, #PanelUI-menu-button)[disabled] {
-  fill-opacity: var(--toolbarbutton-disabled-opacity);
-}
-
-/* The overflow button should look both disabled and open. */
-#nav-bar[customizing] > #nav-bar-overflow-button > .toolbarbutton-icon {
-  background-color: var(--toolbarbutton-active-background);
-}
-
 #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   -moz-context-properties: fill, stroke;
