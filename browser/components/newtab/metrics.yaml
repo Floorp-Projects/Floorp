@@ -278,7 +278,7 @@ newtab:
       weather_display_mode: &weather_display_mode
         description: >
           Which display mode is selected.
-        type: boolean
+        type: string
       newtab_visit_id: *newtab_visit_id
     send_in_pings:
       - newtab
