@@ -4956,15 +4956,12 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   // use them to resolve the sizes with intrinsic keywords in the inline axis.
   // If |aAxis| is the block axis of |aFrame|, intrinsic keywords should behaves
   // as auto, so we don't need this.
-  //
-  // FIXME(emilio): For -moz-available it seems we shouldn't need this.
-  //
   // https://github.com/w3c/csswg-drafts/issues/5032
-  // FIXME: Bug 1670151: Use GetAspectRatio() to cover replaced elements (and
-  // then we can drop the check of eSupportsAspectRatio).
-  const AspectRatio ar = stylePos->mAspectRatio.ToLayoutRatio();
-  if (isInlineAxis && ar && nsIFrame::ToExtremumLength(styleISize) &&
-      aFrame->SupportsAspectRatio() && !iSizeFromAspectRatio) {
+  const AspectRatio ar = aFrame->GetAspectRatio();
+  if (isInlineAxis && ar && !iSizeFromAspectRatio &&
+      (nsIFrame::IsIntrinsicKeyword(styleISize) ||
+       nsIFrame::IsIntrinsicKeyword(styleMinISize) ||
+       nsIFrame::IsIntrinsicKeyword(styleMaxISize))) {
     // This 'B' in |styleBSize| means the block size of |aFrame|. We go into
     // this branch only if |aAxis| is the inline axis of |aFrame|.
     const StyleSize& styleBSize =
