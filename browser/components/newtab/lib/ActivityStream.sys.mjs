@@ -325,6 +325,27 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "newtabWallpapers.highlightHeaderText",
+    {
+      title: "Changes the wallpaper feature highlight header text",
+      value: "",
+    },
+  ],
+  [
+    "newtabWallpapers.highlightContentText",
+    {
+      title: "Changes the wallpaper feature highlight content text",
+      value: "",
+    },
+  ],
+  [
+    "newtabWallpapers.highlightCtaText",
+    {
+      title: "Changes the wallpaper feature highlight cta text",
+      value: "",
+    },
+  ],
+  [
     "newtabWallpapers.wallpaper-light",
     {
       title: "Currently set light wallpaper",

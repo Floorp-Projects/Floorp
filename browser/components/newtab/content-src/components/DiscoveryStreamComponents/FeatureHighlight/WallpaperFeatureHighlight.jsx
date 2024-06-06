@@ -4,6 +4,7 @@
 
 import { FeatureHighlight } from "./FeatureHighlight";
 import React, { useCallback, useEffect, useState, useRef } from "react";
+import { useSelector } from "react-redux";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 
 const INTERSECTION_RATIO = 1;
@@ -20,6 +21,10 @@ export function WallpaperFeatureHighlight({
   const [highlightVisibilityTimeoutID, setHighlightVisibilityTimeoutID] =
     useState("");
   const heightElement = useRef(null);
+  const prefs = useSelector(state => state.Prefs.values);
+  const highlightHeaderText = prefs["newtabWallpapers.highlightHeaderText"];
+  const highlightContentText = prefs["newtabWallpapers.highlightContentText"];
+  const highlightCtaText = prefs["newtabWallpapers.highlightCtaText"];
 
   const onToggleClick = useCallback(() => {
     dispatch(ac.SetPref(WALLPAPER_HIGHLIGHT_DISMISSED_PREF, true));
@@ -88,6 +93,37 @@ export function WallpaperFeatureHighlight({
     };
   }, [dispatch, windowObj]);
 
+  let header = (
+    <span
+      className="highlightHeader"
+      data-l10n-id="newtab-wallpaper-feature-highlight-header"
+    ></span>
+  );
+
+  let content = (
+    <span
+      className="highlightContent"
+      data-l10n-id="newtab-wallpaper-feature-highlight-content"
+    ></span>
+  );
+
+  let button = (
+    <button
+      onClick={onToggleClick}
+      data-l10n-id="newtab-wallpaper-feature-highlight-button"
+    ></button>
+  );
+
+  if (highlightHeaderText) {
+    header = <span className="highlightHeader">{highlightHeaderText}</span>;
+  }
+  if (highlightContentText) {
+    content = <span className="highlightContent">{highlightContentText}</span>;
+  }
+  if (highlightCtaText) {
+    button = <button onClick={onToggleClick}>{highlightCtaText}</button>;
+  }
+
   return (
     <div className="wallpaper-feature-highlight" ref={heightElement}>
       <FeatureHighlight
@@ -97,18 +133,9 @@ export function WallpaperFeatureHighlight({
         dispatch={dispatch}
         message={
           <div className="wallpaper-feature-highlight-content">
-            <span
-              className="highlightHeader"
-              data-l10n-id="newtab-wallpaper-feature-highlight-header"
-            ></span>
-            <span
-              className="highlightContent"
-              data-l10n-id="newtab-wallpaper-feature-highlight-content"
-            ></span>
-            <button
-              onClick={onToggleClick}
-              data-l10n-id="newtab-wallpaper-feature-highlight-button"
-            ></button>
+            {header}
+            {content}
+            {button}
           </div>
         }
         icon={<div className="customize-icon"></div>}

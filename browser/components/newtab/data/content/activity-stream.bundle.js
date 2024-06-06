@@ -10187,6 +10187,7 @@ const Weather_Weather = (0,external_ReactRedux_namespaceObject.connect)(state =>
 
 
 
+
 const WallpaperFeatureHighlight_INTERSECTION_RATIO = 1;
 const WallpaperFeatureHighlight_VISIBLE = "visible";
 const WallpaperFeatureHighlight_VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -10198,6 +10199,10 @@ function WallpaperFeatureHighlight({
 }) {
   const [highlightVisibilityTimeoutID, setHighlightVisibilityTimeoutID] = (0,external_React_namespaceObject.useState)("");
   const heightElement = (0,external_React_namespaceObject.useRef)(null);
+  const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
+  const highlightHeaderText = prefs["newtabWallpapers.highlightHeaderText"];
+  const highlightContentText = prefs["newtabWallpapers.highlightContentText"];
+  const highlightCtaText = prefs["newtabWallpapers.highlightCtaText"];
   const onToggleClick = (0,external_React_namespaceObject.useCallback)(() => {
     dispatch(actionCreators.SetPref(WALLPAPER_HIGHLIGHT_DISMISSED_PREF, true));
   }, [dispatch]);
@@ -10246,6 +10251,33 @@ function WallpaperFeatureHighlight({
       windowObj.document.removeEventListener(WallpaperFeatureHighlight_VISIBILITY_CHANGE_EVENT, onVisibilityChange);
     };
   }, [dispatch, windowObj]);
+  let header = /*#__PURE__*/external_React_default().createElement("span", {
+    className: "highlightHeader",
+    "data-l10n-id": "newtab-wallpaper-feature-highlight-header"
+  });
+  let content = /*#__PURE__*/external_React_default().createElement("span", {
+    className: "highlightContent",
+    "data-l10n-id": "newtab-wallpaper-feature-highlight-content"
+  });
+  let button = /*#__PURE__*/external_React_default().createElement("button", {
+    onClick: onToggleClick,
+    "data-l10n-id": "newtab-wallpaper-feature-highlight-button"
+  });
+  if (highlightHeaderText) {
+    header = /*#__PURE__*/external_React_default().createElement("span", {
+      className: "highlightHeader"
+    }, highlightHeaderText);
+  }
+  if (highlightContentText) {
+    content = /*#__PURE__*/external_React_default().createElement("span", {
+      className: "highlightContent"
+    }, highlightContentText);
+  }
+  if (highlightCtaText) {
+    button = /*#__PURE__*/external_React_default().createElement("button", {
+      onClick: onToggleClick
+    }, highlightCtaText);
+  }
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "wallpaper-feature-highlight",
     ref: heightElement
@@ -10256,16 +10288,7 @@ function WallpaperFeatureHighlight({
     dispatch: dispatch,
     message: /*#__PURE__*/external_React_default().createElement("div", {
       className: "wallpaper-feature-highlight-content"
-    }, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "highlightHeader",
-      "data-l10n-id": "newtab-wallpaper-feature-highlight-header"
-    }), /*#__PURE__*/external_React_default().createElement("span", {
-      className: "highlightContent",
-      "data-l10n-id": "newtab-wallpaper-feature-highlight-content"
-    }), /*#__PURE__*/external_React_default().createElement("button", {
-      onClick: onToggleClick,
-      "data-l10n-id": "newtab-wallpaper-feature-highlight-button"
-    })),
+    }, header, content, button),
     icon: /*#__PURE__*/external_React_default().createElement("div", {
       className: "customize-icon"
     }),
