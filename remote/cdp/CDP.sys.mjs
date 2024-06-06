@@ -97,14 +97,15 @@ export class CDP {
 
     Cu.printStderr(`DevTools listening on ${this.address}\n`);
 
-    // Write connection details to DevToolsActivePort file within the profile.
-    this._activePortPath = PathUtils.join(
-      PathUtils.profileDir,
-      "DevToolsActivePort"
-    );
-
-    const data = `${this.agent.port}\n${this.mainTargetPath}`;
     try {
+      // Write connection details to DevToolsActivePort file within the profile.
+      this._activePortPath = PathUtils.join(
+        PathUtils.profileDir,
+        "DevToolsActivePort"
+      );
+
+      const data = `${this.agent.port}\n${this.mainTargetPath}`;
+
       await IOUtils.write(this._activePortPath, lazy.textEncoder.encode(data));
     } catch (e) {
       lazy.logger.warn(
