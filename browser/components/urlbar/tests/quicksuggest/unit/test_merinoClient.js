@@ -621,27 +621,19 @@ async function fetchAndCheckSuggestions({
 }
 
 async function withExperiment(values, callback) {
-  let { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(
-      ExperimentFakes.recipe("mock-experiment", {
-        active: true,
-        branches: [
-          {
-            slug: "treatment",
-            features: [
-              {
-                featureId: NimbusFeatures.urlbar.featureId,
-                value: {
-                  enabled: true,
-                  ...values,
-                },
-              },
-            ],
-          },
-        ],
-      })
-    );
-  await enrollmentPromise;
+  const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: NimbusFeatures.urlbar.featureId,
+      value: {
+        enabled: true,
+        ...values,
+      },
+    },
+    {
+      slug: "mock-experiment",
+      branchSlug: "treatment",
+    }
+  );
   await callback();
   await doExperimentCleanup();
 }

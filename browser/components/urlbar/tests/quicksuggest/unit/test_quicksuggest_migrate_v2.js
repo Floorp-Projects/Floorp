@@ -1330,26 +1330,18 @@ add_task(async function () {
 });
 
 async function withOnlineExperiment(callback) {
-  let { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(
-      ExperimentFakes.recipe("firefox-suggest-offline-vs-online", {
-        active: true,
-        branches: [
-          {
-            slug: "treatment",
-            features: [
-              {
-                featureId: NimbusFeatures.urlbar.featureId,
-                value: {
-                  enabled: true,
-                },
-              },
-            ],
-          },
-        ],
-      })
-    );
-  await enrollmentPromise;
+  const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: NimbusFeatures.urlbar.featureId,
+      value: {
+        enabled: true,
+      },
+    },
+    {
+      slug: "firefox-suggest-offline-vs-online",
+      branchSlug: "treatment",
+    }
+  );
   await callback();
   await doExperimentCleanup();
 }
