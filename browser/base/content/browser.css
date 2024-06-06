@@ -218,11 +218,6 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   display: none;
 }
 
-/* Hide extension toolbars that neglected to set the proper class */
-:root[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar) {
-  display: none;
-}
-
 #navigator-toolbox ,
 #mainPopupSet {
   min-width: 1px;
