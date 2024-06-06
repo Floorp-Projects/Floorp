@@ -4353,7 +4353,7 @@ static nscoord GetDefiniteSizeTakenByBoxSizing(
  */
 static bool GetIntrinsicCoord(nsIFrame::ExtremumLength aStyle,
                               gfxContext* aRenderingContext, nsIFrame* aFrame,
-                              Maybe<nscoord> aInlineSizeFromAspectRatio,
+                              Maybe<nscoord> aISizeFromAspectRatio,
                               nsIFrame::SizeProperty aProperty,
                               nscoord aContentBoxToBoxSizingDiff,
                               nscoord& aResult) {
@@ -4390,8 +4390,8 @@ static bool GetIntrinsicCoord(nsIFrame::ExtremumLength aStyle,
   // wrapping inside of it should not apply font size inflation.
   AutoMaybeDisableFontInflation an(aFrame);
 
-  if (aInlineSizeFromAspectRatio) {
-    aResult = *aInlineSizeFromAspectRatio;
+  if (aISizeFromAspectRatio) {
+    aResult = *aISizeFromAspectRatio;
   } else if (aStyle == nsIFrame::ExtremumLength::MaxContent) {
     aResult = aFrame->GetPrefISize(aRenderingContext);
   } else {
@@ -4406,7 +4406,7 @@ static bool GetIntrinsicCoord(nsIFrame::ExtremumLength aStyle,
 template <typename SizeOrMaxSize>
 static bool GetIntrinsicCoord(const SizeOrMaxSize& aStyle,
                               gfxContext* aRenderingContext, nsIFrame* aFrame,
-                              Maybe<nscoord> aInlineSizeFromAspectRatio,
+                              Maybe<nscoord> aISizeFromAspectRatio,
                               nsIFrame::SizeProperty aProperty,
                               nscoord aContentBoxToBoxSizingDiff,
                               nscoord& aResult) {
@@ -4415,7 +4415,7 @@ static bool GetIntrinsicCoord(const SizeOrMaxSize& aStyle,
     return false;
   }
   return GetIntrinsicCoord(*length, aRenderingContext, aFrame,
-                           aInlineSizeFromAspectRatio, aProperty,
+                           aISizeFromAspectRatio, aProperty,
                            aContentBoxToBoxSizingDiff, aResult);
 }
 
@@ -4470,10 +4470,10 @@ static nscoord GetFitContentSizeForMaxOrPreferredSize(
  * @param aFixedMaxSize if aStyleMaxSize is a definite size then this points to
  *                      the value, otherwise nullptr
  * @param aStyleMaxSize a 'max-width' or 'max-height' property value
- * @param aInlineSizeFromAspectRatio the content-box inline size computed from
- *                                   aspect-ratio and the definite block size.
- *                                   We use this value to resolve
- *                                   {min|max}-content.
+ * @param aISizeFromAspectRatio the content-box inline size computed from
+ *                              aspect-ratio and the definite block size.
+ *                              We use this value to resolve sizes in inline
+ *                              axis with intrinsic keyword.
  * @param aFlags same as for IntrinsicForContainer
  * @param aContainerWM the container's WM
  */
@@ -4483,9 +4483,8 @@ static nscoord AddIntrinsicSizeOffset(
     StyleBoxSizing aBoxSizing, nscoord aContentSize, nscoord aContentMinSize,
     const StyleSize& aStyleSize, const nscoord* aFixedMinSize,
     const StyleSize& aStyleMinSize, const nscoord* aFixedMaxSize,
-    const StyleMaxSize& aStyleMaxSize,
-    Maybe<nscoord> aInlineSizeFromAspectRatio, uint32_t aFlags,
-    PhysicalAxis aAxis) {
+    const StyleMaxSize& aStyleMaxSize, Maybe<nscoord> aISizeFromAspectRatio,
+    uint32_t aFlags, PhysicalAxis aAxis) {
   nscoord result = aContentSize;
   nscoord min = aContentMinSize;
   nscoord coordOutsideSize = 0;
@@ -4518,8 +4517,8 @@ static nscoord AddIntrinsicSizeOffset(
   if (aStyleSize.IsFitContentFunction() ||
       aStyleMaxSize.IsFitContentFunction() ||
       aStyleMinSize.IsFitContentFunction()) {
-    if (aInlineSizeFromAspectRatio) {
-      minContent = maxContent = *aInlineSizeFromAspectRatio;
+    if (aISizeFromAspectRatio) {
+      minContent = maxContent = *aISizeFromAspectRatio;
     } else {
       minContent = aFrame->GetMinISize(aRenderingContext);
       maxContent = aFrame->GetPrefISize(aRenderingContext);
@@ -4536,7 +4535,7 @@ static nscoord AddIntrinsicSizeOffset(
     result = 0;  // let |min| handle padding/border/margin
   } else if (GetAbsoluteCoord(aStyleSize, size) ||
              GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
-                               aInlineSizeFromAspectRatio,
+                               aISizeFromAspectRatio,
                                nsIFrame::SizeProperty::Size,
                                contentBoxToBoxSizingDiff, size)) {
     result = size + coordOutsideSize;
@@ -4556,10 +4555,10 @@ static nscoord AddIntrinsicSizeOffset(
 
   // Compute max-size.
   nscoord maxSize = aFixedMaxSize ? *aFixedMaxSize : 0;
-  if (aFixedMaxSize || GetIntrinsicCoord(aStyleMaxSize, aRenderingContext,
-                                         aFrame, aInlineSizeFromAspectRatio,
-                                         nsIFrame::SizeProperty::MaxSize,
-                                         contentBoxToBoxSizingDiff, maxSize)) {
+  if (aFixedMaxSize ||
+      GetIntrinsicCoord(aStyleMaxSize, aRenderingContext, aFrame,
+                        aISizeFromAspectRatio, nsIFrame::SizeProperty::MaxSize,
+                        contentBoxToBoxSizingDiff, maxSize)) {
     maxSize += coordOutsideSize;
     if (result > maxSize) {
       result = maxSize;
@@ -4577,10 +4576,10 @@ static nscoord AddIntrinsicSizeOffset(
 
   // Compute min-size.
   nscoord minSize = aFixedMinSize ? *aFixedMinSize : 0;
-  if (aFixedMinSize || GetIntrinsicCoord(aStyleMinSize, aRenderingContext,
-                                         aFrame, aInlineSizeFromAspectRatio,
-                                         nsIFrame::SizeProperty::MinSize,
-                                         contentBoxToBoxSizingDiff, minSize)) {
+  if (aFixedMinSize ||
+      GetIntrinsicCoord(aStyleMinSize, aRenderingContext, aFrame,
+                        aISizeFromAspectRatio, nsIFrame::SizeProperty::MinSize,
+                        contentBoxToBoxSizingDiff, minSize)) {
     minSize += coordOutsideSize;
     if (result < minSize) {
       result = minSize;
@@ -4756,7 +4755,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
                    : LogicalSize(childWM);
       };
 
-  Maybe<nscoord> inlineSizeFromAspectRatio;
+  Maybe<nscoord> iSizeFromAspectRatio;
   Maybe<LogicalSize> contentBoxSizeToBoxSizingAdjust;
 
   const bool ignorePadding =
@@ -4895,9 +4894,9 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
           result = ratio.ComputeRatioDependentSize(
               isInlineAxis ? LogicalAxis::Inline : LogicalAxis::Block, childWM,
               h, *contentBoxSizeToBoxSizingAdjust);
-          // We have get the inlineSizeForAspectRatio value, so we don't have to
-          // recompute this again below.
-          inlineSizeFromAspectRatio.emplace(result);
+          // We have got the iSizeForAspectRatio value, so we don't need to
+          // compute this again below.
+          iSizeFromAspectRatio.emplace(result);
         }
 
         if (GetDefiniteSize(styleMaxBSize, aFrame, !isInlineAxis,
@@ -4953,10 +4952,10 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
     min = aFrame->GetMinISize(aRenderingContext);
   }
 
-  // If we have an aspect-ratio and a definite block size of |aFrame|, we
-  // resolve the {min|max}-content size by the aspect-ratio and the block size.
-  // If |aAxis| is not the inline axis of |aFrame|, {min|max}-content should
-  // behaves as auto, so we don't need this.
+  // If we have an aspect-ratio and a definite block size of |aFrame|, we should
+  // use them to resolve the sizes with intrinsic keywords in the inline axis.
+  // If |aAxis| is the block axis of |aFrame|, intrinsic keywords should behaves
+  // as auto, so we don't need this.
   //
   // FIXME(emilio): For -moz-available it seems we shouldn't need this.
   //
@@ -4965,7 +4964,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   // then we can drop the check of eSupportsAspectRatio).
   const AspectRatio ar = stylePos->mAspectRatio.ToLayoutRatio();
   if (isInlineAxis && ar && nsIFrame::ToExtremumLength(styleISize) &&
-      aFrame->SupportsAspectRatio() && !inlineSizeFromAspectRatio) {
+      aFrame->SupportsAspectRatio() && !iSizeFromAspectRatio) {
     // This 'B' in |styleBSize| means the block size of |aFrame|. We go into
     // this branch only if |aAxis| is the inline axis of |aFrame|.
     const StyleSize& styleBSize =
@@ -4986,7 +4985,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
           GetDefiniteSizeTakenByBoxSizing(boxSizingForAR, aFrame, !isInlineAxis,
                                           ignorePadding, aPercentageBasis);
       bSize -= bSizeTakenByBoxSizing;
-      inlineSizeFromAspectRatio.emplace(
+      iSizeFromAspectRatio.emplace(
           ar.ComputeRatioDependentSize(LogicalAxis::Inline, childWM, bSize,
                                        *contentBoxSizeToBoxSizingAdjust));
     }
@@ -4997,7 +4996,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
       aRenderingContext, aFrame, offsets, aType, boxSizing, result, min,
       styleISize, haveFixedMinISize ? &minISize : nullptr, styleMinISize,
       haveFixedMaxISize ? &maxISize : nullptr, styleMaxISize,
-      inlineSizeFromAspectRatio, aFlags, aAxis);
+      iSizeFromAspectRatio, aFlags, aAxis);
   nscoord overflow = result - aMarginBoxMinSizeClamp;
   if (MOZ_UNLIKELY(overflow > 0)) {
     nscoord newContentBoxSize = std::max(nscoord(0), contentBoxSize - overflow);
@@ -5130,7 +5129,7 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
                              : aFrame->IntrinsicBSizeOffsets(pmPercentageBasis);
   nscoord result = 0;
   nscoord min = 0;
-  // Note: aInlineSizeFromAspectRatio is Nothing() here because we don't handle
+  // Note: aISizeFromAspectRatio is Nothing() here because we don't handle
   // "content size" cases here (i.e. |fixedMinSize| is false here).
   result = AddIntrinsicSizeOffset(
       aRC, aFrame, offsets, aType, stylePos->mBoxSizing, result, min, size,
