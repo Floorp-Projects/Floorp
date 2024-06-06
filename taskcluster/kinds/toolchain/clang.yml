@@ -432,11 +432,11 @@ win64-clang-17-raw:
     fetches:
         fetch:
             - clang-17
-            - cmake
             - ninja
         toolchain:
             - win64-clang-17-stage1
             - win64-compiler-rt-17
+            - win64-cmake
             - vs-toolchain
             - win64-libxml2
 
@@ -824,10 +824,10 @@ win64-clang-18-raw:
     fetches:
         fetch:
             - clang-18
-            - cmake
             - ninja
         toolchain:
             - win64-clang-18-stage1
+            - win64-cmake
             - win64-compiler-rt-18
             - vs-toolchain
             - win64-libxml2
@@ -1238,10 +1238,10 @@ win64-clang-trunk-raw:
     fetches:
         fetch:
             - clang-trunk
-            - cmake
             - ninja
         toolchain:
             - win64-clang-trunk-stage1
+            - win64-cmake
             - win64-compiler-rt-trunk
             - vs-toolchain
             - win64-libxml2

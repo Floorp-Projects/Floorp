@@ -589,6 +589,20 @@ windows-rs:
               extract: false
               dest: ../artifacts
 
+win64-cmake:
+    description: "cmake toolchain build"
+    treeherder:
+        symbol: TW64(cmake)
+    run:
+        script: build-cmake.sh
+        toolchain-artifact: public/build/cmake.tar.zst
+    fetches:
+        fetch:
+            - cmake
+        toolchain:
+            - linux64-clang-toolchain
+            - vs-toolchain
+
 win64-libxml2:
     description: "libxml2 toolchain build"
     treeherder:
