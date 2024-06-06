@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1717559643220,
+      "derHash": "zBufnkNw+2gUHSihFeqoY/jq23oE4r0js8YvnZ8XwmM=",
+      "subject": "CN=FIRMAPROFESIONAL ICA A01 QWAC 2022,O=Firmaprofesional SA,C=ES",
+      "subjectDN": "MHIxCzAJBgNVBAYTAkVTMRwwGgYDVQQKDBNGaXJtYXByb2Zlc2lvbmFsIFNBMRgwFgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxKzApBgNVBAMMIkZJUk1BUFJPRkVTSU9OQUwgSUNBIEEwMSBRV0FDIDIwMjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d736a3e7ddd478034b9ce53949685d8115e8a539876acfe978db47a7cda1e5c6",
+        "size": 1447,
+        "filename": "bVle95d2TFsMug2xpivw0fPUY7VsTluskvwQa1q1hms=.pem",
+        "location": "security-state-staging/intermediates/ef18664d-a3b4-4937-86fa-040d42090680.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "bVle95d2TFsMug2xpivw0fPUY7VsTluskvwQa1q1hms=",
+      "crlite_enrolled": false,
+      "id": "b693d627-7f28-4463-adb8-51bd4f3c2712",
+      "last_modified": 1717559823094
+    },
+    {
+      "schema": 1717559643616,
+      "derHash": "Iv1U+TOxf0WJQsNF465iXkBc5AsZGzFriHyj0CzKw7E=",
+      "subject": "CN=FIRMAPROFESIONAL ICA A02 NO QWAC 2022,O=Firmaprofesional SA,C=ES",
+      "subjectDN": "MHUxCzAJBgNVBAYTAkVTMRwwGgYDVQQKDBNGaXJtYXByb2Zlc2lvbmFsIFNBMRgwFgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxLjAsBgNVBAMMJUZJUk1BUFJPRkVTSU9OQUwgSUNBIEEwMiBOTyBRV0FDIDIwMjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c1332c5b2b17a40d7e1c836a6cff328b9adb70daa8683b785dd00bc661c36f89",
+        "size": 1451,
+        "filename": "d96AQ4m8-YeSRHUqkGB8vTJPwsoHOcOVl8BS6_lfdXM=.pem",
+        "location": "security-state-staging/intermediates/01df6fff-e459-4353-a8c7-56a5333a7ebe.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "d96AQ4m8+YeSRHUqkGB8vTJPwsoHOcOVl8BS6/lfdXM=",
+      "crlite_enrolled": false,
+      "id": "27e327c4-059e-49c9-8697-35cb673ccf87",
+      "last_modified": 1717559823092
+    },
+    {
       "schema": 1717192455323,
       "derHash": "158fDIFBgEs50EslktV6/r50+UYGVK/0kUkNu3xaLXQ=",
       "subject": "CN=XinChaCha Trust EV TLS G2 R34 CA,O=Beijing Xinchacha Credit Management Co.\\, Ltd.,C=CN",
@@ -30979,5 +31015,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1717192623098
+  "timestamp": 1717559823094
 }

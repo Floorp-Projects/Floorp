@@ -12416,6 +12416,11 @@ trycloudflare.com
 pages.dev
 r2.dev
 workers.dev
+cdn.cloudflareanycast.net
+cdn.cloudflarecn.net
+cdn.cloudflareglobal.net
+cloudflare.net
+cdn.cloudflare.net
 
 // cloudscale.ch AG : https://www.cloudscale.ch/
 // Submitted by Gaudenz Steinlin <support@cloudscale.ch>
