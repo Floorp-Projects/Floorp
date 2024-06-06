@@ -398,6 +398,13 @@ class InactivePropertyHelper {
         fixId: "inactive-css-position-property-on-unpositioned-box-fix",
         msgId: "inactive-css-position-property-on-unpositioned-box",
       },
+      // object-fit or object-position property used on non-replaced elements.
+      {
+        invalidProperties: ["object-fit", "object-position"],
+        when: () => !this.replaced,
+        fixId: "inactive-css-only-replaced-elements-fix",
+        msgId: "inactive-css-only-replaced-elements",
+      },
       // text-overflow property used on elements for which 'overflow' is set to 'visible'
       // (the initial value) in the inline axis. Note that this validator only checks if
       // 'overflow-inline' computes to 'visible' on the element.
