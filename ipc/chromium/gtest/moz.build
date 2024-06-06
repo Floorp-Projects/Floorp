@@ -8,13 +8,8 @@ Library("ipcchromiumtest")
 
 SOURCES += [
     "name_unittest.cc",
+    "ports_unittest.cc",
 ]
-
-# Bug 1837550 - Fails under TSAN
-if not CONFIG["MOZ_TSAN"]:
-    SOURCES += [
-        "ports_unittest.cc",
-    ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
