@@ -16,73 +16,85 @@
  * Test 1: Meta Refresh
  * Test 2: JS Redirect
  * Test 3: 302 redirect
+ * Test 4: Redirect to different origin. No redirect loop should be detected
  */
 
-SimpleTest.requestFlakyTimeout("We need to wait for the HTTPS-Only error page to appear");
-SimpleTest.requestLongerTimeout(10);
 SimpleTest.waitForExplicitFinish();
 
-const REQUEST_URL =
+const HTTP_REQUEST_URL =
   "http://example.com/tests/dom/security/test/https-only/file_break_endless_upgrade_downgrade_loop.sjs";
+const HTTPS_REQUEST_URL =
+  "https://example.com/tests/dom/security/test/https-only/file_break_endless_upgrade_downgrade_loop.sjs";
 
-function resolveAfter6Seconds() {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, 6000);
-  });
-}
+const testQueries = [
+  // Test 1: Meta Refresh Redirect
+  { scheme: "http", query: "test1", error: true },
+  { scheme: "https", query: "test1", error: true },
+  // Test 2: JS win.location Redirect
+  { scheme: "http", query: "test2", error: true },
+  { scheme: "https", query: "test2", error: true },
+  // Test 3: 302 Redirect
+  { scheme: "http", query: "test3", error: true },
+  { scheme: "https", query: "test3", error: true },
+  // Test 4: 302 Redirect with a different path
+  { scheme: "http", query: "test4", error: false },
+  { scheme: "https", query: "test4", error: false },
+];
 
-async function verifyResult(aTestName) {
-  let errorPageL10nId = "about-httpsonly-title-alert";
-  let innerHTML = content.document.body.innerHTML;
-  ok(innerHTML.includes(errorPageL10nId), "the error page should be shown for " + aTestName);
-}
+let currentTest = 0;
+// do each test two time. One time starting with https:// one time with http://
+let testWin;
+window.addEventListener("message", receiveMessageWhenLoaded);
 
-async function verifyTest4Result() {
-  let pathname = content.document.location.pathname;
-  ok(
-    pathname === "/tests/dom/security/test/https-only/file_user_gesture.html",
-     "the http:// page should be loaded"
+function postMessageWhenLoaded() {
+  SimpleTest.waitForCondition(async () => {
+      return await SpecialPowers.spawn(testWin, [], () => {
+        let innerHTML = content.document.body.innerHTML;
+        return innerHTML == "OK :)"
+          || innerHTML == "DO NOT DISPLAY THIS"
+          || innerHTML.includes("about-httpsonly-title-alert");
+      }).catch(() => false);
+    },
+    () => window.postMessage("https-only-page-loaded", "*"),
+    "waiting for page load to complete"
   );
 }
 
-async function runTests() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["dom.security.https_only_mode", true],
-    ["dom.security.https_only_mode_break_upgrade_downgrade_endless_loop", true],
-    ["dom.security.https_only_check_path_upgrade_downgrade_endless_loop", true],
-  ]});
+async function receiveMessageWhenLoaded() {
+  const currentTestParams = testQueries[currentTest];
+  let testName = currentTestParams.scheme + ":" + currentTestParams.query
 
-  // Test 1: Meta Refresh Redirect
-  let winTest1 = window.open(REQUEST_URL + "?test1a", "_blank");
-  // Test 2: JS win.location Redirect
-  let winTest2 = window.open(REQUEST_URL + "?test2a", "_blank");
-  // Test 3: 302 Redirect
-  let winTest3 = window.open(REQUEST_URL + "?test3a", "_blank");
-  // Test 4: 302 Redirect with a different path
-  let winTest4 = window.open(REQUEST_URL + "?test4a", "_blank");
+  let innerHTML = await SpecialPowers.spawn(testWin, [], () => {
+    return content.document.body.innerHTML;
+  });
+  if(currentTestParams.error) {
+    ok(innerHTML.includes("about-httpsonly-title-alert"), testName + ": the error page should be shown");
+  } else {
+    is(innerHTML, "OK :)", testName + ": different path with https loaded ");
+  }
+  testWin.close();
 
-  // provide enough time for:
-  // the redirects to occur, and the error page to be displayed
-  await resolveAfter6Seconds();
-
-  await SpecialPowers.spawn(winTest1, ["test1"], verifyResult);
-  winTest1.close();
-
-  await SpecialPowers.spawn(winTest2, ["test2"], verifyResult);
-  winTest2.close();
-
-  await SpecialPowers.spawn(winTest3, ["test3"], verifyResult);
-  winTest3.close();
-
-  await SpecialPowers.spawn(winTest4, ["test4"], verifyTest4Result);
-  winTest4.close();
-
+  if (++currentTest < testQueries.length) {
+    runNextTest();
+    return;
+  }
+  // no more tests to run -> cleanup
+  window.removeEventListener("https-only-page-load", receiveMessageWhenLoaded);
   SimpleTest.finish();
 }
 
-runTests();
+async function runNextTest() {
+  const currentTestParams = testQueries[currentTest];
+  let uri = `${currentTestParams.scheme}://example.com/tests/dom/security/test/https-only/file_break_endless_upgrade_downgrade_loop.sjs?${currentTestParams.query}`;
+  testWin = window.open(uri, "_blank");
+  postMessageWhenLoaded();
+}
+
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+    ["dom.security.https_only_mode_break_upgrade_downgrade_endless_loop", true],
+    ["dom.security.https_only_mode_ever_enabled", true], // clear this pref at the end
+  ]}, runNextTest);
 
 </script>
 </body>
