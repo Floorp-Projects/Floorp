@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    fetch:
+        type: cft-chromedriver-fetch
+        script: /builds/worker/bin/fetch-cft-chromedriver.py
+
+linux64-cft-chromedriver:
+    description: 'Linux64 Chrome-for-Testing Chromedriver Fetch'
+    attributes:
+        cached_task: false
+    fetch:
+        platform: linux
+        artifact-name: cft-cd-linux.tar.bz2
+
+win64-cft-chromedriver:
+    description: 'Windows64 Chrome-for-Testing Chromedriver Fetch'
+    attributes:
+        cached_task: false
+    fetch:
+        platform: win64
+        artifact-name: cft-cd-win64.tar.bz2
+
+mac-cft-chromedriver:
+    description: 'MacOSX Chrome-for-Testing Chromedriver Fetch'
+    attributes:
+        cached_task: false
+    fetch:
+        platform: mac
+        artifact-name: cft-cd-mac.tar.bz2
+
+mac-cft-chromedriver-arm:
+    description: 'MacOS (arm) Chrome-for-Testing Chromedriver fetch'
+    attributes:
+        cached_task: false
+    fetch:
+        platform: mac-arm
+        artifact-name: cft-cd-mac-arm.tar.bz2

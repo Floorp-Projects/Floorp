@@ -422,13 +422,11 @@ def setup_browsertime(config, tasks):
         }
 
         chromium_fetches = {
-            "linux.*": ["linux64-chromiumdriver"],
-            "macosx1015.*": ["mac-chromiumdriver"],
-            "macosx1400.*": ["mac-chromiumdriver-arm"],
-            "windows.*aarch64.*": ["win32-chromiumdriver"],
-            "windows.*-32.*": ["win32-chromiumdriver"],
-            "windows.*-64.*": ["win64-chromiumdriver"],
-            "android.*": ["linux64-chromiumdriver"],
+            "linux.*": ["linux64-cft-chromedriver"],
+            "macosx1015.*": ["mac-cft-chromedriver"],
+            "macosx1400.*": ["mac-cft-chromedriver-arm"],
+            "windows.*-64.*": ["win64-cft-chromedriver"],
+            "android.*": ["linux64-cft-chromedriver"],
         }
 
         cd_extracted_name = {
@@ -445,13 +443,13 @@ def setup_browsertime(config, tasks):
             for platform in chromium_fetches:
                 fs["by-test-platform"][platform].extend(chromium_fetches[platform])
 
-            # The chromedrivers for chromium are repackaged into the archives
-            # that we get the chromium binary from so we always have a compatible
-            # version.
+            # The Chrome-for-Testing chromedrivers are repackaged into the following
+            # platform specific archives. The versions will always be compatible as
+            # these are fetched from the `Canary` channel.
             cd_extracted_name = {
-                "windows": "chrome-win/chromedriver.exe",
-                "mac": "chrome-mac/chromedriver",
-                "default": "chrome-linux/chromedriver",
+                "windows": "cft-chromedriver-win64/chromedriver.exe",
+                "mac": "cft-chromedriver-mac/chromedriver",
+                "default": "cft-chromedriver-linux/chromedriver",
             }
 
         # Disable the Raptor install step
