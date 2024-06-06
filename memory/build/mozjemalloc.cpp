@@ -2147,11 +2147,11 @@ bool AddressRadixTree<Bits>::Set(void* aKey, void* aValue) {
 
 // Return the offset between a and the nearest aligned address at or below a.
 #define ALIGNMENT_ADDR2OFFSET(a, alignment) \
-  ((size_t)((uintptr_t)(a) & ((alignment)-1)))
+  ((size_t)((uintptr_t)(a) & ((alignment) - 1)))
 
 // Return the smallest alignment multiple that is >= s.
 #define ALIGNMENT_CEILING(s, alignment) \
-  (((s) + ((alignment)-1)) & (~((alignment)-1)))
+  (((s) + ((alignment) - 1)) & (~((alignment) - 1)))
 
 static void* pages_trim(void* addr, size_t alloc_size, size_t leadsize,
                         size_t size) {
