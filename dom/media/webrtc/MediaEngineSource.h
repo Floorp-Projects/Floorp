@@ -246,6 +246,8 @@ class MediaEngineSource : public MediaEngineSourceInterface {
     return 0;
   }
 
+  virtual MediaEventSource<void>* CaptureEndedEvent() { return nullptr; }
+
  protected:
   virtual ~MediaEngineSource();
 };

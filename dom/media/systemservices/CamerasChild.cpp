@@ -431,7 +431,7 @@ int CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id) {
 class ShutdownRunnable : public Runnable {
  public:
   explicit ShutdownRunnable(already_AddRefed<Runnable>&& aReplyEvent)
-      : Runnable("camera::ShutdownRunnable"), mReplyEvent(aReplyEvent){};
+      : Runnable("camera::ShutdownRunnable"), mReplyEvent(aReplyEvent) {};
 
   NS_IMETHOD Run() override {
     LOG(("Closing BackgroundChild"));
@@ -473,6 +473,17 @@ void Shutdown(void) {
   LOG(("Erasing sCameras & thread refs (original thread)"));
   CamerasSingleton::Child() = nullptr;
   CamerasSingleton::Thread() = nullptr;
+}
+
+mozilla::ipc::IPCResult CamerasChild::RecvCaptureEnded(
+    const CaptureEngine& capEngine, const int& capId) {
+  MutexAutoLock lock(mCallbackMutex);
+  if (Callback(capEngine, capId)) {
+    Callback(capEngine, capId)->OnCaptureEnded();
+  } else {
+    LOG(("CaptureEnded called with dead callback"));
+  }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvDeliverFrame(
