@@ -4,6 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const lazy = {};
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "chatEnabled",
+  "browser.ml.chat.enabled"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "chatPromptPrefix",
+  "browser.ml.chat.prompt.prefix"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "chatProvider",
+  "browser.ml.chat.provider"
+);
+
 export const GenAI = {
   /**
    * Build prompts menu to ask chat for context menu or popup.
@@ -12,11 +31,65 @@ export const GenAI = {
    * @param {nsContextMenu} context Additional menu context
    */
   buildAskChatMenu(menu, context) {
+    if (!lazy.chatEnabled || lazy.chatProvider == "") {
+      context.showItem(menu, false);
+      return;
+    }
+
+    menu.context = context;
+    menu.label = "Ask chatbot";
+    menu.menupopup?.remove();
+    Services.prefs.getChildList("browser.ml.chat.prompts.").forEach(pref => {
+      try {
+        let prompt = Services.prefs.getStringPref(pref);
+        try {
+          prompt = JSON.parse(prompt);
+        } catch (ex) {}
+        menu.appendItem(prompt.label ?? prompt, prompt.value ?? "");
+      } catch (ex) {
+        console.error("Failed to add menu item for " + pref, ex);
+      }
+    });
     context.showItem(menu, menu.itemCount > 0);
   },
 
   /**
-   * Handle selected prompt by opening tab or sidebar.
+   * Build a prompt with context.
+   *
+   * @param {MozMenuItem} item Use value falling back to label
+   * @param {object} context Placeholder keys with values to replace
+   * @returns {string} Prompt with placeholders replaced
    */
-  handleAskChat() {},
+  buildChatPrompt(item, context = {}) {
+    // Combine prompt prefix with the item then replace placeholders from the
+    // original prompt (and not from context)
+    return (lazy.chatPromptPrefix + (item.value || item.label)).replace(
+      // Handle %placeholder% as key|options
+      /\%(\w+)(?:\|([^%]+))?\%/g,
+      (placeholder, key, options) =>
+        // Currently only supporting numeric options for slice with `undefined`
+        // resulting in whole string
+        context[key]?.slice(0, options) ?? placeholder
+    );
+  },
+
+  /**
+   * Handle selected prompt by opening tab or sidebar.
+   *
+   * @param {Event} event from menu command
+   */
+  handleAskChat({ target }) {
+    const win = target.ownerGlobal;
+    const { selectedTab } = win.gBrowser;
+    const url = new URL(lazy.chatProvider);
+    url.searchParams.set(
+      "q",
+      this.buildChatPrompt(target, {
+        currentTabTitle:
+          (selectedTab._labelIsContentTitle && selectedTab.label) || "",
+        selection: target.closest("menu").context.selectionInfo.fullText ?? "",
+      })
+    );
+    win.openWebLinkIn(url + "", "tab", { relatedToCurrent: true });
+  },
 };
