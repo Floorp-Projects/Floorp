@@ -1,8 +1,13 @@
 [DEFAULT]
 tags = "wd"
 subsuite = "remote"
+args = [
+  "--remote-debugging-port",
+]
 support-files = ["head.js"]
 
 ["browser_RemoteValue.js"]
 
 ["browser_RemoteValueDOM.js"]
+
+["browser_WebDriverBiDi.js"]
