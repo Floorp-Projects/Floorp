@@ -131,6 +131,25 @@ impl Default for PrintMargins {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SetPermissionParameters {
+    pub descriptor: SetPermissionDescriptor,
+    pub state: SetPermissionState,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SetPermissionDescriptor {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SetPermissionState {
+    Denied,
+    Granted,
+    Prompt,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum WebAuthnProtocol {
     #[serde(rename = "ctap1/u2f")]
@@ -328,6 +347,8 @@ pub enum Command {
     ReleaseActions,
     #[serde(rename = "WebDriver:SendAlertText")]
     SendAlertText(Keys),
+    #[serde(rename = "WebDriver:SetPermission")]
+    SetPermission(SetPermissionParameters),
     #[serde(rename = "WebDriver:SetTimeouts")]
     SetTimeouts(Timeouts),
     #[serde(rename = "WebDriver:SetWindowRect")]
