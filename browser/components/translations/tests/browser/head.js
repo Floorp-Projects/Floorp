@@ -1846,6 +1846,11 @@ class SelectTranslationsTestUtils {
     if (textArea.scrollHeight > textArea.clientHeight) {
       info("Ensuring that the textarea is scrolled to the top.");
       await waitForCondition(() => textArea.scrollTop === 0);
+
+      info("Ensuring that the textarea cursor is at the beginning.");
+      await waitForCondition(
+        () => textArea.selectionStart === 0 && textArea.selectionEnd === 0
+      );
     }
   }
 
