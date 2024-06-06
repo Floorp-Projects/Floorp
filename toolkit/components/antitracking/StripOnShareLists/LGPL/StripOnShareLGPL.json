@@ -84,7 +84,7 @@
   },
   "youtube": {
     "queryParams": ["si", "feature", "kw"],
-    "topLevelSites": ["www.youtube.com", "www.youtu.be"]
+    "topLevelSites": ["www.youtube.com", "youtu.be"]
   },
   "carousell": {
     "queryParams": [
