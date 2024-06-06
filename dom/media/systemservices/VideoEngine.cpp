@@ -7,7 +7,7 @@
 #include "VideoEngine.h"
 #include "libwebrtcglue/SystemTime.h"
 #include "system_wrappers/include/clock.h"
-#include "video_engine/desktop_capture_impl.h"
+#include "video_engine/video_capture_factory.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/jni/Utils.h"
@@ -63,13 +63,10 @@ int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8) {
     }
   }
 
-  CaptureEntry entry = {-1, nullptr, nullptr};
+  CaptureEntry entry = {-1, nullptr};
 
-  VideoCaptureFactory::CreateVideoCaptureResult capturer =
-      mVideoCaptureFactory->CreateVideoCapture(id, aDeviceUniqueIdUTF8,
-                                               mCaptureDevInfo.type);
-  entry =
-      CaptureEntry(id, std::move(capturer.mCapturer), capturer.mDesktopImpl);
+  entry = CaptureEntry(id, mVideoCaptureFactory->CreateVideoCapture(
+                               id, aDeviceUniqueIdUTF8, mCaptureDevInfo.type));
 
   mCaps.emplace(id, std::move(entry));
   mIdMap.emplace(id, id);
@@ -175,27 +172,12 @@ already_AddRefed<VideoEngine> VideoEngine::Create(
 }
 
 VideoEngine::CaptureEntry::CaptureEntry(
-    int32_t aCapnum, rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture,
-    webrtc::DesktopCaptureImpl* aDesktopImpl)
-    : mCapnum(aCapnum),
-      mVideoCaptureModule(std::move(aCapture)),
-      mDesktopImpl(aDesktopImpl) {}
+    int32_t aCapnum, rtc::scoped_refptr<webrtc::VideoCaptureModule> aCapture)
+    : mCapnum(aCapnum), mVideoCaptureModule(aCapture) {}
 
 rtc::scoped_refptr<webrtc::VideoCaptureModule>
 VideoEngine::CaptureEntry::VideoCapture() {
   return mVideoCaptureModule;
-}
-
-mozilla::MediaEventSource<void>*
-VideoEngine::CaptureEntry::CaptureEndedEvent() {
-  if (!mDesktopImpl) {
-    return nullptr;
-  }
-#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
-  return mDesktopImpl->CaptureEndedEvent();
-#else
-  return nullptr;
-#endif
 }
 
 int32_t VideoEngine::CaptureEntry::Capnum() const { return mCapnum; }
