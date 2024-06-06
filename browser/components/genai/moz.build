@@ -10,3 +10,5 @@ with Files("**"):
 EXTRA_JS_MODULES += [
     "GenAI.sys.mjs",
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]

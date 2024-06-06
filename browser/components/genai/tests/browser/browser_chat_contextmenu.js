@@ -35,3 +35,23 @@ add_task(async function test_hidden_menu() {
     await hideContextMenu();
   });
 });
+
+/**
+ * Check that chat context menu is shown with appropriate prefs set
+ */
+add_task(async function test_menu_enabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.ml.chat.enabled", true],
+      ["browser.ml.chat.provider", "http://localhost:8080"],
+    ],
+  });
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    await openContextMenu();
+    Assert.ok(
+      !document.getElementById("context-ask-chat").hidden,
+      "Ask chat menu is shown"
+    );
+    await hideContextMenu();
+  });
+});
