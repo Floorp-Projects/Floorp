@@ -57,16 +57,6 @@ toolbar[overflowable][customizing] > .customization-target {
   overflow: clip;
 }
 
-toolbar:not([overflowing]) > .overflow-button,
-toolbar[customizing] > .overflow-button {
-  display: none;
-}
-
-:root:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-button,
-#nav-bar[customizing] > .overflow-button {
-  display: flex;
-}
-
 /* The ids are ugly, but this should be reasonably performant, and
  * using a tagname as the last item would be less so.
  */
