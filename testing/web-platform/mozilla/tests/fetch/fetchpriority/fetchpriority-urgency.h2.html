@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority affects the urgency parameter of HTTP</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <script src="support/priority-dependent-content.js"></script>
+  <link rel="stylesheet" href="support/resources/priority-dependent-content.py?as-type=style&resource-id=style_low" fetchpriority="low">
+  <link rel="stylesheet" href="support/resources/priority-dependent-content.py?as-type=style&resource-id=style_high" fetchpriority="high">
+  <link rel="stylesheet" href="support/resources/priority-dependent-content.py?as-type=style&resource-id=style_auto" fetchpriority="auto">
+  <link rel="stylesheet" href="support/resources/priority-dependent-content.py?as-type=style&resource-id=style_default">
+  <script src="support/resources/priority-dependent-content.py?as-type=script&resource-id=script_low" fetchpriority="low"></script>
+  <script src="support/resources/priority-dependent-content.py?as-type=script&resource-id=script_high" fetchpriority="high"></script>
+  <script src="support/resources/priority-dependent-content.py?as-type=script&resource-id=script_auto" fetchpriority="auto" ></script>
+  <script src="support/resources/priority-dependent-content.py?as-type=script&resource-id=script_default"></script>
+</head>
+<body>
+  <img src="support/resources/priority-dependent-content.py?as-type=image&resource-id=image_low" id="image_low" fetchpriority="low"/>
+  <img src="support/resources/priority-dependent-content.py?as-type=image&resource-id=image_high" id="image_high" fetchpriority="high"/>
+  <img src="support/resources/priority-dependent-content.py?as-type=image&resource-id=image_auto" id="image_auto" fetchpriority="auto"/>
+  <img src="support/resources/priority-dependent-content.py?as-type=image&resource-id=image_default" id="image_default"/>
+  <div id="urgency_square_style_low"></div>
+  <div id="urgency_square_style_high"></div>
+  <div id="urgency_square_style_auto"></div>
+  <div id="urgency_square_style_default"></div>
+  <span id="glyph_font_low" style="font: 10px font_family_low">M</span>
+  <span id="glyph_font_high" style="font: 10px font_family_high">M</span>
+  <span id="glyph_font_auto" style="font: 10px font_family_auto">M</span>
+  <span id="glyph_font_default" style="font: 10px font_family_default">M</span>
+
+  <script>
+    onload = () => {
+        test(function() {
+            // See kExpectedRequestsOfInitialLoad from image-test-data.js and
+            // nsHttpHandler::UrgencyFromCoSFlags.
+            let normalUrgency = 4;
+            assert_equals(getElementUrgencyFromSize("image_low"), normalUrgency + 1);
+            assert_equals(getElementUrgencyFromSize("image_high"), normalUrgency - 1);
+            assert_equals(getElementUrgencyFromSize("image_auto"), normalUrgency + 1);
+            assert_equals(getElementUrgencyFromSize("image_default"), normalUrgency + 1);
+        }, "Adjustment of urgency parameter for images");
+
+        test(function() {
+            // See kExpectedRequestsForScriptsInHead from script-test-data.js
+            // and nsHttpHandler::UrgencyFromCoSFlags.
+            let normalUrgency = 2;
+            assert_equals(getScriptUrgency("script_low"), normalUrgency + 1);
+            assert_equals(getScriptUrgency("script_high"), normalUrgency - 1);
+            assert_equals(getScriptUrgency("script_auto"), normalUrgency);
+            assert_equals(getScriptUrgency("script_default"), normalUrgency);
+        }, "Adjustment of urgency parameter for scripts");
+
+        test(function() {
+            // See kExpectedRequestsOfLoadStylesheet from link-tests-data.js
+            // and nsHttpHandler::UrgencyFromCoSFlags.
+            let normalUrgency = 2;
+            assert_equals(getStyleUrgency("style_low"), normalUrgency);
+            assert_equals(getStyleUrgency("style_high"), normalUrgency - 2);
+            assert_equals(getStyleUrgency("style_auto"), normalUrgency);
+            assert_equals(getStyleUrgency("style_default"), normalUrgency);
+        }, "Adjustment of urgency parameter for styles");
+
+        promise_test(async function() {
+            async function fetchAndExtractUrgency(priority) {
+                let request_init;
+                if (priority !== "default") {
+                    request_init = {priority: priority};
+                }
+                let response = await fetch(`support/resources/priority-dependent-content.py?as-type=text&resource-id=fetch_${priority}`, request_init);
+                return getResourceUrgencyFromRawText(await response.text());
+            }
+
+            // See kExpectedRequestsOfFetchAPI from link-tests-data.js
+            // and nsHttpHandler::UrgencyFromCoSFlags.
+            let normalUrgency = 4;
+            assert_equals(await fetchAndExtractUrgency("low"), normalUrgency + 1);
+            assert_equals(await fetchAndExtractUrgency("high"), normalUrgency - 1);
+            assert_equals(await fetchAndExtractUrgency("auto"), normalUrgency);
+            assert_equals(await fetchAndExtractUrgency("default"), normalUrgency);
+        }, "Adjustment of urgency parameter for global fetch");
+
+        promise_test(async function() {
+            async function loadFontAndExtractUrgency(priority) {
+                let link = document.createElement("link");
+                if (priority != "default")
+                    link.fetchpriority = priority;
+                link.rel = "preload";
+                link.as = "font";
+                link.crossOrigin = "";
+                await new Promise((resolve, reject) => {
+                    link.onload = resolve;
+                    link.onerror = reject;
+                    link.href = `support/resources/priority-dependent-content.py?as-type=font&resource-id=font_${priority}`;
+                    document.body.appendChild(link);
+                });
+                let response = await fetch(link.href, {cache: "force-cache"});
+                let font_face = new FontFace(`font_family_${priority}`,
+                                             await response.arrayBuffer());
+                document.fonts.add(font_face);
+                let size = document.getElementById(`glyph_font_${priority}`).getBoundingClientRect().width;
+                return convertSizeToUrgency(size);
+            }
+            // See kExpectedRequestsOfLinkPreloadFont from link-tests-data.js
+            // and nsHttpHandler::UrgencyFromCoSFlags.
+            // FIXME(bug 1900764): Why is the urgency always 2 here?
+            let normalUrgency = 2;
+            assert_equals(await loadFontAndExtractUrgency("low"), normalUrgency);
+            assert_equals(await loadFontAndExtractUrgency("high"), normalUrgency);
+            assert_equals(await loadFontAndExtractUrgency("auto"), normalUrgency);
+            assert_equals(await loadFontAndExtractUrgency("default"), normalUrgency);
+        }, "Adjustment of urgency parameter for fonts");
+    }
+  </script>
+</body>
+</html>
