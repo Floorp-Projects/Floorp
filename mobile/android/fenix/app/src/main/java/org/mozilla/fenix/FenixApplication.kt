@@ -380,11 +380,15 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         // new search suggestions. The worker requires us to have called
                         // `GlobalFxSuggestDependencyProvider.initialize`, which we did before
                         // scheduling these tasks. When disabled we stop the periodic work.
-                        if (settings().enableFxSuggest) {
-                            components.fxSuggest.ingestionScheduler.startPeriodicIngestion()
-                        } else {
-                            components.fxSuggest.ingestionScheduler.stopPeriodicIngestion()
-                        }
+
+                        // Disable periodic ingestion until we figure out
+                        // https://bugzilla.mozilla.org/show_bug.cgi?id=1900837
+                        //
+                        // Note: we will still ingest once for a fresh DB because of
+                        // the `runStartupIngestion()` call below.  This should be okay, the
+                        // performance issues only happen when reingesting after a successful
+                        // initial ingestion.
+                        components.fxSuggest.ingestionScheduler.stopPeriodicIngestion()
                     }
                     components.core.fileUploadsDirCleaner.cleanUploadsDirectory()
                 }
