@@ -10,11 +10,11 @@ WORKDIR /builds/worker
 # AUFS slowness.
 VOLUME /builds/worker/checkouts
 
-COPY requirements.txt /builds/worker/requirements.txt
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y gcc python3-dev python3-pip python3-setuptools libffi-dev && \
+    apt-get install --no-install-recommends -y 7zip jq python3-pip wget && \
+    apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
-RUN pip3 install --break-system-packages --no-cache-dir --require-hashes -r /builds/worker/requirements.txt
+RUN pip3 install --progress-bar off --break-system-packages crashstats-tools==2.0.0
 
 # %include tools/crashreporter/system-symbols/win
 COPY topsrcdir/tools/crashreporter/system-symbols/win /builds/worker
