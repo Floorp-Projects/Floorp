@@ -165,6 +165,13 @@ add_task(async function () {
 
   info("Move to the new original file via the source map button/menu");
   await clickOnSourceMapMenuItem(dbg, ".debugger-jump-mapped-source");
+  is(
+    dbg.panel.panelWin.parent.document.querySelector(
+      ".debugger-jump-mapped-source"
+    ).textContent,
+    DEBUGGER_L10N.getStr("sourceFooter.sourceMapButton.jumpToOriginalSource"),
+    "assert jump to original menu label"
+  );
   await waitForSelectedSource(dbg, "times2.js");
 
   info("Open the related source map file and wait for a new tab to be opened");
