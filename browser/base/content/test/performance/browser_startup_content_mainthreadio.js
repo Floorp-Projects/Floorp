@@ -396,20 +396,22 @@ add_task(async function () {
     if (!knownIOList.length) {
       continue;
     }
-    // The I/O interposer is disabled if !RELEASE_OR_BETA, so we expect to have
-    // no I/O marker in that case, but it's good to keep the test running to check
-    // that we are still able to produce startup profiles.
-    is(
-      !!markers.length,
-      !AppConstants.RELEASE_OR_BETA,
-      procName +
-        " startup profiles should have IO markers in builds that are not RELEASE_OR_BETA"
-    );
-    if (!markers.length) {
-      // If a profile unexpectedly contains no I/O marker, it's better to return
-      // early to avoid having a lot of of confusing "no main thread IO when we
-      // expected some" failures.
-      continue;
+    if (knownIOList.some(io => !io.ignoreIfUnused)) {
+      // The I/O interposer is disabled if RELEASE_OR_BETA, so we expect to have
+      // no I/O marker in that case, but it's good to keep the test running to check
+      // that we are still able to produce startup profiles.
+      is(
+        !!markers.length,
+        !AppConstants.RELEASE_OR_BETA,
+        procName +
+          " startup profiles should have IO markers in builds that are not RELEASE_OR_BETA"
+      );
+      if (!markers.length) {
+        // If a profile unexpectedly contains no I/O marker, it's better to return
+        // early to avoid having a lot of confusing "no main thread IO when we
+        // expected some" failures.
+        continue;
+      }
     }
 
     for (let entry of knownIOList) {
