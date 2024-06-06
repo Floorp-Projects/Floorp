@@ -3071,7 +3071,10 @@ var gPrivacyPane = {
 
   _initOSAuthentication() {
     let osReauthCheckbox = document.getElementById("osReauthCheckbox");
-    if (!OSKeyStore.canReauth()) {
+    if (
+      !OSKeyStore.canReauth() ||
+      Services.prefs.getBoolPref("security.nocertdb", false)
+    ) {
       osReauthCheckbox.hidden = true;
       return;
     }
