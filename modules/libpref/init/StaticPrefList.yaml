@@ -3223,6 +3223,13 @@
   value: 0
   mirror: always
 
+# User pref to control whether Private Attribution
+# information should be collected / submitted.
+- name: dom.private-attribution.submission.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for Window.paintWorklet enabled?
 - name: dom.paintWorklet.enabled
   type: bool
