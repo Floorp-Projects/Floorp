@@ -17,9 +17,11 @@
 
 #include "chrome/common/process_watcher.h"
 #include "mozilla/Result.h"
+#include "mozilla/Services.h"
 #include "mozilla/XREAppData.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIBrowserDOMWindow.h"
+#include "nsIPrivateAttributionService.h"
 
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
@@ -1241,6 +1243,35 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateGMPService() {
 
   mGMPCreated = true;
 
+  return IPC_OK();
+}
+
+IPCResult ContentParent::RecvAttributionEvent(
+    const nsACString& aHost, PrivateAttributionImpressionType aType,
+    uint32_t aIndex, const nsAString& aAd, const nsACString& aTargetHost) {
+  nsCOMPtr<nsIPrivateAttributionService> pa =
+      components::PrivateAttribution::Service();
+  if (NS_WARN_IF(!pa)) {
+    return IPC_OK();
+  }
+  pa->OnAttributionEvent(aHost, GetEnumString(aType), aIndex, aAd, aTargetHost);
+  return IPC_OK();
+}
+
+IPCResult ContentParent::RecvAttributionConversion(
+    const nsACString& aHost, const nsAString& aTask, uint32_t aHistogramSize,
+    const Maybe<uint32_t>& aLoopbackDays,
+    const Maybe<PrivateAttributionImpressionType>& aImpressionType,
+    const nsTArray<nsString>& aAds, const nsTArray<nsCString>& aSourceHosts) {
+  nsCOMPtr<nsIPrivateAttributionService> pa =
+      components::PrivateAttribution::Service();
+  if (NS_WARN_IF(!pa)) {
+    return IPC_OK();
+  }
+  pa->OnAttributionConversion(
+      aHost, aTask, aHistogramSize, aLoopbackDays.valueOr(0),
+      aImpressionType ? GetEnumString(*aImpressionType) : EmptyCString(), aAds,
+      aSourceHosts);
   return IPC_OK();
 }
 

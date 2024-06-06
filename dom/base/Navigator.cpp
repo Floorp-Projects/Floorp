@@ -21,6 +21,7 @@
 #include "nsIClassOfService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIContentPolicy.h"
+#include "nsIPrivateAttributionService.h"
 #include "nsContentPolicyUtils.h"
 #include "nsISupportsPriority.h"
 #include "nsIWebProtocolHandlerRegistrar.h"
@@ -41,11 +42,13 @@
 #include "BatteryManager.h"
 #include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/Clipboard.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/PrivateAttribution.h"
 #include "mozilla/dom/LockManager.h"
 #include "mozilla/dom/MIDIAccessManager.h"
 #include "mozilla/dom/MIDIOptionsBinding.h"
@@ -161,6 +164,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAddonManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebGpu)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocks)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrivateAttribution)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUserActivation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWakeLock)
 
@@ -249,6 +253,8 @@ void Navigator::Invalidate() {
     mLocks->Shutdown();
     mLocks = nullptr;
   }
+
+  mPrivateAttribution = nullptr;
 
   mUserActivation = nullptr;
 
@@ -2271,6 +2277,13 @@ dom::LockManager* Navigator::Locks() {
     mLocks = dom::LockManager::Create(*GetWindow()->AsGlobal());
   }
   return mLocks;
+}
+
+dom::PrivateAttribution* Navigator::PrivateAttribution() {
+  if (!mPrivateAttribution) {
+    mPrivateAttribution = new dom::PrivateAttribution(GetWindow()->AsGlobal());
+  }
+  return mPrivateAttribution;
 }
 
 /* static */

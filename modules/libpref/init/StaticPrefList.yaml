@@ -3216,6 +3216,13 @@
   value: 0
   mirror: always
 
+# Origin trial state for Private Attribution
+# 0: normal, 1: always-enabled, 2: always-disabled
+- name: dom.origin-trials.private-attribution.state
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
+
 # Is support for Window.paintWorklet enabled?
 - name: dom.paintWorklet.enabled
   type: bool
