@@ -36,7 +36,7 @@ class SitePermissionsFragment : BaseSettingsFragment() {
 
     @VisibleForTesting
     internal fun bindCategoryPhoneFeatures() {
-        SitePermission.values()
+        SitePermission.entries
             // Only AUTOPLAY should appear in the list AUTOPLAY_INAUDIBLE and AUTOPLAY_AUDIBLE
             // shouldn't be bound
             .filter { it != SitePermission.AUTOPLAY_INAUDIBLE && it != SitePermission.AUTOPLAY_AUDIBLE }

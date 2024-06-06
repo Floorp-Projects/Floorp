@@ -73,8 +73,8 @@ class StartupTypeTelemetryTest {
 
     @Test
     fun `GIVEN all possible path and state combinations WHEN record telemetry THEN the labels are incremented the appropriate number of times`() = runTestOnMain {
-        val allPossibleInputArgs = StartupState.values().toList().crossProduct(
-            StartupPath.values().toList(),
+        val allPossibleInputArgs = StartupState.entries.crossProduct(
+            StartupPath.entries,
         ) { state, path ->
             Pair(state, path)
         }

@@ -202,7 +202,7 @@ class SitePermissionOptionsStorage(private val context: Context) {
     }
 
     fun isSitePermissionNotBlocked(permissionsList: Array<String>): Boolean {
-        SitePermission.values().forEach { sitePermission ->
+        SitePermission.entries.forEach { sitePermission ->
             if (
                 sitePermission.androidPermissionsList.intersect(permissionsList.toSet()).isNotEmpty() &&
                 getSitePermissionRules(sitePermission) != SitePermissionsRules.Action.BLOCKED
