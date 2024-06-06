@@ -26,7 +26,8 @@ async def test_capability_type(new_session, add_browser_capabilities):
         ("browserVersion", str),
         ("platformName", str),
         ("proxy", dict),
-        ("setWindowRect", bool),
+        ("unhandledPromptBehavior", str),
+        ("userAgent", str),
     ]
 
     assert isinstance(bidi_session.capabilities, dict)
@@ -70,7 +71,6 @@ async def test_ignore_non_spec_fields_in_capabilities(
         ("pageLoadStrategy", "none"),
         ("strictFileInteractability", True),
         ("timeouts", {"script": 500}),
-        ("unhandledPromptBehavior", "accept"),
     ],
 )
 async def test_with_webdriver_classic_capabilities(

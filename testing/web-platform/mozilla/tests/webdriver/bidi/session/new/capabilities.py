@@ -49,3 +49,12 @@ async def test_proxy(
     )
 
     assert response == {"type": "string", "value": page_content}
+
+
+@pytest.mark.parametrize("match_type", ["alwaysMatch", "firstMatch"])
+async def test_websocket_url(new_session, match_capabilities, match_type):
+    capabilities = match_capabilities(match_type, "webSocketUrl", True)
+
+    bidi_session = await new_session(capabilities=capabilities)
+
+    assert bidi_session.capabilities.get("webSocketUrl") is None

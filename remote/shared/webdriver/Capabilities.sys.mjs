@@ -51,10 +51,18 @@ export const WEBDRIVER_CLASSIC_CAPABILITIES = [
   "webSocketUrl",
 
   // Gecko specific capabilities
+  "moz:accessibilityChecks",
   "moz:debuggerAddress",
   "moz:firefoxOptions",
   "moz:useNonSpecCompliantPointerOrigin",
   "moz:webdriverClick",
+
+  // Extension capabilities
+  "webauthn:extension:credBlob",
+  "webauthn:extension:largeBlob",
+  "webauthn:extension:prf",
+  "webauthn:extension:uvm",
+  "webauthn:virtualAuthenticators",
 ];
 
 /** Representation of WebDriver session timeouts. */
@@ -436,36 +444,46 @@ export class Proxy {
 export class Capabilities extends Map {
   /**
    * WebDriver session capabilities representation.
+   *
+   * @param {boolean} isBidi
+   *     Flag indicating that it is a WebDriver BiDi session. Defaults to false.
    */
-  constructor() {
+  constructor(isBidi = false) {
     // Default values for capabilities supported by both WebDriver protocols
-    super([
+    const defaults = [
+      ["acceptInsecureCerts", false],
       ["browserName", getWebDriverBrowserName()],
       ["browserVersion", lazy.AppInfo.version],
       ["platformName", getWebDriverPlatformName()],
-      ["acceptInsecureCerts", false],
       ["proxy", new Proxy()],
       ["unhandledPromptBehavior", new lazy.UserPromptHandler()],
       ["userAgent", lazy.userAgent],
 
-      // HTTP only capabilities
-      ["pageLoadStrategy", PageLoadStrategy.Normal],
-      ["timeouts", new Timeouts()],
-      ["setWindowRect", !lazy.AppInfo.isAndroid],
-      ["strictFileInteractability", false],
-
       // Gecko specific capabilities
-      ["moz:accessibilityChecks", false],
       ["moz:buildID", lazy.AppInfo.appBuildID],
-      ["moz:debuggerAddress", lazy.debuggerAddress],
       ["moz:headless", lazy.isHeadless],
       ["moz:platformVersion", Services.sysinfo.getProperty("version")],
       ["moz:processID", lazy.AppInfo.processID],
       ["moz:profile", maybeProfile()],
       ["moz:shutdownTimeout", lazy.shutdownTimeout],
-      ["moz:webdriverClick", true],
-      ["moz:windowless", false],
-    ]);
+    ];
+
+    if (!isBidi) {
+      // HTTP-only capabilities
+      defaults.push(
+        ["pageLoadStrategy", PageLoadStrategy.Normal],
+        ["timeouts", new Timeouts()],
+        ["setWindowRect", !lazy.AppInfo.isAndroid],
+        ["strictFileInteractability", false],
+
+        ["moz:accessibilityChecks", false],
+        ["moz:debuggerAddress", lazy.debuggerAddress],
+        ["moz:webdriverClick", true],
+        ["moz:windowless", false]
+      );
+    }
+
+    super(defaults);
   }
 
   /**
@@ -512,13 +530,13 @@ export class Capabilities extends Map {
    *
    * @param {Object<string, *>=} json
    *     WebDriver capabilities.
-   * @param {boolean=} isHttp
-   *     Flag indicating that it is a WebDriver classic session. Defaults to false.
+   * @param {boolean=} isBidi
+   *     Flag indicating that it is a WebDriver BiDi session. Defaults to false.
    *
    * @returns {Capabilities}
    *     Internal representation of WebDriver capabilities.
    */
-  static fromJSON(json, isHttp = false) {
+  static fromJSON(json, isBidi = false) {
     if (typeof json == "undefined" || json === null) {
       json = {};
     }
@@ -527,11 +545,12 @@ export class Capabilities extends Map {
       lazy.pprint`Expected "capabilities" to be an object, got ${json}"`
     );
 
-    const capabilities = new Capabilities();
+    const capabilities = new Capabilities(isBidi);
+
     // TODO: Bug 1823907. We can start using here spec compliant method `validate`,
     // as soon as `desiredCapabilities` and `requiredCapabilities` are not supported.
     for (let [k, v] of Object.entries(json)) {
-      if (!isHttp && WEBDRIVER_CLASSIC_CAPABILITIES.includes(k)) {
+      if (isBidi && WEBDRIVER_CLASSIC_CAPABILITIES.includes(k)) {
         // Ignore any WebDriver classic capability for a WebDriver BiDi session.
         continue;
       }

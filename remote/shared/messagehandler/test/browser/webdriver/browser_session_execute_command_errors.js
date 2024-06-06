@@ -12,7 +12,7 @@ const { error } = ChromeUtils.importESModule(
 );
 
 add_task(async function test_execute_missing_command_error() {
-  const session = new WebDriverSession({}, new Set());
+  const session = new WebDriverSession({}, new Set(["bidi"]));
 
   info("Attempt to execute an unknown protocol command");
   await Assert.rejects(
@@ -24,7 +24,7 @@ add_task(async function test_execute_missing_command_error() {
 });
 
 add_task(async function test_execute_missing_internal_command_error() {
-  const session = new WebDriverSession({}, new Set());
+  const session = new WebDriverSession({}, new Set(["bidi"]));
 
   info(
     "Attempt to execute a protocol command which relies on an unknown internal method"

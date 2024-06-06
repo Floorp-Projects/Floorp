@@ -14,8 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
   quit: "chrome://remote/content/shared/Browser.sys.mjs",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
-  WEBDRIVER_CLASSIC_CAPABILITIES:
-    "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
+  WebDriverSession: "chrome://remote/content/shared/webdriver/Session.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
@@ -23,6 +22,8 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 );
 
 export class WebDriverBiDiConnection extends WebSocketConnection {
+  #sessionConfigFlags;
+
   /**
    * @param {WebSocket} webSocket
    *     The WebSocket server connection to wrap.
@@ -34,6 +35,10 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
 
     // Each connection has only a single associated WebDriver session.
     this.session = null;
+
+    this.#sessionConfigFlags = new Set([
+      lazy.WebDriverSession.SESSION_FLAG_BIDI,
+    ]);
   }
 
   /**
@@ -180,24 +185,10 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
       if (module === "session" && command === "new") {
         const processedCapabilities = lazy.processCapabilities(params);
 
-        const flags = new Set();
         result = await lazy.RemoteAgent.webDriverBiDi.createSession(
           processedCapabilities,
-          flags,
+          this.#sessionConfigFlags,
           this
-        );
-
-        // The Capabilities class sets up default values also for capabilities
-        // which are not relevant for BiDi, we want to remove those from the payload.
-        result.capabilities = Array.from(result.capabilities.entries()).reduce(
-          (object, [key, value]) => {
-            if (!lazy.WEBDRIVER_CLASSIC_CAPABILITIES.includes(key)) {
-              object[key] = value;
-            }
-
-            return object;
-          },
-          {}
         );
       } else if (module === "session" && command === "status") {
         result = lazy.RemoteAgent.webDriverBiDi.getSessionReadinessStatus();

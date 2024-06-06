@@ -369,8 +369,15 @@ add_task(function test_Proxy_fromJSON() {
   deepEqual(p, Proxy.fromJSON(manual));
 });
 
-add_task(function test_Capabilities_ctor() {
-  let caps = new Capabilities();
+add_task(function test_Capabilities_ctor_http_default() {
+  const caps = new Capabilities();
+
+  equal(true, caps.get("moz:webdriverClick"));
+});
+
+add_task(function test_Capabilities_ctor_http() {
+  const caps = new Capabilities(false);
+
   ok(caps.has("browserName"));
   ok(caps.has("browserVersion"));
   ok(caps.has("platformName"));
@@ -390,6 +397,30 @@ add_task(function test_Capabilities_ctor() {
   ok(caps.has("moz:processID"));
   ok(caps.has("moz:profile"));
   equal(true, caps.get("moz:webdriverClick"));
+});
+
+add_task(function test_Capabilities_ctor_bidi() {
+  const caps = new Capabilities(true);
+
+  ok(caps.has("browserName"));
+  ok(caps.has("browserVersion"));
+  ok(caps.has("platformName"));
+  ok(["linux", "mac", "windows", "android"].includes(caps.get("platformName")));
+  equal(undefined, caps.get("pageLoadStrategy"));
+  equal(false, caps.get("acceptInsecureCerts"));
+  ok(!caps.has("timeouts"));
+  ok(caps.get("proxy") instanceof Proxy);
+  ok(!caps.has("setWindowRect"));
+  ok(!caps.has("strictFileInteractability"));
+  ok(!caps.has("webSocketUrl"));
+
+  ok(!caps.has("moz:accessibilityChecks"));
+  ok(caps.has("moz:buildID"));
+  ok(!caps.has("moz:debuggerAddress"));
+  ok(caps.has("moz:platformVersion"));
+  ok(caps.has("moz:processID"));
+  ok(caps.has("moz:profile"));
+  ok(!caps.has("moz:webdriverClick"));
 
   // No longer supported capabilities
   ok(!caps.has("moz:useNonSpecCompliantPointerOrigin"));
@@ -423,123 +454,162 @@ add_task(function test_Capabilities_toJSON() {
   equal(caps.get("moz:webdriverClick"), json["moz:webdriverClick"]);
 });
 
-add_task(function test_Capabilities_fromJSON() {
+add_task(function test_Capabilities_fromJSON_http() {
   const { fromJSON } = Capabilities;
 
   // plain
-  for (let typ of [{}, null, undefined]) {
-    ok(fromJSON(typ).has("browserName"));
+  for (const type of [{}, null, undefined]) {
+    ok(fromJSON(type, false).has("browserName"));
   }
 
-  // matching
-  let caps = new Capabilities();
+  let caps;
 
-  caps = fromJSON({ acceptInsecureCerts: true });
+  // Capabilities supported by HTTP and BiDi
+  caps = fromJSON({ acceptInsecureCerts: true }, false);
   equal(true, caps.get("acceptInsecureCerts"));
-  caps = fromJSON({ acceptInsecureCerts: false });
-  equal(false, caps.get("acceptInsecureCerts"));
 
   let proxyConfig = { proxyType: "manual" };
-  caps = fromJSON({ proxy: proxyConfig });
+  caps = fromJSON({ proxy: proxyConfig }, false);
   equal("manual", caps.get("proxy").proxyType);
 
-  // HTTP only capabilities
+  // WebDriver HTTP-only capabilities
   for (let strategy of Object.values(PageLoadStrategy)) {
-    caps = fromJSON({ pageLoadStrategy: strategy }, true);
+    caps = fromJSON({ pageLoadStrategy: strategy }, false);
     equal(strategy, caps.get("pageLoadStrategy"));
-
-    caps = fromJSON({ pageLoadStrategy: strategy });
-    equal("normal", caps.get("pageLoadStrategy"));
   }
 
   let timeoutsConfig = { implicit: 123 };
-  caps = fromJSON({ timeouts: timeoutsConfig });
-  equal(0, caps.get("timeouts").implicit);
-  caps = fromJSON({ timeouts: timeoutsConfig }, true);
+  caps = fromJSON({ timeouts: timeoutsConfig }, false);
   equal(123, caps.get("timeouts").implicit);
 
-  caps = fromJSON({ strictFileInteractability: false }, true);
-  equal(false, caps.get("strictFileInteractability"));
-  caps = fromJSON({ strictFileInteractability: true }, true);
+  caps = fromJSON({ strictFileInteractability: true }, false);
   equal(true, caps.get("strictFileInteractability"));
 
-  caps = fromJSON({ webSocketUrl: true }, true);
+  caps = fromJSON({ webSocketUrl: true }, false);
   equal(true, caps.get("webSocketUrl"));
 
   // Mozilla specific capabilities
-  caps = fromJSON({ "moz:accessibilityChecks": true });
+  caps = fromJSON({ "moz:accessibilityChecks": true }, false);
   equal(true, caps.get("moz:accessibilityChecks"));
-  caps = fromJSON({ "moz:accessibilityChecks": false });
-  equal(false, caps.get("moz:accessibilityChecks"));
 
-  caps = fromJSON({ "moz:webdriverClick": true }, true);
+  caps = fromJSON({ "moz:webdriverClick": true }, false);
   equal(true, caps.get("moz:webdriverClick"));
-  caps = fromJSON({ "moz:webdriverClick": false }, true);
-  equal(false, caps.get("moz:webdriverClick"));
 
   // capability is always populated with null if remote agent is not listening
-  caps = fromJSON({});
+  caps = fromJSON({}, false);
   equal(null, caps.get("moz:debuggerAddress"));
-  caps = fromJSON({ "moz:debuggerAddress": "foo" });
+  caps = fromJSON({ "moz:debuggerAddress": "foo" }, false);
   equal(null, caps.get("moz:debuggerAddress"));
-  caps = fromJSON({ "moz:debuggerAddress": true });
+  caps = fromJSON({ "moz:debuggerAddress": true }, false);
   equal(null, caps.get("moz:debuggerAddress"));
 
   // Extension capabilities
-  caps = fromJSON({ "webauthn:virtualAuthenticators": true });
+  caps = fromJSON({ "webauthn:virtualAuthenticators": true }, false);
   equal(true, caps.get("webauthn:virtualAuthenticators"));
-  caps = fromJSON({ "webauthn:virtualAuthenticators": false });
-  equal(false, caps.get("webauthn:virtualAuthenticators"));
   Assert.throws(
-    () => fromJSON({ "webauthn:virtualAuthenticators": "foo" }),
+    () => fromJSON({ "webauthn:virtualAuthenticators": "foo" }, false),
     /InvalidArgumentError/
   );
 
-  caps = fromJSON({ "webauthn:extension:uvm": true });
+  caps = fromJSON({ "webauthn:extension:uvm": true }, false);
   equal(true, caps.get("webauthn:extension:uvm"));
-  caps = fromJSON({ "webauthn:extension:uvm": false });
-  equal(false, caps.get("webauthn:extension:uvm"));
   Assert.throws(
-    () => fromJSON({ "webauthn:extension:uvm": "foo" }),
+    () => fromJSON({ "webauthn:extension:uvm": "foo" }, false),
     /InvalidArgumentError/
   );
 
-  caps = fromJSON({ "webauthn:extension:prf": true });
+  caps = fromJSON({ "webauthn:extension:prf": true }, false);
   equal(true, caps.get("webauthn:extension:prf"));
-  caps = fromJSON({ "webauthn:extension:prf": false });
-  equal(false, caps.get("webauthn:extension:prf"));
   Assert.throws(
-    () => fromJSON({ "webauthn:extension:prf": "foo" }),
+    () => fromJSON({ "webauthn:extension:prf": "foo" }, false),
     /InvalidArgumentError/
   );
 
-  caps = fromJSON({ "webauthn:extension:largeBlob": true });
+  caps = fromJSON({ "webauthn:extension:largeBlob": true }, false);
   equal(true, caps.get("webauthn:extension:largeBlob"));
-  caps = fromJSON({ "webauthn:extension:largeBlob": false });
-  equal(false, caps.get("webauthn:extension:largeBlob"));
   Assert.throws(
-    () => fromJSON({ "webauthn:extension:largeBlob": "foo" }),
+    () => fromJSON({ "webauthn:extension:largeBlob": "foo" }, false),
     /InvalidArgumentError/
   );
 
-  caps = fromJSON({ "webauthn:extension:credBlob": true });
+  caps = fromJSON({ "webauthn:extension:credBlob": true }, false);
   equal(true, caps.get("webauthn:extension:credBlob"));
-  caps = fromJSON({ "webauthn:extension:credBlob": false });
-  equal(false, caps.get("webauthn:extension:credBlob"));
   Assert.throws(
-    () => fromJSON({ "webauthn:extension:credBlob": "foo" }),
+    () => fromJSON({ "webauthn:extension:credBlob": "foo" }, false),
     /InvalidArgumentError/
   );
 
   // No longer supported capabilities
   Assert.throws(
-    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": false }, true),
+    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": true }, false),
     /InvalidArgumentError/
   );
-  Assert.throws(
-    () => fromJSON({ "moz:useNonSpecCompliantPointerOrigin": true }, true),
-    /InvalidArgumentError/
-  );
+});
+
+add_task(function test_Capabilities_fromJSON_bidi() {
+  const { fromJSON } = Capabilities;
+
+  // plain
+  for (const type of [{}, null, undefined]) {
+    ok(fromJSON(type, true).has("browserName"));
+  }
+
+  let caps;
+
+  // Capabilities supported by HTTP and BiDi
+  caps = fromJSON({ acceptInsecureCerts: true }, true);
+  equal(true, caps.get("acceptInsecureCerts"));
+
+  let proxyConfig = { proxyType: "manual" };
+  caps = fromJSON({ proxy: proxyConfig }, true);
+  equal("manual", caps.get("proxy").proxyType);
+
+  // HTTP capabilities are ignored for BiDi-only sessions
+  for (let strategy of Object.values(PageLoadStrategy)) {
+    caps = fromJSON({ pageLoadStrategy: strategy }, true);
+    ok(!caps.has("pageLoadStrategy"));
+  }
+
+  let timeoutsConfig = { implicit: 123 };
+  caps = fromJSON({ timeouts: timeoutsConfig }, true);
+  ok(!caps.has("timeouts"));
+
+  caps = fromJSON({ strictFileInteractability: true }, true);
+  ok(!caps.has("strictFileInteractability"));
+
+  caps = fromJSON({ webSocketUrl: true }, true);
+  ok(!caps.has("webSocketUrl"));
+
+  // Mozilla specific capabilities
+  caps = fromJSON({ "moz:accessibilityChecks": true }, true);
+  ok(!caps.has("moz:accessibilityChecks"));
+
+  caps = fromJSON({ "moz:webdriverClick": true }, true);
+  equal(undefined, caps.get("moz:webdriverClick"));
+
+  // capability is always populated with null if remote agent is not listening
+  caps = fromJSON({}, true);
+  equal(null, caps.get("moz:debuggerAddress"));
+  caps = fromJSON({ "moz:debuggerAddress": "foo" }, true);
+  equal(null, caps.get("moz:debuggerAddress"));
+  caps = fromJSON({ "moz:debuggerAddress": true }, true);
+  equal(null, caps.get("moz:debuggerAddress"));
+
+  // Extension capabilities
+  caps = fromJSON({ "webauthn:virtualAuthenticators": true }, true);
+  ok(!caps.has("webauthn:virtualAuthenticators"));
+
+  caps = fromJSON({ "webauthn:extension:uvm": true }, true);
+  ok(!caps.has("webauthn:extension:uvm"));
+
+  caps = fromJSON({ "webauthn:extension:prf": true }, true);
+  ok(!caps.has("webauthn:extension:prf"));
+
+  caps = fromJSON({ "webauthn:extension:largeBlob": true }, true);
+  ok(!caps.has("webauthn:extension:largeBlob"));
+
+  caps = fromJSON({ "webauthn:extension:credBlob": true }, true);
+  ok(!caps.has("webauthn:extension:credBlob"));
 });
 
 add_task(function test_mergeCapabilities() {

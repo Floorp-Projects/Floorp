@@ -116,7 +116,7 @@ export function GeckoDriver(server) {
   this._currentSession = null;
 
   // Flag to indicate a WebDriver HTTP session
-  this._flags = new Set([lazy.WebDriverSession.SESSION_FLAG_HTTP]);
+  this._sessionConfigFlags = new Set([lazy.WebDriverSession.SESSION_FLAG_HTTP]);
 
   // Flag to indicate that the application is shutting down
   this._isShuttingDown = false;
@@ -418,14 +418,14 @@ GeckoDriver.prototype.newSession = async function (cmd) {
       // to handle the WebDriver session.
       await lazy.RemoteAgent.webDriverBiDi.createSession(
         capabilities,
-        this._flags
+        this._sessionConfigFlags
       );
     } else {
       // If it's not the case then Marionette itself needs to handle it, and
       // has to nullify the "webSocketUrl" capability.
       this._currentSession = new lazy.WebDriverSession(
         capabilities,
-        this._flags
+        this._sessionConfigFlags
       );
       this._currentSession.capabilities.delete("webSocketUrl");
     }

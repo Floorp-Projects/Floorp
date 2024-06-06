@@ -60,11 +60,37 @@ export class WebDriverBiDi {
     return this.#session;
   }
 
+  #newSessionAlgorithm(session, flags) {
+    if (!this.#agent.running) {
+      // With the Remote Agent not running WebDriver BiDi is not supported.
+      return;
+    }
+
+    if (flags.has(lazy.WebDriverSession.SESSION_FLAG_BIDI)) {
+      // It's already a WebDriver BiDi session.
+      return;
+    }
+
+    const webSocketUrl = session.capabilities.get("webSocketUrl");
+    if (webSocketUrl === undefined) {
+      return;
+    }
+
+    // Start listening for BiDi connections.
+    this.#agent.server.registerPathHandler(session.path, session);
+    lazy.logger.debug(`Registered session handler: ${session.path}`);
+
+    session.capabilities.set("webSocketUrl", `${this.address}${session.path}`);
+
+    session.bidi = true;
+    flags.add("bidi");
+  }
+
   /**
    * Add a new connection that is not yet attached to a WebDriver session.
    *
    * @param {WebDriverBiDiConnection} connection
-   *     The connection without an accociated WebDriver session.
+   *     The connection without an associated WebDriver session.
    */
   addSessionlessConnection(connection) {
     this.#sessionlessConnections.add(connection);
@@ -79,7 +105,7 @@ export class WebDriverBiDi {
    * @param {Set} flags
    *     Session configuration flags.
    * @param {WebDriverBiDiConnection=} sessionlessConnection
-   *     Optional connection that is not yet accociated with a WebDriver
+   *     Optional connection that is not yet associated with a WebDriver
    *     session, and has to be associated with the new WebDriver session.
    *
    * @returns {Object<string, Capabilities>}
@@ -95,19 +121,21 @@ export class WebDriverBiDi {
       );
     }
 
-    const session = new lazy.WebDriverSession(
+    this.#session = new lazy.WebDriverSession(
       capabilities,
       flags,
       sessionlessConnection
     );
 
-    // When the Remote Agent is listening, and a BiDi WebSocket connection
-    // has been requested, register a path handler for the session.
-    let webSocketUrl = null;
-    if (
-      this.#agent.running &&
-      (session.capabilities.get("webSocketUrl") || sessionlessConnection)
-    ) {
+    // Run new session steps for WebDriver BiDi.
+    this.#newSessionAlgorithm(this.#session, flags);
+
+    if (sessionlessConnection) {
+      // Connection is now registered with a WebDriver session
+      this.#sessionlessConnections.delete(sessionlessConnection);
+    }
+
+    if (this.#session.bidi) {
       // Creating a WebDriver BiDi session too early can cause issues with
       // clients in not being able to find any available browsing context.
       // Also when closing the application while it's still starting up can
@@ -115,23 +143,7 @@ export class WebDriverBiDi {
       // once the initial application window has finished initializing.
       lazy.logger.debug(`Waiting for initial application window`);
       await this.#agent.browserStartupFinished;
-
-      this.#agent.server.registerPathHandler(session.path, session);
-      webSocketUrl = `${this.address}${session.path}`;
-
-      lazy.logger.debug(`Registered session handler: ${session.path}`);
-
-      if (sessionlessConnection) {
-        // Remove temporary session-less connection
-        this.#sessionlessConnections.delete(sessionlessConnection);
-      }
     }
-
-    // Also update the webSocketUrl capability to contain the session URL if
-    // a path handler has been registered. Otherwise set its value to null.
-    session.capabilities.set("webSocketUrl", webSocketUrl);
-
-    this.#session = session;
 
     return {
       sessionId: this.#session.id,

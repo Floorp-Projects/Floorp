@@ -39,6 +39,8 @@ const webDriverSessions = new Map();
  *     define additional flags, or create sessions without the HTTP flag.
  *
  *     <dl>
+ *       <dt><code>"bidi"</code> (string)
+ *       <dd>Flag indicating a WebDriver BiDi session.
  *       <dt><code>"http"</code> (string)
  *       <dd>Flag indicating a WebDriver classic (HTTP) session.
  *     </dl>
@@ -48,6 +50,7 @@ const webDriverSessions = new Map();
  * Representation of WebDriver session.
  */
 export class WebDriverSession {
+  #bidi;
   #capabilities;
   #connections;
   #http;
@@ -55,6 +58,7 @@ export class WebDriverSession {
   #messageHandler;
   #path;
 
+  static SESSION_FLAG_BIDI = "bidi";
   static SESSION_FLAG_HTTP = "http";
 
   /**
@@ -206,13 +210,26 @@ export class WebDriverSession {
     this.#connections = new Set();
 
     this.#id = lazy.generateUUID();
+
+    // Flags for WebDriver session features
+    this.#bidi = flags.has(WebDriverSession.SESSION_FLAG_BIDI);
     this.#http = flags.has(WebDriverSession.SESSION_FLAG_HTTP);
+
+    if (this.#bidi == this.#http) {
+      // Initially a WebDriver session can either be HTTP or BiDi. An upgrade of a
+      // HTTP session to offer BiDi features is done after the constructor is run.
+      throw new lazy.error.SessionNotCreatedError(
+        `Initially the WebDriver session needs to be either HTTP or BiDi (bidi=${
+          this.#bidi
+        }, http=${this.#http})`
+      );
+    }
 
     // Define the HTTP path to query this session via WebDriver BiDi
     this.#path = `/session/${this.#id}`;
 
     try {
-      this.#capabilities = lazy.Capabilities.fromJSON(capabilities, this.#http);
+      this.#capabilities = lazy.Capabilities.fromJSON(capabilities, this.#bidi);
     } catch (e) {
       throw new lazy.error.SessionNotCreatedError(e);
     }
@@ -280,35 +297,20 @@ export class WebDriverSession {
     }
   }
 
-  async execute(module, command, params) {
-    // XXX: At the moment, commands do not describe consistently their destination,
-    // so we will need a translation step based on a specific command and its params
-    // in order to extract a destination that can be understood by the MessageHandler.
-    //
-    // For now, an option is to send all commands to ROOT, and all BiDi MessageHandler
-    // modules will therefore need to implement this translation step in the root
-    // implementation of their module.
-    const destination = {
-      type: lazy.RootMessageHandler.type,
-    };
-    if (!this.messageHandler.supportsCommand(module, command, destination)) {
-      throw new lazy.error.UnknownCommandError(`${module}.${command}`);
-    }
-
-    return this.messageHandler.handleCommand({
-      moduleName: module,
-      commandName: command,
-      params,
-      destination,
-    });
-  }
-
   get a11yChecks() {
     return this.#capabilities.get("moz:accessibilityChecks");
   }
 
   get acceptInsecureCerts() {
     return this.#capabilities.get("acceptInsecureCerts");
+  }
+
+  get bidi() {
+    return this.#bidi;
+  }
+
+  set bidi(value) {
+    this.#bidi = value;
   }
 
   get capabilities() {
@@ -364,6 +366,33 @@ export class WebDriverSession {
 
   get userPromptHandler() {
     return this.#capabilities.get("unhandledPromptBehavior");
+  }
+
+  get webSocketUrl() {
+    return this.#capabilities.get("webSocketUrl");
+  }
+
+  async execute(module, command, params) {
+    // XXX: At the moment, commands do not describe consistently their destination,
+    // so we will need a translation step based on a specific command and its params
+    // in order to extract a destination that can be understood by the MessageHandler.
+    //
+    // For now, an option is to send all commands to ROOT, and all BiDi MessageHandler
+    // modules will therefore need to implement this translation step in the root
+    // implementation of their module.
+    const destination = {
+      type: lazy.RootMessageHandler.type,
+    };
+    if (!this.messageHandler.supportsCommand(module, command, destination)) {
+      throw new lazy.error.UnknownCommandError(`${module}.${command}`);
+    }
+
+    return this.messageHandler.handleCommand({
+      moduleName: module,
+      commandName: command,
+      params,
+      destination,
+    });
   }
 
   /**
