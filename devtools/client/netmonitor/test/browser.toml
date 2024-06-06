@@ -1,4 +1,5 @@
 [DEFAULT]
+https_first_disabled = true
 tags = "devtools"
 subsuite = "devtools"
 skip-if = [
