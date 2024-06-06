@@ -702,15 +702,14 @@ int32_t BufferTextureHost::GetCbCrStride() const {
   return 0;
 }
 
-already_AddRefed<gfx::DataSourceSurface> BufferTextureHost::GetAsSurface(
-    gfx::DataSourceSurface* aSurface) {
+already_AddRefed<gfx::DataSourceSurface> BufferTextureHost::GetAsSurface() {
   RefPtr<gfx::DataSourceSurface> result;
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;
   } else if (mFormat == gfx::SurfaceFormat::YUV) {
     result = ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
-        GetBuffer(), mDescriptor.get_YCbCrDescriptor(), aSurface);
+        GetBuffer(), mDescriptor.get_YCbCrDescriptor());
     if (NS_WARN_IF(!result)) {
       return nullptr;
     }

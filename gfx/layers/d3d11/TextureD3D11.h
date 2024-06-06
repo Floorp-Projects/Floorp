@@ -358,8 +358,7 @@ class DXGITextureHostD3D11 : public TextureHost {
   gfx::IntSize GetSize() const override { return mSize; }
   gfx::ColorRange GetColorRange() const override { return mColorRange; }
 
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface(
-      gfx::DataSourceSurface* aSurface) override;
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
@@ -428,8 +427,7 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
 
   gfx::IntSize GetSize() const override { return mSize; }
 
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface(
-      gfx::DataSourceSurface* aSurface) override {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     return nullptr;
   }
 

@@ -95,8 +95,7 @@ class DcompSurfaceHandleHost : public TextureHost {
 
   const char* Name() override { return "DcompSurfaceHandleHost"; }
 
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface(
-      gfx::DataSourceSurface* aSurface) override {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     return nullptr;
   }
 

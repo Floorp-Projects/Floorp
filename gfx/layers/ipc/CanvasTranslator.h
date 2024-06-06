@@ -36,7 +36,6 @@ namespace layers {
 
 class SharedSurfacesHolder;
 class TextureData;
-class TextureHost;
 
 class CanvasTranslator final : public gfx::InlineTranslator,
                                public PCanvasParent {
@@ -334,9 +333,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void ClearCachedResources();
 
-  already_AddRefed<gfx::DataSourceSurface>
-  GetRecycledDataSurfaceForSurfaceDescriptor(TextureHost* aTextureHost);
-
   const RefPtr<TaskQueue> mTranslationTaskQueue;
   const RefPtr<SharedSurfacesHolder> mSharedSurfacesHolder;
 #if defined(XP_WIN)
@@ -400,7 +396,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   Atomic<bool> mIPDLClosed{false};
   bool mIsInTransaction = false;
   bool mDeviceResetInProgress = false;
-  RefPtr<gfx::DataSourceSurface> mUsedDataSurfaceForSurfaceDescriptor;
 };
 
 }  // namespace layers

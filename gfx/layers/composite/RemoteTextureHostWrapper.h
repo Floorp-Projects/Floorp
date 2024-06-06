@@ -27,8 +27,7 @@ class RemoteTextureHostWrapper : public TextureHost {
 
   gfx::SurfaceFormat GetFormat() const override;
 
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface(
-      gfx::DataSourceSurface* aSurface) override {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     return nullptr;
   }
 
