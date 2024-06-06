@@ -874,6 +874,34 @@ pocketNewtab:
         pref: browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled
       description: >-
         Turns on and off updated wallpaper experience.
+    wallpapersHighlightEnabled:
+      type: boolean
+      setPref:
+        branch: user
+        pref: browser.newtabpage.activity-stream.newtabWallpapers.highlightEnabled
+      description: >-
+        Turns on and off wallpaper feature highlight.
+    wallpaperHighlightHeaderText:
+      type: string
+      setPref:
+        branch: user
+        pref: browser.newtabpage.activity-stream.newtabWallpapers.highlightHeaderText
+      description: >-
+        Changes the wallpaper feature highlight header
+    wallpaperHighlightContentText:
+      type: string
+      setPref:
+        branch: user
+        pref: browser.newtabpage.activity-stream.newtabWallpapers.highlightContentText
+      description: >-
+        Changes the wallpaper feature highlight content
+    wallpaperHighlightCtaText:
+      type: string
+      setPref:
+        branch: user
+        pref: browser.newtabpage.activity-stream.newtabWallpapers.highlightCtaText
+      description: >-
+        Changes the wallpaper feature highlight cta
     weatherLocationSearch:
       type: boolean
       fallbackPref: >-

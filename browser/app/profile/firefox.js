@@ -1732,6 +1732,9 @@ pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper-color", "");
 pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightEnabled", false);
 pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightDismissed", false);
 pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightSeenCounter", 0);
+pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightHeaderText", "");
+pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightContentText", "");
+pref("browser.newtabpage.activity-stream.newtabWallpapers.highlightCtaText", "");
 
 pref("browser.newtabpage.activity-stream.newNewtabExperience.colors", "#0090ED,#FF4F5F,#2AC3A2,#FF7139,#A172FF,#FFA437,#FF2A8A");
 

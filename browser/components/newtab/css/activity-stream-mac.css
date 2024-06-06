@@ -5066,6 +5066,7 @@ main section {
   font-size: var(--font-size-small);
   font-weight: normal;
   margin: var(--space-large) 0;
+  flex-grow: 1;
 }
 .feature-highlight .toggle-button {
   border: none;
@@ -5169,6 +5170,7 @@ main section {
   display: block;
   margin-inline-start: auto;
   background-color: var(--button-background-color);
+  margin-block-start: var(--space-small);
 }
 
 .ASRouterButton {
