@@ -293,6 +293,45 @@ newtab-wallpaper-dark-sky = City landscape with a night sky
 newtab-wallpaper-dark-mountain = Landscape mountain
 newtab-wallpaper-dark-city = Purple city landscape
 
+## Solid Colors
+
+newtab-wallpaper-category-title-colors = Solid colors
+newtab-wallpaper-blue = Blue
+newtab-wallpaper-light-blue = Light blue
+newtab-wallpaper-light-purple = Light purple
+newtab-wallpaper-light-green = Light green
+newtab-wallpaper-green = Green
+newtab-wallpaper-beige = Beige
+newtab-wallpaper-yellow = Yellow
+newtab-wallpaper-orange = Orange
+newtab-wallpaper-pink = Pink
+newtab-wallpaper-light-pink = Light pink
+newtab-wallpaper-red = Red
+newtab-wallpaper-dark-blue = Dark blue
+newtab-wallpaper-dark-purple = Dark purple
+newtab-wallpaper-dark-green = Dark green
+newtab-wallpaper-brown = Brown
+
+## Abstract
+
+newtab-wallpaper-category-title-abstract = Abstract
+newtab-wallpaper-abstract-green = Green shapes
+newtab-wallpaper-abstract-blue = Blue shapes
+newtab-wallpaper-abstract-purple = Purple shapes
+newtab-wallpaper-abstract-orange = Orange shapes
+newtab-wallpaper-gradient-orange = Gradient orange and pink
+newtab-wallpaper-abstract-blue-purple = Blue and purple shapes
+
+## Photographs
+
+newtab-wallpaper-category-title-photographs = Photographs
+newtab-wallpaper-beach-at-sunrise = Beach at sunrise
+newtab-wallpaper-beach-at-sunset = Beach at sunset
+newtab-wallpaper-storm-sky = Storm sky
+newtab-wallpaper-sky-with-pink-clouds = Sky with pink clouds
+newtab-wallpaper-red-panda-yawns-in-a-tree = Red panda yawns in a tree
+newtab-wallpaper-white-mountains = White mountains
+
 # Variables
 #   $author_string (String) - The name of the creator of the photo.
 #   $webpage_string (String) - The name of the webpage where the photo is located.
