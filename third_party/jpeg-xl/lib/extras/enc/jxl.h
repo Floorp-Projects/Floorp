@@ -7,11 +7,13 @@
 #define LIB_EXTRAS_ENC_JXL_H_
 
 #include <jxl/encode.h>
+#include <jxl/memory_manager.h>
 #include <jxl/parallel_runner.h>
 #include <jxl/thread_parallel_runner.h>
 #include <jxl/types.h>
-#include <stdint.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "lib/extras/packed_image.h"
@@ -36,30 +38,41 @@ struct JXLOption {
 
 struct JXLCompressParams {
   std::vector<JXLOption> options;
+
   // Target butteraugli distance, 0.0 means lossless.
   float distance = 1.0f;
   float alpha_distance = 0.0f;
+
   // If set to true, forces container mode.
   bool use_container = false;
+
   // Whether to enable/disable byte-exact jpeg reconstruction for jpeg inputs.
   bool jpeg_store_metadata = true;
   bool jpeg_strip_exif = false;
   bool jpeg_strip_xmp = false;
   bool jpeg_strip_jumbf = false;
+
   // Whether to create brob boxes.
   bool compress_boxes = true;
+
   // Upper bound on the intensity level present in the image in nits (zero means
   // that the library chooses a default).
   float intensity_target = 0;
   int already_downsampled = 1;
   int upsampling_mode = -1;
+
   // Overrides for bitdepth, codestream level and alpha premultiply.
   size_t override_bitdepth = 0;
   int32_t codestream_level = -1;
   int32_t premultiply = -1;
-  // If runner_opaque is set, the decoder uses this parallel runner.
+
+  // If runner_opaque is set, the encoder uses this parallel runner.
   JxlParallelRunner runner = JxlThreadParallelRunner;
   void* runner_opaque = nullptr;
+
+  // If memory_manager is set, encoder uses it.
+  JxlMemoryManager* memory_manager = nullptr;
+
   JxlEncoderOutputProcessor output_processor = {};
   JxlDebugImageCallback debug_image = nullptr;
   void* debug_image_opaque = nullptr;

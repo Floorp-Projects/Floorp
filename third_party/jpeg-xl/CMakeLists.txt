@@ -21,6 +21,10 @@ check_cxx_compiler_flag("-fsanitize=fuzzer-no-link" CXX_FUZZERS_SUPPORTED)
 check_cxx_compiler_flag("-fmacro-prefix-map=OLD=NEW" CXX_MACRO_PREFIX_MAP)
 check_cxx_compiler_flag("-fno-rtti" CXX_NO_RTTI_SUPPORTED)
 
+# Add "DebugOpt" CMake build type. Unlike builtin DEBUG it is optimized.
+string(REGEX REPLACE "-DNDEBUG " "" CMAKE_CXX_FLAGS_DEBUGOPT "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DDEBUG" )
+string(REGEX REPLACE "-DNDEBUG " "" CMAKE_C_FLAGS_DEBUGOPT "${CMAKE_C_FLAGS_RELWITHDEBINFO} -DDEBUG" )
+
 # Enabled PIE binaries by default if supported.
 include(CheckPIESupported OPTIONAL RESULT_VARIABLE CHECK_PIE_SUPPORTED)
 if(CHECK_PIE_SUPPORTED)
@@ -226,7 +230,16 @@ find_package(Threads REQUIRED)
 
 # These settings are important to drive check_cxx_source_compiles
 # See CMP0067 (min cmake version is 3.10 anyway)
-set(CMAKE_CXX_STANDARD 11)
+
+if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+  set(CMAKE_CXX_STANDARD 17)
+else()
+  if ("cxx_std_14" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+    set(CMAKE_CXX_STANDARD 14)
+  else()
+    set(CMAKE_CXX_STANDARD 11)
+  endif()
+endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 

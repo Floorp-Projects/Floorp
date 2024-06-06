@@ -428,7 +428,7 @@ Status ModularFrameDecoder::DecodeVarDCTDC(const FrameHeader& frame_header,
   DequantDC(r, &dec_state->shared_storage.dc_storage,
             &dec_state->shared_storage.quant_dc, image,
             dec_state->shared->quantizer.MulDC(), mul,
-            dec_state->shared->cmap.DCFactors(),
+            dec_state->shared->cmap.base().DCFactors(),
             frame_header.chroma_subsampling, dec_state->shared->block_ctx_map);
   return true;
 }

@@ -23,10 +23,10 @@
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/cache_aligned.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_huffman.h"
 #include "lib/jxl/field_encodings.h"
+#include "lib/jxl/memory_manager_internal.h"
 
 namespace jxl {
 
@@ -143,7 +143,7 @@ static JXL_INLINE int SpecialDistance(size_t index, int multiplier) {
 }
 
 struct ANSCode {
-  CacheAlignedUniquePtr alias_tables;
+  AlignedMemory alias_tables;
   std::vector<HuffmanDecodingData> huffman_data;
   std::vector<HybridUintConfig> uint_config;
   std::vector<int> degenerate_symbols;
@@ -447,7 +447,8 @@ class ANSSymbolReader {
 
  private:
   ANSSymbolReader(const ANSCode* code, BitReader* JXL_RESTRICT br,
-                  size_t distance_multiplier);
+                  size_t distance_multiplier,
+                  AlignedMemory&& lz77_window_storage);
 
   const AliasTable::Entry* JXL_RESTRICT alias_tables_;  // not owned
   const HuffmanDecodingData* huffman_data_;
@@ -462,7 +463,7 @@ class ANSSymbolReader {
   static constexpr size_t kWindowMask = kWindowSize - 1;
   // a std::vector incurs unacceptable decoding speed loss because of
   // initialization.
-  CacheAlignedUniquePtr lz77_window_storage_;
+  AlignedMemory lz77_window_storage_;
   uint32_t* lz77_window_ = nullptr;
   uint32_t num_decoded_ = 0;
   uint32_t num_to_copy_ = 0;

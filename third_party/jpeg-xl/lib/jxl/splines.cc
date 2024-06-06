@@ -402,9 +402,9 @@ QuantizedSpline::QuantizedSpline(const Spline& original,
       const float inv_dct_factor = (i == 0) ? kSqrt0_5 : 1.0f;
       auto restored_y =
           color_dct_[1][i] * inv_dct_factor * kChannelWeight[1] * inv_quant;
-      auto decorellated = original.color_dct[c][i] - factor * restored_y;
+      auto decorrelated = original.color_dct[c][i] - factor * restored_y;
       color_dct_[c][i] =
-          to_int(decorellated * dct_factor * quant / kChannelWeight[c]);
+          to_int(decorrelated * dct_factor * quant / kChannelWeight[c]);
     }
   }
   for (int i = 0; i < 32; ++i) {
@@ -626,7 +626,7 @@ void Splines::SubtractFrom(Image3F* const opsin) const {
 
 Status Splines::InitializeDrawCache(const size_t image_xsize,
                                     const size_t image_ysize,
-                                    const ColorCorrelationMap& cmap) {
+                                    const ColorCorrelation& color_correlation) {
   // TODO(veluca): avoid storing segments that are entirely outside image
   // boundaries.
   segments_.clear();
@@ -639,9 +639,9 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
   for (size_t i = 0; i < splines_.size(); ++i) {
     Spline spline;
     JXL_RETURN_IF_ERROR(splines_[i].Dequantize(
-        starting_points_[i], quantization_adjustment_, cmap.YtoXRatio(0),
-        cmap.YtoBRatio(0), image_xsize * image_ysize,
-        &total_estimated_area_reached, spline));
+        starting_points_[i], quantization_adjustment_,
+        color_correlation.YtoXRatio(0), color_correlation.YtoBRatio(0),
+        image_xsize * image_ysize, &total_estimated_area_reached, spline));
     if (std::adjacent_find(spline.control_points.begin(),
                            spline.control_points.end()) !=
         spline.control_points.end()) {

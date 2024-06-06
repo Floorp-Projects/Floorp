@@ -46,7 +46,7 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
   size_t layer_idx = 0;
   uint32_t frame_duration = 0;
   double tps_denom = 1.f;
-  double tps_numer = 1.f;
+  double tps_numerator = 1.f;
 
   gint32 layer;
 
@@ -134,7 +134,7 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
       if (info.have_animation) {
         animation = info.animation;
         tps_denom = animation.tps_denominator;
-        tps_numer = animation.tps_numerator;
+        tps_numerator = animation.tps_numerator;
       }
 
       JxlResizableParallelRunnerSetThreads(
@@ -375,7 +375,7 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
         } else {
           temp_frame_name = frame_name;
         }
-        double fduration = frame_duration * 1000.f * tps_denom / tps_numer;
+        double fduration = frame_duration * 1000.f * tps_denom / tps_numerator;
         layer_name = g_strdup_printf("%s (%.15gms)%s", temp_frame_name,
                                      fduration, blend->str);
         if (must_free_frame_name) free(temp_frame_name);

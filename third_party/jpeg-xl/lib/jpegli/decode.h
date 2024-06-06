@@ -23,7 +23,7 @@
 #include "lib/jpegli/common.h"
 #include "lib/jpegli/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -100,7 +100,7 @@ void jpegli_new_colormap(j_decompress_ptr cinfo);
 void jpegli_set_output_format(j_decompress_ptr cinfo, JpegliDataType data_type,
                               JpegliEndianness endianness);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }  // extern "C"
 #endif
 

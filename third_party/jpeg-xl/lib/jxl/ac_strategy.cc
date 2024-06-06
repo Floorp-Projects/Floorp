@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "lib/jxl/base/bits.h"
+#include "lib/jxl/base/compiler_specific.h"
 
 namespace jxl {
 
@@ -79,10 +80,11 @@ void AcStrategy::ComputeNaturalCoeffOrderLut(coeff_order_t* lut) const {
   CoeffOrderAndLut</*is_lut=*/true>(*this, lut);
 }
 
-// These definitions are needed before C++17.
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr size_t AcStrategy::kMaxCoeffBlocks;
 constexpr size_t AcStrategy::kMaxBlockDim;
 constexpr size_t AcStrategy::kMaxCoeffArea;
+#endif
 
 StatusOr<AcStrategyImage> AcStrategyImage::Create(
     JxlMemoryManager* memory_manager, size_t xsize, size_t ysize) {

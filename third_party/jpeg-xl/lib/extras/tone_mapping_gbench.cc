@@ -27,6 +27,7 @@ static void BM_ToneMapping(benchmark::State& state) {
   JXL_CHECK(linear_rec2020.CreateICC());
 
   for (auto _ : state) {
+    (void)_;
     state.PauseTiming();
     CodecInOut tone_mapping_input{memory_manager};
     JXL_ASSIGN_OR_DIE(

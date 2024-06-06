@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "lib/jxl/ac_context.h"
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
@@ -58,6 +59,8 @@ Status DecodeBlockCtxMap(JxlMemoryManager* memory_manager, BitReader* br,
   return true;
 }
 
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr uint8_t BlockCtxMap::kDefaultCtxMap[];  // from ac_context.h
+#endif
 
 }  // namespace jxl

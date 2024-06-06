@@ -11,16 +11,26 @@
 #include <jxl/memory_manager.h>
 #include <sys/types.h>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/image_bundle.h"
+#include "lib/jxl/image_metadata.h"
 
 namespace jxl {
+
+struct ReferceFrame {
+  std::unique_ptr<ImageBundle> frame;
+  // ImageBundle doesn't yet have a simple way to state it is in XYB.
+  bool ib_is_in_xyb = false;
+};
 
 enum class PatchBlendMode : uint8_t {
   // The new values are the old ones. Useful to skip some channels.
@@ -92,16 +102,18 @@ class PatchDictionaryEncoder;
 
 class PatchDictionary {
  public:
-  PatchDictionary() = default;
+  explicit PatchDictionary(JxlMemoryManager* memory_manager)
+      : memory_manager_(memory_manager) {}
 
-  void SetPassesSharedState(const PassesSharedState* shared) {
-    shared_ = shared;
+  void SetShared(const std::array<ReferceFrame, 4>* reference_frames) {
+    reference_frames_ = reference_frames;
   }
 
   bool HasAny() const { return !positions_.empty(); }
 
   Status Decode(JxlMemoryManager* memory_manager, BitReader* br, size_t xsize,
-                size_t ysize, bool* uses_extra_channels);
+                size_t ysize, size_t num_extra_channels,
+                bool* uses_extra_channels);
 
   void Clear() {
     positions_.clear();
@@ -110,8 +122,9 @@ class PatchDictionary {
 
   // Adds patches to a segment of `xsize` pixels, starting at `inout`, assumed
   // to be located at position (x0, y) in the frame.
-  Status AddOneRow(float* const* inout, size_t y, size_t x0,
-                   size_t xsize) const;
+  Status AddOneRow(
+      float* const* inout, size_t y, size_t x0, size_t xsize,
+      const std::vector<ExtraChannelInfo>& extra_channel_info) const;
 
   // Returns dependencies of this patch dictionary on reference frame ids as a
   // bit mask: bits 0-3 indicate reference frame 0-3.
@@ -122,10 +135,12 @@ class PatchDictionary {
  private:
   friend class PatchDictionaryEncoder;
 
-  const PassesSharedState* shared_;
+  JxlMemoryManager* memory_manager_;
+  const std::array<ReferceFrame, 4>* reference_frames_;
   std::vector<PatchPosition> positions_;
   std::vector<PatchReferencePosition> ref_positions_;
   std::vector<PatchBlending> blendings_;
+  size_t blendings_stride_;
 
   // Interval tree on the y coordinates of the patches.
   struct PatchTreeNode {

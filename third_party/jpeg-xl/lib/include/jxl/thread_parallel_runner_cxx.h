@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <memory>
 
-#if !(defined(__cplusplus) || defined(c_plusplus))
+#ifndef __cplusplus
 #error \
     "This a C++ only header. Use jxl/jxl_thread_parallel_runner.h from C" \
     "sources."

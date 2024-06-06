@@ -146,6 +146,7 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
   // Convert the extra blobs
   io->blobs.exif = ppf.metadata.exif;
   io->blobs.iptc = ppf.metadata.iptc;
+  io->blobs.jhgm = ppf.metadata.jhgm;
   io->blobs.jumbf = ppf.metadata.jumbf;
   io->blobs.xmp = ppf.metadata.xmp;
 
@@ -292,6 +293,7 @@ Status ConvertCodecInOutToPackedPixelFile(const CodecInOut& io,
   // Convert the extra blobs
   ppf->metadata.exif = io.blobs.exif;
   ppf->metadata.iptc = io.blobs.iptc;
+  ppf->metadata.jhgm = io.blobs.jhgm;
   ppf->metadata.jumbf = io.blobs.jumbf;
   ppf->metadata.xmp = io.blobs.xmp;
   const bool float_out = pixel_format.data_type == JXL_TYPE_FLOAT ||
@@ -338,7 +340,7 @@ Status ConvertCodecInOutToPackedPixelFile(const CodecInOut& io,
 
     // TODO(firsching): Convert the extra channels, beside one potential alpha
     // channel. FIXME!
-    JXL_CHECK(frame.extra_channels().size() <= has_alpha);
+    JXL_CHECK(frame.extra_channels().size() <= (has_alpha ? 1 : 0));
     ppf->frames.push_back(std::move(packed_frame));
   }
 

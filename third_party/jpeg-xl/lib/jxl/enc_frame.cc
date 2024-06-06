@@ -262,11 +262,12 @@ Status LoopFilterFromParams(const CompressParams& cparams, bool streaming_mode,
       cparams.gaborish, cparams.speed_tier <= SpeedTier::kHare &&
                             frame_header->encoding == FrameEncoding::kVarDCT &&
                             cparams.decoding_speed_tier < 4 &&
-                            !cparams.disable_percepeptual_optimizations);
+                            cparams.butteraugli_distance > 0.5f &&
+                            !cparams.disable_perceptual_optimizations);
 
   if (cparams.epf != -1) {
     loop_filter->epf_iters = cparams.epf;
-  } else if (cparams.disable_percepeptual_optimizations) {
+  } else if (cparams.disable_perceptual_optimizations) {
     loop_filter->epf_iters = 0;
     return true;
   } else {
@@ -823,8 +824,8 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
       ImageSB* map = (c == 0 ? &shared.cmap.ytox_map : &shared.cmap.ytob_map);
       const float kScale = kDefaultColorFactor;
       const int kOffset = 127;
-      const float kBase =
-          c == 0 ? shared.cmap.YtoXRatio(0) : shared.cmap.YtoBRatio(0);
+      const float kBase = c == 0 ? shared.cmap.base().YtoXRatio(0)
+                                 : shared.cmap.base().YtoBRatio(0);
       const float kZeroThresh =
           kScale * kZeroBiasDefault[c] *
           0.9999f;  // just epsilon less for better rounding
@@ -968,7 +969,7 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
             }
           } else {
             const int32_t scale =
-                shared.cmap.RatioJPEG(cm[bx / kColorTileDimInBlocks]);
+                ColorCorrelation::RatioJPEG(cm[bx / kColorTileDimInBlocks]);
 
             for (size_t y = 0; y < 8; y++) {
               for (size_t x = 0; x < 8; x++) {
@@ -1175,7 +1176,7 @@ Status EncodeGlobalDCInfo(const PassesSharedState& shared, BitWriter* writer,
   JXL_RETURN_IF_ERROR(
       WriteQuantizerParams(params, writer, kLayerQuant, aux_out));
   EncodeBlockCtxMap(shared.block_ctx_map, writer, aux_out);
-  ColorCorrelationMapEncodeDC(shared.cmap, writer, kLayerDC, aux_out);
+  ColorCorrelationEncodeDC(shared.cmap.base(), writer, kLayerDC, aux_out);
   return true;
 }
 
@@ -1442,7 +1443,7 @@ Status ComputeEncodingData(
     shared.frame_dim = frame_header.ToFrameDimensions();
   }
 
-  shared.image_features.patches.SetPassesSharedState(&shared);
+  shared.image_features.patches.SetShared(&shared.reference_frames);
   const FrameDimensions& frame_dim = shared.frame_dim;
   JXL_ASSIGN_OR_RETURN(
       shared.ac_strategy,
@@ -1512,7 +1513,6 @@ Status ComputeEncodingData(
                                         metadata->m, has_interleaved_alpha,
                                         pool, &extra_channels));
 
-  shared.image_features.patches.SetPassesSharedState(&shared);
   enc_state.cparams = cparams;
 
   Image3F linear_storage;
@@ -1541,7 +1541,7 @@ Status ComputeEncodingData(
         frame_header.frame_type == FrameType::kRegularFrame &&
         !ApplyOverride(cparams.keep_invisible, cparams.IsLossless()) &&
         cparams.ec_resampling == cparams.resampling &&
-        !cparams.disable_percepeptual_optimizations) {
+        !cparams.disable_perceptual_optimizations) {
       // simplify invisible pixels
       SimplifyInvisible(&color, *alpha, lossless);
       if (linear) {
@@ -2189,7 +2189,7 @@ Status EncodeFrame(JxlMemoryManager* memory_manager,
           std::vector<uint8_t> output(64);
           uint8_t* next_out = output.data();
           size_t avail_out = output.size();
-          JxlEncoderOutputProcessorWrapper local_output;
+          JxlEncoderOutputProcessorWrapper local_output(memory_manager);
           local_output.SetAvailOut(&next_out, &avail_out);
           if (!EncodeFrame(memory_manager, all_params[task], frame_info,
                            metadata, frame_data, cms, nullptr, &local_output,
@@ -2314,7 +2314,7 @@ Status EncodeFrame(JxlMemoryManager* memory_manager,
   std::vector<uint8_t> output(64);
   uint8_t* next_out = output.data();
   size_t avail_out = output.size();
-  JxlEncoderOutputProcessorWrapper output_processor;
+  JxlEncoderOutputProcessorWrapper output_processor(memory_manager);
   output_processor.SetAvailOut(&next_out, &avail_out);
   JXL_RETURN_IF_ERROR(EncodeFrame(memory_manager, cparams_orig, fi, metadata,
                                   frame_data, cms, pool, &output_processor,

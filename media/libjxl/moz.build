@@ -15,7 +15,6 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/alpha.cc",
     "/third_party/jpeg-xl/lib/jxl/ans_common.cc",
     "/third_party/jpeg-xl/lib/jxl/blending.cc",
-    "/third_party/jpeg-xl/lib/jxl/cache_aligned.cc",
     "/third_party/jpeg-xl/lib/jxl/chroma_from_luma.cc",
     "/third_party/jpeg-xl/lib/jxl/coeff_order.cc",
     "/third_party/jpeg-xl/lib/jxl/color_encoding_internal.cc",
@@ -85,6 +84,7 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/render_pipeline/stage_ycbcr.cc",
     "/third_party/jpeg-xl/lib/jxl/simd_util.cc",
     "/third_party/jpeg-xl/lib/jxl/splines.cc",
+    "/third_party/jpeg-xl/lib/jxl/test_memory_manager.cc",
     "/third_party/jpeg-xl/lib/jxl/toc.cc",
 ]
 

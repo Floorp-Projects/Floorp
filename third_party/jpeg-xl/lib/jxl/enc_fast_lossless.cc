@@ -536,8 +536,8 @@ struct PrefixCode {
     }
     // Encode 0s until 224 (start of LZ77 symbols). This is in total 224-19 =
     // 205.
-    static_assert(kLZ77Offset == 224, "");
-    static_assert(kNumRawSymbols == 19, "");
+    static_assert(kLZ77Offset == 224);
+    static_assert(kNumRawSymbols == 19);
     {
       // Max bits in this block: 24
       writer->Write(code_length_nbits[17], code_length_bits[17]);
@@ -681,7 +681,7 @@ void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
 
     output->Write(1, 1);  // all_default transform data
 
-    // No ICC, no preview. Frame should start at byte boundery.
+    // No ICC, no preview. Frame should start at byte boundary.
     output->ZeroPadToByte();
   }
 #else
@@ -1130,13 +1130,13 @@ struct SIMDVec16 {
     __m512i rg = _mm512_permutexvar_epi64(
         permuteidx, _mm512_packus_epi32(_mm512_and_si512(bytes1, rg_mask),
                                         _mm512_and_si512(bytes2, rg_mask)));
-    __m512i ba = _mm512_permutexvar_epi64(
+    __m512i b_a = _mm512_permutexvar_epi64(
         permuteidx, _mm512_packus_epi32(_mm512_srli_epi32(bytes1, 16),
                                         _mm512_srli_epi32(bytes2, 16)));
     __m512i r = _mm512_and_si512(rg, _mm512_set1_epi16(0xFF));
     __m512i g = _mm512_srli_epi16(rg, 8);
-    __m512i b = _mm512_and_si512(ba, _mm512_set1_epi16(0xFF));
-    __m512i a = _mm512_srli_epi16(ba, 8);
+    __m512i b = _mm512_and_si512(b_a, _mm512_set1_epi16(0xFF));
+    __m512i a = _mm512_srli_epi16(b_a, 8);
     return {SIMDVec16{r}, SIMDVec16{g}, SIMDVec16{b}, SIMDVec16{a}};
   }
   static std::array<SIMDVec16, 4> LoadRGBA16(const unsigned char* data) {
@@ -1669,14 +1669,14 @@ struct SIMDVec16 {
         _mm256_packus_epi32(_mm256_and_si256(bytes1, rg_mask),
                             _mm256_and_si256(bytes2, rg_mask)),
         0b11011000);
-    __m256i ba = _mm256_permute4x64_epi64(
+    __m256i b_a = _mm256_permute4x64_epi64(
         _mm256_packus_epi32(_mm256_srli_epi32(bytes1, 16),
                             _mm256_srli_epi32(bytes2, 16)),
         0b11011000);
     __m256i r = _mm256_and_si256(rg, _mm256_set1_epi16(0xFF));
     __m256i g = _mm256_srli_epi16(rg, 8);
-    __m256i b = _mm256_and_si256(ba, _mm256_set1_epi16(0xFF));
-    __m256i a = _mm256_srli_epi16(ba, 8);
+    __m256i b = _mm256_and_si256(b_a, _mm256_set1_epi16(0xFF));
+    __m256i a = _mm256_srli_epi16(b_a, 8);
     return {SIMDVec16{r}, SIMDVec16{g}, SIMDVec16{b}, SIMDVec16{a}};
   }
   static std::array<SIMDVec16, 4> LoadRGBA16(const unsigned char* data) {
@@ -2345,9 +2345,10 @@ FJXL_INLINE void StoreToWriterAVX512(const Bits32& bits32, BitWriter& output) {
   auto sh4 = [zero](__m512i vec) { return _mm512_alignr_epi64(vec, zero, 4); };
 
   // Compute first-past-end-bit-position.
-  __m512i end_interm0 = _mm512_add_epi64(nbits, sh1(nbits));
-  __m512i end_interm1 = _mm512_add_epi64(end_interm0, sh2(end_interm0));
-  __m512i end = _mm512_add_epi64(end_interm1, sh4(end_interm1));
+  __m512i end_intermediate0 = _mm512_add_epi64(nbits, sh1(nbits));
+  __m512i end_intermediate1 =
+      _mm512_add_epi64(end_intermediate0, sh2(end_intermediate0));
+  __m512i end = _mm512_add_epi64(end_intermediate1, sh4(end_intermediate1));
 
   uint64_t simd_nbits = _mm512_cvtsi512_si32(_mm512_alignr_epi64(end, end, 7));
 
@@ -4111,7 +4112,7 @@ class FJxlFrameInput {
 
 size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
                              size_t row_stride, size_t height, size_t nb_chans,
-                             size_t bitdepth, int big_endian, int effort,
+                             size_t bitdepth, bool big_endian, int effort,
                              unsigned char** output, void* runner_opaque,
                              FJxlParallelRunner runner) {
   FJxlFrameInput input(rgba, row_stride, nb_chans, bitdepth);
@@ -4137,7 +4138,8 @@ size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
 
 JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
     JxlChunkedFrameInputSource input, size_t width, size_t height,
-    size_t nb_chans, size_t bitdepth, int big_endian, int effort, int oneshot) {
+    size_t nb_chans, size_t bitdepth, bool big_endian, int effort,
+    int oneshot) {
 #if FJXL_ENABLE_AVX512
   if (__builtin_cpu_supports("avx512cd") &&
       __builtin_cpu_supports("avx512vbmi") &&

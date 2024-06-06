@@ -546,11 +546,11 @@ struct AdaptiveQuantizationImpl {
         scalar_pixel(x);
       }
       if (y % 4 == 3) {
-        float* row_dout = pre_erosion[thread].Row((y - y_start) / 4);
+        float* row_d_out = pre_erosion[thread].Row((y - y_start) / 4);
         for (size_t x = 0; x < (x_end - x_start) / 4; x++) {
-          row_dout[x] = (row_out[x * 4] + row_out[x * 4 + 1] +
-                         row_out[x * 4 + 2] + row_out[x * 4 + 3]) *
-                        0.25f;
+          row_d_out[x] = (row_out[x * 4] + row_out[x * 4 + 1] +
+                          row_out[x * 4 + 2] + row_out[x * 4 + 3]) *
+                         0.25f;
         }
       }
     }
@@ -680,10 +680,10 @@ Status DumpHeatmap(const CompressParams& cparams, const AuxOut* aux_out,
 }
 
 Status DumpHeatmaps(const CompressParams& cparams, const AuxOut* aux_out,
-                    float ba_target, const ImageF& quant_field,
+                    float butteraugli_target, const ImageF& quant_field,
                     const ImageF& tile_heatmap, const ImageF& bt_diffmap) {
-  JxlMemoryManager* memory_manager = quant_field.memory_manager();
   if (JXL_DEBUG_ADAPTIVE_QUANTIZATION) {
+    JxlMemoryManager* memory_manager = quant_field.memory_manager();
     if (!WantDebugOutput(cparams)) return true;
     JXL_ASSIGN_OR_RETURN(ImageF inv_qmap,
                          ImageF::Create(memory_manager, quant_field.xsize(),
@@ -696,9 +696,11 @@ Status DumpHeatmaps(const CompressParams& cparams, const AuxOut* aux_out,
       }
     }
     JXL_RETURN_IF_ERROR(DumpHeatmap(cparams, aux_out, "quant_heatmap", inv_qmap,
-                                    4.0f * ba_target, 6.0f * ba_target));
+                                    4.0f * butteraugli_target,
+                                    6.0f * butteraugli_target));
     JXL_RETURN_IF_ERROR(DumpHeatmap(cparams, aux_out, "tile_heatmap",
-                                    tile_heatmap, ba_target, 1.5f * ba_target));
+                                    tile_heatmap, butteraugli_target,
+                                    1.5f * butteraugli_target));
     // matches heat maps produced by the command line tool.
     JXL_RETURN_IF_ERROR(DumpHeatmap(cparams, aux_out, "bt_diffmap", bt_diffmap,
                                     ButteraugliFuzzyInverse(1.5),

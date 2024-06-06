@@ -154,4 +154,15 @@ using ssize_t = intptr_t;
 #define JXL_FORMAT(idx_fmt, idx_arg)
 #endif
 
+// C++ standard.
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_MSVC_LANG) && \
+    _MSVC_LANG > __cplusplus
+#define JXL_CXX_LANG _MSVC_LANG
+#else
+#define JXL_CXX_LANG __cplusplus
+#endif
+
+// Known / distinguished C++ standards.
+#define JXL_CXX_17 201703
+
 #endif  // LIB_JXL_BASE_COMPILER_SPECIFIC_H_

@@ -140,7 +140,7 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
 
   if (gif->ImageCount > 1) {
     ppf->info.have_animation = JXL_TRUE;
-    // Delays in GIF are specified in 100ths of a second.
+    // Delays in GIF are specified in censiseconds.
     ppf->info.animation.tps_numerator = 100;
     ppf->info.animation.tps_denominator = 1;
   }

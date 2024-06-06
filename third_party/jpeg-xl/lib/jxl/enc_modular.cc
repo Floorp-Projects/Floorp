@@ -19,6 +19,7 @@
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/compressed_dc.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/enc_aux_out.h"
@@ -56,7 +57,7 @@ const float squeeze_luma_factor =
     1.1;  // for easy tweaking of the balance between luma (or anything
           // non-chroma) and chroma (decrease this number for higher quality
           // luma)
-const float squeeze_quality_factor_xyb = 2.4f;
+const float squeeze_quality_factor_xyb = 4.8f;
 const float squeeze_xyb_qtable[3][16] = {
     {163.84, 81.92, 40.96, 20.48, 10.24, 5.12, 2.56, 1.28, 0.64, 0.32, 0.16,
      0.08, 0.04, 0.02, 0.01, 0.005},  // Y
@@ -695,7 +696,7 @@ Status ModularFrameEncoder::ComputeEncodingData(
   int c = 0;
   if (cparams_.color_transform == ColorTransform::kXYB &&
       cparams_.modular_mode == true) {
-    float enc_factors[3] = {32768.0f, 2048.0f, 2048.0f};
+    float enc_factors[3] = {65536.0f, 4096.0f, 4096.0f};
     if (cparams_.butteraugli_distance > 0 && !cparams_.responsive) {
       // quantize XYB here and then treat it as a lossless image
       enc_factors[0] *= 1.f / (1.f + 23.f * cparams_.butteraugli_distance);
@@ -737,8 +738,6 @@ Status ModularFrameEncoder::ComputeEncodingData(
             // TODO(eustas): check if std::roundf is appropriate
             row_out[x] = row_in[x] * factor + 0.5f;
             row_out[x] -= row_Y[x];
-            // zero the lsb of B
-            row_out[x] = row_out[x] / 2 * 2;
           }
         }
       } else {
@@ -1532,13 +1531,14 @@ Status ModularFrameEncoder::AddVarDCTDC(const FrameHeader& frame_header,
   JXL_ASSIGN_OR_RETURN(
       stream_images_[stream_id],
       Image::Create(memory_manager, r.xsize(), r.ysize(), 8, 3));
+  const ColorCorrelation& color_correlation = enc_state->shared.cmap.base();
   if (nl_dc && stream_options_[stream_id].tree_kind ==
                    ModularOptions::TreeKind::kGradientFixedDC) {
     JXL_ASSERT(frame_header.chroma_subsampling.Is444());
     for (size_t c : {1, 0, 2}) {
       float inv_factor = enc_state->shared.quantizer.GetInvDcStep(c) * mul;
       float y_factor = enc_state->shared.quantizer.GetDcStep(1) / mul;
-      float cfl_factor = enc_state->shared.cmap.DCFactors()[c];
+      float cfl_factor = color_correlation.DCFactors()[c];
       for (size_t y = 0; y < r.ysize(); y++) {
         int32_t* quant_row =
             stream_images_[stream_id].channel[c < 2 ? c ^ 1 : c].plane.Row(y);
@@ -1567,7 +1567,7 @@ Status ModularFrameEncoder::AddVarDCTDC(const FrameHeader& frame_header,
     for (size_t c : {1, 0, 2}) {
       float inv_factor = enc_state->shared.quantizer.GetInvDcStep(c) * mul;
       float y_factor = enc_state->shared.quantizer.GetDcStep(1) / mul;
-      float cfl_factor = enc_state->shared.cmap.DCFactors()[c];
+      float cfl_factor = color_correlation.DCFactors()[c];
       weighted::Header header;
       weighted::State wp_state(header, r.xsize(), r.ysize());
       for (size_t y = 0; y < r.ysize(); y++) {
@@ -1599,7 +1599,7 @@ Status ModularFrameEncoder::AddVarDCTDC(const FrameHeader& frame_header,
     for (size_t c : {1, 0, 2}) {
       float inv_factor = enc_state->shared.quantizer.GetInvDcStep(c) * mul;
       float y_factor = enc_state->shared.quantizer.GetDcStep(1) / mul;
-      float cfl_factor = enc_state->shared.cmap.DCFactors()[c];
+      float cfl_factor = color_correlation.DCFactors()[c];
       for (size_t y = 0; y < r.ysize(); y++) {
         int32_t* quant_row =
             stream_images_[stream_id].channel[c < 2 ? c ^ 1 : c].plane.Row(y);
@@ -1644,7 +1644,7 @@ Status ModularFrameEncoder::AddVarDCTDC(const FrameHeader& frame_header,
 
   DequantDC(r, &enc_state->shared.dc_storage, &enc_state->shared.quant_dc,
             stream_images_[stream_id], enc_state->shared.quantizer.MulDC(),
-            1.0 / mul, enc_state->shared.cmap.DCFactors(),
+            1.0 / mul, color_correlation.DCFactors(),
             frame_header.chroma_subsampling, enc_state->shared.block_ctx_map);
   return true;
 }

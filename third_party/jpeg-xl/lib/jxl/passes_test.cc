@@ -5,6 +5,7 @@
 
 #include <jxl/cms.h>
 #include <jxl/memory_manager.h>
+#include <jxl/types.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -19,10 +20,13 @@
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/common.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
@@ -105,7 +109,7 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
         target_distance + threshold);
   };
 
-  auto run1 = std::async(std::launch::async, test, 1.0f, 0.15f);
+  auto run1 = std::async(std::launch::async, test, 1.0f, 0.25f);
   auto run2 = std::async(std::launch::async, test, 2.0f, 0.0f);
 }
 
@@ -398,7 +402,7 @@ TEST(PassesTest, RoundtripSmallNoGaborishPasses) {
       ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
                           *JxlGetDefaultCms(),
                           /*distmap=*/nullptr),
-      1.2);
+      1.0);
 }
 
 }  // namespace

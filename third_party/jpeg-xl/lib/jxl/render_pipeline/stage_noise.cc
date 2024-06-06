@@ -156,11 +156,11 @@ void AddNoiseToRGB(const D d, const Vec<D> rnd_noise_r,
 class AddNoiseStage : public RenderPipelineStage {
  public:
   AddNoiseStage(const NoiseParams& noise_params,
-                const ColorCorrelationMap& cmap, size_t first_c)
+                const ColorCorrelation& color_correlation, size_t first_c)
       : RenderPipelineStage(RenderPipelineStage::Settings::Symmetric(
             /*shift=*/0, /*border=*/0)),
         noise_params_(noise_params),
-        cmap_(cmap),
+        color_correlation_(color_correlation),
         first_c_(first_c) {}
 
   Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
@@ -176,8 +176,8 @@ class AddNoiseStage : public RenderPipelineStage {
     // normalizer is half of what it was before (0.5).
     const auto norm_const = Set(d, 0.22f);
 
-    float ytox = cmap_.YtoXRatio(0);
-    float ytob = cmap_.YtoBRatio(0);
+    float ytox = color_correlation_.YtoXRatio(0);
+    float ytob = color_correlation_.YtoBRatio(0);
 
     const size_t xsize_v = RoundUpTo(xsize, Lanes(d));
 
@@ -227,14 +227,15 @@ class AddNoiseStage : public RenderPipelineStage {
 
  private:
   const NoiseParams& noise_params_;
-  const ColorCorrelationMap& cmap_;
+  const ColorCorrelation& color_correlation_;
   size_t first_c_;
 };
 
 std::unique_ptr<RenderPipelineStage> GetAddNoiseStage(
-    const NoiseParams& noise_params, const ColorCorrelationMap& cmap,
+    const NoiseParams& noise_params, const ColorCorrelation& color_correlation,
     size_t noise_c_start) {
-  return jxl::make_unique<AddNoiseStage>(noise_params, cmap, noise_c_start);
+  return jxl::make_unique<AddNoiseStage>(noise_params, color_correlation,
+                                         noise_c_start);
 }
 
 class ConvolveNoiseStage : public RenderPipelineStage {
@@ -305,9 +306,9 @@ HWY_EXPORT(GetAddNoiseStage);
 HWY_EXPORT(GetConvolveNoiseStage);
 
 std::unique_ptr<RenderPipelineStage> GetAddNoiseStage(
-    const NoiseParams& noise_params, const ColorCorrelationMap& cmap,
+    const NoiseParams& noise_params, const ColorCorrelation& color_correlation,
     size_t noise_c_start) {
-  return HWY_DYNAMIC_DISPATCH(GetAddNoiseStage)(noise_params, cmap,
+  return HWY_DYNAMIC_DISPATCH(GetAddNoiseStage)(noise_params, color_correlation,
                                                 noise_c_start);
 }
 

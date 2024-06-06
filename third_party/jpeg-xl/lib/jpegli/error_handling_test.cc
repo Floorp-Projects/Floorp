@@ -1177,7 +1177,7 @@ TEST(DecoderErrorHandlingTest, InvalidDQT) {
     compressed[kDQTOffset + 3] += diff;
     EXPECT_FALSE(ParseCompressed(compressed));
   }
-  // inavlid table index / precision
+  // invalid table index / precision
   for (int val : {0x20, 0x05}) {
     std::vector<uint8_t> compressed(kCompressed0, kCompressed0 + kLen0);
     compressed[kDQTOffset + 4] = val;
@@ -1242,7 +1242,7 @@ TEST(DecoderErrorHandlingTest, InvalidDHT) {
     compressed[kDHTOffset + 2] += 17;
     EXPECT_FALSE(ParseCompressed(compressed));
   }
-  // inavlid table slot_id
+  // invalid table slot_id
   for (int val : {0x05, 0x15, 0x20}) {
     std::vector<uint8_t> compressed(kCompressed0, kCompressed0 + kLen0);
     compressed[kDHTOffset + 4] = val;

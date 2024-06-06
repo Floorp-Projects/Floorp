@@ -6,7 +6,7 @@
 #ifndef LIB_JPEGLI_TYPES_H_
 #define LIB_JPEGLI_TYPES_H_
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -31,7 +31,7 @@ typedef enum {
 
 int jpegli_bytes_per_sample(JpegliDataType data_type);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }  // extern "C"
 #endif
 

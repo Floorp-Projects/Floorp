@@ -7,15 +7,19 @@
 
 #include <jxl/memory_manager.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/coeff_order_fwd.h"
+#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_toc.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 

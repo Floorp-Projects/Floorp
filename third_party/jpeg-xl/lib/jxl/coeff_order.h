@@ -33,7 +33,7 @@ static constexpr std::array<size_t, 3 * kNumOrders + 1> JXL_MAYBE_UNUSED
         100,  108,  172,  236,  300,  332,  364,  396,  652,  908,
         1164, 1292, 1420, 1548, 2572, 3596, 4620, 5132, 5644, kCoeffOrderLimit};
 
-// TODO(eustas): rollback to constexpr once modern C++ becomes reuired.
+// TODO(eustas): rollback to constexpr once modern C++ becomes required.
 #define CoeffOrderOffset(O, C) \
   (kCoeffOrderOffset[3 * (O) + (C)] * kDCTBlockSize)
 

@@ -295,13 +295,14 @@ void DownsampleInputBuffer(j_compress_ptr cinfo) {
     }
     auto& input = *m->smooth_input[c];
     auto& output = *m->raw_data[c];
-    const size_t yout0 = y0 / v_factor;
+    const size_t y_out0 = y0 / v_factor;
     float* rows_in[MAX_SAMP_FACTOR];
-    for (size_t yin = y0, yout = yout0; yin < y1; yin += v_factor, ++yout) {
+    for (size_t y_in = y0, y_out = y_out0; y_in < y1;
+         y_in += v_factor, ++y_out) {
       for (int iy = 0; iy < v_factor; ++iy) {
-        rows_in[iy] = input.Row(yin + iy);
+        rows_in[iy] = input.Row(y_in + iy);
       }
-      float* row_out = output.Row(yout);
+      float* row_out = output.Row(y_out);
       (*m->downsample_method[c])(rows_in, xsize_padded, row_out);
     }
   }

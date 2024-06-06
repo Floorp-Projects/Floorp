@@ -8,6 +8,8 @@
 #include <jxl/memory_manager.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdio>
 #include <numeric>  // iota
 #include <utility>
 #include <vector>
@@ -15,10 +17,12 @@
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_coeff_order.h"
-#include "lib/jxl/test_utils.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {

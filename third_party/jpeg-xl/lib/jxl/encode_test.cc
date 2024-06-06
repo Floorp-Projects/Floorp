@@ -41,6 +41,7 @@
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/modular/options.h"
 #include "lib/jxl/test_image.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 

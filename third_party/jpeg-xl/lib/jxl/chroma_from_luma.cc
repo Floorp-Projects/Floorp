@@ -7,9 +7,37 @@
 
 #include <jxl/memory_manager.h>
 
+#include <cstddef>
+#include <cstdlib>  // abs
+#include <limits>
+
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/fields.h"
 #include "lib/jxl/image_ops.h"
 
 namespace jxl {
+
+Status ColorCorrelation::DecodeDC(BitReader* br) {
+  if (br->ReadFixedBits<1>() == 1) {
+    // All default.
+    return true;
+  }
+  SetColorFactor(U32Coder::Read(kColorFactorDist, br));
+  JXL_RETURN_IF_ERROR(F16Coder::Read(br, &base_correlation_x_));
+  if (std::abs(base_correlation_x_) > 4.0f) {
+    return JXL_FAILURE("Base X correlation is out of range");
+  }
+  JXL_RETURN_IF_ERROR(F16Coder::Read(br, &base_correlation_b_));
+  if (std::abs(base_correlation_b_) > 4.0f) {
+    return JXL_FAILURE("Base B correlation is out of range");
+  }
+  ytox_dc_ = static_cast<int>(br->ReadFixedBits<kBitsPerByte>()) +
+             std::numeric_limits<int8_t>::min();
+  ytob_dc_ = static_cast<int>(br->ReadFixedBits<kBitsPerByte>()) +
+             std::numeric_limits<int8_t>::min();
+  RecomputeDCFactors();
+  return true;
+}
 
 StatusOr<ColorCorrelationMap> ColorCorrelationMap::Create(
     JxlMemoryManager* memory_manager, size_t xsize, size_t ysize, bool XYB) {
@@ -23,9 +51,9 @@ StatusOr<ColorCorrelationMap> ColorCorrelationMap::Create(
   ZeroFillImage(&result.ytox_map);
   ZeroFillImage(&result.ytob_map);
   if (!XYB) {
-    result.base_correlation_b_ = 0;
+    result.base_.base_correlation_b_ = 0;
   }
-  result.RecomputeDCFactors();
+  result.base_.RecomputeDCFactors();
   return result;
 }
 

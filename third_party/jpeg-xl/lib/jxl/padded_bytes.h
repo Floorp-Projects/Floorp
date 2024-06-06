@@ -19,7 +19,7 @@
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/cache_aligned.h"
+#include "lib/jxl/memory_manager_internal.h"
 
 namespace jxl {
 
@@ -101,26 +101,28 @@ class PaddedBytes {
     new_capacity = std::max<size_t>(64, new_capacity);
 
     // BitWriter writes up to 7 bytes past the end.
-    CacheAlignedUniquePtr new_data = AllocateArray(new_capacity + 8);
-    if (new_data == nullptr) {
+    StatusOr<AlignedMemory> new_data_or =
+        AlignedMemory::Create(memory_manager_, new_capacity + 8);
+    if (!new_data_or.ok()) {
       // Allocation failed, discard all data to ensure this is noticed.
       size_ = capacity_ = 0;
       return;
     }
+    AlignedMemory new_data = std::move(new_data_or).value();
 
-    if (data_ == nullptr) {
+    if (data_.address<void>() == nullptr) {
       // First allocation: ensure first byte is initialized (won't be copied).
-      new_data[0] = 0;
+      new_data.address<uint8_t>()[0] = 0;
     } else {
       // Subsequent resize: copy existing data to new location.
-      memcpy(new_data.get(), data_.get(), size_);
+      memmove(new_data.address<void>(), data_.address<void>(), size_);
       // Ensure that the first new byte is initialized, to allow write_bits to
       // safely append to the newly-resized PaddedBytes.
-      new_data[size_] = 0;
+      new_data.address<uint8_t>()[size_] = 0;
     }
 
     capacity_ = new_capacity;
-    std::swap(new_data, data_);
+    data_ = std::move(new_data);
   }
 
   // NOTE: unlike vector, this does not initialize the new data!
@@ -148,14 +150,14 @@ class PaddedBytes {
       if (data() == nullptr) return;
     }
 
-    data_[size_++] = x;
+    data_.address<uint8_t>()[size_++] = x;
   }
 
   size_t size() const { return size_; }
   size_t capacity() const { return capacity_; }
 
-  uint8_t* data() { return data_.get(); }
-  const uint8_t* data() const { return data_.get(); }
+  uint8_t* data() { return data_.address<uint8_t>(); }
+  const uint8_t* data() const { return data_.address<uint8_t>(); }
 
   // std::vector operations implemented in terms of the public interface above.
 
@@ -213,7 +215,7 @@ class PaddedBytes {
   JxlMemoryManager* memory_manager_;
   size_t size_;
   size_t capacity_;
-  CacheAlignedUniquePtr data_;
+  AlignedMemory data_;
 };
 
 template <typename T>

@@ -7,7 +7,6 @@
 
 #include <jxl/memory_manager.h>
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -22,6 +21,7 @@
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
 #include "lib/jxl/image_metadata.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 

@@ -49,7 +49,6 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
   JXL_ASSERT(pdic.HasAny());
   JxlMemoryManager* memory_manager = writer->memory_manager();
   std::vector<std::vector<Token>> tokens(1);
-  size_t num_ec = pdic.shared_->metadata->m.num_extra_channels;
 
   auto add_num = [&](int context, size_t num) {
     tokens[0].emplace_back(context, num);
@@ -65,6 +64,9 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
   }
   add_num(kNumRefPatchContext, num_ref_patch);
   size_t blend_pos = 0;
+  size_t blending_stride = pdic.blendings_stride_;
+  // blending_stride == num_ec + 1; num_ec > 1 =>
+  bool choose_alpha = (blending_stride > 1 + 1);
   for (size_t i = 0; i < pdic.positions_.size();) {
     size_t i_start = i;
     size_t ref_pos_idx = pdic.positions_[i].ref_pos_idx;
@@ -92,11 +94,10 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
         add_num(kPatchOffsetContext,
                 PackSigned(pos.y - pdic.positions_[j - 1].y));
       }
-      for (size_t j = 0; j < num_ec + 1; ++j, ++blend_pos) {
+      for (size_t j = 0; j < blending_stride; ++j, ++blend_pos) {
         const PatchBlending& info = pdic.blendings_[blend_pos];
         add_num(kPatchBlendModeContext, static_cast<uint32_t>(info.mode));
-        if (UsesAlpha(info.mode) &&
-            pdic.shared_->metadata->m.extra_channel_info.size() > 1) {
+        if (UsesAlpha(info.mode) && choose_alpha) {
           add_num(kPatchAlphaChannelContext, info.alpha_channel);
         }
         if (UsesClamp(info.mode)) {
@@ -117,7 +118,6 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
 // static
 void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
                                           Image3F* opsin) {
-  size_t num_ec = pdic.shared_->metadata->m.num_extra_channels;
   // TODO(veluca): this can likely be optimized knowing it runs on full images.
   for (size_t y = 0; y < opsin->ysize(); y++) {
     float* JXL_RESTRICT rows[3] = {
@@ -125,8 +125,9 @@ void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
         opsin->PlaneRow(1, y),
         opsin->PlaneRow(2, y),
     };
+    size_t blending_stride = pdic.blendings_stride_;
     for (size_t pos_idx : pdic.GetPatchesForRow(y)) {
-      const size_t blending_idx = pos_idx * (num_ec + 1);
+      const size_t blending_idx = pos_idx * blending_stride;
       const PatchPosition& pos = pdic.positions_[pos_idx];
       const PatchReferencePosition& ref_pos =
           pdic.ref_positions_[pos.ref_pos_idx];
@@ -139,13 +140,13 @@ void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
       size_t iy = y - by;
       size_t ref = ref_pos.ref;
       const float* JXL_RESTRICT ref_rows[3] = {
-          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+          pdic.reference_frames_->at(ref).frame->color()->ConstPlaneRow(
               0, ref_pos.y0 + iy) +
               ref_pos.x0,
-          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+          pdic.reference_frames_->at(ref).frame->color()->ConstPlaneRow(
               1, ref_pos.y0 + iy) +
               ref_pos.x0,
-          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+          pdic.reference_frames_->at(ref).frame->color()->ConstPlaneRow(
               2, ref_pos.y0 + iy) +
               ref_pos.x0,
       };
@@ -598,11 +599,12 @@ Status FindBestPatchDictionary(const Image3F& opsin,
           state->cparams.dots,
           state->cparams.speed_tier <= SpeedTier::kSquirrel &&
               state->cparams.butteraugli_distance >= kMinButteraugliForDots &&
-              !state->cparams.disable_percepeptual_optimizations)) {
+              !state->cparams.disable_perceptual_optimizations)) {
     Rect rect(0, 0, state->shared.frame_dim.xsize,
               state->shared.frame_dim.ysize);
-    JXL_ASSIGN_OR_RETURN(info, FindDotDictionary(state->cparams, opsin, rect,
-                                                 state->shared.cmap, pool));
+    JXL_ASSIGN_OR_RETURN(info,
+                         FindDotDictionary(state->cparams, opsin, rect,
+                                           state->shared.cmap.base(), pool));
   }
 
   if (info.empty()) return true;
@@ -758,7 +760,7 @@ Status FindBestPatchDictionary(const Image3F& opsin,
   // this works out.
   PatchDictionaryEncoder::SetPositions(
       &state->shared.image_features.patches, std::move(positions),
-      std::move(pref_positions), std::move(blendings));
+      std::move(pref_positions), std::move(blendings), num_ec + 1);
   return true;
 }
 
@@ -805,8 +807,7 @@ Status RoundtripPatchFrame(Image3F* reference_frame,
     }
     ib.SetExtraChannels(std::move(extra_channels));
   }
-  auto special_frame =
-      std::unique_ptr<BitWriter>(new BitWriter(memory_manager));
+  auto special_frame = jxl::make_unique<BitWriter>(memory_manager);
   AuxOut patch_aux_out;
   JXL_CHECK(EncodeFrame(
       memory_manager, cparams, patch_frame_info, state->shared.metadata, ib,

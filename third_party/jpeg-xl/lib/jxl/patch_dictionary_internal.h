@@ -6,9 +6,6 @@
 #ifndef LIB_JXL_PATCH_DICTIONARY_INTERNAL_H_
 #define LIB_JXL_PATCH_DICTIONARY_INTERNAL_H_
 
-#include "lib/jxl/dec_patch_dictionary.h"
-#include "lib/jxl/passes_state.h"  // for PassesSharedState
-
 namespace jxl {
 
 // Context numbers as specified in Section C.4.5, Listing C.2:

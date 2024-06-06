@@ -5,6 +5,8 @@
 
 #include "lib/extras/dec/exr.h"
 
+#include "lib/jxl/base/common.h"
+
 #if JPEGXL_ENABLE_EXR
 #include <ImfChromaticitiesAttribute.h>
 #include <ImfIO.h>
@@ -81,7 +83,7 @@ Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
 #ifdef __EXCEPTIONS
   std::unique_ptr<OpenEXR::RgbaInputFile> input_ptr;
   try {
-    input_ptr.reset(new OpenEXR::RgbaInputFile(is));
+    input_ptr = jxl::make_unique<OpenEXR::RgbaInputFile>(is);
   } catch (...) {
     // silently return false if it is not an EXR file
     return false;

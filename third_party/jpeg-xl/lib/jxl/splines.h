@@ -129,7 +129,7 @@ class Splines {
   int32_t GetQuantizationAdjustment() const { return quantization_adjustment_; }
 
   Status InitializeDrawCache(size_t image_xsize, size_t image_ysize,
-                             const ColorCorrelationMap& cmap);
+                             const ColorCorrelation& color_correlation);
 
  private:
   template <bool>

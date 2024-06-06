@@ -33,6 +33,7 @@
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_group.h"
+#include "lib/jxl/dec_noise.h"
 #include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/enc_ac_strategy.h"
 #include "lib/jxl/enc_adaptive_quantization.h"
@@ -49,6 +50,7 @@
 #include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
@@ -203,9 +205,9 @@ Status FindBestDequantMatrices(JxlMemoryManager* memory_manager,
   // TODO(veluca): quant matrices for no-gaborish.
   // TODO(veluca): heuristics for in-bitstream quant tables.
   *dequant_matrices = DequantMatrices();
-  if (cparams.max_error_mode || cparams.disable_percepeptual_optimizations) {
+  if (cparams.max_error_mode || cparams.disable_perceptual_optimizations) {
     constexpr float kMSEWeights[3] = {0.001, 0.001, 0.001};
-    const float* wp = cparams.disable_percepeptual_optimizations
+    const float* wp = cparams.disable_perceptual_optimizations
                           ? kMSEWeights
                           : cparams.max_error;
     // Set numerators of all quantization matrices to constant values.
@@ -772,6 +774,12 @@ StatusOr<Image3F> ReconstructImage(
                           FrameHeader::kSplines);
   frame_header.color_transform = ColorTransform::kNone;
 
+  CodecMetadata metadata = *frame_header.nonserialized_metadata;
+  metadata.m.extra_channel_info.clear();
+  metadata.m.num_extra_channels = metadata.m.extra_channel_info.size();
+  frame_header.nonserialized_metadata = &metadata;
+  frame_header.extra_channel_upsampling.clear();
+
   const bool is_gray = shared.metadata->m.color_encoding.IsGray();
   PassesDecoderState dec_state(memory_manager);
   JXL_RETURN_IF_ERROR(
@@ -819,6 +827,10 @@ StatusOr<Image3F> ReconstructImage(
     JXL_CHECK(DecodeGroupForRoundtrip(frame_header, coeffs, group_index,
                                       &dec_state, &group_dec_caches[thread],
                                       thread, input, nullptr, nullptr));
+    if ((frame_header.flags & FrameHeader::kNoise) != 0) {
+      PrepareNoiseInput(dec_state, shared.frame_dim, frame_header, group_index,
+                        thread);
+    }
     if (!input.Done()) {
       has_error = true;
       return;
@@ -999,7 +1011,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
       image_features.splines = FindSplines(*opsin);
     }
     JXL_RETURN_IF_ERROR(image_features.splines.InitializeDrawCache(
-        opsin->xsize(), opsin->ysize(), cmap));
+        opsin->xsize(), opsin->ysize(), cmap.base()));
     image_features.splines.SubtractFrom(opsin);
   }
 
@@ -1043,7 +1055,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
   // on simple heuristics in FindBestAcStrategy, or set a constant for Falcon
   // mode.
   if (cparams.speed_tier > SpeedTier::kHare ||
-      cparams.disable_percepeptual_optimizations) {
+      cparams.disable_perceptual_optimizations) {
     JXL_ASSIGN_OR_RETURN(initial_quant_field,
                          ImageF::Create(memory_manager, frame_dim.xsize_blocks,
                                         frame_dim.ysize_blocks));
@@ -1054,7 +1066,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
     FillImage(q, &initial_quant_field);
     float masking = 1.0f / (q + 0.001f);
     FillImage(masking, &initial_quant_masking);
-    if (cparams.disable_percepeptual_optimizations) {
+    if (cparams.disable_perceptual_optimizations) {
       JXL_ASSIGN_OR_RETURN(
           initial_quant_masking1x1,
           ImageF::Create(memory_manager, frame_dim.xsize, frame_dim.ysize));
@@ -1065,7 +1077,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
     // Call this here, as it relies on pre-gaborish values.
     float butteraugli_distance_for_iqf = cparams.butteraugli_distance;
     if (!frame_header.loop_filter.gab) {
-      butteraugli_distance_for_iqf *= 0.73f;
+      butteraugli_distance_for_iqf *= 0.62f;
     }
     JXL_ASSIGN_OR_RETURN(
         initial_quant_field,
@@ -1080,11 +1092,12 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
 
   // Apply inverse-gaborish.
   if (frame_header.loop_filter.gab) {
-    // Unsure why better to do some more gaborish on X and B than Y.
+    // Changing the weight here to 0.99f would help to reduce ringing in
+    // generation loss.
     float weight[3] = {
-        1.0036278514398933f,
-        0.99406123118127299f,
-        0.99719338015886894f,
+        1.0f,
+        1.0f,
+        1.0f,
     };
     JXL_RETURN_IF_ERROR(GaborishInverse(opsin, rect, weight, pool));
   }
@@ -1152,7 +1165,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
   JXL_RETURN_IF_ERROR(acs_heuristics.Finalize(frame_dim, ac_strategy, aux_out));
 
   // Refine quantization levels.
-  if (!streaming_mode && !cparams.disable_percepeptual_optimizations) {
+  if (!streaming_mode && !cparams.disable_perceptual_optimizations) {
     ImageB& epf_sharpness = shared.epf_sharpness;
     FillPlane(static_cast<uint8_t>(4), &epf_sharpness, Rect(epf_sharpness));
     JXL_RETURN_IF_ERROR(FindBestQuantizer(frame_header, linear, *opsin,

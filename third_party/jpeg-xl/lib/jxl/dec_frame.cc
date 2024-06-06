@@ -272,7 +272,7 @@ Status FrameDecoder::ProcessDCGlobal(BitReader* br) {
     bool uses_extra_channels = false;
     JXL_RETURN_IF_ERROR(shared.image_features.patches.Decode(
         memory_manager, br, frame_dim_.xsize_padded, frame_dim_.ysize_padded,
-        &uses_extra_channels));
+        shared.metadata->m.num_extra_channels, &uses_extra_channels));
     if (uses_extra_channels && frame_header_.upsampling != 1) {
       for (size_t ecups : frame_header_.extra_channel_upsampling) {
         if (ecups != frame_header_.upsampling) {
@@ -303,7 +303,7 @@ Status FrameDecoder::ProcessDCGlobal(BitReader* br) {
   if (frame_header_.flags & FrameHeader::kSplines) {
     JXL_RETURN_IF_ERROR(shared.image_features.splines.InitializeDrawCache(
         frame_dim_.xsize_upsampled, frame_dim_.ysize_upsampled,
-        dec_state_->shared->cmap));
+        dec_state_->shared->cmap.base()));
   }
   Status dec_status = modular_frame_decoder_.DecodeGlobalInfo(
       br, frame_header_, /*allow_truncated_group=*/false);
@@ -538,29 +538,8 @@ Status FrameDecoder::ProcessACGroup(size_t ac_group_id,
   decoded_passes_per_ac_group_[ac_group_id] += num_passes;
 
   if ((frame_header_.flags & FrameHeader::kNoise) != 0) {
-    size_t noise_c_start =
-        3 + frame_header_.nonserialized_metadata->m.num_extra_channels;
-    // When the color channels are downsampled, we need to generate more noise
-    // input for the current group than just the group dimensions.
-    std::pair<ImageF*, Rect> rects[3];
-    for (size_t iy = 0; iy < frame_header_.upsampling; iy++) {
-      for (size_t ix = 0; ix < frame_header_.upsampling; ix++) {
-        for (size_t c = 0; c < 3; c++) {
-          auto r = render_pipeline_input.GetBuffer(noise_c_start + c);
-          rects[c].first = r.first;
-          size_t x1 = r.second.x0() + r.second.xsize();
-          size_t y1 = r.second.y0() + r.second.ysize();
-          rects[c].second = Rect(r.second.x0() + ix * group_dim,
-                                 r.second.y0() + iy * group_dim, group_dim,
-                                 group_dim, x1, y1);
-        }
-        Random3Planes(dec_state_->visible_frame_index,
-                      dec_state_->nonvisible_frame_index,
-                      (gx * frame_header_.upsampling + ix) * group_dim,
-                      (gy * frame_header_.upsampling + iy) * group_dim,
-                      rects[0], rects[1], rects[2]);
-      }
-    }
+    PrepareNoiseInput(*dec_state_, frame_dim_, frame_header_, ac_group_id,
+                      thread);
   }
 
   if (!modular_frame_decoder_.UsesFullImage() && !decoded_->IsJPEG()) {

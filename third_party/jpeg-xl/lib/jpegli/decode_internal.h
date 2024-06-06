@@ -80,7 +80,7 @@ struct jpeg_decomp_master {
   int h_factor[jpegli::kMaxComponents];
   int v_factor[jpegli::kMaxComponents];
 
-  // Initialized at strat of frame.
+  // Initialized at start of frame.
   uint16_t scan_progression_[jpegli::kMaxComponents][DCTSIZE2];
 
   //

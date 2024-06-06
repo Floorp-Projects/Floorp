@@ -16,7 +16,7 @@
 #include <jxl/jxl_export.h>
 #include <stddef.h>
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -94,7 +94,7 @@ JXL_EXPORT size_t JxlEncoderStatsGet(const JxlEncoderStats* stats,
 JXL_EXPORT void JxlEncoderStatsMerge(JxlEncoderStats* stats,
                                      const JxlEncoderStats* other);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }
 #endif
 

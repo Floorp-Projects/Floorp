@@ -8,6 +8,7 @@
 #include <cmath>
 
 #include "lib/jpegli/decode_internal.h"
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 
 #undef HWY_TARGET_INCLUDE
@@ -62,15 +63,15 @@ void DequantBlock(const int16_t* JXL_RESTRICT qblock,
 }
 
 template <size_t N>
-void ForwardEvenOdd(const float* JXL_RESTRICT ain, size_t ain_stride,
-                    float* JXL_RESTRICT aout) {
+void ForwardEvenOdd(const float* JXL_RESTRICT a_in, size_t a_in_stride,
+                    float* JXL_RESTRICT a_out) {
   for (size_t i = 0; i < N / 2; i++) {
-    auto in1 = LoadU(d8, ain + 2 * i * ain_stride);
-    Store(in1, d8, aout + i * 8);
+    auto in1 = LoadU(d8, a_in + 2 * i * a_in_stride);
+    Store(in1, d8, a_out + i * 8);
   }
   for (size_t i = N / 2; i < N; i++) {
-    auto in1 = LoadU(d8, ain + (2 * (i - N / 2) + 1) * ain_stride);
-    Store(in1, d8, aout + i * 8);
+    auto in1 = LoadU(d8, a_in + (2 * (i - N / 2) + 1) * a_in_stride);
+    Store(in1, d8, a_out + i * 8);
   }
 }
 
@@ -111,8 +112,10 @@ struct WcMultipliers<8> {
   };
 };
 
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr float WcMultipliers<4>::kMultipliers[];
 constexpr float WcMultipliers<8>::kMultipliers[];
+#endif
 
 template <size_t N>
 void MultiplyAndAdd(const float* JXL_RESTRICT coeff, float* JXL_RESTRICT out,

@@ -17,6 +17,7 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_context_map.h"
 #include "lib/jxl/fields.h"
+#include "lib/jxl/memory_manager_internal.h"
 
 namespace jxl {
 namespace {
@@ -225,9 +226,10 @@ Status DecodeANSCodes(JxlMemoryManager* memory_manager,
     JXL_ASSERT(max_alphabet_size <= ANS_MAX_ALPHABET_SIZE);
     size_t alloc_size = num_histograms * (1 << result->log_alpha_size) *
                         sizeof(AliasTable::Entry);
-    result->alias_tables = AllocateArray(alloc_size);
+    JXL_ASSIGN_OR_RETURN(result->alias_tables,
+                         AlignedMemory::Create(memory_manager, alloc_size));
     AliasTable::Entry* alias_tables =
-        reinterpret_cast<AliasTable::Entry*>(result->alias_tables.get());
+        result->alias_tables.address<AliasTable::Entry>();
     for (size_t c = 0; c < num_histograms; ++c) {
       std::vector<int32_t> counts;
       if (!ReadHistogram(ANS_LOG_TAB_SIZE, &counts, in)) {
@@ -368,17 +370,26 @@ Status DecodeHistograms(JxlMemoryManager* memory_manager, BitReader* br,
 StatusOr<ANSSymbolReader> ANSSymbolReader::Create(const ANSCode* code,
                                                   BitReader* JXL_RESTRICT br,
                                                   size_t distance_multiplier) {
-  return ANSSymbolReader(code, br, distance_multiplier);
+  AlignedMemory lz77_window_storage;
+  if (code->lz77.enabled) {
+    JxlMemoryManager* memory_manager = code->memory_manager;
+    JXL_ASSIGN_OR_RETURN(
+        lz77_window_storage,
+        AlignedMemory::Create(memory_manager, kWindowSize * sizeof(uint32_t)));
+  }
+  return ANSSymbolReader(code, br, distance_multiplier,
+                         std::move(lz77_window_storage));
 }
 
 ANSSymbolReader::ANSSymbolReader(const ANSCode* code,
                                  BitReader* JXL_RESTRICT br,
-                                 size_t distance_multiplier)
-    : alias_tables_(
-          reinterpret_cast<AliasTable::Entry*>(code->alias_tables.get())),
+                                 size_t distance_multiplier,
+                                 AlignedMemory&& lz77_window_storage)
+    : alias_tables_(code->alias_tables.address<AliasTable::Entry>()),
       huffman_data_(code->huffman_data.data()),
       use_prefix_code_(code->use_prefix_code),
-      configs(code->uint_config.data()) {
+      configs(code->uint_config.data()),
+      lz77_window_storage_(std::move(lz77_window_storage)) {
   if (!use_prefix_code_) {
     state_ = static_cast<uint32_t>(br->ReadFixedBits<32>());
     log_alpha_size_ = code->log_alpha_size;
@@ -388,8 +399,7 @@ ANSSymbolReader::ANSSymbolReader(const ANSCode* code,
     state_ = (ANS_SIGNATURE << 16u);
   }
   if (!code->lz77.enabled) return;
-  lz77_window_storage_ = AllocateArray(kWindowSize * sizeof(uint32_t));
-  lz77_window_ = reinterpret_cast<uint32_t*>(lz77_window_storage_.get());
+  lz77_window_ = lz77_window_storage_.address<uint32_t>();
   lz77_ctx_ = code->lz77.nonserialized_distance_context;
   lz77_length_uint_ = code->lz77.length_uint_config;
   lz77_threshold_ = code->lz77.min_symbol;

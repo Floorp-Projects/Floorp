@@ -3,7 +3,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jxl/test_utils.h"
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/fast_math_test.cc"
 #include <jxl/cms.h>
@@ -14,6 +13,7 @@
 #include "lib/jxl/cms/transfer_functions-inl.h"
 #include "lib/jxl/dec_xyb-inl.h"
 #include "lib/jxl/enc_xyb.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/testing.h"
 
 // Test utils

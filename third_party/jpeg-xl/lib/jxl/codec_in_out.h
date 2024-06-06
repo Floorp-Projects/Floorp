@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/headers.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -27,6 +28,7 @@ namespace jxl {
 struct Blobs {
   std::vector<uint8_t> exif;
   std::vector<uint8_t> iptc;
+  std::vector<uint8_t> jhgm;
   std::vector<uint8_t> jumbf;
   std::vector<uint8_t> xmp;
 };

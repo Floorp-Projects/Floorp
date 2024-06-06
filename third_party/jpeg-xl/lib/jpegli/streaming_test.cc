@@ -128,26 +128,26 @@ TEST_P(StreamingTestParam, TestStreaming) {
     size_t stride = cinfo.image_width * cinfo.input_components;
     size_t iMCU_height = 8 * cinfo.max_v_samp_factor;
     std::vector<uint8_t> row_bytes(iMCU_height * stride);
-    size_t yin = 0;
-    size_t yout = 0;
-    while (yin < cinfo.image_height) {
+    size_t y_in = 0;
+    size_t y_out = 0;
+    while (y_in < cinfo.image_height) {
       // Feed one iMCU row at a time to the compressor.
-      size_t lines_in = std::min(iMCU_height, cinfo.image_height - yin);
-      memcpy(row_bytes.data(), &input.pixels[yin * stride], lines_in * stride);
+      size_t lines_in = std::min(iMCU_height, cinfo.image_height - y_in);
+      memcpy(row_bytes.data(), &input.pixels[y_in * stride], lines_in * stride);
       std::vector<JSAMPROW> rows_in(lines_in);
       for (size_t i = 0; i < lines_in; ++i) {
         rows_in[i] = &row_bytes[i * stride];
       }
       EXPECT_EQ(lines_in,
                 jpegli_write_scanlines(&cinfo, rows_in.data(), lines_in));
-      yin += lines_in;
-      if (yin == cinfo.image_height) {
+      y_in += lines_in;
+      if (y_in == cinfo.image_height) {
         jpegli_finish_compress(&cinfo);
       }
 
       // Atfer the first iMCU row, we don't yet expect any output because the
       // compressor delays processing to have context rows after the iMCU row.
-      if (yin < std::min<size_t>(2 * iMCU_height, cinfo.image_height)) {
+      if (y_in < std::min<size_t>(2 * iMCU_height, cinfo.image_height)) {
         continue;
       }
 
@@ -155,7 +155,7 @@ TEST_P(StreamingTestParam, TestStreaming) {
       // data. We check here that at least the scan header was output, because
       // we expect that the compressor's output buffer was filled at least once
       // while emitting the first compressed iMCU row.
-      if (yin == std::min<size_t>(2 * iMCU_height, cinfo.image_height)) {
+      if (y_in == std::min<size_t>(2 * iMCU_height, cinfo.image_height)) {
         EXPECT_EQ(JPEG_REACHED_SOS,
                   jpegli_read_header(&dinfo, /*require_image=*/TRUE));
         output.xsize = dinfo.image_width;
@@ -166,7 +166,7 @@ TEST_P(StreamingTestParam, TestStreaming) {
         EXPECT_EQ(output.components, input.components);
         EXPECT_TRUE(jpegli_start_decompress(&dinfo));
         output.pixels.resize(output.ysize * stride);
-        if (yin < cinfo.image_height) {
+        if (y_in < cinfo.image_height) {
           continue;
         }
       }
@@ -176,7 +176,7 @@ TEST_P(StreamingTestParam, TestStreaming) {
       // data to be in the decoder's input buffer, but since the decoder also
       // needs context rows for upsampling and smoothing, we don't expect any
       // output to be ready yet.
-      if (yin < 7 * iMCU_height && yin < cinfo.image_height) {
+      if (y_in < 7 * iMCU_height && y_in < cinfo.image_height) {
         continue;
       }
 
@@ -184,18 +184,19 @@ TEST_P(StreamingTestParam, TestStreaming) {
       // with four iMCU rows of delay.
       // TODO(szabadka) Reduce the processing delay in the decoder if possible.
       size_t lines_out =
-          (yin == cinfo.image_height ? cinfo.image_height - yout : iMCU_height);
+          (y_in == cinfo.image_height ? cinfo.image_height - y_out
+                                      : iMCU_height);
       std::vector<JSAMPROW> rows_out(lines_out);
       for (size_t i = 0; i < lines_out; ++i) {
         rows_out[i] =
-            reinterpret_cast<JSAMPLE*>(&output.pixels[(yout + i) * stride]);
+            reinterpret_cast<JSAMPLE*>(&output.pixels[(y_out + i) * stride]);
       }
       EXPECT_EQ(lines_out,
                 jpegli_read_scanlines(&dinfo, rows_out.data(), lines_out));
-      VerifyOutputImage(input, output, yout, lines_out, 3.8f);
-      yout += lines_out;
+      VerifyOutputImage(input, output, y_out, lines_out, 3.8f);
+      y_out += lines_out;
 
-      if (yout == cinfo.image_height) {
+      if (y_out == cinfo.image_height) {
         EXPECT_TRUE(jpegli_finish_decompress(&dinfo));
       }
     }

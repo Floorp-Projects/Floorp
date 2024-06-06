@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 
+#include "lib/jxl/base/common.h"
+
 namespace jxl {
 namespace jpeg {
 
@@ -48,14 +50,14 @@ struct OutputChunk {
 
   // Owning
   explicit OutputChunk(size_t size = 0) {
-    buffer.reset(new std::vector<uint8_t>(size));
+    buffer = jxl::make_unique<std::vector<uint8_t>>(size);
     next = buffer->data();
     len = size;
   }
 
   // Owning
   OutputChunk(std::initializer_list<uint8_t> bytes) {
-    buffer.reset(new std::vector<uint8_t>(bytes));
+    buffer = jxl::make_unique<std::vector<uint8_t>>(bytes);
     next = buffer->data();
     len = bytes.size();
   }

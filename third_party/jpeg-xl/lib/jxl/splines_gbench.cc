@@ -17,9 +17,9 @@ namespace jxl {
 namespace {
 
 constexpr int kQuantizationAdjustment = 0;
-const ColorCorrelationMap* const cmap = new ColorCorrelationMap;
-const float kYToX = cmap->YtoXRatio(0);
-const float kYToB = cmap->YtoBRatio(0);
+const ColorCorrelation color_correlation{};
+const float kYToX = color_correlation.YtoXRatio(0);
+const float kYToB = color_correlation.YtoBRatio(0);
 
 void BM_Splines(benchmark::State& state) {
   const size_t n = state.range();
@@ -47,9 +47,10 @@ void BM_Splines(benchmark::State& state) {
       Image3F::Create(jpegxl::tools::NoMemoryManager(), 320, 320));
   ZeroFillImage(&drawing_area);
   for (auto _ : state) {
+    (void)_;
     for (size_t i = 0; i < n; ++i) {
-      JXL_CHECK(splines.InitializeDrawCache(drawing_area.xsize(),
-                                            drawing_area.ysize(), *cmap));
+      JXL_CHECK(splines.InitializeDrawCache(
+          drawing_area.xsize(), drawing_area.ysize(), color_correlation));
       splines.AddTo(&drawing_area, Rect(drawing_area), Rect(drawing_area));
     }
   }

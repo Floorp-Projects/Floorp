@@ -12,12 +12,10 @@
 #include <cstdint>
 #include <vector>
 
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
 
 namespace jxl {
-
-// Context map uses uint8_t.
-constexpr size_t kMaxClusters = 256;
 
 // Reads the context map from the bit stream. On calling this function,
 // context_map->size() must be the number of possible context ids.

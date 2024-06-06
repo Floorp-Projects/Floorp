@@ -23,12 +23,14 @@
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
+#include "lib/jxl/common.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_splines.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
@@ -48,9 +50,9 @@ namespace {
 using test::ReadTestData;
 
 constexpr int kQuantizationAdjustment = 0;
-const ColorCorrelationMap* const cmap = new ColorCorrelationMap;
-const float kYToX = cmap->YtoXRatio(0);
-const float kYToB = cmap->YtoBRatio(0);
+const ColorCorrelation color_correlation{};
+const float kYToX = color_correlation.YtoXRatio(0);
+const float kYToB = color_correlation.YtoBRatio(0);
 
 constexpr float kTolerance = 0.003125;
 
@@ -271,8 +273,8 @@ TEST(SplinesTest, DuplicatePoints) {
 
   JXL_ASSIGN_OR_DIE(Image3F image, Image3F::Create(memory_manager, 320, 320));
   ZeroFillImage(&image);
-  EXPECT_FALSE(
-      splines.InitializeDrawCache(image.xsize(), image.ysize(), *cmap));
+  EXPECT_FALSE(splines.InitializeDrawCache(image.xsize(), image.ysize(),
+                                           color_correlation));
 }
 
 TEST(SplinesTest, Drawing) {
@@ -308,7 +310,8 @@ TEST(SplinesTest, Drawing) {
 
   JXL_ASSIGN_OR_DIE(Image3F image, Image3F::Create(memory_manager, 320, 320));
   ZeroFillImage(&image);
-  ASSERT_TRUE(splines.InitializeDrawCache(image.xsize(), image.ysize(), *cmap));
+  ASSERT_TRUE(splines.InitializeDrawCache(image.xsize(), image.ysize(),
+                                          color_correlation));
   splines.AddTo(&image, Rect(image), Rect(image));
 
   CodecInOut io_actual{memory_manager};

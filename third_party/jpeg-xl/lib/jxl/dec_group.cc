@@ -11,6 +11,7 @@
 #include <memory>
 #include <utility>
 
+#include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/frame_header.h"
 
 #undef HWY_TARGET_INCLUDE
@@ -209,8 +210,9 @@ Status DecodeGroupImpl(const FrameHeader& frame_header,
   std::array<int, 3> dcoff = {};
 
   // TODO(veluca): all of this should be done only once per image.
+  const ColorCorrelation& color_correlation = dec_state->shared->cmap.base();
   if (jpeg_data) {
-    if (!dec_state->shared->cmap.IsJPEGCompatible()) {
+    if (!color_correlation.IsJPEGCompatible()) {
       return JXL_FAILURE("The CfL map is not JPEG-compatible");
     }
     jpeg_is_gray = (jpeg_data->components.size() == 1);
@@ -292,10 +294,8 @@ Status DecodeGroupImpl(const FrameHeader& frame_header,
     for (size_t tx = 0; tx < DivCeil(xsize_blocks, kColorTileDimInBlocks);
          tx++) {
       size_t abs_tx = tx + block_rect.x0() / kColorTileDimInBlocks;
-      auto x_cc_mul =
-          Set(d, dec_state->shared->cmap.YtoXRatio(row_cmap[0][abs_tx]));
-      auto b_cc_mul =
-          Set(d, dec_state->shared->cmap.YtoBRatio(row_cmap[2][abs_tx]));
+      auto x_cc_mul = Set(d, color_correlation.YtoXRatio(row_cmap[0][abs_tx]));
+      auto b_cc_mul = Set(d, color_correlation.YtoBRatio(row_cmap[2][abs_tx]));
       // Increment bx by llf_x because those iterations would otherwise
       // immediately continue (!IsFirstBlock). Reduces mispredictions.
       for (; bx < xsize_blocks && bx < (tx + 1) * kColorTileDimInBlocks;) {
@@ -382,8 +382,8 @@ Status DecodeGroupImpl(const FrameHeader& frame_header,
               }
             } else {
               // transposed_dct_y contains the y channel block, transposed.
-              const auto scale = Set(
-                  di, dec_state->shared->cmap.RatioJPEG(row_cmap[c][abs_tx]));
+              const auto scale =
+                  Set(di, ColorCorrelation::RatioJPEG(row_cmap[c][abs_tx]));
               const auto round = Set(di, 1 << (kCFLFixedPointPrecision - 1));
               for (int i = 0; i < 64; i += Lanes(d)) {
                 auto in = Load(di, transposed_dct + i);

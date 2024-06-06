@@ -13,6 +13,7 @@
 
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/field_encodings.h"
 

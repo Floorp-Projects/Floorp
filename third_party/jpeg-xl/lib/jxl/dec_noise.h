@@ -9,20 +9,20 @@
 // Noise synthesis. Currently disabled.
 
 #include <cstddef>
-#include <utility>
 
-#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/image.h"
+#include "lib/jxl/dec_cache.h"
+#include "lib/jxl/frame_dimensions.h"
+#include "lib/jxl/frame_header.h"
 #include "lib/jxl/noise.h"
 
 namespace jxl {
 
-void Random3Planes(size_t visible_frame_index, size_t nonvisible_frame_index,
-                   size_t x0, size_t y0, const std::pair<ImageF*, Rect>& plane0,
-                   const std::pair<ImageF*, Rect>& plane1,
-                   const std::pair<ImageF*, Rect>& plane2);
+void PrepareNoiseInput(const PassesDecoderState& dec_state,
+                       const FrameDimensions& frame_dim,
+                       const FrameHeader& frame_header, size_t group_index,
+                       size_t thread);
 
 // Must only call if FrameHeader.flags.kNoise.
 Status DecodeNoise(BitReader* br, NoiseParams* noise_params);

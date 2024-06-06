@@ -11,39 +11,14 @@
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
-#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/cache_aligned.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/test_utils.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
-
-// Ensure entire payload is readable/writable for various size/offset combos.
-TEST(ImageTest, TestAllocator) {
-  Rng rng(0);
-  const size_t k32 = 32;
-  const size_t kAlign = CacheAligned::kAlignment;
-  for (size_t size : {k32 * 1, k32 * 2, k32 * 3, k32 * 4, k32 * 5,
-                      CacheAligned::kAlias, 2 * CacheAligned::kAlias + 4}) {
-    for (size_t offset = 0; offset <= CacheAligned::kAlias; offset += kAlign) {
-      uint8_t* bytes =
-          static_cast<uint8_t*>(CacheAligned::Allocate(size, offset));
-      JXL_CHECK(reinterpret_cast<uintptr_t>(bytes) % kAlign == 0);
-      // Ensure we can write/read the last byte. Use RNG to fool the compiler
-      // into thinking the write is necessary.
-      memset(bytes, 0, size);
-      bytes[size - 1] = 1;                       // greatest element
-      uint32_t pos = rng.UniformU(0, size - 1);  // random but != greatest
-      JXL_CHECK(bytes[pos] < bytes[size - 1]);
-
-      CacheAligned::Free(bytes);
-    }
-  }
-}
 
 template <typename T>
 void TestFillImpl(Image3<T>* img, const char* layout) {
