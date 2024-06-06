@@ -147,7 +147,7 @@ export class BackupService extends EventTarget {
    * 2. null - encryption is not enabled.
    * 3. ArchiveEncryptionState - encryption is enabled.
    *
-   * @see BackupService.loadEncryptionState();
+   * @see BackupService.loadEncryptionState()
    * @type {ArchiveEncryptionState|null|undefined}
    */
   #encState = undefined;
