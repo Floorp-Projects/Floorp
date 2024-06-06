@@ -19,7 +19,7 @@ object FenixProductDetector {
     fun getInstalledFenixVersions(context: Context): List<String> {
         val fenixVersions = mutableListOf<String>()
 
-        for (product in FenixVersion.values()) {
+        for (product in FenixVersion.entries) {
             if (packageIsInstalled(context, product.packageName)) {
                 fenixVersions.add(product.packageName)
             }
@@ -31,7 +31,7 @@ object FenixProductDetector {
     fun isFenixDefaultBrowser(defaultBrowser: ActivityInfo?): Boolean {
         if (defaultBrowser == null) return false
 
-        for (product in FenixVersion.values()) {
+        for (product in FenixVersion.entries) {
             if (product.packageName == defaultBrowser.packageName) return true
         }
         return false
