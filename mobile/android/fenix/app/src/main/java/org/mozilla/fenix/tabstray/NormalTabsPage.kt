@@ -42,11 +42,21 @@ internal fun NormalTabsPage(
     onInactiveTabsCFRClick: () -> Unit,
     onInactiveTabsCFRDismiss: () -> Unit,
 ) {
-    val inactiveTabsExpanded by appStore.observeAsState(false) { state -> state.inactiveTabsExpanded }
-    val selectedTabId by browserStore.observeAsState(null) { state -> state.selectedTabId }
-    val normalTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.normalTabs }
-    val inactiveTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.inactiveTabs }
-    val selectionMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
+    val inactiveTabsExpanded by appStore.observeAsState(
+        initialValue = appStore.state.inactiveTabsExpanded,
+    ) { state -> state.inactiveTabsExpanded }
+    val selectedTabId by browserStore.observeAsState(
+        initialValue = browserStore.state.selectedTabId,
+    ) { state -> state.selectedTabId }
+    val normalTabs by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.normalTabs,
+    ) { state -> state.normalTabs }
+    val inactiveTabs by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.inactiveTabs,
+    ) { state -> state.inactiveTabs }
+    val selectionMode by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.mode,
+    ) { state -> state.mode }
 
     if (normalTabs.isNotEmpty() || inactiveTabs.isNotEmpty()) {
         val showInactiveTabsAutoCloseDialog =

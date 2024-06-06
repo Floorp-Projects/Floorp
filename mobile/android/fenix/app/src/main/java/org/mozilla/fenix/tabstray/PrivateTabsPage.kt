@@ -24,9 +24,15 @@ internal fun PrivateTabsPage(
     onTabLongClick: (TabSessionState) -> Unit,
     onMove: (String, String?, Boolean) -> Unit,
 ) {
-    val selectedTabId by browserStore.observeAsState(null) { state -> state.selectedTabId }
-    val privateTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.privateTabs }
-    val selectionMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
+    val selectedTabId by browserStore.observeAsState(
+        initialValue = browserStore.state.selectedTabId,
+    ) { state -> state.selectedTabId }
+    val privateTabs by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.privateTabs,
+    ) { state -> state.privateTabs }
+    val selectionMode by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.mode,
+    ) { state -> state.mode }
 
     if (privateTabs.isNotEmpty()) {
         TabLayout(
