@@ -10,6 +10,7 @@
 #include "CamerasTypes.h"
 #include "MediaEngineSource.h"
 #include "PerformanceRecorder.h"
+#include "VideoEngine.h"
 #include "VideoFrameUtils.h"
 
 #include "common/browser_logging/WebRtcLog.h"
@@ -32,6 +33,7 @@
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "video_engine/desktop_capture_impl.h"
 #include "video_engine/video_capture_factory.h"
 
 #include "api/video/video_frame_buffer.h"
@@ -249,7 +251,7 @@ class DeliverFrameRunnable : public mozilla::Runnable {
         mTrackingId(aTrackingId),
         mBuffer(std::move(aBuffer)),
         mProperties(aProperties),
-        mResult(0){};
+        mResult(0) {};
 
   NS_IMETHOD Run() override {
     // runs on BackgroundEventTarget
@@ -329,6 +331,14 @@ int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine,
 
 ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
   return mShmemPool.GetIfAvailable(aSize);
+}
+
+void CallbackHelper::OnCaptureEnded() {
+  nsIEventTarget* target = mParent->GetBackgroundEventTarget();
+
+  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewRunnableFunction(__func__, [&] {
+    Unused << mParent->SendCaptureEnded(mCapEngine, mStreamId);
+  })));
 }
 
 void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
@@ -1003,6 +1013,13 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
                 cap.VideoCapture()->RegisterCaptureDataCallback(
                     static_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(
                         *cbh));
+                if (auto* event = cap.CaptureEndedEvent();
+                    event && !(*cbh)->mConnectedToCaptureEnded) {
+                  (*cbh)->mCaptureEndedListener =
+                      event->Connect(mVideoCaptureThread, (*cbh),
+                                     &CallbackHelper::OnCaptureEnded);
+                  (*cbh)->mConnectedToCaptureEnded = true;
+                }
               } else {
                 sDeviceUniqueIDs.erase(aCaptureId);
                 sAllRequestedCapabilities.erase(aCaptureId);
@@ -1095,7 +1112,7 @@ void CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
             sAllRequestedCapabilities.erase(aCaptureId);
           }
         });
-
+        cbh->mCaptureEndedListener.DisconnectIfExists();
         delete mCallbacks[i - 1];
         mCallbacks.RemoveElementAt(i - 1);
         break;

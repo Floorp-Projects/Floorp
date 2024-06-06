@@ -8,6 +8,7 @@ include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/dom/media/gmp",  # for GMPLog.h,
+    "/dom/media/systemservices",
     "/dom/media/webrtc",
     "/ipc/chromium/src",
     "/media/libyuv/libyuv/include",
