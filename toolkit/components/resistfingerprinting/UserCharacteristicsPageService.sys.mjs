@@ -192,6 +192,9 @@ export class UserCharacteristicsPageService {
         }
 
         Glean.characteristics.zoomCount.set(await this.populateZoomPrefs());
+        Glean.characteristics.pixelRatio.set(
+          await this.populateDevicePixelRatio(browser.ownerGlobal)
+        );
 
         try {
           Glean.characteristics.canvasdata1.set(data.output.canvas1data);
@@ -252,6 +255,12 @@ export class UserCharacteristicsPageService {
     });
 
     return zoomPrefsCount;
+  }
+
+  async populateDevicePixelRatio(window) {
+    return (
+      (window.browsingContext.overrideDPPX || window.devicePixelRatio) * 100
+    );
   }
 
   async pageLoaded(browsingContext, data) {
