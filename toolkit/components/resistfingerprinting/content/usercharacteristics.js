@@ -660,6 +660,95 @@ function populateVoiceList() {
   };
 }
 
+function populateMediaCapabilities() {
+  // Decoding: MP4 and WEBM are PDM dependant, while the other types are not, so for MP4 and WEBM we manually check for mimetypes.
+  // We also don't make an extra check for media-source as both file and media-source end up calling the same code path except for
+  // some prefs that block some mime types but we collect them.
+  // Encoding: It isn't dependant on hardware, so we just skip it, but collect media.encoder.webm.enabled pref.
+  const mimeTypes = {
+    audio: [
+      // WEBM
+      "audio/webm; codecs=vorbis",
+      "audio/webm; codecs=opus",
+      // MP4
+      "audio/mp4; codecs=mp4a.40.2",
+      "audio/mp4; codecs=mp3",
+      "audio/mp4; codecs=opus",
+      "audio/mp4; codecs=flac",
+    ],
+    video: [
+      // WEBM
+      "video/webm; codecs=vp9",
+      "video/webm; codecs=vp8",
+      "video/webm; codecs=av1",
+      // MP4
+      "video/mp4; codecs=vp9",
+      "video/mp4; codecs=vp8",
+      "video/mp4; codecs=hev1.1.6.L123.B0",
+      "video/mp4; codecs=avc1.64001F",
+    ],
+  };
+
+  const audioConfig = {
+    type: "file",
+    audio: {
+      channels: 2,
+      bitrate: 64000,
+      samplerate: 44000,
+    },
+  };
+
+  const videoConfig = {
+    type: "file",
+    video: {
+      width: 1280,
+      height: 720,
+      bitrate: 10000,
+      framerate: 30,
+    },
+  };
+
+  async function getCapabilities() {
+    // Firefox reports all supported audio codecs as smooth and power efficient
+    // so we just check supported codecs for audio
+    const capabilities = {
+      unsupported: [],
+      videos: {},
+    };
+
+    for (const audioMime of mimeTypes.audio) {
+      audioConfig.audio.contentType = audioMime;
+      const capability = await navigator.mediaCapabilities.decodingInfo(
+        audioConfig
+      );
+      if (!capability.supported) {
+        capabilities.unsupported.push(audioMime);
+      }
+    }
+
+    for (const videoMime of mimeTypes.video) {
+      videoConfig.video.contentType = videoMime;
+      const capability = await navigator.mediaCapabilities.decodingInfo(
+        videoConfig
+      );
+      if (!capability.supported) {
+        capabilities.unsupported.push(videoMime);
+      } else {
+        capabilities.videos[videoMime] = {
+          smooth: capability.smooth,
+          powerEfficient: capability.powerEfficient,
+        };
+      }
+    }
+
+    return JSON.stringify(capabilities);
+  }
+
+  return {
+    mediaCapabilities: getCapabilities(),
+  };
+}
+
 // =======================================================================
 // Setup & Populating
 
@@ -681,6 +770,7 @@ const LocalFiraSans = new FontFace(
     ...populateWebGLCanvases(),
     ...populateFingerprintJSCanvases(),
     ...populateVoiceList(),
+    ...populateMediaCapabilities(),
   };
 
   debug("Awaiting", Object.keys(data).length, "data promises.");
