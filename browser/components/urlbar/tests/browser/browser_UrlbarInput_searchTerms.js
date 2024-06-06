@@ -12,7 +12,10 @@ const SEARCH_STRING = "chocolate cake";
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+    set: [
+      ["browser.urlbar.recentsearches.featureGate", false],
+      ["browser.urlbar.showSearchTerms.featureGate", true],
+    ],
   });
 
   await SearchTestUtils.installSearchExtension(

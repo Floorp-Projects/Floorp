@@ -295,7 +295,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["recentsearches.expirationMs", (1000 * 60 * 60 * 24 * 3).toString()],
 
   // Feature gate pref for recent searches being shown in the urlbar.
-  ["recentsearches.featureGate", false],
+  ["recentsearches.featureGate", true],
 
   // Store the time the last default engine changed so we can only show
   // recent searches since then.
@@ -450,7 +450,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["tipShownCount.searchTip_redirect", 0],
 
   // Feature gate pref for trending suggestions in the urlbar.
-  ["trending.featureGate", false],
+  ["trending.featureGate", true],
 
   // The maximum number of trending results to show while not in search mode.
   ["trending.maxResultsNoSearchMode", 10],
@@ -461,7 +461,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether to only show trending results when the urlbar is in search
   // mode or when the user initially opens the urlbar without selecting
   // an engine.
-  ["trending.requireSearchMode", true],
+  ["trending.requireSearchMode", false],
 
   // Remove 'https://' from url when urlbar is focused.
   ["trimHttps", true],
