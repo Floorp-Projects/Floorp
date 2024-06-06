@@ -302,7 +302,10 @@ $letter-fallback-color: $white;
 
     .icon {
       margin-inline-end: 2px;
-      fill: var(--newtab-text-primary-color);
+      fill: var(--newtab-contextual-text-primary-color);
+
+      // Contrast fix for users who have wallpapers set
+      @include wallpaper-contrast-fix;
     }
 
     span {
