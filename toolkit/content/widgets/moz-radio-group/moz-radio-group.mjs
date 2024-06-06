@@ -34,6 +34,7 @@ const NAVIGATION_DIRECTIONS = {
  * as a single form-control element.
  *
  * @tagname moz-radio-group
+ * @property {boolean} disabled - Whether or not the fieldset is disabled.
  * @property {string} label - Label for the group of moz-radio elements.
  * @property {string} name
  *  Input name of the radio group. Propagates to moz-radio children.
@@ -47,22 +48,23 @@ export class MozRadioGroup extends MozLitElement {
   #value;
 
   static properties = {
+    disabled: { type: Boolean, reflect: true },
     label: { type: String },
     name: { type: String },
   };
 
   static queries = {
     defaultSlot: "slot:not([name])",
+    fieldset: "fieldset",
     legend: "legend",
   };
 
   set value(newValue) {
     this.#value = newValue;
-    let focusableIndex = this.focusableIndex;
-    this.#radioButtons.forEach((button, index) => {
+    this.#radioButtons.forEach(button => {
       button.checked = this.value === button.value;
-      button.inputTabIndex = focusableIndex === index ? 0 : -1;
     });
+    this.syncFocusState();
   }
 
   get value() {
@@ -71,13 +73,16 @@ export class MozRadioGroup extends MozLitElement {
 
   get focusableIndex() {
     if (!this.#value) {
-      return 0;
+      return this.#radioButtons.findIndex(button => !button.disabled);
     }
-    return this.#radioButtons.findIndex(button => button.value === this.#value);
+    return this.#radioButtons.findIndex(
+      button => button.value === this.#value && !button.disabled
+    );
   }
 
   constructor() {
     super();
+    this.disabled = false;
     this.addEventListener("keydown", e => this.handleKeydown(e));
   }
 
@@ -100,12 +105,18 @@ export class MozRadioGroup extends MozLitElement {
       ?.assignedElements()
       .filter(el => el.localName === "moz-radio");
 
-    let focusableIndex = this.focusableIndex;
-    this.#radioButtons.forEach((button, index) => {
+    this.#radioButtons.forEach(button => {
       if (button.checked && this.value == undefined) {
         this.value = button.value;
       }
       button.name = this.name;
+    });
+    this.syncFocusState();
+  }
+
+  syncFocusState() {
+    let focusableIndex = this.focusableIndex;
+    this.#radioButtons.forEach((button, index) => {
       button.inputTabIndex = focusableIndex === index ? 0 : -1;
     });
   }
@@ -149,21 +160,27 @@ export class MozRadioGroup extends MozLitElement {
   }
 
   navigate(direction) {
-    let nextIndex = this.focusableIndex + NAVIGATION_VALUE[direction];
+    let currentIndex = this.focusableIndex;
+    let indexStep = this.#radioButtons.length + NAVIGATION_VALUE[direction];
 
-    if (nextIndex < 0) {
-      nextIndex = this.#radioButtons.length - 1;
-    } else if (nextIndex >= this.#radioButtons.length) {
-      nextIndex = 0;
+    for (let i = 1; i < this.#radioButtons.length; i++) {
+      let nextIndex =
+        (currentIndex + indexStep * i) % this.#radioButtons.length;
+      if (!this.#radioButtons[nextIndex].disabled) {
+        this.#radioButtons[nextIndex].click();
+        return;
+      }
     }
-
-    let nextButton = this.#radioButtons[nextIndex];
-    nextButton.click();
   }
 
   willUpdate(changedProperties) {
     if (changedProperties.has("name")) {
       this.handleSetName();
+    }
+    if (changedProperties.has("disabled")) {
+      this.#radioButtons.forEach(button => {
+        button.requestUpdate();
+      });
     }
   }
 
@@ -185,7 +202,7 @@ export class MozRadioGroup extends MozLitElement {
         rel="stylesheet"
         href="chrome://global/content/elements/moz-radio-group.css"
       />
-      <fieldset role="radiogroup">
+      <fieldset role="radiogroup" ?disabled=${this.disabled}>
         <legend class="heading-medium">${this.label}</legend>
         <slot
           @slotchange=${this.syncStateToRadioButtons}
@@ -202,6 +219,7 @@ customElements.define("moz-radio-group", MozRadioGroup);
  *
  * @tagname moz-radio
  * @property {boolean} checked - Whether or not the input is selected.
+ * @property {boolean} disabled - Whether or not the input is disabled.
  * @property {string} label - Label for the radio input.
  * @property {string} name
  *  Name of the input control, set by the associated moz-radio-group element.
@@ -213,6 +231,7 @@ export class MozRadio extends MozLitElement {
 
   static properties = {
     checked: { type: Boolean, reflect: true },
+    disabled: { type: Boolean, reflect: true },
     iconSrc: { type: String },
     label: { type: String },
     name: { type: String, attribute: false },
@@ -229,6 +248,7 @@ export class MozRadio extends MozLitElement {
   constructor() {
     super();
     this.checked = false;
+    this.disabled = false;
   }
 
   connectedCallback() {
@@ -262,6 +282,16 @@ export class MozRadio extends MozLitElement {
       this.value === this.#controller.value
     ) {
       this.#controller.value = "";
+    }
+
+    if (changedProperties.has("disabled")) {
+      // Prevent enabling a radio button if containing radio-group is disabled.
+      if (this.disabled === false && this.#controller.disabled) {
+        this.disabled = true;
+      } else if (this.checked || !this.#controller.value) {
+        // Update buttons via moz-radio-group for proper keyboard nav behavior.
+        this.#controller.syncFocusState();
+      }
     }
   }
 
@@ -308,6 +338,7 @@ export class MozRadio extends MozLitElement {
           .checked=${this.checked}
           aria-checked=${this.checked}
           tabindex=${this.inputTabIndex}
+          ?disabled=${this.disabled || this.#controller.disabled}
           @click=${this.handleClick}
           @change=${this.handleChange}
         />
