@@ -154,3 +154,92 @@ TEST_F(psm_CertificateCompression_Zlib, ZlibDecodingFailsOutputTooSmall) {
                                        sizeof(decodedEncodedBuffer), &usedLen);
   ASSERT_EQ(SECFailure, rv);
 }
+
+class psm_CertificateCompression_Brotli : public ::testing::Test {};
+
+uint8_t encodedBufferExampleBrotli[60] = {
+    0x8b, 0x1b, 0x80, 0x4c, 0x6f, 0x72, 0x65, 0x6d, 0x20, 0x69, 0x70, 0x73,
+    0x75, 0x6d, 0x20, 0x64, 0x6f, 0x6c, 0x6f, 0x72, 0x20, 0x73, 0x69, 0x74,
+    0x20, 0x61, 0x6d, 0x65, 0x74, 0x2c, 0x20, 0x63, 0x6f, 0x6e, 0x73, 0x65,
+    0x63, 0x74, 0x65, 0x74, 0x75, 0x72, 0x20, 0x61, 0x64, 0x69, 0x70, 0x69,
+    0x73, 0x63, 0x69, 0x6e, 0x67, 0x20, 0x65, 0x6c, 0x69, 0x74, 0x2e, 0x03};
+
+TEST_F(psm_CertificateCompression_Brotli, BrotliCorrectlyDecodesEncodedBuffer) {
+  SECItem encodedItem = {siBuffer, encodedBufferExampleBrotli,
+                         sizeof(encodedBufferExampleBrotli)};
+  uint8_t decodedEncodedBuffer[100] = {0};
+  size_t usedLen = sizeof(decodedEncodedBuffer);
+
+  SECStatus rv =
+      brotliCertificateDecode(&encodedItem, decodedEncodedBuffer,
+                              sizeof(decodedEncodedBuffer), &usedLen);
+
+  ASSERT_EQ(SECSuccess, rv);
+}
+
+TEST_F(psm_CertificateCompression_Brotli, BrotliDecodingFailsEmptyInputItem) {
+  uint8_t decodedEncodedBuffer[100] = {0};
+  size_t usedLen = 0;
+  /* nullptr instead of input */
+  SECStatus rv = brotliCertificateDecode(
+      nullptr, decodedEncodedBuffer, sizeof(decodedEncodedBuffer), &usedLen);
+  ASSERT_EQ(SECFailure, rv);
+}
+
+TEST_F(psm_CertificateCompression_Brotli, BrotliDecodingFailsEmptyInput) {
+  SECItem encodedItem = {siBuffer, nullptr,
+                         (unsigned int)sizeof(encodedBufferExampleBrotli)};
+  uint8_t decodedEncodedBuffer[500] = {0};
+  size_t usedLen = 0;
+  /* nullptr instead of input.data */
+  SECStatus rv =
+      brotliCertificateDecode(&encodedItem, decodedEncodedBuffer,
+                              sizeof(decodedEncodedBuffer), &usedLen);
+  ASSERT_EQ(SECFailure, rv);
+}
+
+TEST_F(psm_CertificateCompression_Brotli, BrotliDecodingFails0LenInput) {
+  SECItem encodedItem = {siBuffer, encodedBufferExampleBrotli, 0};
+  uint8_t decodedEncodedBuffer[500] = {0};
+  size_t usedLen = 0;
+  /* 0 instead of input.len*/
+  SECStatus rv =
+      brotliCertificateDecode(&encodedItem, decodedEncodedBuffer,
+                              sizeof(decodedEncodedBuffer), &usedLen);
+  ASSERT_EQ(SECFailure, rv);
+}
+
+TEST_F(psm_CertificateCompression_Brotli, BrotliDecodingFailsEmptyBuffer) {
+  unsigned char encodedBuffer[500] = {0};
+  SECItem encodedItem = {siBuffer, encodedBuffer, 500};
+  uint8_t decodedEncodedBuffer[500] = {0};
+  size_t usedLen = 0;
+  /* Empty buffer will return an error if decoded. */
+  SECStatus rv =
+      brotliCertificateDecode(&encodedItem, decodedEncodedBuffer,
+                              sizeof(decodedEncodedBuffer), &usedLen);
+  ASSERT_EQ(SECFailure, rv);
+}
+
+TEST_F(psm_CertificateCompression_Brotli, BrotliDecodingFailsNullOutput) {
+  SECItem encodedItem = {siBuffer, encodedBufferExampleBrotli,
+                         (unsigned int)sizeof(encodedBufferExampleBrotli)};
+  uint8_t decodedEncodedBuffer[5] = {0};
+  size_t usedLen = 0;
+  /* Empty buffer will return an error if decoded. */
+  SECStatus rv = brotliCertificateDecode(
+      &encodedItem, nullptr, sizeof(decodedEncodedBuffer), &usedLen);
+  ASSERT_EQ(SECFailure, rv);
+}
+
+TEST_F(psm_CertificateCompression_Brotli, BrotliDecodingFailsOutputTooSmall) {
+  SECItem encodedItem = {siBuffer, encodedBufferExampleBrotli,
+                         (unsigned int)sizeof(encodedBufferExampleBrotli)};
+  uint8_t decodedEncodedBuffer[5] = {0};
+  size_t usedLen = 0;
+  /* Empty buffer will return an error if decoded. */
+  SECStatus rv =
+      brotliCertificateDecode(&encodedItem, decodedEncodedBuffer,
+                              sizeof(decodedEncodedBuffer), &usedLen);
+  ASSERT_EQ(SECFailure, rv);
+}

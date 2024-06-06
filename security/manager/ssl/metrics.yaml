@@ -149,6 +149,23 @@ cert_compression:
       bucket_count: 100
       expires: 136
 
+    brotli_saved_bytes:
+      type: custom_distribution
+      description:
+        The difference between the length of encoded certificate vs the actual certificate.
+      data_sensitivity:
+        - interaction
+      bugs:
+        - https://bugzilla.mozilla.org/1881027
+      data_reviews:
+        - https://bugzilla.mozilla.org/1881027
+      notification_emails:
+        - anna.weine@mozilla.com
+      histogram_type: exponential
+      range_max: 65536
+      bucket_count: 100
+      expires: 136
+
 verification_used_cert_from:
   tls_handshake:
     type: rate
