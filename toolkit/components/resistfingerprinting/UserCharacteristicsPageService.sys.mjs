@@ -190,6 +190,7 @@ export class UserCharacteristicsPageService {
         for (let gamepad of data.output.gamepads) {
           Glean.characteristics.gamepads.add(gamepad);
         }
+        this.populateIntlLocale();
 
         Glean.characteristics.zoomCount.set(await this.populateZoomPrefs());
         Glean.characteristics.pixelRatio.set(
@@ -261,6 +262,13 @@ export class UserCharacteristicsPageService {
     return (
       (window.browsingContext.overrideDPPX || window.devicePixelRatio) * 100
     );
+  }
+
+  populateIntlLocale() {
+    const locale = new Intl.DisplayNames(undefined, {
+      type: "region",
+    }).resolvedOptions().locale;
+    Glean.characteristics.intlLocale.set(locale);
   }
 
   async pageLoaded(browsingContext, data) {
