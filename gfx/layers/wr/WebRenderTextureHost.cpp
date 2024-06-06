@@ -75,9 +75,8 @@ void WebRenderTextureHost::UnbindTextureSource() {
   TextureHost::UnbindTextureSource();
 }
 
-already_AddRefed<gfx::DataSourceSurface> WebRenderTextureHost::GetAsSurface(
-    gfx::DataSourceSurface* aSurface) {
-  return mWrappedTextureHost->GetAsSurface(aSurface);
+already_AddRefed<gfx::DataSourceSurface> WebRenderTextureHost::GetAsSurface() {
+  return mWrappedTextureHost->GetAsSurface();
 }
 
 gfx::ColorDepth WebRenderTextureHost::GetColorDepth() const {

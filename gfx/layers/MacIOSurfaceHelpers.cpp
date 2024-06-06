@@ -149,7 +149,7 @@ static nsresult CopyFromLockedMacIOSurface(MacIOSurface* aSurface,
 }
 
 already_AddRefed<SourceSurface> CreateSourceSurfaceFromMacIOSurface(
-    MacIOSurface* aSurface, gfx::DataSourceSurface* aDataSurface) {
+    MacIOSurface* aSurface) {
   aSurface->Lock();
   auto scopeExit = MakeScopeExit([&]() { aSurface->Unlock(); });
 
@@ -163,21 +163,10 @@ already_AddRefed<SourceSurface> CreateSourceSurfaceFromMacIOSurface(
           ? SurfaceFormat::B8G8R8X8
           : SurfaceFormat::B8G8R8A8;
 
-  RefPtr<DataSourceSurface> dataSurface;
-  if (aDataSurface) {
-    MOZ_ASSERT(aDataSurface->GetSize() == size);
-    MOZ_ASSERT(aDataSurface->GetFormat() == format);
-    if (aDataSurface->GetSize() == size &&
-        aDataSurface->GetFormat() == format) {
-      dataSurface = aDataSurface;
-    }
-  }
-
-  if (!dataSurface) {
-    dataSurface = Factory::CreateDataSourceSurface(size, format);
-    if (NS_WARN_IF(!dataSurface)) {
-      return nullptr;
-    }
+  RefPtr<DataSourceSurface> dataSurface =
+      Factory::CreateDataSourceSurface(size, format);
+  if (NS_WARN_IF(!dataSurface)) {
+    return nullptr;
   }
 
   DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::WRITE);
