@@ -46,7 +46,7 @@ if (!window.ramblerIdHelper) {
   })();
 
   const ramblerIdHelper = {
-    getProfileInfo: (successCallback, errorCallback) => {
+    getProfileInfo: (successCallback, _errorCallback) => {
       successCallback({});
     },
     openAuth: () => {

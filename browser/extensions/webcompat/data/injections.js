@@ -233,20 +233,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1712833",
-    platform: "all",
-    domain: "buskocchi.desuca.co.jp",
-    bug: "1712833",
-    contentScripts: {
-      matches: ["*://buskocchi.desuca.co.jp/*"],
-      css: [
-        {
-          file: "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1722955",
     platform: "android",
     domain: "frontgate.com",
@@ -511,7 +497,6 @@ const AVAILABLE_INJECTIONS = [
         "*://*.fieldstoneamherst.com/*", // #132974
         "*://*.gslbriarcreek.com/*", // #126401
         "*://*.hpixeniatrails.com/*", // #131703
-        "*://*.liveatlasathens.com/*", // #111189
         "*://*.liveobserverpark.com/*", // #105244
         "*://*.liveupark.com/*", // #121083
         "*://*.midwayurban.com/*", // #116523
@@ -535,6 +520,20 @@ const AVAILABLE_INJECTIONS = [
     platform: "linux",
     domain: "www.samsung.com",
     bug: "1799968",
+    contentScripts: {
+      matches: ["*://www.samsung.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1860417",
+    platform: "android",
+    domain: "www.samsung.com",
+    bug: "1860417",
     contentScripts: {
       matches: ["*://www.samsung.com/*"],
       js: [
@@ -585,6 +584,7 @@ const AVAILABLE_INJECTIONS = [
         "*://drafthouse.com/*", // 126385
         "*://*.lafoodbank.org/*", // 127006
         "*://rutamayacoffee.com/*", // 129353
+        "*://ottoandspike.com.au/*", // bugzilla 1644602
       ],
       js: [
         {
@@ -639,7 +639,7 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1827678-webc77727",
+    id: "bug1827678-webc77727-js",
     platform: "android",
     domain: "free4talk.com",
     bug: "1827678",
@@ -690,20 +690,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1829949-tomshardware.com-scrollbar-width.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1830747",
-    platform: "android",
-    domain: "my.babbel.com",
-    bug: "1830747",
-    contentScripts: {
-      matches: ["*://my.babbel.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1830747-babbel.com-page-height.css",
         },
       ],
     },
@@ -923,20 +909,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1849019",
-    platform: "android",
-    domain: "axa-assistance.pl",
-    bug: "1849019",
-    contentScripts: {
-      matches: ["*://*.axa-assistance.pl/*"],
-      css: [
-        {
-          file: "injections/css/bug1849019-axa-assistance.pl-datepicker-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1849058",
     platform: "all",
     domain: "nicochannel.jp",
@@ -1020,6 +992,7 @@ const AVAILABLE_INJECTIONS = [
       matches: [
         "*://www.tvmovie.de/tv/fernsehprogramm",
         "*://www.tvmovie.de/tv/fernsehprogramm*",
+        "*://www.goodcarbadcar.net/*",
       ],
       css: [
         {
@@ -1052,6 +1025,35 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1884842-foodora.cz-height-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1897120",
+    platform: "desktop",
+    domain: "turn.js breakage",
+    bug: "1897120",
+    contentScripts: {
+      matches: ["*://flipbook.se.com/*", "*://*.flipbookpdf.net/*"],
+      js: [
+        {
+          file: "injections/js/bug1897120-turnjs-zoom-fix.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
+    id: "1896383",
+    platform: "all",
+    domain: "unimarc.cl",
+    bug: "1896383",
+    contentScripts: {
+      matches: ["*://*.unimarc.cl/*"],
+      js: [
+        {
+          file: "injections/js/bug1896383-error-capturestacktrace-shim.js",
         },
       ],
     },

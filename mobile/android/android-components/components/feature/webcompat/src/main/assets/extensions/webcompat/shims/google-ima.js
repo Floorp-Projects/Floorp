@@ -124,9 +124,9 @@ if (!window.google?.ima?.VERSION) {
     setPpid(p) {
       this.#p = p;
     }
-    setSessionId(s) {}
-    setVpaidAllowed(a) {}
-    setVpaidMode(m) {}
+    setSessionId(_s) {}
+    setVpaidAllowed(_a) {}
+    setVpaidMode(_m) {}
   }
   ImaSdkSettings.CompanionBackfillMode = {
     ALWAYS: "always",
@@ -174,7 +174,7 @@ if (!window.google?.ima?.VERSION) {
     getVersion() {
       return VERSION;
     }
-    requestAds(r, c) {
+    requestAds(_r, _c) {
       // If autoplay is disabled and the page is trying to autoplay a tracking
       // ad, then IMA fails with an error, and the page is expected to request
       // ads again later when the user clicks to play.
@@ -222,7 +222,7 @@ if (!window.google?.ima?.VERSION) {
     getVolume() {
       return this.#volume;
     }
-    init(w, h, m, e) {}
+    init(_w, _h, _m, _e) {}
     isCustomClickTrackingUsed() {
       return false;
     }
@@ -231,7 +231,7 @@ if (!window.google?.ima?.VERSION) {
     }
     pause() {}
     requestNextAdBreak() {}
-    resize(w, h, m) {}
+    resize(_w, _h, _m) {}
     resume() {}
     setVolume(v) {
       this.#volume = v;
@@ -259,7 +259,7 @@ if (!window.google?.ima?.VERSION) {
       });
     }
     stop() {}
-    updateAdsRenderingSettings(s) {}
+    updateAdsRenderingSettings(_s) {}
   }
 
   class AdsRenderingSettings {}
