@@ -31,6 +31,12 @@ const RECOMMENDED_PREFS = new Map([
  * @see https://w3c.github.io/webdriver-bidi
  */
 export class WebDriverBiDi {
+  #agent;
+  #bidiServerPath;
+  #running;
+  #session;
+  #sessionlessConnections;
+
   /**
    * Creates a new instance of the WebDriverBiDi class.
    *
@@ -38,19 +44,20 @@ export class WebDriverBiDi {
    *     Reference to the Remote Agent instance.
    */
   constructor(agent) {
-    this.agent = agent;
-    this._running = false;
+    this.#agent = agent;
+    this.#running = false;
 
-    this._session = null;
-    this._sessionlessConnections = new Set();
+    this.#bidiServerPath;
+    this.#session = null;
+    this.#sessionlessConnections = new Set();
   }
 
   get address() {
-    return `ws://${this.agent.host}:${this.agent.port}`;
+    return `ws://${this.#agent.host}:${this.#agent.port}`;
   }
 
   get session() {
-    return this._session;
+    return this.#session;
   }
 
   /**
@@ -60,7 +67,7 @@ export class WebDriverBiDi {
    *     The connection without an accociated WebDriver session.
    */
   addSessionlessConnection(connection) {
-    this._sessionlessConnections.add(connection);
+    this.#sessionlessConnections.add(connection);
   }
 
   /**
@@ -82,7 +89,7 @@ export class WebDriverBiDi {
    *     If, for whatever reason, a session could not be created.
    */
   async createSession(capabilities, flags, sessionlessConnection) {
-    if (this.session) {
+    if (this.#session) {
       throw new lazy.error.SessionNotCreatedError(
         "Maximum number of active sessions"
       );
@@ -98,7 +105,7 @@ export class WebDriverBiDi {
     // has been requested, register a path handler for the session.
     let webSocketUrl = null;
     if (
-      this.agent.running &&
+      this.#agent.running &&
       (session.capabilities.get("webSocketUrl") || sessionlessConnection)
     ) {
       // Creating a WebDriver BiDi session too early can cause issues with
@@ -107,16 +114,16 @@ export class WebDriverBiDi {
       // cause shutdown hangs. As such WebDriver BiDi will return a new session
       // once the initial application window has finished initializing.
       lazy.logger.debug(`Waiting for initial application window`);
-      await this.agent.browserStartupFinished;
+      await this.#agent.browserStartupFinished;
 
-      this.agent.server.registerPathHandler(session.path, session);
+      this.#agent.server.registerPathHandler(session.path, session);
       webSocketUrl = `${this.address}${session.path}`;
 
       lazy.logger.debug(`Registered session handler: ${session.path}`);
 
       if (sessionlessConnection) {
         // Remove temporary session-less connection
-        this._sessionlessConnections.delete(sessionlessConnection);
+        this.#sessionlessConnections.delete(sessionlessConnection);
       }
     }
 
@@ -124,11 +131,11 @@ export class WebDriverBiDi {
     // a path handler has been registered. Otherwise set its value to null.
     session.capabilities.set("webSocketUrl", webSocketUrl);
 
-    this._session = session;
+    this.#session = session;
 
     return {
-      sessionId: this.session.id,
-      capabilities: this.session.capabilities,
+      sessionId: this.#session.id,
+      capabilities: this.#session.capabilities,
     };
   }
 
@@ -136,19 +143,19 @@ export class WebDriverBiDi {
    * Delete the current WebDriver session.
    */
   deleteSession() {
-    if (!this.session) {
+    if (!this.#session) {
       return;
     }
 
     // When the Remote Agent is listening, and a BiDi WebSocket is active,
     // unregister the path handler for the session.
-    if (this.agent.running && this.session.capabilities.get("webSocketUrl")) {
-      this.agent.server.registerPathHandler(this.session.path, null);
-      lazy.logger.debug(`Unregistered session handler: ${this.session.path}`);
+    if (this.#agent.running && this.#session.capabilities.get("webSocketUrl")) {
+      this.#agent.server.registerPathHandler(this.#session.path, null);
+      lazy.logger.debug(`Unregistered session handler: ${this.#session.path}`);
     }
 
-    this.session.destroy();
-    this._session = null;
+    this.#session.destroy();
+    this.#session = null;
   }
 
   /**
@@ -161,7 +168,7 @@ export class WebDriverBiDi {
    *     The readiness state.
    */
   getSessionReadinessStatus() {
-    if (this.session) {
+    if (this.#session) {
       // We currently only support one session, see Bug 1720707.
       return {
         ready: false,
@@ -179,42 +186,42 @@ export class WebDriverBiDi {
    * Starts the WebDriver BiDi support.
    */
   async start() {
-    if (this._running) {
+    if (this.#running) {
       return;
     }
 
-    this._running = true;
+    this.#running = true;
 
     lazy.RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
 
     // Install a HTTP handler for direct WebDriver BiDi connection requests.
-    this.agent.server.registerPathHandler(
+    this.#agent.server.registerPathHandler(
       "/session",
       new lazy.WebDriverNewSessionHandler(this)
     );
 
     Cu.printStderr(`WebDriver BiDi listening on ${this.address}\n`);
 
-    // Write WebSocket connection details to the WebDriverBiDiServer.json file
-    // located within the application's profile.
-    this._bidiServerPath = PathUtils.join(
-      PathUtils.profileDir,
-      "WebDriverBiDiServer.json"
-    );
-
-    const data = {
-      ws_host: this.agent.host,
-      ws_port: this.agent.port,
-    };
-
     try {
+      // Write WebSocket connection details to the WebDriverBiDiServer.json file
+      // located within the application's profile.
+      this.#bidiServerPath = PathUtils.join(
+        PathUtils.profileDir,
+        "WebDriverBiDiServer.json"
+      );
+
+      const data = {
+        ws_host: this.#agent.host,
+        ws_port: this.#agent.port,
+      };
+
       await IOUtils.write(
-        this._bidiServerPath,
+        this.#bidiServerPath,
         lazy.textEncoder.encode(JSON.stringify(data, undefined, "  "))
       );
     } catch (e) {
       lazy.logger.warn(
-        `Failed to create ${this._bidiServerPath} (${e.message})`
+        `Failed to create ${this.#bidiServerPath} (${e.message})`
       );
     }
   }
@@ -223,30 +230,30 @@ export class WebDriverBiDi {
    * Stops the WebDriver BiDi support.
    */
   async stop() {
-    if (!this._running) {
+    if (!this.#running) {
       return;
     }
 
     try {
-      await IOUtils.remove(this._bidiServerPath);
+      await IOUtils.remove(this.#bidiServerPath);
     } catch (e) {
       lazy.logger.warn(
-        `Failed to remove ${this._bidiServerPath} (${e.message})`
+        `Failed to remove ${this.#bidiServerPath} (${e.message})`
       );
     }
 
     try {
       // Close open session
       this.deleteSession();
-      this.agent.server.registerPathHandler("/session", null);
+      this.#agent.server.registerPathHandler("/session", null);
 
       // Close all open session-less connections
-      this._sessionlessConnections.forEach(connection => connection.close());
-      this._sessionlessConnections.clear();
+      this.#sessionlessConnections.forEach(connection => connection.close());
+      this.#sessionlessConnections.clear();
     } catch (e) {
       lazy.logger.error("Failed to stop protocol", e);
     } finally {
-      this._running = false;
+      this.#running = false;
     }
   }
 }
