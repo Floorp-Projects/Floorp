@@ -1031,6 +1031,28 @@
   </vbox>
 </groupbox>
 
+#ifdef MOZ_DATA_REPORTING
+<!-- Website Advertising Preferences -->
+<hbox id="websiteAdvertisingCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="panePrivacy">
+  <html:h1 data-l10n-id="website-advertising-header"/>
+</hbox>
+
+<groupbox id="websiteAdvertisingGroup" data-category="panePrivacy" hidden="true">
+  <checkbox id="privateAttribution"
+            preference="dom.private-attribution.submission.enabled"
+            data-l10n-id="website-advertising-private-attribution"/>
+  <description class="indent tip-caption" data-l10n-id="website-advertising-private-attribution-description">
+    <html:a is="moz-support-link"
+            class="learnMore"
+            data-l10n-name="learn-more"
+            support-page="privacy-preserving-attribution"/>
+  </description>
+</groupbox>
+#endif
+
 <hbox id="securityCategory"
       class="subcategory"
       hidden="true"

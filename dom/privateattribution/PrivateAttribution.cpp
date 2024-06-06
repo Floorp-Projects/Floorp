@@ -52,6 +52,10 @@ bool PrivateAttribution::GetSourceHost(nsACString& aSourceHost,
 
 void PrivateAttribution::SaveImpression(
     const PrivateAttributionImpressionOptions& aOptions, ErrorResult& aRv) {
+  if (!StaticPrefs::dom_private_attribution_submission_enabled()) {
+    return;
+  }
+
   nsAutoCString source;
   if (!GetSourceHost(source, aRv)) {
     return;
@@ -82,6 +86,10 @@ void PrivateAttribution::SaveImpression(
 
 void PrivateAttribution::MeasureConversion(
     const PrivateAttributionConversionOptions& aOptions, ErrorResult& aRv) {
+  if (!StaticPrefs::dom_private_attribution_submission_enabled()) {
+    return;
+  }
+
   nsAutoCString source;
   if (!GetSourceHost(source, aRv)) {
     return;
