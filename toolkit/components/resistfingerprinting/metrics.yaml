@@ -1909,3 +1909,23 @@ characteristics:
     expires: never
     data_sensitivity:
       - technical
+
+  pixel_ratio:
+    type: quantity
+    unit: int
+    description: >
+      The value of window.devicePixelRatio multiplied by 100
+      to include some of the decimal places
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900844
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=xxx
+    expires: never
+    data_sensitivity:
+      - technical
