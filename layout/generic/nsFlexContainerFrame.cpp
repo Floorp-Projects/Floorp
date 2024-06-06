@@ -1103,17 +1103,6 @@ class nsFlexContainerFrame::FlexLine final {
   void FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
                                        bool aIsFinalIteration);
 
-  // Stores this line's flex items.
-  nsTArray<FlexItem> mItems;
-
-  // Number of *frozen* FlexItems in this line, based on FlexItem::IsFrozen().
-  // Mostly used for optimization purposes, e.g. to bail out early from loops
-  // when we can tell they have nothing left to do.
-  uint32_t mNumFrozenItems = 0;
-
-  // Sum of margin/border/padding for the FlexItems in this FlexLine.
-  nscoord mTotalItemMBP = 0;
-
   // Sum of FlexItems' outer hypothetical main sizes and all main-axis
   // {row,columnm}-gaps between items.
   // (i.e. their flex base sizes, clamped via their min/max-size properties,
@@ -1124,6 +1113,17 @@ class nsFlexContainerFrame::FlexLine final {
   // can happen with percent-width table-layout:fixed descendants. We have to
   // avoid integer overflow in order to shrink items properly in that scenario.
   AuCoord64 mTotalOuterHypotheticalMainSize = 0;
+
+  // Stores this line's flex items.
+  nsTArray<FlexItem> mItems;
+
+  // Number of *frozen* FlexItems in this line, based on FlexItem::IsFrozen().
+  // Mostly used for optimization purposes, e.g. to bail out early from loops
+  // when we can tell they have nothing left to do.
+  uint32_t mNumFrozenItems = 0;
+
+  // Sum of margin/border/padding for the FlexItems in this FlexLine.
+  nscoord mTotalItemMBP = 0;
 
   nscoord mLineCrossSize = 0;
   nscoord mFirstBaselineOffset = nscoord_MIN;
