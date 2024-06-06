@@ -31,5 +31,5 @@ Object.defineProperty(navigator.wrappedJSObject, "plugins", {
   get: exportFunction(function () {
     return pluginsArray;
   }, window),
-  set: exportFunction(function (val) {}, window),
+  set: exportFunction(function () {}, window),
 });

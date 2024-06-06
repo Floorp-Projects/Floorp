@@ -87,7 +87,7 @@ class UAOverrides {
 
     const listeners = { onBeforeSendHeaders: listener };
     if (blocks) {
-      const blistener = details => {
+      const blistener = () => {
         return { cancel: true };
       };
 

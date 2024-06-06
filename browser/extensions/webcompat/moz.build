@@ -52,7 +52,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1654907-reactine.ca-hide-unsupported.css",
     "injections/css/bug1694470-myvidster.com-content-not-shown.css",
     "injections/css/bug1707795-office365-sheets-overscroll-disable.css",
-    "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
     "injections/css/bug1741234-patient.alphalabs.ca-height-fix.css",
     "injections/css/bug1765947-veniceincoming.com-left-fix.css",
     "injections/css/bug1770962-coldwellbankerhomes.com-image-height.css",
@@ -61,7 +60,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1784199-entrata-platform-unsupported.css",
     "injections/css/bug1819678-nppes.cms.hhs.gov-unsupported-banner.css",
     "injections/css/bug1829949-tomshardware.com-scrollbar-width.css",
-    "injections/css/bug1830747-babbel.com-page-height.css",
     "injections/css/bug1830752-afisha.ru-slider-pointer-events.css",
     "injections/css/bug1830761-91mobiles.com-content-height.css",
     "injections/css/bug1830796-copyleaks.com-hide-unsupported.css",
@@ -72,7 +70,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1848711-vio.com-page-height.css",
     "injections/css/bug1848713-cleanrider.com-slider.css",
     "injections/css/bug1848849-theaa.com-printing-mode-fix.css",
-    "injections/css/bug1849019-axa-assistance.pl-datepicker-fix.css",
     "injections/css/bug1849388-kucharkaprodceru.cz-scroll-fix.css",
     "injections/css/bug1868345-tvmovie.de-scroll-fix.css",
     "injections/css/bug1877346-offerup.com-infinite-scroll-fix.css",
@@ -106,6 +103,8 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1855071-www.meteoam.it.js",
     "injections/js/bug1859617-installtrigger-removal-shim.js",
     "injections/js/bug1864564-esri-transfrom-names-shim.js",
+    "injections/js/bug1896383-error-capturestacktrace-shim.js",
+    "injections/js/bug1897120-turnjs-zoom-fix.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [

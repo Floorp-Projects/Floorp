@@ -673,6 +673,8 @@ const AVAILABLE_SHIMS = [
       ["*://teams.microsoft.com/*", "*://login.microsoftonline.com/*"],
       ["*://*.teams.microsoft.us/*", "*://login.microsoftonline.us/*"],
       ["*://www.msn.com/*", "*://login.microsoftonline.com/*"],
+      ["*://support.microsoft.com/*", "*://login.microsoftonline.com/*"],
+      ["*://answers.microsoft.com/*", "*://login.microsoftonline.com/*"],
     ],
     contentScripts: [
       {
@@ -682,6 +684,8 @@ const AVAILABLE_SHIMS = [
           "*://teams.microsoft.com/*",
           "*://*.teams.microsoft.us/*",
           "*://www.msn.com/*",
+          "*://support.microsoft.com/*",
+          "*://answers.microsoft.com/*",
         ],
         runAt: "document_start",
       },
