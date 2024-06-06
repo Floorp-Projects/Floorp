@@ -42,8 +42,10 @@
   }
 }
 
-.paintbrush-icon {
-  background-image: url('chrome://activity-stream/content/data/content/assets/glyph-paintbrush-16.svg');
+.customize-icon {
+  -moz-context-properties: fill;
+  fill: var(--icon-color);
+  background-image: url('chrome://browser/skin/customize.svg');
   background-size: var(--icon-size-default);
   height: var(--icon-size-default);
   width: var(--icon-size-default);

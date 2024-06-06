@@ -10267,7 +10267,7 @@ function WallpaperFeatureHighlight({
       "data-l10n-id": "newtab-wallpaper-feature-highlight-button"
     })),
     icon: /*#__PURE__*/external_React_default().createElement("div", {
-      className: "paintbrush-icon"
+      className: "customize-icon"
     }),
     toggle: /*#__PURE__*/external_React_default().createElement("div", {
       className: "icon icon-help"
@@ -10558,9 +10558,10 @@ class BaseContent extends (external_React_default()).PureComponent {
   shouldShowWallpapersHighlight() {
     const prefs = this.props.Prefs.values;
 
-    // If wallpapers are not enabled, don't show the highlight.
+    // If wallpapers (or v2 wallpapers) are not enabled, don't show the highlight.
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
-    if (!wallpapersEnabled) {
+    const wallpapersV2Enabled = prefs["newtabWallpapers.v2.enabled"];
+    if (!wallpapersEnabled || !wallpapersV2Enabled) {
       return false;
     }
 
