@@ -111,7 +111,7 @@ export function WallpaperFeatureHighlight({
             ></button>
           </div>
         }
-        icon={<div className="paintbrush-icon"></div>}
+        icon={<div className="customize-icon"></div>}
         toggle={<div className="icon icon-help"></div>}
         openedOverride={true}
         showButtonIcon={false}
