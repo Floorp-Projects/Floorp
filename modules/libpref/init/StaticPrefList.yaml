@@ -15071,6 +15071,11 @@
   mirror: always
   rust: true
 
+- name: security.tls.enable_certificate_compression_zlib
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 - name: security.ssl.treat_unsafe_negotiation_as_broken
   type: RelaxedAtomicBool
   value: false
