@@ -10,7 +10,24 @@
 #include <stdint.h>
 #include <string.h>
 
+// Suppress any -Wdeprecated-declarations warning that might be emitted by
+// GCC or Clang by std::stable_sort in C++17 or later mode
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 #include <algorithm>
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC pop_options
+#endif
+
 #include <hwy/aligned_allocator.h>
 
 #include "lib/jpegli/memory_manager.h"

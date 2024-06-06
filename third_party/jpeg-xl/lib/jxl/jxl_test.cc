@@ -29,6 +29,7 @@
 #include "lib/extras/packed_image.h"
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/sanitizer_definitions.h"  // JXL_MEMORY_SANITIZER
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/codec_in_out.h"
@@ -41,6 +42,7 @@
 #include "lib/jxl/image_metadata.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/test_image.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
@@ -516,8 +518,8 @@ TEST(JxlTest, RoundtripNoGaborishNoAR) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_GABORISH, 0);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 41142, 400);
-  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 1.8);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 45241, 400);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 1.55);
 }
 
 TEST(JxlTest, RoundtripSmallNoGaborish) {
@@ -534,8 +536,8 @@ TEST(JxlTest, RoundtripSmallNoGaborish) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_GABORISH, 0);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 1006, 20);
-  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 1.2);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 1042, 20);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 1.0);
 }
 
 TEST(JxlTest, RoundtripSmallPatchesAlpha) {
@@ -560,8 +562,8 @@ TEST(JxlTest, RoundtripSmallPatchesAlpha) {
   cparams.distance = 0.1f;
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 597, 100);
-  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 0.018f);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 462, 100);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 0.016f);
 }
 
 TEST(JxlTest, RoundtripSmallPatches) {
@@ -988,8 +990,8 @@ TEST(JxlTest, RoundtripAlpha16) {
   PackedPixelFile ppf_out;
   // TODO(szabadka) Investigate big size difference on i686
   // This still keeps happening (2023-04-18).
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool.get(), &ppf_out), 3666, 120);
-  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 0.65);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool.get(), &ppf_out), 4013, 120);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 0.6);
 }
 
 namespace {
@@ -1185,8 +1187,8 @@ TEST(JxlTest, RoundtripDots) {
   cparams.distance = 0.04;
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 280333, 4000);
-  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 0.35);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 276166, 4000);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 0.14);
 }
 
 TEST(JxlTest, RoundtripDisablePerceptual) {
@@ -1205,7 +1207,11 @@ TEST(JxlTest, RoundtripDisablePerceptual) {
   cparams.distance = 1.0;
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 477778, 4000);
+
+  // TODO(eustas): fix or explain why
+  size_t expected_size = JXL_MEMORY_SANITIZER ? 501875 : 477778;
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), expected_size,
+              4000);
   // TODO(veluca): figure out why we can't get below this value.
   EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 11.0);
 }
@@ -1325,10 +1331,10 @@ TEST(JxlTest, RoundtripAnimationPatches) {
   PackedPixelFile ppf_out;
   // 40k with no patches, 27k with patch frames encoded multiple times.
   EXPECT_SLIGHTLY_BELOW(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out),
-                        19420);
+                        21113);
   EXPECT_EQ(ppf_out.frames.size(), t.ppf().frames.size());
   // >10 with broken patches; not all patches are detected on borders.
-  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 1.9);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(t.ppf(), ppf_out), 1.85);
 }
 
 size_t RoundtripJpeg(const std::vector<uint8_t>& jpeg_in, ThreadPool* pool) {

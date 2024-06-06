@@ -6,16 +6,19 @@
 #ifndef LIB_JXL_RENDER_PIPELINE_STAGE_PATCHES_H_
 #define LIB_JXL_RENDER_PIPELINE_STAGE_PATCHES_H_
 
-#include <utility>
+#include <memory>
+#include <vector>
 
-#include "lib/jxl/patch_dictionary_internal.h"
+#include "lib/jxl/dec_patch_dictionary.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 
 namespace jxl {
 
 // Draws patches if applicable.
 std::unique_ptr<RenderPipelineStage> GetPatchesStage(
-    const PatchDictionary* patches, size_t num_channels);
+    const PatchDictionary* patches,
+    const std::vector<ExtraChannelInfo>* extra_channel_info);
 
 }  // namespace jxl
 

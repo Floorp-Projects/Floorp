@@ -14,7 +14,7 @@
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_metadata.h"
-#include "lib/jxl/test_utils.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {

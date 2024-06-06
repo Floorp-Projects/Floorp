@@ -161,8 +161,7 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
       }
       ib.SetExtraChannels(std::move(extra_channels));
     }
-    auto special_frame =
-        std::unique_ptr<BitWriter>(new BitWriter(memory_manager));
+    auto special_frame = jxl::make_unique<BitWriter>(memory_manager);
     FrameInfo dc_frame_info;
     dc_frame_info.frame_type = FrameType::kDCFrame;
     dc_frame_info.dc_level = frame_header.dc_level + 1;

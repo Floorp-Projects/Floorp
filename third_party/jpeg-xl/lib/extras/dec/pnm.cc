@@ -476,7 +476,7 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
   ppf->info.num_extra_channels = num_alpha_channels + header.ec_types.size();
 
   for (auto type : header.ec_types) {
-    PackedExtraChannel pec;
+    PackedExtraChannel pec = {};
     pec.ec_info.bits_per_sample = ppf->info.bits_per_sample;
     pec.ec_info.type = type;
     ppf->extra_channels_info.emplace_back(std::move(pec));

@@ -374,14 +374,14 @@ void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,
    mem.get() + thread * ItemsPerThread());
 }
 
-void ColorCorrelationMapEncodeDC(const ColorCorrelationMap& map,
-                                 BitWriter* writer, size_t layer,
-                                 AuxOut* aux_out) {
-  float color_factor = map.GetColorFactor();
-  float base_correlation_x = map.GetBaseCorrelationX();
-  float base_correlation_b = map.GetBaseCorrelationB();
-  int32_t ytox_dc = map.GetYToXDC();
-  int32_t ytob_dc = map.GetYToBDC();
+void ColorCorrelationEncodeDC(const ColorCorrelation& color_correlation,
+                              BitWriter* writer, size_t layer,
+                              AuxOut* aux_out) {
+  float color_factor = color_correlation.GetColorFactor();
+  float base_correlation_x = color_correlation.GetBaseCorrelationX();
+  float base_correlation_b = color_correlation.GetBaseCorrelationB();
+  int32_t ytox_dc = color_correlation.GetYToXDC();
+  int32_t ytob_dc = color_correlation.GetYToBDC();
 
   BitWriter::Allotment allotment(writer, 1 + 2 * kBitsPerByte + 12 + 32);
   if (ytox_dc == 0 && ytob_dc == 0 && color_factor == kDefaultColorFactor &&

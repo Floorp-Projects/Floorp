@@ -260,13 +260,13 @@ void MaybeAddCLLi(const JxlColorEncoding& c_enc, const float intensity_target,
                   png_structp png_ptr, png_infop info_ptr) {
   if (c_enc.transfer_function != JXL_TRANSFER_FUNCTION_PQ) return;
 
-  const uint32_t max_cll =
+  const uint32_t max_content_light_level =
       static_cast<uint32_t>(10000.f * Clamp1(intensity_target, 0.f, 10000.f));
   png_byte chunk_data[8] = {};
-  chunk_data[0] = (max_cll >> 24) & 0xFF;
-  chunk_data[1] = (max_cll >> 16) & 0xFF;
-  chunk_data[2] = (max_cll >> 8) & 0xFF;
-  chunk_data[3] = max_cll & 0xFF;
+  chunk_data[0] = (max_content_light_level >> 24) & 0xFF;
+  chunk_data[1] = (max_content_light_level >> 16) & 0xFF;
+  chunk_data[2] = (max_content_light_level >> 8) & 0xFF;
+  chunk_data[3] = max_content_light_level & 0xFF;
   // Leave MaxFALL set to 0.
   png_unknown_chunk chunk;
   memcpy(chunk.name, "cLLi", 5);

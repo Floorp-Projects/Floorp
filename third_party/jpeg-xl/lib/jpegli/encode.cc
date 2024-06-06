@@ -628,9 +628,9 @@ void ZigZagShuffleBlocks(j_compress_ptr cinfo) {
   for (int c = 0; c < cinfo->num_components; ++c) {
     jpeg_component_info* comp = &cinfo->comp_info[c];
     for (JDIMENSION by = 0; by < comp->height_in_blocks; ++by) {
-      JBLOCKARRAY ba = GetBlockRow(cinfo, c, by);
+      JBLOCKARRAY blocks = GetBlockRow(cinfo, c, by);
       for (JDIMENSION bx = 0; bx < comp->width_in_blocks; ++bx) {
-        JCOEF* block = &ba[0][bx][0];
+        JCOEF* block = &blocks[0][bx][0];
         for (int k = 0; k < DCTSIZE2; ++k) {
           tmp[k] = block[kJPEGNaturalOrder[k]];
         }

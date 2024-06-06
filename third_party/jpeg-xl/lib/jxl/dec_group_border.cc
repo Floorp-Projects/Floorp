@@ -20,7 +20,7 @@ void GroupBorderAssigner::Init(const FrameDimensions& frame_dim) {
   frame_dim_ = frame_dim;
   size_t num_corners =
       (frame_dim_.xsize_groups + 1) * (frame_dim_.ysize_groups + 1);
-  counters_.reset(new std::atomic<uint8_t>[num_corners]);
+  { std::vector<std::atomic<uint8_t>>(num_corners).swap(counters_); }
   // Initialize counters.
   for (size_t y = 0; y < frame_dim_.ysize_groups + 1; y++) {
     for (size_t x = 0; x < frame_dim_.xsize_groups + 1; x++) {

@@ -478,11 +478,11 @@ void ComputePreErosion(const RowBuffer<float>& input, const size_t xsize,
     }
     if (iy % 4 == 3) {
       size_t y_out = y0_out + iy / 4;
-      float* row_dout = pre_erosion->Row(y_out);
+      float* row_d_out = pre_erosion->Row(y_out);
       for (size_t x = 0; x < xsize_out; x++) {
-        row_dout[x] = (row_out[x * 4] + row_out[x * 4 + 1] +
-                       row_out[x * 4 + 2] + row_out[x * 4 + 3]) *
-                      0.25f;
+        row_d_out[x] = (row_out[x * 4] + row_out[x * 4 + 1] +
+                        row_out[x * 4 + 2] + row_out[x * 4 + 3]) *
+                       0.25f;
       }
       pre_erosion->PadRow(y_out, xsize_out, border);
     }

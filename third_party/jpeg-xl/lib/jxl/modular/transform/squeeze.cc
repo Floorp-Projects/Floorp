@@ -60,6 +60,7 @@ JXL_INLINE void FastUnsqueeze(const pixel_type *JXL_RESTRICT p_residual,
     auto next_avg = Load(d, p_navg + x);
     auto top = Load(d, p_pout + x);
     // Equivalent to SmoothTendency(top,avg,next_avg), but without branches
+    // typo:off
     auto Ba = Sub(top, avg);
     auto an = Sub(avg, next_avg);
     auto nonmono = Xor(Ba, an);
@@ -81,6 +82,7 @@ JXL_INLINE void FastUnsqueeze(const pixel_type *JXL_RESTRICT p_residual,
     auto absBa2 = Add(ShiftLeft<1>(absBa), And(absdiff, Set(d, 1)));
     absdiff = IfThenElse(Gt(absdiff, absBa2),
                          Add(ShiftLeft<1>(absBa), Set(d, 1)), absdiff);
+    // typo:on
     auto absan2 = ShiftLeft<1>(absan);
     absdiff = IfThenElse(Gt(Add(absdiff, And(absdiff, Set(d, 1))), absan2),
                          absan2, absdiff);

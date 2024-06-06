@@ -99,10 +99,10 @@ float ComputePSNR(j_compress_ptr cinfo, int sampling) {
     HWY_ALIGN float iqmc[64];
     ComputeInverseWeights(qmc, iqmc);
     for (JDIMENSION by = 0; by < comp->height_in_blocks; by += sampling) {
-      JBLOCKARRAY ba = GetBlockRow(cinfo, c, by);
+      JBLOCKARRAY blocks = GetBlockRow(cinfo, c, by);
       const float* qf = m->quant_field.Row(by * v_factor);
       for (JDIMENSION bx = 0; bx < comp->width_in_blocks; bx += sampling) {
-        error += BlockError(&ba[0][bx][0], qmc, iqmc, qf[bx * h_factor],
+        error += BlockError(&blocks[0][bx][0], qmc, iqmc, qf[bx * h_factor],
                             zero_bias_offset, zero_bias_mul);
         num += DCTSIZE2;
       }
@@ -122,11 +122,11 @@ void ReQuantizeCoeffs(j_compress_ptr cinfo) {
     const float* zero_bias_offset = m->zero_bias_offset[c];
     const float* zero_bias_mul = m->zero_bias_mul[c];
     for (JDIMENSION by = 0; by < comp->height_in_blocks; ++by) {
-      JBLOCKARRAY ba = GetBlockRow(cinfo, c, by);
+      JBLOCKARRAY block = GetBlockRow(cinfo, c, by);
       const float* qf = m->quant_field.Row(by * v_factor);
       for (JDIMENSION bx = 0; bx < comp->width_in_blocks; ++bx) {
-        ReQuantizeBlock(&ba[0][bx][0], qmc, qf[bx * h_factor], zero_bias_offset,
-                        zero_bias_mul);
+        ReQuantizeBlock(&block[0][bx][0], qmc, qf[bx * h_factor],
+                        zero_bias_offset, zero_bias_mul);
       }
     }
   }

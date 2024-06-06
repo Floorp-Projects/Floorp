@@ -35,24 +35,24 @@ using D = HWY_FULL(float);
 using DI = HWY_FULL(int32_t);
 
 template <size_t N>
-void AddReverse(const float* JXL_RESTRICT ain1, const float* JXL_RESTRICT ain2,
-                float* JXL_RESTRICT aout) {
+void AddReverse(const float* JXL_RESTRICT a_in1,
+                const float* JXL_RESTRICT a_in2, float* JXL_RESTRICT a_out) {
   HWY_CAPPED(float, 8) d8;
   for (size_t i = 0; i < N; i++) {
-    auto in1 = Load(d8, ain1 + i * 8);
-    auto in2 = Load(d8, ain2 + (N - i - 1) * 8);
-    Store(Add(in1, in2), d8, aout + i * 8);
+    auto in1 = Load(d8, a_in1 + i * 8);
+    auto in2 = Load(d8, a_in2 + (N - i - 1) * 8);
+    Store(Add(in1, in2), d8, a_out + i * 8);
   }
 }
 
 template <size_t N>
-void SubReverse(const float* JXL_RESTRICT ain1, const float* JXL_RESTRICT ain2,
-                float* JXL_RESTRICT aout) {
+void SubReverse(const float* JXL_RESTRICT a_in1,
+                const float* JXL_RESTRICT a_in2, float* JXL_RESTRICT a_out) {
   HWY_CAPPED(float, 8) d8;
   for (size_t i = 0; i < N; i++) {
-    auto in1 = Load(d8, ain1 + i * 8);
-    auto in2 = Load(d8, ain2 + (N - i - 1) * 8);
-    Store(Sub(in1, in2), d8, aout + i * 8);
+    auto in1 = Load(d8, a_in1 + i * 8);
+    auto in2 = Load(d8, a_in2 + (N - i - 1) * 8);
+    Store(Sub(in1, in2), d8, a_out + i * 8);
   }
 }
 
@@ -73,15 +73,15 @@ void B(float* JXL_RESTRICT coeff) {
 
 // Ideally optimized away by compiler (except the multiply).
 template <size_t N>
-void InverseEvenOdd(const float* JXL_RESTRICT ain, float* JXL_RESTRICT aout) {
+void InverseEvenOdd(const float* JXL_RESTRICT a_in, float* JXL_RESTRICT a_out) {
   HWY_CAPPED(float, 8) d8;
   for (size_t i = 0; i < N / 2; i++) {
-    auto in1 = Load(d8, ain + i * 8);
-    Store(in1, d8, aout + 2 * i * 8);
+    auto in1 = Load(d8, a_in + i * 8);
+    Store(in1, d8, a_out + 2 * i * 8);
   }
   for (size_t i = N / 2; i < N; i++) {
-    auto in1 = Load(d8, ain + i * 8);
-    Store(in1, d8, aout + (2 * (i - N / 2) + 1) * 8);
+    auto in1 = Load(d8, a_in + i * 8);
+    Store(in1, d8, a_out + (2 * (i - N / 2) + 1) * 8);
   }
 }
 
@@ -109,8 +109,10 @@ struct WcMultipliers<8> {
   };
 };
 
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr float WcMultipliers<4>::kMultipliers[];
 constexpr float WcMultipliers<8>::kMultipliers[];
+#endif
 
 // Invoked on full vector.
 template <size_t N>

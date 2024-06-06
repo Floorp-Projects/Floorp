@@ -46,7 +46,7 @@ double Now() {
   if (timebase.denom == 0) {
     (void)mach_timebase_info(&timebase);
   }
-  return double(t) * timebase.numer / timebase.denom * 1E-9;
+  return double(t) * timebase.numer / timebase.denom * 1E-9;  // notypo
 #elif JXL_OS_HAIKU
   return double(system_time_nsecs()) * 1E-9;
 #else

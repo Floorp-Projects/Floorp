@@ -133,6 +133,7 @@ Status CustomTransformData::VisitFields(Visitor* JXL_RESTRICT visitor) {
     }
   }
   if (visitor->Conditional((custom_weights_mask & 0x4) != 0)) {
+    // typo:off
     // 64 5x5 kernels, all of them can be obtained by symmetry from
     // 10, 4 of which are symmetric along their main diagonals. The top
     // left 16 kernels are defined by
@@ -159,6 +160,7 @@ Status CustomTransformData::VisitFields(Visitor* JXL_RESTRICT visitor) {
     // 11 24 36 47 57  66 74 81 8d 98  a2 ab b3 ba c0  c5 c9 cc cd ce
     // 12 25 37 48 58  67 75 82 8e 99  a3 ac b4 bb c1  c6 ca cd cf d0
     // 13 26 38 49 59  68 76 83 8f 9a  a4 ad b5 bc c2  c7 cb ce d0 d1
+    // typo:on
     constexpr float kWeights8[210] = {
         -0.02928613f, -0.03706353f, -0.03783812f, -0.03324558f, -0.00447632f,
         -0.02519406f, -0.03752601f, -0.03901508f, -0.03663285f, -0.00646649f,

@@ -483,7 +483,7 @@ struct Reader {
     return result;
   }
 
-  /* Returns empty Span on errror. */
+  /* Returns empty Span on error. */
   Bytes ReadChunk() {
     Bytes len = Peek(4);
     if (len.size() != 4) {
@@ -555,7 +555,7 @@ struct Context {
       return false;
     }
 
-    /* hIST chunk tail is not proccesed properly; skip this chunk completely;
+    /* hIST chunk tail is not processed properly; skip this chunk completely;
        see https://github.com/glennrp/libpng/pull/413 */
     constexpr std::array<uint8_t, 5> kIgnoredChunks = {'h', 'I', 'S', 'T', 0};
     png_set_keep_unknown_chunks(png_ptr, 1, kIgnoredChunks.data(),
@@ -792,7 +792,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
   Bytes sig = input.Read(kPngSignature.size());
   if (sig.size() != 8 ||
       memcmp(sig.data(), kPngSignature.data(), kPngSignature.size()) != 0) {
-    return JXL_FAILURE("PNG signature mismatch");
+    return false;  // Return silently if it is not a PNG
   }
 
   // Check IHDR chunk.
@@ -1061,7 +1061,6 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
         if (!ctx.FeedChunks(chunk)) {
           return JXL_FAILURE("Corrupt iCCP chunk");
         }
-        color_info_type = ColorInfoType::ICCP_OR_SRGB;
 
         // TODO(jon): catch special case of PQ and synthesize color encoding
         // in that case

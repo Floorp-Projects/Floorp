@@ -473,7 +473,7 @@ Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
     param.tolerance = params.search_tolerance;
     param.qmin = params.search_q_min;
     param.qmax = params.search_q_max;
-    hook.reset(new MySearchHook());
+    hook = jxl::make_unique<MySearchHook>();
     hook->ReadBaseTables(params.custom_base_quant_fn);
     hook->q_start = params.search_q_start;
     hook->q_precision = params.search_q_precision;

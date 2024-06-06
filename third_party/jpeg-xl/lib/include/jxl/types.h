@@ -16,7 +16,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -145,7 +145,7 @@ typedef struct {
  */
 typedef char JxlBoxType[4];
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }
 #endif
 

@@ -23,7 +23,7 @@
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/cache_aligned.h"
+#include "lib/jxl/memory_manager_internal.h"
 
 namespace jxl {
 
@@ -39,8 +39,6 @@ struct PlaneBase {
         orig_xsize_(0),
         orig_ysize_(0),
         bytes_per_row_(0),
-        memory_manager_(nullptr),
-        bytes_(nullptr),
         sizeof_t_(0) {}
 
   // Copy construction/assignment is forbidden to avoid inadvertent copies,
@@ -54,11 +52,7 @@ struct PlaneBase {
   // Move assignment (required for std::vector)
   PlaneBase& operator=(PlaneBase&& other) noexcept = default;
 
-  ~PlaneBase() {
-    if (bytes_.get()) {
-      JXL_CHECK(memory_manager_);
-    }
-  }
+  ~PlaneBase() = default;
 
   void Swap(PlaneBase& other);
 
@@ -83,17 +77,17 @@ struct PlaneBase {
   JXL_INLINE size_t bytes_per_row() const { return bytes_per_row_; }
 
   JXL_INLINE JxlMemoryManager* memory_manager() const {
-    return memory_manager_;
+    return bytes_.memory_manager();
   }
 
   // Raw access to byte contents, for interfacing with other libraries.
   // Unsigned char instead of char to avoid surprises (sign extension).
   JXL_INLINE uint8_t* bytes() {
-    void* p = bytes_.get();
+    uint8_t* p = bytes_.address<uint8_t>();
     return static_cast<uint8_t * JXL_RESTRICT>(JXL_ASSUME_ALIGNED(p, 64));
   }
   JXL_INLINE const uint8_t* bytes() const {
-    const void* p = bytes_.get();
+    const uint8_t* p = bytes_.address<uint8_t>();
     return static_cast<const uint8_t * JXL_RESTRICT>(JXL_ASSUME_ALIGNED(p, 64));
   }
 
@@ -111,7 +105,7 @@ struct PlaneBase {
     }
 #endif
 
-    void* row = bytes_.get() + y * bytes_per_row_;
+    uint8_t* row = bytes_.address<uint8_t>() + y * bytes_per_row_;
     return JXL_ASSUME_ALIGNED(row, 64);
   }
 
@@ -121,8 +115,7 @@ struct PlaneBase {
   uint32_t orig_xsize_;
   uint32_t orig_ysize_;
   size_t bytes_per_row_;  // Includes padding.
-  JxlMemoryManager* memory_manager_;
-  CacheAlignedUniquePtr bytes_;
+  AlignedMemory bytes_;
   size_t sizeof_t_;
 };
 
@@ -223,17 +216,16 @@ class Image3 {
 
   Image3() : planes_{PlaneT(), PlaneT(), PlaneT()} {}
 
-  Image3(Image3&& other) noexcept {
-    for (size_t i = 0; i < kNumPlanes; i++) {
-      planes_[i] = std::move(other.planes_[i]);
-    }
-  }
-
   // Copy construction/assignment is forbidden to avoid inadvertent copies,
   // which can be very expensive. Use CopyImageTo instead.
   Image3(const Image3& other) = delete;
   Image3& operator=(const Image3& other) = delete;
 
+  Image3(Image3&& other) noexcept {
+    for (size_t i = 0; i < kNumPlanes; i++) {
+      planes_[i] = std::move(other.planes_[i]);
+    }
+  }
   Image3& operator=(Image3&& other) noexcept {
     for (size_t i = 0; i < kNumPlanes; i++) {
       planes_[i] = std::move(other.planes_[i]);

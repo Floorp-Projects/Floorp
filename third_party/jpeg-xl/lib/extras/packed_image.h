@@ -237,6 +237,7 @@ class PackedMetadata {
  public:
   std::vector<uint8_t> exif;
   std::vector<uint8_t> iptc;
+  std::vector<uint8_t> jhgm;
   std::vector<uint8_t> jumbf;
   std::vector<uint8_t> xmp;
 };

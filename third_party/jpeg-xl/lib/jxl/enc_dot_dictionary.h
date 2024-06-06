@@ -23,7 +23,7 @@ namespace jxl {
 
 StatusOr<std::vector<PatchInfo>> FindDotDictionary(
     const CompressParams& cparams, const Image3F& opsin, const Rect& rect,
-    const ColorCorrelationMap& cmap, ThreadPool* pool);
+    const ColorCorrelation& color_correlation, ThreadPool* pool);
 
 }  // namespace jxl
 

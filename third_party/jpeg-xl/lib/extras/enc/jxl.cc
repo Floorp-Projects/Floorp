@@ -5,10 +5,18 @@
 
 #include "lib/extras/enc/jxl.h"
 
+#include <jxl/codestream_header.h>
 #include <jxl/encode.h>
 #include <jxl/encode_cxx.h>
 #include <jxl/types.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <vector>
+
+#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/exif.h"
 
 namespace jxl {
@@ -112,7 +120,7 @@ bool ReadCompressedOutput(JxlEncoder* enc, std::vector<uint8_t>* compressed) {
 bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
                     const std::vector<uint8_t>* jpeg_bytes,
                     std::vector<uint8_t>* compressed) {
-  auto encoder = JxlEncoderMake(/*memory_manager=*/nullptr);
+  auto encoder = JxlEncoderMake(params.memory_manager);
   JxlEncoder* enc = encoder.get();
 
   if (params.allow_expert_options) {
@@ -153,7 +161,8 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
 
   bool has_jpeg_bytes = (jpeg_bytes != nullptr);
   bool use_boxes = !ppf.metadata.exif.empty() || !ppf.metadata.xmp.empty() ||
-                   !ppf.metadata.jumbf.empty() || !ppf.metadata.iptc.empty();
+                   !ppf.metadata.jhgm.empty() || !ppf.metadata.jumbf.empty() ||
+                   !ppf.metadata.iptc.empty();
   bool use_container = params.use_container || use_boxes ||
                        (has_jpeg_bytes && params.jpeg_store_metadata);
 
@@ -298,10 +307,9 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
         const char* type;
         const std::vector<uint8_t>& bytes;
       } boxes[] = {
-          {"Exif", exif_with_offset},
-          {"xml ", ppf.metadata.xmp},
-          {"jumb", ppf.metadata.jumbf},
-          {"xml ", ppf.metadata.iptc},
+          {"Exif", exif_with_offset},   {"xml ", ppf.metadata.xmp},
+          {"jumb", ppf.metadata.jumbf}, {"xml ", ppf.metadata.iptc},
+          {"jhgm", ppf.metadata.jhgm},
       };
       for (auto box : boxes) {
         if (!box.bytes.empty()) {

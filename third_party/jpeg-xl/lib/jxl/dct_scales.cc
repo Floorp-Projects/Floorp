@@ -5,9 +5,11 @@
 
 #include "lib/jxl/dct_scales.h"
 
+#include "lib/jxl/base/compiler_specific.h"
+
 namespace jxl {
 
-// Definition of constexpr arrays.
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr float DCTResampleScales<1, 8>::kScales[];
 constexpr float DCTResampleScales<2, 16>::kScales[];
 constexpr float DCTResampleScales<4, 32>::kScales[];
@@ -27,5 +29,6 @@ constexpr float WcMultipliers<32>::kMultipliers[];
 constexpr float WcMultipliers<64>::kMultipliers[];
 constexpr float WcMultipliers<128>::kMultipliers[];
 constexpr float WcMultipliers<256>::kMultipliers[];
+#endif
 
 }  // namespace jxl

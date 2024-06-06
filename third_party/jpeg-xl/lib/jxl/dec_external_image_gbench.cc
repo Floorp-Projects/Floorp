@@ -37,6 +37,7 @@ void BM_DecExternalImage_ConvertImageRGBA(benchmark::State& state) {
   std::vector<uint8_t> interleaved(bytes_per_row * ysize);
 
   for (auto _ : state) {
+    (void)_;
     for (size_t i = 0; i < kNumIter; ++i) {
       JXL_CHECK(ConvertToExternal(
           ib,

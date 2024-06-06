@@ -12,12 +12,14 @@
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
+#include "lib/jxl/memory_manager_internal.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_write.cc"
@@ -131,7 +133,8 @@ class WriteToOutputStage : public RenderPipelineStage {
         flip_x_(ShouldFlipX(undo_orientation)),
         flip_y_(ShouldFlipY(undo_orientation)),
         transpose_(ShouldTranspose(undo_orientation)),
-        opaque_alpha_(kMaxPixelsPerCall, 1.0f) {
+        opaque_alpha_(kMaxPixelsPerCall, 1.0f),
+        memory_manager_(memory_manager) {
     for (size_t ec = 0; ec < extra_output.size(); ++ec) {
       if (extra_output[ec].callback.IsPresent() || extra_output[ec].buffer) {
         Output extra(extra_output[ec]);
@@ -249,14 +252,18 @@ class WriteToOutputStage : public RenderPipelineStage {
       JXL_RETURN_IF_ERROR(extra.PrepareForThreads(num_threads));
     }
     temp_out_.resize(num_threads);
-    for (CacheAlignedUniquePtr& temp : temp_out_) {
-      temp = AllocateArray(sizeof(float) * kMaxPixelsPerCall *
-                           main_.num_channels_);
+    for (AlignedMemory& temp : temp_out_) {
+      size_t alloc_size =
+          sizeof(float) * kMaxPixelsPerCall * main_.num_channels_;
+      JXL_ASSIGN_OR_RETURN(temp,
+                           AlignedMemory::Create(memory_manager_, alloc_size));
     }
     if ((has_alpha_ && want_alpha_ && unpremul_alpha_) || flip_x_) {
       temp_in_.resize(num_threads * main_.num_channels_);
-      for (CacheAlignedUniquePtr& temp : temp_in_) {
-        temp = AllocateArray(sizeof(float) * kMaxPixelsPerCall);
+      for (AlignedMemory& temp : temp_in_) {
+        size_t alloc_size = sizeof(float) * kMaxPixelsPerCall;
+        JXL_ASSIGN_OR_RETURN(
+            temp, AlignedMemory::Create(memory_manager_, alloc_size));
       }
     }
     return true;
@@ -287,7 +294,7 @@ class WriteToOutputStage : public RenderPipelineStage {
     float* temp_in[4];
     for (size_t c = 0; c < main_.num_channels_; ++c) {
       size_t tix = thread_id * main_.num_channels_ + c;
-      temp_in[c] = reinterpret_cast<float*>(temp_in_[tix].get());
+      temp_in[c] = temp_in_[tix].address<float>();
       memcpy(temp_in[c], line_buffers[c], sizeof(float) * len);
     }
     auto small_alpha = Set(d, kSmallAlpha);
@@ -310,14 +317,12 @@ class WriteToOutputStage : public RenderPipelineStage {
       FlipX(out, thread_id, len, &xstart, input);
     }
     if (out.data_type_ == JXL_TYPE_UINT8) {
-      uint8_t* JXL_RESTRICT temp =
-          reinterpret_cast<uint8_t*>(temp_out_[thread_id].get());
+      uint8_t* JXL_RESTRICT temp = temp_out_[thread_id].address<uint8_t>();
       StoreUnsignedRow(out, input, len, temp, xstart, ypos);
       WriteToOutput(out, thread_id, ypos, xstart, len, temp);
     } else if (out.data_type_ == JXL_TYPE_UINT16 ||
                out.data_type_ == JXL_TYPE_FLOAT16) {
-      uint16_t* JXL_RESTRICT temp =
-          reinterpret_cast<uint16_t*>(temp_out_[thread_id].get());
+      uint16_t* JXL_RESTRICT temp = temp_out_[thread_id].address<uint16_t>();
       if (out.data_type_ == JXL_TYPE_UINT16) {
         StoreUnsignedRow(out, input, len, temp, xstart, ypos);
       } else {
@@ -334,8 +339,7 @@ class WriteToOutputStage : public RenderPipelineStage {
       }
       WriteToOutput(out, thread_id, ypos, xstart, len, temp);
     } else if (out.data_type_ == JXL_TYPE_FLOAT) {
-      float* JXL_RESTRICT temp =
-          reinterpret_cast<float*>(temp_out_[thread_id].get());
+      float* JXL_RESTRICT temp = temp_out_[thread_id].address<float>();
       StoreFloatRow(out, input, len, temp);
       if (out.swap_endianness_) {
         size_t output_len = len * out.num_channels_;
@@ -352,7 +356,7 @@ class WriteToOutputStage : public RenderPipelineStage {
     float* temp_in[4];
     for (size_t c = 0; c < out.num_channels_; ++c) {
       size_t tix = thread_id * main_.num_channels_ + c;
-      temp_in[c] = reinterpret_cast<float*>(temp_in_[tix].get());
+      temp_in[c] = temp_in_[tix].address<float>();
       if (temp_in[c] != line_buffers[c]) {
         memcpy(temp_in[c], line_buffers[c], sizeof(float) * len);
       }
@@ -532,11 +536,14 @@ class WriteToOutputStage : public RenderPipelineStage {
   bool transpose_;
   std::vector<Output> extra_channels_;
   std::vector<float> opaque_alpha_;
-  std::vector<CacheAlignedUniquePtr> temp_in_;
-  std::vector<CacheAlignedUniquePtr> temp_out_;
+  JxlMemoryManager* memory_manager_;
+  std::vector<AlignedMemory> temp_in_;
+  std::vector<AlignedMemory> temp_out_;
 };
 
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr size_t WriteToOutputStage::kMaxPixelsPerCall;
+#endif
 
 std::unique_ptr<RenderPipelineStage> GetWriteToOutputStage(
     const ImageOutput& main_output, size_t width, size_t height, bool has_alpha,

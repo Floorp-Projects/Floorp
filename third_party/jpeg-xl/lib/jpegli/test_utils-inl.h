@@ -421,11 +421,11 @@ void CopyCoefficients(j_decompress_ptr cinfo, jvirt_barray_ptr* coef_arrays,
     std::vector<JCOEF> coeffs(comp->width_in_blocks * comp->height_in_blocks *
                               DCTSIZE2);
     for (size_t by = 0; by < comp->height_in_blocks; ++by) {
-      JBLOCKARRAY ba = (*cinfo->mem->access_virt_barray)(comptr, coef_arrays[c],
-                                                         by, 1, TRUE);
+      JBLOCKARRAY blocks = (*cinfo->mem->access_virt_barray)(
+          comptr, coef_arrays[c], by, 1, TRUE);
       size_t stride = comp->width_in_blocks * sizeof(JBLOCK);
       size_t offset = by * comp->width_in_blocks * DCTSIZE2;
-      memcpy(&coeffs[offset], ba[0], stride);
+      memcpy(&coeffs[offset], blocks[0], stride);
     }
     output->coeffs.emplace_back(std::move(coeffs));
   }

@@ -20,7 +20,9 @@ namespace jxl {
 
 static const int32_t kDefaultQuant = 64;
 
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr int32_t Quantizer::kQuantMax;
+#endif
 
 Quantizer::Quantizer(const DequantMatrices* dequant)
     : Quantizer(dequant, kDefaultQuant, kGlobalScaleDenom / kDefaultQuant) {}

@@ -11,17 +11,13 @@
 
 #include <jxl/memory_manager.h>
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 
-#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/field_encodings.h"
-#include "lib/jxl/fields.h"
 #include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/image.h"
 
@@ -49,15 +45,7 @@ static constexpr uint8_t kCFLFixedPointPrecision = 11;
 static constexpr U32Enc kColorFactorDist(Val(kDefaultColorFactor), Val(256),
                                          BitsOffset(8, 2), BitsOffset(16, 258));
 
-struct ColorCorrelationMap {
-  ColorCorrelationMap() = default;
-  // xsize/ysize are in pixels
-  // set XYB=false to do something close to no-op cmap (needed for now since
-  // cmap is mandatory)
-  static StatusOr<ColorCorrelationMap> Create(JxlMemoryManager* memory_manager,
-                                              size_t xsize, size_t ysize,
-                                              bool XYB = true);
-
+struct ColorCorrelation {
   float YtoXRatio(int32_t x_factor) const {
     return base_correlation_x_ + x_factor * color_scale_;
   }
@@ -66,27 +54,7 @@ struct ColorCorrelationMap {
     return base_correlation_b_ + b_factor * color_scale_;
   }
 
-  Status DecodeDC(BitReader* br) {
-    if (br->ReadFixedBits<1>() == 1) {
-      // All default.
-      return true;
-    }
-    SetColorFactor(U32Coder::Read(kColorFactorDist, br));
-    JXL_RETURN_IF_ERROR(F16Coder::Read(br, &base_correlation_x_));
-    if (std::abs(base_correlation_x_) > 4.0f) {
-      return JXL_FAILURE("Base X correlation is out of range");
-    }
-    JXL_RETURN_IF_ERROR(F16Coder::Read(br, &base_correlation_b_));
-    if (std::abs(base_correlation_b_) > 4.0f) {
-      return JXL_FAILURE("Base B correlation is out of range");
-    }
-    ytox_dc_ = static_cast<int>(br->ReadFixedBits<kBitsPerByte>()) +
-               std::numeric_limits<int8_t>::min();
-    ytob_dc_ = static_cast<int>(br->ReadFixedBits<kBitsPerByte>()) +
-               std::numeric_limits<int8_t>::min();
-    RecomputeDCFactors();
-    return true;
-  }
+  Status DecodeDC(BitReader* br);
 
   // We consider a CfL map to be JPEG-reconstruction-compatible if base
   // correlation is 0, no DC correlation is used, and we use the default color
@@ -129,10 +97,8 @@ struct ColorCorrelationMap {
     dc_factors_[2] = YtoBRatio(ytob_dc_);
   }
 
-  ImageSB ytox_map;
-  ImageSB ytob_map;
-
  private:
+  friend struct ColorCorrelationMap;
   float dc_factors_[4] = {};
   // range of factor: -1.51 to +1.52
   uint32_t color_factor_ = kDefaultColorFactor;
@@ -141,6 +107,34 @@ struct ColorCorrelationMap {
   float base_correlation_b_ = jxl::cms::kYToBRatio;
   int32_t ytox_dc_ = 0;
   int32_t ytob_dc_ = 0;
+};
+
+struct ColorCorrelationMap {
+  ColorCorrelationMap() = default;
+
+  // Copy disallowed.
+  ColorCorrelationMap(const ColorCorrelationMap&) = delete;
+  ColorCorrelationMap& operator=(const ColorCorrelationMap&) = delete;
+
+  // Move default.
+  ColorCorrelationMap(ColorCorrelationMap&&) = default;
+  ColorCorrelationMap& operator=(ColorCorrelationMap&&) = default;
+
+  // xsize/ysize are in pixels
+  // set XYB=false to do something close to no-op cmap (needed for now since
+  // cmap is mandatory)
+  static StatusOr<ColorCorrelationMap> Create(JxlMemoryManager* memory_manager,
+                                              size_t xsize, size_t ysize,
+                                              bool XYB = true);
+
+  const ColorCorrelation& base() const { return base_; }
+  Status DecodeDC(BitReader* br) { return base_.DecodeDC(br); }
+
+  ImageSB ytox_map;
+  ImageSB ytob_map;
+
+ private:
+  ColorCorrelation base_;
 };
 
 }  // namespace jxl

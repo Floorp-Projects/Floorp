@@ -39,6 +39,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/padded_bytes.h"
+#include "lib/jxl/test_memory_manager.h"
 
 #if !defined(TEST_DATA_PATH)
 #include "tools/cpp/runfiles/runfiles.h"
@@ -59,6 +60,76 @@ std::string GetTestDataPath(const std::string& filename) {
   return kRunfiles->Rlocation(root + filename);
 }
 #endif
+
+jxl::IccBytes GetIccTestProfile() {
+  const uint8_t* profile = reinterpret_cast<const uint8_t*>(
+      "\0\0\3\200lcms\0040\0\0mntrRGB XYZ "
+      "\a\344\0\a\0\27\0\21\0$"
+      "\0\37acspAPPL\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\366"
+      "\326\0\1\0\0\0\0\323-lcms\372c\207\36\227\200{"
+      "\2\232s\255\327\340\0\n\26\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+      "\0\0\0\0\0\0\0\0\rdesc\0\0\1 "
+      "\0\0\0Bcprt\0\0\1d\0\0\1\0wtpt\0\0\2d\0\0\0\24chad\0\0\2x\0\0\0,"
+      "bXYZ\0\0\2\244\0\0\0\24gXYZ\0\0\2\270\0\0\0\24rXYZ\0\0\2\314\0\0\0\24rTR"
+      "C\0\0\2\340\0\0\0 gTRC\0\0\2\340\0\0\0 bTRC\0\0\2\340\0\0\0 "
+      "chrm\0\0\3\0\0\0\0$dmnd\0\0\3$\0\0\0("
+      "dmdd\0\0\3L\0\0\0002mluc\0\0\0\0\0\0\0\1\0\0\0\fenUS\0\0\0&"
+      "\0\0\0\34\0R\0G\0B\0_\0D\0006\0005\0_\0S\0R\0G\0_\0R\0e\0l\0_"
+      "\0L\0i\0n\0\0mluc\0\0\0\0\0\0\0\1\0\0\0\fenUS\0\0\0\344\0\0\0\34\0C\0o\0"
+      "p\0y\0r\0i\0g\0h\0t\0 \0002\0000\0001\08\0 \0G\0o\0o\0g\0l\0e\0 "
+      "\0L\0L\0C\0,\0 \0C\0C\0-\0B\0Y\0-\0S\0A\0 \0003\0.\0000\0 "
+      "\0U\0n\0p\0o\0r\0t\0e\0d\0 "
+      "\0l\0i\0c\0e\0n\0s\0e\0(\0h\0t\0t\0p\0s\0:\0/\0/"
+      "\0c\0r\0e\0a\0t\0i\0v\0e\0c\0o\0m\0m\0o\0n\0s\0.\0o\0r\0g\0/"
+      "\0l\0i\0c\0e\0n\0s\0e\0s\0/\0b\0y\0-\0s\0a\0/\0003\0.\0000\0/"
+      "\0l\0e\0g\0a\0l\0c\0o\0d\0e\0)XYZ "
+      "\0\0\0\0\0\0\366\326\0\1\0\0\0\0\323-"
+      "sf32\0\0\0\0\0\1\fB\0\0\5\336\377\377\363%"
+      "\0\0\a\223\0\0\375\220\377\377\373\241\377\377\375\242\0\0\3\334\0\0\300"
+      "nXYZ \0\0\0\0\0\0o\240\0\08\365\0\0\3\220XYZ "
+      "\0\0\0\0\0\0$\237\0\0\17\204\0\0\266\304XYZ "
+      "\0\0\0\0\0\0b\227\0\0\267\207\0\0\30\331para\0\0\0\0\0\3\0\0\0\1\0\0\0\1"
+      "\0\0\0\0\0\0\0\1\0\0\0\0\0\0chrm\0\0\0\0\0\3\0\0\0\0\243\327\0\0T|"
+      "\0\0L\315\0\0\231\232\0\0&"
+      "g\0\0\17\\mluc\0\0\0\0\0\0\0\1\0\0\0\fenUS\0\0\0\f\0\0\0\34\0G\0o\0o\0g"
+      "\0l\0emluc\0\0\0\0\0\0\0\1\0\0\0\fenUS\0\0\0\26\0\0\0\34\0I\0m\0a\0g\0e"
+      "\0 \0c\0o\0d\0e\0c\0\0");
+  size_t profile_size = 896;
+  jxl::IccBytes icc_profile;
+  icc_profile.assign(profile, profile + profile_size);
+  return icc_profile;
+}
+
+std::vector<uint8_t> GetCompressedIccTestProfile() {
+  const uint8_t* raw_icc_data = reinterpret_cast<const uint8_t*>(
+      "\x1f\x8b\x01\x33\x38\x18\x00\x30\x20\x8c"
+      "\xe6\x81\x59\x00\x64\x69\x2c\x50\x80\xfc\xbc\x8e\xd6\xf7\x84\x66"
+      "\x0c\x46\x68\x8e\xc9\x1e\x35\xb7\xe6\x79\x0a\x38\x0f\x2d\x0b\x15"
+      "\x94\x56\x90\x28\x39\x09\x48\x27\x1f\xc3\x2a\x85\xb3\x82\x01\x46"
+      "\x86\x28\x19\xe4\x64\x24\x3d\x69\x74\xa4\x9e\x24\x3e\x4a\x6d\x31"
+      "\xa4\x54\x2a\x35\xc5\xf0\x9e\x34\xa0\x27\x8d\x8a\x04\xb0\xec\x8e"
+      "\xdb\xee\xcc\x40\x5e\x71\x96\xcc\x99\x3e\x3a\x18\x42\x3f\xc0\x06"
+      "\x5c\x04\xaf\x79\xdf\xa3\x7e\x47\x0f\x0f\xbd\x08\xd8\x3d\xa9\xd9"
+      "\xf9\xdd\x3e\x57\x30\xa5\x36\x7e\xcc\x96\x57\xfa\x11\x41\x71\xdd"
+      "\x1b\x8d\xa1\x79\xa5\x5c\xe4\x3e\xb4\xde\xde\xdf\x9c\xe4\xee\x4f"
+      "\x28\xf8\x3e\x4c\xe2\xfa\x36\xfb\x3f\x13\x97\x1a\xc9\x34\xef\xc0"
+      "\x17\x9a\x15\x92\x03\x4b\x83\xd5\x62\xf3\xc4\x20\xc7\xf3\x1c\x4c"
+      "\x0d\xc2\xe1\x8c\x39\xc8\x64\xdc\xc8\xa5\x7b\x93\x18\xec\xec\xc5"
+      "\xe0\x0a\x2f\xf0\x95\x12\x05\x0d\x60\x92\xa1\xf0\x0e\x65\x80\xa5"
+      "\x52\xa1\xf3\x94\x3f\x6f\xc7\x0a\x45\x94\xc8\x1a\xc5\xf0\x34\xcd"
+      "\xe3\x1d\x9b\xaf\x70\xfe\x8f\x19\x1d\x1f\x69\xba\x1d\xc2\xdf\xd9"
+      "\x0b\x1f\xa6\x38\x02\x66\x78\x88\x72\x84\x76\xad\x04\x80\xd3\x69"
+      "\x44\x71\x05\x71\xd2\xeb\xdf\xbf\xf3\x29\x70\x76\x02\xf6\x85\xf8"
+      "\xf7\xef\xde\x90\x7f\xff\xf6\x15\x41\x96\x0b\x02\xd7\x15\xfb\xbe"
+      "\x81\x18\x6c\x1d\xb2\x10\x18\xe2\x07\xea\x12\x40\x9b\x44\x58\xf1"
+      "\x75\x85\x37\x0f\xd0\x68\x96\x7c\x39\x85\xf8\xea\xf7\x62\x47\xb0"
+      "\x42\xeb\x43\x06\x70\xe4\x15\x96\x2a\x8b\x65\x3e\x4d\x98\x51\x03"
+      "\x63\xf6\x14\xf5\xe5\xe0\x7a\x0e\xdf\x3e\x1b\x45\x9a\xef\x87\xe1"
+      "\x3f\xcf\x69\x5c\x43\xda\x68\xde\x84\x26\x38\x6a\xf0\x35\xcb\x08");
+  std::vector<uint8_t> icc_data;
+  icc_data.assign(raw_icc_data, raw_icc_data + 378);
+  return icc_data;
+}
 
 std::vector<uint8_t> ReadTestData(const std::string& filename) {
   std::string full_path = GetTestDataPath(filename);
@@ -605,11 +676,11 @@ float Butteraugli3Norm(const extras::PackedPixelFile& a,
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(a, pool, &io0));
   CodecInOut io1{memory_manager};
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, pool, &io1));
-  ButteraugliParams ba;
+  ButteraugliParams butteraugli_params;
   ImageF distmap;
-  ButteraugliDistance(io0.frames, io1.frames, ba, *JxlGetDefaultCms(), &distmap,
-                      pool);
-  return ComputeDistanceP(distmap, ba, 3);
+  ButteraugliDistance(io0.frames, io1.frames, butteraugli_params,
+                      *JxlGetDefaultCms(), &distmap, pool);
+  return ComputeDistanceP(distmap, butteraugli_params, 3);
 }
 
 float ComputeDistance2(const extras::PackedPixelFile& a,
@@ -838,14 +909,6 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
   Bytes(output).AppendTo(*compressed);
   return true;
 }
-
-namespace {
-void* TestAlloc(void* /* opaque*/, size_t size) { return malloc(size); }
-void TestFree(void* /* opaque*/, void* address) { free(address); }
-JxlMemoryManager kMemoryManager{nullptr, &TestAlloc, &TestFree};
-}  // namespace
-
-JxlMemoryManager* MemoryManager() { return &kMemoryManager; };
 
 }  // namespace test
 

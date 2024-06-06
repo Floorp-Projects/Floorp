@@ -20,7 +20,7 @@ Status InitializePassesSharedState(const FrameHeader& frame_header,
   JXL_ASSERT(frame_header.nonserialized_metadata != nullptr);
   shared->metadata = frame_header.nonserialized_metadata;
   shared->frame_dim = frame_header.ToFrameDimensions();
-  shared->image_features.patches.SetPassesSharedState(shared);
+  shared->image_features.patches.SetShared(&shared->reference_frames);
 
   const FrameDimensions& frame_dim = shared->frame_dim;
   JxlMemoryManager* memory_manager = shared->memory_manager;

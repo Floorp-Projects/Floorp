@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -424,7 +424,7 @@ typedef struct {
   JxlLayerInfo layer_info;
 } JxlFrameHeader;
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }
 #endif
 

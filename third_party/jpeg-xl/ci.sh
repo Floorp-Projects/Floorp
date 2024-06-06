@@ -136,7 +136,24 @@ if [[ "${BUILD_TARGET%%-*}" != "arm" ]]; then
   )
 fi
 
-CLANG_TIDY_BIN=$(which clang-tidy-6.0 clang-tidy-7 clang-tidy-8 clang-tidy 2>/dev/null | head -n 1)
+CLANG_TIDY_BIN_CANDIDATES=(
+  clang-tidy
+  clang-tidy-6.0
+  clang-tidy-7
+  clang-tidy-8
+  clang-tidy-9
+  clang-tidy-10
+  clang-tidy-11
+  clang-tidy-12
+  clang-tidy-13
+  clang-tidy-14
+  clang-tidy-15
+  clang-tidy-16
+  clang-tidy-17
+  clang-tidy-18
+)
+
+CLANG_TIDY_BIN=${CLANG_TIDY_BIN:-$(which ${CLANG_TIDY_BIN_CANDIDATES[@]} 2>/dev/null | tail -n 1)}
 # Default to "cat" if "colordiff" is not installed or if stdout is not a tty.
 if [[ -t 1 ]]; then
   COLORDIFF_BIN=$(which colordiff cat 2>/dev/null | head -n 1)
@@ -467,7 +484,7 @@ strip_dead_code() {
 ### Externally visible commands
 
 cmd_debug() {
-  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_BUILD_TYPE="DebugOpt"
   cmake_configure "$@"
   cmake_build_and_test
 }
@@ -561,6 +578,7 @@ cmd_msanfuzz() {
   # Install msan if needed before changing the flags.
   detect_clang_version
   local msan_prefix="${HOME}/.msan/${CLANG_VERSION}"
+  # TODO(eustas): why libc++abi.a is bad?
   if [[ ! -d "${msan_prefix}" || -e "${msan_prefix}/lib/libc++abi.a" ]]; then
     # Install msan libraries for this version if needed or if an older version
     # with libc++abi was installed.
@@ -589,13 +607,11 @@ cmd_tsan() {
     -DJXL_ENABLE_ASSERT=1
     -g
     -DTHREAD_SANITIZER
-    ${UBSAN_FLAGS[@]}
     -fsanitize=thread
   )
   CMAKE_C_FLAGS+=" ${tsan_args[@]}"
   CMAKE_CXX_FLAGS+=" ${tsan_args[@]}"
 
-  CMAKE_BUILD_TYPE="RelWithDebInfo"
   cmake_configure "$@" -DJPEGXL_ENABLE_TCMALLOC=OFF
   cmake_build_and_test
 }
@@ -647,16 +663,22 @@ cmd_msan() {
     -Wl,-rpath -Wl,"${msan_prefix}"/lib/
   )
 
-  CMAKE_C_FLAGS+=" ${msan_c_flags[@]} ${UBSAN_FLAGS[@]}"
-  CMAKE_CXX_FLAGS+=" ${msan_cxx_flags[@]} ${UBSAN_FLAGS[@]}"
+  CMAKE_C_FLAGS+=" ${msan_c_flags[@]}"
+  CMAKE_CXX_FLAGS+=" ${msan_cxx_flags[@]}"
   CMAKE_EXE_LINKER_FLAGS+=" ${msan_linker_flags[@]}"
   CMAKE_MODULE_LINKER_FLAGS+=" ${msan_linker_flags[@]}"
   CMAKE_SHARED_LINKER_FLAGS+=" ${msan_linker_flags[@]}"
   strip_dead_code
+
+  # MSAN share of stack size is non-negligible.
+  TEST_STACK_LIMIT="none"
+
+  # TODO(eustas): investigate why fuzzers do not link when MSAN libc++ is used
   cmake_configure "$@" \
     -DCMAKE_CROSSCOMPILING=1 -DRUN_HAVE_STD_REGEX=0 -DRUN_HAVE_POSIX_REGEX=0 \
     -DJPEGXL_ENABLE_TCMALLOC=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF \
-    -DCMAKE_REQUIRED_LINK_OPTIONS="${msan_linker_flags[@]}"
+    -DCMAKE_REQUIRED_LINK_OPTIONS="${msan_linker_flags[@]}" \
+    -DJPEGXL_ENABLE_FUZZERS=OFF
   cmake_build_and_test
 }
 
@@ -665,6 +687,8 @@ cmd_msan() {
 cmd_msan_install() {
   local tmpdir=$(mktemp -d)
   CLEANUP_FILES+=("${tmpdir}")
+  local msan_root="${HOME}/.msan"
+  mkdir -p "${msan_root}"
   # Detect the llvm to install:
   export CC="${CC:-clang}"
   export CXX="${CXX:-clang++}"
@@ -672,23 +696,36 @@ cmd_msan_install() {
   # Allow overriding the LLVM checkout.
   local llvm_root="${LLVM_ROOT:-}"
   if [ -z "${llvm_root}" ]; then
-    local llvm_tag="llvmorg-${CLANG_VERSION}.0.0"
-    case "${CLANG_VERSION}" in
-      "6.0")
-        llvm_tag="llvmorg-6.0.1"
-        ;;
-      "7")
-        llvm_tag="llvmorg-7.0.1"
-        ;;
-    esac
-    local llvm_targz="${tmpdir}/${llvm_tag}.tar.gz"
-    curl -L --show-error -o "${llvm_targz}" \
-      "https://github.com/llvm/llvm-project/archive/${llvm_tag}.tar.gz"
+    declare -A llvm_tag_by_version=(
+      ["6.0"]="6.0.1"
+      ["7"]="7.1.0"
+      ["8"]="8.0.1"
+      ["9"]="9.0.2"
+      ["10"]="10.0.1"
+      ["11"]="11.1.0"
+      ["12"]="12.0.1"
+      ["13"]="13.0.1"
+      ["14"]="14.0.6"
+      ["15"]="15.0.7"
+      ["16"]="16.0.6"
+      ["17"]="17.0.6"
+      ["18"]="18.1.6"
+    ) 
+    local llvm_tag="${CLANG_VERSION}.0.0"
+    if [[ -n "${llvm_tag_by_version["${CLANG_VERSION}"]}" ]]; then
+      llvm_tag=${llvm_tag_by_version["${CLANG_VERSION}"]}
+    fi
+    llvm_tag="llvmorg-${llvm_tag}"
+    local llvm_targz="${msan_root}/${llvm_tag}.tar.gz"
+    if [ ! -f "${llvm_targz}" ]; then
+      curl -L --show-error -o "${llvm_targz}" \
+        "https://github.com/llvm/llvm-project/archive/${llvm_tag}.tar.gz"
+    fi
     tar -C "${tmpdir}" -zxf "${llvm_targz}"
     llvm_root="${tmpdir}/llvm-project-${llvm_tag}"
   fi
 
-  local msan_prefix="${HOME}/.msan/${CLANG_VERSION}"
+  local msan_prefix="${msan_root}/${CLANG_VERSION}"
   rm -rf "${msan_prefix}"
 
   local TARGET_OPTS=""
@@ -700,32 +737,29 @@ cmd_msan_install() {
     "
   fi
 
-  declare -A CMAKE_EXTRAS
-  CMAKE_EXTRAS[libcxx]="\
-    -DLIBCXX_CXX_ABI=libstdc++ \
-    -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=ON"
-
-  for project in libcxx; do
-    local proj_build="${tmpdir}/build-${project}"
-    local proj_dir="${llvm_root}/${project}"
-    mkdir -p "${proj_build}"
-    cmake -B"${proj_build}" -H"${proj_dir}" \
-      -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DLLVM_USE_SANITIZER=Memory \
-      -DLLVM_PATH="${llvm_root}/llvm" \
-      -DLLVM_CONFIG_PATH="$(which llvm-config llvm-config-7 llvm-config-6.0 | \
-                            head -n1)" \
-      -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
-      -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS}" \
-      -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}" \
-      -DCMAKE_SHARED_LINKER_FLAGS="${CMAKE_SHARED_LINKER_FLAGS}" \
-      -DCMAKE_INSTALL_PREFIX="${msan_prefix}" \
-      ${TARGET_OPTS} \
-      ${CMAKE_EXTRAS[${project}]}
-    cmake --build "${proj_build}"
-    ninja -C "${proj_build}" install
-  done
+  local build_dir="${tmpdir}/build-llvm"
+  mkdir -p "${build_dir}"
+  cd ${llvm_root}
+  cmake -B"${build_dir}" \
+    -G Ninja \
+    -S runtimes \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_USE_SANITIZER=Memory \
+    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" \
+    -DLIBCXXABI_ENABLE_SHARED=ON \
+    -DLIBCXXABI_ENABLE_STATIC=OFF \
+    -DLIBCXX_ENABLE_SHARED=ON \
+    -DLIBCXX_ENABLE_STATIC=OFF \
+    -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
+    -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS}" \
+    -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}" \
+    -DCMAKE_SHARED_LINKER_FLAGS="${CMAKE_SHARED_LINKER_FLAGS}" \
+    -DCMAKE_INSTALL_PREFIX="${msan_prefix}" \
+    -DLLVM_PATH="${llvm_root}/llvm" \
+    -DLLVM_CONFIG_PATH="$(which llvm-config-${CLANG_VERSION} llvm-config | head -n1)" \
+     ${TARGET_OPTS}
+  cmake --build "${build_dir}"
+  ninja -C "${build_dir}" install
 }
 
 # Internal build step shared between all cmd_ossfuzz_* commands.
@@ -907,7 +941,7 @@ run_benchmark() {
     "${TOOLS_DIR}/benchmark_xl" "${benchmark_args[@]}" | \
        tee "${output_dir}/results.txt"
 
-    # Check error code for benckmark_xl command. This will exit if not.
+    # Check error code for benchmark_xl command. This will exit if not.
     return ${PIPESTATUS[0]}
   )
 }
@@ -1188,6 +1222,15 @@ cmd_lint() {
       echo 'To fix them run (from the base directory):' >&2
       echo '  buildifier `git ls-files | grep -E "/BUILD$|WORKSPACE|.bzl$"`' >&2
     fi
+  fi
+
+  # It is ok, if spell-checker is not installed.
+  if which typos >/dev/null; then
+    local src_ext="bazel|bzl|c|cc|cmake|gni|h|html|in|java|js|m|md|nix|py|rst|sh|ts|txt|yaml|yml"
+    local sources=`git -C ${MYDIR} ls-files | grep -E "\.(${src_ext})$"`
+    typos -c ${MYDIR}/tools/scripts/typos.toml ${sources}
+  else
+    echo "Consider installing https://github.com/crate-ci/typos for spell-checking"
   fi
 
   local installed=()

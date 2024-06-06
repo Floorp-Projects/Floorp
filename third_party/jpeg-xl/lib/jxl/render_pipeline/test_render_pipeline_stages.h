@@ -61,10 +61,10 @@ class UpsampleYSlowStage : public RenderPipelineStage {
         float xp = *(rowp + x);
         float xc = *(rowc + x);
         float xn = *(rown + x);
-        float yout0 = xp * 0.25f + xc * 0.75f;
-        float yout1 = xc * 0.75f + xn * 0.25f;
-        *(row_out0 + x) = yout0;
-        *(row_out1 + x) = yout1;
+        float y_out0 = xp * 0.25f + xc * 0.75f;
+        float y_out1 = xc * 0.75f + xn * 0.25f;
+        *(row_out0 + x) = y_out0;
+        *(row_out1 + x) = y_out1;
       }
     }
     return true;

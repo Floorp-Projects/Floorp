@@ -7,6 +7,7 @@
 
 #include <brotli/encode.h>
 #include <jxl/memory_manager.h>
+#include <jxl/types.h>
 
 #include "lib/jxl/base/sanitizers.h"
 #include "lib/jxl/codec_in_out.h"
@@ -357,7 +358,8 @@ Status EncodeJPEGData(JxlMemoryManager* memory_manager, JPEGData& jpeg_data,
           brotli_enc, last ? BROTLI_OPERATION_FINISH : BROTLI_OPERATION_PROCESS,
           &available_in, &in, &brotli_capacity, &out, &enc_size));
       msan::UnpoisonMemory(out_before, out - out_before);
-    } while (BrotliEncoderHasMoreOutput(brotli_enc) || available_in > 0);
+    } while (FROM_JXL_BOOL(BrotliEncoderHasMoreOutput(brotli_enc)) ||
+             available_in > 0);
   };
 
   for (size_t i = 0; i < jpeg_data.app_data.size(); i++) {

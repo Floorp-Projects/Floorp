@@ -17,6 +17,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/rect.h"
 #include "lib/jxl/frame_dimensions.h"
+#include "lib/jxl/image.h"
 #include "lib/jxl/xorshift128plus-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -100,13 +101,42 @@ HWY_AFTER_NAMESPACE();
 #if HWY_ONCE
 namespace jxl {
 
+namespace {
 HWY_EXPORT(Random3Planes);
-void Random3Planes(size_t visible_frame_index, size_t nonvisible_frame_index,
-                   size_t x0, size_t y0, const std::pair<ImageF*, Rect>& plane0,
-                   const std::pair<ImageF*, Rect>& plane1,
-                   const std::pair<ImageF*, Rect>& plane2) {
-  HWY_DYNAMIC_DISPATCH(Random3Planes)
-  (visible_frame_index, nonvisible_frame_index, x0, y0, plane0, plane1, plane2);
+}  // namespace
+
+void PrepareNoiseInput(const PassesDecoderState& dec_state,
+                       const FrameDimensions& frame_dim,
+                       const FrameHeader& frame_header, size_t group_index,
+                       size_t thread) {
+  size_t group_dim = frame_dim.group_dim;
+  const size_t gx = group_index % frame_dim.xsize_groups;
+  const size_t gy = group_index / frame_dim.xsize_groups;
+  RenderPipelineInput input =
+      dec_state.render_pipeline->GetInputBuffers(group_index, thread);
+  size_t noise_c_start =
+      3 + frame_header.nonserialized_metadata->m.num_extra_channels;
+  // When the color channels are downsampled, we need to generate more noise
+  // input for the current group than just the group dimensions.
+  std::pair<ImageF*, Rect> rects[3];
+  for (size_t iy = 0; iy < frame_header.upsampling; iy++) {
+    for (size_t ix = 0; ix < frame_header.upsampling; ix++) {
+      for (size_t c = 0; c < 3; c++) {
+        auto r = input.GetBuffer(noise_c_start + c);
+        rects[c].first = r.first;
+        size_t x1 = r.second.x0() + r.second.xsize();
+        size_t y1 = r.second.y0() + r.second.ysize();
+        rects[c].second =
+            Rect(r.second.x0() + ix * group_dim, r.second.y0() + iy * group_dim,
+                 group_dim, group_dim, x1, y1);
+      }
+      HWY_DYNAMIC_DISPATCH(Random3Planes)
+      (dec_state.visible_frame_index, dec_state.nonvisible_frame_index,
+       (gx * frame_header.upsampling + ix) * group_dim,
+       (gy * frame_header.upsampling + iy) * group_dim, rects[0], rects[1],
+       rects[2]);
+    }
+  }
 }
 
 void DecodeFloatParam(float precision, float* val, BitReader* br) {

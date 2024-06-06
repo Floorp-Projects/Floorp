@@ -64,22 +64,22 @@ void QuantizeBlockAC(const Quantizer& quantizer, const bool error_diffusion,
     size_t yfix = static_cast<size_t>(y >= ysize * kBlockDim / 2) * 2;
     const size_t off = y * kBlockDim * xsize;
     for (size_t x = 0; x < xsize * kBlockDim; x += Lanes(df)) {
-      auto thr = Zero(df);
+      auto threshold = Zero(df);
       if (xsize == 1) {
         HWY_ALIGN uint32_t kMask[kBlockDim] = {0, 0, 0, 0, ~0u, ~0u, ~0u, ~0u};
         const auto mask = MaskFromVec(BitCast(df, Load(du, kMask + x)));
-        thr = IfThenElse(mask, Set(df, thresholds[yfix + 1]),
-                         Set(df, thresholds[yfix]));
+        threshold = IfThenElse(mask, Set(df, thresholds[yfix + 1]),
+                               Set(df, thresholds[yfix]));
       } else {
         // Same for all lanes in the vector.
-        thr = Set(
+        threshold = Set(
             df,
             thresholds[yfix + static_cast<size_t>(x >= xsize * kBlockDim / 2)]);
       }
       const auto q = Mul(Load(df, qm + off + x), quantv);
       const auto in = Load(df, block_in + off + x);
       const auto val = Mul(q, in);
-      const auto nzero_mask = Ge(Abs(val), thr);
+      const auto nzero_mask = Ge(Abs(val), threshold);
       const auto v = ConvertTo(di, IfThenElseZero(nzero_mask, Round(val)));
       Store(v, di, block_out + off + x);
     }
@@ -434,9 +434,9 @@ void ComputeCoefficients(size_t group_idx, PassesEncoderState* enc_state,
       for (size_t tx = 0; tx < DivCeil(xsize_blocks, kColorTileDimInBlocks);
            tx++) {
         const auto x_factor =
-            Set(d, enc_state->shared.cmap.YtoXRatio(row_cmap[0][tx]));
+            Set(d, enc_state->shared.cmap.base().YtoXRatio(row_cmap[0][tx]));
         const auto b_factor =
-            Set(d, enc_state->shared.cmap.YtoBRatio(row_cmap[2][tx]));
+            Set(d, enc_state->shared.cmap.base().YtoBRatio(row_cmap[2][tx]));
         for (size_t bx = tx * kColorTileDimInBlocks;
              bx < xsize_blocks && bx < (tx + 1) * kColorTileDimInBlocks; ++bx) {
           const AcStrategy acs = ac_strategy_row[bx];

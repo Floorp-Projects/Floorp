@@ -34,12 +34,14 @@ HWY_NOINLINE void TestRec2408ToneMap() {
                        rng.UniformF(0.2f, 0.4f)};
     Color rgb{rng.UniformF(0.0f, 1.0f), rng.UniformF(0.0f, 1.0f),
               rng.UniformF(0.0f, 1.0f)};
-    Rec2408ToneMapper<decltype(d)> tone_mapper({0, src}, {0, tgt}, luminances);
+    Rec2408ToneMapper<decltype(d)> tone_mapper({0.0f, src}, {0.0f, tgt},
+                                               luminances);
     auto r = Set(d, rgb[0]);
     auto g = Set(d, rgb[1]);
     auto b = Set(d, rgb[2]);
     tone_mapper.ToneMap(&r, &g, &b);
-    Rec2408ToneMapperBase tone_mapper_base({0, src}, {0, tgt}, luminances);
+    Rec2408ToneMapperBase tone_mapper_base({0.0f, src}, {0.0f, tgt},
+                                           luminances);
     tone_mapper_base.ToneMap(rgb);
     const float actual_r = GetLane(r);
     const float expected_r = rgb[0];

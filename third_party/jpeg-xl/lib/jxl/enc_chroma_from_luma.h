@@ -28,9 +28,8 @@ namespace jxl {
 struct AuxOut;
 class Quantizer;
 
-void ColorCorrelationMapEncodeDC(const ColorCorrelationMap& map,
-                                 BitWriter* writer, size_t layer,
-                                 AuxOut* aux_out);
+void ColorCorrelationEncodeDC(const ColorCorrelation& color_correlation,
+                              BitWriter* writer, size_t layer, AuxOut* aux_out);
 
 struct CfLHeuristics {
   Status Init(JxlMemoryManager* memory_manager, const Rect& rect);

@@ -43,6 +43,7 @@
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/render_pipeline/test_render_pipeline_stages.h"
 #include "lib/jxl/splines.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 
@@ -272,7 +273,7 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
 }
 
 Splines CreateTestSplines() {
-  const ColorCorrelationMap cmap;
+  const ColorCorrelation color_correlation{};
   std::vector<Spline::Point> control_points{{9, 54},  {118, 159}, {97, 3},
                                             {10, 40}, {150, 25},  {120, 300}};
   const Spline spline{control_points,
@@ -285,7 +286,8 @@ Splines CreateTestSplines() {
   std::vector<Spline::Point> starting_points;
   for (const Spline& spline : spline_data) {
     quantized_splines.emplace_back(spline, /*quantization_adjustment=*/0,
-                                   cmap.YtoXRatio(0), cmap.YtoBRatio(0));
+                                   color_correlation.YtoXRatio(0),
+                                   color_correlation.YtoBRatio(0));
     starting_points.push_back(spline.control_points.front());
   }
   return Splines(/*quantization_adjustment=*/0, std::move(quantized_splines),

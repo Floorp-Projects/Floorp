@@ -121,7 +121,7 @@ Status SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
              kRenderPipelineXOffset;
     };
 
-    // Add mirrored pixes to all kInOut channels.
+    // Add mirrored pixels to all kInOut channels.
     for (size_t c = 0; c < channel_data_.size(); c++) {
       if (stage->GetChannelMode(c) != RenderPipelineChannelMode::kInOut) {
         continue;

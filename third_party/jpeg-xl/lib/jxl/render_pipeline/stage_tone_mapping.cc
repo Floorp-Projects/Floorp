@@ -35,10 +35,10 @@ class ToneMappingStage : public RenderPipelineStage {
                               output_encoding_info_.orig_intensity_target) {
       tone_mapper_ = jxl::make_unique<ToneMapper>(
           /*source_range=*/std::pair<float, float>(
-              0, output_encoding_info_.orig_intensity_target),
+              0.0f, output_encoding_info_.orig_intensity_target),
           /*target_range=*/
           std::pair<float, float>(
-              0, output_encoding_info_.desired_intensity_target),
+              0.0f, output_encoding_info_.desired_intensity_target),
           output_encoding_info_.luminances);
     } else if (orig_tf.IsHLG() && !dest_tf.IsHLG()) {
       hlg_ootf_ = jxl::make_unique<HlgOOTF>(

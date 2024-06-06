@@ -35,16 +35,16 @@ Status PassesDecoderState::PreparePipeline(const FrameHeader& frame_header,
                                            PipelineOptions options) {
   JxlMemoryManager* memory_manager = this->memory_manager();
   size_t num_c = 3 + frame_header.nonserialized_metadata->m.num_extra_channels;
-  if (options.render_noise && (frame_header.flags & FrameHeader::kNoise) != 0) {
-    num_c += 3;
-  }
+  bool render_noise =
+      (options.render_noise && (frame_header.flags & FrameHeader::kNoise) != 0);
+  size_t num_tmp_c = render_noise ? 3 : 0;
 
   if (frame_header.CanBeReferenced()) {
     // Necessary so that SetInputSizes() can allocate output buffers as needed.
     frame_storage_for_referencing = ImageBundle(memory_manager, metadata);
   }
 
-  RenderPipeline::Builder builder(memory_manager, num_c);
+  RenderPipeline::Builder builder(memory_manager, num_c + num_tmp_c);
 
   if (options.use_slow_render_pipeline) {
     builder.UseSimpleImplementation();
@@ -99,9 +99,9 @@ Status PassesDecoderState::PreparePipeline(const FrameHeader& frame_header,
   }
 
   if ((frame_header.flags & FrameHeader::kPatches) != 0) {
-    builder.AddStage(
-        GetPatchesStage(&shared->image_features.patches,
-                        3 + shared->metadata->m.num_extra_channels));
+    builder.AddStage(GetPatchesStage(
+        &shared->image_features.patches,
+        &frame_header.nonserialized_metadata->m.extra_channel_info));
   }
   if ((frame_header.flags & FrameHeader::kSplines) != 0) {
     builder.AddStage(GetSplineStage(&shared->image_features.splines));
@@ -117,10 +117,10 @@ Status PassesDecoderState::PreparePipeline(const FrameHeader& frame_header,
           CeilLog2Nonzero(frame_header.upsampling)));
     }
   }
-  if (options.render_noise && (frame_header.flags & FrameHeader::kNoise) != 0) {
-    builder.AddStage(GetConvolveNoiseStage(num_c - 3));
+  if (render_noise) {
+    builder.AddStage(GetConvolveNoiseStage(num_c));
     builder.AddStage(GetAddNoiseStage(shared->image_features.noise_params,
-                                      shared->cmap, num_c - 3));
+                                      shared->cmap.base(), num_c));
   }
   if (frame_header.dc_level != 0) {
     builder.AddStage(GetWriteToImage3FStage(

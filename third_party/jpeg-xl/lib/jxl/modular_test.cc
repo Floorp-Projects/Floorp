@@ -30,6 +30,7 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
+#include "lib/jxl/common.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
@@ -51,6 +52,7 @@
 #include "lib/jxl/modular/transform/transform.h"
 #include "lib/jxl/padded_bytes.h"
 #include "lib/jxl/test_image.h"
+#include "lib/jxl/test_memory_manager.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 

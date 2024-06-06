@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dec_modular.h"
@@ -477,11 +478,12 @@ Status Decode(JxlMemoryManager* memory_manager, BitReader* br,
 
 }  // namespace
 
-// These definitions are needed before C++17.
+#if JXL_CXX_LANG < JXL_CXX_17
 constexpr const std::array<int, 17> DequantMatrices::required_size_x;
 constexpr const std::array<int, 17> DequantMatrices::required_size_y;
 constexpr const size_t DequantMatrices::kSumRequiredXy;
 constexpr DequantMatrices::QuantTable DequantMatrices::kQuantTable[];
+#endif
 
 Status DequantMatrices::Decode(JxlMemoryManager* memory_manager, BitReader* br,
                                ModularFrameDecoder* modular_frame_decoder) {

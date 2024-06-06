@@ -19,6 +19,9 @@ namespace jxl {
 
 namespace {
 
+// Context map uses uint8_t.
+constexpr size_t kMaxClusters = 256;
+
 Status VerifyContextMap(const std::vector<uint8_t>& context_map,
                         const size_t num_htrees) {
   std::vector<bool> have_htree(num_htrees);
