@@ -5873,6 +5873,11 @@
   value: true
   mirror: always
 
+- name: gfx.canvas.remote.recycle-used-data-surface
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: gfx.canvas.willreadfrequently.enabled
   type: bool
 #if defined(XP_WIN)
