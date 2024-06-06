@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/JitHints-inl.h"
+
+#include "gc/Pretenuring.h"
+
 #include "vm/BytecodeLocation-inl.h"
 #include "vm/JSScript-inl.h"
 
@@ -70,8 +73,33 @@ bool JitHintsMap::recordIonCompilation(JSScript* script) {
     }
   }
 
-  hint->initThreshold(script->warmUpCountAtLastICStub());
+  uint32_t threshold = IonHintEagerThresholdValue(
+      script->warmUpCountAtLastICStub(),
+      script->jitScript()->hasPretenuredAllocSites());
+
+  hint->initThreshold(threshold);
   return true;
+}
+
+// static
+uint32_t JitHintsMap::IonHintEagerThresholdValue(uint32_t lastStubCounter,
+                                                 bool hasPretenuredAllocSites) {
+  // Use the counter when the last IC stub was attached as the initial
+  // threshold.
+  uint32_t eagerThreshold = lastStubCounter;
+
+  // Ensure we stay in baseline long enough to pretenure alloc sites.
+  if (hasPretenuredAllocSites) {
+    eagerThreshold =
+        std::max(eagerThreshold, uint32_t(gc::NormalSiteAttentionThreshold));
+  }
+
+  // Add 10 for some wiggle room and to safeguard against cases where the
+  // lastStubCounter is 0.
+  eagerThreshold += 10;
+
+  // Do not exceed the default Ion threshold value set in the options.
+  return std::min(eagerThreshold, JitOptions.normalIonWarmUpThreshold);
 }
 
 bool JitHintsMap::getIonThresholdHint(JSScript* script,

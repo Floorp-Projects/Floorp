@@ -454,6 +454,7 @@ class alignas(uintptr_t) JitScript final
   bool usesEnvironmentChain() const { return *usesEnvironmentChain_; }
 
   bool resetAllocSites(bool resetNurserySites, bool resetPretenuredSites);
+  bool hasPretenuredAllocSites();
 
   void updateLastICStubCounter() { warmUpCountAtLastICStub_ = warmUpCount(); }
   uint32_t warmUpCountAtLastICStub() const { return warmUpCountAtLastICStub_; }

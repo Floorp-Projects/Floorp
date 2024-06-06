@@ -867,6 +867,21 @@ bool JitScript::resetAllocSites(bool resetNurserySites,
   return anyReset;
 }
 
+bool JitScript::hasPretenuredAllocSites() {
+  bool found = false;
+  forEachICScript([&](ICScript* script) {
+    if (!found) {
+      for (gc::AllocSite* site : script->allocSites_) {
+        if (site->initialHeap() == gc::Heap::Tenured) {
+          found = true;
+        }
+      }
+    }
+  });
+
+  return found;
+}
+
 void JitScript::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                        size_t* data, size_t* allocSites) const {
   *data += mallocSizeOf(this);
