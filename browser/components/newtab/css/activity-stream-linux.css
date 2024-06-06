@@ -837,7 +837,13 @@ main section {
 }
 .top-site-outer .title .icon {
   margin-inline-end: 2px;
-  fill: var(--newtab-text-primary-color);
+  fill: var(--newtab-contextual-text-primary-color);
+}
+.lightWallpaper .top-site-outer .title .icon {
+  color-scheme: light;
+}
+.darkWallpaper .top-site-outer .title .icon {
+  color-scheme: dark;
 }
 .top-site-outer .title span {
   display: block;
