@@ -1330,21 +1330,64 @@ static const SSLSignatureScheme sEnabledSignatureSchemes[] = {
     ssl_sig_rsa_pkcs1_sha1,
 };
 
+enum CertificateCompressionAlgorithms {
+  zlib = 0x01,
+  brotli = 0x2,
+};
+
+void GatherCertificateCompressionTelemetry(SECStatus rv,
+                                           CertificateCompressionAlgorithms alg,
+                                           PRUint64 actualCertLen,
+                                           PRUint64 encodedCertLen) {
+  nsAutoCString decoder;
+
+  switch (alg) {
+    case zlib:
+      decoder.AssignLiteral("zlib");
+      break;
+    default:
+      return;
+  }
+
+  mozilla::glean::cert_compression::used.Get(decoder).Add(1);
+
+  if (rv == SECSuccess) {
+    if (actualCertLen >= encodedCertLen) {
+      switch (alg) {
+        case zlib: {
+          mozilla::glean::cert_compression::zlib_saved_bytes
+              .AccumulateSingleSample(actualCertLen - encodedCertLen);
+          break;
+        }
+        case brotli:
+        {
+          break;
+        }
+
+      }
+    }
+  }
+}
+
 SECStatus zlibCertificateDecode(const SECItem* input, unsigned char* output,
                                 size_t outputLen, size_t* usedLen) {
+  SECStatus rv = SECFailure;
   if (!input || !input->data || input->len == 0 || !output || outputLen == 0) {
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
+    return rv;
   }
 
   z_stream strm = {};
 
   if (inflateInit(&strm) != Z_OK) {
     PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return rv;
   }
 
-  auto cleanup = MakeScopeExit([&] { (void)inflateEnd(&strm); });
+  auto cleanup = MakeScopeExit([&] {
+    GatherCertificateCompressionTelemetry(rv, zlib, *usedLen, input->len);
+    (void)inflateEnd(&strm);
+  });
 
   strm.avail_in = input->len;
   strm.next_in = input->data;
@@ -1356,11 +1399,12 @@ SECStatus zlibCertificateDecode(const SECItem* input, unsigned char* output,
   bool ok = ret == Z_STREAM_END && strm.avail_in == 0 && strm.avail_out == 0;
   if (!ok) {
     PR_SetError(SEC_ERROR_BAD_DATA, 0);
-    return SECFailure;
+    return rv;
   }
 
   *usedLen = strm.total_out;
-  return SECSuccess;
+  rv = SECSuccess;
+  return rv;
 }
 
 static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
