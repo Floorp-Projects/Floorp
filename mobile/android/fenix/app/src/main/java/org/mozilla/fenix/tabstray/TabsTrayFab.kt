@@ -36,9 +36,15 @@ fun TabsTrayFab(
     onPrivateTabsFabClicked: () -> Unit,
     onSyncedTabsFabClicked: () -> Unit,
 ) {
-    val currentPage by tabsTrayStore.observeAsState(Page.NormalTabs) { state -> state.selectedPage }
-    val isSyncing by tabsTrayStore.observeAsState(false) { state -> state.syncing }
-    val isInNormalMode by tabsTrayStore.observeAsState(false) { state -> state.mode == TabsTrayState.Mode.Normal }
+    val currentPage by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.selectedPage,
+    ) { state -> state.selectedPage }
+    val isSyncing by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.syncing,
+    ) { state -> state.syncing }
+    val isInNormalMode by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.mode == TabsTrayState.Mode.Normal,
+    ) { state -> state.mode == TabsTrayState.Mode.Normal }
 
     val icon: Painter
     val contentDescription: String

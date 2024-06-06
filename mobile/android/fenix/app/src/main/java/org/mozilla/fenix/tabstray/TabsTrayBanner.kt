@@ -82,7 +82,7 @@ private const val TAB_COUNT_SHOW_CFR = 6
  * @param onTabAutoCloseBannerDismiss Invoked when the user clicks to dismiss the auto close banner.
  * @param onTabAutoCloseBannerShown Invoked when the auto close banner has been shown to the user.
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 fun TabsTrayBanner(
     tabsTrayStore: TabsTrayStore,
@@ -104,11 +104,21 @@ fun TabsTrayBanner(
     onTabAutoCloseBannerDismiss: () -> Unit,
     onTabAutoCloseBannerShown: () -> Unit,
 ) {
-    val normalTabCount by tabsTrayStore.observeAsState(0) { state -> state.normalTabs.size + state.inactiveTabs.size }
-    val privateTabCount by tabsTrayStore.observeAsState(0) { state -> state.privateTabs.size }
-    val multiselectMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
-    val selectedPage by tabsTrayStore.observeAsState(Page.NormalTabs) { state -> state.selectedPage }
-    val showTabAutoCloseBanner by tabsTrayStore.observeAsState(false) { state ->
+    val normalTabCount by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.normalTabs.size + tabsTrayStore.state.inactiveTabs.size,
+    ) { state -> state.normalTabs.size + state.inactiveTabs.size }
+    val privateTabCount by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.privateTabs.size,
+    ) { state -> state.privateTabs.size }
+    val multiselectMode by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.mode,
+    ) { state -> state.mode }
+    val selectedPage by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.selectedPage,
+    ) { state -> state.selectedPage }
+    val showTabAutoCloseBanner by tabsTrayStore.observeAsState(
+        initialValue = shouldShowTabAutoCloseBanner,
+    ) { state ->
         shouldShowTabAutoCloseBanner &&
             max(state.normalTabs.size, state.privateTabs.size) >= TAB_COUNT_SHOW_CFR
     }

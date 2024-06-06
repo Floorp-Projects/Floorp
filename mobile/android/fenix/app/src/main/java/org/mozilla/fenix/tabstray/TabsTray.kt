@@ -138,8 +138,12 @@ fun TabsTray(
     onInactiveTabsCFRClick: () -> Unit,
     onInactiveTabsCFRDismiss: () -> Unit,
 ) {
-    val multiselectMode by tabsTrayStore.observeAsState(TabsTrayState.Mode.Normal) { state -> state.mode }
-    val selectedPage by tabsTrayStore.observeAsState(Page.NormalTabs) { state -> state.selectedPage }
+    val multiselectMode by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.mode,
+    ) { state -> state.mode }
+    val selectedPage by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.selectedPage,
+    ) { state -> state.selectedPage }
 
     val pagerState =
         rememberPagerState(initialPage = selectedPage.ordinal, pageCount = { Page.values().size })

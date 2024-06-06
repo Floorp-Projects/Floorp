@@ -17,7 +17,9 @@ internal fun SyncedTabsPage(
     onTabClick: OnSyncedTabClick,
     onTabClose: OnSyncedTabClose,
 ) {
-    val syncedTabs by tabsTrayStore.observeAsState(emptyList()) { state -> state.syncedTabs }
+    val syncedTabs by tabsTrayStore.observeAsState(
+        initialValue = tabsTrayStore.state.syncedTabs,
+    ) { state -> state.syncedTabs }
 
     SyncedTabsList(
         syncedTabs = syncedTabs,
