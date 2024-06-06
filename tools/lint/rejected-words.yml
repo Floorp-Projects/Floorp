@@ -235,6 +235,7 @@ avoid-blacklist-and-whitelist:
         - testing/web-platform/tests/tools/manifest/tests/test_manifest.py
         - toolkit/actors/RemotePageChild.sys.mjs
         - toolkit/actors/WebChannelChild.sys.mjs
+        - toolkit/components/antitracking/docs/tracking-lists/index.md
         - toolkit/components/antitracking/test/browser/browser_socialtracking_save_image.js
         - toolkit/components/reputationservice/ApplicationReputation.cpp
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
