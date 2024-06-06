@@ -18,6 +18,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -43,19 +44,9 @@ class FxSuggestIngestionWorkerTest {
 
         val result = worker.startWork().await()
 
-        verify(storage).ingest(any())
+        // Ingestion is disabled until we figure out
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1900837
+        verify(storage, never()).ingest(any())
         assertEquals(ListenableWorker.Result.success(), result)
-    }
-
-    @Test
-    fun workShouldRetry() = runTest {
-        whenever(storage.ingest(any())).thenReturn(false)
-
-        val worker = TestListenableWorkerBuilder<FxSuggestIngestionWorker>(testContext).build()
-
-        val result = worker.startWork().await()
-
-        verify(storage).ingest(any())
-        assertEquals(ListenableWorker.Result.retry(), result)
     }
 }

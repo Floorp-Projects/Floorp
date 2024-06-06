@@ -78,8 +78,6 @@
     <string name="preferences_debug_settings_compose_top_sites" translatable="false">Enable Compose Top Sites</string>
     <!-- Label for enabling the menu redesign -->
     <string name="preferences_debug_settings_menu_redesign" translatable="false">Enable Menu Redesign</string>
-    <!-- Label for enabling Firefox Suggest -->
-    <string name="preferences_debug_settings_fxsuggest" translatable="false">Enable Firefox Suggest</string>
     <!-- Label for enabling Toolbar Redesign incomplete portions -->
     <string name="preferences_debug_settings_toolbar_redesign" translatable="false">Enable Toolbar Redesign incomplete portions</string>
     <!-- Label for enabling Felt Privacy -->
