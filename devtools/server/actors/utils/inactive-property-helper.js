@@ -285,6 +285,13 @@ class InactivePropertyHelper {
         fixId: "inactive-css-not-multicol-container-fix",
         msgId: "inactive-css-not-multicol-container",
       },
+      // column-span used within non-multi-column container.
+      {
+        invalidProperties: ["column-span"],
+        when: () => !this.inMultiColContainer,
+        fixId: "inactive-css-column-span-fix",
+        msgId: "inactive-css-column-span",
+      },
       // Inline properties used on non-inline-level elements.
       {
         invalidProperties: ["vertical-align"],
@@ -960,6 +967,14 @@ class InactivePropertyHelper {
   }
 
   /**
+   * Check if the current node is in a multi-column container, i.e. a node element
+   * that has an ancestor with `column-width` or `column-count` property set to a value.
+   */
+  get inMultiColContainer() {
+    return !!this.getParentMultiColElement(this.node);
+  }
+
+  /**
    * Check if the current node is a table row.
    */
   get tableRow() {
@@ -1329,6 +1344,57 @@ class InactivePropertyHelper {
         return null; // Not a grid item, for sure.
       }
       // display: contents, walk to the parent
+    }
+    return null;
+  }
+
+  /**
+   * Return the multi-column container for a node if it exists.
+   *
+   * @param {DOMNode} The node we want the container for
+   * @param {DOMNode|null} The container element, or null if there is none.
+   */
+  getParentMultiColElement(node) {
+    // The documentElement can't be an element in a multi-column container,
+    // only a container, so bail out.
+    if (node.flattenedTreeParentNode === node.ownerDocument) {
+      return null;
+    }
+
+    // Ignore nodes that are not elements nor text nodes
+    if (
+      node.nodeType !== node.ELEMENT_NODE &&
+      node.nodeType !== node.TEXT_NODE
+    ) {
+      return null;
+    }
+
+    if (node.nodeType === node.ELEMENT_NODE) {
+      const display = this.style ? this.style.display : null;
+
+      if (!display || display === "none" || display === "contents") {
+        // Doesn't generate a box, not an element in a multi-column container.
+        return null;
+      }
+      if (this.isAbsolutelyPositioned) {
+        // Out of flow, not an element in a multi-column container.
+        return null;
+      }
+    }
+
+    // Walk up the tree to find the nearest multi-column container.
+    // Loop over flattenedTreeParentNode instead of parentNode to reach the
+    // shadow host from the shadow DOM.
+    for (
+      let p = node.flattenedTreeParentNode;
+      p && p !== node.ownerDocument;
+      p = p.flattenedTreeParentNode
+    ) {
+      const style = computedStyle(p, node.ownerGlobal);
+      if (style.columnWidth !== "auto" || style.columnCount !== "auto") {
+        // It's a multi-column container!
+        return p;
+      }
     }
     return null;
   }

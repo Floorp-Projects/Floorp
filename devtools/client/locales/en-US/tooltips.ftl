@@ -19,6 +19,8 @@ inactive-css-not-grid-or-flex-container-or-multicol-container = <strong>{ $prope
 
 inactive-css-not-multicol-container = <strong>{ $property }</strong> has no effect on this element since it’s not a multi-column container.
 
+inactive-css-column-span = <strong>{ $property }</strong> has no spanning effect on this element since it is not within a multi-column container.
+
 inactive-css-not-grid-or-flex-item = <strong>{ $property }</strong> has no effect on this element since it’s not a grid or flex item.
 
 inactive-css-not-grid-item = <strong>{ $property }</strong> has no effect on this element since it’s not a grid item.
@@ -89,6 +91,8 @@ inactive-css-not-grid-or-flex-or-block-container-fix = Try adding <strong>displa
 inactive-css-not-grid-or-flex-container-or-multicol-container-fix = Try adding either <strong>display:grid</strong>, <strong>display:flex</strong>, or <strong>columns:2</strong>. { learn-more }
 
 inactive-css-not-multicol-container-fix = Try adding either <strong>column-count</strong> or <strong>column-width</strong>. { learn-more }
+
+inactive-css-column-span-fix = Try adding <strong>column-count</strong> or <strong>column-width</strong> to one of its ancestor elements. { learn-more }
 
 inactive-css-not-grid-or-flex-item-fix-3 = Try adding <strong>display:grid</strong>, <strong>display:flex</strong>, <strong>display:inline-grid</strong>, or <strong>display:inline-flex</strong> to the element’s parent. { learn-more }
 
