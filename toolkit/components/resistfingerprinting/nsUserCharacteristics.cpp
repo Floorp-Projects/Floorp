@@ -46,16 +46,19 @@
 #include "CubebDeviceEnumerator.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/dom/Navigator.h"
+#include "nsIGSettingsService.h"
 
 #include "gfxPlatformFontList.h"
 #include "prsystem.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
 #  include "mozilla/gfx/DisplayConfigWindows.h"
+#  include "gfxWindowsPlatform.h"
 #elif defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/java/GeckoAppShellWrappers.h"
 #elif defined(XP_MACOSX)
 #  include "nsMacUtilsImpl.h"
+#  include <CoreFoundation/CoreFoundation.h>
 #endif
 
 using namespace mozilla;
@@ -538,6 +541,61 @@ void PopulateLanguages() {
   glean::characteristics::languages.Set(output);
 }
 
+void PopulateTextAntiAliasing() {
+  nsCString output = "["_ns;
+  nsTArray<int32_t> levels;
+
+#if defined(XP_WIN)
+  nsTArray<ClearTypeParameterInfo> params;
+  gfxWindowsPlatform::GetCleartypeParams(params);
+  for (const auto& param : params) {
+    levels.AppendElement(param.clearTypeLevel);
+  }
+#elif defined(XP_MACOSX)
+  uint32_t value = 2;  // default = medium
+  CFNumberRef prefValue = (CFNumberRef)CFPreferencesCopyAppValue(
+      CFSTR("AppleFontSmoothing"), kCFPreferencesAnyApplication);
+  if (prefValue) {
+    if (!CFNumberGetValue(prefValue, kCFNumberIntType, &value)) {
+      value = 2;
+    }
+    CFRelease(prefValue);
+  }
+  levels.AppendElement(value);
+#elif defined(XP_LINUX)
+  nsAutoCString level;
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService("@mozilla.org/gsettings-service;1");
+  if (gsettings) {
+    nsCOMPtr<nsIGSettingsCollection> antiAliasing;
+    gsettings->GetCollectionForSchema("org.gnome.desktop.interface"_ns,
+                                      getter_AddRefs(antiAliasing));
+    if (antiAliasing) {
+      antiAliasing->GetString("font-antialiasing"_ns, level);
+      if (level == "rgba") {  // Subpixel
+        levels.AppendElement(2);
+      } else if (level == "grayscale") {  // Standard
+        levels.AppendElement(1);
+      } else if (level == "none") {
+        levels.AppendElement(0);
+      }
+    }
+  }
+#endif
+
+  for (const auto& level : levels) {
+    output.Append(std::to_string(level));
+
+    if (&level != &levels.LastElement()) {
+      output.Append(",");
+    }
+  }
+
+  output.Append("]");
+
+  glean::characteristics::text_anti_aliasing.Set(output);
+}
+
 // ==================================================================
 // The current schema of the data. Anytime you add a metric, or change how a
 // metric is set, this variable should be incremented. It'll be a lot. It's
@@ -675,6 +733,7 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     promises.AppendElement(PopulateMediaDevices());
     promises.AppendElement(PopulateAudioDeviceProperties());
     PopulateLanguages();
+    PopulateTextAntiAliasing();
 
     glean::characteristics::target_frame_rate.Set(
         gfxPlatform::TargetFrameRate());

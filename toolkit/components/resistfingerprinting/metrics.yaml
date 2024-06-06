@@ -1873,3 +1873,20 @@ characteristics:
       # Text metrics are _required_ to be web_activity or highly_sensitive, so even though this
       # is more like 'technical' (per the Data Review), I'm marking highly sensitive.
       - highly_sensitive
+
+  text_anti_aliasing:
+    type: string
+    description: >
+      Font anti aliasing level
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898586
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898586#c5
+    expires: never
+    data_sensitivity:
+      - interaction
