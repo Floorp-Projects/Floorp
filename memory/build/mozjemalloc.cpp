@@ -681,7 +681,7 @@ struct arena_stats_t {
   // Number of bytes currently mapped.
   size_t mapped;
 
-  // Current number of committed pages.
+  // Current number of committed pages (non madvised/decommitted)
   size_t committed;
 
   // Per-size-category statistics.
