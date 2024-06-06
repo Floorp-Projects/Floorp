@@ -2,4 +2,6 @@
 <resources>
     <string name="mozac_feature_customtabs_exit_button">Slědk k pjerwjejšnemu nałoženjeju</string>
     <string name="mozac_feature_customtabs_share_link">Wótkaz źěliś</string>
+    <!-- Content description (not visible, for screen readers etc.): Description of the refresh button in the Custom Tabs toolbar -->
+    <string name="mozac_feature_customtabs_refresh_button">Aktualizěrowaś</string>
 </resources>

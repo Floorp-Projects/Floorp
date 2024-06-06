@@ -2299,6 +2299,20 @@
     <string name="review_quality_check_highlights_title">Sorot tina ulasan cikénéh</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Kumaha urang nangtukeun kualitas ulasan</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Kami maké téknologi AI ti %s ku Mozilla pikeun mariksa kaandelan ulasan produk. Ieu ngan bakal nulungan Anjeun mariksa kualitas ulasan, lain kualitas produk. </string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Kami méré ulasan unggal produk <b>kelas hurup</b> ti A nepi ka F.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Ulasan dipercaya. Kami yakin ulasan téh mungkin ti para nasabah nyata anu neundeun ulasan jujur, teu bias.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Kami yakin yén ulasan anu bisa dipercaya jeung teu tiasa dipercaya téh pacampur.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Ulasan teu dipercaya. Kami yakin yén ulasan éta sigana palsu atawa tina ulasan anu bias.</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Peunteun anu disaluyukeun</b> ngan ukur dumasar kana ulasan anu bener-bener bisa dipercaya.]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Sorotan</b> asalna tina %s ulasan dina 80 poé ka tukang anu ku urang yakin bisa dipercaya.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Leuwih jéntré ngeunaan %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
@@ -2307,6 +2321,8 @@
     <string name="review_quality_check_settings_title">Setélan</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Témbongkeun iklan dina pamariksa ténjoan</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Anjeun bakal sakali-sakali ningali iklan pikeun produk anu luyu. Urang ngan méré iklan produk kalawan ulasan nu dipercaya. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Lenyepan</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2330,6 +2346,8 @@
     <string name="review_quality_check_no_reviews_warning_body">Lamun produk ieu leuwih loba ulasanana, urang bisa mariksa kualitasna.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title">Produk teu sadia</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body">Lamun anjeun ningali produk ieu aya deui dina stok, laporkeun sarta kami bakal ngusahakeun mariksa ulasanana.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Laporan produk aya dina stok</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
@@ -2338,10 +2356,16 @@
     <string name="review_quality_check_analysis_in_progress_warning_body">Lilana ieu kira-kira 60 detik.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title">Hatur nuhun geus ngalaporkeun!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body">Urang kudu mibanda inpormasi ngeunaan ulasan produk ieu dina 24 jam. Mangga pariksa deui.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">Urang henteu bisa mariksa ulasan ieu</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">Hanjakalna, kami teu bisa mariksa kualitas ulasan pikeun sababaraha jinis produk. Contona, kartu kado jeung streaming video, musik, jeung kaulinan.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">béja nu arék datang</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Urang kudu mibanda inpormasi ngeunaan ulasan produk ieu dina 24 jam. Mangga pariksa deui.</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Analisis geus luyu nu jeung panganyarna</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
@@ -2356,10 +2380,18 @@
     <string name="review_quality_check_no_connection_body">Pariksa sambungan jaringan anjeun terus cobaan muatkeun deui kacana.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Euweuh inpormasi ngeunaan ulasan ieu</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body">Sangkan mikanyaho naha ulasan produk ieu bisa dipercaya, pariksa kualitas ulasanana. Éta ngan  perlu kira-kira 60 detik.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Pariksa kualitas review</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Cobaan pituduh ulasan produk urang nu dipercaya </string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Tingali kumaha resénsi produk dipercaya dina %1$s saméméh anjeun meuli. Pamariksa ulasan, fitur ékspérimén ti %2$s, diwangun langsung kana browser. Éta ogé dilarapkeun dina %3$s sarta  %4$s.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Tingali kumaha resénsi produk dipercaya dina %1$s saméméh anjeun meuli. Pamariksa Ulasan, fitur ékspérimén ti %2$s, diwangun langsung kana browser.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Ngagunakeun kakuatan %1$s ku Mozilla, kami mantuan anjeun nyingkahkeun ulasan anu bias jeung teu oténtik. Modél AI kami salawasna ningkatkeun pikeun ngajaga anjeun nalika anjeun balanja. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Leuwih teleb</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
@@ -2614,6 +2646,8 @@
     The dialog will be presented when the user requests deletion of all languages file.
     The first parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_all_languages_file_dialog_title">Pupus sadaya basa (%1$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">Lamun anjeun mupus sakabéh basa, %1$s bakal ngundeur sawaréh basa kana cache anjeun nalika anjeun narjamahkeun.</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">Pupus</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
@@ -2624,6 +2658,10 @@
     a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
     The first parameter is the size in kilobytes or megabytes of the language file.-->
     <string name="download_language_file_dialog_title">Unduh sabot dina modeu irit data (%1$s)?</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">Kami ngundeur sebagian basa kana cache anjeun pikeun ngajaga tarjamahan pribadi.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Kami ngundeur sawaréh basa kana cache anjeun pikeun ngajaga tarjamahan pribadi.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Salawasna unduh dina modeu irit data</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

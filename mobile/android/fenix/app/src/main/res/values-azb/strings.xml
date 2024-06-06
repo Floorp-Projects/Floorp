@@ -751,7 +751,7 @@
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">تاخیْلان مجموعه‌‌سی ایصلاح اوْلدوُ. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
-    <string name="toast_customize_extension_collection_done">اوزانتیْ مجموعه‌سی دییشدیریلدی. دییشمه‌لری یئرینه سالماق اوچون اپ‌دن چیخیلیر...</string>
+    <string name="toast_customize_extension_collection_done">اوزانتیْ مجموعه‌سی دییشدیریلدی. دییشمه‌لری یئرینه سالماق اوچون اپ‌دن چیخیلیر…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
