@@ -1537,6 +1537,7 @@ class HTMLInputElement final : public TextControlElement,
   bool mHasPatternAttribute : 1;
 
  private:
+  Maybe<int32_t> GetNumberInputCols() const;
   static void ImageInputMapAttributesIntoRule(MappedDeclarationsBuilder&);
 
   /**
