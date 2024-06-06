@@ -80,7 +80,7 @@ nsresult InterceptedHttpChannel::SetupReplacementChannel(
     return rv;
   }
 
-  rv = CheckRedirectLimit(aURI, aRedirectFlags);
+  rv = CheckRedirectLimit(aRedirectFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // While we can't resume an synthetic response, we can still propagate

@@ -9,10 +9,6 @@ const OTHERHOST_REDIRECT_URI_HTTP =
   "http://example.org/tests/dom/security/test/https-first/file_multiple_redirection.sjs?verify";
 const REDIRECT_URI_HTTPS =
   "https://example.com/tests/dom/security/test/https-first/file_multiple_redirection.sjs?verify";
-const REDIRECT_DOWNGRADE_URI =
-  "https://example.com/tests/dom/security/test/https-first/file_multiple_redirection.sjs?downgrade";
-const REDIRECT_DOWNGRADE_URI_HTTP =
-  "http://example.com/tests/dom/security/test/https-first/file_multiple_redirection.sjs?downgrade";
 
 const RESPONSE_ERROR = "unexpected-query";
 
@@ -56,10 +52,6 @@ function sendRedirection(query, response) {
   if (query.includes("test4")) {
     response.setHeader("Location", OTHERHOST_REDIRECT_URI_HTTP, false);
   }
-  // send a redirection http downgrade uri
-  if (query.includes("test5")) {
-    response.setHeader("Location", REDIRECT_DOWNGRADE_URI, false);
-  }
 }
 
 function handleRequest(request, response) {
@@ -72,7 +64,6 @@ function handleRequest(request, response) {
     if (request.scheme !== "https") {
       response.setStatusLine(request.httpVersion, 500, "OK");
       response.write("Request should have been HTTPS.");
-      return;
     }
     // send a 302 redirection
     response.setStatusLine(request.httpVersion, 302, "Found");
@@ -84,18 +75,9 @@ function handleRequest(request, response) {
     if (request.scheme !== "https") {
       response.setStatusLine(request.httpVersion, 500, "OK");
       response.write("Request should have been HTTPS.");
-      return;
     }
     response.setStatusLine(request.httpVersion, 302, "Found");
     sendRedirection(query, response);
-    return;
-  }
-  // Send a http redirect downgrade
-  if (query.includes("downgrade")) {
-    response.setStatusLine(request.httpVersion, 302, "Found");
-    let redirect_uri =
-      request.scheme === "https" ? REDIRECT_DOWNGRADE_URI : REDIRECT_URI_HTTP;
-    response.setHeader("Location", redirect_uri, false);
     return;
   }
   // Reset the HSTS policy, prevent influencing other tests
