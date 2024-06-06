@@ -24,7 +24,9 @@ use marionette_rs::webdriver::{
     PrintMargins as MarionettePrintMargins, PrintOrientation as MarionettePrintOrientation,
     PrintPage as MarionettePrintPage, PrintPageRange as MarionettePrintPageRange,
     PrintParameters as MarionettePrintParameters, ScreenshotOptions, Script as MarionetteScript,
-    Selector as MarionetteSelector, Url as MarionetteUrl,
+    Selector as MarionetteSelector, SetPermissionDescriptor as MarionetteSetPermissionDescriptor,
+    SetPermissionParameters as MarionetteSetPermissionParameters,
+    SetPermissionState as MarionetteSetPermissionState, Url as MarionetteUrl,
     UserVerificationParameters as MarionetteUserVerificationParameters,
     WebAuthnProtocol as MarionetteWebAuthnProtocol, WindowRect as MarionetteWindowRect,
 };
@@ -53,18 +55,19 @@ use webdriver::command::WebDriverCommand::{
     GetPageSource, GetShadowRoot, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles,
     GetWindowRect, GoBack, GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow,
     MinimizeWindow, NewSession, NewWindow, PerformActions, Print, Refresh, ReleaseActions,
-    SendAlertText, SetTimeouts, SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame,
-    SwitchToWindow, TakeElementScreenshot, TakeScreenshot, WebAuthnAddCredential,
-    WebAuthnAddVirtualAuthenticator, WebAuthnGetCredentials, WebAuthnRemoveAllCredentials,
-    WebAuthnRemoveCredential, WebAuthnRemoveVirtualAuthenticator, WebAuthnSetUserVerified,
+    SendAlertText, SetPermission, SetTimeouts, SetWindowRect, Status, SwitchToFrame,
+    SwitchToParentFrame, SwitchToWindow, TakeElementScreenshot, TakeScreenshot,
+    WebAuthnAddCredential, WebAuthnAddVirtualAuthenticator, WebAuthnGetCredentials,
+    WebAuthnRemoveAllCredentials, WebAuthnRemoveCredential, WebAuthnRemoveVirtualAuthenticator,
+    WebAuthnSetUserVerified,
 };
 use webdriver::command::{
     ActionsParameters, AddCookieParameters, AuthenticatorParameters, AuthenticatorTransport,
     GetNamedCookieParameters, GetParameters, JavascriptCommandParameters, LocatorParameters,
     NewSessionParameters, NewWindowParameters, PrintMargins, PrintOrientation, PrintPage,
-    PrintPageRange, PrintParameters, SendKeysParameters, SwitchToFrameParameters,
-    SwitchToWindowParameters, TimeoutsParameters, UserVerificationParameters, WebAuthnProtocol,
-    WindowRectParameters,
+    PrintPageRange, PrintParameters, SendKeysParameters, SetPermissionDescriptor,
+    SetPermissionParameters, SetPermissionState, SwitchToFrameParameters, SwitchToWindowParameters,
+    TimeoutsParameters, UserVerificationParameters, WebAuthnProtocol, WindowRectParameters,
 };
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{
@@ -459,6 +462,7 @@ impl MarionetteSession {
             | GetAlertText
             | TakeScreenshot
             | Print(_)
+            | SetPermission(_)
             | TakeElementScreenshot(_)
             | WebAuthnAddVirtualAuthenticator(_)
             | WebAuthnRemoveVirtualAuthenticator
@@ -996,6 +1000,9 @@ fn try_convert_to_marionette_message(
         SendAlertText(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SendAlertText(x.to_marionette()?),
         )),
+        SetPermission(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::SetPermission(x.to_marionette()?),
+        )),
         SetTimeouts(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::SetTimeouts(
             x.to_marionette()?,
         ))),
@@ -1516,6 +1523,33 @@ impl ToMarionette<MarionettePrintMargins> for PrintMargins {
             bottom: self.bottom,
             left: self.left,
             right: self.right,
+        })
+    }
+}
+
+impl ToMarionette<MarionetteSetPermissionParameters> for SetPermissionParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteSetPermissionParameters> {
+        Ok(MarionetteSetPermissionParameters {
+            descriptor: self.descriptor.to_marionette()?,
+            state: self.state.to_marionette()?,
+        })
+    }
+}
+
+impl ToMarionette<MarionetteSetPermissionDescriptor> for SetPermissionDescriptor {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteSetPermissionDescriptor> {
+        Ok(MarionetteSetPermissionDescriptor {
+            name: self.name.clone(),
+        })
+    }
+}
+
+impl ToMarionette<MarionetteSetPermissionState> for SetPermissionState {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteSetPermissionState> {
+        Ok(match self {
+            SetPermissionState::Denied => MarionetteSetPermissionState::Denied,
+            SetPermissionState::Granted => MarionetteSetPermissionState::Granted,
+            SetPermissionState::Prompt => MarionetteSetPermissionState::Prompt,
         })
     }
 }

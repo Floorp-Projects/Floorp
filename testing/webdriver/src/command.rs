@@ -79,6 +79,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     TakeScreenshot,
     TakeElementScreenshot(WebElement),
     Print(PrintParameters),
+    SetPermission(SetPermissionParameters),
     Status,
     Extension(T),
     WebAuthnAddVirtualAuthenticator(AuthenticatorParameters),
@@ -408,6 +409,9 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::TakeElementScreenshot(element)
             }
             Route::Print => WebDriverCommand::Print(serde_json::from_str(raw_body)?),
+            Route::SetPermission => {
+                WebDriverCommand::SetPermission(serde_json::from_str(raw_body)?)
+            }
             Route::Status => WebDriverCommand::Status,
             Route::Extension(ref extension) => extension.command(params, &body_data)?,
             Route::WebAuthnAddVirtualAuthenticator => {
@@ -654,6 +658,25 @@ impl Default for PrintMargins {
             right: 1.0,
         }
     }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct SetPermissionParameters {
+    pub descriptor: SetPermissionDescriptor,
+    pub state: SetPermissionState,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SetPermissionDescriptor {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SetPermissionState {
+    Denied,
+    Granted,
+    Prompt,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -1380,6 +1403,49 @@ mod tests {
     #[test]
     fn test_json_scale_invalid() {
         assert!(serde_json::from_value::<PrintParameters>(json!({"scale": 3})).is_err());
+    }
+
+    #[test]
+    fn test_json_permission() {
+        let params: SetPermissionParameters = SetPermissionParameters {
+            descriptor: SetPermissionDescriptor {
+                name: "push".into(),
+            },
+            state: SetPermissionState::Granted,
+        };
+        assert_de(
+            &params,
+            json!({"descriptor": {"name": "push"}, "state": "granted"}),
+        );
+    }
+
+    #[test]
+    fn test_json_permission_parameters_invalid() {
+        assert!(serde_json::from_value::<SetPermissionParameters>(json!({"test": 3})).is_err());
+    }
+
+    #[test]
+    fn test_json_permission_descriptor_invalid_type() {
+        assert!(serde_json::from_value::<SetPermissionParameters>(
+            json!({"descriptor": "test", "state": "granted"})
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn test_json_permission_state_invalid_type() {
+        assert!(serde_json::from_value::<SetPermissionParameters>(
+            json!({"descriptor": {"name": "push"}, "state": 3})
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn test_json_permission_state_invalid_value() {
+        assert!(serde_json::from_value::<SetPermissionParameters>(
+            json!({"descriptor": {"name": "push"}, "state": "invalid"})
+        )
+        .is_err());
     }
 
     #[test]

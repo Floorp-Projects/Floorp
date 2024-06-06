@@ -307,6 +307,7 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
             "/session/{sessionId}/actions",
             Route::ReleaseActions,
         ),
+        (Method::POST, "/session/{sessionId}/permissions", Route::SetPermission),
         (Method::POST, "/session/{sessionId}/print", Route::Print),
         (
             Method::POST,
@@ -414,6 +415,7 @@ pub enum Route<U: WebDriverExtensionRoute> {
     TakeScreenshot,
     TakeElementScreenshot,
     Print,
+    SetPermission,
     Status,
     Extension(U),
     WebAuthnAddVirtualAuthenticator,
