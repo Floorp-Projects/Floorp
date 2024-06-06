@@ -160,6 +160,7 @@ using mozilla::PerfStats::MetricMask from "mozilla/PerfStats.h";
 [RefCounted] using class nsIX509Cert from "nsIX509Cert.h";
 using nsIDNSService::ResolverMode from "nsIDNSService.h";
 using mozilla::dom::UserActivation::Modifiers from "mozilla/dom/UserActivation.h";
+using mozilla::dom::PrivateAttributionImpressionType from "mozilla/dom/PrivateAttributionIPCUtils.h";
 
 union ChromeRegistryItem
 {
@@ -1970,6 +1971,17 @@ parent:
     // test document before taking the snapshot and starting e.g. IPC fuzzing.
     async SignalFuzzingReady();
 #endif
+
+  async AttributionEvent(nsCString aSourceHost,
+                         PrivateAttributionImpressionType aType,
+                         uint32_t aIndex, nsString aAd, nsCString aTargetHost);
+
+  async AttributionConversion(nsCString aSourceHost, nsString aTask,
+                              uint32_t aHistogramSize,
+                              uint32_t? aLoopbackDays,
+                              PrivateAttributionImpressionType? aImpressionType,
+                              nsString[] aAds,
+                              nsCString[] aImpressionSourceHosts);
 };
 
 }

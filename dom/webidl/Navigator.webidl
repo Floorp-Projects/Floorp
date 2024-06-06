@@ -394,3 +394,9 @@ partial interface Navigator {
   [SameObject, Pref="dom.screenwakelock.enabled"]
   readonly attribute WakeLock wakeLock;
 };
+
+[SecureContext]
+partial interface Navigator {
+  [SameObject, Trial="PrivateAttribution"]
+  readonly attribute PrivateAttribution privateAttribution;
+};

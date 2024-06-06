@@ -42,6 +42,7 @@ class ServiceWorkerContainer;
 class CredentialsContainer;
 class Clipboard;
 class LockManager;
+class PrivateAttribution;
 class HTMLMediaElement;
 class AudioContext;
 class WakeLockJS;
@@ -209,6 +210,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   dom::Clipboard* Clipboard();
   webgpu::Instance* Gpu();
   dom::LockManager* Locks();
+  dom::PrivateAttribution* PrivateAttribution();
 
   static bool Webdriver();
 
@@ -300,7 +302,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   RefPtr<AddonManager> mAddonManager;
   RefPtr<webgpu::Instance> mWebGpu;
   RefPtr<Promise> mSharePromise;  // Web Share API related
-  RefPtr<dom::LockManager> mLocks;
+  RefPtr<LockManager> mLocks;
+  RefPtr<dom::PrivateAttribution> mPrivateAttribution;
   RefPtr<dom::UserActivation> mUserActivation;
   RefPtr<dom::WakeLockJS> mWakeLock;
 };

@@ -13,9 +13,11 @@ support-files = [
 #    verification fails, expectedly.
 skip-if = [
   "!debug",
-  "xorigin", # AudioWorklet requires secure context
+  "xorigin",
 ]
 
+# We want to test that trials are exposed in worklets, and AudioWorklet
+# requires secure context.
 scheme = "https"
 
 ["test_expired_token.html"]

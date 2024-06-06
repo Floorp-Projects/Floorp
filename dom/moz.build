@@ -74,6 +74,7 @@ DIRS += [
     "audiochannel",
     "broadcastchannel",
     "messagechannel",
+    "privateattribution",
     "promise",
     "smil",
     "streams",
