@@ -7,6 +7,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -211,6 +212,10 @@ export class UserCharacteristicsPageService {
             data.output.fingerprintjscanvas2data
           );
           Glean.characteristics.voices.set(data.output.voices);
+          Glean.characteristics.mediaCapabilities.set(
+            data.output.mediaCapabilities
+          );
+          this.populateDisabledMediaPrefs();
         } catch (e) {
           // Grab the exception and send it to the console
           // (we don't see it otherwise)
@@ -259,5 +264,33 @@ export class UserCharacteristicsPageService {
       return;
     }
     throw new Error(`No backround resolve for ${browser} found`);
+  }
+
+  async populateDisabledMediaPrefs() {
+    const PREFS = [
+      "media.wave.enabled",
+      "media.ogg.enabled",
+      "media.opus.enabled",
+      "media.mp4.enabled",
+      "media.wmf.hevc.enabled",
+      "media.webm.enabled",
+      "media.av1.enabled",
+      "media.encoder.webm.enabled",
+      "media.mediasource.enabled",
+      "media.mediasource.mp4.enabled",
+      "media.mediasource.webm.enabled",
+      "media.mediasource.vp9.enabled",
+    ];
+
+    const defaultPrefs = new lazy.Preferences({ defaultBranch: true });
+    const changedPrefs = {};
+    for (const pref of PREFS) {
+      const value = lazy.Preferences.get(pref);
+      if (lazy.Preferences.isSet(pref) && defaultPrefs.get(pref) !== value) {
+        const key = pref.substring(6).substring(0, pref.length - 8 - 6);
+        changedPrefs[key] = value;
+      }
+    }
+    Glean.characteristics.changedMediaPrefs.set(JSON.stringify(changedPrefs));
   }
 }
