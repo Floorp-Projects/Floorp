@@ -67,9 +67,7 @@ class JitHintsMap {
    public:
     explicit IonHint(ScriptKey key) { key_ = key; }
 
-    void initThreshold(uint32_t lastStubCounter) {
-      threshold_ = IonHintEagerThresholdValue(lastStubCounter);
-    }
+    void initThreshold(uint32_t threshold) { threshold_ = threshold; }
 
     uint32_t threshold() { return threshold_; }
 
@@ -117,15 +115,8 @@ class JitHintsMap {
   static constexpr uint32_t IonHintMaxEntries = 5000;
   static constexpr uint32_t MonomorphicInlineMaxEntries = 16;
 
-  static uint32_t IonHintEagerThresholdValue(uint32_t lastStubCounter) {
-    // Use the counter when the last IC stub was attached but add 10
-    // for some wiggle room and to safeguard against cases where the
-    // lastStubCounter is 0.
-    uint32_t eagerThreshold = lastStubCounter + 10;
-
-    // Do not exceed the default Ion threshold value set in the options.
-    return std::min(eagerThreshold, JitOptions.normalIonWarmUpThreshold);
-  }
+  static uint32_t IonHintEagerThresholdValue(uint32_t lastStubCounter,
+                                             bool hasPretenuredAllocSites);
 
   ScriptToHintMap ionHintMap_;
   IonHintPriorityQueue ionHintQueue_;
