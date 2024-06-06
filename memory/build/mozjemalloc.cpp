@@ -193,9 +193,6 @@ using namespace mozilla;
 // track which pages have been MADV_FREE'd.  You can then call
 // jemalloc_purge_freed_pages(), which will force the OS to release those
 // MADV_FREE'd pages, making the process's RSS reflect its true memory usage.
-//
-// The jemalloc_purge_freed_pages definition in memory/build/mozmemory.h needs
-// to be adjusted if MALLOC_DOUBLE_PURGE is ever enabled on Linux.
 
 #ifdef XP_DARWIN
 #  define MALLOC_DOUBLE_PURGE
