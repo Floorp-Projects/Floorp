@@ -56,12 +56,6 @@ toolbarpaletteitem {
     opacity: var(--toolbarbutton-disabled-opacity);
   }
 
-  /* Special-case the overflow and the hamburger button so they show up disabled
-     in customize mode. */
-  &:is(#nav-bar-overflow-button, #PanelUI-menu-button)[disabled] {
-    fill-opacity: var(--toolbarbutton-disabled-opacity);
-  }
-
   > .toolbarbutton-icon {
     margin-inline-end: 0 !important;
   }
@@ -70,6 +64,10 @@ toolbarpaletteitem {
   > .toolbarbutton-badge-stack > .toolbarbutton-icon {
     width: 16px;
   }
+}
+
+.toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
+  width: 12px;
 }
 
 toolbar .toolbarbutton-1 {
@@ -139,8 +137,8 @@ toolbar .toolbarbutton-1 {
   }
 }
 
+/* Adds padding to end of toolbar while making that space click the first button */
 #PanelUI-menu-button {
-  /* Adds padding to end of toolbar while making that space click the first button */
   padding-inline-end: var(--toolbar-start-end-padding);
 }
 
@@ -176,63 +174,6 @@ toolbar .toolbaritem-combined-buttons {
 
 toolbar[brighttext] .toolbaritem-combined-buttons > separator {
   opacity: .3;
-}
-
-#nav-bar-overflow-button {
-  list-style-image: url("chrome://global/skin/icons/chevron.svg");
-
-  #nav-bar:not([overflowing], [nonemptyoverflow], [customizing]) > & {
-    display: none;
-  }
-
-  /* The button should look both disabled and open in customize mode. */
-  #nav-bar[customizing] > & > .toolbarbutton-icon {
-    background-color: var(--toolbarbutton-active-background);
-  }
-
-  > .toolbarbutton-animatable-box {
-    visibility: hidden;
-    top: calc(50% - 8px); /* Vertically center the 16px tall animatable image */
-    width: 16px; /* Width of each frame within the SVG sprite */
-    height: 16px; /* Height of each frame within the SVG sprite */
-    -moz-context-properties: fill, stroke;
-    fill: var(--toolbarbutton-icon-fill);
-    stroke: var(--toolbarbutton-icon-fill-attention);
-
-    > .toolbarbutton-animatable-image {
-      background-image: url("chrome://browser/skin/chevron-animation.svg");
-      width: 848px;
-      height: 16px;
-      transform: translateX(0);
-    }
-  }
-
-  &[animate] {
-    > .toolbarbutton-icon {
-      fill: transparent;
-    }
-
-    > .toolbarbutton-animatable-box {
-      visibility: visible;
-
-      > .toolbarbutton-animatable-image {
-        animation-name: overflow-animation;
-        animation-timing-function: steps(52);
-        animation-duration: calc(52 * 16.667ms);
-      }
-    }
-  }
-}
-
-@keyframes overflow-animation {
-  from {
-    transform: translateX(0);
-  }
-  /* Bug 1831300 is on file for this. */
-  /* stylelint-disable-next-line keyframe-block-no-duplicate-selectors */
-  from {
-    transform: translateX(-832px);
-  }
 }
 
 /* ::::: bookmark buttons ::::: */
