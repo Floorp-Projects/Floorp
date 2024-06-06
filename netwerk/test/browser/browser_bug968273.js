@@ -60,7 +60,10 @@ async function do_test_cache_persistent(https) {
 
 add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [["network.cache.persist_permanent_redirects_http", false]],
+    set: [
+      ["network.cache.persist_permanent_redirects_http", false],
+      ["dom.security.https_first", false],
+    ],
   });
 });
 
