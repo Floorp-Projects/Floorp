@@ -68,6 +68,33 @@ let CONFIG = [
     variants: [{ environment: { allRegionsAndLocales: true } }],
   },
   {
+    identifier: "override",
+    recordType: "engine",
+    base: {
+      classification: "unknown",
+      name: "override name",
+      urls: {
+        search: {
+          base: "https://www.example.com/search",
+          params: [
+            {
+              name: "old_param",
+              value: "old_value",
+            },
+          ],
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: {
+          locales: ["en-US"],
+        },
+      },
+    ],
+  },
+  {
     recordType: "defaultEngines",
     globalDefault: "engine_no_initial_icon",
     specificDefaults: [],
@@ -75,6 +102,19 @@ let CONFIG = [
   {
     recordType: "engineOrders",
     orders: [],
+  },
+];
+
+const TEST_CONFIG_OVERRIDE = [
+  {
+    identifier: "override",
+    urls: {
+      search: {
+        params: [{ name: "new_param", value: "new_value" }],
+      },
+    },
+    telemetrySuffix: "tsfx",
+    clickUrl: "https://example.org/somewhere",
   },
 ];
 
@@ -178,5 +218,55 @@ add_task(async function test_engine_with_some_params_set() {
     engine.getSubmission("test", SearchUtils.URL_TYPE.TRENDING_JSON),
     null,
     "Should not have a trending URL"
+  );
+});
+
+add_task(async function test_engine_remote_override() {
+  // First check the existing engine doesn't have the overrides.
+  let engine = Services.search.getEngineById(
+    "override@search.mozilla.orgdefault"
+  );
+  Assert.ok(engine, "Should have found the override engine");
+
+  Assert.equal(engine.name, "override name", "Should have the expected name");
+  Assert.equal(
+    engine.telemetryId,
+    "override",
+    "Should have the overridden telemetry suffix"
+  );
+  Assert.equal(
+    engine.getSubmission("test").uri.spec,
+    "https://www.example.com/search?old_param=old_value&q=test",
+    "Should have the overridden URL"
+  );
+  Assert.equal(engine.clickUrl, null, "Should not have a click URL");
+
+  // Now apply and test the overrides.
+  const overrides = await RemoteSettings(
+    SearchUtils.NEW_SETTINGS_OVERRIDES_KEY
+  );
+  sinon.stub(overrides, "get").returns(TEST_CONFIG_OVERRIDE);
+
+  await Services.search.wrappedJSObject.reset();
+  await Services.search.init();
+
+  engine = Services.search.getEngineById("override@search.mozilla.orgdefault");
+  Assert.ok(engine, "Should have found the override engine");
+
+  Assert.equal(engine.name, "override name", "Should have the expected name");
+  Assert.equal(
+    engine.telemetryId,
+    "override-tsfx",
+    "Should have the overridden telemetry suffix"
+  );
+  Assert.equal(
+    engine.getSubmission("test").uri.spec,
+    "https://www.example.com/search?new_param=new_value&q=test",
+    "Should have the overridden URL"
+  );
+  Assert.equal(
+    engine.clickUrl,
+    "https://example.org/somewhere",
+    "Should have the click URL specified by the override"
   );
 });
