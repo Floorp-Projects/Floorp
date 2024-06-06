@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*** Status and progress indicator ***/
+
 #downloads-indicator-anchor {
   min-width: 16px;
   min-height: 16px;
@@ -22,6 +23,12 @@
 #downloads-button[attention="success"] > .toolbarbutton-badge-stack > #downloads-indicator-anchor > #downloads-indicator-icon {
   fill: var(--toolbarbutton-icon-fill-attention);
   fill-opacity: 1;
+}
+
+/* Hide the default icon, show the anchor instead. */
+:not(toolbarpaletteitem[place="palette"]) > #downloads-button > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-stack > #downloads-indicator-anchor {
+  display: none;
 }
 
 #downloads-button > .toolbarbutton-badge-stack > .toolbarbutton-animatable-box {

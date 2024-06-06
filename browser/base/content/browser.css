@@ -263,21 +263,6 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   position: absolute;
 }
 
-/*** Visibility of downloads indicator controls ***/
-
-/* Hide the default icon, show the anchor instead. */
-#downloads-button > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
-  display: none;
-}
-
-toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
-  display: flex;
-}
-
-toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-stack > #downloads-indicator-anchor {
-  display: none;
-}
-
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
   .PanelUI-remotetabs-clientcontainer > toolbarbutton > .toolbarbutton-icon,
