@@ -45,6 +45,8 @@ inactive-css-property-is-impossible-to-override-in-visited = It’s impossible t
 
 inactive-css-position-property-on-unpositioned-box = <strong>{ $property }</strong> has no effect on this element since it’s not a positioned element.
 
+inactive-css-only-replaced-elements = <strong>{ $property }</strong> has no effect on this element since it can only be applied to replaced elements.
+
 inactive-text-overflow-when-no-overflow = <strong>{ $property }</strong> has no effect on this element since <strong>overflow:hidden</strong> is not set.
 
 inactive-css-not-for-internal-table-elements = <strong>{ $property }</strong> has no effect on internal table elements.
@@ -107,6 +109,8 @@ inactive-css-non-replaced-inline-or-table-column-or-column-group-fix = Try addin
 inactive-css-not-display-block-on-floated-fix = Try removing <strong>float</strong> or adding <strong>display:block</strong>. { learn-more }
 
 inactive-css-position-property-on-unpositioned-box-fix = Try setting its <strong>position</strong> property to something other than <strong>static</strong>. { learn-more }
+
+inactive-css-only-replaced-elements-fix = Ensure you are adding the property to a replaced element. { learn-more }
 
 inactive-text-overflow-when-no-overflow-fix = Try adding <strong>overflow:hidden</strong>. { learn-more }
 
