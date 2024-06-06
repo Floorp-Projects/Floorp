@@ -77,7 +77,7 @@ class nsHTTPSOnlyUtils {
     EnforceForHTTPSRR,
   };
   static bool IsUpgradeDowngradeEndlessLoop(
-      nsIURI* aOldURI, nsIURI* aNewURI, nsILoadInfo* aLoadInfo,
+      nsIURI* aURI, nsILoadInfo* aLoadInfo,
       const mozilla::EnumSet<UpgradeDowngradeEndlessLoopOptions>& aOptions =
           {});
 
@@ -154,19 +154,16 @@ class nsHTTPSOnlyUtils {
   static bool IsSafeToAcceptCORSOrMixedContent(nsILoadInfo* aLoadInfo);
 
   /**
-   * Checks if https only or https first mode is enabled for this load
-   * @param aLoadInfo nsILoadInfo of the request
-   */
-  static bool ShouldUpgradeConnection(nsILoadInfo* aLoadInfo);
-
-  /**
    * Checks if two URIs are same origin modulo the difference that
-   * aToURI scheme is downgraded to http from https aFromURI.
-   * @param aFromURI nsIURI using scheme of https
-   * @param aToURI nsIURI using scheme of http
+   * aHTTPSchemeURI uses an http scheme.
+   * @param aHTTPSSchemeURI nsIURI using scheme of https
+   * @param aOtherURI nsIURI using scheme of http
+   * @param aLoadInfo nsILoadInfo of the request
    * @return true, if URIs are equal except scheme and ref
    */
-  static bool IsHttpDowngrade(nsIURI* aFromURI, nsIURI* aToURI);
+  static bool IsEqualURIExceptSchemeAndRef(nsIURI* aHTTPSSchemeURI,
+                                           nsIURI* aOtherURI,
+                                           nsILoadInfo* aLoadInfo);
 
   /**
    * Will add a special temporary HTTPS-Only exception that only applies to
