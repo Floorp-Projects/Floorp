@@ -1818,3 +1818,22 @@ characteristics:
     expires: never
     data_sensitivity:
       - highly_sensitive
+
+  languages:
+    type: string
+    description: >
+      Languages the user set. Returns intl.accept_languages pref,
+      if it is empty, returns the first matched OS's language or
+      the default language.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1899311
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1899311#c5
+    expires: never
+    data_sensitivity:
+      - interaction

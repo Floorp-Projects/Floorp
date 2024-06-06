@@ -45,6 +45,7 @@
 #include "nsThreadUtils.h"
 #include "CubebDeviceEnumerator.h"
 #include "mozilla/media/MediaUtils.h"
+#include "mozilla/dom/Navigator.h"
 
 #include "gfxPlatformFontList.h"
 #include "prsystem.h"
@@ -515,6 +516,28 @@ RefPtr<VoidPromise> PopulateAudioDeviceProperties() {
   return voidPromise;
 }
 
+void PopulateLanguages() {
+  // All navigator.languages, navigator.language, and Accept-Languages header
+  // use Navigator::GetAcceptLanguages to create a language list. It is
+  // sufficient to only collect this information as the other properties are
+  // just reformats of Navigator::GetAcceptLanguages.
+  nsTArray<nsString> languages;
+  dom::Navigator::GetAcceptLanguages(languages);
+  nsCString output = "["_ns;
+
+  for (const auto& language : languages) {
+    output.AppendPrintf(R"("%s")", NS_ConvertUTF16toUTF8(language).get());
+
+    if (&language != &languages.LastElement()) {
+      output.Append(",");
+    }
+  }
+
+  output.Append("]");
+
+  glean::characteristics::languages.Set(output);
+}
+
 // ==================================================================
 // The current schema of the data. Anytime you add a metric, or change how a
 // metric is set, this variable should be incremented. It'll be a lot. It's
@@ -651,6 +674,7 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     PopulateScaling();
     promises.AppendElement(PopulateMediaDevices());
     promises.AppendElement(PopulateAudioDeviceProperties());
+    PopulateLanguages();
 
     glean::characteristics::target_frame_rate.Set(
         gfxPlatform::TargetFrameRate());
