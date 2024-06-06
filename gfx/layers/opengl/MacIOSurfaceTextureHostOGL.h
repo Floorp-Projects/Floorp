@@ -34,9 +34,10 @@ class MacIOSurfaceTextureHostOGL : public TextureHost {
   gfx::SurfaceFormat GetFormat() const override;
   gfx::SurfaceFormat GetReadFormat() const override;
 
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface(
+      gfx::DataSourceSurface* aSurface) override {
     RefPtr<gfx::SourceSurface> surf =
-        CreateSourceSurfaceFromMacIOSurface(GetMacIOSurface());
+        CreateSourceSurfaceFromMacIOSurface(GetMacIOSurface(), aSurface);
     return surf->GetDataSurface();
   }
 
