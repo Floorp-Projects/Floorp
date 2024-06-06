@@ -367,9 +367,6 @@ class MessageChannel : HasResultCodes {
  public:
   void ProcessNativeEventsInInterruptCall();
   static void NotifyGeckoEventDispatch();
-
- private:
-  void SpinInternalEventLoop();
 #endif  // defined(XP_WIN)
 
  private:
