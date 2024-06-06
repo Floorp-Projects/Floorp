@@ -824,7 +824,7 @@ nsBrowserContentHandler.prototype = {
             break;
           }
           case OVERRIDE_NEW_BUILD_ID:
-            if (lazy.UpdateManager.readyUpdate) {
+            if (lazy.UpdateManager.updateInstalledAtStartup) {
               // Send the update ping to signal that the update was successful.
               lazy.UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
               lazy.LaterRun.enable(lazy.LaterRun.ENABLE_REASON_UPDATE_APPLIED);
