@@ -425,10 +425,10 @@ pref("browser.urlbar.suggest.recentsearches",       true);
 
 pref("browser.urlbar.scotchBonnet.enableOverride", false);
 
-#if defined(EARLY_BETA_OR_EARLIER)
-  // Enable Trending suggestions.
-  pref("browser.urlbar.trending.featureGate", true);
-#endif
+// Enable trending suggestions and recent searches.
+pref("browser.urlbar.trending.featureGate", true);
+pref("browser.urlbar.trending.requireSearchMode", false);
+pref("browser.urlbar.recentsearches.featureGate", true);
 
 // Enable Rich Entities.
 pref("browser.urlbar.richSuggestions.featureGate", true);

@@ -79,6 +79,7 @@ add_setup(async () => {
 
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.urlbar.recentsearches.featureGate", false],
       ["browser.urlbar.suggest.searches", true],
       ["browser.urlbar.trending.featureGate", true],
       ["browser.urlbar.trending.requireSearchMode", false],
