@@ -57,6 +57,7 @@
 #include "sslerr.h"
 #include "sslexp.h"
 #include "sslproto.h"
+#include "zlib.h"
 
 #if defined(__arm__)
 #  include "mozilla/arm.h"
@@ -1329,6 +1330,39 @@ static const SSLSignatureScheme sEnabledSignatureSchemes[] = {
     ssl_sig_rsa_pkcs1_sha1,
 };
 
+SECStatus zlibCertificateDecode(const SECItem* input, unsigned char* output,
+                                size_t outputLen, size_t* usedLen) {
+  if (!input || !input->data || input->len == 0 || !output || outputLen == 0) {
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return SECFailure;
+  }
+
+  z_stream strm = {};
+
+  if (inflateInit(&strm) != Z_OK) {
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+
+  auto cleanup = MakeScopeExit([&] { (void)inflateEnd(&strm); });
+
+  strm.avail_in = input->len;
+  strm.next_in = input->data;
+
+  strm.avail_out = outputLen;
+  strm.next_out = output;
+
+  int ret = inflate(&strm, Z_FINISH);
+  bool ok = ret == Z_STREAM_END && strm.avail_in == 0 && strm.avail_out == 0;
+  if (!ok) {
+    PR_SetError(SEC_ERROR_BAD_DATA, 0);
+    return SECFailure;
+  }
+
+  *usedLen = strm.total_out;
+  return SECSuccess;
+}
+
 static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
                                        bool haveProxy, const char* host,
                                        int32_t port,
@@ -1477,6 +1511,19 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     // This ensures that we send key shares for X25519 and P-256 in TLS 1.3, so
     // that servers are less likely to use HelloRetryRequest.
     if (SECSuccess != SSL_SendAdditionalKeyShares(fd, 1)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Enabling ZLIB Certificate Encoding
+  if (StaticPrefs::security_tls_enable_certificate_compression_zlib() &&
+      range.max >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+      !(infoObject->GetProviderFlags() &
+        (nsISocketProvider::BE_CONSERVATIVE | nsISocketProvider::IS_RETRY))) {
+    SSLCertificateCompressionAlgorithm t = {1, "zlib", nullptr,
+                                            zlibCertificateDecode};
+
+    if (SSL_SetCertificateCompressionAlgorithm(fd, t) != SECSuccess) {
       return NS_ERROR_FAILURE;
     }
   }

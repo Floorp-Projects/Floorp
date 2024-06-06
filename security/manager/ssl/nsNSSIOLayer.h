@@ -119,6 +119,9 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
                                  bool forSTARTTLS, uint32_t flags,
                                  uint32_t tlsFlags);
 
+SECStatus zlibCertificateDecode(const SECItem* input, unsigned char* output,
+                                size_t outputLen, size_t* usedLen);
+
 extern "C" {
 using FindObjectsCallback = void (*)(uint8_t type, size_t id_len,
                                      const uint8_t* id, size_t data_len,
