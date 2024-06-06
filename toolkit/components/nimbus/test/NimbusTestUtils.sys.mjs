@@ -233,22 +233,23 @@ export const ExperimentFakes = {
       ],
       isRollout,
     });
-    let { enrollmentPromise, doExperimentCleanup } = this.enrollmentHelper(
-      recipe,
-      { manager, source }
-    );
+    const doEnrollmentCleanup = await this.enrollmentHelper(recipe, {
+      manager,
+      source,
+    });
 
-    await enrollmentPromise;
-
-    return doExperimentCleanup;
+    return doEnrollmentCleanup;
   },
   /**
-   * Enroll in the given recipe.
+   * Attempt enrollment in the given recipe.
    *
-   * NB: It is unnecessary to await the enrollmentPromise.
-   *     See bug 1773583 and bug 1829412.
+   * This will evaluate bucketing, so it is possible that enrollment will *not*
+   * occur.
+   *
+   * If you are testing a feature, you likely want to use enrollInFeatureConfig,
+   * which will guarantee successful enrollment.
    */
-  enrollmentHelper(
+  async enrollmentHelper(
     recipe,
     { manager = lazy.ExperimentAPI._manager, source = "enrollmentHelper" } = {}
   ) {
@@ -256,38 +257,15 @@ export const ExperimentFakes = {
       throw new Error("Enrollment helper expects a recipe");
     }
 
-    let enrollmentPromise = new Promise(resolve =>
-      manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
-        if (experiment.active) {
-          manager.store._syncToChildren({ flush: true });
-          resolve(experiment);
-        }
-      })
-    );
-    let unenrollCompleted = slug =>
-      new Promise(resolve =>
-        manager.store.on(`update:${slug}`, (event, experiment) => {
-          if (!experiment.active) {
-            // Removes recipe from file storage which
-            // (normally the users archive of past experiments)
-            manager.store._deleteForTests(recipe.slug);
-            resolve();
-          }
-        })
-      );
-    let doExperimentCleanup = async () => {
-      const experiment = manager.store.get(recipe.slug);
-      let promise = unenrollCompleted(experiment.slug);
-      manager.unenroll(experiment.slug, "cleanup");
-      await promise;
-    };
-
-    if (!manager.store._isReady) {
-      throw new Error("Manager store not ready, call `manager.onStartup`");
+    const enrollment = await manager.enroll(recipe, source);
+    if (enrollment?.active) {
+      manager.store._syncToChildren({ flush: true });
     }
-    manager.enroll(recipe, source);
 
-    return { enrollmentPromise, doExperimentCleanup };
+    return function doEnrollmentCleanup() {
+      manager.unenroll(enrollment.slug, "cleanup");
+      manager.store._deleteForTests(enrollment.slug);
+    };
   },
   async cleanupAll(slugs, { manager = lazy.ExperimentAPI._manager } = {}) {
     function unenrollCompleted(slug) {

@@ -71,10 +71,6 @@ add_task(async function test_experiment_iconOnly() {
     },
   });
 
-  registerCleanupFunction(async function () {
-    await experimentCleanup();
-  });
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -111,4 +107,6 @@ add_task(async function test_experiment_iconOnly() {
       });
     }
   );
+
+  experimentCleanup();
 });

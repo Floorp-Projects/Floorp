@@ -399,7 +399,7 @@ add_task(async function test_aboutwelcome_with_url_backdrop() {
     // Expected selectors:
     [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_URL}']`]
   );
-  await doExperimentCleanup();
+  doExperimentCleanup();
   browser.closeBrowser();
 });
 
@@ -428,7 +428,7 @@ add_task(async function test_aboutwelcome_with_color_backdrop() {
     // Expected selectors:
     [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_COLOR}']`]
   );
-  await doExperimentCleanup();
+  doExperimentCleanup();
   browser.closeBrowser();
 });
 
@@ -492,7 +492,7 @@ add_task(async function test_aboutwelcome_with_text_color_override() {
     }
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   await SpecialPowers.popPrefEnv();
   browser.closeBrowser();
 });
@@ -569,7 +569,7 @@ add_task(async function test_aboutwelcome_with_progress_bar() {
     );
   });
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   browser.closeBrowser();
 });
 
@@ -611,7 +611,7 @@ add_task(async function test_aboutwelcome_history_updates_disabled() {
     "No entries added to the session's history stack with history updates disabled"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   browser.closeBrowser();
 });
 
@@ -718,7 +718,7 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
     ok(false, "No telemetry sent");
   }
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   browser.closeBrowser();
   sandbox.restore();
 });
@@ -743,6 +743,6 @@ add_task(async function test_aboutwelcome_rdm_property() {
     ["main.TEST_NO_RDM[no-rdm]"]
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   browser.closeBrowser();
 });

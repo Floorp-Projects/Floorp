@@ -534,10 +534,10 @@ add_task(async function test_rollout_experiment_no_conflict() {
 
   await ExperimentFakes.enrollmentHelper(experiment, {
     manager,
-  }).enrollmentPromise;
+  });
   await ExperimentFakes.enrollmentHelper(rollout, {
     manager,
-  }).enrollmentPromise;
+  });
 
   Assert.ok(
     manager.store.get(experiment.slug).active,
@@ -854,10 +854,9 @@ add_task(async function test_featureIds_is_stored() {
 
   await manager.onStartup();
 
-  const { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(recipe, { manager });
-
-  await enrollmentPromise;
+  const doExperimentCleanup = await ExperimentFakes.enrollmentHelper(recipe, {
+    manager,
+  });
 
   Assert.ok(manager.store.addEnrollment.calledOnce, "experiment is stored");
   let [enrollment] = manager.store.addEnrollment.firstCall.args;
@@ -868,7 +867,7 @@ add_task(async function test_featureIds_is_stored() {
     "Has expected value"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
 
   await assertEmptyStore(manager.store);
 });
@@ -879,7 +878,7 @@ add_task(async function experiment_and_rollout_enroll_and_cleanup() {
 
   await manager.onStartup();
 
-  let rolloutCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+  let doRolloutCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: "aboutwelcome",
       value: { enabled: true },
@@ -890,7 +889,7 @@ add_task(async function experiment_and_rollout_enroll_and_cleanup() {
     }
   );
 
-  let experimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: "aboutwelcome",
       value: { enabled: true },
@@ -907,7 +906,7 @@ add_task(async function experiment_and_rollout_enroll_and_cleanup() {
     )
   );
 
-  await experimentCleanup();
+  doExperimentCleanup();
 
   Assert.ok(
     !Services.prefs.getBoolPref(
@@ -921,7 +920,7 @@ add_task(async function experiment_and_rollout_enroll_and_cleanup() {
     )
   );
 
-  await rolloutCleanup();
+  doRolloutCleanup();
 
   Assert.ok(
     !Services.prefs.getBoolPref(

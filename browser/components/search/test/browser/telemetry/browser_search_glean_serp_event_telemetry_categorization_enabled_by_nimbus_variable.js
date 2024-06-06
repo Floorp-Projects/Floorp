@@ -170,7 +170,7 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
   resetTelemetry();
 
   info("End experiment.");
-  await doExperimentCleanup();
+  doExperimentCleanup();
   await waitForDomainToCategoriesUninit();
 
   Assert.equal(

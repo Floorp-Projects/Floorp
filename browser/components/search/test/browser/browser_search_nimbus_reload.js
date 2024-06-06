@@ -46,7 +46,7 @@ add_task(async function test_engines_reloaded_nimbus() {
     "Should have expected value"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
 
   Assert.equal(reloadSpy.callCount, 2, "Called by experiment unenrollment");
 

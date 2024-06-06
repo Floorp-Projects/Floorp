@@ -230,9 +230,9 @@ add_task(async function test_getLocalizedValue() {
     localizations: LOCALIZATIONS,
   });
 
-  const { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(experiment);
-  await enrollmentPromise;
+  const doExperimentCleanup = await ExperimentFakes.enrollmentHelper(
+    experiment
+  );
 
   const enrollment = manager.store.getExperimentForFeature(FEATURE_ID);
 
@@ -254,7 +254,7 @@ add_task(async function test_getLocalizedValue() {
     "_getLocalizedValue() with a nested localization"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   await cleanupStore(manager.store);
   sandbox.reset();
 });
@@ -294,7 +294,7 @@ add_task(async function test_getLocalizedValue_unenroll_missingEntry() {
     localizations: LOCALIZATIONS,
   });
 
-  await ExperimentFakes.enrollmentHelper(experiment).enrollmentPromise;
+  await ExperimentFakes.enrollmentHelper(experiment);
 
   const enrollment = manager.store.getExperimentForFeature(FEATURE_ID);
 
@@ -378,7 +378,7 @@ add_task(async function test_getLocalizedValue_unenroll_missingEntry() {
     },
   });
 
-  await ExperimentFakes.enrollmentHelper(experiment).enrollmentPromise;
+  await ExperimentFakes.enrollmentHelper(experiment);
 
   const enrollment = manager.store.getExperimentForFeature(FEATURE_ID);
 
@@ -450,9 +450,9 @@ add_task(async function test_getVariables() {
     localizations: LOCALIZATIONS,
   });
 
-  const { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(experiment);
-  await enrollmentPromise;
+  const doExperimentCleanup = await ExperimentFakes.enrollmentHelper(
+    experiment
+  );
 
   Assert.deepEqual(
     FEATURE.getAllVariables(),
@@ -484,7 +484,7 @@ add_task(async function test_getVariables() {
     "getVariable() returns substitutions inside arrays"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
   await cleanupStore(manager.store);
   sandbox.reset();
 });
@@ -584,13 +584,7 @@ add_task(async function test_getVariables_fallback() {
   );
 
   // Enroll in the rollout.
-  {
-    const { enrollmentPromise, doExperimentCleanup } =
-      ExperimentFakes.enrollmentHelper(recipes.rollout);
-    await enrollmentPromise;
-
-    cleanup.rollout = doExperimentCleanup;
-  }
+  cleanup.rollout = await ExperimentFakes.enrollmentHelper(recipes.rollout);
 
   Assert.deepEqual(
     FEATURE.getAllVariables({ defaultValues: { waldo: ["default-value"] } }),
@@ -620,13 +614,9 @@ add_task(async function test_getVariables_fallback() {
   );
 
   // Enroll in the experiment.
-  {
-    const { enrollmentPromise, doExperimentCleanup } =
-      ExperimentFakes.enrollmentHelper(recipes.experiment);
-    await enrollmentPromise;
-
-    cleanup.experiment = doExperimentCleanup;
-  }
+  cleanup.experiment = await ExperimentFakes.enrollmentHelper(
+    recipes.experiment
+  );
 
   Assert.deepEqual(
     FEATURE.getAllVariables({ defaultValues: { waldo: ["default-value"] } }),
@@ -791,7 +781,7 @@ add_task(async function test_getVariables_fallback_unenroll() {
   ];
 
   for (const recipe of recipes) {
-    await ExperimentFakes.enrollmentHelper(recipe).enrollmentPromise;
+    await ExperimentFakes.enrollmentHelper(recipe);
   }
 
   Assert.deepEqual(FEATURE.getAllVariables(), {
@@ -1140,9 +1130,7 @@ add_task(async function test_updateRecipes_unenroll_missingEntry() {
   await manager.onStartup();
   await manager.store.ready();
 
-  await ExperimentFakes.enrollmentHelper(recipe, {
-    source: "rs-loader",
-  }).enrollmentPromise;
+  await ExperimentFakes.enrollmentHelper(recipe, { source: "rs-loader" });
   Assert.ok(
     !!manager.store.getExperimentForFeature(FEATURE_ID),
     "Should be enrolled in the experiment"
@@ -1295,9 +1283,7 @@ add_task(async function test_updateRecipes_unenroll_missingLocale() {
   await manager.onStartup();
   await manager.store.ready();
 
-  await ExperimentFakes.enrollmentHelper(recipe, {
-    source: "rs-loader",
-  }).enrollmentPromise;
+  await ExperimentFakes.enrollmentHelper(recipe, { source: "rs-loader" });
   Assert.ok(
     !!manager.store.getExperimentForFeature(FEATURE_ID),
     "Should be enrolled in the experiment"

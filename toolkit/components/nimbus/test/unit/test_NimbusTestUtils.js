@@ -32,10 +32,9 @@ add_task(async function test_enrollmentHelper() {
 
   await manager.onStartup();
 
-  let { enrollmentPromise, doExperimentCleanup } =
-    ExperimentFakes.enrollmentHelper(recipe, { manager });
-
-  await enrollmentPromise;
+  const doEnrollmentCleanup = await ExperimentFakes.enrollmentHelper(recipe, {
+    manager,
+  });
 
   Assert.ok(manager.store.getAllActiveExperiments().length === 1, "Enrolled");
   Assert.equal(
@@ -48,7 +47,7 @@ add_task(async function test_enrollmentHelper() {
     "Sync pref cache set"
   );
 
-  await doExperimentCleanup();
+  doEnrollmentCleanup();
 
   Assert.ok(manager.store.getAll().length === 0, "Cleanup done");
   Assert.ok(
@@ -60,7 +59,7 @@ add_task(async function test_enrollmentHelper() {
 add_task(async function test_enrollWithFeatureConfig() {
   let manager = ExperimentFakes.manager();
   await manager.onStartup();
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+  let doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: "enrollWithFeatureConfig",
       value: { enabled: true },
@@ -73,7 +72,7 @@ add_task(async function test_enrollWithFeatureConfig() {
     "Enrolled successfully"
   );
 
-  await doExperimentCleanup();
+  doEnrollmentCleanup();
 
   Assert.ok(
     !manager.store.hasExperimentForFeature("enrollWithFeatureConfig"),

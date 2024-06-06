@@ -67,7 +67,7 @@ add_task(async function test_experiment_plain_text() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_info_disabled() {
@@ -93,7 +93,7 @@ add_task(async function test_experiment_info_disabled() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_promo_disabled() {
@@ -120,7 +120,7 @@ add_task(async function test_experiment_promo_disabled() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_format_urls() {
@@ -164,7 +164,7 @@ add_task(async function test_experiment_format_urls() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_click_info_telemetry() {
@@ -199,7 +199,7 @@ add_task(async function test_experiment_click_info_telemetry() {
   );
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_click_promo_telemetry() {
@@ -250,7 +250,7 @@ add_task(async function test_experiment_click_promo_telemetry() {
   );
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_bottom_promo() {
@@ -318,7 +318,7 @@ add_task(async function test_experiment_bottom_promo() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_below_search_promo() {
@@ -390,7 +390,7 @@ add_task(async function test_experiment_below_search_promo() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_top_promo() {
@@ -455,5 +455,5 @@ add_task(async function test_experiment_top_promo() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });

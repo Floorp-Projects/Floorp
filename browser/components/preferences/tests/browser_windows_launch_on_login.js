@@ -68,7 +68,7 @@ add_task(async function test_check_uncheck_checkbox() {
 
     gBrowser.removeCurrentTab();
   });
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function create_external_regkey() {
@@ -111,7 +111,7 @@ add_task(async function create_external_regkey() {
 
     gBrowser.removeCurrentTab();
   });
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function delete_external_regkey() {
@@ -142,7 +142,7 @@ add_task(async function delete_external_regkey() {
 
     gBrowser.removeCurrentTab();
   });
-  await doCleanup();
+  doCleanup();
 });
 
 registerCleanupFunction(async function () {

@@ -2698,7 +2698,7 @@ add_task(async function test_prefChanged_noPrefSet() {
 
             assertNoObservers(manager);
 
-            await doEnrollmentCleanup();
+            doEnrollmentCleanup();
             await assertEmptyStore(store);
 
             Services.prefs.deleteBranch(pref);

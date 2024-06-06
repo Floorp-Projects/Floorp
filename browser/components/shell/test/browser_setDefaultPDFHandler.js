@@ -87,7 +87,7 @@ add_task(async function remoteEnableWithPDF() {
     [".pdf", "FirefoxPDF"],
   ]);
 
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
@@ -149,7 +149,7 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
     `Will not take default from non-browser`
   );
 
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function remoteEnableWithoutPDF() {
@@ -181,7 +181,7 @@ add_task(async function remoteEnableWithoutPDF() {
   Assert.ok(setDefaultBrowserUserChoiceStub.called);
   Assert.deepEqual(setDefaultBrowserUserChoiceStub.firstCall.args, [aumi, []]);
 
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function remoteDisable() {
@@ -212,7 +212,7 @@ add_task(async function remoteDisable() {
   Assert.ok(setDefaultBrowserUserChoiceStub.notCalled);
   Assert.ok(setDefaultStub.called);
 
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function test_setAsDefaultPDFHandler_knownBrowser() {

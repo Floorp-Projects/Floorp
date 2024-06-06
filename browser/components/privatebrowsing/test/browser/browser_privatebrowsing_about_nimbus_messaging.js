@@ -66,7 +66,7 @@ add_task(async function test_experiment_messaging_system() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_promo_action() {
@@ -156,7 +156,7 @@ add_task(async function test_experiment_promo_action() {
     "Should be called with right URL"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });
 
 add_task(async function test_experiment_open_spotlight_action() {
@@ -243,5 +243,5 @@ add_task(async function test_experiment_open_spotlight_action() {
     "Should be called with metrics property set as allow for experiments"
   );
 
-  await doExperimentCleanup();
+  doExperimentCleanup();
 });

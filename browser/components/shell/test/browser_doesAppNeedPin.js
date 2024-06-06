@@ -38,7 +38,7 @@ add_task(async function remote_disable() {
     "Pinning disabled via nimbus"
   );
 
-  await doCleanup();
+  doCleanup();
 });
 
 add_task(async function restore_default() {
