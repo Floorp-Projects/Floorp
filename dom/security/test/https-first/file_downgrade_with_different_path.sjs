@@ -5,7 +5,7 @@ const RESPONSE_HTTPS_SCHEME = `
   <html>
   <body>
   <script type="application/javascript">
-    window.opener.postMessage({result: 'scheme-https'}, '*');
+    window.opener.postMessage({result: 'scheme-https-'+window.location}, '*');
   </script>
   </body>
   </html>`;
@@ -14,7 +14,7 @@ const RESPONSE_HTTP_SCHEME = `
   <html>
   <body>
   <script type="application/javascript">
-    window.opener.postMessage({result: 'scheme-http'}, '*');
+    window.opener.postMessage({result: 'scheme-http-'+window.location}'}, '*');
   </script>
   </body>
   </html>`;

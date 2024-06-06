@@ -1165,7 +1165,7 @@ nsresult TRRServiceChannel::SetupReplacementChannel(nsIURI* aNewURI,
     return rv;
   }
 
-  rv = CheckRedirectLimit(aRedirectFlags);
+  rv = CheckRedirectLimit(aNewURI, aRedirectFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);

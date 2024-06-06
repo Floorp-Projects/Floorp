@@ -1692,7 +1692,7 @@ function handleRequest(req, res) {
   } else if (u.pathname === "/redirect_to_http") {
     res.setHeader(
       "Location",
-      `http://test.httpsrr.redirect.com:${u.query.port}/redirect_to_http`
+      `http://test.httpsrr.redirect.com:${u.query.port}/redirect_to_http?port=${u.query.port}`
     );
     res.writeHead(307);
     res.end("");

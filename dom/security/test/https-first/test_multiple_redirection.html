@@ -21,10 +21,8 @@ Test multiple redirects using https-first and ensure the entire redirect chain i
   const testCase = [
     // test 1: https-first upgrades http://example.com/test1 -> https://example.com/test1
     //         that's redirect to https://example.com/.../redirect which then redirects
-    //         to http://example.com/../verify. Since the last redirect is http, and the
-    //         the redirection chain contains already example.com we expect https-first
-    //         to downgrade the request.
-    {name: "test last redirect HTTP", result: "scheme-http", query: "test1" },
+    //         to http://example.com/../verify.
+    {name: "test last redirect HTTP", result: "scheme-https", query: "test1" },
     // test 2: https-first upgrades http://example.com/test2 -> https://example.com/test2
     //         that's redirect to https://example.com/.../redirect which then redirects
     //         to https://example.com/../verify. Since the last redirect is https, we
@@ -43,6 +41,13 @@ Test multiple redirects using https-first and ensure the entire redirect chain i
     //         http://example.org/.../verify -upgrade-> httpS://example.ORG/.../verify
     //         Everything should be upgraded and accessed only via HTTPS!
     {name: "test last redirect other HTTP origin gets upgraded", result: "scheme-https", query: "test4" },
+    // test 5: https-first upgrades http://example.com/test5 -> https://example.com/test5
+    //         that's redirect to https://example.com/.../downgrade which then redirects
+    //         https-first upgrades http://example.com/.../downgrade -> https://example.com/.../downgrade
+    //         that's redirect to http://example.com/.../downgrade which which is detected as http downgrade
+    //         to http://example.com/../verify. Since the last redirect is http, and we
+    //         had a downgrade in the redirect chain. We load the http version
+    {name: "test downgrade HTTP", result: "scheme-http", query: "test5" },
   ]
   let currentTest = 0;
   let testWin;

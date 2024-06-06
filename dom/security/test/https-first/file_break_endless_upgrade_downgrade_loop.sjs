@@ -1,61 +1,96 @@
 "use strict";
 
-const REDIRECT_URI =
-  "http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?verify";
-const DOWNGRADE_URI =
-  "http://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs";
-const RESPONSE_ERROR = "unexpected-query";
-
-// An onload postmessage to window opener
-const RESPONSE_HTTPS_SCHEME = `
+// DOWNGRADE_REDIRECT_*: http instead of https, otherwise same path
+const DOWNGRADE_REDIRECT_META = `
   <html>
+  <head>
+    <meta http-equiv="refresh" content="0; url='http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?downgrade_redirect_meta'">
+  </head>
   <body>
-  <script type="application/javascript">
-    window.opener.postMessage({result: 'scheme-https'}, '*');
-  </script>
+    META REDIRECT
   </body>
   </html>`;
 
+const DOWNGRADE_REDIRECT_JS = `
+  <html>
+   <body>
+     JS REDIRECT
+     <script>
+       let url= "http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?downgrade_redirect_js";
+       window.location = url;
+     </script>
+   </body>
+   </html>`;
+
+// REDIRECT_*: different path and http instead of https
+const REDIRECT_META = `
+  <html>
+  <head>
+    <meta http-equiv="refresh" content="0; url='http://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs?redirect_meta'">
+  </head>
+  <body>
+    META REDIRECT
+  </body>
+  </html>`;
+
+const REDIRECT_JS = `
+  <html>
+   <body>
+     JS REDIRECT
+     <script>
+       let url= "http://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs?redirect_js";
+       window.location = url;
+     </script>
+   </body>
+   </html>`;
+
+// An onload postmessage to window opener
 const RESPONSE_HTTP_SCHEME = `
   <html>
   <body>
   <script type="application/javascript">
-    window.opener.postMessage({result: 'scheme-http'}, '*');
+    window.opener.postMessage({result: 'scheme-http-'+window.location}, '*');
   </script>
   </body>
   </html>`;
 
 function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
-  const query = request.queryString;
 
-  if (query == "downgrade") {
-    // send same-origin downgrade from https: to http: with a different path.
-    // we don't consider it's an endless upgrade downgrade loop in this case.
-    response.setStatusLine(request.httpVersion, 302, "Found");
-    response.setHeader("Location", DOWNGRADE_URI, false);
+  if (request.scheme == "https") {
+    // allow http status code as parameter
+    const query = request.queryString.split("=");
+    if (query[0] == "downgrade_redirect_http") {
+      let location = `http://${request.host}${request.path}?${request.queryString}`;
+      response.setStatusLine(request.httpVersion, query[1], "Found");
+      response.setHeader("Location", location, false);
+    } else if (query[0] == "redirect_http") {
+      response.setStatusLine(request.httpVersion, query[1], "Found");
+      let location =
+        "http://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs?" +
+        request.queryString;
+      response.setHeader("Location", location, false);
+    } else if (query[0] == "downgrade_redirect_js") {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(DOWNGRADE_REDIRECT_JS);
+    } else if (query[0] == "redirect_js") {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(REDIRECT_JS);
+    } else if (query[0] == "downgrade_redirect_meta") {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(DOWNGRADE_REDIRECT_META);
+    } else if (query[0] == "redirect_meta") {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(REDIRECT_META);
+    } else {
+      // We should never get here, but just in case ...
+      response.setStatusLine(request.httpVersion, 500, "OK");
+      response.write("unexepcted query");
+    }
     return;
   }
 
-  // handle the redirect case
-  if ((query >= 301 && query <= 303) || query == 307) {
-    // send same-origin downgrade from https: to http: again simluating
-    // and endless upgrade downgrade loop.
-    response.setStatusLine(request.httpVersion, query, "Found");
-    response.setHeader("Location", REDIRECT_URI, false);
-    return;
-  }
-
-  // Check if scheme is http:// or https://
-  if (query == "verify") {
-    let response_content =
-      request.scheme === "https" ? RESPONSE_HTTPS_SCHEME : RESPONSE_HTTP_SCHEME;
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(response_content);
-    return;
-  }
-
-  // We should never get here, but just in case ...
-  response.setStatusLine(request.httpVersion, 500, "OK");
-  response.write("unexepcted query");
+  // return http response
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.write(RESPONSE_HTTP_SCHEME);
 }
