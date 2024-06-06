@@ -496,6 +496,10 @@ export class AppProvidedSearchEngine extends SearchEngine {
       this._telemetryId += `-${engineConfig.telemetrySuffix}`;
     }
 
+    if (engineConfig.clickUrl) {
+      this.clickUrl = engineConfig.clickUrl;
+    }
+
     this._name = engineConfig.name.trim();
     this._definedAliases =
       engineConfig.aliases?.map(alias => `@${alias}`) ?? [];
