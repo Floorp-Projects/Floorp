@@ -720,6 +720,8 @@ bitflags! {
         /// Render large blobs with at a smaller size (incorrectly). This is a temporary workaround for
         /// fuzzing.
         const RESTRICT_BLOB_SIZE        = 1 << 28;
+        /// Enable surface promotion logging.
+        const SURFACE_PROMOTION_LOGGING = 1 << 29;
     }
 }
 
