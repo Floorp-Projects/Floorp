@@ -147,28 +147,28 @@
   <text id="text6" font-size="20px" font-familiy="monospace" fill="blue" x="0" y="80" clip-path="url('#rect06')">99</text>
 
   <!-- image -->
-  <image id="image1" x="150" y="150" width="200" height="200" preserveApectRatio="none" clip="rect(200,300,300,200)"
+  <image id="image1" x="150" y="150" width="200" height="200" preserveApectRatio="none" clip="rect(10px,90px,90px,10px)"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
   
-  <image id="image2" x="2"   y="2"   width="200" height="200" clip-path="url('#circle1')" preserveApectRatio="none"
+  <image id="image2" x="2" y="2" width="200" height="200" clip-path="url('#circle1')" preserveApectRatio="none"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
 
-  <image id="image3" x="205" y="2"   width="200" height="200" clip-path="url('#circle1')" preserveApectRatio="none"
+  <image id="image3" x="205" y="2" width="200" height="200" clip-path="url('#circle1')" preserveApectRatio="none"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
 
-  <image id="image4" x="2"   y="205" width="200" height="200" clip-path="url('#circle1')" preserveApectRatio="none"
+  <image id="image4" x="2" y="205" width="200" height="200" clip-path="url('#circle1')" preserveApectRatio="none"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
 
   <image id="image5" x="205" y="205" width="200" height="200" clip-path="url('#circle1')" preserveApectRatio="none"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
 
-  <image id="image6" x="2"   y="2"   width="200" height="200" clip-path="url('#circle2')" preserveApectRatio="none"
+  <image id="image6" x="2" y="2" width="200" height="200" clip-path="url('#circle2')" preserveApectRatio="none"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
 
-  <image id="image7" x="205" y="2"   width="200" height="200" clip-path="url('#circle2')" preserveApectRatio="none"
+  <image id="image7" x="205" y="2" width="200" height="200" clip-path="url('#circle2')" preserveApectRatio="none"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
 
-  <image id="image8" x="2"   y="205" width="200" height="200" clip-path="url('#circle2')" preserveApectRatio="none"
+  <image id="image8" x="2" y="205" width="200" height="200" clip-path="url('#circle2')" preserveApectRatio="none"
    xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKXRFWHRDcmVhdGlvbiBUaW1lAJCFIDMwIDQgMjAxNCAwOToyODo0MyArMDkwMH73aTcAAAAHdElNRQfeBB4AHhEfV06+AAAACXBIWXMAAB7BAAAewQHDaVRTAAAABGdBTUEAALGPC/xhBQAAABlJREFUeNpjZPj/n4EUwESS6lENoxqGlAYASU8CHux7qQ4AAAAASUVORK5CYII="/>
 
   <image id="image9" x="205" y="205" width="200" height="200" clip-path="url('#circle2')" preserveApectRatio="none"
@@ -246,48 +246,48 @@
   <use id="use8" xlink:href="#rect-10" x="50" y="50" clip-path="url('#m_atr')"/>
 
   <!-- foreignObject -->
-  <foreignObject id="fo1" x="2" y="2" width="200" height="200" clip-path="url('#circle1')" clip="rect(2,102,102,2)">
+  <foreignObject id="fo1" x="2" y="2" width="200" height="200" clip-path="url('#circle1')" clip="rect(2px,102px,102px,2px)">
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
   <foreignObject id="fo2" x="205" y="2" width="200" height="200" clip-path="url('#circle1')" >
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
   <foreignObject id="fo3" x="2" y="205" width="200" height="200" clip-path="url('#circle1')" >
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
-  <foreignObject id="fo4" x="205" y="205" width="200" height="200" clip-path="url('#circle1')" clip="rect(2,102,102,2)">
+  <foreignObject id="fo4" x="205" y="205" width="200" height="200" clip-path="url('#circle1')" clip="rect(2px,102px,102px,2px)">
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
   
   <foreignObject id="fo5" x="250" y="250" width="200" height="200" clip-path="url('#rect8')">
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
 
   <foreignObject id="fo6" x="0" y="0" width="200" height="200" clip-path="url('#rect9')">
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
 
   <foreignObject id="fo7" x="0" y="0" width="200" height="200" clip-path="url('#rect8')">
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
 
   <foreignObject id="fo8" x="0" y="0" width="200" height="200" clip-path="url('#m_atr')">
     <div xmlns="http://www.w3.org/1999/xhtml" style="background-color:pink;width:100%;height:100%;">
-There are issues of dynamic loading required for tiling. Accroding to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
+There are issues of dynamic loading required for tiling. According to 'postpone' attribute of Resource Priorities, the dynamic loading is controlled by positional relation with bounding box of embedded contents and container's viewport. However, each bounding boxes of embedded contents should be whole earth basically when this method is used. (green part on Example) Tiling is impossible unless this situation is changed.
     </div>
   </foreignObject>
 
