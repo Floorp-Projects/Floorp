@@ -192,6 +192,25 @@ Submitter.prototype = {
       if (xhr.readyState == 4) {
         let ret =
           xhr.status === 200 ? this.parseResponse(xhr.responseText) : {};
+        if (xhr.status !== 200) {
+          const xhrStatus = code => {
+            switch (code) {
+              case 400:
+                return xhr.responseText;
+
+              case 413:
+                return "Discarded=post_body_too_large";
+
+              default:
+                return "Discarded=unknown_error";
+            }
+          };
+          let err = xhrStatus(xhr.status);
+          if (err.length && err.startsWith("Discarded=")) {
+            const errMsg = err.split("Discarded=")[1];
+            Glean.crashSubmission.collectorErrors[errMsg].add();
+          }
+        }
         let submitted = !!ret.CrashID;
         let p = Promise.resolve();
 
@@ -257,9 +276,11 @@ Submitter.prototype = {
     switch (status) {
       case SUCCESS:
         this.resolveSubmitStatusPromise(ret.CrashID);
+        Glean.crashSubmission.success.add(1);
         break;
       case FAILED:
         this.rejectSubmitStatusPromise(FAILED);
+        Glean.crashSubmission.failure.add(1);
         break;
       default:
       // no callbacks invoked.
