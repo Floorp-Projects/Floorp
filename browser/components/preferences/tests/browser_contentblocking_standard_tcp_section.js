@@ -83,7 +83,7 @@ async function testTCPSection({ dFPIEnabled }) {
       "Learn more link should have the correct target."
     );
 
-    let description = etpStandardTCPBox.querySelector(".tail-with-learn-more");
+    let description = etpStandardTCPBox.querySelector("description");
     ok(description, "Should have a description element.");
     BrowserTestUtils.isVisible(description, "Description should be visible.");
 
