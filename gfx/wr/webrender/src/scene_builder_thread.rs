@@ -440,6 +440,7 @@ impl SceneBuilderThread {
                     &mut item.interners,
                     &mut item.spatial_tree,
                     &SceneStats::empty(),
+                    self.debug_flags,
                 ));
 
                 interner_updates = Some(
