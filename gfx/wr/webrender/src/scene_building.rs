@@ -37,7 +37,7 @@
 
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, BuiltDisplayList, PrimitiveFlags};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTransferFuncType, RasterSpace};
-use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData};
+use api::{DebugFlags, DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData};
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
@@ -540,6 +540,7 @@ impl<'a> SceneBuilder<'a> {
         interners: &mut Interners,
         spatial_tree: &mut SceneSpatialTree,
         stats: &SceneStats,
+        debug_flags: DebugFlags,
     ) -> BuiltScene {
         profile_scope!("build_scene");
 
@@ -575,6 +576,7 @@ impl<'a> SceneBuilder<'a> {
             tile_cache_builder: TileCacheBuilder::new(
                 root_reference_frame_index,
                 frame_builder_config.background_color,
+                debug_flags,
             ),
             snap_to_device,
             picture_graph: PictureGraph::new(),
