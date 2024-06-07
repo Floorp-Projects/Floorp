@@ -1392,7 +1392,8 @@ class ArenaCollection {
 
   // We're running on the main thread which is set by a call to SetMainThread().
   bool IsOnMainThread() const {
-    return mMainThreadId.isSome() && mMainThreadId.value() == GetThreadId();
+    return mMainThreadId.isSome() &&
+           ThreadIdEqual(mMainThreadId.value(), GetThreadId());
   }
 
   // We're running on the main thread or SetMainThread() has never been called.
