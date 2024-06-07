@@ -11,6 +11,9 @@ add_setup(async () => {
   // (SafeBrowsing.init() will indirectly use nsURLFormatter.js)
   updateAppInfo();
 
+  // Disable updates to prevent automatic updates on custom urls for Remote Settings
+  Services.prefs.setBoolPref("browser.safebrowsing.update.enabled", false);
+
   // This test should not actually try to create a connection to any real
   // endpoint. But a background request could try that while the test is in
   // progress before we've actually shut down networking, and would cause a
@@ -23,6 +26,7 @@ add_setup(async () => {
     Services.prefs.clearUserPref(
       "browser.safebrowsing.provider.mozilla.updateURL"
     );
+    Services.prefs.clearUserPref("browser.safebrowsing.update.enabled");
     Services.prefs.clearUserPref("browser.safebrowsing.provider.google.lists");
     Services.prefs.clearUserPref("browser.safebrowsing.provider.google4.lists");
   });
