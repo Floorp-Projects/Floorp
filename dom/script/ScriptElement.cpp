@@ -157,10 +157,25 @@ bool ScriptElement::MaybeProcessScript() {
   nsAutoString type;
   bool hasType = GetScriptType(type);
   if (!type.IsEmpty()) {
-    NS_ENSURE_TRUE(nsContentUtils::IsJavascriptMIMEType(type) ||
-                       type.LowerCaseEqualsASCII("module") ||
-                       type.LowerCaseEqualsASCII("importmap"),
-                   false);
+    if (!nsContentUtils::IsJavascriptMIMEType(type) &&
+        !type.LowerCaseEqualsASCII("module") &&
+        !type.LowerCaseEqualsASCII("importmap")) {
+#ifdef DEBUG
+      // There is a WebGL convention to store strings they need inside script
+      // tags with these specific unknown script types, so don't warn for them.
+      // "text/something-not-javascript" only seems to be used in the WebGL
+      // conformance tests, but it is also clearly deliberately invalid, so
+      // skip warning for it, too, to reduce warning spam.
+      if (!type.LowerCaseEqualsASCII("x-shader/x-vertex") &&
+          !type.LowerCaseEqualsASCII("x-shader/x-fragment") &&
+          !type.LowerCaseEqualsASCII("text/something-not-javascript")) {
+        NS_WARNING(nsPrintfCString("Unknown script type '%s'",
+                                   NS_ConvertUTF16toUTF8(type).get())
+                       .get());
+      }
+#endif  // #ifdef DEBUG
+      return false;
+    }
   } else if (!hasType) {
     // "language" is a deprecated attribute of HTML, so we check it only for
     // HTML script elements.
