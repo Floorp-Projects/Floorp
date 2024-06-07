@@ -111,6 +111,7 @@ class Rule {
     const data = {
       getUniqueSelector: this.getUniqueSelector,
       selectors: this.domRule.selectors,
+      selectorsSpecificity: this.domRule.selectorsSpecificity,
       selectorWarnings: this.domRule.selectors,
       selectorText: this.keyframes ? this.domRule.keyText : this.selectorText,
     };

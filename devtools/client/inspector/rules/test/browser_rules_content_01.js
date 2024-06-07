@@ -27,11 +27,20 @@ const TEST_URI = `
         }
       }
     }
+
+    #specific,
+    #specific.test,
+    aside#specific.test,
+    body#bdy aside#specific.test,
+    aside#specific.test:is(.this,.that) {}
   </style>
-  <div id="testid" class="testclass">Styled Node</div>
-  <main>
-    <div class="foo">Styled Node in Nested rule</div>
-  </main>
+  <body id="bdy">
+    <div id="testid" class="testclass">Styled Node</div>
+    <main>
+      <div class="foo">Styled Node in Nested rule</div>
+    </main>
+    <aside id=specific class="test">Test with multiple selectors</div>
+  </body>
 `;
 
 add_task(async function () {
@@ -76,10 +85,12 @@ add_task(async function () {
     {
       selector: ".testclass",
       matches: true,
+      specificity: "(0,1,0)",
     },
     {
       selector: ".unmatched",
       matches: false,
+      specificity: "(0,1,0)",
     },
   ]);
 
@@ -94,6 +105,7 @@ add_task(async function () {
     {
       selector: "&",
       matches: true,
+      specificity: "(0,1,1)",
     },
   ]);
 
@@ -101,10 +113,34 @@ add_task(async function () {
     {
       selector: "& > .foo",
       matches: true,
+      specificity: "(0,1,1)",
     },
     {
       selector: "& .unmatched",
       matches: false,
+      specificity: "(0,1,1)",
+    },
+  ]);
+
+  info("Check rule with multiple selectors and different specificites");
+  await selectNode("#specific", inspector);
+  assertSelectors(view, 1, [
+    { selector: "#specific", matches: true, specificity: "(1,0,0)" },
+    { selector: "#specific.test", matches: true, specificity: "(1,1,0)" },
+    {
+      selector: "aside#specific.test",
+      matches: true,
+      specificity: "(1,1,1)",
+    },
+    {
+      selector: "body#bdy aside#specific.test",
+      matches: true,
+      specificity: "(2,1,2)",
+    },
+    {
+      selector: "aside#specific.test:is(.this, .that)",
+      matches: false,
+      specificity: "(1,2,1)",
     },
   ]);
 });
@@ -132,16 +168,24 @@ function assertSelectors(view, ruleIndex, expectedSelectors) {
   );
 
   for (let i = 0; i < expectedSelectors.length; i++) {
+    const ruleSelector = ruleSelectors[i];
+    const expectedSelector = expectedSelectors[i];
+    const selectorText = ruleSelector.textContent;
     is(
-      ruleSelectors[i].textContent,
-      expectedSelectors[i].selector,
+      selectorText,
+      expectedSelector.selector,
       `Got expected text for the selector element #${i} on rule #${ruleIndex}`
     );
     is(
-      [...ruleSelectors[i].classList].join(","),
+      [...ruleSelector.classList].join(","),
       "ruleview-selector," +
-        (expectedSelectors[i].matches ? "matched" : "unmatched"),
-      `Got expected css class on the selector element #${i} ("${ruleSelectors[i].textContent}") on rule #${ruleIndex}`
+        (expectedSelector.matches ? "matched" : "unmatched"),
+      `Got expected css class on the selector element #${i} ("${selectorText}") on rule #${ruleIndex}`
+    );
+    is(
+      ruleSelector.title,
+      `Specificity: ${expectedSelector.specificity}`,
+      `Got expected title with specificity on the selector element #${i} ("${selectorText}") on rule #${ruleIndex}`
     );
   }
 }
