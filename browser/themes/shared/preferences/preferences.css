@@ -1245,7 +1245,9 @@ richlistitem .text-link:hover {
 }
 
 .featureGateDescription {
+  margin-block: var(--space-small);
   margin-inline-start: calc(var(--checkbox-size) + var(--checkbox-margin-inline));
+  white-space: pre-wrap;
 }
 
 .checkbox-row {

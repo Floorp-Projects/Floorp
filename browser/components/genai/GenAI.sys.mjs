@@ -92,4 +92,24 @@ export const GenAI = {
     );
     win.openWebLinkIn(url + "", "tab", { relatedToCurrent: true });
   },
+
+  /**
+   * Build preferences for chat such as handling providers.
+   *
+   * @param {Window} window for about:preferences
+   */
+  buildPreferences({ document, Preferences }) {
+    const providerEl = document.getElementById("genai-chat-provider");
+    if (!providerEl) {
+      return;
+    }
+
+    const enabled = Preferences.get("browser.ml.chat.enabled");
+    const onEnabledChange = () => (providerEl.disabled = !enabled.value);
+    onEnabledChange();
+    enabled.on("change", onEnabledChange);
+
+    // TODO bug 1895433 populate providers
+    Preferences.add({ id: "browser.ml.chat.provider", type: "string" });
+  },
 };

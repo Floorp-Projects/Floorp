@@ -61,6 +61,18 @@ bug-numbers = [1651607]
 is-public-jexl = "true"
 default-value-jexl = "false"
 
+[genai-chat]
+title = "genai-settings-chat-title"
+description = "genai-settings-chat-description"
+# Bug 1895497 to add actual link
+description-links = {connect= "https://connect.mozilla.org"}
+restart-required = false
+preference = "browser.ml.chat.enabled"
+type = "boolean"
+bug-numbers = [1894999]
+is-public-jexl = "false"
+default-value-jexl = "false"
+
 [webrtc-global-mute-toggles]
 title = "experimental-features-webrtc-global-mute-toggles"
 description = "experimental-features-webrtc-global-mute-toggles-description"

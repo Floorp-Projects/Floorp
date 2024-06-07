@@ -72,3 +72,37 @@ add_task(async function testSearchFindsExperiments() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+add_task(async function testExtraTemplate() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.preferences.experimental", true]],
+  });
+
+  // Pretend a feature has id of "featureGate" to reuse that template
+  const server = new DefinitionServer();
+  server.addDefinition({
+    id: "featureGate",
+    isPublicJexl: "true",
+    preference: "test.feature",
+  });
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    `about:preferences?definitionsUrl=${encodeURIComponent(
+      server.definitionsUrl
+    )}#paneExperimental`
+  );
+
+  const doc = gBrowser.contentDocument;
+  const checkbox = await TestUtils.waitForCondition(
+    () => doc.getElementById("featureGate"),
+    "wait for feature to get added to the DOM"
+  );
+
+  is(
+    checkbox.parentNode.querySelectorAll("checkbox").length,
+    2,
+    "extra template added another checkbox"
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});

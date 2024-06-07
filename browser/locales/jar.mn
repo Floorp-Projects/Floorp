@@ -15,6 +15,7 @@
   preview/shopping.ftl                             (../components/shopping/content/shopping.ftl)
   preview/sidebar.ftl                              (../components/sidebar/sidebar.ftl)
   preview/onboarding.ftl                           (../components/aboutwelcome/content/onboarding.ftl)
+  preview/genai.ftl                                (../locales-preview/genai.ftl)
   preview/translations.ftl                         (../locales-preview/translations.ftl)
   browser                                          (%browser/**/*.ftl)
   preview/profiles.ftl                             (../components/profiles/content/profiles.ftl)
