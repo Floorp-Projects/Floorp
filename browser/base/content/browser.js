@@ -3509,7 +3509,9 @@ var XULBrowserWindow = {
       if (this.busyUI && aWebProgress.isTopLevel) {
         this.busyUI = false;
 
-        window.setCursor("auto");
+        if (this.spinCursorWhileBusy) {
+          window.setCursor("auto");
+        }
 
         this.stopCommand.setAttribute("disabled", "true");
         CombinedStopReload.switchToReload(aRequest, aWebProgress);
