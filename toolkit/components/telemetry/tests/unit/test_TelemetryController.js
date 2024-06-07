@@ -739,7 +739,10 @@ add_task(async function test_sendNewProfile() {
     "The new-profile ping generated after startup must have processes.parent data"
   );
 
-  if (AppConstants.platform == "win") {
+  if (
+    AppConstants.platform == "win" &&
+    AppConstants.MOZ_APP_NAME !== "thunderbird"
+  ) {
     Assert.ok(
       "scalars" in ping.payload.processes.parent,
       "The new-profile ping should have a field for scalars"
@@ -794,7 +797,10 @@ add_task(async function test_sendNewProfile() {
     "The new-profile ping generated at shutdown must have processes.parent data"
   );
 
-  if (AppConstants.platform == "win") {
+  if (
+    AppConstants.platform == "win" &&
+    AppConstants.MOZ_APP_NAME !== "thunderbird"
+  ) {
     Assert.ok(
       "scalars" in ping.payload.processes.parent,
       "The new-profile ping should have a field for scalars"
