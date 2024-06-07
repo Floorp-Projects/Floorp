@@ -194,7 +194,6 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
   } else {
     MOZ_ASSERT_UNREACHABLE("Wrong state!");
   }
-  NotifyAudibleStateChangeIfNeeded();
 }
 
 ExternalEngineStateMachine::ExternalEngineStateMachine(
@@ -616,6 +615,7 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
 
   mDuration.DisconnectAll();
   mCurrentPosition.DisconnectAll();
+  // TODO : implement audible check
   mIsAudioDataAudible.DisconnectAll();
 
   mMetadataManager.Disconnect();
@@ -728,7 +728,6 @@ void ExternalEngineStateMachine::PlayStateChanged() {
   } else if (mPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
     mEngine->Pause();
   }
-  NotifyAudibleStateChangeIfNeeded();
 }
 
 void ExternalEngineStateMachine::LoopingChanged() {
@@ -1366,14 +1365,6 @@ void ExternalEngineStateMachine::DecodeError(const MediaResult& aError) {
     mHasFatalError = true;
   }
   MediaDecoderStateMachineBase ::DecodeError(aError);
-}
-
-void ExternalEngineStateMachine::NotifyAudibleStateChangeIfNeeded() {
-  // Only perform a simple check because we can't access audio data from the
-  // external engine.
-  mIsAudioDataAudible = HasAudio() &&
-                        mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-                        mState.IsRunningEngine();
 }
 
 #undef FMT
