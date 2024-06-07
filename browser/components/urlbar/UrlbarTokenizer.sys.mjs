@@ -73,7 +73,6 @@ export var UrlbarTokenizer = {
     SEARCH: "?",
     TITLE: "#",
     URL: "$",
-    ACTION: ">",
   },
 
   // The keys of characters in RESTRICT that will enter search mode.
@@ -83,7 +82,6 @@ export var UrlbarTokenizer = {
       this.RESTRICT.BOOKMARK,
       this.RESTRICT.OPENPAGE,
       this.RESTRICT.SEARCH,
-      this.RESTRICT.ACTION,
     ]);
   },
 
