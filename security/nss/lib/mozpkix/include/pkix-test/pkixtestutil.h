@@ -409,8 +409,8 @@ class OCSPResponseContext final {
   OCSPResponseExtension* singleExtensions;
   // ResponseData extensions.
   OCSPResponseExtension* responseExtensions;
-  const ByteString* trailingResponseData; // optional; trailing data to include
-                                          // at the end of the ResponseData.
+  const ByteString* trailingResponseData;  // optional; trailing data to include
+                                           // at the end of the ResponseData.
   bool includeEmptyExtensions;  // If true, include the extension wrapper
                                 // regardless of if there are any actual
                                 // extensions.
