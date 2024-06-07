@@ -670,7 +670,8 @@ void nsUserCharacteristics::MaybeSubmitPing() {
     return;
   }
   if (lastSubmissionVersion < currentVersion) {
-    PopulateDataAndEventuallySubmit(false);
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning, ("Ping requested"));
+    PopulateDataAndEventuallySubmit(true);
   } else {
     MOZ_ASSERT_UNREACHABLE("Should never reach here");
   }
