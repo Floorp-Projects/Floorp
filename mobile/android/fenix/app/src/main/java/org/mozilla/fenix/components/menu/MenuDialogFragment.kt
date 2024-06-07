@@ -28,6 +28,8 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.components.menu.compose.CUSTOM_TAB_MENU_ROUTE
+import org.mozilla.fenix.components.menu.compose.CustomTabMenu
 import org.mozilla.fenix.components.menu.compose.EXTENSIONS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.ExtensionsSubmenu
 import org.mozilla.fenix.components.menu.compose.MAIN_MENU_ROUTE
@@ -137,7 +139,13 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                     NavHost(
                         navController = navHostController,
-                        startDestination = MAIN_MENU_ROUTE,
+                        startDestination = when (args.accesspoint) {
+                            MenuAccessPoint.Browser,
+                            MenuAccessPoint.Home,
+                            -> MAIN_MENU_ROUTE
+
+                            MenuAccessPoint.External -> CUSTOM_TAB_MENU_ROUTE
+                        },
                     ) {
                         composable(route = MAIN_MENU_ROUTE) {
                             MainMenu(
@@ -267,6 +275,14 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onDiscoverMoreExtensionsMenuClick = {
                                     store.dispatch(MenuAction.Navigate.DiscoverMoreExtensions)
                                 },
+                            )
+                        }
+
+                        composable(route = CUSTOM_TAB_MENU_ROUTE) {
+                            CustomTabMenu(
+                                onSwitchToDesktopSiteMenuClick = {},
+                                onFindInPageMenuClick = {},
+                                onOpenInFirefoxMenuClick = {},
                             )
                         }
                     }
