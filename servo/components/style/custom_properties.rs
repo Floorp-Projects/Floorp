@@ -1054,9 +1054,37 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
         }
     }
 
+    /// Fast check to avoid calling maybe_note_non_custom_dependency in ~all cases.
+    #[inline]
+    pub fn might_have_non_custom_dependency(id: LonghandId, decl: &PropertyDeclaration) {
+        if id == LonghandId::ColorScheme {
+            return true;
+        }
+        if matches!(id, LonghandId::LineHeight | LonghandId::FontSize) {
+            return matches!(decl, PropertyDeclaration::WithVariables(..));
+        }
+        false
+    }
+
     /// Note a non-custom property with variable reference that may in turn depend on that property.
     /// e.g. `font-size` depending on a custom property that may be a registered property using `em`.
     pub fn maybe_note_non_custom_dependency(&mut self, id: LonghandId, decl: &PropertyDeclaration) {
+        debug_assert!(Self::might_have_non_custom_dependency(id, decl));
+        if id == LonghandId::ColorScheme {
+            // If we might change the color-scheme, we need to defer computation of colors.
+            self.has_color_scheme = true;
+            return;
+        }
+
+        let refs = match decl {
+            PropertyDeclaration::WithVariables(ref v) => &v.value.variable_value.references,
+            _ => return,
+        };
+
+        if !refs.any_var {
+            return;
+        }
+
         // With unit algebra in `calc()`, references aren't limited to `font-size`.
         // For example, `--foo: 100ex; font-weight: calc(var(--foo) / 1ex);`,
         // or `--foo: 1em; zoom: calc(var(--foo) * 30px / 2em);`
@@ -1075,20 +1103,9 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                     NonCustomReferences::LH_UNITS | NonCustomReferences::FONT_UNITS
                 }
             },
-            LonghandId::ColorScheme => {
-                // If we might change the color-scheme, we need to defer computation of colors.
-                self.has_color_scheme = true;
-                return;
-            },
             _ => return,
         };
-        let refs = match decl {
-            PropertyDeclaration::WithVariables(ref v) => &v.value.variable_value.references,
-            _ => return,
-        };
-        if !refs.any_var {
-            return;
-        }
+
         let variables: Vec<Atom> = refs
             .refs
             .iter()
