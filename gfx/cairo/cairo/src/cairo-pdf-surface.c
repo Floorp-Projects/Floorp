@@ -2698,16 +2698,18 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 
     status = _cairo_pdf_surface_open_object_stream (surface);
     if (unlikely (status))
-	return status;
+	goto CLEANUP;
 
     /* Emit unbounded surfaces */
-    _cairo_pdf_surface_write_patterns_and_smask_groups (surface, TRUE);
+    status = _cairo_pdf_surface_write_patterns_and_smask_groups (surface, TRUE);
+    if (unlikely (status))
+	goto CLEANUP;
 
     _cairo_pdf_surface_clear (surface, TRUE);
 
-    status = surface->base.status;
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = _cairo_pdf_surface_emit_font_subsets (surface);
+    status = _cairo_pdf_surface_emit_font_subsets (surface);
+    if (unlikely (status))
+	goto CLEANUP;
 
     /* Emit any new patterns or surfaces created by the Type 3 font subset. */
     _cairo_pdf_surface_write_patterns_and_smask_groups (surface, TRUE);
@@ -2716,27 +2718,29 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 
     status = _cairo_pdf_surface_write_pages (surface);
     if (unlikely (status))
-	return status;
+	goto CLEANUP;
 
     status = _cairo_pdf_interchange_write_document_objects (surface);
     if (unlikely (status))
-	return status;
+	goto CLEANUP;
 
     status = _cairo_pdf_surface_write_page_dicts (surface);
     if (unlikely (status))
-	return status;
+	goto CLEANUP;
 
     catalog = _cairo_pdf_surface_new_object (surface);
-    if (catalog.id == 0)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (catalog.id == 0) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto CLEANUP;
+    }
 
     status = _cairo_pdf_surface_write_catalog (surface, catalog);
     if (unlikely (status))
-	return status;
+	goto CLEANUP;
 
     status = _cairo_pdf_surface_close_object_stream (surface);
     if (unlikely (status))
-	return status;
+	goto CLEANUP;
 
     if (!surface->debug && surface->pdf_version >= CAIRO_PDF_VERSION_1_5)
     {
