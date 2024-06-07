@@ -84,12 +84,15 @@ nsresult PrintTargetPDF::BeginPage(const IntSize& aSizeInPoints) {
       return NS_ERROR_FAILURE;
     }
   }
-  return PrintTarget::BeginPage(aSizeInPoints);
+  MOZ_ALWAYS_SUCCEEDS(PrintTarget::BeginPage(aSizeInPoints));
+  return NS_OK;
 }
 
 nsresult PrintTargetPDF::EndPage() {
   cairo_surface_show_page(mCairoSurface);
-  return PrintTarget::EndPage();
+  bool cairoFailure = cairo_surface_status(mCairoSurface);
+  MOZ_ALWAYS_SUCCEEDS(PrintTarget::EndPage());
+  return cairoFailure ? NS_ERROR_FAILURE : NS_OK;
 }
 
 void PrintTargetPDF::Finish() {
