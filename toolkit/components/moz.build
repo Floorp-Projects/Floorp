@@ -94,7 +94,6 @@ if CONFIG["NS_PRINTING"]:
 if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
     DIRS += [
         "aboutconfig",
-        "featuregates",
         "narrate",
         "reader",
         "viaduct",
@@ -131,7 +130,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] not in ("android", "windows"):
     DIRS += ["aboutwebauthn"]
 
 if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DIRS += ["normandy", "messaging-system"]
+    DIRS += ["featuregates", "messaging-system", "normandy"]
 
 DIRS += ["nimbus"]
 

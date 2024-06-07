@@ -468,7 +468,7 @@ var dataProviders = {
   },
 
   async experimentalFeatures(done) {
-    if (AppConstants.platform == "android") {
+    if (AppConstants.MOZ_BUILD_APP != "browser") {
       done();
       return;
     }
