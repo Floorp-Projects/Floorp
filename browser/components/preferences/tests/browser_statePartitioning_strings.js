@@ -23,9 +23,7 @@ async function testStrings() {
   }
 
   // Check the learn more strings
-  elts = doc.querySelectorAll(
-    ".tail-with-learn-more.content-blocking-warning-description"
-  );
+  elts = doc.querySelectorAll(".content-blocking-warning-description");
   for (let elt of elts) {
     let id = doc.l10n.getAttributes(elt).id;
     is(
