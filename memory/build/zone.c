@@ -232,9 +232,8 @@ static void zone_print(malloc_zone_t* zone, boolean_t verbose) {}
 
 static void zone_log(malloc_zone_t* zone, void* address) {}
 
-// On Darwin the postfork handler is called in both the parent and the child.
 extern void _malloc_prefork(void);
-extern void _malloc_postfork(void);
+extern void _malloc_postfork_child(void);
 
 static void zone_force_lock(malloc_zone_t* zone) {
   // /!\ This calls into mozjemalloc. It works because we're linked in the
@@ -245,7 +244,7 @@ static void zone_force_lock(malloc_zone_t* zone) {
 static void zone_force_unlock(malloc_zone_t* zone) {
   // /!\ This calls into mozjemalloc. It works because we're linked in the
   // same library.
-  _malloc_postfork();
+  _malloc_postfork_child();
 }
 
 static void zone_statistics(malloc_zone_t* zone, malloc_statistics_t* stats) {
