@@ -191,8 +191,8 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
         restartApp(composeTestRule.activityRule)
         homeScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager(composeTestRule) {
-            verifyEmptyDownloadsList()
+        }.openDownloadsManager() {
+            verifyEmptyDownloadsList(composeTestRule)
         }
     }
 

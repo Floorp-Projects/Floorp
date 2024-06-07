@@ -32,7 +32,6 @@ import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -276,7 +275,7 @@ class ThreeDotMenuMainRobot {
             return SettingsRobot.Transition()
         }
 
-        fun openDownloadsManager(composeTestRule: HomeActivityComposeTestRule, interact: ComposeDownloadRobot.() -> Unit): DownloadRobot.Transition {
+        fun openDownloadsManager(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
             Log.i(TAG, "openDownloadsManager: Trying to perform swipe down action on the three dot menu")
             threeDotMenuRecyclerView().perform(swipeDown())
             Log.i(TAG, "openDownloadsManager: Performed swipe down action on the three dot menu")
@@ -284,7 +283,7 @@ class ThreeDotMenuMainRobot {
             downloadsButton().click()
             Log.i(TAG, "openDownloadsManager: Clicked the \"DOWNLOADS\" button")
 
-            ComposeDownloadRobot(composeTestRule).interact()
+            DownloadRobot().interact()
             return DownloadRobot.Transition()
         }
 
