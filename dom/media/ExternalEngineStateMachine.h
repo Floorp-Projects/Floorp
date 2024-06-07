@@ -181,17 +181,17 @@ class ExternalEngineStateMachine final
     // crashes.
     struct RecoverEngine : public InitEngine {};
 
-    StateObject() : mData(ReadingMetadata()), mName(State::ReadingMetadata){};
+    StateObject() : mData(ReadingMetadata()), mName(State::ReadingMetadata) {};
     explicit StateObject(InitEngine&& aArg)
-        : mData(std::move(aArg)), mName(State::InitEngine){};
+        : mData(std::move(aArg)), mName(State::InitEngine) {};
     explicit StateObject(RunningEngine&& aArg)
-        : mData(std::move(aArg)), mName(State::RunningEngine){};
+        : mData(std::move(aArg)), mName(State::RunningEngine) {};
     explicit StateObject(SeekingData&& aArg)
-        : mData(std::move(aArg)), mName(State::SeekingData){};
+        : mData(std::move(aArg)), mName(State::SeekingData) {};
     explicit StateObject(ShutdownEngine&& aArg)
-        : mData(std::move(aArg)), mName(State::ShutdownEngine){};
+        : mData(std::move(aArg)), mName(State::ShutdownEngine) {};
     explicit StateObject(RecoverEngine&& aArg)
-        : mData(std::move(aArg)), mName(State::RecoverEngine){};
+        : mData(std::move(aArg)), mName(State::RecoverEngine) {};
 
     bool IsInitEngine() const { return mData.is<InitEngine>(); }
     bool IsReadingMetadata() const { return mData.is<ReadingMetadata>(); }
@@ -300,6 +300,8 @@ class ExternalEngineStateMachine final
   void ReportTelemetry(const MediaResult& aError);
 
   void DecodeError(const MediaResult& aError) override;
+
+  void NotifyAudibleStateChangeIfNeeded();
 
   UniquePtr<ExternalPlaybackEngine> mEngine;
 
