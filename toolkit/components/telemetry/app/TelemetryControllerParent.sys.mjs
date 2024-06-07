@@ -55,7 +55,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
 });
 
-if (AppConstants.platform === "win") {
+if (
+  AppConstants.platform === "win" &&
+  AppConstants.MOZ_APP_NAME !== "thunderbird"
+) {
   ChromeUtils.defineESModuleGetters(lazy, {
     // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
     BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
@@ -1242,7 +1245,10 @@ var Impl = {
       NEWPROFILE_PING_DEFAULT_DELAY
     );
 
-    if (AppConstants.platform == "win") {
+    if (
+      AppConstants.platform == "win" &&
+      AppConstants.MOZ_APP_NAME !== "thunderbird"
+    ) {
       try {
         // This is asynchronous, but we aren't going to await on it now. Just
         // kick it off.
@@ -1274,7 +1280,10 @@ var Impl = {
       "sendNewProfilePing - shutting down: " + this._shuttingDown
     );
 
-    if (AppConstants.platform == "win") {
+    if (
+      AppConstants.platform == "win" &&
+      AppConstants.MOZ_APP_NAME !== "thunderbird"
+    ) {
       try {
         await lazy.BrowserUsageTelemetry.reportInstallationTelemetry();
       } catch (ex) {

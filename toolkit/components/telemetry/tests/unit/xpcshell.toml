@@ -187,3 +187,4 @@ skip-if = ["os == 'android'"] # Android doesn't support telemetry though some te
 
 ["test_new_profile.js"]
 run-if = ["os == 'win'"]
+skip-if = ["appname == 'thunderbird'"] # Test requires modules from browser
