@@ -36,6 +36,8 @@
     <circle cx="100" cy="100" r="5"/>
     <g/>
   </g>
+  <!-- fill="none" should have a non-zero bounding box-->
+  <rect id="none" width="10" height="10" fill="none"/>
   <use x="100" y="100" id="use_v" href="#v"/>
   <use x="100" y="100" id="use_h" href="#h"/>
   <use x="100" y="100" id="use_e" href="#e"/>

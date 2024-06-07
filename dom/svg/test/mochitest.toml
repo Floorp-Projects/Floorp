@@ -15,7 +15,7 @@ support-files = [
   "bounds-helper.svg",
   "dataTypes-helper.svg",
   "fragments-helper.svg",
-  "getBBox-method-helper.svg",
+  "getBBox-options-helper.svg",
   "getCTM-helper.svg",
   "getSubStringLength-helper.svg",
   "matrixUtils.js",
@@ -82,7 +82,7 @@ support-files = [
 
 ["test_fragments.html"]
 
-["test_getBBox-method.html"]
+["test_getBBox-options.html"]
 
 ["test_getCTM.html"]
 
