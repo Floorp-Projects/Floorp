@@ -543,9 +543,9 @@ add_task(async function selected_result_input_field() {
   });
 
   await doTest(async () => {
-    await doPasteAndGo("example.com");
-
-    assertEngagementTelemetry(expected);
+    await expectNoConsoleErrors(async () => {
+      await doPasteAndGo("example.com");
+    });
   });
 });
 

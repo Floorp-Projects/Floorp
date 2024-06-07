@@ -754,7 +754,7 @@ export class UrlbarInput {
       element,
       selType,
       searchString: typedValue,
-      result: selectedResult,
+      result: selectedResult || this._resultForCurrentValue || null,
     });
 
     let isValidUrl = false;
