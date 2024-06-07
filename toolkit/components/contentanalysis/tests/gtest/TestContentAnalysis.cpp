@@ -123,6 +123,18 @@ TEST_F(ContentAnalysisTest, AllowUrlList) {
   ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
 }
 
+TEST_F(ContentAnalysisTest, DefaultAllowUrlList) {
+  MOZ_ALWAYS_SUCCEEDS(Preferences::ClearUser(kAllowUrlPref));
+  RefPtr<nsIContentAnalysisRequest> car = CreateRequest("about:home");
+  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eAllow);
+  car = CreateRequest("about:blank");
+  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
+  car = CreateRequest("about:srcdoc");
+  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
+  car = CreateRequest("https://example.com/");
+  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
+}
+
 TEST_F(ContentAnalysisTest, MultipleAllowUrlList) {
   MOZ_ALWAYS_SUCCEEDS(Preferences::SetCString(
       kAllowUrlPref, ".*\\.org/match.* .*\\.net/match.*"));
