@@ -26,13 +26,20 @@ export function WallpaperFeatureHighlight({
   const highlightContentText = prefs["newtabWallpapers.highlightContentText"];
   const highlightCtaText = prefs["newtabWallpapers.highlightCtaText"];
 
+  // Event triggered by the CTA click event in the FeatureHighlight component.
   const onToggleClick = useCallback(() => {
     dispatch(ac.SetPref(WALLPAPER_HIGHLIGHT_DISMISSED_PREF, true));
+    dispatch(
+      ac.OnlyToMain({ type: at.WALLPAPERS_FEATURE_HIGHLIGHT_CTA_CLICKED })
+    );
   }, [dispatch]);
 
   // Event triggered by the onDismiss click event in the FeatureHighlight component.
   const onDismissCallback = useCallback(() => {
     dispatch(ac.SetPref(WALLPAPER_HIGHLIGHT_DISMISSED_PREF, true));
+    dispatch(
+      ac.OnlyToMain({ type: at.WALLPAPERS_FEATURE_HIGHLIGHT_DISMISSED })
+    );
   }, [dispatch]);
 
   // Event triggered by the onOutsideClick click event in the FeatureHighlight component.

@@ -32,7 +32,7 @@ export class _WallpaperCategories extends React.PureComponent {
     const prefs = this.props.Prefs.values;
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
-    this.handleUserEvent({
+    this.handleUserEvent(at.WALLPAPER_CLICK, {
       selected_wallpaper: id,
       hadPreviousWallpaper: !!this.props.activeWallpaper,
     });
@@ -61,7 +61,7 @@ export class _WallpaperCategories extends React.PureComponent {
   handleReset() {
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
-    this.handleUserEvent({
+    this.handleUserEvent(at.WALLPAPER_CLICK, {
       selected_wallpaper: "none",
       hadPreviousWallpaper: !!this.props.activeWallpaper,
     });
@@ -69,6 +69,7 @@ export class _WallpaperCategories extends React.PureComponent {
 
   handleCategory = event => {
     this.setState({ activeCategory: event.target.id });
+    this.handleUserEvent(at.WALLPAPER_CATEGORY_CLICK, event.target.id);
   };
 
   handleBack() {
@@ -76,13 +77,8 @@ export class _WallpaperCategories extends React.PureComponent {
   }
 
   // Record user interaction when changing wallpaper and reseting wallpaper to default
-  handleUserEvent(data) {
-    this.props.dispatch(
-      ac.OnlyToMain({
-        type: at.WALLPAPER_CLICK,
-        data,
-      })
-    );
+  handleUserEvent(type, data) {
+    this.props.dispatch(ac.OnlyToMain({ type, data }));
   }
 
   render() {

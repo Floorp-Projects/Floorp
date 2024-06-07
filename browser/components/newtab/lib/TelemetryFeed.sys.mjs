@@ -933,7 +933,10 @@ export class TelemetryFeed {
       case at.BLOCK_URL:
         this.handleBlockUrl(action);
         break;
+      case at.WALLPAPER_CATEGORY_CLICK:
       case at.WALLPAPER_CLICK:
+      case at.WALLPAPERS_FEATURE_HIGHLIGHT_DISMISSED:
+      case at.WALLPAPERS_FEATURE_HIGHLIGHT_CTA_CLICKED:
         this.handleWallpaperUserEvent(action);
         break;
       case at.SET_PREF:
@@ -1004,14 +1007,40 @@ export class TelemetryFeed {
     if (!session) {
       return;
     }
-    const { data } = action;
-    const { selected_wallpaper, hadPreviousWallpaper } = data;
-    // if either of the wallpaper prefs are truthy, they had a previous wallpaper
-    Glean.newtab.wallpaperClick.record({
-      newtab_visit_id: session.session_id,
-      selected_wallpaper,
-      hadPreviousWallpaper,
-    });
+
+    // Wallpaper specific telemtry events can be added and parsed here.
+    switch (action.type) {
+      case "WALLPAPER_CATEGORY_CLICK":
+        Glean.newtab.wallpaperCategoryClick.record({
+          newtab_visit_id: session.session_id,
+          selected_category: action.data,
+        });
+        break;
+      case "WALLPAPER_CLICK":
+        {
+          const { data } = action;
+          const { selected_wallpaper, hadPreviousWallpaper } = data;
+          // if either of the wallpaper prefs are truthy, they had a previous wallpaper
+          Glean.newtab.wallpaperClick.record({
+            newtab_visit_id: session.session_id,
+            selected_wallpaper,
+            hadPreviousWallpaper,
+          });
+        }
+        break;
+      case "WALLPAPERS_FEATURE_HIGHLIGHT_CTA_CLICKED":
+        Glean.newtab.wallpaperHighlightCtaClick.record({
+          newtab_visit_id: session.session_id,
+        });
+        break;
+      case "WALLPAPERS_FEATURE_HIGHLIGHT_DISMISSED":
+        Glean.newtab.wallpaperHighlightDismissed.record({
+          newtab_visit_id: session.session_id,
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   handleBlockUrl(action) {

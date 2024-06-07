@@ -235,8 +235,11 @@ for (const type of [
   "UPDATE_SECTION_PREFS",
   "WALLPAPERS_CATEGORY_SET",
   "WALLPAPERS_FEATURE_HIGHLIGHT_COUNTER_INCREMENT",
+  "WALLPAPERS_FEATURE_HIGHLIGHT_CTA_CLICKED",
+  "WALLPAPERS_FEATURE_HIGHLIGHT_DISMISSED",
   "WALLPAPERS_FEATURE_HIGHLIGHT_SEEN",
   "WALLPAPERS_SET",
+  "WALLPAPER_CATEGORY_CLICK",
   "WALLPAPER_CLICK",
   "WEATHER_IMPRESSION",
   "WEATHER_LOAD_ERROR",
@@ -9163,7 +9166,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     const prefs = this.props.Prefs.values;
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
-    this.handleUserEvent({
+    this.handleUserEvent(actionTypes.WALLPAPER_CLICK, {
       selected_wallpaper: id,
       hadPreviousWallpaper: !!this.props.activeWallpaper
     });
@@ -9178,7 +9181,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
   handleReset() {
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
     this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
-    this.handleUserEvent({
+    this.handleUserEvent(actionTypes.WALLPAPER_CLICK, {
       selected_wallpaper: "none",
       hadPreviousWallpaper: !!this.props.activeWallpaper
     });
@@ -9187,6 +9190,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     this.setState({
       activeCategory: event.target.id
     });
+    this.handleUserEvent(actionTypes.WALLPAPER_CATEGORY_CLICK, event.target.id);
   };
   handleBack() {
     this.setState({
@@ -9195,9 +9199,9 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
   }
 
   // Record user interaction when changing wallpaper and reseting wallpaper to default
-  handleUserEvent(data) {
+  handleUserEvent(type, data) {
     this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.WALLPAPER_CLICK,
+      type,
       data
     }));
   }
@@ -10203,13 +10207,21 @@ function WallpaperFeatureHighlight({
   const highlightHeaderText = prefs["newtabWallpapers.highlightHeaderText"];
   const highlightContentText = prefs["newtabWallpapers.highlightContentText"];
   const highlightCtaText = prefs["newtabWallpapers.highlightCtaText"];
+
+  // Event triggered by the CTA click event in the FeatureHighlight component.
   const onToggleClick = (0,external_React_namespaceObject.useCallback)(() => {
     dispatch(actionCreators.SetPref(WALLPAPER_HIGHLIGHT_DISMISSED_PREF, true));
+    dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WALLPAPERS_FEATURE_HIGHLIGHT_CTA_CLICKED
+    }));
   }, [dispatch]);
 
   // Event triggered by the onDismiss click event in the FeatureHighlight component.
   const onDismissCallback = (0,external_React_namespaceObject.useCallback)(() => {
     dispatch(actionCreators.SetPref(WALLPAPER_HIGHLIGHT_DISMISSED_PREF, true));
+    dispatch(actionCreators.OnlyToMain({
+      type: actionTypes.WALLPAPERS_FEATURE_HIGHLIGHT_DISMISSED
+    }));
   }, [dispatch]);
 
   // Event triggered by the onOutsideClick click event in the FeatureHighlight component.

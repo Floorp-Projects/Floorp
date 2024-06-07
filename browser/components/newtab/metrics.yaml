@@ -261,6 +261,64 @@ newtab:
     send_in_pings:
       - newtab
 
+  wallpaper_highlight_cta_click:
+    type: event
+    description: >
+      Recorded when a user clicks the CTA on the wallpaper feature highlight
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900854
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900854
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - mcrawford@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+  wallpaper_highlight_dismissed:
+    type: event
+    description: >
+      Recorded when a user dismisses the wallpaper feature highlight
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900854
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1900854
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - mcrawford@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+  wallpaper_category_click:
+    type: event
+    description: >
+      Recorded when a user clicks a wallpaper category option
+    bugs:
+     - https://bugzilla.mozilla.org/show_bug.cgi?id=1900420
+    data_reviews:
+     - https://bugzilla.mozilla.org/show_bug.cgi?id=1900420
+    data_sensitivity:
+      - interaction
+    notification_emails:
+     - nbarrett@mozilla.com
+    expires: never
+    extra_keys:
+      selected_category:
+        description: >
+          Which wallpaper category selected by user
+        type: string
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
   weather_change_display:
     type: event
     description: >
