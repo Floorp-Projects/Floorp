@@ -239,10 +239,8 @@ fn iter_declarations<'builder, 'decls: 'builder>(
         } else {
             let id = declaration.id().as_longhand().unwrap();
             declarations.note_declaration(declaration, priority, id);
-            if CustomPropertiesBuilder::might_have_non_custom_dependency(id, declaration) {
-                if let Some(ref mut builder) = custom_builder {
-                    builder.maybe_note_non_custom_dependency(id, declaration);
-                }
+            if let Some(ref mut builder) = custom_builder {
+                builder.maybe_note_non_custom_dependency(id, declaration);
             }
         }
     }
