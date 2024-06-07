@@ -88,6 +88,9 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   get selectors() {
     return this._form.selectors;
   }
+  get selectorsSpecificity() {
+    return this._form.selectorsSpecificity;
+  }
 
   /**
    * When a rule is nested in another non-at-rule (aka CSS Nesting), this will return

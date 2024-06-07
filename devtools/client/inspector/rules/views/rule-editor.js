@@ -620,73 +620,7 @@ RuleEditor.prototype = {
     } else {
       const desugaredSelectors = this.rule.domRule.desugaredSelectors;
       this.rule.domRule.selectors.forEach((selector, i) => {
-        if (i !== 0) {
-          createChild(this.selectorText, "span", {
-            class: "ruleview-selector-separator",
-            textContent: ", ",
-          });
-        }
-
-        let containerClass = "ruleview-selector ";
-
-        // Only add matched/unmatched class when the rule does have some matched
-        // selectors. We don't always have some (e.g. rules for pseudo elements)
-
-        if (this.rule.domRule.hasMatchedSelectorIndexesTrait) {
-          if (this.rule.matchedSelectorIndexes.length) {
-            containerClass += this.rule.matchedSelectorIndexes.includes(i)
-              ? "matched"
-              : "unmatched";
-          }
-        } else if (this.rule.matchedDesugaredSelectors.length) {
-          // @backward-compat { version 128 } This whole elseif block can be removed once 128
-          // hits release, as matchedDesugaredSelectors shouldn't be used then.
-          const desugaredSelector = desugaredSelectors[i];
-          const matchedSelector =
-            this.rule.matchedDesugaredSelectors.includes(desugaredSelector);
-          containerClass += matchedSelector ? "matched" : "unmatched";
-        }
-
-        const selectorContainer = createChild(this.selectorText, "span", {
-          class: containerClass,
-        });
-
-        const parsedSelector = parsePseudoClassesAndAttributes(selector);
-
-        for (const selectorText of parsedSelector) {
-          let selectorClass = "";
-
-          switch (selectorText.type) {
-            case SELECTOR_ATTRIBUTE:
-              selectorClass = "ruleview-selector-attribute";
-              break;
-            case SELECTOR_ELEMENT:
-              selectorClass = "ruleview-selector-element";
-              break;
-            case SELECTOR_PSEUDO_CLASS:
-              selectorClass = PSEUDO_CLASSES.some(
-                pseudo => selectorText.value === pseudo
-              )
-                ? "ruleview-selector-pseudo-class-lock"
-                : "ruleview-selector-pseudo-class";
-              break;
-            default:
-              break;
-          }
-
-          createChild(selectorContainer, "span", {
-            textContent: selectorText.value,
-            class: selectorClass,
-          });
-        }
-
-        const warningsContainer = this._createWarningsElementForSelector(
-          i,
-          this.rule.domRule.selectorWarnings
-        );
-        if (warningsContainer) {
-          selectorContainer.append(warningsContainer);
-        }
+        this._populateSelector(selector, i, desugaredSelectors);
       });
     }
 
@@ -724,6 +658,105 @@ RuleEditor.prototype = {
           this.ruleView.emitForTests("rule-editor-focus-reset");
         }, 0);
       }
+    }
+  },
+
+  /**
+   * Render a given rule selector in this.selectorText element
+   *
+   * @param {String} selector: The selector text to display
+   * @param {Number} selectorIndex: Its index in the rule
+   * @param {Array<String>} desugaredSelectors: The array of desugared selectors for the
+   *        rule. This is only for backward compatibility and can be removed when 128
+   *        hits release.
+   */
+  _populateSelector(selector, selectorIndex, desugaredSelectors) {
+    if (selectorIndex !== 0) {
+      createChild(this.selectorText, "span", {
+        class: "ruleview-selector-separator",
+        textContent: ", ",
+      });
+    }
+
+    let containerClass = "ruleview-selector ";
+
+    // Only add matched/unmatched class when the rule does have some matched
+    // selectors. We don't always have some (e.g. rules for pseudo elements)
+
+    if (this.rule.domRule.hasMatchedSelectorIndexesTrait) {
+      if (this.rule.matchedSelectorIndexes.length) {
+        containerClass += this.rule.matchedSelectorIndexes.includes(
+          selectorIndex
+        )
+          ? "matched"
+          : "unmatched";
+      }
+    } else if (this.rule.matchedDesugaredSelectors.length) {
+      // @backward-compat { version 128 } This whole elseif block can be removed once 128
+      // hits release, as matchedDesugaredSelectors shouldn't be used then.
+      const desugaredSelector = desugaredSelectors[selectorIndex];
+      const matchedSelector =
+        this.rule.matchedDesugaredSelectors.includes(desugaredSelector);
+      containerClass += matchedSelector ? "matched" : "unmatched";
+    }
+
+    let selectorContainerTitle;
+    if (
+      typeof this.rule.selector.selectorsSpecificity?.[selectorIndex] !==
+      "undefined"
+    ) {
+      // The specificity that we get from the platform is a single number that we
+      // need to format into the common `(x,y,z)` specificity string.
+      const specificity =
+        this.rule.selector.selectorsSpecificity?.[selectorIndex];
+      const a = Math.floor(specificity / (1024 * 1024));
+      const b = Math.floor((specificity % (1024 * 1024)) / 1024);
+      const c = specificity % 1024;
+      selectorContainerTitle = STYLE_INSPECTOR_L10N.getFormatStr(
+        "rule.selectorSpecificity.title",
+        `(${a},${b},${c})`
+      );
+    }
+    const selectorContainer = createChild(this.selectorText, "span", {
+      class: containerClass,
+      title: selectorContainerTitle,
+    });
+
+    const parsedSelector = parsePseudoClassesAndAttributes(selector);
+
+    for (const selectorText of parsedSelector) {
+      let selectorClass = "";
+
+      switch (selectorText.type) {
+        case SELECTOR_ATTRIBUTE:
+          selectorClass = "ruleview-selector-attribute";
+          break;
+        case SELECTOR_ELEMENT:
+          selectorClass = "ruleview-selector-element";
+          break;
+        case SELECTOR_PSEUDO_CLASS:
+          selectorClass = PSEUDO_CLASSES.some(
+            pseudo => selectorText.value === pseudo
+          )
+            ? "ruleview-selector-pseudo-class-lock"
+            : "ruleview-selector-pseudo-class";
+          break;
+        default:
+          break;
+      }
+
+      createChild(selectorContainer, "span", {
+        textContent: selectorText.value,
+        class: selectorClass,
+      });
+    }
+
+    const warningsContainer = this._createWarningsElementForSelector(
+      selectorIndex,
+      this.rule.domRule.selectorWarnings
+    );
+    if (warningsContainer) {
+      selectorContainer.append(warningsContainer);
     }
   },
 
