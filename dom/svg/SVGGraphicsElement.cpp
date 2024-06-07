@@ -102,7 +102,7 @@ already_AddRefed<SVGRect> SVGGraphicsElement::GetBBox(
   }
   uint32_t flags = 0;
   if (aOptions.mFill) {
-    flags |= SVGUtils::eBBoxIncludeFillGeometry;
+    flags |= SVGUtils::eBBoxIncludeFill;
   }
   if (aOptions.mStroke) {
     flags |= SVGUtils::eBBoxIncludeStroke;
@@ -114,11 +114,11 @@ already_AddRefed<SVGRect> SVGGraphicsElement::GetBBox(
     flags |= SVGUtils::eBBoxIncludeClipped;
   }
   if (flags == 0) {
-    return do_AddRef(new SVGRect(this, {}));
+    return do_AddRef(new SVGRect(this, gfx::Rect()));
   }
   if (flags == SVGUtils::eBBoxIncludeMarkers ||
       flags == SVGUtils::eBBoxIncludeClipped) {
-    flags |= SVGUtils::eBBoxIncludeFillGeometry;
+    flags |= SVGUtils::eBBoxIncludeFill;
   }
   flags |= SVGUtils::eUseUserSpaceOfUseElement;
   return do_AddRef(new SVGRect(this, ToRect(SVGUtils::GetBBox(frame, flags))));
