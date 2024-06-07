@@ -963,9 +963,14 @@ sftk_GetObjectFromList(PRBool *hasLocks, PRBool optimizeSpace,
         }
         PZ_Unlock(list->lock);
         if (object) {
-            object->next = object->prev = NULL;
-            *hasLocks = PR_TRUE;
-            return object;
+            // As a safeguard against misuse of the library, ensure we don't
+            // hand out live objects that somehow land in the free list.
+            PORT_Assert(object->refCount == 0);
+            if (object->refCount == 0) {
+                object->next = object->prev = NULL;
+                *hasLocks = PR_TRUE;
+                return object;
+            }
         }
     }
     size = isSessionObject ? sizeof(SFTKSessionObject) + hashSize * sizeof(SFTKAttribute *) : sizeof(SFTKTokenObject);
@@ -1183,6 +1188,7 @@ void
 sftk_ReferenceObject(SFTKObject *object)
 {
     PZ_Lock(object->refLock);
+    PORT_Assert(object->refCount > 0);
     object->refCount++;
     PZ_Unlock(object->refLock);
 }

@@ -1038,6 +1038,7 @@ DeleteCertAndKey(char *nickname, secuPWData *pwdata)
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "could not authenticate to token %s.",
                             PK11_GetTokenName(slot));
+            PK11_FreeSlot(slot);
             return SECFailure;
         }
     }
