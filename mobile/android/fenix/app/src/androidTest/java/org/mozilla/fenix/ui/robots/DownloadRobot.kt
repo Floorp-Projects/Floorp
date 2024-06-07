@@ -9,6 +9,18 @@ package org.mozilla.fenix.ui.robots
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
@@ -26,6 +38,7 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.getPermissionAllowID
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
@@ -37,12 +50,13 @@ import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.library.downloads.DownloadsListTestTag
 
 /**
  * Implementation of Robot Pattern for download UI handling.
  */
 
-open class DownloadRobot {
+class DownloadRobot {
 
     fun verifyDownloadPrompt(fileName: String) {
         var currentTries = 0
@@ -124,6 +138,50 @@ open class DownloadRobot {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
         }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun verifyDownloadedFileExistsInDownloadsList(testRule: HomeActivityComposeTestRule, fileName: String) {
+        Log.i(TAG, "verifyDownloadedFileName: Trying to verify that the downloaded file: $fileName is displayed")
+        testRule.waitUntilAtLeastOneExists(
+            hasTestTag("${DownloadsListTestTag.DOWNLOADS_LIST_ITEM}.$fileName"),
+        )
+        testRule.onNodeWithTag("${DownloadsListTestTag.DOWNLOADS_LIST_ITEM}.$fileName")
+            .assertIsDisplayed()
+        Log.i(TAG, "verifyDownloadedFileName: Trying to verify that the downloaded file: $fileName is displayed")
+    }
+
+    fun verifyEmptyDownloadsList(testRule: HomeActivityComposeTestRule) {
+        Log.i(TAG, "verifyEmptyDownloadsList: Trying to verify that the \"No downloaded files\" list message is displayed")
+        testRule.onNodeWithText(text = testRule.activity.getString(R.string.download_empty_message_1))
+            .assertIsDisplayed()
+        Log.i(TAG, "verifyEmptyDownloadsList: Verified that the \"No downloaded files\" list message is displayed")
+    }
+
+    fun deleteDownloadedItem(testRule: HomeActivityComposeTestRule, fileName: String) {
+        Log.i(TAG, "deleteDownloadedItem: Trying to click the trash bin icon to delete downloaded file: $fileName")
+        testRule.onNodeWithTag("${DownloadsListTestTag.DOWNLOADS_LIST_ITEM}.$fileName")
+            .onChildren()
+            .filter(hasContentDescription(testRule.activity.getString(R.string.download_delete_item_1)))
+            .onFirst()
+            .performClick()
+        Log.i(TAG, "deleteDownloadedItem: Clicked the trash bin icon to delete downloaded file: $fileName")
+    }
+
+    fun clickDownloadedItem(testRule: HomeActivityComposeTestRule, fileName: String) {
+        Log.i(TAG, "clickDownloadedItem: Trying to click downloaded file: $fileName")
+        testRule.onNodeWithTag("${DownloadsListTestTag.DOWNLOADS_LIST_ITEM}.$fileName")
+            .performClick()
+        Log.i(TAG, "clickDownloadedItem: Clicked downloaded file: $fileName")
+    }
+
+    fun longClickDownloadedItem(testRule: HomeActivityComposeTestRule, title: String) {
+        Log.i(TAG, "longClickDownloadedItem: Trying to long click downloaded file: $title")
+        testRule.onNodeWithTag("${DownloadsListTestTag.DOWNLOADS_LIST_ITEM}.$title")
+            .performTouchInput {
+                longClick()
+            }
+        Log.i(TAG, "longClickDownloadedItem: Long clicked downloaded file: $title")
     }
 
     class Transition {

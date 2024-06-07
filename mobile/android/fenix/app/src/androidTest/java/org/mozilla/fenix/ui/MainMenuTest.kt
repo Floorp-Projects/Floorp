@@ -86,8 +86,8 @@ class MainMenuTest : TestSetup() {
             verifyHistoryMenuView()
         }.goBack {
         }.openThreeDotMenu {
-        }.openDownloadsManager(composeTestRule) {
-            verifyEmptyDownloadsList()
+        }.openDownloadsManager() {
+            verifyEmptyDownloadsList(composeTestRule)
         }.goBack {
         }.openThreeDotMenu {
         }.openAddonsManagerMenu {

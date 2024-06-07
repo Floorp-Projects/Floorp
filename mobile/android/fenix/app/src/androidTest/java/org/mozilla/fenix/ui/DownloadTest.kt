@@ -127,8 +127,8 @@ class DownloadTest : TestSetup() {
         }
         browserScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager(activityTestRule) {
-            verifyEmptyDownloadsList()
+        }.openDownloadsManager() {
+            verifyEmptyDownloadsList(activityTestRule)
         }
     }
 
@@ -141,9 +141,9 @@ class DownloadTest : TestSetup() {
         }
         browserScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager(activityTestRule) {
-            verifyDownloadedFileExistsInDownloadsList("web_icon.png")
-            clickDownloadedItem("web_icon.png")
+        }.openDownloadsManager() {
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, "web_icon.png")
+            clickDownloadedItem(activityTestRule, "web_icon.png")
             verifyPhotosAppOpens()
             mDevice.pressBack()
         }
@@ -157,13 +157,13 @@ class DownloadTest : TestSetup() {
         }
         browserScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager(activityTestRule) {
-            verifyDownloadedFileExistsInDownloadsList("smallZip.zip")
-            deleteDownloadedItem("smallZip.zip")
+        }.openDownloadsManager() {
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, "smallZip.zip")
+            deleteDownloadedItem(activityTestRule, "smallZip.zip")
             clickSnackbarButton("UNDO")
-            verifyDownloadedFileExistsInDownloadsList("smallZip.zip")
-            deleteDownloadedItem("smallZip.zip")
-            verifyEmptyDownloadsList()
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, "smallZip.zip")
+            deleteDownloadedItem(activityTestRule, "smallZip.zip")
+            verifyEmptyDownloadsList(activityTestRule)
         }
     }
 
@@ -184,21 +184,21 @@ class DownloadTest : TestSetup() {
         }
         browserScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager(activityTestRule) {
-            verifyDownloadedFileExistsInDownloadsList(firstDownloadedFile)
-            verifyDownloadedFileExistsInDownloadsList(secondDownloadedFile)
-            longClickDownloadedItem(firstDownloadedFile)
-            clickDownloadedItem(secondDownloadedFile)
+        }.openDownloadsManager() {
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, firstDownloadedFile)
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, secondDownloadedFile)
+            longClickDownloadedItem(activityTestRule, firstDownloadedFile)
+            clickDownloadedItem(activityTestRule, secondDownloadedFile)
             openMultiSelectMoreOptionsMenu()
             clickMultiSelectRemoveButton()
             clickSnackbarButton("UNDO")
-            verifyDownloadedFileExistsInDownloadsList(firstDownloadedFile)
-            verifyDownloadedFileExistsInDownloadsList(secondDownloadedFile)
-            longClickDownloadedItem(firstDownloadedFile)
-            clickDownloadedItem(secondDownloadedFile)
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, firstDownloadedFile)
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, secondDownloadedFile)
+            longClickDownloadedItem(activityTestRule, firstDownloadedFile)
+            clickDownloadedItem(activityTestRule, secondDownloadedFile)
             openMultiSelectMoreOptionsMenu()
             clickMultiSelectRemoveButton()
-            verifyEmptyDownloadsList()
+            verifyEmptyDownloadsList(activityTestRule)
         }
     }
 
@@ -211,13 +211,13 @@ class DownloadTest : TestSetup() {
         }
         browserScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager(activityTestRule) {
-            verifyDownloadedFileExistsInDownloadsList("smallZip.zip")
+        }.openDownloadsManager() {
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, "smallZip.zip")
             deleteDownloadedFileOnStorage("smallZip.zip")
         }.exitDownloadsManagerToBrowser {
         }.openThreeDotMenu {
-        }.openDownloadsManager(activityTestRule) {
-            verifyEmptyDownloadsList()
+        }.openDownloadsManager() {
+            verifyEmptyDownloadsList(activityTestRule)
             exitMenu()
         }
 
@@ -227,8 +227,8 @@ class DownloadTest : TestSetup() {
         }
         browserScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager(activityTestRule) {
-            verifyDownloadedFileExistsInDownloadsList("smallZip.zip")
+        }.openDownloadsManager() {
+            verifyDownloadedFileExistsInDownloadsList(activityTestRule, "smallZip.zip")
         }
     }
 
