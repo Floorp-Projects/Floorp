@@ -1769,6 +1769,22 @@ void SVGObserverUtils::UpdateEffects(nsIFrame* aFrame) {
   }
 }
 
+bool SVGObserverUtils::SelfOrAncestorHasRenderingObservers(
+    const nsIFrame* aFrame) {
+  nsIContent* content = aFrame->GetContent();
+  while (content) {
+    if (content->HasDirectRenderingObservers()) {
+      return true;
+    }
+    const auto* frame = content->GetPrimaryFrame();
+    if (frame && frame->IsRenderingObserverContainer()) {
+      break;
+    }
+    content = content->GetFlattenedTreeParent();
+  }
+  return false;
+}
+
 void SVGObserverUtils::AddRenderingObserver(Element* aElement,
                                             SVGRenderingObserver* aObserver) {
   SVGRenderingObserverSet* observers = GetObserverSet(aElement);
@@ -1782,7 +1798,7 @@ void SVGObserverUtils::AddRenderingObserver(Element* aElement,
                           nsINode::DeleteProperty<SVGRenderingObserverSet>,
                           /* aTransfer = */ true);
   }
-  aElement->SetHasRenderingObservers(true);
+  aElement->SetHasDirectRenderingObservers(true);
   observers->Add(aObserver);
 }
 
@@ -1795,7 +1811,7 @@ void SVGObserverUtils::RemoveRenderingObserver(
     observers->Remove(aObserver);
     if (observers->IsEmpty()) {
       aElement->RemoveProperty(nsGkAtoms::renderingobserverset);
-      aElement->SetHasRenderingObservers(false);
+      aElement->SetHasDirectRenderingObservers(false);
     }
   }
 }
@@ -1805,7 +1821,7 @@ void SVGObserverUtils::RemoveAllRenderingObservers(Element* aElement) {
   if (observers) {
     observers->RemoveAll();
     aElement->RemoveProperty(nsGkAtoms::renderingobserverset);
-    aElement->SetHasRenderingObservers(false);
+    aElement->SetHasDirectRenderingObservers(false);
   }
 }
 
@@ -1853,7 +1869,7 @@ void SVGObserverUtils::InvalidateDirectRenderingObservers(
     frame->RemoveProperty(SVGUtils::ObjectBoundingBoxProperty());
   }
 
-  if (aElement->HasRenderingObservers()) {
+  if (aElement->HasDirectRenderingObservers()) {
     SVGRenderingObserverSet* observers = GetObserverSet(aElement);
     if (observers) {
       if (aFlags & INVALIDATE_REFLOW) {

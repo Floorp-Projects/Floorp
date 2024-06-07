@@ -200,6 +200,11 @@ class SVGObserverUtils {
    */
   static void UpdateEffects(nsIFrame* aFrame);
 
+  /*
+   * Returns true if the frame or any of its ancestors have rendering observers.
+   */
+  static bool SelfOrAncestorHasRenderingObservers(const nsIFrame* aFrame);
+
   /**
    * @param aFrame must be a first-continuation.
    */
