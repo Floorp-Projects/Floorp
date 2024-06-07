@@ -15564,11 +15564,6 @@
   value: 60000
   mirror: always
 
-- name: toolkit.telemetry.geckoview.streaming
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: toolkit.telemetry.testing.overrideProductsCheck
   type: RelaxedAtomicBool
   value: false
