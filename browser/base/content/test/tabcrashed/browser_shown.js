@@ -39,7 +39,7 @@ add_setup(async function () {
  *        crash report's extra data should contain.
  * @returns Promise
  */
-function crashTabTestHelper(fieldValues, expectedExtra) {
+function crashTabTestHelper(fieldValues, expectedExtra, shouldFail = false) {
   return BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -67,7 +67,9 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
         includeURL.checked = fieldValues.includeURL;
       }
 
-      let crashReport = promiseCrashReport(expectedExtra);
+      let crashReport = shouldFail
+        ? promiseCrashReportFail()
+        : promiseCrashReport(expectedExtra);
       let restoreTab = browser.contentDocument.getElementById("restoreTab");
       restoreTab.click();
       await BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
@@ -86,6 +88,7 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
  * send any comments or the URL of the crashing page.
  */
 add_task(async function test_default() {
+  let submissionBefore = Glean.crashSubmission.success.testGetValue();
   await crashTabTestHelper(
     {},
     {
@@ -95,12 +98,17 @@ add_task(async function test_default() {
       URL: "",
     }
   );
+  Assert.equal(
+    submissionBefore + 1,
+    Glean.crashSubmission.success.testGetValue()
+  );
 });
 
 /**
  * Test just sending a comment.
  */
 add_task(async function test_just_a_comment() {
+  let submissionBefore = Glean.crashSubmission.success.testGetValue();
   await crashTabTestHelper(
     {
       SubmittedFrom: "CrashedTab",
@@ -112,12 +120,17 @@ add_task(async function test_just_a_comment() {
       URL: "",
     }
   );
+  Assert.equal(
+    submissionBefore + 1,
+    Glean.crashSubmission.success.testGetValue()
+  );
 });
 
 /**
  * Test that we will send the URL of the page if includeURL is checked.
  */
 add_task(async function test_send_URL() {
+  let submissionBefore = Glean.crashSubmission.success.testGetValue();
   await crashTabTestHelper(
     {
       SubmittedFrom: "CrashedTab",
@@ -129,12 +142,18 @@ add_task(async function test_send_URL() {
       URL: PAGE,
     }
   );
+  Assert.equal(
+    submissionBefore + 1,
+    Glean.crashSubmission.success.testGetValue()
+  );
 });
 
 /**
  * Test that we can send comments and the URL
  */
 add_task(async function test_send_all() {
+  let successBefore = Glean.crashSubmission.success.testGetValue();
+  let failureBefore = Glean.crashSubmission.failure.testGetValue();
   await crashTabTestHelper(
     {
       SubmittedFrom: "CrashedTab",
@@ -146,5 +165,42 @@ add_task(async function test_send_all() {
       Comments: COMMENTS,
       URL: PAGE,
     }
+  );
+  Assert.equal(successBefore + 1, Glean.crashSubmission.success.testGetValue());
+  Assert.equal(failureBefore, Glean.crashSubmission.failure.testGetValue());
+});
+
+add_task(async function test_send_error() {
+  let successBefore = Glean.crashSubmission.success.testGetValue();
+  let failureBefore = Glean.crashSubmission.failure.testGetValue();
+
+  Assert.equal(
+    null,
+    Glean.crashSubmission.collectorErrors.unknown_error.testGetValue()
+  );
+  let invalidAnnotation =
+    Glean.crashSubmission.collectorErrors.malformed_invalid_annotation_value.testGetValue();
+
+  await crashTabTestHelper(
+    {
+      SubmittedFrom: "CrashedTab",
+      Throttleable: "0",
+      comments: "fail-me://malformed_invalid_annotation_value",
+    },
+    {
+      Comments: "fail-me://malformed_invalid_annotation_value",
+    },
+    /* shouldFail */ true
+  );
+  Assert.equal(successBefore, Glean.crashSubmission.success.testGetValue());
+  Assert.equal(failureBefore + 1, Glean.crashSubmission.failure.testGetValue());
+
+  Assert.equal(
+    null,
+    Glean.crashSubmission.collectorErrors.unknown_error.testGetValue()
+  );
+  Assert.equal(
+    invalidAnnotation + 1,
+    Glean.crashSubmission.collectorErrors.malformed_invalid_annotation_value.testGetValue()
   );
 });

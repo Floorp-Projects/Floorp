@@ -21,6 +21,9 @@ add_task(async function test_without_dump() {
       delete browser.permanentKey;
 
       await BrowserTestUtils.crashFrame(browser);
+
+      let submissionBefore = Glean.crashSubmission.success.testGetValue();
+
       let crashReport = promiseCrashReport();
 
       await SpecialPowers.spawn(browser, [], async function () {
@@ -36,6 +39,11 @@ add_task(async function test_without_dump() {
       });
 
       await crashReport;
+
+      Assert.equal(
+        submissionBefore + 1,
+        Glean.crashSubmission.success.testGetValue()
+      );
     }
   );
 });

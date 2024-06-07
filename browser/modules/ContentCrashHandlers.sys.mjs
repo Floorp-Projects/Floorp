@@ -890,6 +890,7 @@ export var UnsubmittedCrashHandler = {
     }
 
     if (reportIDs.length) {
+      Glean.crashSubmission.pending.add(reportIDs.length);
       if (this.autoSubmit) {
         this.submitReports(reportIDs, lazy.CrashSubmit.SUBMITTED_FROM_AUTO);
       } else if (this.shouldShowPendingSubmissionsNotification()) {

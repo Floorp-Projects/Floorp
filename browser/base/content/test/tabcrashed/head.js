@@ -78,6 +78,16 @@ function promiseCrashReport(expectedExtra = {}) {
   })();
 }
 
+function promiseCrashReportFail() {
+  return (async function () {
+    info("Starting wait on crash-report-status");
+    await TestUtils.topicObserved("crash-report-status", (unused, data) => {
+      return data == "failed";
+    });
+    info("Topic observed!");
+  })();
+}
+
 /**
  * For an nsIPropertyBag, returns the value for a given
  * key.

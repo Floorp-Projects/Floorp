@@ -851,3 +851,57 @@ environment:
     expires: never
     send_in_pings:
       - crash
+
+crash_submission:
+  success:
+    type: counter
+    description: >
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_sensitivity:
+      - technical
+    expires: never
+  failure:
+    type: counter
+    description: >
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_sensitivity:
+      - technical
+    expires: never
+  pending:
+    type: counter
+    description: >
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_sensitivity:
+      - technical
+    expires: never
+  collector_errors:
+    type: labeled_counter
+    description: >
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1873956
+    data_sensitivity:
+      - technical
+    expires: never
