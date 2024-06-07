@@ -381,7 +381,7 @@
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Fleire fargar. Betre personvern. Same forplikting til menneske over forteneste.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_3">Det er enklare enn nokon gong g å byte skjerm</string>
+    <string name="onboarding_home_sync_title_3">Det er enklare enn nokon gong å byte skjerm</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Hald fram der du slapp med faner frå andre einingar - no på startsida di.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->

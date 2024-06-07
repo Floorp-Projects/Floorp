@@ -689,6 +689,9 @@
     <!-- The subtitle for the allow for all sites preference toggle -->
     <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">ئەگەر بۇ كېڭەيتىلمىگە ئىشەنسىڭىز، ئۇنى ھەممە تور بېكەتتە ئىشلىتىشكە ئىجازەت بەرسىڭىز بولىدۇ.</string>
 
+    <!-- The text shown when an extension does not require permissions -->
+    <string name="addons_does_not_require_permissions">بۇ كېڭەيتىلمە ھېچقانداق ئىجازەت تەلەپ قىلمايدۇ.</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ئىختىيارى قوشۇلما توپلىمى</string>
@@ -1428,6 +1431,23 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">شەخسىي بەتكۈچنى ياپ</string>
 
+    <!-- Microsuverys -->
+    <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Firefox نىڭ بېسىشىنى ياخشىلاشقا ياردەم بېرىڭ. ئازراقلا ۋاقىت كېتىدۇ</string>
+    <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Firefox نىڭ بېسىش ئىقتىدارىغا بولغان رازىمەنلىكىڭىز قانداق؟</string>
+    <!-- Text for option one, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">ئادەتتىكى</string>
+    <!-- Text for option two, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">بەك نارازى</string>
+    <!-- Text for option three, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">نارازى</string>
+    <!-- Text for option four, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_3" tools:ignore="UnusedResources">رازى</string>
+    <!-- Text for option five, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">بەك رازى</string>
+
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">شەخسىي بەتكۈچنى ياپامدۇ؟</string>
     <string name="notification_erase_text_android_14">بۇ ئۇقتۇرۇش چېكىلسە ياكى سۈرۈلسە شەخسىي بەتكۈچ تاقىلىدۇ.</string>
@@ -1502,10 +1522,6 @@
     <string name="qr_scanner_dialog_invalid_ok">جەزملە</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">بۇ %1$s نى راستىنلا ئۆچۈرەمسىز؟</string>
-    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">بۇ بەتكۈچ ئۆچۈرۈلسە پۈتكۈل يىغقۇچنى ئۆچۈرۈۋېتىدۇ. خالىغان ۋاقىتتا يېڭى يىغقۇچ قۇرالايسىز.</string>
-    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title"> %1$s نى ئۆچۈرەمدۇ؟</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">ئۆچۈر</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
@@ -2594,8 +2610,10 @@
     <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">تىللارنى چۈشۈرۈش</string>
-    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <!-- All languages list item. When the user presses this item, they can download all languages. -->
     <string name="download_language_all_languages_item_preference">بارلىق تىللار</string>
+    <!-- All languages list item. When the user presses this item, they can delete all languages that were downloaded. -->
+    <string name="download_language_all_languages_item_preference_to_delete">ھەممە تىلنى ئۆچۈر</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">ئۆچۈر</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
@@ -2603,7 +2621,7 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
     <string name="download_languages_item_content_description_not_downloaded_state">چۈشۈر</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
-    <string name="download_languages_item_content_description_selected_state">تاللانغان</string>
+    <string name="download_languages_item_content_description_selected_state" moz:removedIn="127" tools:ignore="UnusedResources">تاللانغان</string>
 
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
@@ -2696,7 +2714,7 @@
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">يوللا</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">تاقا</string>
+    <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">تاقا</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">قايتۇرما ئىنكاسىڭىزغا رەھمەت!</string>
     <!-- Option for likert scale -->

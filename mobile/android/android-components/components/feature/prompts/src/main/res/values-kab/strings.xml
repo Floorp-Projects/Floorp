@@ -101,6 +101,8 @@
     <string name="mozac_feature_prompts_manage_logins_2">Sefrek awalen uffiren</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Sken-d inekcam isumar</string>
+    <!-- Content description for expanding the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Snerni awalen n uεeddi i yettwaskelsen</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Ffer inekcam isumar</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
@@ -134,8 +136,12 @@
     <string name="mozac_feature_prompts_select_credit_card_2">Seqdec tkarḍa yettwaskelsen</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Semɣer tikerḍiwin n usmad i d-yettusumren</string>
+    <!-- Content description for expanding the saved card options in the select card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Snerni tikarḍiwin i yettwaskelsen</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Fneẓ tikerḍiwin n usmad i d-yettusumren</string>
+    <!-- Content description for collapsing the saved card options in the select prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Fneẓ awalen n tikarḍiwin i yettwaskelsen</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Sefrektikarḍiwin n usmad</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
@@ -152,6 +158,8 @@
     <string name="mozac_feature_prompts_select_address_2">Fren tansa</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Snefli tansiwin d-yettwasumren</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Snerni tansiwin i yettwaskelsen</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
     <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Fneẓ tansiwin d-yettwasumren</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
