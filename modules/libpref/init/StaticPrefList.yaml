@@ -1200,9 +1200,11 @@
 # Space-separated list of regexs that are compared to URLs of resources
 # being checked by content-analysis.  Resources that match are not checked
 # and are always permitted.
+# By default this does not check any about: page except for about:blank
+# and about:srcdoc.
 - name: browser.contentanalysis.allow_url_regex_list
   type: String
-  value: "^about:.*"
+  value: "^about:(?!blank|srcdoc).*"
   mirror: never
 
 # Space-separated list of regexs that are compared to URLs of resources
