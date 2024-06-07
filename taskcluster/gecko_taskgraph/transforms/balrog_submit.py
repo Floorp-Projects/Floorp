@@ -133,6 +133,13 @@ def make_task_description(config, jobs):
                     == job.get("shipping-product")
                 ):
                     dependencies["startup-test"] = kind_dep.label
+        # We need the release created in balrog first
+        soft_dependencies = [
+            dep.label
+            for dep in config.kind_dependencies_tasks.values()
+            if dep.kind == "release-balrog-submit-toplevel"
+            and dep.attributes.get("shipping_product") == job.get("shipping-product")
+        ]
 
         task = {
             "label": label,
@@ -145,6 +152,7 @@ def make_task_description(config, jobs):
                 "suffixes": ["", "-No-WNP"] if job.get("update-no-wnp") else [""],
             },
             "dependencies": dependencies,
+            "soft-dependencies": soft_dependencies,
             "attributes": attributes,
             "run-on-projects": dep_job.attributes.get("run_on_projects"),
             "treeherder": treeherder,
