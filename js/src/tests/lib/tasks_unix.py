@@ -35,26 +35,24 @@ def spawn_test(test, prefix, tempdir, passthrough, run_skipped, show_cmd):
     if show_cmd:
         print(escape_cmdline(cmd))
 
-    if not passthrough:
-        (rout, wout) = os.pipe()
-        (rerr, werr) = os.pipe()
+    if passthrough:
+        os.execvp(cmd[0], cmd)
+        return
 
-        rv = os.fork()
+    (rout, wout) = os.pipe()
+    (rerr, werr) = os.pipe()
 
-        # Parent.
-        if rv:
-            os.close(wout)
-            os.close(werr)
-            return Task(test, prefix, tempdir, rv, rout, rerr)
+    file_actions = [
+        (os.POSIX_SPAWN_CLOSE, rout),
+        (os.POSIX_SPAWN_CLOSE, rerr),
+        (os.POSIX_SPAWN_DUP2, wout, 1),
+        (os.POSIX_SPAWN_DUP2, werr, 2),
+    ]
+    pid = os.posix_spawnp(cmd[0], cmd, os.environ, file_actions=file_actions)
 
-        # Child.
-        os.close(rout)
-        os.close(rerr)
-
-        os.dup2(wout, 1)
-        os.dup2(werr, 2)
-
-    os.execvp(cmd[0], cmd)
+    os.close(wout)
+    os.close(werr)
+    return Task(test, prefix, tempdir, pid, rout, rerr)
 
 
 def get_max_wait(tasks, timeout):
