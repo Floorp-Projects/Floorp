@@ -424,15 +424,15 @@ SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
   }
 
   nsIContent* node = GetContent()->GetFirstChild();
-  SVGBBox unionBBox;
+  SVGBBox unionBBox, tmpBBox;
   for (; node; node = node->GetNextSibling()) {
     if (nsIFrame* frame = node->GetPrimaryFrame()) {
       ISVGDisplayableFrame* svg = do_QueryFrame(frame);
       if (svg) {
         gfxMatrix matrix =
             SVGUtils::GetTransformMatrixInUserSpace(frame) * aMatrix;
-        SVGBBox tmpBBox = svg->GetBBoxContribution(
-            gfx::ToMatrix(matrix), SVGUtils::eBBoxIncludeFillGeometry);
+        tmpBBox = svg->GetBBoxContribution(gfx::ToMatrix(matrix),
+                                           SVGUtils::eBBoxIncludeFill);
         SVGClipPathFrame* clipPathFrame;
         if (SVGObserverUtils::GetAndObserveClipPath(frame, &clipPathFrame) !=
                 SVGObserverUtils::eHasRefsSomeInvalid &&
@@ -449,8 +449,9 @@ SVGBBox SVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox& aBBox,
   }
 
   if (clipPathThatClipsClipPath) {
-    unionBBox.Intersect(clipPathThatClipsClipPath->GetBBoxForClipPathFrame(
-        aBBox, aMatrix, aFlags));
+    tmpBBox = clipPathThatClipsClipPath->GetBBoxForClipPathFrame(aBBox, aMatrix,
+                                                                 aFlags);
+    unionBBox.Intersect(tmpBBox);
   }
   return unionBBox;
 }

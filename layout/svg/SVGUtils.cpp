@@ -809,7 +809,8 @@ gfxRect SVGUtils::GetClipRectForFrame(const nsIFrame* aFrame, float aX,
 
   const auto& rect = effects->mClip.AsRect();
   nsRect coordClipRect = rect.ToLayoutRect();
-  nsIntRect clipPxRect = coordClipRect.ToOutsidePixels(AppUnitsPerCSSPixel());
+  nsIntRect clipPxRect = coordClipRect.ToOutsidePixels(
+      aFrame->PresContext()->AppUnitsPerDevPixel());
   gfxRect clipRect =
       gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width, clipPxRect.height);
   if (rect.right.IsAuto()) {
@@ -908,14 +909,17 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
   // Account for 'clipped'.
   if (aFlags & SVGUtils::eBBoxIncludeClipped) {
     gfxRect clipRect;
+    float x, y, width, height;
     gfxRect fillBBox =
         svg->GetBBoxContribution({}, SVGUtils::eBBoxIncludeFill).ToThebesRect();
+    x = fillBBox.x;
+    y = fillBBox.y;
+    width = fillBBox.width;
+    height = fillBBox.height;
     // XXX Should probably check for overflow: clip too.
     bool hasClip = aFrame->StyleDisplay()->IsScrollableOverflow();
     if (hasClip) {
-      clipRect = SVGUtils::GetClipRectForFrame(aFrame, 0.0f, 0.0f,
-                                               fillBBox.width, fillBBox.height);
-      clipRect.MoveBy(fillBBox.TopLeft());
+      clipRect = SVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
       if (aFrame->IsSVGForeignObjectFrame() || aFrame->IsSVGUseFrame()) {
         clipRect = matrix.TransformBounds(clipRect);
       }
@@ -923,14 +927,14 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
     SVGClipPathFrame* clipPathFrame;
     if (SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame) ==
         SVGObserverUtils::eHasRefsSomeInvalid) {
-      bbox = gfxRect();
+      bbox = gfxRect(0, 0, 0, 0);
     } else {
       if (clipPathFrame) {
         SVGClipPathElement* clipContent =
             static_cast<SVGClipPathElement*>(clipPathFrame->GetContent());
         if (clipContent->IsUnitsObjectBoundingBox()) {
-          matrix.PreTranslate(fillBBox.TopLeft());
-          matrix.PreScale(fillBBox.width, fillBBox.height);
+          matrix.PreTranslate(gfxPoint(x, y));
+          matrix.PreScale(width, height);
         } else if (aFrame->IsSVGForeignObjectFrame()) {
           matrix = gfxMatrix();
         }
@@ -945,7 +949,7 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
       }
 
       if (bbox.IsEmpty()) {
-        bbox = gfxRect();
+        bbox = gfxRect(0, 0, 0, 0);
       }
     }
   }
