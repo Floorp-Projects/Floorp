@@ -954,40 +954,38 @@ class TelemetryEvent {
       this.#recordEndOfSessionTelemetry(details.searchString);
     }
 
-    if (skipLegacyTelemetry) {
+    if (!skipLegacyTelemetry) {
+      Services.telemetry.scalarAdd(
+        method == "engagement"
+          ? TELEMETRY_SCALAR_ENGAGEMENT
+          : TELEMETRY_SCALAR_ABANDONMENT,
+        1
+      );
+
+      if (
+        method === "engagement" &&
+        this._controller.view?.visibleResults?.[0]?.autofill
+      ) {
+        // Record autofill impressions upon engagement.
+        const type = lazy.UrlbarUtils.telemetryTypeFromResult(
+          this._controller.view.visibleResults[0]
+        );
+        Services.telemetry.scalarAdd(`urlbar.impression.${type}`, 1);
+      }
+    }
+
+    try {
       this._controller.manager.notifyEngagementChange(
         method,
         queryContext,
         details,
         this._controller
       );
-      return;
+    } catch (error) {
+      // We handle and report any error here to avoid hitting the record()
+      // handler, that would look like we didn't send telemetry at all.
+      console.error(error);
     }
-
-    Services.telemetry.scalarAdd(
-      method == "engagement"
-        ? TELEMETRY_SCALAR_ENGAGEMENT
-        : TELEMETRY_SCALAR_ABANDONMENT,
-      1
-    );
-
-    if (
-      method === "engagement" &&
-      this._controller.view?.visibleResults?.[0]?.autofill
-    ) {
-      // Record autofill impressions upon engagement.
-      const type = lazy.UrlbarUtils.telemetryTypeFromResult(
-        this._controller.view.visibleResults[0]
-      );
-      Services.telemetry.scalarAdd(`urlbar.impression.${type}`, 1);
-    }
-
-    this._controller.manager.notifyEngagementChange(
-      method,
-      queryContext,
-      details,
-      this._controller
-    );
   }
 
   _recordSearchEngagementTelemetry(

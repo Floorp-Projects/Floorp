@@ -419,12 +419,14 @@ class ProvidersManager {
     }
 
     if (state === "engagement") {
-      this.#notifyEngagement(
-        this.providersByNotificationType.onEngagement,
-        queryContext,
-        controller,
-        details
-      );
+      if (details.result) {
+        this.#notifyEngagement(
+          this.providersByNotificationType.onEngagement,
+          queryContext,
+          controller,
+          details
+        );
+      }
     } else {
       this.#notifyAbandonment(
         this.providersByNotificationType.onAbandonment,

@@ -174,11 +174,11 @@ add_task(async function engagement_after_closing_results() {
 
       assertEngagementTelemetry([
         {
-          selected_result: "input_field",
+          selected_result: "search_engine",
           selected_result_subtype: "",
-          provider: undefined,
-          results: "",
-          groups: "",
+          provider: "HeuristicFallback",
+          results: "search_engine",
+          groups: "heuristic",
         },
       ]);
     });
