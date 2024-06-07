@@ -1,0 +1,68 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Toolkit :: Telemetry'
+
+private_attribution:
+  save_impression:
+    type: labeled_counter
+    labels:
+      - success
+      - error
+      - last_view
+      - last_click
+      - last_impression
+    description: >
+      The count of outcomes for the saveImpression API
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1901081
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1901081
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - ads-eng@mozilla.com
+    expires: never
+
+  measure_conversion:
+    type: labeled_counter
+    labels:
+      - success
+      - error
+      - last_view
+      - last_click
+      - last_impression
+    description: >
+      The count of outcomes for the measureConversion API
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1901081
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1901081
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - ads-eng@mozilla.com
+    expires: never
+
+  database:
+    type: labeled_counter
+    labels:
+      - reset
+    description: >
+      The metrics for the attribution data stores
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1901081
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1901081
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - ads-eng@mozilla.com
+    expires: never
