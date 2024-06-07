@@ -36,3 +36,19 @@
         <description class="text-deemphasized featureGateDescription"/>
     </html:div>
 </html:template>
+
+<html:template id="template-genai-chat">
+    <description class="featureGateDescription"
+                 data-l10n-id="genai-settings-chat-choose"/>
+    <menulist class="indent"
+              id="genai-chat-provider"
+              preference="browser.ml.chat.provider">
+        <menupopup>
+            <menuitem data-l10n-id="genai-settings-chat-choose-one-menuitem"
+                      value=""/>
+        </menupopup>
+    </menulist>
+    <description class="featureGateDescription tip-caption"
+                 data-l10n-id="genai-settings-chat-links"
+                 id="genai-chat-links"/>
+</html:template>
