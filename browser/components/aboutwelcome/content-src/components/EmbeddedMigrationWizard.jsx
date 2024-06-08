@@ -33,6 +33,7 @@ export const EmbeddedMigrationWizard = ({ handleAction, content }) => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <migration-wizard
+      in-aboutwelcome-bundle=""
       force-show-import-all={options?.force_show_import_all || "false"}
       auto-request-state=""
       ref={ref}

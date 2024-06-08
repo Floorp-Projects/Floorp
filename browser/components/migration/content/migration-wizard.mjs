@@ -31,6 +31,7 @@ export class MigrationWizard extends HTMLElement {
   #resourceSummary = null;
   #expandedDetails = false;
   #extensionsSuccessLink = null;
+  #supportTextLinks = null;
 
   static get markup() {
     return `
@@ -358,6 +359,11 @@ export class MigrationWizard extends HTMLElement {
       "#extensions-success-link"
     );
     this.#extensionsSuccessLink.addEventListener("click", this);
+
+    this.#supportTextLinks = shadow.querySelectorAll(".support-text");
+    this.#supportTextLinks.forEach(link =>
+      link.addEventListener("click", this)
+    );
 
     this.#shadowRoot = shadow;
   }
@@ -1463,6 +1469,23 @@ export class MigrationWizard extends HTMLElement {
       this.dispatchEvent(
         new CustomEvent("MigrationWizard:OpenAboutAddons", {
           bubbles: true,
+        })
+      );
+      event.preventDefault();
+    } else if (
+      [...this.#supportTextLinks].includes(event.target) &&
+      this.hasAttribute("in-aboutwelcome-bundle")
+    ) {
+      // When we're running in the context of a spotlight
+      // the click events for standard anchors are being gobbled up by spotlight,
+      // so we're also firing a custom event to handle those clicks when in that context
+      this.dispatchEvent(
+        new CustomEvent("MigrationWizard:OpenURL", {
+          bubbles: true,
+          detail: {
+            url: event.target.href,
+            where: "tabshifted",
+          },
         })
       );
       event.preventDefault();

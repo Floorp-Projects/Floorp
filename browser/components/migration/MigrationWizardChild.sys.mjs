@@ -162,6 +162,14 @@ export class MigrationWizardChild extends JSWindowActorChild {
         }
         break;
       }
+
+      case "MigrationWizard:OpenURL": {
+        this.sendAsyncMessage("OpenURL", {
+          url: event.detail.url,
+          where: event.detail.where,
+        });
+        break;
+      }
     }
   }
 
