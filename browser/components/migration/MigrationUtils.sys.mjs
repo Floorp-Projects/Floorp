@@ -156,6 +156,7 @@ class MigrationUtils {
           "MigrationWizard:OpenAboutAddons": { wantUntrusted: true },
           "MigrationWizard:PermissionsNeeded": { wantUntrusted: true },
           "MigrationWizard:GetPermissions": { wantUntrusted: true },
+          "MigrationWizard:OpenURL": { wantUntrusted: true },
         },
       },
 
