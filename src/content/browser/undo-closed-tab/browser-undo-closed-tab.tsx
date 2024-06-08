@@ -32,9 +32,6 @@ export class gFloorpUndoClosedTab {
       this.StyleElement(),
       CustomizableUI.AREA_NAVBAR,
       2,
-      (aNode: XULElement) => {
-        aNode.setAttribute("observes", "History:UndoCloseTab");
-      },
     );
   }
 }
