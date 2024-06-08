@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AsyncBlobImageRasterizer, BlobImageResult, DebugFlags, Parameter};
+use api::{AsyncBlobImageRasterizer, BlobImageResult, Parameter};
 use api::{DocumentId, PipelineId, ExternalEvent, BlobImageRequest};
 use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
 use api::{PrimitiveKeyKind, GlyphDimensionRequest, GlyphIndexRequest};
@@ -99,7 +99,6 @@ pub enum SceneBuilderRequest {
     StopRenderBackend,
     ShutDown(Option<Sender<()>>),
     Flush(Sender<()>),
-    SetFlags(DebugFlags),
     SetFrameBuilderConfig(FrameBuilderConfig),
     SetParameter(Parameter),
     ReportMemory(Box<MemoryReport>, Sender<Box<MemoryReport>>),
@@ -241,7 +240,6 @@ pub struct SceneBuilderThread {
     removed_pipelines: FastHashSet<PipelineId>,
     #[cfg(feature = "capture")]
     capture_config: Option<CaptureConfig>,
-    debug_flags: DebugFlags,
 }
 
 pub struct SceneBuilderThreadChannels {
@@ -286,7 +284,6 @@ impl SceneBuilderThread {
             removed_pipelines: FastHashSet::default(),
             #[cfg(feature = "capture")]
             capture_config: None,
-            debug_flags: DebugFlags::default(),
         }
     }
 
@@ -311,9 +308,6 @@ impl SceneBuilderThread {
                 Ok(SceneBuilderRequest::WakeUp) => {}
                 Ok(SceneBuilderRequest::Flush(tx)) => {
                     self.send(SceneBuilderResult::FlushComplete(tx));
-                }
-                Ok(SceneBuilderRequest::SetFlags(debug_flags)) => {
-                    self.debug_flags = debug_flags;
                 }
                 Ok(SceneBuilderRequest::Transactions(txns)) => {
                     let built_txns : Vec<Box<BuiltTransaction>> = txns.into_iter()
@@ -440,7 +434,6 @@ impl SceneBuilderThread {
                     &mut item.interners,
                     &mut item.spatial_tree,
                     &SceneStats::empty(),
-                    self.debug_flags,
                 ));
 
                 interner_updates = Some(
@@ -605,7 +598,6 @@ impl SceneBuilderThread {
                 &mut doc.interners,
                 &mut doc.spatial_tree,
                 &doc.stats,
-                self.debug_flags,
             );
 
             // Update the allocation stats for next scene
