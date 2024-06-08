@@ -47,12 +47,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">บันทึกไว้ล่าสุด</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">บันทึกไว้ล่าสุด</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">แสดงที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">แสดงที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">เอาออก</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">เอาออก</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">ที่คั่นหน้า</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">แสดงที่คั่นหน้าทั้งหมด</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">เอาออก</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ผลิตขึ้นโดย Mozilla</string>
@@ -141,8 +149,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">แท็บส่วนตัวใหม่</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">ทางลัดรหัสผ่าน</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">รหัสผ่าน</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">ทางลัดรหัสผ่าน</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -188,6 +198,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ส่วนเสริม</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">ส่วนขยาย</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">จัดการส่วนขยาย</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">ค้นพบส่วนขยายเพิ่มเติม</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">ข้อมูลบัญชี</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -206,18 +220,26 @@
     <string name="browser_menu_open_in_regular_tab">เปิดในแท็บปกติ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">เพิ่มไปยังหน้าจอหลัก</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">เพิ่มไปยังหน้าจอหลัก…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">ติดตั้ง</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ซิงค์ใหม่</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ค้นหาในหน้า</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">ค้นหาในหน้า…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">แปลหน้า</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">บันทึกไปยังชุดสะสม…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">บันทึกไปยังชุดสะสม</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">แบ่งปัน</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">แบ่งปัน…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">เปิดใน %1$s</string>
@@ -245,9 +267,45 @@
     <string name="browser_menu_customize_home_1">ปรับแต่งหน้าแรก</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">ลงชื่อเข้า</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
-    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">ซิงค์รหัสผ่าน แท็บ และอื่นๆ</string>
+    <string name="browser_menu_sign_in">ลงชื่อเข้า</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">ซิงค์รหัสผ่าน แท็บ และอื่นๆ</string>
+
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">ลงชื่อเข้าอีกครั้งเพื่อซิงค์</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">การซิงค์หยุดชั่วคราว</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">แท็บส่วนตัวใหม่</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">รหัสผ่าน</string>
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">สิ่งใหม่ใน %1$s</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">สลับเป็นไซต์เดสก์ท็อป</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">เครื่องมือ</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">บันทึก</string>
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">เพิ่มที่คั่นหน้าสำหรับหน้านี้</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">แก้ไขที่คั่นหน้า</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">บันทึกเป็น PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">เปิดมุมมองผู้อ่าน</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">ปิดมุมมองผู้อ่าน</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">แปลหน้า…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">แปลเป็นภาษา%1$sแล้ว</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">พิมพ์…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -347,8 +405,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">ประกาศความเป็นส่วนตัวของ Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติมในประกาศความเป็นส่วนตัวของเรา</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">เรารักที่จะดูแลคุณให้ปลอดภัย</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -557,6 +613,10 @@
     <string name="preferences_account_sync_error">เชื่อมต่ออีกครั้งเพื่อทำการซิงค์ต่อ</string>
     <!-- Preference for language -->
     <string name="preferences_language">ภาษา</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">การแปล</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">การแปล</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">ตัวเลือกข้อมูล</string>
     <!-- Preference for data collection -->
@@ -624,6 +684,18 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">ไม่อนุญาต</string>
 
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">จำเป็น</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">ไม่จำเป็น</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">อนุญาตสำหรับทุกไซต์</string>
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">ถ้าคุณเชื่อถือส่วนขยายนี้ คุณสามารถให้สิทธิ์แก่ส่วนขยายนี้ในทุกเว็บไซต์ได้</string>
+    <!-- The text shown when an extension does not require permissions -->
+    <string name="addons_does_not_require_permissions">ส่วนขยายนี้ไม่จำเป็นต้องขอสิทธิ์ใด</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ชุดสะสมส่วนเสริมที่กำหนดเอง</string>
@@ -647,7 +719,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">กลับเข้าไป</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">ที่คั่นหน้าล่าสุด</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">ที่คั่นหน้าล่าสุด</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">ที่คั่นหน้า</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">เยี่ยมชมล่าสุด</string>
@@ -745,8 +819,6 @@
     <string name="preferences_sync_history">ประวัติ</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">ที่คั่นหน้า</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบ</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">รหัสผ่าน</string>
     <!-- Preference for syncing tabs -->
@@ -773,8 +845,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s บน %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">บัตรเครดิต</string>
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">วิธีการชำระเงิน</string>
     <!-- Preference for syncing addresses -->
@@ -789,6 +859,14 @@
     <string name="fxa_tab_received_notification_name">แท็บที่ได้รับ</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">แท็บจาก %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">ปิดแท็บ %1$s แล้ว %2$d แท็บ</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">ดูแท็บที่ปิดล่าสุด</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -1357,6 +1435,7 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">ปิดแท็บส่วนตัว</string>
 
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">ปิดแท็บส่วนตัว?</string>
 
@@ -1432,10 +1511,6 @@
     <string name="qr_scanner_dialog_invalid_ok">ตกลง</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">คุณแน่ใจหรือไม่ว่าต้องการลบ %1$s?</string>
-    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">การลบแท็บนี้จะลบชุดสะสมทั้งชุด คุณสามารถสร้างชุดสะสมใหม่ได้ทุกเมื่อ</string>
-    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title">ลบ %1$s หรือไม่?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">ลบ</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
@@ -1716,11 +1791,7 @@
     <string name="add_to_homescreen_description_2">คุณสามารถเพิ่มเว็บไซต์นี้ลงในหน้าจอหลักของอุปกรณ์ของคุณเพื่อเข้าถึงและเรียกดูได้เร็วขึ้นด้วยประสบการณ์ที่เหมือนแอป</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบและรหัสผ่าน</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">รหัสผ่าน</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกการเข้าสู่ระบบและรหัสผ่าน</string>
 
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">บันทึกรหัสผ่าน</string>
@@ -1738,46 +1809,28 @@
     <string name="preferences_android_autofill">เติมข้อมูลในแอปอื่น ๆ อัตโนมัติ</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">เติมชื่อผู้ใช้และรหัสผ่านในแอปอื่น ๆ บนอุปกรณ์ของคุณ</string>
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">เพิ่มการเข้าสู่ระบบ</string>
 
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">เพิ่มรหัสผ่าน</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ซิงค์การเข้าสู่ระบบ</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">ซิงค์รหัสผ่าน</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">ซิงค์การเข้าสู่ระบบระหว่างอุปกรณ์</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">ซิงค์รหัสผ่านระหว่างอุปกรณ์</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบที่บันทึกไว้</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">รหัสผ่านที่บันทึกไว้</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบที่คุณบันทึกหรือซิงค์กับ %s จะปรากฏที่นี่</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">รหัสผ่านที่คุณบันทึกหรือซิงค์กับ %s จะแสดงอยู่ที่นี่ รหัสผ่านทั้งหมดที่คุณบันทึกจะถูกเข้ารหัสไว้</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติมเกี่ยวกับ Sync</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">เรียนรู้เพิ่มเติมเกี่ยวกับซิงค์</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ข้อยกเว้น</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบและรหัสผ่านที่ไม่ได้บันทึกจะถูกแสดงที่นี่</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์ที่แสดงอยู่ที่นี่</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบและรหัสผ่านจะไม่ถูกบันทึกสำหรับไซต์เหล่านี้</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์เหล่านี้</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ลบข้อยกเว้นทั้งหมด</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">ค้นหาการเข้าสู่ระบบ</string>
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">ค้นหารหัสผ่าน</string>
     <!-- The header for the site that a login is for -->
@@ -1806,16 +1859,10 @@
     <string name="saved_login_reveal_password">แสดงรหัสผ่าน</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">ซ่อนรหัสผ่าน</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ปลดล็อกเพื่อดูการเข้าสู่ระบบที่บันทึกไว้ของคุณ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">ปลดล็อกเพื่อดูรหัสผ่านที่บันทึกไว้ของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">รักษาความปลอดภัยการเข้าสู่ระบบและรหัสผ่านของคุณ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">รักษาความปลอดภัยให้กับรหัสผ่านที่บันทึกไว้ของคุณ</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงการเข้าสู่ระบบและรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1834,8 +1881,6 @@
     <string name="saved_logins_sort_strategy_alphabetically">ชื่อตามตัวอักษร</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">ใช้งานครั้งสุดท้าย</string>
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">เรียงเมนูเข้าสู่ระบบ</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">เมนูเรียงลำดับรหัสผ่าน</string>
@@ -1845,42 +1890,28 @@
     <string name="preferences_autofill">การเติมอัตโนมัติ</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">ที่อยู่</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">บัตรเครดิต</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">วิธีการชำระเงิน</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกและเติมข้อมูลบัตรอัตโนมัติ</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">บันทึกและเติมวิธีการชำระเงิน</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ข้อมูลถูกเข้ารหัส</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s จะเข้ารหัสลับวิธีการชำระเงินทั้งหมดที่คุณบันทึกไว้</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ซิงค์บัตรระหว่างอุปกรณ์</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">ซิงค์บัตร</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">เพิ่มบัตรเครดิต</string>
 
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">เพิ่มบัตร</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">จัดการบัตรที่บันทึกไว้</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">จัดการบัตร</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">เพิ่มที่อยู่</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">จัดการที่อยู่</string>
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกและป้อนที่อยู่อัตโนมัติ</string>
 
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">บันทึกและเติมที่อยู่อัตโนมัติ</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">รวมข้อมูลเช่นหมายเลข อีเมล และที่อยู่ในการจัดส่ง</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">รวมหมายเลขโทรศัพท์และที่อยู่อีเมล</string>
@@ -1904,8 +1935,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">ลบบัตร</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ว่าต้องการลบบัตรเครดิตนี้?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">ลบบัตร?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ลบ</string>
@@ -1919,22 +1948,14 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">บัตรที่บันทึกไว้</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">โปรดป้อนหมายเลขบัตรเครดิตที่ถูกต้อง</string>
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">ใส่หมายเลขบัตรที่ถูกต้อง</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">โปรดกรอกช่องนี้</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">เพิ่มชื่อ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">ปลดล็อกเพื่อดูบัตรเครดิตที่บันทึกไว้ของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">รักษาความปลอดภัยให้กับบัตรเครดิตของคุณ</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">รักษาความปลอดภัยให้กับวิธีการชำระเงินที่บันทึกไว้ของคุณ</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงบัตรเครดิตที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงวิธีการชำระเงินที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1943,8 +1964,6 @@
     <string name="credit_cards_warning_dialog_later">ภายหลัง</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">ปลดล็อกอุปกรณ์ของคุณ</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ปลดล็อกเพื่อใช้ข้อมูลบัตรเครดิตที่เก็บไว้</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">ปลดล็อกเพื่อใช้วิธีการชำระเงินที่บันทึกไว้</string>
@@ -1954,12 +1973,6 @@
     <string name="addresses_edit_address">แก้ไขที่อยู่</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">จัดการที่อยู่</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">ชื่อจริง</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">ชื่อกลาง</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">นามสกุล</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">ชื่อ</string>
     <!-- The header for the street address of an address -->
@@ -1985,8 +1998,6 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">ลบที่อยู่</string>
 
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">ลบที่อยู่นี้หรือไม่?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2085,48 +2096,28 @@
     <string name="login_menu_delete_button">ลบ</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">แก้ไข</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ที่ต้องการจะลบการเข้าสู่ระบบนี้?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">คุณแน่ใจหรือไม่ว่าต้องการลบรหัสผ่านนี้?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ลบ</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ยกเลิก</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">ตัวเลือกการเข้าสู่ระบบ</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">ตัวเลือกรหัสผ่าน</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บของการเข้าสู่ระบบ</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บไซต์</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้ของการเข้าสู่ระบบ</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่านของการเข้าสู่ระบบ</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่าน</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกการเปลี่ยนแปลงเพื่อเข้าสู่ระบบ</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">บันทึกการเปลี่ยนแปลง</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">แก้ไข</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">แก้ไขรหัสผ่าน</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">เพิ่มการเข้าสู่ระบบใหม่</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">เพิ่มรหัสผ่าน</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ต้องการรหัสผ่าน</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">ใส่รหัสผ่าน</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ต้องการชื่อผู้ใช้</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">ป้อนชื่อผู้ใช้</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2469,10 +2460,14 @@
     <string name="translations_bottom_sheet_translate_from">แปลจาก</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">แปลเป็น</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">ลองเลือกภาษาต้นฉบับอื่น</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">ไม่ใช่ตอนนี้</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">แสดงต้นฉบับ</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">โหลดหน้าต้นฉบับที่ยังไม่ได้แปลแล้ว</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">เสร็จสิ้น</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2493,7 +2488,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">ขออภัย เรายังไม่รองรับภาษา%1$s</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">เรียนรู้เพิ่มเติม</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติม</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">กำลังแปล…</string>
@@ -2507,7 +2502,9 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">ตัวเลือกการแปล</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">ตัวเลือกการแปล</string>
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">ตัวเลือกการแปล</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">เสนอให้แปลอยู่เสมอ</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2524,6 +2521,11 @@
     <string name="translation_option_bottom_sheet_translation_settings">การตั้งค่าการแปล</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">เกี่ยวกับการแปลใน %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">ปิดชีตการแปล</string>
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">การตั้งค่าบางอย่างไม่พร้อมใช้งานในขณะนี้</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2548,6 +2550,9 @@
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">เลือกภาษาที่จะจัดการการกำหนดลักษณะ ”แปลเสมอ“ และ ”ไม่แปลเสมอ“</string>
 
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">ไม่สามารถโหลดภาษาได้ โปรดกลับมาตรวจสอบอีกครั้งในภายหลัง</string>
+
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
     <string name="automatic_translation_option_offer_to_translate_title_preference">เสนอให้แปล (ค่าเริ่มต้น)</string>
@@ -2571,6 +2576,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">เอา %1$s ออก</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">ไม่สามารถโหลดไซต์ได้ โปรดกลับมาตรวจสอบอีกครั้งในภายหลัง</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">ลบ %1$s หรือไม่?</string>
@@ -2596,7 +2603,7 @@
     <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">ดาวน์โหลดภาษา</string>
-    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <!-- All languages list item. When the user presses this item, they can download all languages. -->
     <string name="download_language_all_languages_item_preference">ภาษาทั้งหมด</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">ลบ</string>
@@ -2605,7 +2612,7 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
     <string name="download_languages_item_content_description_not_downloaded_state">ดาวน์โหลด</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
-    <string name="download_languages_item_content_description_selected_state">เลือกแล้ว</string>
+    <string name="download_languages_item_content_description_selected_state" moz:removedIn="127" tools:ignore="UnusedResources">เลือกแล้ว</string>
 
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
@@ -2647,12 +2654,19 @@
     <string name="debug_drawer_title">เครื่องมือดีบัก</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">นำทางย้อนกลับ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">เปิดแผงเมนูดีบั๊ก</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">เครื่องมือแท็บ</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">จำนวนแท็บ</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">ใช้งานอยู่</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">ใช้งานอยู่</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">ทำงานอยู่</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">ไม่มีการใช้งานอยู่</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2663,10 +2677,63 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">เครื่องมือสร้างแท็บ</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">จำนวนแท็บที่จะสร้าง</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">ช่องข้อความว่างเปล่า</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">โปรดป้อนจำนวนเต็มบวกเท่านั้น</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">โปรดป้อนตัวเลขที่มากกว่าศูนย์</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">เกินจำนวนแท็บสูงสุด (%1$s) ที่สามารถสร้างได้ในการดำเนินการหนึ่งครั้ง</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">เพิ่มไปยังแท็บที่ใช้งานอยู่</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">เพิ่มไปยังแท็บที่ไม่ได้ใช้งาน</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">เพิ่มไปยังแท็บส่วนตัว</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">ดำเนินการต่อ</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">ทำแบบสำรวจนี้ให้เสร็จสมบูรณ์</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">ประกาศความเป็นส่วนตัว</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label">ส่ง</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">ปิด</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation">ขอบคุณสำหรับข้อคิดเห็นของคุณ!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">พึงพอใจมาก</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">พึงพอใจ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">เฉยๆ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">ไม่พอใจ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">ไม่พอใจมาก</string>
+
+    <!-- Microsurvey accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">เปิดแบบสำรวจ</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">ปิดแบบสำรวจ</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">ปิด</string>
+
+    <!-- Debug drawer logins -->
+    <!-- The title of the Logins feature in the Debug Drawer. -->
+    <string name="debug_drawer_logins_title">การเข้าสู่ระบบ</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">โดเมนปัจจุบัน: %s</string>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">เพิ่มข้อมูลเข้าสู่ระบบปลอมสำหรับโดเมนนี้</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">ลบข้อมูลเข้าสู่ระบบที่มีชื่อผู้ใช้ %s</string>
 </resources>
