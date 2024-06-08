@@ -60,8 +60,11 @@ async function assertExtensionsProgressState(wizard, state, description) {
   } else if (state == MigrationWizardConstants.PROGRESS_VALUE.WARNING) {
     Assert.stringMatches(progressIcon.getAttribute("state"), "warning");
     Assert.stringMatches(messageText.textContent, description.message);
-    Assert.stringMatches(supportLink.textContent, description.linkText);
-    Assert.stringMatches(supportLink.href, description.linkURL);
+    await assertSupportLink(
+      supportLink,
+      description.linkURL,
+      description.linkText
+    );
     await assertSuccessLink(extensionsSuccessLink, "");
   } else if (state == MigrationWizardConstants.PROGRESS_VALUE.INFO) {
     Assert.stringMatches(progressIcon.getAttribute("state"), "info");
@@ -93,6 +96,33 @@ async function assertSuccessLink(link, message) {
     );
     EventUtils.synthesizeMouseAtCenter(link, {}, link.ownerGlobal);
     let tab = await aboutAddonsOpened;
+    BrowserTestUtils.removeTab(tab);
+  }
+}
+
+/**
+ * Checks that support links have the correct text, correct url,
+ * and if they have both text and a URL, checks that clicking on the link
+ * opens a background tab with the desired URL.
+ *
+ * @param {Element} link
+ *   The support-link link element.
+ * @param {string} url
+ *   The URL that is expected to be in the link. If the link is not
+ *   expected to appear, this should be an emptry string.
+ * @param {string} message
+ *   The expected string to appear in the link textContent. If the
+ *   link is not expected to appear, this should be an empty string.
+ * @returns {Promise<undefined>}
+ */
+async function assertSupportLink(link, url, message) {
+  Assert.stringMatches(link.textContent, message);
+  Assert.stringMatches(link.href, url);
+  if (message && url) {
+    link.href = "about:blank";
+    let linkOpened = BrowserTestUtils.waitForNewTab(gBrowser, link.href);
+    EventUtils.synthesizeMouseAtCenter(link, {}, link.ownerGlobal);
+    let tab = await linkOpened;
     BrowserTestUtils.removeTab(tab);
   }
 }

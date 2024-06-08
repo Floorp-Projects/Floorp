@@ -49,6 +49,8 @@ Notably, the ``MigrationWizard`` does not contain any internal logic or privileg
 
 If the ``MigrationWizard`` is embedded in a dialog, it should have the ``dialog-mode`` attribute set on it so that dialog-appropriate buttons and styles are applied.
 
+If the ``MigrationWizard`` is used in a messaging system surface that uses the same underlying component as ``about:welcome`` such as the Spotlight modal or Feature Callout, it should have the ``is-aboutwelcome-bundle`` attribute set so that anchor click events are appropriately captured and handled.
+
 ``MigrationWizardConstants``
 ============================
 
