@@ -2427,32 +2427,37 @@ var gBrowserInit = {
         }
       }
 
-      SessionStore.promiseInitialized.then(() => {
-        const windows = Services.wm.getEnumerator("navigator:browser");
-        const excludedWindows = Array.from(windows).filter(
-          win => win != window
-        );
-        if (
-          (window.SessionStartup.isAutomaticRestoreEnabled() &&
-            excludedWindows.length === 0 &&
-            window.workspacesWindowId == null) ||
-          window.workspacesWindowId == undefined ||
-          window.workspacesWindowId == ""
-        ) {
-          // If there is no other browser window, we need to restore the last session.
-          const closedWindows = window.SessionStore.getClosedWindowData();
-          const closedWindow = closedWindows[0] ? closedWindows[0] : null;
-          if (closedWindow && closedWindow.closedId) {
-            // Last window should be restored.
-            // But secound or later window should not be restored if it was not closed recent of 1st window closed time.
-            // recent is 10000ms or -10000ms.
-            console.log("Closed Window ID: " + closedWindow.closedId);
-            window.SessionStore.undoCloseById(closedWindow.closedId);
-            window.close();
+      if (
+        Services.prefs.getBoolPref(
+          "floorp.browser.ssb.separation.enabled",
+          false
+        )
+      ) {
+        SessionStore.promiseInitialized.then(() => {
+          const windows = Services.wm.getEnumerator("navigator:browser");
+          const excludedWindows = Array.from(windows).filter(
+            win => win != window
+          );
+          if (
+            (window.SessionStartup.isAutomaticRestoreEnabled() &&
+              excludedWindows.length === 0 &&
+              window.workspacesWindowId == null) ||
+            window.workspacesWindowId == undefined ||
+            window.workspacesWindowId == ""
+          ) {
+            // If there is no other browser window, we need to restore the last session.
+            const closedWindows = window.SessionStore.getClosedWindowData();
+            const closedWindow = closedWindows[0] ? closedWindows[0] : null;
+            if (closedWindow && closedWindow.closedId) {
+              // Last window should be restored.
+              // But secound or later window should not be restored if it was not closed recent of 1st window closed time.
+              // recent is 10000ms or -10000ms.
+              window.SessionStore.undoCloseById(closedWindow.closedId);
+              window.close();
+            }
           }
-        }
-      });
-
+        });
+      }
       const SsbPrefName = "browser.ssb.startup";
       let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
       if (needSsbOpenWindow) {
