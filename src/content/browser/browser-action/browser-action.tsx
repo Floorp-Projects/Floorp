@@ -32,19 +32,22 @@ export const gFloorpBrowserAction = {
     if (widget && widget.type !== "custom") {
       return;
     }
-    CustomizableUI.createWidget({
-      id: widgetId,
-      type: "button",
-      l10nId,
-      removable: true,
-      onCommand() {
-        onCommandFunc?.();
-      },
-      onCreated(aNode: XULElement) {
-        onCreatedFunc?.(aNode);
-      },
-    });
-    CustomizableUI.addWidgetToArea(widgetId, area, position);
+    (async () => {
+      CustomizableUI.createWidget({
+        id: widgetId,
+        type: "button",
+        tooltiptext: await document.l10n?.formatValue(l10nId),
+        label: await document.l10n?.formatValue(l10nId),
+        removable: true,
+        onCommand: () => {
+          onCommandFunc?.();
+        },
+        onCreated: (aNode: XULElement) => {
+          onCreatedFunc?.(aNode);
+        },
+      });
+      CustomizableUI.addWidgetToArea(widgetId, area, position);
+    })();
   },
 
   createMenuToolbarButton(
@@ -63,21 +66,23 @@ export const gFloorpBrowserAction = {
     if (widget && widget.type !== "custom") {
       return;
     }
-    CustomizableUI.createWidget({
-      id: widgetId,
-      type: "button",
-      l10nId,
-      removable: true,
-      onCommand() {
-        onCommandFunc?.();
-      },
-      onCreated(aNode: XULElement) {
-        aNode.setAttribute("type", "menu");
-
-        insert(aNode, () => popupElem, aNode.lastChild);
-        onCreatedFunc?.(aNode);
-      },
-    });
-    CustomizableUI.addWidgetToArea(widgetId, area, position);
+    (async () => {
+      CustomizableUI.createWidget({
+        id: widgetId,
+        type: "button",
+        tooltiptext: await document.l10n?.formatValue(l10nId),
+        label: await document.l10n?.formatValue(l10nId),
+        removable: true,
+        onCommand: () => {
+          onCommandFunc?.();
+        },
+        onCreated: (aNode: XULElement) => {
+          aNode.setAttribute("type", "menu");
+          insert(aNode, () => popupElem, aNode.lastChild);
+          onCreatedFunc?.(aNode);
+        },
+      });
+      CustomizableUI.addWidgetToArea(widgetId, area, position);
+    })();
   },
 };
