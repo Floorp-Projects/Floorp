@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DebugFlags, PrimitiveFlags, QualitySettings, RasterSpace, ClipId};
+use api::{ColorF, PrimitiveFlags, QualitySettings, RasterSpace, ClipId};
 use api::units::*;
 use crate::clip::{ClipNodeKind, ClipLeafId, ClipNodeId, ClipTreeBuilder};
 use crate::frame_builder::FrameBuilderConfig;
@@ -119,8 +119,6 @@ pub struct TileCacheBuilder {
     prev_scroll_root_cache: (SpatialNodeIndex, SpatialNodeIndex),
     /// Handle to the root reference frame
     root_spatial_node_index: SpatialNodeIndex,
-    /// Debug flags to provide to our TileCacheInstances.
-    debug_flags: DebugFlags,
 }
 
 /// The output of a tile cache builder, containing all details needed to construct the
@@ -147,13 +145,11 @@ impl TileCacheBuilder {
     pub fn new(
         root_spatial_node_index: SpatialNodeIndex,
         background_color: Option<ColorF>,
-        debug_flags: DebugFlags,
     ) -> Self {
         TileCacheBuilder {
             primary_slices: vec![PrimarySlice::new(SliceFlags::empty(), None, background_color)],
             prev_scroll_root_cache: (SpatialNodeIndex::INVALID, SpatialNodeIndex::INVALID),
             root_spatial_node_index,
-            debug_flags,
         }
     }
 
@@ -475,7 +471,6 @@ impl TileCacheBuilder {
                         clip_tree_builder,
                     ) {
                         create_tile_cache(
-                            self.debug_flags,
                             primary_slice.slice_flags,
                             descriptor.scroll_root,
                             primary_slice.iframe_clip,
@@ -493,7 +488,6 @@ impl TileCacheBuilder {
                 SliceKind::Default { secondary_slices } => {
                     for descriptor in secondary_slices {
                         create_tile_cache(
-                            self.debug_flags,
                             primary_slice.slice_flags,
                             descriptor.scroll_root,
                             primary_slice.iframe_clip,
@@ -572,7 +566,6 @@ fn find_shared_clip_root(
 /// Given a PrimitiveList and scroll root, construct a tile cache primitive instance
 /// that wraps the primitive list.
 fn create_tile_cache(
-    debug_flags: DebugFlags,
     slice_flags: SliceFlags,
     scroll_root: SpatialNodeIndex,
     iframe_clip: Option<ClipId>,
@@ -618,7 +611,6 @@ fn create_tile_cache(
     // Store some information about the picture cache slice. This is used when we swap the
     // new scene into the frame builder to either reuse existing slices, or create new ones.
     tile_caches.insert(slice_id, TileCacheParams {
-        debug_flags,
         slice,
         slice_flags,
         spatial_node_index: scroll_root,

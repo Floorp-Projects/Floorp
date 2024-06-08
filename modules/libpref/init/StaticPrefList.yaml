@@ -6545,14 +6545,6 @@
   value: false
   mirror: always
 
-# When true, we output warning messages when rejecting surface promotion
-# when it has been requested. This is important for color correctness of
-# wide color videos, as well as for GPU performance for all videos.
-- name: gfx.webrender.debug.surface-promotion-logging
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 #ifdef MOZ_WIDGET_GTK
 - name: gfx.webrender.reject-software-driver
   type: bool
