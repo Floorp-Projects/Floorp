@@ -172,6 +172,12 @@ export class MigrationWizardParent extends JSWindowActorParent {
         let migrator = await MigrationUtils.getMigrator(message.data.key);
         return migrator.getPermissions(this.browsingContext.topChromeWindow);
       }
+
+      case "OpenURL": {
+        let browser = this.browsingContext.topChromeWindow;
+        this.#openURL(browser, message.data.url, message.data.where);
+        break;
+      }
     }
 
     return null;
@@ -838,5 +844,31 @@ export class MigrationWizardParent extends JSWindowActorParent {
   #openAboutAddons(browser) {
     let window = browser.ownerGlobal;
     window.openTrustedLinkIn("about:addons", "tab", { inBackground: true });
+  }
+
+  /**
+   * Opens a url in a new background tab in the same window
+   * as the passed browser.
+   *
+   * @param {Element} browser
+   *   The browser element requesting that the URL opens in.
+   * @param {Element} url
+   *   The URL that will be opened.
+   * @param {Element} where
+   *   Where the URL will be opened. Defaults to current tab.
+   */
+  #openURL(browser, url, where) {
+    let window = browser.ownerGlobal;
+    window.openLinkIn(
+      Services.urlFormatter.formatURL(url),
+      where || "current",
+      {
+        private: false,
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+          {}
+        ),
+        csp: null,
+      }
+    );
   }
 }
