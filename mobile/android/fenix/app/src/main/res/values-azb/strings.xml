@@ -733,6 +733,9 @@
     <!-- The subtitle for the allow for all sites preference toggle -->
     <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">بو اوزانتیْ‌یا گوونسه‌نیز، هر سایتدا اوْنا ایجازه وئره‌بیلرسینیز.</string>
 
+    <!-- The text shown when an extension does not require permissions -->
+    <string name="addons_does_not_require_permissions">بو اوزانتیْ‌یا هیچ بیر اجازه ایسته‌میر.</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">اؤزل تاخیْلان مجموعه‌سی</string>
@@ -1501,6 +1504,25 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">گیزلی تاغ‌لاریْ باغلا</string>
 
+    <!-- Microsuverys -->
+    <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">فایرفاکس‌دا پرینتی یاخچیلاشدیرماغا کمک ائدین. یالنیز بیر ثانیه چکیر.</string>
+    <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">فایرفاکس‌دا پرینت‌دن نه قدر راضیسینیز؟</string>
+
+
+    <!-- Text for option one, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">اوْرتا</string>
+    <!-- Text for option two, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">چوْخ ناراضیْ</string>
+    <!-- Text for option three, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">ناراضیْ</string>
+    <!-- Text for option four, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_3" tools:ignore="UnusedResources">راضیْ</string>
+    <!-- Text for option five, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">چوْخ راضیْ</string>
+
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">گیزلی تاغ‌لار باغلانسین؟</string>
 
@@ -1518,6 +1540,201 @@
 
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">گیزلی مورورو ایمتیحان ائله</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">%1$s ساخلانیلمیش کوکی‌لر و گئچمیشه اوْلمادان مرور باشلایین.</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">ایز بوراخمادان مرور باشلایین.</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">گیزلی مرور %1$s-دا سیزین بیلگیلرینیزی ساخلاماز.</string>
+
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">ایلک آختارماغیزا باشلایین</string>
+
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">یاخیندا بیر شئی تاپین. یا جالب بیر شئی کشف ائدین</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">لطفا، قیسا بیر سؤرغویا قاتیلاراق فایرفاکس تکمیل اولماسینا کمک ائدین.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">سوْرغویا قاتیلن</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">یوْخ ممنون</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">مجموعه سیلیندی</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">مجموعه‌نین آدی دییشیلدی</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">تاغ باغلاندیْ</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">تاغلار باغلاندیْ</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">بوکمارک‌لار ساخلاندیْ !</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">شوْرتکات‌لارا آرتیریلدیْ !</string>
+
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">گیزلی تاغ باغلاندیْ</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">گیزلی تاغلار باغلاندیْ</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">اؤزل باخیش دیتالاریْ سیلیندی</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">لغو</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">سایت قالدیریلدیْ</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$s -یه %2$s آدرسینی آچماسینا اجازه وئر</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">اجازه وئر</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">رد ائله</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">وب آدرسی گئچرسیز.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">تامام</string>
+
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">%1$s مجموعه‌سینی سیلمه‌گه آرخایینسیز؟</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">سیل</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">بوتون اکران حالتینه گئچیلیر</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">اینترنت آدرسی کوْپی اوْلدو</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">بو نمونه متن‌دیر. بو تنظیم‌له اؤلچونو آرتیردیغینیزدا ویا آزالتیغینیزدا متن‌ین نئجه گؤرونه‌جگینی گؤسترمک اوچون بورادادیر.</string>
+
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">وبسایتلاردا متنی داها بؤیوک و یا کیچیک ائدین</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">فوْنت اؤلچوسو</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">اوْتوماتیک فوْنت اؤلچوسو</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">متن‌ین اؤلچوسو اندروید تنظیم‌لرینه اویقون اوْلاجاق. فونت اؤلچو مدیریتینی بوردا ایشدن سالین.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">مرور دیتالارینیْ سیلین</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">آچیق تاغ‌لار</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d تاغ</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">مرور گئچیمیشی</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d آدرس</string>
+
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">کوکی‌لر و سایت دیتالاریْ</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">اکثر سایتلاردان چیخاجاقسینیز</string>
+
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">کش اوْلموش عکس‌لر و فایل‌لار</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">ساخلاما یئرینی بوْشالدیر</string>
+
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">سایت اجازه‌لری</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">یئندیریلن‌لر</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">مرور دیتالارینیْ سیلین</string>
+
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">چیخیش زمانی آختاریش بیلگی‌لری سیلین</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">اصلی منودان \&quot;چیخین\&quot; سئچدیگینیز زمان باخیش بیلگی‌لری سیلینیر.</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">چیخ</string>
+
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">سیلمک اوچون وقت آرالیغی</string>
+
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">گئچمیشی (باشقا جهازلاردان دؤنگل اوْلموش گئچمیشده ایچینده)، کوکی‌لر و دیگر باخیش بیلگی‌لری سیلیر.</string>
+
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">گئچمیشی (باشقا جهازلاردان دؤنگل اوْلموش گئچمیشده ایچینده)</string>
+
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">سوْن ساعت</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">بوگون و دونن</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">هر شئی</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s اپی سئچیلمیش مرور دیتاسینی سیله‌جک.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">لغو</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">سیل</string>
+
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">مرور دیتالاریْ سیلیندی</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">مرور دیتالاریْ سیلینیر…</string>
+
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">“%s” گروهونداکی بوتون سایتلاریْ سیل</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">لغو</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">سیل</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">گروه سیلیندی</string>
+
+    <!-- Onboarding -->
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">دؤنگل آچیق</string>
+
+    <!-- Onboarding theme -->
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">تاغلار گؤندریلدی</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">تاغ گؤندریلدی!</string>
+
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">گئنه سعی ائله</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">کد اسکنی</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[کامپیوتریزده <b>https://firefox.com/pair</b> آدرسینه گئدین]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">اسکنه حاضیر</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">کامرانیزلا گیریش ائدین</string>
+
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">یئرینه ایمیل استفاده ائدین</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">باغلانتینیْ کس</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">لغو</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">قوْروما تنظیم‌لری</string>
+
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">گلیشمیش ایزله‌مه قوْرماسیْ</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">آرتیق بیلین</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">استاندارد (وارساییلان)</string>
 
     <!-- Translations feature-->
 

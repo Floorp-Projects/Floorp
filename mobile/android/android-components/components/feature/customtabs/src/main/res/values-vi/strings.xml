@@ -2,4 +2,6 @@
 <resources>
     <string name="mozac_feature_customtabs_exit_button">Quay lại ứng dụng trước</string>
     <string name="mozac_feature_customtabs_share_link">Chia sẻ liên kết</string>
+    <!-- Content description (not visible, for screen readers etc.): Description of the refresh button in the Custom Tabs toolbar -->
+    <string name="mozac_feature_customtabs_refresh_button">Làm mới</string>
 </resources>
