@@ -571,20 +571,35 @@ export var SearchTestUtils = {
 
   /**
    * Simulates an update to the RemoteSettings configuration.
+   * If parameters are not specified, then the appropriate configuration is
+   * reset to the data stored in remote settings.
    *
-   * @param {object} [config]
-   *  The new configuration.
+   * @param {object[]} [config]
+   *   The replacement configuration.
+   * @param {object[]} [overridesConfig]
+   *   The replacement overrides configuration.
    */
-  async updateRemoteSettingsConfig(config) {
+  async updateRemoteSettingsConfig(config, overridesConfig) {
     if (!config) {
       let settings = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
       config = await settings.get();
+    }
+    if (!overridesConfig) {
+      let settings = lazy.RemoteSettings(
+        lazy.SearchUtils.SETTINGS_OVERRIDES_KEY
+      );
+      overridesConfig = await settings.get();
     }
     const reloadObserved =
       SearchTestUtils.promiseSearchNotification("engines-reloaded");
     await lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY).emit("sync", {
       data: { current: config },
     });
+    await lazy
+      .RemoteSettings(lazy.SearchUtils.SETTINGS_OVERRIDES_KEY)
+      .emit("sync", {
+        data: { current: overridesConfig },
+      });
 
     this.idleService._fireObservers("idle");
     await reloadObserved;

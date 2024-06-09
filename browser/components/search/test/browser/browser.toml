@@ -63,6 +63,8 @@ support-files = [
 
 ["browser_private_search_perwindowpb.js"]
 
+["browser_remote_override.js"]
+
 ["browser_rich_suggestions.js"]
 support-files = ["trendingSuggestionEngine.sjs"]
 
