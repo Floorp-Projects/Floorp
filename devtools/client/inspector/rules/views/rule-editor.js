@@ -253,6 +253,16 @@ RuleEditor.prototype = {
           selectorContainer.append(
             this.doc.createTextNode(`@import ${ancestorData.value}`)
           );
+        } else if (ancestorData.type == "scope") {
+          let text = `@scope`;
+          if (ancestorData.start) {
+            text += ` (${ancestorData.start})`;
+
+            if (ancestorData.end) {
+              text += ` to (${ancestorData.end})`;
+            }
+          }
+          selectorContainer.append(this.doc.createTextNode(text));
         } else if (ancestorData.selectors) {
           ancestorData.selectors.forEach((selector, i) => {
             if (i !== 0) {
