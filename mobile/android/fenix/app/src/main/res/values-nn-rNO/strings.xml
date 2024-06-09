@@ -1454,6 +1454,11 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Lat att private faner</string>
 
+    <!-- Microsuverys -->
+    <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Bidra til å gjere utskrifter i Firefox betre. Det tek berre eit sekund</string>
+    <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Kor fornøgd er du med utskrifter i Firefox?</string>
     <!-- Text for option one, shown in microsurvey.-->
     <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">Nøytral</string>
     <!-- Text for option two, shown in microsurvey.-->
