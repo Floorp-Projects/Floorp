@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@scope (aside) {
+  div, [data-test="start-no-end"] {
+    box-shadow: 60px -16px teal;
+  }
+}
+
+@scope (aside) to (.limit) {
+  div, [data-test="start-and-end"] {
+    outline: 2px solid gold;
+
+    span {
+      color: cornflowerblue;
+    }
+  }
+
+  /* This should show up as inherited rule for spans that are in .limit subtree, even
+     if the rule doesn't directly apply */
+  div, [data-test="start-and-end-inherit"] {
+    color: salmon;
+  }
+}
