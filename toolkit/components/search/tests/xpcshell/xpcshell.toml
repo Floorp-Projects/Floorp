@@ -128,9 +128,6 @@ skip-if = ["true"] # Will be permanently removed as part of bug 1870686
 
 ["test_engine_old_selector_override.js"]
 
-["test_engine_old_selector_remote_settings.js"]
-tags = "remotesettings searchmain"
-
 ["test_engine_selector_defaults.js"]
 
 ["test_engine_selector_engine_orders.js"]
@@ -138,6 +135,9 @@ tags = "remotesettings searchmain"
 ["test_engine_selector_environment.js"]
 
 ["test_engine_selector_remote_override.js"]
+
+["test_engine_selector_remote_settings.js"]
+tags = "remotesettings searchmain"
 
 ["test_engine_selector_subvariants.js"]
 
