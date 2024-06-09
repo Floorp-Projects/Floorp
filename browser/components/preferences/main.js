@@ -62,6 +62,9 @@ Preferences.addAll([
   browser.tabs.warnOnClose
   - true if when closing a window with multiple tabs the user is warned and
     allowed to cancel the action, false to just close the window
+  browser.tabs.closeWindowWithLastTab
+  - true if the window should be closed when the last tab is closed, false
+    to create a new tab instead
   browser.tabs.warnOnOpen
   - true if the user should be warned if he attempts to open a lot of tabs at
     once (e.g. a large folder of bookmarks), false otherwise
@@ -74,6 +77,7 @@ Preferences.addAll([
   { id: "browser.link.open_newwindow", type: "int" },
   { id: "browser.tabs.loadInBackground", type: "bool", inverted: true },
   { id: "browser.tabs.warnOnClose", type: "bool" },
+  { id: "browser.tabs.closeWindowWithLastTab", type: "bool" },
   { id: "browser.warnOnQuitShortcut", type: "bool" },
   { id: "browser.tabs.warnOnOpen", type: "bool" },
   { id: "browser.ctrlTab.sortByRecentlyUsed", type: "bool" },
@@ -1634,6 +1638,9 @@ var gMainPane = {
    * browser.tabs.warnOnClose - bool
    *   True - If when closing a window with multiple tabs the user is warned and
    *          allowed to cancel the action, false to just close the window.
+   * browser.tabs.closeWindowWithLastTab - bool
+   *   True - If the last tab in a window is closed, the window should be closed.
+   *   False - If the last tab in a window is closed, create a new tab instead.
    * browser.warnOnQuitShortcut - bool
    *   True - If the keyboard shortcut (Ctrl/Cmd+Q) is pressed, the user should
    *          be warned, false to just quit without prompting.

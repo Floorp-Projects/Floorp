@@ -169,6 +169,10 @@ confirm-on-close-multiple-tabs =
     .label = Confirm before closing multiple tabs
     .accesskey = m
 
+close-window-with-last-tab =
+    .label = Close window with last tab
+    .accessKey = l
+
 # This string is used for the confirm before quitting preference.
 # Variables:
 #   $quitKey (string) - the quit keyboard shortcut, and formatted

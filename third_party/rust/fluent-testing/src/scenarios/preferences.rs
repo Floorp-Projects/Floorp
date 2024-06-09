@@ -74,6 +74,7 @@ pub fn get_scenario() -> Scenario {
             ("ctrl-tab-recently-used-order", L10nMessage::new(None, Some(vec![L10nAttribute::new("label", "Ctrl+Tab cycles through tabs in recently used order"), L10nAttribute::new("accesskey", "T")]))),
             ("open-new-link-as-tabs", L10nMessage::new(None, Some(vec![L10nAttribute::new("label", "Open links in tabs instead of new windows"), L10nAttribute::new("accesskey", "w")]))),
             ("warn-on-close-multiple-tabs", L10nMessage::new(None, Some(vec![L10nAttribute::new("label", "Warn you when closing multiple tabs"), L10nAttribute::new("accesskey", "m")]))),
+            ("close-window-with-last-tab", L10nMessage::new(None, Some(vec![L10nAttribute::new("label", "Close window with last tab"), L10nAttribute::new("accesskey", "l")]))),
             ("warn-on-open-many-tabs", L10nMessage::new(None, Some(vec![L10nAttribute::new("label", "Warn you when opening multiple tabs might slow down Nightly"), L10nAttribute::new("accesskey", "d")]))),
             ("switch-links-to-new-tabs", L10nMessage::new(None, Some(vec![L10nAttribute::new("label", "When you open a link in a new tab, switch to it immediately"), L10nAttribute::new("accesskey", "h")]))),
             ("disable-extension", L10nMessage::new(None, Some(vec![L10nAttribute::new("label", "Disable Extension")]))),
