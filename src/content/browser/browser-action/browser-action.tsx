@@ -24,7 +24,9 @@ export const gFloorpBrowserAction = {
   ) {
     // Add style Element for toolbar button icon.
     // This insert is runnning every open browser window.
-    insert(document.head, () => styleElement, document.head?.lastChild);
+    if (styleElement) {
+      insert(document.head, () => styleElement, document.head?.lastChild);
+    }
 
     // Create toolbar button. If widget already exists, return.
     // custom type is temporary widget type. It will be changed to button type.
@@ -60,7 +62,9 @@ export const gFloorpBrowserAction = {
     position: number | null = null,
     onCreatedFunc: null | ((aNode: XULElement) => void) = null,
   ) {
-    insert(document.head, () => styleElement, document.head?.lastChild);
+    if (styleElement) {
+      insert(document.head, () => styleElement, document.head?.lastChild);
+    }
 
     const widget = CustomizableUI.getWidget(widgetId);
     if (widget && widget.type !== "custom") {
