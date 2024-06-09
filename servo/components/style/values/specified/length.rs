@@ -195,7 +195,7 @@ impl FontRelativeLength {
             Self::Ic(x) => Self::Ic(op(*x)),
             Self::Rem(x) => Self::Rem(op(*x)),
             Self::Lh(x) => Self::Lh(op(*x)),
-            Self::Rlh(x) => Self::Lh(op(*x)),
+            Self::Rlh(x) => Self::Rlh(op(*x)),
         }
     }
 
