@@ -5031,8 +5031,11 @@ void nsFlexContainerFrame::CreateFlexLineAndFlexItemInfo(
       // anonymous flex item, e.g. wrapping one or more text nodes.
       // DevTools wants the content node for the actual child in
       // the DOM tree, so we descend through anonymous boxes.
+      nsIContent* content = nullptr;
       nsIFrame* targetFrame = GetFirstNonAnonBoxInSubtree(frame);
-      nsIContent* content = targetFrame->GetContent();
+      if (targetFrame) {
+        content = targetFrame->GetContent();
+      }
 
       // Skip over content that is only whitespace, which might
       // have been broken off from a text node which is our real
