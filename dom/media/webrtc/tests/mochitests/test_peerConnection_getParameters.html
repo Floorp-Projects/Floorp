@@ -61,8 +61,7 @@
 // SDP with unusual values in fmtp, but in the same formatting that Firefox
 // typically uses. This lets us check that we're putting the right param values
 // in sdpFmtpLine, if not what appears in the SDP verbatim.
-  const audioSdp = `
-v=0
+  const audioSdp = `v=0
 o=- 1878890426675213188 2 IN IP4 127.0.0.1
 s=-
 t=0 0
@@ -88,8 +87,7 @@ a=setup:passive
   let videoSdp;
   if (navigator.userAgent.includes("Android")) {
     // Alternate form with no h264
-    videoSdp  = `
-v=0
+    videoSdp  = `v=0
 o=- 1878890426675213188 2 IN IP4 127.0.0.1
 s=-
 t=0 0
@@ -118,8 +116,7 @@ a=rtpmap:119 rtx/90000
 a=setup:passive
 `;
   } else {
-    videoSdp  = `
-v=0
+    videoSdp  = `v=0
 o=- 1878890426675213188 2 IN IP4 127.0.0.1
 s=-
 t=0 0
