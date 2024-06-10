@@ -1321,33 +1321,6 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
           codec_info_found = TRUE;
 
-        } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') {
-            temp=PL_strtok_r(tmp, ";", &strtok_state);
-            if (temp) {
-                if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-                    SDP_PRINT("%s Annexes are possibly there for this fmtp %s  tmp: %s line\n",
-                              sdp_p->debug_str, fmtp_ptr, tmp);
-                }
-                while (temp != NULL) {
-                    if (strchr(temp, 'D') !=NULL) {
-                        attr_p->attr.fmtp.annex_d = TRUE;
-                    }
-                    if (strchr(temp, 'F') !=NULL) {
-                        attr_p->attr.fmtp.annex_f = TRUE;
-                    }
-                    if (strchr(temp, 'I') !=NULL) {
-                        attr_p->attr.fmtp.annex_i = TRUE;
-                    }
-                    if (strchr(temp, 'J') !=NULL) {
-                        attr_p->attr.fmtp.annex_j = TRUE;
-                    }
-                    if (strchr(temp, 'T') !=NULL) {
-                        attr_p->attr.fmtp.annex_t = TRUE;
-                    }
-                    temp=PL_strtok_r(NULL, ";", &strtok_state);
-                }
-            } /* if (temp) */
-            done = TRUE;
         } else if (strchr(tmp, '/')) {
             // XXX Note that because RFC 5109 so conveniently specified
             // this fmtp with no param names, we hope that nothing else
@@ -1375,6 +1348,33 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
           // a=fmtp:101 0-15 (or 0-15,NN,NN etc)
           sstrncpy(fmtp_p->dtmf_tones , tmp, sizeof(fmtp_p->dtmf_tones));
           codec_info_found = TRUE;
+        } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') {
+            temp=PL_strtok_r(tmp, ";", &strtok_state);
+            if (temp) {
+                if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
+                    SDP_PRINT("%s Annexes are possibly there for this fmtp %s  tmp: %s line\n",
+                              sdp_p->debug_str, fmtp_ptr, tmp);
+                }
+                while (temp != NULL) {
+                    if (strchr(temp, 'D') !=NULL) {
+                        attr_p->attr.fmtp.annex_d = TRUE;
+                    }
+                    if (strchr(temp, 'F') !=NULL) {
+                        attr_p->attr.fmtp.annex_f = TRUE;
+                    }
+                    if (strchr(temp, 'I') !=NULL) {
+                        attr_p->attr.fmtp.annex_i = TRUE;
+                    }
+                    if (strchr(temp, 'J') !=NULL) {
+                        attr_p->attr.fmtp.annex_j = TRUE;
+                    }
+                    if (strchr(temp, 'T') !=NULL) {
+                        attr_p->attr.fmtp.annex_t = TRUE;
+                    }
+                    temp=PL_strtok_r(NULL, ";", &strtok_state);
+                }
+            } /* if (temp) */
+            done = TRUE;
         } else {
           // unknown parameter - eat chars until ';'
           SDPLogDebug(logTag, "%s Unknown fmtp type (%s) - ignoring", __FUNCTION__,
