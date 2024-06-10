@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "Chrome",
+      "schema": 1717054811711,
+      "status": "nightly",
+      "version": "127",
+      "browserid": "chrome",
+      "id": "0e69f9d7-19f6-4c6e-bc36-731da4cee6e3",
+      "last_modified": 1718005312990
+    },
+    {
+      "name": "Edge",
+      "schema": 1717286706296,
+      "status": "planned",
+      "version": "128",
+      "browserid": "edge",
+      "id": "edad0482-a612-4019-a601-53dc349514b8",
+      "last_modified": 1718005312987
+    },
+    {
+      "name": "Node.js",
+      "schema": 1717286706438,
+      "status": "esr",
+      "version": "20.12.0",
+      "browserid": "nodejs",
+      "id": "93175823-df25-4102-bda0-e45955132cb5",
+      "last_modified": 1718005312984
+    },
+    {
+      "name": "Deno",
+      "schema": 1717805106873,
+      "status": "current",
+      "version": "1.44",
+      "browserid": "deno",
+      "id": "ea6c817d-237b-498b-964e-a8ca4668580a",
+      "last_modified": 1718005312981
+    },
+    {
+      "name": "Edge",
+      "schema": 1717286706151,
+      "status": "beta",
+      "version": "126",
+      "browserid": "edge",
+      "id": "c8bf4918-03b7-4be2-bf75-4d6139dbd7c9",
+      "last_modified": 1718005312974
+    },
+    {
+      "name": "Edge",
+      "schema": 1717286706227,
+      "status": "nightly",
+      "version": "127",
+      "browserid": "edge",
+      "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
+      "last_modified": 1718005312971
+    },
+    {
       "name": "Edge",
       "schema": 1716941107417,
       "status": "current",
@@ -181,24 +235,6 @@
       "last_modified": 1715589742227
     },
     {
-      "name": "Edge",
-      "schema": 1714867506498,
-      "status": "planned",
-      "version": "127",
-      "browserid": "edge",
-      "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
-      "last_modified": 1715003394961
-    },
-    {
-      "name": "Edge",
-      "schema": 1714867506401,
-      "status": "nightly",
-      "version": "126",
-      "browserid": "edge",
-      "id": "c8bf4918-03b7-4be2-bf75-4d6139dbd7c9",
-      "last_modified": 1715003394956
-    },
-    {
       "name": "Samsung Internet",
       "schema": 1714521906708,
       "status": "current",
@@ -224,24 +260,6 @@
       "browserid": "opera",
       "id": "08a3849f-52fd-40ae-9054-b0e33272d279",
       "last_modified": 1713943930228
-    },
-    {
-      "name": "Deno",
-      "schema": 1712707507752,
-      "status": "current",
-      "version": "1.42",
-      "browserid": "deno",
-      "id": "a308f3c2-cc19-4a1e-825f-898696606328",
-      "last_modified": 1712840749681
-    },
-    {
-      "name": "Node.js",
-      "schema": 1702685107693,
-      "status": "esr",
-      "version": "20.10.0",
-      "browserid": "nodejs",
-      "id": "0d78585f-e9e0-41e8-816a-22461158e36d",
-      "last_modified": 1702890886929
     },
     {
       "name": "Firefox for Android",
@@ -280,5 +298,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1716966331504
+  "timestamp": 1718005312990
 }
