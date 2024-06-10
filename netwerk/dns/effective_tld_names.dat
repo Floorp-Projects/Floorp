@@ -12416,6 +12416,11 @@ trycloudflare.com
 pages.dev
 r2.dev
 workers.dev
+cdn.cloudflareanycast.net
+cdn.cloudflarecn.net
+cdn.cloudflareglobal.net
+cloudflare.net
+cdn.cloudflare.net
 
 // cloudscale.ch AG : https://www.cloudscale.ch/
 // Submitted by Gaudenz Steinlin <support@cloudscale.ch>
@@ -13046,6 +13051,14 @@ easypanel.host
 // Submitted by <infracloudteam@namecheap.com>
 *.ewp.live
 
+// eDirect Corp. : https://hosting.url.com.tw/
+// Submitted by C.S. chang <cschang@corp.url.com.tw>
+twmail.cc
+twmail.net
+twmail.org
+mymailer.com.tw
+url.tw
+
 // Electromagnetic Field : https://www.emfcamp.org
 // Submitted by <noc@emfcamp.org>
 at.emf.camp
@@ -13156,18 +13169,15 @@ us-2.evennode.com
 us-3.evennode.com
 us-4.evennode.com
 
+// Evervault : https://evervault.com
+// Submitted by Hannah Neary <engineering@evervault.com>
+relay.evervault.app
+relay.evervault.dev
+
 // Expo : https://expo.dev/
 // Submitted by James Ide <psl@expo.dev>
 expo.app
 staging.expo.app
-
-// eDirect Corp. : https://hosting.url.com.tw/
-// Submitted by C.S. chang <cschang@corp.url.com.tw>
-twmail.cc
-twmail.net
-twmail.org
-mymailer.com.tw
-url.tw
 
 // Fabrica Technologies, Inc. : https://www.fabrica.dev/
 // Submitted by Eric Jiang <eric@fabrica.dev>
@@ -13768,6 +13778,10 @@ pages.it.hs-heilbronn.de
 helioho.st
 heliohost.us
 
+// HeiyuSpace: https://lazycat.cloud
+// Submitted by Xia Bin <admin@lazycat.cloud>
+heiyu.space
+
 // Hepforge : https://www.hepforge.org
 // Submitted by David Grellscheid <admin@hepforge.org>
 hepforge.org
@@ -14194,12 +14208,15 @@ barsy.club
 barsycenter.com
 barsyonline.com
 barsy.de
+barsy.dev
 barsy.eu
+barsy.gr
 barsy.in
 barsy.info
 barsy.io
 barsy.me
 barsy.menu
+barsyonline.menu
 barsy.mobi
 barsy.net
 barsy.online
@@ -14207,8 +14224,11 @@ barsy.org
 barsy.pro
 barsy.pub
 barsy.ro
+barsy.rs
 barsy.shop
+barsyonline.shop
 barsy.site
+barsy.store
 barsy.support
 barsy.uk
 barsy.co.uk
@@ -15224,6 +15244,10 @@ try-snowplow.com
 // SourceHut : https://sourcehut.org
 // Submitted by Drew DeVault <sir@cmpwn.com>
 srht.site
+
+// SparrowHost : https://sparrowhost.in/
+// Submitted by Anant Pandey <info@sparrowhost.in>
+ind.mom
 
 // StackBlitz : https://stackblitz.com
 // Submitted by Dominic Elm <hello@stackblitz.com>
