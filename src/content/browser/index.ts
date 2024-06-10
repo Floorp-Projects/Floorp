@@ -5,6 +5,7 @@ import { initStatusbar } from "./statusbar";
 import { initBrowserContextMenu } from "./browser-context-menu";
 import { initShareMode } from "./browser-share-mode";
 import { initProfileManager } from "./profile-manager";
+import { initUndoClosedTab } from "./undo-closed-tab";
 
 export default function initScripts() {
   //@ts-expect-error ii
@@ -13,6 +14,7 @@ export default function initScripts() {
     setBrowserDesign();
     initShareMode();
     initProfileManager();
+    initUndoClosedTab();
 
     //createWebpanel("tmp", "https://manatoki332.net/");
     //console.log(document.getElementById("tmp"));
