@@ -1882,77 +1882,133 @@ TEST_P(NewSdpTest, CheckMediaSectionGetBandwidth) {
   "BiAGEAFQASAAkAZQBkAGAAFAARAAgABgADAQA="
 
 // SDP from a basic A/V apprtc call FFX/FFX
-const std::string kBasicAudioVideoOffer =
-    "v=0" CRLF "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
-    "s=SIP Call" CRLF "c=IN IP4 224.0.0.1/100/12" CRLF "t=0 0" CRLF
-    "a=dtls-message:client " BASE64_DTLS_HELLO CRLF "a=ice-ufrag:4a799b2e" CRLF
-    "a=ice-pwd:e4cc12a910f106a0a744719425510e17" CRLF "a=ice-lite" CRLF
-    "a=ice-options:trickle foo" CRLF "a=msid-semantic:WMS stream streama" CRLF
-    "a=msid-semantic:foo stream" CRLF
+const std::vector<std::string> kBasicAudioVideoOfferLines = {
+    "v=0",
+    "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0",
+    "s=SIP Call",
+    "c=IN IP4 224.0.0.1/100/12",
+    "t=0 0",
+    "a=dtls-message:client " BASE64_DTLS_HELLO,
+    "a=ice-ufrag:4a799b2e",
+    "a=ice-pwd:e4cc12a910f106a0a744719425510e17",
+    "a=ice-lite",
+    "a=ice-options:trickle foo",
+    "a=msid-semantic:WMS stream streama",
+    "a=msid-semantic:foo stream",
     "a=fingerprint:sha-256 "
     "DF:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:"
-    "A0:72:9B:14:08:6D:0F:4C" CRLF "a=identity:" LONG_IDENTITY CRLF
-    "a=group:BUNDLE first second" CRLF "a=group:BUNDLE third" CRLF
-    "a=group:LS first third" CRLF "m=audio 9 RTP/SAVPF 109 9 0 8 101" CRLF
-    "c=IN IP4 0.0.0.0" CRLF "a=mid:first" CRLF "a=rtpmap:109 opus/48000/2" CRLF
-    "a=fmtp:109 maxplaybackrate=32000;stereo=1" CRLF "a=ptime:20" CRLF
-    "a=maxptime:20" CRLF "a=rtpmap:9 G722/8000" CRLF "a=rtpmap:0 PCMU/8000" CRLF
-    "a=rtpmap:8 PCMA/8000" CRLF "a=rtpmap:101 telephone-event/8000" CRLF
-    "a=fmtp:101 0-15,66,32-34,67" CRLF "a=ice-ufrag:00000000" CRLF
-    "a=ice-pwd:0000000000000000000000000000000" CRLF "a=sendonly" CRLF
-    "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level" CRLF
-    "a=setup:actpass" CRLF "a=rtcp-mux" CRLF "a=msid:stream track" CRLF
-    "a=candidate:0 1 UDP 2130379007 10.0.0.36 62453 typ host" CRLF
+    "A0:72:9B:14:08:6D:0F:4C",
+    "a=identity:" LONG_IDENTITY,
+    "a=group:BUNDLE first second",
+    "a=group:BUNDLE third",
+    "a=group:LS first third",
+    "m=audio 9 RTP/SAVPF 109 9 0 8 101",
+    "c=IN IP4 0.0.0.0",
+    "a=mid:first",
+    "a=rtpmap:109 opus/48000/2",
+    "a=fmtp:109 maxplaybackrate=32000;stereo=1",
+    "a=ptime:20",
+    "a=maxptime:20",
+    "a=rtpmap:9 G722/8000",
+    "a=rtpmap:0 PCMU/8000",
+    "a=rtpmap:8 PCMA/8000",
+    "a=rtpmap:101 telephone-event/8000",
+    "a=fmtp:101 0-15,66,32-34,67",
+    "a=ice-ufrag:00000000",
+    "a=ice-pwd:0000000000000000000000000000000",
+    "a=sendonly",
+    "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+    "a=setup:actpass",
+    "a=rtcp-mux",
+    "a=msid:stream track",
+    "a=candidate:0 1 UDP 2130379007 10.0.0.36 62453 typ host",
     "a=candidate:2 1 UDP 1694236671 24.6.134.204 62453 typ srflx raddr "
-    "10.0.0.36 rport 62453" CRLF
+    "10.0.0.36 rport 62453",
     "a=candidate:3 1 UDP 100401151 162.222.183.171 49761 typ relay raddr "
-    "162.222.183.171 rport 49761" CRLF
+    "162.222.183.171 rport 49761",
     "a=candidate:6 1 UDP 16515071 162.222.183.171 51858 typ relay raddr "
-    "162.222.183.171 rport 51858" CRLF
+    "162.222.183.171 rport 51858",
     "a=candidate:3 2 UDP 100401150 162.222.183.171 62454 typ relay raddr "
-    "162.222.183.171 rport 62454" CRLF
+    "162.222.183.171 rport 62454",
     "a=candidate:2 2 UDP 1694236670 24.6.134.204 55428 typ srflx raddr "
-    "10.0.0.36 rport 55428" CRLF
+    "10.0.0.36 rport 55428",
     "a=candidate:6 2 UDP 16515070 162.222.183.171 50340 typ relay raddr "
-    "162.222.183.171 rport 50340" CRLF
-    "a=candidate:0 2 UDP 2130379006 10.0.0.36 55428 typ host" CRLF
-    "a=rtcp:62454 IN IP4 162.222.183.171" CRLF "a=end-of-candidates" CRLF
-    "a=ssrc:5150" CRLF "m=video 9 RTP/SAVPF 120 121 122 123" CRLF
-    "c=IN IP6 ::1" CRLF
+    "162.222.183.171 rport 50340",
+    "a=candidate:0 2 UDP 2130379006 10.0.0.36 55428 typ host",
+    "a=rtcp:62454 IN IP4 162.222.183.171",
+    "a=end-of-candidates",
+    "a=ssrc:5150",
+    "m=video 9 RTP/SAVPF 120 121 122 123",
+    "c=IN IP6 ::1",
     "a=fingerprint:sha-1 "
-    "DF:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C" CRLF
-    "a=mid:second" CRLF "a=rtpmap:120 VP8/90000" CRLF
-    "a=fmtp:120 max-fs=3600;max-fr=30" CRLF "a=rtpmap:121 VP9/90000" CRLF
-    "a=fmtp:121 max-fs=3600;max-fr=30" CRLF "a=rtpmap:122 red/90000" CRLF
-    "a=rtpmap:123 ulpfec/90000" CRLF "a=recvonly" CRLF "a=rtcp-fb:120 nack" CRLF
-    "a=rtcp-fb:120 nack pli" CRLF "a=rtcp-fb:120 ccm fir" CRLF
-    "a=rtcp-fb:121 nack" CRLF "a=rtcp-fb:121 nack pli" CRLF
-    "a=rtcp-fb:121 ccm fir" CRLF "a=setup:active" CRLF "a=rtcp-mux" CRLF
-    "a=msid:streama tracka" CRLF "a=msid:streamb trackb" CRLF
-    "a=candidate:0 1 UDP 2130379007 10.0.0.36 59530 typ host" CRLF
-    "a=candidate:0 2 UDP 2130379006 10.0.0.36 64378 typ host" CRLF
+    "DF:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C",
+    "a=mid:second",
+    "a=rtpmap:120 VP8/90000",
+    "a=fmtp:120 max-fs=3600;max-fr=30",
+    "a=rtpmap:121 VP9/90000",
+    "a=fmtp:121 max-fs=3600;max-fr=30",
+    "a=rtpmap:122 red/90000",
+    "a=rtpmap:123 ulpfec/90000",
+    "a=fmtp:122 120/121/123",
+    "a=recvonly",
+    "a=rtcp-fb:120 nack",
+    "a=rtcp-fb:120 nack pli",
+    "a=rtcp-fb:120 ccm fir",
+    "a=rtcp-fb:121 nack",
+    "a=rtcp-fb:121 nack pli",
+    "a=rtcp-fb:121 ccm fir",
+    "a=setup:active",
+    "a=rtcp-mux",
+    "a=msid:streama tracka",
+    "a=msid:streamb trackb",
+    "a=candidate:0 1 UDP 2130379007 10.0.0.36 59530 typ host",
+    "a=candidate:0 2 UDP 2130379006 10.0.0.36 64378 typ host",
     "a=candidate:2 2 UDP 1694236670 24.6.134.204 64378 typ srflx raddr "
-    "10.0.0.36 rport 64378" CRLF
+    "10.0.0.36 rport 64378",
     "a=candidate:6 2 UDP 16515070 162.222.183.171 64941 typ relay raddr "
-    "162.222.183.171 rport 64941" CRLF
+    "162.222.183.171 rport 64941",
     "a=candidate:6 1 UDP 16515071 162.222.183.171 64800 typ relay raddr "
-    "162.222.183.171 rport 64800" CRLF
+    "162.222.183.171 rport 64800",
     "a=candidate:2 1 UDP 1694236671 24.6.134.204 59530 typ srflx raddr "
-    "10.0.0.36 rport 59530" CRLF
+    "10.0.0.36 rport 59530",
     "a=candidate:3 1 UDP 100401151 162.222.183.171 62935 typ relay raddr "
-    "162.222.183.171 rport 62935" CRLF
+    "162.222.183.171 rport 62935",
     "a=candidate:3 2 UDP 100401150 162.222.183.171 61026 typ relay raddr "
-    "162.222.183.171 rport 61026" CRLF "a=rtcp:61026" CRLF
-    "a=end-of-candidates" CRLF "a=ssrc:1111 foo" CRLF "a=ssrc:1111 foo:bar" CRLF
+    "162.222.183.171 rport 61026",
+    "a=rtcp:61026",
+    "a=end-of-candidates",
+    "a=ssrc:1111 foo",
+    "a=ssrc:1111 foo:bar",
     "a=ssrc:1111 msid:1d0cdb4e-5934-4f0f-9f88-40392cb60d31 "
-    "315b086a-5cb6-4221-89de-caf0b038c79d" CRLF
-    "a=imageattr:120 send * recv *" CRLF
-    "a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]" CRLF
-    "a=rid:bar recv pt=120;max-width=800;max-height=600" CRLF
-    "a=rid:bar123 recv max-width=1920;max-height=1080" CRLF
-    "a=simulcast:recv bar;bar123" CRLF "m=audio 9 RTP/SAVPF 0" CRLF
-    "a=mid:third" CRLF "a=rtpmap:0 PCMU/8000" CRLF "a=ice-options:foo bar" CRLF
-    "a=msid:noappdata" CRLF "a=bundle-only" CRLF;
+    "315b086a-5cb6-4221-89de-caf0b038c79d",
+    "a=imageattr:120 send * recv *",
+    "a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]",
+    "a=rid:bar recv pt=120;max-width=800;max-height=600",
+    "a=rid:bar123 recv max-width=1920;max-height=1080",
+    "a=simulcast:recv bar;bar123",
+    "m=audio 9 RTP/SAVPF 0",
+    "a=mid:third",
+    "a=rtpmap:0 PCMU/8000",
+    "a=ice-options:foo bar",
+    "a=msid:noappdata",
+    "a=bundle-only"};
+
+static std::string joinSdp(const std::vector<std::string>& aSdp,
+                           const std::string& aEndl) {
+  std::ostringstream result;
+  for (const auto& line : aSdp) {
+    result << line << aEndl;
+  }
+  // Extra endl!
+  result << aEndl;
+  return result.str();
+}
+
+const std::string kBasicAudioVideoOffer =
+    joinSdp(kBasicAudioVideoOfferLines, "\r\n");
+
+const std::string kBasicAudioVideoOfferLinefeedOnly =
+    joinSdp(kBasicAudioVideoOfferLines, "\n");
 
 TEST_P(NewSdpTest, BasicAudioVideoSdpParse) { ParseSdp(kBasicAudioVideoOffer); }
 
@@ -1989,9 +2045,10 @@ TEST_P(NewSdpTest, CheckRemoveFmtp) {
   SdpAttributeList& videoAttrList =
       Sdp()->GetMediaSection(1).GetAttributeList();
   ASSERT_TRUE(videoAttrList.HasAttribute(SdpAttribute::kFmtpAttribute));
-  ASSERT_EQ(2U, videoAttrList.GetFmtp().mFmtps.size());
+  ASSERT_EQ(3U, videoAttrList.GetFmtp().mFmtps.size());
   ASSERT_TRUE(Sdp()->GetMediaSection(1).FindFmtp("120"));
   ASSERT_TRUE(Sdp()->GetMediaSection(1).FindFmtp("121"));
+  ASSERT_TRUE(Sdp()->GetMediaSection(1).FindFmtp("122"));
 }
 
 TEST_P(NewSdpTest, CheckIceUfrag) {
@@ -4077,6 +4134,7 @@ TEST(NewSdpTestNoFixture, CheckParsingResultComparer)
   };
 
   ASSERT_TRUE(check_comparison(kBasicAudioVideoOffer));
+  ASSERT_TRUE(check_comparison(kBasicAudioVideoOfferLinefeedOnly));
   ASSERT_TRUE(check_comparison(kH264AudioVideoOffer));
 
   // Check the Fmtp comprison
