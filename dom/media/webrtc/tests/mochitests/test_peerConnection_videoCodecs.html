@@ -33,6 +33,11 @@
         test.originalOffer.sdp =
           sdputils.removeAllButPayloadType(test.originalOffer.sdp, id);
 
+        // Bug 1901160 test receiving signaling with no H264 fmtp.
+        if (codec.hasOwnProperty("fmtpOverride")) {
+          test.originalOffer.sdp = test.originalOffer.sdp.replace(new RegExp("a=fmtp:" + id + ".*\\r\\n", "gi"), codec.fmtpOverride);
+        }
+
         ok(!test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${otherId}[^0-9]`, "gi")),
           `Other codec ${otherId} should be removed after filtering`);
         ok(test.originalOffer.sdp.match(new RegExp(`m=.*UDP/TLS/RTP/SAVPF.* ${id}[^0-9]`, "gi")),
@@ -99,6 +104,11 @@
     { name: "VP9" },
     { name: "H264" },
     { name: "H264", offset: 1 },
+    { name: "H264", offset: 2 },
+    { name: "H264", offset: 2, fmtpOverride: "a=fmtp:packetization-mode=1" },
+    { name: "H264", offset: 3 },
+    { name: "H264", offset: 3, fmtpOverride: "a=fmtp:packetization-mode=0" },
+    { name: "H264", offset: 3, fmtpOverride: "" },
   ];
 
   runNetworkTest(async (options) => {
@@ -114,7 +124,7 @@
         let dec = SpecialPowers.getBoolPref('media.navigator.mediadatadecoder_h264_enabled');
         if (codec.name == "H264") {
           await matchPlatformH264CodecPrefs();
-          if (codec.offset == 1) {
+          if (codec.offset == 1 || codec.offset == 3) {
             // Force fake GMP codec for H.264 mode 0 because not all platforms
             // support slice size control. Re-enable it after
             // a. SW encoder fallback support (bug 1726617), and

@@ -3887,7 +3887,7 @@ TEST_F(JsepSessionTest, TestH264NegotiationOffererDefault) {
   ASSERT_EQ("H264", answererSendCodec->mName);
   const JsepVideoCodecDescription* answererVideoSendCodec(
       static_cast<const JsepVideoCodecDescription*>(answererSendCodec.get()));
-  ASSERT_EQ((uint32_t)0x420010, answererVideoSendCodec->mProfileLevelId);
+  ASSERT_EQ((uint32_t)0x42000A, answererVideoSendCodec->mProfileLevelId);
 }
 
 TEST_F(JsepSessionTest, TestH264NegotiationOffererNoFmtp) {
@@ -3914,14 +3914,14 @@ TEST_F(JsepSessionTest, TestH264NegotiationOffererNoFmtp) {
   ASSERT_EQ("H264", answererSendCodec->mName);
   const JsepVideoCodecDescription* answererVideoSendCodec(
       static_cast<const JsepVideoCodecDescription*>(answererSendCodec.get()));
-  ASSERT_EQ((uint32_t)0x420010, answererVideoSendCodec->mProfileLevelId);
+  ASSERT_EQ((uint32_t)0x42000A, answererVideoSendCodec->mProfileLevelId);
 
   UniquePtr<JsepCodecDescription> answererRecvCodec;
   GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &answererRecvCodec);
   ASSERT_EQ("H264", answererRecvCodec->mName);
   const JsepVideoCodecDescription* answererVideoRecvCodec(
       static_cast<const JsepVideoCodecDescription*>(answererRecvCodec.get()));
-  ASSERT_EQ((uint32_t)0x420010, answererVideoRecvCodec->mProfileLevelId);
+  ASSERT_EQ((uint32_t)0x42000A, answererVideoRecvCodec->mProfileLevelId);
 }
 
 TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByOffererWithLowLevel) {
