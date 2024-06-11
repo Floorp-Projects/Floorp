@@ -42,11 +42,9 @@ add_task(
     );
 
     TranslationsPanelShared.simulateLangListError();
-    await SelectTranslationsTestUtils.waitForPanelPopupEvent(
-      "popupshown",
-      SelectTranslationsTestUtils.clickTryAgainButton,
-      SelectTranslationsTestUtils.assertPanelViewInitFailure
-    );
+    await SelectTranslationsTestUtils.clickTryAgainButton({
+      viewAssertion: SelectTranslationsTestUtils.assertPanelViewInitFailure,
+    });
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsSelectTranslationsPanel.tryAgainButton,
       {

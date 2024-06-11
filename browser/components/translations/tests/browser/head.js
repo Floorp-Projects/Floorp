@@ -2210,9 +2210,18 @@ class SelectTranslationsTestUtils {
     logAction();
     const { tryAgainButton } = SelectTranslationsPanel.elements;
     assertVisibility({ visible: { tryAgainButton } });
-    click(tryAgainButton, "Clicking the try-again button");
-    await SelectTranslationsTestUtils.waitForPanelState("translatable");
+    if (SelectTranslationsPanel.phase() === "init-failure") {
+      // The try-again button reopens the panel from the "init-failure" phase.
+      await SelectTranslationsTestUtils.waitForPanelPopupEvent(
+        "popupshown",
+        () => click(tryAgainButton, "Clicking the try-again button")
+      );
+    } else {
+      // Otherwise the try-again button just attempts to re-translate.
+      click(tryAgainButton, "Clicking the try-again button");
+    }
     if (downloadHandler) {
+      await SelectTranslationsTestUtils.waitForPanelState("translatable");
       await this.handleDownloads({ downloadHandler, pivotTranslation });
     }
     if (viewAssertion) {
