@@ -11772,6 +11772,11 @@
   value: false
   mirror: always
 
+- name: network.cookie.sameSite.crossSiteIframeSetCheck
+  type: bool
+  value: true
+  mirror: always
+
 - name: network.cookie.thirdparty.sessionOnly
   type: bool
   value: false
