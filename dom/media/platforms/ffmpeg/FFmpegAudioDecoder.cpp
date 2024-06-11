@@ -285,7 +285,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
 
   RefPtr<AudioData> data =
       new AudioData(aSample->mOffset, pts, std::move(audio), numChannels,
-                    samplingRate, numChannels);
+                    samplingRate, mAudioInfo.mChannelMap);
   MOZ_ASSERT(duration == data->mDuration, "must be equal");
   aResults.AppendElement(std::move(data));
 
