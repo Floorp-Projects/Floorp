@@ -1440,9 +1440,9 @@
 
     <!-- Microsuverys -->
     <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
-    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Bidra til å gjøre utskrift i Firefox bedre. Det tar bare et sekund</string>
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Bidra til å gjøre utskrifter i Firefox bedre. Det tar bare et sekund</string>
     <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
-    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Hvor fornøyd er du med utskrift i Firefox?</string>
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Hvor fornøyd er du med utskrifter i Firefox?</string>
 
 
     <!-- Text for option one, shown in microsurvey.-->
