@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * www.elal.com - Firefox is an unsupported browser
+ * Bug #1848716 - https://bugzilla.mozilla.org/show_bug.cgi?id=1848716
+ * WebCompat issue #85474 - https://github.com/webcompat/web-bugs/issues/85474
+ *
+ * As everything seems to work just fine, this intervention simply hides the
+ * banner.
+ */
+
+.pnlOldBrowser {
+  display: none !important;
+}

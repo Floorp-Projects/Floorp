@@ -309,7 +309,7 @@ class ConfigSettings(collections.abc.Mapping):
         """Load config data by reading file objects."""
 
         for fp in fps:
-            self._config.readfp(fp)
+            self._config.read_file(fp)
 
     def write(self, fh):
         """Write the config to a file object."""

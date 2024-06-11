@@ -19,6 +19,20 @@ console.warn(
 
 const GOOGLE_OAUTH_PATH_PREFIX = "https://accounts.google.com/ServiceLogin";
 
+// After permission was granted request (use) storage access and reload
+async function requestGrantedAccess() {
+  const storageAccessPermission = await navigator.permissions.query({
+    name: "storage-access",
+  });
+  const hasStorageAccess = await document.hasStorageAccess();
+  if (storageAccessPermission.state === "granted" && !hasStorageAccess) {
+    await document.requestStorageAccess();
+    location.reload();
+  }
+}
+
+requestGrantedAccess();
+
 // Overwrite the window.open method so we can detect oauth related popups.
 const origOpen = window.wrappedJSObject.open;
 Object.defineProperty(window.wrappedJSObject, "open", {

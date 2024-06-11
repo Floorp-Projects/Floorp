@@ -56,12 +56,9 @@ function templateHTML(options) {
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob: chrome:; style-src 'unsafe-inline';"
-    />
-    <meta name="color-scheme" content="light dark" />
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob: chrome: resource: file:; style-src 'unsafe-inline';">
+    <meta name="color-scheme" content="light dark">
     <title data-l10n-id="newtab-page-title"></title>
     <link
       rel="icon"

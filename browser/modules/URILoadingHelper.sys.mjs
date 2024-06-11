@@ -581,6 +581,11 @@ export const URILoadingHelper = {
         });
         targetBrowser = tabUsedForLoad.linkedBrowser;
 
+        if(!Services.prefs.getBoolPref("browser.tabs.loadInBackground")) {
+          w.gBrowser.selectedTab = tabUsedForLoad;
+        }
+        // End Floorp Injection
+
         resolveOnNewTabCreated?.(targetBrowser);
         resolveOnContentBrowserCreated?.(targetBrowser);
 
