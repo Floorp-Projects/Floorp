@@ -4276,6 +4276,7 @@ name = "qcms"
 version = "0.2.0"
 dependencies = [
  "libc",
+ "version_check",
 ]
 
 [[package]]

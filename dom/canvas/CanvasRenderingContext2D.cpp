@@ -1074,6 +1074,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() {
+  CanvasImageCache::NotifyCanvasDestroyed(this);
   RemovePostRefreshObserver();
   RemoveShutdownObserver();
   ResetBitmap();
@@ -5221,8 +5222,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       element = video;
     }
 
-    srcSurf = CanvasImageCache::LookupCanvas(element, mCanvasElement, mTarget,
-                                             &imgSize, &intrinsicImgSize);
+    srcSurf = CanvasImageCache::LookupCanvas(element, this, mTarget, &imgSize,
+                                             &intrinsicImgSize);
   }
 
   DirectDrawInfo drawInfo;
@@ -5267,7 +5268,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     if (res.mSourceSurface) {
       if (res.mImageRequest) {
-        CanvasImageCache::NotifyDrawImage(element, mCanvasElement, mTarget,
+        CanvasImageCache::NotifyDrawImage(element, this, mTarget,
                                           res.mSourceSurface, imgSize,
                                           intrinsicImgSize);
       }

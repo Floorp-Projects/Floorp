@@ -10,19 +10,19 @@
 setup({allow_uncaught_exception: true});
 
 testSharedWorkerHelper = (t, script) => {
-  try {
-    const worker = new SharedWorker(script, '');
-    worker.onerror = t.step_func_done(e => {
-      assert_true(e instanceof Event);
-    });
-  } catch (e) {
-    assert_throws_dom("SecurityError", () => {throw e}, "DOMExceptions thrown on cross-origin SharedWorker construction must be SecurityErrors");
-    t.done();
-  }
+  const worker = new SharedWorker(script, '');
+  worker.onerror = t.step_func_done(e => {
+    assert_true(e instanceof Event);
+  });
 }
 
 test(() => {
-  assert_throws_dom("SecurityError", () => { new SharedWorker('unsupported:', ''); });
+  assert_throws_dom("SyntaxError", () => { new SharedWorker('https://test:test', ''); });
+}, "non-parsable URL");
+
+async_test(t => {
+  // Parses fine as a URL, fails to fetch according to Fetch
+  testSharedWorkerHelper(t, 'unsupported:');
 }, "unsupported_scheme");
 
 async_test(t => {

@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ScopeExit.h"
 #include "nsIURI.h"
 #include "nsExternalProtocolHandler.h"
 #include "nsString.h"
@@ -148,22 +149,25 @@ nsresult nsExtProtocolChannel::OpenURL() {
   nsCOMPtr<nsIExternalProtocolService> extProtService(
       do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
 
+  auto cleanup = mozilla::MakeScopeExit([&] {
+    mCallbacks = nullptr;
+    mListener = nullptr;
+  });
+
   if (extProtService) {
-#ifdef DEBUG
     nsAutoCString urlScheme;
     mUrl->GetScheme(urlScheme);
     bool haveHandler = false;
     extProtService->ExternalProtocolHandlerExists(urlScheme.get(),
                                                   &haveHandler);
-    NS_ASSERTION(haveHandler,
-                 "Why do we have a channel for this url if we don't support "
-                 "the protocol?");
-#endif
+    if (!haveHandler) {
+      return NS_ERROR_UNKNOWN_PROTOCOL;
+    }
 
     RefPtr<mozilla::dom::BrowsingContext> ctx;
     rv = mLoadInfo->GetTargetBrowsingContext(getter_AddRefs(ctx));
     if (NS_FAILED(rv)) {
-      goto finish;
+      return rv;
     }
 
     RefPtr<nsIPrincipal> triggeringPrincipal = mLoadInfo->TriggeringPrincipal();
@@ -189,9 +193,6 @@ nsresult nsExtProtocolChannel::OpenURL() {
     }
   }
 
-finish:
-  mCallbacks = nullptr;
-  mListener = nullptr;
   return rv;
 }
 
@@ -497,36 +498,12 @@ nsExternalProtocolHandler::AllowPort(int32_t port, const char* scheme,
   *_retval = false;
   return NS_OK;
 }
-// returns TRUE if the OS can handle this protocol scheme and false otherwise.
-bool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI* aURI) {
-  MOZ_ASSERT(aURI);
-  nsAutoCString scheme;
-  aURI->GetScheme(scheme);
-
-  nsCOMPtr<nsIExternalProtocolService> extProtSvc(
-      do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-  if (!extProtSvc) {
-    return false;
-  }
-
-  bool haveHandler = false;
-  extProtSvc->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
-  return haveHandler;
-}
 
 NS_IMETHODIMP
 nsExternalProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                       nsIChannel** aRetval) {
   NS_ENSURE_TRUE(aURI, NS_ERROR_UNKNOWN_PROTOCOL);
   NS_ENSURE_TRUE(aRetval, NS_ERROR_UNKNOWN_PROTOCOL);
-
-  // Only try to return a channel if we have a protocol handler for the url.
-  // nsOSHelperAppService::LoadUriInternal relies on this to check trustedness
-  // for some platforms at least.  (win uses ::ShellExecute and unix uses
-  // gnome_url_show.)
-  if (!HaveExternalProtocolHandler(aURI)) {
-    return NS_ERROR_UNKNOWN_PROTOCOL;
-  }
 
   nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel(aURI, aLoadInfo);
   channel.forget(aRetval);

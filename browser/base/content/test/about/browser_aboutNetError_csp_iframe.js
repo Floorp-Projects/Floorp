@@ -8,6 +8,10 @@ const BLOCKED_PAGE =
   "http://example.org:8000/browser/browser/base/content/test/about/csp_iframe.sjs";
 
 add_task(async function test_csp() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.xfocsp.hideOpenInNewWindow", false]],
+  });
+
   let { iframePageTab, blockedPageTab } = await setupPage(
     "iframe_page_csp.html",
     BLOCKED_PAGE

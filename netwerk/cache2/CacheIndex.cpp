@@ -2213,16 +2213,10 @@ void CacheIndex::ParseRecords(const StaticMutexAutoLock& aProofOfLock) {
           reinterpret_cast<uint32_t*>(moz_xmalloc(sizeof(uint32_t)));
       NetworkEndian::writeUint32(isDirty, 1);
 
-      // Mark index dirty. The buffer is freed by CacheFileIOManager when
-      // nullptr is passed as the listener and the call doesn't fail
-      // synchronously.
-      rv = CacheFileIOManager::Write(mIndexHandle, 2 * sizeof(uint32_t),
-                                     reinterpret_cast<char*>(isDirty),
-                                     sizeof(uint32_t), true, false, nullptr);
-      if (NS_FAILED(rv)) {
-        // This is not fatal, just free the memory
-        free(isDirty);
-      }
+      // Mark index dirty. The buffer will be freed by CacheFileIOManager.
+      CacheFileIOManager::WriteWithoutCallback(
+          mIndexHandle, 2 * sizeof(uint32_t), reinterpret_cast<char*>(isDirty),
+          sizeof(uint32_t), true, false);
     }
     pos += sizeof(uint32_t);
 
