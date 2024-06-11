@@ -7713,6 +7713,20 @@ first_session:
       tags:
         - Performance
         - Attribution
+  install_source:
+    type: string
+    lifetime: application
+    description: |
+      Used to identify the source the app was installed from.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1898363
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D212913
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 play_store_attribution:
   install_referrer_response:
     type: text
