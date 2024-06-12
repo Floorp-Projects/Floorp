@@ -23,5 +23,5 @@
 # This brand name can be used in messages where the product name needs to
 # remain unchanged across different versions (Nightly, Beta, etc.).
 -brand-product-name = Noraneko
--vendor-short-name = Nora
+-vendor-short-name = NyanRus
 trademarkInfo = { " " }
