@@ -30,13 +30,16 @@ JSObject* PrivateAttribution::WrapObject(JSContext* aCx,
 
 PrivateAttribution::~PrivateAttribution() = default;
 
-bool PrivateAttribution::GetSourceHost(nsACString& aSourceHost,
-                                       ErrorResult& aRv) {
+bool PrivateAttribution::GetSourceHostIfNonPrivate(nsACString& aSourceHost,
+                                                   ErrorResult& aRv) {
   MOZ_ASSERT(mOwner);
   nsIPrincipal* prin = mOwner->PrincipalOrNull();
   if (!prin || NS_FAILED(prin->GetHost(aSourceHost))) {
     aRv.ThrowInvalidStateError("Couldn't get source host");
     return false;
+  }
+  if (prin->GetPrivateBrowsingId() > 0) {
+    return false;  // Do not throw.
   }
   return true;
 }
@@ -57,7 +60,7 @@ void PrivateAttribution::SaveImpression(
   }
 
   nsAutoCString source;
-  if (!GetSourceHost(source, aRv)) {
+  if (!GetSourceHostIfNonPrivate(source, aRv)) {
     return;
   }
 
@@ -91,7 +94,7 @@ void PrivateAttribution::MeasureConversion(
   }
 
   nsAutoCString source;
-  if (!GetSourceHost(source, aRv)) {
+  if (!GetSourceHostIfNonPrivate(source, aRv)) {
     return;
   }
   for (const nsACString& host : aOptions.mSources) {
