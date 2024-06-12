@@ -455,7 +455,15 @@ class UpdateVerifyConfigCreator(BaseScript):
             try:
                 return (
                     subprocess.check_output(
-                        ["hg", "-R", self.config["local_repo"], "cat", "-r", rev, path]
+                        [
+                            "hg",
+                            "--cwd",
+                            self.config["local_repo"],
+                            "cat",
+                            "-r",
+                            rev,
+                            path,
+                        ]
                     )
                     .strip()
                     .decode("utf-8")
