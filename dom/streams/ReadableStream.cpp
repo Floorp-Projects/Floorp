@@ -367,9 +367,16 @@ class ReadableStreamFromAlgorithms final
 
     // Step 5. Let returnResult be Call(returnMethod.[[Value]], iterator, «
     // reason »).
+    JS::Rooted<JS::Value> reason(aCx, aReason.Value());
+    if (!JS_WrapValue(aCx, &reason)) {
+      JS_ClearPendingException(aCx);
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
     JS::Rooted<JS::Value> returnResult(aCx);
     if (!JS::Call(aCx, iterator, returnMethod,
-                  JS::HandleValueArray(aReason.Value()), &returnResult)) {
+                  JS::HandleValueArray(reason), &returnResult)) {
       // Step 6. If returnResult is an abrupt completion, return a promise
       // rejected with returnResult.[[Value]].
       aRv.StealExceptionFromJSContext(aCx);
