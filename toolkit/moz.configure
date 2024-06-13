@@ -3353,7 +3353,7 @@ with only_when(compile_environment):
     set_config("MOZ_TREE_PIXMAN", True, when=in_tree_pixman)
     set_define("MOZ_TREE_PIXMAN", True, when=in_tree_pixman)
 
-    pkg_check_modules("MOZ_PIXMAN", "pixman-1 >= 0.36.0", when="--enable-system-pixman")
+    pkg_check_modules("MOZ_PIXMAN", "pixman-1 >= 0.40.0", when="--enable-system-pixman")
     # Set MOZ_PIXMAN_CFLAGS to an explicit empty value when --enable-system-pixman is *not* used,
     # for layout/style/extra-bindgen-flags
     set_config("MOZ_PIXMAN_CFLAGS", [], when=in_tree_pixman)
