@@ -344,6 +344,7 @@ bool PowPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   if (power->isToDouble()) {
     MDefinition* input = power->toToDouble()->input();
     if (input->type() == MIRType::Int32) {
+      power->setImplicitlyUsedUnchecked();
       ins->replaceOperand(1, input);
       return true;
     }
