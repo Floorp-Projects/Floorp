@@ -42,6 +42,8 @@ skip-if = [
   "os == 'linux' && bits == 64 && os_version == '18.04'",  # Bug 1601460
 ]
 
+["browser_fullscreen-popup.js"]
+
 ["browser_fullscreen-sizemode.js"]
 
 ["browser_fullscreen-tab-close-race.js"]
