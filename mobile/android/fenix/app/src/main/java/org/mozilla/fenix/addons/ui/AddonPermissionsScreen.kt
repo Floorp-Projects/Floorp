@@ -65,6 +65,7 @@ fun AddonPermissionsScreen(
             items(items = permissions) { permission ->
                 TextListItem(
                     label = permission,
+                    maxLabelLines = Int.MAX_VALUE,
                 )
             }
         }
