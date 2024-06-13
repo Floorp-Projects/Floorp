@@ -85,6 +85,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
   #product = null;
 
   receiveMessage(message) {
+    if (this.browsingContext.usePrivateBrowsing) {
+      throw new Error("We should never be invoked in PBM.");
+    }
     switch (message.name) {
       case "ShoppingSidebar:UpdateProductURL":
         let { url, isReload } = message.data;
