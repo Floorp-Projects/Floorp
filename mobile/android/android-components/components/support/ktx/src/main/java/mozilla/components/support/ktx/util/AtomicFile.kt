@@ -8,10 +8,11 @@ import android.util.AtomicFile
 import android.util.JsonReader
 import android.util.JsonWriter
 import org.json.JSONException
+import java.io.BufferedWriter
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStreamWriter
+import java.io.Writer
 
 /**
  * Reads an [AtomicFile] and provides a deserialized version of its content.
@@ -77,17 +78,28 @@ inline fun <R> AtomicFile.readJSON(block: JsonReader.() -> R): R? {
 }
 
 /**
- * Opens the [AtomicFile] for writing and provides an [OutputStreamWriter] to [block] for writing
+ * Opens the [AtomicFile] for writing and provides an [Writer] to [block] for writing
  * directly to the file.
  *
  * At the end of [block] the writer will be flushed and the file closed.
  */
-inline fun AtomicFile.stream(block: (OutputStreamWriter) -> Unit): Boolean {
+inline fun AtomicFile.stream(block: (Writer) -> Unit): Boolean {
     var outputStream: FileOutputStream? = null
     return try {
         outputStream = startWrite()
 
-        outputStream.buffered().writer().apply {
+        // OutputStreamWriter does charset conversion. On Android it has a
+        // large amount of fixed overhead because it does conversion using ICU
+        // via JNI and a lot of time is spent in ReleaseByteArray,
+        // GetByteArrayElements and ReleaseArrayElements.  We amortize this
+        // cost by using a BufferedWriter.
+        //
+        // It would probably be better to have a UTF8Writer that could do the
+        // conversion cheaply without having to add additional buffering, but
+        // this will suffice for now.
+        val writer = BufferedWriter(outputStream.buffered().writer())
+
+        writer.apply {
             block(this)
             flush()
         }
