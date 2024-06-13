@@ -43,6 +43,9 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
   }
 
   async receiveMessage(message) {
+    if (this.browsingContext.usePrivateBrowsing) {
+      throw new Error("We should never be invoked in PBM.");
+    }
     switch (message.name) {
       case "GetProductURL":
         let sidebarBrowser = this.browsingContext.top.embedderElement;
@@ -168,6 +171,12 @@ class ShoppingSidebarManagerClass {
   #initialized = false;
   #everyWindowCallbackId = `shopping-${Services.uuid.generateUUID()}`;
 
+  // Public API methods - these check that we are not in private browsing
+  // mode. (It might be nice to eventually shift pref checks to the public
+  // API, too.)
+  //
+  // Note that any refactoring should preserve the PBM checks in public APIs.
+
   ensureInitialized() {
     if (this.#initialized) {
       return;
@@ -220,6 +229,10 @@ class ShoppingSidebarManagerClass {
     this.enabled = lazy.NimbusFeatures.shopping2023.getVariable("enabled");
 
     for (let window of lazy.BrowserWindowTracker.orderedWindows) {
+      let isPBM = lazy.PrivateBrowsingUtils.isWindowPrivate(window);
+      if (isPBM) {
+        continue;
+      }
       this.updateSidebarVisibilityForWindow(window);
     }
   }
@@ -230,6 +243,11 @@ class ShoppingSidebarManagerClass {
     }
 
     if (!window.gBrowser) {
+      return;
+    }
+
+    let isPBM = lazy.PrivateBrowsingUtils.isWindowPrivate(window);
+    if (isPBM) {
       return;
     }
 
@@ -253,6 +271,54 @@ class ShoppingSidebarManagerClass {
     let { selectedBrowser, currentURI } = window.gBrowser;
     this._maybeToggleSidebar(selectedBrowser, currentURI, 0, false);
   }
+
+  /**
+   * Called by TabsProgressListener whenever any browser navigates from one
+   * URL to another.
+   * Note that this includes hash changes / pushState navigations, because
+   * those can be significant for us.
+   */
+  onLocationChange(aBrowser, aLocationURI, aFlags) {
+    let isPBM = lazy.PrivateBrowsingUtils.isWindowPrivate(aBrowser.ownerGlobal);
+    if (isPBM) {
+      return;
+    }
+
+    lazy.ShoppingUtils.onLocationChange(aLocationURI, aFlags);
+
+    this._maybeToggleButton(aBrowser.getTabBrowser());
+    this._maybeToggleSidebar(aBrowser, aLocationURI, aFlags, true);
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "TabSelect": {
+        if (!this.enabled) {
+          return;
+        }
+        this.updateSidebarVisibility();
+        if (event.detail?.previousTab.linkedBrowser) {
+          this._updateBCActiveness(event.detail.previousTab.linkedBrowser);
+        }
+        break;
+      }
+      case "visibilitychange": {
+        if (!this.enabled) {
+          return;
+        }
+        let { gBrowser } = event.target.ownerGlobal.top;
+        if (!gBrowser) {
+          return;
+        }
+        this.updateSidebarVisibilityForWindow(event.target.ownerGlobal.top);
+        this._updateBCActiveness(gBrowser.selectedBrowser);
+      }
+    }
+  }
+
+  // Private API methods - these assume we are not in private browsing
+  // mode. (It might be nice to eventually shift pref checks to the public
+  // API, too.)
 
   _maybeToggleSidebar(aBrowser, aLocationURI, aFlags, aIsNavigation) {
     let gBrowser = aBrowser.getTabBrowser();
@@ -379,50 +445,6 @@ class ShoppingSidebarManagerClass {
       ? "shopping-sidebar-close-button2"
       : "shopping-sidebar-open-button2";
     document.l10n.setAttributes(button, l10nId);
-  }
-
-  /**
-   * Called by TabsProgressListener whenever any browser navigates from one
-   * URL to another.
-   * Note that this includes hash changes / pushState navigations, because
-   * those can be significant for us.
-   */
-  onLocationChange(aBrowser, aLocationURI, aFlags) {
-    let isPBM = lazy.PrivateBrowsingUtils.isWindowPrivate(aBrowser.ownerGlobal);
-    if (isPBM) {
-      return;
-    }
-
-    lazy.ShoppingUtils.onLocationChange(aLocationURI, aFlags);
-
-    this._maybeToggleButton(aBrowser.getTabBrowser());
-    this._maybeToggleSidebar(aBrowser, aLocationURI, aFlags, true);
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "TabSelect": {
-        if (!this.enabled) {
-          return;
-        }
-        this.updateSidebarVisibility();
-        if (event.detail?.previousTab.linkedBrowser) {
-          this._updateBCActiveness(event.detail.previousTab.linkedBrowser);
-        }
-        break;
-      }
-      case "visibilitychange": {
-        if (!this.enabled) {
-          return;
-        }
-        let { gBrowser } = event.target.ownerGlobal.top;
-        if (!gBrowser) {
-          return;
-        }
-        this.updateSidebarVisibilityForWindow(event.target.ownerGlobal.top);
-        this._updateBCActiveness(gBrowser.selectedBrowser);
-      }
-    }
   }
 }
 
