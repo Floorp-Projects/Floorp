@@ -13051,6 +13051,14 @@ easypanel.host
 // Submitted by <infracloudteam@namecheap.com>
 *.ewp.live
 
+// eDirect Corp. : https://hosting.url.com.tw/
+// Submitted by C.S. chang <cschang@corp.url.com.tw>
+twmail.cc
+twmail.net
+twmail.org
+mymailer.com.tw
+url.tw
+
 // Electromagnetic Field : https://www.emfcamp.org
 // Submitted by <noc@emfcamp.org>
 at.emf.camp
@@ -13069,7 +13077,7 @@ elementor.cool
 en-root.fr
 
 // Enalean SAS: https://www.enalean.com
-// Submitted by Thomas Cottier <thomas.cottier@enalean.com>
+// Submitted by Enalean Security Team <security@enalean.com>
 mytuleap.com
 tuleap-partners.com
 
@@ -13161,18 +13169,15 @@ us-2.evennode.com
 us-3.evennode.com
 us-4.evennode.com
 
+// Evervault : https://evervault.com
+// Submitted by Hannah Neary <engineering@evervault.com>
+relay.evervault.app
+relay.evervault.dev
+
 // Expo : https://expo.dev/
 // Submitted by James Ide <psl@expo.dev>
 expo.app
 staging.expo.app
-
-// eDirect Corp. : https://hosting.url.com.tw/
-// Submitted by C.S. chang <cschang@corp.url.com.tw>
-twmail.cc
-twmail.net
-twmail.org
-mymailer.com.tw
-url.tw
 
 // Fabrica Technologies, Inc. : https://www.fabrica.dev/
 // Submitted by Eric Jiang <eric@fabrica.dev>
@@ -14718,6 +14723,7 @@ pagexl.com
 // Submitted by Pierre Carrier <pc@rrier.ca>
 *.xmit.co
 xmit.dev
+madethis.site
 srv.us
 gh.srv.us
 gl.srv.us
@@ -15277,6 +15283,11 @@ sites.static.land
 // Storebase : https://www.storebase.io
 // Submitted by Tony Schirmer <tony@storebase.io>
 storebase.store
+
+// Strapi : https://strapi.io/
+// Submitted by Florent Baldino <security@strapi.io>
+strapiapp.com
+media.strapiapp.com
 
 // Strategic System Consulting (eApps Hosting): https://www.eapps.com/
 // Submitted by Alex Oancea <aoancea@cloudscale365.com>
