@@ -93,6 +93,8 @@ elif CONFIG['TARGET_CPU'] == 'arm':
             'pixman-arm-simd-asm.S',
             'pixman-arm-simd.c',
         ]
+    if CONFIG['HAVE_ARM_NEON'] or CONFIG['HAVE_ARM_SIMD']:
+        DEFINES['ASM_HAVE_SYNTAX_UNIFIED'] = True
     if CONFIG['OS_TARGET'] == 'Android':
         # For cpu-features.h
         LOCAL_INCLUDES += [
