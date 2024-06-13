@@ -22,6 +22,27 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
 const SETTINGS_FILENAME = "search.json.mozlz4";
 
 /**
+ * A map of engine ids to their previous names. These are required for
+ * ensuring that user's settings are correctly migrated for users upgrading
+ * from a settings file prior to settings version 7 (Firefox 108).
+ *
+ * @type {Map<string, string>}
+ */
+const ENGINE_ID_TO_OLD_NAME_MAP = new Map([
+  ["wikipedia@search.mozilla.orghy", "Wikipedia (hy)"],
+  ["wikipedia@search.mozilla.orgkn", "Wikipedia (kn)"],
+  ["wikipedia@search.mozilla.orglv", "Vikipēdija"],
+  ["wikipedia@search.mozilla.orgNO", "Wikipedia (no)"],
+  ["wikipedia@search.mozilla.orgel", "Wikipedia (el)"],
+  ["wikipedia@search.mozilla.orglt", "Wikipedia (lt)"],
+  ["wikipedia@search.mozilla.orgmy", "Wikipedia (my)"],
+  ["wikipedia@search.mozilla.orgpa", "Wikipedia (pa)"],
+  ["wikipedia@search.mozilla.orgpt", "Wikipedia (pt)"],
+  ["wikipedia@search.mozilla.orgsi", "Wikipedia (si)"],
+  ["wikipedia@search.mozilla.orgtr", "Wikipedia (tr)"],
+]);
+
+/**
  * This class manages the saves search settings.
  *
  * Global settings can be saved and obtained from this class via the
@@ -642,7 +663,18 @@ export class SearchSettings {
    */
   static findSettingsForEngine(settings, engineId, engineName) {
     if (settings.version <= 6) {
-      return settings.engines?.find(e => e._name == engineName);
+      let engineSettings = settings.engines?.find(e => e._name == engineName);
+      if (!engineSettings) {
+        // If we can't find the engine settings with the current name,
+        // see if there was an older name.
+        let oldEngineName = ENGINE_ID_TO_OLD_NAME_MAP.get(engineId);
+        if (oldEngineName) {
+          engineSettings = settings.engines?.find(
+            e => e._name == oldEngineName
+          );
+        }
+      }
+      return engineSettings;
     }
     return settings.engines?.find(e => e.id == engineId);
   }
