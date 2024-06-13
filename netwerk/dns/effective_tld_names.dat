@@ -13077,7 +13077,7 @@ elementor.cool
 en-root.fr
 
 // Enalean SAS: https://www.enalean.com
-// Submitted by Thomas Cottier <thomas.cottier@enalean.com>
+// Submitted by Enalean Security Team <security@enalean.com>
 mytuleap.com
 tuleap-partners.com
 
@@ -14723,6 +14723,7 @@ pagexl.com
 // Submitted by Pierre Carrier <pc@rrier.ca>
 *.xmit.co
 xmit.dev
+madethis.site
 srv.us
 gh.srv.us
 gl.srv.us
@@ -15282,6 +15283,11 @@ sites.static.land
 // Storebase : https://www.storebase.io
 // Submitted by Tony Schirmer <tony@storebase.io>
 storebase.store
+
+// Strapi : https://strapi.io/
+// Submitted by Florent Baldino <security@strapi.io>
+strapiapp.com
+media.strapiapp.com
 
 // Strategic System Consulting (eApps Hosting): https://www.eapps.com/
 // Submitted by Alex Oancea <aoancea@cloudscale365.com>
