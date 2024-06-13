@@ -75,6 +75,7 @@ EXPORTS.mozilla.dom.quota += [
     "StorageHelpers.h",
     "StreamUtils.h",
     "StringifyUtils.h",
+    "ThreadUtils.h",
     "UsageInfo.h",
 ]
 
@@ -125,6 +126,7 @@ UNIFIED_SOURCES += [
     "StorageOriginAttributes.cpp",
     "StreamUtils.cpp",
     "StringifyUtils.cpp",
+    "ThreadUtils.cpp",
 ]
 
 IPDL_SOURCES += [
