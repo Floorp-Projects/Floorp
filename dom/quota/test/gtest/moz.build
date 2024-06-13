@@ -34,6 +34,7 @@ UNIFIED_SOURCES = [
     "TestStorageOriginAttributes.cpp",
     "TestStringifyUtils.cpp",
     "TestTelemetry.cpp",
+    "TestThreadUtils.cpp",
     "TestUsageInfo.cpp",
 ]
 
