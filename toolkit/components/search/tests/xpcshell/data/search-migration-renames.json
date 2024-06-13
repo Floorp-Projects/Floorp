@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "buildID": "20121106",
+  "locale": "en-US",
+  "metaData": {},
+  "engines": [
+    {
+      "_name": "engine1",
+      "_metaData": {
+        "alias": "testAlias"
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (hy)",
+      "_metaData": {
+        "alias": "wikipedia-hy",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (kn)",
+      "_metaData": {
+        "alias": "wikipedia-kn",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Vikipēdija",
+      "_metaData": {
+        "alias": "wikipedia-lv",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (no)",
+      "_metaData": {
+        "alias": "wikipedia-NO",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (el)",
+      "_metaData": {
+        "alias": "wikipedia-el",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (lt)",
+      "_metaData": {
+        "alias": "wikipedia-lt",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (my)",
+      "_metaData": {
+        "alias": "wikipedia-my",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (pa)",
+      "_metaData": {
+        "alias": "wikipedia-pa",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (pt)",
+      "_metaData": {
+        "alias": "wikipedia-pt",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (si)",
+      "_metaData": {
+        "alias": "wikipedia-si",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "Wikipedia (tr)",
+      "_metaData": {
+        "alias": "wikipedia-tr",
+        "hidden": true
+      },
+      "_isAppProvided": true
+    }
+  ]
+}

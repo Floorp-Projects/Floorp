@@ -294,6 +294,10 @@ support-files = ["data/search_ignorelist.json"]
 
 ["test_settings_migration_loadPath.js"]
 
+["test_settings_migration_renames.js"]
+support-files = ["data/search-migration-renames.json"]
+prefs = ["browser.search.newSearchConfig.enabled=true"]
+
 ["test_settings_none.js"]
 
 ["test_settings_obsolete.js"]
