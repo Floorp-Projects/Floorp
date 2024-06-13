@@ -677,17 +677,17 @@ nsUnknownContentTypeDialog.prototype = {
       }
     }
     // When the length is unknown, contentLength would be -1
+    let value = typeString;
     if (this.mLauncher.contentLength >= 0) {
       let [size, unit] = DownloadUtils.convertByteUnits(
         this.mLauncher.contentLength
       );
-      type.value = this.dialogElement("strings").getFormattedString(
+      value = this.dialogElement("strings").getFormattedString(
         "orderedFileSizeWithType",
         [typeString, size, unit]
       );
-    } else {
-      type.value = typeString;
     }
+    type.textContent = value;
   },
 
   // Returns true if opening the default application makes sense.
