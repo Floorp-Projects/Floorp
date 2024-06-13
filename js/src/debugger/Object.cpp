@@ -1278,11 +1278,11 @@ bool DebuggerObject::CallData::createSource() {
     return false;
   }
 
-  Vector<Latin1Char> urlChars(cx);
-  if (!CopyStringToVector(cx, url, urlChars)) {
+  UniqueChars urlChars = JS_EncodeStringToUTF8(cx, url);
+  if (!urlChars) {
     return false;
   }
-  compileOptions.setFile((const char*)urlChars.begin());
+  compileOptions.setFile(urlChars.get());
 
   Vector<char16_t> sourceMapURLChars(cx);
   if (sourceMapURL) {
