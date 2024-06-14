@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2009, 2011, 2015, 2022-2023, D. R. Commander.
+ * Copyright (C) 2009, 2011, 2015, 2023, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -28,19 +28,18 @@
 
 INLINE
 LOCAL(void)
-ycc_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
-                         JDIMENSION input_row, _JSAMPARRAY output_buf,
+ycc_rgb_convert_internal(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
+                         JDIMENSION input_row, JSAMPARRAY output_buf,
                          int num_rows)
 {
-#if BITS_IN_JSAMPLE != 16
   my_cconvert_ptr cconvert = (my_cconvert_ptr)cinfo->cconvert;
   register int y, cb, cr;
-  register _JSAMPROW outptr;
-  register _JSAMPROW inptr0, inptr1, inptr2;
+  register JSAMPROW outptr;
+  register JSAMPROW inptr0, inptr1, inptr2;
   register JDIMENSION col;
   JDIMENSION num_cols = cinfo->output_width;
   /* copy these pointers into registers if possible */
-  register _JSAMPLE *range_limit = (_JSAMPLE *)cinfo->sample_range_limit;
+  register JSAMPLE *range_limit = cinfo->sample_range_limit;
   register int *Crrtab = cconvert->Cr_r_tab;
   register int *Cbbtab = cconvert->Cb_b_tab;
   register JLONG *Crgtab = cconvert->Cr_g_tab;
@@ -63,17 +62,14 @@ ycc_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
                               ((int)RIGHT_SHIFT(Cbgtab[cb] + Crgtab[cr],
                                                 SCALEBITS))];
       outptr[RGB_BLUE] =  range_limit[y + Cbbtab[cb]];
-      /* Set unused byte to _MAXJSAMPLE so it can be interpreted as an */
-      /* opaque alpha channel value */
+      /* Set unused byte to MAXJSAMPLE so it can be interpreted as an opaque */
+      /* alpha channel value */
 #ifdef RGB_ALPHA
-      outptr[RGB_ALPHA] = _MAXJSAMPLE;
+      outptr[RGB_ALPHA] = MAXJSAMPLE;
 #endif
       outptr += RGB_PIXELSIZE;
     }
   }
-#else
-  ERREXIT(cinfo, JERR_CONVERSION_NOTIMPL);
-#endif
 }
 
 
@@ -85,11 +81,11 @@ ycc_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
 
 INLINE
 LOCAL(void)
-gray_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
-                          JDIMENSION input_row, _JSAMPARRAY output_buf,
+gray_rgb_convert_internal(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
+                          JDIMENSION input_row, JSAMPARRAY output_buf,
                           int num_rows)
 {
-  register _JSAMPROW inptr, outptr;
+  register JSAMPROW inptr, outptr;
   register JDIMENSION col;
   JDIMENSION num_cols = cinfo->output_width;
 
@@ -98,10 +94,10 @@ gray_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
     outptr = *output_buf++;
     for (col = 0; col < num_cols; col++) {
       outptr[RGB_RED] = outptr[RGB_GREEN] = outptr[RGB_BLUE] = inptr[col];
-      /* Set unused byte to _MAXJSAMPLE so it can be interpreted as an */
-      /* opaque alpha channel value */
+      /* Set unused byte to MAXJSAMPLE so it can be interpreted as an opaque */
+      /* alpha channel value */
 #ifdef RGB_ALPHA
-      outptr[RGB_ALPHA] = _MAXJSAMPLE;
+      outptr[RGB_ALPHA] = MAXJSAMPLE;
 #endif
       outptr += RGB_PIXELSIZE;
     }
@@ -115,12 +111,12 @@ gray_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
 
 INLINE
 LOCAL(void)
-rgb_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
-                         JDIMENSION input_row, _JSAMPARRAY output_buf,
+rgb_rgb_convert_internal(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
+                         JDIMENSION input_row, JSAMPARRAY output_buf,
                          int num_rows)
 {
-  register _JSAMPROW inptr0, inptr1, inptr2;
-  register _JSAMPROW outptr;
+  register JSAMPROW inptr0, inptr1, inptr2;
+  register JSAMPROW outptr;
   register JDIMENSION col;
   JDIMENSION num_cols = cinfo->output_width;
 
@@ -134,10 +130,10 @@ rgb_rgb_convert_internal(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
       outptr[RGB_RED] = inptr0[col];
       outptr[RGB_GREEN] = inptr1[col];
       outptr[RGB_BLUE] = inptr2[col];
-      /* Set unused byte to _MAXJSAMPLE so it can be interpreted as an */
-      /* opaque alpha channel value */
+      /* Set unused byte to MAXJSAMPLE so it can be interpreted as an opaque */
+      /* alpha channel value */
 #ifdef RGB_ALPHA
-      outptr[RGB_ALPHA] = _MAXJSAMPLE;
+      outptr[RGB_ALPHA] = MAXJSAMPLE;
 #endif
       outptr += RGB_PIXELSIZE;
     }

@@ -2,10 +2,9 @@
 ; jsimdext.inc - common declarations
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
-; Copyright (C) 2010, 2016, 2018-2019, 2024, D. R. Commander.
+; Copyright (C) 2010, 2016, 2018-2019, D. R. Commander.
 ; Copyright (C) 2018, Matthieu Darbois.
 ; Copyright (C) 2018, Matthias Räncker.
-; Copyright (C) 2023, Aliaksiej Kandracienka.
 ;
 ; Based on the x86 SIMD extension for IJG JPEG library - version 1.02
 ;
@@ -75,14 +74,6 @@
 
 ; mark stack as non-executable
 section .note.GNU-stack noalloc noexec nowrite progbits
-
-%ifdef __CET__
-%ifdef __x86_64__
-section .note.gnu.property note alloc noexec align=8
-    dd 0x00000004, 0x00000010, 0x00000005, 0x00554e47
-    dd 0xc0000002, 0x00000004, 0x00000003, 0x00000000
-%endif
-%endif
 
 ; -- segment definition --
 ;
@@ -280,7 +271,7 @@ const_base:
 
 %define GOTOFF(got, sym)  (got) + (sym) - const_base
 
-%imacro GET_GOT 1
+%imacro get_GOT 1
     ; NOTE: this macro destroys ecx resister.
     call        %%geteip
     add         ecx, byte (%%ref - $)
@@ -312,7 +303,7 @@ const_base:
 
 %define GOTOFF(got, sym)  (got) + (sym) wrt ..gotoff
 
-%imacro GET_GOT 1
+%imacro get_GOT 1
     extern      GOT_SYMBOL
     call        %%geteip
     add         %1, GOT_SYMBOL + $$ - $ wrt ..gotpc
@@ -325,13 +316,13 @@ const_base:
 
 %endif    ; GOT_SYMBOL == _MACHO_PIC_ ----------------
 
-%imacro PUSHPIC 1.nolist
+%imacro pushpic 1.nolist
     push        %1
 %endmacro
-%imacro POPPIC  1.nolist
+%imacro poppic  1.nolist
     pop         %1
 %endmacro
-%imacro MOVPIC  2.nolist
+%imacro movpic  2.nolist
     mov         %1, %2
 %endmacro
 
@@ -339,13 +330,13 @@ const_base:
 
 %define GOTOFF(got, sym)  (sym)
 
-%imacro GET_GOT 1.nolist
+%imacro get_GOT 1.nolist
 %endmacro
-%imacro PUSHPIC 1.nolist
+%imacro pushpic 1.nolist
 %endmacro
-%imacro POPPIC  1.nolist
+%imacro poppic  1.nolist
 %endmacro
-%imacro MOVPIC  2.nolist
+%imacro movpic  2.nolist
 %endmacro
 
 %endif   ;  PIC -----------------------------------------
@@ -357,7 +348,7 @@ const_base:
 %define MSKLE(x, y)  (~(((y) & 0xFFFF) - ((x) & 0xFFFF)) >> 16)
 %define FILLB(b, n)  (($$-(b)) & ((n)-1))
 
-%imacro ALIGNX 1-2.nolist 0xFFFF
+%imacro alignx 1-2.nolist 0xFFFF
 %%bs: \
   times MSKLE(FILLB(%%bs, %1), %2) & MSKLE(16, FILLB($, %1)) & FILLB($, %1) \
         db 0x90                                      ; nop
@@ -379,7 +370,7 @@ const_base:
 
 ; Align the next data on {2,4,8,16,..}-byte boundary.
 ;
-%imacro ALIGNZ 1.nolist
+%imacro alignz 1.nolist
     align       %1, db 0                ; filling zeros
 %endmacro
 
@@ -387,7 +378,7 @@ const_base:
 
 %ifdef WIN64
 
-%imacro COLLECT_ARGS 1
+%imacro collect_args 1
     sub         rsp, SIZEOF_XMMWORD
     movaps      XMMWORD [rsp], xmm6
     sub         rsp, SIZEOF_XMMWORD
@@ -406,17 +397,17 @@ const_base:
 %endif
 %if %1 > 4
     push        r14
-    mov         r14, [rbp+48]
+    mov         r14, [rax+48]
 %endif
 %if %1 > 5
     push        r15
-    mov         r15, [rbp+56]
+    mov         r15, [rax+56]
 %endif
     push        rsi
     push        rdi
 %endmacro
 
-%imacro UNCOLLECT_ARGS 1
+%imacro uncollect_args 1
     pop         rdi
     pop         rsi
 %if %1 > 5
@@ -437,7 +428,7 @@ const_base:
     add         rsp, SIZEOF_XMMWORD
 %endmacro
 
-%imacro PUSH_XMM 1
+%imacro push_xmm 1
     sub         rsp, %1 * SIZEOF_XMMWORD
     movaps      XMMWORD [rsp+0*SIZEOF_XMMWORD], xmm8
 %if %1 > 1
@@ -451,7 +442,7 @@ const_base:
 %endif
 %endmacro
 
-%imacro POP_XMM 1
+%imacro pop_xmm 1
     movaps      xmm8, XMMWORD [rsp+0*SIZEOF_XMMWORD]
 %if %1 > 1
     movaps      xmm9, XMMWORD [rsp+1*SIZEOF_XMMWORD]
@@ -467,7 +458,7 @@ const_base:
 
 %else
 
-%imacro COLLECT_ARGS 1
+%imacro collect_args 1
     push        r10
     mov         r10, rdi
 %if %1 > 1
@@ -492,7 +483,7 @@ const_base:
 %endif
 %endmacro
 
-%imacro UNCOLLECT_ARGS 1
+%imacro uncollect_args 1
 %if %1 > 5
     pop         r15
 %endif
@@ -511,26 +502,13 @@ const_base:
     pop         r10
 %endmacro
 
-%imacro PUSH_XMM 1
+%imacro push_xmm 1
 %endmacro
 
-%imacro POP_XMM 1
+%imacro pop_xmm 1
 %endmacro
 
 %endif
-
-%endif
-
-%ifdef __CET__
-
-%imacro ENDBR64 0
-    dd 0xfa1e0ff3
-%endmacro
-
-%else
-
-%imacro ENDBR64 0
-%endmacro
 
 %endif
 

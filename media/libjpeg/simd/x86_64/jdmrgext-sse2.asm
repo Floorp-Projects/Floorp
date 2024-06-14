@@ -2,9 +2,8 @@
 ; jdmrgext.asm - merged upsampling/color conversion (64-bit SSE2)
 ;
 ; Copyright 2009, 2012 Pierre Ossman <ossman@cendio.se> for Cendio AB
-; Copyright (C) 2009, 2012, 2016, 2024, D. R. Commander.
+; Copyright (C) 2009, 2012, 2016, D. R. Commander.
 ; Copyright (C) 2018, Matthias Räncker.
-; Copyright (C) 2023, Aliaksiej Kandracienka.
 ;
 ; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
@@ -34,22 +33,21 @@
 ; r12d = JDIMENSION in_row_group_ctr
 ; r13 = JSAMPARRAY output_buf
 
-%define wk(i)   r15 - (WK_NUM - (i)) * SIZEOF_XMMWORD  ; xmmword wk[WK_NUM]
+%define wk(i)   rbp - (WK_NUM - (i)) * SIZEOF_XMMWORD  ; xmmword wk[WK_NUM]
 %define WK_NUM  3
 
     align       32
     GLOBAL_FUNCTION(jsimd_h2v1_merged_upsample_sse2)
 
 EXTN(jsimd_h2v1_merged_upsample_sse2):
-    ENDBR64
     push        rbp
-    mov         rbp, rsp
-    push        r15
+    mov         rax, rsp                     ; rax = original rbp
+    sub         rsp, byte 4
     and         rsp, byte (-SIZEOF_XMMWORD)  ; align to 128 bits
-    ; Allocate stack space for wk array.  r15 is used to access it.
-    mov         r15, rsp
-    sub         rsp, byte (SIZEOF_XMMWORD * WK_NUM)
-    COLLECT_ARGS 4
+    mov         [rsp], rax
+    mov         rbp, rsp                     ; rbp = aligned rbp
+    lea         rsp, [wk(0)]
+    collect_args 4
     push        rbx
 
     mov         ecx, r10d               ; col
@@ -423,9 +421,9 @@ EXTN(jsimd_h2v1_merged_upsample_sse2):
 
 .return:
     pop         rbx
-    UNCOLLECT_ARGS 4
-    lea         rsp, [rbp-8]
-    pop         r15
+    uncollect_args 4
+    mov         rsp, rbp                ; rsp <- aligned rbp
+    pop         rsp                     ; rsp <- original rbp
     pop         rbp
     ret
 
@@ -449,10 +447,10 @@ EXTN(jsimd_h2v1_merged_upsample_sse2):
     GLOBAL_FUNCTION(jsimd_h2v2_merged_upsample_sse2)
 
 EXTN(jsimd_h2v2_merged_upsample_sse2):
-    ENDBR64
     push        rbp
+    mov         rax, rsp
     mov         rbp, rsp
-    COLLECT_ARGS 4
+    collect_args 4
     push        rbx
 
     mov         eax, r10d
@@ -531,7 +529,7 @@ EXTN(jsimd_h2v2_merged_upsample_sse2):
     add         rsp, SIZEOF_JSAMPARRAY*4
 
     pop         rbx
-    UNCOLLECT_ARGS 4
+    uncollect_args 4
     pop         rbp
     ret
 

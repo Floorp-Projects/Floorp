@@ -17,10 +17,7 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
-#include "jsamplecomp.h"
 
-
-#if BITS_IN_JSAMPLE == 8
 
 /*
  * jpeg_zigzag_order[i] is the zigzag-order position of the i'th element
@@ -92,24 +89,19 @@ jround_up(long a, long b)
   return a - (a % b);
 }
 
-#endif /* BITS_IN_JSAMPLE == 8 */
-
-
-#if BITS_IN_JSAMPLE != 16 || \
-    defined(C_LOSSLESS_SUPPORTED) || defined(D_LOSSLESS_SUPPORTED)
 
 GLOBAL(void)
-_jcopy_sample_rows(_JSAMPARRAY input_array, int source_row,
-                   _JSAMPARRAY output_array, int dest_row, int num_rows,
-                   JDIMENSION num_cols)
+jcopy_sample_rows(JSAMPARRAY input_array, int source_row,
+                  JSAMPARRAY output_array, int dest_row, int num_rows,
+                  JDIMENSION num_cols)
 /* Copy some rows of samples from one place to another.
  * num_rows rows are copied from input_array[source_row++]
  * to output_array[dest_row++]; these areas may overlap for duplication.
  * The source and destination arrays must be at least as wide as num_cols.
  */
 {
-  register _JSAMPROW inptr, outptr;
-  register size_t count = (size_t)(num_cols * sizeof(_JSAMPLE));
+  register JSAMPROW inptr, outptr;
+  register size_t count = (size_t)(num_cols * sizeof(JSAMPLE));
   register int row;
 
   input_array += source_row;
@@ -122,11 +114,6 @@ _jcopy_sample_rows(_JSAMPARRAY input_array, int source_row,
   }
 }
 
-#endif /* BITS_IN_JSAMPLE != 16 ||
-          defined(C_LOSSLESS_SUPPORTED) || defined(D_LOSSLESS_SUPPORTED) */
-
-
-#if BITS_IN_JSAMPLE == 8
 
 GLOBAL(void)
 jcopy_block_row(JBLOCKROW input_row, JBLOCKROW output_row,
@@ -144,5 +131,3 @@ jzero_far(void *target, size_t bytestozero)
 {
   memset(target, 0, bytestozero);
 }
-
-#endif /* BITS_IN_JSAMPLE == 8 */

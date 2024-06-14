@@ -7,22 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Graphics: ImageLib")
 
-# Not technically necessary, but set for consistency with the 12/16-bit ones.
-DEFINES['BITS_IN_JSAMPLE'] = 8
-
-# libjpeg-turbo 3 requires rebuilding some files multiple times in order to
-# pick up 12-bit and 16-bit support. Failure to do so results in missing
-# symbols during linking.
-#
-# Since we can't build the same files multiple times with different
-# BITS_IN_JSAMPLE values defined, we instead create separate moz.build files
-# for each configuration. The files must be kept in sync with JPEG12_SOURCES
-# and JPEG16_SOURCES from the upstream CMakeLists.txt.
-DIRS += [
-    "jpeg12",
-    "jpeg16",
-]
-
 EXPORTS += [
     'jconfig.h',
     'jerror.h',
@@ -41,12 +25,9 @@ SOURCES += [
     'jdcoefct.c',
     'jdcolor.c',
     'jddctmgr.c',
-    'jddiffct.c',
     'jdhuff.c',
     'jdicc.c',
     'jdinput.c',
-    'jdlhuff.c',
-    'jdlossls.c',
     'jdmainct.c',
     'jdmarker.c',
     'jdmaster.c',
@@ -65,7 +46,6 @@ SOURCES += [
     'jidctred.c',
     'jmemmgr.c',
     'jmemnobs.c',
-    'jpeg_nbits.c',
     'jquant1.c',
     'jquant2.c',
     'jutils.c',
@@ -78,12 +58,9 @@ SOURCES += [
     'jccoefct.c',
     'jccolor.c',
     'jcdctmgr.c',
-    'jcdiffct.c',
     'jchuff.c',
     'jcicc.c',
     'jcinit.c',
-    'jclhuff.c',
-    'jclossls.c',
     'jcmainct.c',
     'jcmarker.c',
     'jcmaster.c',
@@ -324,6 +301,10 @@ elif CONFIG['TARGET_CPU'].startswith('ppc'):
     ]
     for srcfile in ppc_vmx_sources:
         SOURCES[srcfile].flags += CONFIG['PPC_VMX_FLAGS']
+else: # No SIMD support?
+    SOURCES += [
+        'jsimd_none.c',
+    ]
 
 ASFLAGS += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
 

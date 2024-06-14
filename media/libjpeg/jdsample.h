@@ -3,22 +3,19 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * libjpeg-turbo Modifications:
- * Copyright (C) 2022, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  */
 
 #define JPEG_INTERNALS
 #include "jpeglib.h"
-#include "jsamplecomp.h"
 
 
 /* Pointer to routine to upsample a single component */
 typedef void (*upsample1_ptr) (j_decompress_ptr cinfo,
                                jpeg_component_info *compptr,
-                               _JSAMPARRAY input_data,
-                               _JSAMPARRAY *output_data_ptr);
+                               JSAMPARRAY input_data,
+                               JSAMPARRAY *output_data_ptr);
 
 /* Private subobject */
 
@@ -32,7 +29,7 @@ typedef struct {
    * ie do not need rescaling.  The corresponding entry of color_buf[] is
    * simply set to point to the input data array, thereby avoiding copying.
    */
-  _JSAMPARRAY color_buf[MAX_COMPONENTS];
+  JSAMPARRAY color_buf[MAX_COMPONENTS];
 
   /* Per-component upsampling method pointers */
   upsample1_ptr methods[MAX_COMPONENTS];

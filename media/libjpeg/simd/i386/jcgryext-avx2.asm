@@ -1,7 +1,7 @@
 ;
 ; jcgryext.asm - grayscale colorspace conversion (AVX2)
 ;
-; Copyright (C) 2011, 2016, 2024, D. R. Commander.
+; Copyright (C) 2011, 2016, D. R. Commander.
 ; Copyright (C) 2015, Intel Corporation.
 ;
 ; Based on the x86 SIMD extension for IJG JPEG library
@@ -49,15 +49,15 @@ EXTN(jsimd_rgb_gray_convert_avx2):
     mov         [esp], eax
     mov         ebp, esp                     ; ebp = aligned ebp
     lea         esp, [wk(0)]
-    PUSHPIC     eax                     ; make a room for GOT address
+    pushpic     eax                     ; make a room for GOT address
     push        ebx
 ;   push        ecx                     ; need not be preserved
 ;   push        edx                     ; need not be preserved
     push        esi
     push        edi
 
-    GET_GOT     ebx                     ; get GOT address
-    MOVPIC      POINTER [gotptr], ebx   ; save GOT address
+    get_GOT     ebx                     ; get GOT address
+    movpic      POINTER [gotptr], ebx   ; save GOT address
 
     mov         ecx, JDIMENSION [img_width(eax)]
     test        ecx, ecx
@@ -76,20 +76,20 @@ EXTN(jsimd_rgb_gray_convert_avx2):
     mov         eax, INT [num_rows(eax)]
     test        eax, eax
     jle         near .return
-    ALIGNX      16, 7
+    alignx      16, 7
 .rowloop:
-    PUSHPIC     eax
+    pushpic     eax
     push        edi
     push        esi
     push        ecx                     ; col
 
     mov         esi, JSAMPROW [esi]     ; inptr
     mov         edi, JSAMPROW [edi]     ; outptr0
-    MOVPIC      eax, POINTER [gotptr]   ; load GOT address (eax)
+    movpic      eax, POINTER [gotptr]   ; load GOT address (eax)
 
     cmp         ecx, byte SIZEOF_YMMWORD
     jae         near .columnloop
-    ALIGNX      16, 7
+    alignx      16, 7
 
 %if RGB_PIXELSIZE == 3  ; ---------------
 
@@ -146,7 +146,7 @@ EXTN(jsimd_rgb_gray_convert_avx2):
     vmovdqu     ymmA, YMMWORD [esi+0*SIZEOF_YMMWORD]
     vmovdqu     ymmF, YMMWORD [esi+1*SIZEOF_YMMWORD]
     jmp         short .rgb_gray_cnv
-    ALIGNX      16, 7
+    alignx      16, 7
 
 .columnloop:
     vmovdqu     ymmA, YMMWORD [esi+0*SIZEOF_YMMWORD]
@@ -270,7 +270,7 @@ EXTN(jsimd_rgb_gray_convert_avx2):
     vmovdqu     ymmA, YMMWORD [esi+0*SIZEOF_YMMWORD]
     vmovdqu     ymmF, YMMWORD [esi+1*SIZEOF_YMMWORD]
     jmp         short .rgb_gray_cnv
-    ALIGNX      16, 7
+    alignx      16, 7
 
 .columnloop:
     vmovdqu     ymmA, YMMWORD [esi+0*SIZEOF_YMMWORD]
@@ -433,7 +433,7 @@ EXTN(jsimd_rgb_gray_convert_avx2):
     pop         ecx                     ; col
     pop         esi
     pop         edi
-    POPPIC      eax
+    poppic      eax
 
     add         esi, byte SIZEOF_JSAMPROW  ; input_buf
     add         edi, byte SIZEOF_JSAMPROW
