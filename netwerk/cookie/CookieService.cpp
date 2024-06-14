@@ -1690,21 +1690,6 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
     // if on terminator, increment past & return true to process new cookie
     if (isterminator(*aIter)) {
       ++aIter;
-      while (aIter != aEndIter && isvalueseparator(*aIter)) {
-        ++aIter;
-      }
-      nsACString::const_char_iterator end = aIter - 1;
-      if (!isterminator(*end)) {
-        // The cookie isn't valid because we have multiple terminators or
-        // a terminator followed by a value separator. Add those invalid
-        // characters to the cookie string or value so it will be rejected.
-        if (aEqualsFound) {
-          aTokenString.Rebind(start, end);
-        } else {
-          aTokenValue.Rebind(start, end);
-        }
-        return false;
-      }
       return true;
     }
     // fall-through: aIter is on ';', increment and return false
