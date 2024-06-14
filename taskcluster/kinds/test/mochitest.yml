@@ -143,7 +143,7 @@ mochitest-plain:
             default: default
     instance-size:
         by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge-noscratch  # runs out of memory using 8GB
+            linux.*64-[at]san-qr/opt: xlarge-noscratch  # runs out of memory using 8GB
             default: default
     max-run-time: 3600
     allow-software-gl-layers: false
