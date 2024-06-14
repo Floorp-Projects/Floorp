@@ -153,8 +153,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Cyfrineiriau</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Llwybr byr cyfrineiriau</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -195,8 +193,6 @@
     <string name="browser_menu_refresh">Adnewyddu</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Atal</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ychwanegion</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Estyniadau</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -205,8 +201,6 @@
     <string name="browser_menu_discover_more_extensions">Darganfod rhagor o estyniadau</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Manylion cyfrif</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Dim ychwanegion yma</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Cymorth</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -223,8 +217,6 @@
     <string name="browser_menu_add_to_homescreen">Ychwanegu i’r sgrin Cartref</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">Ychwanegu i\'r sgrin Cartref…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Gosod</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Ailgydweddu</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -669,13 +661,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Yn gadael y rhaglen er mwyn gosod y newidiadau…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Ychwanegion</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Estyniadau</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Gosod ychwanegyn o ffeil</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Gosod estyniad o ffeil</string>
     <!-- Preference for notifications -->
@@ -701,8 +688,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Casgliad Ychwanegion Cyfaddas</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Casgliad Estyniadau Cyfaddas</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Iawn</string>
@@ -712,8 +697,6 @@
     <string name="customize_addon_collection_hint">Enw’r casgliad</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Perchennog y casgliad (ID Defnyddiwr)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Mae’r casgliad Ychwanegion wedi’i addasu. Yn gadael y rhaglen i osod y newidiadau…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Casgliad estyniadau wedi\'i newid. Yn gadael y rhaglen er mwyn gwneud newidiadau…</string>
@@ -772,36 +755,24 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Rhagor o bapurau wal</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Ychwanegion newydd ar gael nawr</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Estyniadau newydd ar gael nawr</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Edrychwch ar 100+ o estyniadau newydd sy’n gwneud Firefox yn dda i chi.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Archwiliwch yr ychwanegion</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Archwilio\'r estyniadau</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Mae ychwanegion wedi’u hanalluogi dros dro</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Mae\'r estyniadau wedi\'u hanalluogi dros dro</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Rhoddodd un neu fwy o ategion y gorau i weithio, gan wneud eich system yn ansefydlog. Ceisiodd %1$s ailgychwyn yr ychwanegyn(ion) yn aflwyddiannus.\n\nNi fydd ychwanegion yn cael eu hailddechrau yn ystod eich sesiwn gyfredol.\n\nGallai dileu neu analluogi ychwanegion ddatrys y broblem hon.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Rhoddodd un neu fwy o estyniadau y gorau i weithio, gan wneud eich system yn ansefydlog. Ceisiodd %1$s ailgychwyn yr estyniad(au) yn aflwyddiannus.\n\nNi fydd yr estyniadau\'n cael eu hailddechrau yn ystod eich sesiwn gyfredol.\n\nGall dileu neu analluogi estyniadau ddatrys y broblem hon.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Ceisiwch ailgychwyn ychwanegion</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Ceisiwch ailgychwyn yr estyniadau</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Parhau gydag ychwanegion wedi’u hanalluogi</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Parhau gydag estyniadau wedi\'u hanalluogi</string>
@@ -2499,9 +2470,6 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Ymddiheuriadau, nid ydym yn cefnogi %1$s eto.</string>
 
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Darllen rhagor</string>
-
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Wrthi\'n cyfieithu…</string>
 
@@ -2513,8 +2481,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Dewisiadau Cyfieithu</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Dewisiadau cyfieithu</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2709,16 +2675,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Helpwch ni i wneud Firefox yn well. Dim ond munud mae\'n ei gymryd.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Parhau</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Cwblhewch yr arolwg hwn</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Cwblhewch yr arolwg hwn</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Cwblhewch yr arolwg</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Hysbysiad Preifatrwydd</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Hysbysiad Preifatrwydd</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Hysbysiad preifatrwydd</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Cyflwyno</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Cau</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Mae\'r arolwg wedi\'i gwblhau</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Diolch am eich adborth!</string>
     <!-- Option for likert scale -->
@@ -2732,7 +2709,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Anfodlon Iawn</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">Dydw i ddim yn ei ddefnyddio</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Pa mor fodlon ydych chi gyda\'ch hafan Firefox?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Agor arolwg</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->

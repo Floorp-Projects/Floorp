@@ -153,8 +153,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">ססמאות</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">קיצור דרך לססמאות</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -195,8 +193,6 @@
     <string name="browser_menu_refresh">רענון</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">עצירה</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">תוספות</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">הרחבות</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -205,8 +201,6 @@
     <string name="browser_menu_discover_more_extensions">גילוי הרחבות נוספות</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">מידע על החשבון</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">אין תוספות כאן</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">עזרה</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -223,8 +217,6 @@
     <string name="browser_menu_add_to_homescreen">הוספה למסך הבית</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">הוספה למסך הבית…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">התקנה</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">סנכרון מחדש</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -666,13 +658,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">היישום ייסגר לצורך להחלת השינויים…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">תוספות</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">הרחבות</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">התקנת תוספת מקובץ</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">התקנת הרחבה מקובץ</string>
     <!-- Preference for notifications -->
@@ -699,8 +686,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">אוסף תוספות מותאם אישית</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">אוסף הרחבות מותאם אישית</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">אישור</string>
@@ -710,9 +695,6 @@
     <string name="customize_addon_collection_hint">שם האוסף</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">הבעלים של האוסף (מזהה משתמש)</string>
-
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">אוסף התוספות השתנה. היישום ייסגר לצורך להחלת השינויים…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">אוסף ההרחבות השתנה. היישום ייסגר לצורך להחלת השינויים…</string>
@@ -774,36 +756,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">עיון לאיתור טפטים נוספים</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">תוספות חדשות זמינות כעת</string>
-
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">הרחבות חדשות זמינות כעת</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">יש לנו יותר מ־100 הרחבות חדשות המאפשרות לך להפוך את Firefox לשלך.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">סיור בתוספות</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">עיון בהרחבות</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">התוספות מושבתות באופן זמני</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">ההרחבות מושבתות באופן זמני</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">תוספת אחת או יותר הפסיקו לעבוד, מה שהפך את המערכת שלך לבלתי יציבה. %1$s ניסתה להפעיל מחדש את התוספות ללא הצלחה.\n\nתוספות לא יופעלו מחדש במהלך ההפעלה הנוכחית שלך.\n\nהסרה או השבתה של תוספות עשויה לפתור בעיה זו.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">הרחבה אחת או יותר הפסיקו לעבוד, מה שהפך את המערכת שלך לבלתי יציבה. %1$s ניסתה להפעיל מחדש את ההרחבות ללא הצלחה.\n\nהרחבות לא יופעלו מחדש במהלך ההפעלה הנוכחית שלך.\n\nהסרה או השבתה של הרחבות עשויה לפתור בעיה זו.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">לנסות להפעיל מחדש את התוספות</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">לנסות להפעיל מחדש את ההרחבות</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">המשך עם התוספות מושבתות</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">המשך עם ההרחבות מושבתות</string>
@@ -2510,8 +2479,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">לא ניתן היה לטעון שפות. נא לבדוק את חיבור האינטרנט שלך ולנסות שוב.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">איננו תומכים ב%1$s עדיין, עמך הסליחה.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">מידע נוסף</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">בתהליך תרגום…</string>
@@ -2524,8 +2491,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">אפשרויות תרגום</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">אפשרויות תרגום</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2721,16 +2686,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">עזרו לנו לשפר את Firefox. זה ייקח רק דקה.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">המשך</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">נא להשלים את הסקר הזה</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">נא להשלים את הסקר הזה</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">נא למלא את הסקר</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">הצהרת פרטיות</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">הצהרת פרטיות</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">הצהרת פרטיות</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">שליחה</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">סגירה</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">הסקר הושלם</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">תודה על המשוב שלך!</string>
     <!-- Option for likert scale -->
@@ -2744,7 +2720,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">מאוד לא מרוצה</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">אין לי שימוש בזה</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">עד כמה הינך מרוצה מדף הבית שלך ב־Firefox?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">פתיחת סקר</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->

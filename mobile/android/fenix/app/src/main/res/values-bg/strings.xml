@@ -155,8 +155,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Пароли</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Пряк път за пароли</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -197,8 +195,6 @@
     <string name="browser_menu_refresh">Обновяване</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Спиране</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Добавки</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Разширения</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -207,8 +203,6 @@
     <string name="browser_menu_discover_more_extensions">Открийте още разширения</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Информация за профила</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Няма добавки</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Помощ</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -225,8 +219,6 @@
     <string name="browser_menu_add_to_homescreen">Добавяне към екрана</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">Добавяне към началния екран…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Инсталиране</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Повторно синхронизиране</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -670,13 +662,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Приложението се затваря за прилагане на промени…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Добавки</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Разширения</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Инсталиране на добавка от файл</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Инсталиране на разширение от файл</string>
     <!-- Preference for notifications -->
@@ -702,8 +689,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Персонализиран списък от добавки</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Колекция от персонализирани разширения</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Добре</string>
@@ -713,8 +698,6 @@
     <string name="customize_addon_collection_hint">Наименование на списък</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Собственик на списък (User ID)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Списъкът с добавки е променен. Излизане от приложението за прилагане на промените…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Колекцията от разширения е променена. Излизане от приложението за прилагане на промените…</string>
@@ -774,35 +757,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Разгледайте още тапети</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Налични са нови добавки</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Налични са нови разширения</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Вижте 100+ нови разширения, които ви позволяват да направите Firefox ваш.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Разгледайте добавките</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Разглеждане на разширения</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Добавките са временно изключени</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Разширенията са временно деактивирани</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Една или повече добавки са спрели да работят, като намаляват стабилността на системата. %1$s направи опит да ги рестартира, но без успех.\n\nТези добавки няма да работят в текущата сесия.\n\nПремахването или изключването на добавки може да реши този проблем.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Едно или повече разширения са спрели да работят, правейки системата ви нестабилна. %1$s направи неуспешен опит за рестарт на разширението(ите).\n\nРазширенията няма да бъдат рестартирани по време на текущата ви сесия.\n\nПремахването или деактивирането на разширенията може да отстрани този проблем.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Опит за рестарт на добавките</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Опитайте да рестартирате разширенията</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Изключване на добавките</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Продължете с изключени разширения</string>
@@ -2513,8 +2484,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">Езиците не можаха да бъдат заредени. Проверете връзката си с интернет и опитайте отново.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">За съжаление, все още не поддържаме %1$s.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Научете повече</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Превеждане…</string>
@@ -2527,8 +2496,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Настройки на превода</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Опции за превод</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2723,16 +2690,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Помогнете ни да направим Firefox по-добър. Отнема само минута.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Продължаване</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Попълнете тази анкета</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Попълнете тази анкета</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Моля, попълнете анкетата</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Политика на поверителност</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Политика на поверителност</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Политика на поверителност</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Изпращане</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Затваряне</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Проучването е завършено</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Благодарим ви за отзива!</string>
     <!-- Option for likert scale -->
@@ -2746,7 +2724,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Много недоволен</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">не го ползвам</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Доколко сте доволни от началната страница на Firefox?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Отваряне на анкета</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->

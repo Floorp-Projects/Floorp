@@ -156,8 +156,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Passwörter</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Passwörter-Verknüpfung</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -198,8 +196,6 @@
     <string name="browser_menu_refresh">Aktualisieren</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Anhalten</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Add-ons</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Erweiterungen</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -208,8 +204,6 @@
     <string name="browser_menu_discover_more_extensions">Weitere Erweiterungen entdecken</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontoinformationen</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Hier sind keine Add-ons</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Hilfe</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -226,8 +220,6 @@
     <string name="browser_menu_add_to_homescreen">Zum Startbildschirm hinzufügen</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">Zum Startbildschirm hinzufügen…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installieren</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Neu synchronisieren</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -675,13 +667,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Beenden der Anwendung, um Änderungen zu übernehmen…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Add-ons</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Erweiterungen</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Add-on aus Datei installieren</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Erweiterung aus Datei installieren</string>
     <!-- Preference for notifications -->
@@ -707,8 +694,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Benutzerdefinierte Add-on-Sammlung</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Benutzerdefinierte Erweiterungssammlung</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
@@ -718,8 +703,6 @@
     <string name="customize_addon_collection_hint">Name der Sammlung</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Sammlungsbesitzer (Benutzer-ID)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Add-on-Sammlung geändert. Anwendung wird beendet, um Änderungen zu übernehmen…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Erweiterungssammlung geändert. Anwendung wird beendet, um Änderungen zu übernehmen…</string>
@@ -778,35 +761,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Entdecken Sie weitere Hintergrundbilder</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Neue Add-ons jetzt verfügbar</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Neue Erweiterungen sind jetzt verfügbar</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Sehen Sie sich über 100 neue Erweiterungen an, mit denen Sie Firefox an Ihre Bedürfnisse anpassen können.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Entdecken Sie weitere Add-ons</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Entdecken Sie Erweiterungen</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Add-ons sind temporär deaktiviert</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Erweiterungen sind temporär deaktiviert</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Ein oder mehrere Add-ons funktionieren nicht mehr und machen Ihr System instabil. %1$s hat erfolglos versucht, das Add-on oder die Add-ons neu zu starten.\n\nAdd-ons werden während Ihrer aktuellen Sitzung nicht neu gestartet.\n\nEntfernen oder Deaktivieren von Add-ons kann dieses Problem beheben.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Eine oder mehrere Erweiterungen funktionieren nicht mehr und machen Ihr System instabil. %1$s hat erfolglos versucht, die Erweiterung(en) neu zu starten.\n\nErweiterungen werden während Ihrer aktuellen Sitzung nicht neu gestartet.\n\nEntfernen oder Deaktivieren von Erweiterungen kann dieses Problem beheben.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Versuchen, die Add-ons neu zu starten</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Versuchen Sie, die Erweiterungen neu zu starten</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Mit deaktivierten Add-ons fortfahren</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Mit deaktivierten Erweiterungen fortfahren</string>
@@ -2532,8 +2503,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">Sprachen konnten nicht geladen werden. Überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Es tut uns leid, wir unterstützen %1$s noch nicht.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Weitere Informationen</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Wird übersetzt…</string>
@@ -2546,8 +2515,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Übersetzungsoptionen</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Übersetzungsoptionen</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2742,16 +2709,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Helfen Sie uns, Firefox zu verbessern. Es dauert nur eine Minute.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Weiter</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Diese Umfrage ausfüllen</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Diese Umfrage ausfüllen</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Bitte füllen Sie die Umfrage aus</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Datenschutzhinweis</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Datenschutzhinweis</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Datenschutzerklärung</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Absenden</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Schließen</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Umfrage abgeschlossen</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Danke für Ihr Feedback!</string>
     <!-- Option for likert scale -->
@@ -2765,7 +2743,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Sehr unzufrieden</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">Ich verwende sie nicht</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Wie zufrieden sind Sie mit Ihrer Firefox-Startseite?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Umfrage öffnen</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
