@@ -319,7 +319,14 @@ nsXMLContentSink::DidBuildModel(bool aTerminated) {
     mDocument->RemoveObserver(this);
     mIsDocumentObserver = false;
 
-    mDocument->EndLoad();
+    RefPtr<Document> doc = mDocument;
+    if (!mDeferredLayoutStart && doc->IsBeingUsedAsImage()) {
+      // Eagerly layout image documents, so that layout-triggered loads have a
+      // chance of blocking the load event, see bug 1901414.
+      doc->FlushPendingNotifications(FlushType::Layout);
+    }
+
+    doc->EndLoad();
 
     DropParserAndPerfHint();
   }
