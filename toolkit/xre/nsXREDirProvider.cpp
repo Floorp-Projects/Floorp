@@ -55,6 +55,9 @@
 #ifdef MOZ_THUNDERBIRD
 #  include "nsIPK11TokenDB.h"
 #  include "nsIPK11Token.h"
+#  ifdef XP_MACOSX
+#    include "MacApplicationDelegate.h"
+#  endif
 #endif
 
 #include <stdlib.h>
@@ -789,6 +792,11 @@ nsXREDirProvider::DoStartup() {
     if (!bgtaskMode &&
         mozilla::Preferences::GetBool(
             "security.prompt_for_master_password_on_startup", false)) {
+#  ifdef XP_MACOSX
+      // Ensure the application is initialized before the prompt is triggered.
+      // Note: calling InitializeMacApp more than once does nothing.
+      InitializeMacApp();
+#  endif
       // Prompt for the master password prior to opening application windows,
       // to avoid the race that triggers multiple prompts (see bug 177175).
       // We use this code until we have a better solution, possibly as
