@@ -26,7 +26,7 @@
 #include "jpeglib.h"
 #include "jdct.h"               /* Private declarations for DCT subsystem */
 #include "jsimddct.h"
-#include "jpegapicomp.h"
+#include "jpegcomp.h"
 
 
 /*
@@ -100,7 +100,7 @@ start_pass(j_decompress_ptr cinfo)
   int ci, i;
   jpeg_component_info *compptr;
   int method = 0;
-  _inverse_DCT_method_ptr method_ptr = NULL;
+  inverse_DCT_method_ptr method_ptr = NULL;
   JQUANT_TBL *qtbl;
 
   for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
@@ -109,46 +109,42 @@ start_pass(j_decompress_ptr cinfo)
     switch (compptr->_DCT_scaled_size) {
 #ifdef IDCT_SCALING_SUPPORTED
     case 1:
-      method_ptr = _jpeg_idct_1x1;
+      method_ptr = jpeg_idct_1x1;
       method = JDCT_ISLOW;      /* jidctred uses islow-style table */
       break;
     case 2:
-#ifdef WITH_SIMD
       if (jsimd_can_idct_2x2())
         method_ptr = jsimd_idct_2x2;
       else
-#endif
-        method_ptr = _jpeg_idct_2x2;
+        method_ptr = jpeg_idct_2x2;
       method = JDCT_ISLOW;      /* jidctred uses islow-style table */
       break;
     case 3:
-      method_ptr = _jpeg_idct_3x3;
+      method_ptr = jpeg_idct_3x3;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 4:
-#ifdef WITH_SIMD
       if (jsimd_can_idct_4x4())
         method_ptr = jsimd_idct_4x4;
       else
-#endif
-        method_ptr = _jpeg_idct_4x4;
+        method_ptr = jpeg_idct_4x4;
       method = JDCT_ISLOW;      /* jidctred uses islow-style table */
       break;
     case 5:
-      method_ptr = _jpeg_idct_5x5;
+      method_ptr = jpeg_idct_5x5;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 6:
-#if defined(WITH_SIMD) && defined(__mips__)
+#if defined(__mips__)
       if (jsimd_can_idct_6x6())
         method_ptr = jsimd_idct_6x6;
       else
 #endif
-      method_ptr = _jpeg_idct_6x6;
+      method_ptr = jpeg_idct_6x6;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 7:
-      method_ptr = _jpeg_idct_7x7;
+      method_ptr = jpeg_idct_7x7;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
 #endif
@@ -156,34 +152,28 @@ start_pass(j_decompress_ptr cinfo)
       switch (cinfo->dct_method) {
 #ifdef DCT_ISLOW_SUPPORTED
       case JDCT_ISLOW:
-#ifdef WITH_SIMD
         if (jsimd_can_idct_islow())
           method_ptr = jsimd_idct_islow;
         else
-#endif
-          method_ptr = _jpeg_idct_islow;
+          method_ptr = jpeg_idct_islow;
         method = JDCT_ISLOW;
         break;
 #endif
 #ifdef DCT_IFAST_SUPPORTED
       case JDCT_IFAST:
-#ifdef WITH_SIMD
         if (jsimd_can_idct_ifast())
           method_ptr = jsimd_idct_ifast;
         else
-#endif
-          method_ptr = _jpeg_idct_ifast;
+          method_ptr = jpeg_idct_ifast;
         method = JDCT_IFAST;
         break;
 #endif
 #ifdef DCT_FLOAT_SUPPORTED
       case JDCT_FLOAT:
-#ifdef WITH_SIMD
         if (jsimd_can_idct_float())
           method_ptr = jsimd_idct_float;
         else
-#endif
-          method_ptr = _jpeg_idct_float;
+          method_ptr = jpeg_idct_float;
         method = JDCT_FLOAT;
         break;
 #endif
@@ -194,40 +184,40 @@ start_pass(j_decompress_ptr cinfo)
       break;
 #ifdef IDCT_SCALING_SUPPORTED
     case 9:
-      method_ptr = _jpeg_idct_9x9;
+      method_ptr = jpeg_idct_9x9;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 10:
-      method_ptr = _jpeg_idct_10x10;
+      method_ptr = jpeg_idct_10x10;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 11:
-      method_ptr = _jpeg_idct_11x11;
+      method_ptr = jpeg_idct_11x11;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 12:
-#if defined(WITH_SIMD) && defined(__mips__)
+#if defined(__mips__)
       if (jsimd_can_idct_12x12())
         method_ptr = jsimd_idct_12x12;
       else
 #endif
-      method_ptr = _jpeg_idct_12x12;
+      method_ptr = jpeg_idct_12x12;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 13:
-      method_ptr = _jpeg_idct_13x13;
+      method_ptr = jpeg_idct_13x13;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 14:
-      method_ptr = _jpeg_idct_14x14;
+      method_ptr = jpeg_idct_14x14;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 15:
-      method_ptr = _jpeg_idct_15x15;
+      method_ptr = jpeg_idct_15x15;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 16:
-      method_ptr = _jpeg_idct_16x16;
+      method_ptr = jpeg_idct_16x16;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
 #endif
@@ -235,7 +225,7 @@ start_pass(j_decompress_ptr cinfo)
       ERREXIT1(cinfo, JERR_BAD_DCTSIZE, compptr->_DCT_scaled_size);
       break;
     }
-    idct->pub._inverse_DCT[ci] = method_ptr;
+    idct->pub.inverse_DCT[ci] = method_ptr;
     /* Create multiplier table from quant table.
      * However, we can skip this if the component is uninteresting
      * or if we already built the table.  Also, if no quant table
@@ -337,14 +327,11 @@ start_pass(j_decompress_ptr cinfo)
  */
 
 GLOBAL(void)
-_jinit_inverse_dct(j_decompress_ptr cinfo)
+jinit_inverse_dct(j_decompress_ptr cinfo)
 {
   my_idct_ptr idct;
   int ci;
   jpeg_component_info *compptr;
-
-  if (cinfo->data_precision != BITS_IN_JSAMPLE)
-    ERREXIT1(cinfo, JERR_BAD_PRECISION, cinfo->data_precision);
 
   idct = (my_idct_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr)cinfo, JPOOL_IMAGE,
