@@ -1162,3 +1162,7 @@ mochitest-remote:
         extra-options:
             - --setpref=remote.log.level=Trace
     virtualization: virtual
+    instance-size:
+        by-test-platform:
+            linux.*64-asan(-qr)?/opt: xlarge-noscratch  # runs out of memory otherwise using 8GB
+            default: default
