@@ -723,7 +723,7 @@
     <string name="cookie_banner_exception_panel_title_state_off_for_site">להשבית צמצום כרזות עוגיות לאתר %1$s?</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_on_for_site">‏%1$s ינקה את העוגיות של אתר זה וירענן את הדף. ניקוי כל העוגית עשוי לנתק את החשבון שלך מהאתר או לרוקן את עגלת הקניות שלך.</string>
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">‏%1$s ינקה את העוגיות של אתר זה וירענן את הדף. ניקוי כל העוגיות עשוי לנתק את החשבון שלך מהאתר או לרוקן את עגלת הקניות שלך.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">‏%1$s יכול לנסות לדחות באופן אוטומטי בקשות כרזות עוגיות.</string>

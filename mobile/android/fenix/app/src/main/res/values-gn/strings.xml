@@ -157,8 +157,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Ñe’ẽñemi</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Ñe’ẽñemíme jeikepya’erã</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -199,8 +197,6 @@
     <string name="browser_menu_refresh">Mbohekopyahu</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Pyta</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Moĩmbaha</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Jepysokue</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -209,8 +205,6 @@
     <string name="browser_menu_discover_more_extensions">Ejuhuvéta jepysokue</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Mba’ete marandu</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ndaipóri moĩmbaha ápe</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pytyvõ</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -228,8 +222,6 @@
     <string name="browser_menu_add_to_homescreen">Embojuaju mba’erechaha ñepyrũgua</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">Embojuaju mba’erechaha ñepyrũgua…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Mohenda</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Mbojuajujey</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -677,13 +669,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Asẽma tembiporu’ígui iñambuekuaa hag̃ua…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Moĩmbaha</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Jepysokue</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Emohenda moĩmbaha marandurenda guive</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Emohenda jepysokue marandurenda guive</string>
     <!-- Preference for notifications -->
@@ -711,8 +698,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Moĩmbaha aty momba’epyre</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Jepysokue aty momba’epyre</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">MONEĨ</string>
@@ -722,9 +707,6 @@
     <string name="customize_addon_collection_hint">Ñembyatyha réra</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Ñembyatyha jára (poruhára ID)</string>
-
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Moĩmbaha aty moambuepyre. Embotyhína tembiporu’i emoambuekuaa hag̃ua…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Jepysokue aty moambuepyre. Embotyhína tembiporu’i emoambuekuaa hag̃ua…</string>
@@ -786,36 +768,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Ema’ẽjeyjey mba’erechaha ruguáre</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Tembiporu’i pyahu ojeporukuaámava</string>
-
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Jepysokue pyahu ojeporukuaámava</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Ehecha hetave 100 jepysokue pyahu ndeykekótava Firefox ñemboavápe.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Ejepovyvy moĩmbaháre</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Jepysokue jeporeka</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Umi tembiporu’i ojejoko sapy’ami</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Umi jepysokue ojejoko sapy’ami</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Peteĩ térã hetave tembiporu’i ndoikoéima, péicha rupi apopyvusu ndoku’eporãi. %1$s omoñepyrũsejey tembiporu’i ha ndaikatúi.\n\nUmi tembiporu’i ndoku’emo’ãi ko tembiapo aja.\n\nEipe’a térã embotývo umi tembiporu’i ikatu omyatyrõ ko apañuái.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Peteĩ térã hetave jepysokue ndoikovéima, péicha rupi apopyvusu ndoku’eporãi. %1$s omoñepyrũsejey jepysokue ha ndaikatúi.\n\nUmi jepysokue ndoku’emo’ãi ko tembiapo aja.\n\nEipe’a térã embotývo umi jepysokue ikatu omyatyrõ ko apañuái.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Emoñepyrũ umi tembiporu’i</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Emoñepyrũjey jepysokue</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Eku’ejey tembiporu’i jokopyréva ndive</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Eheja pe jepysokue jejokohápe</string>
@@ -2552,8 +2521,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">Nahenyhẽkuaái ñe’ẽnguéra. Ehechajey oikópa ne ñanduti ha eha’ãjey ag̃ave.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Rombyasy, noroykekói gueteri %1$s.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Kuaave</string>
 
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
@@ -2568,8 +2535,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Ñe’ẽasa poravopyrã</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Ñe’ẽasa poravopyrã</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2768,16 +2733,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Ore pytyvõ Firefox iporãve hag̃ua. Peteĩ aravo’ínte.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Ku’ejey</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Embohovái ko ñeporandu</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Embohovái ko ñeporandu</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Ikatúpa embohovái ñeporandu</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Marandu’i ñemiguáva</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Marandu’i ñemiguáva</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Marandu’i ñemiguáva</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Mondo</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Mboty</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Ojejapopáma ñeporandu</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">¡Aguyje nde jehaipyrére!</string>
     <!-- Option for likert scale -->
@@ -2792,7 +2768,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Nachembovy’ái</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">Ndaiporúi</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">¿Evy’ápa nde Firefox kuatiarogue ñepyrũha ndive?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Embojuruja ñeporandu</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->

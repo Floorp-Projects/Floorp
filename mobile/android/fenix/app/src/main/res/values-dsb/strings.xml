@@ -154,8 +154,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Gronidła</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Skrotconka gronidłow</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -196,8 +194,6 @@
     <string name="browser_menu_refresh">Aktualizěrowaś</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zastajiś</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Dodanki</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Rozšyrjenja</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -206,8 +202,6 @@
     <string name="browser_menu_discover_more_extensions">Dalšne rozšyrjenja namakaś</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontowe informacije</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Žedne dodanki how</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomoc</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -224,8 +218,6 @@
     <string name="browser_menu_add_to_homescreen">Startowej wobrazowce pśidaś</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">Startowej wobrazowce pśidaś…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Instalěrowaś</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Znowego synchronizěrowaś</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -667,13 +659,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Nałoženje se kóńcy, aby se změny wustatkowali …</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Dodanki</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Rozšyrjenja</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Dodank z dataje instalěrowaś</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Rozšyrjenje z dataje instalěrowaś</string>
     <!-- Preference for notifications -->
@@ -699,8 +686,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Swójska dodankowa zběrka</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Swójska zběrka rozšyrjenjow</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">W pórěźe</string>
@@ -710,8 +695,6 @@
     <string name="customize_addon_collection_hint">Mě zběrki</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Wobsejźaŕ zběrki (wužywaŕski ID)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Dodankowa zběrka jo se změniła. Nałoženje se kóńcy, aby se změny nałožyli…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Zběrka rozšyrjenjow jo se změniła. Nałoženje se kóńcy, aby se změny nałožyli…</string>
@@ -771,35 +754,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Wuslěźćo dalšne slězynowe wobraze</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Nowe dodanki něnto k dispoziciji</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Nowe rozšyrjenja něnto k dispoziciji</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Wopytajśo wěcej ako 100 nowych rozšyrjenjow, z kótarymiž móžośo Firefox swójim žycenjam pśiměriś.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Dodanki wuslěźiś</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Wuslěźćo rozšyrjenja</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Dodanki su nachylu znjemóžnjone</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Rozšyrjenja su nachylu znjemóžnjone</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Jaden dodank abo někotare dodanki su pśestali funkcioněrowaś a destabilizěruju waš system. %1$s jo njewuspěšnje wopytał, dodanki znowego startowaś.\n\nDodanki se za wašo aktualne pósejźenje znowego njestartuju.\n\nGaž dodanki wótwónoźujośo abo znjemóžnjaśo, buźo se toś ten problem snaź rozwězaś.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Jadno rozšyrjenje abo někotare rozšyrjenja su pśestali funkcioněrowaś a destabilizěruju waš system. %1$s jo njewuspěšnje wopytał, rozšyrjenja znowego startowaś.\n\nRozšyrjenja se za wašo aktualne pósejźenje znowego njestartuju.\n\nGaž rozšyrjenja wótwónoźujośo abo znjemóžnjaśo, buźo se toś ten problem snaź rozwězaś.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Wopytajśo dodanki znowego startowaś</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Wopytajśo rozšyrjenja znowego startowaś</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Ze znjemóžnjonymi dodankami pókšacowaś</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Ze znjemóžnjonymi rozšyrjenjami pókšacowaś</string>
@@ -2502,8 +2473,6 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <string name="translation_error_could_not_load_languages_warning_text">Rěcy njedaju se zacytaś. Pśeglědajśo swój internetny zwisk a wopytajśo hyšći raz.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">%1$s bóžko hyšći njepódpěramy.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Dalšne informacije</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Pśełožujo se…</string>
@@ -2516,8 +2485,6 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Pśełožowańske nastajenja</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Pśełožowańske nastajenja</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2713,16 +2680,27 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Pomagajśo nam, Firefox pólěpšowaś. Trajo jano jadnu minutu.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Dalej</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Toś to napšašowanje dokóńcyś</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Toś to napšašowanje dokóńcyś</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Pšosym dokóńcćo napšašowanje</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Powěźeńka priwatnosći</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Powěźeńka priwatnosći</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Powěźeńka priwatnosći</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Wótpósłaś</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Zacyniś</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Napšašowanje dokóńcone</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Źěkujomy se za waš komentar!</string>
     <!-- Option for likert scale -->
@@ -2736,7 +2714,11 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Wjelgin njespokojom</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">To njewužywam</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Kak spokojny sćo ze swójim startowym bokom Firefox?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Napšašowanje wócyniś</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->

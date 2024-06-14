@@ -159,8 +159,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Passord</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Passordsnarveg</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -201,8 +199,6 @@
     <string name="browser_menu_refresh">Oppdater</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Stopp</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Utvidingar</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -211,8 +207,6 @@
     <string name="browser_menu_discover_more_extensions">Oppdag fleire utvidingar</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontoinformasjon</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ingen tillegg her</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Hjelp</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -229,8 +223,6 @@
     <string name="browser_menu_add_to_homescreen">Legg til på startskjermen</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">Legg til på startskjermen…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installer</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synkroniser på nytt</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -674,13 +666,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Avsluttar applikasjonen for å leggje til endringar…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Utvidingar</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Installer utviding frå fil</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Installer utviding frå fil</string>
     <!-- Preference for notifications -->
@@ -707,8 +694,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Tilpassa tilleggssamling</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Tilpassa utvidings-samling</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
@@ -718,8 +703,6 @@
     <string name="customize_addon_collection_hint">Samlingsnamn</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Samlingseigar (brukar-ID)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Tilleggssamling endra. Avsluttar applikasjonen for å bruke endringar…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Utvidingssamling endra. Avsluttar applikasjonen for å leggje til endringar…</string>
@@ -779,37 +762,24 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Utforsk fleire bakgrunnsbilde</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Nye utvidingar tilgjengelege no</string>
-
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Nye utvidingar tilgjengelege no</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Sjekk ut 100+ nye utvidingar som lèt deg gjere Firefox til din eigen.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Utforsk utvidingar</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Utforsk utvidingar</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg er mellombels deaktivert</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Utvidinga er mellombels deaktivert</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Eitt eller fleire tillegg slutta å fungere, noko som gjorde systemet ditt ustabilt. %1$s prøvde utan hell å starte tillegget/tillegga på nytt.\n\nTillegg vil ikkje bli starta på nytt under gjeldande økt.\n\nDersom du fjernar eller deaktiverer tillegg, kan dette løyse problemet.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Ei eller flere utvidingar slutta å fungere, noko som gjorde systemet ditt ustabilt. %1$s prøvde utan hell å starte utvidinga(ne) på nytt.\n\nUtvidingane vil ikkje bli starta på nytt under gjeldande økt.\n\nViss du fjernar eller deaktiverer utvidingar, kan dette løyse problemet.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Prøv å starte tillegga på nytt</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Prøv å starte utvidingar på nytt</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Hald fram med deaktiverte tillegg</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Hald fram med utvidingar deaktiverte</string>
@@ -2527,8 +2497,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">Klarte ikkje å laste inn språk. Sjekk Internett-tilkoplinga di og prøv igjen.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Beklagar, vi stør ikkje %1$s enno.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Les meir</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Omset…</string>
@@ -2542,8 +2510,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Innstillingar for omsetjing</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Innstillingar for omsetting</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2742,16 +2708,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Hjelp oss med å gjere Firefox betre. Det tek berre eit lite minutt.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Hald fram</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Ver med i denne undersøkinga</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Ver med i denne undersøkinga</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Fullfør undersøkinga</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Personvernerklæring</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Personvernerklæring</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Personvernerklæring</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Send inn</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Lat att</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Undersøkinga er fullført</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Takk for tilbakemeldinga di!</string>
 
@@ -2766,7 +2743,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Veldig misfornøgd</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">Eg brukar henne ikkje</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Kor nøgd er du med startsida til Firefox?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Opne undersøking</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
