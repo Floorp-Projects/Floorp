@@ -175,6 +175,9 @@
 ; updated, but only if we're not the instance of PostUpdate that was started
 ; by the service, because this needs to run as the actual user. Also, don't do
 ; that if the installer was told not to register the agent task at all.
+; XXXbytesized - This also needs to un-register any scheduled tasks for the WDBA
+;                that were registered using elevation, but currently it does
+;                not. See Bugs 1638509 and 1902719.
 !ifdef MOZ_DEFAULT_BROWSER_AGENT
 ${If} $TmpVal == "HKCU"
   ClearErrors
@@ -184,10 +187,6 @@ ${If} $TmpVal == "HKCU"
   ${OrIf} ${Errors}
     ExecWait '"$INSTDIR\default-browser-agent.exe" register-task $AppUserModelID'
   ${EndIf}
-${ElseIf} $TmpVal == "HKLM"
-  ; If we're the privileged PostUpdate, make sure that the unprivileged one
-  ; will have permission to create a task by clearing out the old one first.
-  ExecWait '"$INSTDIR\default-browser-agent.exe" unregister-task $AppUserModelID'
 ${EndIf}
 !endif
 
