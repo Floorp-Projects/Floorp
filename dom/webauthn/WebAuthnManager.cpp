@@ -26,6 +26,8 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/JSONStringWriteFuncs.h"
+#include "mozilla/JSONWriter.h"
 
 #ifdef XP_WIN
 #  include "WinWebAuthnService.h"
@@ -65,28 +67,35 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 static nsresult AssembleClientData(
     const nsAString& aOrigin, const CryptoBuffer& aChallenge,
-    const nsAString& aType,
+    const nsACString& aType,
     const AuthenticationExtensionsClientInputs& aExtensions,
     /* out */ nsACString& aJsonOut) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsString challengeBase64;
-  nsresult rv = aChallenge.ToJwkBase64(challengeBase64);
+  nsAutoCString challengeBase64;
+  nsresult rv =
+      Base64URLEncode(aChallenge.Length(), aChallenge.Elements(),
+                      Base64URLEncodePaddingPolicy::Omit, challengeBase64);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
 
-  CollectedClientData clientDataObject;
-  clientDataObject.mType.Assign(aType);
-  clientDataObject.mChallenge.Assign(challengeBase64);
-  clientDataObject.mOrigin.Assign(aOrigin);
+  // Serialize the collected client data using the algorithm from
+  // https://www.w3.org/TR/webauthn-3/#clientdatajson-serialization.
+  // Please update the definition of CollectedClientData in
+  // dom/webidl/WebAuthentication.webidl when changes are made here.
+  JSONStringRefWriteFunc f(aJsonOut);
+  JSONWriter w(f, JSONWriter::CollectionStyle::SingleLineStyle);
+  w.Start();
+  // Steps 2 and 3
+  w.StringProperty("type", aType);
+  // Steps 4 and 5
+  w.StringProperty("challenge", challengeBase64);
+  // Steps 6 and 7
+  w.StringProperty("origin", NS_ConvertUTF16toUTF8(aOrigin));
+  // Steps 8 through 11 will be implemented in Bug 1901809.
+  w.End();
 
-  nsAutoString temp;
-  if (NS_WARN_IF(!clientDataObject.ToJSON(temp))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aJsonOut.Assign(NS_ConvertUTF16toUTF8(temp));
   return NS_OK;
 }
 
@@ -347,7 +356,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   }
 
   nsAutoCString clientDataJSON;
-  nsresult srv = AssembleClientData(origin, challenge, u"webauthn.create"_ns,
+  nsresult srv = AssembleClientData(origin, challenge, "webauthn.create"_ns,
                                     aOptions.mExtensions, clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
@@ -557,7 +566,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   }
 
   nsAutoCString clientDataJSON;
-  rv = AssembleClientData(origin, challenge, u"webauthn.get"_ns,
+  rv = AssembleClientData(origin, challenge, "webauthn.get"_ns,
                           aOptions.mExtensions, clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
