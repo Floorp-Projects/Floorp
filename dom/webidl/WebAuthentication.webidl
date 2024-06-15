@@ -212,18 +212,18 @@ dictionary AuthenticationExtensionsClientOutputs {
 
 typedef record<DOMString, DOMString> AuthenticationExtensionsAuthenticatorInputs;
 
-[GenerateToJSON]
-dictionary CollectedClientData {
-    required DOMString           type;
-    required DOMString           challenge;
-    required DOMString           origin;
-    TokenBinding                 tokenBinding;
-};
-
-dictionary TokenBinding {
-    required DOMString status;
-    DOMString id;
-};
+// The CollectedClientData dictionary must be serialized using the algorithm
+// from https://w3c.github.io/webauthn/#clientdatajson-serialization. Because
+// CollectedClientData is only consumed by the relying party, and because
+// [GenerateToJSON] does not produce the correct serialization algorithm, the
+// definition below is commented out. Please keep this definition in sync with
+// in AssembleClientData in dom/webauthn/WebAuthnManager.cpp.
+//
+// dictionary CollectedClientData {
+//     required DOMString           type;
+//     required DOMString           challenge;
+//     required DOMString           origin;
+// };
 
 dictionary PublicKeyCredentialDescriptor {
     required DOMString                    type;

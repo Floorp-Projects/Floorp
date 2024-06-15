@@ -58,10 +58,14 @@ add_task(async function() {
     ok(aCredInfo.response.clientDataJSON === aCredInfo.response.clientDataJSON, "PublicKeyCredential.Response.ClientDataJSON is SameObject");
     ok(aCredInfo.response.attestationObject === aCredInfo.response.attestationObject, "PublicKeyCredential.Response.AttestationObject is SameObject");
 
-    let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
-    is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
+    let clientDataJSON = buffer2string(aCredInfo.response.clientDataJSON);
+    let clientData = JSON.parse(clientDataJSON);
+    let challengeB64 = bytesToBase64UrlSafe(gCredentialChallenge);
+    let expectedClientDataJSON = '{"type":"webauthn.create","challenge":"'+challengeB64+'","origin":"'+window.location.origin+'"}';
+    is(clientData.challenge, challengeB64, "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.type, "webauthn.create", "Type is correct");
+    is(clientDataJSON, expectedClientDataJSON, "clientData is in the correct order for limited verification");
 
     let attestationObj = await webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject);
     // Make sure the RP ID hash matches what we calculate.
