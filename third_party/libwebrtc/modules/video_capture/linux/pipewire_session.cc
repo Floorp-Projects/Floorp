@@ -358,6 +358,13 @@ void PipeWireSession::OnRegistryGlobal(void* data,
                                        const spa_dict* props) {
   PipeWireSession* that = static_cast<PipeWireSession*>(data);
 
+  // Skip already added nodes to avoid duplicate camera entries
+  if (std::find_if(that->nodes_.begin(), that->nodes_.end(),
+                   [id](const PipeWireNode& node) {
+                     return node.id() == id;
+                   }) != that->nodes_.end())
+    return;
+
   if (type != absl::string_view(PW_TYPE_INTERFACE_Node))
     return;
 
@@ -376,12 +383,10 @@ void PipeWireSession::OnRegistryGlobal(void* data,
 void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
   PipeWireSession* that = static_cast<PipeWireSession*>(data);
 
-  for (auto it = that->nodes_.begin(); it != that->nodes().end(); ++it) {
-    if ((*it).id() == id) {
-      that->nodes_.erase(it);
-      break;
-    }
-  }
+  auto it = std::remove_if(
+      that->nodes_.begin(), that->nodes_.end(),
+      [id](const PipeWireNode& node) { return node.id() == id; });
+  that->nodes_.erase(it, that->nodes_.end());
 }
 
 void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
