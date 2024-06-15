@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "jacobcassidy.css-nesting-syntax-highlighting",
+    "ms-vscode.vscode-typescript-next",
+    "aaron-bond.better-comments",
+    "biomejs.biome",
+    "usernamehw.errorlens",
+    "christian-kohler.path-intellisense"
+  ]
+}

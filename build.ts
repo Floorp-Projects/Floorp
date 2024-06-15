@@ -10,8 +10,7 @@ import { injectXHTML } from "./scripts/inject/xhtml.js";
 import { injectJavascript } from "./scripts/inject/javascript.js";
 import { $ } from "execa";
 import decompress from "decompress";
-
-import logging from "selenium-webdriver/lib/logging.js";
+import puppeteer, { type Browser } from "puppeteer-core";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -45,9 +44,6 @@ async function decompressBin() {
       console.error(`${binTar} not found`);
       process.exit(1);
     }
-    // const decoder = new ZSTDDecoder();
-    // await decoder.init();
-    // const archive = Buffer.from(decoder.decode(await fs.readFile(binTar)));
     if (
       !(await $({ stdin: "ignore" })`zstd -v`).stderr.includes("Zstandard CLI")
     ) {
@@ -148,49 +144,8 @@ async function compile() {
       alias: [{ find: "@content", replacement: r("src/content") }],
     },
   });
-  const entries = await fg("./src/skin/**/*");
-
-  // for (const _entry of entries) {
-  //   const entry = _entry.replaceAll("\\", "/");
-  //   const stat = await fs.stat(entry);
-  //   if (stat.isFile()) {
-  //     if (entry.endsWith(".pcss")) {
-  //       // file that postcss process required
-  //       const result = await postcss([
-  //         autoprefixer,
-  //         postcssNested,
-  //         postcssSorting,
-  //       ]).process((await fs.readFile(entry)).toString(), {
-  //         from: entry,
-  //         to: entry.replace("src/", "dist/").replace(".pcss", ".css"),
-  //       });
-
-  //       await fs.mkdir(path.dirname(entry).replace("src/", "dist/noraneko/"), {
-  //         recursive: true,
-  //       });
-  //       await fs.writeFile(
-  //         entry.replace("src/", "dist/noraneko/").replace(".pcss", ".css"),
-  //         result.css,
-  //       );
-  //       if (result.map)
-  //         await fs.writeFile(
-  //           `${entry
-  //             .replace("src/", "dist/noraneko/")
-  //             .replace(".pcss", ".css")}.map`,
-  //           result.map.toString(),
-  //         );
-  //     } else {
-  //       // normal file
-  //       await fs.cp(entry, entry.replace("src/", "dist/noraneko/"));
-  //     }
-  //   }
-  // }
-
-  // await fs.cp("public", "dist", { recursive: true });
+  //TODO: load css with vite
 }
-
-import firefox from "selenium-webdriver/firefox.js";
-import { Browser, Builder, LogInspector, Options } from "selenium-webdriver";
 
 async function run() {
   await compile();
@@ -213,96 +168,49 @@ async function run() {
     // 可能性はある、まだ必要はない
   } catch {}
 
-  //const browser: Browser | null = null;
+  let browser: Browser | null = null;
   let watch_running = false;
 
-  const intended_close = false;
+  let intended_close = false;
 
   const watcher = chokidar
     .watch("src", { persistent: true })
     .on("all", async () => {
       if (watch_running) return;
       watch_running = true;
-      // if (browser) {
-      //   console.log("Browser Restarting...");
-      //   intended_close = true;
-      //   await browser.close();
+      if (browser) {
+        console.log("Browser Restarting...");
+        intended_close = true;
+        await browser.close();
 
-      //   await watcher.close();
-      //   await run();
-      // }
+        await watcher.close();
+        await run();
+      }
       watch_running = false;
     });
 
   //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
   await fs.mkdir("./dist/profile/test", { recursive: true });
 
-  const process = $(
-    {},
-  )`./dist/bin/noraneko.exe -wait-for-browser -no-remote --remote-debugging-port`;
-  const decoder = new TextDecoder("utf-8");
-  process.stdout.on("data", (d) => console.log(decoder.decode(d)));
-  process.stderr.on("data", (d) => console.error(decoder.decode(d)));
-  // const options = new firefox.Options();
-  // options.setBinary("./dist/bin/noraneko.exe");
-  // options.enableBidi();
-  // options.setPreference("browser.newtabpage.enabled", true);
-  // options.enableDebugger();
-  // const logPref = new logging.Preferences();
-  // logPref.setLevel("browser", logging.Level.ALL);
-  // options.setLoggingPrefs(logPref);
-  // const ff_service_builder = new firefox.ServiceBuilder();
-  // ff_service_builder.setStdio({ stdout: "inherit" });
+  browser = await puppeteer.launch({
+    headless: false,
+    protocol: "webDriverBiDi",
+    dumpio: true,
+    product: "firefox",
+    executablePath: binPathExe,
+    userDataDir: "./dist/profile/test",
+    extraPrefsFirefox: { "browser.newtabpage.enabled": true },
+    defaultViewport: { height: 0, width: 0 },
+  });
 
-  // // const logger = logging.getLogger();
-  // // logger.setLevel(logging.Level.ALL);
-  // // options.setLoggingPrefs(logger);
-  // // logging.installConsoleHandler();
-  // const driver = await new Builder()
-  //   .forBrowser(Browser.FIREFOX)
-  //   .setFirefoxOptions(options)
-  //   .setFirefoxService(ff_service_builder)
-  //   .build();
-  // const inspector = await LogInspector(driver);
+  await (await browser.pages())[0].goto("about:newtab");
 
-  // inspector.onConsoleEntry((e) => console.log(e));
-  // await inspector.onJavascriptLog((e) => console.log(e));
-  // await inspector.onJavascriptException((e) => console.error(e));
+  const page = await browser.newPage();
+  await page.goto("about:preferences");
 
-  // await driver.get("about:newtab");
-
-  // const ctx = await firefox.launchPersistentContext("./dist/profile/test", {
-  //   executablePath: binPathExe,
-  //   headless: false,
-  //   firefoxUserPrefs: { "browser.newtabpage.enabled": true },
-  //   logger: {
-  //     isEnabled: (name, severity) => true,
-  //     log: (name, severity, message, args) => console.log(`${name} ${message}`),
-  //   },
-  // });
-  // browser = await puppeteer.launch({
-  //   headless: false,
-  //   protocol: "webDriverBiDi",
-  //   dumpio: true,
-  //   product: "firefox",
-  //   executablePath: binPathExe,
-  //   userDataDir: "./dist/profile/test",
-  //   extraPrefsFirefox: { "browser.newtabpage.enabled": true },
-  //   defaultViewport: { height: 0, width: 0 },
-  // });
-
-  // (await browser.pages())[0].setViewport({ width: 0, height: 0 });
-  //   await browser.pages(),
-  // )[0]
-  // .goto("about:newtab");
-
-  // const page = await browser.newPage();
-  // await page.setViewport({ width: 0, height: 0 });
-  // await page.goto("about:preferences");
-
-  // .browser
-  //   .on("disconnected", () =>
-  //     if (!intended_close) exit(););
+  browser.on("disconnected", () => {
+    if (!intended_close) process.exit();
+  });
 }
 
 // run
