@@ -159,8 +159,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">비밀번호</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">비밀번호 바로 가기</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -201,8 +199,6 @@
     <string name="browser_menu_refresh">새로 고침</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">중지</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">확장 기능</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -211,8 +207,6 @@
     <string name="browser_menu_discover_more_extensions">더 많은 확장  기능 살펴보기</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">계정 정보</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능 없음</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">도움말</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -229,8 +223,6 @@
     <string name="browser_menu_add_to_homescreen">홈 화면에 추가</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">홈 화면에 추가…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">설치</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">다시 동기화</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -680,13 +672,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">확장 기능</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">파일에서 부가 기능 설치</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">파일에서 확장 기능 설치</string>
     <!-- Preference for notifications -->
@@ -713,8 +700,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">사용자 지정 부가 기능 모음집</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">사용자 지정 확장 기능 모음집</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">확인</string>
@@ -724,8 +709,6 @@
     <string name="customize_addon_collection_hint">모음집 이름</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">모음집 소유자 (사용자 ID)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능 모음집이 변경되었습니다. 변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">확장 기능 모음집이 변경되었습니다. 변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
@@ -785,36 +768,24 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">더 많은 배경 화면 살펴보기</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">새 부가 기능 지금 사용 가능</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">새 확장 기능 지금 사용 가능</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Firefox를 자신만의 것으로 만들 수 있는 100개 이상의 새로운 확장 기능을 확인해 보세요.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능 살펴보기</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">확장 기능 탐색하기</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능이 일시적으로 비활성화됨</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">확장 기능이 일시적으로 비활성화됨</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">하나 이상의 부가 기능이 작동을 중지하여 시스템이 불안정해졌습니다. %1$s가 부가 기능을 다시 시작하지 못했습니다.\n\n현재 세션 중에는 부가 기능이 다시 시작되지 않습니다.\n\n부가 기능을 제거하거나 비활성화하면 이 문제가 해결될 수도 있습니다.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">하나 이상의 확장 기능이 작동을 중지하여 시스템이 불안정해졌습니다. %1$s가 확장 기능을 다시 시작하지 못했습니다.\n\n현재 세션 중에는 확장 기능이 다시 시작되지 않습니다.\n\n확장 기능을 제거하거나 비활성화하면 이 문제가 해결될 수도 있습니다.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능을 다시 시작해 보기</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">확장 기능을 다시 시작해 보기</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능을 비활성화하고 계속</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">확장 기능을 비활성화하고 계속</string>
@@ -2555,8 +2526,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">언어를 로드할 수 없습니다. 인터넷 연결을 확인하고 다시 시도하세요.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">죄송합니다. 아직 %1$s 언어는 지원되지 않습니다.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">더 알아보기</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">번역 중…</string>
@@ -2569,8 +2538,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">번역 옵션</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">번역 옵션</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2769,17 +2736,28 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Firefox를 개선할 수 있도록 도와주세요. 단 1분밖에 걸리지 않습니다.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">계속</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">이 설문 조사를 완료하세요</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">이 설문 조사를 완료하세요</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">설문 조사를 완료해 주세요</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">개인정보처리방침</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">개인정보처리방침</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">개인정보처리방침</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">보내기</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">닫기</string>
 
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">설문 조사 완료</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">의견을 보내 주셔서 감사합니다!</string>
     <!-- Option for likert scale -->
@@ -2793,7 +2771,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">매우 불만족</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">사용하지 않음</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Firefox 홈페이지에 얼마나 만족하시나요?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">설문조사 열기</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->

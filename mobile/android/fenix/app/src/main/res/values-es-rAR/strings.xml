@@ -2708,14 +2708,14 @@
     <!-- Microsurvey -->
     <!-- Prompt view -->
     <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
-    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Ayudanos a mejorar Firefox. Solo toma un minuto.</string>
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Ayudanos a mejorar Firefox. Solo lleva un minuto.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continuar</string>
     <!-- Survey view -->
     <!-- The survey header -->
     <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Completá esta encuesta</string>
     <!-- The survey header -->
-    <string name="micro_survey_survey_header_2">Por favor completa la encuesta</string>
+    <string name="micro_survey_survey_header_2">Por favor completá la encuesta</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Nota de privacidad</string>
     <!-- The privacy notice link -->

@@ -158,8 +158,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">密码</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">密码快捷方式</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -200,8 +198,6 @@
     <string name="browser_menu_refresh">刷新</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">停止</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">附加组件</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">扩展</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -210,8 +206,6 @@
     <string name="browser_menu_discover_more_extensions">探索更多扩展</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">账户信息</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">这里没有附加组件</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">帮助</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -228,8 +222,6 @@
     <string name="browser_menu_add_to_homescreen">添加到主屏幕</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">添加到主屏幕…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">安装</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">重新同步</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -683,13 +675,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">退出应用程序以应用更改…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">附加组件</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">扩展</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">从文件安装附加组件</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">从文件安装扩展</string>
     <!-- Preference for notifications -->
@@ -715,8 +702,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">自定义附加组件收藏集</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">自定义扩展收藏集</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">确定</string>
@@ -726,8 +711,6 @@
     <string name="customize_addon_collection_hint">收藏集名称</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">收藏集所有者（用户 ID）</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">已更改附加组件收藏集设置。退出应用程序以应用更改…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">已更改扩展收藏集设置。正在退出应用程序以应用更改…</string>
@@ -788,36 +771,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">探索更多壁纸</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">附加组件上新</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">扩展上新</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">探索百余件新鲜扩展，让 Firefox 用起来更得心应手。</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">探索附加组件</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">发现更多扩展</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">附加组件已暂时被禁用</string>
-
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">扩展已被暂时禁用</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">一个或多个附加组件已停止运行，影响系统稳定。%1$s 曾尝试重启附加组件，但未能起效。\n\n当前会话中将不会再重启附加组件。\n\n移除或禁用附加组件也许可以解决此问题。</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">一个或多个扩展已停止运行，影响系统稳定。%1$s 曾尝试重启扩展，但未能起效。\n\n当前会话中将不会再重启扩展。\n\n移除或禁用扩展也许可以解决此问题。</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">尝试重启附加组件</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">尝试重启扩展</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">禁用附加组件并继续</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">禁用扩展并继续</string>
@@ -2561,8 +2531,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">无法加载语言包。请检查互联网连接，然后重试。</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">抱歉，我们尚未支持%1$s。</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">详细了解</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">正在翻译…</string>
@@ -2575,8 +2543,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">翻译设置</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">翻译选项</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2772,16 +2738,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">帮助我们改进 Firefox，只需占用您一分钟时间。</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">继续</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">填写问卷</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">填写问卷</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">请填写问卷</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">隐私声明</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">隐私声明</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">隐私声明</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">提交</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">关闭</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">填写完毕</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">感谢反馈！</string>
     <!-- Option for likert scale -->
@@ -2796,7 +2773,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">非常不满意</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">未曾使用</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">您对 Firefox 主页使用体验的满意度如何？</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">打开问卷</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
