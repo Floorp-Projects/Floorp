@@ -583,6 +583,10 @@ export class ScreenshotsOverlay {
         this.maybeLockFocus(event);
         return;
       case "Enter":
+        if (this.handleKeyDownOnButton(event)) {
+          return;
+        }
+
         if (this.hoverElementRegion.isRegionValid) {
           this.draggingReadyStart();
           this.draggingReadyDragEnd();
@@ -590,7 +594,10 @@ export class ScreenshotsOverlay {
         }
       // eslint-disable-next-line no-fallthrough
       case " ": {
-        this.handleKeyDownOnButton(event);
+        if (this.handleKeyDownOnButton(event)) {
+          return;
+        }
+
         if (Services.appinfo.isWayland) {
           return;
         }
@@ -1090,7 +1097,10 @@ export class ScreenshotsOverlay {
       case this.downloadButton:
         this.downloadSelectedRegion();
         break;
+      default:
+        return false;
     }
+    return true;
   }
 
   /**

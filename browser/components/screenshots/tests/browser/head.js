@@ -629,6 +629,17 @@ class ScreenshotsHelper {
     });
   }
 
+  async hoverTestPageElement(elementId = "testPageElement") {
+    let rect = await this.getTestPageElementRect(elementId);
+    let dims = await this.getContentDimensions();
+
+    let x = Math.floor(rect.x + dims.scrollX + rect.width / 2);
+    let y = Math.floor(rect.y + dims.scrollY + rect.height / 2);
+
+    mouse.move(x, y);
+    await this.waitForHoverElementRect(rect.width, rect.height);
+  }
+
   async clickTestPageElement(elementId = "testPageElement") {
     let rect = await this.getTestPageElementRect(elementId);
     let dims = await this.getContentDimensions();
