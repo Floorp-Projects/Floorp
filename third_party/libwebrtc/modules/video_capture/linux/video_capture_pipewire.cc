@@ -33,6 +33,10 @@ struct {
     {SPA_VIDEO_FORMAT_NV12, VideoType::kNV12},
     {SPA_VIDEO_FORMAT_YUY2, VideoType::kYUY2},
     {SPA_VIDEO_FORMAT_UYVY, VideoType::kUYVY},
+    // PipeWire is big-endian for the formats, while libyuv is little-endian
+    // This means that BGRA == ARGB and RGBA == ABGR
+    {SPA_VIDEO_FORMAT_BGRA, VideoType::kARGB},
+    {SPA_VIDEO_FORMAT_RGBA, VideoType::kABGR},
     {SPA_VIDEO_FORMAT_RGB, VideoType::kRGB24},
 };
 
@@ -302,6 +306,10 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
         break;
       case VideoType::kRGB24:
         stride = configured_capability_.width * 3;
+        break;
+      case VideoType::kARGB:
+      case VideoType::kABGR:
+        stride = configured_capability_.width * 4;
         break;
       default:
         RTC_LOG(LS_ERROR) << "Unsupported video format.";
