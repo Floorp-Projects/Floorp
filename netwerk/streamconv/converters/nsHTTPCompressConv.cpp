@@ -736,8 +736,15 @@ nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
                                                 uint64_t offset,
                                                 const char* buffer,
                                                 uint32_t count) {
-  LOG(("nsHttpCompressConv %p do_OnDataAvailable mDispatchToMainThread %d",
-       this, mDispatchToMainThread));
+  LOG(
+      ("nsHttpCompressConv %p do_OnDataAvailable mDispatchToMainThread %d "
+       "count %u",
+       this, mDispatchToMainThread, count));
+  if (count == 0) {
+    // Never send 0-byte OnDataAvailables; imglib at least barfs on them and
+    // they're not useful
+    return NS_OK;
+  }
   if (mDispatchToMainThread && !NS_IsMainThread()) {
     nsCOMPtr<nsIInputStream> stream;
     MOZ_TRY(NS_NewByteInputStream(getter_AddRefs(stream), Span(buffer, count),

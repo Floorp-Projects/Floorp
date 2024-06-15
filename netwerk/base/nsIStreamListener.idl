@@ -24,7 +24,8 @@ interface nsIStreamListener : nsIRequestObserver
      *        Number of bytes that were sent in previous onDataAvailable calls
      *        for this request. In other words, the sum of all previous count
      *        parameters.
-     * @param aCount number of bytes available in the stream
+     * @param aCount number of bytes available in the stream.  aCount may not
+     *        be 0.
      *
      * NOTE: The aInputStream parameter must implement readSegments.
      *
