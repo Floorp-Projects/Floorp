@@ -537,6 +537,8 @@ add_task(async function test_clickingButtonsWithKeyDown() {
         helper.triggerUIFromToolbar();
         await helper.waitForOverlay();
 
+        await helper.hoverTestPageElement();
+
         await SpecialPowers.spawn(browser, [], () => {
           let screenshotsChild = content.windowGlobalChild.getActor(
             "ScreenshotsComponent"
