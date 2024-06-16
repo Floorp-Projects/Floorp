@@ -144,7 +144,6 @@ async function compile() {
       alias: [{ find: "@content", replacement: r("src/content") }],
     },
   });
-  //TODO: load css with vite
 }
 
 async function run() {
