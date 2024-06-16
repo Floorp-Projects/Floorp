@@ -2,4 +2,6 @@
 <resources>
     <string name="mozac_feature_customtabs_exit_button">Turnar a la app precedenta</string>
     <string name="mozac_feature_customtabs_share_link">Cundivider la colliaziun</string>
+    <!-- Content description (not visible, for screen readers etc.): Description of the refresh button in the Custom Tabs toolbar -->
+    <string name="mozac_feature_customtabs_refresh_button">Actualisar</string>
 </resources>

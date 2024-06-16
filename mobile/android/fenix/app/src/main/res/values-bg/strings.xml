@@ -591,7 +591,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Профил</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Лента с инструменти</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Лента с инструменти</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Местоположение на адресната лента</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тема</string>
     <!-- Preference for customizing the home screen -->
@@ -898,10 +900,15 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Плъзване скрива лентата с инструменти</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Плъзване на лентата с инструменти настрани сменя раздели</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Плъзване на лентата с инструменти настрани сменя раздели</string>
 
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Плъзване нагоре на лентата с инструменти отваря раздели</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Превъртете, за да скриете адресната лента и лентата с инструменти</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Плъзнете адресната лента настрани, за да превключите разделите</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

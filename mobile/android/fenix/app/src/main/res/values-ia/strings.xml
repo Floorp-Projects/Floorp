@@ -596,7 +596,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Conto</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Barra de instrumentos</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Barra de instrumentos</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Position del barra del adresses</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Thema</string>
     <!-- Preference for customizing the home screen -->
@@ -919,11 +921,16 @@
 
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Glissa lateralmente le barra del instrumentos pro mutar schedas</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Glissa lateralmente le barra del instrumentos pro mutar schedas</string>
 
 
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Glissa verso le alto le barra del instrumentos pro aperir le schedas</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Rola pro celar le barra del adresses e le barra del utensiles</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Glissa lateralmente le barra del adresses pro mutar schedas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -2739,6 +2746,8 @@
     <!-- Survey view -->
     <!-- The survey header -->
     <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Completa iste inquesta</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Completa le sondage</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Aviso de confidentialitate</string>
     <!-- The privacy notice link -->
