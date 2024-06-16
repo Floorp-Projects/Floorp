@@ -16,8 +16,8 @@ Star me!
 
 1. `pnpm install`
 
-You can run `pnpm build` and `pnpm dev`
-`pnpm build` is just outputting files, and `pnpm dev` is debugging the code with file watch
+You can run `pnpm build` and `pnpm dev`  
+`pnpm build` is just outputting files, and `pnpm dev` is debugging the code with file watch  
 Kindly refer "How to debug" if you want to know how to use `pnpm dev`.
 
 ## How to debug
