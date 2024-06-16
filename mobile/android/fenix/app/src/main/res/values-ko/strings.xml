@@ -600,7 +600,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">계정</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">도구 모음</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">도구 모음</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">주소 표시줄 위치</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">테마</string>
     <!-- Preference for customizing the home screen -->
@@ -912,9 +914,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">스크롤해서 툴바 숨기기</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">도구 모음을 옆으로 밀어서 탭 전환</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">도구 모음을 옆으로 밀어서 탭 전환</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">도구 모음을 위로 밀어서 탭 열기</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">주소 표시줄 및 도구 모음을 숨기려면 스크롤</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">탭을 전환하려면 주소 표시줄을 옆으로 스와이프</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

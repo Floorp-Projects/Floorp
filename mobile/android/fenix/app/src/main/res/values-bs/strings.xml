@@ -150,8 +150,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Lozinke</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Prečica za lozinke</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -189,8 +187,6 @@
     <string name="browser_menu_refresh">Osvježi</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zaustavi</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Add-oni</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Ekstenzije</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -199,8 +195,6 @@
     <string name="browser_menu_discover_more_extensions">Otkrijte više ekstenzija</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Podaci o računu</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ovdje nema add-ona</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomoć</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -217,8 +211,6 @@
     <string name="browser_menu_add_to_homescreen">Dodaj na Početni ekran</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">Dodaj na početni ekran…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Instaliraj</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Ponovo sinhronizuj</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -582,7 +574,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Račun</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Alatna traka</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Alatna traka</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Lokacija u adresnoj traci</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -653,13 +647,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Napuštanje aplikacije radi primjene promjena…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Add-oni</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Ekstenzije</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Instaliraj dodatak iz datoteke</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Instalirajte ekstenziju iz datoteke</string>
     <!-- Preference for notifications -->
@@ -685,8 +674,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Kolekcija prilagođenih dodataka</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Kolekcija prilagođenih ekstenzija</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
@@ -696,8 +683,6 @@
     <string name="customize_addon_collection_hint">Naziv kolekcije</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Vlasnik kolekcije (korisnički ID)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Izmijenjena kolekcija dodataka. Napuštanje aplikacije radi primjene promjena…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Kolekcija ekstenzija je izmijenjena. Napuštanje aplikacije radi primjene promjena…</string>
@@ -754,36 +739,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Istražite više pozadina</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Novi dodaci su sada dostupni</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Sada su dostupne nove ekstenzije</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Pogledajte preko 100 novih ekstenzija koje vam omogućuju da Firefox učinite svojim.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Istražite dodatke</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Istražite ekstenzije</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Dodaci su privremeno onemogućeni</string>
-
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">Ekstenzije su privremeno onemogućene</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Jedan ili više dodataka su prestali da rade, čineći vaš sistem nestabilnim. %1$s je neuspješno pokušao ponovo pokrenuti dodatak(e).\n\nDodaci se neće ponovo pokrenuti tokom vaše trenutne sesije.\n\nUklanjanje ili onemogućavanje dodataka može riješiti ovaj problem.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Jedno ili više ekstenzija je prestalo da radi, što je vaš sistem učinilo nestabilnim. %1$s je neuspješno pokušao ponovo pokrenuti ekstenzije.\n\nEkstenzije se neće ponovo pokrenuti tokom vaše trenutne sesije.\n\nUklanjanje ili onemogućavanje ekstenzija može riješiti ovaj problem.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Pokušajte ponovo pokrenuti dodatke</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Pokušajte ponovo pokrenuti ekstenzije</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Nastavite s onemogućenim dodacima</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Nastavite s onemogućenim ekstenzijama</string>
@@ -909,9 +881,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Skrolujte da sakrijete alatnu traku</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Prevucite alatnu traku u stranu da promijenite tabove</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Prevucite alatnu traku u stranu da promijenite tabove</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Prevucite alatnu traku prema gore da biste otvorili tabove</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Skrolujte da sakrijete adresnu traku i traku s alatima</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Prevucite adresnu traku u stranu za promjenu tabova</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -2472,8 +2449,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">Učitavanje jezika nije uspjelo. Provjerite internetsku vezu i pokušajte ponovo.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Žao nam je, još uvijek ne podržavamo %1$s.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Saznajte više</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Prevođenje…</string>
@@ -2486,8 +2461,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Opcije prevođenja</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Opcije prevođenja</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2683,16 +2656,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Pomozite nam da učinimo Firefox boljim. Traje samo minut.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Nastavi</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Popunite ovu anketu</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Popunite ovu anketu</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Molimo popunite anketu</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Napomena o privatnosti</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Napomena o privatnosti</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Polica privatnosti</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Pošalji</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Zatvori</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Anketa završena</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Hvala na povratnim informacijama!</string>
     <!-- Option for likert scale -->
@@ -2706,7 +2690,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Vrlo nezadovoljan</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">Ne koristim ga</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Koliko ste zadovoljni svojom Firefox početnom stranicom?</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Otvori anketu</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->

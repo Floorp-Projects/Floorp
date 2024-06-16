@@ -588,7 +588,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Symbolowa rědka</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Symbolowa rědka</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Městno adresowego póla</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Drastwa</string>
     <!-- Preference for customizing the home screen -->
@@ -895,9 +897,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Kulniśo, aby symbolowu rědku schował</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Trějśo symbolowu rědku na bok, aby rejtariki pśešaltował</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Trějśo symbolowu rědku na bok, aby rejtariki pśešaltował</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Trějśo symbolowu rědku górjej, aby rejtariki wócynił</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Kulnuś, aby adresowe pólo a symbolowu rědku schował</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Trějśo adresowe pólo na bok, aby rejtariki pśešaltował</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

@@ -594,7 +594,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Conta</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Barra de ferramentas</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Barra de ferramentas</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Local da barra de endereços</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -901,9 +903,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Ocultar barra de ferramentas ao deslizar para cima</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Mudar de aba ao deslizar a barra de ferramentas para o lado</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Mudar de aba ao deslizar a barra de ferramentas para o lado</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Abrir abas ao deslizar a barra de ferramentas para cima</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Ocultar barra de endereços e ferramentas ao deslizar verticalmente</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Mudar de aba ao deslizar a barra de endereços para o lado</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -1766,7 +1773,7 @@
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Copiar</string>
     <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
-    <string name="browser_toolbar_long_press_popup_paste_and_go">Colar e ir</string>
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Colar e abrir</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Colar</string>
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->

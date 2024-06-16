@@ -584,7 +584,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Conta</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Barra de ferramentas</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Barra de ferramentas</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Localización da barra de enderezos</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -889,9 +891,14 @@
     <string name="preference_gestures_dynamic_toolbar">Desprazar para agochar a barra de ferramentas</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Desprazar a barra de ferramentas de lado para cambiar de lapela</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Desprazar a barra de ferramentas de lado para cambiar de lapela</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Desprazar a barra de ferramentas para abrir lapelas</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Desprácese para ocultar a barra de enderezos e a barra de ferramentas</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Pasa a barra de enderezos cara a lado para cambiar de pestana</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

@@ -598,7 +598,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Mba’ete</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Tembiporu renda</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Tembiporu renda</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Kundaharenda rupápe jeike</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma</string>
     <!-- Preference for customizing the home screen -->
@@ -911,9 +913,14 @@
     <string name="preference_gestures_dynamic_toolbar">Emongu’e emoñemi hag̃ua mba’erenda</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Eraha mba’erenda yke gotyo emoambue hag̃ua tendayke</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Eraha mba’erenda yke gotyo emoambue hag̃ua tendayke</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Eraha mba’erenda yvate gotyo embojuruja hag̃ua tendayke</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Eku’e eñomi hag̃ua kundaharenda ha tembiporu rupa</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Eraha mba’erenda yke gotyo emoambue hag̃ua tendayke</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

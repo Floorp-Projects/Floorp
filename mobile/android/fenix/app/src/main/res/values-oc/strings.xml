@@ -2704,6 +2704,10 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Picatz pas que de nombre entièr positius</string>
     <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
     <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Picatz un nombre superior a zèro</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Avètz depassat lo nombre maximal d’onglets (%1$s) que se pòt generar en una sola operacion</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Apondre als onglets actius</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2713,17 +2717,27 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Ajudatz-nos a melhorar Firefox. Aquò pren pas qu’una minuta.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Contunhar</string>
     <!-- Survey view -->
     <!-- The survey header -->
     <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Participar al sondatge</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Mercés de respondre al sondatge</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Politica de confidencialitat</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Politica de confidencialitat</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">Mandar</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Tampar</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Sondatge acabat</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Mercés per vòstre retorn !</string>
     <!-- Option for likert scale -->
@@ -2737,6 +2751,10 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Plan insatisfach</string>
 
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">O utilizi pas</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Sètz satisfach de vòstra pagina d’acuèlh Firefox ?</string>
     <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Dobrir lo sondatge</string>

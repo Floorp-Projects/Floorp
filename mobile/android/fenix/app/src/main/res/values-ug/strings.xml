@@ -155,8 +155,6 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">يېڭى شەخسىي بەتكۈچ</string>
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">ئىم</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">ئىم تېزلەتمىسى</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -195,8 +193,6 @@
     <string name="browser_menu_refresh">يېڭىلاش</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">توختا</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">قوشۇلما</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">كېڭەيتمە</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -205,8 +201,6 @@
     <string name="browser_menu_discover_more_extensions">تېخىمۇ كۆپ كېڭەيتمە بايقا</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">ھېسابات ئۇچۇرى</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">بۇ يەردە ھېچقانداق قوشۇلما يوق</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ياردەم</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -223,8 +217,6 @@
     <string name="browser_menu_add_to_homescreen">باش ئېكرانغا قوش</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">باش ئېكرانغا قوش…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">قاچىلاش</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">قايتا قەدەمداشلا</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -664,12 +656,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">ئۆزگەرتىشنى قوللىنىش ئۈچۈن ئەپتىن چېكىنىۋاتىدۇ…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">قوشۇلما</string>
     <!-- Preference for extensions -->
     <string name="preferences_extensions">كېڭەيتمە</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">ھۆججەتتىن قوشۇلما ئورنىتىدۇ</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">ھۆججەتتىن كېڭەيتىلمە ئورنىتىدۇ</string>
     <!-- Preference for notifications -->
@@ -694,8 +682,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ئىختىيارى قوشۇلما توپلىمى</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">ئىختىيارى كېڭەيتىلمە توپلىمى</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ھەئە</string>
@@ -706,8 +692,6 @@
     <string name="customize_addon_collection_hint">توپلام ئىسمى</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">توپلىغۇچى ئىگىسى (ئىشلەتكۈچى كىملىكى)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">قوشۇلما توپلىمى ئۆزگەرتىلدى. پىروگراممىنىڭ ئۆزگەرتىش ئىلتىماسىدىن ۋاز كېچىۋاتىدۇ…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">كېڭەيتىلمە توپلىمى ئۆزگەردى. ئۆزگەرتىشنى قوللىنىش ئۈچۈن پىروگراممىدىن چېكىنىۋاتىدۇ…</string>
@@ -766,36 +750,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">تېخىمۇ كۆپ تام قەغەزنى ئىزدەيدۇ</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">ھازىر يېڭى قوشۇلما بار</string>
-
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">ھازىر يېڭى كېڭەيتىلمە بار</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">ئۆزىڭىزنىڭ Firefox غا ئايلاندۇرىدىغان 100+ يېڭى كېڭەيتىلمىلەرنى تاپالايسىز.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">قوشۇلما ئىزدەش</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">كېڭەيتىلمە بايقاش</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">قوشۇلما ۋاقىتلىق چەكلەنگەن</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">كېڭەيتمە ۋاقىتلىق چەكلەنگەن</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">بىر ياكى بىر قانچە قوشۇلما ئىشلەشتىن توختاپ، سىستېمىنىڭ مۇقىملىقىغا تەسىر كۆرسەتتى. %1$s قوشۇلمىنى قايتا قوزغىتىشنى سىنىشى مەغلۇپ بولدى.\n\nقوشۇلما نۆۋەتتىكى سۆزلىشىشتە قايتا قوزغىتىلمايدۇ.\n\nبۇ مەسىلىنى قوشۇلمىنى چىقىرىۋېتىپ ياكى چەكلەپ ھەل قىلغىلى بولۇشى مۇمكىن.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">بىر ياكى بىر قانچە كېڭەيتىلمە ئىشلەشتىن توختاپ، سىستېمىڭىزنى مۇقىمسىزلاشتۇردى. %1$s كېڭەيتىلمىنى قايتا قوزغىتىشنى سىنىدى ئەمما ئۈنۈمى بولمىدى.\n\nنۆۋەتتىكى سۆزلىشىشتە كېڭەيتىلمە يەنە قايتا قوزغىتىلمايدۇ.\n\nكېڭەيتىلمە چىقىرىۋېتىلسە ياكى چەكلەنسە بۇ مەسىلە ئوڭشىلىشى مۇمكىن.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">قوشۇلمىنى قايتا قوزغىتىپ بېقىڭ</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">كېڭەيتىلمىنى قايتا قوزغىتىشنى سىناۋاتىدۇ</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">قوشۇلمىنى چەكلەپ داۋاملاشتۇرىدۇ</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">كېڭەيتىلمىنى چەكلەپ داۋاملاشتۇرىدۇ</string>
@@ -2492,8 +2463,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">تىلنى يۈكلىيەلمىدى. تور باغلىنىشىڭىزنى تەكشۈرۈپ قايتا سىناڭ.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">كەچۈرۈڭ، بىز تېخى %1$s نى قوللىمايمىز.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">تەپسىلاتى</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">تەرجىمە قىلىۋاتىدۇ…</string>
@@ -2506,8 +2475,6 @@
 
 
     <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">تەرجىمە تاللانمىلىرى</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">تەرجىمە تاللانمىسى</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
@@ -2705,16 +2672,27 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Firefox نى ياخشىلىشىمىزغا ياردەم قىلىڭ. بۇنىڭغا پەقەت بىر مىنۇتلا ۋاقىت كېتىدۇ.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">داۋاملاشتۇر</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">بۇ تەكشۈرۈشنى تاماملاڭ</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">بۇ تەكشۈرۈشنى تاماملاڭ</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">راي سىناشنى تاماملاڭ</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">شەخسىيەت ئۇقتۇرۇشى</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">شەخسىيەت ئۇقتۇرۇشى</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">شەخسىيەت ئۇقتۇرۇشى</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label">يوللا</string>
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">تاقا</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">راي سىناش تامام</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">قايتۇرما ئىنكاسىڭىزغا رەھمەت!</string>
     <!-- Option for likert scale -->
@@ -2729,7 +2707,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">بەك نارازى</string>
 
-    <!-- Microsurvey accessibility -->
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">ئىشلەتمەيمەن</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">سىزنىڭ Firefox ئىشلىتىشتىكى مەمنۇنلۇق تەسىراتىڭىز قانداق؟</string>
+    <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">راي سىناشنى ئاچ</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
