@@ -36,7 +36,7 @@
 #nav-bar {
   .toolbarbutton-1 {
     &#back-button {
-      list-style-image: url("chrome://noraneko/skin/floorp-fluerial/icons/arrow_back_FILL0_wght700_GRAD200_opsz48.svg");
+      list-style-image: url("../icons/arrow_back_FILL0_wght700_GRAD200_opsz48.svg");
     }
     &#forward-button {
       list-style-image: url("../icons/arrow_forward_FILL0_wght700_GRAD200_opsz48.svg");

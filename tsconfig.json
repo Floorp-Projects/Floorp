@@ -8,6 +8,7 @@
     "lib": ["es2022", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "target": "ESNext",
     "noEmit": true,
     "allowJs": true,
     "checkJs": true,

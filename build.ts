@@ -1,24 +1,19 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { ZSTDDecoder } from "zstddec";
-import decompress from "decompress";
 import fg from "fast-glob";
-import autoprefixer from "autoprefixer";
-import postcss from "postcss";
-import postcssNested from "postcss-nested";
-import postcssSorting from "postcss-sorting";
 import chokidar from "chokidar";
 import { build } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML } from "./scripts/inject/xhtml.js";
-import puppeteer from "puppeteer-core";
-import { exit } from "node:process";
-import type { Browser } from "puppeteer-core";
 import { injectJavascript } from "./scripts/inject/javascript.js";
+import { $ } from "execa";
+import decompress from "decompress";
+import puppeteer, { type Browser } from "puppeteer-core";
 
-const VERSION = "000";
+//? when the linux binary has published, I'll sync linux bin version
+const VERSION = process.platform === "win32" ? "001" : "000";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -31,10 +26,15 @@ const isExists = async (path: string) => {
     .catch(() => false);
 };
 
-const binTar = "bin.tar.zst";
+const binTar =
+  process.platform === "win32" ? "nora-win_x64-bin.tar.zst" : "bin.tar.zst";
 const binDir = "dist/bin";
-const binPath = path.join(binDir, "firefox");
+const binPath = path.join(
+  binDir,
+  process.platform === "win32" ? "noraneko" : "firefox",
+);
 const binPathExe = binPath + (process.platform === "win32" ? ".exe" : "");
+
 const binVersion = path.join(binDir, "nora.version.txt");
 
 async function decompressBin() {
@@ -44,10 +44,19 @@ async function decompressBin() {
       console.error(`${binTar} not found`);
       process.exit(1);
     }
-    const decoder = new ZSTDDecoder();
-    await decoder.init();
-    const archive = Buffer.from(decoder.decode(await fs.readFile(binTar)));
-    await decompress(archive, binDir);
+    if (
+      !(await $({ stdin: "ignore" })`zstd -v`).stderr.includes("Zstandard CLI")
+    ) {
+      //zstd not installed
+      console.error(`Please install zstd for decompressing ${binTar}`);
+      process.exit();
+    } else {
+      await $`zstd -d nora-win_x64-bin.tar.zst -o nora-bin-tmp.tar`;
+    }
+
+    await decompress("nora-bin-tmp.tar", "./dist/bin");
+    await fs.rm("nora-bin-tmp.tar");
+    //fs.readFile(binTar);
     console.log("decompress complete!");
     await fs.writeFile(binVersion, VERSION);
   } catch (e) {
@@ -58,6 +67,8 @@ async function decompressBin() {
 
 async function initBin() {
   const hasVersion = await isExists(binVersion);
+  const hasBin = await isExists(binPathExe);
+
   if (hasVersion) {
     const version = (await fs.readFile(binVersion)).toString();
     const mismatch = VERSION !== version;
@@ -66,18 +77,20 @@ async function initBin() {
       await fs.rm(binDir, { recursive: true });
       await fs.mkdir(binDir, { recursive: true });
       await decompressBin();
+      return;
     }
-    return;
+  } else {
+    if (hasBin) {
+      console.log(`bin exists, but version file not found, writing ${VERSION}`);
+      await fs.mkdir(binDir, { recursive: true });
+      await fs.writeFile(binVersion, VERSION);
+    }
   }
-
-  const hasBin = await isExists(binDir);
   if (!hasBin) {
+    console.log("There seems no bin. decompressing.");
+    await fs.mkdir(binDir, { recursive: true });
     await decompressBin();
-    return;
   }
-
-  console.log(`bin exists, but version file not found, writing ${VERSION}`);
-  await fs.writeFile(binVersion, VERSION);
 }
 
 async function compile() {
@@ -131,45 +144,6 @@ async function compile() {
       alias: [{ find: "@content", replacement: r("src/content") }],
     },
   });
-  const entries = await fg("./src/skin/**/*");
-
-  for (const _entry of entries) {
-    const entry = _entry.replaceAll("\\", "/");
-    const stat = await fs.stat(entry);
-    if (stat.isFile()) {
-      if (entry.endsWith(".pcss")) {
-        // file that postcss process required
-        const result = await postcss([
-          autoprefixer,
-          postcssNested,
-          postcssSorting,
-        ]).process((await fs.readFile(entry)).toString(), {
-          from: entry,
-          to: entry.replace("src/", "dist/").replace(".pcss", ".css"),
-        });
-
-        await fs.mkdir(path.dirname(entry).replace("src/", "dist/noraneko/"), {
-          recursive: true,
-        });
-        await fs.writeFile(
-          entry.replace("src/", "dist/noraneko/").replace(".pcss", ".css"),
-          result.css,
-        );
-        if (result.map)
-          await fs.writeFile(
-            `${entry
-              .replace("src/", "dist/noraneko/")
-              .replace(".pcss", ".css")}.map`,
-            result.map.toString(),
-          );
-      } else {
-        // normal file
-        await fs.cp(entry, entry.replace("src/", "dist/noraneko/"));
-      }
-    }
-  }
-
-  // await fs.cp("public", "dist", { recursive: true });
 }
 
 async function run() {
@@ -179,6 +153,7 @@ async function run() {
   await injectManifest();
   await injectXHTML();
   await injectJavascript();
+
   //await injectUserJS(`noraneko${VERSION}`);
 
   try {
@@ -215,6 +190,7 @@ async function run() {
 
   //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
   await fs.mkdir("./dist/profile/test", { recursive: true });
+
   browser = await puppeteer.launch({
     headless: false,
     protocol: "webDriverBiDi",
@@ -226,31 +202,19 @@ async function run() {
     defaultViewport: { height: 0, width: 0 },
   });
 
-  // (await browser.pages())[0].setViewport({ width: 0, height: 0 });
-  (await browser.pages())[0].goto("about:newtab");
+  await (await browser.pages())[0].goto("about:newtab");
 
   const page = await browser.newPage();
-  await page.setViewport({ width: 0, height: 0 });
   await page.goto("about:preferences");
 
   browser.on("disconnected", () => {
-    if (!intended_close) exit();
+    if (!intended_close) process.exit();
   });
 }
 
 // run
 if (process.argv[2] && process.argv[2] === "--run") {
-  run()
-    .then()
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
+  run();
 } else {
-  compile()
-    .then()
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
+  compile();
 }
