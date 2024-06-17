@@ -1120,3 +1120,36 @@ add_task(async function first_anchor_selected_is_invalid() {
   await BrowserTestUtils.closeWindow(win);
   sandbox.restore();
 });
+
+add_task(async function test_triggerTab_selector() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const config = {
+    win,
+    location: "chrome",
+    context: "chrome",
+    browser: win.gBrowser.selectedBrowser,
+    theme: { preset: "chrome" },
+  };
+
+  const message = JSON.parse(JSON.stringify(testMessage.message));
+  message.content.screens[0].anchors[0].selector =
+    "#tabbrowser-tabs %triggerTab%[visuallyselected]";
+  const sandbox = sinon.createSandbox();
+
+  const doc = win.document;
+  const featureCallout = new FeatureCallout(config);
+  const getAnchorSpy = sandbox.spy(featureCallout, "_getAnchor");
+  featureCallout.showFeatureCallout(message);
+  await waitForCalloutScreen(doc, message.content.screens[0].id);
+  ok(
+    getAnchorSpy.alwaysReturned(
+      sandbox.match(message.content.screens[0].anchors[0])
+    ),
+    "The first anchor is selected"
+  );
+
+  win.document.querySelector(calloutCTASelector).click();
+  await waitForCalloutRemoved(win.document);
+  await BrowserTestUtils.closeWindow(win);
+  sandbox.restore();
+});
