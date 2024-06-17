@@ -40,7 +40,8 @@ job-defaults:
                     - name: Firefox l10n changesets
                       path: browser/locales/l10n-changesets.json
                       version-path: browser/config/version.txt
-                      l10n-repo-url: "https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1"
+                      l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
+                      l10n-repo-target-branch: main
                       ignore-config:
                           ja:
                               - macosx64
@@ -79,10 +80,28 @@ job-defaults:
                                   "path": "browser/locales/shipped-locales",
                               },
                           ]
+                    - name: Mobile l10n changesets
+                      path: mobile/locales/l10n-changesets.json
+                      l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
+                      l10n-repo-target-branch: main
+                      version-path: mobile/android/version.txt
+                      platform-configs:
+                          [
+                              {
+                                  "platforms":
+                                      [
+                                          "android",
+                                          "android-arm",
+                                          "android-multilocale",
+                                      ],
+                                  "path": "mobile/android/locales/all-locales",
+                              },
+                          ]
                 default:
                     - name: Firefox l10n changesets
                       path: browser/locales/l10n-changesets.json
-                      l10n-repo-url: "https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1"
+                      l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
+                      l10n-repo-target-branch: main
                       version-path: browser/config/version.txt
                       ignore-config:
                           ja:
@@ -120,6 +139,23 @@ job-defaults:
                                           "win64-aarch64-devedition",
                                       ],
                                   "path": "browser/locales/all-locales",
+                              },
+                          ]
+                    - name: Mobile l10n changesets
+                      path: mobile/locales/l10n-changesets.json
+                      l10n-repo-url: https://github.com/mozilla-l10n/firefox-l10n
+                      l10n-repo-target-branch: main
+                      version-path: mobile/android/version.txt
+                      platform-configs:
+                          [
+                              {
+                                  "platforms":
+                                      [
+                                          "android",
+                                          "android-arm",
+                                          "android-multilocale",
+                                      ],
+                                  "path": "mobile/android/locales/all-locales",
                               },
                           ]
 
