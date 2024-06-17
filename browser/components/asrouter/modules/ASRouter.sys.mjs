@@ -1942,6 +1942,17 @@ export class _ASRouter {
     if (!skipLoadingMessages) {
       await this.loadMessagesFromAllProviders();
     }
+    // Implement the global `browserIsSelected` context property.
+    if (trigger && browser?.constructor.name === "MozBrowser") {
+      if (!Object.prototype.hasOwnProperty.call(trigger, "context")) {
+        trigger.context = {};
+      }
+      if (typeof trigger.context === "object") {
+        trigger.context.browserIsSelected =
+          trigger.context.browserIsSelected ||
+          browser === browser.ownerGlobal.gBrowser?.selectedBrowser;
+      }
+    }
     const telemetryObject = { tabId };
     TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
     // Return all the messages so that it can record the Reach event

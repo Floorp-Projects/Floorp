@@ -141,6 +141,11 @@ interface FeatureCallout {
           {
             // A CSS selector for the element to anchor to. The callout will be
             // anchored to the first visible element that matches this selector.
+            // This supports a special token %triggerTab% that functions as a
+            // selector for the tab that triggered the callout, usually (but not
+            // always) the selected tab. It can be placed at any position in the
+            // selector, like other tokens. For example:
+            // "#tabbrowser-tabs %triggerTab%[visuallyselected] .tab-icon-image"
             selector: string;
             // An object representing how the callout should be positioned
             // relative to the anchor element.

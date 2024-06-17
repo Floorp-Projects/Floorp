@@ -16,6 +16,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [attributionData](#attributiondata)
 * [backgroundTaskName](#backgroundtaskname)
 * [blockedCountByType](#blockedcountbytype)
+* [browserIsSelected](#browserisselected)
 * [browserSettings](#browsersettings)
 * [creditCardsSaved](#creditcardssaved)
 * [currentDate](#currentdate)
@@ -746,7 +747,7 @@ Returns a breakdown by category of all blocked resources in the past 42 days.
 #### Definition
 
 ```
-declare const messageImpressions: { [key: string]: number };
+declare const blockedCountByType: { [key: string]: number };
 ```
 
 #### Examples
@@ -759,6 +760,19 @@ Object {
   fingerprinterCount: 3,
   socialCount: 2
 }
+```
+
+### `browserIsSelected`
+
+A context property included for all triggers, indicating whether the tab the
+trigger came from is the currently selected tab. For some triggers that don't
+actually emit from tabs, this is always true. For other triggers, like
+`openURL`, this can be false if the trigger happened in a background tab.
+
+#### Definition
+
+```ts
+declare const browserIsSelected: boolean;
 ```
 
 ### `isChinaRepack`
