@@ -484,9 +484,12 @@ toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 
 /* Bookmarks toolbar drop indicator */
 
-#PlacesToolbarDropIndicator {
+#PlacesToolbarDropIndicatorHolder {
   display: block;
   position: absolute;
+}
+
+#PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/toolbar-drag-indicator.svg);
   pointer-events: none;
 }
