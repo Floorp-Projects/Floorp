@@ -675,7 +675,6 @@ mil.by
 // second-level domain, but it's being used as one (see www.google.com.by and
 // www.yahoo.com.by, for example), so we list it here for safety's sake.
 com.by
-
 // http://hoster.by/
 of.by
 
@@ -6710,7 +6709,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-05-31T15:16:08Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-06-13T15:15:16Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -9227,10 +9226,6 @@ nab
 // nagoya : GMO Registry, Inc.
 // https://www.iana.org/domains/root/db/nagoya.html
 nagoya
-
-// natura : NATURA COSMÉTICOS S.A.
-// https://www.iana.org/domains/root/db/natura.html
-natura
 
 // navy : Dog Beach, LLC
 // https://www.iana.org/domains/root/db/navy.html
@@ -13402,7 +13397,7 @@ freemyip.com
 // Submitted by Daniel A. Maierhofer <vorstand@funkfeuer.at>
 wien.funkfeuer.at
 
-// Future Versatile Group. ：https://www.fvg-on.net/
+// Future Versatile Group. : https://www.fvg-on.net/
 // T.Kabu <webmaster@fvg-on.net>
 daemon.asia
 dix.asia
@@ -14802,8 +14797,8 @@ pstmn.io
 mock.pstmn.io
 httpbin.org
 
-//prequalifyme.today : https://prequalifyme.today
-//Submitted by DeepakTiwari deepak@ivylead.io
+// prequalifyme.today : https://prequalifyme.today
+// Submitted by DeepakTiwari deepak@ivylead.io
 prequalifyme.today
 
 // prgmr.com : https://prgmr.com/
@@ -15157,6 +15152,10 @@ magnet.page
 biz.ua
 co.ua
 pp.ua
+
+// Shanghai Accounting Society : https://www.sasf.org.cn
+// Submitted by Information Administration <info@sasf.org.cn>
+as.sh.cn
 
 // Sheezy.Art : https://sheezy.art
 // Submitted by Nyoom <admin@sheezy.art>
