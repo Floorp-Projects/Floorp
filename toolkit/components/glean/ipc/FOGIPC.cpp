@@ -37,6 +37,10 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
+#if defined(__APPLE__) && defined(__aarch64__)
+#  define HAS_PROCESS_ENERGY
+#endif
+
 using mozilla::dom::ContentParent;
 using mozilla::gfx::GPUChild;
 using mozilla::gfx::GPUProcessManager;
@@ -75,6 +79,29 @@ struct ProcessingTimeMarker {
     return schema;
   }
 };
+
+#ifdef HAS_PROCESS_ENERGY
+struct ProcessEnergyMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("ProcessEnergy");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   int64_t aUWh,
+                                   const ProfilerString8View& aType) {
+    aWriter.IntProperty("energy", aUWh);
+    aWriter.StringProperty("label", aType);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormat("energy", "Energy (µWh)", MS::Format::Integer);
+    schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
+    schema.SetTableLabel(
+        "{marker.name} - {marker.data.label}: {marker.data.energy}µWh");
+    return schema;
+  }
+};
+#endif
 
 }  // namespace geckoprofiler::markers
 
@@ -248,8 +275,26 @@ void GetTrackerType(nsAutoCString& aTrackerType) {
   }
 }
 
+#ifdef HAS_PROCESS_ENERGY
+static int64_t GetTaskEnergy() {
+  task_power_info_v2_data_t task_power_info;
+  mach_msg_type_number_t count = TASK_POWER_INFO_V2_COUNT;
+  kern_return_t kr = task_info(mach_task_self(), TASK_POWER_INFO_V2,
+                               (task_info_t)&task_power_info, &count);
+  if (kr != KERN_SUCCESS) {
+    return 0;
+  }
+
+  // task_energy is in nanojoules. We want microwatt-hours.
+  return task_power_info.task_energy / 3.6 / 1e6;
+}
+#endif
+
 void RecordPowerMetrics() {
   static uint64_t previousCpuTime = 0, previousGpuTime = 0;
+#ifdef HAS_PROCESS_ENERGY
+  static int64_t previousProcessEnergy = 0;
+#endif
 
   uint64_t cpuTime, newCpuTime = 0;
   if (NS_SUCCEEDED(GetCpuTimeSinceProcessStartInMs(&cpuTime)) &&
@@ -265,7 +310,16 @@ void RecordPowerMetrics() {
     newGpuTime = gpuTime - previousGpuTime;
   }
 
-  if (!newCpuTime && !newGpuTime) {
+#ifdef HAS_PROCESS_ENERGY
+  int64_t processEnergy = GetTaskEnergy();
+  int64_t newProcessEnergy = processEnergy - previousProcessEnergy;
+#endif
+
+  if (!newCpuTime && !newGpuTime
+#ifdef HAS_PROCESS_ENERGY
+      && newProcessEnergy <= 0
+#endif
+  ) {
     // Nothing to record.
     return;
   }
@@ -357,6 +411,15 @@ void RecordPowerMetrics() {
                     nNewGpuTime, type, trackerType);
     previousGpuTime += newGpuTime;
   }
+
+#ifdef HAS_PROCESS_ENERGY
+  if (newProcessEnergy) {
+    power::energy_per_process_type.Get(type).Add(newProcessEnergy);
+    PROFILER_MARKER("Process Energy", OTHER, {}, ProcessEnergyMarker,
+                    newProcessEnergy, type);
+    previousProcessEnergy += newProcessEnergy;
+  }
+#endif
 
   profiler_record_wakeup_count(type);
 }
