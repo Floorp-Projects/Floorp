@@ -328,12 +328,7 @@ class UpdateVerifyConfigCreator(BaseScript):
         elif version.version_type == VersionType.ESR:
             branch = "releases/{}-esr{}".format(branch_prefix, version.major_number)
         elif version.version_type == VersionType.RELEASE:
-            if branch_prefix == "comm":
-                # Thunderbird does not have ESR releases, regular releases
-                # go in an ESR branch
-                branch = "releases/{}-esr{}".format(branch_prefix, version.major_number)
-            else:
-                branch = "releases/{}-release".format(branch_prefix)
+            branch = "releases/{}-release".format(branch_prefix)
         if not branch:
             raise Exception("Cannot determine branch, cannot continue!")
 
