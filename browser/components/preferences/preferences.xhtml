@@ -116,7 +116,6 @@
           <label class="category-name" flex="1" data-l10n-id="pane-BSB-title"></label>  
           </richlistitem>
 
-#ifdef FLOORP_OFFICIAL_COMPONENTS_ENABLED
           <richlistitem id="category-workspaces"
                       class="category"
                       value="paneWorkspaces"
@@ -127,7 +126,7 @@
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="pane-workspaces-title"></label>  
           </richlistitem>
-#endif
+
           <richlistitem id="category-Downloads"
                       class="category"
                       value="paneDownloads"
@@ -298,10 +297,8 @@
 #include ../../../floorp/browser/components/preferences/design.inc.xhtml
 #include ../../../floorp/browser/components/preferences/lepton.inc.xhtml
 
-#ifdef FLOORP_OFFICIAL_COMPONENTS_ENABLED
 #include ../../../floorp/browser/components/preferences/csk.inc.xhtml
 #include ../../../floorp/browser/components/preferences/workspaces.inc.xhtml
-#endif
 
 #include containers.inc.xhtml
 #include sync.inc.xhtml

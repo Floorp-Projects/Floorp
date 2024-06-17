@@ -98,23 +98,19 @@ var TabStateInternal = {
       tabData.muteReason = tab.muteReason;
     }
 
-
     /*****Floorp Injections*****/
-
-    var { FloorpAppConstants } = ChromeUtils.importESModule(
-      "resource://floorp/FloorpAppConstants.sys.mjs"
+    let { WorkspacesService } = ChromeUtils.importESModule(
+      "resource://floorp/WorkspacesService.mjs"
     );
 
-    if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
-      let { WorkspacesService } = ChromeUtils.importESModule(
-        "resource://floorp/WorkspacesService.mjs"
-      );
-
-      // WorkspaceId
-      tabData.floorpWorkspaceId = tab.getAttribute(WorkspacesService.workspacesTabAttributionId);
-      // lastShowWorkspaceId
-      tabData.floorpLastShowWorkspaceId = tab.getAttribute(WorkspacesService.workspaceLastShowId);
-    }
+    // WorkspaceId
+    tabData.floorpWorkspaceId = tab.getAttribute(
+      WorkspacesService.workspacesTabAttributionId
+    );
+    // lastShowWorkspaceId
+    tabData.floorpLastShowWorkspaceId = tab.getAttribute(
+      WorkspacesService.workspaceLastShowId
+    );
 
     // Private Container
     tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");

@@ -225,15 +225,8 @@ function init_all() {
   register_module("paneSsb", gSsbPane);
   register_module("paneDownloads", gDownloads);
   register_module("paneUserjs", gUserjsPane);
-
-  var { FloorpAppConstants } = ChromeUtils.importESModule(
-    "resource://floorp/FloorpAppConstants.sys.mjs"
-  );
-
-  if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
-    register_module("paneCsk", { init() {} });
-    register_module("paneWorkspaces", gWorkspacesPane);
-  }
+  register_module("paneCsk", { init() {} });
+  register_module("paneWorkspaces", gWorkspacesPane);
 
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.
