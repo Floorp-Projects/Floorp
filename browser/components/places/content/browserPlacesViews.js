@@ -933,6 +933,8 @@ class PlacesToolbar extends PlacesViewBase {
       this._chevron._placesView.uninit();
     }
 
+    this._chevronPopup.uninit();
+
     if (this._otherBookmarks?._placesView) {
       this._otherBookmarks._placesView.uninit();
     }
