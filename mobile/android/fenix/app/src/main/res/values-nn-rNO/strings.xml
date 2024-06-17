@@ -594,7 +594,9 @@
     <string name="preferences_category_account">Konto</string>
 
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Verktøylinje</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Verktøylinje</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Adresselinjeplassering</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -907,9 +909,14 @@
     <string name="preference_gestures_dynamic_toolbar">Bla for å gøyme verktøylinja</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Sveip verktøylinja sidelengs for å byte fane</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Sveip verktøylinja sidelengs for å byte fane</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Sveip verktøylinja opp for å opne faner</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Rull for å gøyme adresse- og verktøylinja</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Sveip adresselinja sidelengs for å byte fane</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

@@ -583,7 +583,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ھېسابات</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">قورال بالداق</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">قورال بالداق</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">ئادرېس بالداق ئورنى</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ئۇسلۇب</string>
     <!-- Preference for customizing the home screen -->
@@ -892,9 +894,15 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">دومىلاتقاندا قورال بالداقنى يوشۇر</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">قورال بالداق يانغا سۈرۈلسە بەتكۈچ ئالماشتۇرىدۇ</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">قورال بالداق يانغا سۈرۈلسە بەتكۈچ ئالماشتۇرىدۇ</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">قورال بالداق ئۈستىگە سۈرۈلسە بەتكۈچ ئاچىدۇ</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">سىيرىلسا ئادرېس بالداق ۋە قورال بالداقنى يوشۇرىدۇ</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">ئادرېس بالداقتا يانغا سۈرۈلسە بەتكۈچ ئالماشتۇرىدۇ</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
