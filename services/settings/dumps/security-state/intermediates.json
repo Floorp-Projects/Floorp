@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1718419986483,
+      "derHash": "iA+8RP5xqhvkDbEwkXsbrsG9iJsrPXR47aBHKGZ+i0Q=",
+      "subject": "CN=GoDaddy Secure Certificate Authority - G5,O=GoDaddy Inc.,C=US",
+      "subjectDN": "MFgxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxHb0RhZGR5IEluYy4xMjAwBgNVBAMTKUdvRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEc1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b0ab60886b732344120e026a516f1347e7b00beb8696ea917d500d651dfe8aa9",
+        "size": 1983,
+        "filename": "xHVm0DkmnVuuM9hP1BXFOradZUCdIX-phuSB2CBWNiU=.pem",
+        "location": "security-state-staging/intermediates/848610e4-7c79-4502-9bb9-fd3613ddd9ba.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "xHVm0DkmnVuuM9hP1BXFOradZUCdIX+phuSB2CBWNiU=",
+      "crlite_enrolled": false,
+      "id": "e91fe4d1-97c5-4d44-b3b9-eeafa19ab96f",
+      "last_modified": 1718420223252
+    },
+    {
+      "schema": 1718419986168,
+      "derHash": "KeUCmVMQQDaF3WJY+dBIVoeJYwQtR0nG1dl3OjEMMcA=",
+      "subject": "CN=Starfield Secure Certificate Authority - G5,O=Starfield Technologies\\, Inc.,C=US",
+      "subjectDN": "MGoxCzAJBgNVBAYTAlVTMSUwIwYDVQQKExxTdGFyZmllbGQgVGVjaG5vbG9naWVzLCBJbmMuMTQwMgYDVQQDEytTdGFyZmllbGQgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEc1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1ab16093c00cfeb6b1281bd3570ee31b90544dbe82866716c4e0dc4dd23c0850",
+        "size": 2040,
+        "filename": "ZopoHb_DFyTNtOnoOeDm_G07T5xn8PEj_4_f_lJ927A=.pem",
+        "location": "security-state-staging/intermediates/3bb146a9-b858-4d9e-84a3-4898d6729add.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ZopoHb/DFyTNtOnoOeDm/G07T5xn8PEj/4/f/lJ927A=",
+      "crlite_enrolled": false,
+      "id": "c56b52a8-0671-4599-8084-0cb8e9fc79e8",
+      "last_modified": 1718420223250
+    },
+    {
       "schema": 1717559643220,
       "derHash": "zBufnkNw+2gUHSihFeqoY/jq23oE4r0js8YvnZ8XwmM=",
       "subject": "CN=FIRMAPROFESIONAL ICA A01 QWAC 2022,O=Firmaprofesional SA,C=ES",
@@ -9559,42 +9595,6 @@
       "last_modified": 1666727873688
     },
     {
-      "schema": 1666727429335,
-      "derHash": "MaCWocuRiHbuV8hbI0n8nMLCy0/Pm903eHzp2levR5A=",
-      "subject": "CN=Alibaba Cloud GCC R3 TLS OV CA 2021,O=Alibaba Cloud Computing Co.\\, Ltd.,C=CN",
-      "subjectDN": "MGcxCzAJBgNVBAYTAkNOMSowKAYDVQQKEyFBbGliYWJhIENsb3VkIENvbXB1dGluZyBDby4sIEx0ZC4xLDAqBgNVBAMTI0FsaWJhYmEgQ2xvdWQgR0NDIFIzIFRMUyBPViBDQSAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c64bbdc4fcc4298ffb453c1558ab7102e685784efb5cc1dae31840e3a119e67a",
-        "size": 1735,
-        "filename": "HacabMO6K4pM-shfB1EkMCGhH2TSlSvVizEDPU1Ruso=.pem",
-        "location": "security-state-staging/intermediates/f8675c4a-871f-4996-b046-3c346fb294db.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "HacabMO6K4pM+shfB1EkMCGhH2TSlSvVizEDPU1Ruso=",
-      "crlite_enrolled": false,
-      "id": "136cca7b-196b-4678-a6b0-4b880a8df6c5",
-      "last_modified": 1666727873674
-    },
-    {
-      "schema": 1666727396635,
-      "derHash": "HdCVRJ/7PP8UsiJNWWuD/ULytHaDVTx5fREVDJGGkb0=",
-      "subject": "CN=GlobalSign Atlas R3 DV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIERWIFRMUyBDQSBIMiAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e06bf97fe011b418ca619844016454cc4529a0fe9de1bf1ec3daa57af5a3a724",
-        "size": 1715,
-        "filename": "P_B6nUOG4cUlLNI8o81n2MESbUnYMzT49Flc6X5W1bk=.pem",
-        "location": "security-state-staging/intermediates/f804d5ba-d989-47f7-8217-4f41b5fb5978.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "P/B6nUOG4cUlLNI8o81n2MESbUnYMzT49Flc6X5W1bk=",
-      "crlite_enrolled": false,
-      "id": "308fb64b-a058-4676-aa68-e8e33b332c2f",
-      "last_modified": 1666727873661
-    },
-    {
       "schema": 1666727359631,
       "derHash": "R7LvvDZw59tLQfIsUfwC7oT7Lb8wgqSfLCaIEi6SEKE=",
       "subject": "CN=emSign SSL CA - G1,OU=emSign PKI,O=eMudhra Technologies Limited,C=IN",
@@ -9773,24 +9773,6 @@
       "crlite_enrolled": false,
       "id": "04ee2b55-620a-4d2e-a4c7-00b5c73ec962",
       "last_modified": 1666727873463
-    },
-    {
-      "schema": 1666727407351,
-      "derHash": "ThpWTHGgQoiXDlPAN9HPwlwfm+/FJ2zzvVAe4mLwQgI=",
-      "subject": "CN=GlobalSign Atlas R3 OV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIE9WIFRMUyBDQSBIMiAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d499679a13f287b719305ece5b064b2730137bf3006a9913e7ab121e378f3262",
-        "size": 1715,
-        "filename": "D2Dxjr_K2WrUouIXuBMldR6ucBSdBjfQI6boJU6R6i8=.pem",
-        "location": "security-state-staging/intermediates/fae57392-fd90-4733-a1bb-c543b9e8ff29.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "D2Dxjr/K2WrUouIXuBMldR6ucBSdBjfQI6boJU6R6i8=",
-      "crlite_enrolled": false,
-      "id": "105b6627-b2cd-462b-8da2-204dc969ac8c",
-      "last_modified": 1666727873449
     },
     {
       "schema": 1666727359279,
@@ -10727,24 +10709,6 @@
       "crlite_enrolled": false,
       "id": "a846caeb-4b0d-4bb1-af76-d203f6bd83ea",
       "last_modified": 1666727872580
-    },
-    {
-      "schema": 1666727380169,
-      "derHash": "kK8bYaCCZipjnKpoxqP7Qeu6N2DDUaSh6J+22srUhvw=",
-      "subject": "CN=GlobalSign Atlas ECCR5 OV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IE9WIFRMUyBDQSBIMiAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "cd5cf65b5f603e9fadcbf6fb536bc9043b3881094161a4a6e0b15cb311a3ed46",
-        "size": 1272,
-        "filename": "WZLG43M_xjDLnY1jaF9kQcG-7bpQC8fM0xt9RK4n3dY=.pem",
-        "location": "security-state-staging/intermediates/626980a9-463c-4a9d-891e-45a1de9a7525.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "WZLG43M/xjDLnY1jaF9kQcG+7bpQC8fM0xt9RK4n3dY=",
-      "crlite_enrolled": false,
-      "id": "bfebb62d-c09f-4bec-9fe4-bfa95ea3ef7b",
-      "last_modified": 1666727872565
     },
     {
       "schema": 1666727424275,
@@ -13625,24 +13589,6 @@
       "crlite_enrolled": false,
       "id": "5e15deb4-1340-4b98-b021-7c82087df0ad",
       "last_modified": 1666727869830
-    },
-    {
-      "schema": 1666727418384,
-      "derHash": "EbbbW2jc3zRHmufnt7uqcWWQVXetg9R08ruXF84kTOo=",
-      "subject": "CN=GlobalSign Atlas R3 AlphaSSL CA H2 2021,O=Globalsign nv-sa,C=BE",
-      "subjectDN": "MFoxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMTAwLgYDVQQDEydHbG9iYWxTaWduIEF0bGFzIFIzIEFscGhhU1NMIENBIEgyIDIwMjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9cf02d5a547d487093c6600cddc45835d2265d1a9e325589d4fc84f0f6d7d961",
-        "size": 1715,
-        "filename": "xecaLv-HFBkn7bPt0j9a3x6oQIAxlTk0PaC8CEgAAK8=.pem",
-        "location": "security-state-staging/intermediates/60d13cbe-72e2-4434-bd54-82eab5032874.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "xecaLv+HFBkn7bPt0j9a3x6oQIAxlTk0PaC8CEgAAK8=",
-      "crlite_enrolled": false,
-      "id": "ff529e2f-a01e-4a10-b6be-ec1b7f25db92",
-      "last_modified": 1666727869816
     },
     {
       "schema": 1666727423438,
@@ -19691,60 +19637,6 @@
       "crlite_enrolled": false,
       "id": "5c698bdb-ba48-4930-a3a8-831f93b497a4",
       "last_modified": 1665665823256
-    },
-    {
-      "schema": 1665578919085,
-      "derHash": "ROaDV24clg14TRe7IyXCXPG+TiBHDDHZ1zys7Ulslck=",
-      "subject": "CN=GlobalSign Atlas E46 EV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBUTFMgQ0EgSDIgMjAyMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6cd9e29057bbe5b64edf3377a6113b0eaccbd584246dad3b5bd7e028d89f27c9",
-        "size": 1252,
-        "filename": "M57F0Wnxzruxx2skIABzM3bhMc1XFcJ5OmPMfoX_2Kw=.pem",
-        "location": "security-state-staging/intermediates/1bbcc3cd-f827-4861-a10e-95361d1c9110.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "M57F0Wnxzruxx2skIABzM3bhMc1XFcJ5OmPMfoX/2Kw=",
-      "crlite_enrolled": false,
-      "id": "a7237377-ea8a-421a-9e89-eb5e456457e7",
-      "last_modified": 1665579462842
-    },
-    {
-      "schema": 1665557823626,
-      "derHash": "Crsc3lPMrBcEg9r808258mIrp+R9MewP09snG0qqUwM=",
-      "subject": "CN=GlobalSign Atlas R6 EV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFI2IEVWIFRMUyBDQSBIMiAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d6a647a904b2296b2de421924aee6694ee9acef681494c12c051da05b878733b",
-        "size": 2406,
-        "filename": "0mvzohE9hsg2CJwQhrPuumD2oI7MvADSjcdM3IhnqV4=.pem",
-        "location": "security-state-staging/intermediates/2e408e2e-ba52-4bfd-8fce-a7fcfe0075be.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0mvzohE9hsg2CJwQhrPuumD2oI7MvADSjcdM3IhnqV4=",
-      "crlite_enrolled": false,
-      "id": "8ebb9dc6-96b6-48c7-a893-297551984569",
-      "last_modified": 1665579462830
-    },
-    {
-      "schema": 1665578919278,
-      "derHash": "OFqgChhI+Af2ZVYeiIsNT2lhQFLYJfPDOXDgD0w2WN0=",
-      "subject": "CN=GlobalSign Atlas R46 EV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBUTFMgQ0EgSDIgMjAyMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6af7c086768ea998be52398129400eb39d0f5d4eb9230e1c2c7a9f228d5f6d58",
-        "size": 2398,
-        "filename": "6kj_jfSE7hoAQjieaM0YreYi-NU25dfVW4X5EvPet-c=.pem",
-        "location": "security-state-staging/intermediates/5719a806-1c18-46c8-9229-0f467fd98968.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "6kj/jfSE7hoAQjieaM0YreYi+NU25dfVW4X5EvPet+c=",
-      "crlite_enrolled": false,
-      "id": "51e492fd-63e9-4386-9e4c-107cf4cc16b1",
-      "last_modified": 1665579462816
     },
     {
       "schema": 1665168564306,
@@ -26173,24 +26065,6 @@
       "last_modified": 1647658653936
     },
     {
-      "schema": 1647442638278,
-      "derHash": "slTzzerx0pq1PLQ56A+5lvHpCig+m1CFuHSdGOT1mHs=",
-      "subject": "CN=GlobalSign Atlas R3 DV ACME CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFIzIERWIEFDTUUgQ0EgSDIgMjAyMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9b7764d2dd9d44f3454ff2c69278ccacf175873333cb4bc22bb78001354c66f5",
-        "size": 1715,
-        "filename": "Drirt5siv6auOz2CsdX1ih0Gq_A2hFkwS82cYSyOOSc=.pem",
-        "location": "security-state-staging/intermediates/be7d54ce-f543-44f1-8741-28214b2ee3cd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Drirt5siv6auOz2CsdX1ih0Gq/A2hFkwS82cYSyOOSc=",
-      "crlite_enrolled": false,
-      "id": "1ea36836-d34e-48ad-a1c3-679ebae83102",
-      "last_modified": 1647464240149
-    },
-    {
       "schema": 1647442123610,
       "derHash": "gCRH7lIcxmbNt7uuk6OF5V8gDXaj0TVqhURaxMvb7RI=",
       "subject": "CN=Cybertrust Global Root,O=Cybertrust\\, Inc",
@@ -27863,42 +27737,6 @@
       "crlite_enrolled": false,
       "id": "f10e152b-912b-41b0-8b22-172bab5325a5",
       "last_modified": 1624913855021
-    },
-    {
-      "schema": 1623916924551,
-      "derHash": "aRbakW7hsemMsx7pRzDuzX8sB3llvbjU4Wo7gcWKKbY=",
-      "subject": "CN=GlobalSign Atlas ECCR5 DV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IERWIFRMUyBDQSBIMiAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "abdf25b3a11dd96af2217032fe2da76890e22dc7b40e8981301a8971d97f32a9",
-        "size": 1268,
-        "filename": "6-g1TUJXD0WhY01dlTAcFTi6R1z-L4XP4pPgJVUTHfA=.pem",
-        "location": "security-state-staging/intermediates/2ff02552-6c42-4558-bb97-ca531ec69f7d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "6+g1TUJXD0WhY01dlTAcFTi6R1z+L4XP4pPgJVUTHfA=",
-      "crlite_enrolled": false,
-      "id": "7760e5f2-11cf-4582-8639-e223f057cafa",
-      "last_modified": 1623920278097
-    },
-    {
-      "schema": 1623916935947,
-      "derHash": "YbMM6uoMjGOXw1mYKYCctzyo+Be7nN8ADXRT5EJDgCg=",
-      "subject": "CN=GlobalSign Atlas ECCR5 DV ACME CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFwxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTIwMAYDVQQDEylHbG9iYWxTaWduIEF0bGFzIEVDQ1I1IERWIEFDTUUgQ0EgSDIgMjAyMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "edb2ab3c9beabe368a1a743918ee6b2a8507da3e116b951154f6dcbac67de73c",
-        "size": 1272,
-        "filename": "N3T01UrP_szopZ--ULwPC9MuquTStnfM28bhLKuZ1rY=.pem",
-        "location": "security-state-staging/intermediates/8859905c-00e5-4d2a-b3f0-e00fa03ce62c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "N3T01UrP/szopZ++ULwPC9MuquTStnfM28bhLKuZ1rY=",
-      "crlite_enrolled": false,
-      "id": "bbc79d7d-1abd-4027-8cae-092d0491fd43",
-      "last_modified": 1623920278014
     },
     {
       "schema": 1622555926542,
@@ -31015,5 +30853,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1717559823094
+  "timestamp": 1718553423053
 }
