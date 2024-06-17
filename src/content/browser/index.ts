@@ -5,6 +5,7 @@ import { initStatusbar } from "./statusbar";
 import { initBrowserContextMenu } from "./browser-context-menu";
 import { initShareMode } from "./browser-share-mode";
 import { initProfileManager } from "./profile-manager";
+import { initReverseSidebarPosition } from "./reverse-sidebar-position";
 import { initUndoClosedTab } from "./undo-closed-tab";
 
 export default function initScripts() {
@@ -15,6 +16,7 @@ export default function initScripts() {
     initShareMode();
     initProfileManager();
     initUndoClosedTab();
+    initReverseSidebarPosition();
 
     //createWebpanel("tmp", "https://manatoki332.net/");
     //console.log(document.getElementById("tmp"));
