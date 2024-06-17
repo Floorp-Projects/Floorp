@@ -596,7 +596,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">帳號</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">工具列</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">工具列</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">網址列位置</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">佈景主題</string>
     <!-- Preference for customizing the home screen -->
@@ -907,9 +909,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">滾動畫面即可隱藏工具列</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">橫向滑動工具列來切換分頁</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">橫向滑動工具列來切換分頁</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">向上滑動工具列來開新分頁</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">滑動即可隱藏網址列與工具列</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">橫向滑動網址列來切換分頁</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
