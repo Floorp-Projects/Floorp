@@ -87,6 +87,8 @@ support-files = ["pageopeningwindow.html"]
 
 ["browser_bookmarks_toolbar_context_menu_view_options.js"]
 
+["browser_bookmarks_toolbar_drag_from_chevron.js"]
+
 ["browser_bookmarks_toolbar_telemetry.js"]
 
 ["browser_bug427633_no_newfolder_if_noip.js"]
