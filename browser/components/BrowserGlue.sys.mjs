@@ -4474,7 +4474,21 @@ BrowserGlue.prototype = {
       // This is achieved by converting them into a string pref and encrypting the values
       // stored inside it.
 
-      if (!AppConstants.NIGHTLY_BUILD) {
+      // Note: we don't run this on nightly builds and we also do not run this
+      // for users with primary password enabled. That means both these sets of
+      // users will have the features turned on by default. For Nightly this is
+      // an intentional product decision; for primary password this is because
+      // we cannot encrypt the opt-out value without asking for the primary
+      // password, which in turn means we cannot migrate without doing so. It
+      // is also very difficult to postpone this migration because there is no
+      // way to know when the user has put in the primary password. We will
+      // probably reconsider some of this architecture in future, but for now
+      // this is the least-painful method considering the alternatives, cf.
+      // bug 1901899.
+      if (
+        !AppConstants.NIGHTLY_BUILD &&
+        !lazy.LoginHelper.isPrimaryPasswordSet()
+      ) {
         const hasRunBetaMigration = Services.prefs
           .getCharPref("browser.startup.homepage_override.mstone", "")
           .startsWith("127.0");
