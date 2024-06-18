@@ -4350,8 +4350,6 @@ var TabsProgressListener = {
       return;
     }
 
-    Services.obs.notifyObservers(aBrowser, "mailto::onLocationChange", aFlags);
-
     // Only need to call locationChange if the PopupNotifications object
     // for this window has already been initialized (i.e. its getter no
     // longer exists)
@@ -4365,6 +4363,10 @@ var TabsProgressListener = {
     }
 
     gBrowser.readNotificationBox(aBrowser)?.removeTransientNotifications();
+
+    // Notify the mailto notification creation code _after_ clearing transient
+    // notifications, so its notification does not immediately get removed.
+    Services.obs.notifyObservers(aBrowser, "mailto::onLocationChange", aFlags);
 
     FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     CaptivePortalWatcher.onLocationChange(aBrowser);
