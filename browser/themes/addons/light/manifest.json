@@ -59,7 +59,6 @@
       "panel_active": "color-mix(in srgb, currentColor 20%, transparent)",
       "panel_active_darker": "color-mix(in srgb, currentColor 27%, transparent)",
       "toolbar_field_icon_opacity": "0.72",
-      "input_border_color": "color-mix(in srgb, currentColor 41%, transparent)",
       "zap_gradient": "linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"
     }
   },
@@ -77,7 +76,6 @@
       "button_primary_color": "--button-primary-color",
       "input_background": "--input-bgcolor",
       "input_color": "--input-color",
-      "input_border": "--input-border-color",
       "urlbar_popup_hover": "--urlbarView-hover-background",
       "urlbar_popup_separator": "--urlbarView-separator-color",
       "tab_icon_overlay_stroke": "--tab-icon-overlay-stroke",
@@ -88,7 +86,6 @@
       "panel_active": "--arrowpanel-dimmed-further",
       "panel_active_darker": "--panel-item-active-bgcolor",
       "toolbar_field_icon_opacity": "--urlbar-icon-fill-opacity",
-      "input_border_color": "--input-border-color",
       "zap_gradient": "--panel-separator-zap-gradient"
     }
   }

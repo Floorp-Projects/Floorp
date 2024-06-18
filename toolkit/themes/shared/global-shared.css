@@ -33,12 +33,14 @@
 
   --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
 
+  --input-border-color: color-mix(in srgb, currentColor 46%, transparent);
+
   --toolbarbutton-icon-fill: currentColor;
   --toolbarbutton-disabled-opacity: 0.4;
 
   --toolbar-field-background-color: Field;
   --toolbar-field-color: FieldText;
-  --toolbar-field-border-color: ThreeDShadow;
+  --toolbar-field-border-color: var(--input-border-color);
   --toolbar-field-focus-background-color: Field;
   --toolbar-field-focus-color: FieldText;
   --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
@@ -72,9 +74,15 @@
     --panel-separator-color: currentColor;
     --toolbar-field-focus-border-color: var(--focus-outline-color);
 
+    --input-border-color: currentColor;
+
     &:not([lwtheme]) {
       --panel-disabled-color: GrayText;
     }
+  }
+
+  @media (forced-colors) {
+    --input-border-color: ThreeDShadow;
   }
 
   background-color: -moz-Dialog;
@@ -137,7 +145,7 @@ html|input:where(:not([type=radio i], [type=checkbox i], [type=range i])),
 html|textarea {
   appearance: none;
   padding: var(--space-small);
-  border: 1px solid var(--input-border-color, ThreeDShadow);
+  border: 1px solid var(--input-border-color);
   border-radius: var(--border-radius-small);
   margin: 0;
   background-color: var(--input-bgcolor, Field);

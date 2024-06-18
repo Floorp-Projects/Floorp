@@ -59,7 +59,7 @@ xul|findbar {
   appearance: none;
   background-color: var(--input-bgcolor, var(--toolbar-field-background-color));
   color: var(--input-color, var(--toolbar-field-color));
-  border: 1px solid var(--input-border-color, var(--toolbar-field-border-color));
+  border: 1px solid var(--toolbar-field-border-color);
   border-radius: 4px;
   outline: none;
   margin: 0;
