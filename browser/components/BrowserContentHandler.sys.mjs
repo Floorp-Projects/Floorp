@@ -322,7 +322,13 @@ function openBrowserWindow(
           Ci.nsILoadContext
         ).usePrivateBrowsing = true;
 
-        if (AppConstants.platform == "win") {
+        if (
+          AppConstants.platform == "win" &&
+          Services.prefs.getBoolPref(
+            "browser.privateWindowSeparation.enabled",
+            true
+          )
+        ) {
           lazy.WinTaskbar.setGroupIdForWindow(
             win,
             lazy.WinTaskbar.defaultPrivateGroupId
