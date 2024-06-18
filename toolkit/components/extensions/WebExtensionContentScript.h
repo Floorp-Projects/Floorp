@@ -62,6 +62,7 @@ class MOZ_STACK_CLASS DocInfo final {
   bool RequiresMatchOriginAsFallback() const;
 
   bool IsTopLevel() const;
+  bool IsTopLevelOpaqueAboutBlank() const;
   bool IsSameOriginWithTop() const;
   bool ShouldMatchActiveTabPermission() const;
 
@@ -101,6 +102,7 @@ class MOZ_STACK_CLASS DocInfo final {
   mutable Maybe<bool> mRequiresMatchOriginAsFallback;
 
   mutable Maybe<bool> mIsTopLevel;
+  mutable Maybe<bool> mIsTopLevelOpaqueAboutBlank;
 
   mutable Maybe<nsCOMPtr<nsIPrincipal>> mPrincipal;
   mutable Maybe<uint64_t> mFrameID;

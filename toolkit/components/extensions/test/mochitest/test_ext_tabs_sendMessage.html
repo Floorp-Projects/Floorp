@@ -262,7 +262,7 @@ add_task(async function test_tabs_sendMessage_opaqueOrigin() {
         browser.test.sendMessage("done");
       });
 
-       tab = await browser.tabs.create({ url: "about:blank" });
+      tab = await browser.tabs.create({ url: "about:blank" });
     },
 
     files: {
