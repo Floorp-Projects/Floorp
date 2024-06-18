@@ -119,7 +119,7 @@ export class ContentSection extends React.PureComponent {
 
     return (
       <div className="home-section">
-        {wallpapersEnabled && (
+        {!wallpapersV2Enabled && wallpapersEnabled && (
           <div className="wallpapers-section">
             <WallpapersSection
               setPref={setPref}

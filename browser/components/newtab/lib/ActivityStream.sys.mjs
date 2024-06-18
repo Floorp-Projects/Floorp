@@ -360,9 +360,9 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "newtabWallpapers.wallpaper-color",
+    "newtabWallpapers.wallpaper",
     {
-      title: "Currently set solid color wallpaper",
+      title: "Currently set wallpaper",
       value: "",
     },
   ],

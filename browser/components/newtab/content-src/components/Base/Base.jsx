@@ -266,7 +266,6 @@ export class BaseContent extends React.PureComponent {
     const prefs = this.props.Prefs.values;
     const wallpaperLight = prefs["newtabWallpapers.wallpaper-light"];
     const wallpaperDark = prefs["newtabWallpapers.wallpaper-dark"];
-    const wallpaperColor = prefs["newtabWallpapers.wallpaper-color"];
     const { wallpaperList } = this.props.Wallpapers;
 
     if (wallpaperList) {
@@ -274,6 +273,10 @@ export class BaseContent extends React.PureComponent {
         wallpaperList.find(wp => wp.title === wallpaperLight) || "";
       const darkWallpaper =
         wallpaperList.find(wp => wp.title === wallpaperDark) || "";
+
+      const wallpaperColor =
+        darkWallpaper?.solid_color || lightWallpaper?.solid_color || "";
+
       global.document?.body.style.setProperty(
         `--newtab-wallpaper-light`,
         `url(${lightWallpaper?.wallpaperUrl || ""})`
@@ -296,14 +299,14 @@ export class BaseContent extends React.PureComponent {
         const rgbColors = this.getRGBColors(wallpaperColor);
         const isColorDark = this.isWallpaperColorDark(rgbColors);
         wallpaperTheme = isColorDark ? "dark" : "light";
-      }
+      } else {
+        // Grab the contrast of the currently displayed wallpaper.
+        const { theme } =
+          this.state.colorMode === "light" ? lightWallpaper : darkWallpaper;
 
-      // Grab the contrast of the currently displayed wallpaper.
-      const { theme } =
-        this.state.colorMode === "light" ? lightWallpaper : darkWallpaper;
-
-      if (theme) {
-        wallpaperTheme = theme;
+        if (theme) {
+          wallpaperTheme = theme;
+        }
       }
 
       // Add helper class to body if user has a wallpaper selected
