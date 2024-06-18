@@ -1048,6 +1048,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
       // NOTE(emilio): If you change this condition you also need to change
       // nsTextFrame::AddInlineMinISizeForFlow to match.
       bool atHyphenationBreak = !atNaturalBreak && haveHyphenation &&
+                                (!aLineBreakBefore || i > aStart) &&
                                 IsOptionalHyphenBreak(hyphenBuffer[i - aStart]);
       bool atAutoHyphenWithManualHyphenInSameWord =
           atHyphenationBreak &&
