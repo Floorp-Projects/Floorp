@@ -997,7 +997,7 @@ var SelectTranslationsPanel = new (class {
     // We want to maintain some buffer of pixels between the panel's bottom edge
     // and the bottom edge of our available space, because if they touch, it can
     // cause visual glitching to occur.
-    const BOTTOM_EDGE_PIXEL_BUFFER = 20;
+    const BOTTOM_EDGE_PIXEL_BUFFER = Math.abs(panelBottom - panelTop) / 5;
 
     if (panelBottomToBottomEdge < BOTTOM_EDGE_PIXEL_BUFFER) {
       this.console?.debug(
