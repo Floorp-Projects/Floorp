@@ -3205,6 +3205,7 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
   mState = nil;
   mDisabledNeedsDisplay = NO;
   mTrackingArea = nil;
+  mViewWithTrackingArea = nil;
   mDirtyRect = NSZeroRect;
   mBeingShown = NO;
   mDrawTitle = NO;
@@ -3417,25 +3418,28 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (void)removeTrackingArea {
-  if (mTrackingArea) {
-    [self.trackingAreaView removeTrackingArea:mTrackingArea];
-    [mTrackingArea release];
-    mTrackingArea = nil;
-  }
+  [mViewWithTrackingArea removeTrackingArea:mTrackingArea];
+
+  [mTrackingArea release];
+  mTrackingArea = nil;
+
+  [mViewWithTrackingArea release];
+  mViewWithTrackingArea = nil;
 }
 
 - (void)updateTrackingArea {
   [self removeTrackingArea];
 
-  NSView* view = self.trackingAreaView;
+  mViewWithTrackingArea = [self.trackingAreaView retain];
   const NSTrackingAreaOptions options = NSTrackingMouseEnteredAndExited |
                                         NSTrackingMouseMoved |
                                         NSTrackingActiveAlways;
-  mTrackingArea = [[NSTrackingArea alloc] initWithRect:[view bounds]
-                                               options:options
-                                                 owner:self
-                                              userInfo:nil];
-  [view addTrackingArea:mTrackingArea];
+  mTrackingArea =
+      [[NSTrackingArea alloc] initWithRect:[mViewWithTrackingArea bounds]
+                                   options:options
+                                     owner:self
+                                  userInfo:nil];
+  [mViewWithTrackingArea addTrackingArea:mTrackingArea];
 }
 
 - (void)mouseEntered:(NSEvent*)aEvent {
