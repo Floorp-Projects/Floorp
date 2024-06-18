@@ -84,6 +84,11 @@ class AsyncTimeEventRunner : public Runnable {
 
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    nsPIDOMWindowInner* inner = mTarget->OwnerDoc()->GetInnerWindow();
+    if (inner && !inner->HasSMILTimeEventListeners()) {
+      return NS_OK;
+    }
+
     InternalSMILTimeEvent event(true, mMsg);
     event.mDetail = mDetail;
 
@@ -1500,7 +1505,7 @@ bool SMILTimedElement::GetNextInterval(const SMILInterval* aPrevInterval,
     prevIntervalWasZeroDur =
         aPrevInterval->End()->Time() == aPrevInterval->Begin()->Time();
   } else {
-    beginAfter.SetMillis(INT64_MIN);
+    beginAfter.SetMillis(std::numeric_limits<SMILTime>::min());
   }
 
   RefPtr<SMILInstanceTime> tempBegin;

@@ -148,6 +148,7 @@ EventListenerManagerBase::EventListenerManagerBase()
       mMayHaveSelectionChangeEventListener(false),
       mMayHaveFormSelectEventListener(false),
       mMayHaveTransitionEventListener(false),
+      mMayHaveSMILTimeEventListener(false),
       mClearingListeners(false),
       mIsMainThreadELM(NS_IsMainThread()),
       mMayHaveListenersForUntrustedEvents(false) {
@@ -514,6 +515,14 @@ void EventListenerManager::AddEventListenerInternal(
         mMayHaveTransitionEventListener = true;
         if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
           window->SetHasTransitionEventListeners();
+        }
+        break;
+      case eSMILBeginEvent:
+      case eSMILEndEvent:
+      case eSMILRepeatEvent:
+        mMayHaveSMILTimeEventListener = true;
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          window->SetHasSMILTimeEventListeners();
         }
         break;
       case eFormCheckboxStateChange:

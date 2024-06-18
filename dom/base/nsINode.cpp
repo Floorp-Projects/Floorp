@@ -3575,6 +3575,9 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
         if (elm->MayHaveTransitionEventListener()) {
           window->SetHasTransitionEventListeners();
         }
+        if (elm->MayHaveSMILTimeEventListener()) {
+          window->SetHasSMILTimeEventListeners();
+        }
       }
     }
     if (wasRegistered) {

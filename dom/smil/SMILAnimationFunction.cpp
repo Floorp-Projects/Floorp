@@ -57,7 +57,7 @@ nsAttrValue::EnumTable SMILAnimationFunction::sCalcModeTable[] = {
 SMILAnimationFunction::SMILAnimationFunction()
     : mSampleTime(-1),
       mRepeatIteration(0),
-      mBeginTime(INT64_MIN),
+      mBeginTime(std::numeric_limits<SMILTime>::min()),
       mAnimationElement(nullptr),
       mErrorFlags(0),
       mIsActive(false),

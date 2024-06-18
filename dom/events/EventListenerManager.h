@@ -163,10 +163,11 @@ class EventListenerManagerBase {
   uint16_t mMayHaveSelectionChangeEventListener : 1;
   uint16_t mMayHaveFormSelectEventListener : 1;
   uint16_t mMayHaveTransitionEventListener : 1;
+  uint16_t mMayHaveSMILTimeEventListener : 1;
   uint16_t mClearingListeners : 1;
   uint16_t mIsMainThreadELM : 1;
   uint16_t mMayHaveListenersForUntrustedEvents : 1;
-  // 2 unused flags.
+  // 1 unused flag.
 };
 
 /*
@@ -566,6 +567,9 @@ class EventListenerManager final : public EventListenerManagerBase {
   }
   bool MayHaveTransitionEventListener() {
     return mMayHaveTransitionEventListener;
+  }
+  bool MayHaveSMILTimeEventListener() const {
+    return mMayHaveSMILTimeEventListener;
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
