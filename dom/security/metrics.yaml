@@ -14,8 +14,9 @@ httpsfirst:
   upgraded:
     type: counter
     description: >
-      Counts how often a load is marked to be upgraded to HTTPS because of
-      HTTPS-First (`dom.security.https_first` enabled).
+      Counts how often a load is successfully upgraded to HTTPS because of
+      HTTPS-First (`dom.security.https_first` enabled). This does not include
+      loads that get downgraded again.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
     data_reviews:
@@ -30,9 +31,10 @@ httpsfirst:
   upgraded_schemeless:
     type: counter
     description: >
-      Counts how often a load is marked to be upgraded to HTTPS because of
+      Counts how often a load is successfully upgraded to HTTPS because of
       schemeless HTTPS-First (`dom.security.https_first` disabled, but load
-      marked as schemeless).
+      marked as schemeless). This does not include loads that get downgraded
+      again.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
     data_reviews:
@@ -48,7 +50,7 @@ httpsfirst:
     type: counter
     description: >
       How many regular HTTPS-First (`dom.security.https_first` enabled)
-      upgrades get downgraded again.
+      upgrades fail and get downgraded again.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
     data_reviews:
@@ -64,7 +66,7 @@ httpsfirst:
     type: counter
     description: >
       How many schemeless HTTPS-First (`dom.security.https_first` disabled, but
-      load marked as schemeless) upgrades get downgraded again.
+      load marked as schemeless) upgrades fail and get downgraded again.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
     data_reviews:
@@ -118,8 +120,7 @@ httpsfirst:
     description: >
       If a HTTPS-First (`dom.security.https_first` enabled) upgrade isn't
       successful, measures the timespan between the navigation start and the
-      downgrade. This does not include the case in which the https request times
-      out and the http request sent after 3s gets a response faster.
+      downgrade.
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
@@ -137,9 +138,7 @@ httpsfirst:
     description: >
       If a schemeless HTTPS-First (`dom.security.https_first` disabled, but load
       marked as schemeless) upgrade isn't successful, measures the timespan
-      between the navigation start and the downgrade. This does not include the
-      case in which the https request times out and the http request sent after
-      3s gets a response faster.
+      between the navigation start and the downgrade.
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380

@@ -448,8 +448,6 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
     nsHTTPSOnlyUtils::LogLocalizedString("HTTPSFirstSchemeless", params,
                                          nsIScriptError::warningFlag, aLoadInfo,
                                          aURI, true);
-
-    mozilla::glean::httpsfirst::upgraded_schemeless.Add();
   } else {
     nsAutoCString scheme;
 
@@ -464,10 +462,6 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
         isSpeculative ? "HTTPSOnlyUpgradeSpeculativeConnection"
                       : "HTTPSOnlyUpgradeRequest",
         params, nsIScriptError::warningFlag, aLoadInfo, aURI, true);
-
-    if (!isSpeculative) {
-      mozilla::glean::httpsfirst::upgraded.Add();
-    }
   }
 
   // Set flag so we know that we upgraded the request
@@ -594,7 +588,17 @@ nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(
                                        nsIScriptError::warningFlag, loadInfo,
                                        uri, true);
 
-  // Record telemety
+  return newURI.forget();
+}
+
+void nsHTTPSOnlyUtils::UpdateLoadStateAfterHTTPSFirstDowngrade(
+    mozilla::net::DocumentLoadListener* aDocumentLoadListener,
+    nsDocShellLoadState* aLoadState) {
+  // We have to exempt the load from HTTPS-First to prevent a upgrade-downgrade
+  // loop
+  aLoadState->SetIsExemptFromHTTPSFirstMode(true);
+
+  // Add downgrade data for later telemetry usage to load state
   nsDOMNavigationTiming* timing = aDocumentLoadListener->GetTiming();
   if (timing) {
     mozilla::TimeStamp navigationStart = timing->GetNavigationStartTimeStamp();
@@ -602,31 +606,60 @@ nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(
       mozilla::TimeDuration duration =
           mozilla::TimeStamp::Now() - navigationStart;
 
+      nsCOMPtr<nsIChannel> channel = aDocumentLoadListener->GetChannel();
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+
       bool isPrivateWin =
           loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
       bool isSchemeless =
           loadInfo->GetWasSchemelessInput() &&
           !nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(isPrivateWin);
 
-      using namespace mozilla::glean::httpsfirst;
-      auto downgradedMetric = isSchemeless ? downgraded_schemeless : downgraded;
-      auto downgradedOnTimerMetric =
-          isSchemeless ? downgraded_on_timer_schemeless : downgraded_on_timer;
-      auto downgradeTimeMetric =
-          isSchemeless ? downgrade_time_schemeless : downgrade_time;
-
       nsresult channelStatus;
       channel->GetStatus(&channelStatus);
-      if (channelStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL) {
-        downgradedOnTimerMetric.AddToNumerator();
-      } else {
-        downgradeTimeMetric.AccumulateRawDuration(duration);
-      }
-      downgradedMetric.Add();
+
+      RefPtr downgradeData = mozilla::MakeRefPtr<HTTPSFirstDowngradeData>();
+      downgradeData->downgradeTime = duration;
+      downgradeData->isOnTimer = channelStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL;
+      downgradeData->isSchemeless = isSchemeless;
+      aLoadState->SetHttpsFirstDowngradeData(downgradeData);
     }
   }
+}
 
-  return newURI.forget();
+void nsHTTPSOnlyUtils::SubmitHTTPSFirstTelemetry(
+    nsCOMPtr<nsILoadInfo> const& aLoadInfo,
+    RefPtr<HTTPSFirstDowngradeData> const& aHttpsFirstDowngradeData) {
+  using namespace mozilla::glean::httpsfirst;
+  if (aHttpsFirstDowngradeData) {
+    // Successfully downgraded load
+
+    auto downgradedMetric = aHttpsFirstDowngradeData->isSchemeless
+                                ? downgraded_schemeless
+                                : downgraded;
+    auto downgradedOnTimerMetric = aHttpsFirstDowngradeData->isSchemeless
+                                       ? downgraded_on_timer_schemeless
+                                       : downgraded_on_timer;
+    auto downgradeTimeMetric = aHttpsFirstDowngradeData->isSchemeless
+                                   ? downgrade_time_schemeless
+                                   : downgrade_time;
+
+    if (aHttpsFirstDowngradeData->isOnTimer) {
+      downgradedOnTimerMetric.AddToNumerator();
+    }
+    downgradedMetric.Add();
+    downgradeTimeMetric.AccumulateRawDuration(
+        aHttpsFirstDowngradeData->downgradeTime);
+  } else if (aLoadInfo->GetHttpsOnlyStatus() &
+             nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST) {
+    // Successfully upgraded load
+
+    if (aLoadInfo->GetWasSchemelessInput()) {
+      upgraded_schemeless.Add();
+    } else {
+      upgraded.Add();
+    }
+  }
 }
 
 /* static */

@@ -644,6 +644,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   // See description of  mFileName in nsDocShellLoadState.h
   mIsDownload = !aLoadState->FileName().IsVoid();
   mIsLoadingJSURI = net::SchemeIsJavascript(aLoadState->URI());
+  mHTTPSFirstDowngradeData = aLoadState->GetHttpsFirstDowngradeData().forget();
 
   // Check for infinite recursive object or iframe loads
   if (aLoadState->OriginalFrameSrc() || !mIsDocumentLoad) {
@@ -2427,9 +2428,7 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
   loadState->SetWasSchemelessInput(wasSchemelessInput);
 
   if (isHTTPSFirstFixup) {
-    // We have to exempt the load from HTTPS-First to prevent a
-    // upgrade-downgrade loop.
-    loadState->SetIsExemptFromHTTPSFirstMode(true);
+    nsHTTPSOnlyUtils::UpdateLoadStateAfterHTTPSFirstDowngrade(this, loadState);
   }
 
   // Ensure to set referrer information in the fallback channel equally to the
@@ -2569,6 +2568,17 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // need to do anything else.
   if (MaybeHandleLoadErrorWithURIFixup(status)) {
     return NS_OK;
+  }
+
+  // If this is a successful load with a successful status code, we can possibly
+  // submit HTTPS-First telemetry.
+  if (NS_SUCCEEDED(status) && httpChannel) {
+    uint32_t responseStatus = 0;
+    if (NS_SUCCEEDED(httpChannel->GetResponseStatus(&responseStatus)) &&
+        responseStatus < 400) {
+      nsHTTPSOnlyUtils::SubmitHTTPSFirstTelemetry(
+          mChannel->LoadInfo(), mHTTPSFirstDowngradeData.forget());
+    }
   }
 
   mStreamListenerFunctions.AppendElement(StreamListenerFunction{
