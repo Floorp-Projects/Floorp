@@ -293,6 +293,13 @@ var SelectTranslationsPanel = new (class {
    * @returns {Promise<string>} - The code of a supported language, a supported document language, or the top detected language.
    */
   async getTopSupportedDetectedLanguage(textToTranslate) {
+    // We want to refresh our cache every time we make a determination about the detected source language,
+    // even if we never make it to the section of the logic below where we consider the document language,
+    // otherwise the incorrect, cached document language may be reported to telemetry.
+    const { docLangTag, isDocLangTagSupported } = this.#getLanguageInfo(
+      /* forceFetch */ true
+    );
+
     // First see if any of the detected languages are supported and return it if so.
     const { language, languages } = await LanguageDetector.detectLanguage(
       textToTranslate
@@ -308,9 +315,6 @@ var SelectTranslationsPanel = new (class {
 
     // Since none of the detected languages were supported, check to see if the
     // document has a specified language tag that is supported.
-    const { docLangTag, isDocLangTagSupported } = this.#getLanguageInfo(
-      /* forceFetch */ true
-    );
     if (isDocLangTagSupported) {
       return docLangTag;
     }
