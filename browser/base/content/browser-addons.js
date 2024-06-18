@@ -78,6 +78,13 @@ const ERROR_L10N_IDS = new Map([
     -11,
     ["addon-install-error-incompatible", "addon-install-error-incompatible"],
   ],
+  [
+    -13,
+    [
+      "addon-install-error-admin-install-only",
+      "addon-install-error-admin-install-only",
+    ],
+  ],
 ]);
 
 customElements.define(

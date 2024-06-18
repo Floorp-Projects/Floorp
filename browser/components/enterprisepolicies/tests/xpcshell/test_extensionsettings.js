@@ -22,6 +22,7 @@ const BASE_URL = `http://example.com/data`;
 
 let addonID = "policytest2@mozilla.com";
 let themeID = "policytheme@mozilla.com";
+let policyOnlyID = "policy_installed_only@mozilla.com";
 
 let fileURL;
 
@@ -53,6 +54,28 @@ async function assertManagementAPIInstallType(addonId, expectedInstallType) {
   );
 }
 
+function waitForAddonInstall(addonId) {
+  return new Promise(resolve => {
+    let listener = {
+      onInstallEnded(install, addon) {
+        if (addon.id == addonId) {
+          AddonManager.removeInstallListener(listener);
+          resolve();
+        }
+      },
+      onDownloadFailed() {
+        AddonManager.removeInstallListener(listener);
+        resolve();
+      },
+      onInstallFailed() {
+        AddonManager.removeInstallListener(listener);
+        resolve();
+      },
+    };
+    AddonManager.addInstallListener(listener);
+  });
+}
+
 add_setup(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
@@ -65,15 +88,31 @@ add_setup(async function setup() {
       },
     },
   });
+  server.registerFile("/data/policy_test.xpi", webExtensionFile);
+  fileURL = Services.io
+    .newFileURI(webExtensionFile)
+    .QueryInterface(Ci.nsIFileURL);
+
+  let policyOnlyExtensionFile = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      name: "Enterprise Policy Only Test Extension",
+      browser_specific_settings: {
+        gecko: {
+          id: policyOnlyID,
+          admin_install_only: true,
+        },
+      },
+    },
+  });
+  server.registerFile(
+    "/data/policy_installed_only.xpi",
+    policyOnlyExtensionFile
+  );
 
   server.registerFile(
     "/data/amosigned-sha1only.xpi",
     do_get_file("amosigned-sha1only.xpi")
   );
-  server.registerFile("/data/policy_test.xpi", webExtensionFile);
-  fileURL = Services.io
-    .newFileURI(webExtensionFile)
-    .QueryInterface(Ci.nsIFileURL);
 });
 
 add_task(async function test_extensionsettings() {
@@ -445,4 +484,132 @@ add_task(async function test_allow_weak_signatures() {
   await addon.uninstall();
 
   resetWeakSignaturePref();
+});
+
+add_task(async function test_policy_installed_only_addon() {
+  const cleanupTestAddon = async () => {
+    const addon = await AddonManager.getAddonByID(policyOnlyID);
+    if (addon) {
+      await addon.uninstall();
+    }
+  };
+  registerCleanupFunction(cleanupTestAddon);
+
+  info(
+    "Expect the test addon to install successfully when installed by the policy"
+  );
+  let installPromise = waitForAddonInstall(policyOnlyID);
+  await setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        [policyOnlyID]: {
+          install_url: `${BASE_URL}/policy_installed_only.xpi`,
+          installation_mode: "force_installed",
+          updates_disabled: true,
+        },
+      },
+    },
+  });
+  await installPromise;
+  let addon = await AddonManager.getAddonByID(policyOnlyID);
+  Assert.notEqual(addon, null, "Addon expected to be installed successfully.");
+  Assert.deepEqual(
+    addon.installTelemetryInfo,
+    { source: "enterprise-policy" },
+    "Got the expected addon.installTelemetryInfo"
+  );
+
+  info(
+    "Remove the ExtensionSettings and verify the addon becomes appDisabled on XPIDatabase.verifySignatures calls"
+  );
+  await setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        // NOTE: an empty ExtensionSettings config would not be reflected
+        // by data returned by Services.policy.getExtensionSettings calls,
+        // on the contrary setting new policy data with an unrelated addon-id
+        // forces the ExtensionSettings data to be refreshed.
+        "someother-addon@test": { updates_disabled: true },
+      },
+    },
+  });
+
+  {
+    const { XPIExports } = ChromeUtils.importESModule(
+      "resource://gre/modules/addons/XPIExports.sys.mjs"
+    );
+    await XPIExports.XPIDatabase.verifySignatures();
+  }
+
+  addon = await AddonManager.getAddonByID(policyOnlyID);
+  Assert.notEqual(addon, null, "Addon expected to still be installed");
+  Assert.equal(addon.appDisabled, true, "Expect the addon to be appDisabled");
+
+  await cleanupTestAddon();
+  addon = await AddonManager.getAddonByID(policyOnlyID);
+  Assert.equal(addon, null, "Addon expected to not be installed anymore");
+
+  info(
+    "Expect the test addon to NOT install successfully when not installed by the policy"
+  );
+  // Setting back the extension settings with installation_mode set to force_installed
+  // will install the extension again, and so we need to wait for that and uninstall
+  // it first (otherwise the addon may endup being installed when the test task is
+  // completed and trigger an intermittent failre).
+  installPromise = waitForAddonInstall(policyOnlyID);
+  await setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        [policyOnlyID]: {
+          install_url: `${BASE_URL}/policy_installed_only.xpi`,
+          installation_mode: "force_installed",
+          updates_disabled: true,
+        },
+      },
+    },
+  });
+  await installPromise;
+  await cleanupTestAddon();
+
+  await setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        // NOTE: an empty ExtensionSettings config would not be reflected
+        // by data returned by Services.policy.getExtensionSettings calls,
+        // on the contrary setting new policy data with an unrelated addon-id
+        // forces the ExtensionSettings data to be refreshed.
+        "someother-addon@test": { updates_disabled: true },
+      },
+    },
+  });
+
+  const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
+    installPromise = waitForAddonInstall(policyOnlyID);
+    const install = await AddonManager.getInstallForURL(
+      `${BASE_URL}/policy_installed_only.xpi`,
+      { telemetryInfo: { source: "not-enterprise-policy" } }
+    );
+    await Assert.rejects(
+      install.install(),
+      /Install failed/,
+      "Expect the install method to reject"
+    );
+    await installPromise;
+
+    addon = await AddonManager.getAddonByID(policyOnlyID);
+    Assert.equal(addon, null, "Addon expected to not be installed");
+  });
+
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      expected: [
+        {
+          message:
+            /This addon can only be installed through Enterprise Policies/,
+        },
+      ],
+    },
+    "Got the expect error logged on installing enterprise only extension"
+  );
 });

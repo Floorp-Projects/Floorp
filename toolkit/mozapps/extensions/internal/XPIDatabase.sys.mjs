@@ -2261,6 +2261,18 @@ export const XPIDatabase = {
         }
 
         if (
+          addon.signedState === lazy.AddonManager.SIGNEDSTATE_SIGNED &&
+          Services.policies
+        ) {
+          const addonDetailsFromFile =
+            await XPIExports.XPIInstall.loadManifestFromFile(
+              addon._sourceBundle,
+              addon.location
+            );
+          addon.adminInstallOnly = addonDetailsFromFile.adminInstallOnly;
+        }
+
+        if (
           !lazy.ObjectUtils.deepEqual(
             signedTypes?.toSorted(),
             addon.signedTypes?.toSorted()
@@ -2596,6 +2608,25 @@ export const XPIDatabase = {
       if (Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
         logger.warn(`Preference ${PREF_XPI_SIGNATURES_DEV_ROOT} is set.`);
       }
+      return false;
+    }
+
+    // When signatures are required, and the addon has the adminInstallOnly
+    // flag set to true, then we want to confirm if there is still an active
+    // enterprise policy setting for the same addon id, otherwise we should
+    // mark if as appDisabled.
+    //
+    // NOTE: the adminInstallOnly boolean flag is not being stored in the Addon DB,
+    // it is instead computed only when installing the addon and when we are
+    // re-verify the signatures once per day.
+    if (
+      this.mustSign(aAddon.type) &&
+      aAddon.adminInstallOnly &&
+      !aAddon.wrapper.isInstalledByEnterprisePolicy
+    ) {
+      logger.warn(
+        `Add-on ${aAddon.id} is installable only from policies, but no policy extension settings have been found.`
+      );
       return false;
     }
 
