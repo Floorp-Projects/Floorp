@@ -42,6 +42,7 @@ enum class NativeKeyBindingsType : uint8_t;
   BOOL mDisabledNeedsDisplay;
 
   NSTrackingArea* mTrackingArea;
+  NSView* mViewWithTrackingArea;
 
   NSRect mDirtyRect;
 
