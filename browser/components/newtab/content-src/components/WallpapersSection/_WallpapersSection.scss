@@ -26,11 +26,16 @@
 
 .arrow-button {
   background: url('chrome://global/skin/icons/arrow-left.svg') no-repeat left center;
+
+  &:dir(rtl) {
+    background: url('chrome://global/skin/icons/arrow-right.svg') no-repeat right center;
+  }
+
   border: none;
   cursor: pointer;
   font-size: 16px;
   margin-bottom: 25px;
-  padding-left: 24px;
+  padding-inline-start: 24px;
   -moz-context-properties: fill;
   fill: currentColor;
   min-height: 1rem;
@@ -91,11 +96,16 @@
     grid-auto-rows: unset;
     grid-template-columns: unset;
     height: 100%;
-    left: 25px;
+    inset-inline-start: 25px;
     position: absolute;
     top: 0;
     width: 380px;
     z-index: 2;
+    transform: translateX(100%);
+
+    &:dir(rtl) {
+      transform: translateX(-100%);
+    }
 
     fieldset {
       border: none;
@@ -106,23 +116,17 @@
     }
 
     @media (prefers-reduced-motion: no-preference) {
-      &.wallpaper-list-enter {
-        transform: translateX(100%);
-      }
-
-      &.wallpaper-list-enter-active {
-        transform: translateX(0);
+      &.wallpaper-list-enter,
+      &.wallpaper-list-exit,
+      &.wallpaper-list-enter-done,
+      &.wallpaper-list-exit-done {
         transition: transform 300ms;
       }
+    }
 
-      &.wallpaper-list-exit {
-        transform: translateX(0);
-      }
-
-      &.wallpaper-list-exit-active {
-        transform: translateX(100%);
-        transition: transform 300ms;
-      }
+    &.wallpaper-list-enter-done,
+    &.wallpaper-list-enter-active {
+      transform: translateX(0);
     }
   }
 
