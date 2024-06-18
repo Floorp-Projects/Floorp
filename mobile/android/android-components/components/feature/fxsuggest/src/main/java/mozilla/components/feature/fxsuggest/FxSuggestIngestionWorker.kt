@@ -22,10 +22,16 @@ internal class FxSuggestIngestionWorker(
     private val logger = Logger("FxSuggestIngestionWorker")
 
     override suspend fun doWork(): Result {
-        // Disable periodic ingestion until we figure out
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1900837
-        logger.info("Skipping ingesting new suggestions")
-        return Result.success()
+        logger.info("Ingesting new suggestions")
+        val storage = GlobalFxSuggestDependencyProvider.requireStorage()
+        val success = storage.ingest()
+        return if (success) {
+            logger.info("Successfully ingested new suggestions")
+            Result.success()
+        } else {
+            logger.error("Failed to ingest new suggestions")
+            Result.retry()
+        }
     }
 
     internal companion object {
