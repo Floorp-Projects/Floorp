@@ -598,7 +598,7 @@
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Barra de instrumentos</string>
     <!-- Preference for changing where the AddressBar is positioned -->
-    <string name="preferences_toolbar_2">Position del barra del adresses</string>
+    <string name="preferences_toolbar_2">Position del barra de adresse</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Thema</string>
     <!-- Preference for customizing the home screen -->
@@ -928,9 +928,9 @@
     <string name="preference_gestures_swipe_toolbar_show_tabs">Glissa verso le alto le barra del instrumentos pro aperir le schedas</string>
 
     <!-- Preference for using the dynamic toolbars -->
-    <string name="preference_gestures_dynamic_toolbar_2">Rola pro celar le barra del adresses e le barra del utensiles</string>
+    <string name="preference_gestures_dynamic_toolbar_2">Rola pro celar le barra de adresse e le barra de utensiles</string>
     <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Glissa lateralmente le barra del adresses pro mutar schedas</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Glissa lateralmente le barra de adresse pro cambiar de scheda</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -1457,19 +1457,19 @@
 
     <!-- Microsuverys -->
     <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
-    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Adjuta nos a meliorar le impression in Firefox. Il passa justo un secunda</string>
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Adjuta nos a meliorar le impression in Firefox. Isto prende solo un momento</string>
     <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
     <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Quanto es tu satisfacite del impression in Firefox?</string>
     <!-- Text for option one, shown in microsurvey.-->
     <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">Neutral</string>
     <!-- Text for option two, shown in microsurvey.-->
-    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">Absolutemente non satisfacite</string>
+    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">Multo insatisfacite</string>
     <!-- Text for option three, shown in microsurvey.-->
-    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">Non satisfacite</string>
+    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">Insatisfacite</string>
     <!-- Text for option four, shown in microsurvey.-->
     <string name="microsurvey_survey_5_point_option_3" tools:ignore="UnusedResources">Satisfacite</string>
     <!-- Text for option five, shown in microsurvey.-->
-    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">Absolutemente satisfacite</string>
+    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">Multo satisfacite</string>
 
 
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
@@ -2591,7 +2591,7 @@
     <string name="automatic_translation_header_preference">Elige un lingua pro gerer le preferentias “sempre traducer” e “jammais traducer”.</string>
 
     <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
-    <string name="automatic_translation_error_warning_text">Impossibile cargar le linguas. Re-controla plus tarde.</string>
+    <string name="automatic_translation_error_warning_text">Non poteva cargar le linguas. Per favor reveni plus tarde.</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
@@ -2616,7 +2616,7 @@
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Remover %1$s</string>
     <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
-    <string name="never_translate_site_error_warning_text">Impossibile cargar sitos. Retenta plus tarde.</string>
+    <string name="never_translate_site_error_warning_text">Non poteva cargar le sitos. Per favor reveni plus tarde.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Deler %1$s?</string>
@@ -2721,7 +2721,7 @@
     <!-- The error message of the text field in the tab creation tool when the text field is empty -->
     <string name="debug_drawer_tab_tools_tab_quantity_empty_error">Le campo de texto es vacue</string>
     <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
-    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Solo insere numeros integre positive</string>
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Insere solmente numeros integre positive</string>
     <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
     <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Insere un numero major que zero</string>
     <!-- The error message of the text field in the tab creation tool when the text field is a
@@ -2747,7 +2747,7 @@
     <!-- The survey header -->
     <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Completa iste inquesta</string>
     <!-- The survey header -->
-    <string name="micro_survey_survey_header_2">Completa le sondage</string>
+    <string name="micro_survey_survey_header_2">Per favor completa le sondage</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Aviso de confidentialitate</string>
     <!-- The privacy notice link -->
@@ -2757,7 +2757,7 @@
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Clauder</string>
     <!-- The survey completion header -->
-    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Questionario complete</string>
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Sondage concludite</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation">Gratias pro tu commentario!</string>
     <!-- Option for likert scale -->
@@ -2774,12 +2774,12 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_6" tools:ignore="UnusedResources">Io non lo usa</string>
     <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
-    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Quanto es vos satisfacite de vostre pagina initial de Firefox?</string>
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Quanto es tu satisfacite de tu pagina initial de Firefox?</string>
     <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Aperir sondage</string>
     <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
-    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Clauder le questionario</string>
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Clauder le sondage</string>
     <!-- Content description for "X" button that is closing microsurvey. -->
     <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Clauder</string>
 

@@ -155,8 +155,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱥᱚᱴᱠᱚᱴ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -197,8 +195,6 @@
     <string name="browser_menu_refresh">ᱱᱟᱶᱟ ᱟᱹᱨᱩ</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">ᱛᱤᱸᱜᱩ</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">ᱮᱠᱥᱴᱮᱱᱥᱚᱱᱠᱚ</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -207,8 +203,6 @@
     <string name="browser_menu_discover_more_extensions">ᱟᱨᱦᱚᱸ ᱰᱷᱮᱨ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱯᱟᱱᱛᱮ ᱢᱮ</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">ᱠᱷᱟᱛᱟ ᱵᱤᱵᱨᱚᱬ</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ᱱᱚᱰᱮ ᱮᱰ-ᱟᱸᱱᱥ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ᱜᱚᱲᱚ</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -225,8 +219,6 @@
     <string name="browser_menu_add_to_homescreen">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">ᱵᱚᱦᱟᱞ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ᱨᱤᱥᱭᱝᱠ</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -597,7 +589,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ᱠᱷᱟᱛᱟ</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">ᱴᱩᱞᱵᱟᱨ</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">ᱴᱩᱞᱵᱟᱨ</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">ᱴᱷᱤᱠᱬᱟᱹᱵᱟᱨ ᱡᱟᱭᱜᱟ</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ᱩᱭᱦᱟᱹᱨ</string>
     <!-- Preference for customizing the home screen -->
@@ -668,12 +662,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">ᱵᱚᱫᱚᱞ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Preference for extensions -->
     <string name="preferences_extensions">ᱯᱟᱥᱱᱟᱣ ᱠᱚ</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">ᱨᱮᱫᱽ ᱠᱷᱚᱱ ᱮᱰ-ᱚᱱ ᱵᱚᱦᱟᱞ ᱢᱮ</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">ᱨᱮᱫᱽ ᱠᱷᱚᱱ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱵᱚᱦᱟᱞ ᱢᱮ</string>
     <!-- Preference for notifications -->
@@ -695,9 +685,10 @@
     <!-- The subtitle for the allow for all sites preference toggle -->
     <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">ᱟᱢ ᱡᱩᱫᱤ ᱱᱚᱶᱟ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱪᱮᱛᱟᱱ ᱨᱮ ᱵᱷᱚᱨᱥᱟ ᱮᱫ ᱠᱷᱟᱱ, ᱟᱢ ᱫᱚ ᱡᱷᱚᱛᱚ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱨᱮ ᱦᱚᱠᱮᱢ ᱮᱢ ᱫᱟᱲᱮ ᱟᱭᱟ ᱾</string>
 
+    <!-- The text shown when an extension does not require permissions -->
+    <string name="addons_does_not_require_permissions">ᱱᱚᱶᱟ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱨᱮ ᱡᱟᱦᱟᱸ ᱦᱚᱠ ᱞᱟᱹᱠᱛᱤ ᱵᱟᱹᱱᱩᱜ ᱟᱹᱱᱤᱡ ᱾</string>
+
     <!-- Add-on Preferences -->
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ᱠᱟᱹᱥᱴᱚᱢ ᱮᱰᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ</string>
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">ᱠᱟᱹᱥᱴᱚᱢ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱛᱩᱢᱟᱹᱞ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
@@ -708,8 +699,6 @@
     <string name="customize_addon_collection_hint">ᱛᱩᱢᱟᱹᱞ ᱧᱩᱛᱩᱢ</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">ᱛᱩᱢᱟᱹᱞ ᱢᱟᱞᱤᱠ (ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
@@ -770,35 +759,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">ᱰᱷᱮᱨ ᱠᱟᱱᱛᱷᱪᱤᱛᱟᱹᱨ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱮᱰ-ᱚᱱᱥᱠᱚ ᱱᱤᱛᱚᱜ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱱᱤᱛᱚᱜ ᱢᱮᱱᱟᱜᱼᱟ</string>
 
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">100+ ᱱᱟᱣᱟ ᱮᱠᱥᱴᱮᱱᱥᱟᱱ ᱠᱚ ᱧᱮᱞ ᱢᱮ ᱡᱟᱦᱟᱸ ᱫᱚ ᱟᱢᱟᱜ Firefox ᱵᱮᱱᱟᱣ ᱮᱫᱟ ᱾</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱚᱱ ᱯᱟᱧᱡᱟᱭ ᱢᱮ</string>
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">ᱮᱠᱥᱴᱮᱱᱥᱚᱱᱠᱚ ᱯᱟᱧᱡᱟᱭ ᱢᱮ</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰᱼᱚᱱ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱷᱟᱹᱬᱤᱡ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫ ᱠᱟᱱᱟ</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱷᱟᱹᱬᱤᱡ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫ ᱠᱟᱱᱟ</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">ᱢᱤᱫ ᱟᱨᱵᱟᱝ ᱵᱟᱹᱲᱛᱤ ᱮᱰᱼᱚᱱ ᱠᱚ ᱠᱟᱹᱢᱤ ᱵᱚᱫᱚ ᱠᱮᱫᱟ, ᱡᱟᱦᱟᱸ ᱠᱷᱟᱹᱛᱤᱨ ᱟᱢᱟᱜ ᱥᱤᱥᱛᱚᱢ ᱴᱷᱤᱠ ᱥᱮ ᱵᱟᱭ ᱠᱟᱹᱢᱤᱭᱟᱭ ᱾ %1$s ᱫᱚ ᱮᱰᱼᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵ ᱵᱟᱭ ᱜᱟᱱ ᱪᱷᱚ ᱞᱮᱫᱟᱭ ᱾\n\nᱮᱰ-ᱚᱱ ᱨᱮ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ ᱫᱚ ᱫᱩᱦᱲᱟᱹ ᱵᱟᱝ ᱮᱦᱚᱵᱚᱜᱼᱟ ᱾\n\nᱮᱰ-ᱟᱩᱱ ᱠᱚ ᱚᱪᱚᱜ ᱥᱮ ᱵᱚᱸᱫ ᱞᱮᱠᱷᱟᱱ ᱱᱚᱶᱟ ᱢᱩᱫᱟᱹ ᱴᱷᱤᱠᱚᱜᱼᱟ ᱾</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">ᱢᱤᱫ ᱟᱨᱵᱟᱝ ᱵᱟᱹᱲᱛᱤ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱠᱚ ᱠᱟᱹᱢᱤ ᱵᱚᱫᱚ ᱠᱮᱫᱟ, ᱡᱟᱦᱟᱸ ᱠᱷᱟᱹᱛᱤᱨ ᱟᱢᱟᱜ ᱥᱤᱥᱛᱚᱢ ᱴᱷᱤᱠ ᱥᱮ ᱵᱟᱭ ᱠᱟᱹᱢᱤᱭᱟᱭ ᱾ %1$s ᱫᱚ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵ ᱵᱟᱭ ᱜᱟᱱ ᱪᱷᱚ ᱞᱮᱫᱟᱭ ᱾\n\nᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱨᱮ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ ᱫᱚ ᱫᱩᱦᱲᱟᱹ ᱵᱟᱝ ᱮᱦᱚᱵᱚᱜᱼᱟ ᱾\n\nᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱠᱚ ᱚᱪᱚᱜ ᱥᱮ ᱵᱚᱸᱫ ᱞᱮᱠᱷᱟᱱ ᱱᱚᱶᱟ ᱢᱩᱫᱟᱹ ᱴᱷᱤᱠᱚᱜᱼᱟ ᱾</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱛᱦᱚᱵ ᱵᱤᱲᱟᱹᱣ ᱢᱮ</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">ᱮᱠᱮᱴᱮᱱᱮᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱛᱦᱚᱵ ᱵᱤᱲᱟᱹᱣ ᱢᱮ</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱚᱱ ᱵᱚᱸᱫ ᱠᱟᱛᱮ ᱞᱟᱦᱟᱜ ᱢᱮ</string>
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱵᱚᱸᱫ ᱠᱟᱛᱮ ᱞᱟᱦᱟᱜ ᱢᱮ</string>
 
@@ -924,9 +901,14 @@
     <string name="preference_gestures_dynamic_toolbar">ᱴᱩᱞᱵᱟᱨ ᱩᱠᱩ ᱞᱟᱹᱜᱤᱫᱛᱮ ᱛᱚᱛᱨᱚᱭ ᱢᱮ</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱫᱚᱞ‌ ᱞᱟᱹᱜᱤᱫᱛᱮ ᱴᱩᱞᱵᱟᱨ ᱫᱷᱟᱨᱮᱛᱮ ᱜᱷᱟᱥᱠᱟᱣ ᱢᱮ</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱫᱚᱞ‌ ᱞᱟᱹᱜᱤᱫᱛᱮ ᱴᱩᱞᱵᱟᱨ ᱫᱷᱟᱨᱮᱛᱮ ᱜᱷᱟᱥᱠᱟᱣ ᱢᱮ</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">ᱴᱮᱵᱽ ᱠᱚ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱴᱩᱞᱵᱟᱨ ᱥᱣᱟᱭᱤᱯ ᱢᱮ</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">ᱴᱷᱤᱠᱬᱟᱹᱵᱟᱨ ᱟᱨ ᱦᱟᱹᱛᱷᱤᱭᱟᱹᱨᱵᱟᱨ ᱩᱠᱩ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱥᱨᱚᱫ ᱢᱮ</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱫᱚᱞ‌ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱭᱤᱰ ᱴᱷᱤᱠᱬᱟᱹᱵᱟᱨ ᱠᱷᱚᱥᱨᱚᱫ ᱢᱮ</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -1440,6 +1422,23 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
+    <!-- Microsuverys -->
+    <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Firefox ᱨᱮ ᱪᱷᱟᱯᱟ ᱜᱟᱱᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢᱚᱜ ᱢᱮ ᱾ ᱱᱚᱶᱟ ᱫᱚ ᱢᱤᱫ ᱴᱤᱡ ᱜᱟᱱ ᱚᱠᱛᱚ ᱤᱫᱤᱭᱟᱭ</string>
+    <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Firefox ᱨᱮ ᱪᱷᱟᱯᱟ ᱠᱟᱹᱢᱤᱦᱟᱨᱟ ᱥᱟᱞᱟᱜ ᱛᱤᱱᱟᱹᱜ ᱨᱟᱹᱥᱠᱟᱹ ᱢᱮᱱᱟᱢᱟᱸ ?</string>
+    <!-- Text for option one, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">ᱱᱤᱣᱴᱨᱟᱞ</string>
+    <!-- Text for option two, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">ᱟᱹᱰᱤ ᱵᱟᱱᱴᱷᱤᱠ</string>
+    <!-- Text for option three, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">ᱵᱟᱱᱴᱷᱤᱠ</string>
+
+    <!-- Text for option four, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_3" tools:ignore="UnusedResources">ᱨᱟᱹᱥᱠᱟᱹ</string>
+    <!-- Text for option five, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">ᱟᱹᱰᱤ ᱨᱟᱹᱥᱠᱟᱹ</string>
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱟᱢ ᱥᱮ ?</string>
     <string name="notification_erase_text_android_14">ᱯᱨᱟᱭᱵᱷᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱶᱟ ᱱᱚᱴᱤᱯᱷᱤᱠᱮᱥᱚᱱ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱥᱮ ᱠᱷᱚᱥᱨᱚᱫ ᱢᱮ ᱾</string>
@@ -1515,10 +1514,6 @@
     <string name="qr_scanner_dialog_invalid_ok">ᱴᱷᱤᱠ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢ-ᱟ?</string>
-    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">ᱱᱚᱶᱟ ᱴᱮᱵᱽ ᱢᱮᱴᱟᱣ ᱞᱮᱠᱷᱟᱭ ᱥᱟᱱᱟᱢ ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣ ᱪᱟᱵᱟᱜ-ᱟ ᱾ ᱚᱠᱟ ᱥᱚᱢᱚᱭ ᱨᱮ ᱦᱚᱸ ᱟᱢ ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱠᱚ ᱛᱮᱭᱟᱨ ᱫᱟᱲᱮᱼᱟᱜ ᱟᱢ ᱾</string>
-    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title">%1$s ᱢᱮᱴᱟᱣᱟ ᱥᱮ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
 
@@ -2285,6 +2280,16 @@
     <string name="review_quality_check_explanation_body_reliability">Mozilla  ᱯᱟᱦᱴᱟ ᱠᱷᱚᱱ %s ᱠᱷᱚᱱ AI ᱴᱮᱠᱱᱚᱞᱚᱡᱤ ᱵᱮᱵᱷᱟᱨ ᱠᱟᱛᱮᱜ ᱟᱞᱮ ᱯᱨᱚᱰᱚᱠᱴ ᱨᱤᱵᱷᱤᱭᱩ ᱨᱮᱱᱟᱜ ᱥᱟᱹᱨᱤᱜᱟᱱᱤ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣᱜ ᱮᱫᱟ ᱞᱮ ᱾ ᱱᱚᱶᱟ ᱫᱚ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ ᱜᱩᱱ ᱵᱟᱲᱟᱭ ᱪᱷᱚ ᱨ ᱜᱚᱲᱚ ᱮᱢ ᱫᱟᱲᱮᱭᱟᱢᱟ, ᱯᱨᱚᱰᱚᱠᱴ ᱨᱮᱭᱟᱜ ᱢᱩᱞ ᱜᱩᱱ ᱵᱟᱵᱚᱛ ᱫᱚ ᱵᱟᱝᱟ ᱾</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[ᱟᱞᱮ ᱫᱚ ᱯᱨᱚᱰᱚᱠᱴ ᱨᱮᱭᱟᱜ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ ᱫᱚ <b>ᱪᱤᱠᱤ ᱜᱽᱨᱮᱰ</b> A ᱠᱷᱚᱱ F ᱫᱷᱟᱹᱵᱤᱡ ᱞᱮ ᱮᱢ ᱮᱫᱟ ᱾]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">ᱵᱷᱚᱨᱥᱟ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚ ᱾ ᱟᱞᱮ ᱵᱩᱡᱷᱟᱹᱣ ᱨᱮ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱫᱚ ᱥᱟᱹᱨᱤ ᱦᱚᱲᱴᱷᱮᱱᱠᱷᱚᱱ ᱦᱟᱹᱡᱩᱜ ᱠᱟᱱᱟ, ᱟᱨ ᱱᱤᱥᱪᱟᱞ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚ ᱠᱟᱱᱟ ᱾</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">ᱟᱞᱮ ᱵᱩᱡᱷᱟᱹᱣ ᱨᱮ ᱢᱮᱥᱟ ᱟᱨ ᱵᱟᱝ ᱴᱷᱤᱠ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ ᱾</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">ᱱᱤᱥᱪᱷᱚᱞ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚ ᱾ ᱟᱞᱮ ᱵᱩᱡᱷᱟᱹᱣ ᱨᱮ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚᱫᱚ ᱪᱷᱚᱞ ᱥᱮ ᱠᱤᱨᱤᱧ ᱧᱮᱞᱯᱚᱨᱚᱠᱷᱤᱭᱟᱹ ᱠᱟᱱᱟᱠᱚ ᱾</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>ᱨᱮᱴᱤᱝ</b> ᱫᱚ ᱪᱷᱚᱞ ᱜᱮᱭᱟ ᱡᱟᱦᱟᱸᱫᱚ ᱟᱞᱮ ᱵᱩᱡᱷᱟᱹᱣ ᱨᱮ ᱴᱷᱤᱠ ᱜᱮᱭᱟ ᱾]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>ᱪᱤᱱᱦᱟᱹᱠᱚ</b>ᱫᱚ %s ᱧᱮᱞᱯᱚᱨᱚᱠᱷ ᱠᱷᱚᱱ ᱢᱩᱪᱟᱹᱫ 80 ᱢᱟᱦᱟᱸ ᱨᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱡᱟᱦᱟᱸᱭ ᱫᱚ ᱟᱞᱮ ᱦᱤᱥᱟᱹᱵᱽ ᱛᱮ ᱵᱷᱚᱨᱥᱟ ᱜᱮᱭᱟ ᱾]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">%s ᱵᱟᱵᱚᱛ ᱰᱷᱮᱨ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
@@ -2293,6 +2298,9 @@
     <string name="review_quality_check_settings_title">ᱥᱟᱡᱟᱣᱠᱚ</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱨᱮ ᱫᱷᱟᱶᱨᱟ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">ᱟᱢ ᱫᱚ ᱛᱤᱱᱛᱤᱱᱡᱷᱚᱜ ᱠᱚᱨᱮ ᱵᱟᱪᱷᱟᱣ ᱡᱤᱱᱤᱥᱠᱚᱢ ᱧᱮᱞ ᱜᱮᱭᱟ ᱾ ᱟᱞᱮ ᱫᱚ ᱚᱱᱟ ᱡᱤᱱᱤᱥᱠᱚᱜᱮ ᱰᱷᱟᱶᱨᱟᱜᱼᱟ ᱞᱮ ᱡᱟᱦᱟᱸ ᱫᱚ ᱡᱟᱹᱥᱛᱤ ᱵᱷᱚᱨᱥᱟ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱛᱟᱦᱮᱸᱱᱟ ᱾%s
+</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2329,6 +2337,8 @@
     <string name="review_quality_check_analysis_requested_info_body">ᱟᱞᱮ ᱴᱷᱮᱱ ᱫᱚ ᱱᱚᱶᱟ ᱡᱤᱱᱤᱥ ᱵᱚᱵᱛ ᱧᱮᱞ ᱵᱤᱰᱟᱣᱜ 24 ᱴᱟᱲᱟᱝ ᱜᱟᱱ ᱞᱟᱣᱟ ᱞᱮᱭᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">ᱟᱞᱮ ᱫᱚ ᱱᱚᱶᱟ ᱵᱟᱞᱮ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ </string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">ᱫᱩᱨᱵᱷᱟᱜᱽ ᱛᱮ, ᱟᱞᱮ ᱫᱚ ᱡᱷᱚᱛᱚ ᱡᱤᱱᱤᱥ ᱠᱚᱨᱮᱭᱟᱜ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱵᱟᱞᱮ ᱫᱟᱲᱮᱭᱟᱫᱼᱟ ᱾ ᱡᱮᱢᱚᱱ, ᱜᱤᱯᱷᱴ ᱠᱟᱨᱰ ᱟᱨ ᱥᱴᱨᱤᱢᱤᱝ ᱣᱤᱰᱤᱭᱳ, ᱥᱮᱨᱮᱧ, ᱟᱨ ᱠᱷᱮᱞᱠᱚ ᱾</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">ᱵᱤᱵᱨᱚᱬ ᱞᱚᱜᱚᱱ ᱜᱮ ᱦᱟᱹᱡᱩᱜ ᱠᱟᱱᱟ</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2341,6 +2351,55 @@
     <string name="review_quality_check_generic_error_title">ᱱᱤᱛᱚᱜ ᱪᱮᱫ ᱦᱚᱸ ᱵᱤᱵᱨᱚᱬ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱼᱟ</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
     <string name="review_quality_check_generic_error_body">ᱱᱚᱶᱟ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱥᱩᱫᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱠᱟᱹᱢᱤ ᱪᱟᱹᱞᱩ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱛᱟᱭᱚᱢ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱦᱟᱹᱡᱩᱜ ᱢᱮ ᱾</string>
+    <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_title">ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱫᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body">ᱟᱢᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱛᱟᱢ ᱟᱨ ᱥᱟᱦᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱞᱟᱫᱮ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title">ᱱᱚᱶᱟ ᱧᱮᱞᱯᱚᱨᱚᱠᱷ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱫ ᱵᱤᱵᱨᱚᱬ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body">ᱡᱩᱫᱤ ᱟᱢ ᱵᱟᱲᱟᱭ ᱥᱮᱱ ᱢᱮ ᱠᱟᱱᱟ ᱱᱚᱶᱟ ᱡᱤᱱᱤᱥ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚ ᱵᱟᱵᱚᱛ, ᱢᱮᱱᱠᱷᱟᱱ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱜᱩᱱ ᱧᱮᱞ ᱢᱮ ᱾ ᱱᱚᱶᱟ ᱫᱚ 60 ᱴᱤᱡ ᱤᱫᱤᱭᱟᱭ ᱾</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link">ᱧᱮᱞᱯᱚᱨᱚᱠ ᱜᱩᱱ ᱧᱮᱞ ᱢᱮ</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">ᱡᱤᱱᱤᱥ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚ ᱨᱮ ᱟᱞᱮᱭᱟᱜ ᱵᱷᱚᱨᱥᱟ ᱜᱚᱲᱚᱠᱚ ᱪᱮᱥᱴᱟ ᱰᱤᱲᱟᱹᱣ ᱢᱮ
+</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">%1$s ᱨᱮ ᱠᱤᱨᱤᱧ ᱢᱟᱲᱟᱝ ᱨᱮ ᱧᱮᱞᱢᱮ ᱡᱤᱱᱤᱥ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚᱫᱚ ᱪᱮᱫ ᱞᱮᱠᱷᱟ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ ᱾ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱧᱮᱧᱮᱞᱤᱭᱟᱹ, %2$s ᱠᱷᱚᱱ ᱢᱤᱫᱴᱟᱹᱝ ᱮᱠᱥᱯᱮᱨᱤᱢᱮᱱᱴᱟᱞ ᱯᱷᱤᱪᱚᱨ, ᱱᱚᱶᱟ ᱫᱚ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱪᱮᱛᱟᱱ ᱨᱮ ᱛᱮᱭᱟᱨ ᱠᱟᱱᱟ ᱾ ᱱᱚᱶᱟ ᱫᱚ %3$s ᱟᱨ %4$s ᱨᱮ ᱦᱚᱸ ᱠᱟᱹᱢᱤᱭᱟᱭ ᱾</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">%1$s ᱨᱮ ᱠᱤᱨᱤᱧ ᱢᱟᱲᱟᱝ ᱨᱮ ᱧᱮᱞᱢᱮ ᱡᱤᱱᱤᱥ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚᱫᱚ ᱪᱮᱫ ᱞᱮᱠᱷᱟ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ ᱾ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱧᱮᱧᱮᱞᱤᱭᱟᱹ, %2$s ᱠᱷᱚᱱ ᱢᱤᱫᱴᱟᱹᱝ ᱮᱠᱥᱯᱮᱨᱤᱢᱮᱱᱴᱟᱞ ᱯᱷᱤᱪᱚᱨ, ᱱᱚᱶᱟ ᱫᱚ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱪᱮᱛᱟᱱ ᱨᱮ ᱛᱮᱭᱟᱨ ᱠᱟᱱᱟ ᱾</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla ᱛᱮ %1$s ᱨᱮᱭᱟᱜ ᱯᱟᱣᱟᱨ ᱵᱮᱵᱷᱟᱨ,‌ ᱟᱞᱮ ᱫᱚ ᱠᱤᱨᱤᱧ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱟᱨ ᱵᱟᱝ ᱴᱷᱟᱹᱣᱠᱟᱹ ᱧᱮᱞᱯᱚᱨᱚᱠ ᱵᱟᱲᱟᱭ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢᱚᱜᱟᱭ ᱾ ᱟᱞᱮᱭᱟᱜ AI ᱢᱳᱰᱮᱞ ᱫᱚ ᱟᱢ ᱡᱟᱦᱟᱱᱟᱜ ᱠᱤᱨᱤᱧ ᱥᱩᱫᱷᱨᱟᱹᱣ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢ ᱮᱫᱟᱭ ᱾%2$s</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">ᱟᱢ ᱫᱚ “ᱦᱚᱭ, ᱪᱮᱥᱴᱟᱭ ᱢᱮ” ᱨᱮ ᱚᱛᱟ ᱠᱟᱛᱮ %1$s ᱦᱟᱜ %2$s ᱟᱨ %3$s ᱦᱟᱜ %4$s ᱥᱟᱞᱟᱜ ᱦᱮᱥᱮᱨᱤᱭᱟᱹ ᱮᱫᱟᱢ ᱾</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">ᱟᱢ ᱫᱚ “ᱦᱚᱭ, ᱪᱮᱥᱴᱟᱭ ᱢᱮ” ᱨᱮ ᱚᱛᱟ ᱠᱟᱛᱮ %1$s ᱦᱟᱜ %2$s ᱟᱨ %3$s ᱦᱟᱜ %4$s ᱥᱟᱞᱟᱜ ᱦᱮᱥᱮᱨᱤᱭᱟᱹ ᱮᱫᱟᱢ ᱾</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">ᱱᱤᱥᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱚᱴᱤᱥ</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use">ᱵᱮᱵᱷᱟᱨ ᱨᱮᱭᱟᱜ ᱥᱚᱨᱛᱚ</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">ᱦᱚᱭ, ᱪᱮᱥᱴᱟᱭ ᱢᱮ</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">ᱯᱟᱱᱛᱮ ᱚᱰᱚᱠ ᱢᱮ ᱡᱩᱫᱤ ᱟᱢ ᱱᱚᱶᱟ ᱡᱤᱱᱤᱥ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚ ᱵᱷᱚᱨᱥᱟ ᱦᱟᱜ ᱠᱟᱱᱟᱢ — ᱠᱤᱨᱤᱧ ᱢᱟᱲᱟᱝ ᱨᱮ ᱾</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱪᱮᱥᱴᱟ ᱵᱤᱲᱟᱹᱣ ᱢᱮ</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">ᱱᱚᱶᱟ ᱧᱮᱞᱯᱚᱨᱚᱠᱠᱚ ᱵᱷᱚᱨᱥᱟ ᱜᱮᱭᱟ ᱥᱮ ? ᱢᱤᱫᱴᱟᱹᱝ ᱮᱰᱡᱚᱥᱴ ᱫᱚᱨ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱱᱤᱛᱚᱜ ᱧᱮᱞ ᱢᱮ ᱾</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+    <!-- Flag showing that the review quality check feature is work in progress. -->
+    <string name="review_quality_check_beta_flag">ᱵᱤᱴᱟ</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_open_handle_content_description">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_close_handle_content_description">ᱫᱩᱦᱲᱟᱹ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣᱤᱭᱟᱹ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
+    <string name="review_quality_check_star_rating_content_description">5 ᱠᱷᱚᱱ %1$s ᱤᱯᱤᱞᱠᱚ</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
     <string name="review_quality_check_highlights_show_less">ᱠᱚᱢ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
@@ -2354,17 +2413,31 @@
     <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
     <string name="review_quality_check_highlights_type_packaging_appearance">ᱯᱚᱠᱮᱡᱽ ᱟᱨ ᱧᱮᱞᱠᱚ</string>
 
+    <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
+    <string name="review_quality_check_highlights_type_competitiveness">ᱠᱚᱢᱯᱮᱴᱤᱴᱤᱵᱷ</string>
+    <!-- Text that is surrounded by quotes. The parameter is the actual text that is in quotes. An example of that text could be: Excellent craftsmanship, and that is displayed as “Excellent craftsmanship”. The text comes from a buyer's review that the feature is highlighting"   -->
+    <string name="surrounded_with_quotes">“%s”</string>
+
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
     <string name="a11y_action_label_collapse">ᱜᱷᱟᱥᱟᱣ</string>
+    <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_collapsed">ᱜᱷᱟᱥᱟᱣ ᱟᱠᱟᱱᱟ</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">ᱚᱥᱟᱨ</string>
+    <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_expanded">ᱯᱟᱥᱱᱟᱣ ᱟᱠᱟᱱᱟ</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">ᱱᱚᱶᱟ ᱡᱟᱣᱨᱟ ᱵᱮᱵᱚᱫ ᱰᱷᱮᱨ ᱵᱟᱰᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱝᱠ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">ᱚᱱᱚᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">ᱰᱷᱮᱨ ᱵᱟᱲᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱝᱠ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, ᱧᱩᱛᱩᱢ</string>
+    <!-- Title for dialog displayed when trying to access links present in a text. -->
+    <string name="a11y_links_title">ᱡᱚᱱᱚᱲᱟᱣ ᱠᱚ</string>
 
     <!-- Translations feature-->
 
