@@ -2260,9 +2260,12 @@ export class TranslationsParent extends JSWindowActorParent {
    * is supported when translating to that language.
    */
   static async getTopPreferredSupportedToLang() {
-    return TranslationsParent.getPreferredLanguages().find(
-      async langTag => await TranslationsParent.isSupportedAsToLang(langTag)
-    );
+    for (const langTag of TranslationsParent.getPreferredLanguages()) {
+      if (await TranslationsParent.isSupportedAsToLang(langTag)) {
+        return langTag;
+      }
+    }
+    return PIVOT_LANGUAGE;
   }
 
   /**

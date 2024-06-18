@@ -117,6 +117,59 @@ add_task(async function test_language_support_checks() {
     );
   }
 
+  await usingAppLocale("en", async () => {
+    const expected = "en";
+    const actual = await TranslationsParent.getTopPreferredSupportedToLang();
+    is(
+      actual,
+      expected,
+      "The top supported to-language should match the expected language tag"
+    );
+  });
+
+  await usingAppLocale("es", async () => {
+    const expected = "es";
+    const actual = await TranslationsParent.getTopPreferredSupportedToLang();
+    is(
+      actual,
+      expected,
+      "The top supported to-language should match the expected language tag"
+    );
+  });
+
+  // Only supported as a source language
+  await usingAppLocale("fi", async () => {
+    const expected = "en";
+    const actual = await TranslationsParent.getTopPreferredSupportedToLang();
+    is(
+      actual,
+      expected,
+      "The top supported to-language should match the expected language tag"
+    );
+  });
+
+  // Only supported as a target language
+  await usingAppLocale("sl", async () => {
+    const expected = "sl";
+    const actual = await TranslationsParent.getTopPreferredSupportedToLang();
+    is(
+      actual,
+      expected,
+      "The top supported to-language should match the expected language tag"
+    );
+  });
+
+  // Not supported as a source language or a target language.
+  await usingAppLocale("ja", async () => {
+    const expected = "en";
+    const actual = await TranslationsParent.getTopPreferredSupportedToLang();
+    is(
+      actual,
+      expected,
+      "The top supported to-language should match the expected language tag"
+    );
+  });
+
   await cleanup();
 });
 
