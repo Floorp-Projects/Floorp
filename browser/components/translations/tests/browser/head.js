@@ -2652,12 +2652,14 @@ class SelectTranslationsTestUtils {
     );
     ok(ariaDescription, "The a11y description for the panel can be found.");
 
-    const ariaLabel = document.getElementById(
-      documentRoleElement.getAttribute("aria-labelledby")
-    );
-    ok(ariaLabel, "The a11y label for the panel can be found.");
-
-    assertVisibility({ visible: { ariaLabel } });
+    const ariaLabelIds = documentRoleElement
+      .getAttribute("aria-labelledby")
+      .split(" ");
+    for (const id of ariaLabelIds) {
+      const ariaLabel = document.getElementById(id);
+      ok(ariaLabel, `The a11y label element '${id}' can be found.`);
+      assertVisibility({ visible: { ariaLabel } });
+    }
   }
 
   /**
