@@ -1249,6 +1249,16 @@ export class SearchEngine {
   }
 
   /**
+   * Gets the order hint for this engine. This is determined from the search
+   * configuration when the engine is initialized.
+   *
+   * @type {number}
+   */
+  get orderHint() {
+    return this._orderHint;
+  }
+
+  /**
    * Get the user-defined alias.
    *
    * @type {string}
