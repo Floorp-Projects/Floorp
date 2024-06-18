@@ -57,6 +57,7 @@ support-files = [
   "file_with_iframe_sandbox.html",
   "file_with_subframes_and_embed.html",
   "file_with_xorigin_frame.html",
+  "file_with_same_origin_frame.html",
   "head.js",
   "head_cookies.js",
   "head_notifications.js",
@@ -387,6 +388,8 @@ skip-if = [
 ]
 
 ["test_ext_scripting_executeScript_null_principal.html"]
+
+["test_ext_scripting_executeScript_slow_frame.html"]
 
 ["test_ext_scripting_executeScript_world.html"]
 

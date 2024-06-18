@@ -478,13 +478,20 @@ class Script {
     }
 
     try {
-      if (this.runAt === "document_end") {
-        await promiseDocumentReady(window.document);
-      } else if (this.runAt === "document_idle") {
-        await Promise.race([
-          promiseDocumentIdle(window),
-          promiseDocumentLoaded(window.document),
-        ]);
+      // In case of initial about:blank documents, inject immediately without
+      // awaiting the runAt logic in the blocks below, to avoid getting stuck
+      // due to https://bugzilla.mozilla.org/show_bug.cgi?id=1900222#c7
+      // This is only relevant for dynamic code execution because declarative
+      // content scripts do not run on initial about:blank - bug 1415539).
+      if (!window.document.isInitialDocument) {
+        if (this.runAt === "document_end") {
+          await promiseDocumentReady(window.document);
+        } else if (this.runAt === "document_idle") {
+          await Promise.race([
+            promiseDocumentIdle(window),
+            promiseDocumentLoaded(window.document),
+          ]);
+        }
       }
 
       return this.inject(context, reportExceptions);

@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+
+Load a same-origin iframe (http://mochi.test:8888, https://mochi.test/, http://mochi.xorigin-test:8888, etc.).<br>
+<iframe src="file_sample.html"></iframe>
+<script>
+"use strict";
+
+// Dereference frames[0] to ensure the creation of the frame's window context.
+// Without this, the frame's browsingContext.currentWindowGlobal is null in the
+// parent on Android with --disable-fission (bug 1902709).
+void frames[0];
+console.log("This is " + document.URL + " and opener=" + opener);
+</script>
