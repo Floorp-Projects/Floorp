@@ -81,6 +81,9 @@ export function getSelectors() {
     getSpanishHyperlink() {
       return content.document.getElementById("spanish-hyperlink");
     },
+    getURLHyperlink() {
+      return content.document.getElementById("url-hyperlink");
+    },
   };
 }
 

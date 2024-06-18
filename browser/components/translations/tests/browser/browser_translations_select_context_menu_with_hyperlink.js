@@ -107,3 +107,33 @@ add_task(
     await cleanup();
   }
 );
+
+/**
+ * This test case verifies that the translate-selection context menu item is unavailable
+ * when the underlying hyperlink text is a URL, rather than plain text.
+ */
+add_task(
+  async function test_translate_selection_menuitem_with_raw_url_hyperlink() {
+    const { cleanup, runInPage } = await loadTestPage({
+      page: SELECT_TEST_PAGE_URL,
+      languagePairs: LANGUAGE_PAIRS,
+      prefs: [["browser.translations.select.enable", true]],
+    });
+
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
+      { button: true, circleArrows: false, locale: false, icon: true },
+      "The button is available."
+    );
+
+    await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
+      runInPage,
+      {
+        openAtURLHyperlink: true,
+        expectMenuItemVisible: false,
+      },
+      "The translate-selection context menu item should be unavailable when the hyperlink text is a URL."
+    );
+
+    await cleanup();
+  }
+);
