@@ -11,17 +11,19 @@
          tabspecific="true"
          locationspecific="true"
          orient="vertical">
-    <html:div id="select-translations-panel-a11y-document-wrapper"
-              role="document"
-              aria-labelledby="select-translations-panel-header"
-              aria-describedby="select-translations-panel-a11y-document-wrapper">
+    <html:div role="document"
+              aria-labelledby="select-translations-panel-header select-translations-panel-beta-icon-wrapper"
+              aria-describedby="select-translations-panel-settings-button">
       <hbox id="select-translations-panel-header-row"
             class="panel-header select-translations-panel-content">
         <html:h1 class="translations-panel-header-wrapper">
           <html:span id="select-translations-panel-header" data-l10n-id="select-translations-panel-header">
           </html:span>
         </html:h1>
-        <hbox class="translations-panel-beta" role="image" aria-label="Beta">
+        <hbox id="select-translations-panel-beta-icon-wrapper"
+              class="translations-panel-beta"
+              role="image"
+              aria-label="Beta">
           <image id="select-translations-panel-beta-icon"
                  class="translations-panel-beta-icon">
           </image>
@@ -116,7 +118,8 @@
         <vbox class="select-translations-panel-content">
           <html:textarea id="select-translations-panel-text-area"
                          readonly="true"
-                         tabindex="0">
+                         tabindex="0"
+                         aria-labelledby="select-translations-panel-main-content">
           </html:textarea>
           <html:moz-message-bar id="select-translations-panel-translation-failure-message-bar"
                                 type="error"
