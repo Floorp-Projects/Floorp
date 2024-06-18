@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.executeScript() with allFrames:true or frameId option, edge cases</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+let gRequestThrottlerExt = null;
+async function throttleAllIframeLoads() {
+  is(gRequestThrottlerExt, null, "throttleAllIframeLoads - one at a time");
+  gRequestThrottlerExt = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking"],
+      host_permissions: ["*://*/*"],
+    },
+    background() {
+      let neverResolvingPromise = new Promise(() => {});
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          browser.test.log(`(Indefinitely) delaying load of ${details.url}`);
+          return neverResolvingPromise;
+        },
+        { urls: ["*://*/*"], types: ["sub_frame"] },
+        ["blocking"]
+      );
+    },
+  });
+  await gRequestThrottlerExt.startup();
+}
+async function stopThrottlingAllIframeLoads() {
+  await gRequestThrottlerExt.unload();
+  gRequestThrottlerExt = null;
+}
+
+async function openTabAndAwaitLoad(url) {
+  info(`openTabAndAwaitLoad: ${url}`);
+  // We cannot use AppTestDelegate.openNewForegroundTab in this test because it
+  // resolves only when all subresources have been loaded, but we are
+  // intentionally delaying iframe loads in this test.
+  let win = window.open(url);
+  const browsingContextId = SpecialPowers.wrap(win).browsingContext.id;
+  await SimpleTest.promiseWaitForCondition(
+    () =>
+      SpecialPowers.spawnChrome(
+        [browsingContextId],
+        bcId => BrowsingContext.get(bcId).children.length
+      ),
+    "Parent process should detect frame in " + url
+  );
+  return win;
+}
+
+async function do_test_executeScript_with_slow_frame({
+  injectImmediately = false,
+  targetSlowFrame = false, // if false, then allFrames:true is used.
+}) {
+  await throttleAllIframeLoads();
+
+  let url = new URL("file_with_same_origin_frame.html", document.baseURI).href;
+  let win = await openTabAndAwaitLoad(url);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      description: JSON.stringify({ injectImmediately, targetSlowFrame, url }),
+      permissions: ["scripting", "tabs"],
+      host_permissions: ["*://*/*"],
+    },
+    async background() {
+      let { injectImmediately, targetSlowFrame, url } = JSON.parse(
+        browser.runtime.getManifest().description
+      );
+      // Replace port to work around bug 1468162.
+      let tabs = await browser.tabs.query({ url: url.replace(/:\d+\//, "/") });
+      browser.test.assertEq(1, tabs.length, "Found tab of current test");
+
+      const target = { tabId: tabs[0].id, allFrames: !targetSlowFrame };
+
+      if (targetSlowFrame) {
+        let [ { result: frameId }] = await browser.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          func: () => browser.runtime.getFrameId(frames[0]),
+          injectImmediately: true,
+        });
+        target.frameIds = [frameId];
+      }
+
+      browser.test.log(`executeScript target is ${JSON.stringify(target)}`);
+      let results = await browser.scripting.executeScript({
+        target,
+        injectImmediately,
+        func: () => document.URL,
+      });
+      // The top document is file_with_same_origin_frame.html and the only
+      // child frame is the pending load of file_sample.html.
+
+      if (!targetSlowFrame) {
+        // with allFrames:true, the first result is from the top document.
+        browser.test.assertEq(results[0]?.result, url, "Got right tab");
+      }
+      let { error, result } = results[targetSlowFrame ? 0 : 1] || {};
+      browser.test.assertEq(error?.message, undefined, "No error");
+      browser.test.assertEq(result, "about:blank", "Got result");
+
+      browser.test.notifyPass();
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
+
+  win.close();
+
+  await stopThrottlingAllIframeLoads();
+}
+
+// Tests scripting.executeScript with allFrames:true and injectImmediately:true
+// while one of the frames is still loading (and at initial about:blank).
+add_task(async function test_executeScript_allFrames_injectImmediately_true() {
+  await do_test_executeScript_with_slow_frame({ injectImmediately: true });
+});
+
+// Tests scripting.executeScript with allFrames:true while one of the frames is
+// still loading (and at initial about:blank).
+add_task(async function test_executeScript_allFrames_injectImmediately_false() {
+  await do_test_executeScript_with_slow_frame({ injectImmediately: false });
+});
+
+// Tests scripting.executeScript with frameId of a frame that is still loading
+// (and at initial about:blank).
+add_task(async function test_executeScript_frameId_slow_frame() {
+  // Note: this tests with injectImmediately:false. We do not separately test
+  // with injectImmediately:true because if there were to be any failure with
+  // its implementation, then it should have been caught by
+  // test_executeScript_allFrames_injectImmediately_true.
+  await do_test_executeScript_with_slow_frame({ targetSlowFrame: true });
+});
+
+</script>
+
+</body>
+</html>
