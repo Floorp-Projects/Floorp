@@ -1426,8 +1426,9 @@ class SelectTranslationsTestUtils {
    * @param {boolean} options.openAtEnglishSentence - Opens the context menu at an English sentence.
    * @param {boolean} options.openAtSpanishSentence - Opens the context menu at a Spanish sentence.
    * @param {boolean} options.openAtFrenchHyperlink - Opens the context menu at a hyperlinked French text.
-   * @param {boolean} options.openAtEnglishHyperlink - Opens the context menu at an hyperlinked English text.
+   * @param {boolean} options.openAtEnglishHyperlink - Opens the context menu at a hyperlinked English text.
    * @param {boolean} options.openAtSpanishHyperlink - Opens the context menu at a hyperlinked Spanish text.
+   * @param {boolean} options.openAtURLHyperlink - Opens the context menu at a hyperlinked URL text.
    * @param {string} [message] - A message to log to info.
    * @throws Throws an error if the properties of the translate-selection item do not match the expected options.
    */
@@ -1455,6 +1456,7 @@ class SelectTranslationsTestUtils {
       openAtFrenchHyperlink,
       openAtEnglishHyperlink,
       openAtSpanishHyperlink,
+      openAtURLHyperlink,
     },
     message
   ) {
@@ -1488,6 +1490,7 @@ class SelectTranslationsTestUtils {
       openAtFrenchHyperlink,
       openAtEnglishHyperlink,
       openAtSpanishHyperlink,
+      openAtURLHyperlink,
     });
 
     const menuItem = maybeGetById(
@@ -2314,8 +2317,9 @@ class SelectTranslationsTestUtils {
    * @param {boolean} options.openAtEnglishSentence - Opens the context menu at an English sentence.
    * @param {boolean} options.openAtSpanishSentence - Opens the context menu at a Spanish sentence.
    * @param {boolean} options.openAtFrenchHyperlink - Opens the context menu at a hyperlinked French text.
-   * @param {boolean} options.openAtEnglishHyperlink - Opens the context menu at an hyperlinked English text.
+   * @param {boolean} options.openAtEnglishHyperlink - Opens the context menu at a hyperlinked English text.
    * @param {boolean} options.openAtSpanishHyperlink - Opens the context menu at a hyperlinked Spanish text.
+   * @param {boolean} options.openAtURLHyperlink - Opens the context menu at a hyperlinked URL text.
    * @throws Throws an error if no valid option was provided for opening the menu.
    */
   static async openContextMenu(runInPage, options) {
@@ -2385,6 +2389,7 @@ class SelectTranslationsTestUtils {
     await maybeOpenContextMenuAt("FrenchHyperlink");
     await maybeOpenContextMenuAt("EnglishHyperlink");
     await maybeOpenContextMenuAt("SpanishHyperlink");
+    await maybeOpenContextMenuAt("URLHyperlink");
   }
 
   /**
@@ -2595,8 +2600,9 @@ class SelectTranslationsTestUtils {
    * @param {boolean} options.openAtEnglishSentence - Opens the context menu at an English sentence.
    * @param {boolean} options.openAtSpanishSentence - Opens the context menu at a Spanish sentence.
    * @param {boolean} options.openAtFrenchHyperlink - Opens the context menu at a hyperlinked French text.
-   * @param {boolean} options.openAtEnglishHyperlink - Opens the context menu at an hyperlinked English text.
+   * @param {boolean} options.openAtEnglishHyperlink - Opens the context menu at a hyperlinked English text.
    * @param {boolean} options.openAtSpanishHyperlink - Opens the context menu at a hyperlinked Spanish text.
+   * @param {boolean} options.openAtURLHyperlink - Opens the context menu at a hyperlinked URL text.
    * @param {Function} [options.onOpenPanel] - An optional callback function to execute after the panel opens.
    * @param {string|null} [message] - An optional message to log to info.
    * @throws Throws an error if the context menu could not be opened with the provided options.

@@ -116,7 +116,6 @@ add_task(async function test_xul_text_link_label() {
     true,
     "context-searchselect-private",
     true,
-    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
   ]);
 
   // Clean up so won't affect HTML element test cases.
@@ -209,18 +208,27 @@ const kLinkItems = [
   true,
   "context-searchselect-private",
   true,
-  ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
 ];
 
 add_task(async function test_link() {
-  await test_contextmenu("#test-link", kLinkItems);
+  await test_contextmenu("#test-link", [
+    ...kLinkItems,
+    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
+  ]);
 });
 
 add_task(async function test_link_in_shadow_dom() {
-  await test_contextmenu("#shadow-host", kLinkItems, {
-    offsetX: 6,
-    offsetY: 6,
-  });
+  await test_contextmenu(
+    "#shadow-host",
+    [
+      ...kLinkItems,
+      ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
+    ],
+    {
+      offsetX: 6,
+      offsetY: 6,
+    }
+  );
 });
 
 add_task(async function test_link_over_shadow_dom() {
@@ -1543,9 +1551,6 @@ add_task(async function test_imagelink() {
     null,
     "context-setDesktopBackground",
     true,
-    ...(hasSelectTranslations
-      ? ["---", null, "context-translate-selection", true]
-      : []),
   ]);
 });
 
@@ -1742,7 +1747,6 @@ add_task(async function test_svg_link() {
     true,
     "context-searchselect-private",
     true,
-    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
   ]);
 
   await test_contextmenu("#svg-with-link2 > a", [
@@ -1772,7 +1776,6 @@ add_task(async function test_svg_link() {
     true,
     "context-searchselect-private",
     true,
-    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
   ]);
 
   await test_contextmenu("#svg-with-link3 > a", [
@@ -1802,7 +1805,6 @@ add_task(async function test_svg_link() {
     true,
     "context-searchselect-private",
     true,
-    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
   ]);
 });
 
@@ -1834,7 +1836,6 @@ add_task(async function test_svg_relative_link() {
     true,
     "context-searchselect-private",
     true,
-    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
   ]);
 
   await test_contextmenu("#svg-with-relative-link2 > a", [
@@ -1864,7 +1865,6 @@ add_task(async function test_svg_relative_link() {
     true,
     "context-searchselect-private",
     true,
-    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
   ]);
 
   await test_contextmenu("#svg-with-relative-link3 > a", [
@@ -1894,7 +1894,6 @@ add_task(async function test_svg_relative_link() {
     true,
     "context-searchselect-private",
     true,
-    ...(hasSelectTranslations ? ["context-translate-selection", true] : []),
   ]);
 });
 

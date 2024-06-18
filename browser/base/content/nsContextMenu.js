@@ -2599,9 +2599,27 @@ class nsContextMenu {
    * @returns {string} The text to translate.
    */
   #getTextToTranslate() {
-    return this.isTextSelected
-      ? this.selectionInfo.fullText.trim()
-      : this.linkTextStr.trim();
+    if (this.isTextSelected) {
+      // If there is an active selection, we will always offer to translate.
+      return this.selectionInfo.fullText.trim();
+    }
+
+    const linkText = this.linkTextStr.trim();
+    if (!linkText) {
+      // There was no underlying link text, so do not offer to translate.
+      return "";
+    }
+
+    try {
+      // If the underlying link text is a URL, we should not offer to translate.
+      new URL(linkText);
+      return "";
+    } catch {
+      // A URL could not be parsed from the unerlying link text.
+    }
+
+    // Since the underlying link text is not a URL, we should offer to translate it.
+    return linkText;
   }
 
   /**
