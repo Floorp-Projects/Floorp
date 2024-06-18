@@ -413,6 +413,9 @@ export class ProtonScreen extends React.PureComponent {
             : {}
         }
       >
+        {content.dismiss_button && content.reverse_split
+          ? this.renderDismissButton()
+          : null}
         <Localized text={content.image_alt_text}>
           <div className="sr-only image-alt" role="img" />
         </Localized>
@@ -534,7 +537,9 @@ export class ProtonScreen extends React.PureComponent {
             />
           ) : null}
           {includeNoodles ? this.renderNoodles() : null}
-          {content.dismiss_button ? this.renderDismissButton() : null}
+          {content.dismiss_button && !content.reverse_split
+            ? this.renderDismissButton()
+            : null}
           <div
             className={`main-content ${hideStepsIndicator ? "no-steps" : ""}`}
             style={{
