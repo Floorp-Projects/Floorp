@@ -2250,7 +2250,10 @@ export class UrlbarQueryContext {
     }
 
     // We're unlikely to get useful remote results for a single character.
-    if (searchString.length < 2 && !allowEmptySearchString) {
+    if (
+      searchString.length < 2 &&
+      !(!searchString.length && allowEmptySearchString)
+    ) {
       return false;
     }
 

@@ -299,6 +299,22 @@ add_task(async function heuristicAddsFormHistory() {
   await UrlbarTestUtils.formHistory.clear();
 });
 
+add_task(async function minChars() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.trending.featureGate", true]],
+  });
+  gURLBar.focus();
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "f",
+  });
+
+  // Suggestions shouldn't be fetched with single character queries.
+  await assertSuggestions([]);
+  await SpecialPowers.popPrefEnv();
+});
+
 async function getFirstSuggestion() {
   let results = await getSuggestionResults();
   if (!results.length) {
