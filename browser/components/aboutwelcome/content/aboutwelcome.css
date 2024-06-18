@@ -1595,6 +1595,7 @@ html {
   align-items: center;
   -moz-context-properties: fill, stroke, fill-opacity, stroke-opacity;
   stroke: currentColor;
+  position: relative;
 }
 .onboardingContainer .screen[pos=split] .section-secondary:dir(rtl) {
   border-radius: 0 8px 8px 0;
