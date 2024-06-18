@@ -30,38 +30,20 @@ export class _WallpaperCategories extends React.PureComponent {
 
   handleChange(event) {
     const { id } = event.target;
-    const prefs = this.props.Prefs.values;
-    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
+    this.props.setPref("newtabWallpapers.wallpaper-light", id);
+    this.props.setPref("newtabWallpapers.wallpaper-dark", id);
+    // Setting this now so when we remove v1 we don't have to migrate v1 values.
+    this.props.setPref("newtabWallpapers.wallpaper", id);
     this.handleUserEvent(at.WALLPAPER_CLICK, {
       selected_wallpaper: id,
       hadPreviousWallpaper: !!this.props.activeWallpaper,
     });
-    // bug 1892095
-    if (
-      prefs["newtabWallpapers.wallpaper-dark"] === "" &&
-      colorMode === "light"
-    ) {
-      this.props.setPref(
-        "newtabWallpapers.wallpaper-dark",
-        id.replace("light", "dark")
-      );
-    }
-
-    if (
-      prefs["newtabWallpapers.wallpaper-light"] === "" &&
-      colorMode === "dark"
-    ) {
-      this.props.setPref(
-        `newtabWallpapers.wallpaper-light`,
-        id.replace("dark", "light")
-      );
-    }
   }
-
   handleReset() {
-    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
+    this.props.setPref("newtabWallpapers.wallpaper-light", "");
+    this.props.setPref("newtabWallpapers.wallpaper-dark", "");
+    // Setting this now so when we remove v1 we don't have to migrate v1 values.
+    this.props.setPref("newtabWallpapers.wallpaper", "");
     this.handleUserEvent(at.WALLPAPER_CLICK, {
       selected_wallpaper: "none",
       hadPreviousWallpaper: !!this.props.activeWallpaper,
@@ -97,6 +79,7 @@ export class _WallpaperCategories extends React.PureComponent {
   }
 
   render() {
+    const prefs = this.props.Prefs.values;
     const { wallpaperList, categories } = this.props.Wallpapers;
     const { activeWallpaper } = this.props;
     const { activeCategory } = this.state;
@@ -104,6 +87,10 @@ export class _WallpaperCategories extends React.PureComponent {
     const filteredWallpapers = wallpaperList.filter(
       wallpaper => wallpaper.category === activeCategory
     );
+    let categorySectionClassname = "category wallpaper-list";
+    if (prefs["newtabWallpapers.v2.enabled"]) {
+      categorySectionClassname += " ignore-color-mode";
+    }
 
     return (
       <div>
@@ -121,6 +108,9 @@ export class _WallpaperCategories extends React.PureComponent {
               wallpaper => wallpaper.category === category
             );
             const title = firstWallpaper ? firstWallpaper.title : "";
+            const solid_color = firstWallpaper
+              ? firstWallpaper.solid_color
+              : "";
 
             let fluent_id;
             switch (category) {
@@ -133,12 +123,16 @@ export class _WallpaperCategories extends React.PureComponent {
               case "solid-colors":
                 fluent_id = "newtab-wallpaper-category-title-colors";
             }
-            //
+
+            const style = {
+              backgroundColor: solid_color || "transparent",
+            };
 
             return (
               <div key={category}>
                 <input
                   id={category}
+                  style={style}
                   onClick={this.handleCategory}
                   className={`wallpaper-input ${title}`}
                 />
@@ -156,36 +150,42 @@ export class _WallpaperCategories extends React.PureComponent {
           classNames="wallpaper-list"
           unmountOnExit={true}
         >
-          <section className="category wallpaper-list">
+          <section className={categorySectionClassname}>
             <button
               className="arrow-button"
               data-l10n-id={activeCategoryFluentID}
               onClick={this.handleBack}
             />
             <fieldset>
-              {filteredWallpapers.map(({ title, theme, fluent_id }) => {
-                return (
-                  <>
-                    <input
-                      onChange={this.handleChange}
-                      type="radio"
-                      name={`wallpaper-${title}`}
-                      id={title}
-                      value={title}
-                      checked={title === activeWallpaper}
-                      aria-checked={title === activeWallpaper}
-                      className={`wallpaper-input theme-${theme} ${title}`}
-                    />
-                    <label
-                      htmlFor={title}
-                      className="sr-only"
-                      data-l10n-id={fluent_id}
-                    >
-                      {fluent_id}
-                    </label>
-                  </>
-                );
-              })}
+              {filteredWallpapers.map(
+                ({ title, theme, fluent_id, solid_color }) => {
+                  const style = {
+                    backgroundColor: solid_color || "transparent",
+                  };
+                  return (
+                    <>
+                      <input
+                        onChange={this.handleChange}
+                        style={style}
+                        type="radio"
+                        name={`wallpaper-${title}`}
+                        id={title}
+                        value={title}
+                        checked={title === activeWallpaper}
+                        aria-checked={title === activeWallpaper}
+                        className={`wallpaper-input theme-${theme} ${title}`}
+                      />
+                      <label
+                        htmlFor={title}
+                        className="sr-only"
+                        data-l10n-id={fluent_id}
+                      >
+                        {fluent_id}
+                      </label>
+                    </>
+                  );
+                }
+              )}
             </fieldset>
           </section>
         </CSSTransition>

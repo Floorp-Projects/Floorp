@@ -27,12 +27,8 @@ add_task(async function test_construction() {
   Assert.ok(feed, "Could construct a WallpaperFeed");
   Assert.ok(feed.loaded === false, "WallpaperFeed is not loaded");
   Assert.ok(
-    feed.wallpaperClient === "",
-    "wallpaperClient is initialized as an empty string"
-  );
-  Assert.ok(
-    feed.wallpaperDB === "",
-    "wallpaperDB is initialized as an empty string"
+    feed.wallpaperClient === null,
+    "wallpaperClient is initialized as null"
   );
   Assert.ok(
     feed.baseAttachmentURL === "",

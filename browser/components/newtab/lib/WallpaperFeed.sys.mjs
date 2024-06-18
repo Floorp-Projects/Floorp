@@ -22,12 +22,15 @@ const PREF_WALLPAPERS_HIGHLIGHT_SEEN_COUNTER =
 const PREF_WALLPAPERS_V2_ENABLED =
   "browser.newtabpage.activity-stream.newtabWallpapers.v2.enabled";
 
+const WALLPAPER_REMOTE_SETTINGS_COLLECTION = "newtab-wallpapers";
+const WALLPAPER_REMOTE_SETTINGS_COLLECTION_V2 = "newtab-wallpapers-v2";
+
 export class WallpaperFeed {
   constructor() {
     this.loaded = false;
-    this.wallpaperClient = "";
-    this.wallpaperDB = "";
+    this.wallpaperClient = null;
     this.baseAttachmentURL = "";
+    this._onSync = this.onSync.bind(this);
   }
 
   /**
@@ -58,13 +61,35 @@ export class WallpaperFeed {
     if (wallpapersEnabled || wallpapersV2Enabled) {
       if (!this.wallpaperClient) {
         // getting collection
-        this.wallpaperClient = this.RemoteSettings("newtab-wallpapers");
+        if (wallpapersV2Enabled) {
+          this.wallpaperClient = this.RemoteSettings(
+            WALLPAPER_REMOTE_SETTINGS_COLLECTION_V2
+          );
+        } else {
+          this.wallpaperClient = this.RemoteSettings(
+            WALLPAPER_REMOTE_SETTINGS_COLLECTION
+          );
+        }
       }
 
       await this.getBaseAttachment();
-      this.wallpaperClient.on("sync", () => this.updateWallpapers());
+      this.wallpaperClient.on("sync", this._onSync);
       this.updateWallpapers(isStartup);
     }
+  }
+
+  async wallpaperTeardown() {
+    if (this._onSync) {
+      this.wallpaperClient?.off("sync", this._onSync);
+    }
+    this.loaded = false;
+    this.wallpaperClient = null;
+    this.baseAttachmentURL = "";
+  }
+
+  async onSync() {
+    this.wallpaperTeardown();
+    await this.wallpaperSetup(false /* isStartup */);
   }
 
   async getBaseAttachment() {
@@ -90,13 +115,20 @@ export class WallpaperFeed {
     if (!this.baseAttachmentURL) {
       await this.getBaseAttachment();
     }
-    const wallpapers = records.map(record => {
-      return {
-        ...record,
-        wallpaperUrl: `${this.baseAttachmentURL}${record.attachment.location}`,
-        category: record.category || "other",
-      };
-    });
+
+    const wallpapers = [
+      ...records.map(record => {
+        return {
+          ...record,
+          ...(record.attachment
+            ? {
+                wallpaperUrl: `${this.baseAttachmentURL}${record.attachment.location}`,
+              }
+            : {}),
+          category: record.category || "other",
+        };
+      }),
+    ];
 
     const categories = [
       ...new Set(wallpapers.map(wallpaper => wallpaper.category)),
@@ -176,7 +208,11 @@ export class WallpaperFeed {
       case at.SYSTEM_TICK:
         break;
       case at.PREF_CHANGED:
-        if (action.data.name === "newtabWallpapers.enabled") {
+        if (
+          action.data.name === "newtabWallpapers.enabled" ||
+          action.data.name === "newtabWallpapers.v2.enabled"
+        ) {
+          this.wallpaperTeardown();
           await this.wallpaperSetup(false /* isStartup */);
         }
         if (action.data.name === "newtabWallpapers.highlightSeenCounter") {
