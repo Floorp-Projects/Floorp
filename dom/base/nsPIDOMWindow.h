@@ -251,6 +251,18 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   /**
    * Call this to check whether some node (this window, its document,
+   * or content in that document) has a SMILTime* event listeners.
+   */
+  bool HasSMILTimeEventListeners() { return mMayHaveSMILTimeEventListener; }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a SMILTime* event listener.
+   */
+  void SetHasSMILTimeEventListeners() { mMayHaveSMILTimeEventListener = true; }
+
+  /**
+   * Call this to check whether some node (this window, its document,
    * or content in that document) has a beforeinput event listener.
    * Returing false may be wrong if some nodes have come from another document
    * with `Document.adoptNode`.
@@ -702,6 +714,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   bool mMayHaveMouseEnterLeaveEventListener;
   bool mMayHavePointerEnterLeaveEventListener;
   bool mMayHaveTransitionEventListener;
+  bool mMayHaveSMILTimeEventListener;
   // Only used for telemetry probes.  This may be wrong if some nodes have
   // come from another document with `Document.adoptNode`.
   bool mMayHaveBeforeInputEventListenerForTelemetry;

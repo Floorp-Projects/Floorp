@@ -425,7 +425,7 @@ void SMILAnimationController::DoMilestoneSamples() {
   // registered for those times. This way events can fire in the correct order,
   // dependencies can be resolved etc.
 
-  SMILTime sampleTime = INT64_MIN;
+  SMILTime sampleTime = std::numeric_limits<SMILTime>::min();
 
   while (true) {
     // We want to find any milestones AT OR BEFORE the current sample time so we
