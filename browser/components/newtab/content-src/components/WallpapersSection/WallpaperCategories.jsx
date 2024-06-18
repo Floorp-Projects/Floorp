@@ -18,6 +18,7 @@ export class _WallpaperCategories extends React.PureComponent {
     this.prefersDarkQuery = null;
     this.state = {
       activeCategory: null,
+      activeCategoryFluentID: null,
     };
   }
 
@@ -70,6 +71,20 @@ export class _WallpaperCategories extends React.PureComponent {
   handleCategory = event => {
     this.setState({ activeCategory: event.target.id });
     this.handleUserEvent(at.WALLPAPER_CATEGORY_CLICK, event.target.id);
+
+    let fluent_id;
+    switch (event.target.id) {
+      case "photographs":
+        fluent_id = "newtab-wallpaper-category-title-photographs";
+        break;
+      case "abstract":
+        fluent_id = "newtab-wallpaper-category-title-abstract";
+        break;
+      case "solid-colors":
+        fluent_id = "newtab-wallpaper-category-title-colors";
+    }
+
+    this.setState({ activeCategoryFluentID: fluent_id });
   };
 
   handleBack() {
@@ -85,18 +100,21 @@ export class _WallpaperCategories extends React.PureComponent {
     const { wallpaperList, categories } = this.props.Wallpapers;
     const { activeWallpaper } = this.props;
     const { activeCategory } = this.state;
+    const { activeCategoryFluentID } = this.state;
     const filteredWallpapers = wallpaperList.filter(
       wallpaper => wallpaper.category === activeCategory
     );
 
     return (
       <div>
-        <h2 data-l10n-id="newtab-wallpaper-title">Wallpapers</h2>
-        <button
-          className="wallpapers-reset"
-          onClick={this.handleReset}
-          data-l10n-id="newtab-wallpaper-reset"
-        />
+        <div className="category-header">
+          <h2 data-l10n-id="newtab-wallpaper-title">Wallpapers</h2>
+          <button
+            className="wallpapers-reset"
+            onClick={this.handleReset}
+            data-l10n-id="newtab-wallpaper-reset"
+          />
+        </div>
         <fieldset className="category-list">
           {categories.map(category => {
             const firstWallpaper = wallpaperList.find(
@@ -104,16 +122,30 @@ export class _WallpaperCategories extends React.PureComponent {
             );
             const title = firstWallpaper ? firstWallpaper.title : "";
 
+            let fluent_id;
+            switch (category) {
+              case "photographs":
+                fluent_id = "newtab-wallpaper-category-title-photographs";
+                break;
+              case "abstract":
+                fluent_id = "newtab-wallpaper-category-title-abstract";
+                break;
+              case "solid-colors":
+                fluent_id = "newtab-wallpaper-category-title-colors";
+            }
+            //
+
             return (
-              <>
+              <div key={category}>
                 <input
-                  key={category}
                   id={category}
                   onClick={this.handleCategory}
                   className={`wallpaper-input ${title}`}
                 />
-                <label>{category}</label>
-              </>
+                <label htmlFor={category} data-l10n-id={fluent_id}>
+                  {fluent_id}
+                </label>
+              </div>
             );
           })}
         </fieldset>
@@ -125,8 +157,11 @@ export class _WallpaperCategories extends React.PureComponent {
           unmountOnExit={true}
         >
           <section className="category wallpaper-list">
-            <button onClick={this.handleBack}>back arrow</button>
-            <h2>{activeCategory}</h2>
+            <button
+              className="arrow-button"
+              data-l10n-id={activeCategoryFluentID}
+              onClick={this.handleBack}
+            />
             <fieldset>
               {filteredWallpapers.map(({ title, theme, fluent_id }) => {
                 return (

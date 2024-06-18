@@ -9153,7 +9153,8 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     this.prefersHighContrastQuery = null;
     this.prefersDarkQuery = null;
     this.state = {
-      activeCategory: null
+      activeCategory: null,
+      activeCategoryFluentID: null
     };
   }
   componentDidMount() {
@@ -9191,6 +9192,20 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       activeCategory: event.target.id
     });
     this.handleUserEvent(actionTypes.WALLPAPER_CATEGORY_CLICK, event.target.id);
+    let fluent_id;
+    switch (event.target.id) {
+      case "photographs":
+        fluent_id = "newtab-wallpaper-category-title-photographs";
+        break;
+      case "abstract":
+        fluent_id = "newtab-wallpaper-category-title-abstract";
+        break;
+      case "solid-colors":
+        fluent_id = "newtab-wallpaper-category-title-colors";
+    }
+    this.setState({
+      activeCategoryFluentID: fluent_id
+    });
   };
   handleBack() {
     this.setState({
@@ -9216,24 +9231,46 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     const {
       activeCategory
     } = this.state;
+    const {
+      activeCategoryFluentID
+    } = this.state;
     const filteredWallpapers = wallpaperList.filter(wallpaper => wallpaper.category === activeCategory);
-    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "category-header"
+    }, /*#__PURE__*/external_React_default().createElement("h2", {
       "data-l10n-id": "newtab-wallpaper-title"
     }, "Wallpapers"), /*#__PURE__*/external_React_default().createElement("button", {
       className: "wallpapers-reset",
       onClick: this.handleReset,
       "data-l10n-id": "newtab-wallpaper-reset"
-    }), /*#__PURE__*/external_React_default().createElement("fieldset", {
+    })), /*#__PURE__*/external_React_default().createElement("fieldset", {
       className: "category-list"
     }, categories.map(category => {
       const firstWallpaper = wallpaperList.find(wallpaper => wallpaper.category === category);
       const title = firstWallpaper ? firstWallpaper.title : "";
-      return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("input", {
-        key: category,
+      let fluent_id;
+      switch (category) {
+        case "photographs":
+          fluent_id = "newtab-wallpaper-category-title-photographs";
+          break;
+        case "abstract":
+          fluent_id = "newtab-wallpaper-category-title-abstract";
+          break;
+        case "solid-colors":
+          fluent_id = "newtab-wallpaper-category-title-colors";
+      }
+      //
+
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        key: category
+      }, /*#__PURE__*/external_React_default().createElement("input", {
         id: category,
         onClick: this.handleCategory,
         className: `wallpaper-input ${title}`
-      }), /*#__PURE__*/external_React_default().createElement("label", null, category));
+      }), /*#__PURE__*/external_React_default().createElement("label", {
+        htmlFor: category,
+        "data-l10n-id": fluent_id
+      }, fluent_id));
     })), /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
       in: !!activeCategory,
       timeout: 300,
@@ -9242,8 +9279,10 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("section", {
       className: "category wallpaper-list"
     }, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "arrow-button",
+      "data-l10n-id": activeCategoryFluentID,
       onClick: this.handleBack
-    }, "back arrow"), /*#__PURE__*/external_React_default().createElement("h2", null, activeCategory), /*#__PURE__*/external_React_default().createElement("fieldset", null, filteredWallpapers.map(({
+    }), /*#__PURE__*/external_React_default().createElement("fieldset", null, filteredWallpapers.map(({
       title,
       theme,
       fluent_id
