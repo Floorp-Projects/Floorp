@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.EditTextPreference
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.ext.components
@@ -30,6 +32,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preferences_debug_settings))
     }
 
+    @Suppress("LongMethod")
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         val debugSettingsRepository = DefaultDebugSettingsRepository(
             context = requireContext(),
@@ -78,6 +81,27 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().enableMenuRedesign
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_fxsuggest).apply {
+            isVisible = FeatureFlags.fxSuggest
+            isChecked = context.settings().enableFxSuggest
+            onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    val newBooleanValue = newValue as? Boolean ?: return false
+                    val ingestionScheduler =
+                        requireContext().components.fxSuggest.ingestionScheduler
+                    if (newBooleanValue) {
+                        ingestionScheduler.startPeriodicIngestion()
+                    } else {
+                        ingestionScheduler.stopPeriodicIngestion()
+                    }
+                    requireContext().settings().preferences.edit {
+                        putBoolean(preference.key, newBooleanValue)
+                    }
+                    return true
+                }
+            }
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_should_enable_felt_privacy).apply {
