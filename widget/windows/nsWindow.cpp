@@ -993,7 +993,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
-  if (aInitData->mIsPrivate) {
+  if (Preferences::GetBool("browser.privateWindowSeparation.enabled", true) &&
+      (aInitData->mIsPrivate)) {
     // Although permanent Private Browsing mode is indeed Private Browsing,
     // we choose to make it look like regular Firefox in terms of the icon
     // it uses (which also means we shouldn't use the Private Browsing
