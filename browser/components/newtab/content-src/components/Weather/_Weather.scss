@@ -7,7 +7,7 @@
 .weather {
   font-size: var(--font-size-root);
   position: absolute;
-  left: var(--space-xlarge);
+  inset-inline-start: var(--space-xlarge);
   top: var(--space-xlarge);
   z-index: 1;
 }
@@ -115,7 +115,10 @@
   display: flex;
   gap: var(--space-medium);
   padding: var(--space-small) var(--space-medium);
-  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
+  border-start-start-radius: var(--border-radius-medium);
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  border-end-start-radius: var(--border-radius-medium);
   text-decoration: none;
   color: var(--text-color);;
   min-width: 130px;
@@ -146,7 +149,10 @@
 .weatherButtonContextMenuWrapper {
   position: relative;
   cursor: pointer;
-  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
+  border-start-start-radius: 0;
+  border-start-end-radius: var(--border-radius-medium);
+  border-end-end-radius: var(--border-radius-medium);
+  border-end-start-radius: 0;
   display: flex;
   align-items: stretch;
   width: 50px;
@@ -154,7 +160,7 @@
 
   &::after {
     content: '';
-    left: 0;
+    inset-inline-start: 0;
     top: 10px;
     height: calc(100% - 20px);
     width: 1px;
