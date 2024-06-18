@@ -297,7 +297,9 @@ dependencies {
     implementation ComponentsDependencies.androidx_work_runtime
     implementation ComponentsDependencies.androidx_datastore_preferences
 
-    implementation FocusDependencies.google_play
+    // Required for in-app reviews
+    implementation ComponentsDependencies.play_review
+    implementation ComponentsDependencies.play_review_ktx
 
     implementation ComponentsDependencies.google_material
 
