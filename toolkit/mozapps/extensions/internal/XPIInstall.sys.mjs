@@ -500,6 +500,7 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
   addon.id = bss.id;
   addon.version = manifest.version;
   addon.manifestVersion = manifest.manifest_version;
+  addon.name = manifest.name;
   addon.type = extension.type;
   addon.loader = null;
   addon.strictCompatibility = true;
@@ -593,6 +594,8 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
       maxVersion: bss.strict_max_version,
     },
   ];
+
+  addon.adminInstallOnly = bss.admin_install_only;
 
   addon.targetPlatforms = [];
   // Themes are disabled by default, except when they're installed from a web page.
@@ -1579,6 +1582,11 @@ class AddonInstall {
     try {
       try {
         this.addon = await loadManifest(pkg, this.location, this.existingAddon);
+        // Set the install.name property to the addon name if it is not set yet,
+        // install.name is expected to be set to the addon name and used to
+        // fill the addon name in the fluent strings when reporting install
+        // errors.
+        this.name = this.name ?? this.addon.name;
       } catch (e) {
         return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
       }
@@ -1654,6 +1662,16 @@ class AddonInstall {
           return Promise.reject([
             AddonManager.ERROR_CORRUPT_FILE,
             "signature verification failed",
+          ]);
+        }
+
+        if (
+          this.addon.adminInstallOnly &&
+          !this.addon.wrapper.isInstalledByEnterprisePolicy
+        ) {
+          return Promise.reject([
+            AddonManager.ERROR_ADMIN_INSTALL_ONLY,
+            "This addon can only be installed through Enterprise Policies",
           ]);
         }
 
