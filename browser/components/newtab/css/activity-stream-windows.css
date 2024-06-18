@@ -1961,32 +1961,50 @@ main section {
   gap: 16px;
   grid-auto-rows: 86px;
   grid-template-columns: 1fr 1fr 1fr;
+  margin-bottom: 15px;
+  padding: 0;
 }
-.category-list button {
+.category-list label {
+  display: inline-block;
+  font-size: var(--font-size-small);
+  text-align: center;
+  width: 100%;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+}
+.category-header .wallpapers-reset {
+  margin: unset;
+}
+
+.arrow-button {
+  background: url("chrome://global/skin/icons/arrow-left.svg") no-repeat left center;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 25px;
+  padding-left: 24px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-height: 1rem;
+}
+
+.wallpaper-input {
+  appearance: none;
   background-clip: content-box;
   background-repeat: no-repeat;
   background-size: cover;
   border-radius: 8px;
   border: none;
-  box-shadow: 0 1px 2px 0 #3A394433;
-  cursor: pointer;
-  height: 86px;
-  width: 116px;
-}
-
-.wallpaper-input {
-  appearance: none;
-  margin: 0;
-  padding: 0;
-  height: 86px;
-  width: 100%;
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
-  border-radius: 8px;
-  background-clip: content-box;
-  background-repeat: no-repeat;
-  background-size: cover;
   cursor: pointer;
+  height: 86px;
+  margin: 0;
   outline: 2px solid transparent;
+  padding: 0;
+  width: 100%;
 }
 .wallpaper-input.dark-landscape {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-landscape.avif");
@@ -2026,6 +2044,7 @@ main section {
 }
 .wallpaper-input:checked {
   outline-color: var(--color-accent-primary-active);
+  padding: 2px;
 }
 .wallpaper-input:focus-visible {
   outline-color: var(--newtab-primary-action-background);
@@ -2052,9 +2071,10 @@ main section {
   grid-auto-rows: unset;
   grid-template-columns: unset;
   height: 100%;
+  left: 25px;
   position: absolute;
   top: 0;
-  width: 370px;
+  width: 380px;
   z-index: 2;
 }
 .wallpaper-list.category fieldset {
