@@ -943,12 +943,9 @@ export class TelemetryFeed {
         this.handleSetPref(action);
         break;
       case at.WEATHER_IMPRESSION:
-        this.handleWeatherUserEvent(action);
-        break;
       case at.WEATHER_LOAD_ERROR:
-        this.handleWeatherUserEvent(action);
-        break;
       case at.WEATHER_OPEN_PROVIDER_URL:
+      case at.WEATHER_LOCATION_DATA_UPDATE:
         this.handleWeatherUserEvent(action);
         break;
     }
@@ -993,6 +990,11 @@ export class TelemetryFeed {
         break;
       case "WEATHER_OPEN_PROVIDER_URL":
         Glean.newtab.weatherOpenProviderUrl.record({
+          newtab_visit_id: session.session_id,
+        });
+        break;
+      case "WEATHER_LOCATION_DATA_UPDATE":
+        Glean.newtab.weatherLocationSelected.record({
           newtab_visit_id: session.session_id,
         });
         break;

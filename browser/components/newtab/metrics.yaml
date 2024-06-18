@@ -415,6 +415,23 @@ newtab:
       send_in_pings:
         - newtab
 
+  weather_location_selected:
+      type: event
+      description: >
+        Recorded when a user selects a location for weather widget
+      bugs:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1900103
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1900103
+      data_sensitivity:
+        - interaction
+      notification_emails:
+        - nbarrett@mozilla.com
+      expires: never
+      extra_keys:
+        newtab_visit_id: *newtab_visit_id
+      send_in_pings:
+        - newtab
 
 newtab.search:
   enabled:
