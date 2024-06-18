@@ -93,7 +93,10 @@ object Versions {
         const val messaging = "24.0.0"
     }
 
-    const val play_services = "18.4.0"
+    object Google {
+        const val play_review = "2.0.1"
+        const val play_services = "18.4.0"
+    }
 }
 
 // Synchronized dependencies used by (some) modules
@@ -218,5 +221,7 @@ object ComponentsDependencies {
 
     const val firebase_messaging = "com.google.firebase:firebase-messaging:${Versions.Firebase.messaging}"
 
-    const val play_services_base = "com.google.android.gms:play-services-base:${Versions.play_services}"
+    const val play_review = "com.google.android.play:review:${Versions.Google.play_review}"
+    const val play_review_ktx = "com.google.android.play:review-ktx:${Versions.Google.play_review}"
+    const val play_services_base = "com.google.android.gms:play-services-base:${Versions.Google.play_services}"
 }
