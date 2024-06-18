@@ -50,7 +50,6 @@
       "button_primary_color": "rgb(43, 42, 51)",
       "input_background": "#42414D",
       "input_color": "rgb(251,251,254)",
-      "input_border": "#8f8f9d",
       "urlbar_popup_separator": "rgb(82,82,94)",
       "tab_icon_overlay_stroke": "rgb(66,65,77)",
       "tab_icon_overlay_fill": "rgb(251,251,254)"
@@ -75,7 +74,6 @@
       "button_primary_color": "--button-primary-color",
       "input_background": "--input-bgcolor",
       "input_color": "--input-color",
-      "input_border": "--input-border-color",
       "urlbar_popup_separator": "--urlbarView-separator-color",
       "zoom_controls": "--zoom-controls-bgcolor",
       "tab_icon_overlay_stroke": "--tab-icon-overlay-stroke",
