@@ -6,6 +6,7 @@
 #ifndef nsBaseClipboard_h__
 #define nsBaseClipboard_h__
 
+#include "mozilla/Array.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MoveOnlyFunction.h"
@@ -229,10 +230,13 @@ class nsBaseClipboard : public nsIClipboard {
   // Track the pending request for each clipboard type separately. And only need
   // to track the latest request for each clipboard type as the prior pending
   // request will be canceled when a new request is made.
-  RefPtr<AsyncSetClipboardData>
-      mPendingWriteRequests[nsIClipboard::kClipboardTypeCount];
+  mozilla::Array<RefPtr<AsyncSetClipboardData>,
+                 nsIClipboard::kClipboardTypeCount>
+      mPendingWriteRequests;
 
-  mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
+  mozilla::Array<mozilla::UniquePtr<ClipboardCache>,
+                 nsIClipboard::kClipboardTypeCount>
+      mCaches;
   const mozilla::dom::ClipboardCapabilities mClipboardCaps;
   bool mIgnoreEmptyNotification = false;
 };
