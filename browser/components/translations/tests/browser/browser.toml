@@ -169,6 +169,20 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_select_telemetry_init_failure_ui_then_succeed.js"]
 
+["browser_translations_select_telemetry_keypresses_cancel_button.js"]
+
+["browser_translations_select_telemetry_keypresses_copy_button.js"]
+
+["browser_translations_select_telemetry_keypresses_done_button.js"]
+
+["browser_translations_select_telemetry_keypresses_settings_button.js"]
+
+["browser_translations_select_telemetry_keypresses_translate_button.js"]
+
+["browser_translations_select_telemetry_keypresses_translate_full_page_button.js"]
+
+["browser_translations_select_telemetry_keypresses_try_again_button.js"]
+
 ["browser_translations_select_telemetry_multi_page.js"]
 
 ["browser_translations_select_telemetry_primary_ui.js"]

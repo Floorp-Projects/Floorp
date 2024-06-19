@@ -56,6 +56,12 @@ function click(element, message) {
   });
 }
 
+function focusElementAndSynthesizeKey(element, key) {
+  assertVisibility({ visible: { element } });
+  element.focus();
+  EventUtils.synthesizeKey(key);
+}
+
 /**
  * Get all elements that match the l10n id.
  *
