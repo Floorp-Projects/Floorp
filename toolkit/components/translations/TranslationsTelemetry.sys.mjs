@@ -462,12 +462,20 @@ class SelectTranslationsPanelTelemetry {
     );
   }
 
-  static onTranslateButton() {
+  static onTranslateButton({ detectedLanguage, fromLanguage, toLanguage }) {
     Glean.translationsSelectTranslationsPanel.translateButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      detected_language: detectedLanguage,
+      from_language: fromLanguage,
+      to_language: toLanguage,
     });
     TranslationsTelemetry.logEventToConsole(
-      SelectTranslationsPanelTelemetry.onTranslateButton
+      SelectTranslationsPanelTelemetry.onTranslateButton,
+      {
+        detectedLanguage,
+        fromLanguage,
+        toLanguage,
+      }
     );
   }
 
