@@ -586,7 +586,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">חשבון</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">סרגל כלים</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">סרגל כלים</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">מיקום שורת הכתובת</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ערכת נושא</string>
     <!-- Preference for customizing the home screen -->
@@ -897,9 +899,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">גלילה להסתרת סרגל הכלים</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">החלקה על סרגל הכלים כלפי הצדדים למעבר בין לשוניות</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">החלקה על סרגל הכלים כלפי הצדדים למעבר בין לשוניות</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">החלקה על סרגל הכלים כלפי מעלה לפתיחת לשוניות</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">גלילה להסתרת שורת הכתובת וסרגל הכלים</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">החלקה על שורת הכתובת כלפי הצדדים למעבר בין לשוניות</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

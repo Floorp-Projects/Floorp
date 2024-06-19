@@ -599,7 +599,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Аккаунт</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Панель инструментов</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Панель инструментов</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Расположение адресной строки</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тема</string>
     <!-- Preference for customizing the home screen -->
@@ -908,9 +910,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Прокрутите страницу, чтобы скрыть панель инструментов</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Проведите в сторону по панели инструментов, чтобы переключить вкладки</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Проведите в сторону по панели инструментов, чтобы переключить вкладки</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Проведите вверх по панели инструментов, чтобы открыть вкладки</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Прокрутите, чтобы скрыть адресную строку и панель инструментов</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Проведите в сторону по адресной строке, чтобы переключить вкладки</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

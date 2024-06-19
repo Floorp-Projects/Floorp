@@ -2439,9 +2439,39 @@
     <!-- Title for dialog displayed when trying to access links present in a text. -->
     <string name="a11y_links_title">ᱡᱚᱱᱚᱲᱟᱣ ᱠᱚ</string>
 
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">ᱞᱤᱝᱠ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ</string>
+
     <!-- Translations feature-->
 
 
+    <!-- Translation request dialog -->
+    <!-- Title for the translation dialog that allows a user to translate the webpage. -->
+    <string name="translations_bottom_sheet_title">ᱱᱚᱶᱟ ᱥᱟᱦᱴᱟ ᱛᱚᱨᱡᱚᱢᱟᱭᱟᱢ ᱥᱮ ?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">ᱥᱟᱦᱴᱟ %1$s ᱠᱷᱚᱱ %2$s ᱛᱚᱨᱡᱚᱢᱟ ᱟᱠᱟᱱᱟ</string>
+    <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translations_bottom_sheet_title_first_time">%1$s ᱨᱮ ᱯᱨᱟᱭᱣᱮᱴ ᱛᱚᱨᱡᱚᱢᱟ ᱵᱤᱲᱟᱹᱣ ᱢᱮ</string>
+    <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
+    <string name="translations_bottom_sheet_info_message">ᱟᱢᱟᱜ ᱯᱨᱟᱭᱣᱮᱥᱤ ᱞᱟᱹᱜᱤᱫ, ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱛᱚᱨᱡᱚᱢᱟ ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ ᱪᱟᱞᱟᱜᱼᱟ ᱾ ᱱᱚᱶᱟ ᱯᱟᱹᱨᱥᱤ ᱟᱨ ᱥᱩᱫᱷᱟᱹᱨ ᱞᱚᱜᱚᱱ ᱜᱮ ᱦᱟᱹᱡᱩᱜ ᱞᱟᱹᱜᱤᱫ!%1$s</string>
+    <!-- Text that links to additional information about the Firefox translations feature. -->
+    <string name="translations_bottom_sheet_info_message_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
+    <string name="translations_bottom_sheet_translate_from">ᱠᱷᱚᱱ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ</string>
+    <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
+    <string name="translations_bottom_sheet_translate_to">ᱛᱮ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">ᱮᱴᱟᱜ ᱥᱨᱚᱛ ᱯᱟᱹᱨᱥᱤ ᱵᱮᱵᱷᱟᱨ ᱢᱮ</string>
+    <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">ᱢᱩᱞᱟᱜ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">ᱢᱩᱞ ᱵᱟᱝᱛᱚᱨᱡᱚᱢᱟᱜ ᱠᱟᱱ ᱥᱟᱦᱴᱟ ᱞᱟᱫᱮ ᱮᱱᱟ</string>
+    <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
+    <string name="translations_bottom_sheet_negative_button_error">ᱦᱩᱭᱮᱱᱟ</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">ᱛᱚᱨᱡᱚᱢᱟ</string>
     <!-- Button text on the translations dialog when a translation error appears. -->
@@ -2455,6 +2485,81 @@
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">ᱛᱚᱨᱡᱚᱢᱟ ᱡᱷᱚᱜ ᱵᱷᱩᱞ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱦᱩᱭᱮᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</string>
 
+
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">ᱯᱟᱹᱨᱥᱤ ᱞᱟᱫᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ ᱾ ᱟᱢᱟᱜ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱢᱮ ᱟᱨ ᱫᱩᱦᱲᱟᱹ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</string>
+
+
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">ᱤᱠᱟᱹ, ᱟᱞᱮ ᱱᱤᱛᱚᱜ %1$s ᱵᱟᱞᱮ ᱜᱚᱲᱚ ᱠᱟᱣᱫᱼᱟ ᱾</string>
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">ᱛᱚᱨᱡᱚᱢᱟᱜ ᱠᱟᱱᱟ …</string>
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">ᱰᱟᱴᱟ ᱥᱟᱧᱪᱟᱣ ᱢᱳᱰ ᱨᱮ ᱯᱟᱹᱨᱥᱤ ᱰᱟᱩᱱᱞᱚᱰ ᱢᱮ (%1$s)?</string>
+
+
+    <!-- Translations options dialog -->
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">ᱛᱚᱨᱡᱚᱢᱟ ᱵᱟᱪᱷᱟᱣᱠᱚ</string>
+    <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
+    <string name="translation_option_bottom_sheet_always_translate">ᱛᱚᱨᱡᱚᱢᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱹᱣᱜᱮ ᱱᱮᱦᱚᱨ ᱢᱮ</string>
+    <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
+    <string name="translation_option_bottom_sheet_always_translate_in_language">%1$s ᱡᱟᱣᱜᱮ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ</string>
+    <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
+    <string name="translation_option_bottom_sheet_never_translate_in_language">%1$s ᱛᱤᱥ ᱦᱚᱸ ᱟᱞᱚᱢ ᱛᱚᱨᱡᱚᱢᱟᱭᱟ</string>
+    <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
+    <string name="translation_option_bottom_sheet_never_translate_site">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱛᱮᱥ ᱦᱚᱸ ᱟᱞᱚᱢ ᱛᱚᱨᱡᱚᱢᱟᱭᱟ</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">ᱡᱷᱚᱛᱚ ᱮᱴᱟᱜ ᱥᱟᱡᱟᱣᱠᱚ ᱞᱟᱫᱮ ᱪᱮᱛᱟᱱ ᱞᱟᱫᱮ</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">ᱡᱷᱚᱛᱚ ᱮᱴᱟᱜ ᱥᱟᱡᱟᱣᱠᱚ ᱞᱟᱫᱮ ᱪᱮᱛᱟᱱ ᱞᱟᱫᱮ ᱦᱚᱦᱚᱪᱷᱚᱭᱟ</string>
+    <!-- Button text for the button that will take the user to the translation settings dialog. -->
+    <string name="translation_option_bottom_sheet_translation_settings">ᱛᱚᱨᱡᱚᱢᱟ ᱥᱟᱡᱟᱣᱠᱚ</string>
+    <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translation_option_bottom_sheet_about_translations">%1$s ᱨᱮ ᱛᱚᱨᱡᱚᱢᱟ ᱵᱟᱵᱚᱛ</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">ᱛᱚᱨᱡᱚᱢᱟ ᱥᱟᱦᱴᱟ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱥᱟᱡᱟᱣᱠᱚᱫᱚ ᱱᱤᱛᱤᱜ ᱵᱟᱭ ᱛᱟᱦᱮᱸᱱᱟ ᱾</string>
+
+    <!-- Translation settings dialog -->
+    <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
+    <string name="translation_settings_toolbar_title">ᱛᱚᱨᱡᱚᱢᱟᱠᱚ</string>
+
+    <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
+    <string name="translation_settings_offer_to_translate">ᱛᱤᱧ ᱡᱷᱚᱜ ᱫᱚᱨᱠᱟᱨ ᱯᱟᱲᱟᱣᱜᱼᱟ ᱩᱱ ᱡᱷᱚᱜ ᱛᱚᱨᱡᱚᱢᱟᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
+    <string name="translation_settings_always_download">ᱰᱟᱴᱟ ᱥᱟᱧᱪᱟᱣ ᱢᱳᱰ ᱨᱮ ᱡᱟᱹᱣᱜᱮ ᱯᱟᱹᱨᱥᱤ ᱰᱟᱩᱱᱞᱚᱰ ᱢᱮ ?</string>
+    <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
+    <string name="translation_settings_translation_preference">ᱛᱚᱨᱡᱚᱢᱟ ᱠᱩᱥᱤᱭᱟᱜ ᱠᱚ</string>
+    <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
+    <string name="translation_settings_automatic_translation">ᱟᱡᱛᱮ ᱛᱚᱨᱡᱚᱢᱟ</string>
+    <!-- Button text for the button that will take the user to the never translate these sites dialog. On the never translate these sites dialog, the user can set if translations should never occur on certain websites. -->
+    <string name="translation_settings_automatic_never_translate_sites">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴᱠᱚᱫᱚ ᱛᱮᱥ ᱦᱚᱸ ᱟᱞᱚᱢ ᱛᱚᱨᱡᱚᱢᱟᱭᱟ</string>
+    <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
+    <string name="translation_settings_download_language">ᱯᱟᱹᱨᱥᱤᱠᱚ ᱰᱟᱣᱱᱞᱚᱰ ᱢᱮ</string>
+
+    <!-- Automatic translation preference screen -->
+    <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
+    <string name="automatic_translation_toolbar_title_preference">ᱟᱡᱛᱮ ᱛᱚᱨᱡᱚᱢᱟ</string>
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">”ᱡᱟᱣᱜᱮ ᱛᱚᱨᱡᱚᱢᱟ“ ᱢᱮᱱᱮᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱢᱤᱫᱴᱟᱹᱝ ᱯᱟᱹᱨᱥᱤ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱟᱨ ”ᱛᱤᱥ ᱦᱚᱸ ᱟᱞᱚ ᱛᱚᱨᱡᱚᱢᱟ“ ᱠᱩᱥᱤᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱾</string>
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">ᱯᱟᱹᱨᱥᱤ ᱞᱟᱫᱮ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱪᱟᱭᱚᱢᱛᱮ ᱪᱮᱥᱴᱟ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾</string>
+
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">ᱛᱚᱨᱡᱚᱢᱟ ᱦᱚᱪᱷᱚ (ᱢᱩᱞ)</string>
+    <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_offer_to_translate_summary_preference">ᱱᱚᱶᱟ ᱯᱟᱹᱨᱥᱤ ᱛᱮ %1$s ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱛᱚᱨᱡᱚᱢᱟ ᱪᱷᱚᱭᱟ ᱾</string>
+    <!-- Preference option for always translate. Radio button title text. -->
+    <string name="automatic_translation_option_always_translate_title_preference">ᱡᱟᱣᱜᱮ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ</string>
+
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">ᱥᱟᱦᱴᱟ ᱞᱟᱫᱮ ᱡᱷᱚᱜ %1$s ᱫᱚ ᱱᱚᱶᱟ ᱯᱟᱹᱨᱥᱤ ᱛᱮ ᱟᱡᱛᱮ ᱥᱟᱦᱴᱟ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱟ ᱾</string>
 
     <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
     <string name="never_translate_site_dialog_cancel_preference">ᱵᱟᱹᱰᱨᱟᱹ</string>
