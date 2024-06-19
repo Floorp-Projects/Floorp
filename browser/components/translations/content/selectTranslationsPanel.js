@@ -234,15 +234,11 @@ var SelectTranslationsPanel = new (class {
       );
 
       const panel = wrapper.content.firstElementChild;
-      const settingsButton = document.getElementById(
-        "translations-panel-settings"
-      );
       wrapper.replaceWith(wrapper.content);
 
       // Lazily select the elements.
       this.#lazyElements = {
         panel,
-        settingsButton,
       };
 
       TranslationsPanelShared.defineLazyElements(document, this.#lazyElements, {
@@ -498,6 +494,12 @@ var SelectTranslationsPanel = new (class {
     const { panel, fromMenuList, toMenuList, tryAnotherSourceMenuList } =
       this.elements;
 
+    // XUL buttons on macOS do not handle the Enter key by default for
+    // the focused element, so we must listen for the Enter key manually:
+    // https://searchfox.org/mozilla-central/rev/4c8627a76e2e0a9b49c2b673424da478e08715ad/dom/xul/XULButtonElement.cpp#563-579
+    if (AppConstants.platform === "macosx") {
+      panel.addEventListener("keypress", this);
+    }
     panel.addEventListener("popupshown", this);
     panel.addEventListener("popuphidden", this);
 
@@ -818,6 +820,56 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles events when the Enter key is pressed within the panel.
+   *
+   * @param {Element} target - The event target
+   */
+  #handleEnterKeyPressed(target) {
+    const {
+      cancelButton,
+      copyButton,
+      doneButtonPrimary,
+      doneButtonSecondary,
+      settingsButton,
+      translateButton,
+      translateFullPageButton,
+      tryAgainButton,
+    } = this.elements;
+
+    switch (target.id) {
+      case cancelButton.id: {
+        this.onClickCancelButton();
+        break;
+      }
+      case copyButton.id: {
+        this.onClickCopyButton();
+        break;
+      }
+      case doneButtonPrimary.id:
+      case doneButtonSecondary.id: {
+        this.onClickDoneButton();
+        break;
+      }
+      case settingsButton.id: {
+        this.#openSettingsPopup();
+        break;
+      }
+      case translateButton.id: {
+        this.onClickTranslateButton();
+        break;
+      }
+      case translateFullPageButton.id: {
+        this.onClickTranslateFullPageButton();
+        break;
+      }
+      case tryAgainButton.id: {
+        this.onClickTryAgainButton();
+        break;
+      }
+    }
+  }
+
+  /**
    * Conditionally enables the resizer component at the bottom corner of the text area,
    * and limits the maximum height that the textarea can be resized.
    *
@@ -1084,6 +1136,12 @@ var SelectTranslationsPanel = new (class {
     switch (event.type) {
       case "command": {
         this.#handleCommandEvent(target);
+        break;
+      }
+      case "keypress": {
+        if (event.key === "Enter") {
+          this.#handleEnterKeyPressed(target);
+        }
         break;
       }
       case "popupshown": {
