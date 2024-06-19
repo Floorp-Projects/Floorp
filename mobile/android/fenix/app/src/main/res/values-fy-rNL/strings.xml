@@ -591,7 +591,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Account</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Arkbalke</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Arkbalke</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Lokaasje adresbalke</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -897,9 +899,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Scroll om de wurkbalke te ferstopjen</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Fei de wurkbalke op side om fan ljepblêd te wikseljen</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Fei de wurkbalke op side om fan ljepblêd te wikseljen</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Fei de wurkbalke omheech om ljepblêden te iepenjen</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Skowe om adresbalke en arkbalke te ferstopjen</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">De arkbalke op side feie om fan ljepblêd te wikseljen</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

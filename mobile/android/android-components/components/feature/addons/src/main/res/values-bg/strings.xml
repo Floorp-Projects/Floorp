@@ -76,8 +76,6 @@
     <string name="mozac_feature_addons_version">Издание</string>
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Автор</string>
-    <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Автори</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Последно обновяване</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -86,16 +84,12 @@
     <string name="mozac_feature_addons_learn_more">Научете повече за правата</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Оценка</string>
-    <!-- A link that points to the detail page of the add-on. -->
-    <string name="mozac_feature_addons_more_info_link" moz:removedIn="126" tools:ignore="UnusedResources">Повече за добавката</string>
     <!-- A link that points to the detail page of the extension. -->
     <string name="mozac_feature_addons_more_info_link_2">Повече за разширението</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Настройки</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Включена</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Изключена</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Разрешаване в поверителни раздели</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -104,8 +98,6 @@
     <string name="mozac_feature_addons_not_allowed_in_private_browsing">Не е разрешено в поверителни прозорци</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Включени</string>
-    <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Изключени</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Инсталирани</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -140,36 +132,24 @@
     <string name="mozac_feature_addons_permissions_dialog_deny">Забраняване</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Отказ</string>
-    <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Инсталиране на добавка</string>
     <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_install_addon_content_description_2">Инсталиране на %1$s</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Отказ</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
     <string name="mozac_feature_addons_user_rating_count_2">Отзиви: %1$s</string>
-    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
-    <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
     <string name="mozac_feature_addons_rating_content_description_2">Оценка: %1$.02f от 5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Добавки</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Управление на добавки</string>
-    <!-- The title of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">Добавките са временно изключени</string>
     <!-- The title of the "crash" notification in the extensions manager -->
     <string name="mozac_feature_extensions_manager_notification_title_text">Разширенията са временно деактивирани</string>
-    <!-- The content of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Една или повече добавки са спрели да работят, като намаляват стабилността на системата.</string>
     <!-- The content of the "crash" notification in the extensions manager -->
     <string name="mozac_feature_extensions_manager_notification_content_text">Едно или повече разширения са спрели да работят, правейки системата ви нестабилна.</string>
-    <!-- Button to re-enable the add-ons in the "crash" notification -->
-    <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Рестарт на добавките</string>
     <!-- Button to re-enable the extensions in the "crash" notification -->
     <string name="mozac_feature_extensions_manager_notification_restart_button">Рестартиране на разширенията</string>
-    <!-- Button in the add-ons manager that opens AMO in a tab -->
-    <string name="mozac_feature_addons_find_more_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Намерете още добавки</string>
     <!-- Button in the extensions manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_extensions_button_text">Още разширения</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
@@ -182,8 +162,6 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Необходими са %1$d нови права</string>
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">Необходими са нови права</string>
-    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_updater_notification_channel" moz:removedIn="126" tools:ignore="UnusedResources">Обновявания на добавки</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel_2">Обновяване на разширението</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
@@ -199,15 +177,9 @@
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Добавяне към %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption" moz:removedIn="126" tools:ignore="UnusedResources">Технологията на Firefox за добавки се модернизира. Тези добавки използват софтуерни рамки, които са несъвместими с Firefox издание 75 и по-ново.</string>
-    <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">В момента изграждаме поддръжка на първоначалния набор от препоръчителни разширения.</string>
-    <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption" moz:removedIn="126" tools:ignore="UnusedResources">Изтегляне и проверка на добавката …</string>
     <!-- This is the caption for the extension installation progress overlay -->
     <string name="mozac_extension_install_progress_caption">Изтегляне и проверка на разширението…</string>
-    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
-    <string name="mozac_feature_addons_failed_to_query_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Неуспешно запитване на добавки!</string>
     <!-- Error shown when something unexpected happened while trying to get the extension list from the server -->
     <string name="mozac_feature_addons_failed_to_query_extensions">Неуспешна заявка за разширения!</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
@@ -216,26 +188,20 @@
     <string name="mozac_feature_addons_successfully_installed">Добавката „%1$s“ е инсталирана</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Добавката „%1$s“ не е инсталирана</string>
-    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
-    <string name="mozac_feature_addons_failed_to_install_generic" moz:removedIn="126" tools:ignore="UnusedResources">Добавката не е инсталирана.</string>
     <!-- Text shown after failing to install an extension for which we don't have its name. -->
     <string name="mozac_feature_addons_extension_failed_to_install">Инсталирането на разширението не бе успешно.</string>
-    <!-- Text shown when attempting to install an add-on and a network error happened. -->
-    <string name="mozac_feature_addons_failed_to_install_network_error" moz:removedIn="126" tools:ignore="UnusedResources">Добавката не може да бъде изтеглена поради неуспешно установена връзка.</string>
     <!-- Text shown when attempting to install an extension and a network error happened. -->
     <string name="mozac_feature_addons_extension_failed_to_install_network_error">Разширението не може да бъде изтеглено поради неуспешна връзка.</string>
-    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
-    <string name="mozac_feature_addons_failed_to_install_corrupt_error" moz:removedIn="126" tools:ignore="UnusedResources">Добавката не може да бъде инсталирана, защото изглежда е повредена.</string>
     <!-- Text shown when attempting to install an extension and the downloaded file is corrupted. -->
     <string name="mozac_feature_addons_extension_failed_to_install_corrupt_error">Разширението не може да бъде инсталирано, защото изглежда е повредено.</string>
-    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
-    <string name="mozac_feature_addons_failed_to_install_not_signed_error" moz:removedIn="126" tools:ignore="UnusedResources">Добавката не може да бъде инсталирана, защото не е проверена.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">Това разширение не може да бъде инсталирано, защото не е проверено.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">Добавката %1$s не може да бъде инсталирана, защото е несъвместима с %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">Добавката %1$s не може да бъде инсталирана, защото носи висок риск от причиняване на проблеми със стабилността или сигурността.</string>
+    <!-- Text shown when attempting to install an add-on that can only be install via Enterprise Policies, which is not supported on Android.  %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_admin_install_only">%1$s не може да бъде инсталиран, защото може да бъде инсталиран само от организация, използваща корпоративни правила, които не се поддържат от тази платформа.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Добавката „%1$s“ е включена</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -254,12 +220,8 @@
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Добавката „%1$s“ не е премахната</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Добавката е мигрирана от предишно издание на %1$s</string>
-    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
-    <string name="mozac_feature_addons_unsupported_caption" moz:removedIn="126" tools:ignore="UnusedResources">1 добавка</string>
     <!-- Text shown in not yet supported add-ons section. -->
     <string name="mozac_feature_addons_unsupported_caption_2">1 разширение</string>
-    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
-    <string name="mozac_feature_addons_unsupported_caption_plural" moz:removedIn="126" tools:ignore="UnusedResources">%1$s добавки</string>
     <!-- Text shown in not yet supported add-ons section - plural. %1$s is the number of unsupported extensions. -->
     <string name="mozac_feature_addons_unsupported_caption_plural_2">%1$s разширения</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
@@ -278,12 +240,8 @@
     <string name="mozac_feature_addons_updater_dialog_status">Състояние:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">Добавката „%1$s“ е добавена към %2$s</string>
-    <!-- Text shown in the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Отворете я от менюто</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_description_2">Достъп до %1$s от менюто на %2$s.</string>
-    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Да, разбрах</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button_2">Добре</string>
     <!-- "Learn more" link displayed below an add-on status message. -->

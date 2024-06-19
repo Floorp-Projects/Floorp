@@ -173,8 +173,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">رمز‌لر</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">رمزلر شورتکاتی</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -215,8 +213,6 @@
     <string name="browser_menu_refresh">رفرش</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">دوردور</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لار</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">اوزانتی‌لار</string>
     <!-- Browser menu button that opens the extensions manager -->
@@ -225,8 +221,6 @@
     <string name="browser_menu_discover_more_extensions">داها چوْخ اوزانتیْ گؤر</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">حساب بیلگی‌لری</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">بوردا هئچ تاخیلان یوخ</string>
 
 
     <!-- Browser menu button that sends a user to help articles -->
@@ -245,8 +239,6 @@
     <string name="browser_menu_add_to_homescreen">آناصفحه‌یه آرتیر</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen_2">آنا اکرانا آرتیر…</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">قوْش</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">گئنه دؤنگل</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -634,7 +626,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">حساب</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">ادوات چوبوغو</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">ادوات چوبوغو</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">آدرس چوبوغو یئری</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">تم</string>
     <!-- Preference for customizing the home screen -->
@@ -706,13 +700,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لار</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">اوزانتی‌لار</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلانیْ فایل‌دان قوْش</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">تاخیلانیْ اوزانتی‌دان قوْش</string>
     <!-- Preference for notifications -->
@@ -738,8 +727,6 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">اؤزل تاخیْلان مجموعه‌سی</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">اؤزل اوزانتیْ مجموعه‌سی</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">تامام</string>
@@ -750,8 +737,6 @@
     <string name="customize_addon_collection_hint">مجموعه آدیْ</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">مجموعه صاحیبی (قوللانیجیْ آیدی‌سی)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">تاخیْلان مجموعه‌‌سی ایصلاح اوْلدوُ. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">اوزانتیْ مجموعه‌سی دییشدیریلدی. دییشمه‌لری یئرینه سالماق اوچون اپ‌دن چیخیلیر…</string>
@@ -814,36 +799,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">داها چوْخ دال پرده‌لری آراشدیْرین</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">ایندی یئنی تاخیْلان‌لار وار</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">ایندی یئنی اوزانتیْ‌لار وار</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">فایرفاکسیْ اؤزوُنوز ائتمک ایمکانیْ وئرن 100 دن چوْخ یئنی اوُزانتیا باخیْن.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لاریْ آراشدیْر</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">اوزانتی‌ْ‌لاری آراشدیرین</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لار گئچیجی اوْلاراق گوُجدن سالیْنمیش.</string>
-
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">اوزانتی‌ْلار گئچیجی اوْلاراق گوجدن سالینمیش.</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">بیر و یا نئچه تاخیْلانین ایشی دایاندیریلدیْ، بوُدا سیستمیزی ثابیتسیز ائله‌دی. %1$s تاخیلانی(لاریْ) یئنی‌دن باشلاتماغا باشاریْسیز اوْلدو. \n\n تاخیلانلار ایندیکی اوتورومونوزدا یئنی‌دن ایشه سالیْنمیاجاق. \n\n تاخیلانی(لار)ین سیلینمه‌سی و یا ایشدن سالینماسیْ بو موُشکولو حل ائلیه بیلر.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">بیر و یا نئچه اوزانتیْ ایشی دایاندیریلدیْ، بوُدا سیستمیزی ثابیتسیز ائله‌دی. %1$s اوزانتیْ‌یی(لاریْ) یئنی‌دن باشلاتماغا باشاریْسیز اوْلدو. \n\n اوزانتیْ‌لار ایندیکی اوتورومونوزدا یئنی‌دن ایشه سالیْنمیاجاق. \n\n اوزانتیْ‌یی(لار)ین سیلینمه‌سی و یا گوجدن سالینماسیْ بو موُشکولو حل ائلیه بیلر.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لاریْ یئنی‌دن باشلاتماغا چالیْشین</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">اوزانتی‌لاریْ یئنی‌دن باشلاتماغا چالیشین</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لاریْ گوُجسوز ائتمه‌گه ایدامه وئرین</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">اوزانتی‌لاریْ گوجسوز ائتمه‌گه ایدامه وئرین</string>
@@ -976,9 +948,15 @@
 
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">تاغ‌لاریْ دگیشدیرمک اوچون ادوات چوُبوغونو یانالار طرف چکین</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">تاغ‌لاریْ دگیشدیرمک اوچون ادوات چوُبوغونو یانالار طرف چکین</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">تاغ‌لاریْ آچماق اوچون ادوات چوُبوغونو یوخاریا چکین</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">آدرس چوبوغونو و ابزار چوبوغونو گیزله‌مک اوچون چکین</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">نیشان‌لاری دگیشمک اوچون آدرس چوبوغونو یانا چکین</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -1707,6 +1685,8 @@
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">تاغ گؤندریلدی!</string>
 
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">گؤندری‌لنمه‌دی</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">گئنه سعی ائله</string>
     <!-- Title of QR Pairing Fragment -->
@@ -1740,5 +1720,6 @@
 
 
     <!-- Micro survey -->
+
 
     </resources>
