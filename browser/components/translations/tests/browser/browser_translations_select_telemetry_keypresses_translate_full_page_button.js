@@ -23,11 +23,18 @@ add_task(
       onOpenPanel: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
+    const fullPageTranslationCompletePromise =
+      FullPageTranslationsTestUtils.assertTranslationsButton(
+        { button: true, circleArrows: false, locale: true, icon: true },
+        "The icon presents the locale."
+      );
+
     focusElementAndSynthesizeKey(
       SelectTranslationsPanel.elements.translateFullPageButton,
       "KEY_Enter"
     );
 
+    await fullPageTranslationCompletePromise;
     await FullPageTranslationsTestUtils.assertPageIsTranslated(
       "es",
       "en",
@@ -67,11 +74,18 @@ add_task(
       onOpenPanel: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
+    const fullPageTranslationCompletePromise =
+      FullPageTranslationsTestUtils.assertTranslationsButton(
+        { button: true, circleArrows: false, locale: true, icon: true },
+        "The icon presents the locale."
+      );
+
     focusElementAndSynthesizeKey(
       SelectTranslationsPanel.elements.translateFullPageButton,
       " "
     );
 
+    await fullPageTranslationCompletePromise;
     await FullPageTranslationsTestUtils.assertPageIsTranslated(
       "fr",
       "en",
