@@ -181,7 +181,9 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_select_telemetry_keypresses_translate_full_page_button.js"]
 
-["browser_translations_select_telemetry_keypresses_try_again_button.js"]
+["browser_translations_select_telemetry_keypresses_try_again_button_init_failure.js"]
+
+["browser_translations_select_telemetry_keypresses_try_again_button_translation_failure.js"]
 
 ["browser_translations_select_telemetry_multi_page.js"]
 
