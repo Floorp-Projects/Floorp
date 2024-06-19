@@ -851,47 +851,14 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Step 5. Let state be generator.[[AsyncGeneratorState]].
-  // Step 6. If state is completed, then
-  if (generator->isCompleted()) {
-    // Step 6.a. Let iteratorResult be
-    //           ! CreateIterResultObject(undefined, true).
-    JSObject* resultObj =
-        CreateIterResultObject(cx, UndefinedHandleValue, true);
-    if (!resultObj) {
+  // Steps 5-10.
+  if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Normal,
+                             completionValue, resultPromise)) {
+    return false;
+  }
+  if (!generator->isExecuting() && !generator->isAwaitingYieldReturn()) {
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
-    }
-
-    // Step 6.b. Perform
-    //           ! Call(promiseCapability.[[Resolve]], undefined,
-    //                  « iteratorResult »).
-    RootedValue resultValue(cx, ObjectValue(*resultObj));
-    if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
-      return false;
-    }
-  } else {
-    // Step 7. Let completion be NormalCompletion(value).
-    // Step 8. Perform
-    //         ! AsyncGeneratorEnqueue(generator, completion,
-    //                                 promiseCapability).
-    if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Normal,
-                               completionValue, resultPromise)) {
-      return false;
-    }
-
-    // Step 9. If state is either suspendedStart or suspendedYield, then
-    if (generator->isSuspendedStart() || generator->isSuspendedYield()) {
-      RootedValue resumptionValue(cx, completionValue);
-      // Step 9.a. Perform ! AsyncGeneratorResume(generator, completion).
-      if (!AsyncGeneratorResume(cx, generator, CompletionKind::Normal,
-                                resumptionValue)) {
-        return false;
-      }
-    } else {
-      // Step 10. Else,
-      // Step 10.a. Assert: state is either executing or awaiting-return.
-      MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingReturn() ||
-                 generator->isAwaitingYieldReturn());
     }
   }
 
