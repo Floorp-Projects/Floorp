@@ -279,7 +279,7 @@ export type SelectTranslationsPanelState =
 
   // The language dropdown menus failed to populate upon opening the panel.
   // This state contains all of the information for the try-again button to close and re-open the panel.
-  | { phase: "init-failure"; event: Event, screenX: number, screenY: number, sourceText: string, langPairPromise: Promise<{fromLang?: string, toLang?: string}> }
+  | { phase: "init-failure"; event: Event, screenX: number, screenY: number, sourceText: string, isTextSelected: boolean, langPairPromise: Promise<{fromLang?: string, toLang?: string}> }
 
   // The translation failed to complete.
   | { phase: "translation-failure"; fromLanguage: string; toLanguage: string, sourceText: string, }

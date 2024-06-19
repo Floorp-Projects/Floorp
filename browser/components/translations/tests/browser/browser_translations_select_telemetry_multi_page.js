@@ -17,8 +17,7 @@ add_task(
     });
 
     await SelectTranslationsTestUtils.openPanel(runInPage, {
-      selectSpanishSentence: true,
-      openAtSpanishSentence: true,
+      openAtSpanishHyperlink: true,
       expectedFromLanguage: "es",
       expectedToLanguage: "en",
       downloadHandler: resolveDownloads,
@@ -34,6 +33,7 @@ add_task(
           from_language: "es",
           to_language: "en",
           top_preferred_language: "en",
+          text_source: "hyperlink",
         },
       }
     );
@@ -55,8 +55,8 @@ add_task(
           top_preferred_language: "en",
           request_target: "select",
           auto_translate: false,
-          source_text_code_units: 165,
-          source_text_word_count: 28,
+          source_text_code_units: 23,
+          source_text_word_count: 4,
         },
       }
     );
@@ -87,6 +87,7 @@ add_task(
           from_language: "fr",
           to_language: "en",
           top_preferred_language: "en",
+          text_source: "selection",
         },
       }
     );

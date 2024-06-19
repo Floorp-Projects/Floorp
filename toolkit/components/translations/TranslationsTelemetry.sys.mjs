@@ -409,6 +409,7 @@ class SelectTranslationsPanelTelemetry {
    * @param {string} data.fromLanguage
    * @param {string} data.toLanguage
    * @param {string} data.topPreferredLanguage
+   * @param {string} data.textSource
    */
   static onOpen(data) {
     Glean.translationsSelectTranslationsPanel.open.record({
@@ -419,6 +420,7 @@ class SelectTranslationsPanelTelemetry {
       from_language: data.fromLanguage,
       to_language: data.toLanguage,
       top_preferred_language: data.topPreferredLanguage,
+      text_source: data.textSource,
     });
     TranslationsTelemetry.logEventToConsole(
       SelectTranslationsPanelTelemetry.onOpen,

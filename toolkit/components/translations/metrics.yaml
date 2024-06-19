@@ -612,10 +612,15 @@ translations.select_translations_panel:
       from_language: *from_language
       to_language: *to_language
       top_preferred_language: *top_preferred_language
+      text_source:
+        type: string
+        description: The source that the text was pulled from, either "selection" or "hyperlink".
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1870367
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903393
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1870367
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903393
     data_sensitivity:
       - interaction
     notification_emails:

@@ -35,6 +35,7 @@ add_task(
           from_language: "fr",
           to_language: "en",
           top_preferred_language: "en",
+          text_source: "selection",
         },
       }
     );
