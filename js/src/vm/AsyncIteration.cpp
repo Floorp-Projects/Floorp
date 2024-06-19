@@ -800,8 +800,7 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
 
 [[nodiscard]] static bool AsyncGeneratorMethodSanityCheck(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
-  if (generator->isCompleted() || generator->isSuspendedStart() ||
-      generator->isSuspendedYield()) {
+  if (generator->isSuspendedStart() || generator->isSuspendedYield()) {
     // The spec assumes the queue is empty when async generator methods are
     // called with those state, but our debugger allows calling those methods
     // in unexpected state, such as before suspendedStart.
