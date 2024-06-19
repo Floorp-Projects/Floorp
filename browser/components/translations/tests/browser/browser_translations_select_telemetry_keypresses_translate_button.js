@@ -29,15 +29,17 @@ add_task(
       "uk"
     );
 
+    const translatablePhasePromise =
+      SelectTranslationsTestUtils.waitForPanelState("translatable");
     focusElementAndSynthesizeKey(
       SelectTranslationsPanel.elements.translateButton,
       "KEY_Enter"
     );
+    await translatablePhasePromise;
 
-    const translatedPromise =
-      SelectTranslationsTestUtils.waitForPanelState("translated");
-    await resolveDownloads(1);
-    await translatedPromise;
+    await SelectTranslationsTestUtils.handleDownloads({
+      downloadHandler: resolveDownloads,
+    });
     await SelectTranslationsTestUtils.assertPanelViewTranslated();
 
     await closeAllOpenPanelsAndMenus();
@@ -79,15 +81,17 @@ add_task(
       "fr"
     );
 
+    const translatablePhasePromise =
+      SelectTranslationsTestUtils.waitForPanelState("translatable");
     focusElementAndSynthesizeKey(
       SelectTranslationsPanel.elements.translateButton,
       " "
     );
+    await translatablePhasePromise;
 
-    const translatedPromise =
-      SelectTranslationsTestUtils.waitForPanelState("translated");
-    await resolveDownloads(1);
-    await translatedPromise;
+    await SelectTranslationsTestUtils.handleDownloads({
+      downloadHandler: resolveDownloads,
+    });
     await SelectTranslationsTestUtils.assertPanelViewTranslated();
 
     await closeAllOpenPanelsAndMenus();

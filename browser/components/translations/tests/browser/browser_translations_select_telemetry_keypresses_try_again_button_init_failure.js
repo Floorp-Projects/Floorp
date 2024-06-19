@@ -22,15 +22,17 @@ add_task(
       onOpenPanel: SelectTranslationsTestUtils.assertPanelViewInitFailure,
     });
 
+    const translatablePhasePromise =
+      SelectTranslationsTestUtils.waitForPanelState("translatable");
     focusElementAndSynthesizeKey(
       SelectTranslationsPanel.elements.tryAgainButton,
       "KEY_Enter"
     );
+    await translatablePhasePromise;
 
-    const translatedPromise =
-      SelectTranslationsTestUtils.waitForPanelState("translated");
-    await resolveDownloads(1);
-    await translatedPromise;
+    await SelectTranslationsTestUtils.handleDownloads({
+      downloadHandler: resolveDownloads,
+    });
     await SelectTranslationsTestUtils.assertPanelViewTranslated();
 
     await closeAllOpenPanelsAndMenus();
@@ -65,15 +67,17 @@ add_task(
       onOpenPanel: SelectTranslationsTestUtils.assertPanelViewInitFailure,
     });
 
+    const translatablePhasePromise =
+      SelectTranslationsTestUtils.waitForPanelState("translatable");
     focusElementAndSynthesizeKey(
       SelectTranslationsPanel.elements.tryAgainButton,
       " "
     );
+    await translatablePhasePromise;
 
-    const translatedPromise =
-      SelectTranslationsTestUtils.waitForPanelState("translated");
-    await resolveDownloads(1);
-    await translatedPromise;
+    await SelectTranslationsTestUtils.handleDownloads({
+      downloadHandler: resolveDownloads,
+    });
     await SelectTranslationsTestUtils.assertPanelViewTranslated();
 
     await closeAllOpenPanelsAndMenus();
