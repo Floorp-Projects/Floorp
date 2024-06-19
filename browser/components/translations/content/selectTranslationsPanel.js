@@ -2197,6 +2197,37 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Reports to telemetry whether the from-language or the to-language has
+   * changed based on whether the currently selected language is different
+   * than the corresponding language that is stored in the panel's state.
+   */
+  #maybeReportLanguageChangeToTelemetry() {
+    const {
+      fromLanguage: previousFromLanguage,
+      toLanguage: previousToLanguage,
+    } = this.#translationState;
+    const {
+      fromLanguage: selectedFromLanguage,
+      toLanguage: selectedToLanguage,
+    } = this.#getSelectedLanguagePair();
+
+    if (selectedFromLanguage !== previousFromLanguage) {
+      const { docLangTag } = this.#getLanguageInfo();
+      TranslationsParent.telemetry()
+        .selectTranslationsPanel()
+        .onChangeFromLanguage({
+          previousLangTag: previousFromLanguage,
+          currentLangTag: selectedFromLanguage,
+          docLangTag,
+        });
+    } else if (selectedToLanguage !== previousToLanguage) {
+      TranslationsParent.telemetry()
+        .selectTranslationsPanel()
+        .onChangeToLanguage(selectedToLanguage);
+    }
+  }
+
+  /**
    * Attaches event listeners to the target element for initiating translation on specified event types.
    *
    * @param {string[]} eventTypes - An array of event types to listen for.
@@ -2214,6 +2245,7 @@ var SelectTranslationsPanel = new (class {
           case "focus":
           case "popuphidden": {
             callback = () => {
+              this.#maybeReportLanguageChangeToTelemetry();
               this.#maybeRequestTranslation();
             };
             break;
@@ -2221,6 +2253,7 @@ var SelectTranslationsPanel = new (class {
           case "keypress": {
             callback = event => {
               if (event.key === "Enter") {
+                this.#maybeReportLanguageChangeToTelemetry();
                 this.#maybeRequestTranslation();
               }
             };
