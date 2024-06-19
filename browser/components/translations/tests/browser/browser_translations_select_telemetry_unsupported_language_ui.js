@@ -103,6 +103,11 @@ add_task(
       Glean.translationsSelectTranslationsPanel.translateButton,
       {
         expectedEventCount: 1,
+        assertForMostRecentEvent: {
+          detected_language: "es",
+          from_language: "fr",
+          to_language: "en",
+        },
       }
     );
     await TestTranslationsTelemetry.assertLabeledCounter(

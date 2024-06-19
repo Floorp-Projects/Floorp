@@ -692,10 +692,17 @@ translations.select_translations_panel:
       Triggers when the translate button is invoked in the select translations panel.
     extra_keys:
       flow_id: *flow_id
+      from_language: *from_language
+      to_language: *to_language
+      detected_language: &detected_language
+        type: string
+        description: The detected language of the selected text to be translated.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1870367
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903392
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1870367
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903392
     data_sensitivity:
       - interaction
     notification_emails:
@@ -862,9 +869,7 @@ translations.select_translations_panel:
     extra_keys:
       flow_id: *flow_id
       document_language: *document_language
-      detected_language:
-        type: string
-        description: The detected language of the selected text to be translated.
+      detected_language: *detected_language
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1870367
     data_reviews:

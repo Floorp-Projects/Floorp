@@ -48,6 +48,11 @@ add_task(
       Glean.translationsSelectTranslationsPanel.translateButton,
       {
         expectedEventCount: 1,
+        assertForMostRecentEvent: {
+          detected_language: "fr",
+          from_language: "uk",
+          to_language: "en",
+        },
       }
     );
 
