@@ -9,13 +9,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 import {
-  FX_OAUTH_CLIENT_ID,
+  OAUTH_CLIENT_ID,
   SCOPE_PROFILE,
   SCOPE_PROFILE_WRITE,
-  SCOPE_OLD_SYNC,
+  SCOPE_APP_SYNC,
 } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
-const VALID_SCOPES = [SCOPE_PROFILE, SCOPE_PROFILE_WRITE, SCOPE_OLD_SYNC];
+const VALID_SCOPES = [SCOPE_PROFILE, SCOPE_PROFILE_WRITE, SCOPE_APP_SYNC];
 
 export const ERROR_INVALID_SCOPES = "INVALID_SCOPES";
 export const ERROR_INVALID_STATE = "INVALID_STATE";
@@ -116,7 +116,7 @@ export class FxAccountsOAuth {
       throw new Error(ERROR_INVALID_SCOPES);
     }
     const queryParams = {
-      client_id: FX_OAUTH_CLIENT_ID,
+      client_id: OAUTH_CLIENT_ID,
       action: "email",
       response_type: "code",
       access_type: "offline",
@@ -194,15 +194,15 @@ export class FxAccountsOAuth {
         sessionTokenHex,
         code,
         verifier,
-        FX_OAUTH_CLIENT_ID
+        OAUTH_CLIENT_ID
       );
     if (
-      requestedScopes.includes(SCOPE_OLD_SYNC) &&
-      !scope.includes(SCOPE_OLD_SYNC)
+      requestedScopes.includes(SCOPE_APP_SYNC) &&
+      !scope.includes(SCOPE_APP_SYNC)
     ) {
       throw new Error(ERROR_SYNC_SCOPE_NOT_GRANTED);
     }
-    if (scope.includes(SCOPE_OLD_SYNC) && !keys_jwe) {
+    if (scope.includes(SCOPE_APP_SYNC) && !keys_jwe) {
       throw new Error(ERROR_NO_KEYS_JWE);
     }
     let scopedKeys;

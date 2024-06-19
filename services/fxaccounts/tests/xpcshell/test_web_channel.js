@@ -3,8 +3,14 @@
 
 "use strict";
 
-const { ON_PROFILE_CHANGE_NOTIFICATION, WEBCHANNEL_ID, log } =
-  ChromeUtils.importESModule("resource://gre/modules/FxAccountsCommon.sys.mjs");
+const {
+  CLIENT_IS_THUNDERBIRD,
+  ON_PROFILE_CHANGE_NOTIFICATION,
+  WEBCHANNEL_ID,
+  log,
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsCommon.sys.mjs"
+);
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );
@@ -684,6 +690,7 @@ add_task(async function test_helpers_login_with_customize_sync() {
 });
 
 add_task(
+  { skip_if: () => CLIENT_IS_THUNDERBIRD },
   async function test_helpers_login_with_customize_sync_and_declined_engines() {
     let configured = false;
     let helpers = new FxAccountsWebChannelHelpers({

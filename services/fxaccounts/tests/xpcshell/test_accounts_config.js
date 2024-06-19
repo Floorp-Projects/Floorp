@@ -9,6 +9,7 @@ const { FxAccounts } = ChromeUtils.importESModule(
 
 add_task(
   async function test_non_https_remote_server_uri_with_requireHttps_false() {
+    Services.prefs.setStringPref("identity.fxaccounts.autoconfig.uri", "");
     Services.prefs.setBoolPref("identity.fxaccounts.allowHttp", true);
     Services.prefs.setStringPref(
       "identity.fxaccounts.remote.root",

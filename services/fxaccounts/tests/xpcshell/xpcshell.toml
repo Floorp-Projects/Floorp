@@ -3,7 +3,7 @@ head = "head.js ../../../common/tests/unit/head_helpers.js ../../../common/tests
 firefox-appdir = "browser"
 skip-if = [
   "os == 'android'",
-  "appname == 'thunderbird'",
+  "appname == 'thunderbird' && !nightly_build"
 ]
 support-files = [
   "!/services/common/tests/unit/head_helpers.js",

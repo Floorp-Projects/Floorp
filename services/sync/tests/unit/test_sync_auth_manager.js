@@ -24,6 +24,7 @@ const {
   ERRNO_INVALID_AUTH_TOKEN,
   ONLOGIN_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
+  SCOPE_APP_SYNC,
 } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
@@ -66,8 +67,8 @@ MockFxAccountsClient.prototype = {
   },
   getScopedKeyData() {
     return Promise.resolve({
-      "https://identity.mozilla.com/apps/oldsync": {
-        identifier: "https://identity.mozilla.com/apps/oldsync",
+      [SCOPE_APP_SYNC]: {
+        identifier: SCOPE_APP_SYNC,
         keyRotationSecret:
           "0000000000000000000000000000000000000000000000000000000000000000",
         keyRotationTimestamp: 1234567890123,

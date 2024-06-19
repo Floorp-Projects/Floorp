@@ -17,7 +17,7 @@ const {
   "resource://gre/modules/FxAccountsOAuth.sys.mjs"
 );
 
-const { SCOPE_PROFILE, FX_OAUTH_CLIENT_ID } = ChromeUtils.importESModule(
+const { SCOPE_PROFILE, OAUTH_CLIENT_ID } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
 
@@ -45,15 +45,15 @@ add_task(function test_begin_oauth_flow() {
     }
   });
   add_task(async function test_begin_oauth_flow_ok() {
-    const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
+    const scopes = [SCOPE_PROFILE, SCOPE_APP_SYNC];
     const queryParams = await oauth.beginOAuthFlow(scopes);
 
     // First verify default query parameters
-    Assert.equal(queryParams.client_id, FX_OAUTH_CLIENT_ID);
+    Assert.equal(queryParams.client_id, OAUTH_CLIENT_ID);
     Assert.equal(queryParams.action, "email");
     Assert.equal(queryParams.response_type, "code");
     Assert.equal(queryParams.access_type, "offline");
-    Assert.equal(queryParams.scope, [SCOPE_PROFILE, SCOPE_OLD_SYNC].join(" "));
+    Assert.equal(queryParams.scope, [SCOPE_PROFILE, SCOPE_APP_SYNC].join(" "));
 
     // Then, we verify that the state is a valid Base64 value
     const state = queryParams.state;
@@ -120,7 +120,7 @@ add_task(function test_complete_oauth_flow() {
         }),
     };
     const oauth = new FxAccountsOAuth(fxaClient);
-    const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
+    const scopes = [SCOPE_PROFILE, SCOPE_APP_SYNC];
     const sessionToken = "01abcef12";
     const queryParams = await oauth.beginOAuthFlow(scopes);
     try {
@@ -133,7 +133,7 @@ add_task(function test_complete_oauth_flow() {
     }
   });
   add_task(async function test_jwe_not_returned() {
-    const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
+    const scopes = [SCOPE_PROFILE, SCOPE_APP_SYNC];
     const fxaClient = {
       oauthToken: () =>
         Promise.resolve({
@@ -157,15 +157,15 @@ add_task(function test_complete_oauth_flow() {
   add_task(async function test_complete_oauth_ok() {
     // First, we initialize some fake values we would typically get
     // from outside our system
-    const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
+    const scopes = [SCOPE_PROFILE, SCOPE_APP_SYNC];
     const oauthCode = "fake oauth code";
     const sessionToken = "01abcef12";
     const plainTextScopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     const fakeAccessToken = "fake access token";
@@ -280,16 +280,16 @@ add_task(function test_complete_oauth_flow() {
   add_task(async function test_complete_oauth_invalid_scoped_keys() {
     // First, we initialize some fake values we would typically get
     // from outside our system
-    const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
+    const scopes = [SCOPE_PROFILE, SCOPE_APP_SYNC];
     const oauthCode = "fake oauth code";
     const sessionToken = "01abcef12";
     const invalidScopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         // ====== This is an invalid key type! Should be "oct", so we will raise an error once we realize
         kty: "EC",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     const fakeAccessToken = "fake access token";

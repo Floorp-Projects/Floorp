@@ -28,7 +28,7 @@ import {
   COMMAND_PAIR_COMPLETE,
   COMMAND_PAIR_PREFERENCES,
   COMMAND_FIREFOX_VIEW,
-  FX_OAUTH_CLIENT_ID,
+  OAUTH_CLIENT_ID,
   ON_PROFILE_CHANGE_NOTIFICATION,
   PREF_LAST_FXA_USER,
   WEBCHANNEL_ID,
@@ -647,7 +647,7 @@ FxAccountsWebChannelHelpers.prototype = {
 
     return {
       signedInUser,
-      clientId: FX_OAUTH_CLIENT_ID,
+      clientId: OAUTH_CLIENT_ID,
       capabilities,
     };
   },

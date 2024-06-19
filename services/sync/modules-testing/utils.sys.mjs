@@ -20,7 +20,7 @@ import {
 } from "resource://gre/modules/FxAccounts.sys.mjs";
 import { FxAccountsClient } from "resource://gre/modules/FxAccountsClient.sys.mjs";
 
-import { SCOPE_OLD_SYNC } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+import { SCOPE_APP_SYNC } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 // A mock "storage manager" for FxAccounts that doesn't actually write anywhere.
 export function MockFxaStorageManager() {}
@@ -119,7 +119,7 @@ export var makeIdentityConfig = function (overrides) {
       user: {
         email: "foo",
         scopedKeys: {
-          [SCOPE_OLD_SYNC]: {
+          [SCOPE_APP_SYNC]: {
             kid: "1234567890123-u7u7u7u7u7u7u7u7u7u7uw",
             k: "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg",
             kty: "oct",
@@ -174,8 +174,8 @@ export var makeFxAccountsInternalMock = function (config) {
     keys: {
       getScopedKeys: () =>
         Promise.resolve({
-          "https://identity.mozilla.com/apps/oldsync": {
-            identifier: "https://identity.mozilla.com/apps/oldsync",
+          [SCOPE_APP_SYNC]: {
+            identifier: SCOPE_APP_SYNC,
             keyRotationSecret:
               "0000000000000000000000000000000000000000000000000000000000000000",
             keyRotationTimestamp: 1510726317123,

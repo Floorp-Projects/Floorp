@@ -72,8 +72,8 @@ const fxAccounts = {
     fxAccountsClient: {
       async getScopedKeyData() {
         return {
-          "https://identity.mozilla.com/apps/oldsync": {
-            identifier: "https://identity.mozilla.com/apps/oldsync",
+          [SCOPE_APP_SYNC]: {
+            identifier: SCOPE_APP_SYNC,
             keyRotationTimestamp: 12345678,
           },
         };
@@ -151,7 +151,7 @@ add_task(async function testFullFlow() {
         new TextEncoder().encode(JSON.stringify(epk.publicJWK)),
         { pad: false }
       ),
-      scope: "profile https://identity.mozilla.com/apps/oldsync",
+      scope: `profile ${SCOPE_APP_SYNC}`,
       code_challenge: "chal",
       code_challenge_method: "S256",
     },
@@ -169,7 +169,9 @@ add_task(async function testFullFlow() {
   const oauthUrl = await promiseSwitchToWebContent;
   Assert.equal(
     oauthUrl,
-    `${OAUTH_URI}?client_id=client_id_1&scope=profile+https%3A%2F%2Fidentity.mozilla.com%2Fapps%2Foldsync&email=foo%40bar.com&uid=abcd&channel_id=${CHANNEL_ID}&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob%3Apair-auth-webchannel`
+    `${OAUTH_URI}?client_id=client_id_1&scope=profile+${encodeURIComponent(
+      SCOPE_APP_SYNC
+    )}&email=foo%40bar.com&uid=abcd&channel_id=${CHANNEL_ID}&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob%3Apair-auth-webchannel`
   );
 
   let pairSuppMetadata = await simulateIncomingWebChannel(
@@ -199,7 +201,7 @@ add_task(async function testFullFlow() {
   const generateArgs = generateJWE.firstCall.args;
   Assert.deepEqual(generateArgs[0], epk.publicJWK);
   Assert.deepEqual(JSON.parse(new TextDecoder().decode(generateArgs[1])), {
-    "https://identity.mozilla.com/apps/oldsync": {
+    [SCOPE_APP_SYNC]: {
       kid: "123456",
       k: KSYNC,
       kty: "oct",
@@ -217,10 +219,7 @@ add_task(async function testFullFlow() {
   Assert.equal(oauthCodeArgs.client_id, "client_id_1");
   Assert.equal(oauthCodeArgs.access_type, "offline");
   Assert.equal(oauthCodeArgs.state, "mystate");
-  Assert.equal(
-    oauthCodeArgs.scope,
-    "profile https://identity.mozilla.com/apps/oldsync"
-  );
+  Assert.equal(oauthCodeArgs.scope, `profile ${SCOPE_APP_SYNC}`);
   Assert.equal(oauthCodeArgs.code_challenge, "chal");
   Assert.equal(oauthCodeArgs.code_challenge_method, "S256");
 
@@ -318,7 +317,7 @@ add_task(async function testPairingChannelFailure() {
     data: {
       client_id: "client_id_1",
       state: "mystate",
-      scope: "profile https://identity.mozilla.com/apps/oldsync",
+      scope: `profile ${SCOPE_APP_SYNC}`,
       code_challenge: "chal",
       code_challenge_method: "S256",
     },

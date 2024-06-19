@@ -13,9 +13,10 @@ const { FxAccountsClient } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsClient.sys.mjs"
 );
 const {
+  CLIENT_IS_THUNDERBIRD,
   ERRNO_INVALID_AUTH_TOKEN,
   ERROR_NO_ACCOUNT,
-  FX_OAUTH_CLIENT_ID,
+  OAUTH_CLIENT_ID,
   ONLOGIN_NOTIFICATION,
   ONLOGOUT_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
@@ -34,7 +35,7 @@ const MOCK_TOKEN_RESPONSE = {
   access_token:
     "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69",
   token_type: "bearer",
-  scope: "https://identity.mozilla.com/apps/oldsync",
+  scope: SCOPE_APP_SYNC,
   expires_in: 21600,
   auth_at: 1589579900,
 };
@@ -152,13 +153,13 @@ function MockFxAccountsClient() {
 
   this.getScopedKeyData = function (sessionToken, client_id, scopes) {
     Assert.ok(sessionToken);
-    Assert.equal(client_id, FX_OAUTH_CLIENT_ID);
-    Assert.equal(scopes, SCOPE_OLD_SYNC);
+    Assert.equal(client_id, OAUTH_CLIENT_ID);
+    Assert.equal(scopes, SCOPE_APP_SYNC);
     return new Promise(resolve => {
       do_timeout(50, () => {
         resolve({
-          "https://identity.mozilla.com/apps/oldsync": {
-            identifier: "https://identity.mozilla.com/apps/oldsync",
+          [SCOPE_APP_SYNC]: {
+            identifier: SCOPE_APP_SYNC,
             keyRotationSecret:
               "0000000000000000000000000000000000000000000000000000000000000000",
             keyRotationTimestamp: 1234567890123,
@@ -678,7 +679,7 @@ add_test(function test_getKeyForScope() {
       Assert.equal(!!user2.keyFetchToken, true);
       Assert.equal(!!user2.unwrapBKey, true);
 
-      fxa.keys.getKeyForScope(SCOPE_OLD_SYNC).then(() => {
+      fxa.keys.getKeyForScope(SCOPE_APP_SYNC).then(() => {
         fxa._internal.getUserAccountData().then(user3 => {
           // Now we should have keys
           Assert.equal(fxa._internal.isUserEmailVerified(user3), true);
@@ -712,7 +713,7 @@ add_task(
 
     await fxa.setSignedInUser(user);
     // getKeyForScope will run the migration
-    await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+    await fxa.keys.getKeyForScope(SCOPE_APP_SYNC);
     let newUser = await fxa._internal.getUserAccountData();
     // Then, the deprecated keys will be removed
     Assert.strictEqual(newUser.kExtSync, undefined);
@@ -732,21 +733,21 @@ add_task(
     user.scopedKeys = {
       ...MOCK_ACCOUNT_KEYS.scopedKeys,
       [DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY]:
-        MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+        MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_APP_SYNC],
       [DEPRECATED_SCOPE_WEBEXT_SYNC]:
-        MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
-      [EXTRA_SCOPE]: MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+        MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_APP_SYNC],
+      [EXTRA_SCOPE]: MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_APP_SYNC],
     };
 
     await fxa.setSignedInUser(user);
-    await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+    await fxa.keys.getKeyForScope(SCOPE_APP_SYNC);
     let newUser = await fxa._internal.getUserAccountData();
     // It should have removed the deprecated ecosystem_telemetry key,
     // and the old kinto extension sync key
     // but left the other keys intact.
     const expectedScopedKeys = {
       ...MOCK_ACCOUNT_KEYS.scopedKeys,
-      [EXTRA_SCOPE]: MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+      [EXTRA_SCOPE]: MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_APP_SYNC],
     };
     Assert.deepEqual(newUser.scopedKeys, expectedScopedKeys);
     Assert.equal(newUser.ecosystemUserId, null);
@@ -777,7 +778,7 @@ add_task(async function test_getKeyForScope_nonexistent_account() {
     });
   });
 
-  await Assert.rejects(fxa.keys.getKeyForScope(SCOPE_OLD_SYNC), err => {
+  await Assert.rejects(fxa.keys.getKeyForScope(SCOPE_APP_SYNC), err => {
     Assert.equal(err.message, ERROR_INVALID_ACCOUNT_STATE);
     return true; // expected error
   });
@@ -808,7 +809,7 @@ add_task(async function test_getKeyForScope_invalid_token() {
   Assert.notEqual(user.encryptedSendTabKeys, null);
 
   try {
-    await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+    await fxa.keys.getKeyForScope(SCOPE_APP_SYNC);
     Assert.ok(false);
   } catch (err) {
     Assert.equal(err.code, 401);
@@ -831,8 +832,8 @@ add_task(async function test_getKeyForScope_oldsync() {
   let client = fxa._internal.fxAccountsClient;
   client.getScopedKeyData = () =>
     Promise.resolve({
-      "https://identity.mozilla.com/apps/oldsync": {
-        identifier: "https://identity.mozilla.com/apps/oldsync",
+      [SCOPE_APP_SYNC]: {
+        identifier: SCOPE_APP_SYNC,
         keyRotationSecret:
           "0000000000000000000000000000000000000000000000000000000000000000",
         keyRotationTimestamp: 1510726317123,
@@ -862,7 +863,7 @@ add_task(async function test_getKeyForScope_oldsync() {
   await fxa.setSignedInUser(user);
 
   // We derive, persist and return the sync key
-  const key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+  const key = await fxa.keys.getKeyForScope(SCOPE_APP_SYNC);
 
   // We verify the key returned matches what we would expect from the test vectors
   // kb = 2ee722fdd8ccaa721bdeb2d1b76560efef705b04349d9357c3e592cf4906e075 (from test vectors)
@@ -871,7 +872,7 @@ add_task(async function test_getKeyForScope_oldsync() {
   //
   // k can be verified by HKDF(kb, undefined, "identity.mozilla.com/picl/v1/oldsync", 64)
   Assert.deepEqual(key, {
-    scope: SCOPE_OLD_SYNC,
+    scope: SCOPE_APP_SYNC,
     kid: "1510726317123-BAik7hEOdpGnPZnPBSdaTg",
     k: "fwM5VZu0Spf5XcFRZYX2zk6MrqZP7zvovCBcvuKwgYMif3hz98FHmIVa3qjKjrW0J244Zj-P5oWaOcQbvypmpw",
     kty: "oct",
@@ -888,10 +889,10 @@ add_task(async function test_getScopedKeys_cached_key() {
   };
 
   await fxa.setSignedInUser(user);
-  let key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+  let key = await fxa.keys.getKeyForScope(SCOPE_APP_SYNC);
   Assert.deepEqual(key, {
-    scope: SCOPE_OLD_SYNC,
-    ...MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+    scope: SCOPE_APP_SYNC,
+    ...MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_APP_SYNC],
   });
 });
 
@@ -934,8 +935,8 @@ add_task(async function test_getScopedKeys_misconfigured_fxa_server() {
   };
   await fxa.setSignedInUser(user);
   await Assert.rejects(
-    fxa.keys.getKeyForScope(SCOPE_OLD_SYNC),
-    /The FxA server did not grant Firefox the `oldsync` scope/
+    fxa.keys.getKeyForScope(SCOPE_APP_SYNC),
+    /The FxA server did not grant Firefox the sync scope/
   );
 });
 
@@ -947,10 +948,10 @@ add_task(async function test_setScopedKeys() {
   };
   await fxa.setSignedInUser(user);
   await fxa.keys.setScopedKeys(MOCK_ACCOUNT_KEYS.scopedKeys);
-  const key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+  const key = await fxa.keys.getKeyForScope(SCOPE_APP_SYNC);
   Assert.deepEqual(key, {
-    scope: SCOPE_OLD_SYNC,
-    ...MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+    scope: SCOPE_APP_SYNC,
+    ...MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_APP_SYNC],
   });
 });
 
@@ -1166,7 +1167,10 @@ add_test(async function test_getOAuthTokenWithSessionToken() {
   ) => {
     oauthTokenCalled = true;
     Assert.equal(sessionTokenHex, "alice's session token");
-    Assert.equal(clientId, "5882386c6d801776");
+    Assert.equal(
+      clientId,
+      CLIENT_IS_THUNDERBIRD ? "a958794159236f76" : "5882386c6d801776"
+    );
     Assert.equal(scope, "profile");
     Assert.equal(ttl, undefined);
     return MOCK_TOKEN_RESPONSE;
@@ -1445,7 +1449,7 @@ add_task(async function test_listAttachedOAuthClients() {
           deviceId: "deadbeef",
           sessionTokenId: null,
           name: "Firefox Preview (no session token)",
-          scope: ["profile", "https://identity.mozilla.com/apps/oldsync"],
+          scope: ["profile", SCOPE_APP_SYNC],
           lastAccessTime: Date.now(),
         },
         {

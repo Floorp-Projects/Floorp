@@ -19,7 +19,7 @@ import {
   FXA_PWDMGR_PLAINTEXT_FIELDS,
   FXA_PWDMGR_REAUTH_ALLOWLIST,
   FXA_PWDMGR_SECURE_FIELDS,
-  FX_OAUTH_CLIENT_ID,
+  OAUTH_CLIENT_ID,
   ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
   ONLOGIN_NOTIFICATION,
   ONLOGOUT_NOTIFICATION,
@@ -1089,10 +1089,7 @@ FxAccountsInternal.prototype = {
    * @param { Object } tokenData: The token's data, with `tokenData.token` being the token itself
    **/
   destroyOAuthToken(tokenData) {
-    return this.fxAccountsClient.oauthDestroy(
-      FX_OAUTH_CLIENT_ID,
-      tokenData.token
-    );
+    return this.fxAccountsClient.oauthDestroy(OAUTH_CLIENT_ID, tokenData.token);
   },
 
   _destroyAllOAuthTokens(tokenInfos) {
@@ -1378,7 +1375,7 @@ FxAccountsInternal.prototype = {
   async _doTokenFetchWithSessionToken(sessionToken, scopeString, ttl) {
     const result = await this.fxAccountsClient.accessTokenWithSessionToken(
       sessionToken,
-      FX_OAUTH_CLIENT_ID,
+      OAUTH_CLIENT_ID,
       scopeString,
       ttl
     );

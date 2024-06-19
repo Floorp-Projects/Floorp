@@ -620,7 +620,7 @@ add_task(async function test_accessTokenWithSessionToken() {
         access_token:
           "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69",
         token_type: "bearer",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
         expires_in: 21600,
         auth_at: 1589579900,
       });
@@ -634,7 +634,7 @@ add_task(async function test_accessTokenWithSessionToken() {
   let sessionTokenHex =
     "0599c36ebb5cad6feb9285b9547b65342b5434d55c07b33bffd4307ab8f82dc4";
   let clientId = "5882386c6d801776";
-  let scope = "https://identity.mozilla.com/apps/oldsync";
+  let scope = SCOPE_APP_SYNC;
   let ttl = 100;
   let result = await client.accessTokenWithSessionToken(
     sessionTokenHex,
