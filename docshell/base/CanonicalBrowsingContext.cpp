@@ -1696,6 +1696,7 @@ void CanonicalBrowsingContext::GoToIndex(
                                 aUserActivation);
   }
 }
+
 void CanonicalBrowsingContext::Reload(uint32_t aReloadFlags) {
   if (IsDiscarded()) {
     return;
