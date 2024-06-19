@@ -2542,6 +2542,7 @@ class nsContextMenu {
       screenX,
       screenY,
       this.#getTextToTranslate(),
+      this.isTextSelected,
       this.#translationsLangPairPromise
     ).catch(console.error);
   }

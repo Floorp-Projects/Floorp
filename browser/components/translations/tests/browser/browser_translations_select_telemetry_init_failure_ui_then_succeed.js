@@ -31,6 +31,7 @@ add_task(
           from_language: "es",
           to_language: "en",
           top_preferred_language: "en",
+          text_source: "selection",
         },
       }
     );
@@ -67,6 +68,7 @@ add_task(
           from_language: "es",
           to_language: "en",
           top_preferred_language: "en",
+          text_source: "selection",
         },
       }
     );

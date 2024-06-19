@@ -518,6 +518,7 @@ var SelectTranslationsPanel = new (class {
    * @param {number} screenX - The x-axis location of the screen at which to open the popup.
    * @param {number} screenY - The y-axis location of the screen at which to open the popup.
    * @param {string} sourceText - The text to translate.
+   * @param {boolean} isTextSelected - True if the text comes from a selection, false if it comes from a hyperlink.
    * @param {Promise} langPairPromise - Promise resolving to language pair data for initializing dropdowns.
    * @param {boolean} maintainFlow - Whether the telemetry flow-id should be persisted or assigned a new id.
    *
@@ -528,6 +529,7 @@ var SelectTranslationsPanel = new (class {
     screenX,
     screenY,
     sourceText,
+    isTextSelected,
     langPairPromise,
     maintainFlow = false
   ) {
@@ -537,6 +539,7 @@ var SelectTranslationsPanel = new (class {
         screenX,
         screenY,
         sourceText,
+        isTextSelected,
         langPairPromise
       );
       return;
@@ -545,13 +548,16 @@ var SelectTranslationsPanel = new (class {
     const { fromLanguage, toLanguage } = await langPairPromise;
     const { docLangTag, topPreferredLanguage } = this.#getLanguageInfo();
 
-    TranslationsParent.telemetry().selectTranslationsPanel().onOpen({
-      maintainFlow,
-      docLangTag,
-      fromLanguage,
-      toLanguage,
-      topPreferredLanguage,
-    });
+    TranslationsParent.telemetry()
+      .selectTranslationsPanel()
+      .onOpen({
+        maintainFlow,
+        docLangTag,
+        fromLanguage,
+        toLanguage,
+        topPreferredLanguage,
+        textSource: isTextSelected ? "selection" : "hyperlink",
+      });
 
     try {
       this.#sourceTextWordCount = undefined;
@@ -572,6 +578,7 @@ var SelectTranslationsPanel = new (class {
         screenX,
         screenY,
         sourceText,
+        isTextSelected,
         langPairPromise
       );
     }
@@ -589,15 +596,30 @@ var SelectTranslationsPanel = new (class {
    * @param {number} screenX - The x-axis location of the screen at which to open the popup.
    * @param {number} screenY - The y-axis location of the screen at which to open the popup.
    * @param {string} sourceText - The text to translate.
+   * @param {boolean} isTextSelected - True if the text comes from a selection, false if it comes from a hyperlink.
    * @param {Promise} langPairPromise - Promise resolving to language pair data for initializing dropdowns.
    *
    * @returns {Promise<void>}
    */
-  async #forceReopen(event, screenX, screenY, sourceText, langPairPromise) {
+  async #forceReopen(
+    event,
+    screenX,
+    screenY,
+    sourceText,
+    isTextSelected,
+    langPairPromise
+  ) {
     this.console?.warn("The SelectTranslationsPanel was forced to reopen.");
     this.close();
     this.#changeStateToClosed();
-    await this.open(event, screenX, screenY, sourceText, langPairPromise);
+    await this.open(
+      event,
+      screenX,
+      screenY,
+      sourceText,
+      isTextSelected,
+      langPairPromise
+    );
   }
 
   /**
@@ -1283,8 +1305,14 @@ var SelectTranslationsPanel = new (class {
         // If the initialization failed, we need to close the panel and try reopening it
         // which will attempt to initialize everything again after failure.
         const { panel } = this.elements;
-        const { event, screenX, screenY, sourceText, langPairPromise } =
-          this.#translationState;
+        const {
+          event,
+          screenX,
+          screenY,
+          sourceText,
+          isTextSelected,
+          langPairPromise,
+        } = this.#translationState;
 
         panel.addEventListener(
           "popuphidden",
@@ -1294,6 +1322,7 @@ var SelectTranslationsPanel = new (class {
               screenX,
               screenY,
               sourceText,
+              isTextSelected,
               langPairPromise,
               /* maintainFlow */ true
             ),
@@ -1559,12 +1588,20 @@ var SelectTranslationsPanel = new (class {
 
   /**
    * Changes the phase to "init-failure".
+   *
+   * @param {Event} event - The triggering event for opening the panel.
+   * @param {number} screenX - The x-axis location of the screen at which to open the popup.
+   * @param {number} screenY - The y-axis location of the screen at which to open the popup.
+   * @param {string} sourceText - The text to translate.
+   * @param {boolean} isTextSelected - True if the text comes from a hyperlink, false if it is from a selection.
+   * @param {Promise} langPairPromise - Promise resolving to language pair data for initializing dropdowns.
    */
   #changeStateToInitFailure(
     event,
     screenX,
     screenY,
     sourceText,
+    isTextSelected,
     langPairPromise
   ) {
     this.#changeStateTo("init-failure", /* retainEntries */ true, {
@@ -1572,6 +1609,7 @@ var SelectTranslationsPanel = new (class {
       screenX,
       screenY,
       sourceText,
+      isTextSelected,
       langPairPromise,
     });
   }
