@@ -743,6 +743,51 @@ translations.select_translations_panel:
       - translations-telemetry-alerts@mozilla.com
     expires: never
 
+  change_from_language:
+    type: event
+    description: >
+      Triggers when the from-language selected value is changed.
+    extra_keys:
+      flow_id: *flow_id
+      language:
+        type: string
+        description: >
+          - The BCP47 language tag.
+      document_language: *language
+      previous_language:
+        type: string
+        description: >
+          - The BCP47 language tag of the previously selected language.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903391
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903391
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: never
+
+  change_to_language:
+    type: event
+    description: >
+      Triggers when the to-language selected value is changed.
+    extra_keys:
+      flow_id: *flow_id
+      language:
+        type: string
+        description: >
+          - The BCP47 language tag.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903391
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1903391
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: never
+
   open_settings_menu:
     type: event
     description: >

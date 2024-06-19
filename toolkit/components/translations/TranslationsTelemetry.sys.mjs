@@ -489,6 +489,30 @@ class SelectTranslationsPanelTelemetry {
     );
   }
 
+  static onChangeFromLanguage({ previousLangTag, currentLangTag, docLangTag }) {
+    Glean.translationsSelectTranslationsPanel.changeFromLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      document_language: docLangTag,
+      previous_language: previousLangTag,
+      language: currentLangTag,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onChangeFromLanguage,
+      { previousLangTag, currentLangTag, docLangTag }
+    );
+  }
+
+  static onChangeToLanguage(langTag) {
+    Glean.translationsSelectTranslationsPanel.changeToLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      language: langTag,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onChangeToLanguage,
+      { langTag }
+    );
+  }
+
   static onOpenSettingsMenu() {
     Glean.translationsSelectTranslationsPanel.openSettingsMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
