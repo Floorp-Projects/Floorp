@@ -8,6 +8,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCrypto;
 import android.media.MediaFormat;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -134,7 +135,18 @@ import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
   }
 
   /* package */ LollipopAsyncCodec(final String name) throws IOException {
-    mCodec = MediaCodec.createByCodecName(name);
+    // Create the codec.
+    // We wrap the call to MediaCodec.createByCodecName in a pair of
+    // clearCallingIdentity / restoreCallingIdentity, so that the resource
+    // gets attributed to this process and not to whichever process was calling us.
+    // This works around a battery usage attribution bug in Android 14+,
+    // see bug 1902077.
+    final long token = Binder.clearCallingIdentity();
+    try {
+      mCodec = MediaCodec.createByCodecName(name);
+    } finally {
+      Binder.restoreCallingIdentity(token);
+    }
   }
 
   @Override
