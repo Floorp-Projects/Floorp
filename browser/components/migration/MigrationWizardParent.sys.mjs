@@ -163,7 +163,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
       }
 
       case "OpenAboutAddons": {
-        let browser = this.browsingContext.top.embedderElement;
+        let browser = this.browsingContext.topChromeWindow;
         this.#openAboutAddons(browser);
         break;
       }
@@ -852,9 +852,9 @@ export class MigrationWizardParent extends JSWindowActorParent {
    *
    * @param {Element} browser
    *   The browser element requesting that the URL opens in.
-   * @param {Element} url
+   * @param {string} url
    *   The URL that will be opened.
-   * @param {Element} where
+   * @param {string} where
    *   Where the URL will be opened. Defaults to current tab.
    */
   #openURL(browser, url, where) {
