@@ -1029,6 +1029,7 @@ system_headers = [
     "vpx_mem/vpx_mem.h",
     "aom/aom_image.h",
     "aom/aomdx.h",
+    "aom/aomcx.h",
     "aom/aom_decoder.h",
 ]
 
