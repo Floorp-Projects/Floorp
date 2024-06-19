@@ -4,7 +4,6 @@
 "use strict";
 
 add_setup(() => SpecialPowers.pushPrefEnv({ set: [["sidebar.revamp", true]] }));
-registerCleanupFunction(() => SpecialPowers.popPrefEnv());
 
 add_task(async function test_customize_sidebar_actions() {
   const win = await BrowserTestUtils.openNewBrowserWindow();
@@ -12,6 +11,10 @@ add_task(async function test_customize_sidebar_actions() {
   const sidebar = document.querySelector("sidebar-main");
   ok(sidebar, "Sidebar is shown.");
 
+  await BrowserTestUtils.waitForCondition(
+    async () => (await sidebar.updateComplete) && sidebar.customizeButton,
+    `The sidebar-main component has fully rendered, and the customize button is present.`
+  );
   const button = sidebar.customizeButton;
   const promiseFocused = BrowserTestUtils.waitForEvent(win, "SidebarFocused");
   button.click();
