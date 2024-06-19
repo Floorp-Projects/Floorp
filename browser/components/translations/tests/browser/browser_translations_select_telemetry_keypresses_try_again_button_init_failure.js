@@ -24,9 +24,11 @@ add_task(
 
     const translatablePhasePromise =
       SelectTranslationsTestUtils.waitForPanelState("translatable");
-    focusElementAndSynthesizeKey(
-      SelectTranslationsPanel.elements.tryAgainButton,
-      "KEY_Enter"
+    await SelectTranslationsTestUtils.waitForPanelPopupEvent("popupshown", () =>
+      focusElementAndSynthesizeKey(
+        SelectTranslationsPanel.elements.tryAgainButton,
+        "KEY_Enter"
+      )
     );
     await translatablePhasePromise;
 
@@ -69,9 +71,11 @@ add_task(
 
     const translatablePhasePromise =
       SelectTranslationsTestUtils.waitForPanelState("translatable");
-    focusElementAndSynthesizeKey(
-      SelectTranslationsPanel.elements.tryAgainButton,
-      " "
+    await SelectTranslationsTestUtils.waitForPanelPopupEvent("popupshown", () =>
+      focusElementAndSynthesizeKey(
+        SelectTranslationsPanel.elements.tryAgainButton,
+        "KEY_Enter"
+      )
     );
     await translatablePhasePromise;
 
