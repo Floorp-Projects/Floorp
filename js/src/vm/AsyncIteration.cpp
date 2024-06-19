@@ -306,43 +306,15 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
 // ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
 //
-// AsyncGeneratorUnwrapYieldResumption ( resumptionValue )
-// https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
-//
-// Steps 1-2.
-[[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
-    JSContext* cx, Handle<AsyncGeneratorObject*> generator,
-    CompletionKind completionKind, HandleValue resumptionValue) {
-  // Step 1. If resumptionValue.[[Type]] is not return, return
-  //         Completion(resumptionValue).
-  if (completionKind != CompletionKind::Return) {
-    return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
-  }
-
-  // Step 2. Let awaited be Await(resumptionValue.[[Value]]).
-  //
-  // Since we don't have the place that handles return from yield
-  // inside the generator, handle the case here, with extra state
-  // State_AwaitingYieldReturn.
-  generator->setAwaitingYieldReturn();
-
-  const PromiseHandler onFulfilled =
-      PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
-  const PromiseHandler onRejected =
-      PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
-
-  return InternalAsyncGeneratorAwait(cx, generator, resumptionValue,
-                                     onFulfilled, onRejected);
-}
-
-// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
-//
 // AsyncGeneratorYield ( value )
 // https://tc39.es/ecma262/#sec-asyncgeneratoryield
 //
 // Stesp 10-13.
 [[nodiscard]] static bool AsyncGeneratorYield(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
+  // Step 13.a.
+  generator->setSuspendedYield();
+
   // Step 10. Perform
   //          ! AsyncGeneratorCompleteStep(generator, completion, false,
   //                                       previousRealm).
@@ -350,37 +322,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     return false;
   }
 
-  // Step 11. Let queue be generator.[[AsyncGeneratorQueue]].
-  // Step 12. If queue is not empty, then
-  // Step 13. Else,
-  // (reordered)
-  if (generator->isQueueEmpty()) {
-    // Step 13.a. Set generator.[[AsyncGeneratorState]] to suspendedYield.
-    generator->setSuspendedYield();
-
-    // Steps 13.b-c are done in caller.
-
-    // Step 13.d. Return undefined.
-    return true;
-  }
-
-  // Step 12. If queue is not empty, then
-  // Step 12.a. NOTE: Execution continues without suspending the generator.
-
-  // Step 12.b. Let toYield be the first element of queue.
-  Rooted<AsyncGeneratorRequest*> toYield(
-      cx, AsyncGeneratorObject::peekRequest(generator));
-  if (!toYield) {
-    return false;
-  }
-
-  // Step 12.c. Let resumptionValue be toYield.[[Completion]].
-  CompletionKind completionKind = toYield->completionKind();
-  RootedValue resumptionValue(cx, toYield->completionValue());
-
-  // Step 12.d. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
-  return AsyncGeneratorUnwrapYieldResumptionAndResume(
-      cx, generator, completionKind, resumptionValue);
+  // Steps 11-13.
+  return AsyncGeneratorDrainQueue(cx, generator);
 }
 
 // ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
