@@ -777,6 +777,13 @@ nsBaseClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                         int32_t aWhichClipboard,
                                         bool* aOutResult) {
   MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+
+  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                      aWhichClipboard);
+    return NS_ERROR_FAILURE;
+  }
+
   if (MOZ_CLIPBOARD_LOG_ENABLED()) {
     MOZ_CLIPBOARD_LOG("    Asking for content clipboard=%i:\n",
                       aWhichClipboard);
