@@ -40,7 +40,7 @@ add_task(async function test_derive_legacy_sync_key_test_vector() {
   const uid = "aeaa1725c7a24ff983c6295725d5fc9b";
   const kB = "eaf9570b7219a4187d3d6bf3cec2770c2e0719b7cc0dfbb38243d6f1881675e9";
   const scopedKeyMetadata = {
-    identifier: "https://identity.mozilla.com/apps/oldsync",
+    identifier: SCOPE_APP_SYNC,
     keyRotationTimestamp: 1510726317123,
     keyRotationSecret:
       "0000000000000000000000000000000000000000000000000000000000000000",
@@ -49,7 +49,7 @@ add_task(async function test_derive_legacy_sync_key_test_vector() {
   const scopedKey = await keys._deriveLegacyScopedKey(
     uid,
     CommonUtils.hexToBytes(kB),
-    "https://identity.mozilla.com/apps/oldsync",
+    SCOPE_APP_SYNC,
     scopedKeyMetadata
   );
 
@@ -71,8 +71,8 @@ add_task(async function test_derive_multiple_keys_at_once() {
       keyRotationSecret:
         "517d478cb4f994aa69930416648a416fdaa1762c5abf401a2acf11a0f185e98d",
     },
-    "https://identity.mozilla.com/apps/oldsync": {
-      identifier: "https://identity.mozilla.com/apps/oldsync",
+    [SCOPE_APP_SYNC]: {
+      identifier: SCOPE_APP_SYNC,
       keyRotationTimestamp: 1510726318123,
       keyRotationSecret:
         "0000000000000000000000000000000000000000000000000000000000000000",
@@ -91,7 +91,7 @@ add_task(async function test_derive_multiple_keys_at_once() {
       kid: "1510726317-tUkxiR1lTlFrTgkF0tJidA",
       k: "TYK6Hmj86PfKiqsk9DZmX61nxk9VsExGrwo94HP-0wU",
     },
-    "https://identity.mozilla.com/apps/oldsync": {
+    [SCOPE_APP_SYNC]: {
       kty: "oct",
       kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
       k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
@@ -103,17 +103,17 @@ add_task(function test_check_valid_scoped_keys() {
   const keys = new FxAccountsKeys(null);
   add_task(function test_missing_key_data() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), false);
   });
   add_task(function test_unexpected_scope() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
@@ -124,59 +124,59 @@ add_task(function test_check_valid_scoped_keys() {
   });
   add_task(function test_not_oct_key() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         // Should be "oct"!
         kty: "EC",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), false);
   });
   add_task(function test_invalid_kid_not_timestamp() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         // Does not have the timestamp!
         kid: "IqQv4onc7VcVE1kTQkyyOw",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), false);
   });
   add_task(function test_invalid_kid_not_valid_timestamp() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         // foo is not a valid timestamp!
         kid: "foo-IqQv4onc7VcVE1kTQkyyOw",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), false);
   });
   add_task(function test_invalid_kid_not_b64_fingerprint() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         // fingerprint not a valid base64 encoded string.
         kid: "1510726318123-notvalidb64][",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), false);
   });
   add_task(function test_invalid_k_not_base64() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
         k: "notavalidb64[]",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), false);
@@ -192,11 +192,11 @@ add_task(function test_check_valid_scoped_keys() {
         scope: "https://identity.mozilla.com/apps/otherscope",
       },
       // Invalid
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
         k: "notavalidb64[]",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), false);
@@ -204,11 +204,11 @@ add_task(function test_check_valid_scoped_keys() {
 
   add_task(function test_valid_scopedkeys() {
     const scopedKeys = {
-      "https://identity.mozilla.com/apps/oldsync": {
+      [SCOPE_APP_SYNC]: {
         kty: "oct",
         kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
         k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
-        scope: "https://identity.mozilla.com/apps/oldsync",
+        scope: SCOPE_APP_SYNC,
       },
       "https://identity.mozilla.com/apps/otherscope": {
         kty: "oct",

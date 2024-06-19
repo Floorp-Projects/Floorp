@@ -6,7 +6,7 @@ import { RESTRequest } from "resource://services-common/rest.sys.mjs";
 
 import {
   log,
-  SCOPE_OLD_SYNC,
+  SCOPE_APP_SYNC,
   SCOPE_PROFILE,
 } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -344,7 +344,7 @@ export var FxAccountsConfig = {
 
   async _getAuthParams() {
     if (this._isOAuthFlow()) {
-      const scopes = [SCOPE_OLD_SYNC, SCOPE_PROFILE];
+      const scopes = [SCOPE_APP_SYNC, SCOPE_PROFILE];
       return lazy.fxAccounts._internal.beginOAuthFlow(scopes);
     }
     return { service: SYNC_PARAM };

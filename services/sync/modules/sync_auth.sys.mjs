@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
 import * as fxAccountsCommon from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
-const SCOPE_OLD_SYNC = fxAccountsCommon.SCOPE_OLD_SYNC;
+const SCOPE_APP_SYNC = fxAccountsCommon.SCOPE_APP_SYNC;
 
 const OBSERVER_TOPICS = [
   fxAccountsCommon.ONLOGIN_NOTIFICATION,
@@ -305,7 +305,7 @@ SyncAuthManager.prototype = {
       lazy.log.debug("unlockAndVerifyAuthState has an unverified user");
       return LOGIN_FAILED_LOGIN_REJECTED;
     }
-    if (await fxa.keys.canGetKeyForScope(SCOPE_OLD_SYNC)) {
+    if (await fxa.keys.canGetKeyForScope(SCOPE_APP_SYNC)) {
       lazy.log.debug(
         "unlockAndVerifyAuthState already has (or can fetch) sync keys"
       );
@@ -323,7 +323,7 @@ SyncAuthManager.prototype = {
     // without unlocking the MP or cleared the saved logins, so we've now
     // lost them - the user will need to reauth before continuing.
     let result;
-    if (await fxa.keys.canGetKeyForScope(SCOPE_OLD_SYNC)) {
+    if (await fxa.keys.canGetKeyForScope(SCOPE_APP_SYNC)) {
       result = STATUS_OK;
     } else {
       result = LOGIN_FAILED_LOGIN_REJECTED;
@@ -377,7 +377,7 @@ SyncAuthManager.prototype = {
     // We need keys for things to work.  If we don't have them, just
     // return null for the token - sync calling unlockAndVerifyAuthState()
     // before actually syncing will setup the error states if necessary.
-    if (!(await fxa.keys.canGetKeyForScope(SCOPE_OLD_SYNC))) {
+    if (!(await fxa.keys.canGetKeyForScope(SCOPE_APP_SYNC))) {
       this._log.info(
         "Unable to fetch keys (master-password locked?), so aborting token fetch"
       );
@@ -400,7 +400,7 @@ SyncAuthManager.prototype = {
       try {
         this._log.info("Getting sync key");
         const tokenAndKey = await fxa.getOAuthTokenAndKey({
-          scope: SCOPE_OLD_SYNC,
+          scope: SCOPE_APP_SYNC,
           ttl,
         });
 
@@ -419,7 +419,7 @@ SyncAuthManager.prototype = {
           "Token server returned 401, retrying token fetch with fresh credentials"
         );
         const tokenAndKey = await fxa.getOAuthTokenAndKey({
-          scope: SCOPE_OLD_SYNC,
+          scope: SCOPE_APP_SYNC,
           ttl,
         });
         token = await getToken(tokenAndKey.key, tokenAndKey.token);
