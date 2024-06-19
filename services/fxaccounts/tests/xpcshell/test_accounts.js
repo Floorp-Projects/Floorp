@@ -1169,7 +1169,7 @@ add_test(async function test_getOAuthTokenWithSessionToken() {
     Assert.equal(sessionTokenHex, "alice's session token");
     Assert.equal(
       clientId,
-      CLIENT_IS_THUNDERBIRD ? "a958794159236f76" : "5882386c6d801776"
+      CLIENT_IS_THUNDERBIRD ? "8269bacd7bbc7f80" : "5882386c6d801776"
     );
     Assert.equal(scope, "profile");
     Assert.equal(ttl, undefined);
