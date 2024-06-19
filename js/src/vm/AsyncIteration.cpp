@@ -916,29 +916,11 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Step 7. Let state be generator.[[AsyncGeneratorState]].
-  // Step 8. If state is either suspendedStart or completed, then
-  if (generator->isSuspendedStart() || generator->isCompleted()) {
-    // Step 8.a. Set generator.[[AsyncGeneratorState]] to awaiting-return.
-    generator->setAwaitingReturn();
-
-    // Step 8.b. Perform ! AsyncGeneratorAwaitReturn(generator).
-    if (!AsyncGeneratorAwaitReturn(cx, generator, completionValue)) {
+  // Steps 7-10.
+  if (!generator->isExecuting() && !generator->isAwaitingYieldReturn()) {
+    if (!AsyncGeneratorDrainQueue(cx, generator)) {
       return false;
     }
-  } else if (generator->isSuspendedYield()) {
-    // Step 9. Else if state is suspendedYield, then
-
-    // Step 9.a. Perform ! AsyncGeneratorResume(generator, completion).
-    if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
-            cx, generator, CompletionKind::Return, completionValue)) {
-      return false;
-    }
-  } else {
-    // Step 10. Else,
-    // Step 10.a. Assert: state is either executing or awaiting-return.
-    MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingReturn() ||
-               generator->isAwaitingYieldReturn());
   }
 
   // Step 11. Return promiseCapability.[[Promise]].
