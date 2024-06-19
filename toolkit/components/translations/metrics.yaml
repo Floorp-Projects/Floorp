@@ -242,7 +242,7 @@ translations.panel:
       Triggers when the from-language selected value is changed.
     extra_keys:
       flow_id: *flow_id
-      language:
+      language: &language
         type: string
         description: >
           - The BCP47 language tag.
@@ -300,10 +300,7 @@ translations.panel:
       Triggers when the to-language selected value is changed.
     extra_keys:
       flow_id: *flow_id
-      language:
-        type: string
-        description: >
-          - The BCP47 language tag.
+      language: *language
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
@@ -488,10 +485,7 @@ translations.panel:
       Triggers when the always-translate-language menuitem is invoked in the full-page translations panel settings.
     extra_keys:
       flow_id: *flow_id
-      language:
-        type: string
-        description: >
-          - The BCP47 language tag.
+      language: *language
       toggled_on:
         type: boolean
         description: >
@@ -514,10 +508,7 @@ translations.panel:
       Triggers when the never-translate-language menuitem is invoked in the full-page translations panel settings.
     extra_keys:
       flow_id: *flow_id
-      language:
-        type: string
-        description: >
-          - The BCP47 language tag.
+      language: *language
       toggled_on:
         type: boolean
         description: >
@@ -749,10 +740,7 @@ translations.select_translations_panel:
       Triggers when the from-language selected value is changed.
     extra_keys:
       flow_id: *flow_id
-      language:
-        type: string
-        description: >
-          - The BCP47 language tag.
+      language: *language
       document_language: *language
       previous_language:
         type: string
@@ -774,10 +762,7 @@ translations.select_translations_panel:
       Triggers when the to-language selected value is changed.
     extra_keys:
       flow_id: *flow_id
-      language:
-        type: string
-        description: >
-          - The BCP47 language tag.
+      language: *language
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1903391
     data_reviews:
