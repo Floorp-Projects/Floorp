@@ -1511,6 +1511,8 @@ class XPCShellTests(object):
         for key, value in self.http3Server.ports().items():
             self.env[key] = value
         self.env["MOZHTTP3_ECH"] = self.http3Server.echConfig()
+        self.env["MOZ_HTTP3_SERVER_PATH"] = http3ServerPath
+        self.env["MOZ_HTTP3_CERT_DB_PATH"] = dbPath
 
     def shutdownHttp3Server(self):
         if self.http3Server is None:

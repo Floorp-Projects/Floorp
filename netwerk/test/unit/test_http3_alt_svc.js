@@ -1,8 +1,13 @@
 "use strict";
 
+/* import-globals-from head_servers.js */
+
 let httpsOrigin;
 let h3AltSvc;
 let h3Route;
+let h3Port;
+let h3ServerPath;
+let h3DBPath;
 let prefs;
 
 let tests = [test_https_alt_svc, test_https_alt_svc_1, testsDone];
@@ -17,16 +22,19 @@ function run_next_test() {
   }
 }
 
+function setupAltSvc() {
+  h3AltSvc = ":" + h3Port;
+  h3Route = "foo.example.com:" + h3Port;
+}
+
 function run_test() {
   let h2Port = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
-  let h3Port = Services.env.get("MOZHTTP3_PORT");
-  Assert.notEqual(h3Port, null);
-  Assert.notEqual(h3Port, "");
-  h3AltSvc = ":" + h3Port;
 
-  h3Route = "foo.example.com:" + h3Port;
+  h3ServerPath = Services.env.get("MOZ_HTTP3_SERVER_PATH");
+  h3DBPath = Services.env.get("MOZ_HTTP3_CERT_DB_PATH");
+
   do_get_profile();
   prefs = Services.prefs;
 
@@ -131,20 +139,38 @@ function doTest(uri, expectedRoute, altSvc, expectedH3Version) {
 // H2 server returns alt-svc=h2=foo2.example.com:8000,h3-29=:h3port
 function test_https_alt_svc() {
   dump("test_https_alt_svc()\n");
+
   do_test_pending();
-  doTest(httpsOrigin + "http3-test2", h3Route, h3AltSvc, "h3-29");
+
+  let server = new HTTP3Server();
+  server
+    .start(h3ServerPath, h3DBPath)
+    .then(() => {
+      h3Port = server.port();
+      setupAltSvc();
+      doTest(httpsOrigin + "http3-test2", h3Route, h3AltSvc, "h3-29");
+    })
+    .catch(_ => {});
 }
 
 // Test if we use the latest version of HTTP/3.
 // H2 server returns alt-svc=h3-29=:h3port,h3=:h3port
 function test_https_alt_svc_1() {
-  // Close the previous connection and clear alt-svc mappings.
+  dump("test_https_alt_svc_1()\n");
   Services.obs.notifyObservers(null, "last-pb-context-exited");
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
+
   do_test_pending();
-  do_timeout(1000, () => {
-    doTest(httpsOrigin + "http3-test3", h3Route, h3AltSvc, "h3");
-  });
+
+  let server = new HTTP3Server();
+  server
+    .start(h3ServerPath, h3DBPath)
+    .then(() => {
+      h3Port = server.port();
+      setupAltSvc();
+      doTest(httpsOrigin + "http3-test3", h3Route, h3AltSvc, "h3");
+    })
+    .catch(_ => {});
 }
 
 function testsDone() {

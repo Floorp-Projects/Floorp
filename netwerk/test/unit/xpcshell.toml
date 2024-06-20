@@ -647,7 +647,7 @@ run-sequentially = "http3server"
 ["test_http3_alt_svc.js"]
 skip-if = [
   "os == 'android'",
-  "os == 'win'", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
+  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807931
 ]
 run-sequentially = "http3server"
 

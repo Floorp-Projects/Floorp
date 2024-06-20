@@ -15,7 +15,7 @@ add_task(async function setup() {
   Assert.notEqual(h2Port, "");
   httpsUri = "https://foo.example.com:" + h2Port + "/";
 
-  await http3_setup_tests("h3");
+  await http3_setup_tests("h3", true);
 });
 
 let Listener = function () {};

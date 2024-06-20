@@ -18,6 +18,7 @@ var crypto = require("crypto");
 const dnsPacket = require(`${node_http2_root}/../dns-packet`);
 const ip = require(`${node_http2_root}/../node_ip`);
 const { fork } = require("child_process");
+const { spawn } = require("child_process");
 const path = require("path");
 const zlib = require("zlib");
 
@@ -1835,6 +1836,17 @@ let httpServer = http.createServer((req, res) => {
       return;
     }
 
+    if (u.pathname == "/forkH3Server") {
+      forkH3Server(u.query.path, u.query.dbPath)
+        .then(result => {
+          computeAndSendBackResponse(result);
+        })
+        .catch(error => {
+          computeAndSendBackResponse(error);
+        });
+      return;
+    }
+
     if (u.pathname.startsWith("/kill/")) {
       let id = u.pathname.slice(6);
       let forked = globalObjects[id];
@@ -1902,10 +1914,27 @@ let httpServer = http.createServer((req, res) => {
   });
 });
 
+function forkH3Server(serverPath, dbPath) {
+  const args = [dbPath];
+  let process = spawn(serverPath, args);
+  let id = forkProcessInternal(process);
+  // Return a promise that resolves when we receive data from stdout
+  return new Promise((resolve, _) => {
+    process.stdout.on("data", data => {
+      console.log(data.toString());
+      resolve({ id, output: data.toString().trim() });
+    });
+  });
+}
+
 function forkProcess() {
   let scriptPath = path.resolve(__dirname, "moz-http2-child.js");
-  let id = makeid(6);
   let forked = fork(scriptPath);
+  return forkProcessInternal(forked);
+}
+
+function forkProcessInternal(forked) {
+  let id = makeid(6);
   forked.errors = "";
   globalObjects[id] = forked;
   forked.on("message", msg => {
