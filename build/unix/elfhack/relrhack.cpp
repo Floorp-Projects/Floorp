@@ -12,6 +12,7 @@
 
 #include "relrhack.h"
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
