@@ -362,7 +362,7 @@ def _create_fluent_localizations(
                 localized_desktop_entry_filename,
             )
         else:
-            non_en_US_fluent_resource_file_url = f"{l10n_central_url}/{linux_l10n_changesets[locale]['re    vision']}/{locale}/browser/browser/{desktop_entry_fluent_filename}"
+            non_en_US_fluent_resource_file_url = f"{l10n_central_url}/{linux_l10n_changesets[locale]['revision']}/{locale}/browser/browser/{desktop_entry_fluent_filename}"
             response = requests.get(non_en_US_fluent_resource_file_url)
             response = retry(
                 requests.get,
