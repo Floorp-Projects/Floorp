@@ -588,7 +588,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Հաշիվ</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Գործիքագոտի</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Գործիքագոտի</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Հասցեի գոտու տեղադրություն</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Ոճ</string>
     <!-- Preference for customizing the home screen -->
@@ -895,9 +897,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Ոլորել՝ գործիքագոտիի թաքցնման համար</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Սահարկեք գործիքագոտին կողքից՝ ներդիրների փոխարկման համար</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Սահարկեք գործիքագոտին կողքից՝ ներդիրների փոխարկման համար</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Սահարկել գործիքագոտին վերև՝ ներդիրների բացման համար</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Ոլորեք՝ հասցեագոտին ու գործիքագոտին թաքցնելու համար</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Սահարկեք գործիքագոտին կողքից՝ ներդիրներին անցնելու համար</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

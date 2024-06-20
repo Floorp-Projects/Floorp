@@ -13,7 +13,7 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Gera huliðsvafur óvirkt</string>
     <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
-    <string name="search_hint">Leitaðu eða sláðu inn vistfang</string>
+    <string name="search_hint">Leitaðu eða settu inn vistfang</string>
     <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
     <string name="search_hint_general_engine">Leita á vefnum</string>
     <!-- Placeholder text shown in search bar when using history search -->
@@ -2032,7 +2032,7 @@
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Skráðu heiti leitarvélar</string>
     <!-- Text shown when a user leaves the search string field empty -->
-    <string name="search_add_custom_engine_error_empty_search_string">Sláðu inn leitarstreng</string>
+    <string name="search_add_custom_engine_error_empty_search_string">Settu inn leitarstreng</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Athugaðu hvort leitarstrengurinn sé í sama sniði og dæmið</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
