@@ -179,6 +179,7 @@
         ],
         "classification": "unknown",
         "name": "Amazon.co.jp",
+        "partnerCode": "mozillajapan-fx-22",
         "urls": {
           "search": {
             "base": "https://www.amazon.co.jp/exec/obidos/external-search/",
@@ -189,7 +190,7 @@
               },
               {
                 "name": "tag",
-                "value": "mozillajapan-fx-22"
+                "value": "{partnerCode}"
               },
               {
                 "name": "sourceid",
@@ -202,16 +203,29 @@
       },
       "id": "9d089e46-dc94-4d4f-8f17-cc07b59aa9e4",
       "identifier": "amazon-jp",
-      "last_modified": 1702906502401,
+      "last_modified": 1718719100309,
       "recordType": "engine",
-      "schema": 1702901805111,
+      "schema": 1718637175117,
       "variants": [
         {
           "environment": {
             "regions": [
               "jp"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "moz-jp-mbl-22"
+            }
+          ]
         }
       ]
     },
@@ -231,13 +245,16 @@
       },
       "id": "788a2ded-6872-4742-8115-c14dde7a18f9",
       "identifier": "amazondotcom-us",
-      "last_modified": 1702906502412,
+      "last_modified": 1718719100307,
       "notes": "Amazon.com (us only)",
       "recordType": "engine",
-      "schema": 1702901802672,
+      "schema": 1718698346192,
       "variants": [
         {
           "environment": {
+            "applications": [
+              "firefox"
+            ],
             "regions": [
               "us"
             ]
@@ -308,16 +325,35 @@
       },
       "id": "ad58537f-f397-46ec-a1a8-935e12f0aab6",
       "identifier": "baidu",
-      "last_modified": 1702906502749,
+      "last_modified": 1718719100295,
       "recordType": "engine",
-      "schema": 1702901740286,
+      "schema": 1718698349444,
       "variants": [
         {
           "environment": {
             "locales": [
               "zh-CN"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "urls": {
+                "search": {
+                  "base": "https://m.baidu.com/s",
+                  "params": [],
+                  "searchTermParamName": "word"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -339,13 +375,7 @@
               },
               {
                 "name": "form",
-                "searchAccessPoint": {
-                  "addressbar": "MOZLBR",
-                  "contextmenu": "MOZCON",
-                  "homepage": "MOZSPG",
-                  "newtab": "MOZTSB",
-                  "searchbar": "MOZSBR"
-                }
+                "value": "MOZLBR"
               }
             ],
             "searchTermParamName": "q"
@@ -367,96 +397,17 @@
       },
       "id": "05645095-d26e-4f20-9137-f24a14a23f28",
       "identifier": "bing",
-      "last_modified": 1713282817048,
+      "last_modified": 1718719100291,
       "recordType": "engine",
-      "schema": 1713199744323,
+      "schema": 1718698353718,
       "variants": [
         {
           "environment": {
-            "locales": [
-              "ach",
-              "af",
-              "an",
-              "ar",
-              "ast",
-              "az",
-              "bn",
-              "bs",
-              "ca",
-              "ca-valencia",
-              "cak",
-              "cs",
-              "cy",
-              "da",
-              "de",
-              "dsb",
-              "el",
-              "en-CA",
-              "en-GB",
-              "en-US",
-              "eo",
-              "es-CL",
-              "es-ES",
-              "es-MX",
-              "eu",
-              "fa",
-              "ff",
-              "fi",
-              "fr",
-              "fur",
-              "fy-NL",
-              "gd",
-              "gl",
-              "gn",
-              "gu-IN",
-              "he",
-              "hi-IN",
-              "hr",
-              "hsb",
-              "hy-AM",
-              "ia",
-              "id",
-              "is",
-              "it",
-              "ja",
-              "ja-JP-macos",
-              "ka",
-              "kab",
-              "km",
-              "kn",
-              "lij",
-              "lo",
-              "lt",
-              "meh",
-              "mk",
-              "ms",
-              "my",
-              "nb-NO",
-              "ne-NP",
-              "nl",
-              "nn-NO",
-              "oc",
-              "pa-IN",
-              "pt-BR",
-              "rm",
-              "ro",
-              "sc",
-              "sco",
-              "son",
-              "sq",
-              "sr",
-              "sv-SE",
-              "te",
-              "th",
-              "tl",
-              "tr",
-              "trs",
-              "uk",
-              "ur",
-              "uz",
-              "wo",
-              "xh",
-              "zh-CN"
+            "allRegionsAndLocales": true,
+            "applications": [
+              "firefox",
+              "firefox-android",
+              "firefox-ios"
             ]
           },
           "subVariants": [
@@ -468,6 +419,52 @@
               },
               "partnerCode": "MOZR",
               "telemetrySuffix": "esr"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android"
+                ]
+              },
+              "partnerCode": "MOZB",
+              "urls": {
+                "search": {
+                  "params": [
+                    {
+                      "name": "pc",
+                      "value": "{partnerCode}"
+                    },
+                    {
+                      "name": "form",
+                      "value": "MOZMBA"
+                    }
+                  ],
+                  "searchTermParamName": "q"
+                }
+              }
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-ios"
+                ]
+              },
+              "partnerCode": "MOZW",
+              "urls": {
+                "search": {
+                  "params": [
+                    {
+                      "name": "pc",
+                      "value": "{partnerCode}"
+                    },
+                    {
+                      "name": "form",
+                      "value": "MOZWSB"
+                    }
+                  ],
+                  "searchTermParamName": "q"
+                }
+              }
             }
           ]
         }
@@ -542,6 +539,7 @@
       "base": {
         "classification": "unknown",
         "name": "Cốc Cốc",
+        "partnerCode": "firefox",
         "urls": {
           "search": {
             "base": "https://coccoc.com/search",
@@ -552,7 +550,7 @@
               },
               {
                 "name": "utm_source",
-                "value": "firefox"
+                "value": "{partnerCode}"
               }
             ],
             "searchTermParamName": "query"
@@ -575,16 +573,29 @@
       },
       "id": "20104daa-cb8a-40b9-a8c5-2433f4476c3e",
       "identifier": "coccoc",
-      "last_modified": 1702906502314,
+      "last_modified": 1718719100314,
       "recordType": "engine",
-      "schema": 1702901821664,
+      "schema": 1718698356483,
       "variants": [
         {
           "environment": {
             "locales": [
               "vi"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "ffmobile"
+            }
+          ]
         }
       ]
     },
@@ -621,16 +632,31 @@
       },
       "id": "3330e927-6733-4239-9738-b41c5c460b11",
       "identifier": "daum-kr",
-      "last_modified": 1702906502311,
+      "last_modified": 1718719100316,
       "recordType": "engine",
-      "schema": 1702901822275,
+      "schema": 1718698358587,
       "variants": [
         {
           "environment": {
             "locales": [
               "ko"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "urls": {
+                "search": {
+                  "base": "https://m.search.daum.net/search"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -668,9 +694,9 @@
       },
       "id": "04e99a38-13ee-47d8-8aa4-64482b3dea99",
       "identifier": "ddg",
-      "last_modified": 1713282817053,
+      "last_modified": 1718719100285,
       "recordType": "engine",
-      "schema": 1713282081098,
+      "schema": 1718698362015,
       "variants": [
         {
           "environment": {
@@ -687,6 +713,26 @@
               "telemetrySuffix": "esr"
             }
           ]
+        },
+        {
+          "environment": {
+            "allRegionsAndLocales": true,
+            "applications": [
+              "firefox-android",
+              "focus-android"
+            ]
+          },
+          "partnerCode": "fpas"
+        },
+        {
+          "environment": {
+            "allRegionsAndLocales": true,
+            "applications": [
+              "firefox-ios",
+              "focus-ios"
+            ]
+          },
+          "partnerCode": "ffip"
         },
         {
           "environment": {
@@ -752,9 +798,9 @@
       },
       "id": "d8b7ed81-00f3-478a-a835-dc0677d7190a",
       "identifier": "ebay",
-      "last_modified": 1702906502450,
+      "last_modified": 1718719100298,
       "recordType": "engine",
-      "schema": 1702901794691,
+      "schema": 1718698365997,
       "variants": [
         {
           "environment": {
@@ -764,7 +810,18 @@
             "regions": [
               "us"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -821,9 +878,9 @@
       },
       "id": "8dee7454-6c6c-4b22-a411-4e474c7afbb3",
       "identifier": "ebay-at",
-      "last_modified": 1702906502421,
+      "last_modified": 1718719100305,
       "recordType": "engine",
-      "schema": 1702901800849,
+      "schema": 1718698368829,
       "variants": [
         {
           "environment": {
@@ -835,7 +892,18 @@
             "regions": [
               "at"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -892,9 +960,9 @@
       },
       "id": "e5a64fe0-2cb9-4b22-83d3-4e529c3702a9",
       "identifier": "ebay-au",
-      "last_modified": 1702906502429,
+      "last_modified": 1718719100302,
       "recordType": "engine",
-      "schema": 1702901799015,
+      "schema": 1718698373814,
       "variants": [
         {
           "environment": {
@@ -907,7 +975,18 @@
             "regions": [
               "au"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -964,9 +1043,9 @@
       },
       "id": "5f40614e-4fc6-4dee-a897-07b258e00820",
       "identifier": "ebay-be",
-      "last_modified": 1702906502442,
+      "last_modified": 1718719100300,
       "recordType": "engine",
-      "schema": 1702901796541,
+      "schema": 1718698383258,
       "variants": [
         {
           "environment": {
@@ -981,7 +1060,18 @@
             "regions": [
               "be"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1038,9 +1128,9 @@
       },
       "id": "336d7fa9-7579-4981-bfb0-024c6c5f977d",
       "identifier": "ebay-ca",
-      "last_modified": 1715090108516,
+      "last_modified": 1718719100278,
       "recordType": "engine",
-      "schema": 1714065170548,
+      "schema": 1718698388762,
       "variants": [
         {
           "environment": {
@@ -1053,7 +1143,18 @@
             "regions": [
               "ca"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         },
         {
           "environment": {
@@ -1063,7 +1164,18 @@
             "locales": [
               "en-CA"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1120,9 +1232,9 @@
       },
       "id": "8d8484a2-b856-4edd-93d7-c53a7aaca6e1",
       "identifier": "ebay-ch",
-      "last_modified": 1715090108518,
+      "last_modified": 1718719100276,
       "recordType": "engine",
-      "schema": 1714498577167,
+      "schema": 1718698406340,
       "variants": [
         {
           "environment": {
@@ -1138,7 +1250,18 @@
             "regions": [
               "ch"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         },
         {
           "environment": {
@@ -1148,7 +1271,18 @@
             "locales": [
               "rm"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1205,9 +1339,9 @@
       },
       "id": "e991a5f7-616e-43b0-b349-7995b837a520",
       "identifier": "ebay-de",
-      "last_modified": 1715090108527,
+      "last_modified": 1718719100269,
       "recordType": "engine",
-      "schema": 1714498578625,
+      "schema": 1718698412277,
       "variants": [
         {
           "environment": {
@@ -1221,7 +1355,18 @@
               "dsb",
               "hsb"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1278,9 +1423,9 @@
       },
       "id": "0592aedc-f4e5-4873-a8d4-da9482071613",
       "identifier": "ebay-es",
-      "last_modified": 1715090108511,
+      "last_modified": 1718719100283,
       "recordType": "engine",
-      "schema": 1714498579838,
+      "schema": 1718698418873,
       "variants": [
         {
           "environment": {
@@ -1296,7 +1441,18 @@
               "eu",
               "gl"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1353,9 +1509,9 @@
       },
       "id": "d327156c-dfc4-47f6-a620-3846a21144d9",
       "identifier": "ebay-fr",
-      "last_modified": 1715090108513,
+      "last_modified": 1718719100280,
       "recordType": "engine",
-      "schema": 1714498580858,
+      "schema": 1718698423588,
       "variants": [
         {
           "environment": {
@@ -1370,7 +1526,18 @@
               "fr",
               "wo"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1427,9 +1594,9 @@
       },
       "id": "0a9fed24-cd33-4293-bac8-eb26a285c9f1",
       "identifier": "ebay-ie",
-      "last_modified": 1715090108524,
+      "last_modified": 1718719100271,
       "recordType": "engine",
-      "schema": 1714498581865,
+      "schema": 1718698428556,
       "variants": [
         {
           "environment": {
@@ -1442,7 +1609,18 @@
             "regions": [
               "ie"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         },
         {
           "environment": {
@@ -1452,7 +1630,18 @@
             "locales": [
               "ga-IE"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1509,9 +1698,9 @@
       },
       "id": "f36dd44c-ba5f-44e5-8b19-672eb1ed62fd",
       "identifier": "ebay-it",
-      "last_modified": 1715090108532,
+      "last_modified": 1718719100264,
       "recordType": "engine",
-      "schema": 1714498582844,
+      "schema": 1718698434710,
       "variants": [
         {
           "environment": {
@@ -1524,7 +1713,18 @@
               "lij",
               "sc"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1581,9 +1781,9 @@
       },
       "id": "670475c3-d56f-4f87-9834-ddb12d0e8cbd",
       "identifier": "ebay-nl",
-      "last_modified": 1715090108529,
+      "last_modified": 1718719100266,
       "recordType": "engine",
-      "schema": 1714498583851,
+      "schema": 1718698440696,
       "variants": [
         {
           "environment": {
@@ -1595,7 +1795,18 @@
               "fy-NL",
               "nl"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         },
         {
           "environment": {
@@ -1605,7 +1816,18 @@
             "regions": [
               "nl"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1662,16 +1884,27 @@
       },
       "id": "37f83917-8d6e-46d6-9d15-8e7779339d08",
       "identifier": "ebay-pl",
-      "last_modified": 1715090108535,
+      "last_modified": 1718719100261,
       "recordType": "engine",
-      "schema": 1714498585934,
+      "schema": 1718698443475,
       "variants": [
         {
           "environment": {
             "regions": [
               "pl"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1728,9 +1961,9 @@
       },
       "id": "37f83917-8d6e-46d6-9d15-8e7779339d18",
       "identifier": "ebay-uk",
-      "last_modified": 1715090108522,
+      "last_modified": 1718719100273,
       "recordType": "engine",
-      "schema": 1714498584991,
+      "schema": 1718698449042,
       "variants": [
         {
           "environment": {
@@ -1744,27 +1977,40 @@
               "en-GB",
               "gd"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         },
         {
           "environment": {
             "locales": [
+              "en-US",
               "sco"
             ],
             "regions": [
               "gb"
             ]
-          }
-        },
-        {
-          "environment": {
-            "locales": [
-              "en-US"
-            ],
-            "regions": [
-              "gb"
-            ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "5338791379"
+            }
+          ]
         }
       ]
     },
@@ -1798,16 +2044,36 @@
       },
       "id": "e8e4a7e3-aead-43e3-887d-4064a186bd70",
       "identifier": "ecosia",
-      "last_modified": 1702906502308,
+      "last_modified": 1718719100319,
       "recordType": "engine",
-      "schema": 1702901822899,
+      "schema": 1718698454063,
       "variants": [
         {
           "environment": {
             "locales": [
               "de"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "813cf1dd"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "16eeffc4"
+            }
+          ]
         }
       ]
     },
@@ -1856,16 +2122,33 @@
       },
       "id": "d21e561b-64ae-4a33-b2f0-c4a490a5cf82",
       "identifier": "faclair-beag",
-      "last_modified": 1702906502303,
+      "last_modified": 1718719100322,
       "recordType": "engine",
-      "schema": 1702901824109,
+      "schema": 1718698465691,
       "variants": [
         {
           "environment": {
             "locales": [
               "gd"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "urls": {
+                "search": {
+                  "base": "https://www.faclair.com/m"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -2157,9 +2440,9 @@
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1713282817051,
+      "last_modified": 1718719100288,
       "recordType": "engine",
-      "schema": 1713282083062,
+      "schema": 1718698468913,
       "variants": [
         {
           "environment": {
@@ -2174,6 +2457,18 @@
               },
               "partnerCode": "firefox-b-e",
               "telemetrySuffix": "b-e"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "firefox-b-m",
+              "telemetrySuffix": "b-m"
             }
           ],
           "telemetrySuffix": "b-d"
@@ -2213,6 +2508,18 @@
               },
               "partnerCode": "firefox-b-1-e",
               "telemetrySuffix": "b-1-e"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "firefox-b-1-m",
+              "telemetrySuffix": "b-1-m"
             }
           ],
           "telemetrySuffix": "b-1-d",
@@ -2822,16 +3129,36 @@
       },
       "id": "2e62746e-b90a-42ee-b0f2-9ed0e1e2eaf0",
       "identifier": "qwant",
-      "last_modified": 1710766863306,
+      "last_modified": 1718719100293,
       "recordType": "engine",
-      "schema": 1710460806956,
+      "schema": 1718698472747,
       "variants": [
         {
           "environment": {
             "locales": [
               "fr"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "ff_android"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "ff_ios"
+            }
+          ]
         },
         {
           "environment": {
@@ -2843,7 +3170,27 @@
               "it",
               "nl"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android"
+                ]
+              },
+              "partnerCode": "ff_android"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "ff_ios"
+            }
+          ]
         },
         {
           "environment": {
@@ -2981,14 +3328,41 @@
     {
       "base": {
         "classification": "unknown",
+        "name": "Reddit",
+        "urls": {
+          "search": {
+            "base": "https://www.reddit.com/search/",
+            "params": [],
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "id": "f2038189-6bfe-458b-b379-577fe9db4d51",
+      "identifier": "reddit",
+      "last_modified": 1718719100336,
+      "recordType": "engine",
+      "schema": 1718698475234,
+      "variants": [
+        {
+          "environment": {
+            "allRegionsAndLocales": true
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
+      "base": {
+        "classification": "unknown",
         "name": "Salidzini.lv",
+        "partnerCode": "firefox-plugin",
         "urls": {
           "search": {
             "base": "https://www.salidzini.lv/search.php",
             "params": [
               {
                 "name": "utm_source",
-                "value": "firefox-plugin"
+                "value": "{partnerCode}"
               }
             ],
             "searchTermParamName": "q"
@@ -3001,9 +3375,9 @@
       },
       "id": "883c6f10-cac4-4dc0-b631-9a28cbadda49",
       "identifier": "salidzinilv",
-      "last_modified": 1702906502262,
+      "last_modified": 1718719100324,
       "recordType": "engine",
-      "schema": 1702901833283,
+      "schema": 1718698485230,
       "variants": [
         {
           "environment": {
@@ -3011,7 +3385,20 @@
               "ltg",
               "lv"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "firefox_mobile"
+            }
+          ]
         }
       ]
     },
@@ -3039,16 +3426,29 @@
       },
       "id": "b0cdb724-b7df-47d0-8ead-93aa0a8f60a2",
       "identifier": "seznam-cz",
-      "last_modified": 1702906502339,
+      "last_modified": 1718719100311,
       "recordType": "engine",
-      "schema": 1702901816717,
+      "schema": 1718698494927,
       "variants": [
         {
           "environment": {
             "locales": [
               "cs"
             ]
-          }
+          },
+          "subVariants": [
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android",
+                  "focus-android",
+                  "firefox-ios",
+                  "focus-ios"
+                ]
+              },
+              "partnerCode": "SearchBox"
+            }
+          ]
         }
       ]
     },
@@ -7196,6 +7596,46 @@
     {
       "base": {
         "classification": "unknown",
+        "name": "ವಿಕ್ಷನರಿ (kn)",
+        "urls": {
+          "search": {
+            "base": "https://kn.wiktionary.org/wiki/ವಿಶೇಷ:Search",
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://kn.wiktionary.org/w/api.php",
+            "params": [
+              {
+                "name": "action",
+                "value": "opensearch"
+              },
+              {
+                "name": "namespace",
+                "value": "0"
+              }
+            ],
+            "searchTermParamName": "search"
+          }
+        }
+      },
+      "id": "a2b8eb91-dc15-4d98-8a1f-d7dced364111",
+      "identifier": "wiktionary-kn",
+      "last_modified": 1718719100333,
+      "recordType": "engine",
+      "schema": 1718698503954,
+      "variants": [
+        {
+          "environment": {
+            "locales": [
+              "kn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "base": {
+        "classification": "unknown",
         "name": "Wikiccionari (oc)",
         "urls": {
           "search": {
@@ -7228,6 +7668,46 @@
           "environment": {
             "locales": [
               "oc"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "base": {
+        "classification": "unknown",
+        "name": "விக்சனரி (ta)",
+        "urls": {
+          "search": {
+            "base": "https://ta.wiktionary.org/wiki/சிறப்பு:Search",
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://ta.wiktionary.org/w/api.php",
+            "params": [
+              {
+                "name": "action",
+                "value": "opensearch"
+              },
+              {
+                "name": "namespace",
+                "value": "0"
+              }
+            ],
+            "searchTermParamName": "search"
+          }
+        }
+      },
+      "id": "bcb9427b-c7c4-4665-9620-16ec5c0b304f",
+      "identifier": "wiktionary-ta",
+      "last_modified": 1718719100330,
+      "recordType": "engine",
+      "schema": 1718698508333,
+      "variants": [
+        {
+          "environment": {
+            "locales": [
+              "ta"
             ]
           }
         }
@@ -7387,6 +7867,32 @@
       ]
     },
     {
+      "base": {
+        "classification": "unknown",
+        "name": "YouTube",
+        "urls": {
+          "search": {
+            "base": "https://www.youtube.com/results",
+            "params": [],
+            "searchTermParamName": "search_query"
+          }
+        }
+      },
+      "id": "05b6f528-bd00-4101-b107-b91d5f70b44b",
+      "identifier": "youtube",
+      "last_modified": 1718719100328,
+      "recordType": "engine",
+      "schema": 1718698509654,
+      "variants": [
+        {
+          "environment": {
+            "allRegionsAndLocales": true
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
       "id": "3e1fed64-5ec7-4b1c-bedc-741fe3c59bc3",
       "last_modified": 1707833224345,
       "orders": [
@@ -7420,5 +7926,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1717416922458
+  "timestamp": 1718719100336
 }
