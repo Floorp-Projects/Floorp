@@ -603,7 +603,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">账户</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">工具栏</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">工具栏</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">地址栏位置</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">主题</string>
     <!-- Preference for customizing the home screen -->
@@ -916,10 +918,15 @@
     <string name="preference_gestures_dynamic_toolbar">滚动时隐藏工具栏</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">横向滑动工具栏切换标签页</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">横向滑动工具栏切换标签页</string>
 
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">上滑工具栏显示打开的标签页</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">滚动时隐藏地址栏和工具栏</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">横向滑动地址栏切换标签页</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
