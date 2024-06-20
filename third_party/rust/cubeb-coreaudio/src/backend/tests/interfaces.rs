@@ -1623,6 +1623,7 @@ fn test_ops_timing_sensitive_multiple_duplex_voice_stream_params() {
             |stream| {
                 let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
                 assert!(stm.core_stream_data.using_voice_processing_unit());
+                assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
                 let queue = stm.queue.clone();
                 // Test that input processing params does not carry over when reusing vpio.
                 let mut bypass: u32 = 0;
