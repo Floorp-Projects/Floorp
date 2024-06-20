@@ -4570,7 +4570,7 @@ gfxFloat SVGTextFrame::GetStartOffset(nsIFrame* aTextPathFrame) {
                       100.0
                 : 0.0;
   }
-  float lengthValue = length->GetAnimValue(tp);
+  float lengthValue = length->GetAnimValueWithZoom(tp);
   // If offsetScale is infinity we want to return 0 not NaN
   return lengthValue == 0 ? 0.0 : lengthValue * GetOffsetScale(aTextPathFrame);
 }
@@ -4808,7 +4808,7 @@ void SVGTextFrame::DoGlyphPositioning() {
       element->EnumAttributes()[SVGTextContentElement::LENGTHADJUST]
           .GetAnimValue();
   bool adjustingTextLength = textLengthAttr->IsExplicitlySet();
-  float expectedTextLength = textLengthAttr->GetAnimValue(element);
+  float expectedTextLength = textLengthAttr->GetAnimValueWithZoom(element);
 
   if (adjustingTextLength &&
       (expectedTextLength < 0.0f || lengthAdjust == LENGTHADJUST_UNKNOWN)) {

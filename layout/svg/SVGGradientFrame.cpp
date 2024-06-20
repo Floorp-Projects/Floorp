@@ -455,7 +455,7 @@ float SVGLinearGradientFrame::GetLengthValue(uint32_t aIndex) {
   NS_ASSERTION(gradientUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length.GetAnimValue(static_cast<SVGViewportElement*>(nullptr));
+  return length.GetAnimValueWithZoom(static_cast<SVGViewportElement*>(nullptr));
 }
 
 dom::SVGLinearGradientElement*
@@ -557,7 +557,7 @@ float SVGRadialGradientFrame::GetLengthValueFromElement(
   NS_ASSERTION(gradientUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length.GetAnimValue(static_cast<SVGViewportElement*>(nullptr));
+  return length.GetAnimValueWithZoom(static_cast<SVGViewportElement*>(nullptr));
 }
 
 dom::SVGRadialGradientElement*

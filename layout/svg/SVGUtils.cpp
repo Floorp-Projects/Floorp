@@ -254,19 +254,20 @@ float SVGUtils::ObjectSpace(const gfxRect& aRect,
     // Multiply first to avoid precision errors:
     return axis * aLength->GetAnimValInSpecifiedUnits() / 100;
   }
-  return aLength->GetAnimValue(static_cast<SVGViewportElement*>(nullptr)) *
+  return aLength->GetAnimValueWithZoom(
+             static_cast<SVGViewportElement*>(nullptr)) *
          axis;
 }
 
 float SVGUtils::UserSpace(nsIFrame* aNonSVGContext,
                           const SVGAnimatedLength* aLength) {
   MOZ_ASSERT(!aNonSVGContext->IsTextFrame(), "Not expecting text content");
-  return aLength->GetAnimValue(aNonSVGContext);
+  return aLength->GetAnimValueWithZoom(aNonSVGContext);
 }
 
 float SVGUtils::UserSpace(const UserSpaceMetrics& aMetrics,
                           const SVGAnimatedLength* aLength) {
-  return aLength->GetAnimValue(aMetrics);
+  return aLength->GetAnimValueWithZoom(aMetrics);
 }
 
 SVGOuterSVGFrame* SVGUtils::GetOuterSVGFrame(nsIFrame* aFrame) {

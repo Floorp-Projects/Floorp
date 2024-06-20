@@ -20,6 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=342513
     <svg font-size="10" width="20em" height="20em">
       <rect id="r1" x="5em" y="6em" width="20%" height="30%" />
     </svg>
+    <div style="zoom: 2;">
+      <svg width="40" height="40">
+        <rect id="r2" width="25" height="20" />
+    </svg>
+    </div>
   </svg>
 
 </div>
@@ -34,7 +39,7 @@ function run() {
   var divElem = document.getElementById("div");
   var expectedWidth = divElem.clientWidth;
   // test for the pixel width of the svg
-  is(svgDoc.width.baseVal.value, expectedWidth, "svgDoc.width.baseVal.value");
+  isfuzzy(svgDoc.width.baseVal.value, expectedWidth, 0.01, "svgDoc.width.baseVal.value");
 
   // set the SVG width to ~50% in pixels
   svgDoc.width.baseVal.newValueSpecifiedUnits(svgDoc.width.baseVal.SVG_LENGTHTYPE_PX, Math.floor(expectedWidth / 2));
@@ -45,6 +50,10 @@ function run() {
   let r1 = document.getElementById("r1");
   is(r1.width.baseVal.value, 40, "width in em for elements inside inner <svg> should be resolved against the inner <svg>");
   is(r1.height.baseVal.value, 60, "height in em for elements inside inner <svg> should be resolved against the inner <svg>");
+
+  let r2 = document.getElementById("r2");
+  is(r2.width.baseVal.value, 25, "width in px for elements in zoomed div should be the same as unzoomed");
+  is(r2.height.baseVal.value, 20, "height in px for elements inside zoomed div should be the same as unzoomed");
 
   SimpleTest.finish();
 }

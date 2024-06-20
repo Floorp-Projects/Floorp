@@ -151,14 +151,17 @@ class SVGAnimatedLength {
   float GetAnimValue(const SVGElement* aSVGElement) const {
     return mAnimVal * GetPixelsPerUnit(aSVGElement, mAnimUnitType);
   }
-  float GetAnimValue(nsIFrame* aFrame) const {
-    return mAnimVal * GetPixelsPerUnit(aFrame, mAnimUnitType);
+  float GetAnimValueWithZoom(const SVGElement* aSVGElement) const {
+    return mAnimVal * GetPixelsPerUnitWithZoom(aSVGElement, mAnimUnitType);
   }
-  float GetAnimValue(const SVGViewportElement* aCtx) const {
-    return mAnimVal * GetPixelsPerUnit(aCtx, mAnimUnitType);
+  float GetAnimValueWithZoom(nsIFrame* aFrame) const {
+    return mAnimVal * GetPixelsPerUnitWithZoom(aFrame, mAnimUnitType);
   }
-  float GetAnimValue(const UserSpaceMetrics& aMetrics) const {
-    return mAnimVal * GetPixelsPerUnit(aMetrics, mAnimUnitType);
+  float GetAnimValueWithZoom(const SVGViewportElement* aCtx) const {
+    return mAnimVal * GetPixelsPerUnitWithZoom(aCtx, mAnimUnitType);
+  }
+  float GetAnimValueWithZoom(const UserSpaceMetrics& aMetrics) const {
+    return mAnimVal * GetPixelsPerUnitWithZoom(aMetrics, mAnimUnitType);
   }
 
   uint8_t GetCtxType() const { return mCtxType; }
@@ -197,13 +200,15 @@ class SVGAnimatedLength {
 
   // These APIs returns the number of user-unit pixels per unit of the
   // given type, in a given context (frame/element/etc).
-  float GetPixelsPerUnit(nsIFrame* aFrame, uint8_t aUnitType) const;
-  float GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
-                         uint8_t aUnitType) const;
   float GetPixelsPerUnit(const SVGElement* aSVGElement,
                          uint8_t aUnitType) const;
-  float GetPixelsPerUnit(const SVGViewportElement* aCtx,
-                         uint8_t aUnitType) const;
+  float GetPixelsPerUnitWithZoom(nsIFrame* aFrame, uint8_t aUnitType) const;
+  float GetPixelsPerUnitWithZoom(const UserSpaceMetrics& aMetrics,
+                                 uint8_t aUnitType) const;
+  float GetPixelsPerUnitWithZoom(const SVGElement* aSVGElement,
+                                 uint8_t aUnitType) const;
+  float GetPixelsPerUnitWithZoom(const SVGViewportElement* aCtx,
+                                 uint8_t aUnitType) const;
 
   // SetBaseValue and SetAnimValue set the value in user units. This may fail
   // if unit conversion fails e.g. conversion to ex or em units where the
