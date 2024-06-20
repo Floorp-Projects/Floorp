@@ -3572,7 +3572,15 @@ impl<'ctx> CoreStreamData<'ctx> {
             let r = audio_unit_get_property(
                 self.input_unit,
                 kAudioUnitProperty_StreamFormat,
-                kAudioUnitScope_Output,
+                if using_voice_processing_unit {
+                    // With a VPIO unit the input scope includes AEC reference channels.
+                    // We need to use the output scope of the input bus.
+                    kAudioUnitScope_Output
+                } else {
+                    // With a HAL unit the output scope for the input bus returns the number of
+                    // output channels of the output device, i.e. it seems the bus is ignored.
+                    kAudioUnitScope_Input
+                },
                 AU_IN_BUS,
                 &mut input_hw_desc,
                 &mut size,
