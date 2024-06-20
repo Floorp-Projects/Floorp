@@ -61,17 +61,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         ],
         [
             [
-                "--tag-override",
-            ],
-            {
-                "action": "store",
-                "dest": "tag_override",
-                "type": "string",
-                "help": "Override the tags set for all repos",
-            },
-        ],
-        [
-            [
                 "--en-us-installer-url",
             ],
             {
