@@ -1536,7 +1536,7 @@ class AsyncPanZoomController {
    * govern dynamic toolbar and pull-to-refresh behaviour).
    */
   PointerEventsConsumableFlags ArePointerEventsConsumable(
-      TouchBlockState* aBlock, const MultiTouchInput& aInput);
+      TouchBlockState* aBlock, const MultiTouchInput& aInput) const;
 
   /**
    * Clear internal state relating to touch input handling.

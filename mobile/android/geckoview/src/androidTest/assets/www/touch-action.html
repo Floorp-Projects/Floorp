@@ -26,15 +26,43 @@
     <script>
       const searchParams = new URLSearchParams(location.search);
       let div = document.querySelector("div");
-      if (searchParams.has("subframe")) {
-        const scrolledContents = document.createElement("div");
-        scrolledContents.style.height = "100%";
+      switch (searchParams.get("descendants")) {
+        case "subframe": {
+          const scrolledContents = document.createElement("div");
+          scrolledContents.style.height = "100%";
 
-        div.appendChild(scrolledContents);
-        div.style.overflow = "auto";
+          div.appendChild(scrolledContents);
+          div.style.overflow = "auto";
 
-        div = scrolledContents;
+          div = scrolledContents;
+          break;
+        }
+        case "svg": {
+          const svg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg"
+          );
+          svg.setAttribute("viewBox", "0 0 16 8");
+          svg.style.position = "absolute";
+          const path = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+          );
+          path.setAttribute("width", "100");
+          path.setAttribute(
+            "d",
+            "M8 1a7 7 0 1 1-7 7 7 7 0 0 1 7-7zm0 3a1 1 0 1 1-1 1 1 1 0 0 1 1-1zm0 3a1 1 0 0 1 1 1v3a1 1 0 0 1-2 0V8a1 1 0 0 1 1-1z"
+          );
+          path.setAttribute("fill-rule", "evenodd");
+          path.setAttribute("fill", "green");
+          svg.appendChild(path);
+
+          div.appendChild(svg);
+          div.style.position = "absolute";
+          break;
+        }
       }
+
       if (searchParams.has("scrollable")) {
         // Scrollable for dynamic toolbar purposes.
         div.style.height = "100vh";

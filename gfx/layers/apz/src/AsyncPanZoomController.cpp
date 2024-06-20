@@ -876,7 +876,7 @@ AsyncPanZoomController::GetPinchLockMode() {
 }
 
 PointerEventsConsumableFlags AsyncPanZoomController::ArePointerEventsConsumable(
-    TouchBlockState* aBlock, const MultiTouchInput& aInput) {
+    TouchBlockState* aBlock, const MultiTouchInput& aInput) const {
   uint32_t touchPoints = aInput.mTouches.Length();
   if (touchPoints == 0) {
     // Cant' do anything with zero touch points

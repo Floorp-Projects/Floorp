@@ -1007,15 +1007,30 @@ void InputQueue::SetBrowserGestureResponse(uint64_t aInputBlockId,
   ProcessQueue();
 }
 
-static APZHandledResult GetHandledResultFor(
-    const AsyncPanZoomController* aApzc,
-    const InputBlockState& aCurrentInputBlock, nsEventStatus aEagerStatus) {
-  if (aCurrentInputBlock.ShouldDropEvents()) {
+static APZHandledResult GetHandledResultFor(const AsyncPanZoomController* aApzc,
+                                            InputBlockState* aCurrentInputBlock,
+                                            nsEventStatus aEagerStatus,
+                                            const InputData& aEvent) {
+  if (aCurrentInputBlock->ShouldDropEvents()) {
     return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
   }
 
   if (!aApzc) {
     return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
+  }
+
+  if (aEvent.mInputType == MULTITOUCH_INPUT) {
+    // If the event is a multi touch event and is disallowed by touch-action,
+    // treat it as if a touch event listener had preventDefault()-ed it.
+    PointerEventsConsumableFlags consumableFlags =
+        aApzc->ArePointerEventsConsumable(aCurrentInputBlock->AsTouchBlock(),
+                                          aEvent.AsMultiTouchInput());
+    if (!consumableFlags.mAllowedByTouchAction) {
+      APZHandledResult result =
+          APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
+      result.mOverscrollDirections = ScrollDirections();
+      return result;
+    }
   }
 
   if (aApzc->IsRootContent()) {
@@ -1033,14 +1048,14 @@ static APZHandledResult GetHandledResultFor(
   }
 
   bool mayTriggerPullToRefresh =
-      aCurrentInputBlock.GetOverscrollHandoffChain()
+      aCurrentInputBlock->GetOverscrollHandoffChain()
           ->ScrollingUpWillTriggerPullToRefresh(aApzc);
   if (mayTriggerPullToRefresh) {
     return APZHandledResult{APZHandledPlace::Unhandled, aApzc, true};
   }
 
   auto [willMoveDynamicToolbar, rootApzc] =
-      aCurrentInputBlock.GetOverscrollHandoffChain()
+      aCurrentInputBlock->GetOverscrollHandoffChain()
           ->ScrollingDownWillMoveDynamicToolbar(aApzc);
   if (!willMoveDynamicToolbar) {
     return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
@@ -1113,7 +1128,8 @@ bool InputQueue::ProcessQueue() {
                  "\n",
                  curBlock, curBlock->GetBlockId());
         APZHandledResult handledResult =
-            GetHandledResultFor(target, *curBlock, it->second.mEagerStatus);
+            GetHandledResultFor(target, curBlock, it->second.mEagerStatus,
+                                *(mQueuedInputs[0]->Input()));
         it->second.mCallback(curBlock->GetBlockId(), handledResult);
         // The callback is one-shot; discard it after calling it.
         mInputBlockCallbacks.erase(it);
