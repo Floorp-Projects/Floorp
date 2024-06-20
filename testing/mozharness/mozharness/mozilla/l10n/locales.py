@@ -136,27 +136,53 @@ class LocalesMixin(object):
         return self.abs_dirs
 
     # This requires self to inherit a VCSMixin.
-    def pull_locale_source(self, hg_l10n_base=None, parent_dir=None, vcs="hg"):
+    def pull_locale_source(self, hg_l10n_base=None, parent_dir=None):
         c = self.config
+        git_repository = c.get("git_repository")
         if not hg_l10n_base:
             hg_l10n_base = c["hg_l10n_base"]
         if parent_dir is None:
             parent_dir = self.query_abs_dirs()["abs_l10n_dir"]
         self.mkdir_p(parent_dir)
-        # Pull locales
         locales = self.query_locales()
         locale_repos = []
-        for locale in locales:
-            tag = c.get("hg_l10n_tag", "default")
-            if self.l10n_revisions.get(locale):
-                tag = self.l10n_revisions[locale]
-            locale_repos.append(
-                {"repo": "%s/%s" % (hg_l10n_base, locale), "branch": tag, "vcs": vcs}
+        if git_repository:
+            # At the time this code was written we decided we have no use case
+            # for separate revisions for different locales, and in fact, would
+            # like to remove support for this from l10n-changesets.json
+            # altogether. Because of this, we simply ensure that all revisions
+            # given are the same, and clone the repository once at that
+            # revision. This avoids unnecessary network operations and copies
+            # on disk.
+            revisions = set(self.l10n_revisions.values())
+            if len(revisions) != 1:
+                raise Exception(
+                    "All l10n revisions must be the same when pulling from a git repository!"
+                )
+
+            self.vcs_checkout(
+                vcs="gittool",
+                repo=git_repository,
+                dest=parent_dir,
+                revision=revisions.pop(),
             )
-        self.vcs_checkout_repos(
-            repo_list=locale_repos,
-            parent_dir=parent_dir,
-        )
+        else:
+            locale_repos = []
+            for locale in locales:
+                tag = c.get("hg_l10n_tag", "default")
+                if self.l10n_revisions.get(locale):
+                    tag = self.l10n_revisions[locale]
+                locale_repos.append(
+                    {
+                        "repo": "%s/%s" % (hg_l10n_base, locale),
+                        "branch": tag,
+                        "vcs": "hg",
+                    }
+                )
+            self.vcs_checkout_repos(
+                repo_list=locale_repos,
+                parent_dir=parent_dir,
+            )
 
 
 # __main__ {{{1
