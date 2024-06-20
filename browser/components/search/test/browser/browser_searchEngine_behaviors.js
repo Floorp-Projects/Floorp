@@ -29,12 +29,19 @@ const SEARCH_ENGINE_DETAILS = [
       : `https://www.bing.com/search?{code}pc=${
           SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "MOZR" : "MOZI"
         }&q=foo`,
-    codes: {
-      context: "form=MOZCON&",
-      keyword: "form=MOZLBR&",
-      newTab: "form=MOZTSB&",
-      submission: "form=MOZSBR&",
-    },
+    codes: SearchUtils.newSearchConfigEnabled
+      ? {
+          context: "form=MOZLBR&",
+          keyword: "form=MOZLBR&",
+          newTab: "form=MOZLBR&",
+          submission: "form=MOZLBR&",
+        }
+      : {
+          context: "form=MOZCON&",
+          keyword: "form=MOZLBR&",
+          newTab: "form=MOZTSB&",
+          submission: "form=MOZSBR&",
+        },
     name: "Bing",
   },
   {

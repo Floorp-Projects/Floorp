@@ -76,7 +76,7 @@ add_task(async function test_selector_db_out_of_date() {
   if (SearchUtils.newSearchConfigEnabled) {
     Assert.deepEqual(
       result.engines.map(e => e.identifier),
-      ["google", "ddg", "wikipedia"],
+      ["google", "ddg", "bing", "wikipedia"],
       "Should have returned the correct data."
     );
   } else {
