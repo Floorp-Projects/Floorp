@@ -933,3 +933,50 @@ class WebSocketConnection {
     return messages;
   }
 }
+
+class HTTP3Server {
+  protocol() {
+    return "h3";
+  }
+  origin() {
+    return `${this.protocol()}://localhost:${this.port()}`;
+  }
+  port() {
+    return this._port;
+  }
+  domain() {
+    return `localhost`;
+  }
+
+  /// Stops the server
+  async stop() {
+    if (this.processId) {
+      await NodeServer.kill(this.processId);
+      this.processId = undefined;
+    }
+  }
+
+  async start(path, dbPath) {
+    let result = await NodeServer.sendCommand(
+      "",
+      `/forkH3Server?path=${path}&dbPath=${dbPath}`
+    );
+    this.processId = result.id;
+
+    /* eslint-disable no-control-regex */
+    const regex =
+      /HTTP3 server listening on ports (\d+), (\d+), (\d+), (\d+) and (\d+). EchConfig is @([\x00-\x7F]+)@/;
+
+    // Execute the regex on the input string
+    let match = regex.exec(result.output);
+
+    if (match) {
+      // Extract the ports as an array of numbers
+      let ports = match.slice(1, 6).map(Number);
+      this._port = ports[0];
+      return ports[0];
+    }
+
+    return -1;
+  }
+}
