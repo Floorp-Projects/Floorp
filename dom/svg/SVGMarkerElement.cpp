@@ -180,17 +180,17 @@ SVGViewBox SVGMarkerElement::GetViewBox() {
   if (mViewBox.HasRect()) {
     return mViewBox.GetAnimValue();
   }
-  return SVGViewBox(0, 0,
-                    mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx),
-                    mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx));
+  return SVGViewBox(
+      0, 0, mLengthAttributes[MARKERWIDTH].GetAnimValueWithZoom(mCoordCtx),
+      mLengthAttributes[MARKERHEIGHT].GetAnimValueWithZoom(mCoordCtx));
 }
 
 gfx::Matrix SVGMarkerElement::GetViewBoxTransform() {
   if (!mViewBoxToViewportTransform) {
     float viewportWidth =
-        mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx);
+        mLengthAttributes[MARKERWIDTH].GetAnimValueWithZoom(mCoordCtx);
     float viewportHeight =
-        mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
+        mLengthAttributes[MARKERHEIGHT].GetAnimValueWithZoom(mCoordCtx);
 
     SVGViewBox viewbox = GetViewBox();
 
@@ -201,8 +201,8 @@ gfx::Matrix SVGMarkerElement::GetViewBoxTransform() {
         viewportWidth, viewportHeight, viewbox.x, viewbox.y, viewbox.width,
         viewbox.height, mPreserveAspectRatio);
 
-    float refX = mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
-    float refY = mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
+    float refX = mLengthAttributes[REFX].GetAnimValueWithZoom(mCoordCtx);
+    float refY = mLengthAttributes[REFY].GetAnimValueWithZoom(mCoordCtx);
 
     gfx::Point ref = viewBoxTM.TransformPoint(gfx::Point(refX, refY));
 

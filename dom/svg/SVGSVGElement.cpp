@@ -396,7 +396,7 @@ LengthPercentage SVGSVGElement::GetIntrinsicWidthOrHeight(int aAttr) {
   // that uses the passed argument as the context, but that's fine since we
   // know the length isn't a percentage so the context won't be used (and we
   // need to pass the element to be able to resolve em/ex units).
-  float rawSize = mLengthAttributes[aAttr].GetAnimValue(this);
+  float rawSize = mLengthAttributes[aAttr].GetAnimValueWithZoom(this);
   return LengthPercentage::FromPixels(rawSize);
 }
 
