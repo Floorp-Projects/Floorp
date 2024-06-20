@@ -525,6 +525,8 @@ class Preferences final : public nsIPrefService,
 
  private:
   nsCOMPtr<nsIFile> mCurrentFile;
+  // Time since unix epoch in ms (JS Date compatible)
+  PRTime mUserPrefsFileLastModifiedAtStartup = 0;
   bool mDirty = false;
   bool mProfileShutdown = false;
   // We wait a bit after prefs are dirty before writing them. In this period,

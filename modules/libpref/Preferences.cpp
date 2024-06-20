@@ -4351,6 +4351,12 @@ Preferences::ParsePrefsFromBuffer(const nsTArray<uint8_t>& aBytes,
 }
 
 NS_IMETHODIMP
+Preferences::GetUserPrefsFileLastModifiedAtStartup(PRTime* aLastModified) {
+  *aLastModified = mUserPrefsFileLastModifiedAtStartup;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Preferences::GetDirty(bool* aRetVal) {
   *aRetVal = mDirty;
   return NS_OK;
@@ -4380,13 +4386,19 @@ already_AddRefed<nsIFile> Preferences::ReadSavedPrefs() {
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
     // This is a normal case for new users.
     rv = NS_OK;
-  } else if (NS_FAILED(rv)) {
-    // Save a backup copy of the current (invalid) prefs file, since all prefs
-    // from the error line to the end of the file will be lost (bug 361102).
-    // TODO we should notify the user about it (bug 523725).
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::PREFERENCES_PREFS_FILE_WAS_INVALID, true);
-    MakeBackupPrefFile(file);
+  } else {
+    // Store the last modified time of the file while we've got it.
+    // We don't really care if this fails.
+    Unused << file->GetLastModifiedTime(&mUserPrefsFileLastModifiedAtStartup);
+
+    if (NS_FAILED(rv)) {
+      // Save a backup copy of the current (invalid) prefs file, since all prefs
+      // from the error line to the end of the file will be lost (bug 361102).
+      // TODO we should notify the user about it (bug 523725).
+      Telemetry::ScalarSet(
+          Telemetry::ScalarID::PREFERENCES_PREFS_FILE_WAS_INVALID, true);
+      MakeBackupPrefFile(file);
+    }
   }
 
   return file.forget();
@@ -6088,8 +6100,7 @@ void UnloadPrefsModule() { Preferences::Shutdown(); }
 
 // Preference Sanitization Related Code ---------------------------------------
 
-#define PREF_LIST_ENTRY(s) \
-  { s, (sizeof(s) / sizeof(char)) - 1 }
+#define PREF_LIST_ENTRY(s) {s, (sizeof(s) / sizeof(char)) - 1}
 struct PrefListEntry {
   const char* mPrefBranch;
   size_t mLen;

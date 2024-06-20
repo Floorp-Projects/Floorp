@@ -1860,44 +1860,7 @@ BrowserGlue.prototype = {
       }
     });
 
-    // Offer to reset a user's profile if it hasn't been used for 60 days.
-    const OFFER_PROFILE_RESET_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000;
-    let lastUse = Services.appinfo.replacedLockTime;
-    let disableResetPrompt = Services.prefs.getBoolPref(
-      "browser.disableResetPrompt",
-      false
-    );
-
-    if (
-      !disableResetPrompt &&
-      lastUse &&
-      Date.now() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS
-    ) {
-      this._resetProfileNotification("unused");
-    } else if (AppConstants.platform == "win" && !disableResetPrompt) {
-      // Check if we were just re-installed and offer Firefox Reset
-      let updateChannel;
-      try {
-        updateChannel = ChromeUtils.importESModule(
-          "resource://gre/modules/UpdateUtils.sys.mjs"
-        ).UpdateUtils.UpdateChannel;
-      } catch (ex) {}
-      if (updateChannel) {
-        let uninstalledValue = lazy.WindowsRegistry.readRegKey(
-          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-          "Software\\Mozilla\\Firefox",
-          `Uninstalled-${updateChannel}`
-        );
-        let removalSuccessful = lazy.WindowsRegistry.removeRegKey(
-          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-          "Software\\Mozilla\\Firefox",
-          `Uninstalled-${updateChannel}`
-        );
-        if (removalSuccessful && uninstalledValue == "True") {
-          this._resetProfileNotification("uninstall");
-        }
-      }
-    }
+    this._maybeOfferProfileReset();
 
     this._checkForOldBuildUpdates();
 
@@ -1991,6 +1954,56 @@ BrowserGlue.prototype = {
       "browser.contentblocking.features.strict",
       this._setPrefExpectationsAndUpdate
     );
+  },
+
+  _maybeOfferProfileReset() {
+    // Offer to reset a user's profile if it hasn't been used for 60 days.
+    const OFFER_PROFILE_RESET_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000;
+    let lastUse = Services.appinfo.replacedLockTime;
+    let disableResetPrompt = Services.prefs.getBoolPref(
+      "browser.disableResetPrompt",
+      false
+    );
+
+    // Also check prefs.js last modified timestamp as a backstop.
+    // This helps for cases where the lock file checks don't work,
+    // e.g. NFS or because the previous time Firefox ran, it ran
+    // for a very long time. See bug 1054947 and related bugs.
+    lastUse = Math.max(
+      lastUse,
+      Services.prefs.userPrefsFileLastModifiedAtStartup
+    );
+
+    if (
+      !disableResetPrompt &&
+      lastUse &&
+      Date.now() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS
+    ) {
+      this._resetProfileNotification("unused");
+    } else if (AppConstants.platform == "win" && !disableResetPrompt) {
+      // Check if we were just re-installed and offer Firefox Reset
+      let updateChannel;
+      try {
+        updateChannel = ChromeUtils.importESModule(
+          "resource://gre/modules/UpdateUtils.sys.mjs"
+        ).UpdateUtils.UpdateChannel;
+      } catch (ex) {}
+      if (updateChannel) {
+        let uninstalledValue = lazy.WindowsRegistry.readRegKey(
+          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+          "Software\\Mozilla\\Firefox",
+          `Uninstalled-${updateChannel}`
+        );
+        let removalSuccessful = lazy.WindowsRegistry.removeRegKey(
+          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+          "Software\\Mozilla\\Firefox",
+          `Uninstalled-${updateChannel}`
+        );
+        if (removalSuccessful && uninstalledValue == "True") {
+          this._resetProfileNotification("uninstall");
+        }
+      }
+    }
   },
 
   _updateAutoplayPref() {
