@@ -80,13 +80,15 @@ class InputResultDetailTest : BaseSessionTest() {
     fun testTouchAction() {
         sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
 
-        for (subframe in arrayOf(true, false)) {
+        for (descendants in arrayOf("subframe", "svg", "nothing")) {
             for (scrollable in arrayOf(true, false)) {
                 for (event in arrayOf(true, false)) {
                     for (touchAction in arrayOf("auto", "none", "pan-x", "pan-y")) {
                         var url = TOUCH_ACTION_HTML_PATH + "?"
-                        if (subframe) {
-                            url += "subframe&"
+                        when (descendants) {
+                            "subframe" -> url += "descendants=subframe&"
+                            "svg" -> url += "descendants=svg&"
+                            "nothing" -> {}
                         }
                         if (scrollable) {
                             url += "scrollable&"
@@ -103,7 +105,7 @@ class InputResultDetailTest : BaseSessionTest() {
                         // the pan-x and pan-y cases.
                         var expectedPlace = if (touchAction == "none") {
                             PanZoomController.INPUT_RESULT_HANDLED_CONTENT
-                        } else if (scrollable && !subframe) {
+                        } else if (scrollable && descendants != "subframe") {
                             PanZoomController.INPUT_RESULT_HANDLED
                         } else {
                             PanZoomController.INPUT_RESULT_UNHANDLED
@@ -123,7 +125,7 @@ class InputResultDetailTest : BaseSessionTest() {
 
                         var value = sessionRule.waitForResult(sendDownEvent(50f, 20f))
                         assertResultDetail(
-                            "`subframe=$subframe, scrollable=$scrollable, event=$event, touch-action=$touchAction`",
+                            "`descendants=$descendants, scrollable=$scrollable, event=$event, touch-action=$touchAction`",
                             value,
                             expectedPlace,
                             expectedScrollableDirections,
