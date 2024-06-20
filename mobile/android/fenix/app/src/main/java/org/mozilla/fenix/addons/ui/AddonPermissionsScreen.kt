@@ -72,20 +72,10 @@ fun AddonPermissionsScreen(
 
         if (permissions.isEmpty() && (optionalPermissions.isEmpty() && originPermissions.isEmpty())) {
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, start = 16.dp, bottom = 32.dp, end = 16.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.addons_does_not_require_permissions),
-                        color = FirefoxTheme.colors.textPrimary,
-                        style = FirefoxTheme.typography.headline8,
-                        modifier = Modifier
-                            .weight(1f)
-                            .semantics { heading() },
-                    )
-                }
+                TextListItem(
+                    label = stringResource(R.string.addons_does_not_require_permissions),
+                    maxLabelLines = Int.MAX_VALUE,
+                )
             }
         }
 
