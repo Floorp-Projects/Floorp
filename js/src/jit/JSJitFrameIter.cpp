@@ -26,26 +26,29 @@ using namespace js;
 using namespace js::jit;
 
 JSJitFrameIter::JSJitFrameIter(const JitActivation* activation)
-    : JSJitFrameIter(activation, FrameType::Exit, activation->jsExitFP()) {}
-
-JSJitFrameIter::JSJitFrameIter(const JitActivation* activation,
-                               FrameType frameType, uint8_t* fp)
-    : current_(fp),
-      type_(frameType),
-      resumePCinCurrentFrame_(nullptr),
-      cachedSafepointIndex_(nullptr),
+    : current_(activation->jsExitFP()),
+      type_(FrameType::Exit),
       activation_(activation) {
   // If we're currently performing a bailout, we have to use the activation's
   // bailout data when we start iterating over the activation's frames.
-  // Note: JSJitToWasm indicates the activation contains both JS and Wasm frames
-  // and we're resuming iteration of the JS frames.
-  MOZ_ASSERT(type_ == FrameType::JSJitToWasm || type_ == FrameType::Exit);
-  if (type_ == FrameType::Exit && activation_->bailoutData()) {
+  if (activation_->bailoutData()) {
     current_ = activation_->bailoutData()->fp();
     type_ = FrameType::Bailout;
-  } else {
-    MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
   }
+  MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
+}
+
+JSJitFrameIter::JSJitFrameIter(const JitActivation* activation,
+                               FrameType frameType, uint8_t* fp)
+    : current_(fp), type_(frameType), activation_(activation) {
+  // This constructor is only used when resuming iteration after iterating Wasm
+  // frames in the same JitActivation so ignore activation_->bailoutData().
+  //
+  // Note: FrameType::JSJitToWasm is used for JIT => Wasm calls through the Wasm
+  // JIT entry trampoline. FrameType::Exit is used for direct Ion => Wasm calls.
+  MOZ_ASSERT(fp > activation->jsOrWasmExitFP());
+  MOZ_ASSERT(type_ == FrameType::JSJitToWasm || type_ == FrameType::Exit);
+  MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
 }
 
 bool JSJitFrameIter::checkInvalidation() const {
