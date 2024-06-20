@@ -115,14 +115,14 @@ class JSJitFrameIter {
  protected:
   uint8_t* current_;
   FrameType type_;
-  uint8_t* resumePCinCurrentFrame_;
+  uint8_t* resumePCinCurrentFrame_ = nullptr;
 
   // Size of the current Baseline frame. Equivalent to
   // BaselineFrame::debugFrameSize_ in debug builds.
   mozilla::Maybe<uint32_t> baselineFrameSize_;
 
  private:
-  mutable const SafepointIndex* cachedSafepointIndex_;
+  mutable const SafepointIndex* cachedSafepointIndex_ = nullptr;
   const JitActivation* activation_;
 
   void dumpBaseline() const;
