@@ -254,7 +254,11 @@ pub fn get_device_streams(
             );
             return Ok(sub_device_ids
                 .into_iter()
-                .filter_map(|sub_id| get_device_streams(sub_id, devtype).ok())
+                .filter_map(|sub_id| match sub_id {
+                    #[allow(non_upper_case_globals)]
+                    kAudioObjectUnknown => None,
+                    i => get_device_streams(i, devtype).ok(),
+                })
                 .flatten()
                 .collect());
         }
