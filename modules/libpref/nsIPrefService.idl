@@ -196,6 +196,13 @@ interface nsIPrefService : nsISupports
   void parsePrefsFromBuffer(in Array<uint8_t> bytes,
                             in nsIPrefObserver observer,
                             [optional] in string pathLabel);
+
+  /**
+   * Last modified time of the user pref file when initially read, in
+   * milliseconds. Can be 0 (unix epoch) if the file didn't exist when we
+   * started.
+   */
+  readonly attribute PRTime userPrefsFileLastModifiedAtStartup;
 };
 
 %{C++
