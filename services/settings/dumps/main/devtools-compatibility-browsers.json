@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Safari",
+      "schema": 1718755502911,
+      "status": "current",
+      "version": "17.6",
+      "browserid": "safari",
+      "id": "4dc72290-4d4e-472d-9348-51def293d286",
+      "last_modified": 1718777113320
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1718755503054,
+      "status": "current",
+      "version": "17.6",
+      "browserid": "safari_ios",
+      "id": "f5260c7c-37e9-4a80-b775-6fcb7d3134db",
+      "last_modified": 1718777113317
+    },
+    {
+      "name": "Edge",
+      "schema": 1718755502762,
+      "status": "current",
+      "version": "126",
+      "browserid": "edge",
+      "id": "c8bf4918-03b7-4be2-bf75-4d6139dbd7c9",
+      "last_modified": 1718777113307
+    },
+    {
       "name": "Chrome Android",
       "schema": 1718237106974,
       "status": "beta",
@@ -173,48 +200,12 @@
     },
     {
       "name": "Edge",
-      "schema": 1717286706151,
-      "status": "beta",
-      "version": "126",
-      "browserid": "edge",
-      "id": "c8bf4918-03b7-4be2-bf75-4d6139dbd7c9",
-      "last_modified": 1718005312974
-    },
-    {
-      "name": "Edge",
       "schema": 1717286706227,
       "status": "nightly",
       "version": "127",
       "browserid": "edge",
       "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
       "last_modified": 1718005312971
-    },
-    {
-      "name": "Edge",
-      "schema": 1716941107417,
-      "status": "current",
-      "version": "125",
-      "browserid": "edge",
-      "id": "f1147d5f-d690-43d0-879d-117c6ca24a16",
-      "last_modified": 1716966331501
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1715731507984,
-      "status": "current",
-      "version": "17.5",
-      "browserid": "safari_ios",
-      "id": "4375a82d-f2f1-4883-8da7-0aedfb05b8f9",
-      "last_modified": 1715839095923
-    },
-    {
-      "name": "Safari",
-      "schema": 1715731507854,
-      "status": "current",
-      "version": "17.5",
-      "browserid": "safari",
-      "id": "24e30aff-fbf8-4a96-a036-84f970447d4b",
-      "last_modified": 1715839095920
     },
     {
       "name": "Node.js",
@@ -307,5 +298,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1718606078088
+  "timestamp": 1718777113320
 }
