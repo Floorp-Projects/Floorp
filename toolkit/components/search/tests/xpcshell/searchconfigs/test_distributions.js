@@ -309,7 +309,14 @@ engineSelector = SearchUtils.newSearchConfigEnabled
   : new SearchEngineSelectorOld();
 
 add_setup(async function () {
-  if (!SearchUtils.newSearchConfigEnabled) {
+  if (SearchUtils.newSearchConfigEnabled) {
+    updateAppInfo({
+      name: "firefox",
+      ID: "xpcshell@tests.mozilla.org",
+      version: "128",
+      platformVersion: "128",
+    });
+  } else {
     AddonTestUtils.init(GLOBAL_SCOPE);
     AddonTestUtils.createAppInfo(
       "xpcshell@tests.mozilla.org",

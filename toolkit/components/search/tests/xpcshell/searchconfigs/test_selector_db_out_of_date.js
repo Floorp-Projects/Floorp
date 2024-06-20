@@ -11,6 +11,13 @@ ChromeUtils.defineESModuleGetters(this, {
 do_get_profile();
 
 add_task(async function test_selector_db_out_of_date() {
+  updateAppInfo({
+    name: "firefox",
+    ID: "xpcshell@tests.mozilla.org",
+    version: "128",
+    platformVersion: "128",
+  });
+
   let searchConfig = RemoteSettings(SearchUtils.SETTINGS_KEY);
 
   // Do an initial get to pre-seed the database.
