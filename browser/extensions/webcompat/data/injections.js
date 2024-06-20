@@ -1058,6 +1058,20 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "1882040",
+    platform: "android",
+    domain: "YouTube Shorts",
+    bug: "1882040",
+    contentScripts: {
+      matches: ["*://m.youtube.com/shorts/*"],
+      css: [
+        {
+          file: "injections/css/bug1882040-disable-pull-to-refresh.css",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
