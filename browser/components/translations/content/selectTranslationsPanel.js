@@ -2262,7 +2262,8 @@ var SelectTranslationsPanel = new (class {
           currentLangTag: selectedFromLanguage,
           docLangTag,
         });
-    } else if (selectedToLanguage !== previousToLanguage) {
+    }
+    if (selectedToLanguage !== previousToLanguage) {
       TranslationsParent.telemetry()
         .selectTranslationsPanel()
         .onChangeToLanguage(selectedToLanguage);
