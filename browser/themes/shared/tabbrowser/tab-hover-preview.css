@@ -40,9 +40,7 @@
     display: none;
   }
 
-  > img,
   > canvas {
     display: block;
-    width: 100%;
   }
 }
