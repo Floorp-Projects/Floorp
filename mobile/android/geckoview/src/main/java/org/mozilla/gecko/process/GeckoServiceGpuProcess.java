@@ -48,10 +48,13 @@ public class GeckoServiceGpuProcess extends GeckoServiceChildProcess {
 
     @Override
     public synchronized void onSurfaceChanged(final int widgetId, final Surface surface) {
+      final Surface prevSurface = mSurfaces.get(widgetId);
+      if (prevSurface != null) {
+        prevSurface.release();
+        mSurfaces.delete(widgetId);
+      }
       if (surface != null) {
         mSurfaces.put(widgetId, surface);
-      } else {
-        mSurfaces.remove(widgetId);
       }
     }
 
