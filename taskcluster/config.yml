@@ -872,6 +872,11 @@ workers:
             implementation: generic-worker
             os: linux
             worker-type: 't-linux-2204-wayland'
+        t-linux-xlarge-wayland:
+            provisioner: '{trust-domain}-t'
+            implementation: generic-worker
+            os: linux
+            worker-type: 't-linux-xlarge-2204-wayland'
         t-linux-wayland-vm:
             provisioner: '{trust-domain}-t'
             implementation: generic-worker
