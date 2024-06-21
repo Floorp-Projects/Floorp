@@ -356,6 +356,15 @@ async function mockRecordWithAttachment({
     ("0" + hash.charCodeAt(i).toString(16)).slice(-2)
   ).join("");
 
+  // Mapping file extensions to corresponding MIME types.
+  const mimetypeFromExtension = {
+    ico: "image/x-icon",
+    svg: "image/svg+xml",
+    png: "image/png",
+  };
+
+  const extension = filename.split(".").pop().toLowerCase();
+
   let record = {
     id,
     engineIdentifiers,
@@ -365,7 +374,7 @@ async function mockRecordWithAttachment({
       location: `${filename}`,
       filename,
       size: buffer.byteLength,
-      mimetype: "application/json",
+      mimetype: mimetypeFromExtension[extension] || "",
     },
     last_modified: lastModified,
   };

@@ -25,6 +25,7 @@ let TESTS = [
   {
     engineId: "engine_no_icon",
     expectedIcon: null,
+    expectedMimeType: null,
   },
   {
     engineId: "engine_exact_match",
@@ -36,6 +37,7 @@ let TESTS = [
       },
     ],
     expectedIcon: "remoteIcon.ico",
+    expectedMimeType: "image/x-icon",
   },
   {
     engineId: "engine_begins_with",
@@ -47,6 +49,7 @@ let TESTS = [
       },
     ],
     expectedIcon: "remoteIcon.ico",
+    expectedMimeType: "image/x-icon",
   },
   {
     engineId: "engine_non_default_sized_icon",
@@ -62,6 +65,7 @@ let TESTS = [
       },
     ],
     expectedIcon: "remoteIcon.ico",
+    expectedMimeType: "image/x-icon",
   },
   {
     engineId: "engine_multiple_icons",
@@ -78,6 +82,19 @@ let TESTS = [
       },
     ],
     expectedIcon: "bigIcon.ico",
+    expectedMimeType: "image/x-icon",
+  },
+  {
+    engineId: "engine_svg_icon",
+    icons: [
+      {
+        filename: "svgIcon.svg",
+        engineIdentifiers: ["engine_svg_icon"],
+        imageSize: 16,
+      },
+    ],
+    expectedIcon: "svgIcon.svg",
+    expectedMimeType: "image/svg+xml",
   },
 ];
 
@@ -142,6 +159,14 @@ for (let test of TESTS) {
       Assert.ok(
         buffer.every((value, index) => value === expectedBuffer[index]),
         "Should have received matching data for the expected icon"
+      );
+
+      let contentType = response.headers.get("content-type");
+
+      Assert.equal(
+        contentType,
+        test.expectedMimeType,
+        "Should have received matching MIME types for the expected icon"
       );
     } else {
       Assert.equal(

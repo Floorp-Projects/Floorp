@@ -126,8 +126,7 @@ class IconHandler {
       this.#maybeQueueIdle();
     }
     return URL.createObjectURL(
-      new Blob([iconData.buffer]),
-      iconRecord.attachment.mimetype
+      new Blob([iconData.buffer], { type: iconRecord.attachment.mimetype })
     );
   }
 
@@ -175,8 +174,9 @@ class IconHandler {
         await engine.maybeUpdateIconURL(
           record.engineIdentifiers,
           URL.createObjectURL(
-            new Blob([iconData.buffer]),
-            record.attachment.mimetype
+            new Blob([iconData.buffer], {
+              type: record.attachment.mimetype,
+            })
           )
         );
       }

@@ -44,7 +44,9 @@ add_setup(async function () {
 });
 
 async function ensureIcon(tab, expectedIcon) {
-  await SpecialPowers.spawn(
+  let response = await fetch(expectedIcon);
+  const expectedType = response.headers.get("content-type");
+  let blobURL = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [expectedIcon],
     async function (icon) {
@@ -67,15 +69,28 @@ async function ensureIcon(tab, expectedIcon) {
             .startsWith("url(blob:"),
           "Should have a blob URL"
         );
-      } else {
-        Assert.equal(
-          computedStyle.getPropertyValue("--newtab-search-icon"),
-          `url(${icon})`,
-          "Should have the expected icon"
-        );
+        return computedStyle
+          .getPropertyValue("--newtab-search-icon")
+          .slice(4, -1);
       }
+      Assert.equal(
+        computedStyle.getPropertyValue("--newtab-search-icon"),
+        `url(${icon})`,
+        "Should have the expected icon"
+      );
+      return icon;
     }
   );
+  // Ensure that the icon has the correct MIME type.
+  if (blobURL) {
+    try {
+      response = await fetch(blobURL);
+      const type = response.headers.get("content-type");
+      Assert.equal(type, expectedType, "Should have the correct MIME type");
+    } catch (error) {
+      console.error("Error retrieving url: ", error);
+    }
+  }
 }
 
 async function ensurePlaceholder(tab, expectedId, expectedEngine) {
