@@ -45,10 +45,6 @@ job-defaults:
                     - unittests/mac_unittest.py
                 windows.*:
                     - unittests/win_unittest.py
-    worker-type:
-        by-test-platform:
-            .*wayland.*: t-linux-wayland-vm
-            default: default
 
 mochitest-plain:
     description: "Mochitest plain run"
@@ -188,6 +184,10 @@ mochitest-plain:
                     - linux64-node
                     - linux64-minidump-stackwalk
                     - linux64-hostutils
+    worker-type:
+        by-test-platform:
+            .*wayland.*: t-linux-wayland-vm
+            default: default
 
 mochitest-a11y:
     description: "Mochitest a11y run"

@@ -38,10 +38,6 @@ job-defaults:
                 windows.*-mingwclang-qr/.*: false
                 windows.*: true
                 default: false
-    worker-type:
-        by-test-platform:
-            .*wayland.*: t-linux-wayland-vm
-            default: default
 
 xpcshell:
     description: "xpcshell test run"

@@ -40,10 +40,6 @@ job-defaults:
                     .*(tsan|wayland).*: []
                     default: built-projects
     virtualization: virtual
-    worker-type:
-        by-test-platform:
-            .*wayland.*: t-linux-wayland-vm
-            default: default
 
 marionette:
     description: "Marionette unittest run"

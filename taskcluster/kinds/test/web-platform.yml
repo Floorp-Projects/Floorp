@@ -30,10 +30,6 @@ job-defaults:
             android-em-7.0-x86_64(-lite)?-qr/opt: geckoview-test_runner.apk
             android-em-7.0-x86_64(-lite)?-qr/debug(-isolated-process)?: geckoview-test_runner.apk
             default: null
-    worker-type:
-        by-test-platform:
-            .*wayland.*: t-linux-wayland-vm
-            default: default
 
 web-platform-tests:
     description: "Web platform test run"
@@ -307,6 +303,10 @@ web-platform-tests-webgpu:
                     - --tag=webgpu
                     - --exclude-tag=canvas
                     - --exclude-tag=webcodecs
+    worker-type:
+        by-test-platform:
+            .*wayland.*: t-linux-wayland-vm
+            default: default
 
 web-platform-tests-webgpu-backlog:
     description: "Web platform WebGPU test run (backlog)"
@@ -359,6 +359,10 @@ web-platform-tests-webgpu-backlog:
                     - --skip-implementation-status=implementing
                     - --skip-implementation-status=not-implementing
                     - --backlog
+    worker-type:
+        by-test-platform:
+            .*wayland.*: t-linux-wayland-vm
+            default: default
 
 web-platform-tests-canvas:
     description: "Web platform Canvas test run"

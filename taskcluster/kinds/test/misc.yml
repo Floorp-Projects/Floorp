@@ -4,10 +4,6 @@
 ---
 job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
-    worker-type:
-        by-test-platform:
-            .*wayland.*: t-linux-wayland-vm
-            default: default
 
 geckoview-junit:
     description: "Geckoview junit run"
@@ -133,6 +129,10 @@ test-verify:
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
                     - linux64-hostutils
+    worker-type:
+        by-test-platform:
+            .*wayland.*: t-linux-wayland-vm
+            default: default
 
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"
@@ -175,6 +175,10 @@ test-verify-gpu:
         extra-options:
             - --verify
             - --gpu-required
+    worker-type:
+        by-test-platform:
+            .*wayland.*: t-linux-wayland-vm
+            default: default
 
 test-coverage:
     description: "Per-test coverage"
