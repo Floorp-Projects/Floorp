@@ -7209,6 +7209,19 @@ static bool IsOnlyMeaningfulChildOfWrapperPseudo(nsIFrame* aFrame,
   return false;
 }
 
+static bool CanRemoveWrapperPseudoForChildRemoval(nsIFrame* aFrame,
+                                                  nsIFrame* aParent) {
+  if (!IsOnlyMeaningfulChildOfWrapperPseudo(aFrame, aParent)) {
+    return false;
+  }
+  if (aParent->IsRubyBaseContainerFrame()) {
+    // We can't remove the first ruby base container of a ruby frame unless
+    // it has no siblings. See CreateNeededPseudoSiblings.
+    return aParent->GetPrevSibling() || !aParent->GetNextSibling();
+  }
+  return true;
+}
+
 bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
                                            nsIContent* aOldNextSibling,
                                            RemoveFlags aFlags) {
@@ -7461,7 +7474,7 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     // at it. Note that MaybeRecreateContainerForFrameRemoval takes care of
     // harder cases (merging sibling anonymous boxes etc).
     while (IsWrapperPseudo(parentFrame) &&
-           IsOnlyMeaningfulChildOfWrapperPseudo(childFrame, parentFrame)) {
+           CanRemoveWrapperPseudoForChildRemoval(childFrame, parentFrame)) {
       childFrame = parentFrame;
       parentFrame = childFrame->GetParent();
     }
