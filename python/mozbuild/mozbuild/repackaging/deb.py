@@ -498,6 +498,8 @@ def _get_en_US_brand_fluent_filename(
         return branding_fluent_filename_template.format(brand="official")
     elif release_type == "beta" and release_product == "devedition":
         return branding_fluent_filename_template.format(brand="aurora")
+    elif release_type.startswith("esr"):
+        return branding_fluent_filename_template.format(brand="official")
     else:
         return branding_fluent_filename_template.format(brand="unofficial")
 
