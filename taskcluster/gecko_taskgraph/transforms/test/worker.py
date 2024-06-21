@@ -173,7 +173,10 @@ def set_worker_type(config, tasks):
             task["worker-type"] = "t-linux-kvm"
         elif test_platform.startswith("linux") or test_platform.startswith("android"):
             if "wayland" in test_platform:
-                task["worker-type"] = "t-linux-wayland"
+                if task["instance-size"].startswith("xlarge"):
+                    task["worker-type"] = "t-linux-xlarge-wayland"
+                else:
+                    task["worker-type"] = "t-linux-wayland"
             elif task.get("suite", "") in ["talos", "raptor"] and not task[
                 "build-platform"
             ].startswith("linux64-ccov"):
@@ -189,7 +192,7 @@ def set_worker_type(config, tasks):
 @transforms.add
 def set_wayland_env(config, tasks):
     for task in tasks:
-        if not task["worker-type"].startswith("t-linux-wayland"):
+        if "wayland" not in task["test-platform"]:
             yield task
             continue
 
