@@ -67,6 +67,7 @@ add_task(async function GetState() {
     type: "GetState",
   });
   let msg = await statePromise.donePromise;
+
   checkMsg(msg, {
     type: "State",
     data: await currentStateObj(false),
@@ -492,33 +493,24 @@ async function constructEngineObj(engine) {
   };
 }
 
-function iconDataFromURI(uri) {
+async function iconDataFromURI(uri) {
   if (!uri) {
-    return Promise.resolve(
-      "chrome://browser/skin/search-engine-placeholder.png"
-    );
+    return "chrome://browser/skin/search-engine-placeholder.png";
   }
 
   if (!uri.startsWith("data:") && !uri.startsWith("blob:")) {
     plainURIIconTested = true;
-    return Promise.resolve(uri);
+    return uri;
   }
 
-  return new Promise(resolve => {
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", uri, true);
-    xhr.responseType = "arraybuffer";
-    xhr.onerror = () => {
-      resolve("chrome://browser/skin/search-engine-placeholder.png");
-    };
-    xhr.onload = () => {
-      arrayBufferIconTested = true;
-      resolve(xhr.response);
-    };
-    try {
-      xhr.send();
-    } catch (err) {
-      resolve("chrome://browser/skin/search-engine-placeholder.png");
-    }
-  });
+  try {
+    const response = await fetch(uri);
+    const mimeType = response.headers.get("Content-Type") || "";
+    const data = await response.arrayBuffer();
+    arrayBufferIconTested = true;
+    return { icon: data, mimeType };
+  } catch (err) {
+    console.error("Fetch error: ", err);
+    return "chrome://browser/skin/search-engine-placeholder.png";
+  }
 }

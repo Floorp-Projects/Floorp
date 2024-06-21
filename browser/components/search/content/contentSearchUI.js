@@ -771,15 +771,22 @@ this.ContentSearchUIController = (function () {
       return row;
     },
 
-    // If the favicon is an array buffer, convert it into a Blob URI.
-    // Otherwise just return the plain URI.
+    /**
+     * If the favicon is an iconData object, convert it into a Blob URI.
+     * Otherwise just return the plain URI.
+     *
+     * @param {string|iconData} data
+     *   The icon's URL or an iconData object containing the icon data.
+     * @returns {string}
+     *   A blob URL or the plain icon URI.
+     */
     _getFaviconURIFromIconData(data) {
       if (typeof data == "string") {
         return data;
       }
 
-      // If typeof(data) != "string", we assume it's an ArrayBuffer
-      let blob = new Blob([data]);
+      // If typeof(data) != "string", the iconData object is returned.
+      let blob = new Blob([data.icon], { type: data.mimeType });
       return URL.createObjectURL(blob);
     },
 
