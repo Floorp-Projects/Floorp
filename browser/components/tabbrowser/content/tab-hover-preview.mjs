@@ -74,12 +74,12 @@ export default class TabHoverPreviewPanel {
     if (!this._prefDisplayThumbnail || !this._hasValidThumbnailState(tab)) {
       return;
     }
-    let thumbnailCanvas = this._win.PageThumbs.createCanvas(this._win);
-    thumbnailCanvas.width = 280;
-    thumbnailCanvas.height = 125;
+    let thumbnailCanvas = this._win.document.createElement("canvas");
+
     this._win.PageThumbs.captureToCanvas(tab.linkedBrowser, thumbnailCanvas, {
       fullViewport: true,
       targetWidth: 280,
+      preserveAspectRatio: true,
     })
       .then(() => {
         // in case we've changed tabs after capture started, ensure we still want to show the thumbnail
