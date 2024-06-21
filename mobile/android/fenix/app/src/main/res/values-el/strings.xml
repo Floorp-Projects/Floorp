@@ -601,6 +601,8 @@
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Γραμμή εργαλείων</string>
 
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Τοποθεσία γραμμής διευθύνσεων</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Θέμα</string>
     <!-- Preference for customizing the home screen -->
@@ -911,6 +913,11 @@
     <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Ολίσθηση γραμμής εργαλείων προς τα πλάγια για εναλλαγή καρτελών</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Ολίσθηση γραμμής εργαλείων προς τα πάνω για άνοιγμα καρτελών</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Κύλιση για απόκρυψη της γραμμής διευθύνσεων και της γραμμής εργαλείων</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Ολίσθηση γραμμής διευθύνσεων προς τα πλάγια για εναλλαγή καρτελών</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -2648,7 +2655,7 @@
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Κάνουμε μερική λήψη των γλωσσών στην προσωρινή μνήμη για να παραμείνουν ιδιωτικές οι μεταφράσεις.</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
-    <string name="download_language_file_dialog_message_all_languages_no_cache">Κάνουμε μερική λήψη των γλωσσών για να παραμείνουν ιδιωτικές οι μεταφράσεις.</string>
+    <string name="download_language_file_dialog_message_all_languages_no_cache" moz:removedIn="129" tools:ignore="UnusedResources">Κάνουμε μερική λήψη των γλωσσών για να παραμείνουν ιδιωτικές οι μεταφράσεις.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Πάντα λήψη στη λειτουργία εξοικονόμησης δεδομένων</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
@@ -2705,11 +2712,17 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Βοηθήστε μας να κάνουμε το Firefox καλύτερο. Χρειάζεται μόνο ένα λεπτό.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Συνέχεια</string>
     <!-- Survey view -->
     <!-- The survey header -->
     <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Συμπληρώστε αυτήν την έρευνα</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Παρακαλούμε συμπληρώστε την έρευνα</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Σημείωση απορρήτου</string>
     <!-- The privacy notice link -->

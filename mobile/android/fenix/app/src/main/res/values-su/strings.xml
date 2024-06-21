@@ -592,7 +592,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Akun</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Tulbar</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Tulbar</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Tempat papan alamat</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma</string>
     <!-- Preference for customizing the home screen -->
@@ -906,9 +908,14 @@
     <string name="preference_gestures_dynamic_toolbar">Gorolongkeun pikeun nyumputkeun tulbar</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Gilerkeun tulbar ka gigir pikeun pindah tab</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Gilerkeun tulbar ka gigir pikeun pindah tab</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Gilerkeun tulbar ka luhur pikeun muka tab</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Gulirkeun pikeun nyumputkeun wilah alamat jeung wilah parabot</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Toel wilah alamat ka sisi pikeun mindahkeun tab</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

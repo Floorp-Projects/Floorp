@@ -589,7 +589,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Tài khoản</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Thanh công cụ</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Thanh công cụ</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Vị trí thanh địa chỉ</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Chủ đề</string>
     <!-- Preference for customizing the home screen -->
@@ -895,9 +897,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Cuộn trang để ẩn thanh công cụ</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Vuốt thanh công cụ sang hai bên để chuyển đổi các thẻ</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Vuốt thanh công cụ sang hai bên để chuyển đổi các thẻ</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Vuốt thanh công cụ lên để mở các thẻ</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Cuộn để ẩn thanh địa chỉ và thanh công cụ</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Vuốt thanh địa chỉ sang một bên để chuyển thẻ</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
