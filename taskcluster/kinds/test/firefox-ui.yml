@@ -20,6 +20,10 @@ job-defaults:
                 linux.*:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
+    worker-type:
+        by-test-platform:
+            .*wayland.*: t-linux-wayland-vm
+            default: default
 
 firefox-ui-functional:
     description: "Firefox-ui-tests functional run"

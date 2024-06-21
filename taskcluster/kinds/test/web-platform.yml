@@ -30,6 +30,10 @@ job-defaults:
             android-em-7.0-x86_64(-lite)?-qr/opt: geckoview-test_runner.apk
             android-em-7.0-x86_64(-lite)?-qr/debug(-isolated-process)?: geckoview-test_runner.apk
             default: null
+    worker-type:
+        by-test-platform:
+            .*wayland.*: t-linux-wayland-vm
+            default: default
 
 web-platform-tests:
     description: "Web platform test run"

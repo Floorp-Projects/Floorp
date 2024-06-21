@@ -189,7 +189,7 @@ def set_worker_type(config, tasks):
 @transforms.add
 def set_wayland_env(config, tasks):
     for task in tasks:
-        if task["worker-type"] != "t-linux-wayland":
+        if not task["worker-type"].startswith("t-linux-wayland"):
             yield task
             continue
 

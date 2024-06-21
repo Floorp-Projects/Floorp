@@ -40,7 +40,7 @@ jobs:
         from-deps:
             group-by: single-with-filters
         description: Runs basic tests on a Firefox Snap package
-        worker-type: t-linux-wayland
+        worker-type: t-linux-wayland-vm
         run:
             command: >-
               export TASKCLUSTER_ROOT_DIR=$PWD && cd $MOZ_FETCHES_DIR/ && ./tests.sh --basic
@@ -58,7 +58,7 @@ jobs:
         from-deps:
             group-by: single-with-filters
         description: Runs some QA tests on a Firefox Snap package
-        worker-type: t-linux-wayland
+        worker-type: t-linux-wayland-vm
         run:
             command: >-
               export TASKCLUSTER_ROOT_DIR=$PWD && cd $MOZ_FETCHES_DIR/ && ./tests.sh --qa
