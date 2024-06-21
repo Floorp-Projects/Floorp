@@ -176,3 +176,38 @@ add_task(async function enterOnEmptySearchBar() {
   // Cleanup.
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_open_settings_with_enter() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const searchBar = win.BrowserSearch.searchBar;
+  const searchPopup = win.document.getElementById("PopupSearchAutoComplete");
+  const searchButton = searchBar.querySelector(".searchbar-search-button");
+
+  let shownPromise = promiseEvent(searchPopup, "popupshown");
+  info("Clicking icon");
+  EventUtils.synthesizeMouseAtCenter(searchButton, {}, win);
+  await shownPromise;
+  info("Popup shown");
+
+  EventUtils.synthesizeKey("KEY_ArrowUp", {}, win);
+
+  await TestUtils.waitForCondition(
+    () =>
+      searchBar.textbox.selectedButton?.classList.contains(
+        "search-setting-button"
+      ),
+    "Wait for settings button to get selected"
+  );
+
+  let promise = TestUtils.topicObserved("sync-pane-loaded");
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  await promise;
+
+  Assert.equal(
+    win.gBrowser.contentWindow.history.state,
+    "paneSearch",
+    "Should have opened the search preferences pane"
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+});
