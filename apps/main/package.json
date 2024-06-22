@@ -1,0 +1,18 @@
+{
+  "name": "@nora/app",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@nora/shared": "workspace:*",
+    "@nora/skin": "workspace:*",
+    "solid-js": "^1.8.18"
+  },
+  "devDependencies": {
+    "vite": "5.3.3",
+    "vite-plugin-solid": "^2.10.2",
+    "vite-tsconfig-paths": "^4.3.2"
+  },
+  "scripts": {
+    "build": "vite build"
+  }
+}
