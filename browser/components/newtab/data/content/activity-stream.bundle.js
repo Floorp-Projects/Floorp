@@ -9239,7 +9239,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       className: "category-header"
     }, /*#__PURE__*/external_React_default().createElement("h2", {
       "data-l10n-id": "newtab-wallpaper-title"
-    }, "Wallpapers"), /*#__PURE__*/external_React_default().createElement("button", {
+    }), /*#__PURE__*/external_React_default().createElement("button", {
       className: "wallpapers-reset",
       onClick: this.handleReset,
       "data-l10n-id": "newtab-wallpaper-reset"

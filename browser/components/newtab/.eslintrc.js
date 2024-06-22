@@ -31,6 +31,7 @@ module.exports = {
         "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx",
         "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal.jsx",
         "content-src/components/CustomizeMenu/**",
+        "content-src/components/WallpapersSection/**",
       ],
       rules: {
         "jsx-a11y/anchor-has-content": "off",
