@@ -125,13 +125,15 @@ export class WallpaperFeed {
                 wallpaperUrl: `${this.baseAttachmentURL}${record.attachment.location}`,
               }
             : {}),
-          category: record.category || "other",
+          category: record.category || "",
         };
       }),
     ];
 
     const categories = [
-      ...new Set(wallpapers.map(wallpaper => wallpaper.category)),
+      ...new Set(
+        wallpapers.map(wallpaper => wallpaper.category).filter(Boolean)
+      ),
     ];
 
     this.store.dispatch(
