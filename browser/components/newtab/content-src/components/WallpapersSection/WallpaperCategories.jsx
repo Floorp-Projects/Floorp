@@ -95,7 +95,7 @@ export class _WallpaperCategories extends React.PureComponent {
     return (
       <div>
         <div className="category-header">
-          <h2 data-l10n-id="newtab-wallpaper-title">Wallpapers</h2>
+          <h2 data-l10n-id="newtab-wallpaper-title"></h2>
           <button
             className="wallpapers-reset"
             onClick={this.handleReset}
