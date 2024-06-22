@@ -1710,7 +1710,6 @@ pref("browser.newtab.preload", true);
 pref("browser.newtabpage.activity-stream.showWeather", true);
 pref("browser.newtabpage.activity-stream.weather.query", "");
 pref("browser.newtabpage.activity-stream.weather.locationSearchEnabled", false);
-pref("browser.newtabpage.activity-stream.weather.temperatureUnits", "f");
 pref("browser.newtabpage.activity-stream.weather.display", "simple");
 // List of regions that get weather by default.
 #ifdef NIGHTLY_BUILD
