@@ -87,6 +87,7 @@ export class _WallpaperCategories extends React.PureComponent {
     const filteredWallpapers = wallpaperList.filter(
       wallpaper => wallpaper.category === activeCategory
     );
+
     let categorySectionClassname = "category wallpaper-list";
     if (prefs["newtabWallpapers.v2.enabled"]) {
       categorySectionClassname += " ignore-color-mode";
@@ -104,29 +105,32 @@ export class _WallpaperCategories extends React.PureComponent {
         </div>
         <fieldset className="category-list">
           {categories.map(category => {
-            const firstWallpaper = wallpaperList.find(
+            const filteredList = wallpaperList.filter(
               wallpaper => wallpaper.category === category
             );
-            const title = firstWallpaper ? firstWallpaper.title : "";
-            const solid_color = firstWallpaper
-              ? firstWallpaper.solid_color
-              : "";
+            const activeWallpaperObj =
+              activeWallpaper &&
+              filteredList.find(wp => wp.title === activeWallpaper);
+            const thumbnail = activeWallpaperObj || filteredList[0];
 
             let fluent_id;
             switch (category) {
               case "photographs":
                 fluent_id = "newtab-wallpaper-category-title-photographs";
                 break;
-              case "abstract":
+              case "abstracts":
                 fluent_id = "newtab-wallpaper-category-title-abstract";
                 break;
               case "solid-colors":
                 fluent_id = "newtab-wallpaper-category-title-colors";
             }
 
-            const style = {
-              backgroundColor: solid_color || "transparent",
-            };
+            let style = {};
+            if (thumbnail?.wallpaperUrl) {
+              style.backgroundImage = `url(${thumbnail.wallpaperUrl})`;
+            } else {
+              style.backgroundColor = thumbnail?.solid_color || "";
+            }
 
             return (
               <div key={category}>
@@ -134,7 +138,7 @@ export class _WallpaperCategories extends React.PureComponent {
                   id={category}
                   style={style}
                   onClick={this.handleCategory}
-                  className={`wallpaper-input ${title}`}
+                  className="wallpaper-input"
                 />
                 <label htmlFor={category} data-l10n-id={fluent_id}>
                   {fluent_id}
@@ -158,10 +162,14 @@ export class _WallpaperCategories extends React.PureComponent {
             />
             <fieldset>
               {filteredWallpapers.map(
-                ({ title, theme, fluent_id, solid_color }) => {
-                  const style = {
-                    backgroundColor: solid_color || "transparent",
-                  };
+                ({ title, theme, fluent_id, solid_color, wallpaperUrl }) => {
+                  let style = {};
+
+                  if (wallpaperUrl) {
+                    style.backgroundImage = `url(${wallpaperUrl})`;
+                  } else {
+                    style.backgroundColor = solid_color || "";
+                  }
                   return (
                     <>
                       <input
@@ -173,7 +181,7 @@ export class _WallpaperCategories extends React.PureComponent {
                         value={title}
                         checked={title === activeWallpaper}
                         aria-checked={title === activeWallpaper}
-                        className={`wallpaper-input theme-${theme} ${title}`}
+                        className={`wallpaper-input theme-${theme}`}
                       />
                       <label
                         htmlFor={title}

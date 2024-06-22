@@ -78,7 +78,7 @@ add_task(async function test_onAction_INIT() {
           {
             ...attachment,
             wallpaperUrl: "http://localhost:8888/base_url/attachment",
-            category: "other",
+            category: "",
           },
         ],
         meta: {

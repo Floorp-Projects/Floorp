@@ -9246,30 +9246,33 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     })), /*#__PURE__*/external_React_default().createElement("fieldset", {
       className: "category-list"
     }, categories.map(category => {
-      const firstWallpaper = wallpaperList.find(wallpaper => wallpaper.category === category);
-      const title = firstWallpaper ? firstWallpaper.title : "";
-      const solid_color = firstWallpaper ? firstWallpaper.solid_color : "";
+      const filteredList = wallpaperList.filter(wallpaper => wallpaper.category === category);
+      const activeWallpaperObj = activeWallpaper && filteredList.find(wp => wp.title === activeWallpaper);
+      const thumbnail = activeWallpaperObj || filteredList[0];
       let fluent_id;
       switch (category) {
         case "photographs":
           fluent_id = "newtab-wallpaper-category-title-photographs";
           break;
-        case "abstract":
+        case "abstracts":
           fluent_id = "newtab-wallpaper-category-title-abstract";
           break;
         case "solid-colors":
           fluent_id = "newtab-wallpaper-category-title-colors";
       }
-      const style = {
-        backgroundColor: solid_color || "transparent"
-      };
+      let style = {};
+      if (thumbnail?.wallpaperUrl) {
+        style.backgroundImage = `url(${thumbnail.wallpaperUrl})`;
+      } else {
+        style.backgroundColor = thumbnail?.solid_color || "";
+      }
       return /*#__PURE__*/external_React_default().createElement("div", {
         key: category
       }, /*#__PURE__*/external_React_default().createElement("input", {
         id: category,
         style: style,
         onClick: this.handleCategory,
-        className: `wallpaper-input ${title}`
+        className: "wallpaper-input"
       }), /*#__PURE__*/external_React_default().createElement("label", {
         htmlFor: category,
         "data-l10n-id": fluent_id
@@ -9289,11 +9292,15 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       title,
       theme,
       fluent_id,
-      solid_color
+      solid_color,
+      wallpaperUrl
     }) => {
-      const style = {
-        backgroundColor: solid_color || "transparent"
-      };
+      let style = {};
+      if (wallpaperUrl) {
+        style.backgroundImage = `url(${wallpaperUrl})`;
+      } else {
+        style.backgroundColor = solid_color || "";
+      }
       return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("input", {
         onChange: this.handleChange,
         style: style,
@@ -9303,7 +9310,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
         value: title,
         checked: title === activeWallpaper,
         "aria-checked": title === activeWallpaper,
-        className: `wallpaper-input theme-${theme} ${title}`
+        className: `wallpaper-input theme-${theme}`
       }), /*#__PURE__*/external_React_default().createElement("label", {
         htmlFor: title,
         className: "sr-only",
