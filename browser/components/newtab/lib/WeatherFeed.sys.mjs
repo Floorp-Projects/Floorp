@@ -80,18 +80,21 @@ export class WeatherFeed {
    * This thin wrapper around the fetch call makes it easier for us to write
    * automated tests that simulate responses.
    */
-  async fetchHelper() {
+  async fetchHelper(retries = 3) {
     this.restartFetchTimer();
     const weatherQuery = this.store.getState().Prefs.values[PREF_WEATHER_QUERY];
     let suggestions = [];
-    try {
-      suggestions = await this.merino.fetch({
-        query: weatherQuery || "",
-        providers: MERINO_PROVIDER,
-        timeoutMs: 7000,
-      });
-    } catch (error) {
-      // We don't need to do anything with this right now.
+    let retry = 0;
+    while (retry++ < retries && suggestions.length === 0) {
+      try {
+        suggestions = await this.merino.fetch({
+          query: weatherQuery || "",
+          providers: MERINO_PROVIDER,
+          timeoutMs: 7000,
+        });
+      } catch (error) {
+        // We don't need to do anything with this right now.
+      }
     }
 
     // results from the API or empty array if null
