@@ -2659,6 +2659,16 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state" moz:removedIn="127" tools:ignore="UnusedResources">선택됨</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
+    <string name="download_languages_fetch_error_warning_text">언어를 로드할 수 없습니다. 나중에 다시 확인해 주세요.</string>
+    <!-- The title of the warning card informs the user that an error has occurred at downloading a language.
+      The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_error_warning_text"><![CDATA[<b>%1$s</b> 언어를 다운로드할 수 없습니다. 다시 시도해 주세요.]]></string>
+
+    <!-- The title of the warning card informs the user that an error has occurred at deleting a language.
+          The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_delete_error_warning_text"><![CDATA[<b>%1$s</b> 언어를 삭제할 수 없습니다. 다시 시도해 주세요.]]></string>
+
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
@@ -2686,7 +2696,7 @@
     <string name="download_language_file_dialog_message_all_languages">개인 정보 보호를 위해 언어 일부분을 캐시에 다운로드합니다.</string>
 
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
-    <string name="download_language_file_dialog_message_all_languages_no_cache">개인 정보 보호를 위해 언어 일부분을 다운로드합니다.</string>
+    <string name="download_language_file_dialog_message_all_languages_no_cache" moz:removedIn="129" tools:ignore="UnusedResources">개인 정보 보호를 위해 언어 일부분을 다운로드합니다.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">항상 데이터 절약 모드에서 다운로드</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
