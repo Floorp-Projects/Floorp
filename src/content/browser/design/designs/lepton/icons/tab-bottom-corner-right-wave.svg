@@ -1,0 +1,9 @@
+<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <path id="tabCorner" fill="context-fill" stroke="context-stroke" stroke-opacity="context-stroke-opacity" stroke-width="1.5" stroke-dasharray="59.75 100" d="M 36,36 C 30,36 23.999,36 20.9995,30.0005 18,24.001 18,12.001 14.9995,6.0005 11.999,0 6,0 0,0 c 0,0 0,36 0,36 0,0 36,0 36,0 z"/>
+  </defs>
+  <clipPath id="svgClipPath" clipPathUnits="objectBoundingBox">
+    <use href="#tabCorner" transform="scale(0.0299, 0.0277)" />
+  </clipPath>
+  <use href="#tabCorner" />
+</svg>
