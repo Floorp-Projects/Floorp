@@ -3,11 +3,11 @@
     <!-- Text for context menu item to open the link in a new tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">링크를 새 탭에서 열기</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">사생활 보호 탭에 링크 열기</string>
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">링크를 사생활 보호 탭에서 열기</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">이미지를 새 탭에서 열기</string>
     <!-- Text for context menu item to save / download the link. -->
-    <string name="mozac_feature_contextmenu_download_link">다운로드 링크</string>
+    <string name="mozac_feature_contextmenu_download_link">링크 다운로드</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">링크 공유</string>
     <!-- Text for context menu item to share the image with an other app. -->
@@ -31,7 +31,7 @@
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">전환</string>
     <!-- Text for context menu item to open the link in an external app. -->
-    <string name="mozac_feature_contextmenu_open_link_in_external_app">외부 앱에서 링크 열기</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">링크를 외부 앱에서 열기</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">이메일 주소 공유</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->

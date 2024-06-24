@@ -2,4 +2,6 @@
 <resources>
     <string name="mozac_feature_customtabs_exit_button">กลับไปที่แอปก่อนหน้า</string>
     <string name="mozac_feature_customtabs_share_link">แบ่งปันลิงก์</string>
+    <!-- Content description (not visible, for screen readers etc.): Description of the refresh button in the Custom Tabs toolbar -->
+    <string name="mozac_feature_customtabs_refresh_button">เรียกใหม่</string>
 </resources>
