@@ -284,6 +284,7 @@ select > button {
 select > label {
   display: inline-block;
   overflow: clip;
+  pointer-events: none;
   cursor: unset;
 }
 
