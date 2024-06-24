@@ -162,7 +162,7 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">최근 탭으로 이동</string>
+    <string name="recent_tabs_header">최근 탭</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">모두 표시</string>
 
@@ -182,7 +182,7 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header_2">최근에 방문함</string>
+    <string name="history_metadata_header_2">최근 방문</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">삭제</string>
@@ -520,7 +520,7 @@
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">사생활 보호 모드</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">사생활 보호 탭에 링크 열기</string>
+    <string name="preferences_open_links_in_a_private_tab">링크를 사생활 보호 탭에서 열기</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">사생활 보호 모드에서 스크린샷 허용</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
@@ -717,14 +717,14 @@
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
-    <string name="customize_toggle_jump_back_in">최근 탭으로 이동</string>
+    <string name="customize_toggle_jump_back_in">최근 탭</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">최근 북마크</string>
     <!-- Title for the customize home screen section with bookmarks. -->
     <string name="customize_toggle_bookmarks">북마크</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
-    <string name="customize_toggle_recently_visited">최근에 방문함</string>
+    <string name="customize_toggle_recently_visited">최근 방문</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">생각하게 하는 이야기</string>
@@ -912,7 +912,7 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">당겨서 새로 고침</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">스크롤해서 툴바 숨기기</string>
+    <string name="preference_gestures_dynamic_toolbar">스크롤 중 도구 모음 숨기기</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">도구 모음을 옆으로 밀어서 탭 전환</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
@@ -933,7 +933,7 @@
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">북마크 메뉴</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
-    <string name="library_desktop_bookmarks_toolbar">북마크 도구모음</string>
+    <string name="library_desktop_bookmarks_toolbar">북마크 도구 모음</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">기타 북마크</string>
     <!-- Option in Library to open History page -->
@@ -958,11 +958,11 @@
 
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
-    <string name="history_search_group_site_1">%d 페이지</string>
+    <string name="history_search_group_site_1">%d개 페이지</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
-    <string name="history_search_group_sites_1">%d 페이지</string>
+    <string name="history_search_group_sites_1">%d개 페이지</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">최근에 닫은 탭</string>
@@ -1009,7 +1009,7 @@
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">마지막 탭</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
-    <string name="opening_screen_after_four_hours_of_inactivity">4시간 동안 사용하지 않을 때의 홈페이지</string>
+    <string name="opening_screen_after_four_hours_of_inactivity">4시간 비활동 후에는 홈페이지</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">수동으로 닫기</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1020,11 +1020,11 @@
     <string name="close_tabs_after_one_month_summary">한 달 후 닫기</string>
 
     <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
-    <string name="opening_screen_homepage_summary">홈페이지에서 열기</string>
+    <string name="opening_screen_homepage_summary">홈페이지 열기</string>
     <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
-    <string name="opening_screen_last_tab_summary">마지막 탭에서 열기</string>
+    <string name="opening_screen_last_tab_summary">마지막 탭 열기</string>
     <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
-    <string name="opening_screen_after_four_hours_of_inactivity_summary">4시간 후 홈페이지에서 열기</string>
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">4시간 후에는 홈페이지 열기</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1582,7 +1582,7 @@
     <string name="preferences_delete_browsing_data_browsing_history_title">방문 기록</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
-    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 주소</string>
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d개 주소</string>
     <!-- Title for the cookies and site data items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_and_site_data">쿠키 및 사이트 데이터</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1681,7 +1681,7 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">향상된 추적 방지 기능</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary">이제 크로스 사이트 추적기에 대한 우리의 가장 강력한 기능인 전체 쿠키 보호 기능을 제공합니다.</string>
+    <string name="preference_enhanced_tracking_protection_summary">이제 교차 사이트 추적기에 대한 가장 강력한 기능인 전체 쿠키 보호 기능을 제공합니다.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s는 온라인 활동을 추적하는 가장 일반적인 여러 추적기로부터 사용자를 보호합니다.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
