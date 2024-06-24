@@ -14376,6 +14376,10 @@ ui.nabu.casa
 // Submitted by Jan Jaeschke <jan.jaeschke@netatwork.de>
 cloud.nospamproxy.com
 
+// Netfy Domains : https://netfy.domains
+// Submitted by Suranga Ranasinghe <security@mavicsoft.com>
+netfy.app
+
 // Netlify : https://www.netlify.com
 // Submitted by Jessica Parsons <jessica@netlify.com>
 netlify.app
@@ -14578,6 +14582,10 @@ nyc.mn
 // O3O.Foundation : https://o3o.foundation/
 // Submitted by the prvcy.page Registry Team <psl@registry.prvcy.page>
 prvcy.page
+
+// Obl.ong : <https://obl.ong>
+// Submitted by Reese Armstrong <team@obl.ong>
+obl.ong
 
 // Observable, Inc. : https://observablehq.com
 // Submitted by Mike Bostock <dns@observablehq.com>
@@ -15043,11 +15051,19 @@ from.tv
 sakura.tv
 
 // Salesforce.com, Inc. https://salesforce.com/
-// Submitted by Michael Biven <mbiven@salesforce.com> and Aaron Romeo <aaron.romeo@salesforce.com>
+// Submitted by Salesforce Public Suffix List Team <public-suffix-list@salesforce.com>
 *.builder.code.com
 *.dev-builder.code.com
 *.stg-builder.code.com
 *.001.test.code-builder-stg.platform.salesforce.com
+*.d.crm.dev
+*.w.crm.dev
+*.wa.crm.dev
+*.wb.crm.dev
+*.wc.crm.dev
+*.wd.crm.dev
+*.we.crm.dev
+*.wf.crm.dev
 
 // Sandstorm Development Group, Inc. : https://sandcats.io/
 // Submitted by Asheesh Laroia <asheesh@sandstorm.io>
@@ -15468,7 +15484,7 @@ azimuth.network
 tlon.network
 
 // Tor Project, Inc. : https://torproject.org
-// Submitted by Antoine Beaupré <anarcat@torproject.org
+// Submitted by Antoine Beaupré <anarcat@torproject.org>
 torproject.net
 pages.torproject.net
 
@@ -15638,6 +15654,11 @@ bookonline.app
 hotelwithflight.com
 reserve-online.com
 reserve-online.net
+
+// WebPros International, LLC : https://webpros.com/
+// Submitted by Nicolas Rochelemagne <public.suffix@webpros.com>
+wp2.host
+wpsquared.site
 
 // WebWaddle Ltd: https://webwaddle.com/
 // Submitted by Merlin Glander <hostmaster@webwaddle.com>
