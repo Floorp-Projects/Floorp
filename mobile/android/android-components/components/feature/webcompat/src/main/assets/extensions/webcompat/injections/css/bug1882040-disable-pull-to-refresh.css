@@ -1,0 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * m.youtube.com/shorts - pull-to-refresh breaks scrolling
+ * Bug #1882040 - https://bugzilla.mozilla.org/show_bug.cgi?id=1882040
+ *
+ * Pull-to-refresh is breaking scrolling on the YouTube Shorts mobile page.
+ * The easiest work-around is to inject this CSS to disable it for now.
+ */
+html {
+  overscroll-behavior: contain;
+}
