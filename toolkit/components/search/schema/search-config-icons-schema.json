@@ -22,7 +22,7 @@
       "type": "string",
       "title": "Filter Expression",
       "description": "A JEXL to filter records",
-      "pattern": "^[a-zA-Z0-9-_=!\"{} .]*$"
+      "pattern": "^[a-zA-Z0-9-_=!\"{} .<>|&()]*$"
     }
   }
 }
