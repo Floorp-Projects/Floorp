@@ -599,9 +599,11 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   }
   int64_t tstamp = holder->Timestamp();
   int64_t duration = holder->Duration();
+  int64_t defaultDuration = holder->DefaultDuration();
   if (aType == TrackInfo::TrackType::kVideoTrack) {
-    WEBM_DEBUG("GetNextPacket(video): tstamp=%" PRId64 ", duration=%" PRId64,
-               tstamp, duration);
+    WEBM_DEBUG("GetNextPacket(video): tstamp=%" PRId64 ", duration=%" PRId64
+               ", defaultDuration=%" PRId64,
+               tstamp, duration, defaultDuration);
   }
 
   // The end time of this frame is the start time of the next frame. Fetch
@@ -625,6 +627,8 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       next_tstamp = tstamp + duration;
     } else if (lastFrameTime.isSome()) {
       next_tstamp = tstamp + (tstamp - lastFrameTime.ref());
+    } else if (defaultDuration >= 0) {
+      next_tstamp = tstamp + defaultDuration;
     } else if (mVideoFrameEndTimeBeforeReset) {
       WEBM_DEBUG("Setting next timestamp to be %" PRId64 " us",
                  mVideoFrameEndTimeBeforeReset->ToMicroseconds());
@@ -949,7 +953,7 @@ nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
 
   int64_t offset = Resource(aType).Tell();
   RefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
-  if (!holder->Init(packet, offset, track, false)) {
+  if (!holder->Init(packet, Context(aType), offset, track, false)) {
     WEBM_DEBUG("NesteggPacketHolder::Init: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
