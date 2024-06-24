@@ -2743,6 +2743,10 @@ BrowserGlue.prototype = {
         name: "ensurePrivateBrowsingShortcutExists",
         condition:
           AppConstants.platform == "win" &&
+          Services.prefs.getBoolPref(
+            "browser.privateWindowSeparation.enabled",
+            true
+          ) &&
           // We don't want a shortcut if it's been disabled, eg: by enterprise policy.
           lazy.PrivateBrowsingUtils.enabled &&
           // Private Browsing shortcuts for packaged builds come with the package,
