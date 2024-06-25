@@ -183,6 +183,7 @@ skip-if = [
 ]
 
 ["test_ext_cookieBehaviors.js"]
+requesttimeoutfactor = 3 # deleteDatabase may take several minutes in slow environments, Android (bug 1896262)
 skip-if = [
   "appname == 'thunderbird'",
   "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
