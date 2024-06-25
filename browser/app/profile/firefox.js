@@ -296,6 +296,9 @@ pref("browser.shell.checkDefaultPDF", true);
 // Will be set to `true` if the user indicates that they don't want to be asked
 // again about Firefox being their default PDF handler any more.
 pref("browser.shell.checkDefaultPDF.silencedByUser", false);
+// Whether or not the user should be shown the guidance notifications when
+// setting Firefox as their default browser.
+pref("browser.shell.setDefaultGuidanceNotifications", true);
 #endif
 
 

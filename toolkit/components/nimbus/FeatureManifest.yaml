@@ -1118,7 +1118,10 @@ shellService:
         Should setting it as the default PDF handler only replace existing PDF
         handlers that are browsers, and not other PDF handlers such as Acrobat
         Reader or Nitro PDF.
-
+    setDefaultGuidanceNotifications:
+      type: boolean
+      fallbackPref: browser.shell.setDefaultGuidanceNotifications
+      description: Whether or not the user should see the guidance notifications when setting Firefox as their default browser.
 upgradeDialog:
   description: The dialog shown for major upgrades
   owner: omc@mozilla.com
