@@ -600,7 +600,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Účet</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Panel s nástrojmi</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Panel s nástrojmi</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Umiestnenie panela s adresou</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma vzhľadu</string>
     <!-- Preference for customizing the home screen -->
@@ -911,9 +913,14 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Skryť panel s nástrojmi posunutím stránky</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Prepínať medzi kartami posunutím panela nástrojov do strán</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Prepínať medzi kartami posunutím panela nástrojov do strán</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Potiahnutím panela nástrojov smerom hore otvoríte karty</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Rolovaním skryť panel s adresou a panel s nástrojmi</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Prepínať medzi kartami posunutím panela s adresou do strán</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -2480,7 +2487,7 @@
     <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
     <string name="translations_bottom_sheet_default_dropdown_selection">Zvoľte jazyk</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
-    <string name="translation_error_could_not_translate_warning_text">Pri preklade sa vyskytol problém. Prosím skúste to znova.</string>
+    <string name="translation_error_could_not_translate_warning_text">Pri preklade sa vyskytol problém. Skúste to znova.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
     <string name="translation_error_could_not_load_languages_warning_text">Nepodarilo sa načítať jazyky. Skontrolujte svoje internetové pripojenie a skúste to znova.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
@@ -2611,6 +2618,16 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state" moz:removedIn="127" tools:ignore="UnusedResources">Zvolený</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
+    <string name="download_languages_fetch_error_warning_text">Nepodarilo sa načítať jazyky. Skúste to neskôr.</string>
+    <!-- The title of the warning card informs the user that an error has occurred at downloading a language.
+      The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_error_warning_text"><![CDATA[Jazyk <b>%1$s</b> sa nepodarilo stiahnuť. Skúste to znova.]]></string>
+
+    <!-- The title of the warning card informs the user that an error has occurred at deleting a language.
+          The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_delete_error_warning_text"><![CDATA[Jazyk <b>%1$s</b> sa nepodarilo odstrániť. Skúste to znova.]]></string>
+
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
@@ -2636,7 +2653,7 @@
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Aby boli preklady súkromné, sťahujeme čiastočné údaje pre jazyky do vašej vyrovnávacej pamäte.</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
-    <string name="download_language_file_dialog_message_all_languages_no_cache">Sťahujeme čiastočné údaje pre jazyky, aby boli preklady súkromné.</string>
+    <string name="download_language_file_dialog_message_all_languages_no_cache" moz:removedIn="129" tools:ignore="UnusedResources">Sťahujeme čiastočné údaje pre jazyky, aby boli preklady súkromné.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Vždy sťahovať v režime šetrenia dát</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
