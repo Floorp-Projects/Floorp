@@ -197,6 +197,8 @@
     <string name="browser_menu_extensions">ایکسٹینشنز</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">ایکسٹینشنز دا بندوبست کرو</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">ٻیاں ایکسٹنشناں لبھو</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">کھاتہ معلومات</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -214,6 +216,8 @@
     <string name="browser_menu_open_in_regular_tab">باقائدہ ٹیب وچ کھولو</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">ہوم سکرین تے شامل کرو</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">ہوم سکرین تے شامل کرو۔۔۔</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ولدا ہم وقت کرو</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -222,6 +226,8 @@
     <string name="browser_menu_find_in_page_2">ورقے وچ لبھو۔۔۔</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">ورقے دا ترجمہ کرو</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">مجموعے وچ محفوظ کرو۔۔۔</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">مجموعے وچ محفوظ کرو</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -271,6 +277,8 @@
          The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="browser_menu_new_in_firefox">%1$s وچ نواں</string>
 
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">ڈیسک ٹاپ سائٹ تے سوئچ کرو</string>
     <!-- Browser menu label that navigates to the page tools sub-menu -->
     <string name="browser_menu_tools">اوزار</string>
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
@@ -2571,6 +2579,8 @@
     <string name="download_language_header_preference">زباناں ڈاؤن لوڈ کرو</string>
     <!-- All languages list item. When the user presses this item, they can download all languages. -->
     <string name="download_language_all_languages_item_preference">ساریاں زباناں</string>
+    <!-- All languages list item. When the user presses this item, they can delete all languages that were downloaded. -->
+    <string name="download_language_all_languages_item_preference_to_delete">ساریاں زباناں مٹاؤ</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">مٹاؤ</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
@@ -2605,7 +2615,7 @@
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">ترجمہ کوں نجی رکّھݨ کِیتے اَساں تُہاݙے کیشے وِچ جزوی ٻولیاں ڈاؤن لوڈ کرین٘دے ہِسے۔</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
-    <string name="download_language_file_dialog_message_all_languages_no_cache">اَساں ترجمہ کوں نجی رکّھݨ کِیتے جزوی ٻولیاں ڈاؤن لوڈ کرین٘دے ہِسے۔</string>
+    <string name="download_language_file_dialog_message_all_languages_no_cache" moz:removedIn="129" tools:ignore="UnusedResources">اَساں ترجمہ کوں نجی رکّھݨ کِیتے جزوی ٻولیاں ڈاؤن لوڈ کرین٘دے ہِسے۔</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">ہمیشاں ڈیٹا سیونگ موڈ وِچ ڈاؤن لوڈ کرو</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
@@ -2675,6 +2685,10 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">ݙاڈھا غیرتسلی بخش</string>
 
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">میں ایں کوں کائنی ورتیندا</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">تساں آپݨے Firefox مکھ پنے نال چوکھے مطمئن ہو؟</string>
     <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">سروے کھولو</string>

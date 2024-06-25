@@ -2,4 +2,6 @@
 <resources>
     <string name="mozac_feature_customtabs_exit_button">Kthehu te aplikacioni i mëparshëm</string>
     <string name="mozac_feature_customtabs_share_link">Ndani lidhje me të tjerët</string>
+    <!-- Content description (not visible, for screen readers etc.): Description of the refresh button in the Custom Tabs toolbar -->
+    <string name="mozac_feature_customtabs_refresh_button">Rifreskoje</string>
 </resources>

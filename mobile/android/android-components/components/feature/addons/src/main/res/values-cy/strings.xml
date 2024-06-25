@@ -201,7 +201,7 @@
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">Nid oedd modd gosod %1$s oherwydd bod risg uchel o achosi problemau sefydlogrwydd neu ddiogelwch.</string>
     <!-- Text shown when attempting to install an add-on that can only be install via Enterprise Policies, which is not supported on Android.  %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_admin_install_only">Nid oedd modd gosod %1$s oherwydd dim ond sefydliad sy\'n defnyddio polisïau menter sy\'n gallu ei osod, sydd ddim yn cael ei gefnogi ar y platfform hwn.</string>
+    <string name="mozac_feature_addons_admin_install_only">Nid oedd modd gosod %1$s oherwydd dim ond sefydliad sy\'n defnyddio polisïau menter sy\'n gallu ei osod, nad yw\'n cael ei gefnogi ar y platfform hwn.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Wedi galluogi %1$s yn llwyddiannus</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
