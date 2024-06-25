@@ -81,7 +81,8 @@ typedef struct cairo_quartz_image_surface {
     cairo_surface_t base;
 
     int width, height;
-    CGContextRef cgContext;
+
+    CGImageRef image;
     cairo_image_surface_t *imageSurface;
 } cairo_quartz_image_surface_t;
 
@@ -113,6 +114,16 @@ _cairo_quartz_set_antialiasing (CGContextRef context, cairo_antialias_t antialia
 cairo_status_t _cairo_quartz_surface_to_png (cairo_surface_t *abstract_surface, const char *dest);
 cairo_private void _cairo_quartz_image_to_png (CGImageRef, const char *dest);
 
+cairo_private CGImageRef
+CairoQuartzCreateCGImage (cairo_format_t format,
+			      unsigned int width,
+			      unsigned int height,
+			      unsigned int stride,
+			      void *data,
+			      cairo_bool_t interpolate,
+			      CGColorSpaceRef colorSpaceOverride,
+			      CGDataProviderReleaseDataCallback releaseCallback,
+			      void *releaseInfo);
 #else
 
 # error Cairo was not compiled with support for the quartz backend
