@@ -2973,6 +2973,34 @@ class PromptFeatureTest {
         verify(fragment).dismiss()
     }
 
+    @Test
+    fun `WHEN prompt request is a file THEN the active prompt should not be dismissed`() {
+        var onDismissWasCalled = false
+
+        val filePickerRequest =
+            PromptRequest.File(emptyArray(), true, { _, _ -> }, { _, _ -> }) {
+                onDismissWasCalled = true
+            }
+
+        val feature =
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fileUploadsDirCleaner = mock(),
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+            ) { }
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest))
+            .joinBlocking()
+
+        feature.start()
+        store.waitUntilIdle()
+
+        assertFalse(onDismissWasCalled)
+        assertTrue(tab()!!.content.promptRequests.isNotEmpty())
+    }
+
     private fun mockFragmentManager(): FragmentManager {
         val fragmentManager: FragmentManager = mock()
         val transaction: FragmentTransaction = mock()
