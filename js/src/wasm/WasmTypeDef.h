@@ -1301,7 +1301,10 @@ inline uintptr_t TypeDef::forMatch(const TypeDef* typeDef,
 
   // Return a tagged index for local type references
   if (typeDef && &typeDef->recGroup() == recGroup) {
-    return uintptr_t(recGroup->indexOf(typeDef)) | 0x1;
+    // recGroup->indexOf result is expected to be not greater than MaxTypes,
+    // and shall fit in 32-bit pointer without loss.
+    static_assert(MaxTypes <= 0x7FFFFFFF);
+    return (uintptr_t(recGroup->indexOf(typeDef)) << 1) | 0x1;
   }
 
   // Return an untagged pointer for non-local type references
