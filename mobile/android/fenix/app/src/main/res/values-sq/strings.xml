@@ -903,6 +903,9 @@
     <!-- Preference for using the dynamic toolbars -->
     <string name="preference_gestures_dynamic_toolbar_2">Rrëshqiteni, për fshehje të shtyllës së adresave dhe panelit</string>
 
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Që të ndërroni skeda, fërkojeni për anash shtyllën e adresave</string>
+
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Shkarkime</string>
@@ -2679,6 +2682,10 @@
     <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Ju lutemi, jepni vetëm numra të plotë pozitivë</string>
     <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
     <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Ju lutemi, jepni një numër më të madh se zero</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">U tjekalua numri maksimum i skedave (%1$s) që mund të prodhohen në një veprim</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Shtoje te skeda aktive</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2724,6 +2731,8 @@
 
     <!-- Option for likert scale -->
     <string name="likert_scale_option_6" tools:ignore="UnusedResources">S’e përdor</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Sa të kënaqur jeni me faqen hyrëse të Firefox-it?</string>
     <!-- Accessibility -->
     <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
     <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Hapni pyetësorin</string>

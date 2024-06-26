@@ -201,7 +201,7 @@
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s não pôde ser instalado porque possui um risco elevado de causar problemas de estabilidade ou de segurança.</string>
     <!-- Text shown when attempting to install an add-on that can only be install via Enterprise Policies, which is not supported on Android.  %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_admin_install_only">%1$s não pôde ser instalado porque apenas pode ser instalado por uma organização que utilize políticas empresariais, o que não é suportado nesta plataforma.</string>
+    <string name="mozac_feature_addons_admin_install_only">%1$s não pode ser instalado porque apenas pode ser instalado por uma organização que utilize políticas empresariais, o que não é suportado nesta plataforma.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s ativado com sucesso</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
