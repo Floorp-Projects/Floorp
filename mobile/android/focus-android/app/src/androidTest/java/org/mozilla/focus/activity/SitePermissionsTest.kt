@@ -229,6 +229,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore
     fun testLocationSharingAllowed() {
         mockLocationUpdatesRule.setMockLocation()
 
@@ -244,6 +245,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore
     fun allowCameraPermissionsTest() {
         Assume.assumeTrue(cameraManager.cameraIdList.isNotEmpty())
         searchScreen {

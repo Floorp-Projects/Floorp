@@ -2,25 +2,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts.dialog
+package mozilla.components.support.ktx.util
 
+import androidx.annotation.VisibleForTesting
 import java.util.Date
 
 /**
  * Helper class to identify if a website has shown many dialogs.
+ *  @param maxSuccessiveDialogSecondsLimit Maximum time required
+ *  between dialogs in seconds before not showing more dialog.
  */
-internal class PromptAbuserDetector {
+class PromptAbuserDetector(private val maxSuccessiveDialogSecondsLimit: Int = MAX_SUCCESSIVE_DIALOG_SECONDS_LIMIT) {
 
-    internal var jsAlertCount = 0
-    internal var lastDialogShownAt = Date()
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var jsAlertCount = 0
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var lastDialogShownAt = Date()
+
     var shouldShowMoreDialogs = true
         private set
 
+    /**
+     * Updates internal state for alerts counts.
+     */
     fun resetJSAlertAbuseState() {
         jsAlertCount = 0
         shouldShowMoreDialogs = true
     }
 
+    /**
+     * Updates internal state for last shown and count of dialogs.
+     */
     fun updateJSDialogAbusedState() {
         if (!areDialogsAbusedByTime()) {
             jsAlertCount = 0
@@ -29,25 +42,35 @@ internal class PromptAbuserDetector {
         lastDialogShownAt = Date()
     }
 
+    /**
+     * Indicates whether or not user wants to see more dialogs.
+     */
     fun userWantsMoreDialogs(checkBox: Boolean) {
         shouldShowMoreDialogs = checkBox
     }
 
+    /**
+     * Indicates whether dialogs are being abused or not.
+     */
     fun areDialogsBeingAbused(): Boolean {
         return areDialogsAbusedByTime() || areDialogsAbusedByCount()
     }
 
-    internal fun areDialogsAbusedByTime(): Boolean {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Suppress("UndocumentedPublicFunction") // this is visible only for tests
+    fun now() = Date()
+
+    private fun areDialogsAbusedByTime(): Boolean {
         return if (jsAlertCount == 0) {
             false
         } else {
-            val now = Date()
+            val now = now()
             val diffInSeconds = (now.time - lastDialogShownAt.time) / SECOND_MS
-            diffInSeconds < MAX_SUCCESSIVE_DIALOG_SECONDS_LIMIT
+            diffInSeconds < maxSuccessiveDialogSecondsLimit
         }
     }
 
-    internal fun areDialogsAbusedByCount(): Boolean {
+    private fun areDialogsAbusedByCount(): Boolean {
         return jsAlertCount > MAX_SUCCESSIVE_DIALOG_COUNT
     }
 

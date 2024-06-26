@@ -63,7 +63,6 @@ import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.
 import mozilla.components.feature.prompts.dialog.ColorPickerDialogFragment
 import mozilla.components.feature.prompts.dialog.ConfirmDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
-import mozilla.components.feature.prompts.dialog.PromptAbuserDetector
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
@@ -103,6 +102,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.ifNullOrEmpty
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import mozilla.components.support.ktx.util.PromptAbuserDetector
 import java.lang.ref.WeakReference
 import java.security.InvalidParameterException
 import java.util.Collections

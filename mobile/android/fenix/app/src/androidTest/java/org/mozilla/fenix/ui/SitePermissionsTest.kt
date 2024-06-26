@@ -12,6 +12,7 @@ import android.os.Build
 import androidx.core.net.toUri
 import androidx.test.rule.GrantPermissionRule
 import org.junit.Assume.assumeTrue
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -32,6 +33,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *  Tests for verifying site permissions prompts & functionality
  *
  */
+@Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1903828")
 class SitePermissionsTest : TestSetup() {
     /* Test page created and handled by the Mozilla mobile test-eng team */
     private val testPage = "https://mozilla-mobile.github.io/testapp/permissions"

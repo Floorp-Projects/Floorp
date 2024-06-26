@@ -57,6 +57,7 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':support-ktx')
     implementation project(':feature-tabs')
+    implementation project(':support-utils')
 
     implementation ComponentsDependencies.kotlin_coroutines
 
