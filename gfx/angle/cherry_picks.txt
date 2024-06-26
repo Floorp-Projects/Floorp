@@ -1,3 +1,23 @@
+commit 7918168436578718b234bfd56da152e34a85af1d
+Author: Kelsey Gilbert <kelsey.gilbert@mozilla.com>
+Date:   Tue Jun 4 15:37:29 2024 -0700
+
+    Add GLSL variable byte size limits to ShBuiltInResources.
+
+commit 31c0a5bff1330706aff3c4594c8166745814a45b
+Author: Shahbaz Youssefi <syoussefi@chromium.org>
+Date:   Wed May 3 13:41:36 2023 -0400
+
+    WebGL: Limit total size of private data
+    
+    ... not just individual arrays.
+    
+    Bug: chromium:1431761
+    Change-Id: I721e29aeceeaf12c3f6a67b668abffb8dfbc89b0
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/4503753
+    Reviewed-by: Kenneth Russell <kbr@chromium.org>
+    Commit-Queue: Shahbaz Youssefi <syoussefi@chromium.org>
+
 commit ddaf44ac75d5d0390873c2af193e02159ecbe672
 Author: Geoff Lang <geofflang@chromium.org>
 Date:   Fri Dec 8 13:20:36 2023 -0500
