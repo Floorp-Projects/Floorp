@@ -99,7 +99,7 @@ class TranslationsDialogMiddleware(
                     is TranslationPageSettingsOption.AlwaysOfferPopup -> {
                         // Ensures the translations engine has the correct value
                         browserStore.dispatch(
-                            TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                            TranslationsAction.UpdateGlobalOfferTranslateSettingAction(
                                 offerTranslation = action.checkValue,
                             ),
                         )
