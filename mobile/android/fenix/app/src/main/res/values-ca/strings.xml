@@ -49,12 +49,12 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Desades recentment</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Desades recentment</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Mostra totes les adreces d’interès desades</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Mostra totes les adreces d’interès desades</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Elimina</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Elimina</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">El %1$s està creat per Mozilla.</string>
@@ -72,7 +72,7 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle_2">El %1$s suprimeix les galetes, l’historial i les dades dels llocs en tancar totes les perstanyes privades. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle_2">El %1$s suprimeix les galetes, l’historial i les dades dels llocs en tancar totes les pestanyes privades. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -144,8 +144,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Pestanya privada nova</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">Drecera per a les contrasenyes</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">Contrasenyes</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -185,12 +185,12 @@
     <string name="browser_menu_refresh">Actualitza</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Atura</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Complements</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Extensions</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Gestiona les extensions</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informació del compte</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">No hi ha cap complement</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ajuda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -205,18 +205,24 @@
     <string name="browser_menu_open_in_regular_tab">Obre en una pestanya normal</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Afegeix a la pantalla d’inici</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Instal·la</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Afegeix a la pantalla d\'inici…</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Resincronitza</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Cerca a la pàgina</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Cerca a la pàgina…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Tradueix la pàgina</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Desa a la col·lecció…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Desa a la col·lecció</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Comparteix</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Comparteix…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Obre amb el %1$s</string>
@@ -243,6 +249,11 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personalitza la pàgina d’inici</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in">Inicia la sessió</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Canvia al lloc d\'escriptori</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -332,11 +343,10 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Avís de privadesa del Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ens encanta mantenir-vos segur</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">El nostre navegador sense ànim de lucre ajuda a evitar que les empreses us segueixin en secret al web.\n\nObteniu més informació al nostre avís de privadesa.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">El nostre navegador sense ànim de lucre ajuda a blocar automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.\n\nObteniu més informació al nostre avís de privadesa.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">avís de privadesa</string>
@@ -346,10 +356,10 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ara no</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title_2">Manteniu el xifrat quan passeu d\'un aparell a un altre</string>
+    <string name="juno_onboarding_sign_in_title_2">Manteniu-vos protegit amb el xifratge quan passeu d\'un dispositiu a un altre</string>
     <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
      Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_sign_in_description_2">Si teniu la sessió iniciada i sincronitzada, esteu més segur. Firefox xifra les contrasenyes, els marcadors i molt més.</string>
+    <string name="juno_onboarding_sign_in_description_2">Si teniu la sessió iniciada i sincronitzada, esteu més segur. El Firefox xifra les contrasenyes, les adreces d\'interès i molt més.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Inicia la sessió</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -451,7 +461,7 @@
     <string name="preferences_cookie_banner_reduction_private_mode">Blocador de bàners de galetes en la navegació privada</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_off_for_site">Desactivada en aquest lloc</string>
+    <string name="reduce_cookie_banner_off_for_site">Desactivat en aquest lloc</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Cancel·la</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -513,7 +523,7 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Compte</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Barra d’eines</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Barra d’eines</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -580,11 +590,6 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">S’està tancant l’aplicació per aplicar els canvis…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons">Complements</string>
-
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Instal·la un complement des d\'un fitxer</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificacions</string>
 
@@ -593,9 +598,6 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">No permès</string>
 
-    <!-- Add-on Preferences -->
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Col·lecció de complements personalitzada</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">D’acord</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -604,14 +606,12 @@
     <string name="customize_addon_collection_hint">Nom de la col·lecció</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Propietari de la col·lecció (identificador d’usuari)</string>
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">S’ha modificat la col·lecció de complements. L’aplicació es tancarà per aplicar els canvis…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Torneu a la pestanya</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Adreces d’interès recents</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Adreces d’interès recents</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visitat recentment</string>
@@ -658,24 +658,8 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Descobriu més fons de pantalla</string>
 
-    <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Nous complements disponibles</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Descobriu les més de cent noves extensions que us permeten fer el Firefox vostre.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Explora els complements</string>
-
-    <!-- Add-on process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Els complements s’han desactivat temporalment</string>
-
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Un o més complements han deixat de funcionar, i això fa que el vostre sistema sigui inestable. El %1$s ha intentat reiniciar els complements sense èxit.\n\nEls complements no es reiniciaran durant la sessió actual.\n\nPodeu eliminar o desactivar complements per intentar solucionar el problema.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Prova de reiniciar els complements</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Continua amb els complements desactivats</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -690,10 +674,8 @@
     <string name="preferences_sync_history">Historial</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Adreces d’interès</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Inicis de sessió</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Contrasenyes</string>
+    <string name="preferences_sync_logins_2">Contrasenyes</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Pestanyes obertes</string>
     <!-- Preference for signing out -->
@@ -718,10 +700,8 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s en %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Targetes de crèdit</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Formes de pagament</string>
+    <string name="preferences_sync_credit_cards_2">Formes de pagament</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adreces</string>
 
@@ -793,7 +773,7 @@
     <string name="preference_gestures_dynamic_toolbar">Amaga la barra d’eines en desplaçar-me</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Canvia de pestanya en fer lliscar la barra d’eines cap als costats</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Canvia de pestanya en fer lliscar la barra d’eines cap als costats</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Mostra les pestanyes obertes en fer lliscar la barra d’eines cap amunt</string>
 
@@ -1377,10 +1357,6 @@
     <string name="qr_scanner_dialog_invalid_ok">D\'acord</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Segur que voleu suprimir %1$s?</string>
-    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">Si suprimiu aquesta pestanya, suprimireu tota la col·lecció. Podeu crear col·leccions noves en qualsevol moment.</string>
-    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title">Voleu suprimir %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Suprimeix</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
@@ -1662,14 +1638,10 @@
     <string name="add_to_homescreen_description_2">Podeu afegir fàcilment aquest lloc web a la pantalla d’inici del vostre dispositiu per accedir-hi directament i navegar-hi com si fos una aplicació.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Inicis de sessió i contrasenyes</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Contrasenyes</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Desa els inicis de sessió i contrasenyes</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Contrasenyes</string>
 
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Desa les contrasenyes</string>
+    <string name="preferences_passwords_save_logins_2">Desa les contrasenyes</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Demana-m’ho</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1683,43 +1655,24 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Emplena noms d’usuari i contrasenyes en altres aplicacions del vostre dispositiu.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Afegeix un inici de sessió</string>
-
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Afegeix una contrasenya</string>
+    <string name="preferences_logins_add_login_2">Afegeix una contrasenya</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sincronitza els inicis de sessió</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sincronitza les contrasenyes</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Sincronitza els inicis de sessió entre dispositius</string>
+    <string name="preferences_passwords_sync_logins_2">Sincronitza les contrasenyes</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sincronitza les contrasenyes entre dispositius</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Inicis de sessió desats</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Sincronitza les contrasenyes entre dispositius</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Contrasenyes desades</string>
+    <string name="preferences_passwords_saved_logins_2">Contrasenyes desades</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Aquí es mostren els inicis de sessió que deseu o sincronitzeu en el %s.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Les contrasenyes que deseu o sincronitzeu amb el %s es mostraran aquí. Totes les contrasenyes que deseu estan xifrades.
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Les contrasenyes que deseu o sincronitzeu amb el %s es mostraran aquí. Totes les contrasenyes que deseu estan xifrades.
 </string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Més informació sobre el Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Més informació sobre la sincronització</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Més informació sobre la sincronització</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepcions</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Els inicis de sessió i les contrasenyes que no es desin es mostraran aquí.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">No es desaran els inicis de sessió ni les contrasenyes per a aquests llocs.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Suprimeix totes les excepcions</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Cerca els inicis de sessió</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Lloc</string>
     <!-- The header for the username for a login -->
@@ -1746,12 +1699,6 @@
     <string name="saved_login_reveal_password">Mostra la contrasenya</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Amaga la contrasenya</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Desbloqueu per veure els inicis de sessió desats</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Protegiu els inicis de sessió i contrasenyes</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Configureu un patró de bloqueig del dispositiu, un PIN o una contrasenya perquè cap persona que accedeixi al vostre dispositiu pugui veure els inicis de sessió i les contrasenyes que deseu.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Més tard</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1768,49 +1715,32 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Darrer ús</string>
 
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordena el menú d’inicis de sessió</string>
-
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Emplenament automàtic</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adreces</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Targetes de crèdit</string>
 
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Formes de pagament</string>
-    <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Desa i emplena automàticament les targetes</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Les dades estan xifrades</string>
+    <string name="preferences_credit_cards_2">Formes de pagament</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronitza les targetes entre dispositius</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sincronitza les targetes</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Afegeix una targeta de crèdit</string>
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Afegeix una targeta</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Gestiona les targetes desades</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Afegeix una targeta</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Gestiona les targetes</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Gestiona les targetes</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Afegeix una adreça</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Gestiona les adreces</string>
 
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Desa i emplena automàticament les adreces</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Desa i emplena automàticament les adreces</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Inclou informació com números, adreces electròniques i adreces d’enviament</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Desa i emplena automàticament les adreces</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Inclou números de telèfon i adreces de correu electrònic</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Inclou números de telèfon i adreces de correu electrònic</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Afegeix una targeta</string>
@@ -1831,9 +1761,7 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Suprimeix la targeta</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Segur que voleu suprimir aquesta targeta de crèdit?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Voleu suprimir la targeta?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Voleu suprimir la targeta?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Suprimeix</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1844,28 +1772,18 @@
     <string name="credit_cards_cancel_button">Cancel·la</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Targetes desades</string>
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Introduïu un número de targeta de crèdit vàlid</string>
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Introduïu un número de targeta vàlid</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Empleneu aquest camp</string>
+    <string name="credit_cards_number_validation_error_message_2">Introduïu un número de targeta vàlid</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Afegiu un nom</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Afegiu un nom</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Desbloqueu per veure les targetes desades</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Protegiu les vostres targetes de crèdit</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Configureu un patró de bloqueig del dispositiu, un PIN o una contrasenya perquè cap persona que accedeixi al vostre dispositiu pugui veure les targetes de crèdit que deseu.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Configura-ho ara</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">Més tard</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Desbloqueu el dispositiu</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Desbloqueu per utilitzar la informació emmagatzemada d’una targeta de crèdit</string>
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Afegeix una adreça</string>
@@ -1873,12 +1791,6 @@
     <string name="addresses_edit_address">Edita l’adreça</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Gestiona les adreces</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Nom</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Segon nom</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Cognoms</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Adreça postal</string>
     <!-- The header for the city of an address -->
@@ -1903,9 +1815,7 @@
     <string name="addressess_delete_address_button">Suprimeix l’adreça</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Segur que voleu suprimir aquesta adreça?</string>
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Voleu suprimir aquesta adreça?</string>
+    <string name="addressess_confirm_dialog_message_2">Voleu suprimir aquesta adreça?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Suprimeix</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2003,42 +1913,22 @@
     <string name="login_menu_delete_button">Suprimeix</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Edita</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Segur que voleu suprimir aquest inici de sessió?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Suprimeix</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Cancel·la</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Opcions d’inici de sessió</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Opcions de la contrasenya</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Camp de text editable per a l’adreça web de l’inici de sessió.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Camp de text editable per al nom d’usuari de l’inici de sessió.</string>
-    <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Camp de text editable per a la contrasenya de l’inici de sessió.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Desa els canvis de l’inici de sessió.</string>
+    <string name="login_options_menu_2">Opcions de la contrasenya</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Desa els canvis.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit">Edita</string>
+    <string name="save_changes_to_login_2">Desa els canvis.</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Edita la contrasenya</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login">Afegeix un inici de sessió nou</string>
+    <string name="edit_2">Edita la contrasenya</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Afegeix una contrasenya</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Cal una contrasenya</string>
+    <string name="add_login_2">Afegeix una contrasenya</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Escriviu una contrasenya</string>
+    <string name="saved_login_password_required_2">Escriviu una contrasenya</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Cal el nom d’usuari</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Escriviu un nom d\'usuari</string>
+    <string name="saved_login_username_required_2">Escriviu un nom d\'usuari</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Cal el nom del servidor</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2138,7 +2028,7 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Cerca amb %s</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Feu que els enllaços dels llocs web, del correu electrònic i dels missatges s’obrin automàticament en el Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2148,7 +2038,7 @@
     <string name="radio_preference_info_content_description">Feu clic aquí per a veure més informació</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Navega cap amunt</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Navega cap amunt</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Tanca</string>
@@ -2195,7 +2085,7 @@
     <string name="review_quality_check_explanation_title">Com es determina la qualitat de la ressenya</string>
 
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_explanation_body_reliability">Usem tecnologia d\'IA de %s de Mozilla per a comprovar la fiabilitat de les ressenyes de productes. Això només us ajudarà a avaluar la qualitat de la ressenya, no la qualitat del producte.</string>
+    <string name="review_quality_check_explanation_body_reliability">Usem tecnologia d\'IA del %s de Mozilla per a comprovar la fiabilitat de les ressenyes de productes. Això només us ajudarà a avaluar la qualitat de la ressenya, no la qualitat del producte.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Assignem a les ressenyes de cada producte una <b>puntuació alfabètica</b> de la A a la F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
@@ -2207,7 +2097,7 @@
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[La <b>puntuació ajustada</b> només es basa en les ressenyes que creiem fiables.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights"><![CDATA[Els <b>destacats</b> provenen de %s ressenyes dels darrers 80 dies que creiem que són fiables.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[Els <b>destacats</b> provenen de ressenyes de %s dels darrers 80 dies que creiem que són fiables.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Més informació sobre %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
@@ -2259,7 +2149,7 @@
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Hauríem de tenir informació sobre les ressenyes del producte d\'aquí a 24 hores. Torneu més tard.</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
-    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">L\'anàlisi està actualitzat</string>
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">L\'anàlisi és actual</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Entesos</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
@@ -2279,11 +2169,11 @@
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Proveu la nostra guia de confiança per a ressenyes de productes</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">Vegeu com de fiables són les ressenyes de productes a %1$s abans de comprar. El verificador de ressenyes, una funció experimental de %2$s, està integrat directament al navegador. També funciona a %3$s i %4$s.</string>
+    <string name="review_quality_check_contextual_onboarding_description">Vegeu com de fiables són les ressenyes de productes a %1$s abans de comprar. El verificador de ressenyes, una funció experimental del %2$s, està integrat directament al navegador. També funciona a %3$s i %4$s.</string>
     <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Vegeu com de fiables són les ressenyes de productes a %1$s abans de comprar. El verificador de ressenyes, una funció experimental de %2$s, està integrada directament en el navegador.</string>
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Vegeu com de fiables són les ressenyes de productes a %1$s abans de comprar. El verificador de ressenyes, una funció experimental del %2$s, està integrada directament en el navegador.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_learn_more">Amb el poder de %1$s de Mozilla, us ajudem a evitar ressenyes esbiaixades i no autèntiques. El nostre model d\'IA sempre millora per a protegir-vos mentre compreu. %2$s</string>
+    <string name="review_quality_check_contextual_onboarding_learn_more">Gràcies al %1$s de Mozilla, us ajudem a evitar ressenyes esbiaixades i no autèntiques. El nostre model d\'IA sempre millora per a protegir-vos mentre compreu. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Més informació</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2370,13 +2260,8 @@
     <string name="translations_bottom_sheet_default_dropdown_selection">Trieu una llengua</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Hi ha hagut un problema en traduir. Torneu-ho a provar.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">Més informació</string>
 
 
-    <!-- Translations options dialog -->
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">Opcions de la traducció</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_always_translate_in_language">Tradueix sempre %1$s</string>
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
@@ -2435,7 +2320,7 @@
     <string name="download_languages_default_system_language_require_preference">necessari</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">Baixa llengües</string>
-    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <!-- All languages list item. When the user presses this item, they can download all languages. -->
     <string name="download_language_all_languages_item_preference">Totes les llengües</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">Suprimeix</string>
@@ -2470,12 +2355,14 @@
     <string name="debug_drawer_title">Eines de depuració</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Vés enrere</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Eines de pestanyes</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Recompte de pestanyes</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Actives</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Actives</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inactives</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2492,4 +2379,5 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Afegeix a les pestanyes inactives</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Afegeix a les pestanyes privades</string>
-</resources>
+
+    </resources>

@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Comparteix mitjançant</string>
 
     <string name="notification_erase_title_android_14">Voleu esborrar l\'historial de navegació?</string>
-    <string name="notification_erase_text_android_14">Toqueu o esborreu aquesta notificació per a esborrar de manera segura l\'historial de navegació.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Toqueu o esborreu aquesta notificació per a esborrar de manera segura l\'historial de navegació.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Toqueu o feu lliscar aquesta notificació per a esborrar de manera segura l\'historial de navegació.</string>
 
     <string name="notification_erase_text">Esborra l\'historial de navegació</string>
 

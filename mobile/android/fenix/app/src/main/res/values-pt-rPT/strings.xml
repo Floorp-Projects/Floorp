@@ -2614,10 +2614,10 @@
     <string name="download_languages_fetch_error_warning_text">Não foi possível carregar os idiomas. Por favor, volte mais tarde.</string>
     <!-- The title of the warning card informs the user that an error has occurred at downloading a language.
       The first parameter is the language name, for example, "Spanish". -->
-    <string name="download_languages_error_warning_text"><![CDATA[Não foi possível transferir <b>%1$s</b>. Por favor, tente novamente.]]></string>
+    <string name="download_languages_error_warning_text"><![CDATA[Não foi possível transferir <b>%1$s</b>. Tente novamente.]]></string>
     <!-- The title of the warning card informs the user that an error has occurred at deleting a language.
           The first parameter is the language name, for example, "Spanish". -->
-    <string name="download_languages_delete_error_warning_text"><![CDATA[Não foi possível apagar <b>%1$s</b>. Por favor, tente novamente.]]></string>
+    <string name="download_languages_delete_error_warning_text"><![CDATA[Não foi possível eliminar <b>%1$s</b>. Por favor, tente novamente.]]></string>
 
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
