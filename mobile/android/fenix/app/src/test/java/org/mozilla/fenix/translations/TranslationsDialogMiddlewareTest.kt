@@ -155,7 +155,7 @@ class TranslationsDialogMiddlewareTest {
         }
 
     @Test
-    fun `GIVEN translationState WHEN UpdatePageSettingsValue with action type AlwaysOfferPopup from TranslationDialogStore is called THEN call UpdatePageSettingAction from BrowserStore`() =
+    fun `GIVEN translationState WHEN UpdatePageSettingsValue with action type AlwaysOfferPopup from TranslationDialogStore is called THEN call UpdateGlobalOfferTranslateSettingAction from BrowserStore`() =
         runTest {
             assertTrue(settings.offerTranslation)
             val translationStore = TranslationsDialogStore(
@@ -173,7 +173,7 @@ class TranslationsDialogMiddlewareTest {
 
             verify {
                 browserStore.dispatch(
-                    TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                    TranslationsAction.UpdateGlobalOfferTranslateSettingAction(
                         offerTranslation = false,
                     ),
                 )

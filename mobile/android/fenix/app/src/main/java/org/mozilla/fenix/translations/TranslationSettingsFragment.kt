@@ -108,7 +108,7 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
                     isEnabled = true,
                     onStateChange = { _, checked ->
                         browserStore.dispatch(
-                            TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                            TranslationsAction.UpdateGlobalOfferTranslateSettingAction(
                                 offerTranslation = checked,
                             ),
                         )
