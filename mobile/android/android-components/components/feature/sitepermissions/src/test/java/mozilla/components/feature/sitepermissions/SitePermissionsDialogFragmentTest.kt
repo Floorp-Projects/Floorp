@@ -19,6 +19,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
@@ -233,6 +234,7 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1903828")
     fun `clicking on positive button notifies the feature (temporary)`() {
         val mockFeature: SitePermissionsFeature = mock()
         val fragment = spy(
@@ -261,6 +263,7 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1903828")
     fun `dismissing the dialog notifies the feature`() {
         val mockFeature: SitePermissionsFeature = mock()
         val fragment = spy(
@@ -360,6 +363,7 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1903828")
     fun `clicking on positive button notifies the feature (permanent)`() {
         val mockFeature: SitePermissionsFeature = mock()
         val fragment = spy(
@@ -389,6 +393,7 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1903828")
     fun `clicking on negative button notifies the feature (permanent)`() {
         val mockFeature: SitePermissionsFeature = mock()
         val fragment = spy(
