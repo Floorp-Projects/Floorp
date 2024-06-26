@@ -1064,7 +1064,7 @@ const AVAILABLE_INJECTIONS = [
     domain: "YouTube Shorts",
     bug: "1882040",
     contentScripts: {
-      matches: ["*://m.youtube.com/shorts/*"],
+      matches: ["*://m.youtube.com/shorts", "*://m.youtube.com/shorts/*"],
       css: [
         {
           file: "injections/css/bug1882040-disable-pull-to-refresh.css",
