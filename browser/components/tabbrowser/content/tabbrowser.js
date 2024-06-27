@@ -2864,10 +2864,23 @@
       this.tabAnimationsInProgress++;
 
       if (animate) {
-        requestAnimationFrame(function () {
-          // kick the animation off
-          t.setAttribute("fadein", "true");
-        });
+        // Kick the animation off.
+        // TODO: we should figure out a better solution here. We use RAF
+        // to avoid jank of the animation due to synchronous work happening
+        // on tab open.
+        // With preloaded content though a single RAF happens too early. and
+        // both the transition and the transitionend event don't happen.
+        if (usingPreloadedContent) {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              t.setAttribute("fadein", "true");
+            });
+          });
+        } else {
+          requestAnimationFrame(() => {
+            t.setAttribute("fadein", "true");
+          });
+        }
       }
 
       // Additionally send pinned tab events
