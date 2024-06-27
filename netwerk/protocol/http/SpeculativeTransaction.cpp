@@ -70,15 +70,10 @@ nsresult SpeculativeTransaction::ReadSegments(nsAHttpSegmentReader* aReader,
 
 void SpeculativeTransaction::Close(nsresult aReason) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("SpeculativeTransaction::Close %p aReason=%" PRIx32, this,
-       static_cast<uint32_t>(aReason)));
   NullHttpTransaction::Close(aReason);
 
-  if (aReason == NS_BASE_STREAM_CLOSED) {
-    aReason = NS_OK;
-  }
   if (mCloseCallback) {
-    mCloseCallback(mTriedToWrite && NS_SUCCEEDED(aReason));
+    mCloseCallback(mTriedToWrite && aReason == NS_BASE_STREAM_CLOSED);
     mCloseCallback = nullptr;
   }
 }
