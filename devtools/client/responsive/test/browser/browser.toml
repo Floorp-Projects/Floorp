@@ -133,7 +133,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked button#device-pixel-ratio-menu e
 ["browser_tab_remoteness_change_fission_switch_target.js"]
 
 ["browser_target_blank.js"]
-https_first_disabled = true
 
 ["browser_telemetry_activate_rdm.js"]
 
