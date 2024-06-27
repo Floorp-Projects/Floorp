@@ -10,8 +10,6 @@ extern crate bitflags;
 extern crate cubeb_backend;
 #[macro_use]
 extern crate float_cmp;
-#[macro_use]
-extern crate lazy_static;
 extern crate mach;
 
 mod backend;
