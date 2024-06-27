@@ -3751,13 +3751,6 @@
   value: true
   mirror: always
 
-# If true, when checking if it's upgrade downgrade cycles, the URI path will be
-# also checked.
-- name: dom.security.https_only_check_path_upgrade_downgrade_endless_loop
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # If true and HTTPS-only mode is enabled, requests
 # to local IP addresses are also upgraded
 - name: dom.security.https_only_mode.upgrade_local

@@ -651,7 +651,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   static void CallTypeSniffers(void* aClosure, const uint8_t* aData,
                                uint32_t aCount);
 
-  nsresult CheckRedirectLimit(uint32_t aRedirectFlags) const;
+  nsresult CheckRedirectLimit(nsIURI* aNewURI, uint32_t aRedirectFlags) const;
 
   bool MaybeWaitForUploadStreamNormalization(nsIStreamListener* aListener,
                                              nsISupports* aContext);
