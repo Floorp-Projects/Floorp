@@ -168,3 +168,69 @@ add_task(async function manifest_content_scripts_world_MAIN_runAt_order() {
   await contentPage.close();
   await extension.unload();
 });
+
+add_task(async function manifest_content_scripts_anonymous_filename() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          js: ["file_leak_me.js"],
+          matches: ["*://*/data/file_simple_inline_script.html"],
+          run_at: "document_end",
+          world: "MAIN",
+        },
+        {
+          js: ["file_leak_me.js"],
+          matches: ["*://*/data/file_simple_inline_script.html"],
+          world: "ISOLATED",
+        },
+      ],
+    },
+    files: {
+      "file_leak_me.js": function fileExtractFilename() {
+        let error = new Error();
+        let result = {
+          fileName: error.fileName,
+          // We only care about file names, so strip line and column numbers.
+          stack: error.stack.replaceAll(/:\d+:\d+/g, ""),
+        };
+        if (window.varInPage) {
+          window.mainResult = result;
+        } else {
+          // The content script runs in an execution environment isolated from
+          // non-extension code, so it is safe to expose the actual script URL.
+          const contentScriptUrl = browser.runtime.getURL("file_leak_me.js");
+          browser.test.assertDeepEq(
+            {
+              fileName: contentScriptUrl,
+              stack: `fileExtractFilename@${contentScriptUrl}\n@${contentScriptUrl}\n`,
+            },
+            result,
+            "world:ISOLATED content script may see the extension URL"
+          );
+
+          // Code running in the MAIN world is shared with the web page. To
+          // minimize information leakage, the script sources are anonymous.
+          browser.test.assertDeepEq(
+            {
+              fileName: "<anonymous code>",
+              stack:
+                "fileExtractFilename@<anonymous code>\n@<anonymous code>\n",
+            },
+            window.wrappedJSObject.mainResult,
+            "world:MAIN content script should not leak the extension URL"
+          );
+
+          browser.test.sendMessage("done");
+        }
+      },
+    },
+  });
+  await extension.startup();
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_simple_inline_script.html"
+  );
+  await extension.awaitMessage("done");
+  await contentPage.close();
+  await extension.unload();
+});
