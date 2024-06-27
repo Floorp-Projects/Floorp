@@ -29,7 +29,8 @@ interface PrecompiledScript {
   any executeInGlobal(object global, optional ExecuteInGlobalOptions options = {});
 
   /**
-   * The URL that the script was loaded from.
+   * The URL that the script was loaded from. Could also be an arbitrary other
+   * value as specified by the "filename" option to ChromeUtils.compileScript.
    */
   [Pure]
   readonly attribute DOMString url;

@@ -73,6 +73,48 @@ add_task(async function test_syntaxError() {
     SyntaxError);
 });
 
+add_task(async function test_Error_filename() {
+  // This function will be serialized as a data:-URL and called.
+  function getMyError() {
+    let err = new Error();
+    return {
+      fileName: err.fileName,
+      stackFirstLine: err.stack.split("\n")[0],
+    };
+  }
+  const scriptUrl = `data:,(${encodeURIComponent(getMyError)})()`;
+  const dummyFilename = "dummy filename";
+  let script1 = await ChromeUtils.compileScript(scriptUrl, { hasReturnValue: true });
+  let script2 = await ChromeUtils.compileScript(scriptUrl, { hasReturnValue: true, filename: dummyFilename });
+
+  equal(script1.url, scriptUrl, "Script URL is correct");
+  equal(script2.url, "dummy filename", "Script URL overridden");
+
+  let sandbox = Cu.Sandbox("http://example.com");
+  let err1 = script1.executeInGlobal(sandbox);
+  equal(err1.fileName, scriptUrl, "fileName is original script URL");
+  equal(err1.stackFirstLine, `getMyError@${scriptUrl}:2:15`, "Stack has original URL");
+
+  let err2 = script2.executeInGlobal(sandbox);
+  equal(err2.fileName, dummyFilename, "fileName is overridden filename");
+  equal(err2.stackFirstLine, `getMyError@${dummyFilename}:2:15`, "Stack has overridden URL");
+});
+
+add_task(async function test_invalid_url() {
+  // In this test we want a URL that doesn't resolve to a valid file.
+  // Moreover, the name is chosen such that it does not trigger the
+  // CheckForBrokenChromeURL check.
+  await Assert.rejects(
+    ChromeUtils.compileScript("resource:///invalid.ftl"),
+    /^Unable to load script: resource:\/\/\/invalid\.ftl$/
+  );
+
+  await Assert.rejects(
+    ChromeUtils.compileScript("resource:///invalid.ftl", { filename: "bye bye" }),
+    /^Unable to load script: bye bye$/
+  );
+});
+
 /**
  * Assert that executeInGlobal throws a special exception when the content script throws.
  * And the content script exception is notified to the console.

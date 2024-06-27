@@ -967,6 +967,11 @@ dictionary CompileScriptOptionsDictionary {
   DOMString charset = "utf-8";
 
   /**
+   * The filename to associate with the script. Defaults to the source's URL.
+   */
+  DOMString filename;
+
+  /**
    * If true, certain parts of the script may be parsed lazily, the first time
    * they are used, rather than eagerly parsed at load time.
    */

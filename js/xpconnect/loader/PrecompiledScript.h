@@ -53,7 +53,7 @@ class PrecompiledScript : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsISupports> mParent;
 
   RefPtr<JS::Stencil> mStencil;
-  nsCString mURL;
+  nsCString mPublicURL;
   const bool mHasReturnValue;
 };
 
