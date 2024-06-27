@@ -158,6 +158,126 @@ add_task(async function test_executeScript_main_world_func() {
   await AppTestDelegate.removeTab(window, tab);
 });
 
+add_task(async function test_executeScript_anonymous_filename() {
+  let extension = makeExtension({
+    async background() {
+      const BACKGROUND_SCRIPT_URL =
+        browser.runtime.getManifest().background.scripts[0];
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      function funcExtractFilename() {
+        let error = new Error();
+        return {
+          fileName: error.fileName,
+          // We only care about file names, so strip line and column numbers.
+          stack: error.stack.replaceAll(/:\d+:\d+/g, ""),
+        };
+      }
+
+      // Verify that the script source cannot be exfiltrated by the MAIN world
+      // script. If it were to be possible, then a script on the web page can
+      // do the same, which is undesirable because of fingerprinting and script
+      // source secrecy.
+
+      let results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: funcExtractFilename,
+        world: "MAIN",
+      });
+      browser.test.assertEq(undefined, results[0].error?.message, "No error");
+      browser.test.assertDeepEq(
+        {
+          fileName: "<anonymous code>",
+          stack: "funcExtractFilename@<anonymous code>\n@<anonymous code>\n",
+        },
+        results[0].result,
+        "executeScript with world:MAIN & code should not leak the extension URL"
+      );
+
+      results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["file_leak_me.js"],
+        world: "MAIN",
+      });
+      browser.test.assertEq(undefined, results[0].error?.message, "No error");
+      browser.test.assertDeepEq(
+        {
+          fileName: "<anonymous code>",
+          stack: "fileExtractFilename@<anonymous code>\n@<anonymous code>\n",
+        },
+        results[0].result,
+        "executeScript with world:MAIN & file should not leak the extension URL"
+      );
+
+      // Same tests, but with world: "ISOLATED". Since the world is isolated,
+      // it does not really matter what the values are, but just to verify that
+      // the value is sane, check its value.
+      results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: funcExtractFilename,
+        world: "ISOLATED",
+      });
+      browser.test.assertEq(undefined, results[0].error?.message, "No error");
+      browser.test.assertDeepEq(
+        {
+          fileName: "sandbox eval code",
+          stack: `funcExtractFilename@sandbox eval code
+@sandbox eval code
+Async*background@${BACKGROUND_SCRIPT_URL}
+async*@${BACKGROUND_SCRIPT_URL}
+`
+        },
+        results[0].result,
+        "executeScript with world:ISOLATED & code may expose extension URLs"
+      );
+
+      results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["file_leak_me.js"],
+        world: "ISOLATED",
+      });
+      browser.test.assertEq(undefined, results[0].error?.message, "No error");
+      browser.test.assertDeepEq(
+        {
+          fileName: location.origin + "/file_leak_me.js",
+          stack: `fileExtractFilename@${location.origin}/file_leak_me.js
+@${location.origin}/file_leak_me.js
+Async*background@${BACKGROUND_SCRIPT_URL}
+async*@${BACKGROUND_SCRIPT_URL}
+`,
+        },
+        results[0].result,
+        "executeScript with world:ISOLATED & file may expose extension URLs"
+      );
+
+      browser.test.notifyPass("background-done");
+    },
+    files: {
+      "file_leak_me.js": function fileExtractFilename() {
+        let error = new Error();
+        return {
+          fileName: error.fileName,
+          // We only care about file names, so strip line and column numbers.
+          stack: error.stack.replaceAll(/:\d+:\d+/g, ""),
+        };
+      },
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_simple_inline_script.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("background-done");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
 add_task(async function test_executeScript_invalid_world() {
   let extension = makeExtension({
     async background() {

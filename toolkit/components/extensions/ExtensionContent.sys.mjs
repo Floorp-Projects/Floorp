@@ -292,6 +292,18 @@ defineLazyGetter(ExtensionChild.prototype, "dynamicScripts", function () {
   return new ScriptCache({ hasReturnValue: true }, this);
 });
 
+defineLazyGetter(ExtensionChild.prototype, "anonStaticScripts", function () {
+  // TODO bug 1651557: Use dynamic name to improve debugger experience.
+  const filename = "<anonymous code>";
+  return new ScriptCache({ filename, hasReturnValue: false }, this);
+});
+
+defineLazyGetter(ExtensionChild.prototype, "anonDynamicScripts", function () {
+  // TODO bug 1651557: Use dynamic name to improve debugger experience.
+  const filename = "<anonymous code>";
+  return new ScriptCache({ filename, hasReturnValue: true }, this);
+});
+
 defineLazyGetter(ExtensionChild.prototype, "userCSS", function () {
   return new CSSCache(Ci.nsIStyleSheetService.USER_SHEET, this);
 });
@@ -342,8 +354,15 @@ class Script {
       extension[this.cssOrigin === "user" ? "userCSS" : "authorCSS"];
     this.cssCodeCache =
       extension[this.cssOrigin === "user" ? "userCSSCode" : "authorCSSCode"];
-    this.scriptCache =
-      extension[matcher.wantReturnValue ? "dynamicScripts" : "staticScripts"];
+    if (this.world === "MAIN") {
+      this.scriptCache = matcher.wantReturnValue
+        ? extension.anonDynamicScripts
+        : extension.anonStaticScripts;
+    } else {
+      this.scriptCache = matcher.wantReturnValue
+        ? extension.dynamicScripts
+        : extension.staticScripts;
+    }
 
     /** @type {WeakSet<Document>} A set of documents injected into. */
     this.injectedInto = new WeakSet();
@@ -384,11 +403,12 @@ class Script {
       // To do so without being blocked by the web page's CSP, we convert
       // jsCode to a PrecompiledScript, which is then executed by the logic
       // that is usually used for file-based execution.
-      // TODO bug 1900410: Replace data:-URL with something that does not
-      // reveal the extension source to the web page.
       const dataUrl = `data:text/javascript,${encodeURIComponent(jsCode)}`;
       const options = {
         hasReturnValue: this.matcher.wantReturnValue,
+        // Redact the file name to hide actual script content from web pages.
+        // TODO bug 1651557: Use dynamic name to improve debugger experience.
+        filename: "<anonymous code>",
       };
       // Note: this logic is similar to this.scriptCaches.get(...), but we are
       // not using scriptCaches because we don't want the URL to be cached.
@@ -646,6 +666,7 @@ class Script {
         this.jsCode,
         context.cloneScope,
         "latest",
+        // TODO bug 1651557: Use dynamic name to improve debugger experience.
         "sandbox eval code",
         1
       );
