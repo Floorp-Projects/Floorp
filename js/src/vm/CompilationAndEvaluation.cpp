@@ -184,10 +184,6 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
     return true;
   }
 
-  // Return true on any out-of-memory error or non-EOF-related syntax error, so
-  // our caller doesn't try to collect more buffered source.
-  bool result = true;
-
   using frontend::FullParseHandler;
   using frontend::ParseGoal;
   using frontend::Parser;
@@ -208,6 +204,9 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
     return false;
   }
 
+  // Warnings and errors during parsing shouldn't be reported.
+  fc.clearAutoReport();
+
   Parser<FullParseHandler, char16_t> parser(&fc, options, chars.get(), length,
                                             /* foldConstants = */ true,
                                             compilationState,
@@ -217,13 +216,13 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
     // return false so our caller knows to try to collect more buffered
     // source.
     if (parser.isUnexpectedEOF()) {
-      result = false;
+      return false;
     }
-
-    cx->clearPendingException();
   }
 
-  return result;
+  // Return true on any out-of-memory error or non-EOF-related syntax error, so
+  // our caller doesn't try to collect more buffered source.
+  return true;
 }
 
 class FunctionCompiler {
