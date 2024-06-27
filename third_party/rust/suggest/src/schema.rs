@@ -15,7 +15,7 @@ use sql_support::open_database::{self, ConnectionInitializer};
 ///     [`SuggestConnectionInitializer::upgrade_from`].
 ///    a. If suggestions should be re-ingested after the migration, call `clear_database()` inside
 ///       the migration.
-pub const VERSION: u32 = 19;
+pub const VERSION: u32 = 20;
 
 /// The current Suggest database schema.
 pub const SQL: &str = "
@@ -26,17 +26,16 @@ CREATE TABLE meta(
 
 CREATE TABLE keywords(
     keyword TEXT NOT NULL,
-    suggestion_id INTEGER NOT NULL REFERENCES suggestions(id) ON DELETE CASCADE,
-    full_keyword_id INTEGER NULL REFERENCES full_keywords(id) ON DELETE SET NULL,
+    suggestion_id INTEGER NOT NULL,
+    full_keyword_id INTEGER NULL,
     rank INTEGER NOT NULL,
     PRIMARY KEY (keyword, suggestion_id)
 ) WITHOUT ROWID;
 
 -- full keywords are what we display to the user when a (partial) keyword matches
--- The FK to suggestion_id makes it so full keywords get deleted when the parent suggestion is deleted.
 CREATE TABLE full_keywords(
     id INTEGER PRIMARY KEY,
-    suggestion_id INTEGER NOT NULL REFERENCES suggestions(id) ON DELETE CASCADE,
+    suggestion_id INTEGER NOT NULL,
     full_keyword TEXT NOT NULL
 );
 
@@ -45,7 +44,7 @@ CREATE TABLE prefix_keywords(
     keyword_suffix TEXT NOT NULL DEFAULT '',
     confidence INTEGER NOT NULL DEFAULT 0,
     rank INTEGER NOT NULL,
-    suggestion_id INTEGER NOT NULL REFERENCES suggestions(id) ON DELETE CASCADE,
+    suggestion_id INTEGER NOT NULL,
     PRIMARY KEY (keyword_prefix, keyword_suffix, suggestion_id)
 ) WITHOUT ROWID;
 
@@ -193,6 +192,41 @@ CREATE TABLE IF NOT EXISTS dismissed_suggestions (
                 )?;
                 Ok(())
             }
+            19 => {
+                // Clear the database since we're going to be dropping the keywords table and
+                // re-creating it
+                clear_database(tx)?;
+                tx.execute_batch(
+                    "
+-- Recreate the various keywords table to drop the foreign keys.
+DROP TABLE keywords;
+DROP TABLE full_keywords;
+DROP TABLE prefix_keywords;
+CREATE TABLE keywords(
+    keyword TEXT NOT NULL,
+    suggestion_id INTEGER NOT NULL,
+    full_keyword_id INTEGER NULL,
+    rank INTEGER NOT NULL,
+    PRIMARY KEY (keyword, suggestion_id)
+) WITHOUT ROWID;
+CREATE TABLE full_keywords(
+    id INTEGER PRIMARY KEY,
+    suggestion_id INTEGER NOT NULL,
+    full_keyword TEXT NOT NULL
+);
+CREATE TABLE prefix_keywords(
+    keyword_prefix TEXT NOT NULL,
+    keyword_suffix TEXT NOT NULL DEFAULT '',
+    confidence INTEGER NOT NULL DEFAULT 0,
+    rank INTEGER NOT NULL,
+    suggestion_id INTEGER NOT NULL,
+    PRIMARY KEY (keyword_prefix, keyword_suffix, suggestion_id)
+) WITHOUT ROWID;
+CREATE UNIQUE INDEX keywords_suggestion_id_rank ON keywords(suggestion_id, rank);
+                    ",
+                )?;
+                Ok(())
+            }
             _ => Err(open_database::Error::IncompatibleVersion(version)),
         }
     }
@@ -203,6 +237,9 @@ pub fn clear_database(db: &Connection) -> rusqlite::Result<()> {
     db.execute_batch(
         "
         DELETE FROM meta;
+        DELETE FROM keywords;
+        DELETE FROM full_keywords;
+        DELETE FROM prefix_keywords;
         DELETE FROM suggestions;
         DELETE FROM icons;
         DELETE FROM yelp_subjects;

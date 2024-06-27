@@ -423,6 +423,7 @@ pub mod test_utils {
         pub fn assert_schema_matches_new_database(&self) {
             let db = self.open();
             let new_db = open_memory_database(&self.connection_initializer).unwrap();
+
             let table_names = get_table_names(&db);
             let new_db_table_names = get_table_names(&new_db);
             let extra_tables = Vec::from_iter(table_names.difference(&new_db_table_names));
@@ -433,12 +434,29 @@ pub mod test_utils {
             if !new_db_extra_tables.is_empty() {
                 panic!("Extra tables only present in new database: {new_db_extra_tables:?}");
             }
-
             for table_name in table_names {
                 assert_eq!(
                     get_table_sql(&db, &table_name),
                     get_table_sql(&new_db, &table_name),
                     "sql differs for table: {table_name}",
+                );
+            }
+
+            let index_names = get_index_names(&db);
+            let new_db_index_names = get_index_names(&new_db);
+            let extra_index = Vec::from_iter(index_names.difference(&new_db_index_names));
+            if !extra_index.is_empty() {
+                panic!("Extra indexes not present in new database: {extra_index:?}");
+            }
+            let new_db_extra_index = Vec::from_iter(new_db_index_names.difference(&index_names));
+            if !new_db_extra_index.is_empty() {
+                panic!("Extra indexes only present in new database: {new_db_extra_index:?}");
+            }
+            for index_name in index_names {
+                assert_eq!(
+                    get_index_sql(&db, &index_name),
+                    get_index_sql(&new_db, &index_name),
+                    "sql differs for index: {index_name}",
                 );
             }
         }
@@ -463,6 +481,26 @@ pub mod test_utils {
         conn.query_row_and_then(
             "SELECT sql FROM sqlite_master WHERE name = ? AND type='table'",
             (&table_name,),
+            |row| row.get::<_, String>(0),
+        )
+        .unwrap()
+    }
+
+    fn get_index_names(conn: &Connection) -> HashSet<String> {
+        conn.query_rows_and_then(
+            "SELECT name FROM sqlite_master WHERE type='index'",
+            (),
+            |row| row.get(0),
+        )
+        .unwrap()
+        .into_iter()
+        .collect()
+    }
+
+    fn get_index_sql(conn: &Connection, index_name: &str) -> String {
+        conn.query_row_and_then(
+            "SELECT sql FROM sqlite_master WHERE name = ? AND type='index'",
+            (&index_name,),
             |row| row.get::<_, String>(0),
         )
         .unwrap()

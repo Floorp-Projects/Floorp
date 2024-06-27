@@ -221,14 +221,14 @@ warp = { git = "https://github.com/seanmonstar/warp", rev = "9d081461ae1167eb321
 malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
-relevancy = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
-suggest = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "3ca067683c7546e34bc8cdbe820fbe8e4089939a" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
+relevancy = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
+suggest = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
 
 # Patch mio 0.8.8 to use windows-sys 0.52 (backport https://github.com/tokio-rs/mio/commit/eea9e3e0c469480e5c59c01e6c3c7e5fd88f0848)
 mio_0_8 = { package = "mio", git = "https://github.com/glandium/mio", rev = "9a2ef335c366044ffe73b1c4acabe50a1daefe05" }
