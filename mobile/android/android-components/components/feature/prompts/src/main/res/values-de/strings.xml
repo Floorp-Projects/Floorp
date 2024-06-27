@@ -25,9 +25,9 @@
     <string name="mozac_feature_prompt_password_hint">Passwort</string>
 
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">Nicht speichern</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">Nicht speichern</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Nicht jetzt</string>
+    <string name="mozac_feature_prompt_dont_save_2">Nicht jetzt</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Nie speichern</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -35,27 +35,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Speichern</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">Nicht aktualisieren</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">Nicht aktualisieren</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Nicht jetzt</string>
+    <string name="mozac_feature_prompt_dont_update_2">Nicht jetzt</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Aktualisieren</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">Das Passwortfeld darf nicht leer bleiben</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">Das Passwortfeld darf nicht leer bleiben</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Passwort eingeben</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">Passwort eingeben</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Zugangsdaten konnten nicht gespeichert werden</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">Zugangsdaten konnten nicht gespeichert werden</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Passwort kann nicht gespeichert werden</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">Passwort kann nicht gespeichert werden</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Diese Zugangsdaten speichern?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">Diese Zugangsdaten speichern?</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Passwort speichern?</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">Passwort speichern?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Diese Zugangsdaten aktualisieren?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">Diese Zugangsdaten aktualisieren?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Passwort aktualisieren?</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">Passwort aktualisieren?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Benutzernamen zum gespeicherten Passwort hinzufügen?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -108,29 +108,45 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Zeit einstellen</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Zugangsdaten verwalten</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">Zugangsdaten verwalten</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Passwörter verwalten</string>
+    <string name="mozac_feature_prompts_manage_logins_2">Passwörter verwalten</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Vorgeschlagene Zugangsdaten ausklappen</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Vorgeschlagene Zugangsdaten ausklappen</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Gespeicherte Passwörter ausklappen</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Gespeicherte Passwörter ausklappen</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Vorgeschlagene Zugangsdaten einklappen</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Vorgeschlagene Zugangsdaten einklappen</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Gespeicherte Passwörter einklappen</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">Gespeicherte Passwörter einklappen</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Vorgeschlagene Zugangsdaten</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">Vorgeschlagene Zugangsdaten</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Gespeicherte Passwörter</string>
+    <string name="mozac_feature_prompts_saved_logins_2">Gespeicherte Passwörter</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">Starkes Passwort vorschlagen</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">Starkes Passwort vorschlagen</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">Starkes Passwort vorschlagen</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">Ein starkes Passwort verwenden</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">Verwenden Sie ein starkes Passwort: %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">Starkes Passwort verwenden?</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Schütze deine Konten, indem du ein starkes, zufällig generiertes Passwort verwendest. Erhalten Sie schnellen Zugriff auf Ihre Passwörter, indem Sie sie in Ihrem Konto speichern.</string>
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">Passwort verwenden</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">Nicht jetzt</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">Passwort gespeichert</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">Passwort aktualisiert</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Daten erneut an diese Website senden?</string>
@@ -142,42 +158,42 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Kreditkarte auswählen</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">Kreditkarte auswählen</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Eine gespeicherte Karte verwenden</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">Eine gespeicherte Karte verwenden</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Vorgeschlagene Kreditkarten ausklappen</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Vorgeschlagene Kreditkarten ausklappen</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Gespeicherte Karten ausklappen</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Gespeicherte Karten ausklappen</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Vorgeschlagene Kreditkarten einklappen</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Vorgeschlagene Kreditkarten einklappen</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Gespeicherte Karten einklappen</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Gespeicherte Karten einklappen</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">Kreditkarten verwalten</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Kreditkarten verwalten</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Karten verwalten</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">Karten verwalten</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Soll diese Karte sicher gespeichert werden?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Ablaufdatum der Karte aktualisieren?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Die Kartennummer wird verschlüsselt. Der Sicherheitscode wird nicht gespeichert.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">Die Kartennummer wird verschlüsselt. Der Sicherheitscode wird nicht gespeichert.</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s verschlüsselt Ihre Kartennummer. Ihr Sicherheitscode wird nicht gespeichert.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s verschlüsselt Ihre Kartennummer. Ihr Sicherheitscode wird nicht gespeichert.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Adresse auswählen</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">Vorgeschlagene Adressen ausklappen</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Vorgeschlagene Adressen ausklappen</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Gespeicherte Adressen ausklappen</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Gespeicherte Adressen ausklappen</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">Vorgeschlagene Adressen einklappen</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Vorgeschlagene Adressen einklappen</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Gespeicherte Adressen einklappen</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">Gespeicherte Adressen einklappen</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Adressen verwalten</string>
 
