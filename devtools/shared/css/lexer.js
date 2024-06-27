@@ -92,7 +92,7 @@ class InspectorCSSParserWrapper {
           this.#eofCharacters =
             this.#eofCharacters | EEOFCHARACTERS_DROPBACKSLASH;
         }
-        if (text[0] !== lastChar) {
+        if (text[0] !== lastChar || text.length === 1) {
           this.#eofCharacters =
             this.#eofCharacters |
             (text[0] === `"`
