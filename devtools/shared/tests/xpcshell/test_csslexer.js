@@ -261,6 +261,9 @@ add_task(function test_lexer_eofchar() {
     // doesn't cause an assertion trying to strip a backslash from the
     // end of an empty string.
     ["'\\", "\\'", ""],
+    // Check single-char quotes
+    [`"`, `""`],
+    [`'`, `''`],
   ];
 
   const test = (cssText, expectedAppend, argText) => {
