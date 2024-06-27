@@ -2,4 +2,6 @@
 <resources>
     <string name="mozac_feature_customtabs_exit_button">ወደ ቀዳሚው መተግበሪያ ተመለስ</string>
     <string name="mozac_feature_customtabs_share_link">አገናኝ አጋራ</string>
+    <!-- Content description (not visible, for screen readers etc.): Description of the refresh button in the Custom Tabs toolbar -->
+    <string name="mozac_feature_customtabs_refresh_button">አድስ</string>
 </resources>
