@@ -3864,9 +3864,10 @@ impl<'ctx> CoreStreamData<'ctx> {
                 device_layout
             );
 
-            // Simple case of stereo output only, map to the stereo pair (that might not be the first two channels)
-            if !self.has_input()
-                && self.output_stream_params.channels() == 2
+            // Simple case of stereo output, map to the stereo pair (that might not be the first
+            // two channels). Fall back to regular mixing if this fails.
+            let mut maybe_need_mixer = true;
+            if self.output_stream_params.channels() == 2
                 && self.output_stream_params.layout() == ChannelLayout::STEREO
             {
                 let layout = AudioChannelLayout {
@@ -3886,13 +3887,16 @@ impl<'ctx> CoreStreamData<'ctx> {
                         "AudioUnitSetProperty/output/kAudioUnitProperty_AudioChannelLayout rv={}",
                         r
                     );
-                    return Err(Error::error());
                 }
-            } else {
+                maybe_need_mixer = r != NO_ERR;
+            }
+
+            if maybe_need_mixer {
                 // The mixer will be set up when
-                // 0. not playing simply stereo
+                // 0. not playing simply stereo, or failing to set the channel layout to the stereo
+                //    pair
                 // 1. using aggregate device whose input device has output channels
-                // 2. output device has more channels than we need, and stream isn't simply mono or stereo
+                // 2. output device has more channels than we need, and stream isn't simply stereo
                 // 3. output device has different layout than the one we have
                 self.mixer = if self.output_dev_desc.mChannelsPerFrame
                     != self.output_stream_params.channels()
