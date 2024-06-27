@@ -1,6 +1,114 @@
 {
   "data": [
     {
+      "schema": 1719240777384,
+      "derHash": "OygSHYmF4trfICnFPyMgB/DBnseIZUssK6rr5QQZsNU=",
+      "subject": "CN=Certum EV TLS G2 E39 CA,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlBMMSEwHwYDVQQKDBhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xIDAeBgNVBAMMF0NlcnR1bSBFViBUTFMgRzIgRTM5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8788872cc2c2ba1fdd0a26900d3fdf50549df7816ae3cdcb7fbdd22be8323193",
+        "size": 1203,
+        "filename": "6U5bo8jkX6murfunyMH4g3qaK357PWrqLEjcX_m3tpI=.pem",
+        "location": "security-state-staging/intermediates/e6aa27d0-4364-4394-abac-5d8502ee06c7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "6U5bo8jkX6murfunyMH4g3qaK357PWrqLEjcX/m3tpI=",
+      "crlite_enrolled": false,
+      "id": "8d80070d-2556-4f79-92db-bd7877908f9b",
+      "last_modified": 1719241031587
+    },
+    {
+      "schema": 1719240777081,
+      "derHash": "okjwTFUppM0drsqBd7dUZTBiXjAYvMWlP2R/n1h0l7E=",
+      "subject": "CN=Certum OV TLS G2 E39 CA,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlBMMSEwHwYDVQQKDBhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xIDAeBgNVBAMMF0NlcnR1bSBPViBUTFMgRzIgRTM5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "38e7bdab68b1b662719c3a2cc9cd49b1cb8d12879f04b627e929698d4be4f6d0",
+        "size": 1203,
+        "filename": "WQgkpYHZ4_ke9o09TUD5rfeh90R_IGyqS4SlD1DdLTA=.pem",
+        "location": "security-state-staging/intermediates/99ef59f5-3213-4066-b1ef-46e5a2296d66.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "WQgkpYHZ4/ke9o09TUD5rfeh90R/IGyqS4SlD1DdLTA=",
+      "crlite_enrolled": false,
+      "id": "0feaaa20-7e8d-465f-9f42-10f5ad8023dd",
+      "last_modified": 1719241031585
+    },
+    {
+      "schema": 1719240776746,
+      "derHash": "UgLV8FBcabL3ttotFdLdYVFcY5WKkMBaI9mozq/e2/o=",
+      "subject": "CN=Certum DV TLS G2 E39 CA,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlBMMSEwHwYDVQQKDBhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xIDAeBgNVBAMMF0NlcnR1bSBEViBUTFMgRzIgRTM5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "443bf4f46b3a2720d0ba9bbc784a03b12825dc517feed3a95b166c4794e74e17",
+        "size": 1203,
+        "filename": "57pZuOuTBAH4ZNkXO7JX1139eZKRYljwItM3QdLng30=.pem",
+        "location": "security-state-staging/intermediates/4e119efc-90f9-4a24-b230-22835d4c6be3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "57pZuOuTBAH4ZNkXO7JX1139eZKRYljwItM3QdLng30=",
+      "crlite_enrolled": false,
+      "id": "74fa6f67-9de7-446a-9cfa-8f60143dac27",
+      "last_modified": 1719241031582
+    },
+    {
+      "schema": 1719240776426,
+      "derHash": "9UziHqD3lUjxIBphkEnKFfBl5Jpp8m+5zxKCx+7PnEw=",
+      "subject": "CN=Certum OV TLS G2 R39 CA,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlBMMSEwHwYDVQQKDBhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xIDAeBgNVBAMMF0NlcnR1bSBPViBUTFMgRzIgUjM5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "025a5f58b8cfb2596f4551750c207634bddc59370b8bd66b0adcbb84604b3a3b",
+        "size": 2353,
+        "filename": "SoFCm4qoQgj2h7VZkPZuglKI1-wTCs4imvCo8F0QrIU=.pem",
+        "location": "security-state-staging/intermediates/29843c12-2399-4474-8b87-d418fff918a4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "SoFCm4qoQgj2h7VZkPZuglKI1+wTCs4imvCo8F0QrIU=",
+      "crlite_enrolled": false,
+      "id": "123b22a2-690d-4c2f-8f2d-2ee61a9c3c8a",
+      "last_modified": 1719241031580
+    },
+    {
+      "schema": 1719240775977,
+      "derHash": "Rzbx7PJqBDy02PlNqDAuqeRfPTEQSPOkANAa7tHplEQ=",
+      "subject": "CN=Certum EV TLS G2 R39 CA,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlBMMSEwHwYDVQQKDBhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xIDAeBgNVBAMMF0NlcnR1bSBFViBUTFMgRzIgUjM5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9d083a16fa7d9b69b78a9e6ada088e74968b98d204bc40cb5af8c3e9a7c36f2e",
+        "size": 2353,
+        "filename": "gqB1V0MFQpiBCTz-E-8NcNvy_Y4bUkg-ByYHikZE2W4=.pem",
+        "location": "security-state-staging/intermediates/0d5d1135-f610-40be-a14a-198a28fe4fc8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "gqB1V0MFQpiBCTz+E+8NcNvy/Y4bUkg+ByYHikZE2W4=",
+      "crlite_enrolled": false,
+      "id": "dfd88f35-4cfa-456a-9035-618ad39564cf",
+      "last_modified": 1719241031577
+    },
+    {
+      "schema": 1719240777676,
+      "derHash": "g8Clp2hEyEDfr4IP/QKt9lc6JoI+9q91ijOEoKwEQIM=",
+      "subject": "CN=Certum DV TLS G2 R39 CA,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlBMMSEwHwYDVQQKDBhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xIDAeBgNVBAMMF0NlcnR1bSBEViBUTFMgRzIgUjM5IENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a075440d4abf1fe6960031e014f1f2ef474a3ced9f32176af2d37a46b2747283",
+        "size": 2353,
+        "filename": "92oK29_qv5N8xocT_H9kxxVqihg3OD2rlooJW9f7L3Y=.pem",
+        "location": "security-state-staging/intermediates/002d327a-0c0a-4998-be5e-61c0c8e93c07.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "92oK29/qv5N8xocT/H9kxxVqihg3OD2rlooJW9f7L3Y=",
+      "crlite_enrolled": false,
+      "id": "d2b187ad-312a-424f-976b-3b4bff6ae87d",
+      "last_modified": 1719241031574
+    },
+    {
       "schema": 1719024776570,
       "derHash": "srAvm5G4z0vIm6HgAOYDBrACrqiiTAiy1/Pdi46trqU=",
       "subject": "CN=TLC ECC EV SSL CA 2,O=泰尔认证中心有限公司,C=CN",
@@ -31213,5 +31321,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1719154633250
+  "timestamp": 1719241031587
 }

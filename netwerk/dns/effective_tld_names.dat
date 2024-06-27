@@ -13824,7 +13824,7 @@ sch.so
 // Submitted by Bohdan Dub <support@hostfly.com.ua>
 ie.ua
 
-// HostyHosting (hostyhosting.com)
+// HostyHosting (https://hostyhosting.com)
 hostyhosting.io
 
 // Hypernode B.V. : https://www.hypernode.com/
@@ -14853,6 +14853,11 @@ cloudsite.builders
 myradweb.net
 servername.us
 
+// Raidboxes GmbH : https://raidboxes.de
+// Submitted by Auke Tembrink <hostmaster@raidboxes.de>
+myrdbx.io
+site.rb-hosting.io
+
 // Redgate Software: https://red-gate.com
 // Submitted by Andrew Farries <andrew.farries@red-gate.com>
 instances.spawn.cc
@@ -15437,7 +15442,7 @@ beta.tailscale.net
 ts.net
 *.c.ts.net
 
-// TASK geographical domains (www.task.gda.pl/uslugi/dns)
+// TASK geographical domains (https://www.task.gda.pl/uslugi/dns)
 gda.pl
 gdansk.pl
 gdynia.pl
@@ -15484,7 +15489,7 @@ azimuth.network
 tlon.network
 
 // Tor Project, Inc. : https://torproject.org
-// Submitted by Antoine Beaupré <anarcat@torproject.org
+// Submitted by Antoine Beaupré <anarcat@torproject.org>
 torproject.net
 pages.torproject.net
 

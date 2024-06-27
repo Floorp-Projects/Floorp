@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1719360303260,
+      "status": "planned",
+      "version": "129",
+      "browserid": "edge",
+      "id": "456f0e06-6dca-4c51-8222-af64d27324e0",
+      "last_modified": 1719410204834
+    },
+    {
+      "name": "Edge",
+      "schema": 1718956116149,
+      "status": "beta",
+      "version": "127",
+      "browserid": "edge",
+      "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
+      "last_modified": 1719410204831
+    },
+    {
+      "name": "Edge",
+      "schema": 1719360303190,
+      "status": "nightly",
+      "version": "128",
+      "browserid": "edge",
+      "id": "edad0482-a612-4019-a601-53dc349514b8",
+      "last_modified": 1719410204828
+    },
+    {
       "name": "Safari",
       "schema": 1718755502911,
       "status": "current",
@@ -172,15 +199,6 @@
       "last_modified": 1718606078039
     },
     {
-      "name": "Edge",
-      "schema": 1717286706296,
-      "status": "planned",
-      "version": "128",
-      "browserid": "edge",
-      "id": "edad0482-a612-4019-a601-53dc349514b8",
-      "last_modified": 1718005312987
-    },
-    {
       "name": "Node.js",
       "schema": 1717286706438,
       "status": "esr",
@@ -197,15 +215,6 @@
       "browserid": "deno",
       "id": "ea6c817d-237b-498b-964e-a8ca4668580a",
       "last_modified": 1718005312981
-    },
-    {
-      "name": "Edge",
-      "schema": 1717286706227,
-      "status": "nightly",
-      "version": "127",
-      "browserid": "edge",
-      "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
-      "last_modified": 1718005312971
     },
     {
       "name": "Node.js",
@@ -298,5 +307,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1718777113320
+  "timestamp": 1719410204834
 }
