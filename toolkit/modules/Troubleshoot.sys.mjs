@@ -1087,7 +1087,14 @@ var dataProviders = {
       "resource://services-settings/remote-settings.sys.mjs"
     );
 
-    const inspected = await RemoteSettings.inspect({ localOnly: true });
+    let inspected;
+    try {
+      inspected = await RemoteSettings.inspect({ localOnly: true });
+    } catch (error) {
+      console.error(error);
+      done({ isSynchronizationBroken: true, history: { "settings-sync": [] } });
+      return;
+    }
 
     // Show last check in standard format.
     inspected.lastCheck = inspected.lastCheck
