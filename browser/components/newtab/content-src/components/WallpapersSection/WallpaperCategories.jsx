@@ -59,7 +59,7 @@ export class _WallpaperCategories extends React.PureComponent {
       case "photographs":
         fluent_id = "newtab-wallpaper-category-title-photographs";
         break;
-      case "abstract":
+      case "abstracts":
         fluent_id = "newtab-wallpaper-category-title-abstract";
         break;
       case "solid-colors":
