@@ -20,55 +20,64 @@ Test that same origin redirect does not cause endless loop with https-first enab
 
   SimpleTest.waitForExplicitFinish();
 
-  const redirectCodes = ["301", "302","303","307"];
+  let testQueries = [
+    // Those are clear downgrades. Need to load http site
+    { query: "downgrade_redirect_meta", result: "http" },
+    { query: "downgrade_redirect_js", result: "http" },
+    { query: "downgrade_redirect_http=301", result: "http" },
+    { query: "downgrade_redirect_http=302", result: "http" },
+    { query: "downgrade_redirect_http=303", result: "http" },
+    { query: "downgrade_redirect_http=307", result: "http" },
+    // from here it isn't required to downgrade. Could be upgraded again
+    { query: "redirect_meta", result: "https" },
+    { query: "redirect_js", result: "https" },
+    { query: "redirect_http=301", result: "https" },
+    { query: "redirect_http=302", result: "https" },
+    { query: "redirect_http=303", result: "https" },
+    { query: "redirect_http=307", result: "https" },
+  ];
   let currentTest = 0;
+  // do each test two time. One time starting with https:// one time with http://
+  let currentTestStartWithHttps = false;
   let testWin;
   window.addEventListener("message", receiveMessage);
 
   // receive message from loaded site verifying the scheme of
   // the loaded document.
   async function receiveMessage(event) {
-    let currentRedirectCode = redirectCodes[currentTest];
-    is(event.data.result,
-       "scheme-http",
-       "same-origin redirect results in 'http' for " + currentRedirectCode
+    let currentTestParams = testQueries[Math.floor(currentTest / 2)];
+    let expectedURI;
+    if(currentTestParams.result == "https") {
+      expectedURI = "https://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs?" + currentTestParams.query;
+    } else {
+      expectedURI = "http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?" + currentTestParams.query;
+    }
+    is(`scheme-${currentTestParams.result}-${expectedURI}`,
+       event.data.result,
+       `${currentTest}: redirect results in '${currentTestParams.result}' for ${expectedURI}`
     );
     testWin.close();
     await SpecialPowers.removePermission(
       "https-only-load-insecure",
       "http://example.com"
     );
-    if (++currentTest < redirectCodes.length) {
+    // each test gets run starting with http:// and https://. Therefore *2 
+    if (++currentTest < 2 * testQueries.length) {
+      // start next case
       startTest();
       return;
     }
+    // cleanup
     window.removeEventListener("message", receiveMessage);
-    window.addEventListener("message", receiveMessageForDifferentPathTest);
-    testDifferentPath();
-  }
-
-  async function receiveMessageForDifferentPathTest(event) {
-    is(event.data.result,
-       "scheme-https",
-       "scheme should be https when the path is different"
-    );
-    testWin.close();
-    window.removeEventListener("message", receiveMessageForDifferentPathTest);
     SimpleTest.finish();
   }
 
   async function startTest() {
-    const currentCode = redirectCodes[currentTest];
+    const currentTestParams = testQueries[Math.floor(currentTest / 2)];
+    const scheme = currentTest % 2 == 0 ? "https" : "http";
     // Load an http:// window which gets upgraded to https://
     let uri =
-      `http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?${currentCode}`;
-    testWin = window.open(uri);
-  }
-
-  async function testDifferentPath() {
-    // Load an https:// window which gets downgraded to http://
-    let uri =
-      `https://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?downgrade`;
+      `${scheme}://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?${currentTestParams.query}`;
     testWin = window.open(uri);
   }
 
@@ -77,7 +86,6 @@ Test that same origin redirect does not cause endless loop with https-first enab
     ["dom.security.https_first", true],
     ["security.mixed_content.block_active_content", false],
     ["security.mixed_content.block_display_content", false],
-    ["dom.security.https_only_check_path_upgrade_downgrade_endless_loop", true],
   ]}, startTest);
   </script>
 </body>
