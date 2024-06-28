@@ -102,7 +102,7 @@
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Pudete cunfigurà %1$s per apre autumaticamente i liami in d’altre appiecazioni.</string>
     <!-- Text for the positive action button -->
-    <string name="open_in_app_cfr_positive_button_text">Apre e preferenze</string>
+    <string name="open_in_app_cfr_positive_button_text">Apre i parametri</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ricusà</string>
 
@@ -119,9 +119,9 @@
 
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
-    <string name="camera_permissions_needed_message">Accessu richiestu à l’apparechju-fotò. Accidite à e preferenze d’Android, picchichjate Permessi, è dopu Permette.</string>
+    <string name="camera_permissions_needed_message">Accessu richiestu à l’apparechju-fotò. Accidite à i parametri d’Android, picchichjate Permessi, è dopu Permette.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
-    <string name="camera_permissions_needed_positive_button_text">Apre e preferenze</string>
+    <string name="camera_permissions_needed_positive_button_text">Apre i parametri</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Ricusà</string>
 
@@ -135,7 +135,7 @@
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
     <string name="tab_tray_inactive_onboarding_message">L’unghjette chì vo ùn avete micca viste dapoi duie settimane sò dispiazzate quì.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text">Disattivà in e preferenze</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Disattivà in i parametri</string>
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Chjusura autumatica dopu un mese ?</string>
@@ -158,8 +158,6 @@
 
     <!-- Shortcut action to open Passwords screen -->
     <string name="home_screen_shortcut_passwords">Parolle d’intesa</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Accurtatoghju per e parolle d’intesa</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -200,20 +198,20 @@
     <string name="browser_menu_refresh">Attualizà</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Piantà</string>
-    <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Moduli addiziunali</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Estensioni</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Amministrà l’estensioni</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Scopre d’altre estensioni</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Infurmazione nant’à u contu</string>
-    <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Nisunu modulu quì</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Aiutu</string>
     <!-- Browser menu button that sends a to a the what's new article -->
     <string name="browser_menu_whats_new">Ciò chì hè novu</string>
     <!-- Browser menu button that opens the settings menu -->
-    <string name="browser_menu_settings">Preferenze</string>
+    <string name="browser_menu_settings">Parametri</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Bibliuteca</string>
     <!-- Browser menu toggle that requests a desktop site -->
@@ -222,8 +220,8 @@
     <string name="browser_menu_open_in_regular_tab">Apre in un’unghjetta nurmale</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Aghjunghje à u screnu d’accolta</string>
-    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installà</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Aghjunghje à u screnu d’accolta…</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Risincrunizà</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -233,9 +231,13 @@
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Traduce a pagina</string>
     <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Arregistrà in una cullezzione…</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Arregistrà in una cullezzione</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Sparte</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Sparte…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Apre cù %1$s</string>
@@ -287,6 +289,24 @@
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">Arregistrà</string>
 
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Indettà sta pagina</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Mudificà l’indetta</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Arregistrà cum’è PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Attivà u modu di lettura</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Disattivà u modu di lettura</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Traduce a pagina…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Tradutta in %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Stampà…</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">Nisuna estensione dispunibule</string>
@@ -318,7 +338,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Numerizà</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Preferenze di u mutore di ricerca</string>
+    <string name="search_shortcuts_engine_settings">Parametri di u mutore di ricerca</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Riempie da u preme’papei</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -336,7 +356,7 @@
     <string name="search_engine_suggestions_description">Ricercà direttamente da a barra d’indirizzu</string>
 
     <!-- Menu option in the search selector menu to open the search settings -->
-    <string name="search_settings_menu_item">Preferenze di ricerca</string>
+    <string name="search_settings_menu_item">Parametri di ricerca</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Sta volta, ricercà cù :</string>
@@ -383,8 +403,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Dichjarazione di cunfidenzialità di Firefox</string>
-    <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Sapene di più in a nostra dichjarazione di cunfidenzialità</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">A vostra prutezzione cunta per noi</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
@@ -453,7 +471,7 @@
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
-    <string name="settings">Preferenze</string>
+    <string name="settings">Parametri</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Generale</string>
     <!-- Preference category for all links about Fenix -->
@@ -577,7 +595,9 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Contu</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Barra d’attrezzi</string>
+    <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Barra d’attrezzi</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Pusizione di a barra d’indirizzu</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -620,7 +640,7 @@
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
     <string name="preferences_search_synced_tabs">Ricercà in l’unghjette sincrunizate</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Preferenze di u contu</string>
+    <string name="preferences_account_settings">Parametri di u contu</string>
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Compie autumaticamente l’indirizzi</string>
@@ -650,13 +670,8 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Chjusura di l’appiecazione per piglià i cambiamenti in contu…</string>
 
-    <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Moduli addiziunali</string>
-
     <!-- Preference for extensions -->
     <string name="preferences_extensions">Estensioni</string>
-    <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Installà un modulu addiziunale da un schedariu</string>
     <!-- Preference for installing a local extension -->
     <string name="preferences_install_local_extension">Installà un’estensione da un schedariu</string>
     <!-- Preference for notifications -->
@@ -673,19 +688,16 @@
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Ozzionale</string>
 
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Fighjà è cambià i dati di i siti web</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Squassà u situ web</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Permette per tutti i siti</string>
 
     <!-- The subtitle for the allow for all sites preference toggle -->
     <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">S’è vo fate cunfidenza à st’estensione, pudete cuncede u permessu nant’à tutti i siti web.</string>
 
+    <!-- The text shown when an extension does not require permissions -->
+    <string name="addons_does_not_require_permissions">St’estensione ùn richiede alcunu permessu.</string>
+
     <!-- Add-on Preferences -->
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Cullezzione persunalizata di moduli addiziunale</string>
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_extension_collection">Cullezzione persunalizata d’estensioni</string>
     <!-- Button caption to confirm the add-on collection configuration -->
@@ -696,9 +708,6 @@
     <string name="customize_addon_collection_hint">Nome di a cullezzione</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Prupietariu di a cullezzione (Id. d’utilizatore)</string>
-
-    <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Cullezzione di moduli addiziunale mudificata. Chjusura di l’appiecazione per piglialla in contu…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
     <string name="toast_customize_extension_collection_done">Cullezzione d’estensioni mudificata. Chjusura di l’appiecazione per piglià i cambiamenti in contu…</string>
@@ -759,35 +768,23 @@
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Scuprite d’altri sfonduli di screnu</string>
 
     <!-- Add-ons general availability nimbus message-->
-    <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Novi moduli addiziunali dispunibule</string>
     <!-- Title of the Nimbus message for extension general availability-->
     <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Nove estensioni dispunibule</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Scuprite più di 100 estensioni nove chì vi permettenu di persunalizà Firefox.</string>
-    <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Esplurà i moduli addiziunali</string>
 
     <!-- Button text of the Nimbus message for extensions general availability. -->
     <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Esplurà l’estensioni</string>
 
     <!-- Extension process crash dialog to user -->
-    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">I moduli addiziunali sò disattivati timpurariamente</string>
     <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
     <string name="extension_process_crash_dialog_title">L’estensioni sò disattivate timpurariamente</string>
-    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Certi moduli addiziunale anu fermatu di funziunà, rindendu u vostru sistema instabile. %1$s hà pruvatu, senza successu, di rilancialli.\n\nSti moduli addiziunale ùn seranu micca rilanciati durante a sessione attuale.\n\nCaccialli o disattivalli puderia currege stu prublema.</string>
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
     <string name="extension_process_crash_dialog_message">Certe estensioni anu fermatu di funziunà, rindendu u vostru sistema instabile. %1$s hà pruvatu, senza successu, di rilancialle.\n\nSt’estensioni ùn seranu micca rilanciate durante a sessione attuale.\n\nCaccialle o disattivalle puderia currege stu prublema.</string>
-    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Pruvà di rilancià i moduli</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
     <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Pruvà di rilancià l’estensioni</string>
-    <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Cuntinuà cù i moduli disattivati</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
     <string name="extension_process_crash_dialog_disable_extensions_button_text">Cuntinuà cù l’estensioni disattivate</string>
@@ -805,8 +802,6 @@
     <string name="preferences_sync_history">Cronolugia</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Indette</string>
-    <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificazioni di cunnessione</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Parolle d’intesa</string>
     <!-- Preference for syncing tabs -->
@@ -833,9 +828,6 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s nant’à %2$s %3$s</string>
 
-    <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Carte bancarie</string>
-
     <!-- Preference for syncing payment methods -->
     <string name="preferences_sync_credit_cards_2">Metode di pagamentu</string>
     <!-- Preference for syncing addresses -->
@@ -850,6 +842,14 @@
     <string name="fxa_tab_received_notification_name">Unghjetta ricevuta</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Unghjetta pruvinendu da %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">%2$d unghjette chjose nant’à %1$s</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Affissà l’unghjette chjose pocu fà</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -909,9 +909,15 @@
     <string name="preference_gestures_dynamic_toolbar">Sfilà per piattà a barra d’attrezzi</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Fà sfilà a barra d’attrezzi lateralmente per cambià d’unghjetta</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Fà sfilà a barra d’attrezzi lateralmente per cambià d’unghjetta</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Fà sfilà a barra d’attrezzi insù per apre unghjette</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Sfilà per piattà a barra d’indirizzu è a barra d’attrezzi</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Fà sguillà a barra d’indirizzu lateralmente per cambià d’unghjetta</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -931,7 +937,7 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Nova unghjetta</string>
     <!-- Settings Page Title -->
-    <string name="settings_title">Preferenze</string>
+    <string name="settings_title">Parametri</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Chjode</string>
@@ -1066,9 +1072,9 @@
     <!-- Text shown in the tabs tray inactive tabs section -->
     <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Chjose pocu fà</string>
     <!-- Text shown in the menu to view account settings -->
-    <string name="tab_tray_menu_account_settings">Preferenze di u contu</string>
+    <string name="tab_tray_menu_account_settings">Parametri di u contu</string>
     <!-- Text shown in the menu to view tab settings -->
-    <string name="tab_tray_menu_tab_settings">Preferenze di l’unghjette</string>
+    <string name="tab_tray_menu_tab_settings">Parametri di l’unghjette</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Chjode tutte l’unghjette</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
@@ -1236,11 +1242,11 @@
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">Andà à e preferenze</string>
+    <string name="phone_feature_go_to_settings">Andà à i parametri</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
-    <string name="quick_settings_sheet">Panellu d’accessu rapidu à e preferenze</string>
+    <string name="quick_settings_sheet">Panellu d’accessu rapidu à i parametri</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Ricumandatu</string>
 
@@ -1425,6 +1431,22 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Chjode l’unghjette private</string>
 
+    <!-- Microsuverys -->
+    <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Aiutateci à amendà a stampa in Firefox. Què piglia solu una stonda</string>
+    <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Site cuntenti di a stampa in Firefox ?</string>
+    <!-- Text for option one, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">Indifferente</string>
+    <!-- Text for option two, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">Assai infelice</string>
+    <!-- Text for option three, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">Infelice</string>
+    <!-- Text for option four, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_3" tools:ignore="UnusedResources">Felice</string>
+    <!-- Text for option five, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">Assai felice</string>
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">Chjode l’unghjette private ?</string>
 
@@ -1500,10 +1522,6 @@
     <string name="qr_scanner_dialog_invalid_ok">Vai</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Vulete veramente squassà %1$s ?</string>
-    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">A squassatura di st’unghjetta squasserà a cullezzione sana. Pudete creà nove cullezzioni à ogni mumentu.</string>
-    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_title">Squassà %1$s ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Squassà</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
@@ -1520,7 +1538,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Dimensione autumatica di e grafie</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">A dimensione di a grafia currispunderà à e vostre preferenze d’Android. Disattivate st’ozzione per amministrà a dimensione di a grafia.</string>
+    <string name="preference_accessibility_auto_size_summary">A dimensione di a grafia currispunderà à i vostri parametri d’Android. Disattivate st’ozzione per amministrà a dimensione di a grafia.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Squassà i dati di navigazione</string>
@@ -1624,7 +1642,7 @@
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
-    <string name="etp_settings">Preferenze di prutezzione</string>
+    <string name="etp_settings">Parametri di prutezzione</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Prutezzione rinfurzata contr’à u spiunagiu</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
@@ -1780,11 +1798,7 @@
     <string name="add_to_homescreen_description_2">Hè faciule d’aghjunghje stu situ nant’à u screnu d’accolta di u vostru apparechju per accedeci direttamente è navigà più prestu cum’è s’ella fussi un’appiecazione.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificazioni è parolle d’intesa</string>
-    <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords_2">Parolle d’intesa</string>
-    <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà l’identificazioni è e parolle d’intesa</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins_2">Arregistrà e parolle d’intesa</string>
     <!-- Preference option for asking to save passwords in Fenix -->
@@ -1801,46 +1815,27 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Riimpiete nomi d’utilizatore è parolle d’intesa in l’altre appiecazioni nant’à u vostru apparechju.</string>
 
-    <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aghjunghje un’identificazione di cunnessione</string>
-
     <!-- Preference option for adding a password -->
     <string name="preferences_logins_add_login_2">Aghjunghje una parolla d’intesa</string>
 
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincrunizà l’identificazioni</string>
-    <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins_2">Sincrunizà e parolle d’intesa</string>
-    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincrunizà l’identificazioni di cunnessione trà l’apparechji</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices_2">Sincrunizà e parolle d’intesa trà l’apparechji</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificazioni di cunnessione arregistrate</string>
     <!-- Preference to access list of saved passwords -->
     <string name="preferences_passwords_saved_logins_2">Parolle d’intesa arregistrate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">L’identificazioni di cunnessione chì voi arregistrate o sincrunizate cù %s seranu affissate quì.</string>
-    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text_2">E parolle d’intesa chì vo arregistrate o sincrunizate cù %s seranu affissate quì. Tutte e parolle d’intesa chì vo arregistrate sò cifrate.</string>
-    <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Sapene di più nant’à Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Sapene di più nant’à a sincrunizazione</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eccezzioni</string>
-    <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">L’identificazioni è parolle d’intesa chì ùn sò micca arregistrate seranu affissate quì.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_empty_2">%s ùn arregistrerà micca e parolle d’intesa per i siti allistinati quì.</string>
-    <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">L’identificazioni è parolle d’intesa ùn seranu micca arregistrate per sti siti.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
     <string name="preferences_passwords_exceptions_description_2">%s ùn arregistrerà micca e parolle d’intesa per sti siti.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Squassà tutte l’eccezzioni</string>
-    <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Ricercà identificazioni di cunnessione</string>
 
     <!-- Hint for search box in passwords list -->
     <string name="preferences_passwords_saved_logins_search_2">Ricercà parolle d’intesa</string>
@@ -1871,16 +1866,10 @@
     <string name="saved_login_reveal_password">Affissa a parolla d’intesa</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Piattà a parolla d’intesa</string>
-    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Spalancate per affissà l’identificazioni di cunnessione arregistrate</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
     <string name="logins_biometric_prompt_message_2">Spalancate per affissà e vostre parolle d’intesa arregistrate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Prutigite e vostre identificazioni di cunnessione è parolle d’intesa</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title_2">Prutigite e vostre parolle d’intesa arregistrate</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre identificazioni di cunnessione è parolle d’intesa arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message_2">Definite un dissegnu di chjuditura, un codice PIN o una parolla d’intesa per prutege e vostre parolle d’intesa arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1899,9 +1888,6 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Ultimu impiegu</string>
 
-    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Listinu di classificazione di l’identificazioni</string>
-
     <!-- Content description (not visible, for screen readers etc.) -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Listinu di classificazione di e parolle d’intesa</string>
 
@@ -1910,28 +1896,18 @@
     <string name="preferences_autofill">Riempiimentu autumaticu</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Indirizzi</string>
-    <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Carte bancarie</string>
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Metode di pagamentu</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà è riempie autumaticamente e carte</string>
-    <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards_2">Arregistrà è rinsignà e metode di pagamentu</string>
-    <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">I dati sò cifrati</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s cifra tutte e metode di pagamentu chì vo arregistrate</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincrunizate e carte trà i vostri apparechji</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sincrunizà e carte</string>
-    <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Aghjunghje una carta bancaria</string>
     <!-- Preference option for adding a card -->
     <string name="preferences_credit_cards_add_credit_card_2">Aghjunghje una carta</string>
-    <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Amministrà e carte arregistrate</string>
     <!-- Preference option for managing saved cards -->
     <string name="preferences_credit_cards_manage_saved_cards_2">Amministrà e carte</string>
     <!-- Preference option for adding an address -->
@@ -1939,12 +1915,8 @@
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Urganizà l’indirizzi</string>
 
-    <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà è riempie autumaticamente l’indirizzi</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Arregistrà è rinsignà autumaticamente l’indirizzi</string>
-    <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Include l’infurmazioni cum’è i numeri, i messaghji elettronichi è l’indirizzi di spedizione</string>
 
     <!-- Preference summary for saving and filling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Include i numeri di telefonu è l’indirizzi elettronichi</string>
@@ -1969,8 +1941,6 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Squassà a carta</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Vulete veramente squassà sta carta bancaria ?</string>
-    <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation_2">Squassà a carta ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Squassà</string>
@@ -1983,24 +1953,15 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Carte arregistrate</string>
 
-    <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ci vole à stampittà un numeru accettevule di carta bancaria</string>
-
     <!-- Error message for card number validation -->
     <string name="credit_cards_number_validation_error_message_2">Stampittate un numeru di carta bancaria accettevule</string>
-    <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ci vole à riempie stu campu</string>
     <!-- Error message for card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message_2">Aghjunghje un nome</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Spalancate per affissà e vostre carte arregistrate</string>
 
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Prutege e vostre carte bancarie</string>
-    <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title_2">Prutigite e vostre metode di pagamentu arregistrate</string>
-    <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre carte arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message_3">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre metode di pagamentu arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2009,8 +1970,6 @@
     <string name="credit_cards_warning_dialog_later">Dopu</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Spalancate u vostru apparechju</string>
-    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Spalancate per impiegà l’infurmazione di e carte bancarie arregistrate</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
     <string name="credit_cards_biometric_prompt_unlock_message_2">Spalancate per impiegà e metode di pagamentu arregistrate</string>
@@ -2020,12 +1979,6 @@
     <string name="addresses_edit_address">Mudificà l’indirizzu</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Urganizà l’indirizzi</string>
-    <!-- The header for the first name of an address -->
-    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Nome</string>
-    <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Secondu nome</string>
-    <!-- The header for the last name of an address -->
-    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Casata</string>
     <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
     <string name="addresses_name">Nome cumpletu</string>
     <!-- The header for the street address of an address -->
@@ -2051,8 +2004,6 @@
     <string name="addresses_cancel_button">Abbandunà</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Squassà l’indirizzu</string>
-    <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Vulete veramente squassà st’indirizzu ?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message_2">Squassà st’indirizzu ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
@@ -2116,7 +2067,7 @@
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Per permettelu :</string>
     <!-- First step for the allowing a permission -->
-    <string name="phone_feature_blocked_step_settings">1. Andate à e preferenze Android</string>
+    <string name="phone_feature_blocked_step_settings">1. Andate à i parametri Android</string>
     <!-- Second step for the allowing a permission -->
     <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tucchate <b>Permessi</b>]]></string>
 
@@ -2152,48 +2103,28 @@
     <string name="login_menu_delete_button">Squassà</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Mudificà</string>
-    <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Vulete veramente squassà st’identificazione di cunnessione ?</string>
     <!-- Message in delete confirmation dialog for password -->
     <string name="login_deletion_confirmation_2">Vulete veramente squassà sta parolla d’intesa ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Squassà</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Abbandunà</string>
-    <!--  The saved login options menu description. -->
-    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Ozzioni di l’identificazione</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Ozzioni di parolla d’intesa</string>
-    <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">U campu di testu mudifichevule per l’indirizzu web di l’identificazione.</string>
     <!--  The editable text field for a website address. -->
     <string name="saved_login_hostname_description_3">U campu di testu mudifichevule per l’indirizzu di u situ web.</string>
-    <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">U campu di testu mudifichevule per u nome d’utilizatore di l’identificazione.</string>
     <!--  The editable text field for a username. -->
     <string name="saved_login_username_description_3">U campu di testu mudifichevule per u nome d’utilizatore.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">U campu di testu mudifichevule per a parolla d’intesa di l’identificazione.</string>
-    <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description_2">U campu di testu mudifichevule per a parolla d’intesa.</string>
-    <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà i cambiamenti di l’identificazione.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Arregistrà i cambiamenti.</string>
-    <!--  The page title for editing a saved login. -->
-    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Mudificà</string>
     <!--  The page title for editing a saved password. -->
     <string name="edit_2">Mudificà a parolla d’intesa</string>
-    <!--  The page title for adding new login. -->
-    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aghjunghje una nova identificazione di cunnessione</string>
     <!--  The page title for adding new password. -->
     <string name="add_login_2">Aghjunghje una parolla d’intesa</string>
-    <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Parolla d’intesa richiesta</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
     <string name="saved_login_password_required_2">Stampittate una parolla d’intesa</string>
-    <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">U nome d’utilizatore hè richiestu</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required_2">Stampittate un nome d’utilizatore</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2259,7 +2190,7 @@
     <string name="top_sites_rename_dialog_cancel">Abbandunà</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
-    <string name="top_sites_menu_settings">Preferenze</string>
+    <string name="top_sites_menu_settings">Parametri</string>
     <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
     <string name="top_sites_menu_sponsor_privacy">I nostri spunsurizatori è a vostra vita privata</string>
     <!-- Label text displayed for a sponsored top site. -->
@@ -2335,7 +2266,7 @@
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Attivà a telemetria per mandà dati.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
-    <string name="experiments_snackbar_button">Andà à e preferenze</string>
+    <string name="experiments_snackbar_button">Andà à i parametri</string>
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
@@ -2380,7 +2311,7 @@
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_info_learn_more_link_2">cumu %s determineghja a qualità di l’avisi</string>
     <!-- Text for title of settings section. -->
-    <string name="review_quality_check_settings_title">Preferenze</string>
+    <string name="review_quality_check_settings_title">Parametri</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Affissà publicità in u verificadore d’avisu</string>
 
@@ -2575,8 +2506,6 @@
     <string name="translation_error_could_not_load_languages_warning_text">Ùn si pò micca caricà e lingue. Ci vole à verificà a vostra cunnessione internet è pruvà torna.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Per disgrazia, a lingua %1$s ùn hè ancu accettata.</string>
-    <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Sapene di più</string>
 
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
@@ -2590,8 +2519,6 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Ozzioni di traduzzione</string>
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title_heading">Ozzioni di traduzzione</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Prupone sempre di traduce</string>
@@ -2602,17 +2529,20 @@
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Ùn traduce mai stu situ</string>
     <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Supraneghja tutte l’altre preferenze</string>
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Supraneghja tutti l’altri parametri</string>
     <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
     <string name="translation_option_bottom_sheet_switch_description">Supraneghja e pruposte di traduzzione</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
-    <string name="translation_option_bottom_sheet_translation_settings">Preferenze di traduzzione</string>
+    <string name="translation_option_bottom_sheet_translation_settings">Parametri di traduzzione</string>
 
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Apprupositu di e traduzzioni in %1$s</string>
 
     <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
     <string name="translation_option_bottom_sheet_close_content_description">Chjode u panellu di e traduzzioni</string>
+
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">Certi parametri sò timpurariamente indispunibule.</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2637,6 +2567,9 @@
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">Selezziunà una lingua per sceglie l’ozzione « Traduce sempre » o « Ùn traduce mai ».</string>
 
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">Ùn si pò micca caricà e lingue. Ci vole à verificà un’altra volta.</string>
+
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
     <string name="automatic_translation_option_offer_to_translate_title_preference">Prupone di traduce (predefinitu)</string>
@@ -2660,6 +2593,8 @@
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Caccià %1$s</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">Ùn si pò micca caricà i siti. Ci vole à verificà un’altra volta.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Squassà %1$s ?</string>
@@ -2686,8 +2621,10 @@
     <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">Scaricà lingue</string>
-    <!-- All languages list item. When the user presses this item, they can download or delete all languages. -->
+    <!-- All languages list item. When the user presses this item, they can download all languages. -->
     <string name="download_language_all_languages_item_preference">Tutte e lingue</string>
+    <!-- All languages list item. When the user presses this item, they can delete all languages that were downloaded. -->
+    <string name="download_language_all_languages_item_preference_to_delete">Squassà tutte e lingue</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">Squassà</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
@@ -2695,7 +2632,16 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
     <string name="download_languages_item_content_description_not_downloaded_state">Scaricà</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
-    <string name="download_languages_item_content_description_selected_state">Selezziunata</string>
+    <string name="download_languages_item_content_description_selected_state" moz:removedIn="127" tools:ignore="UnusedResources">Selezziunata</string>
+
+    <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
+    <string name="download_languages_fetch_error_warning_text">Ùn si pò micca caricà e lingue. Ci vole à verificà un’altra volta.</string>
+    <!-- The title of the warning card informs the user that an error has occurred at downloading a language.
+      The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_error_warning_text"><![CDATA[Ùn si pò micca scaricà <b>%1$s</b>. Pruvate torna.]]></string>
+    <!-- The title of the warning card informs the user that an error has occurred at deleting a language.
+          The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_delete_error_warning_text"><![CDATA[Ùn si pò micca squassà <b>%1$s</b>. Pruvate torna.]]></string>
 
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
@@ -2723,7 +2669,7 @@
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Scarichemu in a vostra impiatta certe parti di lingue per mantene private e vostre traduzzioni.</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
-    <string name="download_language_file_dialog_message_all_languages_no_cache">Scarichemu certe parti di lingue per mantene private e vostre traduzzioni.</string>
+    <string name="download_language_file_dialog_message_all_languages_no_cache" moz:removedIn="129" tools:ignore="UnusedResources">Scarichemu certe parti di lingue per mantene private e vostre traduzzioni.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Scaricà sempre in modu di risparmiu di dati</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
@@ -2739,6 +2685,9 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Navigazione in daretu</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Apre a cantera di spannatura</string>
+
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Attrezzi d’unghjette</string>
@@ -2746,6 +2695,8 @@
     <string name="debug_drawer_tab_tools_tab_count_title">Numeru d’unghjette</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Attive</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Attive</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inattive</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2756,6 +2707,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">Attrezzu di creazione d’unghjetta</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Numeru d’unghjette à creà</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">U campu di testu hè viotu</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Stampittate solu numeri interi pusitivi</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Stampittate un numeri superiore à zeru</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">Avete trapassatu u numeru massimu d’unghjette (%1$s) chì ponu esse ingenerate in una sola operazione</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Aghjunghje à l’unghjette attive</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2765,19 +2726,30 @@
 
     <!-- Micro survey -->
 
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Aiutateci à amendà Firefox. Què piglia solu un minutu.</string>
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Cuntinuà</string>
+    <!-- Survey view -->
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Participà à l’inchiesta</string>
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Participà à l’inchiesta</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Vi ringraziemu di risponde à l’inchiesta</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Pulitica di cunfidenzialità</string>
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Pulitica di cunfidenzialità</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Pulitica di cunfidenzialità</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Mandà</string>
+    <string name="micro_survey_submit_button_label">Mandà</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">Chjode</string>
+    <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Chjode</string>
 
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Inchiesta compia</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Vi ringraziemu d’avè spartitu u vostru avisu !</string>
+    <string name="micro_survey_feedback_confirmation">Vi ringraziemu d’avè spartitu u vostru avisu !</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Assai felice</string>
     <!-- Option for likert scale -->
@@ -2788,6 +2760,18 @@
     <string name="likert_scale_option_4" tools:ignore="UnusedResources">Infelice</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Assai infelice</string>
+
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">Ùn l’impiegu micca</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Site cuntenti di a vostra pagina d’accolta in Firefox ?</string>
+    <!-- Accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Apre l’inchiesta</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Chjode l’inchiesta</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Chjode</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->

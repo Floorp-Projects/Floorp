@@ -15,5 +15,5 @@
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">Caricamentu…</string>
     <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
-    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">Certi cuntenuti sò stati bluccati da a preferenza di lettura autumatica</string>
+    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">Certi cuntenuti sò stati bluccati da u parametru di lettura autumatica</string>
 </resources>

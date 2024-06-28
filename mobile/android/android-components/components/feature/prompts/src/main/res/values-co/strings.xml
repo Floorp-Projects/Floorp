@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Parolla d’intesa</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">Ùn arregistrà micca</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">Ùn arregistrà micca</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Micca subitu</string>
+    <string name="mozac_feature_prompt_dont_save_2">Micca subitu</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Ùn arregistrà mai</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,27 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Arregistrà</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">Ùn micca rinnovà</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">Ùn micca rinnovà</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Micca subitu</string>
+    <string name="mozac_feature_prompt_dont_update_2">Micca subitu</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Piglià in contu</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">U campu di a parolla d’intesa ùn deve micca esse viotu</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">U campu di a parolla d’intesa ùn deve micca esse viotu</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Stampittate una parolla d’intesa</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">Stampittate una parolla d’intesa</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Impussibule d’arregistrà l’identificazione di cunnessione</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">Impussibule d’arregistrà l’identificazione di cunnessione</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Ùn si pò micca arregistrà a parolla d’intesa</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">Ùn si pò micca arregistrà a parolla d’intesa</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Arregistrà st’identificazioni di cunnessione</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">Arregistrà st’identificazioni di cunnessione</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Arregistrà a parolla d’intesa ?</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">Arregistrà a parolla d’intesa ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Mudificà st’identificazione di cunnessione ?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">Mudificà st’identificazione di cunnessione ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Mudificà a parolla d’intesa ?</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">Mudificà a parolla d’intesa ?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Aghjunghje un nome d’utilizatore à a parolla d’intesa arregistrata ?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -96,29 +96,45 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Sceglie l’ora</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Urganizà l’identificazioni di cunnessione</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">Urganizà l’identificazioni di cunnessione</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Amministrà e parolle d’intesa</string>
+    <string name="mozac_feature_prompts_manage_logins_2">Amministrà e parolle d’intesa</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Spiegà l’identificazioni di cunnessione suggerite</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Spiegà l’identificazioni di cunnessione suggerite</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Spiegà e parolle d’intesa arregistrate</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Spiegà e parolle d’intesa arregistrate</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Ripiegà l’identificazioni di cunnessione suggerite</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Ripiegà l’identificazioni di cunnessione suggerite</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Ripiegà e parolle d’intesa arregistrate</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">Ripiegà e parolle d’intesa arregistrate</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Identificazioni di cunnessione suggerite</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">Identificazioni di cunnessione suggerite</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Parolle d’intesa arregistrate</string>
+    <string name="mozac_feature_prompts_saved_logins_2">Parolle d’intesa arregistrate</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">Suggerisce una parolla d’intesa forte</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">Suggerisce una parolla d’intesa forte</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">Suggerisce una parolla d’intesa forte</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">Impiegà una parolla d’intesa forte</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
-    <string name="mozac_feature_prompts_suggest_strong_password_message">Impiegà a parolla d’intesa forte : %1$s</string>
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Impiegà una parolla d’intesa forte : %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">Impiegà una parolla d’intesa forte ?</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Prutigite i vostri conti impieghendu una parolla d’intesa forte è ingenerata à l’azardu. Accidite in furia à e vostre parolle d’intesa arregistrendule in u vostru contu.</string>
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">Impiegà sta parolla d’intesa</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">Micca subitu</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">Parolla d’intesa arregistrata</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">Parolla d’intesa mudificata</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Rimandà i dati à stu situ ?</string>
@@ -130,42 +146,42 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Selezziunà una carta bancaria</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">Selezziunà una carta bancaria</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Impiegà una carta arregistrata</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">Impiegà una carta arregistrata</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Spiegà e carte bancarie suggerite</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Spiegà e carte bancarie suggerite</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Spiegà e carte arregistrate</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Spiegà e carte arregistrate</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Ripiegà e carte bancarie suggerite</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Ripiegà e carte bancarie suggerite</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Ripiegà e carte arregistrate</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Ripiegà e carte arregistrate</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">Urganizà e carte bancarie</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Urganizà e carte bancarie</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Amministrà e carte</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">Amministrà e carte</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Arregistrà sta carta di manera sicura ?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Mudificà a data di scadenza di a carta ?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">U numeru di a carta serà cifratu. U codice di sicurità ùn serà micca arregistratu.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">U numeru di a carta serà cifratu. U codice di sicurità ùn serà micca arregistratu.</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s cifra u vostru numeru di carta. U vostru codice di sicurità ùn serà micca arregistratu.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s cifra u vostru numeru di carta. U vostru codice di sicurità ùn serà micca arregistratu.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Selezziunà un indirizzu</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">Spiegà l’indirizzi suggeriti</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Spiegà l’indirizzi suggeriti</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Spiegà l’indirizzi arregistrati</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Spiegà l’indirizzi arregistrati</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">Ripiegà l’indirizzi suggeriti</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Ripiegà l’indirizzi suggeriti</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Ripiegà l’indirizzi arregistrati</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">Ripiegà l’indirizzi arregistrati</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Urganizà l’indirizzi</string>
 

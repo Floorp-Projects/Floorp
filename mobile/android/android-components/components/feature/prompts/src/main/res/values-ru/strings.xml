@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Пароль</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">Не сохранять</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">Не сохранять</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Не сейчас</string>
+    <string name="mozac_feature_prompt_dont_save_2">Не сейчас</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Никогда не сохранять</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,27 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Сохранить</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">Не обновлять</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">Не обновлять</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Не сейчас</string>
+    <string name="mozac_feature_prompt_dont_update_2">Не сейчас</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Обновить</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">Поле пароля не может быть пустым</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">Поле пароля не может быть пустым</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Введите пароль</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">Введите пароль</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Не удалось сохранить логин</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">Не удалось сохранить логин</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Не удалось сохранить пароль</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">Не удалось сохранить пароль</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Сохранить этот логин?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">Сохранить этот логин?</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Сохранить пароль?</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">Сохранить пароль?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Обновить этот логин?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">Обновить этот логин?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Обновить пароль?</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">Обновить пароль?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Добавить имя пользователя к сохранённому паролю?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -96,30 +96,46 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Установка времени</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Управление паролями</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">Управление паролями</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Управление паролями</string>
+    <string name="mozac_feature_prompts_manage_logins_2">Управление паролями</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Развернуть предлагаемые пароли</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Развернуть предлагаемые пароли</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Развернуть сохранённые пароли</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Развернуть сохранённые пароли</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Свернуть предлагаемые пароли</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Свернуть предлагаемые пароли</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Свернуть сохранённые пароли</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">Свернуть сохранённые пароли</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Предлагаемые пароли</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">Предлагаемые пароли</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Сохранённые пароли</string>
+    <string name="mozac_feature_prompts_saved_logins_2">Сохранённые пароли</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">Предложить надежный пароль</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">Предложить надежный пароль</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">Предложить надежный пароль</string>
 
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">Используйте надежный пароль</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">Используйте надежный пароль: %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">Использовать надёжный пароль?</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Защитите свои аккаунты с помощью надёжных, сгенерированных случайным образом паролей. Получите быстрый доступ к своим паролям, сохранив их в своем аккаунте.</string>
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">Использовать пароль</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">Не сейчас</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">Пароль сохранён</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">Пароль изменён</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Отправить данные на этот сайт снова?</string>
@@ -131,42 +147,42 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Выберите банковскую карту</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">Выберите банковскую карту</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Использовать сохранённую карту</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">Использовать сохранённую карту</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Развернуть предлагаемые банковские карты</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Развернуть предлагаемые банковские карты</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Развернуть сохранённые карты</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Развернуть сохранённые карты</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Свернуть предлагаемые банковские карты</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Свернуть предлагаемые банковские карты</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Свернуть сохранённые карты</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Свернуть сохранённые карты</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">Управление банковскими картами</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Управление банковскими картами</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Управление картами</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">Управление картами</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Сохранить надёжно эту карту?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Обновить срок действия карты?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Номер карты будет зашифрован. Код безопасности не будет сохранён.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">Номер карты будет зашифрован. Код безопасности не будет сохранён.</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s шифрует номер вашей карты. Ваш код безопасности не будет сохранён.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s шифрует номер вашей карты. Ваш код безопасности не будет сохранён.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Выберите адрес</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">Развернуть предлагаемые адреса</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Развернуть предлагаемые адреса</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Развернуть сохранённые адреса</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Развернуть сохранённые адреса</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">Свернуть предлагаемые адреса</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Свернуть предлагаемые адреса</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Свернуть сохранённые адреса</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">Свернуть сохранённые адреса</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Управление адресами</string>
 

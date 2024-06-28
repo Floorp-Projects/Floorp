@@ -253,7 +253,7 @@
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
       <p>U navigatore hè cunfiguratu per impiegà un servitore proxy, ma quessu hà ricusatu a cunnessione.</p>
       <ul>
-        <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate e preferenze è pruvate torna.</li>
+        <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate i parametri è pruvate torna.</li>
         <li>U serviziu proxy permette e cunnessioni da sta reta ?</li>
         <li>Avete sempre penseru ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>
       </ul>
@@ -264,7 +264,7 @@
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
       <p>U navigatore hè cunfiguratu per impiegà un servitore proxy, ma quessu ùn si trova micca.</p>
       <ul>
-        <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate e preferenze è pruvate torna.</li>
+        <li>Hè curretta a cunfigurazione proxy di u navigatore ? Verificate i parametri è pruvate torna.</li>
         <li>Hè cunnessu à una reta attiva, l’apparechju ?</li>
         <li>Avete sempre penseru ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>
       </ul>]]></string>

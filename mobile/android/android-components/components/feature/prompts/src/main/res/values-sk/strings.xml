@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Heslo</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">Neuložiť</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">Neuložiť</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Teraz nie</string>
+    <string name="mozac_feature_prompt_dont_save_2">Teraz nie</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Nikdy neukladať</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,27 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Uložiť</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">Neaktualizovať</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">Neaktualizovať</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Teraz nie</string>
+    <string name="mozac_feature_prompt_dont_update_2">Teraz nie</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Aktualizovať</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">Pole s heslom nesmie byť prázdne</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">Pole s heslom nesmie byť prázdne</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Zadajte heslo</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">Zadajte heslo</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Prihlasovacie údaje sa nepodarilo uložiť</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">Prihlasovacie údaje sa nepodarilo uložiť</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Heslo nie je možné uložiť</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">Heslo nie je možné uložiť</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Chcete uložiť tieto prihlasovacie údaje?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">Chcete uložiť tieto prihlasovacie údaje?</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Uložiť heslo?</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">Uložiť heslo?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Chcete aktualizovať tieto prihlasovacie údaje?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">Chcete aktualizovať tieto prihlasovacie údaje?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Aktualizovať heslo?</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">Aktualizovať heslo?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Chcete k uloženému heslu pridať používateľské meno?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -96,29 +96,47 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Nastaviť čas</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Spravovať prihlasovacie údaje</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">Spravovať prihlasovacie údaje</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Spravovať heslá</string>
+    <string name="mozac_feature_prompts_manage_logins_2">Spravovať heslá</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Rozbaliť navrhované prihlasovacie údaje</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Rozbaliť navrhované prihlasovacie údaje</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Rozbaliť uložené heslá</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Rozbaliť uložené heslá</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Zbaliť navrhované prihlasovacie údaje</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Zbaliť navrhované prihlasovacie údaje</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Zbaliť uložené heslá</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">Zbaliť uložené heslá</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Navrhované prihlasovacie údaje</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">Navrhované prihlasovacie údaje</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Uložené heslá</string>
+    <string name="mozac_feature_prompts_saved_logins_2">Uložené heslá</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">Navrhnúť silné heslo</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">Navrhnúť silné heslo</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">Navrhnúť silné heslo</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">Použitie silného hesla</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">Použiť silné heslo: %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">Použiť silné heslo?</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Chráňte svoje účty pomocou silného, náhodne generovaného hesla. Získajte rýchly prístup k svojim heslám tým, že si ich uložíte do svojho účtu.</string>
+
+
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">Použiť heslo</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">Teraz nie</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">Heslo bolo uložené</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">Heslo bolo aktualizované</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Znova odoslať údaje tejto stránke?</string>
@@ -130,42 +148,42 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Vyberte platobnú kartu</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">Vyberte platobnú kartu</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Použiť uloženú kartu</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">Použiť uloženú kartu</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Rozbaliť navrhované platobné karty</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Rozbaliť navrhované platobné karty</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Rozbaliť uložené karty</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Rozbaliť uložené karty</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Zbaliť navrhované platobné karty</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Zbaliť navrhované platobné karty</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Zbaliť uložené karty</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Zbaliť uložené karty</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">Spravovať platobné karty</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Spravovať platobné karty</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Spravovať karty</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">Spravovať karty</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Bezpečne uložiť túto kartu?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Aktualizovať dátum vypršania platnosti karty?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Číslo karty bude zašifrované. Bezpečnostný kód sa neuloží.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">Číslo karty bude zašifrované. Bezpečnostný kód sa neuloží.</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s zašifruje číslo vašej karty. Váš bezpečnostný kód sa neuloží.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s zašifruje číslo vašej karty. Váš bezpečnostný kód sa neuloží.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Vyberte adresu</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">Rozbaliť navrhované adresy</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Rozbaliť navrhované adresy</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Rozbaliť uložené adresy</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Rozbaliť uložené adresy</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">Zbaliť navrhované adresy</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Zbaliť navrhované adresy</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Zbaliť uložené adresy</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">Zbaliť uložené adresy</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Spravovať adresy</string>
 
