@@ -1326,8 +1326,8 @@ bool SharedContextWebgl::CreateShaders() {
         "                     dot(u_transform[1], u_transform[1]));\n"
         "   vec2 invScale = u_aa * inversesqrt(scale + 1.0e-6);\n"
         "   scale *= invScale;\n"
-        "   vec2 extrude = a_vertex.xy + invScale * (2.0 * a_vertex.xy - "
-        "1.0);\n"
+        "   vec2 extrude = a_vertex.xy +\n"
+        "                  invScale * (2.0 * a_vertex.xy - 1.0);\n"
         "   vec2 vertex = u_transform[0] * extrude.x +\n"
         "                 u_transform[1] * extrude.y +\n"
         "                 u_transform[2];\n"
@@ -1335,7 +1335,8 @@ bool SharedContextWebgl::CreateShaders() {
         "   v_cliptc = vertex / u_viewport;\n"
         "   v_clipdist = vec4(vertex - u_clipbounds.xy,\n"
         "                     u_clipbounds.zw - vertex);\n"
-        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy + 1.5 - u_aa;\n"
+        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy +\n"
+        "            0.5 * min(scale.xyxy, 1.0) + (1.0 - u_aa);\n"
         "   v_alpha = a_vertex.z;\n"
         "}\n";
     auto fsSource =
@@ -1406,8 +1407,8 @@ bool SharedContextWebgl::CreateShaders() {
         "                     dot(u_transform[1], u_transform[1]));\n"
         "   vec2 invScale = u_aa * inversesqrt(scale + 1.0e-6);\n"
         "   scale *= invScale;\n"
-        "   vec2 extrude = a_vertex.xy + invScale * (2.0 * a_vertex.xy - "
-        "1.0);\n"
+        "   vec2 extrude = a_vertex.xy +\n"
+        "                  invScale * (2.0 * a_vertex.xy - 1.0);\n"
         "   vec2 vertex = u_transform[0] * extrude.x +\n"
         "                 u_transform[1] * extrude.y +\n"
         "                 u_transform[2];\n"
@@ -1418,7 +1419,8 @@ bool SharedContextWebgl::CreateShaders() {
         "   v_texcoord = u_texmatrix[0] * extrude.x +\n"
         "                u_texmatrix[1] * extrude.y +\n"
         "                u_texmatrix[2];\n"
-        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy + 1.5 - u_aa;\n"
+        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy +\n"
+        "            0.5 * min(scale.xyxy, 1.0) + (1.0 - u_aa);\n"
         "   v_alpha = a_vertex.z;\n"
         "}\n";
     auto fsSource =
