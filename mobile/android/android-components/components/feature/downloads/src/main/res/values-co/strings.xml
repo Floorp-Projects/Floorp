@@ -43,7 +43,7 @@
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Impussibule d’apre %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
-    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">I diritti d’accessu à i schedarii è i medià sò richiesti per scaricà schedarii. Accidite à e preferenze d’Android, picchichjate Permessi, è dopu Permette.</string>
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">I diritti d’accessu à i schedarii è i medià sò richiesti per scaricà schedarii. Accidite à i parametri d’Android, picchichjate Permessi, è dopu Permette.</string>
 
     <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
     <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Abbandunà i scaricamenti in a navigazione privata ?</string>

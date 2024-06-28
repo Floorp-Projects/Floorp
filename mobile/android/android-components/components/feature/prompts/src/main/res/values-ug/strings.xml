@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">پارول</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">ساقلىما</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">ساقلىما</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
+    <string name="mozac_feature_prompt_dont_save_2">ھازىر ئەمەس</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">ھەرگىز ساقلىما</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,27 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">ساقلا</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">يېڭىلانمىسۇن</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">يېڭىلانمىسۇن</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
+    <string name="mozac_feature_prompt_dont_update_2">ھازىر ئەمەس</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">يېڭىلاش</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">ئىم بۆلىكى بوش قالمايدۇ</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">ئىم بۆلىكى بوش قالمايدۇ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">ئىم كىرگۈزۈلىدۇ</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">ئىم كىرگۈزۈلىدۇ</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">كىرىش ئۇچۇرىنى ساقلىيالمايدۇ</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">كىرىش ئۇچۇرىنى ساقلىيالمايدۇ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">ئىم ساقلىيالمايدۇ</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">ئىم ساقلىيالمايدۇ</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">بۇ كىرىشنى ساقلامدۇ؟</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">بۇ كىرىشنى ساقلامدۇ؟</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">ئىم ساقلامدۇ؟</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">ئىم ساقلامدۇ؟</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">بۇ كىرىشنى يېڭىلامدۇ؟</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">بۇ كىرىشنى يېڭىلامدۇ؟</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">ئىم يېڭىلامدۇ؟</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">ئىم يېڭىلامدۇ؟</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">ساقلانغان ئىمغا ئىشلەتكۈچى ئاتىنى قوشامدۇ؟</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -98,29 +98,47 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">ۋاقىت تەڭشىكى</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">كىرىشنى باشقۇرۇش</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">كىرىشنى باشقۇرۇش</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">ئىم باشقۇرۇش</string>
+    <string name="mozac_feature_prompts_manage_logins_2">ئىم باشقۇرۇش</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">تەۋسىيە كىرىشنى كېڭەيتىدۇ</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تەۋسىيە كىرىشنى كېڭەيتىدۇ</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">ساقلىغان ئىمنى ياي</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">ساقلىغان ئىمنى ياي</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">تەۋسىيە كىرىشنى يىغ</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تەۋسىيە كىرىشنى يىغ</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">ساقلىغان ئىمنى يىغ</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">ساقلىغان ئىمنى يىغ</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">تەۋسىيە كىرىش</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">تەۋسىيە كىرىش</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">ساقلانغان ئىم</string>
+    <string name="mozac_feature_prompts_saved_logins_2">ساقلانغان ئىم</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">كۈچلۈك ئىم تەۋسىيە قىلىنىدۇ</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">كۈچلۈك ئىم تەۋسىيە قىلىنىدۇ</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">كۈچلۈك ئىم تەۋسىيە قىلىنىدۇ</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">كۈچلۈك ئىم ئىشلىتىش</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">كۈچلۈك ئىم ئىشلىتىش: %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">كۈچلۈك ئىم ئىشلىتەمدۇ؟</string>
+
+
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">كۈچلۈك، ئىختىيارى ھاسىل قىلىنغان ئىم ئارقىلىق ھېساباتىڭىزنى قوغداڭ. ئىمنى ھېساباتىڭىزغا ساقلاپ تېز زىيارەت قىلىڭ.</string>
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">ئىم ئىشلىتىش</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">ھازىر ئەمەس</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">ئىم ساقلاندى</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">ئىم يېڭىلاندى</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">بۇ بېكەتكە سانلىق مەلۇماتنى قايتا يوللامدۇ؟</string>
@@ -132,43 +150,43 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">ئىناۋەتلىك كارتا تاللىنىدۇ</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">ئىناۋەتلىك كارتا تاللىنىدۇ</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">ساقلانغان كارتىنى ئىشلەت</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">ساقلانغان كارتىنى ئىشلەت</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">تەۋسىيە قىلىنغان ئىناۋەتلىك كارتىنى كېڭەيتىدۇ</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تەۋسىيە قىلىنغان ئىناۋەتلىك كارتىنى كېڭەيتىدۇ</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">ساقلانغان كارتىنى ياي</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">ساقلانغان كارتىنى ياي</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">تەۋسىيە قىلىنغان ئىناۋەتلىك كارتىنى يىغىدۇ</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تەۋسىيە قىلىنغان ئىناۋەتلىك كارتىنى يىغىدۇ</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">ساقلانغان كارتىنى يىغ</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">ساقلانغان كارتىنى يىغ</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">ئىناۋەتلىك كارتا باشقۇرۇش</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">ئىناۋەتلىك كارتا باشقۇرۇش</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">كارتا باشقۇرۇش</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">كارتا باشقۇرۇش</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">بۇ كارتىنى بىخەتەر ساقلامدۇ؟</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">كارتىنىڭ مۇددىتى توشۇش قەرەلىنى يېڭىلامدۇ؟</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">كارتا نومۇرى شىفىرلىنىدۇ. بىخەتەرلىك كودى ساقلانمايدۇ.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">كارتا نومۇرى شىفىرلىنىدۇ. بىخەتەرلىك كودى ساقلانمايدۇ.</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s كارتا نومۇرىڭىزنى شىفىرلايدۇ. بىخەتەرلىك كودىڭىز ساقلانمايدۇ.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s كارتا نومۇرىڭىزنى شىفىرلايدۇ. بىخەتەرلىك كودىڭىز ساقلانمايدۇ.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">ئادرېس تاللىنىدۇ</string>
 
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">تەۋسىيە ئادرېسنى كېڭەيتىدۇ</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تەۋسىيە ئادرېسنى كېڭەيتىدۇ</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">ساقلانغان ئادرېسنى ياي</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">ساقلانغان ئادرېسنى ياي</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">تەۋسىيە ئادرېسنى يىغىدۇ</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تەۋسىيە ئادرېسنى يىغىدۇ</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">ساقلانغان ئادرېسنى يىغ</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">ساقلانغان ئادرېسنى يىغ</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">ئادرېس باشقۇرۇش</string>
 
