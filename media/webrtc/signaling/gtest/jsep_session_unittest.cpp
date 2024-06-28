@@ -66,6 +66,7 @@ class JsepSessionTest : public JsepSessionTestBase,
                             "never");
     Preferences::SetBool("media.peerconnection.video.use_rtx", true);
     Preferences::SetBool("media.navigator.video.use_transport_cc", true);
+    Preferences::SetBool("media.navigator.video.disable_h264_baseline", false);
 
     mSessionOff =
         MakeUnique<JsepSessionImpl>("Offerer", MakeUnique<FakeUuidGenerator>());
