@@ -124,6 +124,8 @@
 
     <!-- Title for using the suggest strong password confirmation dialog -->
     <string name="mozac_feature_prompts_suggest_strong_password_title">Χρήση ισχυρού κωδικού πρόσβασης;</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Προστατέψτε τους λογαριασμούς σας με έναν ισχυρό, τυχαίο κωδικό πρόσβασης. Αποκτήστε γρήγορη πρόσβαση στους κωδικούς πρόσβασής σας αποθηκεύοντάς τους στον λογαριασμό σας.</string>
     <!-- Pressing this will use the suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_use_password">Χρήση κωδικού πρόσβασης</string>
     <!-- Pressing this will dismiss the suggested strong password dialog -->
