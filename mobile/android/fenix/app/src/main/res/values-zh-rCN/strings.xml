@@ -2667,10 +2667,10 @@
     <string name="download_languages_fetch_error_warning_text">无法加载语言包，请稍后再试。</string>
     <!-- The title of the warning card informs the user that an error has occurred at downloading a language.
       The first parameter is the language name, for example, "Spanish". -->
-    <string name="download_languages_error_warning_text"><![CDATA[无法下载<b>%1$s</b>。请重试。]]></string>
+    <string name="download_languages_error_warning_text"><![CDATA[无法下载<b>%1$s</b>，请重试。]]></string>
     <!-- The title of the warning card informs the user that an error has occurred at deleting a language.
           The first parameter is the language name, for example, "Spanish". -->
-    <string name="download_languages_delete_error_warning_text"><![CDATA[无法删除<b>%1$s</b>。请重试。]]></string>
+    <string name="download_languages_delete_error_warning_text"><![CDATA[无法删除<b>%1$s</b>，请重试。]]></string>
 
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.

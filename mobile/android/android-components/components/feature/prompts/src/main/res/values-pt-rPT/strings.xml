@@ -119,7 +119,7 @@
     <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">Sugerir palavra-passe forte</string>
 
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password_2">Usar palavra-passe forte</string>
+    <string name="mozac_feature_prompts_suggest_strong_password_2">Utilizar palavra-passe forte</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">Utilizar palavra-passe forte: %1$s</string>
 

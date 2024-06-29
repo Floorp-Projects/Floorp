@@ -137,7 +137,7 @@
     <!-- Title for using the suggest strong password confirmation dialog -->
     <string name="mozac_feature_prompts_suggest_strong_password_title">要使用高强度密码吗？</string>
     <!-- Content description for the suggest strong password confirmation dialog -->
-    <string name="mozac_feature_prompts_suggest_strong_password_description">使用随机生成的高强度密码保护您的账户。在账户中保存密码更加方便快捷。</string>
+    <string name="mozac_feature_prompts_suggest_strong_password_description">使用随机生成的高强度密码保护您的账户。将密码保存到您的账户，取用更方便。</string>
     <!-- Pressing this will use the suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_use_password">使用密码</string>
     <!-- Pressing this will dismiss the suggested strong password dialog -->

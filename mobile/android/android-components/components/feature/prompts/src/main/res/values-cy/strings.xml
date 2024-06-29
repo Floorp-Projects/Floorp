@@ -125,7 +125,7 @@
     <!-- Title for using the suggest strong password confirmation dialog -->
     <string name="mozac_feature_prompts_suggest_strong_password_title">Defnyddio cyfrinair cryf?</string>
     <!-- Content description for the suggest strong password confirmation dialog -->
-    <string name="mozac_feature_prompts_suggest_strong_password_description">Gwarchodwch eich cyfrifon trwy ddefnyddio cyfrinair cryf a gynhyrchir ar hap. Sicrhewch fynediad cyflym i\'ch cyfrineiriau trwy eu cadw yn eich cyfrif.</string>
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Diogelwch eich cyfrifon trwy ddefnyddio cyfrinair cryf wedi\'i gynhyrchu ar hap. Cewch fynediad cyflym i\'ch cyfrineiriau trwy eu cadw yn eich cyfrif.</string>
     <!-- Pressing this will use the suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_use_password">Defnyddiwch gyfrinair</string>
     <!-- Pressing this will dismiss the suggested strong password dialog -->
