@@ -826,6 +826,8 @@ function boundaryToString(aBoundaryType) {
       return "line end";
     case BOUNDARY_PARAGRAPH:
       return "paragraph";
+    case BOUNDARY_CLUSTER:
+      return "cluster";
   }
   return "unknown";
 }
