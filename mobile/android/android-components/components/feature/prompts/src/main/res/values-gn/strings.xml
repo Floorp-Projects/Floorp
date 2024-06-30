@@ -116,9 +116,25 @@
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">Eikuave’ẽ ñe’ẽñemi hekorosãva</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">Eikuave’ẽ ñe’ẽñemi hekorosãva</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">Eikuave’ẽ ñe’ẽñemi hekorosãva</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">Eiporu ñe’ẽñemi oikóva</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">Eiporu ñe’ẽñemi hekorosãva: %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">¿Eiporu ñe’ẽñemi oikóva?</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Emo’ã ne mba’ete eiporúvo ñe’ẽñemi hekorosãva ejapóva eiporu hag̃ua. Eike pya’e ne ñe’ẽñemíme eñongatúvo ne mba’etépe.</string>
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">Eiporu ñe’ẽñemi</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">Ani ko’ág̃a</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">Eñongatu ñe’ẽñemi</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">Ñe’ẽñemi hekopyahúva</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">¿Emondojey mba’ekuaarã ko tendápe?</string>

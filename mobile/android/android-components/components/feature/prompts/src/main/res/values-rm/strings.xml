@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Pled-clav</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">Betg memorisar</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">Betg memorisar</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Betg ussa</string>
+    <string name="mozac_feature_prompt_dont_save_2">Betg ussa</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Mai memorisar</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,27 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Memorisar</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">Betg actualisar</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">Betg actualisar</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Betg ussa</string>
+    <string name="mozac_feature_prompt_dont_update_2">Betg ussa</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Actualisar</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">Il champ dal pled-clav na dastga betg esser vid</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">Il champ dal pled-clav na dastga betg esser vid</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Endatar in pled-clav</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">Endatar in pled-clav</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Impussibel da memorisar las datas d\'annunzia</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">Impussibel da memorisar las datas d\'annunzia</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Impussibel da memorisar il pled-clav</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">Impussibel da memorisar il pled-clav</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Memorisar questa infurmaziun d\'annunzia?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">Memorisar questa infurmaziun d\'annunzia?</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Memorisar il pled-clav?</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">Memorisar il pled-clav?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Actualisar questa infurmaziun d\'annunzia?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">Actualisar questa infurmaziun d\'annunzia?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Actualisar il pled-clav?</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">Actualisar il pled-clav?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Agiuntar in num d\'utilisader al pled-clav memorisà?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -96,29 +96,45 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Drizzar l\'ura</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Administrar las datas d\'annunzia</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">Administrar las datas d\'annunzia</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Administrar ils pleds-clav</string>
+    <string name="mozac_feature_prompts_manage_logins_2">Administrar ils pleds-clav</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Expander las datas d\'annunzia proponidas</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Expander las datas d\'annunzia proponidas</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Extender ils pleds-clav memorisads</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Extender ils pleds-clav memorisads</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Reducir las datas d\'annunzia proponidas</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Reducir las datas d\'annunzia proponidas</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Reducir ils pleds-clav memorisads</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">Reducir ils pleds-clav memorisads</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Datas d\'annunzia proponidas</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">Datas d\'annunzia proponidas</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Pleds-clav memorisads</string>
+    <string name="mozac_feature_prompts_saved_logins_2">Pleds-clav memorisads</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">Proponer in ferm pled-clav</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">Proponer in ferm pled-clav</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">Proponer in ferm pled-clav</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">Utilisescha in ferm pled-clav</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">Utilisar in ferm pled-clav: %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">Utilisar in ferm pled-clav?</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">Protegia tes contos cun utilisar in ferm pled-clav generà a moda casuala. Acceda svelt a tes pleds-clav cun als memorisar en tes conto.</string>
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">Utilisar quest pled-clav</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">Betg ussa</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">Memorisà il pled-clav</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">Actualisà il pled-clav</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Anc ina giada trametter las datas a questa website?</string>
@@ -130,42 +146,42 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Tscherner ina carta da credit</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">Tscherner ina carta da credit</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Utilisar ina carta memorisada</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">Utilisar ina carta memorisada</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Expander las cartas da credit proponidas</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Expander las cartas da credit proponidas</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Extender las cartas memorisadas</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Extender las cartas memorisadas</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Reducir las cartas da credit proponidas</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Reducir las cartas da credit proponidas</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Reducir las cartas memorisadas</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Reducir las cartas memorisadas</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">Administrar las cartas da credit</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Administrar las cartas da credit</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Administrar las cartas</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">Administrar las cartas</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Memorisar questa carta a moda segira?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Actualisar la data da scadenza da la carta?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Il numer da la carta vegn criptà. Il code da segirezza na vegn betg memorisà.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">Il numer da la carta vegn criptà. Il code da segirezza na vegn betg memorisà.</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s criptescha il numer da tia carta. Tes code da segirezza na vegn betg memorisà.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s criptescha il numer da tia carta. Tes code da segirezza na vegn betg memorisà.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Tscherner l\'adressa</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">Expander las adressas proponidas</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Expander las adressas proponidas</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Extender las adressas proponidas</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Extender las adressas proponidas</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">Cumprimer las adressas proponidas</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Cumprimer las adressas proponidas</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Reducir las adressas memorisadas</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">Reducir las adressas memorisadas</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Administrar las adressas</string>
 

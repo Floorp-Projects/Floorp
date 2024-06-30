@@ -2347,9 +2347,9 @@
     <string name="review_quality_check_contextual_onboarding_title">Prøv vores pålidelige vejledning til produktanmeldelser</string>
 
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">Se hvor pålidelige produktanmeldelser på %1$s er, inden du køber. Verificering af anmeldelser, en eksperimental funktion fra %2$s, er indbygget i browseren. Den virker også på %3$s og %4$s.</string>
+    <string name="review_quality_check_contextual_onboarding_description">Se hvor pålidelige produktanmeldelser på %1$s er, inden du køber. Verificering af anmeldelser, en eksperimentel funktion fra %2$s, er indbygget i browseren. Den virker også på %3$s og %4$s.</string>
     <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Se hvor pålidelige produktanmeldelser på %1$s er, inden du køber. Verificering af anmeldelser, en eksperimental funktion fra %2$s, er indbygget i browseren.</string>
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Se hvor pålidelige produktanmeldelser på %1$s er, inden du køber. Verificering af anmeldelser, en eksperimentel funktion fra %2$s, er indbygget i browseren.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Ved hjælp af %1$s fra Mozilla gør vi det nemmere for dig undgå partiske og uægte anmeldelser. Vores kunstig intelligens-model forbedres altid for at beskytte dig, mens du handler. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
