@@ -4,36 +4,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { For } from "solid-js";
-import { designConfigs } from "./configs";
+import type { z } from "zod";
+import type { zFloorpDesignConfigs } from "./configs";
+import { config } from "./configs";
 import leptonChromeStyles from "./styles/lepton/css/leptonChrome.css?url";
 import leptonTabStyles from "./styles/lepton/css/leptonContent.css?url";
 import fluerialStyles from "./styles/fluerial/css/fluerial.css?url";
 
-const browserDesignStyles: {
-  [key: string]: { [key: number]: string[] };
-} = {
-  designs: {
-    0: [leptonChromeStyles, leptonTabStyles],
-    3: [fluerialStyles],
-  },
-  verticalTabs: {
-    0: [],
-    3: [],
-  },
-  multiRowTabs: {
-    0: [],
-    3: [],
-  },
-};
+function getCSSFromConfig(
+  pref: z.infer<typeof zFloorpDesignConfigs>,
+): string[] {
+  const result: string[] = [];
+  switch (pref.globalConfigs.userInterface) {
+    case "fluerial": {
+      result.push(fluerialStyles);
+      break;
+    }
+    case "lepton": {
+      [leptonChromeStyles, leptonTabStyles].forEach((style) => {
+        result.push(style);
+      });
+    }
+  }
+  return result;
+}
 
 export function BrowserDesignElement() {
   return (
     <>
-      <For
-        each={
-          browserDesignStyles.designs[designConfigs.globalConfigs.userInterface]
-        }
-      >
+      <For each={getCSSFromConfig(config())}>
         {(style) => (
           <link rel="stylesheet" class="browser-design" href={style} />
         )}

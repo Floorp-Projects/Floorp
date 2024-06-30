@@ -3,14 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { createSignal } from "solid-js";
 import { z } from "zod";
 
-export function getOldConfigs() {
+function getOldConfigs() {
   const oldConfigs = {
     globalConfigs: {
       verticalTabEnabled: false,
       multiRowTabEnabled: false,
-      userInterface: 0,
+      userInterface: "lepton",
     },
     fluerial: {
       roundVerticalTabs: false,
@@ -28,15 +29,25 @@ export const zFloorpDesignConfigs = z.object({
   globalConfigs: z.object({
     verticalTabEnabled: z.boolean(),
     multiRowTabEnabled: z.boolean(),
-    userInterface: z.number(),
+    userInterface: z.string(),
   }),
   fluerial: z.object({
     roundVerticalTabs: z.boolean(),
   }),
 });
 
-export const designConfigs = zFloorpDesignConfigs.parse(
-  JSON.parse(
-    Services.prefs.getStringPref("floorp.design.configs", getOldConfigs()),
+export const [config, setConfig] = createSignal(
+  zFloorpDesignConfigs.parse(
+    JSON.parse(
+      Services.prefs.getStringPref("floorp.design.configs", getOldConfigs()),
+    ),
+  ),
+);
+
+Services.prefs.addObserver("floorp.design.configs", () =>
+  setConfig(
+    zFloorpDesignConfigs.parse(
+      JSON.parse(Services.prefs.getStringPref("floorp.design.configs")),
+    ),
   ),
 );

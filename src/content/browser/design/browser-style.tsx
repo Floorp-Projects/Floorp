@@ -14,12 +14,6 @@ export class gFloorpDesignClass {
   private static get getBrowserDesignElement() {
     return document.querySelector("#browserdesign");
   }
-
-  private readonly prefs = [
-    "floorp.browser.user.interface",
-    "floorp.fluerial.roundVerticalTabs",
-  ];
-
   private static instance: gFloorpDesignClass;
   public static getInstance() {
     if (!gFloorpDesignClass.instance) {
@@ -30,9 +24,6 @@ export class gFloorpDesignClass {
 
   constructor() {
     gFloorpDesignClass.setBrowserDesign();
-    for (const pref of this.prefs) {
-      Services.prefs.addObserver(pref, gFloorpDesignClass.setBrowserDesign);
-    }
 
     Services.obs.addObserver(
       gFloorpDesignClass.setBrowserDesign,
@@ -45,8 +36,6 @@ export class gFloorpDesignClass {
       <BrowserStyleElement />,
       document.head?.lastElementChild,
     );
-
-    console.log("gFloorpDesignClass initialized");
   }
 
   public static setBrowserDesign() {
