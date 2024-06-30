@@ -754,7 +754,7 @@ export class AboutWelcomeShoppingChild extends AboutWelcomeChild {
       lazy.pdpVisits >= MIN_VISITS_TO_SHOW_SURVEY &&
       hasBeen24HrsSinceOptin;
 
-    if (this.showMicroSurvey) {
+    if (this.showMicroSurvey && !this.showOnboarding) {
       this.renderMessage();
     }
   }
@@ -775,6 +775,7 @@ export class AboutWelcomeShoppingChild extends AboutWelcomeChild {
   handleEvent(event) {
     // Decide when to show/hide onboarding and survey message
     const { productUrl, showOnboarding, data } = event.detail;
+    this.showOnboarding = showOnboarding;
 
     // Display onboarding if a user hasn't opted-in
     const optInReady = showOnboarding && productUrl;
@@ -819,18 +820,24 @@ export class AboutWelcomeShoppingChild extends AboutWelcomeChild {
   }
 
   renderMessage() {
+    this.contentWindow.clearTimeout(this.thankYouFadeTimeout);
     this.document.getElementById("multi-stage-message-root").hidden = false;
     this.document.dispatchEvent(
-      new this.contentWindow.CustomEvent("RenderWelcome", {
-        bubbles: true,
-      })
+      new this.contentWindow.CustomEvent("RenderWelcome", { bubbles: true })
     );
+  }
+
+  resetOnboardingContainer(root) {
+    root.innerHTML = "";
+    let newRoot = root.cloneNode(false);
+    root.replaceWith(newRoot);
+    return newRoot;
   }
 
   // TODO - Move messages into an ASRouter message provider. See bug 1848251.
   AWGetFeatureConfig() {
     let messageContent = optInDynamicContent;
-    if (this.showMicroSurvey) {
+    if (this.showMicroSurvey && !this.showOnboarding) {
       messageContent = SHOPPING_MICROSURVEY;
       this.setShoppingSurveySeen();
     }
@@ -855,13 +862,15 @@ export class AboutWelcomeShoppingChild extends AboutWelcomeChild {
     if (this._destroyed) {
       return;
     }
-    const root = this.document.getElementById("multi-stage-message-root");
+    let root = this.document.getElementById("multi-stage-message-root");
     if (root) {
-      root.innerHTML = "";
+      root = this.resetOnboardingContainer(root);
       root
         .appendChild(this.document.createElement("shopping-message-bar"))
         .setAttribute("type", "thank-you-for-feedback");
-      this.contentWindow.setTimeout(() => {
+      this.contentWindow.clearTimeout(this.thankYouFadeTimeout);
+      this.thankYouFadeTimeout = this.contentWindow.setTimeout(() => {
+        root = this.resetOnboardingContainer(root);
         root.hidden = true;
       }, 5000);
     }

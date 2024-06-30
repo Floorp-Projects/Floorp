@@ -7,7 +7,7 @@ const currentTime = Date.now() / 1000;
 const time25HrsAgo = currentTime - 25 * 60 * 60;
 const time1HrAgo = currentTime - 1 * 60 * 60;
 
-add_task(async function test_setup() {
+add_setup(async function test_setup() {
   await BrowserTestUtils.withNewTab(
     {
       url: "about:shoppingsidebar",
@@ -300,6 +300,10 @@ add_task(async function test_confirmation_screen() {
 
           await shoppingContainer.updateComplete;
 
+          let childActor = content.windowGlobalChild.getExistingActor(
+            "AboutWelcomeShopping"
+          );
+
           let surveyScreen1 = await ContentTaskUtils.waitForCondition(
             () =>
               content.document.querySelector(
@@ -329,6 +333,111 @@ add_task(async function test_confirmation_screen() {
           );
 
           ok(confirmationScreen, "Survey confirmation screen is rendered");
+
+          childActor.resetChildStates();
+        }
+      );
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_onboarding_resets_after_opt_out() {
+  // Verify the fix for bug 1900486.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.optedIn", 1],
+      ["browser.shopping.experience2023.survey.enabled", true],
+      ["browser.shopping.experience2023.autoOpen.enabled", true],
+      ["browser.shopping.experience2023.survey.hasSeen", false],
+      ["browser.shopping.experience2023.survey.pdpVisits", 5],
+      ["browser.shopping.experience2023.survey.optedInTime", time25HrsAgo],
+    ],
+  });
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [MOCK_ANALYZED_PRODUCT_RESPONSE],
+        async mockData => {
+          const { TestUtils } = ChromeUtils.importESModule(
+            "resource://testing-common/TestUtils.sys.mjs"
+          );
+          let surveyPrefChanged = TestUtils.waitForPrefChange(
+            "browser.shopping.experience2023.survey.hasSeen"
+          );
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+          shoppingContainer.data = Cu.cloneInto(mockData, content);
+
+          // Manually send data update event, as it isn't set due to the lack of mock APIs.
+          // TODO: Support for the mocks will be added in Bug 1853474.
+          let mockObj = {
+            data: mockData,
+            productUrl: "https://example.com/product/1234",
+          };
+          let evt = new content.CustomEvent("Update", {
+            bubbles: true,
+            detail: Cu.cloneInto(mockObj, content),
+          });
+          content.document.dispatchEvent(evt);
+
+          await shoppingContainer.updateComplete;
+          await surveyPrefChanged;
+
+          let childActor = content.windowGlobalChild.getExistingActor(
+            "AboutWelcomeShopping"
+          );
+
+          ok(childActor.surveyEnabled, "Survey is Enabled");
+
+          let surveyScreen = await ContentTaskUtils.waitForCondition(
+            () =>
+              content.document.querySelector(
+                "shopping-container .screen.SHOPPING_MICROSURVEY_SCREEN_1"
+              ),
+            "survey-screen"
+          );
+
+          ok(surveyScreen, "Survey screen is rendered");
+          ok(
+            childActor.showMicroSurvey,
+            "Show Survey targeting conditions met"
+          );
+
+          let root = content.document.getElementById(
+            "multi-stage-message-root"
+          );
+          ok(!root.hidden, "Survey Message container is shown");
+
+          let optInShown = ContentTaskUtils.waitForMutationCondition(
+            root,
+            { childList: true },
+            () => root.querySelector(".screen.FS_OPT_IN")
+          );
+          content.document.dispatchEvent(
+            new content.CustomEvent("Update", {
+              bubbles: true,
+              detail: Cu.cloneInto(
+                {
+                  data: mockData,
+                  productUrl: "https://example.com/product/1234",
+                  showOnboarding: true,
+                },
+                content
+              ),
+            })
+          );
+          await shoppingContainer.updateComplete;
+          await optInShown;
+
+          childActor.resetChildStates();
         }
       );
     }

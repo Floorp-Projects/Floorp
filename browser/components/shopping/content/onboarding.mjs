@@ -8,9 +8,7 @@ const BUNDLE_SRC =
 class Onboarding {
   constructor({ win } = {}) {
     this.doc = win.document;
-    win.addEventListener("RenderWelcome", () => this._addScriptsAndRender(), {
-      once: true,
-    });
+    win.addEventListener("RenderWelcome", () => this._addScriptsAndRender());
   }
 
   async _addScriptsAndRender() {
