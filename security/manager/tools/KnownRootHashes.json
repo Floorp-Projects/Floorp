@@ -1337,7 +1337,12 @@
       "label": "Telekom_Security_TLS_ECC_Root_2020",
       "binNumber": 266,
       "sha256Fingerprint": "V4r03tCFP05ZmNtK6vnL6o2UX2C2IKONGjwTsrx7qOE="
+    },
+    {
+      "label": "FIRMAPROFESIONAL_CA_ROOT_A_WEB",
+      "binNumber": 267,
+      "sha256Fingerprint": "vvJW2vJunGm97BYCNZeY88r3GCGgPgGCV8U8ZWF/PUo="
     }
   ],
-  "maxBin": 266
+  "maxBin": 267
 }

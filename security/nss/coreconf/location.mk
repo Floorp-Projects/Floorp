@@ -64,6 +64,10 @@ ifndef SOFTOKEN_LIB_DIR
     SOFTOKEN_LIB_DIR = $(DIST)/lib
 endif
 
+ifdef SQLITE_INCLUDE_DIR
+    INCLUDES += -I$(SQLITE_INCLUDE_DIR)
+endif
+
 ifndef SQLITE_LIB_DIR
     SQLITE_LIB_DIR = $(DIST)/lib
 endif

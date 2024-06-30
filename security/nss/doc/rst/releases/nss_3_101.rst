@@ -8,7 +8,7 @@ NSS 3.101 release notes
 
 .. container::
 
-   Network Security Services (NSS) 3.101 was released on *6 June 2024**.
+   Network Security Services (NSS) 3.101 was released on *6 June 2024**.  NSS 3.101 is an ESR release.
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------
