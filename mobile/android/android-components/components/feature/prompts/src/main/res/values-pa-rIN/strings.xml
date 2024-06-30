@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">ਪਾਸਵਰਡ</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">ਨਾ ਸੰਭਾਲੋ</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">ਨਾ ਸੰਭਾਲੋ</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="mozac_feature_prompt_dont_save_2">ਹੁਣੇ ਨਹੀਂ</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">ਕਦੇ ਨਾ ਸੰਭਾਲੋ</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,27 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">ਸੰਭਾਲੋ</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">ਅੱਪਡੇਟ ਨਾ ਕਰੋ</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">ਅੱਪਡੇਟ ਨਾ ਕਰੋ</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="mozac_feature_prompt_dont_update_2">ਹੁਣੇ ਨਹੀਂ</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">ਅੱਪਡੇਟ ਕਰੋ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">ਪਾਸਵਰਡ ਖੇਤਰ ਖਾਲੀ ਨਹੀਂ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">ਪਾਸਵਰਡ ਖੇਤਰ ਖਾਲੀ ਨਹੀਂ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">ਪਾਸਵਰਡ ਦਿਓ</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">ਪਾਸਵਰਡ ਦਿਓ</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">ਲਾਗਇਨ ਸੰਭਾਲਣ ਲਈ ਅਸਮਰੱਥ</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨ ਸੰਭਾਲਣ ਲਈ ਅਸਮਰੱਥ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">ਪਾਸਵਰਡ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ ਹੈ</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">ਪਾਸਵਰਡ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ ਹੈ</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">ਇਹ ਲਾਗਇਨ ਸੰਭਾਲਣਾ ਹੈ?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">ਇਹ ਲਾਗਇਨ ਸੰਭਾਲਣਾ ਹੈ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
-    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">ਪਾਸਵਰਡ ਸੰਭਾਲਣਾ ਹੈ?</string>
+    <string name="mozac_feature_prompt_login_save_headline_2">ਪਾਸਵਰਡ ਸੰਭਾਲਣਾ ਹੈ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">ਇਹ ਲਾਗਇਨ ਅੱਪਡੇਟ ਕਰਨਾ ਹੈ?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">ਇਹ ਲਾਗਇਨ ਅੱਪਡੇਟ ਕਰਨਾ ਹੈ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
-    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">ਪਾਸਵਰਡ ਅੱਪਡੇਟ ਕਰਨਾ ਹੈ?</string>
+    <string name="mozac_feature_prompt_login_update_headline_2">ਪਾਸਵਰਡ ਅੱਪਡੇਟ ਕਰਨਾ ਹੈ?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਨੂੰ ਸੰਭਾਲੇ ਪਾਸਵਰਡ ਵਿੱਚ ਜੋੜਨਾ ਹੈ?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -96,29 +96,45 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">ਸਮਾਂ ਸੈੱਟ ਕਰੋ</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">ਲਾਗਇਨਾਂ ਦਾ ਇੰਤਜ਼ਾਮ</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">ਲਾਗਇਨਾਂ ਦਾ ਇੰਤਜ਼ਾਮ</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">ਪਾਸਵਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ</string>
+    <string name="mozac_feature_prompts_manage_logins_2">ਪਾਸਵਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">ਸੁਝਾਏ ਲਾਗਇਨ ਫੈਲਾਓ</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ਸੁਝਾਏ ਲਾਗਇਨ ਫੈਲਾਓ</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡਾਂ ਨੂੰ ਫੈਲਾਓ</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡਾਂ ਨੂੰ ਫੈਲਾਓ</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">ਸੁਝਾਏ ਲਾਗਇਨ ਸਮੇਟੋ</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ਸੁਝਾਏ ਲਾਗਇਨ ਸਮੇਟੋ</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡਾਂ ਨੂੰ ਸਮੇਟੋ</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡਾਂ ਨੂੰ ਸਮੇਟੋ</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">ਸੁਝਾਏ ਗਏ ਲਾਗਇਨ</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">ਸੁਝਾਏ ਗਏ ਲਾਗਇਨ</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡ</string>
+    <string name="mozac_feature_prompts_saved_logins_2">ਸੰਭਾਲੇ ਹੋਏ ਪਾਸਵਰਡ</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">ਮਜ਼ਬੂਤ ਪਾਸਵਰਡ ਲਈ ਸੁਝਾਅ</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">ਮਜ਼ਬੂਤ ਪਾਸਵਰਡ ਲਈ ਸੁਝਾਅ</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">ਮਜ਼ਬੂਤ ਪਾਸਵਰਡ ਲਈ ਸੁਝਾਅ</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">ਮਜ਼ਬੂਤ ਪਾਸਵਰਡ ਵਰਤੋਂ</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">ਮਜ਼ਬੂਤ ਪਾਸਵਰਡ ਨੂੰ ਵਰਤੋਂ: %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">ਮਜ਼ਬੂਤ ਪਾਸਵਰਡ ਵਰਤਣਾ ਹੈ?</string>
+    <!-- Content description for the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_description">ਆਪਣੇ ਖਾਤਿਆਂ ਨੂੰ ਮਜ਼ਬੂਤ, ਰਲਵੇਂ ਮਿਲਵੇਂ ਤਿਆਰ ਕੀਤੇ ਪਾਸਵਰਡ ਨੂੰ ਵਰਤ ਕੇ ਸੁਰੱਖਿਅਤ ਕਰੋ। ਆਪਣੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਆਪਣੇ ਖਾਤੇ ਵਿੱਚ ਸੰਭਾਲ ਕੇ ਫ਼ੌਰਨ ਲਵੋ।</string>
+    <!-- Pressing this will use the suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_use_password">ਪਾਸਵਰਡ ਨੂੰ ਵਰਤੋਂ</string>
+    <!-- Pressing this will dismiss the suggested strong password dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_dismiss">ਹੁਣੇ ਨਹੀਂ</string>
+    <!-- Title for showing the suggest strong password saved confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_saved_snackbar_title">ਪਾਸਵਰਡ ਸੰਭਾਲਿਆ</string>
+    <!-- Title for showing the suggest strong password updated confirmation snackbar -->
+    <string name="mozac_feature_prompts_suggest_strong_password_updated_snackbar_title">ਪਾਸਵਰਡ ਅੱਪਡੇਟ ਕੀਤਾ ਗਿਆ</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">ਇਸ ਸਾਈਟ ਲਈ ਡਾਟਾ ਮੁੜ-ਭੇਜਣਾ ਹੈ?</string>
@@ -131,42 +147,42 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">ਕਰੈਡਿਟ ਕਾਰਡ ਚੁਣੋ</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">ਕਰੈਡਿਟ ਕਾਰਡ ਚੁਣੋ</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਕਾਰਡ ਨੂੰ ਵਰਤੋਂ</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">ਸੰਭਾਲੇ ਕਾਰਡ ਨੂੰ ਵਰਤੋਂ</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">ਸੁਝਾਏ ਗਏ ਕਰੈਡਿਟ ਕਾਰਡ ਨੂੰ ਫੈਲਾਓ</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ਸੁਝਾਏ ਗਏ ਕਰੈਡਿਟ ਕਾਰਡ ਨੂੰ ਫੈਲਾਓ</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡਾਂ ਨੂੰ ਫੈਲਾਓ</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡਾਂ ਨੂੰ ਫੈਲਾਓ</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">ਸੁਝਾਏ ਗਏ ਕਰੈਡਿਟ ਕਾਰਡ ਨੂੰ ਸਮੇਟੋ</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ਸੁਝਾਏ ਗਏ ਕਰੈਡਿਟ ਕਾਰਡ ਨੂੰ ਸਮੇਟੋ</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡਾਂ ਨੂੰ ਸਮੇਟੋ</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡਾਂ ਨੂੰ ਸਮੇਟੋ</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">ਕਰੈਡਿਟ ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">ਕਰੈਡਿਟ ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">ਇਹ ਕਾਰਡ ਨੂੰ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸੰਭਾਲਣਾ ਹੈ?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">ਕਾਰਡ ਦੀ ਮਿਆਦ ਪੁੱਗਣ ਦੀ ਤਾਰੀਖ ਨੂੰ ਅੱਪਡੇਟ ਕਰਨਾ ਹੈ?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">ਕਾਰਡ ਨੰਬਰ ਨੂੰ ਇੰਕ੍ਰਿਪਟ ਕੀਤਾ ਜਾਵੇਗਾ। ਸੁਰੱਖਿਆ ਕੋਡ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾਵੇਗਾ।</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">ਕਾਰਡ ਨੰਬਰ ਨੂੰ ਇੰਕ੍ਰਿਪਟ ਕੀਤਾ ਜਾਵੇਗਾ। ਸੁਰੱਖਿਆ ਕੋਡ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾਵੇਗਾ।</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s ਤੁਹਾਡੇ ਕਾਰਡ ਨੂੰ ਇੰਕ੍ਰਿਪਟ ਕਰਦਾ ਹੈ। ਤੁਹਾਡੇ ਸੁਰੱਖਿਆ ਕੋਡ ਨੂੰ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾਵੇਗਾ।</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s ਤੁਹਾਡੇ ਕਾਰਡ ਨੂੰ ਇੰਕ੍ਰਿਪਟ ਕਰਦਾ ਹੈ। ਤੁਹਾਡੇ ਸੁਰੱਖਿਆ ਕੋਡ ਨੂੰ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾਵੇਗਾ।</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">ਸਿਰਨਾਵਾਂ ਚੁਣੋ</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">ਸੁਝਾਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਫੈਲਾਓ</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ਸੁਝਾਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਫੈਲਾਓ</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਫੈਲਾਓ</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">ਸੰਭਾਲੇ ਹੋਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਫੈਲਾਓ</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">ਸੁਝਾਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸਮੇਟੋ</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ਸੁਝਾਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸਮੇਟੋ</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">ਸੰਭਾਲੇ ਹੋਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸਮੇਟੋ</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">ਸੰਭਾਲੇ ਹੋਏ ਸਿਰਨਾਵਿਆਂ ਨੂੰ ਸਮੇਟੋ</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
 
