@@ -1014,13 +1014,12 @@ net.et
 // eu : https://en.wikipedia.org/wiki/.eu
 eu
 
-// fi : https://en.wikipedia.org/wiki/.fi
+// fi : https://www.iana.org/domains/root/db/fi.html
 fi
-// aland.fi : https://en.wikipedia.org/wiki/.ax
+// aland.fi : https://www.iana.org/domains/root/db/ax.html
 // This domain is being phased out in favor of .ax. As there are still many
 // domains under aland.fi, we still keep it on the list until aland.fi is
 // completely removed.
-// TODO: Check for updates (expected to be phased out around Q1/2009)
 aland.fi
 
 // fj : http://domains.fj/
@@ -6709,7 +6708,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-06-13T15:15:16Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-06-29T15:13:33Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -10495,7 +10494,7 @@ ups
 // https://www.iana.org/domains/root/db/vacations.html
 vacations
 
-// vana : Internet Naming Company LLC
+// vana : D3 Registry LLC
 // https://www.iana.org/domains/root/db/vana.html
 vana
 
@@ -12518,10 +12517,6 @@ feste-ip.net
 knx-server.net
 static-access.net
 
-// cPanel L.L.C. : https://www.cpanel.net/
-// Submitted by Dustin Scherer <public.suffix@cpanel.net>
-*.cprapid.com
-
 // Craynic, s.r.o. : http://www.craynic.com/
 // Submitted by Ales Krajnik <ales.krajnik@craynic.com>
 realm.cz
@@ -12669,6 +12664,10 @@ shoparena.pl
 // DreamHost : http://www.dreamhost.com/
 // Submitted by Andrew Farmer <andrew.farmer@dreamhost.com>
 dreamhosters.com
+
+// Dreamyoungs, Inc. : https://durumis.com
+// Submitted by Infra Team <infra@durumis.com>
+durumis.com
 
 // Drobo : http://www.drobo.com/
 // Submitted by Ricardo Padilha <rpadilha@drobo.com>
@@ -13824,7 +13823,7 @@ sch.so
 // Submitted by Bohdan Dub <support@hostfly.com.ua>
 ie.ua
 
-// HostyHosting (hostyhosting.com)
+// HostyHosting (https://hostyhosting.com)
 hostyhosting.io
 
 // Hypernode B.V. : https://www.hypernode.com/
@@ -14768,12 +14767,6 @@ platter-app.com
 platter-app.dev
 platterp.us
 
-// Plesk : https://www.plesk.com/
-// Submitted by Anton Akhtyamov <program-managers@plesk.com>
-pleskns.com
-pdns.page
-plesk.page
-
 // Pley AB : https://www.pley.com/
 // Submitted by Henning Pohl <infra@pley.com>
 pley.games
@@ -14853,13 +14846,14 @@ cloudsite.builders
 myradweb.net
 servername.us
 
+// Raidboxes GmbH : https://raidboxes.de
+// Submitted by Auke Tembrink <hostmaster@raidboxes.de>
+myrdbx.io
+site.rb-hosting.io
+
 // Redgate Software: https://red-gate.com
 // Submitted by Andrew Farries <andrew.farries@red-gate.com>
 instances.spawn.cc
-
-// Redstar Consultants : https://www.redstarconsultants.com/
-// Submitted by Jons Slemmer <jons@redstarconsultants.com>
-instantcloud.cn
 
 // Russian Academy of Sciences
 // Submitted by Tech Support <support@rasnet.ru>
@@ -15437,7 +15431,7 @@ beta.tailscale.net
 ts.net
 *.c.ts.net
 
-// TASK geographical domains (www.task.gda.pl/uslugi/dns)
+// TASK geographical domains (https://www.task.gda.pl/uslugi/dns)
 gda.pl
 gdansk.pl
 gdynia.pl
@@ -15657,7 +15651,11 @@ reserve-online.net
 
 // WebPros International, LLC : https://webpros.com/
 // Submitted by Nicolas Rochelemagne <public.suffix@webpros.com>
+cprapid.com
+pleskns.com
 wp2.host
+pdns.page
+plesk.page
 wpsquared.site
 
 // WebWaddle Ltd: https://webwaddle.com/
