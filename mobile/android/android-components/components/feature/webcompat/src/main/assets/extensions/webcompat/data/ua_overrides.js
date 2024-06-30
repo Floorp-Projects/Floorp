@@ -55,11 +55,8 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://*.directv.com.ec/*", // bug 1827706
         "*://*.directv.com/*",
       ],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36"
-        );
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
