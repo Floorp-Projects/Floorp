@@ -11539,24 +11539,6 @@
       "last_modified": 1666727872267
     },
     {
-      "schema": 1666727386927,
-      "derHash": "nGSppD6ZDpj7zoMXstTBwH/+bgMtqLttYKaW4v8Djx8=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 02,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "10551307f634eba8fbd03c34df0f74b6bf4e7d3b3857885e7e915dc171786627",
-        "size": 1329,
-        "filename": "OhdUJ-wrpPRtpX53tkyqVLKQoNpdCCWve8MQQaQDQ2A=.pem",
-        "location": "security-state-staging/intermediates/f2b86d33-5739-44cf-b054-65badcce6a6f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OhdUJ+wrpPRtpX53tkyqVLKQoNpdCCWve8MQQaQDQ2A=",
-      "crlite_enrolled": false,
-      "id": "d2a922d8-4206-443a-b5a3-7ca1cfd237ba",
-      "last_modified": 1666727872249
-    },
-    {
       "schema": 1666727367887,
       "derHash": "yKYQupQXdw0sAt4ivKjFakKK916ONU76NsVoIh3bfPw=",
       "subject": "CN=WISeKey CertifyID SSL GB CA 2,O=WISeKey,C=CH",
@@ -11611,24 +11593,6 @@
       "last_modified": 1666727872206
     },
     {
-      "schema": 1666727428992,
-      "derHash": "lJ1rS3YcoTStPnqFcRhvWA7oh/LGtWi1FA9BV/mNaN0=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 01,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1a3bc0dfeb8f9e3f79809953a727d69dc11a315684b4cf57c35d226206502e31",
-        "size": 1329,
-        "filename": "OZOx9JJC3JsSDSjFX2iEA3_ED6gCha3L1ZrOeRNoyx8=.pem",
-        "location": "security-state-staging/intermediates/e45aef57-3b9a-453f-bcc3-d1f5b6cc8d9f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OZOx9JJC3JsSDSjFX2iEA3/ED6gCha3L1ZrOeRNoyx8=",
-      "crlite_enrolled": false,
-      "id": "cbe28fbe-3eec-45be-a5ef-d53c15988acd",
-      "last_modified": 1666727872179
-    },
-    {
       "schema": 1666727364817,
       "derHash": "kmUc1IoCiKowdTVN3BXcJNCvjuZwFbaKFFlwoJNHXhk=",
       "subject": "CN=GlobalSign Atlas R3 DV ACME CA 2022 Q1,O=GlobalSign nv-sa,C=BE",
@@ -11645,24 +11609,6 @@
       "crlite_enrolled": false,
       "id": "d9a8325b-38fd-4205-a3e8-1e692af95693",
       "last_modified": 1666727872165
-    },
-    {
-      "schema": 1666727375150,
-      "derHash": "1oMbpDYH9awZd41idTFWKvVRRfGRyrXvr6DgAFRCswI=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "eec823ad61a76103455ac29ab1ea726af33851691074cffd1fb703c49fe85217",
-        "size": 2121,
-        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
-        "location": "security-state-staging/intermediates/2f77f92c-4a14-472b-8226-b3089173a1cc.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
-      "crlite_enrolled": false,
-      "id": "f1115643-4628-4823-bd7e-4206b13e8548",
-      "last_modified": 1666727872151
     },
     {
       "schema": 1666727411172,
@@ -11809,24 +11755,6 @@
       "last_modified": 1666727872042
     },
     {
-      "schema": 1666727369932,
-      "derHash": "JMcpmGTgoqaWT1UcDo3yRhUy+oxI5Nu7YIBxZpHxkOU=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 01,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1963ee36a9c20eb3169ad73cd42da09bfc6829eb50f71d6216925c6b9c2dddcb",
-        "size": 2121,
-        "filename": "NHwusbC7w844JzTmvIRIo8NL7D6StITK9phzFgtJi0w=.pem",
-        "location": "security-state-staging/intermediates/8b305ed8-e20d-4a9d-b915-24f4a186cd46.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "NHwusbC7w844JzTmvIRIo8NL7D6StITK9phzFgtJi0w=",
-      "crlite_enrolled": false,
-      "id": "eb2cd267-3056-4c85-aa35-b0985e1c423a",
-      "last_modified": 1666727872028
-    },
-    {
       "schema": 1666727333802,
       "derHash": "XEUjNNnJyaLqQsx3pxZeF5XunYTrcMt4S0fqnZKlgtk=",
       "subject": "CN=Soluti CA - DV,O=SOLUTI - SOLUCOES EM NEGOCIOS INTELIGENTES S/A,C=BR",
@@ -11899,24 +11827,6 @@
       "last_modified": 1666727871932
     },
     {
-      "schema": 1666727380502,
-      "derHash": "SP+LSUZox1IwS0i/6Bh1iYfe9lguXwm5IfS2C7PWqN0=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 06,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b800befca1341c29912755ead3105bdab854e4517a96d3492de73bd48b6aca1c",
-        "size": 2121,
-        "filename": "Wl8MFY-9zijGG8QgEHCAK5fhA-ydPZxaLQOFdiEPz3U=.pem",
-        "location": "security-state-staging/intermediates/d631f0df-1b1d-4f64-9d14-9fe8304d44fa.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Wl8MFY+9zijGG8QgEHCAK5fhA+ydPZxaLQOFdiEPz3U=",
-      "crlite_enrolled": false,
-      "id": "163fe716-2a45-49db-8d69-b86ff58b3114",
-      "last_modified": 1666727871889
-    },
-    {
       "schema": 1666727369075,
       "derHash": "Zz6P7rEWgnfQFTER0g7Tjp2lH0QL5/1QshhUCTd0Gkg=",
       "subject": "CN=DigiCert QuoVadis TLS ICA QuoVadis Root CA 2,O=DigiCert\\, Inc,C=US",
@@ -11971,42 +11881,6 @@
       "last_modified": 1666727871835
     },
     {
-      "schema": 1666727442113,
-      "derHash": "ffTT70V5j4xDhPxwK6UqRM571imLFBYo1Kurx2ePZGc=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 06,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8d704ee294bd149733993801e0cbad6deaa30f162b02e59509443d2f13b07b74",
-        "size": 2653,
-        "filename": "Wl8MFY-9zijGG8QgEHCAK5fhA-ydPZxaLQOFdiEPz3U=.pem",
-        "location": "security-state-staging/intermediates/02efee7c-c22f-45e0-a6cc-daa72a4e6d89.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Wl8MFY+9zijGG8QgEHCAK5fhA+ydPZxaLQOFdiEPz3U=",
-      "crlite_enrolled": false,
-      "id": "c2d5a60b-44df-4ee6-b081-765b3e6cbedd",
-      "last_modified": 1666727871821
-    },
-    {
-      "schema": 1666727337676,
-      "derHash": "BDerLsLCtIkClsE1A0sh2xRkNLgxfucDqoqpQ8XqUa4=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 01,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2777739491d74eeced727118790444484a83437e4e704c6697aa928b36a78bbb",
-        "size": 2653,
-        "filename": "NHwusbC7w844JzTmvIRIo8NL7D6StITK9phzFgtJi0w=.pem",
-        "location": "security-state-staging/intermediates/4c8d2520-1f13-47a3-9b9b-85990fa78aa4.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "NHwusbC7w844JzTmvIRIo8NL7D6StITK9phzFgtJi0w=",
-      "crlite_enrolled": false,
-      "id": "a114ce1e-4757-4407-8ea8-d7421902f389",
-      "last_modified": 1666727871807
-    },
-    {
       "schema": 1666727360825,
       "derHash": "MqTlVONjEW/kjiLwHawXNnUqcccg+Z9GLVZQItO60H0=",
       "subject": "CN=DPDHL Global TLS CA - I5,O=Deutsche Post AG,C=DE",
@@ -12043,24 +11917,6 @@
       "last_modified": 1666727871780
     },
     {
-      "schema": 1666727334470,
-      "derHash": "TsQ5ZypENAGmbieUfMO1iX8TK2Z/cSzBo3AYo8yFsWo=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 02,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d6b88839e53fd1739f156f78254837d2b4b300f968dc9ab78c1f926d2648da2c",
-        "size": 1508,
-        "filename": "OhdUJ-wrpPRtpX53tkyqVLKQoNpdCCWve8MQQaQDQ2A=.pem",
-        "location": "security-state-staging/intermediates/c7978a8f-9ea4-4bdb-a90f-d52d5ad11e64.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OhdUJ+wrpPRtpX53tkyqVLKQoNpdCCWve8MQQaQDQ2A=",
-      "crlite_enrolled": false,
-      "id": "f76e0282-0a3d-4444-b1a1-7e599a44f7c8",
-      "last_modified": 1666727871767
-    },
-    {
       "schema": 1666727354370,
       "derHash": "s2ef3dxkSFi5fbtn3neN1WxuXVOpa3DoWrUJ0JhoGG0=",
       "subject": "CN=SwissSign RSA TLS OV ICA 2021 - 1,O=SwissSign AG,C=CH",
@@ -12077,24 +11933,6 @@
       "crlite_enrolled": false,
       "id": "b9db9702-fd9d-4e21-8319-8998e1be5e47",
       "last_modified": 1666727871753
-    },
-    {
-      "schema": 1666727381856,
-      "derHash": "Yk1VdqZSshMHaL/oS5Ze7//ZFgPSXNX3FVp9wnidrDg=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDU=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2468274c7b25fd2b19d422592a89957967b1d0b2667a280258fa181e4990089d",
-        "size": 1512,
-        "filename": "k09MzmwiRPkPmkpgmUtprMk_uALSVedNLtfOBkCMvXE=.pem",
-        "location": "security-state-staging/intermediates/80b6ec62-bff9-48b4-a3cf-f8e34874b58f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "k09MzmwiRPkPmkpgmUtprMk/uALSVedNLtfOBkCMvXE=",
-      "crlite_enrolled": false,
-      "id": "806d2ed6-4b90-44a3-8208-2c60f2a2e5f3",
-      "last_modified": 1666727871704
     },
     {
       "schema": 1666727410506,
@@ -12167,24 +12005,6 @@
       "crlite_enrolled": false,
       "id": "9bfb32bb-d95f-4440-a86b-01e4010249cf",
       "last_modified": 1666727871648
-    },
-    {
-      "schema": 1666727376687,
-      "derHash": "FamHYevgEVVNo6RtIGsIEssutproeqoRpt1MuE7VFCo=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 02,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b94f365e9c87f17f0cce2845177df14966cfe660eb761de3a71b860db6a98fd9",
-        "size": 2121,
-        "filename": "zAwfx2iFcQ5vMOCc9vt-MXLdLl08EquNsOWgDF0hOw8=.pem",
-        "location": "security-state-staging/intermediates/c871cd6e-8739-4945-ad56-640037061116.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zAwfx2iFcQ5vMOCc9vt+MXLdLl08EquNsOWgDF0hOw8=",
-      "crlite_enrolled": false,
-      "id": "9c580ae1-ee63-4434-966d-7c79332c7aef",
-      "last_modified": 1666727871635
     },
     {
       "schema": 1666727391920,
@@ -12347,24 +12167,6 @@
       "crlite_enrolled": false,
       "id": "7cd75c73-53a3-4d79-954c-c72716711cea",
       "last_modified": 1666727871499
-    },
-    {
-      "schema": 1666727437324,
-      "derHash": "LK77tV5w31qJhf6bwQ3VakDD3tqz2hUwopaCAVxbfGY=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 01,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a45e27eb4ce4e2624d46479d0ecf5a612e520e17ac29d9b405427a94f6798f65",
-        "size": 1512,
-        "filename": "OZOx9JJC3JsSDSjFX2iEA3_ED6gCha3L1ZrOeRNoyx8=.pem",
-        "location": "security-state-staging/intermediates/0aaac946-3682-4510-bb2f-61af7a692f2c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OZOx9JJC3JsSDSjFX2iEA3/ED6gCha3L1ZrOeRNoyx8=",
-      "crlite_enrolled": false,
-      "id": "23219f23-4f65-40c8-9baf-cf8d86adfbc1",
-      "last_modified": 1666727871485
     },
     {
       "schema": 1666727337842,
@@ -12637,24 +12439,6 @@
       "last_modified": 1666727871248
     },
     {
-      "schema": 1666727370444,
-      "derHash": "qzIDs+ogF9UJcmodgik+/8uMQs61LJrxwO7pa1wCvLo=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "dab72f8a61c3d1392090bfa1d53928ff5e675385a1b03742a601a3457a12342f",
-        "size": 2653,
-        "filename": "4i4h0jN9NROr1xKJI-TQ1Q_ZIfUjPMXtmWUsDR3Pjiw=.pem",
-        "location": "security-state-staging/intermediates/72a185d7-4eb2-47d8-b2a4-e045b0a06de6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4i4h0jN9NROr1xKJI+TQ1Q/ZIfUjPMXtmWUsDR3Pjiw=",
-      "crlite_enrolled": false,
-      "id": "5f4eb28e-9486-4fc3-a0b6-bf4fa86b1b59",
-      "last_modified": 1666727871232
-    },
-    {
       "schema": 1666727435110,
       "derHash": "ffgAB19SA8AXNk6BGVqayf8AxQfWSnD3N9jT6Ms/CEU=",
       "subject": "CN=e-Szigno Qualified TLS CA 2018,O=Microsec Ltd.,L=Budapest,C=HU",
@@ -12689,24 +12473,6 @@
       "crlite_enrolled": false,
       "id": "67adf801-f8c9-4aa3-8959-8c52c5b8e487",
       "last_modified": 1666727871191
-    },
-    {
-      "schema": 1666727424612,
-      "derHash": "AD9x3EggIWV1/Fqs/jsa63b3Kupbjo/O/IC59RekphI=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 05,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDU=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "312e807dea2263ef605990bfa0b57b238b64d9fea0fc945e37f48f3e6246d576",
-        "size": 1329,
-        "filename": "k09MzmwiRPkPmkpgmUtprMk_uALSVedNLtfOBkCMvXE=.pem",
-        "location": "security-state-staging/intermediates/6aaee85d-0f49-4200-aef8-443dcc265c89.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "k09MzmwiRPkPmkpgmUtprMk/uALSVedNLtfOBkCMvXE=",
-      "crlite_enrolled": false,
-      "id": "aa89fd7f-c3e7-48eb-8a53-205dfa9060a4",
-      "last_modified": 1666727871176
     },
     {
       "schema": 1666727444500,
@@ -12761,42 +12527,6 @@
       "crlite_enrolled": false,
       "id": "94dee99a-f803-4f21-bbe1-cec73c87cf5e",
       "last_modified": 1666727871121
-    },
-    {
-      "schema": 1666727392408,
-      "derHash": "FRo+WWnGYW62N6hyKxdM/ZU4eqznjVfDvSPwyzAIGGo=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 06,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDY=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3f94a2f59b7465d9ec3993abf5497a7454a624492a51b0f1af1453447008be7a",
-        "size": 1508,
-        "filename": "yBjnrcmcUp2nylDRWnQvSPRspmhm1f_fOuKrsNiaSdA=.pem",
-        "location": "security-state-staging/intermediates/02495c18-91a4-42fb-956a-4fe8ed43bfee.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "yBjnrcmcUp2nylDRWnQvSPRspmhm1f/fOuKrsNiaSdA=",
-      "crlite_enrolled": false,
-      "id": "97c50b5c-b8db-4d7e-9a48-a00cfe50809d",
-      "last_modified": 1666727871096
-    },
-    {
-      "schema": 1666727436978,
-      "derHash": "05zjn/b0SdTzOR7iAE1wXsIvmc/8pAqI+F2yZFSt29E=",
-      "subject": "CN=Microsoft Azure TLS Issuing CA 02,O=Microsoft Corporation,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xKjAoBgNVBAMTIU1pY3Jvc29mdCBBenVyZSBUTFMgSXNzdWluZyBDQSAwMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ce0b3cc7344615f4e2c08e375e5170baea84e9c13a2b7eab45e0eb275cfec111",
-        "size": 2653,
-        "filename": "zAwfx2iFcQ5vMOCc9vt-MXLdLl08EquNsOWgDF0hOw8=.pem",
-        "location": "security-state-staging/intermediates/ba9ba353-fc26-4c61-a866-b85b659ec9a5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zAwfx2iFcQ5vMOCc9vt+MXLdLl08EquNsOWgDF0hOw8=",
-      "crlite_enrolled": false,
-      "id": "99c86985-1228-476e-a19f-d0460513f062",
-      "last_modified": 1666727871078
     },
     {
       "schema": 1666727373459,
@@ -13211,24 +12941,6 @@
       "crlite_enrolled": false,
       "id": "f0051e35-0e04-44e0-b38c-9ae0dfcb304f",
       "last_modified": 1666727870715
-    },
-    {
-      "schema": 1666727337012,
-      "derHash": "KXW6tR0A2GLQ4W7t74MGp1nGXNS58A2vUOzfy07DluQ=",
-      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 06,O=Microsoft Corporation,C=US",
-      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDY=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "913a6555d1accfb6fad27f0850000c3dead37ef7c0c8683ab4771d4154dafae2",
-        "size": 1329,
-        "filename": "yBjnrcmcUp2nylDRWnQvSPRspmhm1f_fOuKrsNiaSdA=.pem",
-        "location": "security-state-staging/intermediates/d4441bdb-1976-4959-915a-7e64feadf03a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "yBjnrcmcUp2nylDRWnQvSPRspmhm1f/fOuKrsNiaSdA=",
-      "crlite_enrolled": false,
-      "id": "23eb6ffd-3fb0-4819-9292-f84d510529b1",
-      "last_modified": 1666727870702
     },
     {
       "schema": 1666727387103,
@@ -31321,5 +31033,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1719241031587
+  "timestamp": 1719500222993
 }

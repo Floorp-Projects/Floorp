@@ -1014,13 +1014,12 @@ net.et
 // eu : https://en.wikipedia.org/wiki/.eu
 eu
 
-// fi : https://en.wikipedia.org/wiki/.fi
+// fi : https://www.iana.org/domains/root/db/fi.html
 fi
-// aland.fi : https://en.wikipedia.org/wiki/.ax
+// aland.fi : https://www.iana.org/domains/root/db/ax.html
 // This domain is being phased out in favor of .ax. As there are still many
 // domains under aland.fi, we still keep it on the list until aland.fi is
 // completely removed.
-// TODO: Check for updates (expected to be phased out around Q1/2009)
 aland.fi
 
 // fj : http://domains.fj/
@@ -6709,7 +6708,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-06-13T15:15:16Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-06-29T15:13:33Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -10495,7 +10494,7 @@ ups
 // https://www.iana.org/domains/root/db/vacations.html
 vacations
 
-// vana : Internet Naming Company LLC
+// vana : D3 Registry LLC
 // https://www.iana.org/domains/root/db/vana.html
 vana
 
@@ -12518,9 +12517,9 @@ feste-ip.net
 knx-server.net
 static-access.net
 
-// cPanel L.L.C. : https://www.cpanel.net/
-// Submitted by Dustin Scherer <public.suffix@cpanel.net>
-*.cprapid.com
+// Craft Docs Ltd : https://www.craft.do/
+// Submitted by Zsombor Fuszenecker <security@craft.do>
+craft.me
 
 // Craynic, s.r.o. : http://www.craynic.com/
 // Submitted by Ales Krajnik <ales.krajnik@craynic.com>
@@ -12549,6 +12548,10 @@ curv.dev
 *.oci.customer-oci.com
 *.ocp.customer-oci.com
 *.ocs.customer-oci.com
+
+// cyber_Folks S.A. : https://cyberfolks.pl
+// Submitted by Bartlomiej Kida <security@cyberfolks.pl>
+cfolks.pl
 
 // Cyclic Software : https://www.cyclic.sh
 // Submitted by Kam Lasater <dns-admin@cyclic.sh>
@@ -12669,6 +12672,10 @@ shoparena.pl
 // DreamHost : http://www.dreamhost.com/
 // Submitted by Andrew Farmer <andrew.farmer@dreamhost.com>
 dreamhosters.com
+
+// Dreamyoungs, Inc. : https://durumis.com
+// Submitted by Infra Team <infra@durumis.com>
+durumis.com
 
 // Drobo : http://www.drobo.com/
 // Submitted by Ricardo Padilha <rpadilha@drobo.com>
@@ -13760,6 +13767,15 @@ hashbang.sh
 hasura.app
 hasura-app.io
 
+// Hatena Co., Ltd. : https://hatena.co.jp
+// Submitted by Masato Nakamura <blog-developers@hatena.ne.jp>
+hatenablog.com
+hatenadiary.com
+hateblo.jp
+hatenablog.jp
+hatenadiary.jp
+hatenadiary.org
+
 // Heilbronn University of Applied Sciences - Faculty Informatics (GitLab Pages): https://www.hs-heilbronn.de
 // Submitted by Richard Zowalla <mi-admin@hs-heilbronn.de>
 pages.it.hs-heilbronn.de
@@ -14768,12 +14784,6 @@ platter-app.com
 platter-app.dev
 platterp.us
 
-// Plesk : https://www.plesk.com/
-// Submitted by Anton Akhtyamov <program-managers@plesk.com>
-pleskns.com
-pdns.page
-plesk.page
-
 // Pley AB : https://www.pley.com/
 // Submitted by Henning Pohl <infra@pley.com>
 pley.games
@@ -14862,10 +14872,6 @@ site.rb-hosting.io
 // Submitted by Andrew Farries <andrew.farries@red-gate.com>
 instances.spawn.cc
 
-// Redstar Consultants : https://www.redstarconsultants.com/
-// Submitted by Jons Slemmer <jons@redstarconsultants.com>
-instantcloud.cn
-
 // Russian Academy of Sciences
 // Submitted by Tech Support <support@rasnet.ru>
 ras.ru
@@ -14901,10 +14907,6 @@ vaporcloud.io
 // Submitted by Kirill Pertsev <kika@rackmaze.com>
 rackmaze.com
 rackmaze.net
-
-// Rakuten Games, Inc : https://dev.viberplay.io
-// Submitted by Joshua Zhang <public-suffix@rgames.jp>
-g.vbrplsbx.io
 
 // Rancher Labs, Inc : https://rancher.com
 // Submitted by Vincent Fiduccia <domains@rancher.com>
@@ -15662,7 +15664,11 @@ reserve-online.net
 
 // WebPros International, LLC : https://webpros.com/
 // Submitted by Nicolas Rochelemagne <public.suffix@webpros.com>
+cprapid.com
+pleskns.com
 wp2.host
+pdns.page
+plesk.page
 wpsquared.site
 
 // WebWaddle Ltd: https://webwaddle.com/
