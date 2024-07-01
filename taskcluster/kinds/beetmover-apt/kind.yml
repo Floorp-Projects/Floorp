@@ -28,3 +28,4 @@ jobs:
             - nightly
             - beta
             - release
+            - esr128
