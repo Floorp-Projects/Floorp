@@ -863,40 +863,6 @@ var SessionStoreInternal = {
             }
           }
 
-          // Remove needless Workspaces data from JSON
-          const { WorkspacesWindowIdUtils } = ChromeUtils.importESModule(
-            "resource://floorp/WorkspacesWindowIdUtils.mjs"
-          );
-          // win.windowUuid is Workspace window id
-          // Create existing window id set for remove needless Workspaces data
-          const savedWindowIds = new Set();
-          const storedWindowsData = state.windows.concat(state._closedWindows);
-          for (const win of storedWindowsData) {
-            if (win.windowUuid) {
-              savedWindowIds.add(win.windowUuid);
-            }
-          }
-
-          // async function cannnot used in this initialization function
-          // We need to use then() to wait for the result
-          // Remove needless Workspaces data from JSON
-          WorkspacesWindowIdUtils.getAllWindowAndWorkspacesData().then(
-            async json => {
-              for (const windowId in json.windows) {
-                if (!savedWindowIds.has(windowId)) {
-                  delete json.windows[windowId];
-                }
-              }
-              // Update Workspaces data
-              await IOUtils.writeJSON(
-                WorkspacesWindowIdUtils._workspacesStoreFile,
-                json
-              );
-            }
-          );
-
-          // End of floorp injections
-
           // If we didn't use about:sessionrestore, record that:
           if (!restoreAsCrashed) {
             Services.telemetry.keyedScalarAdd(
