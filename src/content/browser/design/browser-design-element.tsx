@@ -6,9 +6,13 @@
 import { For } from "solid-js";
 import type { z } from "zod";
 import type { zFloorpDesignConfigs } from "./configs";
+import { applyUserJS } from "./userjs-applyer";
 import { config } from "./configs";
 import leptonChromeStyles from "./styles/lepton/css/leptonChrome.css?url";
 import leptonTabStyles from "./styles/lepton/css/leptonContent.css?url";
+import leptonUserJs from "./styles/lepton/userjs/lepton.js?url";
+import photonUserJs from "./styles/lepton/userjs/photon.js?url";
+import protonfixUserJs from "./styles/lepton/userjs/protonfix.js?url";
 import fluerialStyles from "./styles/fluerial/css/fluerial.css?url";
 
 function getCSSFromConfig(
@@ -24,6 +28,22 @@ function getCSSFromConfig(
       [leptonChromeStyles, leptonTabStyles].forEach((style) => {
         result.push(style);
       });
+      applyUserJS(`chrome://noraneko${leptonUserJs}`);
+      break;
+    }
+    case "photon": {
+      [leptonChromeStyles, leptonTabStyles].forEach((style) => {
+        result.push(style);
+      });
+      applyUserJS(`chrome://noraneko${photonUserJs}`);
+      break;
+    }
+    case "protonfix": {
+      [leptonChromeStyles, leptonTabStyles].forEach((style) => {
+        result.push(style);
+      });
+      applyUserJS(`chrome://noraneko${protonfixUserJs}`);
+      break;
     }
   }
   return result;
@@ -34,7 +54,11 @@ export function BrowserDesignElement() {
     <>
       <For each={getCSSFromConfig(config())}>
         {(style) => (
-          <link rel="stylesheet" class="browser-design" href={style} />
+          <link
+            rel="stylesheet"
+            class="browser-design"
+            href={`chrome://noraneko${style}`}
+          />
         )}
       </For>
     </>

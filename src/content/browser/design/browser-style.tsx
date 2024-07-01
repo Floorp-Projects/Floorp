@@ -11,8 +11,8 @@ import { BrowserDesignElement } from "./browser-design-element";
 import("./lepton-config");
 
 export class gFloorpDesignClass {
-  private static get getBrowserDesignElement() {
-    return document.querySelector("#browserdesign");
+  private static get getBrowserDesignElements() {
+    return document.querySelectorAll(".browser-design");
   }
   private static instance: gFloorpDesignClass;
   public static getInstance() {
@@ -39,7 +39,9 @@ export class gFloorpDesignClass {
   }
 
   public static setBrowserDesign() {
-    gFloorpDesignClass.getBrowserDesignElement?.remove();
+    for (const elem of gFloorpDesignClass.getBrowserDesignElements) {
+      elem.remove();
+    }
 
     insert(
       document.head,

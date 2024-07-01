@@ -12,6 +12,7 @@ function getOldConfigs() {
       verticalTabEnabled: false,
       multiRowTabEnabled: false,
       userInterface: "lepton",
+      appliedUserJs: "",
     },
     fluerial: {
       roundVerticalTabs: false,
@@ -30,6 +31,7 @@ export const zFloorpDesignConfigs = z.object({
     verticalTabEnabled: z.boolean(),
     multiRowTabEnabled: z.boolean(),
     userInterface: z.string(),
+    appliedUserJs: z.string(),
   }),
   fluerial: z.object({
     roundVerticalTabs: z.boolean(),
