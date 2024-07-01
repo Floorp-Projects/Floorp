@@ -350,6 +350,7 @@ a=setup:passive
   }
 
   runNetworkTest(async () => {
+    await SpecialPowers.pushPrefEnv({ set: [["media.navigator.video.disable_h264_baseline", false]] });
     for (const test of tests) {
       info(`Running test: ${test.name}`);
       await test();
