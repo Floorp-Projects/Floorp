@@ -6,8 +6,12 @@
 const currentUserJS = Services.prefs.getCharPref("browser.userjs.location", "");
 
 export async function applyUserJS(path: string) {
+  if (currentUserJS !== "") {
+    await resetPreferencesWithUserJsContents(currentUserJS);
+  }
+
   const userjs = await (await fetch(path)).text();
-  const p_userjs = userjs.replaceAll(/\/\/[\/]*.*\n/g, "\n");
+  const p_userjs = userjs.replaceAll(/^\s*\/\/.*$/gm, "");
   for (const line of p_userjs.split("\n")) {
     if (line.includes("user_pref")) {
       const tmp = line.replaceAll("user_pref(", "").replaceAll(");", "");
@@ -16,19 +20,16 @@ export async function applyUserJS(path: string) {
       value = value.trim();
 
       if (value === "true" || value === "false") {
-        //console.log(prefName);
         Services.prefs
           .getDefaultBranch("")
           .setBoolPref(prefName, value === "true");
       } else if (value.includes('"')) {
         Services.prefs
           .getDefaultBranch("")
-          .setStringPref(prefName, value.replace('"', ""));
-      } else if (!Number.isNaN(value)) {
+          .setStringPref(prefName, value.replace(/"/g, ""));
+      } else if (!Number.isNaN(Number(value))) {
         // integer
-        Services.prefs
-          .getDefaultBranch("")
-          .setIntPref(prefName, value as unknown as number);
+        Services.prefs.getDefaultBranch("").setIntPref(prefName, Number(value));
       }
     }
   }
@@ -36,20 +37,15 @@ export async function applyUserJS(path: string) {
 }
 
 export async function resetPreferencesWithUserJsContents(path: string) {
-  const text = await (await fetch(path)).text();
-  const prefPattern = /user_pref\("([^"]+)",\s*(true|false|\d+|"[^"]*")\);/g;
-
-  const match = prefPattern.exec(text);
-  while (match !== null) {
-    if (!match[0].startsWith("//")) {
-      const settingName = match[1];
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          Services.prefs.clearUserPref(settingName);
-          console.info(`resetting ${settingName}`);
-        }, 100);
-        resolve(undefined);
-      });
+  const userjs = await (await fetch(path)).text();
+  const p_userjs = userjs.replaceAll(/^\s*\/\/.*$/gm, "");
+  for (const line of p_userjs.split("\n")) {
+    if (line.includes("user_pref")) {
+      const tmp = line.replaceAll("user_pref(", "").replaceAll(");", "");
+      let [prefName] = tmp.split(",");
+      prefName = prefName.trim().replaceAll('"', "");
+      Services.prefs.clearUserPref(prefName);
     }
   }
+  Services.prefs.setStringPref("browser.userjs.location", "");
 }

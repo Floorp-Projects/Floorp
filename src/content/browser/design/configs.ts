@@ -6,25 +6,17 @@
 import { createSignal } from "solid-js";
 import { z } from "zod";
 
-function getOldConfigs() {
-  const oldConfigs = {
-    globalConfigs: {
-      verticalTabEnabled: false,
-      multiRowTabEnabled: false,
-      userInterface: "lepton",
-      appliedUserJs: "",
-    },
-    fluerial: {
-      roundVerticalTabs: false,
-    },
-  };
-
-  Services.prefs.setStringPref(
-    "floorp.design.configs",
-    JSON.stringify(oldConfigs),
-  );
-  return JSON.stringify(oldConfigs);
-}
+const getOldConfigs = JSON.stringify({
+  globalConfigs: {
+    verticalTabEnabled: false,
+    multiRowTabEnabled: false,
+    userInterface: "lepton",
+    appliedUserJs: "",
+  },
+  fluerial: {
+    roundVerticalTabs: false,
+  },
+});
 
 export const zFloorpDesignConfigs = z.object({
   globalConfigs: z.object({
@@ -41,7 +33,7 @@ export const zFloorpDesignConfigs = z.object({
 export const [config, setConfig] = createSignal(
   zFloorpDesignConfigs.parse(
     JSON.parse(
-      Services.prefs.getStringPref("floorp.design.configs", getOldConfigs()),
+      Services.prefs.getStringPref("floorp.design.configs", getOldConfigs),
     ),
   ),
 );

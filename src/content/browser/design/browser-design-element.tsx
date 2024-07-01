@@ -6,7 +6,7 @@
 import { For } from "solid-js";
 import type { z } from "zod";
 import type { zFloorpDesignConfigs } from "./configs";
-import { applyUserJS } from "./userjs-applyer";
+import { applyUserJS } from "./userjs-parser";
 import { config } from "./configs";
 import leptonChromeStyles from "./styles/lepton/css/leptonChrome.css?url";
 import leptonTabStyles from "./styles/lepton/css/leptonContent.css?url";
