@@ -12517,6 +12517,10 @@ feste-ip.net
 knx-server.net
 static-access.net
 
+// Craft Docs Ltd : https://www.craft.do/
+// Submitted by Zsombor Fuszenecker <security@craft.do>
+craft.me
+
 // Craynic, s.r.o. : http://www.craynic.com/
 // Submitted by Ales Krajnik <ales.krajnik@craynic.com>
 realm.cz
@@ -12544,6 +12548,10 @@ curv.dev
 *.oci.customer-oci.com
 *.ocp.customer-oci.com
 *.ocs.customer-oci.com
+
+// cyber_Folks S.A. : https://cyberfolks.pl
+// Submitted by Bartlomiej Kida <security@cyberfolks.pl>
+cfolks.pl
 
 // Cyclic Software : https://www.cyclic.sh
 // Submitted by Kam Lasater <dns-admin@cyclic.sh>
@@ -13759,6 +13767,15 @@ hashbang.sh
 hasura.app
 hasura-app.io
 
+// Hatena Co., Ltd. : https://hatena.co.jp
+// Submitted by Masato Nakamura <blog-developers@hatena.ne.jp>
+hatenablog.com
+hatenadiary.com
+hateblo.jp
+hatenablog.jp
+hatenadiary.jp
+hatenadiary.org
+
 // Heilbronn University of Applied Sciences - Faculty Informatics (GitLab Pages): https://www.hs-heilbronn.de
 // Submitted by Richard Zowalla <mi-admin@hs-heilbronn.de>
 pages.it.hs-heilbronn.de
@@ -14890,10 +14907,6 @@ vaporcloud.io
 // Submitted by Kirill Pertsev <kika@rackmaze.com>
 rackmaze.com
 rackmaze.net
-
-// Rakuten Games, Inc : https://dev.viberplay.io
-// Submitted by Joshua Zhang <public-suffix@rgames.jp>
-g.vbrplsbx.io
 
 // Rancher Labs, Inc : https://rancher.com
 // Submitted by Vincent Fiduccia <domains@rancher.com>
