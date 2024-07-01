@@ -116,7 +116,8 @@
     // video device as loopback does not currently change.
     await pushPrefs(
       ['media.video_loopback_dev', ''],
-      ['media.navigator.streams.fake', true]);
+      ['media.navigator.streams.fake', true],
+      ["media.navigator.video.disable_h264_baseline", false]);
     for (let codec of codecs) {
       info(`Testing video for codec ${codec.name} offset ${codec.offset}`);
       try {
