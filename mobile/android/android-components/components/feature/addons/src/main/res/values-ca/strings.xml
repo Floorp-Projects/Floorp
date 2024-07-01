@@ -192,10 +192,16 @@
     <string name="mozac_feature_addons_extension_failed_to_install">No s’ha pogut instal·lar aquesta extensió.</string>
     <!-- Text shown when attempting to install an extension and a network error happened. -->
     <string name="mozac_feature_addons_extension_failed_to_install_network_error">No s’ha pogut baixar aquesta extensió perquè s’ha produït un problema de connexió.</string>
+    <!-- Text shown when attempting to install an extension and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_corrupt_error">No s\'ha pogut instal·lar aquesta extensió perquè sembla que està malmesa.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">No es pot instal·lar aquesta extensió perquè no està verificada.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">No s’ha pogut instal·lar el complement «%1$s» perquè no és compatible amb el %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">No s’ha pogut instal·lar el complement %1$s perquè hi ha un alt risc que provoqui problemes d’estabilitat o de seguretat.</string>
+    <!-- Text shown when attempting to install an add-on that can only be install via Enterprise Policies, which is not supported on Android.  %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_admin_install_only">No s\'ha pogut instal·lar %1$s perquè només pot instal·lar-lo una organització que utilitzi polítiques empresarials, però en aquesta plataforma no s\'admeten.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s s’ha activat correctament</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -214,6 +220,10 @@
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">No s’ha pogut eliminar %1$s</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Aquest complement es va migrar des d’una versió anterior del %1$s</string>
+    <!-- Text shown in not yet supported add-ons section. -->
+    <string name="mozac_feature_addons_unsupported_caption_2">1 extensió</string>
+    <!-- Text shown in not yet supported add-ons section - plural. %1$s is the number of unsupported extensions. -->
+    <string name="mozac_feature_addons_unsupported_caption_plural_2">%1$s extensions</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Més informació</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
@@ -230,6 +240,10 @@
     <string name="mozac_feature_addons_updater_dialog_status">Estat:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s s’ha afegit al %2$s</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">Accediu a %1$s des del menú del %2$s.</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button_2">D’acord</string>
     <!-- "Learn more" link displayed below an add-on status message. -->
     <string name="mozac_feature_addons_status_learn_more">Més informació</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->

@@ -2631,6 +2631,13 @@
     <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
     <string name="download_languages_fetch_error_warning_text">Nelze načíst jazyky. Zkuste to prosím později.</string>
 
+    <!-- The title of the warning card informs the user that an error has occurred at downloading a language.
+      The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_error_warning_text"><![CDATA[Jazyk <b>%1$s</b> se nepodařilo stáhnout. Zkuste to znovu.]]></string>
+    <!-- The title of the warning card informs the user that an error has occurred at deleting a language.
+          The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_delete_error_warning_text"><![CDATA[Jazyk <b>%1$s</b> se nepodařilo smazat. Zkuste to znovu.]]></string>
+
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->

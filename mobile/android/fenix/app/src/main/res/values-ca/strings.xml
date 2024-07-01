@@ -56,6 +56,14 @@
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Elimina</string>
 
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Adreces d\'interès</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Mostra totes les adreces d\'interès</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Elimina</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">El %1$s està creat per Mozilla.</string>
 
@@ -189,6 +197,8 @@
     <string name="browser_menu_extensions">Extensions</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Gestiona les extensions</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Mostra més extensions</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informació del compte</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -252,8 +262,48 @@
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
     <string name="browser_menu_sign_in">Inicia la sessió</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">Sincronitzeu contrasenyes, pestanyes i molt més</string>
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">Torneu a iniciar la sessió per sincronitzar</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">S\'ha posat en pausa la sincronització</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">Pestanya privada nova</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">Contrasenyes</string>
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Novetats del %1$s</string>
     <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
     <string name="browser_menu_switch_to_desktop_site">Canvia al lloc d\'escriptori</string>
+
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Eines</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Desa</string>
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Afegeix aquesta pàgina a les adreces d’interès</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Edita l’adreça d’interès</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Desa com a PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Activa la vista de lectura</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Desactiva la vista de lectura</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Tradueix la pàgina…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">S’ha traduït a %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Imprimeix…</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">No hi ha cap extensió</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -264,6 +314,11 @@
     <string name="browser_toolbar_erase">Esborra l’historial de navegació</string>
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Tradueix la pàgina</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Pàgina traduïda de %1$s a %2$s.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -345,6 +400,17 @@
     <string name="juno_onboarding_privacy_notice_text">Avís de privadesa del Firefox</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ens encanta mantenir-vos segur</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Descobriu per què milions de persones estimen el Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Navegació segura amb més opcions</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_3">El nostre navegador sense ànim de lucre ajuda a blocar automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Més de 100 milions de persones protegeixen la seva privadesa triant un navegador creat per una organització sense ànim de lucre.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Els elements de seguiment habituals? Els bloquem automàticament. Voleu extensions? Proveu-ne 700. Treballeu amb documents PDF? El nostre lector integrat ho fa fàcil.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">El nostre navegador sense ànim de lucre ajuda a blocar automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.\n\nObteniu més informació al nostre avís de privadesa.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -524,6 +590,8 @@
     <string name="preferences_category_account">Compte</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar" moz:removedIn="129" tools:ignore="UnusedResources">Barra d’eines</string>
+    <!-- Preference for changing where the AddressBar is positioned -->
+    <string name="preferences_toolbar_2">Ubicació de la barra d’adreces</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
@@ -540,6 +608,10 @@
     <string name="preferences_account_sync_error">Torneu-vos a connectar per reprendre la sincronització</string>
     <!-- Preference for language -->
     <string name="preferences_language">Llengua</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Traducció</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Traduccions</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Elecció de dades</string>
     <!-- Preference for data collection -->
@@ -590,6 +662,10 @@
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">S’està tancant l’aplicació per aplicar els canvis…</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Extensions</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Instal·la una extensió des d’un fitxer</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificacions</string>
 
@@ -598,6 +674,22 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">No permès</string>
 
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Obligatori</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Opcional</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Permet per a tots els llocs</string>
+
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Si confieu en aquesta extensió, podeu donar-li permisos en tots els llocs web.</string>
+    <!-- The text shown when an extension does not require permissions -->
+    <string name="addons_does_not_require_permissions">Aquesta extensió no necessita cap permís.</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Col·lecció d’extensions personalitzada</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">D’acord</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -607,17 +699,22 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Propietari de la col·lecció (identificador d’usuari)</string>
 
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">S’ha modificat la col·lecció d’extensions. L’aplicació es tancarà per aplicar els canvis…</string>
+
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Torneu a la pestanya</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Adreces d’interès recents</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Adreces d’interès</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visitat recentment</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket_2">Articles suggeridors</string>
+    <string name="customize_toggle_pocket_2">Articles suggerents</string>
     <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
     <string name="customize_toggle_pocket_summary">Articles recomanats pel %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
@@ -658,8 +755,27 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Descobriu més fons de pantalla</string>
 
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Noves extensions disponibles</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Descobriu les més de cent noves extensions que us permeten fer el Firefox vostre.</string>
+
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Mostra les extensions</string>
+
+    <!-- Extension process crash dialog to user -->
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Les extensions s’han desactivat temporalment</string>
+
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Una o més extensions han deixat de funcionar, i això fa que el vostre sistema sigui inestable. El %1$s ha intentat reiniciar les extensions sense èxit.\n\nLes extensions no es reiniciaran durant la sessió actual.\n\nPodeu eliminar o desactivar extensions per intentar solucionar el problema.</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Prova de reiniciar les extensions</string>
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Continua amb les extensions desactivades</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -714,6 +830,14 @@
     <string name="fxa_tab_received_notification_name">S’ha rebut una pestanya</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Pestanya de %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">Pestanyes del %1$s tancades: %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Mostra les pestanyes tancades recentment</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -776,6 +900,11 @@
     <string name="preference_gestures_swipe_toolbar_switch_tabs" moz:removedIn="129" tools:ignore="UnusedResources">Canvia de pestanya en fer lliscar la barra d’eines cap als costats</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Mostra les pestanyes obertes en fer lliscar la barra d’eines cap amunt</string>
+
+    <!-- Preference for using the dynamic toolbars -->
+    <string name="preference_gestures_dynamic_toolbar_2">Desplaceu-vos per amagar la barra d’adreces i la barra d’eines</string>
+    <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Canvia de pestanya en fer lliscar la barra d’adreces cap als costats</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -1283,8 +1412,26 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Tanca les pestanyes privades</string>
 
+    <!-- Microsuverys -->
+    <!-- Text shown in prompt for printing microsurvey. "sec" It's an abrevation for "second". -->
+    <string name="microsurvey_prompt_printing_title" tools:ignore="UnusedResources">Ajudeu-nos a millorar la impressió en el Firefox. Només és un minut.</string>
+    <!-- Text shown in prompt for printing microsurvey. 'Firefox' intentionally hardcoded here--> --&gt;
+    <string name="microsurvey_survey_printing_title" tools:ignore="UnusedResources">Esteu satisfet/a de la impressió en el Firefox?</string>
+    <!-- Text for option one, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_0" tools:ignore="UnusedResources">Neutre/a</string>
+    <!-- Text for option two, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_1" tools:ignore="UnusedResources">Molt insatisfet/a</string>
+    <!-- Text for option three, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_2" tools:ignore="UnusedResources">Insatisfet/a</string>
+    <!-- Text for option four, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_3" tools:ignore="UnusedResources">Satisfet/a</string>
+    <!-- Text for option five, shown in microsurvey.-->
+    <string name="microsurvey_survey_5_point_option_4" tools:ignore="UnusedResources">Molt satisfet/a</string>
+
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
     <string name="notification_erase_title_android_14">Voleu tancar les pestanyes privades?</string>
+
+    <string name="notification_erase_text_android_14">Toqueu o feu lliscar aquesta notificació per a tancar les pestanyes privades.</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Màrqueting</string>
@@ -1671,8 +1818,14 @@
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Més informació sobre la sincronització</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepcions</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2">El %s no desarà les contrasenyes dels llocs llistats aquí.</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2">El %s no desarà les contrasenyes d’aquests llocs.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Suprimeix totes les excepcions</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2">Cerca contrasenyes</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Lloc</string>
     <!-- The header for the username for a login -->
@@ -1699,6 +1852,12 @@
     <string name="saved_login_reveal_password">Mostra la contrasenya</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Amaga la contrasenya</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2">Desbloqueu per veure les contrasenyes desades</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2">Protegiu les contrasenyes desades</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2">Configureu un patró de bloqueig del dispositiu, un PIN o una contrasenya perquè cap persona que accedeixi al vostre dispositiu pugui veure les contrasenyes que deseu.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Més tard</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1715,6 +1874,9 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Darrer ús</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Menú d’ordenar les contrasenyes</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Emplenament automàtic</string>
@@ -1723,6 +1885,10 @@
 
     <!-- Preference and title for managing the settings for payment methods -->
     <string name="preferences_credit_cards_2">Formes de pagament</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Desa i emplena les formes de pagament</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">El %s xifra totes les formes de pagament que deseu</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronitza les targetes entre dispositius</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1778,6 +1944,10 @@
     <string name="credit_cards_name_on_card_validation_error_message_2">Afegiu un nom</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Desbloqueu per veure les targetes desades</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2">Protegiu les formes de pagament desades</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3">Configureu un patró de bloqueig del dispositiu, un PIN o una contrasenya perquè cap persona que accedeixi al vostre dispositiu pugui veure les formes de pagament que deseu.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Configura-ho ara</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1785,12 +1955,16 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Desbloqueu el dispositiu</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Desbloqueu per utilitzar les formes de pagament desades</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Afegeix una adreça</string>
     <!-- Title of the "Edit address" screen -->
     <string name="addresses_edit_address">Edita l’adreça</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Gestiona les adreces</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Nom</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Adreça postal</string>
     <!-- The header for the city of an address -->
@@ -1913,12 +2087,20 @@
     <string name="login_menu_delete_button">Suprimeix</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Edita</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2">Segur que voleu suprimir aquesta contrasenya?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Suprimeix</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Cancel·la</string>
     <!--  The saved password options menu description. -->
     <string name="login_options_menu_2">Opcions de la contrasenya</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3">Camp de text editable per a l’adreça web.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3">Camp de text editable per al nom d’usuari.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2">Camp de text editable per a la contrasenya.</string>
     <!--  The button description to save changes to an edited password. -->
     <string name="save_changes_to_login_2">Desa els canvis.</string>
     <!--  The page title for editing a saved password. -->
@@ -2028,6 +2210,9 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Cerca amb %s</string>
 
+    <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Canvieu el navegador per defecte</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Feu que els enllaços dels llocs web, del correu electrònic i dels missatges s’obrin automàticament en el Firefox.</string>
 
@@ -2045,7 +2230,7 @@
 
     <!-- Pocket recommended stories -->
     <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_header_1">Articles suggeridors</string>
+    <string name="pocket_stories_header_1">Articles suggerents</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Articles per tema</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
@@ -2079,6 +2264,8 @@
     <string name="review_quality_check_grade_title">Són fiables aquestes ressenyes?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Valoració ajustada</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description_2">Basat en ressenyes fiables</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Punts destacats de les ressenyes recents</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
@@ -2134,6 +2321,8 @@
     <string name="review_quality_check_product_availability_warning_body">Si veieu que torna a haver-hi estoc del producte, informeu-nos i en comprovarem les ressenyes.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Informa que hi ha estoc del producte</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">S’està comprovant la qualitat de la ressenya (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Això pot trigar uns 60 segons.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2176,6 +2365,12 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Gràcies al %1$s de Mozilla, us ajudem a evitar ressenyes esbiaixades i no autèntiques. El nostre model d\'IA sempre millora per a protegir-vos mentre compreu. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Més informació</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">En seleccionar «Sí, prova-ho», accepteu l’%2$s del %1$s i les %4$s del %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">En seleccionar «Sí, prova-ho», accepteu l’%2$s del %1$s i les %4$s del %3$s.</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">avís de privadesa</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">condicions d\'ús</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
@@ -2237,46 +2432,98 @@
     <!-- Title for dialog displayed when trying to access links present in a text. -->
     <string name="a11y_links_title">Enllaços</string>
 
+    <!-- Additional content description for text bodies that contain urls. -->
+    <string name="a11y_links_available">Enllaços disponibles</string>
+
     <!-- Translations feature-->
 
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Voleu traduir aquesta pàgina?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Pàgina traduïda de %1$s a %2$s</string>
+    <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translations_bottom_sheet_title_first_time">Proveu les traduccions privades al %1$s</string>
+    <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
+    <string name="translations_bottom_sheet_info_message">Per a la vostra privadesa, les traduccions no surten mai del dispositiu. Aviat hi hauran llengües noves i millores disponibles. %1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
     <string name="translations_bottom_sheet_info_message_learn_more">Més informació</string>
     <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
     <string name="translations_bottom_sheet_translate_from">Tradueix de:</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Tradueix a:</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Proveu una altra la llengua d’origen</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ara no</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Mostra l’original</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">S’ha carregat la pàgina original sense traduir</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Fet</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">Tradueix</string>
+    <!-- Button text on the translations dialog when a translation error appears. -->
+    <string name="translations_bottom_sheet_positive_button_error">Torna-ho a provar</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">S\'està traduint</string>
+    <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">S’està traduint…</string>
     <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
     <string name="translations_bottom_sheet_default_dropdown_selection">Trieu una llengua</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Hi ha hagut un problema en traduir. Torneu-ho a provar.</string>
 
 
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">No s’han pogut carregar les llengües. Comproveu la connexió a Internet i torneu-ho a provar.</string>
+    <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
+    <string name="translation_error_language_not_supported_warning_text">Malauradament, encara no s’admet %1$s.</string>
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">S’està traduint…</string>
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">Voleu baixar la llengua en mode d’estalvi de dades (%1$s)?</string>
+
+
+    <!-- Translations options dialog -->
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">Opcions de traducció</string>
+    <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
+    <string name="translation_option_bottom_sheet_always_translate">Ofereix-ne la traducció sempre</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_always_translate_in_language">Tradueix sempre %1$s</string>
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_never_translate_in_language">No tradueixis mai %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">No tradueixis mai aquest lloc</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Preval sobre la resta de paràmetres</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Preval sobre oferir-ne la traducció</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Paràmetres de les traduccions</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Quant a les traduccions al %1$s</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">Tanca el full Traduccions</string>
+    <!-- The title of the warning card informs the user that an error has occurred at page settings. -->
+    <string name="translation_option_bottom_sheet_error_warning_text">Alguns paràmetres no estan disponibles temporalment.</string>
+
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
     <string name="translation_settings_toolbar_title">Traduccions</string>
 
+    <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
+    <string name="translation_settings_offer_to_translate">Ofereix-ne la traducció quan sigui possible</string>
+    <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
+    <string name="translation_settings_always_download">Baixa sempre les llengües en mode d’estalvi de dades</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">Preferències de traducció</string>
     <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
@@ -2291,19 +2538,36 @@
     <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Traducció automàtica</string>
 
+    <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
+    <string name="automatic_translation_header_preference">Trieu una llengua per gestionar-ne les preferències de «tradueix sempre» i «no tradueixis mai».</string>
+    <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
+    <string name="automatic_translation_error_warning_text">No s\'han pogut carregar les llengües. Proveu-ho més tard.</string>
+
+    <!-- Automatic translation options preference screen -->
+    <!-- Preference option for offering to translate. Radio button title text.-->
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Ofereix-ne la traducció (per defecte)</string>
     <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="automatic_translation_option_offer_to_translate_summary_preference">El %1$s oferirà traduir llocs en aquesta llengua.</string>
     <!-- Preference option for always translate. Radio button title text. -->
     <string name="automatic_translation_option_always_translate_title_preference">Tradueix sempre</string>
 
+    <!-- Preference option for always translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="automatic_translation_option_always_translate_summary_preference">El %1$s traduirà aquesta llengua automàticament en carregar la pàgina.</string>
     <!-- Preference option for never translate. Radio button title text.-->
     <string name="automatic_translation_option_never_translate_title_preference">No tradueixis mai</string>
     <!-- Preference option for never translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="automatic_translation_option_never_translate_summary_preference">El %1$s no oferirà mai traduir llocs en aquesta llengua.</string>
 
+    <!-- Never translate site preference screen -->
+    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <string name="never_translate_site_toolbar_title_preference">No tradueixis mai aquests llocs</string>
+    <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
+    <string name="never_translate_site_header_preference">Per afegir un lloc nou: visiteu-lo i trieu «No tradueixis mai aquest lloc» al menú de traducció.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Elimina %1$s</string>
+    <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
+    <string name="never_translate_site_error_warning_text">No s\'han pogut carregar els llocs. Proveu-ho més tard.</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Voleu suprimir %1$s?</string>
@@ -2312,16 +2576,27 @@
     <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
     <string name="never_translate_site_dialog_cancel_preference">Cancel·la</string>
 
+    <!-- Download languages preference screen -->
+    <!-- Title of the download languages preference screen toolbar.-->
+    <string name="download_languages_toolbar_title_preference">Baixa llengües</string>
+    <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="download_languages_header_preference">Baixeu llengües completes per a fer traduccions més ràpides i sense connexió. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">Més informació</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
     <string name="download_languages_available_languages_preference">Llengües disponibles</string>
     <!-- Text that will appear beside a core or pivot language package name to show that the language is necessary for the translation feature to function. -->
     <string name="download_languages_default_system_language_require_preference">necessari</string>
+    <!-- A text for download language preference item.
+    The first parameter is the language name, for example, "Spanish".
+    The second parameter is the language file size, for example, "(3.91 KB)" or, if the language package name is a pivot language, "(required)". -->
+    <string name="download_languages_language_item_preference">%1$s (%2$s)</string>
     <!-- The subhead of the download language preference screen will appear above the items that were not downloaded. -->
     <string name="download_language_header_preference">Baixa llengües</string>
     <!-- All languages list item. When the user presses this item, they can download all languages. -->
     <string name="download_language_all_languages_item_preference">Totes les llengües</string>
+    <!-- All languages list item. When the user presses this item, they can delete all languages that were downloaded. -->
+    <string name="download_language_all_languages_item_preference_to_delete">Suprimeix totes les llengües</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was downloaded, the user can now delete it. -->
     <string name="download_languages_item_content_description_downloaded_state">Suprimeix</string>
     <!-- Content description (not visible, for screen readers etc.): For a language list item, downloading is in progress. -->
@@ -2330,19 +2605,45 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
     <string name="download_languages_item_content_description_not_downloaded_state">Baixa</string>
 
+    <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
+    <string name="download_languages_item_content_description_selected_state" moz:removedIn="127" tools:ignore="UnusedResources">Seleccionat</string>
+    <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
+    <string name="download_languages_fetch_error_warning_text">No s’han pogut carregar les llengües. Proveu-ho més tard.</string>
+    <!-- The title of the warning card informs the user that an error has occurred at downloading a language.
+      The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_error_warning_text"><![CDATA[No s’ha pogut baixar <b>%1$s</b>. Torneu-ho a provar.]]></string>
+    <!-- The title of the warning card informs the user that an error has occurred at deleting a language.
+          The first parameter is the language name, for example, "Spanish". -->
+    <string name="download_languages_delete_error_warning_text"><![CDATA[No s’ha pogut suprimir <b>%1$s</b>. Torneu-ho a provar.]]></string>
+
     <!-- Title for the dialog used by the translations feature to confirm deleting a language.
     The dialog will be presented when the user requests deletion of a language.
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_file_dialog_title">Voleu suprimir %1$s (%2$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_file_dialog_message">Si suprimiu aquesta llengua, el %1$s baixarà llengües parcialment en la memòria cau mentre traduïu.</string>
     <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
     The dialog will be presented when the user requests deletion of all languages file.
     The first parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_all_languages_file_dialog_title">Voleu suprimir totes les llengües (%1$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">Si suprimiu totes les llengües, el %1$s baixarà llengües parcialment a la memòria cau mentre traduïu.</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">Suprimeix</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
     <string name="delete_language_file_dialog_negative_button_text">Cancel·la</string>
 
+    <!-- Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file.-->
+    <string name="download_language_file_dialog_title">Voleu baixar en mode d’estalvi de dades (%1$s)?</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">Les llengües es baixen parcialment a la memòria cau perquè les traduccions siguin privades.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache" moz:removedIn="129" tools:ignore="UnusedResources">Les llengües es baixen parcialment perquè les traduccions siguin privades.</string>
+    <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
+    <string name="download_language_file_dialog_checkbox_text">Baixa sempre en mode d’estalvi de dades</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
     <string name="download_language_file_dialog_positive_button_text">Baixa</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
@@ -2356,6 +2657,9 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Vés enrere</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Obre el calaix de depuració</string>
+
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Eines de pestanyes</string>
@@ -2363,6 +2667,8 @@
     <string name="debug_drawer_tab_tools_tab_count_title">Recompte de pestanyes</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Actives</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Actives</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inactives</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
@@ -2373,6 +2679,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_title">Eina de creació de pestanyes</string>
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Nombre de pestanyes a crear</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is empty -->
+    <string name="debug_drawer_tab_tools_tab_quantity_empty_error">El camp de text és buit</string>
+    <!-- The error message of the text field in the tab creation tool when the text field has characters other than digits -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_digits_error">Introduïu només nombre enters positius</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a zero -->
+    <string name="debug_drawer_tab_tools_tab_quantity_non_zero_error">Introduïu un nombre superior a zero</string>
+    <!-- The error message of the text field in the tab creation tool when the text field is a
+        quantity greater than the max tabs. The first parameter is the maximum number of tabs
+        that can be generated in one operation.-->
+    <string name="debug_drawer_tab_tools_tab_quantity_exceed_max_error">S’ha superat el nombre màxim de pestanyes (%1$s) que es poden generar en una operació</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Afegeix a les pestanyes actives</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
@@ -2380,4 +2696,58 @@
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Afegeix a les pestanyes privades</string>
 
-    </resources>
+    <!-- Microsurvey -->
+    <!-- Prompt view -->
+    <!-- The microsurvey prompt title. Note: The word "Firefox" should NOT be translated -->
+    <string name="micro_survey_prompt_title" tools:ignore="UnusedResources">Ajudeu-nos a millorar el Firefox. Només és un minut.</string>
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continua</string>
+    <!-- Survey view -->
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header" moz:removedIn="129" tools:ignore="UnusedResources">Empleneu aquesta enquesta</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header_2">Empleneu l’enquesta</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice" moz:removedIn="129" tools:ignore="UnusedResources">Avís de privadesa</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice_2">Avís de privadesa</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label">Envia</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" moz:removedIn="128" tools:ignore="UnusedResources">Tanca</string>
+    <!-- The survey completion header -->
+    <string name="micro_survey_survey_header_confirmation" tools:ignore="UnusedResources">Enquesta completa</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation">Gràcies per la vostra opinió</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Molt satisfet/a</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Satisfet/a</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Neutre/a</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Insatisfet/a</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Molt insatisfet/a</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_6" tools:ignore="UnusedResources">No l’utilitzo</string>
+    <!-- Text shown in prompt for homepage microsurvey. 'Firefox' intentionally hardcoded here- -->
+    <string name="microsurvey_prompt_homepage_title" tools:ignore="UnusedResources">Esteu satisfet/a de la pàgina d’inici del Firefox?</string>
+    <!-- Accessibility -->
+    <!-- Content description (not visible, for screen readers etc.) for opening microsurvey bottom sheet. -->
+    <string name="microsurvey_open_handle_content_description" tools:ignore="UnusedResources">Obre l’enquesta</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing microsurvey bottom sheet. -->
+    <string name="microsurvey_close_handle_content_description" tools:ignore="UnusedResources">Tanca l’enquesta</string>
+    <!-- Content description for "X" button that is closing microsurvey. -->
+    <string name="microsurvey_close_button_content_description" tools:ignore="UnusedResources">Tanca</string>
+
+    <!-- Debug drawer logins -->
+    <!-- The title of the Logins feature in the Debug Drawer. -->
+    <string name="debug_drawer_logins_title">Inicis de sessió</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">Domini actual: %s</string>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Afegeix un inici de sessió fals per a aquest domini</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Suprimeix l’inici de sessió amb el nom d\'usuari %s</string>
+</resources>

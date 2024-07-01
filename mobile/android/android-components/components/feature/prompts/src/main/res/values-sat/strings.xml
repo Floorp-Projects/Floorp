@@ -116,9 +116,15 @@
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">ᱟᱸᱴ ᱫᱟᱫᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱛᱟᱣ ᱢᱮ …</string>
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
-    <string name="mozac_feature_prompts_suggest_strong_password">ᱟᱸᱴ ᱫᱟᱫᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱛᱟᱣ ᱢᱮ …</string>
+    <string name="mozac_feature_prompts_suggest_strong_password" moz:removedIn="128" tools:ignore="UnusedResources">ᱟᱸᱴ ᱫᱟᱫᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱛᱟᱣ ᱢᱮ …</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_2">ᱟᱸᱴᱷ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱮᱵᱷᱟᱨ ᱢᱮ ᱺ %1$s</string>
     <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
     <string name="mozac_feature_prompts_suggest_strong_password_message">ᱟᱹᱴ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱮᱵᱷᱟᱨ ᱢᱮ ᱺ %1$s</string>
+
+    <!-- Title for using the suggest strong password confirmation dialog -->
+    <string name="mozac_feature_prompts_suggest_strong_password_title">ᱟᱸᱴᱷ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱮᱵᱷᱟᱨ ᱟ ᱥᱮ ?</string>
+
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱰᱟᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱵᱷᱮᱡᱟᱭ ᱟᱢ‌ ᱥᱮ?</string>

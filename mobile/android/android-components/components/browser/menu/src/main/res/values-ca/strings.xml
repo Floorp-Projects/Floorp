@@ -10,4 +10,6 @@
     <string name="mozac_browser_menu_extensions_manager">Gestor d\'extensions</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Navega amunt</string>
-    </resources>
+    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
+    <string name="mozac_browser_menu_extensions_content_description">Extensions, navega cap amunt</string>
+</resources>

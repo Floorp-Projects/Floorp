@@ -2372,6 +2372,10 @@
     <string name="review_quality_check_no_analysis_link">Tarkista arvostelun laatu</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Kokeile luotettavaa tuotearvosteluopastamme</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Katso, kuinka luotettavia tuotearvostelut ovat palvelussa %1$s, ennen kuin ostat. Arvostelujen tarkistin, %2$sin kokeellinen ominaisuus, on sisäänrakennettu suoraan selaimeen.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Mozillan %1$s auttaa välttämään puolueellisia ja epäaitoja arvosteluja. Tekoälymallimme kehittyy jatkuvasti suojatakseen sinua, kun teet ostoksia. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Lue lisää</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
