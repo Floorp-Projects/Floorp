@@ -6974,20 +6974,20 @@ Maybe<int32_t> HTMLInputElement::GetNumberInputCols() const {
               (size.mAfterDecimal ? 1 : 0));
 }
 
-int32_t HTMLInputElement::GetCols() {
+Maybe<int32_t> HTMLInputElement::GetCols() {
   if (const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::size);
       attr && attr->Type() == nsAttrValue::eInteger) {
     int32_t cols = attr->GetIntegerValue();
     if (cols > 0) {
-      return cols;
+      return Some(cols);
     }
   }
 
   if (Maybe<int32_t> cols = GetNumberInputCols(); cols && *cols > 0) {
-    return *cols;
+    return cols;
   }
 
-  return DEFAULT_COLS;
+  return {};
 }
 
 int32_t HTMLInputElement::GetWrapCols() {

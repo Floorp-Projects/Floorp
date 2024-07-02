@@ -324,7 +324,7 @@ class TextControlState final : public SupportsWeakPtr {
   bool IsPasswordTextControl() const {
     return mTextCtrlElement->IsPasswordTextControl();
   }
-  int32_t GetCols() { return mTextCtrlElement->GetCols(); }
+  int32_t GetColsOrDefault() { return mTextCtrlElement->GetColsOrDefault(); }
   int32_t GetWrapCols() {
     int32_t wrapCols = mTextCtrlElement->GetWrapCols();
     MOZ_ASSERT(wrapCols >= 0);
