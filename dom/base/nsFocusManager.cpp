@@ -4007,6 +4007,20 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
           return elementInFrame;
         }
         if (!checkSubDocument) {
+          if (aReachedToEndForDocumentNavigation &&
+              StaticPrefs::dom_disable_tab_focus_to_root_element() &&
+              nsContentUtils::IsChromeDoc(iterContent->GetComposedDoc())) {
+            // aReachedToEndForDocumentNavigation is true means
+            //   1. This is a document navigation (i.e, VK_F6, Control + Tab)
+            //   2. This is the top-level document (Note that we may start from
+            //      a subdocument)
+            //   3. We've searched through the this top-level document already
+            if (!GetRootForChildDocument(iterContent)) {
+              // We'd like to focus the first focusable element of this
+              // top-level chrome document.
+              return iterContent;
+            }
+          }
           continue;
         }
 
@@ -4548,7 +4562,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
                      nsContentUtils::IsChromeDoc(
                          currentContent->GetComposedDoc())) {
             // aReachedToEndForDocumentNavigation is true means
-            //   1. This is a document navigation (VK_F6)
+            //   1. This is a document navigation (i.e, VK_F6, Control + Tab)
             //   2. This is the top-level document (Note that we may start from
             //      a subdocument)
             //   3. We've searched through the this top-level document already
