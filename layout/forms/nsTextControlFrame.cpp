@@ -188,7 +188,8 @@ LogicalSize nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
   const nscoord charMaxAdvance = fontMet->MaxAdvance();
 
   // Initialize based on the width in characters.
-  const int32_t cols = GetCols();
+  const Maybe<int32_t> maybeCols = GetCols();
+  const int32_t cols = maybeCols.valueOr(TextControlElement::DEFAULT_COLS);
   intrinsicSize.ISize(aWM) = cols * charWidth;
 
   // If we do not have what appears to be a fixed-width font, add a "slop"
@@ -247,6 +248,14 @@ LogicalSize nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
       }
     }
   }
+
+  // Add the inline size of the button if our char size is explicit, so as to
+  // make sure to make enough space for it.
+  if (maybeCols.isSome() && mButton && mButton->GetPrimaryFrame()) {
+    intrinsicSize.ISize(aWM) +=
+        mButton->GetPrimaryFrame()->GetMinISize(aRenderingContext);
+  }
+
   return intrinsicSize;
 }
 
