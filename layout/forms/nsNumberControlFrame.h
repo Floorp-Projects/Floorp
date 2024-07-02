@@ -49,16 +49,12 @@ class nsNumberControlFrame final : public nsTextControlFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsNumberControlFrame)
 
-  void Destroy(DestroyContext&) override;
-
 #ifdef ACCESSIBILITY
   mozilla::a11y::AccType AccessibleType() override;
 #endif
 
   // nsIAnonymousContentCreator
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
-  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                uint32_t aFilter) override;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
@@ -97,7 +93,6 @@ class nsNumberControlFrame final : public nsTextControlFrame {
  private:
   // See nsNumberControlFrame::CreateAnonymousContent for a description of
   // these.
-  nsCOMPtr<Element> mSpinBox;
   nsCOMPtr<Element> mSpinUp;
   nsCOMPtr<Element> mSpinDown;
 };

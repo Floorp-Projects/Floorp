@@ -3991,7 +3991,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             if (mType == FormControlType::InputSearch) {
               if (nsSearchControlFrame* searchControlFrame =
                       do_QueryFrame(GetPrimaryFrame())) {
-                Element* clearButton = searchControlFrame->GetAnonClearButton();
+                Element* clearButton = searchControlFrame->GetButton();
                 if (clearButton &&
                     aVisitor.mEvent->mOriginalTarget == clearButton) {
                   SetUserInput(EmptyString(),
@@ -4005,7 +4005,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             } else if (mType == FormControlType::InputPassword) {
               if (nsTextControlFrame* textControlFrame =
                       do_QueryFrame(GetPrimaryFrame())) {
-                auto* reveal = textControlFrame->GetRevealButton();
+                auto* reveal = textControlFrame->GetButton();
                 if (reveal && aVisitor.mEvent->mOriginalTarget == reveal) {
                   SetRevealPassword(!RevealPassword());
                   // TODO(emilio): This should focus the input, but calling

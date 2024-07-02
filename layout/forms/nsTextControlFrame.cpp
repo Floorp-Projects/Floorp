@@ -168,7 +168,7 @@ void nsTextControlFrame::Destroy(DestroyContext& aContext) {
   aContext.AddAnonymousContent(mRootNode.forget());
   aContext.AddAnonymousContent(mPlaceholderDiv.forget());
   aContext.AddAnonymousContent(mPreviewDiv.forget());
-  aContext.AddAnonymousContent(mRevealButton.forget());
+  aContext.AddAnonymousContent(mButton.forget());
 
   nsContainerFrame::Destroy(aContext);
 }
@@ -431,21 +431,20 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   // background on the placeholder doesn't obscure the caret.
   aElements.AppendElement(mRootNode);
 
+  rv = UpdateValueDisplay(false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if ((StaticPrefs::layout_forms_reveal_password_button_enabled() ||
        PresContext()->Document()->ChromeRulesEnabled()) &&
       IsPasswordTextControl() &&
       StyleDisplay()->EffectiveAppearance() != StyleAppearance::Textfield) {
-    mRevealButton =
+    mButton =
         MakeAnonElement(PseudoStyleType::mozReveal, nullptr, nsGkAtoms::button);
-    mRevealButton->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
-                           u"true"_ns, false);
-    mRevealButton->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, u"-1"_ns,
-                           false);
-    aElements.AppendElement(mRevealButton);
+    mButton->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden, u"true"_ns,
+                     false);
+    mButton->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, u"-1"_ns, false);
+    aElements.AppendElement(mButton);
   }
-
-  rv = UpdateValueDisplay(false);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   InitializeEagerlyIfNeeded();
   return NS_OK;
@@ -561,8 +560,8 @@ void nsTextControlFrame::AppendAnonymousContentTo(
     aElements.AppendElement(mPreviewDiv);
   }
 
-  if (mRevealButton) {
-    aElements.AppendElement(mRevealButton);
+  if (mButton) {
+    aElements.AppendElement(mButton);
   }
 
   aElements.AppendElement(mRootNode);
@@ -597,13 +596,6 @@ Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
   return Some(nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight,
                                                      wm.IsLineInverted()) +
               aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm));
-}
-
-static bool IsButtonBox(const nsIFrame* aFrame) {
-  auto pseudoType = aFrame->Style()->GetPseudoType();
-  return pseudoType == PseudoStyleType::mozNumberSpinBox ||
-         pseudoType == PseudoStyleType::mozSearchClearButton ||
-         pseudoType == PseudoStyleType::mozReveal;
 }
 
 void nsTextControlFrame::Reflow(nsPresContext* aPresContext,

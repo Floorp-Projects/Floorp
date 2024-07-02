@@ -40,12 +40,8 @@ class nsSearchControlFrame final : public nsTextControlFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSearchControlFrame)
 
-  void Destroy(DestroyContext&) override;
-
   // nsIAnonymousContentCreator
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
-  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                uint32_t aFilter) override;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
@@ -53,16 +49,10 @@ class nsSearchControlFrame final : public nsTextControlFrame {
   }
 #endif
 
-  Element* GetAnonClearButton() const { return mClearButton; }
-
   /**
    * Update visbility of the clear button depending on the value
    */
   void UpdateClearButtonState();
-
- private:
-  // See nsSearchControlFrame::CreateAnonymousContent of a description of these
-  RefPtr<Element> mClearButton;
 };
 
 #endif  // nsSearchControlFrame_h__
