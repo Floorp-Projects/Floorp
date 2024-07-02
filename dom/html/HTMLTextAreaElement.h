@@ -79,7 +79,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   bool IsSingleLineTextControl() const override;
   bool IsTextArea() const override;
   bool IsPasswordTextControl() const override;
-  int32_t GetCols() override;
+  Maybe<int32_t> GetCols() override;
   int32_t GetWrapCols() override;
   int32_t GetRows() override;
   void GetDefaultValueFromContent(nsAString& aValue, bool aForDisplay) override;
@@ -171,7 +171,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
-  uint32_t Cols() { return GetUnsignedIntAttr(nsGkAtoms::cols, DEFAULT_COLS); }
+  uint32_t Cols() { return GetColsOrDefault(); }
   void SetCols(uint32_t aCols, ErrorResult& aError) {
     uint32_t cols = aCols ? aCols : DEFAULT_COLS;
     SetUnsignedIntAttr(nsGkAtoms::cols, cols, DEFAULT_COLS, aError);
