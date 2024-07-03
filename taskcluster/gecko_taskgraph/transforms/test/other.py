@@ -18,12 +18,12 @@ from taskgraph.util.taskcluster import (
     get_artifact_url,
     get_index_url,
 )
+from taskgraph.util.templates import merge
 from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.transforms.test.variant import TEST_VARIANTS
 from gecko_taskgraph.util.perftest import is_external_browser
 from gecko_taskgraph.util.platforms import platform_family
-from gecko_taskgraph.util.templates import merge
 
 transforms = TransformSequence()
 
