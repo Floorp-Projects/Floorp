@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.source_test:transforms
@@ -15,7 +15,7 @@ kind-dependencies:
     - toolchain
     - build
 
-job-defaults:
+task-defaults:
     worker-type: b-linux-gcp
     worker:
         max-run-time: 3600
@@ -29,7 +29,7 @@ job-defaults:
         substitution-fields: []
     if-dependencies: [build]
 
-jobs:
+tasks:
     simple:
         platform: linux64/opt
         require-build:

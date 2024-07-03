@@ -93,7 +93,7 @@ packaging_description_schema = Schema(
             Optional("run-as-root"): bool,
             Optional("use-caches"): bool,
         },
-        Optional("job-from"): job_description_schema["job-from"],
+        Optional("task-from"): job_description_schema["task-from"],
     }
 )
 

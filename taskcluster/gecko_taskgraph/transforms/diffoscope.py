@@ -27,11 +27,11 @@ diff_description_schema = Schema(
         # Treeherder symbol.
         Required("symbol"): str,
         # relative path (from config.path) to the file the task was defined in.
-        Optional("job-from"): str,
+        Optional("task-from"): str,
         # Original and new builds to compare.
         Required("original"): index_or_string,
         Required("new"): index_or_string,
-        # Arguments to pass to diffoscope, used for job-defaults in
+        # Arguments to pass to diffoscope, used for task-defaults in
         # taskcluster/kinds/diffoscope/kind.yml
         Optional("args"): str,
         # Extra arguments to pass to diffoscope, that can be set per job.

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - artifact-build
@@ -21,7 +21,7 @@ transforms:
 # Note: the .chk excludes are for files that are known to differ between
 # builds because they are signed with an ephemeral private key that is
 # generated for each build.
-job-defaults:
+task-defaults:
     tier: 2
     args: >-
         --output-empty
@@ -31,7 +31,7 @@ job-defaults:
         --exclude-directory-metadata=yes
         --exclude-command .--line-numbers
 
-jobs-from:
+tasks-from:
     - artifacts.yml
     - reproducible.yml
 
@@ -40,7 +40,7 @@ jobs-from:
 # from other sets through an index-search. Other kinds than `build` can be
 # compared (for example, static-analysis), provided you adjust the
 # kind-dependencies above.
-# jobs:
+# tasks:
 #     android-build-vs-previous-try:
 #         symbol: A
 #         new: build-android-arm/opt

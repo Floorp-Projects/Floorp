@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
@@ -14,7 +14,7 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     attributes:
         retrigger: true
     index:
@@ -35,7 +35,7 @@ job-defaults:
         kind: build
         tier: 1
 
-jobs:
+tasks:
     linux64-st-autotest/debug:
         description: "Linux64 Debug Static Analysis Autotest"
         index:

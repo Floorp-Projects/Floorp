@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.ui_tests:transforms
@@ -16,7 +16,7 @@ kind-dependencies:
     - build-fat-aar
 
 
-job-defaults:
+task-defaults:
     attributes:
         build_platform: android
         build-type: debug
@@ -61,7 +61,7 @@ job-defaults:
         skip-unless-backstop: null
 
 
-jobs:
+tasks:
     unit-browser-engine-gecko-nightly:
         component: browser
         description: 'Run unit tests on device for browser component'

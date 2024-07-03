@@ -74,8 +74,8 @@ def fake_loader(kind, path, config, parameters, loaded_tasks):
             },
             "dependencies": dependencies,
         }
-        if "job-defaults" in config:
-            task = merge(config["job-defaults"], task)
+        if "task-defaults" in config:
+            task = merge(config["task-defaults"], task)
         yield task
 
 

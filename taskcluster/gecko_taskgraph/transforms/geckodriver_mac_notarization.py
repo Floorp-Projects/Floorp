@@ -21,7 +21,7 @@ geckodriver_notarization_description_schema = Schema(
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("worker"): task_description_schema["worker"],
         Optional("worker-type"): task_description_schema["worker-type"],
-        Optional("job-from"): task_description_schema["job-from"],
+        Optional("task-from"): task_description_schema["task-from"],
         Optional("attributes"): task_description_schema["attributes"],
         Optional("dependencies"): task_description_schema["dependencies"],
     }

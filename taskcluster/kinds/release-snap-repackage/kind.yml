@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
@@ -13,7 +13,7 @@ kind-dependencies:
     - post-beetmover-dummy
     - post-langpack-dummy
 
-job-defaults:
+task-defaults:
     description: Generates snap image
     run-on-projects: []  # to make sure this never runs as part of CI
     shipping-phase: promote
@@ -50,7 +50,7 @@ job-defaults:
             L10N_CHANGESETS: "{config_params[head_repository]}/raw-file/{config_params[head_rev]}/browser/locales/l10n-changesets.json"
         chain-of-trust: true
 
-jobs:
+tasks:
     firefox:
         shipping-product: firefox
         attributes:
