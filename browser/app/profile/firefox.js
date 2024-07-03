@@ -430,6 +430,9 @@ pref("browser.urlbar.scotchBonnet.enableOverride", false);
 
 // Enable trending suggestions and recent searches.
 pref("browser.urlbar.trending.featureGate", true);
+#if defined(RELEASE_OR_BETA)
+pref("browser.urlbar.trending.enabledLocales", "en-US, en-CA");
+#endif
 pref("browser.urlbar.trending.requireSearchMode", false);
 pref("browser.urlbar.recentsearches.featureGate", true);
 
