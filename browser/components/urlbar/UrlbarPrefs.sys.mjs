@@ -452,6 +452,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for trending suggestions in the urlbar.
   ["trending.featureGate", true],
 
+  // Only enable trending suggestions if the users browser locale is contained
+  // in this list; enable in all locales if empty.
+  // (if the value was "en-US", trending would only be enabled for en-US users).
+  ["trending.enabledLocales", ""],
+
   // The maximum number of trending results to show while not in search mode.
   ["trending.maxResultsNoSearchMode", 10],
 
