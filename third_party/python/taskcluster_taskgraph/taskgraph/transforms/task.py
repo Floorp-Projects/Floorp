@@ -9,6 +9,7 @@ complexities of worker implementations, scopes, and treeherder annotations.
 """
 
 
+import functools
 import hashlib
 import os
 import re
@@ -23,7 +24,6 @@ from taskgraph import MAX_DEPENDENCIES
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.hash import hash_path
 from taskgraph.util.keyed_by import evaluate_keyed_by
-from taskgraph.util.memoize import memoize
 from taskgraph.util.schema import (
     OptimizationSchema,
     Schema,
@@ -43,7 +43,7 @@ RUN_TASK = os.path.join(
 )
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def _run_task_suffix():
     """String to append to cache names under control of run-task."""
     return hash_path(RUN_TASK)[0:20]
@@ -214,14 +214,14 @@ def get_branch_rev(config):
     return config.params["head_rev"]
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def get_default_priority(graph_config, project):
     return evaluate_keyed_by(
         graph_config["task-priority"], "Graph Config", {"project": project}
     )
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def get_default_deadline(graph_config, project):
     return evaluate_keyed_by(
         graph_config["task-deadline-after"], "Graph Config", {"project": project}
@@ -380,10 +380,10 @@ def build_docker_worker_payload(config, task, task_def):
             for v in sorted(volumes):
                 if v in worker["volumes"]:
                     raise Exception(
-                        "volume %s already defined; "
+                        f"volume {v} already defined; "
                         "if it is defined in a Dockerfile, "
                         "it does not need to be specified in the "
-                        "worker definition" % v
+                        "worker definition"
                     )
 
                 worker["volumes"].append(v)
@@ -544,9 +544,7 @@ def build_docker_worker_payload(config, task, task_def):
                 suffix=suffix,
             )
             caches[name] = cache["mount-point"]
-            task_def["scopes"].append(
-                {"task-reference": "docker-worker:cache:%s" % name}
-            )
+            task_def["scopes"].append({"task-reference": f"docker-worker:cache:{name}"})
 
         # Assertion: only run-task is interested in this.
         if run_task:

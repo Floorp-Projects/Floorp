@@ -163,7 +163,7 @@ export class PrivateAttributionService {
     await impressionStore.put(impressions, key);
   }
 
-  async compareImpression(cur, impression) {
+  compareImpression(cur, impression) {
     return cur.source === impression.source && cur.target === impression.target;
   }
 

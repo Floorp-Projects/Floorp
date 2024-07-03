@@ -33,7 +33,7 @@ langpack_sign_push_description_schema = Schema(
         Required("run-on-projects"): [],
         Required("scopes"): optionally_keyed_by("release-level", [str]),
         Required("shipping-phase"): task_description_schema["shipping-phase"],
-        Optional("job-from"): task_description_schema["job-from"],
+        Optional("task-from"): task_description_schema["task-from"],
         Optional("attributes"): task_description_schema["attributes"],
         Optional("dependencies"): task_description_schema["dependencies"],
     }

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - build
@@ -13,7 +13,7 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     treeherder:
         kind: other
         tier: 2
@@ -30,7 +30,7 @@ job-defaults:
         taskcluster-proxy: true
         max-run-time: 10800
     use-python: default
-jobs:
+tasks:
     windows2012-64-firefox:
         worker-type: b-win2022
         description: Creates or updates conditioned profiles on Win64

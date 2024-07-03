@@ -21,7 +21,7 @@ beetmover_push_to_release_description_schema = Schema(
         Required("product"): str,
         Required("treeherder-platform"): str,
         Optional("attributes"): {str: object},
-        Optional("job-from"): task_description_schema["job-from"],
+        Optional("task-from"): task_description_schema["task-from"],
         Optional("run"): {str: object},
         Optional("run-on-projects"): task_description_schema["run-on-projects"],
         Optional("dependencies"): {str: taskref_or_string},

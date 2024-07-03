@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
@@ -10,7 +10,7 @@ transforms:
     - gecko_taskgraph.transforms.balrog_toplevel:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     run-on-projects: []  # to make sure this never runs in CI
     shipping-phase: promote
     worker-type: balrog
@@ -29,7 +29,7 @@ job-defaults:
                 staging: dev.bouncer.nonprod.webservices.mozgcp.net
     whats-new-config: browser/config/whats_new_page.yml
 
-jobs:
+tasks:
     firefox:
         name: submit-toplevel-rc-firefox-release-to-balrog
         description: submit toplevel RC Firefox release to balrog

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
@@ -15,7 +15,7 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     index:
         product: firefox
     treeherder:
@@ -29,7 +29,7 @@ job-defaults:
     # the files that sccache optimizes away compilation for.
     use-sccache: false
 
-jobs:
+tasks:
     linux64-searchfox/debug:
         description: "Linux64 Debug Searchfox"
         index:

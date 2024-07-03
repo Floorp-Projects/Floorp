@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
@@ -14,12 +14,12 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     attributes:
         retrigger: true
     use-python: default
 
-jobs:
+tasks:
     linux64-valgrind-qr/opt-swr:
         description: "Linux64 Valgrind Opt WebRender"
         index:

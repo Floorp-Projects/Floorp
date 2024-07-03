@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
@@ -15,7 +15,7 @@ kind-dependencies:
     - repackage-signing-l10n
 
 # move this into the single job ??
-job-defaults:
+task-defaults:
     name: partner-attribution
     description: Release Promotion partner attribution
     run-on-projects: []  # to make sure this never runs as part of CI
@@ -31,7 +31,7 @@ job-defaults:
         using: mach
         mach: python python/mozrelease/mozrelease/attribute_builds.py
 
-jobs:
+tasks:
     partner-attribution:
         attributes:
             build_platform: linux-shippable

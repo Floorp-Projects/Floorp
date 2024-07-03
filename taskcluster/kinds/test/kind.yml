@@ -29,7 +29,7 @@ transforms:
 # Adding a new test type or running tests on a new platform? Be sure to review
 # https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy
 
-jobs-from:
+tasks-from:
     - awsy.yml
     - browsertime-desktop.yml
     - browsertime-mobile.yml
@@ -43,7 +43,7 @@ jobs-from:
     - web-platform.yml
     - xpcshell.yml
 
-job-defaults:
+task-defaults:
     attributes:
         retrigger: true
     use-python: default

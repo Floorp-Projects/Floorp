@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
@@ -12,7 +12,7 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     description: "Build OpenH264 plugin"
     treeherder:
         kind: build
@@ -25,7 +25,7 @@ job-defaults:
     worker:
         chain-of-trust: true
 
-jobs:
+tasks:
     linux32/opt:
         attributes:
             build_platform: linux32

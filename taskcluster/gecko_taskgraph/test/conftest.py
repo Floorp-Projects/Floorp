@@ -13,10 +13,10 @@ from taskgraph.generator import Kind, TaskGraphGenerator
 from taskgraph.optimize import base as optimize_mod
 from taskgraph.optimize.base import OptimizationStrategy
 from taskgraph.parameters import Parameters
+from taskgraph.util.templates import merge
 
 from gecko_taskgraph import GECKO
 from gecko_taskgraph.actions import render_actions_json
-from gecko_taskgraph.util.templates import merge
 
 
 @pytest.fixture
@@ -74,8 +74,8 @@ def fake_loader(kind, path, config, parameters, loaded_tasks):
             },
             "dependencies": dependencies,
         }
-        if "job-defaults" in config:
-            task = merge(config["job-defaults"], task)
+        if "task-defaults" in config:
+            task = merge(config["task-defaults"], task)
         yield task
 
 

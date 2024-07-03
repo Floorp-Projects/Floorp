@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset=utf-8>
+<link rel="help" href="https://bugzilla.mozilla.org/1905743">
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<input id="implicit-number" type="number">
+<input id="implicit-text" type="text">
+
+<input id="explicit-number" type="number" size="1">
+<input id="explicit-text" type="text" size="1">
+
+<input id="minmax-number" type="number" min="1" max="9">
+
+<script>
+
+function assert_width(number, text, shouldBeEqual) {
+  let w1 = document.getElementById(number).getBoundingClientRect().width;
+  let w2 = document.getElementById(text).getBoundingClientRect().width;
+
+  if (shouldBeEqual) {
+    assert_equals(w1, w2, `${number} vs. ${text}`);
+  } else {
+    assert_greater_than(w1, w2, `${number} vs. ${text}`);
+  }
+}
+
+test(function() {
+  assert_width("implicit-number", "implicit-text", true);
+  const hasNoSpinners = navigator.appVersion.includes("Android");
+  assert_width("explicit-number", "explicit-text", hasNoSpinners);
+  assert_width("minmax-number", "explicit-text", hasNoSpinners);
+});
+</script>

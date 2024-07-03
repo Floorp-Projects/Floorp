@@ -21,7 +21,7 @@ repackage_signing_description_schema = Schema(
         Optional("dependencies"): task_description_schema["dependencies"],
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
-        Optional("job-from"): task_description_schema["job-from"],
+        Optional("task-from"): task_description_schema["task-from"],
     }
 )
 

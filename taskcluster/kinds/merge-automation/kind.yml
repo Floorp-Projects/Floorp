@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.merge_automation:transforms
     - gecko_taskgraph.transforms.task:transforms
 
 
-jobs:
+tasks:
     merge-automation:
         name: merge-automation
         label: merge-automation

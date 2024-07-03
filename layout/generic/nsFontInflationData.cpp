@@ -345,7 +345,8 @@ void nsFontInflationData::ScanTextIn(nsIFrame* aFrame) {
         // We don't want changes to the amount of text in a text input
         // to change what we count towards inflation.
         nscoord fontSize = kid->StyleFont()->mFont.size.ToAppUnits();
-        int32_t charCount = static_cast<nsTextControlFrame*>(kid)->GetCols();
+        int32_t charCount =
+            static_cast<nsTextControlFrame*>(kid)->GetColsOrDefault();
         mTextAmount += charCount * fontSize;
       } else if (fType == LayoutFrameType::ComboboxControl) {
         // See textInputFrame above (with s/amount of text/selected option/).

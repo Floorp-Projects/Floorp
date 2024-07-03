@@ -63,8 +63,8 @@ transforms.add_validate(source_test_description_schema)
 @transforms.add
 def set_job_name(config, jobs):
     for job in jobs:
-        if "job-from" in job and job["job-from"] != "kind.yml":
-            from_name = os.path.splitext(job["job-from"])[0]
+        if "task-from" in job and job["task-from"] != "kind.yml":
+            from_name = os.path.splitext(job["task-from"])[0]
             job["name"] = "{}-{}".format(from_name, job["name"])
         yield job
 

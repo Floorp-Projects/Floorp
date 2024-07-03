@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - toolchain
@@ -17,13 +17,13 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-jobs-from:
+tasks-from:
     - android.yml
     - linux.yml
     - macosx.yml
     - windows.yml
 
-job-defaults:
+task-defaults:
     attributes:
         retrigger: true
     run-on-projects: []

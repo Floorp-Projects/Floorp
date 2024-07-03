@@ -3991,7 +3991,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             if (mType == FormControlType::InputSearch) {
               if (nsSearchControlFrame* searchControlFrame =
                       do_QueryFrame(GetPrimaryFrame())) {
-                Element* clearButton = searchControlFrame->GetAnonClearButton();
+                Element* clearButton = searchControlFrame->GetButton();
                 if (clearButton &&
                     aVisitor.mEvent->mOriginalTarget == clearButton) {
                   SetUserInput(EmptyString(),
@@ -4005,7 +4005,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             } else if (mType == FormControlType::InputPassword) {
               if (nsTextControlFrame* textControlFrame =
                       do_QueryFrame(GetPrimaryFrame())) {
-                auto* reveal = textControlFrame->GetRevealButton();
+                auto* reveal = textControlFrame->GetButton();
                 if (reveal && aVisitor.mEvent->mOriginalTarget == reveal) {
                   SetRevealPassword(!RevealPassword());
                   // TODO(emilio): This should focus the input, but calling
@@ -6974,20 +6974,20 @@ Maybe<int32_t> HTMLInputElement::GetNumberInputCols() const {
               (size.mAfterDecimal ? 1 : 0));
 }
 
-int32_t HTMLInputElement::GetCols() {
+Maybe<int32_t> HTMLInputElement::GetCols() {
   if (const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::size);
       attr && attr->Type() == nsAttrValue::eInteger) {
     int32_t cols = attr->GetIntegerValue();
     if (cols > 0) {
-      return cols;
+      return Some(cols);
     }
   }
 
   if (Maybe<int32_t> cols = GetNumberInputCols(); cols && *cols > 0) {
-    return *cols;
+    return cols;
   }
 
-  return DEFAULT_COLS;
+  return {};
 }
 
 int32_t HTMLInputElement::GetWrapCols() {

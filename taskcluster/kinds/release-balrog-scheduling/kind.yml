@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
@@ -13,7 +13,7 @@ kind-dependencies:
     - release-bouncer-check
     - release-push-langpacks
 
-job-defaults:
+task-defaults:
     run-on-projects: []
     shipping-phase: ship
     worker-type: balrog
@@ -21,7 +21,7 @@ job-defaults:
         implementation: balrog
         balrog-action: schedule
 
-jobs:
+tasks:
     firefox:
         description: Schedule Firefox publishing in balrog
         name: release-firefox_schedule_publishing_in_balrog

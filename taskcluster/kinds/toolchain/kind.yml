@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - fetch
@@ -14,7 +14,7 @@ transforms:
     - gecko_taskgraph.transforms.cached_tasks:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     treeherder:
         kind: build
         platform: toolchains/opt
@@ -23,7 +23,7 @@ job-defaults:
     run:
         using: toolchain-script
 
-jobs-from:
+tasks-from:
     - android.yml
     - cargo-vet.yml
     - cbindgen.yml

@@ -102,7 +102,7 @@ def build_context(name, outputFile, args=None):
 
     image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
-        raise Exception("image directory does not exist: %s" % image_dir)
+        raise Exception(f"image directory does not exist: {image_dir}")
 
     docker.create_context_tar(".", image_dir, outputFile, args)
 
@@ -117,7 +117,7 @@ def build_image(name, tag, args=None):
 
     image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
-        raise Exception("image directory does not exist: %s" % image_dir)
+        raise Exception(f"image directory does not exist: {image_dir}")
 
     tag = tag or docker.docker_image(name, by_tag=True)
 

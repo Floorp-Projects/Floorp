@@ -20,7 +20,7 @@ bootstrap_schema = Schema(
         # Initialization commands.
         Required("pre-commands"): [str],
         # relative path (from config.path) to the file task was defined in
-        Optional("job-from"): str,
+        Optional("task-from"): str,
     }
 )
 

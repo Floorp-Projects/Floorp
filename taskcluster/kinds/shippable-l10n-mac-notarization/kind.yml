@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
@@ -19,7 +19,7 @@ kind-dependencies:
 only-for-attributes:
     - shippable
 
-jobs:
+tasks:
     shippable-l10n-mac-notarization:
         from-deps:
             group-by: chunk-locales
