@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const currentUserJS = Services.prefs.getCharPref("browser.userjs.location", "");
+import { config, setGlobalDesignConfig } from "./configs";
+const currentUserJS = config().globalConfigs.appliedUserJs;
 
 export async function applyUserJS(path: string) {
   if (currentUserJS !== "") {
@@ -28,12 +29,11 @@ export async function applyUserJS(path: string) {
           .getDefaultBranch("")
           .setStringPref(prefName, value.replace(/"/g, ""));
       } else if (!Number.isNaN(Number(value))) {
-        // integer
         Services.prefs.getDefaultBranch("").setIntPref(prefName, Number(value));
       }
     }
   }
-  Services.prefs.setStringPref("browser.userjs.location", path);
+  setGlobalDesignConfig("appliedUserJs", path);
 }
 
 export async function resetPreferencesWithUserJsContents(path: string) {
@@ -47,5 +47,5 @@ export async function resetPreferencesWithUserJsContents(path: string) {
       Services.prefs.clearUserPref(prefName);
     }
   }
-  Services.prefs.setStringPref("browser.userjs.location", "");
+  setGlobalDesignConfig("appliedUserJs", "");
 }

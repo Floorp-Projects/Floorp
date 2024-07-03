@@ -6,6 +6,8 @@
 import { createSignal } from "solid-js";
 import { z } from "zod";
 
+type zFloorpDesignConfigsType = z.infer<typeof zFloorpDesignConfigs>;
+
 const getOldConfigs = JSON.stringify({
   globalConfigs: {
     verticalTabEnabled: false,
@@ -37,6 +39,19 @@ export const [config, setConfig] = createSignal(
     ),
   ),
 );
+
+export const setGlobalDesignConfig = (
+  key: keyof zFloorpDesignConfigsType["globalConfigs"],
+  value: boolean | string | number,
+) => {
+  setConfig((prev) => ({
+    ...prev,
+    globalConfigs: {
+      ...prev.globalConfigs,
+      [key]: value,
+    },
+  }));
+};
 
 Services.prefs.addObserver("floorp.design.configs", () =>
   setConfig(
