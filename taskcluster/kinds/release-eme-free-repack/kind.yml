@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
@@ -18,7 +18,7 @@ kind-dependencies:
     - shippable-l10n-mac-signing
     - shippable-l10n-mac-notarization
 
-job-defaults:
+task-defaults:
     name: eme-free-repack
     description: Release Promotion eme-free repacks
     run-on-projects: []  # to make sure this never runs as part of CI
@@ -43,7 +43,7 @@ job-defaults:
                 staging: true
                 production: false
 
-jobs:
+tasks:
     macosx64-shippable:
         treeherder:
             symbol: EME

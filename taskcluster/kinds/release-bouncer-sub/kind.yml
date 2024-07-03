@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release:run_on_releases
     - gecko_taskgraph.transforms.bouncer_submission:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     description: release bouncer submission job
     worker-type: bouncer
     worker:
@@ -30,7 +30,7 @@ job-defaults:
         kind: test
         tier: 1
 
-jobs:
+tasks:
     devedition:
         bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
         bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi', 'msix']

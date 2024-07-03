@@ -30,7 +30,7 @@ FETCH_SCHEMA = Schema(
         Required("name"): str,
         # Relative path (from config.path) to the file the task was defined
         # in.
-        Optional("job-from"): str,
+        Optional("task-from"): str,
         # Description of the task.
         Required("description"): str,
         Optional(

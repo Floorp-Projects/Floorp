@@ -212,6 +212,7 @@ events:
     expires: never
   marketing_notification_allowed:
     type: boolean
+    lifetime: application
     description: |
       True if marketing notifications are allowed, otherwise false.
     bugs:
@@ -2708,6 +2709,7 @@ metrics:
         - Wallpapers
   notifications_allowed:
     type: boolean
+    lifetime: application
     description: |
       True if notifications are allowed, otherwise false.
     send_in_pings:
@@ -2791,6 +2793,7 @@ metrics:
 customize_home:
   most_visited_sites:
     type: boolean
+    lifetime: application
     description: |
       An indication of whether the most visited sites
       are enabled to be displayed
@@ -2810,6 +2813,7 @@ customize_home:
     expires: never
   jump_back_in:
     type: boolean
+    lifetime: application
     description: |
       An indication of whether the Jump back
       in section is enabled to be displayed
@@ -2829,6 +2833,7 @@ customize_home:
     expires: never
   bookmarks:
     type: boolean
+    lifetime: application
     description: |
       An indication of whether the recently
       saved section is enabled to be displayed. This was previously customize_home.recently_saved.
@@ -2848,6 +2853,7 @@ customize_home:
     expires: never
   recently_visited:
     type: boolean
+    lifetime: application
     description: |
       An indication of whether the Recently
       visited section is enabled to be displayed
@@ -2867,6 +2873,7 @@ customize_home:
     expires: never
   pocket:
     type: boolean
+    lifetime: application
     description: |
       An indication of whether Pocket is enabled to be displayed
     send_in_pings:
@@ -2888,6 +2895,7 @@ customize_home:
         - PocketIntegration
   sponsored_pocket:
     type: boolean
+    lifetime: application
     description: |
       An indication of whether Pocket sponsored stories are enabled
       to be displayed
@@ -2909,6 +2917,7 @@ customize_home:
         - PocketIntegration
   contile:
     type: boolean
+    lifetime: application
     description: |
       An indication of whether Contile is enabled to be displayed
     send_in_pings:
@@ -2956,6 +2965,7 @@ customize_home:
     expires: never
   opening_screen:
     type: string
+    lifetime: application
     description: |
       What opening screen preference the user has selected
       under "Customize Home".
@@ -2976,6 +2986,7 @@ customize_home:
 preferences:
   studies_enabled:
     type: boolean
+    lifetime: application
     description: >
       A metric indicating whether or not the user has studies enabled
       default: true
@@ -3009,6 +3020,7 @@ preferences:
     expires: never
   search_suggestions_enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has search suggestions enabled
       default: true
@@ -3033,6 +3045,7 @@ preferences:
         - Settings
   remote_debugging_enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has remote debugging enabled
       default: false
@@ -3058,6 +3071,7 @@ preferences:
         - Settings
   telemetry_enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has telemetry enabled. Note we should
       never receive a "false" value for this since telemetry would
@@ -3084,6 +3098,7 @@ preferences:
         - Settings
   enhanced_tracking_protection:
     type: string
+    lifetime: application
     description: |
       What type of enhanced tracking protection the user has enabled.
       "standard," "strict," "custom," or "" (if disabled)
@@ -3111,6 +3126,7 @@ preferences:
         - Settings
   etp_custom_cookies_selection:
     type: string
+    lifetime: application
     description: |
       The option user has selected in the "Custom" mode of the
       Enhanced Tracking Protection settings.
@@ -3138,6 +3154,7 @@ preferences:
         - Settings
   bookmarks_suggestion:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has enabled bookmark search suggestions
       default: true
@@ -3163,6 +3180,7 @@ preferences:
         - Settings
   browsing_history_suggestion:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has enabled browsing history suggestions.
       default: true
@@ -3188,6 +3206,7 @@ preferences:
         - Settings
   clipboard_suggestions_enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has enabled clipboard search suggestions.
       default: true
@@ -3213,6 +3232,7 @@ preferences:
         - Settings
   search_shortcuts_enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has enabled search shortcuts.
       default: true
@@ -3237,6 +3257,7 @@ preferences:
         - Settings
   signed_in_sync:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user is signed into FxA
       default: false
@@ -3263,6 +3284,7 @@ preferences:
         - Settings
   sync_items:
     type: string_list
+    lifetime: application
     description: |
       The list of items the user has chosen to sync with FxA.
       default: "" if the user is signed out. Otherwise defaults to
@@ -3290,6 +3312,7 @@ preferences:
         - Settings
   voice_search_enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has enabled the voice search button.
       default: true
@@ -3317,6 +3340,7 @@ preferences:
         - Settings
   toolbar_position_setting:
     type: string
+    lifetime: application
     description: |
       The position of the toolbar
       default: bottom (defaults to top if the user has accessibility services)
@@ -3341,6 +3365,7 @@ preferences:
         - Settings
   accessibility_services:
     type: string_list
+    lifetime: application
     description: |
       Whether or not the user has touch exploration or switch services enabled.
       These are built into the Android OS, not Fenix prefs.
@@ -3365,6 +3390,7 @@ preferences:
         - Settings
   open_links_in_app_enabled:
     type: string
+    lifetime: application
     description: |
       The user has the open links in apps feature enabled.
       "ask_before_opening", "always" or "never".
@@ -3385,6 +3411,7 @@ preferences:
         - Settings
   user_theme:
     type: string
+    lifetime: application
     description: |
       The theme the user has enabled. "light," "dark," "system," or "battery"
       default: "system" for API 28+, else "light"
@@ -3409,6 +3436,7 @@ preferences:
         - Settings
   inactive_tabs_enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has the inactive tabs feature enabled.
       default: true
@@ -6681,6 +6709,7 @@ logins:
         - Logins
   saved_all:
     type: quantity
+    lifetime: application
     description: |
       Counter of number of passwords currently saved by user.
     bugs:
@@ -7065,11 +7094,11 @@ top_sites:
     expires: never
   context_id:
     type: uuid
+    lifetime: application
     description: |
       A UUID that is unjoinable with other browser metrics. This ID will not be
       shared with AdM, only for internal uses. This ID is shared across all
       contextual services features.
-    lifetime: application
     send_in_pings:
       - topsites-impression
     bugs:
@@ -7626,6 +7655,7 @@ first_session:
         - Attribution
   distribution_id:
     type: string
+    lifetime: application
     description: |
       A string containing the distribution identifier. This is currently used
       to identify installs from Mozilla Online.
@@ -8086,6 +8116,7 @@ addons:
         - WebExtensions
   has_installed_addons:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has installed add-ons on the device.
     send_in_pings:
@@ -8109,6 +8140,7 @@ addons:
         - WebExtensions
   has_enabled_addons:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user has enabled add-ons on the device.
     send_in_pings:
@@ -9465,6 +9497,7 @@ awesomebar:
 android_autofill:
   supported:
     type: boolean
+    lifetime: application
     description: |
       Whether or not Android Autofill is supported by the device and is
       supported for this user.
@@ -9482,6 +9515,7 @@ android_autofill:
     expires: never
   enabled:
     type: boolean
+    lifetime: application
     description: |
       Whether or not Firefox is the Android Autofill provider for this user.
       provider.
@@ -9992,6 +10026,7 @@ recent_searches:
 credit_cards:
   saved:
     type: counter
+    lifetime: application
     description: |
       A counter of the number of credit cards that have been saved
       manually by the user.
@@ -11343,6 +11378,7 @@ shopping:
 shopping.settings:
   component_opted_out:
     type: boolean
+    lifetime: application
     description: |
       Whether or not the user opted out of review quality check feature.
     send_in_pings:
@@ -11362,6 +11398,7 @@ shopping.settings:
         - Shopping
   nimbus_disabled_shopping:
     type: boolean
+    lifetime: application
     description: |
       Whether or not Nimbus has disabled the use of the shopping component.
     send_in_pings:
@@ -11381,6 +11418,7 @@ shopping.settings:
         - Shopping
   user_has_onboarded:
     type: boolean
+    lifetime: application
     description: |
       Whether or the user has completed the review quality check onboarding.
     send_in_pings:
@@ -11400,6 +11438,7 @@ shopping.settings:
         - Shopping
   disabled_ads:
     type: boolean
+    lifetime: application
     description: |
       Indicates if the user has disabled ads.
     send_in_pings:

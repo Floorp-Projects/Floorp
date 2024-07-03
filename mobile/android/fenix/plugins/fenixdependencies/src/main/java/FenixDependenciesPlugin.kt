@@ -34,8 +34,6 @@ object FenixVersions {
 
     const val google_ads_id_version = "16.0.0"
 
-    const val google_play_review_version = "2.0.1"
-
     // keep in sync with the versions used in AS.
     const val protobuf = "3.21.10"
     const val protobuf_plugin = "0.9.4"
@@ -86,10 +84,6 @@ object FenixDependencies {
     // --- END AndroidX test dependencies --- //
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${FenixVersions.google_ads_id_version}"
-
-    // Required for in-app reviews
-    const val google_play_review = "com.google.android.play:review:${FenixVersions.google_play_review_version}"
-    const val google_play_review_ktx = "com.google.android.play:review-ktx:${FenixVersions.google_play_review_version}"
 
     const val junitApi = "org.junit.jupiter:junit-jupiter-api:${FenixVersions.junit}"
     const val junitParams = "org.junit.jupiter:junit-jupiter-params:${FenixVersions.junit}"

@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
     - gecko_taskgraph.transforms.release_version_bump:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     description: Release Promotion version tag for buildN
     run-on-projects: []
     shipping-phase: promote
@@ -26,7 +26,7 @@ job-defaults:
                 default: false
 
 
-jobs:
+tasks:
     firefox:
         name: firefox-tag-buildN
         shipping-product: firefox

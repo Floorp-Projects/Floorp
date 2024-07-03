@@ -77,7 +77,14 @@ def cache_task(config, tasks):
                         task["label"], p
                     )
                 )
+
         digest_data = cache["digest-data"] + sorted(dependency_digests)
+
+        # Chain of trust affects task artifacts therefore it should influence
+        # cache digest.
+        if task.get("worker", {}).get("chain-of-trust"):
+            digest_data.append(str(task["worker"]["chain-of-trust"]))
+
         add_optimization(
             config,
             task,

@@ -5631,6 +5631,13 @@
   type: bool
   value: true
   mirror: always
+
+# Time in milliseconds after which geoclue will try to fallback to MLS if no
+# location is received after successful start.
+- name: geo.provider.geoclue.mls_fallback_timeout_ms
+  type: uint32_t
+  value: 5000
+  mirror: always
 #endif
 
 #---------------------------------------------------------------------------

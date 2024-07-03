@@ -27,6 +27,7 @@ Preferences.addAll([
   { id: "browser.search.separatePrivateDefault.ui.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.trending", type: "bool" },
   { id: "browser.urlbar.trending.featureGate", type: "bool" },
+  { id: "browser.urlbar.trending.enabledLocales", type: "string" },
   { id: "browser.urlbar.recentsearches.featureGate", type: "bool" },
   { id: "browser.urlbar.suggest.recentsearches", type: "bool" },
 ]);
@@ -283,8 +284,18 @@ var gSearchPane = {
     let trendingSupported = (
       await Services.search.getDefault()
     ).supportsResponseType(lazy.SearchUtils.URL_TYPE.TRENDING_JSON);
-    trendingBox.hidden = !Preferences.get("browser.urlbar.trending.featureGate")
-      .value;
+    let trendingEnabled = Preferences.get(
+      "browser.urlbar.trending.featureGate"
+    ).value;
+    let enabledLocales = Preferences.get(
+      "browser.urlbar.trending.enabledLocales"
+    ).value;
+    if (trendingEnabled && enabledLocales) {
+      trendingEnabled = enabledLocales.includes(
+        Services.locale.appLocaleAsBCP47
+      );
+    }
+    trendingBox.hidden = !trendingEnabled;
     trendingCheckBox.disabled = suggestDisabled || !trendingSupported;
   },
 

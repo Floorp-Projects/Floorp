@@ -693,8 +693,8 @@ dependencies {
     implementation FenixDependencies.google_ads_id // Required for the Google Advertising ID
 
     // Required for in-app reviews
-    implementation FenixDependencies.google_play_review
-    implementation FenixDependencies.google_play_review_ktx
+    implementation ComponentsDependencies.play_review
+    implementation ComponentsDependencies.play_review_ktx
 
     implementation FenixDependencies.androidx_profileinstaller
 

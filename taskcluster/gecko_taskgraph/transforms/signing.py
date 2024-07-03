@@ -56,7 +56,7 @@ signing_description_schema = Schema(
         Optional("repacks-per-chunk"): int,
         # Override the default priority for the project
         Optional("priority"): task_description_schema["priority"],
-        Optional("job-from"): task_description_schema["job-from"],
+        Optional("task-from"): task_description_schema["task-from"],
     }
 )
 

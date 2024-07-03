@@ -2,7 +2,7 @@
 # license, v. 2.0. if a copy of the mpl was not distributed with this
 # file, you can obtain one at http://mozilla.org/mpl/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
@@ -15,7 +15,7 @@ kind-dependencies:
     - signing-apk
     - signing-bundle
 
-jobs:
+tasks:
     beetmover:
         from-deps:
             with-attributes:

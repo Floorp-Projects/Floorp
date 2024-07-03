@@ -4,9 +4,9 @@
 #
 # We have these build jobs in a separate file because their definitions are
 # different enough from the main Linux build jobs that their presence in
-# linux.yml would make using job-defaults there significantly less useful.
+# linux.yml would make using task-defaults there significantly less useful.
 ---
-job-defaults:
+task-defaults:
     worker-type: b-linux-gcp
     run:
         extra-config:

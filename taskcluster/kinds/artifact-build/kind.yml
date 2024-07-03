@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - fetch
@@ -16,7 +16,7 @@ transforms:
     - gecko_taskgraph.transforms.artifact:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     index:
         product: firefox
     treeherder:
@@ -42,7 +42,7 @@ job-defaults:
         keep-artifacts: false
     use-python: default
 
-jobs:
+tasks:
     linux64-artifact/opt:
         description: "Linux64 Opt Artifact Build"
         index:

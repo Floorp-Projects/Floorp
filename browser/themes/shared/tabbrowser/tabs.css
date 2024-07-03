@@ -20,12 +20,20 @@
   --tab-selected-textcolor: var(--toolbar-color);
   --tab-selected-bgcolor: var(--toolbar-bgcolor);
   --tab-selected-color-scheme: var(--toolbar-color-scheme);
-
   &[lwt-tab-selected="light"] {
     --tab-selected-color-scheme: light;
   }
   &[lwt-tab-selected="dark"] {
     --tab-selected-color-scheme: dark;
+  }
+  --tab-selected-outline-color: transparent;
+  --tab-hover-outline-color: transparent;
+  @media (prefers-contrast) {
+    --tab-selected-outline-color: currentColor;
+    --tab-hover-outline-color: currentColor;
+  }
+  &[lwtheme] {
+    --tab-selected-outline-color: var(--lwt-tab-line-color, currentColor);
   }
 }
 
@@ -121,13 +129,6 @@
       position: absolute !important;
       display: block;
     }
-  }
-
-  /* tabbrowser-tab keyboard focus */
-  &.keyboard-focused-tab > .tab-stack > .tab-background,
-  &:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
-    outline: var(--focus-outline);
-    outline-offset: var(--focus-outline-inset);
   }
 
   #tabbrowser-tabs[movingtab] > #tabbrowser-arrowscrollbox > &:is([selected], [multiselected]) {
@@ -563,11 +564,8 @@
 #TabsToolbar #firefox-view-button:hover:not([open]) > .toolbarbutton-icon,
 .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected], [multiselected]) {
   background-color: color-mix(in srgb, currentColor 11%, transparent);
-}
-
-#TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
-#tabbrowser-tabs:not([noshadowfortests]) .tab-background:is([selected], [multiselected]) {
-  box-shadow: 0 0 4px rgba(0,0,0,.4);
+  outline: 1px solid var(--tab-hover-outline-color);
+  outline-offset: -1px;
 }
 
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
@@ -575,29 +573,19 @@
   background-color: var(--tab-selected-bgcolor);
   background-origin: border-box;
   background-repeat: repeat-x;
+  box-shadow: 0 0 4px rgba(0,0,0,.4);
+  outline: 1px solid var(--tab-selected-outline-color);
+  outline-offset: -1px;
+
+  #tabbrowser-tabs[noshadowfortests] & {
+    box-shadow: none;
+  }
 }
 
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
 .tabbrowser-tab:is([visuallyselected], [multiselected]) {
   color: var(--tab-selected-textcolor);
   color-scheme: var(--tab-selected-color-scheme);
-}
-
-@media (prefers-contrast) {
-  #TabsToolbar #firefox-view-button:is([open], :hover):not(:focus-visible) > .toolbarbutton-icon,
-  .tab-background[selected],
-  .tabbrowser-tab:hover > .tab-stack > .tab-background {
-    outline: 1px solid currentColor;
-    outline-offset: -1px;
-  }
-}
-
-@media not (prefers-contrast) {
-  :root[lwtheme] #TabsToolbar #firefox-view-button[open]:not(:focus-visible) > .toolbarbutton-icon,
-  :root[lwtheme] .tab-background[selected]:not([multiselected]) {
-    outline: 1px solid var(--lwt-tab-line-color, var(--lwt-tabs-border-color, currentColor));
-    outline-offset: -1px;
-  }
 }
 
 /* Add a focus outline on top of the multiselected tabs, with the currently selected
@@ -610,6 +598,13 @@
     outline-width: 2px;
     outline-offset: -2px;
   }
+}
+
+/* Keyboard focus outline */
+#TabsToolbar #firefox-view-button:focus-visible > .toolbarbutton-icon,
+.tabbrowser-tab:is(.keyboard-focused-tab, :focus:not([aria-activedescendant])) > .tab-stack > .tab-background {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 /* Pinned tabs */

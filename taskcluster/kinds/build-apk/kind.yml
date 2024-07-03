@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.build_android_app:transforms
@@ -14,7 +14,7 @@ kind-dependencies:
     - toolchain
     - build-fat-aar
 
-job-defaults:
+task-defaults:
     apk-artifact-template:
         type: file
         name: 'public/build/target.{abi}.apk'
@@ -23,7 +23,7 @@ job-defaults:
         build_platform: android
 
 
-jobs:
+tasks:
     focus-debug:
         attributes:
             shipping-product: focus

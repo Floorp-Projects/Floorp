@@ -3,9 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.treeherder import join_symbol, split_symbol
-
-from gecko_taskgraph.util.copy_task import copy_task
 
 transforms = TransformSequence()
 
@@ -31,7 +30,7 @@ def test_confirm_failure_tasks(config, tasks):
             env = config.params.get("try_task_config", {}) or {}
             env = env.get("templates", {}).get("env", {})
 
-            cftask = copy_task(task)
+            cftask = deepcopy(task)
 
             # when scheduled other settings will be made
             cftask["tier"] = 2

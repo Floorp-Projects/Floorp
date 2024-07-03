@@ -75,7 +75,7 @@ test_description_schema = Schema(
         # common attributes)
         Optional("attributes"): {str: object},
         # relative path (from config.path) to the file task was defined in
-        Optional("job-from"): str,
+        Optional("task-from"): str,
         # The `run_on_projects` attribute, defaulting to "all".  This dictates the
         # projects on which this task should be included in the target task set.
         # See the attributes documentation for details.
@@ -485,7 +485,7 @@ def make_job_description(config, tasks):
         jobdesc["description"] = task["description"]
         jobdesc["attributes"] = attributes
         jobdesc["dependencies"] = {"build": build_label}
-        jobdesc["job-from"] = task["job-from"]
+        jobdesc["task-from"] = task["task-from"]
 
         if task.get("fetches"):
             jobdesc["fetches"] = task["fetches"]

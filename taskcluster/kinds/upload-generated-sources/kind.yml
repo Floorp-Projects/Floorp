@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
@@ -22,7 +22,7 @@ not-for-build-platforms:
     - macosx64-shippable/opt
     - macosx64-devedition/opt
 
-jobs:
+tasks:
     upload-generated-sources:
         description: Upload generated source files from build
         from-deps:

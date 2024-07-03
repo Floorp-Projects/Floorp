@@ -28,7 +28,7 @@ beetmover_checksums_description_schema = Schema(
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("locale"): str,
         Optional("dependencies"): task_description_schema["dependencies"],
-        Optional("job-from"): task_description_schema["job-from"],
+        Optional("task-from"): task_description_schema["task-from"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
     }

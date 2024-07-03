@@ -58,7 +58,7 @@ Each variant must conform to the
   to be applied. The ``task`` definition is passed in as context.
 * **replace** - A dictionary that will overwrite keys in the task definition.
 * **merge** - A dictionary that will be merged into the task definition using
-  the :py:func:`~gecko_taskgraph.util.templates.merge` function.
+  the :py:func:`~taskgraph.util.templates.merge` function.
 
 .. note::
 

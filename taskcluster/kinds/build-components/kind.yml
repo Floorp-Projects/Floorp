@@ -17,7 +17,7 @@ kind-dependencies:
     - toolchain
     - build-fat-aar
 
-job-defaults:
+task-defaults:
     artifact-template:
         type: file
         name: public/build/{artifact_file_name}

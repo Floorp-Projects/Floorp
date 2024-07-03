@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.try_job:transforms
@@ -18,7 +18,7 @@ kind-dependencies:
     - build
     - build-fat-aar
 
-jobs-from:
+tasks-from:
     - android-compare-locales.yml
     - android-detekt.yml
     - android-lint.yml
@@ -42,7 +42,7 @@ jobs-from:
     - wpt-manifest.yml
     - wpt-metadata.yml
 
-job-defaults:
+task-defaults:
     use-python: default
     attributes:
         retrigger: true

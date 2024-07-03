@@ -10,9 +10,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
+import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.google.android.play.core.tasks.Task
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -40,7 +40,7 @@ class AppReviewUtils {
                 request.addOnCompleteListener { task: Task<ReviewInfo?> ->
                     if (task.isSuccessful) {
                         // We can get the ReviewInfo object
-                        val reviewInfo = task.result
+                        val reviewInfo = task.result ?: return@addOnCompleteListener
                         val flow = manager.launchReviewFlow(activity, reviewInfo)
                         flow.addOnCompleteListener {
                             // The flow has finished. The API does not indicate whether the user

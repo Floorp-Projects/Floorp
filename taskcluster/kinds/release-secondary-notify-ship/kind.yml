@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_deps:transforms
@@ -12,7 +12,7 @@ transforms:
 kind-dependencies:
     - release-secondary-balrog-scheduling
 
-job-defaults:
+task-defaults:
     name: notify-release-drivers-ship
     description: Sends email to release-drivers telling release was shipped.
     run-on-projects: []
@@ -26,7 +26,7 @@ job-defaults:
                 try: ["{config[params][owner]}"]
                 default: []
 
-jobs:
+tasks:
     firefox-rc:
         shipping-product: firefox
         notifications:
