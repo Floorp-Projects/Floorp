@@ -619,21 +619,23 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
                              std::move(nogc));
   }
 
-  template <typename Processor>
+  template <bool AllowLargeTypedArrays = false, typename Processor>
   [[nodiscard]] ProcessNoGCReturnType<Processor> ProcessDataHelper(
       Processor&& aProcessor) const {
     LengthPinner pinner(this);
     // The data from GetCurrentData() is GC sensitive.
     JS::AutoCheckCannotGC nogc;
-    return CallProcessorNoGC(
-        GetCurrentData(), std::forward<Processor>(aProcessor), std::move(nogc));
+    return CallProcessorNoGC(GetCurrentData<AllowLargeTypedArrays>(),
+                             std::forward<Processor>(aProcessor),
+                             std::move(nogc));
   }
 
  public:
-  template <typename Processor>
+  template <bool AllowLargeTypedArrays = false, typename Processor>
   [[nodiscard]] ProcessNoGCReturnType<Processor> ProcessData(
       Processor&& aProcessor) const {
-    return ProcessDataHelper(std::forward<Processor>(aProcessor));
+    return ProcessDataHelper<AllowLargeTypedArrays>(
+        std::forward<Processor>(aProcessor));
   }
 
   template <typename Processor>
@@ -684,6 +686,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
   }
 
  private:
+  template <bool AllowLargeTypedArrays = false>
   Span<element_type> GetCurrentData() const {
     MOZ_ASSERT(inited());
     MOZ_RELEASE_ASSERT(
@@ -696,8 +699,10 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     bool shared;
     Span<element_type> span =
         ArrayT::fromObject(mImplObj).getData(&shared, nogc);
-    MOZ_RELEASE_ASSERT(span.Length() <= INT32_MAX,
-                       "Bindings must have checked ArrayBuffer{View} length");
+    if constexpr (!AllowLargeTypedArrays) {
+      MOZ_RELEASE_ASSERT(span.Length() <= INT32_MAX,
+                         "Bindings must have checked ArrayBuffer{View} length");
+    }
     return span;
   }
 
