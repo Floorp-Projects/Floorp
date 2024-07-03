@@ -6,14 +6,14 @@ import itertools
 import os
 from copy import deepcopy
 from datetime import datetime
+from functools import lru_cache
 
 import jsone
-from taskgraph.util.memoize import memoize
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.yaml import load_yaml
 
-cached_load_yaml = memoize(load_yaml)
+cached_load_yaml = lru_cache(maxsize=None)(load_yaml)
 
 
 def generate_beetmover_upstream_artifacts(

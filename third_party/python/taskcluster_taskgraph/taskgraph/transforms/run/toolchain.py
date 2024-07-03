@@ -14,6 +14,7 @@ from taskgraph.transforms.run.common import (
     generic_worker_add_artifacts,
     get_vcsdir_name,
 )
+from taskgraph.util import path as mozpath
 from taskgraph.util.hash import hash_paths
 from taskgraph.util.schema import Schema
 from taskgraph.util.shell import quote as shell_quote
@@ -57,7 +58,8 @@ toolchain_run_schema = Schema(
 def get_digest_data(config, run, taskdesc):
     files = list(run.pop("resources", []))
     # The script
-    files.append("taskcluster/scripts/toolchain/{}".format(run["script"]))
+    script = mozpath.join("taskcluster/scripts/toolchain/", run["script"])
+    files.append(mozpath.normpath(script))
 
     # Accumulate dependency hashes for index generation.
     data = [hash_paths(config.graph_config.vcs_root, files)]
@@ -126,16 +128,14 @@ def common_toolchain(config, task, taskdesc, is_docker):
             "digest-data": get_digest_data(config, run, taskdesc),
         }
 
-    script = run.pop("script")
+    script = mozpath.join("taskcluster/scripts/toolchain/", run.pop("script"))
     run["using"] = "run-task"
     run["cwd"] = "{checkout}/.."
 
     if script.endswith(".ps1"):
         run["exec-with"] = "powershell"
 
-    command = [f"{srcdir}/taskcluster/scripts/toolchain/{script}"] + run.pop(
-        "arguments", []
-    )
+    command = [f"{srcdir}/{mozpath.normpath(script)}"] + run.pop("arguments", [])
 
     if not is_docker:
         # Don't quote the first item in the command because it purposely contains

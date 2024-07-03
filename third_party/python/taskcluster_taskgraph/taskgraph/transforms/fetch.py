@@ -128,7 +128,7 @@ def make_task(config, tasks):
             "name": name,
             "description": task["description"],
             "expires-after": task.get("expires-after", expires),
-            "label": "fetch-%s" % name,
+            "label": f"fetch-{name}",
             "run-on-projects": [],
             "run": {
                 "using": "run-task",
@@ -265,12 +265,7 @@ def create_fetch_url_task(config, name, fetch):
         for k, v in fetch["headers"].items():
             command.extend(["-H", f"{k}:{v}"])
 
-    command.extend(
-        [
-            fetch["url"],
-            "/builds/worker/artifacts/%s" % artifact_name,
-        ]
-    )
+    command.extend([fetch["url"], f"/builds/worker/artifacts/{artifact_name}"])
 
     return {
         "command": command,
@@ -316,7 +311,7 @@ def create_git_fetch_task(config, name, fetch):
         path_prefix,
         fetch["repo"],
         fetch["revision"],
-        "/builds/worker/artifacts/%s" % artifact_name,
+        f"/builds/worker/artifacts/{artifact_name}",
     ]
 
     ssh_key = fetch.get("ssh-key")

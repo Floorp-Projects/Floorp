@@ -16,7 +16,6 @@ from requests.packages.urllib3.util.retry import Retry
 
 from taskgraph.task import Task
 from taskgraph.util import yaml
-from taskgraph.util.memoize import memoize
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ PRODUCTION_TASKCLUSTER_ROOT_URL = None
 CONCURRENCY = 50
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def get_root_url(use_proxy):
     """Get the current TASKCLUSTER_ROOT_URL.
 
@@ -106,7 +105,7 @@ def requests_retry_session(
     return session
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def get_session():
     return requests_retry_session(retries=5)
 
@@ -277,7 +276,7 @@ def get_task_url(task_id, use_proxy=False):
     return task_tmpl.format(task_id)
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def get_task_definition(task_id, use_proxy=False):
     response = _do_request(get_task_url(task_id, use_proxy))
     return response.json()
@@ -446,7 +445,7 @@ def list_task_group_incomplete_tasks(task_group_id):
             break
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def _get_deps(task_ids, use_proxy):
     upstream_tasks = {}
     for task_id in task_ids:

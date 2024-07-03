@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import functools
 from dataclasses import dataclass
 
 from .keyed_by import evaluate_keyed_by
-from .memoize import memoize
 
 
 @dataclass
@@ -29,7 +29,7 @@ _BUILTIN_TYPES = {
 }
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def worker_type_implementation(graph_config, worker_type):
     """Get the worker implementation and OS for the given workerType, where the
     OS represents the host system, not the target OS, in the case of
@@ -46,7 +46,7 @@ def worker_type_implementation(graph_config, worker_type):
     return worker_config["implementation"], worker_config.get("os")
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def get_worker_type(graph_config, alias, level):
     """
     Get the worker type based, evaluating aliases from the graph config.

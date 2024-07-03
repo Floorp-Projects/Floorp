@@ -5,6 +5,7 @@
 
 import logging
 import sys
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Union
@@ -192,7 +193,17 @@ def verify_routes_notification_filters(
     if task is None:
         return
     route_prefix = "notify."
-    valid_filters = ("on-any", "on-completed", "on-failed", "on-exception")
+    valid_filters = (
+        "on-any",
+        "on-completed",
+        "on-defined",
+        "on-failed",
+        "on-exception",
+        "on-pending",
+        "on-resolved",
+        "on-running",
+        "on-transition",
+    )
     task_dict = task.task
     routes = task_dict.get("routes", [])
 
@@ -203,6 +214,13 @@ def verify_routes_notification_filters(
             if route_filter not in valid_filters:
                 raise Exception(
                     f"{task.label} has invalid notification filter ({route_filter})"
+                )
+            if route_filter == "on-any":
+                warnings.warn(
+                    DeprecationWarning(
+                        f"notification filter '{route_filter}' is deprecated. Use "
+                        "'on-transition' or 'on-resolved'."
+                    )
                 )
 
 

@@ -545,9 +545,9 @@ six==1.16.0 ; python_version >= "3.8" and python_version < "4.0" \
 slugid==2.0.0 ; python_version >= "3.8" and python_version < "4.0" \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
-taskcluster-taskgraph==8.2.0 ; python_version >= "3.8" and python_version < "4.0" \
-    --hash=sha256:410e9c9ef43eac1d0676f16867137de90f77eb0b4e0cbe746fe5512d1a626822 \
-    --hash=sha256:af146323402c2d5f67c65e3c232eda953da1ce319e465069e4d5c7aeb212b66e
+taskcluster-taskgraph==9.0.0 ; python_version >= "3.8" and python_version < "4.0" \
+    --hash=sha256:306366c70da7353cc198406a36630b28ecc77ded32f7e4ca0187913d56c40713 \
+    --hash=sha256:3ebc1a07c31168c19159e71507341b40fc33ae3e652c7c80d8871904855021d1
 taskcluster-urls==13.0.1 ; python_version >= "3.8" and python_version < "4.0" \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
