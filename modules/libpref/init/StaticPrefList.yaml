@@ -5636,7 +5636,7 @@
 # location is received after successful start.
 - name: geo.provider.geoclue.mls_fallback_timeout_ms
   type: uint32_t
-  value: 10000
+  value: 5000
   mirror: always
 #endif
 
