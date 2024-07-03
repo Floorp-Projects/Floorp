@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozbuild.util import ReadOnlyDict
 from taskgraph.task import Task
+from taskgraph.util.readonlydict import ReadOnlyDict
 
 immutable_types = {int, float, bool, str, type(None), ReadOnlyDict}
 

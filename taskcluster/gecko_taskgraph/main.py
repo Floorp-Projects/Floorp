@@ -63,7 +63,7 @@ def format_taskgraph_json(taskgraph):
 
 
 def format_taskgraph_yaml(taskgraph):
-    from mozbuild.util import ReadOnlyDict
+    from taskgraph.util.readonlydict import ReadOnlyDict
 
     class TGDumper(yaml.SafeDumper):
         def ignore_aliases(self, data):
