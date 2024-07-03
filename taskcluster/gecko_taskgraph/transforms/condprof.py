@@ -7,12 +7,12 @@ the condprof/kind.yml file
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import Schema
 from voluptuous import Optional
 
 from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.copy_task import copy_task
 
 diff_description_schema = Schema(
     {
@@ -67,21 +67,21 @@ def generate_scenarios(config, tasks):
                     "kind": task["treeherder"]["kind"],
                     "tier": task["treeherder"]["tier"],
                 },
-                "worker-type": copy_task(task["worker-type"]),
-                "worker": copy_task(task["worker"]),
-                "index": copy_task(index),
+                "worker-type": deepcopy(task["worker-type"]),
+                "worker": deepcopy(task["worker"]),
+                "index": deepcopy(index),
                 "run": {
                     "using": "run-task",
                     "cwd": task["run"]["cwd"],
                     "checkout": task["run"]["checkout"],
-                    "tooltool-downloads": copy_task(task["run"]["tooltool-downloads"]),
+                    "tooltool-downloads": deepcopy(task["run"]["tooltool-downloads"]),
                     "command": tcmd,
                     "run-as-root": run_as_root,
                 },
-                "run-on-projects": copy_task(task["run-on-projects"]),
-                "scopes": copy_task(task["scopes"]),
-                "dependencies": copy_task(task["dependencies"]),
-                "fetches": copy_task(task["fetches"]),
+                "run-on-projects": deepcopy(task["run-on-projects"]),
+                "scopes": deepcopy(task["scopes"]),
+                "dependencies": deepcopy(task["dependencies"]),
+                "fetches": deepcopy(task["fetches"]),
             }
 
             use_taskcluster_python = task.get("use-python", "system")

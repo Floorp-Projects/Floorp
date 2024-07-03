@@ -16,6 +16,7 @@ import logging
 import mozpack.path as mozpath
 from packaging.version import Version
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.python_path import import_sibling_modules
 from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.taskcluster import get_artifact_prefix
@@ -23,7 +24,6 @@ from voluptuous import Any, Coerce, Exclusive, Extra, Optional, Required
 
 from gecko_taskgraph.transforms.cached_tasks import order_tasks
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 
 logger = logging.getLogger(__name__)
@@ -213,7 +213,7 @@ def make_task_description(config, jobs):
         if job["worker"]["implementation"] == "docker-worker":
             job["run"].setdefault("workdir", "/builds/worker")
 
-        taskdesc = copy_task(job)
+        taskdesc = deepcopy(job)
 
         # fill in some empty defaults to make run implementations easier
         taskdesc.setdefault("attributes", {})

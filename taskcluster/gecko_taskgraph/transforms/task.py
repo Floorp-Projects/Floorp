@@ -19,6 +19,7 @@ import attr
 from mozbuild.util import memoize
 from taskcluster.utils import fromNow
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import (
     Schema,
@@ -35,7 +36,6 @@ from gecko_taskgraph.optimize.schema import OptimizationSchema
 from gecko_taskgraph.transforms.job.common import get_expiration
 from gecko_taskgraph.util import docker as dockerutil
 from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_level
-from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.partners import get_partners_to_be_published
 from gecko_taskgraph.util.scriptworker import BALROG_ACTIONS, get_release_config
@@ -772,7 +772,7 @@ def build_generic_worker_payload(config, task, task_def):
     #   * 'cache-name' -> 'cacheName'
     #   * 'task-id'    -> 'taskId'
     # All other key names are already suitable, and don't need renaming.
-    mounts = copy_task(worker.get("mounts", []))
+    mounts = deepcopy(worker.get("mounts", []))
     for mount in mounts:
         if "cache-name" in mount:
             mount["cacheName"] = "{trust_domain}-level-{level}-{name}".format(

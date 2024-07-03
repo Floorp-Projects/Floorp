@@ -4,12 +4,12 @@
 
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import Extra, Optional, Required
 
 from gecko_taskgraph.transforms.test import test_description_schema
-from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.perftest import is_external_browser
 
 transforms = TransformSequence()
@@ -104,7 +104,7 @@ def split_apps(config, tests):
             ] and test["attributes"].get("unittest_variant"):
                 continue
 
-            atest = copy_task(test)
+            atest = deepcopy(test)
             suffix = f"-{app}"
             atest["app"] = app
             atest["description"] += f" on {app.capitalize()}"
@@ -146,7 +146,7 @@ def split_raptor_subtests(config, tests):
 
         for chunk_number, subtest in enumerate(subtests):
             # Create new test job
-            chunked = copy_task(test)
+            chunked = deepcopy(test)
             chunked["chunk-number"] = 1 + chunk_number
             chunked["subtest"] = subtest
             chunked["subtest-symbol"] = subtest

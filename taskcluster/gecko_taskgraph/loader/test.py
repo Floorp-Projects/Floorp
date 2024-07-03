@@ -5,9 +5,8 @@
 
 import logging
 
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.yaml import load_yaml
-
-from gecko_taskgraph.util.copy_task import copy_task
 
 from .transform import loader as transform_loader
 
@@ -43,7 +42,7 @@ def loader(kind, path, config, params, loaded_tasks):
     # generate all tests for all test platforms
     for test_platform_name, test_platform in test_platforms.items():
         for test_name in test_platform["test-names"]:
-            test = copy_task(test_descriptions[test_name])
+            test = deepcopy(test_descriptions[test_name])
             test["build-platform"] = test_platform["build-platform"]
             test["test-platform"] = test_platform_name
             test["build-label"] = test_platform["build-label"]
