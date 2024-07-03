@@ -7,11 +7,11 @@ import jsone
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import Schema, validate_schema
+from taskgraph.util.templates import merge
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.util.chunking import TEST_VARIANTS
-from gecko_taskgraph.util.templates import merge
 
 transforms = TransformSequence()
 
