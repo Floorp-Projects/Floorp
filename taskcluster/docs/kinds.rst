@@ -240,10 +240,6 @@ release-beetmover-push-to-release publishes promoted releases from the
 candidates directory to the release directory. This is part of release
 promotion.
 
-beetmover-snap
---------------
-Beetmover-source publishes Ubuntu's snap. This is part of release promotion.
-
 beetmover-source
 ----------------
 Beetmover-source publishes release source. This is part of release promotion.
@@ -309,10 +305,6 @@ release-binary-transparency
 ---------------------------
 Binary transparency creates a publicly verifiable log of binary shas for downstream
 release auditing. https://wiki.mozilla.org/Security/Binary_Transparency
-
-release-snap-repackage
-----------------------
-Generate an installer using Ubuntu's Snap format.
 
 release-flatpak-repackage
 -------------------------
