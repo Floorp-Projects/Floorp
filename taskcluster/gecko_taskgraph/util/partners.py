@@ -12,10 +12,10 @@ from urllib.parse import urlencode
 import requests
 import yaml
 from redo import retry
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import resolve_keyed_by
 
 from gecko_taskgraph.util.attributes import release_level
-from gecko_taskgraph.util.copy_task import copy_task
 
 # Suppress chatty requests logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -391,7 +391,7 @@ def get_partner_config_by_kind(config, kind):
         elif kind.startswith("release-partner-attribution") and isinstance(
             kind_config, dict
         ):
-            all_configs = copy_task(kind_config.get("configs", []))
+            all_configs = deepcopy(kind_config.get("configs", []))
             kind_config["configs"] = []
             for this_config in all_configs:
                 if this_config["campaign"] in partner_subset:
@@ -400,7 +400,7 @@ def get_partner_config_by_kind(config, kind):
 
 
 def _fix_subpartner_locales(orig_config, all_locales):
-    subpartner_config = copy_task(orig_config)
+    subpartner_config = deepcopy(orig_config)
     # Get an ordered list of subpartner locales that is a subset of all_locales
     subpartner_config["locales"] = sorted(
         list(set(orig_config["locales"]) & set(all_locales))
@@ -465,7 +465,7 @@ def locales_per_build_platform(build_platform, locales):
 
 
 def get_partner_url_config(parameters, graph_config):
-    partner_url_config = copy_task(graph_config["partner-urls"])
+    partner_url_config = deepcopy(graph_config["partner-urls"])
     substitutions = {
         "release-product": parameters["release_product"],
         "release-level": release_level(parameters["project"]),

@@ -5,12 +5,12 @@ import datetime
 
 import jsone
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.util.chunking import TEST_VARIANTS
-from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.templates import merge
 
 transforms = TransformSequence()
@@ -113,12 +113,12 @@ def split_variants(config, tasks):
         variants = remove_expired(variants, expired_variants)
 
         if task.pop("run-without-variant"):
-            yield copy_task(task)
+            yield deepcopy(task)
 
         for name in variants:
             # Apply composite variants (joined by '+') in order.
             parts = name.split("+")
-            taskv = copy_task(task)
+            taskv = deepcopy(task)
             for part in parts:
                 variant = TEST_VARIANTS[part]
 
