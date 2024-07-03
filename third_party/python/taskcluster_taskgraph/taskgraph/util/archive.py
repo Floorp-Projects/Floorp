@@ -80,14 +80,14 @@ def create_tar_from_files(fp, files):
             ti.type = tarfile.REGTYPE
 
             if not ti.isreg():
-                raise ValueError("not a regular file: %s" % f)
+                raise ValueError(f"not a regular file: {f}")
 
             # Disallow setuid and setgid bits. This is an arbitrary restriction.
             # However, since we set uid/gid to root:root, setuid and setgid
             # would be a glaring security hole if the archive were
             # uncompressed as root.
             if ti.mode & (stat.S_ISUID | stat.S_ISGID):
-                raise ValueError("cannot add file with setuid or setgid set: " "%s" % f)
+                raise ValueError(f"cannot add file with setuid or setgid set: {f}")
 
             # Set uid, gid, username, and group as deterministic values.
             ti.uid = 0

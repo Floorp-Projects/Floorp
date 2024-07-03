@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+import functools
 import hashlib
 import io
 import os
@@ -10,7 +11,6 @@ import re
 from typing import Optional
 
 from taskgraph.util.archive import create_tar_gz_from_files
-from taskgraph.util.memoize import memoize
 
 IMAGE_DIR = os.path.join(".", "taskcluster", "docker")
 
@@ -177,15 +177,15 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name=None, args=N
 
             p = line[len("# %include ") :].strip()
             if os.path.isabs(p):
-                raise Exception("extra include path cannot be absolute: %s" % p)
+                raise Exception(f"extra include path cannot be absolute: {p}")
 
             fs_path = os.path.normpath(os.path.join(topsrcdir, p))
             # Check for filesystem traversal exploits.
             if not fs_path.startswith(topsrcdir):
-                raise Exception("extra include path outside topsrcdir: %s" % p)
+                raise Exception(f"extra include path outside topsrcdir: {p}")
 
             if not os.path.exists(fs_path):
-                raise Exception("extra include path does not exist: %s" % p)
+                raise Exception(f"extra include path does not exist: {p}")
 
             if os.path.isdir(fs_path):
                 for root, dirs, files in os.walk(fs_path):
@@ -205,7 +205,7 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name=None, args=N
     return writer.hexdigest()
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def image_paths():
     """Return a map of image name to paths containing their Dockerfile."""
     config = load_yaml("taskcluster", "kinds", "docker-image", "kind.yml")
@@ -222,7 +222,7 @@ def image_path(name):
     return os.path.join(IMAGE_DIR, name)
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def parse_volumes(image):
     """Parse VOLUME entries from a Dockerfile for an image."""
     volumes = set()

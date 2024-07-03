@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: taskcluster-taskgraph
-Version: 8.2.0
+Version: 9.0.0
 Summary: Build taskcluster taskgraphs
 Home-page: https://github.com/taskcluster/taskgraph
 Classifier: Development Status :: 5 - Production/Stable

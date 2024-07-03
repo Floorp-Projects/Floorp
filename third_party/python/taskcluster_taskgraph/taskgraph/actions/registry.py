@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+import functools
 import json
 from collections import namedtuple
 from types import FunctionType
@@ -13,7 +14,6 @@ from taskgraph import create
 from taskgraph.config import load_graph_config
 from taskgraph.parameters import Parameters
 from taskgraph.util import hash, taskcluster, yaml
-from taskgraph.util.memoize import memoize
 from taskgraph.util.python_path import import_sibling_modules
 
 actions = []
@@ -31,13 +31,13 @@ def is_json(data):
     return True
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def read_taskcluster_yml(filename):
-    """Load and parse .taskcluster.yml, memoized to save some time"""
+    """Load and parse .taskcluster.yml, cached to save some time"""
     return yaml.load_yaml(filename)
 
 
-@memoize
+@functools.lru_cache(maxsize=None)
 def hash_taskcluster_yml(filename):
     """
     Generate a hash of the given .taskcluster.yml.  This is the first 10 digits

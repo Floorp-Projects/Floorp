@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+import functools
 import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Union
@@ -11,7 +12,6 @@ from taskgraph.task import Task
 
 from ..config import GraphConfig
 from ..parameters import Parameters
-from ..util.memoize import memoize
 from ..util.schema import Schema, validate_schema
 
 
@@ -58,7 +58,7 @@ class TransformConfig:
     write_artifacts: bool
 
     @property
-    @memoize
+    @functools.lru_cache(maxsize=None)
     def repo_configs(self):
         repositories = self.graph_config["taskgraph"]["repositories"]
         if len(repositories) == 1:

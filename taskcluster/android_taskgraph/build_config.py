@@ -4,9 +4,9 @@
 
 
 import os
+from functools import lru_cache
 
 import yaml
-from taskgraph.util.memoize import memoize
 
 from android_taskgraph import ANDROID_COMPONENTS_DIR, FENIX_DIR, FOCUS_DIR
 
@@ -47,7 +47,7 @@ def get_extensions(component):
     ]
 
 
-@memoize
+@lru_cache(maxsize=None)
 def _read_build_config(root_dir):
     with open(os.path.join(root_dir, ".buildconfig.yml"), "rb") as f:
         return yaml.safe_load(f)
