@@ -8,10 +8,10 @@ import json
 import re
 
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
-from mozbuild.util import ReadOnlyDict
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
+from taskgraph.util.readonlydict import ReadOnlyDict
 from taskgraph.util.schema import Schema, resolve_keyed_by
 from taskgraph.util.taskcluster import (
     get_artifact_path,
