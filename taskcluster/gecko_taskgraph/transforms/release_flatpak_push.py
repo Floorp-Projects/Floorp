@@ -16,7 +16,7 @@ from gecko_taskgraph.util.scriptworker import add_scope_prefix
 push_flatpak_description_schema = Schema(
     {
         Required("name"): str,
-        Required("job-from"): task_description_schema["job-from"],
+        Required("task-from"): task_description_schema["task-from"],
         Required("dependencies"): task_description_schema["dependencies"],
         Required("description"): task_description_schema["description"],
         Required("treeherder"): task_description_schema["treeherder"],

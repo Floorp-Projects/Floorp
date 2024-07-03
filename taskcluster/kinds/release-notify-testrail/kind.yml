@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.test_apk
@@ -12,7 +12,7 @@ transforms:
 kind-dependencies:
     - ui-test-apk
 
-job-defaults:
+task-defaults:
     description: Sends Slack message to release testers that Testrail Milestone was created.
     treeherder:
         kind: other
@@ -45,7 +45,7 @@ job-defaults:
                 - notify:slack-channel:C02KDDS9QM9
             default: []
 
-jobs:
+tasks:
     create-milestone-focus:
         dependencies:
             ui-test-apk: ui-test-apk-focus-arm-beta

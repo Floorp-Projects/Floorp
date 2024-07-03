@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - build
@@ -17,7 +17,7 @@ transforms:
     - gecko_taskgraph.transforms.release_notifications
     - gecko_taskgraph.transforms.task
 
-jobs:
+tasks:
     fxrecord:
         name: notify-fxrecord-failure
         description: "Desktop Startup Visual Metrics"

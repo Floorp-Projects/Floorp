@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 only-for-attributes:
     - build_platform
@@ -16,7 +16,7 @@ transforms:
 kind-dependencies:
     - snap-upstream-build
 
-job-defaults:
+task-defaults:
     attributes:
         retrigger: true
         cron: true
@@ -35,7 +35,7 @@ job-defaults:
               type: directory
               path: builds/worker/artifacts/
 
-jobs:
+tasks:
     basic:
         from-deps:
             group-by: single-with-filters

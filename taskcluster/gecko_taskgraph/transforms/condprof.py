@@ -22,7 +22,7 @@ diff_description_schema = Schema(
         Optional("dependencies"): task_description_schema["dependencies"],
         Optional("fetches"): job_description_schema["fetches"],
         Optional("index"): task_description_schema["index"],
-        Optional("job-from"): str,
+        Optional("task-from"): str,
         Optional("name"): str,
         Optional("run"): job_description_schema["run"],
         Optional("run-on-projects"): task_description_schema["run-on-projects"],

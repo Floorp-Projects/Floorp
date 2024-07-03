@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release:run_on_releases
@@ -14,7 +14,7 @@ kind-dependencies:
     - post-beetmover-dummy
     - post-langpack-dummy
 
-job-defaults:
+task-defaults:
     description: Generates flatpak by reackaging the existing tar.bz2
     run-on-projects: []  # to make sure this never runs as part of CI
     run-on-releases: [beta, release, release-rc]
@@ -56,7 +56,7 @@ job-defaults:
                     default: beta
         chain-of-trust: true
 
-jobs:
+tasks:
     firefox:
         shipping-product: firefox
         attributes:

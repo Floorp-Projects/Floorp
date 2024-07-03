@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release:run_on_releases
@@ -13,7 +13,7 @@ transforms:
 kind-dependencies:
     - release-flatpak-repackage
 
-job-defaults:
+task-defaults:
     description: Pushes Flatpaks onto Flathub
     run-on-projects: []  # to make sure this never runs as part of CI
     run-on-releases: [beta, release, release-rc]
@@ -31,7 +31,7 @@ job-defaults:
                 release: stable
                 default: mock
 
-jobs:
+tasks:
     firefox:
         shipping-product: firefox
         flathub-scope: "flathub:firefox"

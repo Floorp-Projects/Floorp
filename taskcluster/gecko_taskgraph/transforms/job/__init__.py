@@ -41,7 +41,7 @@ job_description_schema = Schema(
         # taskcluster/gecko_taskgraph/transforms/task.py for the schema details.
         Required("description"): task_description_schema["description"],
         Optional("attributes"): task_description_schema["attributes"],
-        Optional("job-from"): task_description_schema["job-from"],
+        Optional("task-from"): task_description_schema["task-from"],
         Optional("dependencies"): task_description_schema["dependencies"],
         Optional("if-dependencies"): task_description_schema["if-dependencies"],
         Optional("soft-dependencies"): task_description_schema["soft-dependencies"],

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.attribution:resolve_keyed_by_transforms
@@ -19,7 +19,7 @@ kind-dependencies:
     # Mac
     - repackage-l10n
 
-job-defaults:
+task-defaults:
     description: Attribute release builds
     shipping-phase: promote
     # never run as part of CI
@@ -101,7 +101,7 @@ job-defaults:
                     - __MOZCUSTOM__dlsource%3D{attribution_code[json][dlsource]}
     use-python: default
 
-jobs:
+tasks:
     win32-devedition/opt:
         label: attribution-win32-{locale}-devedition/opt
         shipping-product: devedition

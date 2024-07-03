@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
@@ -20,7 +20,7 @@ only-for-build-platforms:
     - linux-devedition/opt
     - linux64-devedition/opt
 
-jobs:
+tasks:
     beetmover-apt:
         from-deps:
             group-by: single-with-filters

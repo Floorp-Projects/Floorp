@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.release_version_bump:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     worker-type: tree
     worker:
         implementation: treescript
@@ -159,7 +159,7 @@ job-defaults:
                               },
                           ]
 
-jobs:
+tasks:
     l10n-bumper:
         name: l10n_bumper
         description: l10n changesets bumper

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.transform:loader
+loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - post-balrog-dummy
@@ -16,7 +16,7 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     name: secondary-final-verify
     run-on-projects: []  # to make sure this never runs as part of CI
     worker-type: b-linux-gcp
@@ -26,7 +26,7 @@ job-defaults:
         max-run-time: 7200
         retry-exit-status: [1]
 
-jobs:
+tasks:
     firefox:
         description: secondary final verify
         shipping-phase: promote
