@@ -153,9 +153,13 @@ typedef Mutex StaticMutex;
 #ifdef XP_WIN
 typedef DWORD ThreadId;
 inline ThreadId GetThreadId() { return GetCurrentThreadId(); }
+inline bool ThreadIdEqual(ThreadId a, ThreadId b) { return a == b; }
 #else
 typedef pthread_t ThreadId;
 inline ThreadId GetThreadId() { return pthread_self(); }
+inline bool ThreadIdEqual(ThreadId a, ThreadId b) {
+  return pthread_equal(a, b);
+}
 #endif
 
 class MOZ_CAPABILITY("mutex") MaybeMutex : public Mutex {
@@ -212,7 +216,7 @@ class MOZ_CAPABILITY("mutex") MaybeMutex : public Mutex {
   // protected resource.
 #ifdef MOZ_DEBUG
   bool SafeOnThisThread() const {
-    return mDoLock == MUST_LOCK || GetThreadId() == mThreadId;
+    return mDoLock == MUST_LOCK || ThreadIdEqual(GetThreadId(), mThreadId);
   }
 #endif
 
@@ -228,7 +232,7 @@ class MOZ_CAPABILITY("mutex") MaybeMutex : public Mutex {
       return true;
     }
 
-    MOZ_ASSERT(GetThreadId() == mThreadId);
+    MOZ_ASSERT(ThreadIdEqual(GetThreadId(), mThreadId));
     return false;
   }
 
