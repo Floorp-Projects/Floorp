@@ -1550,6 +1550,9 @@ static bool malloc_init_hard();
 FORK_HOOK void _malloc_prefork(void);
 FORK_HOOK void _malloc_postfork_parent(void);
 FORK_HOOK void _malloc_postfork_child(void);
+#  ifdef XP_DARWIN
+FORK_HOOK void _malloc_postfork(void);
+#  endif
 #endif
 
 // End forward declarations.
@@ -5178,13 +5181,23 @@ inline void MozJemalloc::moz_set_max_dirty_page_modifier(int32_t aModifier) {
 // state for the child is if fork is called from the main thread only.  Or the
 // child must not use them, eg it should call exec().  We attempt to prevent the
 // child for accessing these arenas by refusing to re-initialise them.
+//
+// This is only accessed in the fork handlers while gArenas.mLock is held.
 static pthread_t gForkingThread;
+
+#  ifdef XP_DARWIN
+// This is only accessed in the fork handlers while gArenas.mLock is held.
+static pid_t gForkingProcess;
+#  endif
 
 FORK_HOOK
 void _malloc_prefork(void) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // Acquire all mutexes in a safe order.
   gArenas.mLock.Lock();
   gForkingThread = pthread_self();
+#  ifdef XP_DARWIN
+  gForkingProcess = getpid();
+#  endif
 
   for (auto arena : gArenas.iter()) {
     if (arena->mLock.LockIsEnabled()) {
@@ -5229,7 +5242,22 @@ void _malloc_postfork_child(void) {
 
   gArenas.mLock.Init();
 }
-#endif  // XP_WIN
+
+#  ifdef XP_DARWIN
+FORK_HOOK
+void _malloc_postfork(void) {
+  // On MacOS we need to check if this is running in the parent or child
+  // process.
+  bool is_in_parent = getpid() == gForkingProcess;
+  gForkingProcess = 0;
+  if (is_in_parent) {
+    _malloc_postfork_parent();
+  } else {
+    _malloc_postfork_child();
+  }
+}
+#  endif  // XP_DARWIN
+#endif    // ! XP_WIN
 
 // End library-private functions.
 // ***************************************************************************
