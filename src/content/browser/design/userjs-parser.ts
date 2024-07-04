@@ -3,14 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { config, setGlobalDesignConfig } from "./configs";
-const currentUserJS = config().globalConfigs.appliedUserJs;
-
 export async function applyUserJS(path: string) {
-  if (currentUserJS !== "") {
-    await resetPreferencesWithUserJsContents(currentUserJS);
-  }
-
   const userjs = await (await fetch(path)).text();
   const p_userjs = userjs.replaceAll(/^\s*\/\/.*$/gm, "");
   for (const line of p_userjs.split("\n")) {
@@ -33,10 +26,9 @@ export async function applyUserJS(path: string) {
       }
     }
   }
-  setGlobalDesignConfig("appliedUserJs", path);
 }
 
-export async function resetPreferencesWithUserJsContents(path: string) {
+export async function resetPreferencesFromUserJS(path: string) {
   const userjs = await (await fetch(path)).text();
   const p_userjs = userjs.replaceAll(/^\s*\/\/.*$/gm, "");
   for (const line of p_userjs.split("\n")) {
@@ -47,5 +39,4 @@ export async function resetPreferencesWithUserJsContents(path: string) {
       Services.prefs.clearUserPref(prefName);
     }
   }
-  setGlobalDesignConfig("appliedUserJs", "");
 }
