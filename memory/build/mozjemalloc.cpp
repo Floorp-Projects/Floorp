@@ -1402,11 +1402,10 @@ class ArenaCollection {
   }
 
   // After a fork set the new thread ID in the child.
-  void PostForkFixMainThread() {
-    if (mMainThreadId.isSome()) {
-      // Only if the main thread has been defined.
-      mMainThreadId = Some(GetThreadId());
-    }
+  void ResetMainThread() {
+    // The post fork handler in the child can run from a MacOS worker thread,
+    // so we can't set our main thread to it here.  Instead we have to clear it.
+    mMainThreadId = Nothing();
   }
 
   void SetMainThread() {
@@ -5217,7 +5216,7 @@ void _malloc_postfork_parent(void) MOZ_NO_THREAD_SAFETY_ANALYSIS {
 FORK_HOOK
 void _malloc_postfork_child(void) {
   // Do this before iterating over the arenas.
-  gArenas.PostForkFixMainThread();
+  gArenas.ResetMainThread();
 
   // Reinitialize all mutexes, now that fork() has completed.
   huge_mtx.Init();
