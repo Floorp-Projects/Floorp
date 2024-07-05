@@ -363,6 +363,8 @@ https_first_disabled = true
 
 ["browser_ext_popup_background.js"]
 
+["browser_ext_popup_bug1906132.js"]
+
 ["browser_ext_popup_corners.js"]
 
 ["browser_ext_popup_focus.js"]
