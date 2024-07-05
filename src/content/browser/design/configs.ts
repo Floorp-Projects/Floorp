@@ -53,6 +53,10 @@ export const setGlobalDesignConfig = (
   }));
 };
 
+export const setBrowserInterface = (value: string) => {
+  setGlobalDesignConfig("userInterface", value);
+};
+
 Services.prefs.addObserver("floorp.design.configs", () =>
   setConfig(
     zFloorpDesignConfigs.parse(

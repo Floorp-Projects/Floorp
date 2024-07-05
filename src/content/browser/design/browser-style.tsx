@@ -36,22 +36,10 @@ export class gFloorpDesignClass {
   }
 
   public static setBrowserDesign() {
-    for (const elem of gFloorpDesignClass.getBrowserDesignElements) {
-      elem.remove();
-    }
-
     insert(
       document.head,
       <BrowserDesignElement />,
       document.head?.lastElementChild,
     );
-
-    setTimeout(() => {
-      window.gURLBar._updateLayoutBreakoutDimensions();
-    }, 100);
-
-    setTimeout(() => {
-      window.gURLBar._updateLayoutBreakoutDimensions();
-    }, 500);
   }
 }

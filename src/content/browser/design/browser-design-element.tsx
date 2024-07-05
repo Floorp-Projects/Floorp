@@ -50,6 +50,12 @@ function getCSSFromConfig(
 }
 
 export function BrowserDesignElement() {
+  [100, 500].forEach((time) => {
+    setTimeout(() => {
+      window.gURLBar._updateLayoutBreakoutDimensions();
+    }, time);
+  });
+
   return (
     <>
       <For each={getCSSFromConfig(config())}>
