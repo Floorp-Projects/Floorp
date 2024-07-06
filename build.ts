@@ -123,9 +123,12 @@ async function compile() {
 
       assetsDir: "content/assets",
     },
+
+    /*
     css: {
       transformer: "lightningcss",
     },
+    */
 
     plugins: [
       tsconfigPaths(),
