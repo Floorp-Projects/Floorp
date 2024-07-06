@@ -8,9 +8,6 @@ import { BrowserStyleElement } from "./browser-style-element";
 import { BrowserDesignElement } from "./browser-design-element";
 
 export class gFloorpDesignClass {
-  private static get getBrowserDesignElements() {
-    return document.querySelectorAll(".browser-design");
-  }
   private static instance: gFloorpDesignClass;
   public static getInstance() {
     if (!gFloorpDesignClass.instance) {

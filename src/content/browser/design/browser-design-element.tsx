@@ -60,11 +60,7 @@ export function BrowserDesignElement() {
     <>
       <For each={getCSSFromConfig(config())}>
         {(style) => (
-          <link
-            rel="stylesheet"
-            class="browser-design"
-            href={`chrome://noraneko${style}`}
-          />
+          <link rel="stylesheet" href={`chrome://noraneko${style}`} />
         )}
       </For>
     </>
