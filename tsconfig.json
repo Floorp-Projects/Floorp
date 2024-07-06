@@ -20,13 +20,9 @@
     "isolatedModules": true,
     "jsxImportSource": "solid-js",
     "paths": {
-      "@types/*": ["./@types/*"],
-      "@solid-xul/*": ["./src/components/solid-xul/*"],
-      "@private/*": ["./src/components/private/src/content/*"],
-      "@content/*": ["./src/content/*"],
-      "@skin/*": ["./src/skin/*"],
-      "@modules/*": ["./src/modules/*"]
-    }
+      "@types/*": ["./@types/*"]
+    },
+    "composite": true
   },
-  "exclude": ["dist/**"]
+  "exclude": ["_dist/**"]
 }

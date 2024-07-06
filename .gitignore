@@ -1,5 +1,6 @@
 /dist/
-/node_modules/
+**/_dist/
+**/node_modules/
 
 *.tar.zst
 

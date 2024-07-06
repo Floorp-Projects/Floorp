@@ -11,5 +11,6 @@
   },
   "[postcss]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "rust-analyzer.linkedProjects": ["crates/noraneko-hmr-transformer/Cargo.toml"]
 }

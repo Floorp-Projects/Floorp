@@ -1,8 +1,8 @@
 # Welcome to Noraneko Browser Repository!
 
 <p align="center">
-<img src="assets/logo_with_wordmark_light.svg#gh-light-mode-only" width="400px"></img>
-<img src="assets/logo_with_wordmark_dark.svg#gh-dark-mode-only" width="400px"></img>
+<img src="docs/assets/logo_with_wordmark_light.svg#gh-light-mode-only" width="400px"></img>
+<img src="docs/assets/logo_with_wordmark_dark.svg#gh-dark-mode-only" width="400px"></img>
 </p>
 
 > [!WARNING]

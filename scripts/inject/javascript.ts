@@ -93,6 +93,14 @@ function checkMemberExprId(
     case "ThisExpression": {
       return _assertSame(left, right);
     }
+    case "ConditionalExpression": {
+      return (
+        _assertSame(left, right) &&
+        checkMemberExprId(left.test, right.test) &&
+        checkMemberExprId(left.consequent, right.consequent) &&
+        checkMemberExprId(left.alternate, right.alternate)
+      );
+    }
     case "Identifier":
     case "StringLiteral":
     case "BooleanLiteral": {
@@ -215,6 +223,7 @@ function checkSWCExpr(
   find: swc.ModuleItem,
 ): number | undefined {
   const _assertSame = assertSWCMemberExprSameType;
+  //console.log("checkSWCExpr");
   switch (find.type) {
     case "FunctionDeclaration": {
       const funcDecls = original.filter((v) => _assertSame(find, v));
@@ -431,7 +440,7 @@ export async function injectJavascript() {
   //   isNoraInjectPlace(swc.parseSync("#noraInject();").body[0] as swc.Statement),
   // );
   await injectToJs(
-    "dist/bin/browser/chrome/browser/content/browser/preferences/preferences.js",
+    "_dist/bin/browser/chrome/browser/content/browser/preferences/preferences.js",
     `function init_all(){
     Services.telemetry.setEventRecordingEnabled('aboutpreferences', true);
     #noraInject();
@@ -439,7 +448,7 @@ export async function injectJavascript() {
     `register_module("paneCsk", {init(){}});`,
   );
   await injectToJs(
-    "dist/bin/browser/modules/sessionstore/TabState.sys.mjs",
+    "_dist/bin/browser/modules/sessionstore/TabState.sys.mjs",
     `var TabStateInternal = {
       _collectBaseTabData(tab, options) {
         let browser = tab.linkedBrowser;
@@ -450,7 +459,7 @@ export async function injectJavascript() {
   );
 
   await injectToJs(
-    "dist/bin/browser/chrome/browser/content/browser/tabbrowser.js",
+    "_dist/bin/browser/chrome/browser/content/browser/tabbrowser.js",
     `{
       window._gBrowser = {
         createTabsForSessionRestore(restoreTabsLazily, selectTab, tabDataList) {
@@ -468,7 +477,7 @@ export async function injectJavascript() {
   );
 
   await injectToJs(
-    "dist/bin/chrome/remote/content/webdriver-bidi/WebDriverBidiConnection.sys.mjs",
+    "_dist/bin/chrome/remote/content/webdriver-bidi/WebDriverBidiConnection.sys.mjs",
     `export class WebDriverBiDiConnection extends WebSocketConnection {
       async onPacket(packet) {
         try {

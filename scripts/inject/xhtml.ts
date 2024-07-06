@@ -3,7 +3,7 @@ import { DOMParser } from "linkedom";
 
 export async function injectXHTML() {
   const path_browserxhtml =
-    "dist/bin/browser/chrome/browser/content/browser/browser.xhtml";
+    "_dist/bin/browser/chrome/browser/content/browser/browser.xhtml";
   {
     const document = new DOMParser().parseFromString(
       (await fs.readFile(path_browserxhtml)).toString(),
@@ -24,7 +24,7 @@ export async function injectXHTML() {
   }
 
   const path_preferencesxhtml =
-    "dist/bin/browser/chrome/browser/content/browser/preferences/preferences.xhtml";
+    "_dist/bin/browser/chrome/browser/content/browser/preferences/preferences.xhtml";
   {
     const document = new DOMParser().parseFromString(
       (await fs.readFile(path_preferencesxhtml)).toString(),
