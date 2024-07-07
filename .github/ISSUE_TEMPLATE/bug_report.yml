@@ -18,14 +18,14 @@ body:
         ## Disclaimer
         > [!NOTE]
         > Windows 7, 8, 8.1, and earlier versions are not supported due to maintenance costs.
-        > DRM is not supported esp. on Netflix.
-        > In addition, kindly refer to the [Issue Tracker](https://docs.floorp.app/en/issues/)
+        > DRM is not supported, esp. on Netflix.
+        > In addition, kindly refer to the [Issue Tracker](https://docs.floorp.app/en/issues/).
 
   - type: markdown
     attributes:
       value: |
         ## Before submitting your issue
-        Kindly refer to the guidelines in the ["When you submit issue to Floorp"](https://docs.floorp.app/en/others/issue-checklist/) section of Floorp Docs!
+        Kindly refer to the guidelines in the ["When you submit an issue to Floorp"](https://docs.floorp.app/en/others/issue-checklist/) section of Floorp Docs!
 
   - type: checkboxes
     attributes:
@@ -39,7 +39,7 @@ body:
         - label: I have checked with a new profile and the issue still occurs.
         - label: I have provided detailed step-by-step instructions on how to reproduce the issue.
         - label: I have included relevant screenshots or console outputs.
-        - label: I have checked this problem is not occurring in the latest version of Firefox ESR.
+        - label: I have checked that this problem is not occurring in the latest version of Firefox ESR.
         - label: This issue is specific to this browser and does not occur in other browsers.
 
   - type: textarea
@@ -77,7 +77,7 @@ body:
     attributes:
       label: Screenshots
       description: Add screenshots to help explain your problem.
-      placeholder: Drag or paste images or videos to upload (Video is recommended).
+      placeholder: Drag or paste images or videos to upload (video is recommended).
     validations:
       required: true
 
