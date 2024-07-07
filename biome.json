@@ -9,9 +9,10 @@
     "rules": {
       "recommended": true,
       "complexity": {
-        "noForEach":"off"
+        "noForEach": "off"
       }
-    }
+    },
+    "ignore": ["@types/gecko/**"]
   },
   "files": {
     "ignore": ["bin/**", "dist/**", "node_modules/**"]

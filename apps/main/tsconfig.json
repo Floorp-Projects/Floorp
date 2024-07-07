@@ -1,8 +1,26 @@
 {
-  "extends": "../../tsconfig.json",
+  "typeAcquisition": {
+    "enable": true
+  },
   "compilerOptions": {
     "paths": {
       "@nora/solid-xul": ["./solid-xul"]
-    }
-  }
+    },
+    "useDefineForClassFields": true,
+    "lib": ["es2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "jsx": "preserve",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "resolvePackageJsonExports": false,
+    "isolatedModules": true,
+    "jsxImportSource": "solid-js"
+  },
+  "exclude": ["_dist"]
 }

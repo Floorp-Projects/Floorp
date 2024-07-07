@@ -10,6 +10,8 @@
 
 /// <reference no-default-lib="true" />
 /// <reference lib="es2023" />
+/// <reference path="../lib.gecko.xpcom.d.ts" />
+/// <reference path="../lib.gecko.services.d.ts" />
 
 interface Principal extends nsIPrincipal {}
 interface URI extends nsIURI {}
@@ -33520,4 +33522,9 @@ type mozPacketDumpType = "rtcp" | "rtp" | "srtcp" | "srtp";
 /* NORA START */
 declare var document: Document;
 declare var window: Window;
+declare var Components: nsIXPCComponents;
+declare var Cc: nsIXPCComponents_Classes;
+declare var Cu: nsIXPCComponents_Utils;
+declare var Ci: nsIXPCComponents_Interfaces;
+declare var Services: JSServices;
 /* NORA END */
