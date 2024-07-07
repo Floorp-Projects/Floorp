@@ -349,6 +349,7 @@ function checkSWCExpr(
                 checkMemberExprId(decl.superClass, find.superClass)
               : true
           ) {
+            console.log("class");
             const find_member = find.body[0];
             for (const member of decl.body) {
               switch (find_member.type) {
@@ -370,10 +371,20 @@ function checkSWCExpr(
                   ) {
                     // console.log(member.function.body?.stmts);
                     // console.log(find_member.function.body?.stmts);
-                    return checkSWCExpr(
-                      member.function.body!.stmts,
-                      find_member.function.body!.stmts[0],
-                    );
+                    if (
+                      find_member.function.body!.stmts[0].type ===
+                      "ExpressionStatement"
+                    ) {
+                      return findIndexOfNoraInject(
+                        member.function.body!.stmts,
+                        find_member.function.body!.stmts,
+                      );
+                    } else {
+                      return checkSWCExpr(
+                        member.function.body!.stmts,
+                        find_member.function.body!.stmts[0],
+                      );
+                    }
                   }
                 }
               }
@@ -436,9 +447,6 @@ async function injectToJs(
 }
 
 export async function injectJavascript() {
-  // console.log(
-  //   isNoraInjectPlace(swc.parseSync("#noraInject();").body[0] as swc.Statement),
-  // );
   await injectToJs(
     "_dist/bin/browser/chrome/browser/content/browser/preferences/preferences.js",
     `function init_all(){
@@ -459,7 +467,7 @@ export async function injectJavascript() {
   );
 
   await injectToJs(
-    "_dist/bin/browser/chrome/browser/content/browser/tabbrowser.js",
+    "_dist/bin/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js",
     `{
       window._gBrowser = {
         createTabsForSessionRestore(restoreTabsLazily, selectTab, tabDataList) {
@@ -486,9 +494,28 @@ export async function injectJavascript() {
         } catch {}
       }
     }`,
-    `if (module === "session" && command === "new") {
+    `
+
+    if (module === "session" && command === "new") {
+      result = JSON.parse(JSON.stringify(result))
       result.capabilities.browserName = "firefox";
     }
     `,
   );
+  // await injectToJs(
+  //   "_dist/bin/browser/modules/AsyncTabSwitcher.sys.mjs",
+  //   `
+  //   export class AsyncTabSwitcher {
+  //     setTabState(tab, state) {
+  //       #noraInject();
+  //       this.setTabStateNoAction(tab, state);
+  //     }
+  //   }
+  //   `,
+  //   `
+  //   function floorpSplitViewIsEnabled() {
+  //     return Services.prefs.getBoolPref("floorp.browser.splitView.working", false);
+  //   }
+  //   `,
+  // );
 }
