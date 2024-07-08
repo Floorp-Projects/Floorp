@@ -95,7 +95,7 @@ fn distribute_one_chunk<'a, 'scope, E, D>(
 
 /// Distributes all items into the thread pool, in `work_unit_max` chunks.
 fn distribute_work<'a, 'scope, E, D>(
-    mut items: VecDeque<SendNode<E::ConcreteNode>>,
+    mut items: impl Iterator<Item = SendNode<E::ConcreteNode>>,
     traversal_root: OpaqueNode,
     work_unit_max: usize,
     traversal_data: PerLevelTraversalData,
@@ -106,10 +106,14 @@ fn distribute_work<'a, 'scope, E, D>(
     E: TElement + 'scope,
     D: DomTraversal<E>,
 {
-    while items.len() > work_unit_max {
-        let rest = items.split_off(work_unit_max);
+    use std::iter::FromIterator;
+    loop {
+        let chunk = VecDeque::from_iter(items.by_ref().take(work_unit_max));
+        if chunk.is_empty() {
+            return;
+        }
         distribute_one_chunk(
-            items,
+            chunk,
             traversal_root,
             work_unit_max,
             traversal_data,
@@ -117,17 +121,7 @@ fn distribute_work<'a, 'scope, E, D>(
             traversal,
             tls,
         );
-        items = rest;
     }
-    distribute_one_chunk(
-        items,
-        traversal_root,
-        work_unit_max,
-        traversal_data,
-        scope,
-        traversal,
-        tls,
-    );
 }
 
 /// Processes `discovered` items, possibly spawning work in other threads as needed.
@@ -175,7 +169,7 @@ pub fn style_trees<'a, 'scope, E, D>(
             let mut traversal_data_copy = traversal_data.clone();
             traversal_data_copy.current_dom_depth += 1;
             distribute_work(
-                discovered.split_off(kept_work),
+                discovered.range(kept_work..).cloned(),
                 traversal_root,
                 work_unit_max,
                 traversal_data_copy,
@@ -183,6 +177,7 @@ pub fn style_trees<'a, 'scope, E, D>(
                 traversal,
                 tls,
             );
+            discovered.truncate(kept_work);
         }
 
         if nodes_remaining_at_current_depth == 0 {
