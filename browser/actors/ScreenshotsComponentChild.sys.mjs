@@ -34,6 +34,10 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     "mousemove",
     "mousedown",
     "mouseup",
+    "mouseenter",
+    "mouseover",
+    "mouseout",
+    "mouseleave",
     "touchstart",
     "touchmove",
     "touchend",
@@ -41,6 +45,10 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     "auxclick",
     "keypress",
     "contextmenu",
+    "pointerenter",
+    "pointerover",
+    "pointerout",
+    "pointerleave",
   ];
 
   get overlay() {
