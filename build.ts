@@ -2,11 +2,12 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import chokidar from "chokidar";
 import { injectManifest } from "./scripts/inject/manifest.js";
-import { injectXHTML } from "./scripts/inject/xhtml.js";
+import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
 import { injectJavascript } from "./scripts/inject/javascript.js";
-import { $ } from "execa";
+import { $, type ResultPromise, type Result } from "execa";
 import decompress from "decompress";
 import puppeteer, { type Browser } from "puppeteer-core";
+import { stdout } from "node:process";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -96,13 +97,41 @@ async function initBin() {
   }
 }
 
+let devProcesses: ResultPromise<{
+  cwd: string;
+  stdout: "inherit";
+  stdin: "ignore";
+}>[];
+let devInit = false;
+
 async function run() {
-  await $({ cwd: r("./apps/main") })`pnpm vite build`;
+  if (!devInit) {
+    console.log("run dev servers");
+    devProcesses = [
+      $({
+        cwd: r("./apps/main"),
+        stdin: "ignore",
+        stdout: "inherit",
+      })`pnpm vite dev --port 5181`,
+      $({
+        cwd: r("./apps/pages"),
+        stdin: "ignore",
+        stdout: "inherit",
+      })`pnpm vite dev --port 5182`,
+    ];
+    devInit = true;
+  }
   await initBin();
-  console.log("inject");
-  await injectManifest();
-  await injectXHTML();
-  await injectJavascript();
+  await Promise.all([
+    $({ cwd: r("./apps/main") })`pnpm vite build --mode dev`,
+
+    injectManifest("_dist/bin"),
+    (async () => {
+      await injectXHTML("_dist/bin");
+      await injectXHTMLDev("_dist/bin");
+    })(),
+    injectJavascript("_dist/bin"),
+  ]);
 
   //await injectUserJS(`noraneko${VERSION}`);
 
@@ -127,9 +156,15 @@ async function run() {
       persistent: true,
       ignored: [
         (str) =>
-          str.includes("node_modules") ||
-          str.includes("_dist") ||
-          str.includes("vite.timestamp"),
+          [
+            "node_modules",
+            "_dist",
+            "vite.timestamp",
+            "hmr",
+            "pages",
+            "about",
+            "core",
+          ].some((v) => str.includes(v)),
       ],
     })
     .on("all", async () => {
@@ -156,21 +191,52 @@ async function run() {
     product: "firefox",
     executablePath: binPathExe,
     userDataDir: "./_dist/profile/test",
-    extraPrefsFirefox: { "browser.newtabpage.enabled": true },
+    extraPrefsFirefox: {
+      "browser.newtabpage.enabled": true,
+
+      //? Thank you for `arai` san in Mozilla!
+      //? This pref allows to run import of http(s) protocol in browser-top or about: pages
+      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/dom/security/nsContentSecurityManager.cpp#1037-1041
+      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/modules/libpref/init/StaticPrefList.yaml#15063
+      "security.disallow_privileged_https_script_loads": false,
+      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/dom/security/nsContentSecurityUtils.cpp#1600-1607
+      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/dom/security/nsContentSecurityUtils.cpp#1445-1450
+      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/modules/libpref/init/StaticPrefList.yaml#14743
+      "security.allow_parent_unrestricted_js_loads": true,
+    },
     defaultViewport: { height: 0, width: 0 },
   });
 
-  await (await browser.pages())[0].goto("about:newtab");
+  browser.pages().then((page) => page[0].goto("about:newtab"));
 
-  const page = await browser.newPage();
-  await page.goto("about:preferences");
+  browser.newPage().then((page) => page.goto("about:preferences"));
+  browser
+    .newPage()
+    .then((page) =>
+      page.goto("http://localhost:5182/nora-settings/index.html"),
+    );
 
   browser.on("disconnected", () => {
     if (!intended_close) process.exit();
   });
 }
 
+async function build() {
+  const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
+  await Promise.all([
+    $({ cwd: r("./apps/main") })`pnpm vite build`,
+
+    injectManifest(binPath),
+    (async () => {
+      await injectXHTML(binPath);
+    })(),
+    injectJavascript(binPath),
+  ]);
+}
+
 // run
 if (process.argv[2] && process.argv[2] === "--run") {
   run();
+} else if (process.argv[2] && process.argv[2] === "--production-build") {
+  build();
 }

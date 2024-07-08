@@ -1,0 +1,10 @@
+{
+  "name": "@nora/solid-xul",
+  "private": true,
+  "devDependencies": {
+    "@types/uuid": "^10.0.0"
+  },
+  "dependencies": {
+    "uuid": "^10.0.0"
+  }
+}
