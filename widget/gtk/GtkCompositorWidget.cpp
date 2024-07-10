@@ -211,5 +211,9 @@ bool GtkCompositorWidget::IsPopup() {
 }
 #endif
 
+UniquePtr<MozContainerSurfaceLock> GtkCompositorWidget::LockSurface() {
+  return mWidget->LockSurface();
+}
+
 }  // namespace widget
 }  // namespace mozilla
