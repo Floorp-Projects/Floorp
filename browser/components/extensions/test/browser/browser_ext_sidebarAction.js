@@ -387,3 +387,71 @@ add_task(async function sidebar_switcher_panel_hidpi_icon() {
   await extension.unload();
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function sidebar_switcher_label_bug1905771_regression_test() {
+  let extData = getExtData({
+    name: "Test Extension",
+    browser_specific_settings: { gecko: { id: "@sidebar" } },
+    version: "1.0",
+    sidebar_action: {
+      default_icon: {
+        16: "icon.png",
+        32: "icon@2x.png",
+      },
+      default_panel: "sidebar.html",
+      open_at_install: true,
+    },
+  });
+  extData.useAddonManager = "permanent";
+
+  await window.SidebarController.promiseInitialized;
+  let extension = ExtensionTestUtils.loadExtension(extData);
+  await extension.startup();
+  await extension.awaitMessage("sidebar");
+
+  // Recreate Bug 1905771 conditions:
+  // - sidebar extension installed
+  // - sidebar extension page selected
+  // - open a new tab
+  //
+  // Under these conditions SidebarController._setExtensionAttributes used to trigger the bug
+  // by setting a label DOM attribute on the SidebarController._switcherTarget element if the
+  // extension sidebar was the one selected for the SidebarController instance.
+
+  const extSidebarActionID = `${makeWidgetId(extension.id)}-sidebar-action`;
+  is(
+    window.SidebarController.currentID,
+    extSidebarActionID,
+    "Expect extension sidebar ID to be set as currently selected"
+  );
+
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    is(
+      window.SidebarController._switcherTarget.querySelector(
+        "label#sidebar-title"
+      ).value,
+      extData.manifest.name,
+      "sidebar switcher target element textContent expected to be the extension name"
+    );
+    await window.SidebarController.show("viewBookmarksSidebar");
+    is(
+      window.SidebarController._switcherTarget.querySelector(
+        "label#sidebar-title"
+      ).value,
+      "Bookmarks",
+      "sidebar switcher target element textContent expected to be set to Bookmarks"
+    );
+    // NOTE: assertion to prevent Bug 1905771 from regressing.
+    is(
+      window.SidebarController._switcherTarget.getAttribute("label"),
+      null,
+      "sidebar switcher target element should not have a label attribute set"
+    );
+  });
+
+  // NOTE: explicitly close the sidebar to prevent perma-failure when running in
+  // test-verify mode (due to the sidebar not being inizially closed as the first
+  // test ask in this file expects).
+  await window.SidebarController.hide();
+  await extension.unload();
+});
