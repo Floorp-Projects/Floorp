@@ -13,6 +13,7 @@
 #include <vector>
 #include "mozilla/Mutex.h"
 #include "WindowSurface.h"
+#include "MozContainerSurfaceLock.h"
 
 /*
  * MozContainer
@@ -61,15 +62,12 @@ struct _MozContainerClass;
 typedef struct _MozContainer MozContainer;
 typedef struct _MozContainerClass MozContainerClass;
 
-class MozContainerSurfaceLock {
-  MozContainer* mContainer;
-  struct wl_surface* mSurface;
-
- public:
-  explicit MozContainerSurfaceLock(MozContainer* aContainer);
-  ~MozContainerSurfaceLock();
-  struct wl_surface* GetSurface();
-};
+// Lock mozcontainer and get wayland surface of it. You need to pair with
+// moz_container_wayland_surface_unlock() even
+// if moz_container_wayland_surface_lock() fails and returns nullptr.
+struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container);
+void moz_container_wayland_surface_unlock(MozContainer* container,
+                                          struct wl_surface** surface);
 
 void moz_container_wayland_map(GtkWidget*);
 gboolean moz_container_wayland_map_event(GtkWidget*, GdkEventAny*);
