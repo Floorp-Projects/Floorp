@@ -137,6 +137,8 @@ support-files = ["image.html"]
 ["browser_persist_mixed_content_image.js"]
 support-files = ["test_mixed_content_image.html"]
 
+["browser_pointerlock_popup.js"]
+
 ["browser_pointerlock_warning.js"]
 
 ["browser_sessionStorage_navigation.js"]
