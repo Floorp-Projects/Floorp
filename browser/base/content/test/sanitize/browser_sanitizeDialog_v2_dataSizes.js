@@ -20,9 +20,11 @@ function isIframeOverflowing(win) {
 
 add_setup(async function () {
   await blankSlate();
+  requestLongerTimeout(2);
   registerCleanupFunction(async function () {
     await blankSlate();
     await PlacesTestUtils.promiseAsyncUpdates();
+    await SiteDataTestUtils.clear();
   });
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.sanitize.useOldClearHistoryDialog", false]],
