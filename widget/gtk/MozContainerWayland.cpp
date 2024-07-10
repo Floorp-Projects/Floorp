@@ -87,23 +87,6 @@ static void moz_container_wayland_set_opaque_region_locked(
     const MutexAutoLock& aProofOfLock, MozContainer* container,
     const LayoutDeviceIntRegion&);
 
-// Lock mozcontainer and get wayland surface of it. You need to pair with
-// moz_container_wayland_surface_unlock() even
-// if moz_container_wayland_surface_lock() fails and returns nullptr.
-static struct wl_surface* moz_container_wayland_surface_lock(
-    MozContainer* container);
-static void moz_container_wayland_surface_unlock(MozContainer* container,
-                                                 struct wl_surface** surface);
-
-MozContainerSurfaceLock::MozContainerSurfaceLock(MozContainer* aContainer) {
-  mContainer = aContainer;
-  mSurface = moz_container_wayland_surface_lock(aContainer);
-}
-MozContainerSurfaceLock::~MozContainerSurfaceLock() {
-  moz_container_wayland_surface_unlock(mContainer, &mSurface);
-}
-struct wl_surface* MozContainerSurfaceLock::GetSurface() { return mSurface; }
-
 // Invalidate gtk wl_surface to commit changes to wl_subsurface.
 // wl_subsurface changes are effective when parent surface is commited.
 static void moz_container_wayland_invalidate(MozContainer* container) {

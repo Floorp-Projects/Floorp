@@ -33,6 +33,7 @@ if CONFIG["MOZ_ENABLE_V4L2"]:
 
 EXPORTS += [
     "MozContainer.h",
+    "MozContainerSurfaceLock.h",
     "nsGTKToolkit.h",
     "nsGtkUtils.h",
     "nsImageToPixbuf.h",
@@ -71,6 +72,7 @@ UNIFIED_SOURCES += [
     "IMContextWrapper.cpp",
     "InProcessGtkCompositorWidget.cpp",
     "MozContainer.cpp",
+    "MozContainerSurfaceLock.cpp",
     "MPRISServiceHandler.cpp",
     "NativeKeyBindings.cpp",
     "NativeMenuGtk.cpp",
@@ -114,6 +116,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "WindowSurfaceWaylandMultiBuffer.cpp",
     ]
     EXPORTS.mozilla.widget += [
+        "MozContainerSurfaceLock.h",
         "MozContainerWayland.h",
         "nsWaylandDisplay.h",
         "WaylandBuffer.h",
