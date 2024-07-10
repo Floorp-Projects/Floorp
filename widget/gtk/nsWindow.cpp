@@ -10218,3 +10218,10 @@ void nsWindow::SetDragSource(GdkDragContext* aSourceDragContext) {
     }
   }
 }
+
+UniquePtr<MozContainerSurfaceLock> nsWindow::LockSurface() {
+  if (mIsDestroyed) {
+    return nullptr;
+  }
+  return MakeUnique<MozContainerSurfaceLock>(mContainer);
+}
