@@ -236,11 +236,13 @@ class ZoneList {
 };
 
 struct WeakCacheToSweep {
-  WeakCacheBase* cache;
+  JS::detail::WeakCacheBase* cache;
   JS::Zone* zone;
 };
 
 class WeakCacheSweepIterator {
+  using WeakCacheBase = JS::detail::WeakCacheBase;
+
   JS::Zone* sweepZone;
   WeakCacheBase* sweepCache;
 
@@ -1249,7 +1251,8 @@ class GCRuntime {
    * used during shutdown GCs. In either case, unmarked objects may need to be
    * discarded.
    */
-  WeakCache<GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>> testMarkQueue;
+  JS::WeakCache<GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>>
+      testMarkQueue;
 
   /* Position within the test mark queue. */
   size_t queuePos = 0;
