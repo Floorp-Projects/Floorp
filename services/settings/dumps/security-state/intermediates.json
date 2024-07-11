@@ -1,6 +1,114 @@
 {
   "data": [
     {
+      "schema": 1720666099799,
+      "derHash": "frX0qqw5s6eDXXb3IqRz+bSRHko2kd54s8KXNZV2TqI=",
+      "subject": "CN=Cloudflare Inc ECC CA-4,O=Cloudflare\\, Inc.,C=US",
+      "subjectDN": "MEoxCzAJBgNVBAYTAlVTMRkwFwYDVQQKExBDbG91ZGZsYXJlLCBJbmMuMSAwHgYDVQQDExdDbG91ZGZsYXJlIEluYyBFQ0MgQ0EtNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2d3185ca699ccb9aabb49c911f21d543cffb499812b422438327ecaab43e6cc1",
+        "size": 1142,
+        "filename": "bqmrs-PB9A-B92euE7tljq0Umt_lqmpZwgZdjHQqvgE=.pem",
+        "location": "security-state-staging/intermediates/36b03b92-df2e-43dc-948d-2d8a984b3bd7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "bqmrs+PB9A+B92euE7tljq0Umt/lqmpZwgZdjHQqvgE=",
+      "crlite_enrolled": false,
+      "id": "d33cf9b6-cfc1-49f7-895a-917b74fdb9be",
+      "last_modified": 1720666622968
+    },
+    {
+      "schema": 1720666099461,
+      "derHash": "n7A4Uxf6scAFQbJ0psgrdkTefH/Uu14zXeRF+gqWv9k=",
+      "subject": "CN=Cloudflare Inc RSA CA-3,O=Cloudflare\\, Inc.,C=US",
+      "subjectDN": "MEoxCzAJBgNVBAYTAlVTMRkwFwYDVQQKExBDbG91ZGZsYXJlLCBJbmMuMSAwHgYDVQQDExdDbG91ZGZsYXJlIEluYyBSU0EgQ0EtMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1e8c31bf768c6248ab7f86fdf717168da9cd2746844381a019609220b542585b",
+        "size": 1983,
+        "filename": "33fTYx2MHyKfegGuQmiGJj_BkFCXWk5xJFyuVujoO6U=.pem",
+        "location": "security-state-staging/intermediates/73fe75ca-7e88-43dd-9ac2-7b323fb8a9f9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "33fTYx2MHyKfegGuQmiGJj/BkFCXWk5xJFyuVujoO6U=",
+      "crlite_enrolled": false,
+      "id": "04f8aed8-c52d-4069-b0ae-419a20bd695c",
+      "last_modified": 1720666622966
+    },
+    {
+      "schema": 1720558069715,
+      "derHash": "gEYrkmrRB5OpA214wFTn8xvU4mYCCzMiDtIa2Aje69E=",
+      "subject": "CN=NETLOCK TLS OV ECC CA,O=NETLOCK Kft.,L=Budapest,C=HU",
+      "subjectDN": "MHAxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEVMBMGA1UECgwMTkVUTE9DSyBLZnQuMR4wHAYDVQQDDBVORVRMT0NLIFRMUyBPViBFQ0MgQ0ExFzAVBgNVBGEMDlZBVEhVLTEyMjAxNTIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1f8c607b45240a4940a89b928eeeac156489773c7f3836b292151d2d20fb9edb",
+        "size": 1329,
+        "filename": "i16I9ip2k2JwWRaZXmFeIeiS2KzOYhrChFGnUDooIl0=.pem",
+        "location": "security-state-staging/intermediates/73527d36-9b9e-479c-80c6-7b67fbc17e15.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "i16I9ip2k2JwWRaZXmFeIeiS2KzOYhrChFGnUDooIl0=",
+      "crlite_enrolled": false,
+      "id": "85d19132-20a5-4258-a939-893191c393fe",
+      "last_modified": 1720558623153
+    },
+    {
+      "schema": 1720558070405,
+      "derHash": "73hwstg6oUWCcUeTsNfZ7xEk+9/MiK4Bw3efnDHW9TI=",
+      "subject": "CN=NETLOCK TLS Qualified EV ECC CA,O=NETLOCK Kft.,L=Budapest,C=HU",
+      "subjectDN": "MHoxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEVMBMGA1UECgwMTkVUTE9DSyBLZnQuMSgwJgYDVQQDDB9ORVRMT0NLIFRMUyBRdWFsaWZpZWQgRVYgRUNDIENBMRcwFQYDVQRhDA5WQVRIVS0xMjIwMTUyMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a2e9517784ec821dce9524ef6c79147beac8c351995ece25e3cf29748a806e67",
+        "size": 1341,
+        "filename": "8hGei3i00u2h5PvrbQEWCXLIaozLXkbULtTHvZ-3QZg=.pem",
+        "location": "security-state-staging/intermediates/51412110-bb01-49aa-bc56-2c9175706337.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8hGei3i00u2h5PvrbQEWCXLIaozLXkbULtTHvZ+3QZg=",
+      "crlite_enrolled": false,
+      "id": "87032642-01fe-4a50-ad59-84b47e7c5601",
+      "last_modified": 1720558623151
+    },
+    {
+      "schema": 1720558070096,
+      "derHash": "Pexf+DbrS0oUTxDKAr7t8GUAH3PydtKbXIU1GD/kPHg=",
+      "subject": "CN=NETLOCK TLS DV ECC CA,O=NETLOCK Kft.,L=Budapest,C=HU",
+      "subjectDN": "MHAxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEVMBMGA1UECgwMTkVUTE9DSyBLZnQuMR4wHAYDVQQDDBVORVRMT0NLIFRMUyBEViBFQ0MgQ0ExFzAVBgNVBGEMDlZBVEhVLTEyMjAxNTIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "343a542ba4ea4dba9663b057ae11ee0d96d063aa034a0f11e40883468d85076a",
+        "size": 1329,
+        "filename": "li0YuffRNQ1XEOF7VTuJakr96zJ_ALD7q_pshmkp7mU=.pem",
+        "location": "security-state-staging/intermediates/5ee95c7a-b260-49d2-bdad-37a5bd990661.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "li0YuffRNQ1XEOF7VTuJakr96zJ/ALD7q/pshmkp7mU=",
+      "crlite_enrolled": false,
+      "id": "8f163a1a-b497-432c-98c4-250210622918",
+      "last_modified": 1720558623148
+    },
+    {
+      "schema": 1720536768542,
+      "derHash": "ArSq9XrwlD/x17rEzg/MdW4zbw8cBZqoyvhN/53S56M=",
+      "subject": "CN=NETLOCK TLS EV ECC CA,O=NETLOCK Kft.,L=Budapest,C=HU",
+      "subjectDN": "MHAxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEVMBMGA1UECgwMTkVUTE9DSyBLZnQuMR4wHAYDVQQDDBVORVRMT0NLIFRMUyBFViBFQ0MgQ0ExFzAVBgNVBGEMDlZBVEhVLTEyMjAxNTIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "832bdc18f3f40ce2b30b365dd2d5bbbb5b7d253c40e49988f501de6d21413ab2",
+        "size": 1329,
+        "filename": "cbddOej5UNOOv4KN9cNSXUsA1PNl6KujuXDCLRgBnFg=.pem",
+        "location": "security-state-staging/intermediates/8db8da41-bb31-40e1-9d98-12d022ea0eb3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "cbddOej5UNOOv4KN9cNSXUsA1PNl6KujuXDCLRgBnFg=",
+      "crlite_enrolled": false,
+      "id": "4ce91844-0658-4c91-b850-56dd1cd43695",
+      "last_modified": 1720537022986
+    },
+    {
       "schema": 1719240777384,
       "derHash": "OygSHYmF4trfICnFPyMgB/DBnseIZUssK6rr5QQZsNU=",
       "subject": "CN=Certum EV TLS G2 E39 CA,O=Asseco Data Systems S.A.,C=PL",
@@ -15265,24 +15373,6 @@
       "last_modified": 1666727868540
     },
     {
-      "schema": 1666727363808,
-      "derHash": "Or00nX/hQwXmlSQSNPn/lK6CGt9EZ7wWB6E+ES9ep2c=",
-      "subject": "CN=SSL.com Premium EV CA,OU=Controlled by COMODO exclusively for SSL.com+OU=www.ssl.com,O=SSL.com,C=US",
-      "subjectDN": "MIGMMQswCQYDVQQGEwJVUzEQMA4GA1UEChMHU1NMLmNvbTE1MDMGA1UECxMsQ29udHJvbGxlZCBieSBDT01PRE8gZXhjbHVzaXZlbHkgZm9yIFNTTC5jb20xFDASBgNVBAsTC3d3dy5zc2wuY29tMR4wHAYDVQQDExVTU0wuY29tIFByZW1pdW0gRVYgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "621fb09b600be83bd671ce763198a88e0d36dba88e3ad54918becd46e9e7e07a",
-        "size": 2231,
-        "filename": "q9kHBA4OE40-HVkOIjyKiKBED3yDP_uskMLt3i9Z7e8=.pem",
-        "location": "security-state-staging/intermediates/5580e1ae-418c-42ad-8a59-8d0d6a18993c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "q9kHBA4OE40+HVkOIjyKiKBED3yDP/uskMLt3i9Z7e8=",
-      "crlite_enrolled": false,
-      "id": "ccbc177b-530d-4075-8cda-7c1a84f5dfe0",
-      "last_modified": 1666727868525
-    },
-    {
       "schema": 1666727438187,
       "derHash": "AqtX5OZ6DLSN0v80gw6KxA9EdvsIymvj9c2Eb2RoQPA=",
       "subject": "CN=COMODO RSA Domain Validation Secure Server CA,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
@@ -16163,24 +16253,6 @@
       "crlite_enrolled": false,
       "id": "0ca3c903-7710-434a-91d3-e883365b3718",
       "last_modified": 1666727867841
-    },
-    {
-      "schema": 1666727359118,
-      "derHash": "vJI+nHvr5T9VyXMrFvUdU7dyAzmkSBtCgaQBP2Ypn7Y=",
-      "subject": "CN=SSL.com DV CA,OU=www.ssl.com,O=SSL.com,C=US",
-      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRAwDgYDVQQKEwdTU0wuY29tMRQwEgYDVQQLEwt3d3cuc3NsLmNvbTEWMBQGA1UEAxMNU1NMLmNvbSBEViBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "cc7824c1ad989e39ca014a5f92fa4709a13e3de34ce7f067ecdb9b4c95f0323c",
-        "size": 2105,
-        "filename": "Csnhxeh1vsuMPZmVPaq9zufjZbtCA2WDcjROo3ZMJmY=.pem",
-        "location": "security-state-staging/intermediates/7ce8dabe-ff60-4885-9695-36590e3979d5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Csnhxeh1vsuMPZmVPaq9zufjZbtCA2WDcjROo3ZMJmY=",
-      "crlite_enrolled": false,
-      "id": "6e3e2820-6bf0-4c1b-8408-6c10da3c0366",
-      "last_modified": 1666727867828
     },
     {
       "schema": 1666727338533,
@@ -22283,24 +22355,6 @@
       "crlite_enrolled": false,
       "id": "b2cf83bd-95d9-4714-93eb-800cb4a4fab5",
       "last_modified": 1663786625937
-    },
-    {
-      "schema": 1663786312648,
-      "derHash": "cj4fieqqwPVrn5OF8TEvbNvXVFQGl7pGNA3yrjDqWec=",
-      "subject": "CN=SSL.com High Assurance CA,OU=www.ssl.com,O=SSL.com,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMRAwDgYDVQQKEwdTU0wuY29tMRQwEgYDVQQLEwt3d3cuc3NsLmNvbTEiMCAGA1UEAxMZU1NMLmNvbSBIaWdoIEFzc3VyYW5jZSBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "09954e1ba56d5de2350aa2be48974a6c3b30878a90b78ebe7f1294e29fcab376",
-        "size": 2121,
-        "filename": "Ck8cX6ydytkZDI6Az0ES3m8TykmMPRUEb5UVDjRtJ_w=.pem",
-        "location": "security-state-staging/intermediates/c7908f51-74f4-4f42-83ae-1aea4789362b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Ck8cX6ydytkZDI6Az0ES3m8TykmMPRUEb5UVDjRtJ/w=",
-      "crlite_enrolled": false,
-      "id": "32f01173-0130-437b-bc2a-95324d09359b",
-      "last_modified": 1663786625922
     },
     {
       "schema": 1663786310061,
@@ -31033,5 +31087,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1719500222993
+  "timestamp": 1720666622968
 }
