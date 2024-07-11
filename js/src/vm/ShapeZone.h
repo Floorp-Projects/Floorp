@@ -10,7 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
-#include "gc/SweepingAPI.h"
 #include "js/GCHashTable.h"
 #include "vm/PropertyKey.h"
 #include "vm/PropMap.h"

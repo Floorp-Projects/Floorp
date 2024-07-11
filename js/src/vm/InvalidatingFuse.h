@@ -8,7 +8,7 @@
 #define vm_InvalidatingFuse_h
 
 #include "gc/Barrier.h"
-#include "gc/SweepingAPI.h"
+#include "js/SweepingAPI.h"
 #include "vm/GuardFuse.h"
 class JSScript;
 
