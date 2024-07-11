@@ -204,6 +204,7 @@ EXPORTS.js += [
     "../public/StreamConsumer.h",
     "../public/String.h",
     "../public/StructuredClone.h",
+    "../public/SweepingAPI.h",
     "../public/Symbol.h",
     "../public/TelemetryTimers.h",
     "../public/TraceKind.h",

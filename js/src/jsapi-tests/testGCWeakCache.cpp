@@ -6,10 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/Policy.h"
-#include "gc/SweepingAPI.h"
 #include "gc/Zone.h"
 #include "js/GCHashTable.h"
 #include "js/RootingAPI.h"
+#include "js/SweepingAPI.h"
 
 #include "jsapi-tests/tests.h"
 
