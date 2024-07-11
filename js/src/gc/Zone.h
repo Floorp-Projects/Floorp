@@ -78,7 +78,7 @@ class MissingAllocSites {
   using ScriptMap = JS::GCHashMap<WeakHeapPtr<JSScript*>, SiteMap,
                                   StableCellHasher<WeakHeapPtr<JSScript*>>,
                                   SystemAllocPolicy>;
-  WeakCache<ScriptMap> scriptMap;
+  JS::WeakCache<ScriptMap> scriptMap;
 
   explicit MissingAllocSites(JS::Zone* zone) : scriptMap(zone) {}
 };
@@ -468,7 +468,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   // List of non-ephemeron weak containers to sweep during
   // beginSweepingSweepGroup.
-  js::MainThreadOrGCTaskData<mozilla::LinkedList<js::gc::WeakCacheBase>>
+  js::MainThreadOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>>
       weakCaches_;
 
   // Mapping from not yet marked keys to a vector of all values that the key
@@ -766,10 +766,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     }
   }
 
-  mozilla::LinkedList<js::gc::WeakCacheBase>& weakCaches() {
+  mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() {
     return weakCaches_.ref();
   }
-  void registerWeakCache(js::gc::WeakCacheBase* cachep) {
+  void registerWeakCache(detail::WeakCacheBase* cachep) {
     weakCaches().insertBack(cachep);
   }
 

@@ -175,7 +175,7 @@ class NonshrinkingGCObjectVector
   }
 };
 
-using MarkBitObservers = WeakCache<NonshrinkingGCObjectVector>;
+using MarkBitObservers = JS::WeakCache<NonshrinkingGCObjectVector>;
 
 #ifdef SINGLESTEP_PROFILING
 using StackChars = Vector<char16_t, 0, SystemAllocPolicy>;

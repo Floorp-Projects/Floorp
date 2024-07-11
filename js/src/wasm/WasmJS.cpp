@@ -1627,8 +1627,8 @@ bool WasmInstanceObject::isNewborn() const {
 // This is defined here in order to avoid recursive dependency between
 // WasmJS.h and Scope.h.
 using WasmFunctionScopeMap =
-    WeakCache<GCHashMap<uint32_t, WeakHeapPtr<WasmFunctionScope*>,
-                        DefaultHasher<uint32_t>, CellAllocPolicy>>;
+    JS::WeakCache<GCHashMap<uint32_t, WeakHeapPtr<WasmFunctionScope*>,
+                            DefaultHasher<uint32_t>, CellAllocPolicy>>;
 class WasmInstanceObject::UnspecifiedScopeMap {
  public:
   WasmFunctionScopeMap& asWasmFunctionScopeMap() {

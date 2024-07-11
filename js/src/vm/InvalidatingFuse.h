@@ -54,7 +54,7 @@ class DependentScriptSet {
   using WeakScriptSet = GCHashSet<WeakHeapPtr<JSScript*>,
                                   StableCellHasher<WeakHeapPtr<JSScript*>>,
                                   js::SystemAllocPolicy>;
-  js::WeakCache<WeakScriptSet> weakScripts;
+  JS::WeakCache<WeakScriptSet> weakScripts;
 };
 
 class DependentScriptGroup {

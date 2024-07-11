@@ -240,7 +240,7 @@ class ObjectRealm {
 
  public:
   // Map from array buffers to views sharing that storage.
-  WeakCache<js::InnerViewTable> innerViews;
+  JS::WeakCache<js::InnerViewTable> innerViews;
 
   // Keep track of the metadata objects which can be associated with each JS
   // object. Both keys and values are in this realm.
