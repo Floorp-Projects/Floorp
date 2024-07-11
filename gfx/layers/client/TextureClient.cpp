@@ -1723,10 +1723,14 @@ class CrossProcessSemaphoreReadLock : public TextureReadLock {
 already_AddRefed<TextureReadLock> TextureReadLock::Deserialize(
     ReadLockDescriptor&& aDescriptor, ISurfaceAllocator* aAllocator) {
   switch (aDescriptor.type()) {
-    case ReadLockDescriptor::TShmemSection: {
-      const ShmemSection& section = aDescriptor.get_ShmemSection();
-      MOZ_RELEASE_ASSERT(section.shmem().IsReadable());
-      return MakeAndAddRef<ShmemTextureReadLock>(section);
+    case ReadLockDescriptor::TUntrustedShmemSection: {
+      const UntrustedShmemSection& untrusted =
+          aDescriptor.get_UntrustedShmemSection();
+      Maybe<ShmemSection> section = ShmemSection::FromUntrusted(untrusted);
+      if (section.isNothing()) {
+        return nullptr;
+      }
+      return MakeAndAddRef<ShmemTextureReadLock>(section.value());
     }
     case ReadLockDescriptor::Tuintptr_t: {
       if (!aAllocator->IsSameProcess()) {
@@ -1833,7 +1837,7 @@ ShmemTextureReadLock::~ShmemTextureReadLock() {
 
 bool ShmemTextureReadLock::Serialize(ReadLockDescriptor& aOutput,
                                      base::ProcessId aOther) {
-  aOutput = ReadLockDescriptor(GetShmemSection());
+  aOutput = ReadLockDescriptor(GetShmemSection().AsUntrusted());
   return true;
 }
 
