@@ -16,6 +16,13 @@ void pattern_vertex(PrimitiveInfo info) {
     if (info.segment.uv_rect.p0 != info.segment.uv_rect.p1) {
         // Textured
         v_flags_textured = 1;
+        // TODO: Ideally we would unconditionally modulate the texture with the provided
+        // base color, however we are currently getting glitches on Adreno GPUs on Windows
+        // if the base color is set to white for composite primitives. While we figure this
+        // out, v_color is forced to white here in the textured case, which restores the
+        // behavior from before the patch that introduced the glitches.
+        // See comment in `add_composite_prim`.
+        v_color = vec4(1.0);
 
         vec2 f = (info.local_pos - info.segment.rect.p0) / rect_size(info.segment.rect);
         vs_init_sample_color0(f, info.segment.uv_rect);
