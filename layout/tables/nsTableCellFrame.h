@@ -216,6 +216,7 @@ class nsTableCellFrame : public nsContainerFrame,
   }
 
   virtual mozilla::LogicalMargin GetBorderWidth(mozilla::WritingMode aWM) const;
+  virtual bool BCBordersChanged() const { return false; }
 
   void DecorateForSelection(DrawTarget* aDrawTarget, nsPoint aPt);
 
@@ -265,10 +266,15 @@ class nsBCTableCellFrame final : public nsTableCellFrame {
   NS_DECL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 
   nsBCTableCellFrame(ComputedStyle* aStyle, nsTableFrame* aTableFrame);
+  void Reflow(nsPresContext*, ReflowOutput&, const ReflowInput&,
+              nsReflowStatus&) override;
 
   ~nsBCTableCellFrame();
 
   nsMargin GetUsedBorder() const override;
+  bool BCBordersChanged() const override {
+    return GetUsedBorder() != mLastUsedBorder;
+  }
 
   // Get the *inner half of the border only*, in twips.
   mozilla::LogicalMargin GetBorderWidth(
@@ -289,10 +295,12 @@ class nsBCTableCellFrame final : public nsTableCellFrame {
  private:
   // These are the entire width of the border (the cell edge contains only
   // the inner half).
-  nscoord mBStartBorder;
-  nscoord mIEndBorder;
-  nscoord mBEndBorder;
-  nscoord mIStartBorder;
+  nscoord mBStartBorder = 0;
+  nscoord mIEndBorder = 0;
+  nscoord mBEndBorder = 0;
+  nscoord mIStartBorder = 0;
+
+  nsMargin mLastUsedBorder;
 };
 
 // Implemented here because that's a sane-ish way to make the includes work out.

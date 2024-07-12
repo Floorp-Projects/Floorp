@@ -889,6 +889,14 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
   PushDirtyBitToAbsoluteFrames();
 }
 
+void nsBCTableCellFrame::Reflow(nsPresContext* aPresContext,
+                                ReflowOutput& aDesiredSize,
+                                const ReflowInput& aReflowInput,
+                                nsReflowStatus& aStatus) {
+  nsTableCellFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
+  mLastUsedBorder = GetUsedBorder();
+}
+
 /* ----- global methods ----- */
 
 NS_QUERYFRAME_HEAD(nsTableCellFrame)
@@ -944,9 +952,7 @@ nsresult nsTableCellFrame::GetFrameName(nsAString& aResult) const {
 
 nsBCTableCellFrame::nsBCTableCellFrame(ComputedStyle* aStyle,
                                        nsTableFrame* aTableFrame)
-    : nsTableCellFrame(aStyle, aTableFrame, kClassID) {
-  mBStartBorder = mIEndBorder = mBEndBorder = mIStartBorder = 0;
-}
+    : nsTableCellFrame(aStyle, aTableFrame, kClassID) {}
 
 nsBCTableCellFrame::~nsBCTableCellFrame() = default;
 
