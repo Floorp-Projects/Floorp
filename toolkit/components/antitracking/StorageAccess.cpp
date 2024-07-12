@@ -801,8 +801,7 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   bool isDocument = false;
   aChannel->GetIsDocument(&isDocument);
 
-  if (isDocument) {
-    MOZ_ASSERT(targetBC);
+  if (targetBC && isDocument) {
     nsCOMPtr<nsPIDOMWindowInner> inner =
         AntiTrackingUtils::GetInnerWindow(targetBC);
     if (inner && inner->UsingStorageAccess()) {
