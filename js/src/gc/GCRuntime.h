@@ -901,6 +901,7 @@ class GCRuntime {
   void sweepBackgroundThings(ZoneList& zones);
   void backgroundFinalize(JS::GCContext* gcx, Zone* zone, AllocKind kind,
                           Arena** empty);
+  void prepareForSweepSlice(JS::GCReason reason);
   void assertBackgroundSweepingFinished();
 
   bool allCCVisibleZonesWereCollected();
