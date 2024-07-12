@@ -3811,10 +3811,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 
     case State::Mark:
       if (mightSweepInThisSlice(budget.isUnlimited())) {
-        // Trace wrapper rooters before marking if we might start sweeping in
-        // this slice.
-        rt->mainContextFromOwnThread()->traceWrapperGCRooters(
-            marker().tracer());
+        prepareForSweepSlice(reason);
 
         // Incremental marking validation re-runs all marking non-incrementally,
         // which requires collecting the nursery. If that might happen in this
@@ -3871,13 +3868,8 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       [[fallthrough]];
 
     case State::Sweep:
-      if (storeBuffer().mayHavePointersToDeadCells()) {
-        collectNurseryFromMajorGC(reason);
-      }
-
       if (initialState == State::Sweep) {
-        rt->mainContextFromOwnThread()->traceWrapperGCRooters(
-            marker().tracer());
+        prepareForSweepSlice(reason);
       }
 
       if (performSweepActions(budget) == NotFinished) {
