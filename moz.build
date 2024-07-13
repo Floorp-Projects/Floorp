@@ -151,6 +151,7 @@ if CONFIG["ENABLE_CLANG_PLUGIN"]:
 DIRS += [
     "build",
     "config",
+    "floorp",
     "python",
     "testing",
     "third_party/python",
