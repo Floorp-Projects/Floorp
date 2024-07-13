@@ -3541,6 +3541,15 @@ var XULBrowserWindow = {
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags, aIsSimulated) {
     var location = aLocationURI ? aLocationURI.spec : "";
 
+    // Floorp Injections
+    window.gFloorpOnLocationChange.onLocationChange(
+      aWebProgress,
+      aRequest,
+      aLocationURI,
+      aFlags,
+      aIsSimulated
+    );
+
     UpdateBackForwardCommands(gBrowser.webNavigation);
 
     Services.obs.notifyObservers(
