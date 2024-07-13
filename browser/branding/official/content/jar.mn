@@ -8,10 +8,9 @@ browser.jar:
   content/branding/about-logo.png
   content/branding/about-logo.svg
   content/branding/about-logo@2x.png
+  content/branding/about-wordmark.svg
   content/branding/about-logo-private.png
   content/branding/about-logo-private@2x.png
-  content/branding/about-wordmark.svg
-  content/branding/document.ico                  (../document.ico)
   content/branding/firefox-wordmark.svg
   content/branding/icon16.png                    (../default16.png)
   content/branding/icon32.png                    (../default32.png)
@@ -19,3 +18,17 @@ browser.jar:
   content/branding/icon64.png                    (../default64.png)
   content/branding/icon128.png                   (../default128.png)
   content/branding/aboutDialog.css
+  content/branding/floorp-background.png
+  content/branding/floorp-pb-toolbar-icon.ico    (../pbmode.ico)
+
+#ifdef XP_MACOSX
+   content/branding/document.ico                  (mac/document.ico)
+#endif
+
+#ifdef XP_WIN
+   content/branding/document.ico                  (windows/document.ico)
+#endif
+
+#ifdef XP_LINUX
+   content/branding/document.ico                  (linux/document.ico)
+#endif
