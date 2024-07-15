@@ -3,6 +3,21 @@
     {
       "urls": [
         {
+          "search_url": "https://www.qwant.com/?q={searchTerms}&client=ext-firefox-sb"
+        },
+        {
+          "search_url": "https://www.qwant.com/?q={searchTerms}&client=plgn-firefox-sb"
+        }
+      ],
+      "schema": 1720102461642,
+      "overridesId": "qwant@search.mozilla.org",
+      "thirdPartyId": "qwant-search-firefox@qwant.com",
+      "id": "c5de2b3f-da15-4bc5-b36f-9555043b5ef4",
+      "last_modified": 1720102790795
+    },
+    {
+      "urls": [
+        {
           "search_url": "https://www.qwant.com?q={searchTerms}&client=opensearch"
         }
       ],
@@ -41,18 +56,6 @@
     {
       "urls": [
         {
-          "search_url": "https://www.qwant.com/?q={searchTerms}&client=ext-firefox-sb"
-        }
-      ],
-      "schema": 1710115218582,
-      "overridesId": "qwant@search.mozilla.org",
-      "thirdPartyId": "qwant-search-firefox@qwant.com",
-      "id": "c5de2b3f-da15-4bc5-b36f-9555043b5ef4",
-      "last_modified": 1710168995091
-    },
-    {
-      "urls": [
-        {
           "search_url": "https://duckduckgo.com/?q={searchTerms}&t=newext"
         }
       ],
@@ -63,5 +66,5 @@
       "last_modified": 1595254618540
     }
   ],
-  "timestamp": 1710168995103
+  "timestamp": 1720102790795
 }

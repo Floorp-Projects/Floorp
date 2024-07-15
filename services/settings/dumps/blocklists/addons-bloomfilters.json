@@ -3,6 +3,37 @@
     {
       "stash": {
         "blocked": [
+          "{f210eb24-0747-4537-bd98-e4b35073aa6d}:2.5",
+          "allianziowebext@allianz.it:1.0.60090.1",
+          "{f210eb24-0747-4537-bd98-e4b35073aa6d}:2.6",
+          "allianziowebext@allianz.it:0.16.37760",
+          "allianziowebext@allianz.it:1.0.60043",
+          "{f210eb24-0747-4537-bd98-e4b35073aa6d}:2.4"
+        ],
+        "unblocked": []
+      },
+      "schema": 1719858960352,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1719923704677,
+      "id": "13514365-53e3-4ea2-a0ea-1917c52b9511",
+      "last_modified": 1719923758587
+    },
+    {
+      "stash": {
+        "blocked": [
+          "ledlivextid2024@gmail.com:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1719847114479,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1719858905560,
+      "id": "f11eebc6-fbb3-48fc-b4c1-c8fe003f22dd",
+      "last_modified": 1719858960220
+    },
+    {
+      "stash": {
+        "blocked": [
           "contact@trusifycr.com:0.0.1",
           "tonkeeprid2024@gmail.com:1.0"
         ],
@@ -1120,5 +1151,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1719599760847
+  "timestamp": 1719923758587
 }
