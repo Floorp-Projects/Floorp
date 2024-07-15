@@ -14741,6 +14741,13 @@
   mirror: once
 #endif
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+- name: security.sandbox.warn_unprivileged_namespaces
+  type: bool
+  value: true
+  mirror: always
+#endif
+
 # Pref to show warning when submitting from secure to insecure.
 - name: security.warn_submit_secure_to_insecure
   type: bool
