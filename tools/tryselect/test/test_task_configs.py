@@ -161,7 +161,7 @@ def test_pernosco(patch_ssh_user):
     cfg.add_arguments(parser)
     args = parser.parse_args(["--pernosco"])
     params = cfg.get_parameters(**vars(args))
-    assert params == {"try_task_config": {"env": {"PERNOSCO": "1"}}}
+    assert params == {"try_task_config": {"env": {"PERNOSCO": "1"}, "pernosco": True}}
 
 
 def test_exisiting_tasks(responses, patch_ssh_user):
