@@ -842,11 +842,12 @@ class TypeDef {
       return true;
     }
     const SuperTypeVector* subSTV = subTypeDef->superTypeVector();
+    const SuperTypeVector* superSTV = superTypeDef->superTypeVector();
 
     // During construction of a recursion group, the super type vector may not
     // have been computed yet, in which case we need to fall back to a linear
     // search.
-    if (!subSTV) {
+    if (!subSTV || !superSTV) {
       while (subTypeDef) {
         if (subTypeDef == superTypeDef) {
           return true;
@@ -868,7 +869,6 @@ class TypeDef {
       return false;
     }
 
-    const SuperTypeVector* superSTV = superTypeDef->superTypeVector();
     MOZ_ASSERT(superSTV);
     MOZ_ASSERT(superSTV->typeDef() == superTypeDef);
 
