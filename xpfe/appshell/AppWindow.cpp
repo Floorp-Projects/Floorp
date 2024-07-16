@@ -760,8 +760,8 @@ AppWindow::GetDimensions(DimensionKind aDimensionKind, int32_t* aX, int32_t* aY,
 nsresult AppWindow::MoveResize(const Maybe<LayoutDeviceIntPoint>& aPosition,
                                const Maybe<LayoutDeviceIntSize>& aSize,
                                bool aRepaint) {
+  NS_ENSURE_STATE(mWindow);
   DesktopToLayoutDeviceScale scale = mWindow->GetDesktopToDeviceScale();
-
   return MoveResize(aPosition ? Some(*aPosition / scale) : Nothing(),
                     aSize ? Some(*aSize / scale) : Nothing(), aRepaint);
 }
