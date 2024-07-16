@@ -66,6 +66,11 @@ gecko_parameters_schema = {
             "A module path pointing to a dict to be use as the `strategy_override` "
             "argument in `taskgraph.optimize.base.optimize_task_graph`.",
         ): str,
+        Optional(
+            "pernosco",
+            description="Record an rr trace on supported tasks using the Pernosco debugging "
+            "service.",
+        ): bool,
         Optional("rebuild"): int,
         Optional("tasks-regex"): {
             "include": Any(None, [str]),
