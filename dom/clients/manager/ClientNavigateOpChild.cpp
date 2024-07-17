@@ -224,7 +224,7 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
     return ClientOpPromise::CreateAndReject(result, __func__);
   }
 
-  if (url->GetSpecOrDefault().EqualsLiteral("about:blank")) {
+  if (NS_IsAboutBlankAllowQueryAndFragment(url)) {
     CopyableErrorResult result;
     result.ThrowTypeError("Navigation to \"about:blank\" is not allowed");
     return ClientOpPromise::CreateAndReject(result, __func__);

@@ -876,6 +876,12 @@ void net_EnsurePSMInit();
 bool NS_IsAboutBlank(nsIURI* uri);
 
 /**
+ * Test whether a URI is "about:blank", possibly with fragment or query.  |uri|
+ * must not be null
+ */
+bool NS_IsAboutBlankAllowQueryAndFragment(nsIURI* uri);
+
+/**
  * Test whether a URI is "about:srcdoc".  |uri| must not be null
  */
 bool NS_IsAboutSrcdoc(nsIURI* uri);
