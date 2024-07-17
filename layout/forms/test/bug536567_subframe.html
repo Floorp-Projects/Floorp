@@ -5,6 +5,9 @@
 <script type="text/javascript">
 
 window.onload = function() {
+  // Activate the page to allow opening the file picker.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+
   var fileInput = document.getElementById("target");
   fileInput.click();
 };

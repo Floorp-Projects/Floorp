@@ -59,6 +59,7 @@ function populateInputFile(aInputFile) {
     let promptHandled = waitForPromptHandled();
     let changeEvent = waitForEvent(input, "change");
 
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
     input.click();
 
     await promptHandled;
@@ -149,6 +150,7 @@ async function test_individualSymlink(aInputFile) {
 
   let changeEvent = waitForEvent(input, "change");
 
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
   input.click();
 
   await pickerShown;
@@ -208,6 +210,8 @@ function test_changeDataWhileWorking() {
     var input = document.getElementById("inputFileDirectoryChange");
 
     promptHandled = waitForPromptHandled();
+
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
     input.click();
   })
 
@@ -234,6 +238,7 @@ function test_changeDataWhileWorking() {
       let input = document.getElementById("inputFileDirectoryChange");
       let changeEvent = waitForEvent(input, "change");
 
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
       input.click();
 
       await promptHandled;
