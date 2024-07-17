@@ -250,11 +250,10 @@ SelectContentHelper.prototype = {
 
         // Fire input and change events when selected option changes
         {
-          let handlingUserInput = win.windowUtils.setHandlingUserInput(true);
+          let changed = this.initialSelection !== selectedOption;
+          let handlingUserInput = win.windowUtils.setHandlingUserInput(changed);
           try {
-            element.userFinishedInteracting(
-              this.initialSelection !== selectedOption
-            );
+            element.userFinishedInteracting(changed);
           } finally {
             handlingUserInput.destruct();
           }
