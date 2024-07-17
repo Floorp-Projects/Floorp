@@ -2959,7 +2959,7 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
     nsCOMPtr<nsIURI> currentURI = wgp->GetDocumentURI();
     // Exempt about:* pages from bfcache, with the exception of about:blank
     if (currentURI->SchemeIs("about") &&
-        !currentURI->GetSpecOrDefault().EqualsLiteral("about:blank")) {
+        !NS_IsAboutBlankAllowQueryAndFragment(currentURI)) {
       bfcacheCombo |= BFCacheStatus::ABOUT_PAGE;
       MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * about:* page"));
     }
