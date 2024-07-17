@@ -4733,8 +4733,8 @@ void SVGTextFrame::DoAnchoring() {
   }
 
   bool vertical = GetWritingMode().IsVertical();
-  uint32_t start = it.TextElementCharIndex();
-  while (start < mPositions.Length()) {
+  for (uint32_t start = it.TextElementCharIndex(); start < mPositions.Length();
+       start = it.TextElementCharIndex()) {
     it.AdvanceToCharacter(start);
     nsTextFrame* chunkFrame = it.TextFrame();
 
@@ -4770,8 +4770,6 @@ void SVGTextFrame::DoAnchoring() {
 
       ShiftAnchoredChunk(mPositions, start, end, left, right, anchor, vertical);
     }
-
-    start = it.TextElementCharIndex();
   }
 }
 
@@ -4834,15 +4832,19 @@ void SVGTextFrame::DoGlyphPositioning() {
   TruncateTo(deltas, charPositions);
   TruncateTo(mPositions, charPositions);
 
-  // Fill in an unspecified character position at index 0.
-  if (!mPositions[0].IsXSpecified()) {
-    mPositions[0].mPosition.x = 0.0;
+  // Fill in an unspecified position for the first addressable character.
+  uint32_t first = 0;
+  while (first + 1 < mPositions.Length() && mPositions[first].mUnaddressable) {
+    ++first;
   }
-  if (!mPositions[0].IsYSpecified()) {
-    mPositions[0].mPosition.y = 0.0;
+  if (!mPositions[first].IsXSpecified()) {
+    mPositions[first].mPosition.x = 0.0;
   }
-  if (!mPositions[0].IsAngleSpecified()) {
-    mPositions[0].mAngle = 0.0;
+  if (!mPositions[first].IsYSpecified()) {
+    mPositions[first].mPosition.y = 0.0;
+  }
+  if (!mPositions[first].IsAngleSpecified()) {
+    mPositions[first].mAngle = 0.0;
   }
 
   nsPresContext* presContext = PresContext();
