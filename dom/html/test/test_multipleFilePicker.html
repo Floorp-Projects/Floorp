@@ -20,6 +20,8 @@ foo.addEventListener('click', _ => {
     let input = document.createElement('input');
     input.type = 'file';
     foo.appendChild(input);
+
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
     input.click();
   }
 });

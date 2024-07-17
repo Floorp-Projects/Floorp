@@ -48,7 +48,14 @@ addAccessibleTask(
             { once: true }
           )
         );
+
+        // Activate the page to allow opening the file picker.
+        content.SpecialPowers.wrap(
+          content.document
+        ).notifyUserGestureActivation();
+
         input.click();
+
         return inputReceived;
       });
     }

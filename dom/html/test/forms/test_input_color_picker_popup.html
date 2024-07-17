@@ -65,6 +65,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
       // To make sure we can actually click on the element.
       element.focus();
 
+      // Do not worry about user activation for these tests.
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
+
       switch (currentTest.type) {
         case 'untrusted':
           var e = document.createEvent('MouseEvents');
@@ -89,7 +92,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
           element.click();
           break;
         case 'show-picker':
-          SpecialPowers.wrap(document).notifyUserGestureActivation();
           element.showPicker();
           break;
         case 'right-click':

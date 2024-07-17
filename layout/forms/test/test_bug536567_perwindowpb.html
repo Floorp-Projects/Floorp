@@ -112,6 +112,7 @@ function runTest() {
     var file = dirs[test[2]].clone();
     file.append("file.file");
     MockFilePicker.setFiles([file]);
+
     content.setAttribute('src', domains[test[0]] + '/chrome/layout/forms/test/bug536567_subframe.html');
   }
 }

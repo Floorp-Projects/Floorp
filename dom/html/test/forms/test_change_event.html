@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <input type="tel" id="input_tel" onchange="++textInputChange[3];"></input>
 <input type="url" id="input_url" onchange="++textInputChange[4];"></input>
 <input type="password" id="input_password" onchange="++textInputChange[5];"></input>
- 
+
 <!-- "Non-text" inputs-->
 <input type="button" id="input_button" onchange="++NonTextInputChange[0];"></input>
 <input type="submit" id="input_submit" onchange="++NonTextInputChange[1];"></input>
@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <!-- Input text with default value and blurs on focus-->
 <input type="text" id="input_text_value" onchange="++textInputValueChange"
   onfocus="this.blur();" value="foo"></input>
- 
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -88,7 +88,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
         is(fileInputChange, 1, "change event shouldn't be dispatched on blur for file input element (2)");
       }
     });
+
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
     input.click();
+
     // blur the file input, we can't use blur() because of bug 760283
     document.getElementById('input_text').focus();
     setTimeout(testUserInput2, 0);
@@ -98,7 +101,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     var input = document.getElementById('fileInput');
     // remove it, otherwise cleanup() opens a native file picker!
     input.remove();
-    MockFilePicker.cleanup(); 
+    MockFilePicker.cleanup();
 
     //text, email, search, telephone, url & password input tests
     for (var i = 0; i < textInputTypes.length; ++i) {
@@ -279,7 +282,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
   }
 
   addLoadEvent(testUserInput);
- 
+
 </script>
 </pre>
 </body>

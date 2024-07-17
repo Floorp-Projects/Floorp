@@ -158,6 +158,9 @@ function launchNextTest() {
   // will work.
   document.getElementById(testData[currentTest][0]).focus();
 
+  // Do not worry about user activation for these tests.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+
   if (testData[currentTest][0] == "untrusted-click") {
     var e = document.createEvent('MouseEvents');
     e.initEvent('click', true, false);
@@ -205,7 +208,6 @@ function launchNextTest() {
   } else if (testData[currentTest][0] == 'div-keydown') {
     sendString("a");
   } else if (testData[currentTest][0] == 'show-picker') {
-    SpecialPowers.wrap(document).notifyUserGestureActivation();
     document.getElementById(testData[currentTest][0]).showPicker();
   } else {
     document.getElementById(testData[currentTest][0]).click();
