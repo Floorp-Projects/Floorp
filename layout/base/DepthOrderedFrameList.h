@@ -35,6 +35,11 @@ class DepthOrderedFrameList {
 
   auto IterFromShallowest() const { return Reversed(mList); }
 
+  // The number of elements that there are.
+  size_t Length() const { return mList.Length(); }
+  nsIFrame* ElementAt(size_t i) const { return mList.ElementAt(i); }
+  void RemoveElementAt(size_t i) { mList.RemoveElementAt(i); }
+
  private:
   struct FrameAndDepth {
     nsIFrame* mFrame;

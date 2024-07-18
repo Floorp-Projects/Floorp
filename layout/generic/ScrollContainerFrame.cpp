@@ -5132,8 +5132,7 @@ static nsSize GetScrollPortSizeExcludingHeadersAndFooters(
       StickyScrollContainer::GetStickyScrollContainerForScrollFrame(
           aScrollFrame);
   if (ssc) {
-    const nsTArray<nsIFrame*>& stickyFrames = ssc->GetFrames();
-    for (nsIFrame* f : stickyFrames) {
+    for (nsIFrame* f : ssc->GetFrames().IterFromShallowest()) {
       // If it's acting like fixed position.
       if (ssc->IsStuckInYDirection(f)) {
         AddToListIfHeaderFooter(f, aScrollFrame, aScrollPort, list);

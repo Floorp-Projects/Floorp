@@ -351,22 +351,23 @@ void StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
 
   OverflowChangedTracker oct;
   oct.SetSubtreeRoot(aSubtreeRoot);
-  for (nsTArray<nsIFrame*>::size_type i = 0; i < mFrames.Length(); i++) {
-    nsIFrame* f = mFrames[i];
+  // We need to position ancestors before children, so iter from shallowest. We
+  // don't use mFrames.IterFromShallowest() because we want to handle removal of
+  // non-first continuations while we iterate.
+  for (size_t i = mFrames.Length(); i--;) {
+    nsIFrame* f = mFrames.ElementAt(i);
     if (!nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(f)) {
-      // This frame was added in nsIFrame::Init before we knew it wasn't
-      // the first ib-split-sibling.
+      // This frame was added in nsIFrame::DidSetComputedStyle before we knew it
+      // wasn't the first ib-split-sibling.
       mFrames.RemoveElementAt(i);
-      --i;
       continue;
     }
-
     if (aSubtreeRoot) {
       // Reflowing the scroll frame, so recompute offsets.
       ComputeStickyOffsets(f);
     }
     // mFrames will only contain first continuations, because we filter in
-    // nsIFrame::Init.
+    // nsIFrame::DidSetComputedStyle.
     PositionContinuations(f);
 
     f = f->GetParent();
