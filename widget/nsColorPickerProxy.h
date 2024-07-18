@@ -21,6 +21,7 @@ class nsColorPickerProxy final : public nsIColorPicker,
   virtual mozilla::ipc::IPCResult RecvUpdate(const nsAString& aColor) override;
   virtual mozilla::ipc::IPCResult Recv__delete__(
       const nsAString& aColor) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
   ~nsColorPickerProxy() = default;
