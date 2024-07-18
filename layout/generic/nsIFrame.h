@@ -969,10 +969,6 @@ class nsIFrame : public nsQueryFrame {
 
   /**
    * Set this frame's parent to aParent.
-   * If the frame may have moved into or out of a scrollframe's
-   * frame subtree,
-   * StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary must
-   * also be called.
    */
   void SetParent(nsContainerFrame* aParent);
 
