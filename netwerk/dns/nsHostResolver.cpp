@@ -10,7 +10,6 @@
 #  include <arpa/inet.h>
 #  include <arpa/nameser.h>
 #  include <resolv.h>
-#  define RES_RETRY_ON_FAILURE
 #endif
 
 #include <stdlib.h>
@@ -132,46 +131,6 @@ LazyLogModule gHostResolverLog("nsHostResolver");
 
 //----------------------------------------------------------------------------
 
-#if defined(RES_RETRY_ON_FAILURE)
-
-// this class represents the resolver state for a given thread.  if we
-// encounter a lookup failure, then we can invoke the Reset method on an
-// instance of this class to reset the resolver (in case /etc/resolv.conf
-// for example changed).  this is mainly an issue on GNU systems since glibc
-// only reads in /etc/resolv.conf once per thread.  it may be an issue on
-// other systems as well.
-
-class nsResState {
- public:
-  nsResState()
-      // initialize mLastReset to the time when this object
-      // is created.  this means that a reset will not occur
-      // if a thread is too young.  the alternative would be
-      // to initialize this to the beginning of time, so that
-      // the first failure would cause a reset, but since the
-      // thread would have just started up, it likely would
-      // already have current /etc/resolv.conf info.
-      : mLastReset(PR_IntervalNow()) {}
-
-  bool Reset() {
-    // reset no more than once per second
-    if (PR_IntervalToSeconds(PR_IntervalNow() - mLastReset) < 1) {
-      return false;
-    }
-
-    mLastReset = PR_IntervalNow();
-    auto result = res_ninit(&_res);
-
-    LOG(("nsResState::Reset() > 'res_ninit' returned %d", result));
-    return (result == 0);
-  }
-
- private:
-  PRIntervalTime mLastReset;
-};
-
-#endif  // RES_RETRY_ON_FAILURE
-
 class DnsThreadListener final : public nsIThreadPoolListener {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADPOOLLISTENER
@@ -180,11 +139,25 @@ class DnsThreadListener final : public nsIThreadPoolListener {
 };
 
 NS_IMETHODIMP
-DnsThreadListener::OnThreadCreated() { return NS_OK; }
+DnsThreadListener::OnThreadCreated() {
+#if defined(HAVE_RES_NINIT)
+  if (!(_res.options & RES_INIT)) {
+    auto result = res_ninit(&_res);
+    LOG(("'res_ninit' returned %d ", result));
+  }
+#endif
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 DnsThreadListener::OnThreadShuttingDown() {
   DNSThreadShutdown();
+#if defined(HAVE_RES_NINIT)
+  if (_res.options & RES_INIT) {
+    res_nclose(&_res);
+    memset(&_res, 0, sizeof(_res));
+  }
+#endif
   return NS_OK;
 }
 
@@ -1899,9 +1872,6 @@ size_t nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
 void nsHostResolver::ThreadFunc() {
   LOG(("DNS lookup thread - starting execution.\n"));
 
-#if defined(RES_RETRY_ON_FAILURE)
-  nsResState rs;
-#endif
   RefPtr<nsHostRecord> rec;
   RefPtr<AddrInfo> ai;
 
@@ -1943,12 +1913,6 @@ void nsHostResolver::ThreadFunc() {
 
     nsresult status =
         GetAddrInfo(rec->host, rec->af, rec->flags, getter_AddRefs(ai), getTtl);
-#if defined(RES_RETRY_ON_FAILURE)
-    if (NS_FAILED(status) && rs.Reset()) {
-      status = GetAddrInfo(rec->host, rec->af, rec->flags, getter_AddRefs(ai),
-                           getTtl);
-    }
-#endif
 
     mozilla::glean::networking::dns_native_count
         .EnumGet(rec->pb ? glean::networking::DnsNativeCountLabel::ePrivate
