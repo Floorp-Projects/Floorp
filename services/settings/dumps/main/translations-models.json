@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "vocab.daen.spm",
+      "schema": 1721157281122,
+      "toLang": "en",
+      "version": "1.0a1",
+      "fileType": "vocab",
+      "fromLang": "da",
+      "attachment": {
+        "hash": "b9392fcd9c53b802628d33a160f6eb52ca3d25a07ec9e015ab93b6bd5c7e8033",
+        "size": 796018,
+        "filename": "vocab.daen.spm",
+        "location": "main-workspace/translations-models/245acf34-cbc2-47fd-84a6-904441f1acc0.spm",
+        "mimetype": "text/plain"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "0af7734a-2c2f-4bee-81de-9e9af0a93071",
+      "last_modified": 1721161932792
+    },
+    {
+      "name": "model.daen.intgemm.alphas.bin",
+      "schema": 1721157283552,
+      "toLang": "en",
+      "version": "1.0a1",
+      "fileType": "model",
+      "fromLang": "da",
+      "attachment": {
+        "hash": "2c1ace24220c905404bbb1de14bfeda8a391ef8d6c56f3b193a9d3e340d99b12",
+        "size": 17141051,
+        "filename": "model.daen.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/e5b3f500-36bc-45d0-85ea-d9e5cb4f63da.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "2bfe9de0-ce71-46c8-9a97-2bbab5d03620",
+      "last_modified": 1721161932789
+    },
+    {
+      "name": "lex.50.50.daen.s2t.bin",
+      "schema": 1721157287618,
+      "toLang": "en",
+      "version": "1.0a1",
+      "fileType": "lex",
+      "fromLang": "da",
+      "attachment": {
+        "hash": "e5f50fba646e0d3cedf2957575aa84c3bdca6798ce32ccd63c956fc043d774a3",
+        "size": 4489412,
+        "filename": "lex.50.50.daen.s2t.bin",
+        "location": "main-workspace/translations-models/fa12cb47-e7eb-4ace-a5ce-d3343ba3c1d7.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "b3825cff-a8f7-426d-bc6a-53bd7b20d0b5",
+      "last_modified": 1721161932786
+    },
+    {
       "name": "vocab.enlt.spm",
       "schema": 1720802014505,
       "toLang": "lt",
@@ -3019,5 +3073,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1720802448983
+  "timestamp": 1721161932792
 }
