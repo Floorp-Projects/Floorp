@@ -25,12 +25,6 @@ inline void HyperTextAccessible::SetCaretOffset(int32_t aOffset) {
   SelectionMgr()->UpdateCaretOffset(this, aOffset);
 }
 
-inline bool HyperTextAccessible::IsCaretAtEndOfLine() const {
-  RefPtr<nsFrameSelection> frameSelection = FrameSelection();
-  return frameSelection &&
-         frameSelection->GetHint() == CaretAssociationHint::Before;
-}
-
 inline already_AddRefed<nsFrameSelection> HyperTextAccessible::FrameSelection()
     const {
   nsIFrame* frame = GetFrame();
