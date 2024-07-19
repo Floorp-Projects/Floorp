@@ -36,6 +36,7 @@ struct NavigationIsolationOptions {
   nsCString mRemoteType;
   bool mReplaceBrowsingContext = false;
   uint64_t mSpecificGroupId = 0;
+  bool mShouldCrossOriginIsolate = false;
   bool mTryUseBFCache = false;
   RefPtr<SessionHistoryEntry> mActiveSessionHistoryEntry;
 };

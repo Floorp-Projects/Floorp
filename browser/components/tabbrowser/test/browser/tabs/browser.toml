@@ -202,6 +202,10 @@ skip-if = ["verify && os == 'mac'"]
 
 ["browser_new_file_whitelisted_http_tab.js"]
 https_first_disabled = true
+support-files = [
+  "file_coop_coep.html",
+  "file_coop_coep.html^headers^",
+]
 
 ["browser_new_tab_bookmarks_toolbar_height.js"]
 skip-if = ["!verify && os == 'mac'"] # Bug 1872477
