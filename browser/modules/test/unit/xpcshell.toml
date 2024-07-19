@@ -27,6 +27,10 @@ run-if = ["os == 'win'"] # Test of a Windows-specific feature
 run-if = ["os == 'win'"] # Test of a Windows-specific feature
 
 ["test_Sanitizer_interrupted.js"]
+prefs = ["privacy.sanitize.useOldClearHistoryDialog=true"]
+
+["test_Sanitizer_interrupted_v2.js"]
+prefs = ["privacy.sanitize.useOldClearHistoryDialog=false"]
 
 ["test_SiteDataManager.js"]
 
