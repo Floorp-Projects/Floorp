@@ -1365,7 +1365,10 @@ class RecursiveMakeBackend(MakeBackend):
     def _process_shared_library(self, libdef, backend_file):
         backend_file.write_once("LIBRARY_NAME := %s\n" % libdef.basename)
         backend_file.write("FORCE_SHARED_LIB := 1\n")
-        backend_file.write("IMPORT_LIBRARY := %s\n" % libdef.import_name)
+        backend_file.write(
+            "IMPORT_LIBRARY := %s\n"
+            % self._pretty_path(libdef.import_path, backend_file)
+        )
         shared_lib = self._pretty_path(libdef.output_path, backend_file)
         backend_file.write("SHARED_LIBRARY := %s\n" % shared_lib)
         if libdef.soname:
