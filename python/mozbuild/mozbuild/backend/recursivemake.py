@@ -1389,9 +1389,8 @@ class RecursiveMakeBackend(MakeBackend):
         backend_file.write("WASM_ARCHIVE := %s\n" % libdef.basename)
 
     def _process_rust_library(self, libdef, backend_file):
-        backend_file.write_once(
-            "%s := %s\n" % (libdef.LIB_FILE_VAR, libdef.import_path.full_path)
-        )
+        rust_lib = self._pretty_path(libdef.import_path, backend_file)
+        backend_file.write_once("%s := %s\n" % (libdef.LIB_FILE_VAR, rust_lib))
         backend_file.write_once("CARGO_FILE := $(srcdir)/Cargo.toml\n")
         # Need to normalize the path so Cargo sees the same paths from all
         # possible invocations of Cargo with this CARGO_TARGET_DIR.  Otherwise,
@@ -1404,9 +1403,7 @@ class RecursiveMakeBackend(MakeBackend):
                 "%s := %s\n" % (libdef.FEATURES_VAR, " ".join(libdef.features))
             )
         if libdef.output_category:
-            self._process_non_default_target(
-                libdef, libdef.import_path.full_path, backend_file
-            )
+            self._process_non_default_target(libdef, rust_lib, backend_file)
 
     def _process_host_shared_library(self, libdef, backend_file):
         backend_file.write("HOST_SHARED_LIBRARY = %s\n" % libdef.lib_name)
@@ -1426,9 +1423,6 @@ class RecursiveMakeBackend(MakeBackend):
         )
 
     def _process_linked_libraries(self, obj, backend_file):
-        def pretty_relpath(path):
-            return os.path.normpath(mozpath.relpath(path, obj.objdir))
-
         objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
 
         obj_target = obj.name
@@ -1482,7 +1476,7 @@ class RecursiveMakeBackend(MakeBackend):
         for lib in shared_libs:
             assert obj.KIND != "host" and obj.KIND != "wasm"
             backend_file.write_once(
-                "SHARED_LIBS += %s\n" % pretty_relpath(lib.import_path.full_path)
+                "SHARED_LIBS += %s\n" % self._pretty_path(lib.import_path, backend_file)
             )
 
         # We have to link any Rust libraries after all intermediate static
@@ -1494,7 +1488,7 @@ class RecursiveMakeBackend(MakeBackend):
             (l for l in static_libs if isinstance(l, BaseRustLibrary)),
         ):
             backend_file.write_once(
-                "%s += %s\n" % (var, pretty_relpath(lib.import_path.full_path))
+                "%s += %s\n" % (var, self._pretty_path(lib.import_path, backend_file))
             )
 
         for lib in os_libs:
