@@ -326,24 +326,25 @@ LightweightThemeConsumer.prototype = {
       "--lwt-additional-images",
       theme.additionalBackgrounds
     );
-    _setProperties(root, hasTheme, theme);
+    let _processedColors = _setProperties(root, hasTheme, theme);
 
     if (hasTheme) {
       if (updateGlobalThemeData) {
         _determineToolbarAndContentTheme(
           this._doc,
           theme,
+          _processedColors,
           hasDarkTheme,
           useDarkTheme
         );
       }
       root.setAttribute("lwtheme", "true");
     } else {
-      _determineToolbarAndContentTheme(this._doc, null);
+      _determineToolbarAndContentTheme(this._doc, null, null);
       root.removeAttribute("lwtheme");
     }
 
-    _setDarkModeAttributes(this._doc, root, theme._processedColors, hasTheme);
+    _setDarkModeAttributes(this._doc, root, _processedColors, hasTheme);
 
     let contentThemeData = _getContentProperties(this._doc, hasTheme, theme);
     Services.ppmm.sharedData.set(`theme/${this._winId}`, contentThemeData);
@@ -499,6 +500,7 @@ function _isToolbarDark(aDoc, aColors) {
 function _determineToolbarAndContentTheme(
   aDoc,
   aTheme,
+  colors,
   aHasDarkTheme = false,
   aIsDarkTheme = false
 ) {
@@ -506,7 +508,6 @@ function _determineToolbarAndContentTheme(
   const kLight = 1;
   const kSystem = 2;
 
-  const colors = aTheme?._processedColors;
   function colorSchemeValue(aColorScheme) {
     if (!aColorScheme) {
       return null;
@@ -666,7 +667,7 @@ function _setProperties(root, hasTheme, themeData) {
   // content) are not processed here, but are referenced in places that check
   // _processedColors. Copying means _processedColors will contain irrelevant
   // properties like `id`. There aren't too many, so that's OK.
-  themeData._processedColors = { ...themeData };
+  let _processedColors = { ...themeData };
   for (let map of [toolkitVariableMap, lazy.ThemeVariableMap]) {
     for (let [cssVarName, definition] of map) {
       const {
@@ -697,11 +698,12 @@ function _setProperties(root, hasTheme, themeData) {
       }
 
       // Add processed color to themeData.
-      themeData._processedColors[lwtProperty] = val;
+      _processedColors[lwtProperty] = val;
 
       _setProperty(elem, hasTheme, cssVarName, val);
     }
   }
+  return _processedColors;
 }
 
 const kInvalidColor = { r: 0, g: 0, b: 0, a: 1 };
