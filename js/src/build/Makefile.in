@@ -80,7 +80,7 @@ endif
 ifneq (,$(SHARED_LIBRARY))
 	$(SYSINSTALL) $(SHARED_LIBRARY) $(DESTDIR)$(libdir)
 ifeq ($(OS_ARCH),Darwin)
-	$(INSTALL_NAME_TOOL) -id $(abspath $(libdir)/$(SHARED_LIBRARY)) $(DESTDIR)$(libdir)/$(SHARED_LIBRARY)
+	$(INSTALL_NAME_TOOL) -id $(abspath $(libdir)/$(notdir $(SHARED_LIBRARY))) $(DESTDIR)$(libdir)/$(notdir $(SHARED_LIBRARY))
 endif
 endif
 ifneq (,$(IMPORT_LIBRARY))
