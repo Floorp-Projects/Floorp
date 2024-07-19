@@ -15,6 +15,7 @@
 #include "mozilla/a11y/Role.h"
 #include "States.h"
 #include "TextAttrs.h"
+#include "TextLeafRange.h"
 #include "TextRange.h"
 #include "TreeWalker.h"
 
@@ -753,6 +754,35 @@ LayoutDeviceIntRect HyperTextAccessible::GetCaretRect(nsIWidget** aWidget) {
 
   *aWidget = frame->GetNearestWidget();
   return caretRect;
+}
+
+bool HyperTextAccessible::IsCaretAtEndOfLine() const {
+  RefPtr<nsFrameSelection> frameSelection = FrameSelection();
+  if (!frameSelection ||
+      frameSelection->GetHint() != CaretAssociationHint::Before) {
+    return false;
+  }
+  // CaretAssociationHint::Before can mean that the caret is at the end of
+  // a line. However, it can also mean that the caret is before the start
+  // of a node in the middle of a line. This happens when moving the cursor
+  // forward to a new node.
+  int32_t caret = CaretOffset();
+  if (caret == -1) {
+    return false;
+  }
+  TextLeafPoint point =
+      const_cast<HyperTextAccessible*>(this)->ToTextLeafPoint(caret);
+  if (!point) {
+    return false;
+  }
+  if (point.mOffset != 0) {
+    // This isn't the start of a node, so we must be at the end of a line.
+    return true;
+  }
+  // The caret is before the start of a node. The caret is at the end of a
+  // line if the node is at the start of a line but not at the start of a
+  // paragraph.
+  return point.FindPrevLineStartSameLocalAcc(true) && !point.IsParagraphStart();
 }
 
 void HyperTextAccessible::GetSelectionDOMRanges(SelectionType aSelectionType,
