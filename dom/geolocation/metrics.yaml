@@ -1,0 +1,77 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: DOM: Geolocation'
+
+geolocation:
+  accuracy:
+    type: custom_distribution
+    description: >
+      Accuracy returned by the Geolocation API
+    range_min: 1
+    range_max: 66355200
+    bucket_count: 50
+    histogram_type: exponential
+    unit: accuracy radius
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    notification_emails:
+      - krosylight@mozilla.com
+    expires: never
+  request_result:
+    type: labeled_counter
+    description: >
+      The result for each geolocation request. Success label will only happen
+      once for each request, even if it's a watch request.
+    labels:
+      - success
+      - permission_denied
+      - position_unavailable
+      - timeout
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    notification_emails:
+      - krosylight@mozilla.com
+    expires: never
+  fallback:
+    type: labeled_counter
+    description: >
+      Whether the default provider falled back to NetworkGeolocationProvider.
+    labels:
+      - none
+      - on_error
+      - on_timeout
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    notification_emails:
+      - krosylight@mozilla.com
+    expires: never
+  linux_provider:
+    type: labeled_boolean
+    description: >
+      Which system provider are we using on Linux
+    labels:
+      - none
+      - portal
+      - geoclue
+      - gpsd
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1905928
+    notification_emails:
+      - krosylight@mozilla.com
+    expires: never

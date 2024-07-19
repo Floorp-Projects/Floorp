@@ -12,6 +12,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/GeolocationPositionError.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_geo.h"
@@ -147,6 +148,7 @@ class nsGeolocationRequest final : public ContentPermissionRequestBase,
 
   int32_t mWatchId;
   bool mShutdown;
+  bool mSeenAnySignal = false;
   nsCOMPtr<nsIEventTarget> mMainThreadSerialEventTarget;
 };
 
@@ -420,9 +422,31 @@ nsIPrincipal* nsGeolocationRequest::GetPrincipal() {
 
 NS_IMETHODIMP
 nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition) {
+  if (!mSeenAnySignal) {
+    mSeenAnySignal = true;
+    glean::geolocation::request_result
+        .EnumGet(glean::geolocation::RequestResultLabel::eSuccess)
+        .Add();
+  }
   nsCOMPtr<nsIRunnable> ev = new RequestSendLocationEvent(aPosition, this);
   mMainThreadSerialEventTarget->Dispatch(ev.forget());
   return NS_OK;
+}
+
+static glean::geolocation::RequestResultLabel MapErrorToLabel(
+    uint16_t aErrorCode) {
+  using Label = glean::geolocation::RequestResultLabel;
+  switch (aErrorCode) {
+    case GeolocationPositionError_Binding::PERMISSION_DENIED:
+      return Label::ePermissionDenied;
+    case GeolocationPositionError_Binding::POSITION_UNAVAILABLE:
+      return Label::ePositionUnavailable;
+    case GeolocationPositionError_Binding::TIMEOUT:
+      return Label::eTimeout;
+    default:
+      MOZ_CRASH("Unknown geolocation error label");
+      return Label::ePositionUnavailable;
+  }
 }
 
 NS_IMETHODIMP
@@ -431,8 +455,13 @@ nsGeolocationRequest::NotifyError(uint16_t aErrorCode) {
       gGeolocationLog, LogLevel::Debug,
       ("nsGeolocationRequest::NotifyError with error code: %u", aErrorCode));
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mSeenAnySignal) {
+    mSeenAnySignal = true;
+    glean::geolocation::request_result.EnumGet(MapErrorToLabel(aErrorCode))
+        .Add();
+  }
   RefPtr<GeolocationPositionError> positionError =
-      new GeolocationPositionError(mLocator, aErrorCode);
+      new GeolocationPositionError(mLocator, static_cast<int16_t>(aErrorCode));
   positionError->NotifyCallback(mErrorCallback);
   return NS_OK;
 }
@@ -510,6 +539,9 @@ nsresult nsGeolocationService::Init() {
     mProvider = new PortalLocationProvider();
     MOZ_LOG(gGeolocationLog, LogLevel::Debug,
             ("Selected PortalLocationProvider"));
+    glean::geolocation::linux_provider
+        .EnumGet(glean::geolocation::LinuxProviderLabel::ePortal)
+        .Set(true);
   }
   // Geoclue includes GPS data so it has higher priority than raw GPSD
   if (!mProvider && StaticPrefs::geo_provider_use_geoclue()) {
@@ -522,6 +554,9 @@ nsresult nsGeolocationService::Init() {
       mProvider = std::move(gcProvider);
       MOZ_LOG(gGeolocationLog, LogLevel::Debug,
               ("Selected GeoclueLocationProvider"));
+      glean::geolocation::linux_provider
+          .EnumGet(glean::geolocation::LinuxProviderLabel::eGeoclue)
+          .Set(true);
     }
   }
 #    ifdef MOZ_GPSD
@@ -529,6 +564,9 @@ nsresult nsGeolocationService::Init() {
     mProvider = new GpsdLocationProvider();
     MOZ_LOG(gGeolocationLog, LogLevel::Debug,
             ("Selected GpsdLocationProvider"));
+    glean::geolocation::linux_provider
+        .EnumGet(glean::geolocation::LinuxProviderLabel::eGpsd)
+        .Set(true);
   }
 #    endif
 #  endif
@@ -920,7 +958,10 @@ Geolocation::Update(nsIDOMGeoPosition* aSomewhere) {
       double accuracy = -1;
       coords->GetAccuracy(&accuracy);
       mozilla::Telemetry::Accumulate(
-          mozilla::Telemetry::GEOLOCATION_ACCURACY_EXPONENTIAL, accuracy);
+          mozilla::Telemetry::GEOLOCATION_ACCURACY_EXPONENTIAL,
+          static_cast<uint32_t>(accuracy));
+      glean::geolocation::accuracy.AccumulateSingleSample(
+          static_cast<uint64_t>(accuracy));
     }
   }
 

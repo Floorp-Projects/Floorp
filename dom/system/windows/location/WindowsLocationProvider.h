@@ -71,6 +71,7 @@ class WindowsLocationProvider final : public nsIGeolocationProvider {
   RefPtr<WindowsLocationParent> mActor;
 
   bool mWatching = false;
+  bool mEverUpdated = false;
 };
 
 }  // namespace mozilla::dom

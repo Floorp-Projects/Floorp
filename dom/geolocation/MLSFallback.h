@@ -35,8 +35,19 @@ class MLSFallback : public nsITimerCallback, public nsINamed {
   NS_DECL_NSINAMED
 
   explicit MLSFallback(uint32_t delayMs = 2000);
-  nsresult Startup(nsIGeolocationUpdate* aWatcher);
-  nsresult Shutdown();
+
+  enum class FallbackReason : uint8_t {
+    Error,
+    Timeout,
+  };
+  nsresult Startup(nsIGeolocationUpdate* aWatcher,
+                   FallbackReason aReason = FallbackReason::Error);
+
+  enum class ShutdownReason : uint8_t {
+    ProviderResponded,
+    ProviderShutdown,
+  };
+  nsresult Shutdown(ShutdownReason aReason);
 
  private:
   nsresult CreateMLSFallbackProvider();
