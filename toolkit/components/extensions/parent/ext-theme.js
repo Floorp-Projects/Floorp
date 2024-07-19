@@ -53,16 +53,28 @@ class Theme {
     this.darkDetails = darkDetails;
     this.windowId = windowId;
 
-    if (startupData && startupData.lwtData) {
-      Object.assign(this, startupData);
+    if (startupData?.lwtData) {
+      // Parsed theme from a previous load() already available in startupData
+      // of parsed theme. We assume that reparsing the theme will yield the same
+      // result, and therefore reuse the value of startupData. This is a minor
+      // optimization; the more important use of startupData is before startup,
+      // by Extension.sys.mjs for LightweightThemeManager.fallbackThemeData.
+      //
+      // Note: the assumption "yield the same result" is not obviously true: the
+      // startupData persists across application updates, so it is possible for
+      // a browser update to occur that interprets the static theme differently.
+      // In this case we would still be using the old interpretation instead of
+      // the new one, until the user disables and re-enables/installs the theme.
+      this.lwtData = startupData.lwtData;
+      this.lwtStyles = startupData.lwtStyles;
+      this.lwtDarkStyles = startupData.lwtDarkStyles;
+      this.experiment = startupData.experiment;
     } else {
+      // lwtData will be populated by load().
+      this.lwtData = null;
       // TODO(ntim): clean this in bug 1550090
       this.lwtStyles = {};
-      this.lwtDarkStyles = null;
-      if (darkDetails) {
-        this.lwtDarkStyles = {};
-      }
-
+      this.lwtDarkStyles = darkDetails ? {} : null;
       this.experiment = null;
       if (experiment) {
         if (extension.canUseThemeExperiment()) {
@@ -98,6 +110,7 @@ class Theme {
    * This method will override any currently applied theme.
    */
   load() {
+    // this.lwtData is usually null, unless populated from startupData.
     if (!this.lwtData) {
       this.loadDetails(this.details, this.lwtStyles);
       if (this.darkDetails) {
@@ -114,6 +127,10 @@ class Theme {
       }
 
       if (this.extension.type === "theme") {
+        // Store the parsed theme in startupData, so it is available early at
+        // browser startup, to use as LightweightThemeManager.fallbackThemeData,
+        // which is assigned from Extension.sys.mjs to avoid having to wait for
+        // this ext-theme.js file to be loaded.
         this.extension.startupData = {
           lwtData: this.lwtData,
           lwtStyles: this.lwtStyles,
