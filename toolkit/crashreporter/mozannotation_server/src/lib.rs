@@ -203,9 +203,15 @@ fn copy_nscstring(
 
     if length > 0 {
         let data_address = reader.copy_object::<usize>(address)?;
-        reader
-            .copy_array::<u8>(data_address, length as _)
-            .map(ThinVec::from)
+        let mut vec = reader.copy_array::<u8>(data_address, length as _)?;
+
+        // Ensure that the string contains no nul characters.
+        let nul_byte_pos = vec.iter().position(|&c| c == 0);
+        if let Some(nul_byte_pos) = nul_byte_pos {
+            vec.truncate(nul_byte_pos);
+        }
+
+        Ok(ThinVec::from(vec))
     } else {
         Ok(ThinVec::<u8>::new())
     }
