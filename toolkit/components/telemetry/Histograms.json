@@ -1380,7 +1380,7 @@
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
+    "expires_in_version": "145",
     "kind": "exponential",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1507925],
@@ -1392,22 +1392,25 @@
   "GEOLOCATION_ERROR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
+    "expires_in_version": "145",
     "kind": "flag",
+    "releaseChannelCollection": "opt-out",
     "description": "Has seen location error"
   },
   "GEOLOCATION_WIN8_SOURCE_IS_MLS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "default",
+    "expires_in_version": "145",
     "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
     "description": "Geolocation on Win8 is either MLS or native"
   },
   "GEOLOCATION_OSX_SOURCE_IS_MLS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "default",
+    "expires_in_version": "145",
     "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
     "description": "Geolocation on OS X is either MLS or CoreLocation"
   },
   "GPU_PROCESS_LAUNCH_TIME_MS_2": {
