@@ -696,7 +696,6 @@ class BaseRustLibrary(object):
         "cargo_file",
         "crate_type",
         "dependencies",
-        "deps_path",
         "features",
         "output_category",
         "is_gkrust",
@@ -740,7 +739,6 @@ class BaseRustLibrary(object):
             cargo_output_directory(context, self.TARGET_SUBST_VAR),
         )
         self.import_name = mozpath.join(build_dir, self.lib_name)
-        self.deps_path = mozpath.join(build_dir, "deps")
 
 
 class RustLibrary(StaticLibrary, BaseRustLibrary):
