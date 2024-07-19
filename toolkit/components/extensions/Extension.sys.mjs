@@ -2992,10 +2992,6 @@ export class Extension extends ExtensionData {
 
     this.emitter = new EventEmitter();
 
-    if (this.startupData.lwtData && this.startupReason == "APP_STARTUP") {
-      lazy.LightweightThemeManager.fallbackThemeData = this.startupData.lwtData;
-    }
-
     /* eslint-disable mozilla/balanced-listeners */
     this.on("add-permissions", (ignoreEvent, permissions) => {
       for (let perm of permissions.permissions) {
@@ -3572,6 +3568,18 @@ export class Extension extends ExtensionData {
       ignoreQuarantine: this.ignoreQuarantine,
     });
     sharedData.set("extensions/pending", pendingExtensions);
+
+    if (
+      // Cannot use this.type because we haven't parsed the manifest yet.
+      this.addonData.type === "theme" &&
+      this.startupData.lwtData &&
+      this.startupReason == "APP_STARTUP"
+    ) {
+      // Avoid FOUC at browser startup by setting the fallback theme data as
+      // soon as the static theme is starting. Not doing so can result in a
+      // FOUC because loadManifest + runManifest (and other steps) are async.
+      lazy.LightweightThemeManager.fallbackThemeData = this.startupData.lwtData;
+    }
 
     lazy.ExtensionTelemetry.extensionStartup.stopwatchStart(this);
     try {
