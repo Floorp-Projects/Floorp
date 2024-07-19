@@ -63,6 +63,7 @@ class Theme {
         this.lwtDarkStyles = {};
       }
 
+      this.experiment = null;
       if (experiment) {
         if (extension.canUseThemeExperiment()) {
           this.lwtStyles.experimental = {
