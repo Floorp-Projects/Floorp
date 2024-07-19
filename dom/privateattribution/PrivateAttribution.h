@@ -36,6 +36,8 @@ class PrivateAttribution final : public nsWrapperCache {
                          ErrorResult&);
 
  private:
+  static bool ShouldRecord();
+
   [[nodiscard]] bool GetSourceHostIfNonPrivate(nsACString&, ErrorResult&);
 
   ~PrivateAttribution();
