@@ -123,6 +123,51 @@ add_task(async function test_static_theme_startupData() {
     startupData,
     "startupData should be identical when the theme loads again"
   );
+  ok(startupData.lwtData, "startupData.lwtData should be set");
+
+  await extension.unload();
+});
+
+// Regression test for bug 1830144.
+add_task(async function test_dynamic_theme_startupData() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      browser_specific_settings: { gecko: { id: "@my-dynamic-theme" } },
+      permissions: ["theme"],
+    },
+    useAddonManager: "permanent",
+    background() {
+      browser.runtime.onInstalled.addListener(async () => {
+        await browser.theme.update({ colors: { frame: "rgb(7, 8, 9)" } });
+        browser.test.sendMessage("onInstalled");
+      });
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("onInstalled");
+
+  equal(
+    await getColorFromAppliedTheme(),
+    "rgb(7, 8, 9)",
+    "Dynamic theme applies to simulated browser window"
+  );
+
+  let startupData = extension.extension.startupData;
+
+  // Notably, startupData.lwtData (among other properties) is not set. In a
+  // previous test (test_static_theme_startupData) we have confirmed that this
+  // property is present in startupData of static themes.
+  Assert.deepEqual(
+    Object.keys(startupData),
+    ["persistentListeners"],
+    "startupData should not have unexpected properties from ext-theme.js"
+  );
+
+  assertPersistentListeners(extension, "runtime", "onInstalled", {
+    primed: false,
+    persisted: true,
+  });
 
   await extension.unload();
 });
