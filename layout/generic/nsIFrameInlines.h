@@ -10,6 +10,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "nsContainerFrame.h"
+#include "nsIContentInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsCSSAnonBoxes.h"
@@ -184,6 +185,10 @@ mozilla::LogicalPoint nsIFrame::GetLogicalNormalPosition(
   // right instead of the left
   return mozilla::LogicalPoint(aWritingMode, GetNormalPosition(),
                                aContainerSize - mRect.Size());
+}
+
+bool nsIFrame::ContentIsEditable() const {
+  return mContent && mContent->IsEditable();
 }
 
 #endif

@@ -94,7 +94,7 @@ class SelectionMovementUtils final {
       nsIContent* aContent, uint32_t aOffset, nsDirection aDirection,
       CaretAssociationHint aHint, intl::BidiEmbeddingLevel aCaretBidiLevel,
       const nsSelectionAmount aAmount, const nsPoint& aDesiredCaretPos,
-      PeekOffsetOptions aOptions);
+      PeekOffsetOptions aOptions, const dom::Element* aAncestorLimiter);
 
   /**
    * IsIntraLineCaretMove() is a helper method for PeekOffsetForCaretMove()

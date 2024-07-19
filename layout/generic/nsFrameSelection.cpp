@@ -70,6 +70,7 @@
 
 #include "nsError.h"
 #include "mozilla/AutoCopyListener.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Highlight.h"
 #include "mozilla/dom/Selection.h"
@@ -139,17 +140,18 @@ static void printRange(nsRange* aDomRange);
 
 namespace mozilla {
 
-PeekOffsetStruct::PeekOffsetStruct(nsSelectionAmount aAmount,
-                                   nsDirection aDirection, int32_t aStartOffset,
-                                   nsPoint aDesiredCaretPos,
-                                   const PeekOffsetOptions aOptions,
-                                   EWordMovementType aWordMovementType)
+PeekOffsetStruct::PeekOffsetStruct(
+    nsSelectionAmount aAmount, nsDirection aDirection, int32_t aStartOffset,
+    nsPoint aDesiredCaretPos, const PeekOffsetOptions aOptions,
+    EWordMovementType aWordMovementType /* = eDefaultBehavior */,
+    const Element* aAncestorLimiter /* = nullptr */)
     : mAmount(aAmount),
       mDirection(aDirection),
       mStartOffset(aStartOffset),
       mDesiredCaretPos(aDesiredCaretPos),
       mWordMovementType(aWordMovementType),
       mOptions(aOptions),
+      mAncestorLimiter(aAncestorLimiter),
       mResultFrame(nullptr),
       mContentOffset(0),
       mAttach(CaretAssociationHint::Before) {}
@@ -945,13 +947,53 @@ Result<PeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
   if (aContinueSelection) {
     options += PeekOffsetOption::Extend;
   }
+  const Element* ancestorLimiter =
+      Element::FromNodeOrNull(GetAncestorLimiter());
   if (selection->IsEditorSelection()) {
     options += PeekOffsetOption::ForceEditableRegion;
+    // If the editor has not receive `focus` event, it may have not set ancestor
+    // limiter.  Then, we need to compute it here for the caret move.
+    if (!ancestorLimiter) {
+      // Editing hosts can be nested.  Therefore, computing selection root from
+      // selection range may be different from the focused editing host.
+      // Therefore, we may need to use a non-closest inclusive ancestor editing
+      // host of selection range container.  On the other hand, selection ranges
+      // may be outside of focused editing host.  In such case, we should use
+      // the closest editing host as the ancestor limiter instead.
+      PresShell* const presShell = selection->GetPresShell();
+      const Document* const doc =
+          presShell ? presShell->GetDocument() : nullptr;
+      if (const nsPIDOMWindowInner* const win =
+              doc ? doc->GetInnerWindow() : nullptr) {
+        const Element* const focusedElement = win->GetFocusedElement();
+        const Element* closestEditingHost = nullptr;
+        for (const Element* element :
+             content->InclusiveAncestorsOfType<Element>()) {
+          if (element->IsEditingHost()) {
+            if (!closestEditingHost) {
+              closestEditingHost = element;
+            }
+            if (focusedElement == element) {
+              ancestorLimiter = focusedElement;
+              break;
+            }
+          }
+        }
+        if (!ancestorLimiter) {
+          ancestorLimiter = closestEditingHost;
+        }
+      }
+      // If it's the root element, we don't need to limit the new caret
+      // position.
+      if (ancestorLimiter && !ancestorLimiter->GetParent()) {
+        ancestorLimiter = nullptr;
+      }
+    }
   }
 
   return SelectionMovementUtils::PeekOffsetForCaretMove(
       content, selection->FocusOffset(), aDirection, GetHint(),
-      GetCaretBidiLevel(), aAmount, aDesiredCaretPos, options);
+      GetCaretBidiLevel(), aAmount, aDesiredCaretPos, options, ancestorLimiter);
 }
 
 nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
