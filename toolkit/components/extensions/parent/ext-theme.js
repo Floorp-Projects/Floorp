@@ -447,6 +447,15 @@ this.theme = class extends ExtensionAPIPersistent {
       experiment: manifest.theme_experiment,
       startupData: extension.startupData,
     });
+    if (extension.startupData.lwtData?._processedColors) {
+      // We should ideally not be modifying startupData, but we did so before,
+      // before bug 1830136 was fixed. startupData persists across browser
+      // updates and is only erased when the theme is updated or uninstalled.
+      // To prevent this stale _processedColors from bloating the database
+      // unnecessarily, we delete it here.
+      delete extension.startupData.lwtData._processedColors;
+      extension.saveStartupData();
+    }
   }
 
   onShutdown(isAppShutdown) {
