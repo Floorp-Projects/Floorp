@@ -734,14 +734,18 @@ class BaseRustLibrary(object):
         # build in that case.
         if not context.config.substs.get("COMPILE_ENVIRONMENT"):
             return
-        build_dir = mozpath.join(
-            context.config.topobjdir,
-            cargo_output_directory(context, self.TARGET_SUBST_VAR),
+        self.import_name = self.lib_name
+
+    @property
+    def import_path(self):
+        return mozpath.join(
+            self._context.config.topobjdir,
+            cargo_output_directory(self._context, self.TARGET_SUBST_VAR),
+            self.import_name,
         )
-        self.import_name = mozpath.join(build_dir, self.lib_name)
 
 
-class RustLibrary(StaticLibrary, BaseRustLibrary):
+class RustLibrary(BaseRustLibrary, StaticLibrary):
     """Context derived container object for a rust static library"""
 
     KIND = "target"
@@ -925,7 +929,7 @@ class HostLibrary(HostMixin, BaseLibrary):
     no_expand_lib = False
 
 
-class HostRustLibrary(HostLibrary, BaseRustLibrary):
+class HostRustLibrary(BaseRustLibrary, HostLibrary):
     """Context derived container object for a host rust library"""
 
     KIND = "host"
