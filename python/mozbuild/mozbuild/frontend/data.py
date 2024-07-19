@@ -639,7 +639,7 @@ class BaseLibrary(Linkable):
 
     @property
     def import_path(self):
-        return mozpath.join(self.objdir, self.import_name)
+        return ObjDirPath(self._context, "!" + self.import_name)
 
 
 class Library(BaseLibrary):
@@ -738,10 +738,13 @@ class BaseRustLibrary(object):
 
     @property
     def import_path(self):
-        return mozpath.join(
-            self._context.config.topobjdir,
-            cargo_output_directory(self._context, self.TARGET_SUBST_VAR),
-            self.import_name,
+        return ObjDirPath(
+            self._context,
+            "!/"
+            + mozpath.join(
+                cargo_output_directory(self._context, self.TARGET_SUBST_VAR),
+                self.import_name,
+            ),
         )
 
 
@@ -884,10 +887,9 @@ class SharedLibrary(Library):
         if self.config.substs.get("OS_ARCH") == "WINNT":
             # We build import libs on windows in a library's objdir
             # to avoid cluttering up dist/bin.
-            return mozpath.join(self.objdir, self.import_name)
-        return mozpath.join(
-            mozpath.dirname(self.output_path.full_path), self.import_name
-        )
+            return ObjDirPath(self._context, "!" + self.import_name)
+        assert self.import_name == self.name
+        return self.output_path
 
 
 class HostSharedLibrary(HostMixin, Library):
