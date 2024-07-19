@@ -38,7 +38,7 @@ class Theme {
    * @param {object} options.details
    * @param {object} options.darkDetails
    * @param {object} options.experiment
-   * @param {object} options.startupData
+   * @param {object} options.startupData startupData if this is a static theme.
    */
   constructor({
     extension,
@@ -113,13 +113,15 @@ class Theme {
         this.lwtData.experiment = this.experiment;
       }
 
-      this.extension.startupData = {
-        lwtData: this.lwtData,
-        lwtStyles: this.lwtStyles,
-        lwtDarkStyles: this.lwtDarkStyles,
-        experiment: this.experiment,
-      };
-      this.extension.saveStartupData();
+      if (this.extension.type === "theme") {
+        this.extension.startupData = {
+          lwtData: this.lwtData,
+          lwtStyles: this.lwtStyles,
+          lwtDarkStyles: this.lwtDarkStyles,
+          experiment: this.experiment,
+        };
+        this.extension.saveStartupData();
+      }
     }
 
     if (this.windowId) {
@@ -440,6 +442,8 @@ this.theme = class extends ExtensionAPIPersistent {
     let { extension } = this;
     let { manifest } = extension;
 
+    // Note: only static themes are processed here; extensions with the "theme"
+    // permission do not enter this code path.
     defaultTheme = new Theme({
       extension,
       details: manifest.theme,
