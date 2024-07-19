@@ -8,15 +8,14 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <stdint.h>          // for UINT32_MAX, uintptr_t
-#include "js/Array.h"        // JS::NewArrayObject
-#include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents},GetArrayBufferLengthAndData}
+#include <stdint.h>    // for UINT32_MAX, uintptr_t
+#include "js/Array.h"  // JS::NewArrayObject
+#include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents}}
 #include "js/Date.h"
-#include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject, JS_GetObjectAsArrayBufferView
+#include "js/experimental/TypedData.h"  // JS::ArrayBufferOrView
 #include "js/MemoryFunctions.h"
 #include "js/Object.h"              // JS::GetBuiltinClass
 #include "js/PropertyAndElement.h"  // JS_DefineElement, JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_HasOwnPropertyById
-#include "js/SharedArrayBuffer.h"   // IsSharedArrayBufferObject
 #include "js/Value.h"
 #include "jsfriendapi.h"
 #include "mozilla/Casting.h"
@@ -30,6 +29,7 @@
 #include "mozilla/dom/indexedDB/Key.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
 #include "nsJSUtils.h"
@@ -102,83 +102,6 @@ IDBResult<Ok, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
   // 6. Return a new array key with value `keys`.
   aPolicy.EndSubkeyList();
   return Ok();
-}
-
-bool IsDetachedBuffer(JSContext* aCx, JS::Handle<JSObject*> aJsBufferSource) {
-  if (JS_IsArrayBufferViewObject(aJsBufferSource)) {
-    bool unused = false;
-    JS::Rooted<JSObject*> viewedArrayBuffer(
-        aCx, JS_GetArrayBufferViewBuffer(aCx, aJsBufferSource, &unused));
-    return JS::IsDetachedArrayBufferObject(viewedArrayBuffer);
-  }
-
-  return JS::IsDetachedArrayBufferObject(aJsBufferSource);
-}
-
-// To get a copy of the bytes held by the buffer source given a buffer source
-// type instance bufferSource:
-IDBResult<Span<const uint8_t>, IDBSpecialValue::Invalid>
-GetByteSpanFromJSBufferSource(JSContext* aCx,
-                              JS::Handle<JSObject*> aJsBufferSource) {
-  // 1. Let jsBufferSource be the result of converting bufferSource to a
-  // JavaScript value.
-
-  // 2. Let jsArrayBuffer be jsBufferSource.
-  JS::Handle<JSObject*>& jsArrayBuffer = aJsBufferSource;
-
-  // 3. Let offset be 0.
-  size_t offset = 0u;
-
-  // 4. Let length be 0.
-  size_t length = 0u;
-
-  // 8. Let bytes be a new byte sequence of length equal to length.
-  uint8_t* bytes = nullptr;  // Note: Copy is deferred, no allocation here
-
-  // 5. If jsBufferSource has a [[ViewedArrayBuffer]] internal slot, then:
-  if (JS_IsArrayBufferViewObject(aJsBufferSource)) {
-    // 5.1 Set jsArrayBuffer to jsBufferSource.[[ViewedArrayBuffer]].
-    // 5.2 Set offset to jsBufferSource.[[ByteOffset]].
-    // 5.3 Set length to jsBufferSource.[[ByteLength]].
-
-    // 9. For i in the range offset to offset + length − 1, inclusive, set
-    // bytes[i − offset] to GetValueFromBuffer(jsArrayBuffer, i, Uint8, true,
-    // Unordered).
-    (void)offset;
-    bool unused = false;
-    if (!JS_GetObjectAsArrayBufferView(jsArrayBuffer, &length, &unused,
-                                       &bytes)) {
-      return Err(IDBError(SpecialValues::Invalid));
-    }
-
-    // 6. Otherwise:
-  } else {
-    // 6.1 Assert: jsBufferSource is an ArrayBuffer or SharedArrayBuffer object.
-    MOZ_RELEASE_ASSERT(JS::IsArrayBufferObject(aJsBufferSource) ||
-                       JS::IsSharedArrayBufferObject(aJsBufferSource));
-
-    // 6.2 Set length to jsBufferSource.[[ArrayBufferByteLength]].
-
-    // 9. For i in the range offset to offset + length − 1, inclusive, set
-    // bytes[i − offset] to GetValueFromBuffer(jsArrayBuffer, i, Uint8, true,
-    // Unordered).
-    (void)offset;
-    if (!JS::GetObjectAsArrayBuffer(jsArrayBuffer, &length, &bytes)) {
-      return Err(IDBError(SpecialValues::Invalid));
-    }
-  }
-
-  // 7. If IsDetachedBuffer(jsArrayBuffer) is true, then return the empty byte
-  // sequence.
-  if (IsDetachedBuffer(aCx, aJsBufferSource)) {
-    // Note: As the web platform tests assume, and as has been discussed at
-    // https://github.com/w3c/IndexedDB/issues/417 - we are better off by
-    // throwing a DataCloneError. The spec language is about to be revised.
-    return Err(IDBError(SpecialValues::Invalid));
-  }
-
-  // 10. Return bytes.
-  return Span<uint8_t>{bytes, length}.AsConst();
 }
 
 }  // namespace
@@ -513,20 +436,9 @@ IDBResult<Ok, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     }
 
     // If `input` is a buffer source type
-    if (JS::IsArrayBufferObject(object) || JS_IsArrayBufferViewObject(object)) {
-      // 1. Let bytes be the result of getting a copy of the bytes held by the
-      // buffer source input.
-
-      auto res = GetByteSpanFromJSBufferSource(aCx, object);
-
-      // Rethrow any exceptions.
-      if (res.isErr()) {
-        return res.propagateErr();
-      }
-
-      // 2. Return a new key with type binary and value bytes.
-      // Note: The copy takes place here.
-      return EncodeAsString(res.inspect(), eBinary + aTypeOffset);
+    if (JS::ArrayBufferOrView arrayBufferOrView =
+            JS::ArrayBufferOrView::fromObject(object)) {
+      return EncodeBinary(arrayBufferOrView, aTypeOffset);
     }
 
     // If IsArray(`input`)
@@ -608,8 +520,7 @@ nsresult Key::DecodeJSValInternal(const EncodedDataType*& aPos,
   } else if (*aPos - aTypeOffset == eFloat) {
     aVal.setDouble(DecodeNumber(aPos, aEnd));
   } else if (*aPos - aTypeOffset == eBinary) {
-    JSObject* arrayBufferObject =
-        GetArrayBufferObjectFromDataRange(aPos, aEnd, aCx);
+    JSObject* arrayBufferObject = DecodeBinary(aPos, aEnd, aCx);
     if (!arrayBufferObject) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -643,7 +554,10 @@ Result<Ok, nsresult> Key::EncodeString(const nsAString& aString,
 template <typename T>
 Result<Ok, nsresult> Key::EncodeString(const Span<const T> aInput,
                                        uint8_t aTypeOffset) {
-  return EncodeAsString(aInput, eString + aTypeOffset);
+  // aInput actually has no invalidatable pointers, but create a nogc token
+  // anyway just to satisfy the API.
+  JS::AutoCheckCannotGC nogc;
+  return EncodeAsString(aInput, std::move(nogc), eString + aTypeOffset);
 }
 
 // nsCString maximum length is limited by INT32_MAX.
@@ -698,6 +612,7 @@ void Key::WriteDoubleToUint64(char* aBuffer, double aValue) {
 
 template <typename T>
 Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
+                                         JS::AutoCheckCannotGC&& aNoGC,
                                          uint8_t aType) {
   // Please note that the input buffer can either be based on two-byte UTF-16
   // values or on arbitrary single byte binary values. Only the first case
@@ -739,6 +654,7 @@ Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
 
   char* buffer;
   if (!mBuffer.GetMutableData(&buffer, size)) {
+    aNoGC.reset();  // Done with aInput
     IDB_REPORT_INTERNAL_ERR();
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
@@ -776,6 +692,8 @@ Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
                    [](auto value) { return value + ONE_BYTE_ADJUST; });
     buffer += inputLen;
   }
+
+  aNoGC.reset();  // Done with aInput
 
   // Write end marker
   *(buffer++) = eTerminator;
@@ -960,10 +878,68 @@ double Key::DecodeNumber(const EncodedDataType*& aPos,
   return BitwiseCast<double>(bits);
 }
 
+template <typename F>
+static Result<Ok, nsresult> ProcessArrayBufferOrView(
+    const JS::ArrayBufferOrView& aArrayBufferOrView, F&& aCallback) {
+  JSObject* object = aArrayBufferOrView.asObjectUnbarriered();
+
+  mozilla::dom::ArrayBufferView arrayBufferView;
+  if (arrayBufferView.Init(object)) {
+    return arrayBufferView.ProcessData</* AllowLargeTypedArrays */ true>(
+        std::forward<F>(aCallback));
+  }
+
+  mozilla::dom::ArrayBuffer arrayBuffer;
+  if (arrayBuffer.Init(object)) {
+    return arrayBuffer.ProcessData</* AllowLargeTypedArrays */ true>(
+        std::forward<F>(aCallback));
+  }
+
+  MOZ_CRASH("ArrayBufferOrView must be ArrayBuffer or ArrayBufferView!");
+}
+
+Result<Ok, nsresult> Key::EncodeBinary(
+    const JS::ArrayBufferOrView& aArrayBufferOrView, uint8_t aTypeOffset) {
+  // We can't exactly mimic the steps for "getting a copy of the bytes held by
+  // the buffer source" because for safety reasons, we have to use higher level
+  // APIs for accessing array buffer or array buffer view data.
+  // Also, EncodeAsString needs to encode the data anyway (making a copy), so
+  // doing a plain extra copy first would be inefficient.
+
+  // https://webidl.spec.whatwg.org/#dfn-get-buffer-source-copy
+  // 7. If IsDetachedBuffer(jsArrayBuffer) is true, then return the empty
+  // byte sequence.
+  //
+  // Note: As the web platform tests assume, and as has been discussed at
+  // https://github.com/w3c/IndexedDB/issues/417 - we are better off by
+  // throwing a DataCloneError. The spec language is about to be revised.
+  if (aArrayBufferOrView.isDetached()) {
+    return Err(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+  }
+
+  // 1. Let aData be the result of getting the bytes held by the buffer source
+  //    input.
+  // 2. Return a new key with type binary and value aData.
+  //
+  // Note: The wording of the steps has been adjusted to reflect implementation
+  // specifics which are described above.
+  return ProcessArrayBufferOrView(
+      aArrayBufferOrView,
+      [aTypeOffset, this](
+          const Span<uint8_t>& aData,
+          JS::AutoCheckCannotGC&& aNoGC) -> Result<Ok, nsresult> {
+        if (aData.LengthBytes() > INT32_MAX) {
+          return Err(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        }
+
+        return EncodeAsString((const Span<const uint8_t>)aData,
+                              std::move(aNoGC), eBinary + aTypeOffset);
+      });
+}
+
 // static
-JSObject* Key::GetArrayBufferObjectFromDataRange(const EncodedDataType*& aPos,
-                                                 const EncodedDataType* aEnd,
-                                                 JSContext* aCx) {
+JSObject* Key::DecodeBinary(const EncodedDataType*& aPos,
+                            const EncodedDataType* aEnd, JSContext* aCx) {
   JS::Rooted<JSObject*> rv(aCx);
   DecodeStringy<eBinary, uint8_t>(
       aPos, aEnd,
