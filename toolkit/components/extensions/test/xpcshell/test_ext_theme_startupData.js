@@ -6,6 +6,9 @@
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
+// LightweightThemeManager.fallbackThemeData setter calls are recorded here:
+const gFallbackHistory = [];
+
 // Simulates opening a browser window and retrieves the color.
 async function getColorFromAppliedTheme() {
   const { LightweightThemeConsumer } = ChromeUtils.importESModule(
@@ -74,8 +77,31 @@ function loadStaticThemeExtension(manifest) {
   return extension;
 }
 
+add_setup(function setup_intercept_fallbackThemeData() {
+  const { LightweightThemeManager } = ChromeUtils.importESModule(
+    "resource://gre/modules/LightweightThemeManager.sys.mjs"
+  );
+  const fallbackThemeDataPropertyDescriptor = Object.getOwnPropertyDescriptor(
+    LightweightThemeManager,
+    "fallbackThemeData"
+  );
+  Object.defineProperty(LightweightThemeManager, "fallbackThemeData", {
+    enumerable: true,
+    configurable: true,
+    set: function (value) {
+      gFallbackHistory.push(structuredClone(value));
+      console.trace(`Set fallbackThemeData: ${value?.theme?.id}`);
+      fallbackThemeDataPropertyDescriptor.set.call(this, value);
+    },
+    get: fallbackThemeDataPropertyDescriptor.get,
+  });
+});
+
 add_setup(async () => {
   await ExtensionTestUtils.startAddonManager();
+  // In reality, loading a built-in static theme would populate the fallback.
+  // But we don't have a built-in static theme in this test.
+  Assert.deepEqual(gFallbackHistory, [], "Fallback history is empty");
 });
 
 add_task(async function test_static_theme_startupData() {
@@ -108,9 +134,25 @@ add_task(async function test_static_theme_startupData() {
     "startupData should not have been changed when a browser window was opened"
   );
 
+  Assert.deepEqual(
+    gFallbackHistory,
+    [startupDataCopy.lwtData],
+    "Fallback set when theme has loaded"
+  );
+  gFallbackHistory.length = 0;
+
   let readyPromise = AddonTestUtils.promiseWebExtensionStartup("@my-theme");
   info("Simulating browser restart");
-  await AddonTestUtils.promiseRestartManager();
+  await AddonTestUtils.promiseShutdownManager();
+
+  Assert.deepEqual(
+    gFallbackHistory,
+    [],
+    "Should not have bothered with resetting the fallback upon app shutdown"
+  );
+  gFallbackHistory.length = 0;
+
+  await AddonTestUtils.promiseStartupManager();
   info("Waiting for theme to have started again");
   await readyPromise;
 
@@ -124,8 +166,23 @@ add_task(async function test_static_theme_startupData() {
     "startupData should be identical when the theme loads again"
   );
   ok(startupData.lwtData, "startupData.lwtData should be set");
+  // Expected to be set 2x: first as soon as the static theme extension has been
+  // initialized by the AddonManager, secondly when the extension internals have
+  // loaded and parsed the actual theme data.
+  Assert.deepEqual(
+    gFallbackHistory,
+    [startupData.lwtData, startupData.lwtData],
+    "Should have set startupData.lwtData as fallback at startup (2x)"
+  );
+  gFallbackHistory.length = 0;
 
   await extension.unload();
+  Assert.deepEqual(
+    gFallbackHistory,
+    [null],
+    "Should have cleared fallback when static theme unloaded (theme uninstall)"
+  );
+  gFallbackHistory.length = 0;
 });
 
 // Regression test for bug 1830144.
@@ -170,4 +227,49 @@ add_task(async function test_dynamic_theme_startupData() {
   });
 
   await extension.unload();
+});
+
+// Due to bug 1830144, startupData of an extension may contain stale data, which
+// is not automatically dropped on updates (unlike StartupCache).
+// Double-check that this does not break anything.
+add_task(async function test_obsolete_theme_in_extension_startupData() {
+  // We're going to load a fake theme to borrow its startupData.
+  let theme = loadStaticThemeExtension({
+    browser_specific_settings: { gecko: { id: "@theme-ext" } },
+    theme: { colors: { frame: "rgb(1, 33, 7)" } },
+  });
+  await theme.startup();
+  let startupDataFromStaticTheme = structuredClone(theme.extension.startupData);
+  await theme.unload();
+
+  // test_static_theme_startupData already tests the expected behavior for
+  // static themes, so don't bother checking again and just reset the history.
+  gFallbackHistory.length = 0;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_specific_settings: { gecko: { id: "@theme-ext" } },
+      permissions: ["theme"],
+    },
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+
+  // The extension does not have anything of interest (such as persistent
+  // listeners), so startupData should be empty.
+  Assert.deepEqual(extension.extension.startupData, {}, "startupData is empty");
+  extension.extension.startupData = startupDataFromStaticTheme;
+  extension.extension.saveStartupData();
+
+  let readyPromise = AddonTestUtils.promiseWebExtensionStartup("@theme-ext");
+  await AddonTestUtils.promiseShutdownManager();
+  await AddonTestUtils.promiseStartupManager();
+  await readyPromise;
+  await extension.unload();
+
+  Assert.deepEqual(
+    gFallbackHistory,
+    [],
+    "startupData.lwtData should be ignored for extensions that are not themes"
+  );
 });
