@@ -104,14 +104,13 @@ add_setup(async () => {
   Assert.deepEqual(gFallbackHistory, [], "Fallback history is empty");
 });
 
-add_task(async function test_static_theme_startupData() {
-  const DUMMY_COLOR = "rgb(12, 34, 56)";
+async function do_test_static_theme_startupData(expectDark) {
+  const EXPECTED_COLOR = expectDark ? "rgb(65, 43, 21)" : "rgb(12, 34, 56)";
 
   let extension = loadStaticThemeExtension({
     browser_specific_settings: { gecko: { id: "@my-theme" } },
-    theme: {
-      colors: { frame: DUMMY_COLOR },
-    },
+    theme: { colors: { frame: "rgb(12, 34, 56)" } },
+    dark_theme: { colors: { frame: "rgb(65, 43, 21)" } },
   });
   await extension.startup();
   let startupDataOriginal = extension.extension.startupData;
@@ -119,7 +118,7 @@ add_task(async function test_static_theme_startupData() {
 
   equal(
     await getColorFromAppliedTheme(),
-    DUMMY_COLOR,
+    EXPECTED_COLOR,
     "Theme applied to simulated browser window"
   );
 
@@ -176,6 +175,12 @@ add_task(async function test_static_theme_startupData() {
   );
   gFallbackHistory.length = 0;
 
+  equal(
+    await getColorFromAppliedTheme(),
+    EXPECTED_COLOR,
+    "Theme applied to simulated browser window after a restart"
+  );
+
   await extension.unload();
   Assert.deepEqual(
     gFallbackHistory,
@@ -183,7 +188,21 @@ add_task(async function test_static_theme_startupData() {
     "Should have cleared fallback when static theme unloaded (theme uninstall)"
   );
   gFallbackHistory.length = 0;
-});
+}
+
+add_task(
+  { pref_set: [["ui.systemUsesDarkTheme", 0]] },
+  async function test_static_theme_startupData_light_theme() {
+    await do_test_static_theme_startupData(/* expectDark */ false);
+  }
+);
+
+add_task(
+  { pref_set: [["ui.systemUsesDarkTheme", 1]] },
+  async function test_static_theme_startupData_dark_theme() {
+    await do_test_static_theme_startupData(/* expectDark */ true);
+  }
+);
 
 // Regression test for bug 1830144.
 add_task(async function test_dynamic_theme_startupData() {
