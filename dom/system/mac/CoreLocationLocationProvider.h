@@ -39,6 +39,7 @@ class CoreLocationLocationProvider : public nsIGeolocationProvider {
   void Update(nsIDOMGeoPosition* aSomewhere);
   void CreateMLSFallbackProvider();
   void CancelMLSFallbackProvider();
+  bool IsEverUpdated() const { return mEverUpdated; }
 
  private:
   virtual ~CoreLocationLocationProvider() = default;
@@ -46,6 +47,8 @@ class CoreLocationLocationProvider : public nsIGeolocationProvider {
   CoreLocationObjects* mCLObjects;
   nsCOMPtr<nsIGeolocationUpdate> mCallback;
   RefPtr<MLSFallback> mMLSFallbackProvider;
+
+  bool mEverUpdated = false;
 
   class MLSUpdate : public nsIGeolocationUpdate {
    public:

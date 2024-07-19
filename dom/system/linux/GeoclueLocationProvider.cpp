@@ -21,6 +21,7 @@
 #include "mozilla/XREAppData.h"
 #include "mozilla/dom/GeolocationPosition.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "MLSFallback.h"
 #include "nsAppRunner.h"
 #include "nsCOMPtr.h"
@@ -237,7 +238,7 @@ class GCLocProviderPriv final : public nsIGeolocationProvider,
   void DoShutdown(bool aDeleteClient, bool aDeleteManager);
   void DoShutdownClearCallback(bool aDestroying);
 
-  nsresult FallbackToMLS();
+  nsresult FallbackToMLS(MLSFallback::FallbackReason aReason);
   void StopMLSFallback();
 
   void WatchStart();
@@ -328,17 +329,23 @@ void GCLocProviderPriv::Update(nsIDOMGeoPosition* aPosition) {
 
 void GCLocProviderPriv::UpdateLastPosition() {
   MOZ_DIAGNOSTIC_ASSERT(mLastPosition, "No last position to update");
+  if (mMLSFallbackTimer) {
+    // We are not going to wait for MLS fallback anymore
+    glean::geolocation::fallback
+        .EnumGet(glean::geolocation::FallbackLabel::eNone)
+        .Add();
+  }
   StopPositionTimer();
   StopMLSFallbackTimer();
   Update(mLastPosition);
 }
 
-nsresult GCLocProviderPriv::FallbackToMLS() {
+nsresult GCLocProviderPriv::FallbackToMLS(MLSFallback::FallbackReason aReason) {
   GCL_LOG(Debug, "trying to fall back to MLS");
   StopMLSFallback();
 
   RefPtr fallback = new MLSFallback(0);
-  MOZ_TRY(fallback->Startup(mCallback));
+  MOZ_TRY(fallback->Startup(mCallback, aReason));
 
   GCL_LOG(Debug, "Started up MLS fallback");
   mMLSFallback = std::move(fallback);
@@ -351,7 +358,7 @@ void GCLocProviderPriv::StopMLSFallback() {
   }
   GCL_LOG(Debug, "Clearing MLS fallback");
   if (mMLSFallback) {
-    mMLSFallback->Shutdown();
+    mMLSFallback->Shutdown(MLSFallback::ShutdownReason::ProviderShutdown);
     mMLSFallback = nullptr;
   }
 }
@@ -362,7 +369,7 @@ void GCLocProviderPriv::NotifyError(int aError) {
   }
 
   // We errored out, try to fall back to MLS.
-  if (NS_SUCCEEDED(FallbackToMLS())) {
+  if (NS_SUCCEEDED(FallbackToMLS(MLSFallback::FallbackReason::Error))) {
     return;
   }
 
@@ -883,7 +890,7 @@ void GCLocProviderPriv::MLSFallbackTimerFired() {
   GCL_LOG(Info,
           "Didn't get a location in a reasonable amount of time, trying to "
           "fall back to MLS");
-  FallbackToMLS();
+  FallbackToMLS(MLSFallback::FallbackReason::Timeout);
 }
 
 // Did we made some D-Bus call and are still waiting for its response?
@@ -1048,7 +1055,7 @@ GCLocProviderPriv::Watch(nsIGeolocationUpdate* aCallback) {
 
   if (!mProxyManager) {
     GCL_LOG(Debug, "watch request falling back to MLS");
-    return FallbackToMLS();
+    return FallbackToMLS(MLSFallback::FallbackReason::Error);
   }
 
   StopMLSFallback();

@@ -340,7 +340,7 @@ void GpsdLocationProvider::Update(nsIDOMGeoPosition* aPosition) {
 
   if (mMLSProvider) {
     /* We got a location from gpsd, so let's cancel our MLS fallback. */
-    mMLSProvider->Shutdown();
+    mMLSProvider->Shutdown(MLSFallback::ShutdownReason::ProviderResponded);
     mMLSProvider = nullptr;
   }
 
@@ -425,7 +425,7 @@ GpsdLocationProvider::Watch(nsIGeolocationUpdate* aCallback) {
 NS_IMETHODIMP
 GpsdLocationProvider::Shutdown() {
   if (mMLSProvider) {
-    mMLSProvider->Shutdown();
+    mMLSProvider->Shutdown(MLSFallback::ShutdownReason::ProviderShutdown);
     mMLSProvider = nullptr;
   }
 

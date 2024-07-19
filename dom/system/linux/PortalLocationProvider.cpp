@@ -104,7 +104,7 @@ void PortalLocationProvider::Update(nsIDOMGeoPosition* aPosition) {
     LOG_PORTAL(
         "Update from location portal received: Cancelling fallback MLS "
         "provider\n");
-    mMLSProvider->Shutdown();
+    mMLSProvider->Shutdown(MLSFallback::ShutdownReason::ProviderResponded);
     mMLSProvider = nullptr;
   }
 
@@ -339,7 +339,7 @@ PortalLocationProvider::Shutdown() {
     mDBUSLocationProxy = nullptr;
   }
   if (mMLSProvider) {
-    mMLSProvider->Shutdown();
+    mMLSProvider->Shutdown(MLSFallback::ShutdownReason::ProviderShutdown);
     mMLSProvider = nullptr;
   }
   return NS_OK;
