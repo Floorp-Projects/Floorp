@@ -9,6 +9,8 @@
 #include "mozilla/CycleCollectedJSContext.h"  // for nsAutoMicroTask
 #include "Geolocation.h"
 
+extern mozilla::LazyLogModule gGeolocationLog;
+
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GeolocationPositionError, mParent)
@@ -46,6 +48,8 @@ JSObject* GeolocationPositionError::WrapObject(
 
 void GeolocationPositionError::NotifyCallback(
     const GeoPositionErrorCallback& aCallback) {
+  MOZ_LOG(gGeolocationLog, LogLevel::Debug,
+          ("GeolocationPositionError::NotifyCallback"));
   nsAutoMicroTask mt;
   if (aCallback.HasWebIDLCallback()) {
     RefPtr<PositionErrorCallback> callback = aCallback.GetWebIDLCallback();

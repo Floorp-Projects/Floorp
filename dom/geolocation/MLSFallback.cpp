@@ -9,6 +9,9 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIGeolocationProvider.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Logging.h"
+
+extern mozilla::LazyLogModule gGeolocationLog;
 
 NS_IMPL_ISUPPORTS(MLSFallback, nsITimerCallback, nsINamed)
 
@@ -62,6 +65,9 @@ nsresult MLSFallback::CreateMLSFallbackProvider() {
     return NS_OK;
   }
 
+  MOZ_LOG(gGeolocationLog, mozilla::LogLevel::Debug,
+          ("Falling back to NetworkLocationProvider"));
+
   nsresult rv;
   mMLSFallbackProvider =
       do_CreateInstance("@mozilla.org/geolocation/mls-provider;1", &rv);
@@ -70,6 +76,8 @@ nsresult MLSFallback::CreateMLSFallbackProvider() {
   if (mMLSFallbackProvider) {
     rv = mMLSFallbackProvider->Startup();
     if (NS_SUCCEEDED(rv)) {
+      MOZ_LOG(gGeolocationLog, mozilla::LogLevel::Debug,
+              ("Successfully started up NetworkLocationProvider"));
       mMLSFallbackProvider->Watch(mUpdateWatcher);
     }
   }
