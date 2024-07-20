@@ -354,6 +354,10 @@ this.test = class extends ExtensionAPI {
         onMessage: new TestEventManager({
           context,
           name: "test.onMessage",
+          // TODO bug 1901294: Set resetIdleOnEvent=false. Tests should not be
+          // relying on test.onMessage for its side effect of resetting the test
+          // but set extensions.background.idle.timeout instead.
+          resetIdleOnEvent: true,
           register: fire => {
             let handler = (event, ...args) => {
               fire.async(...args);

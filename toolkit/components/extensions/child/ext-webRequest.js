@@ -101,6 +101,8 @@ this.webRequest = class extends ExtensionAPI {
       onAuthRequired: new EventManager({
         context,
         name: "webRequest.onAuthRequired",
+        // Parent event already resets idle if needed, no need to do it here.
+        resetIdleOnEvent: false,
         register: (fire, filter, extra) => {
           const listener = details => {
             // NOTE: asyncBlocking and blocking are mutually exclusive
