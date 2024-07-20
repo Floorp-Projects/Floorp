@@ -771,6 +771,26 @@ class BackgroundBuilder {
         extension.emit("background-script-suspend-canceled");
       }
 
+      if (extension.backgroundState !== BACKGROUND_STATE.RUNNING) {
+        // If STOPPED (or STARTING), then there is no idle timer and we should
+        // not reset the timer, because that would actually start the timer that
+        // eventually calls terminateBackground(), see bug 1905505 for example.
+        //
+        // When at state STARTING, we expect the startup to complete soon which
+        // in turn will start the idleManager timer.
+        if (
+          extension.backgroundState === BACKGROUND_STATE.STOPPED &&
+          // Skip logging for "event" because it can currently be encountered in
+          // practice due to bug 1905504, as explained in bug 1905505.
+          reason !== "event"
+        ) {
+          Cu.reportError(
+            `Background keepalive reset with reason "${reason}" failed for ${extension.id}, state stopped.`
+          );
+        }
+        return;
+      }
+
       this.idleManager.resetTimer();
 
       if (this.isWorker) {
@@ -791,6 +811,16 @@ class BackgroundBuilder {
     };
 
     let idleWaitUntil = (_, { promise, reason }) => {
+      if (extension.backgroundState === BACKGROUND_STATE.STOPPED) {
+        // Sanity check: do not start idleManager.waitUntil if we are already
+        // stopped. The purpose of waitUntil is to keep the background alive,
+        // but if it was already stopped we cannot revive. At worst, we could
+        // interfere with a future bgInstance.
+        Cu.reportError(
+          `Background keepalive with reason "${reason}" failed for ${extension.id}, state stopped.`
+        );
+        return;
+      }
       this.idleManager.waitUntil(promise, reason);
     };
 
@@ -814,6 +844,14 @@ class BackgroundBuilder {
       ignoreDevToolsAttached = false,
       disableResetIdleForTest = false, // Disable all reset idle checks for testing purpose.
     } = {}) => {
+      if (extension.backgroundState === BACKGROUND_STATE.STOPPED) {
+        Cu.reportError(
+          `Cannot terminate background of ${extension.id} because it was already stopped.`
+        );
+        // If we were to continue we'd wait until the next background startup
+        // and terminate immediately, which is undesired.
+        return;
+      }
       await bgStartupPromise;
       if (!this.extension || this.extension.hasShutdown) {
         // Extension was already shut down.
@@ -984,6 +1022,21 @@ class BackgroundBuilder {
  *  - suspended (or uninitialized)
  *  - waiting for a timeout (now() < sleepTime)
  *  - waiting on a promise (keepAlive.size > 0)
+ *
+ * When suspended, backgroundState is STOPPED and IdleManager does not have any
+ * pending timers or termination requests. The clearState() in setBgStateStopped
+ * ensures this.
+ *
+ * When backgroundState is in STARTING, waitUntil() may be called to register a
+ * termination blocker since the blocker may be relevant at the next state
+ * transition, to RUNNING.
+ *
+ * When backgroundState is in RUNNING, resetTimer() can be called for the first
+ * time to start the countdown to termination. resetTimer() may be called
+ * repeatedly to postpone termination.
+ *
+ * Eventually, if the timer will fire and call terminateBackground(), which
+ * initiates the transition from RUNNING to SUSPENDING to STOPPED.
  */
 var IdleManager = class IdleManager {
   sleepTime = 0;
@@ -1055,6 +1108,10 @@ var IdleManager = class IdleManager {
       if (Cu.now() < this.sleepTime) {
         this.createTimer();
       } else {
+        // As explained in the comment before the IdleManager class, the timer
+        // is only scheduled while in the RUNNING state. Whenever the background
+        // transitions to another state (SUSPENDING or STOPPED), the timer is
+        // canceled and we won't reach this point.
         this.extension.terminateBackground();
       }
     }

@@ -248,6 +248,7 @@ add_task(
       useAddonManager: "permanent",
       manifest: {
         background: { persistent: false },
+        permissions: ["storage"],
       },
       background() {
         browser.test.log("background script start");
@@ -262,6 +263,19 @@ add_task(
           await browser.runtime.getBrowserInfo();
           browser.test.sendMessage("page-done");
         },
+        "unrelated_page.html":
+          "<meta charset=utf-8><script src=unrelated_page.js></script>",
+        "unrelated_page.js"() {
+          browser.storage.session.onChanged.addListener(() => {
+            browser.test.sendMessage("unrelated_page-done");
+          });
+          browser.test.onMessage.addListener(msg => {
+            browser.test.assertEq("test_message", msg, "Expected message");
+            browser.test.sendMessage("test_message_ack");
+          });
+          browser.test.log("Triggering event unrelated to event page");
+          browser.storage.session.set({ x: 1 });
+        },
       },
     });
 
@@ -273,7 +287,18 @@ add_task(
     await extension.awaitMessage("ready");
     info("Background script ready.");
 
-    extension.extension.once("background-script-reset-idle", () => {
+    // TODO bug 1905504: Remove gotIdle/expectingIdle when we stop triggering
+    // idle resets from events in non-background context.
+    let gotIdle = false;
+    let expectingIdle = false;
+    // TODO bug 1905504: Change next "on" back to "once" and remove eslint
+    // suppression along with removing the gotIdle/expectingIdle variables.
+    // eslint-disable-next-line mozilla/balanced-listeners
+    extension.extension.on("background-script-reset-idle", () => {
+      if (expectingIdle) {
+        gotIdle = true;
+        return;
+      }
       ok(false, "background-script-reset-idle emitted from an extension page.");
     });
 
@@ -289,6 +314,20 @@ add_task(
     ok(true, "API call from extension page did not reset idle timeout.");
 
     await page.close();
+
+    expectingIdle = true;
+    const page2 = await ExtensionTestUtils.loadContentPage(
+      extension.extension.baseURI.resolve("unrelated_page.html")
+    );
+    await extension.awaitMessage("unrelated_page-done");
+    ok(gotIdle, "Got idle for event from unrelated page (due to bug 1905504)");
+
+    gotIdle = false;
+    extension.sendMessage("test_message");
+    await extension.awaitMessage("test_message_ack");
+    ok(gotIdle, "Got idle for triggering test.onMessage (due to bug 1905504)");
+
+    await page2.close();
     await extension.unload();
   }
 );
@@ -772,3 +811,65 @@ add_task(
     await extension.unload();
   }
 );
+
+// Verify that the background stays stopped and does not somehow reactivate any
+// background idleManager timers when already stopped.
+add_task(async function test_reset_idle_while_stopped_is_ignored() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_specific_settings: { gecko: { id: "ext@id" } },
+      manifest_version: 3,
+    },
+    background() {
+      browser.test.sendMessage("wakey");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("wakey");
+  await extension.terminateBackground();
+
+  let { messages } = await promiseConsoleOutput(() => {
+    extension.extension.emit("background-script-reset-idle", {
+      reason: "simulate reset",
+    });
+  });
+  AddonTestUtils.checkMessages(messages, {
+    expected: [
+      {
+        message:
+          /Background keepalive reset with reason "simulate reset" failed for ext@id, state stopped\./,
+      },
+    ],
+  });
+
+  let { messages: messages2 } = await promiseConsoleOutput(() => {
+    extension.extension.emit("background-script-idle-waituntil", {
+      promise: Promise.resolve(),
+      reason: "simulate waitUntil",
+    });
+  });
+  AddonTestUtils.checkMessages(messages2, {
+    expected: [
+      {
+        message:
+          /Background keepalive with reason "simulate waitUntil" failed for ext@id, state stopped\./,
+      },
+    ],
+  });
+
+  let { messages: messages3 } = await promiseConsoleOutput(async () => {
+    // Calling extension.extension.terminateBackground() to make sure that we
+    // are testing the internal method instead of the test-specific wrapper.
+    await extension.extension.terminateBackground();
+  });
+  AddonTestUtils.checkMessages(messages3, {
+    expected: [
+      {
+        message:
+          /Cannot terminate background of ext@id because it was already stopped\./,
+      },
+    ],
+  });
+
+  await extension.unload();
+});
