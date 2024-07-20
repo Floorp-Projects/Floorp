@@ -274,6 +274,8 @@ this.menusInternal = class extends ExtensionAPI {
         onClicked: new EventManager({
           context,
           name: "menus.onClicked",
+          // Parent event already resets idle if needed, no need to do it here.
+          resetIdleOnEvent: false,
           register: fire => {
             let listener = (info, tab) => {
               withHandlingUserInput(context.contentWindow, () =>
