@@ -367,6 +367,10 @@ CHILD_PROCESSES += [
 
     # Causes crashes in the content process with win32k lockdown, bug 1769309
     DllBlocklistEntry("hmpalert.dll", (3, 8, 8, 889)),
+
+    # Teruten security software DLLs cause crashes in the content process (bug 1904087)
+    DllBlocklistEntry("T_Prevent64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("TDCommonLib64.dll", ALL_VERSIONS),
 ]
 
 GPU_PROCESSES += [
