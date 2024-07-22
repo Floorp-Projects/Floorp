@@ -7179,34 +7179,96 @@ static bool IsWhitespaceFrame(const nsIFrame* aFrame) {
   return aFrame->IsTextFrame() && aFrame->GetContent()->TextIsOnlyWhitespace();
 }
 
+static bool IsSyntheticColGroup(const nsIFrame* aFrame) {
+  return aFrame->IsTableColGroupFrame() &&
+         static_cast<const nsTableColGroupFrame*>(aFrame)->IsSynthetic();
+}
+
 static bool IsOnlyNonWhitespaceFrameInList(const nsFrameList& aFrameList,
                                            const nsIFrame* aFrame) {
   for (const nsIFrame* f : aFrameList) {
     if (f == aFrame) {
       // If we have continuations, ignore them too.
       aFrame = aFrame->GetNextContinuation();
-    } else if (!IsWhitespaceFrame(f)) {
+    } else if (!IsWhitespaceFrame(f) && !IsSyntheticColGroup(f)) {
+      // Synthetic colgroups get created unconditionally, so let's not consider
+      // them as giving us a non-whitespace frame.
       return false;
     }
   }
   return true;
 }
 
+static bool AllChildListsAreEffectivelyEmpty(nsIFrame* aFrame) {
+  for (auto& [list, listID] : aFrame->ChildLists()) {
+    if (list.IsEmpty()) {
+      continue;
+    }
+    // We have some existing frame, usually that would be considered as making
+    // this list nonempty. But let's make an exception for the synthetic
+    // colgroup that tables have, since that gets created unconditionally.
+    if (listID == FrameChildListID::ColGroup) {
+      if (nsIFrame* f = list.OnlyChild(); f && IsSyntheticColGroup(f)) {
+        continue;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
+static bool SafeToInsertPseudoNeedingChildren(nsIFrame* aFrame) {
+  return AllChildListsAreEffectivelyEmpty(aFrame);
+}
+
+// Returns true if aFrame is the only meaningful child of aParent (which is
+// known to be a wrapper-pseudo). This lets us determine whether aParent can be
+// removed, as a result of aFrame being removed.
 static bool IsOnlyMeaningfulChildOfWrapperPseudo(nsIFrame* aFrame,
                                                  nsIFrame* aParent) {
   MOZ_ASSERT(IsWrapperPseudo(aParent));
-  if (IsOnlyNonWhitespaceFrameInList(aParent->PrincipalChildList(), aFrame)) {
-    return true;
-  }
-  if (aFrame->IsTableColGroupFrame()) {
-    return IsOnlyNonWhitespaceFrameInList(
-        aParent->GetChildList(FrameChildListID::ColGroup), aFrame);
+  // Handle a few special cases with tables and colgroups / captions.
+  if (aParent->IsTableFrame()) {
+    auto* wrapper = aParent->GetParent();
+    MOZ_ASSERT(wrapper);
+    MOZ_ASSERT(wrapper->IsTableWrapperFrame());
+    MOZ_ASSERT(!aFrame->IsTableCaption(),
+               "Caption parent should be the wrapper");
+    // We can't remove the table if there are any captions present (captions are
+    // never anonymous themselves), because table wrapper always relies on
+    // having a table frame.
+    if (!wrapper->GetChildList(FrameChildListID::Caption).IsEmpty()) {
+      return false;
+    }
+    // Similarly we can't remove the table if there's still a non-anonymous col
+    // group (unless aFrame _is_ the non-anonymous colgroup).
+    if (aFrame->IsTableColGroupFrame()) {
+      return aParent->PrincipalChildList().IsEmpty() &&
+             IsOnlyNonWhitespaceFrameInList(
+                 aParent->GetChildList(FrameChildListID::ColGroup), aFrame);
+    }
+    const auto& colGroupList =
+        aParent->GetChildList(FrameChildListID::ColGroup);
+    if (!colGroupList.IsEmpty()) {
+      nsIFrame* f = colGroupList.OnlyChild();
+      if (!f || !IsSyntheticColGroup(f)) {
+        return false;
+      }
+    }
   }
   if (aFrame->IsTableCaption()) {
+    MOZ_ASSERT(aParent->IsTableWrapperFrame());
+    MOZ_ASSERT(aParent->PrincipalChildList().OnlyChild());
+    MOZ_ASSERT(aParent->PrincipalChildList().OnlyChild()->IsTableFrame());
     return IsOnlyNonWhitespaceFrameInList(
-        aParent->GetChildList(FrameChildListID::Caption), aFrame);
+               aParent->GetChildList(FrameChildListID::Caption), aFrame) &&
+           // This checks for both colgroups and the principal list of the table
+           // frame.
+           AllChildListsAreEffectivelyEmpty(
+               aParent->PrincipalChildList().OnlyChild());
   }
-  return false;
+  MOZ_ASSERT(!aFrame->IsTableColGroupFrame());
+  return IsOnlyNonWhitespaceFrameInList(aParent->PrincipalChildList(), aFrame);
 }
 
 static bool CanRemoveWrapperPseudoForChildRemoval(nsIFrame* aFrame,
@@ -11175,25 +11237,6 @@ bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
   return false;
 
 #undef TRACE
-}
-
-static bool SafeToInsertPseudoNeedingChildren(nsIFrame* aFrame) {
-  for (auto& [list, listID] : aFrame->ChildLists()) {
-    if (list.IsEmpty()) {
-      continue;
-    }
-    // We have some existing frame, usually it would be unsafe to insert. But
-    // let's make an exception for the synthetic colgroup that tables have,
-    // since that gets created unconditionally.
-    if (listID == FrameChildListID::ColGroup) {
-      if (nsIFrame* f = list.OnlyChild();
-          f && static_cast<nsTableColGroupFrame*>(f)->IsSynthetic()) {
-        continue;
-      }
-    }
-    return false;
-  }
-  return true;
 }
 
 bool nsCSSFrameConstructor::WipeContainingBlock(
