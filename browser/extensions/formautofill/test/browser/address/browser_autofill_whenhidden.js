@@ -199,7 +199,7 @@ add_task(async function check_autofill_in_hidden_formfields() {
       );
       is(
         autofillState,
-        "",
+        testIndex == 1 ? "autofill" : "",
         "input autofill state after change " +
           "input " +
           testIndex +
