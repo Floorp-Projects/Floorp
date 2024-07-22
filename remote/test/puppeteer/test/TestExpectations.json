@@ -2614,8 +2614,8 @@
     "testIdPattern": "[network.spec] network Page.authenticate should allow disable authentication",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL"],
-    "comment": "The Puppeteer implementation does not expect 2 responseCompleted events (that AuthRequired triggered)"
+    "expectations": ["FAIL", "PASS"],
+    "comment": "Inconsistent results on early beta or earlier due to use_redirect_for_retries value (Bug 1909281)"
   },
   {
     "testIdPattern": "[network.spec] network Page.authenticate should fail if wrong credentials",
