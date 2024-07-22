@@ -229,7 +229,7 @@ function makeChan(url) {
 
   var internal = chan.QueryInterface(Ci.nsIHttpChannelInternal);
   internal.HTTPUpgrade(ALPN, upgradeListener);
-  internal.setConnectOnly();
+  internal.setConnectOnly(false);
 
   return chan;
 }

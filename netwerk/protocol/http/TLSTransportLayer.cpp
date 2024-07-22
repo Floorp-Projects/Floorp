@@ -360,6 +360,7 @@ NS_INTERFACE_MAP_BEGIN(TLSTransportLayer)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(TLSTransportLayer)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITransport)
 NS_INTERFACE_MAP_END
 
 TLSTransportLayer::TLSTransportLayer(nsISocketTransport* aTransport,

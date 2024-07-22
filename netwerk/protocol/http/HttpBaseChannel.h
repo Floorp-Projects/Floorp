@@ -273,7 +273,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetRemoteAddress(nsACString& addr) override;
   NS_IMETHOD GetRemotePort(int32_t* port) override;
   NS_IMETHOD GetOnlyConnect(bool* aOnlyConnect) override;
-  NS_IMETHOD SetConnectOnly() override;
+  NS_IMETHOD SetConnectOnly(bool aTlsTunnel) override;
   NS_IMETHOD GetAllowSpdy(bool* aAllowSpdy) override;
   NS_IMETHOD SetAllowSpdy(bool aAllowSpdy) override;
   NS_IMETHOD GetAllowHttp3(bool* aAllowHttp3) override;

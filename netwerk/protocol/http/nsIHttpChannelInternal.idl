@@ -211,8 +211,11 @@ interface nsIHttpChannelInternal : nsISupports
      *
      * Proxy resolve flags are set with RESOLVE_PREFER_HTTPS_PROXY and
      * RESOLVE_ALWAYS_TUNNEL.
+     *
+     * @param tlsTunnel
+     *        When true, always setup TLS tunnel
      */
-    [must_use] void setConnectOnly();
+    [must_use] void setConnectOnly(in boolean tlsTunnel);
 
     /**
      * True iff the channel is CONNECT only.

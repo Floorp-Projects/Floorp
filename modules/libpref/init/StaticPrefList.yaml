@@ -11350,6 +11350,11 @@
 #endif
   mirror: always
 
+- name: media.webrtc.tls_tunnel_for_all_proxy
+  type: bool
+  value: true
+  mirror: always
+
  # If true, then we require explicit approval from the embedding app (ex. Fenix)
  # on GeckoView to know if we can allow audible, inaudible media or both kinds
  # of media to autoplay.
