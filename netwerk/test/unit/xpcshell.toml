@@ -1289,6 +1289,11 @@ skip-if = [
 ["test_connection_coalescing.js"]
 
 ["test_default_uri_bypass.js"]
+
+["test_proxyconnect_https.js"]
+skip-if = [
+  "socketprocess_networking",
+]
 ["test_bug1883496.js"]
 skip-if = [
   "os != 'android'",
