@@ -7,6 +7,8 @@
 
 #include "TupleUtils.h"
 
+#include <array>
+
 namespace mozilla {
 
 // -

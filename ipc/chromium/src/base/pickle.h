@@ -128,6 +128,9 @@ class Pickle {
 
   template <class T>
   [[nodiscard]] bool ReadScalar(PickleIterator* iter, T* result) const {
+    static_assert(std::is_arithmetic<T>::value);
+    static_assert(!std::is_same<typename std::remove_cv<T>::type, bool>::value);
+
     DCHECK(iter);
 
     if (!IteratorHasRoomFor(*iter, sizeof(*result)))
@@ -168,6 +171,15 @@ class Pickle {
   // appended to the end of the Pickle's payload.  When reading values from a
   // Pickle, it is important to read them in the order in which they were added
   // to the Pickle.
+  bool WriteBytes(const void* data, uint32_t data_len);
+
+  template <class T>
+  bool WriteScalar(const T& value) {
+    static_assert(std::is_arithmetic<T>::value);
+    static_assert(!std::is_same<typename std::remove_cv<T>::type, bool>::value);
+    return WriteBytes(&value, sizeof(value));
+  }
+
   bool WriteBool(bool value);
   bool WriteInt16(int16_t value);
   bool WriteUInt16(uint16_t value);
@@ -184,7 +196,7 @@ class Pickle {
   bool WriteString(const std::string& value);
   bool WriteWString(const std::wstring& value);
   bool WriteData(const char* data, uint32_t length);
-  bool WriteBytes(const void* data, uint32_t data_len);
+
   // Takes ownership of data
   bool WriteBytesZeroCopy(void* data, uint32_t data_len, uint32_t capacity);
 

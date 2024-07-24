@@ -82,6 +82,11 @@ class MOZ_STACK_CLASS MessageWriter final {
 
 #undef FORWARD_WRITE
 
+  template <class T>
+  bool WriteScalar(const T& result) {
+    return message_.WriteScalar(result);
+  }
+
   bool WriteData(const char* data, uint32_t length) {
     return message_.WriteData(data, length);
   }
@@ -166,6 +171,11 @@ class MOZ_STACK_CLASS MessageReader final {
   FORWARD_READ(Length, int);
 
 #undef FORWARD_READ
+
+  template <class T>
+  [[nodiscard]] bool ReadScalar(T* const result) {
+    return message_.ReadScalar(&iter_, result);
+  }
 
   [[nodiscard]] bool ReadBytesInto(void* data, uint32_t length) {
     return message_.ReadBytesInto(&iter_, data, length);
@@ -721,6 +731,17 @@ struct ParamTraitsFundamental<bool> {
 };
 
 template <>
+struct ParamTraitsFundamental<char> {
+  typedef char param_type;
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteScalar(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadScalar(r);
+  }
+};
+
+template <>
 struct ParamTraitsFundamental<int> {
   typedef int param_type;
   static void Write(MessageWriter* writer, const param_type& p) {
@@ -790,6 +811,28 @@ struct ParamTraitsFundamental<double> {
 
 template <class P>
 struct ParamTraitsFixed : ParamTraitsFundamental<P> {};
+
+template <>
+struct ParamTraitsFixed<int8_t> {
+  typedef int8_t param_type;
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteScalar(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadScalar(r);
+  }
+};
+
+template <>
+struct ParamTraitsFixed<uint8_t> {
+  typedef uint8_t param_type;
+  static void Write(MessageWriter* writer, const param_type& p) {
+    writer->WriteScalar(p);
+  }
+  static bool Read(MessageReader* reader, param_type* r) {
+    return reader->ReadScalar(r);
+  }
+};
 
 template <>
 struct ParamTraitsFixed<int16_t> {

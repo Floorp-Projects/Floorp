@@ -1043,7 +1043,7 @@ void VRManager::PullState(
     const std::function<bool()>& aWaitCondition /* = nullptr */) {
   if (mShmem != nullptr) {
     mShmem->PullSystemState(mDisplayInfo.mDisplayState, mLastSensorState,
-                            mDisplayInfo.mControllerState,
+                            &mDisplayInfo.mControllerState,
                             mEnumerationCompleted, aWaitCondition);
   }
 }
