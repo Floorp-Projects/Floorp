@@ -347,7 +347,7 @@ void OSVRSession::InitializeDisplay() {
 
 bool OSVRSession::InitState(mozilla::gfx::VRSystemState& aSystemState) {
   VRDisplayState& state = aSystemState.displayState;
-  strncpy(state.displayName, "OSVR HMD", kVRDisplayNameMaxLen);
+  strncpy(state.displayName.data(), "OSVR HMD", kVRDisplayNameMaxLen);
   state.eightCC = GFX_VR_EIGHTCC('O', 'S', 'V', 'R', ' ', ' ', ' ', ' ');
   state.isConnected = true;
   state.isMounted = false;

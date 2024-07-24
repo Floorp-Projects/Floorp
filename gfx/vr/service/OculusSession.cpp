@@ -1010,7 +1010,7 @@ void OculusSession::StopRendering() {
 
 bool OculusSession::InitState(VRSystemState& aSystemState) {
   VRDisplayState& state = aSystemState.displayState;
-  strncpy(state.displayName, "Oculus VR HMD", kVRDisplayNameMaxLen);
+  strncpy(state.displayName.data(), "Oculus VR HMD", kVRDisplayNameMaxLen);
   state.isConnected = true;
   state.isMounted = false;
 
@@ -1147,9 +1147,9 @@ void OculusSession::UpdateEyeParameters(VRSystemState& aState) {
   aState.sensorState.CalcViewMatrices(headToEyeTransforms);
 
   Matrix4x4 matView[2];
-  memcpy(matView[0].components, aState.sensorState.leftViewMatrix,
+  memcpy(matView[0].components, aState.sensorState.leftViewMatrix.data(),
          sizeof(float) * 16);
-  memcpy(matView[1].components, aState.sensorState.rightViewMatrix,
+  memcpy(matView[1].components, aState.sensorState.rightViewMatrix.data(),
          sizeof(float) * 16);
 
   for (uint32_t eye = 0; eye < VRDisplayState::NumEyes; eye++) {
@@ -1329,8 +1329,9 @@ void OculusSession::EnumerateControllers(VRSystemState& aState,
       // Touch Controller detected
       if (controllerState.controllerName[0] == '\0') {
         // Controller has been just enumerated
-        strncpy(controllerState.controllerName, OculusControllerNames[handIdx],
-                kVRControllerNameMaxLen);
+        strncpy(controllerState.controllerName.data(),
+                OculusControllerNames[handIdx],
+                controllerState.controllerName.size());
         controllerState.hand = OculusControllerHand[handIdx];
         controllerState.targetRayMode = gfx::TargetRayMode::TrackedPointer;
         controllerState.numButtons = kNumOculusButtons;

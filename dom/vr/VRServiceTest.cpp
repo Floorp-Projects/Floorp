@@ -24,7 +24,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(VRMockDisplay,
 
 namespace {
 template <class T>
-bool ReadFloat32Array(T& aDestination, const Float32Array& aSource,
+bool ReadFloat32Array(T* aDestination, const Float32Array& aSource,
                       ErrorResult& aRv) {
   if (!aSource.CopyDataTo(aDestination)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
@@ -65,7 +65,7 @@ void VRMockDisplay::Create() {
   Clear();
   VRDisplayState& state = DisplayState();
 
-  strncpy(state.displayName, "Puppet HMD", kVRDisplayNameMaxLen);
+  strncpy(state.displayName.data(), "Puppet HMD", kVRDisplayNameMaxLen);
   state.eightCC = GFX_VR_EIGHTCC('P', 'u', 'p', 'p', 'e', 't', ' ', ' ');
   state.isConnected = true;
   state.isMounted = false;
@@ -271,7 +271,7 @@ void VRMockDisplay::SetStageSize(double aWidth, double aHeight) {
 
 void VRMockDisplay::SetSittingToStandingTransform(
     const Float32Array& aTransform, ErrorResult& aRv) {
-  Unused << ReadFloat32Array(DisplayState().sittingToStandingTransform,
+  Unused << ReadFloat32Array(&DisplayState().sittingToStandingTransform,
                              aTransform, aRv);
 }
 
@@ -289,41 +289,41 @@ void VRMockDisplay::SetPose(const Nullable<Float32Array>& aPosition,
   // puppet script execution
 
   if (!aOrientation.IsNull()) {
-    if (!ReadFloat32Array(sensorState.pose.orientation, aOrientation.Value(),
+    if (!ReadFloat32Array(&sensorState.pose.orientation, aOrientation.Value(),
                           aRv)) {
       return;
     }
     sensorState.flags |= VRDisplayCapabilityFlags::Cap_Orientation;
   }
   if (!aAngularVelocity.IsNull()) {
-    if (!ReadFloat32Array(sensorState.pose.angularVelocity,
+    if (!ReadFloat32Array(&sensorState.pose.angularVelocity,
                           aAngularVelocity.Value(), aRv)) {
       return;
     }
     sensorState.flags |= VRDisplayCapabilityFlags::Cap_AngularAcceleration;
   }
   if (!aAngularAcceleration.IsNull()) {
-    if (!ReadFloat32Array(sensorState.pose.angularAcceleration,
+    if (!ReadFloat32Array(&sensorState.pose.angularAcceleration,
                           aAngularAcceleration.Value(), aRv)) {
       return;
     }
     sensorState.flags |= VRDisplayCapabilityFlags::Cap_AngularAcceleration;
   }
   if (!aPosition.IsNull()) {
-    if (!ReadFloat32Array(sensorState.pose.position, aPosition.Value(), aRv)) {
+    if (!ReadFloat32Array(&sensorState.pose.position, aPosition.Value(), aRv)) {
       return;
     }
     sensorState.flags |= VRDisplayCapabilityFlags::Cap_Position;
   }
   if (!aLinearVelocity.IsNull()) {
-    if (!ReadFloat32Array(sensorState.pose.linearVelocity,
+    if (!ReadFloat32Array(&sensorState.pose.linearVelocity,
                           aLinearVelocity.Value(), aRv)) {
       return;
     }
     sensorState.flags |= VRDisplayCapabilityFlags::Cap_LinearAcceleration;
   }
   if (!aLinearAcceleration.IsNull()) {
-    if (!ReadFloat32Array(sensorState.pose.linearAcceleration,
+    if (!ReadFloat32Array(&sensorState.pose.linearAcceleration,
                           aLinearAcceleration.Value(), aRv)) {
       return;
     }
@@ -360,7 +360,8 @@ void VRMockController::Create() {
   // puppet.
   Clear();
   VRControllerState& state = ControllerState();
-  strncpy(state.controllerName, "Puppet Gamepad", kVRControllerNameMaxLen);
+  strncpy(state.controllerName.data(), "Puppet Gamepad",
+          kVRControllerNameMaxLen);
   state.hand = GamepadHand::Left;
   state.flags = GamepadCapabilityFlags::Cap_Position |
                 GamepadCapabilityFlags::Cap_Orientation;
@@ -488,42 +489,42 @@ void VRMockController::SetPose(
   controllerState.flags = GamepadCapabilityFlags::Cap_None;
 
   if (!aOrientation.IsNull()) {
-    if (!ReadFloat32Array(controllerState.pose.orientation,
+    if (!ReadFloat32Array(&controllerState.pose.orientation,
                           aOrientation.Value(), aRv)) {
       return;
     }
     controllerState.flags |= GamepadCapabilityFlags::Cap_Orientation;
   }
   if (!aAngularVelocity.IsNull()) {
-    if (!ReadFloat32Array(controllerState.pose.angularVelocity,
+    if (!ReadFloat32Array(&controllerState.pose.angularVelocity,
                           aAngularVelocity.Value(), aRv)) {
       return;
     }
     controllerState.flags |= GamepadCapabilityFlags::Cap_AngularAcceleration;
   }
   if (!aAngularAcceleration.IsNull()) {
-    if (!ReadFloat32Array(controllerState.pose.angularAcceleration,
+    if (!ReadFloat32Array(&controllerState.pose.angularAcceleration,
                           aAngularAcceleration.Value(), aRv)) {
       return;
     }
     controllerState.flags |= GamepadCapabilityFlags::Cap_AngularAcceleration;
   }
   if (!aPosition.IsNull()) {
-    if (!ReadFloat32Array(controllerState.pose.position, aPosition.Value(),
+    if (!ReadFloat32Array(&controllerState.pose.position, aPosition.Value(),
                           aRv)) {
       return;
     }
     controllerState.flags |= GamepadCapabilityFlags::Cap_Position;
   }
   if (!aLinearVelocity.IsNull()) {
-    if (!ReadFloat32Array(controllerState.pose.linearVelocity,
+    if (!ReadFloat32Array(&controllerState.pose.linearVelocity,
                           aLinearVelocity.Value(), aRv)) {
       return;
     }
     controllerState.flags |= GamepadCapabilityFlags::Cap_LinearAcceleration;
   }
   if (!aLinearAcceleration.IsNull()) {
-    if (!ReadFloat32Array(controllerState.pose.linearAcceleration,
+    if (!ReadFloat32Array(&controllerState.pose.linearAcceleration,
                           aLinearAcceleration.Value(), aRv)) {
       return;
     }

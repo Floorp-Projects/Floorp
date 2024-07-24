@@ -236,7 +236,7 @@ void VRPose::GetPosition(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval,
       bool(mVRState.flags &
            gfx::VRDisplayCapabilityFlags::Cap_PositionEmulated);
   SetFloat32Array(aCx, this, aRetval, mPosition,
-                  valid ? mVRState.pose.position : nullptr, 3, aRv);
+                  valid ? mVRState.pose.position.data() : nullptr, 3, aRv);
 }
 
 void VRPose::GetLinearVelocity(JSContext* aCx,
@@ -247,7 +247,8 @@ void VRPose::GetLinearVelocity(JSContext* aCx,
       bool(mVRState.flags &
            gfx::VRDisplayCapabilityFlags::Cap_PositionEmulated);
   SetFloat32Array(aCx, this, aRetval, mLinearVelocity,
-                  valid ? mVRState.pose.linearVelocity : nullptr, 3, aRv);
+                  valid ? mVRState.pose.linearVelocity.data() : nullptr, 3,
+                  aRv);
 }
 
 void VRPose::GetLinearAcceleration(JSContext* aCx,
@@ -256,7 +257,8 @@ void VRPose::GetLinearAcceleration(JSContext* aCx,
   const bool valid = bool(
       mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_LinearAcceleration);
   SetFloat32Array(aCx, this, aRetval, mLinearAcceleration,
-                  valid ? mVRState.pose.linearAcceleration : nullptr, 3, aRv);
+                  valid ? mVRState.pose.linearAcceleration.data() : nullptr, 3,
+                  aRv);
 }
 
 void VRPose::GetOrientation(JSContext* aCx,
@@ -265,7 +267,7 @@ void VRPose::GetOrientation(JSContext* aCx,
   const bool valid =
       bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation);
   SetFloat32Array(aCx, this, aRetval, mOrientation,
-                  valid ? mVRState.pose.orientation : nullptr, 4, aRv);
+                  valid ? mVRState.pose.orientation.data() : nullptr, 4, aRv);
 }
 
 void VRPose::GetAngularVelocity(JSContext* aCx,
@@ -274,7 +276,8 @@ void VRPose::GetAngularVelocity(JSContext* aCx,
   const bool valid =
       bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation);
   SetFloat32Array(aCx, this, aRetval, mAngularVelocity,
-                  valid ? mVRState.pose.angularVelocity : nullptr, 3, aRv);
+                  valid ? mVRState.pose.angularVelocity.data() : nullptr, 3,
+                  aRv);
 }
 
 void VRPose::GetAngularAcceleration(JSContext* aCx,
@@ -283,7 +286,8 @@ void VRPose::GetAngularAcceleration(JSContext* aCx,
   const bool valid = bool(
       mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_AngularAcceleration);
   SetFloat32Array(aCx, this, aRetval, mAngularAcceleration,
-                  valid ? mVRState.pose.angularAcceleration : nullptr, 3, aRv);
+                  valid ? mVRState.pose.angularAcceleration.data() : nullptr, 3,
+                  aRv);
 }
 
 void VRPose::Update(const gfx::VRHMDSensorState& aState) { mVRState = aState; }
@@ -759,9 +763,9 @@ void VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
       aInfo.mDisplayState.eyeFOV[gfx::VRDisplayState::Eye_Right];
   mRightProjection =
       rightFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
-  memcpy(mLeftView.components, aState.leftViewMatrix,
+  memcpy(mLeftView.components, aState.leftViewMatrix.data(),
          sizeof(aState.leftViewMatrix));
-  memcpy(mRightView.components, aState.rightViewMatrix,
+  memcpy(mRightView.components, aState.rightViewMatrix.data(),
          sizeof(aState.rightViewMatrix));
 }
 

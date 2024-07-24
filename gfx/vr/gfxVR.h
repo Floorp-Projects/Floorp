@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/dom/TiedFields.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnumBits.h"
@@ -47,18 +48,31 @@ struct VRDisplayInfo {
   uint32_t mDisplayID;
   uint32_t mPresentingGroups;
   uint32_t mGroupMask;
+  uint32_t _padding;
   uint64_t mFrameId;
   VRDisplayState mDisplayState;
-  VRControllerState mControllerState[kVRControllerMaxCount];
+  std::array<VRControllerState, kVRControllerMaxCount> mControllerState;
+  std::array<VRHMDSensorState, kVRMaxLatencyFrames> mLastSensorState;
 
-  VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
+  // -
+
+  auto MutTiedFields() {
+    return std::tie(mDisplayID, mPresentingGroups, mGroupMask, _padding,
+                    mFrameId, mDisplayState, mControllerState,
+                    mLastSensorState);
+  }
+
+  // -
+
   void Clear() { memset(this, 0, sizeof(VRDisplayInfo)); }
   const VRHMDSensorState& GetSensorState() const {
     return mLastSensorState[mFrameId % kVRMaxLatencyFrames];
   }
 
   uint32_t GetDisplayID() const { return mDisplayID; }
-  const char* GetDisplayName() const { return mDisplayState.displayName; }
+  const char* GetDisplayName() const {
+    return mDisplayState.displayName.data();
+  }
   VRDisplayCapabilityFlags GetCapabilities() const {
     return mDisplayState.capabilityFlags;
   }
@@ -77,20 +91,7 @@ struct VRDisplayInfo {
   uint64_t GetFrameId() const { return mFrameId; }
 
   bool operator==(const VRDisplayInfo& other) const {
-    for (size_t i = 0; i < kVRMaxLatencyFrames; i++) {
-      if (mLastSensorState[i] != other.mLastSensorState[i]) {
-        return false;
-      }
-    }
-    // Note that mDisplayState and mControllerState are asserted to be POD
-    // types, so memcmp is safe
-    return mDisplayID == other.mDisplayID &&
-           memcmp(&mDisplayState, &other.mDisplayState,
-                  sizeof(VRDisplayState)) == 0 &&
-           memcmp(mControllerState, other.mControllerState,
-                  sizeof(VRControllerState) * kVRControllerMaxCount) == 0 &&
-           mPresentingGroups == other.mPresentingGroups &&
-           mGroupMask == other.mGroupMask && mFrameId == other.mFrameId;
+    return TiedFields(*this) == TiedFields(other);
   }
 
   bool operator!=(const VRDisplayInfo& other) const {
@@ -115,7 +116,7 @@ struct VRSubmitFrameResultInfo {
 struct VRControllerInfo {
   uint32_t GetControllerID() const { return mControllerID; }
   const char* GetControllerName() const {
-    return mControllerState.controllerName;
+    return mControllerState.controllerName.data();
   }
   dom::GamepadMappingType GetMappingType() const { return mMappingType; }
   uint32_t GetDisplayID() const { return mDisplayID; }
