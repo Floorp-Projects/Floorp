@@ -76,6 +76,12 @@ nsresult BrowserBridgeParent::InitWithProcess(
       aContentParent, aTabId, *aParentBrowser, browsingContext, aChromeFlags);
   browserParent->SetBrowserBridgeParent(this);
 
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  if (!cpm) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  cpm->RegisterRemoteFrame(browserParent);
+
   // Open a remote endpoint for our PBrowser actor.
   ManagedEndpoint<PBrowserChild> childEp =
       aContentParent->OpenPBrowserEndpoint(browserParent);
@@ -83,12 +89,6 @@ nsresult BrowserBridgeParent::InitWithProcess(
     MOZ_ASSERT(false, "Browser Open Endpoint Failed");
     return NS_ERROR_FAILURE;
   }
-
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  if (!cpm) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  cpm->RegisterRemoteFrame(browserParent);
 
   RefPtr<WindowGlobalParent> windowParent =
       WindowGlobalParent::CreateDisconnected(aWindowInit);
