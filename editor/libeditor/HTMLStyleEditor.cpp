@@ -2218,15 +2218,17 @@ HTMLEditor::SplitAncestorStyledInlineElementsAt(
               element->GetParsedAttr(aStyle.mAttribute);
           if (attrValue) {
             if (aStyle.mAttribute == nsGkAtoms::size) {
-              if (nsContentUtils::ParseLegacyFontSize(
+              if (attrValue->Type() == nsAttrValue::eInteger &&
+                  nsContentUtils::ParseLegacyFontSize(
                       aStyle.AsInlineStyleAndValue().mAttributeValue) ==
-                  attrValue->GetIntegerValue()) {
+                      attrValue->GetIntegerValue()) {
                 continue;
               }
             } else if (aStyle.mAttribute == nsGkAtoms::color) {
               nsAttrValue newValue;
               nscolor oldColor, newColor;
-              if (attrValue->GetColorValue(oldColor) &&
+              if (attrValue->Type() == nsAttrValue::eColor &&
+                  attrValue->GetColorValue(oldColor) &&
                   newValue.ParseColor(
                       aStyle.AsInlineStyleAndValue().mAttributeValue) &&
                   newValue.GetColorValue(newColor) && oldColor == newColor) {

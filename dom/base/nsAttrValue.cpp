@@ -1828,10 +1828,10 @@ bool nsAttrValue::ParsePositiveIntValue(const nsAString& aString) {
   return true;
 }
 
-void nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString) {
+bool nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString) {
   mozilla::StringBuffer* buf = GetStringBuffer(aString).take();
   if (!buf) {
-    return;
+    return false;
   }
 
   MiscContainer* cont = EnsureEmptyMiscContainer();
@@ -1840,6 +1840,7 @@ void nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString) {
 
   // Save the literal string we were passed for round-tripping.
   cont->SetStringBitsMainThread(reinterpret_cast<uintptr_t>(buf) | eStringBase);
+  return true;
 }
 
 bool nsAttrValue::ParseColor(const nsAString& aString) {
@@ -1861,17 +1862,14 @@ bool nsAttrValue::ParseColor(const nsAString& aString) {
   if (colorStr.First() == '#') {
     nsDependentString withoutHash(colorStr.get() + 1, colorStr.Length() - 1);
     if (NS_HexToRGBA(withoutHash, nsHexColorType::NoAlpha, &color)) {
-      SetColorValue(color, aString);
-      return true;
+      return SetColorValue(color, aString);
     }
   } else if (colorStr.LowerCaseEqualsLiteral("transparent")) {
-    SetColorValue(NS_RGBA(0, 0, 0, 0), aString);
-    return true;
+    return SetColorValue(NS_RGBA(0, 0, 0, 0), aString);
   } else {
     const NS_ConvertUTF16toUTF8 colorNameU8(colorStr);
     if (Servo_ColorNameToRgb(&colorNameU8, &color)) {
-      SetColorValue(color, aString);
-      return true;
+      return SetColorValue(color, aString);
     }
   }
 
@@ -1882,8 +1880,7 @@ bool nsAttrValue::ParseColor(const nsAString& aString) {
 
   // Use NS_LooseHexToRGB as a fallback if nothing above worked.
   if (NS_LooseHexToRGB(colorStr, &color)) {
-    SetColorValue(color, aString);
-    return true;
+    return SetColorValue(color, aString);
   }
 
   return false;
