@@ -15033,6 +15033,15 @@
   value: 3
   mirror: always
 
+# The CRLite filter channel to which the user is subscribed.
+# - "all" => filters that contain all revocations,
+# - "specified" => filters that contain revocations with specified reason codes,
+# - "priority" => filters that contain high priority revocations.
+- name: security.pki.crlite_channel
+  type: String
+  value: "specified"
+  mirror: never
+
 - name: security.tls.version.min
   type: RelaxedAtomicUint32
   value: 3
