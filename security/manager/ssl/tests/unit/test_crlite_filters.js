@@ -101,7 +101,7 @@ function getFilenameForFilter(filter) {
  * @param {boolean} clear Whether or not to clear the local DB first. Defaults
  *                        to true.
  */
-async function syncAndDownload(filters, clear = true) {
+async function syncAndDownload(filters, clear = true, channel = "specified") {
   const localDB = await CRLiteFiltersClient.client.db;
   if (clear) {
     await localDB.clear();
@@ -130,6 +130,8 @@ async function syncAndDownload(filters, clear = true) {
       coverage: filter.type == "full" ? filter.coverage : undefined,
       enrolledIssuers:
         filter.type == "full" ? filter.enrolledIssuers : undefined,
+      channel: `${channel}`,
+      filter_expression: `'${channel}' == 'security.pki.crlite_channel'|preferenceValue('none')`,
     };
 
     await localDB.create(record);
@@ -168,6 +170,21 @@ add_task(async function test_crlite_no_filters() {
   Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
 
   let result = await syncAndDownload([]);
+  equal(
+    result,
+    "unavailable",
+    "CRLite filter download should have run, but nothing was available"
+  );
+});
+
+add_task(async function test_crlite_no_filters_in_channel() {
+  Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
+
+  let result = await syncAndDownload(
+    [{ timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" }],
+    true,
+    "other"
+  );
   equal(
     result,
     "unavailable",

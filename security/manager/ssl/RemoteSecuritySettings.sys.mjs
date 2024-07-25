@@ -538,6 +538,12 @@ class CRLiteFilters {
     }
   }
 
+  async getRecords() {
+    let records = await this.client.db.list();
+    records = await this.client._filterEntries(records);
+    return records;
+  }
+
   async onObservePollEnd() {
     if (!Services.prefs.getBoolPref(CRLITE_FILTERS_ENABLED_PREF, true)) {
       lazy.log.debug("CRLite filter downloading is disabled");
@@ -553,7 +559,7 @@ class CRLiteFilters {
       Ci.nsICertStorage.DATA_TYPE_CRLITE_FILTER_FULL
     );
     if (!hasPriorFilter) {
-      let current = await this.client.db.list();
+      let current = await this.getRecords();
       let toReset = current.filter(
         record => !record.incremental && record.loaded_into_cert_storage
       );
@@ -567,7 +573,7 @@ class CRLiteFilters {
       Ci.nsICertStorage.DATA_TYPE_CRLITE_FILTER_INCREMENTAL
     );
     if (!hasPriorStash) {
-      let current = await this.client.db.list();
+      let current = await this.getRecords();
       let toReset = current.filter(
         record => record.incremental && record.loaded_into_cert_storage
       );
@@ -578,7 +584,7 @@ class CRLiteFilters {
       );
     }
 
-    let current = await this.client.db.list();
+    let current = await this.getRecords();
     let fullFilters = current.filter(filter => !filter.incremental);
     if (fullFilters.length < 1) {
       lazy.log.debug("no full CRLite filters to download?");
