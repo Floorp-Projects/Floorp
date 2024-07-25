@@ -55,7 +55,6 @@ EXPORTS.mozilla.widget += [
     "InProcessWinCompositorWidget.h",
     "JumpListBuilder.h",
     "nsWindowLoggedMessages.h",
-    "OSKInputPaneManager.h",
     "WinCompositorWidget.h",
     "WinCompositorWindowThread.h",
     "WindowsEMF.h",
