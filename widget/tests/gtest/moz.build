@@ -13,7 +13,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += [
         "MockWinWidget.cpp",
         "TestWinHeaderOnlyUtils.cpp",
-        "TestWinInputPane.cpp",
         "TestWinMessageLoggingUtils.cpp",
         "TestWinWindowOcclusionTracker.cpp",
         "TestWinWindowOcclusionTrackerInteractive.cpp",

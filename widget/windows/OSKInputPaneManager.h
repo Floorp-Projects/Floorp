@@ -7,8 +7,6 @@
 #ifndef mozilla_widget_OSKInputPaneManager_h
 #define mozilla_widget_OSKInputPaneManager_h
 
-#include "mozilla/Maybe.h"
-
 #include <windows.h>
 
 namespace mozilla {
@@ -18,7 +16,6 @@ class OSKInputPaneManager final {
  public:
   static void ShowOnScreenKeyboard(HWND aHwnd);
   static void DismissOnScreenKeyboard(HWND aHwnd);
-  static Maybe<bool> HasInputPaneEventHandlerService(HWND aHwnd);
 };
 
 }  // namespace widget
