@@ -325,15 +325,15 @@
 
 <!-- filename which is changed within the file picker -->
 <a id="mod0" href="http://localhost:8000/save_filename.sjs?type=png&filename=teal.png"
-     data-pickedfilename='cyan.png' data-filename='cyan.png'>
+     data-pickedfilename='cyan.png' data-filename='cyan.png'>Link1</a>
 
 <!-- filename which is changed to an invalid filename within the file picker -->
 <a id="mod1" href="http://localhost:8000/save_filename.sjs?type=png&filename=orange.png"
-     data-pickedfilename='"peach".png' data-filename='_peach_.png'>
+     data-pickedfilename='"peach".png' data-filename='_peach_.png'>Link2</a>
 
 <!-- an invalid filename which is changed to another invalid filename within the file picker -->
 <a id="mod2" href="http://localhost:8000/save_filename.sjs?type=png&filename=%maroon%34.png"
-     data-pickedfilename='"violet".png' data-filename="_violet_.png">
+     data-pickedfilename='"violet".png' data-filename="_violet_.png">Link3</a>
 
 </span>
 
@@ -349,7 +349,7 @@
   <!-- The content-disposition overrides the download attribute. -->
   <a id="download4" href="http://localhost:8000/save_filename.sjs?type=png&filename=fakename.jpeg" download="topaz.jpeg" data-filename="fakename.png">Link</a>
   <a id="download5" href="http://localhost:8000/save_filename.sjs?type=png"
-     download="amber?.png" data-filename="amber .png">Link</a>
+     download="amber?.png" data-filename="amber_.png">Link</a>
   <a id="download6" href="http://localhost:8000/save_filename.sjs?type=jpeg"
      download="jade.:*jpeg" data-filename="jade.jpg"
      data-filename-platformlinux="jade.jpeg">Link</a>>
@@ -358,7 +358,10 @@
      data-filename="thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisavery.png">Link</a>
   <a id="download8" href="http://localhost:8000/base"
       download="&Tab;&NewLine;&nbsp;&#11&#x180e;&#x180e;&#12   spa   ced.png &Tab;&NewLine;&nbsp;&#x180e;&#x180e;&#11&#12 "
-      data-filename="spa ced.png">Link</a>
+      data-filename="__ _&#x180e;&#x180e;_ spa ced.png__&#x180e;&#x180e;__">Link</a>
+  <a id="download9" href="http://localhost:8000/base"
+      download="  &nbsp;&#x180e;&#x180e;extraspace.png&#x180e;&#x180e;&nbsp;  "
+      data-filename="extraspace.png">Link</a>
 </span>
 
 <span id="links">
