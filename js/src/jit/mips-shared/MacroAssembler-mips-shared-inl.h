@@ -22,6 +22,10 @@ void MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest) {
   moveToFloat32(src, dest);
 }
 
+void MacroAssembler::move8ZeroExtend(Register src, Register dest) {
+  as_andi(dest, src, 0xff);
+}
+
 void MacroAssembler::move8SignExtend(Register src, Register dest) {
   ma_seb(dest, src);
 }
