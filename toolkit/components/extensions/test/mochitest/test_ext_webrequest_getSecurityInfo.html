@@ -94,6 +94,7 @@ add_task(async function test_getSecurityInfo() {
 
 add_task(async function test_getSecurityInfo_without_permission() {
   const extension = ExtensionTestUtils.loadExtension({
+    temporarilyInstalled: true, // Needed for granted_host_permissions
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
