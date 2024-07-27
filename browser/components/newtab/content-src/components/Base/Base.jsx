@@ -39,7 +39,7 @@ function debounce(func, wait) {
       return;
     }
 
-    let wakeUp = () => {
+    const wakeUp = () => {
       timer = null;
     };
 
@@ -371,9 +371,9 @@ export class BaseContent extends React.PureComponent {
       return [];
     }
 
-    const r = parseInt(input.substr(1, 2), 16);
-    const g = parseInt(input.substr(3, 2), 16);
-    const b = parseInt(input.substr(5, 2), 16);
+    const r = Number.parseInt(input.substr(1, 2), 16);
+    const g = Number.parseInt(input.substr(3, 2), 16);
+    const b = Number.parseInt(input.substr(5, 2), 16);
 
     return [r, g, b];
   }
@@ -398,7 +398,7 @@ export class BaseContent extends React.PureComponent {
 
     const isDiscoveryStream =
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
-    let filteredSections = props.Sections.filter(
+    const filteredSections = props.Sections.filter(
       section => section.id !== "topstories"
     );
 
