@@ -729,16 +729,18 @@ var gHomePane = {
     document
     .getElementById("chooseImagesFolder")
     .addEventListener("command", (async ()=>{
-      const [title] = await document.l10n.formatValues([
+      let [title] = await document.l10n.formatValues([
         { id: "newtab-background-folder-choose" },
       ]);
-      const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
-      fp.init(window, title, Ci.nsIFilePicker.modeGetFolder);
+      fp.init(window.browsingContext, title, Ci.nsIFilePicker.modeGetFolder);
       fp.appendFilters(Ci.nsIFilePicker.filterAll);
+
+
       fp.displayDirectory = FileUtils.File(PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"),"a").slice( 0, -1 ))
-      const result = await new Promise(resolve => fp.open(resolve));
-      if (result !== Ci.nsIFilePicker.returnOK) {
+      let result = await new Promise(resolve => fp.open(resolve));
+      if (result != Ci.nsIFilePicker.returnOK) {
         return;
       }
       Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder",fp.file.path)
@@ -746,26 +748,24 @@ var gHomePane = {
 
     document
     .getElementById("chooseImagePath")
-    .addEventListener("click", (async ()=>{
-      const title = await document.l10n.formatValue(
-        "applications-select-helper"
-      );
-      const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    .addEventListener("command", (async ()=>{
+      let [title] = await document.l10n.formatValues([
+        { id: "newtab-background-image-choose" },
+      ]);
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
       fp.init(window.browsingContext, title, Ci.nsIFilePicker.filterImages);
       fp.appendFilters(Ci.nsIFilePicker.filterAll);
 
       const imgPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path","")
-
-      if (imgPath) {
-        fp.displayDirectory = FileUtils.File(PathUtils.parent(imgPath))
+      if(imgPath){
+        fp.displayDirectory =FileUtils.File(PathUtils.parent(imgPath))
       }
-
-      const result = await new Promise(resolve => fp.open(resolve));
-      if (result !== Ci.nsIFilePicker.returnOK) {
+      let result = await new Promise(resolve => fp.open(resolve));
+      if (result != Ci.nsIFilePicker.returnOK) {
         return;
       }
-      Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.image.path", fp.file.path)
+      Services.prefs.setStringPref("browser.newtabpage.activity-stream.floorp.background.image.path",fp.file.path)
     }))
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
 
@@ -779,14 +779,14 @@ var gHomePane = {
   },
 
   async syncToNewTabBackground() {
-    const menulist = document.getElementById("newTabbackground");
-    const newtabEnabledPref = Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type",0);
-    const newValue = menulist.value;
+    let menulist = document.getElementById("newTabbackground");
+      let newtabEnabledPref = Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type",0);
+      let newValue = menulist.value;
       // Only set this if the pref has changed, otherwise the pref change will trigger other listeners to repeat.
       if (newtabEnabledPref !== newValue) {
         Services.prefs.setIntPref("browser.newtabpage.activity-stream.floorp.background.type", newValue);
-        for(const elem of document.querySelectorAll("[displayBackgroundType]")) {
-          if(elem.getAttribute("displayBackgroundType") === Services.prefs.getIntPref(
+        for(const elem of document.querySelectorAll(`[displayBackgroundType]`)){
+          if(elem.getAttribute(`displayBackgroundType`) == Services.prefs.getIntPref(
             "browser.newtabpage.activity-stream.floorp.background.type",
             0
           )){
@@ -799,20 +799,20 @@ var gHomePane = {
   },
 
   async syncFromNewTabBackground() {
-    const menulist = document.getElementById("newTabbackground");
-    const newtabEnabledPref = Services.prefs.getIntPref(
+    let menulist = document.getElementById("newTabbackground");
+      let newtabEnabledPref = Services.prefs.getIntPref(
         "browser.newtabpage.activity-stream.floorp.background.type",
         0
       );
       if (newtabEnabledPref !== menulist.value) {
         menulist.value = newtabEnabledPref;
-        for (const elem of document.querySelectorAll("[displayBackgroundType]")){
-          if (elem.getAttribute("displayBackgroundType") === Services.prefs.getIntPref(
+        for(const elem of document.querySelectorAll(`[displayBackgroundType]`)){
+          if(elem.getAttribute(`displayBackgroundType`) == Services.prefs.getIntPref(
             "browser.newtabpage.activity-stream.floorp.background.type",
             0
           )){
             elem.style.display = ""
-          } else {
+          }else{
             elem.style.display = "none"
           }
         }
@@ -820,14 +820,14 @@ var gHomePane = {
   },
 
   imagesFolderInputSet(){
-    const folderPath = PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"),"a").slice( 0, -1 )
+    let folderPath = PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"),"a").slice( 0, -1 )
     document.querySelector("#pictureFolder").value = folderPath
     document.querySelector("#pictureFolder").style.backgroundImage = `url(moz-icon://${Services.io.newFileURI(FileUtils.File(folderPath)).asciiSpec})`
     document.querySelector("#pictureExtensions").value = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions","")
   },
 
   imagePathInputSet(){
-    const folderPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages","wallpaper.png")
+    let folderPath = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.image.path") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages","wallpaper.png")
     document.querySelector("#picturePath").value = folderPath
     document.querySelector("#picturePath").style.backgroundImage = `url(moz-icon://${Services.io.newFileURI(FileUtils.File(folderPath)).asciiSpec})`
   }

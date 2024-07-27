@@ -15,6 +15,8 @@ import { Sections } from "content-src/components/Sections/Sections";
 import { Weather } from "content-src/components/Weather/Weather";
 import { WallpaperFeatureHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/WallpaperFeatureHighlight";
 
+import { Background } from "content-src/components/Background/Background";
+
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const WALLPAPER_HIGHLIGHT_DISMISSED_PREF =
@@ -113,6 +115,7 @@ export class BaseContent extends React.PureComponent {
     this.closeCustomizationMenu = this.closeCustomizationMenu.bind(this);
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
+    this.setPref = this.setPref.bind(this);
     this.setPref = this.setPref.bind(this);
     this.shouldShowWallpapersHighlight =
       this.shouldShowWallpapersHighlight.bind(this);
@@ -382,6 +385,10 @@ export class BaseContent extends React.PureComponent {
     return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
   }
 
+  getImageSend(path) {
+    this.props.dispatch(ac.GetImageSend(path));
+  }
+
   render() {
     const { props } = this;
     const { App } = props;
@@ -450,8 +457,39 @@ export class BaseContent extends React.PureComponent {
       this.updateWallpaper();
     }
 
+    let Background_ClassName = "";
+    switch (prefs["floorp.background.type"]) {
+      case 1:
+        Background_ClassName = "random_image";
+        break;
+      case 2:
+        Background_ClassName = "gradation";
+        break;
+      case 3:
+        Background_ClassName = "selected_folder";
+        break;
+      case 4:
+        Background_ClassName = "selected_image";
+        break;
+      default:
+        Background_ClassName = "not_background";
+        break;
+    }
+
     return (
-      <div>
+      <div
+        className={
+          prefs["floorp.newtab.backdrop.blur.disable"]
+            ? ""
+            : "floorp-backdrop-blur-enable"
+        }
+      >
+        {this.getImageSend.bind(this)}
+        <Background
+          className={Background_ClassName}
+          getImg = {this.getImageSend.bind(this)}
+          pref={prefs}
+        />
         {/* Floating menu for customize menu toggle */}
         <menu className="personalizeButtonWrapper">
           <CustomizeMenu
@@ -517,6 +555,42 @@ export class BaseContent extends React.PureComponent {
             )}
           </aside>
         </div>
+        <div id="floorp">
+          <a
+            className="releasenote"
+            href="https://support.ablaze.one"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Support
+          </a>
+          <br />
+          <br />
+          <a
+            className="releasenote"
+            href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Release Note
+          </a>
+        </div>
+        {/* TODO: move to _Base.scss */}
+        <a
+          href="https://unsplash.com/"
+          style={{
+            position: "fixed",
+            bottom: "1em",
+            left: "1em",
+            fontSize: "16px",
+            color: "#ffffff",
+          }}
+          target="_blank"
+          id="unsplash"
+          rel="noreferrer"
+        >
+          Unsplash
+        </a>
       </div>
     );
   }
