@@ -744,7 +744,15 @@ nsBrowserContentHandler.prototype = {
 
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url"
-            );
+            )
+
+            // Floorp Injections
+            if (Services.locale.requestedLocale.startsWith("ja")) {
+              overridePage = Services.urlFormatter.formatURLPref(
+                "floorp.startup.homepage_override_url.ja"
+              );
+            }
+
             let update = lazy.UpdateManager.updateInstalledAtStartup;
 
             /** If the override URL is provided by an experiment, is a valid
