@@ -3549,6 +3549,7 @@ var XULBrowserWindow = {
       aFlags,
       aIsSimulated
     );
+    // End Floorp Injections
 
     UpdateBackForwardCommands(gBrowser.webNavigation);
 
