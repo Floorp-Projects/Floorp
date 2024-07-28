@@ -4,10 +4,6 @@
     "include": ["vite/client"]
   },
   "compilerOptions": {
-    "paths": {
-      "@types-gecko/*": ["../../@types/gecko/*"],
-      "@core/*": ["./core/*"]
-    },
     "useDefineForClassFields": true,
     "lib": ["es2022", "DOM"],
     "module": "ESNext",
@@ -23,7 +19,7 @@
     "resolvePackageJsonExports": false,
     "isolatedModules": true,
     "jsxImportSource": "solid-js",
-    "types": ["vite/client"]
+    "types": ["vite/client", "unplugin-icons/types/solid"]
   },
   "exclude": ["_dist"]
 }

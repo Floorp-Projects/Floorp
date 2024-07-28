@@ -79,7 +79,7 @@ export class CustomShortcutKey {
           .length === 0
       ) {
         if (checkIsSystemShortcut(ev)) {
-          console.warn(`This Event is registered in System: ${ev}`);
+          //console.warn(`This Event is registered in System: ${ev}`);
           return;
         }
 

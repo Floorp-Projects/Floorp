@@ -5,10 +5,12 @@
   "dependencies": {
     "@nora/shared": "workspace:*",
     "@nora/skin": "workspace:*",
-    "solid-js": "^1.8.18"
+    "@nora/solid-xul": "workspace:*",
+    "solid-js": "^1.8.18",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "vite": "5.3.3",
+    "@types/uuid": "^10.0.0",
     "vite-plugin-solid": "^2.10.2",
     "vite-tsconfig-paths": "^4.3.2"
   },
