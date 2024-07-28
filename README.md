@@ -11,6 +11,10 @@
 Noraneko Browser is currently testbed of modern JS environment for Floorp.
 
 Star me!
+
+## Noraneko Docs available!
+Please visit [noraneko.pages.dev](noraneko.pages.dev)!
+
 ## How to Start Development
 
 1. Run `pnpm install`
@@ -35,10 +39,27 @@ Thank you [@CutterKnife](https://github.com/CutterKnife) for the logo!
 
 ### Projects that are inspired by or used in Noraneko
 
-[Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/)
-[Ablaze Floorp](https://github.com/Floorp-Projects/Floorp)
-[Fushra Pulse Browser](https://github.com/pulse-browser/browser)
-[Lepton Designs](https://github.com/black7375/Firefox-UI-Fix)
+- Mozilla Firefox
+
+  License:  \
+  [Homepage: mozilla.org](https://www.mozilla.org/en-US/firefox/new/)
+
+- Ablaze Floorp
+
+  License: Mozilla Public License 2.0 \
+  [Homepage: floorp.app](https://floorp.app) \
+  [GitHub: Floorp-Projects/Floorp](https://github.com/Floorp-Projects/Floorp)
+
+- Fushra Pulse
+
+  License: Mozilla Public License 2.0 \
+  [Homepage: pulsebrowser.app](https://pulsebrowser.app/) \
+  [GitHub: pulse-browser/browser](https://github.com/pulse-browser/browser)
+
+- Lepton Designs (Firefox-UI-Fix)
+
+  License: Mozilla Public License 2.0 \
+  [GitHub: black7375/Firefox-UI-Fix](https://github.com/black7375/Firefox-UI-Fix)
 
 Thank you!
 
