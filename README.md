@@ -13,7 +13,7 @@ Noraneko Browser is currently testbed of modern JS environment for Floorp.
 Star me!
 
 ## Noraneko Docs available!
-Please visit [noraneko.pages.dev](noraneko.pages.dev)!
+Please visit [noraneko.pages.dev](https://noraneko.pages.dev)!
 
 ## How to Start Development
 
