@@ -1,0 +1,25 @@
+{
+  "typeAcquisition": {
+    "enable": true,
+    "include": ["vite/client"]
+  },
+  "compilerOptions": {
+    "useDefineForClassFields": true,
+    "lib": ["es2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "jsx": "preserve",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "resolvePackageJsonExports": false,
+    "isolatedModules": true,
+    "jsxImportSource": "solid-js",
+    "types": ["vite/client", "unplugin-icons/types/solid"]
+  },
+  "exclude": ["_dist"]
+}

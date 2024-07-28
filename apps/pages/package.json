@@ -1,0 +1,12 @@
+{
+  "name": "@nora/pages",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "solid-styled-components": "^0.28.5"
+  },
+  "devDependencies": {
+    "@iconify-json/mdi": "^1.1.67",
+    "unplugin-icons": "^0.19.0"
+  }
+}

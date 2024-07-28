@@ -1,0 +1,44 @@
+/*
+
+.checkboxRoot {
+  display: flex;
+  position: relative;
+  align-items: center;
+  & > .checkbox {
+    opacity: 0;
+    height: 16px;
+    width: 16px;
+  }
+} */
+
+.checkboxRoot {
+  display: flex;
+  > .checkbox {
+    opacity: 0;
+  }
+}
+
+.switch {
+
+  background: black;
+  padding: 5px;
+  border-radius: 2em;
+  width: 1.8em;
+  height: 0.6em;
+
+  > .switch-dot {
+    width: 0.6em;
+    height: 0.6em;
+    background: white;
+    border-radius: 100%;
+    transition: all linear 0.1s;
+    margin-left: 0;
+  }
+
+  .checkbox:not(:checked) + & {
+    background-color: rgb(0, 166, 255);
+    > .switch-dot {
+      margin-left: 70%;
+    }
+  }
+}
