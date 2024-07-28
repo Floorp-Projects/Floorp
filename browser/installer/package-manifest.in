@@ -241,6 +241,11 @@
 #endif
 #endif
 
+; [Floorp Files]
+@RESPATH@/chrome/floorp.manifest
+@RESPATH@/chrome/floorp/*
+@RESPATH@/browser/@PREF_DIR@/000-floorp.js
+
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
 @RESPATH@/browser/@PREF_DIR@/firefox.js
