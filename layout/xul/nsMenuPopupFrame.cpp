@@ -2138,9 +2138,10 @@ void nsMenuPopupFrame::MoveToAttributePosition() {
   mContent->AsElement()->GetAttr(nsGkAtoms::left, left);
   mContent->AsElement()->GetAttr(nsGkAtoms::top, top);
   nsresult err1, err2;
-  mozilla::CSSIntPoint pos(left.ToInteger(&err1), top.ToInteger(&err2));
-
-  if (NS_SUCCEEDED(err1) && NS_SUCCEEDED(err2)) MoveTo(pos, false);
+  const CSSIntPoint pos(left.ToInteger(&err1), top.ToInteger(&err2));
+  if (NS_SUCCEEDED(err1) && NS_SUCCEEDED(err2)) {
+    MoveTo(pos, false);
+  }
 
   PresShell()->FrameNeedsReflow(
       this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
