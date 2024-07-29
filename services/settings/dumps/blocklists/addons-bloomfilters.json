@@ -3,6 +3,19 @@
     {
       "stash": {
         "blocked": [
+          "binancewallet@bnbwallet.com:2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1721952006907,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1722018905389,
+      "id": "eb1291f8-229f-49ff-bcf1-d23eb51745a8",
+      "last_modified": 1722018960262
+    },
+    {
+      "stash": {
+        "blocked": [
           "{f210eb24-0747-4537-bd98-e4b35073aa6d}:2.5",
           "allianziowebext@allianz.it:1.0.60090.1",
           "{f210eb24-0747-4537-bd98-e4b35073aa6d}:2.6",
@@ -1151,5 +1164,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1719923758587
+  "timestamp": 1722018960262
 }
