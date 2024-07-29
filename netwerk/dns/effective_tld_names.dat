@@ -12405,11 +12405,6 @@ cloudaccess.host
 freesite.host
 cloudaccess.net
 
-// cloudControl : https://www.cloudcontrol.com/
-// Submitted by Tobias Wilken <tw@cloudcontrol.com>
-cloudcontrolapp.com
-cloudcontrolled.com
-
 // Cloudera, Inc. : https://www.cloudera.com/
 // Submitted by Kedarnath Waikar <security@cloudera.com>
 *.cloudera.site
@@ -12544,10 +12539,6 @@ on.crisp.email
 // Cryptonomic : https://cryptonomic.net/
 // Submitted by Andrew Cady <public-suffix-list@cryptonomic.net>
 *.cryptonomic.net
-
-// Cupcake : https://cupcake.io/
-// Submitted by Jonathan Rudenberg <jonathan@cupcake.io>
-cupcake.is
 
 // Curv UG : https://curv-labs.de/
 // Submitted by Marvin Wiesner <Marvin@curv-labs.de>
@@ -13356,10 +13347,6 @@ fly.dev
 shw.io
 edgeapp.net
 
-// Flynn : https://flynn.io
-// Submitted by Jonathan Rudenberg <jonathan@flynn.io>
-flynnhosting.net
-
 // Forgerock : https://www.forgerock.com
 // Submitted by Roderick Parr <roderick.parr@forgerock.com>
 forgeblocks.com
@@ -13945,7 +13932,7 @@ iopsys.se
 ipifony.net
 
 // is-a.dev : https://www.is-a.dev
-// Submitted by William Harrison <admin@maintainers.is-a.dev>
+// Submitted by William Harrison <admin@m.is-a.dev>
 is-a.dev
 
 // ir.md : https://nic.ir.md
