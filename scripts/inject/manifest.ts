@@ -6,6 +6,8 @@ export async function injectManifest(binPath: string) {
     await fs.readFile(`${binPath}/chrome.manifest`)
   ).toString();
 
+  console.log(manifest_chrome);
+
   if (!manifest_chrome.includes("manifest noraneko/noraneko.manifest")) {
     await fs.writeFile(
       `${binPath}/chrome.manifest`,
@@ -20,10 +22,7 @@ export async function injectManifest(binPath: string) {
   const isWin = process.platform === "win32";
 
   await fs.symlink(
-    path.relative(
-      `${binPath}/noraneko`,
-      path.resolve(import.meta.dirname, "./apps/main/_dist"),
-    ),
+    path.relative(`${binPath}`, "./apps/main/_dist"),
     `${binPath}/noraneko`,
     isWin ? "junction" : undefined,
   );

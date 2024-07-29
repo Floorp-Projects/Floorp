@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build": "cargo build --release --target wasm32-wasip1 && wasm-tools component new ../../target/wasm32-wasip1/release/nora_inject_lib.wasm --adapt wasi_snapshot_preview1.reactor.wasm -o ../../target/nora-inject.wasm && jco transpile ../../target/nora-inject.wasm -o ../../scripts/inject/wasm"
+  }
+}

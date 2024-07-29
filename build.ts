@@ -3,11 +3,10 @@ import * as path from "node:path";
 import chokidar from "chokidar";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
-import { injectJavascript } from "./scripts/inject/javascript.js";
+import { applyMixin } from "./scripts/inject/mixin-loader.js";
 import { $, type ResultPromise, type Result } from "execa";
 import decompress from "decompress";
 import puppeteer, { type Browser } from "puppeteer-core";
-import { stdout } from "node:process";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -130,7 +129,7 @@ async function run() {
       await injectXHTML("_dist/bin");
       await injectXHTMLDev("_dist/bin");
     })(),
-    injectJavascript("_dist/bin"),
+    applyMixin(),
   ]);
 
   //await injectUserJS(`noraneko${VERSION}`);
@@ -221,22 +220,23 @@ async function run() {
   });
 }
 
-async function build() {
-  const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
-  await Promise.all([
-    $({ cwd: r("./apps/main") })`pnpm vite build`,
+// async function build() {
+//   const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
+//   await Promise.all([
+//     $({ cwd: r("./apps/main") })`pnpm vite build`,
 
-    injectManifest(binPath),
-    (async () => {
-      await injectXHTML(binPath);
-    })(),
-    injectJavascript(binPath),
-  ]);
-}
+//     injectManifest(binPath),
+//     (async () => {
+//       await injectXHTML(binPath);
+//     })(),
+//     applyMixin(binPath),
+//   ]);
+// }
 
 // run
 if (process.argv[2] && process.argv[2] === "--run") {
   run();
-} else if (process.argv[2] && process.argv[2] === "--production-build") {
-  build();
 }
+//  else if (process.argv[2] && process.argv[2] === "--production-build") {
+//   build();
+// }
