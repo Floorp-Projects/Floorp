@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1722038702700,
+      "status": "current",
+      "version": "127",
+      "browserid": "edge",
+      "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
+      "last_modified": 1722232673611
+    },
+    {
       "name": "Chrome",
       "schema": 1721865903425,
       "status": "current",
@@ -218,30 +227,12 @@
     },
     {
       "name": "Edge",
-      "schema": 1718956116149,
-      "status": "beta",
-      "version": "127",
-      "browserid": "edge",
-      "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
-      "last_modified": 1719410204831
-    },
-    {
-      "name": "Edge",
       "schema": 1719360303190,
       "status": "nightly",
       "version": "128",
       "browserid": "edge",
       "id": "edad0482-a612-4019-a601-53dc349514b8",
       "last_modified": 1719410204828
-    },
-    {
-      "name": "Edge",
-      "schema": 1718755502762,
-      "status": "current",
-      "version": "126",
-      "browserid": "edge",
-      "id": "c8bf4918-03b7-4be2-bf75-4d6139dbd7c9",
-      "last_modified": 1718777113307
     },
     {
       "name": "Safari",
@@ -307,5 +298,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1721884805468
+  "timestamp": 1722232673615
 }
