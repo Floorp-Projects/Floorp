@@ -27,7 +27,7 @@ type Commands = z.infer<typeof zCommands>;
 
 export const commands: Commands = {
   "gecko-open-new-tab": {
-    command: () => window.BrowserCommands.openTab(),
+    command: () => window.BrowserOpenTab(),
     type: "tab-action",
   },
   "gecko-close-tab": {

@@ -180,7 +180,6 @@ function isNoraInjectPlace(expression: swc.Expression) {
   return (
     expression.type === "CallExpression" &&
     expression.callee.type === "PrivateName" &&
-    expression.callee.id &&
     expression.callee.id.value === "noraInject"
   );
 }
@@ -447,9 +446,9 @@ async function injectToJs(
   );
 }
 
-export async function injectJavascript(binPath: string) {
+export async function injectJavascript() {
   await injectToJs(
-    `${binPath}/browser/chrome/browser/content/browser/preferences/preferences.js`,
+    "_dist/bin/browser/chrome/browser/content/browser/preferences/preferences.js",
     `function init_all(){
     Services.telemetry.setEventRecordingEnabled('aboutpreferences', true);
     #noraInject();
@@ -457,7 +456,7 @@ export async function injectJavascript(binPath: string) {
     `register_module("paneCsk", {init(){}});`,
   );
   await injectToJs(
-    `${binPath}/browser/modules/sessionstore/TabState.sys.mjs`,
+    "_dist/bin/browser/modules/sessionstore/TabState.sys.mjs",
     `var TabStateInternal = {
       _collectBaseTabData(tab, options) {
         let browser = tab.linkedBrowser;
@@ -468,7 +467,7 @@ export async function injectJavascript(binPath: string) {
   );
 
   await injectToJs(
-    `${binPath}/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js`,
+    "_dist/bin/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js",
     `{
       window._gBrowser = {
         createTabsForSessionRestore(restoreTabsLazily, selectTab, tabDataList) {
@@ -486,7 +485,7 @@ export async function injectJavascript(binPath: string) {
   );
 
   await injectToJs(
-    `${binPath}/chrome/remote/content/webdriver-bidi/WebDriverBidiConnection.sys.mjs`,
+    "_dist/bin/chrome/remote/content/webdriver-bidi/WebDriverBidiConnection.sys.mjs",
     `export class WebDriverBiDiConnection extends WebSocketConnection {
       async onPacket(packet) {
         try {

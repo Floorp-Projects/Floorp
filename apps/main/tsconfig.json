@@ -1,12 +1,10 @@
 {
   "typeAcquisition": {
-    "enable": true,
-    "include": ["vite/client"]
+    "enable": true
   },
   "compilerOptions": {
     "paths": {
-      "@types-gecko/*": ["../../@types/gecko/*"],
-      "@core/*": ["./core/*"]
+      "@nora/solid-xul": ["./solid-xul"]
     },
     "useDefineForClassFields": true,
     "lib": ["es2022", "DOM"],
@@ -22,8 +20,7 @@
     "allowImportingTsExtensions": true,
     "resolvePackageJsonExports": false,
     "isolatedModules": true,
-    "jsxImportSource": "solid-js",
-    "types": ["vite/client"]
+    "jsxImportSource": "solid-js"
   },
   "exclude": ["_dist"]
 }

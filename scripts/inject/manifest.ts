@@ -1,30 +1,26 @@
 import * as fs from "node:fs/promises";
-import path from "node:path";
 
-export async function injectManifest(binPath: string) {
+export async function injectManifest() {
   const manifest_chrome = (
-    await fs.readFile(`${binPath}/chrome.manifest`)
+    await fs.readFile("_dist/bin/chrome.manifest")
   ).toString();
 
   if (!manifest_chrome.includes("manifest noraneko/noraneko.manifest")) {
     await fs.writeFile(
-      `${binPath}/chrome.manifest`,
+      "_dist/bin/chrome.manifest",
       `${manifest_chrome}\nmanifest noraneko/noraneko.manifest`,
     );
   }
 
   try {
-    await fs.access(`${binPath}/noraneko`);
-    await fs.rm(`${binPath}/noraneko`);
+    await fs.access("_dist/bin/noraneko");
+    await fs.rm("_dist/bin/noraneko");
   } catch {}
   const isWin = process.platform === "win32";
 
   await fs.symlink(
-    path.relative(
-      `${binPath}/noraneko`,
-      path.resolve(import.meta.dirname, "./apps/main/_dist"),
-    ),
-    `${binPath}/noraneko`,
+    "../../apps/main/_dist",
+    "_dist/bin/noraneko",
     isWin ? "junction" : undefined,
   );
 }
