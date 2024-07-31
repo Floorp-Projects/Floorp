@@ -5,9 +5,9 @@
 use alloc::vec;
 use alloc::vec::Vec;
 use core::hash::{Hash, Hasher};
-use t1ha::T1haHasher;
+use twox_hash::XxHash64;
 
-// Const seed to be used with [`T1haHasher::with_seed`].
+// Const seed to be used with [`XxHash64::with_seed`].
 const SEED: u64 = 0xaabbccdd;
 
 /// Split the 64bit `hash` into (g, f0, f1).
@@ -27,9 +27,9 @@ pub const fn split_hash64(hash: u64, m: usize) -> (usize, u32, u32) {
     )
 }
 
-/// Compute hash using [`T1haHasher`].
+/// Compute hash using [`XxHash64`].
 pub fn compute_hash<K: Hash + ?Sized>(key: &K) -> u64 {
-    let mut hasher = T1haHasher::with_seed(SEED);
+    let mut hasher = XxHash64::with_seed(SEED);
     key.hash(&mut hasher);
     hasher.finish()
 }

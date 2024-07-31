@@ -6,7 +6,7 @@
 //!
 //! See the documentation of [`ZeroFrom`] for more details.
 
-// https://github.com/unicode-org/icu4x/blob/main/docs/process/boilerplate.md#library-annotations
+// https://github.com/unicode-org/icu4x/blob/main/documents/process/boilerplate.md#library-annotations
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(
     not(test),

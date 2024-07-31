@@ -193,7 +193,7 @@
 //! `zeromap` benches are named by convention, e.g. `zeromap/deserialize/small`, `zeromap/lookup/large`. The type
 //! is appended for baseline comparisons, e.g. `zeromap/lookup/small/hashmap`.
 
-// https://github.com/unicode-org/icu4x/blob/main/docs/process/boilerplate.md#library-annotations
+// https://github.com/unicode-org/icu4x/blob/main/documents/process/boilerplate.md#library-annotations
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![cfg_attr(
     not(test),
@@ -549,10 +549,10 @@ mod tests {
         check_size_of!(120 | 96, ZeroMap2d<str, str, str>);
         check_size_of!(32 | 24, vecs::FlexZeroVec);
 
-        check_size_of!(32, Option<ZeroVec<u8>>);
-        check_size_of!(32, Option<VarZeroVec<str>>);
-        check_size_of!(64 | 56, Option<ZeroMap<str, str>>);
-        check_size_of!(120 | 104, Option<ZeroMap2d<str, str, str>>);
-        check_size_of!(32, Option<vecs::FlexZeroVec>);
+        check_size_of!(24, Option<ZeroVec<u8>>);
+        check_size_of!(32 | 24, Option<VarZeroVec<str>>);
+        check_size_of!(64 | 56 | 48, Option<ZeroMap<str, str>>);
+        check_size_of!(120 | 104 | 96, Option<ZeroMap2d<str, str, str>>);
+        check_size_of!(32 | 24, Option<vecs::FlexZeroVec>);
     }
 }

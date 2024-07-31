@@ -38,11 +38,12 @@ fn test_baked_vec() {
         const: crate::VarZeroVec::new(),
         zerovec
     );
+
     test_bake!(
         VarZeroVec<str>,
         const: unsafe {
             crate::VarZeroVec::from_bytes_unchecked(
-                b"\x02\x01\0\x16\0M\x01\\\x11"
+                b"\x02\0\0\0\0\0\x05\0helloworld"
             )
         },
         zerovec
@@ -60,7 +61,7 @@ fn test_baked_slice() {
         &VarZeroSlice<str>,
         const: unsafe {
             crate::VarZeroSlice::from_bytes_unchecked(
-                b"\x02\x01\0\x16\0M\x01\\\x11"
+                b"\x02\0\0\0\0\0\x05\0helloworld"
             )
         },
         zerovec

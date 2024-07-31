@@ -414,6 +414,14 @@ mod test {
     }
 
     #[test]
+    fn test_serde_rmp() {
+        let map = make_map();
+        let rmp_buf = rmp_serde::to_vec(&map).expect("serialize");
+        let new_map: ZeroMap2d<u32, u16, str> = rmp_serde::from_slice(&rmp_buf).unwrap();
+        assert_eq!(map, new_map);
+    }
+
+    #[test]
     fn test_sample_bincode() {
         // This is the map from the main docs page for ZeroMap2d
         let mut map: ZeroMap2d<u16, u16, str> = ZeroMap2d::new();

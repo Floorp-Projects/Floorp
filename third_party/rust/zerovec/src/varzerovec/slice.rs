@@ -38,8 +38,7 @@ use core::ops::Range;
 /// The following code constructs the conceptual zero-copy equivalent of `Vec<Vec<Vec<str>>>`
 ///
 /// ```rust
-/// use zerovec::ule::*;
-/// use zerovec::{VarZeroSlice, VarZeroVec, ZeroVec};
+/// use zerovec::{VarZeroSlice, VarZeroVec};
 /// let strings_1: Vec<&str> = vec!["foo", "bar", "baz"];
 /// let strings_2: Vec<&str> = vec!["twelve", "seventeen", "forty two"];
 /// let strings_3: Vec<&str> = vec!["我", "喜歡", "烏龍茶"];
@@ -136,7 +135,6 @@ impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
     /// # Example
     ///
     /// ```rust
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -155,7 +153,6 @@ impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
     /// # Examples
     ///
     /// ```
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -174,7 +171,6 @@ impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
     /// # Example
     ///
     /// ```rust
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -197,7 +193,6 @@ impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
     /// # Example
     ///
     /// ```rust
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -225,7 +220,6 @@ impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
     /// # Example
     ///
     /// ```rust
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -259,7 +253,6 @@ impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
     /// # Example
     ///
     /// ```rust
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -319,7 +312,6 @@ where
     /// # Example
     ///
     /// ```
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -347,7 +339,6 @@ where
     /// # Example
     ///
     /// ```
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -395,7 +386,6 @@ where
     /// # Example
     ///
     /// ```
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -423,7 +413,6 @@ where
     /// # Example
     ///
     /// ```
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
