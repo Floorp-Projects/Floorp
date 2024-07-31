@@ -88,7 +88,8 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
                      nsIPrincipal* aRedirectPrincipal,
                      mozilla::dom::BrowsingContext* aBrowsingContext,
                      bool aWasTriggeredExternally,
-                     bool aHasValidUserGestureActivation) override;
+                     bool aHasValidUserGestureActivation,
+                     bool aNewWindowTarget) override;
   NS_IMETHOD SetProtocolHandlerDefaults(nsIHandlerInfo* aHandlerInfo,
                                         bool aOSHandlerExists) override;
 

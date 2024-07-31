@@ -121,6 +121,10 @@ interface nsIExternalProtocolService : nsISupports
    *        Whether the document that triggered the load had user activation.
    *        Used for sandbox checks.
    *
+   * @param aNewWindowTarget
+   *        Whether the load is the first load being triggered in a new window
+   *        (e.g. due to a call to window.open or a target=_blank link click).
+   *
    * @note  Embedders that do not expose the http protocol should not currently
    *        use web-based protocol handlers, as handoff won't work correctly
    *        (bug 394479).
@@ -130,7 +134,8 @@ interface nsIExternalProtocolService : nsISupports
                [optional] in nsIPrincipal aRedirectPrincipal,
                [optional] in BrowsingContext aBrowsingContext,
                [optional] in boolean aWasTriggeredExternally,
-               [optional] in boolean aHasValidUserGestureActivation);
+               [optional] in boolean aHasValidUserGestureActivation,
+               [optional] in boolean aNewWindowTarget);
 
   /**
    * Gets a human-readable description for the application responsible for
