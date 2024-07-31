@@ -13,7 +13,7 @@ use core::ops::Range;
 const USIZE_WIDTH: usize = mem::size_of::<usize>();
 
 /// A zero-copy "slice" that efficiently represents `[usize]`.
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct FlexZeroSlice {
     // Hard Invariant: 1 <= width <= USIZE_WIDTH (which is target_pointer_width)
     // Soft Invariant: width == the width of the largest element

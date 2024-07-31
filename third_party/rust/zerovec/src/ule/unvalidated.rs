@@ -221,7 +221,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use zerovec::ule::{RawBytesULE, UnvalidatedChar, ULE};
+/// use zerovec::ule::UnvalidatedChar;
 /// use zerovec::{ZeroSlice, ZeroVec};
 ///
 /// // data known to be little-endian three-byte chunks of valid Unicode scalar values

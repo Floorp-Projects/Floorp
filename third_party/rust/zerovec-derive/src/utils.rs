@@ -239,7 +239,7 @@ pub fn extract_field_attributes(attrs: &mut Vec<Attribute>) -> Result<Option<Ide
         ));
     }
 
-    Ok(varule.get(0).cloned())
+    Ok(varule.first().cloned())
 }
 
 #[derive(Default, Copy, Clone)]
@@ -265,7 +265,7 @@ pub fn extract_attributes_common(
 
     let name = if is_var { "make_varule" } else { "make_ule" };
 
-    if let Some(attr) = zerovec_attrs.get(0) {
+    if let Some(attr) = zerovec_attrs.first() {
         return Err(Error::new(
             attr.span(),
             format!("Found unknown or duplicate attribute for #[{name}]"),

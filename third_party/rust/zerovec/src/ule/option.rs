@@ -28,7 +28,7 @@ use core::mem::{self, MaybeUninit};
 // Invariants:
 // The MaybeUninit is zeroed when None (bool = false),
 // and is valid when Some (bool = true)
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct OptionULE<U>(bool, MaybeUninit<U>);
 
 impl<U: Copy> OptionULE<U> {
@@ -62,11 +62,11 @@ impl<U: Copy + core::fmt::Debug> core::fmt::Debug for OptionULE<U> {
 
 // Safety (based on the safety checklist on the ULE trait):
 //  1. OptionULE does not include any uninitialized or padding bytes.
-//     (achieved by `#[repr(packed)]` on a struct containing only ULE fields,
+//     (achieved by `#[repr(C, packed)]` on a struct containing only ULE fields,
 //     in the context of this impl. The MaybeUninit is valid for all byte sequences, and we only generate
 ///    zeroed or valid-T byte sequences to fill it)
 //  2. OptionULE is aligned to 1 byte.
-//     (achieved by `#[repr(packed)]` on a struct containing only ULE fields, in the context of this impl)
+//     (achieved by `#[repr(C, packed)]` on a struct containing only ULE fields, in the context of this impl)
 //  3. The impl of validate_byte_slice() returns an error if any byte is not valid.
 //  4. The impl of validate_byte_slice() returns an error if there are extra bytes.
 //  5. The other ULE methods use the default impl.
@@ -141,7 +141,7 @@ impl<U: Copy + Eq> Eq for OptionULE<U> {}
 /// ```
 // The slice field is empty when None (bool = false),
 // and is a valid T when Some (bool = true)
-#[repr(packed)]
+#[repr(C, packed)]
 pub struct OptionVarULE<U: VarULE + ?Sized>(PhantomData<U>, bool, [u8]);
 
 impl<U: VarULE + ?Sized> OptionVarULE<U> {
@@ -166,8 +166,8 @@ impl<U: VarULE + ?Sized + core::fmt::Debug> core::fmt::Debug for OptionVarULE<U>
 
 // Safety (based on the safety checklist on the VarULE trait):
 //  1. OptionVarULE<T> does not include any uninitialized or padding bytes
-//     (achieved by being repr(packed) on ULE types)
-//  2. OptionVarULE<T> is aligned to 1 byte (achieved by being repr(packed) on ULE types)
+//     (achieved by being repr(C, packed) on ULE types)
+//  2. OptionVarULE<T> is aligned to 1 byte (achieved by being repr(C, packed) on ULE types)
 //  3. The impl of `validate_byte_slice()` returns an error if any byte is not valid.
 //  4. The impl of `validate_byte_slice()` returns an error if the slice cannot be used in its entirety
 //  5. The impl of `from_byte_slice_unchecked()` returns a reference to the same data.

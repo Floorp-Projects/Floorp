@@ -199,6 +199,19 @@ mod test {
     }
 
     #[test]
+    fn test_serde_rmp() {
+        let zerovec_orig = ZeroVec::from_slice_or_alloc(TEST_SLICE);
+        let rmp_buf = rmp_serde::to_vec(&zerovec_orig).expect("serialize");
+        // ZeroVec should deserialize from Bincode to ZeroVec but not Vec
+        bincode::deserialize::<Vec<u32>>(&rmp_buf).expect_err("deserialize from buffer to Vec");
+        let zerovec_new: ZeroVec<u32> =
+            rmp_serde::from_slice(&rmp_buf).expect("deserialize from buffer to ZeroVec");
+        assert_eq!(zerovec_orig, zerovec_new);
+
+        assert!(!zerovec_new.is_owned());
+    }
+
+    #[test]
     fn test_chars_valid() {
         // 1-byte, 2-byte, 3-byte, and 4-byte character in UTF-8 (not as relevant in UTF-32)
         let zerovec_orig = ZeroVec::alloc_from_slice(&['w', 'ω', '文', '𑄃']);

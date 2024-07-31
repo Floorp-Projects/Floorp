@@ -56,7 +56,6 @@ use super::*;
 /// # Example
 ///
 /// ```rust
-/// # use std::str::Utf8Error;
 /// # use zerovec::ule::ZeroVecError;
 /// use zerovec::VarZeroVec;
 ///
@@ -88,12 +87,9 @@ use super::*;
 /// Here's another example with `ZeroSlice<T>` (similar to `[T]`):
 ///
 /// ```rust
-/// # use std::str::Utf8Error;
 /// # use zerovec::ule::ZeroVecError;
-/// use zerovec::ule::*;
 /// use zerovec::VarZeroVec;
 /// use zerovec::ZeroSlice;
-/// use zerovec::ZeroVec;
 ///
 /// // The structured list correspond to the list of integers.
 /// let numbers: &[&[u32]] = &[
@@ -259,7 +255,6 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVec<'a, T, F> {
     /// # Example
     ///
     /// ```rust
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -284,7 +279,7 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVec<'a, T, F> {
     ///
     /// `bytes` need to be an output from [`VarZeroSlice::as_bytes()`].
     pub const unsafe fn from_bytes_unchecked(bytes: &'a [u8]) -> Self {
-        Self::Borrowed(core::mem::transmute(bytes))
+        Self::Borrowed(core::mem::transmute::<&[u8], &VarZeroSlice<T, F>>(bytes))
     }
 
     /// Convert this into a mutable vector of the owned `T` type, cloning if necessary.
@@ -293,7 +288,6 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVec<'a, T, F> {
     /// # Example
     ///
     /// ```rust,ignore
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -331,7 +325,6 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVec<'a, T, F> {
     /// # Example
     ///
     /// ```
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///
@@ -369,7 +362,6 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVec<'a, T, F> {
     /// # Example
     ///
     /// ```rust
-    /// # use std::str::Utf8Error;
     /// # use zerovec::ule::ZeroVecError;
     /// # use zerovec::VarZeroVec;
     ///

@@ -10,10 +10,6 @@ use std::ops::RangeInclusive;
 
 use zerovec::VarZeroVec;
 
-#[repr(align(8))]
-#[derive(Default)]
-struct AlignedBuffer(Vec<u8>);
-
 /// Generates an array of random alphanumeric strings.
 ///
 /// - length = range of lengths for the strings (chosen uniformly at random)

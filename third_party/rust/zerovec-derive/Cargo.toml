@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "zerovec-derive"
-version = "0.10.1"
+version = "0.10.2"
 authors = ["Manish Goregaokar <manishsmail@gmail.com>"]
 description = "Custom derive for the zerovec crate"
 readme = "README.md"
@@ -29,7 +29,7 @@ categories = [
     "no-std",
     "data-structures",
 ]
-license-file = "LICENSE"
+license = "Unicode-3.0"
 repository = "https://github.com/unicode-org/icu4x"
 
 [package.metadata.workspaces]
@@ -37,28 +37,25 @@ independent = true
 
 [lib]
 path = "src/lib.rs"
-proc_macro = true
+proc-macro = true
 
 [dependencies.proc-macro2]
-version = "1.0.27"
+version = "1.0.61"
 
 [dependencies.quote]
-version = "1.0.9"
+version = "1.0.28"
 
 [dependencies.syn]
-version = "2"
-features = [
-    "derive",
-    "parsing",
-    "extra-traits",
-]
+version = "2.0.21"
+features = ["extra-traits"]
 
 [dev-dependencies.bincode]
-version = "1.3"
+version = "1.3.1"
 
 [dev-dependencies.serde]
-version = "1.0"
+version = "1.0.110"
 features = ["derive"]
+default-features = false
 
 [dev-dependencies.serde_json]
-version = "1.0"
+version = "1.0.45"

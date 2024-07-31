@@ -61,7 +61,7 @@ use core::{mem, slice};
 /// 6. Acknowledge the following note about the equality invariant.
 ///
 /// If the ULE type is a struct only containing other ULE types (or other types which satisfy invariants 1 and 2,
-/// like `[u8; N]`), invariants 1 and 2 can be achieved via `#[repr(packed)]` or `#[repr(transparent)]`.
+/// like `[u8; N]`), invariants 1 and 2 can be achieved via `#[repr(C, packed)]` or `#[repr(transparent)]`.
 ///
 /// # Equality invariant
 ///
@@ -271,7 +271,7 @@ where
 /// 7. Acknowledge the following note about the equality invariant.
 ///
 /// If the ULE type is a struct only containing other ULE/VarULE types (or other types which satisfy invariants 1 and 2,
-/// like `[u8; N]`), invariants 1 and 2 can be achieved via `#[repr(packed)]` or `#[repr(transparent)]`.
+/// like `[u8; N]`), invariants 1 and 2 can be achieved via `#[repr(C, packed)]` or `#[repr(transparent)]`.
 ///
 /// # Equality invariant
 ///
