@@ -1072,6 +1072,28 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1815733",
+    platform: "desktop",
+    domain: "Office 365 Outlook locations",
+    bug: "1815733",
+    contentScripts: {
+      matches: [
+        "*://outlook.live.com/*",
+        "*://outlook.office.com/*",
+        "*://outlook.office365.com/*",
+        "*://outlook.office365.us/*",
+        "*://*.outlook.cn/*",
+        "*://*.outlook.com/*",
+      ],
+      js: [
+        {
+          file: "injections/js/bug1815733-outlook365-clipboard-read-noop.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
