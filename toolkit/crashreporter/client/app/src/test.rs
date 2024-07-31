@@ -1090,6 +1090,19 @@ fn response_stop_sending_reports() {
         .check_exists("data_dir/EndOfLife100.0");
 }
 
+#[test]
+fn rename_failure_uses_copy() {
+    let mut test = GuiTest::new();
+    test.mock.set(mock::MockHook::new("rename_fail"), true);
+    test.run(|interact| {
+        interact.element("quit", |_style, b: &model::Button| b.click.fire(&()));
+    });
+    test.assert_files()
+        .saved_settings(Settings::default())
+        .submitted()
+        .pending();
+}
+
 /// A real temporary directory in the host filesystem.
 ///
 /// The directory is guaranteed to be unique to the test suite process (in case of crash, it can be
