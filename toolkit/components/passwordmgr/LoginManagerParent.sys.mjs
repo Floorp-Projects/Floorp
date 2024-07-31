@@ -1547,7 +1547,10 @@ export class LoginManagerParent extends JSWindowActorParent {
           data.telemetry.flowId,
           data.telemetry.scenarioName
         );
-        this.#offerRelayIntegration(this.origin);
+        const username = await this.#offerRelayIntegration(this.origin);
+        if (username) {
+          this.sendAsyncMessage("PasswordManager:FillRelayUsername", username);
+        }
         break;
       }
 
