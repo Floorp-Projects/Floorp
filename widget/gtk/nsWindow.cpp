@@ -3102,6 +3102,18 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
             return t;
           }
         }
+#if defined(MOZ_X11)
+        // If it's X11 and there's a startup token, use GDK_CURRENT_TIME, so
+        // gtk_window_present_with_time will pull the timestamp from the startup
+        // token.
+        if (GdkIsX11Display()) {
+          nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
+          const auto& startupToken = toolkit->GetStartupToken();
+          if (!startupToken.IsEmpty()) {
+            return static_cast<uint32_t>(GDK_CURRENT_TIME);
+          }
+        }
+#endif
         return GetLastUserInputTime();
       }();
 

@@ -28,6 +28,11 @@
 #include <dlfcn.h>
 #include <glib.h>
 
+#ifdef MOZ_X11
+#  include <X11/Xlib.h>
+#  include <X11/Xatom.h>
+#endif /* MOZ_X11 */
+
 #undef LOGW
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
@@ -497,5 +502,71 @@ bool IsKdeDesktopEnvironment() {
 bool IsCancelledGError(GError* aGError) {
   return g_error_matches(aGError, G_IO_ERROR, G_IO_ERROR_CANCELLED);
 }
+
+#if defined(MOZ_X11)
+static unsigned long GetWindowUserTime(GdkDisplay* aDisplay,
+                                       uintptr_t aWindow) {
+  Atom actualType;
+  int actualFormat;
+  unsigned long numberOfItems;
+  unsigned long bytesAfter;
+  unsigned char* property = nullptr;
+  unsigned long userTime = 0;
+
+  Display* xDisplay = GDK_DISPLAY_XDISPLAY(aDisplay);
+  Atom atom =
+      gdk_x11_get_xatom_by_name_for_display(aDisplay, "_NET_WM_USER_TIME");
+
+  if (XGetWindowProperty(xDisplay, aWindow, atom, 0, 1, false, XA_CARDINAL,
+                         &actualType, &actualFormat, &numberOfItems,
+                         &bytesAfter, &property) == Success &&
+      property) {
+    if (numberOfItems == 1) {
+      userTime = *((unsigned long*)property);
+    }
+    XFree(property);
+  }
+
+  return userTime;
+}
+
+void FindLatestUserTime(GdkDisplay* aDisplay, uintptr_t aWindow,
+                        unsigned long* aLatestTime) {
+  Window rootReturn;
+  Window parentReturn;
+  Window* children;
+  unsigned int numberOfChildren;
+  unsigned long userTime;
+
+  Display* xDisplay = GDK_DISPLAY_XDISPLAY(aDisplay);
+
+  if (XQueryTree(xDisplay, aWindow, &rootReturn, &parentReturn, &children,
+                 &numberOfChildren)) {
+    for (unsigned int i = 0; i < numberOfChildren; i++) {
+      userTime = GetWindowUserTime(aDisplay, children[i]);
+      if (userTime > *aLatestTime) {
+        *aLatestTime = userTime;
+      }
+      FindLatestUserTime(aDisplay, children[i], aLatestTime);
+    }
+
+    XFree(children);
+  }
+}
+
+// Assume we're started from user interaction and infer user time if its missing
+nsCString SynthesizeStartupToken() {
+  unsigned long latestUserTime = 0;
+  FindLatestUserTime(gdk_display_get_default(),
+                     GDK_WINDOW_XID(gdk_get_default_root_window()),
+                     &latestUserTime);
+
+  if (latestUserTime == 0) {
+    return nsCString();
+  }
+
+  return nsPrintfCString("%s_TIME%lu", g_get_host_name(), latestUserTime);
+}
+#endif
 
 }  // namespace mozilla::widget
