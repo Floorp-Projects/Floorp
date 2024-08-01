@@ -47,11 +47,7 @@ bool nsDBusRemoteServer::HandleOpenURL(const gchar* aInterfaceName,
     return false;
   }
 
-  guint32 timestamp = gtk_get_current_event_time();
-  if (timestamp == GDK_CURRENT_TIME) {
-    timestamp = guint32(g_get_monotonic_time() / 1000);
-  }
-  HandleCommandLine(aParam, timestamp);
+  HandleCommandLine(aParam, gtk_get_current_event_time());
   return true;
 }
 
