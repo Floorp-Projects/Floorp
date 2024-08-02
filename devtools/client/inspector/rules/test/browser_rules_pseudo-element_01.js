@@ -478,6 +478,21 @@ async function testNode(selector, inspector, view) {
   return elementStyle;
 }
 
+const PSEUDO_DICT = {
+  firstLineRules: "::first-line",
+  firstLetterRules: "::first-letter",
+  selectionRules: "::selection",
+  markerRules: "::marker",
+  beforeRules: "::before",
+  afterRules: "::after",
+  backdropRules: "::backdrop",
+  highlightRules: "::highlight",
+  sliderFillRules: "::slider-fill",
+  sliderThumbRules: "::slider-thumb",
+  sliderTrackRules: "::slider-track",
+  targetTextRules: "::target-text",
+};
+
 async function assertPseudoElementRulesNumbers(
   selector,
   inspector,
@@ -486,43 +501,30 @@ async function assertPseudoElementRulesNumbers(
 ) {
   const elementStyle = await testNode(selector, inspector, view);
 
+  // Wait for the expected pseudo classes to be displayed
+  await waitFor(() =>
+    Object.entries(ruleNbs).every(([key, nb]) => {
+      if (!PSEUDO_DICT[key] || nb === 0) {
+        return true;
+      }
+      return (
+        Array.from(
+          view.element.querySelectorAll(".ruleview-selector-pseudo-class")
+        ).filter(el => el.textContent.startsWith(PSEUDO_DICT[key])).length ===
+        nb
+      );
+    })
+  );
+
   const rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),
-    firstLineRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::first-line"
-    ),
-    firstLetterRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::first-letter"
-    ),
-    selectionRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::selection"
-    ),
-    markerRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::marker"
-    ),
-    beforeRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::before"
-    ),
-    afterRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::after"
-    ),
-    backdropRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::backdrop"
-    ),
-    highlightRules: elementStyle.rules.filter(rule =>
-      rule.pseudoElement?.startsWith("::highlight(")
-    ),
-    sliderFillRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::slider-fill"
-    ),
-    sliderThumbRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::slider-thumb"
-    ),
-    sliderTrackRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::slider-track"
-    ),
-    targetTextRules: elementStyle.rules.filter(
-      rule => rule.pseudoElement === "::target-text"
+    ...Object.fromEntries(
+      Object.entries(PSEUDO_DICT).map(([key, pseudoElementSelector]) => [
+        key,
+        elementStyle.rules.filter(rule =>
+          rule.pseudoElement.startsWith(pseudoElementSelector)
+        ),
+      ])
     ),
   };
 
