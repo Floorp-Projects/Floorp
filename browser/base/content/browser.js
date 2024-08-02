@@ -3689,6 +3689,8 @@ var XULBrowserWindow = {
     AboutReaderParent.updateReaderButton(gBrowser.selectedBrowser);
     TranslationsParent.onLocationChange(gBrowser.selectedBrowser);
 
+    gSplitView.onLocationChange(gBrowser.selectedBrowser);
+
     PictureInPicture.updateUrlbarToggle(gBrowser.selectedBrowser);
 
     if (!gMultiProcessBrowser) {
