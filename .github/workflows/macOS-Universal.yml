@@ -187,18 +187,11 @@ jobs:
 
     - name: setup Rust 🦀
       run: |
-
-        #? install rust version 1.77.2
-        rustup toolchain install 1.77.2
-
         if [[ $GHA_ARCH == 'x86_64' ]];then
-          rustup target add x86_64-apple-darwin --toolchain 1.77.2
+          rustup target add x86_64-apple-darwin --toolchain stable
         else
-          rustup target add aarch64-apple-darwin --toolchain 1.77.2
+          rustup target add aarch64-apple-darwin --toolchain stable
         fi
-
-        #? set default toolchain
-        rustup default 1.77.2
 
         #? https://github.com/mozilla/sccache#known-caveats
         export CARGO_INCREMENTAL=0

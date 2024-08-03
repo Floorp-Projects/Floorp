@@ -87,16 +87,9 @@ jobs:
 
     - name: setup Rust 🦀
       run: |
-
-        #? install rust version 1.77.2
-        rustup toolchain install 1.77.2
-
         if [[ $GHA_aarch64 == 'true' ]];then
-          rustup target add aarch64-unknown-linux-gnu --toolchain 1.77.2
+          rustup target add aarch64-unknown-linux-gnu --toolchain stable
         fi
-
-        #? set default toolchain
-        rustup default 1.77.2
 
         #? https://github.com/mozilla/sccache#known-caveats
         export CARGO_INCREMENTAL=0
