@@ -96,30 +96,8 @@ async function initBin() {
   }
 }
 
-let devProcesses: ResultPromise<{
-  cwd: string;
-  stdout: "inherit";
-  stdin: "ignore";
-}>[];
-let devInit = false;
-
 async function run() {
-  if (!devInit) {
-    console.log("run dev servers");
-    devProcesses = [
-      $({
-        cwd: r("./apps/main"),
-        stdin: "ignore",
-        stdout: "inherit",
-      })`pnpm vite dev --port 5181`,
-      $({
-        cwd: r("./apps/pages"),
-        stdin: "ignore",
-        stdout: "inherit",
-      })`pnpm vite dev --port 5182`,
-    ];
-    devInit = true;
-  }
+  await $({ cwd: r("./apps/main") })`pnpm vite build`;
   await initBin();
   await Promise.all([
     $({ cwd: r("./apps/main") })`pnpm vite build --mode dev`,
@@ -155,15 +133,9 @@ async function run() {
       persistent: true,
       ignored: [
         (str) =>
-          [
-            "node_modules",
-            "_dist",
-            "vite.timestamp",
-            "hmr",
-            "pages",
-            "about",
-            "core",
-          ].some((v) => str.includes(v)),
+          str.includes("node_modules") ||
+          str.includes("_dist") ||
+          str.includes("vite.timestamp"),
       ],
     })
     .on("all", async () => {
@@ -190,30 +162,14 @@ async function run() {
     product: "firefox",
     executablePath: binPathExe,
     userDataDir: "./_dist/profile/test",
-    extraPrefsFirefox: {
-      "browser.newtabpage.enabled": true,
-
-      //? Thank you for `arai` san in Mozilla!
-      //? This pref allows to run import of http(s) protocol in browser-top or about: pages
-      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/dom/security/nsContentSecurityManager.cpp#1037-1041
-      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/modules/libpref/init/StaticPrefList.yaml#15063
-      "security.disallow_privileged_https_script_loads": false,
-      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/dom/security/nsContentSecurityUtils.cpp#1600-1607
-      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/dom/security/nsContentSecurityUtils.cpp#1445-1450
-      //https://searchfox.org/mozilla-central/rev/6936c4c3fc9bee166912fce10104fbe0417d77d3/modules/libpref/init/StaticPrefList.yaml#14743
-      "security.allow_parent_unrestricted_js_loads": true,
-    },
+    extraPrefsFirefox: { "browser.newtabpage.enabled": true },
     defaultViewport: { height: 0, width: 0 },
   });
 
-  browser.pages().then((page) => page[0].goto("about:newtab"));
+  await (await browser.pages())[0].goto("about:newtab");
 
-  browser.newPage().then((page) => page.goto("about:preferences"));
-  browser
-    .newPage()
-    .then((page) =>
-      page.goto("http://localhost:5182/nora-settings/index.html"),
-    );
+  const page = await browser.newPage();
+  await page.goto("about:preferences");
 
   browser.on("disconnected", () => {
     if (!intended_close) process.exit();
