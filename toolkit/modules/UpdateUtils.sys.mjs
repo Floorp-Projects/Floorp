@@ -23,7 +23,7 @@ const FILE_UPDATE_LOCALE = "update.locale";
 const PREF_APP_DISTRIBUTION = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION = "distribution.version";
 
-export var UpdateUtils = {
+export const UpdateUtils = {
   _locale: undefined,
   _configFilePath: undefined,
 
@@ -92,6 +92,12 @@ export var UpdateUtils = {
         case "OS_VERSION":
           replacement = this.OSVersion;
           break;
+        case "OS":
+          return Services.appinfo.OS;
+        case "ARCH":
+          return this.ABI.split("-")[0];
+        case "DISPLAY_VERSION":
+          return AppConstants.MOZ_APP_VERSION_DISPLAY;
         case "LOCALE":
           replacement = locale;
           break;
