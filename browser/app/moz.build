@@ -175,16 +175,18 @@ for icon in ("firefox", "document", "newwindow", "newtab", "pbmode"):
         icon,
     )
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG["OS_TARGET"] == "WINNT":
     checkOSBuildFloorp = "windows"
-elif CONFIG["OS_ARCH"] == "Darwin":
+elif CONFIG["OS_TARGET"] == "Darwin":
     checkOSBuildFloorp = "mac"
 else:
     checkOSBuildFloorp = "linux"
 
-DEFINES["document_pdf".upper() + "_ICO"] = '"%s/%s/%s/%s/document_pdf.ico"' % (
-    TOPSRCDIR,
-    CONFIG["MOZ_BRANDING_DIRECTORY"],
-    "content",
-    checkOSBuildFloorp,
-)
+for icon in ["document", "document_pdf"]:
+    DEFINES[icon.upper() + "_ICO"] = '"%s/%s/%s/%s/%s.ico"' % (
+        TOPSRCDIR,
+        CONFIG["MOZ_BRANDING_DIRECTORY"],
+        "content",
+        checkOSBuildFloorp,
+        icon,
+    )
