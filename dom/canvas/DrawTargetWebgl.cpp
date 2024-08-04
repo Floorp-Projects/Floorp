@@ -1335,9 +1335,10 @@ bool SharedContextWebgl::CreateShaders() {
         "   v_cliptc = vertex / u_viewport;\n"
         "   v_clipdist = vec4(vertex - u_clipbounds.xy,\n"
         "                     u_clipbounds.zw - vertex);\n"
-        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy +\n"
-        "            0.5 * min(scale.xyxy, 1.0) + (1.0 - u_aa);\n"
-        "   v_alpha = a_vertex.z;\n"
+        "   float noAA = 1.0 - u_aa;\n"
+        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy + 0.5 + noAA;\n"
+        "   v_alpha = min(a_vertex.z,\n"
+        "                 min(scale.x, 1.0) * min(scale.y, 1.0) + noAA);\n"
         "}\n";
     auto fsSource =
         "precision mediump float;\n"
@@ -1351,7 +1352,7 @@ bool SharedContextWebgl::CreateShaders() {
         "   float clip = texture2D(u_clipmask, v_cliptc).r;\n"
         "   vec4 dist = min(v_dist, v_clipdist);\n"
         "   dist.xy = min(dist.xy, dist.zw);\n"
-        "   float aa = v_alpha * clamp(min(dist.x, dist.y), 0.0, 1.0);\n"
+        "   float aa = clamp(min(dist.x, dist.y), 0.0, v_alpha);\n"
         "   gl_FragColor = clip * aa * u_color;\n"
         "}\n";
     RefPtr<WebGLShader> vsId = mWebgl->CreateShader(LOCAL_GL_VERTEX_SHADER);
@@ -1419,9 +1420,10 @@ bool SharedContextWebgl::CreateShaders() {
         "   v_texcoord = u_texmatrix[0] * extrude.x +\n"
         "                u_texmatrix[1] * extrude.y +\n"
         "                u_texmatrix[2];\n"
-        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy +\n"
-        "            0.5 * min(scale.xyxy, 1.0) + (1.0 - u_aa);\n"
-        "   v_alpha = a_vertex.z;\n"
+        "   float noAA = 1.0 - u_aa;\n"
+        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy + 0.5 + noAA;\n"
+        "   v_alpha = min(a_vertex.z,\n"
+        "                 min(scale.x, 1.0) * min(scale.y, 1.0) + noAA);\n"
         "}\n";
     auto fsSource =
         "precision mediump float;\n"
@@ -1442,7 +1444,7 @@ bool SharedContextWebgl::CreateShaders() {
         "   float clip = texture2D(u_clipmask, v_cliptc).r;\n"
         "   vec4 dist = min(v_dist, v_clipdist);\n"
         "   dist.xy = min(dist.xy, dist.zw);\n"
-        "   float aa = v_alpha * clamp(min(dist.x, dist.y), 0.0, 1.0);\n"
+        "   float aa = clamp(min(dist.x, dist.y), 0.0, v_alpha);\n"
         "   gl_FragColor = clip * aa * u_color *\n"
         "                  mix(image, image.rrrr, u_swizzle);\n"
         "}\n";
