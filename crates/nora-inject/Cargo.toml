@@ -1,0 +1,16 @@
+[package]
+name = "nora-inject"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "nora_inject_lib"
+crate-type = ["cdylib"]
+
+[dependencies]
+oxc = { version = "0.22.1", features = ["serialize", "wasm"] }
+serde = "1.0.203"
+serde_json = "1.0.117"
+wit-bindgen = "0.29.0"

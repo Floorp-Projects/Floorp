@@ -1,0 +1,5 @@
+package nyanrus:nora;
+
+world nora {
+  export transform: func(source:string,metadata:string)->result<string,string>;
+}

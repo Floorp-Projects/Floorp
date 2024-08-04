@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "useDefineForClassFields": false,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ESNext",
+    "experimentalDecorators": true
+  }
+}
