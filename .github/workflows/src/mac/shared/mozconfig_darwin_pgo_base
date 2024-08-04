@@ -27,8 +27,6 @@ MOZ_TELEMETRY_REPORTING=
 
 export CROSS_SYSROOT=/home/runner/cross-tools/macOS-SDK
 export MACOS_SDK_DIR=/home/runner/cross-tools/macOS-SDK
-export CC=/home/runner/cross-tools/clang/bin/clang
-export CXX=/home/runner/cross-tools/clang/bin/clang++
 export HOST_CXXFLAGS=-g
 export HOST_CFLAGS=-g
 export HOST_LDFLAGS=-g
