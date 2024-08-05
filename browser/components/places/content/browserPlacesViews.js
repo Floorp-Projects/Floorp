@@ -1621,6 +1621,13 @@ class PlacesToolbar extends PlacesViewBase {
           dropPoint.beforeIndex = beforeIndex;
         }
       }
+    } else if (elt == this._chevron) {
+      // If drop on the chevron, insert after the last bookmark.
+      dropPoint.ip = new PlacesInsertionPoint({
+        parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
+        orientation: Ci.nsITreeView.DROP_BEFORE,
+      });
+      dropPoint.beforeIndex = -1;
     } else {
       dropPoint.ip = new PlacesInsertionPoint({
         parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
