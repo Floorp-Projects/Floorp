@@ -9,29 +9,12 @@ add_setup(async function () {
     set: [["browser.toolbars.bookmarks.visibility", "newtab"]],
   });
 
-  registerCleanupFunction(async () => {
-    await PlacesUtils.bookmarks.eraseEverything();
-    await PlacesUtils.history.clear();
-  });
-});
-
-add_task(async function drop_on_tabbar() {
-  let bookmarksToolbar = document.getElementById("PersonalToolbar");
-  let chevronMenu = document.getElementById("PlacesChevron");
-
-  info("Open about:newtab to show the bookmark toolbar");
-  let newTab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    opening: "about:newtab",
-    waitForLoad: false,
-  });
-  await TestUtils.waitForCondition(
-    () => !bookmarksToolbar.collapsed,
-    "Wait for toolbar to become visible"
-  );
+  info("Open new tab and bookmarks toolbar");
+  let { newTab } = await openNewTabAndBookmarksToolbar();
 
   info("Add bookmarks until showing chevron menu");
-  let bookmarkCount = 1;
+  let chevronMenu = document.getElementById("PlacesChevron");
+  let bookmarkCount = 2;
   for (; ; bookmarkCount++) {
     let url = `https://example.com/${bookmarkCount}`;
     await PlacesUtils.bookmarks.insert({
@@ -47,7 +30,7 @@ add_task(async function drop_on_tabbar() {
 
   info("Add more bookmarks");
   bookmarkCount += 1;
-  for (let max = bookmarkCount + 5; bookmarkCount < max; bookmarkCount++) {
+  for (let max = bookmarkCount + 2; bookmarkCount < max; bookmarkCount++) {
     let url = `https://example.com/${bookmarkCount}`;
     await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -56,8 +39,21 @@ add_task(async function drop_on_tabbar() {
     });
   }
 
+  BrowserTestUtils.removeTab(newTab);
+
+  registerCleanupFunction(async () => {
+    await PlacesUtils.bookmarks.eraseEverything();
+    await PlacesUtils.history.clear();
+  });
+});
+
+add_task(async function drop_on_tabbar_from_chevron() {
+  info("Open new tab and bookmarks toolbar");
+  let { newTab, bookmarksToolbar } = await openNewTabAndBookmarksToolbar();
+
   info("Check whether DnD from chevron works");
-  await dndTest(chevronMenu);
+  let chevronMenu = document.getElementById("PlacesChevron");
+  await testForDndFromChevron(chevronMenu);
 
   info("Open not about:newtab page to collapse the bookmark toolbar");
   let contentTab = await BrowserTestUtils.openNewForegroundTab({
@@ -78,13 +74,55 @@ add_task(async function drop_on_tabbar() {
   );
 
   info("Check whether DnD from chevron works again");
-  await dndTest(chevronMenu);
+  await testForDndFromChevron(chevronMenu);
 
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(contentTab);
 });
 
-async function dndTest(chevronMenu) {
+add_task(async function drop_on_chevron_from_identity_box() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.bookmarks.visibility", "always"]],
+  });
+
+  const TEST_URL = "https://example.com/404_not_found";
+
+  info("Open new tab and bookmarks toolbar");
+  let { newTab } = await openNewTabAndBookmarksToolbar({
+    url: TEST_URL,
+  });
+
+  info("Start DnD");
+  let chevronMenu = document.getElementById("PlacesChevron");
+  let identityBox = document.getElementById("identity-box");
+  let chevronPopup = document.getElementById("PlacesChevronPopup");
+
+  let onChevronPopupShown = BrowserTestUtils.waitForPopupEvent(
+    chevronPopup,
+    "shown"
+  );
+  await EventUtils.synthesizePlainDragAndDrop({
+    srcElement: identityBox,
+    destElement: chevronMenu,
+  });
+  await onChevronPopupShown;
+
+  info("Check the last bookmark item");
+  await BrowserTestUtils.waitForCondition(() => {
+    let items = [...chevronPopup.children];
+    let lastElement = items.findLast(
+      c => c.nodeName == "menuitem" && BrowserTestUtils.isVisible(c)
+    );
+    return lastElement.label == "404 Not Found";
+  });
+  Assert.ok(true, "The current page is bookmarked with correct position");
+
+  chevronPopup.hidePopup();
+  BrowserTestUtils.removeTab(newTab);
+  await SpecialPowers.popPrefEnv();
+});
+
+async function testForDndFromChevron(chevronMenu) {
   info("Open chevron menu");
   let chevronPopup = document.getElementById("PlacesChevronPopup");
   let onChevronPopupShown = BrowserTestUtils.waitForPopupEvent(
@@ -124,4 +162,20 @@ async function dndTest(chevronMenu) {
   Assert.ok(dropTab, "DnD was successful");
   BrowserTestUtils.removeTab(dropTab);
   chevronPopup.hidePopup();
+}
+
+async function openNewTabAndBookmarksToolbar({ url } = {}) {
+  let newTab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: url ?? "about:newtab",
+    waitForLoad: !!url,
+  });
+
+  let bookmarksToolbar = document.getElementById("PersonalToolbar");
+  await TestUtils.waitForCondition(
+    () => !bookmarksToolbar.collapsed,
+    "Wait for toolbar to become visible"
+  );
+
+  return { newTab, bookmarksToolbar };
 }
