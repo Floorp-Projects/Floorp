@@ -66,7 +66,7 @@ async function test_empty_header(server, doSniff) {
   let req = await new Promise(resolve => {
     chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE));
   });
-  equal(req.status, Cr.NS_ERROR_FAILURE);
+  equal(req.status, Cr.NS_BINDING_ABORTED);
   equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 500);
 
   req.visitResponseHeaders({
