@@ -122,7 +122,7 @@ jobs:
     - name: Setup Cross Build tools 🪛
       run: |
         wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools-ESR115.7z
-        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools-ESR115.7z -o/home/runner/cross-tools/
 
     ## TODO: move mozconfig_darwin_pgo_base to src/macOS
     - name: Create config for "${{ matrix.arch }}" 📦
