@@ -42,31 +42,48 @@ function runTests() {
   ];
 
   let testIdx = 0;
-  let result = parseInt(input.value);
-  let rangeChange = 0;
-  let expectChange = 0;
+
+  // The expected value of the range field; used in is() check below.
+  // Initialized to the value that the field starts out with; subtests will
+  // modify this if they expect to modify the value.
+  let expectedValue = parseInt(input.value);
+
+  // Actual/expected number of mutations to the range field's value:
+  let actualChangeCount = 0;
+  let expectedChangeCount = 0;
 
   input.addEventListener("change", () => {
-    ++rangeChange;
+    ++actualChangeCount;
   });
 
   function runNext() {
     let p = params[testIdx];
     (p.focus) ? input.focus() : input.blur();
-    expectChange = p.valueChanged == 0 ? expectChange : expectChange + 1;
-    result += parseInt(p.valueChanged);
-    sendWheelAndPaint(input, 1, 1, { deltaY: p.deltaY, deltaMode: p.deltaMode }, () => {
-      ok(input.value == result,
-         "Handle wheel in range input test-" + testIdx + " expect " + result + " get " + input.value);
-      ok(rangeChange == expectChange,
-         "UA should fire change event when input's value changed, expect " + expectChange + " get " + rangeChange);
-      (++testIdx >= params.length) ? SimpleTest.finish() : runNext();
+    if (p.valueChanged != 0) {
+      expectedChangeCount++;
+      expectedValue += p.valueChanged;
+    }
+
+    sendWheelAndPaint(input, 1, 1, { deltaY: p.deltaY, deltaMode: p.deltaMode },
+                      () => {
+      is(parseInt(input.value), expectedValue,
+         "Handle wheel in range input test-" + testIdx);
+      is(actualChangeCount, expectedChangeCount,
+         "UA should fire change event when input's value changed");
+      if (++testIdx < params.length) {
+        // More subtests remain; kick off the next one.
+        runNext();
+      } else {
+        // Reached the end of the subtest list. We're done!
+        SimpleTest.finish();
+      }
     });
   }
 
   input.addEventListener("input", () => {
-    ok(input.value == result,
-       "Test-" + testIdx + " receive input event, expect " + result + " get " + input.value);
+    ok(input.value == expectedValue,
+       "Test-" + testIdx + " receive input event, expect " +
+       expectedValue + " get " + input.value);
   });
 
   runNext();
