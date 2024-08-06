@@ -113,18 +113,20 @@ export class PrefFlipsFeature {
       return;
     }
 
-    // If this is new enrollment, we need to cache the original values of prefs
-    // so they can be restored.
-    if (!Object.hasOwn(activeEnrollment, "prefFlips")) {
-      activeEnrollment.prefFlips = {};
-    }
+    if (activeEnrollment) {
+      // If this is new enrollment, we need to cache the original values of prefs
+      // so they can be restored.
+      if (!Object.hasOwn(activeEnrollment, "prefFlips")) {
+        activeEnrollment.prefFlips = {};
+      }
 
-    activeEnrollment.prefFlips.originalValues = Object.fromEntries(
-      Array.from(this._prefs.entries(), ([pref, { originalValue }]) => [
-        pref,
-        originalValue,
-      ])
-    );
+      activeEnrollment.prefFlips.originalValues = Object.fromEntries(
+        Array.from(this._prefs.entries(), ([pref, { originalValue }]) => [
+          pref,
+          originalValue,
+        ])
+      );
+    }
 
     this.#updating = false;
   }
