@@ -52,6 +52,10 @@ function runTests() {
   let actualChangeCount = 0;
   let expectedChangeCount = 0;
 
+  const prefName = "dom.input.number_and_range_modified_by_mousewheel";
+  let didFlipPref = false;
+  let isPrefEnabled = SpecialPowers.getBoolPref(prefName);
+  is(isPrefEnabled, false,  "Expecting pref to be disabled by default");
   input.addEventListener("change", () => {
     ++actualChangeCount;
   });
@@ -59,22 +63,35 @@ function runTests() {
   function runNext() {
     let p = params[testIdx];
     (p.focus) ? input.focus() : input.blur();
-    if (p.valueChanged != 0) {
+    if (isPrefEnabled && p.valueChanged != 0) {
       expectedChangeCount++;
       expectedValue += p.valueChanged;
     }
 
     sendWheelAndPaint(input, 1, 1, { deltaY: p.deltaY, deltaMode: p.deltaMode },
-                      () => {
+                      async () => {
       is(parseInt(input.value), expectedValue,
-         "Handle wheel in number input test-" + testIdx);
+         "Handle wheel in number input test-" + testIdx +
+         " with pref " + (isPrefEnabled ? "en" : "dis") + "abled");
+
       is(actualChangeCount, expectedChangeCount,
          "UA should fire change event when input's value changed");
       if (++testIdx < params.length) {
         // More subtests remain; kick off the next one.
         runNext();
+      } else if (!didFlipPref) {
+        // Reached the end of the subtest list.  Flip the pref
+        // and restart our iteration over the subtests.
+        await SpecialPowers.pushPrefEnv({
+          set: [[prefName, !isPrefEnabled]],
+        });
+        isPrefEnabled = !isPrefEnabled;
+        didFlipPref = true;
+        testIdx = actualChangeCount = expectedChangeCount = 0;
+        runNext();
       } else {
-        // Reached the end of the subtest list. We're done!
+        // Reached the end of the subtest list, for both pref settings.
+        // We're done!
         SimpleTest.finish();
       }
     });

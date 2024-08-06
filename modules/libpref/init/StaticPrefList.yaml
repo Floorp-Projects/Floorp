@@ -3013,6 +3013,14 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Does mousewheel-scrolling over a focused <input type="number"> or
+# <input type="range"> field cause the value to increase/decrease (rather
+# than scrolling the page)?
+- name: dom.input.number_and_range_modified_by_mousewheel
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to allow or disallow web apps to cancel `beforeinput` events caused
 # by MozEditableElement#setUserInput() which is used by autocomplete, autofill
 # and password manager.
