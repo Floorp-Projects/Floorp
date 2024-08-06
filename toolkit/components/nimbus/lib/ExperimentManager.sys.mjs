@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { PrefFlipsFeature } from "resource://nimbus/lib/PrefFlipsFeature.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -91,6 +93,8 @@ export class _ExperimentManager {
     // or would set (e.g., if the enrollment is a rollout and there wasn't an
     // active experiment already setting it).
     this._prefsBySlug = new Map();
+
+    this._prefFlips = new PrefFlipsFeature({ manager: this });
   }
 
   get studiesEnabled() {
@@ -184,6 +188,10 @@ export class _ExperimentManager {
   async onStartup(extraContext = {}) {
     await this.store.init();
     this.extraContext = extraContext;
+
+    lazy.NimbusFeatures.prefFlips.onUpdate((...args) =>
+      this._prefFlips.onFeatureUpdate(...args)
+    );
 
     const restoredExperiments = this.store.getAllActiveExperiments();
     const restoredRollouts = this.store.getAllActiveRollouts();
@@ -399,6 +407,7 @@ export class _ExperimentManager {
     }
 
     this.sessions.delete(sourceToCheck);
+    this._originalDefaultValues = null;
   }
 
   /**
@@ -492,6 +501,32 @@ export class _ExperimentManager {
     options = {}
   ) {
     const { prefs, prefsToSet } = this._getPrefsForBranch(branch, isRollout);
+    const prefNames = new Set(prefs.map(entry => entry.name));
+
+    // Unenroll in any conflicting prefFlips enrollments. Even though the
+    // rollout does not have an effect, if it also *would* control any of the
+    // same prefs, it would cause a conflict when it became active.
+    const prefFlipEnrollments = [
+      this.store.getRolloutForFeature(PrefFlipsFeature.FEATURE_ID),
+      this.store.getExperimentForFeature(PrefFlipsFeature.FEATURE_ID),
+    ].filter(enrollment => enrollment);
+
+    for (const enrollment of prefFlipEnrollments) {
+      const featureValue = getFeatureFromBranch(
+        enrollment.branch,
+        PrefFlipsFeature.FEATURE_ID
+      ).value;
+
+      for (const prefName of Object.keys(featureValue.prefs)) {
+        if (prefNames.has(prefName)) {
+          this._unenroll(enrollment, {
+            reason: "prefFlips-conflict",
+            conflictingSlug: slug,
+          });
+          break;
+        }
+      }
+    }
 
     /** @type {Enrollment} */
     const experiment = {
@@ -675,7 +710,12 @@ export class _ExperimentManager {
    */
   _unenroll(
     enrollment,
-    { reason = "unknown", changedPref = undefined, duringRestore = false } = {}
+    {
+      reason = "unknown",
+      changedPref = undefined,
+      duringRestore = false,
+      conflictingSlug = undefined,
+    } = {}
   ) {
     const { slug } = enrollment;
 
@@ -705,7 +745,8 @@ export class _ExperimentManager {
         },
         typeof changedPref !== "undefined"
           ? { changedPref: changedPref.name }
-          : {}
+          : {},
+        typeof conflictingSlug !== "undefined" ? { conflictingSlug } : {}
       )
     );
     // Sent Glean event equivalent
@@ -718,6 +759,9 @@ export class _ExperimentManager {
         },
         typeof changedPref !== "undefined"
           ? { changed_pref: changedPref.name }
+          : {},
+        typeof conflictingSlug !== "undefined"
+          ? { conflicting_slug: conflictingSlug }
           : {}
       )
     );
@@ -998,9 +1042,16 @@ export class _ExperimentManager {
             // branch would result in returning the default branch value.
             originalValue = null;
           } else {
-            originalValue = lazy.PrefUtils.getPref(prefName, {
-              branch: prefBranch,
-            });
+            // If there is an active prefFlips experiment for this pref on this
+            // branch, we must use its originalValue.
+            const prefFlip = this._prefFlips._prefs.get(prefName);
+            if (prefFlip?.branch === prefBranch) {
+              originalValue = prefFlip.originalValue;
+            } else {
+              originalValue = lazy.PrefUtils.getPref(prefName, {
+                branch: prefBranch,
+              });
+            }
           }
 
           prefs.push({
@@ -1438,47 +1489,18 @@ export class _ExperimentManager {
       }
     }
 
-    // We want to know what branch was changed so we can know if we should
-    // restore prefs. (e.g., if we have a pref set on the user branch and the
-    // user branch changed, we do not want to then overwrite the user's choice).
-
-    // This is not complicated if a pref simply changed. However, we also must
-    // detect `nsIPrefBranch::clearUserPref()`, which wipes out the user branch
-    // and leaves the default branch untouched. That is where this gets
-    // complicated:
-
-    let branch;
-    if (Services.prefs.prefHasUserValue(pref.name)) {
-      // If there is a user branch value, then the user branch changed.
-      branch = "user";
-    } else if (!Services.prefs.prefHasDefaultValue(pref.name)) {
-      // If there is not default branch value, then the user branch must have
-      // been cleared becuase you cannot clear the default branch.
-      branch = "user";
-    } else if (pref.branch === "default") {
-      const feature = getFeatureFromBranch(
-        enrollments.at(-1).branch,
-        pref.featureId
-      );
-      const expectedValue = feature.value[pref.variable];
-      const value = lazy.PrefUtils.getPref(pref.name, { branch: pref.branch });
-
-      if (value === expectedValue) {
-        // If the pref was set on the default branch and still matches the
-        // expected value, then the user branch must have been cleared.
-        branch = "user";
-      } else {
-        branch = "default";
-      }
-    } else {
-      // If the pref was set on the user branch and we don't have a user branch
-      // value, then the user branch must have been cleared.
-      branch = "user";
-    }
+    const feature = getFeatureFromBranch(
+      enrollments.at(-1).branch,
+      pref.featureId
+    );
 
     const changedPref = {
       name: pref.name,
-      branch,
+      branch: PrefFlipsFeature.determinePrefChangeBranch(
+        pref.name,
+        pref.branch,
+        feature.value[pref.variable]
+      ),
     };
 
     for (const enrollment of enrollments) {

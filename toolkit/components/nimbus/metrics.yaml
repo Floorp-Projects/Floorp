@@ -93,14 +93,21 @@ nimbus_events:
         description: >
           If reason == "changed-pref", then this contains the name of the pref
           that changed that caused the unenrollment.
+      conflicting_slug:
+        type: string
+        description: >
+          If reason == "prefFlips-conflict", the slug of the conflicting
+          experiment that caused the unenrollment.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1843126
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1896718
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1843126
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1896718
     data_sensitivity:
       - technical
     notification_emails:
