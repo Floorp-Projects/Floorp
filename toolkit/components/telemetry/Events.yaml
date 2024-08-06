@@ -811,7 +811,10 @@ normandy:
       changedPref: >
         For preference_study or nimbus_experiment, the preference that was
         detected to change that caused the unenrollment.
-    bug_numbers: [1443560, 1843126]
+      conflictingSlug: >
+        For nimbus_experiment, if reason == "prefFlips-conflict", the conflicting
+        experiment that caused the unenrollment.
+    bug_numbers: [1443560, 1843126, 1896718]
     notification_emails: ["normandy-notifications@mozilla.com"]
     products:
       - "firefox"
