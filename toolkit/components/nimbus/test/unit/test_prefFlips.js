@@ -2057,3 +2057,165 @@ add_task(async function test_prefFlip_setPref_restore() {
     Services.prefs.deleteBranch(PREF);
   }
 });
+
+add_task(async function test_prefFlips_cacheOriginalValues() {
+  const recipe = ExperimentFakes.recipe("prefFlips-test", {
+    bucketConfig: {
+      ...ExperimentFakes.recipe.bucketConfig,
+      count: 1000,
+    },
+    branches: [
+      {
+        ...ExperimentFakes.recipe.branches[0],
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: {
+              prefs: {
+                "test.pref.please.ignore": {
+                  branch: "user",
+                  value: "test-value",
+                },
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  await manager.onStartup();
+  await manager.enroll(recipe, "test");
+
+  const activeEnrollment = manager.store.getExperimentForFeature(FEATURE_ID);
+
+  Assert.deepEqual(activeEnrollment.prefFlips, {
+    originalValues: {
+      "test.pref.please.ignore": null,
+    },
+  });
+
+  // Force the store to save to disk
+  await manager.store._store._save();
+
+  const storeContents = await IOUtils.readJSON(manager.store._store.path);
+
+  Assert.ok(
+    Object.hasOwn(storeContents, "prefFlips-test"),
+    "enrollment present in serialized store"
+  );
+  Assert.ok(
+    Object.hasOwn(storeContents["prefFlips-test"], "prefFlips"),
+    "prefFlips cache preset in serialized enrollment"
+  );
+
+  Assert.deepEqual(
+    storeContents["prefFlips-test"].prefFlips,
+    {
+      originalValues: {
+        "test.pref.please.ignore": null,
+      },
+    },
+    "originalValues cached on serialized enrollment"
+  );
+
+  manager.unenroll(recipe.slug, "test");
+  Assert.ok(
+    !Services.prefs.prefHasUserValue("test.pref.please.ignore"),
+    "pref unset after unenrollment"
+  );
+  await assertEmptyStore(manager.store, { cleanup: true });
+
+  sandbox.restore();
+});
+
+add_task(async function test_prefFlips_restore_unenroll() {
+  const recipe = ExperimentFakes.recipe("prefFlips-test", {
+    bucketConfig: {
+      ...ExperimentFakes.recipe.bucketConfig,
+      count: 1000,
+    },
+    branches: [
+      {
+        ...ExperimentFakes.recipe.branches[0],
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: {
+              prefs: {
+                "test.pref.please.ignore": {
+                  branch: "user",
+                  value: "test-value",
+                },
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  // Set up a previous ExperimentStore on disk.
+  {
+    const enrollment = {
+      slug: recipe.slug,
+      branch: recipe.branches[0],
+      active: true,
+      experimentType: "nimbus",
+      userFacingName: recipe.userFacingName,
+      userFacingDescription: recipe.userFacingDescription,
+      featureIds: recipe.featureIds,
+      isRollout: recipe.isRollout,
+      localizations: recipe.localizations,
+      source: "rs-loader",
+      prefFlips: {
+        originalValues: {
+          "test.pref.please.ignore": null,
+        },
+      },
+    };
+
+    const store = ExperimentFakes.store();
+    await store.init();
+    await store.ready();
+    store.set(enrollment.slug, enrollment);
+    store._store.saveSoon();
+    await store._store.finalize();
+  }
+
+  // Set the pref controlled by the experiment.
+  Services.prefs.setStringPref("test.pref.please.ignore", "test-value");
+
+  const sandbox = sinon.createSandbox();
+
+  const manager = ExperimentFakes.manager();
+
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  await manager.onStartup();
+
+  const activeEnrollment = manager.store.getExperimentForFeature(FEATURE_ID);
+  Assert.equal(activeEnrollment.slug, recipe.slug, "enrollment restored");
+
+  Assert.equal(
+    manager._prefFlips._prefs.get("test.pref.please.ignore").originalValue,
+    null
+  );
+
+  manager.unenroll(recipe.slug, "test");
+  Assert.ok(
+    !Services.prefs.prefHasUserValue("test.pref.please.ignore"),
+    "pref unset after unenrollment"
+  );
+
+  await assertEmptyStore(manager.store);
+
+  sandbox.restore();
+});

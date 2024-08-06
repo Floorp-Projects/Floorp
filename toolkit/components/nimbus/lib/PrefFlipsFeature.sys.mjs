@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const FEATURE_ID = "prefFlips";
 
 export class PrefFlipsFeature {
+  #initialized;
   #updating;
 
   static get FEATURE_ID() {
@@ -22,6 +23,7 @@ export class PrefFlipsFeature {
     this.manager = manager;
     this._prefs = new Map();
 
+    this.#initialized = false;
     this.#updating = false;
   }
 
@@ -80,13 +82,67 @@ export class PrefFlipsFeature {
         }
       }
 
-      this._registerPref(pref, { branch, value });
+      this._registerPref(
+        pref,
+        { branch, value },
+        lazy.PrefUtils.getPref(pref, { branch })
+      );
     }
+
+    // If this is new enrollment, we need to cache the original values of prefs
+    // so they can be restored.
+    if (!Object.hasOwn(activeEnrollment, "prefFlips")) {
+      activeEnrollment.prefFlips = {};
+    }
+
+    activeEnrollment.prefFlips.originalValues = Object.fromEntries(
+      Array.from(this._prefs.entries(), ([pref, { originalValue }]) => [
+        pref,
+        originalValue,
+      ])
+    );
 
     this.#updating = false;
   }
 
-  _registerPref(pref, { branch, value }) {
+  /**
+   * Intialize the prefFlips feature.
+   *
+   * This will re-hydrate `this._prefs` from the active enrollment (if any) and
+   * register any necessary pref observers.
+   *
+   * onFeatureUpdate will be called for any future feature changes.
+   */
+  init() {
+    if (this.#initialized) {
+      return;
+    }
+
+    const activeEnrollment =
+      this.manager.store.getExperimentForFeature(FEATURE_ID) ??
+      this.manager.store.getRolloutForFeature(FEATURE_ID);
+
+    if (activeEnrollment?.prefFlips?.originalValues) {
+      const featureValue = activeEnrollment.branch.features.find(
+        fc => fc.featureId === FEATURE_ID
+      ).value;
+      for (const [pref, entry] of Object.entries(featureValue.prefs)) {
+        this._registerPref(
+          pref,
+          entry,
+          activeEnrollment.prefFlips.originalValues[pref]
+        );
+      }
+    }
+
+    lazy.NimbusFeatures.prefFlips.onUpdate((...args) =>
+      this.onFeatureUpdate(...args)
+    );
+
+    this.#initialized = true;
+  }
+
+  _registerPref(pref, { branch, value }, originalValue) {
     const observer = (_aSubject, _aTopic, aData) => {
       // This observer will be called for changes to `name` as well as any
       // other pref that begins with `name.`, so we have to filter to
@@ -105,7 +161,7 @@ export class PrefFlipsFeature {
     // consistent with how setPref experiments work.
     const entry = {
       branch,
-      originalValue: lazy.PrefUtils.getPref(pref, { branch }),
+      originalValue,
       value: value ?? null,
       observer,
     };
