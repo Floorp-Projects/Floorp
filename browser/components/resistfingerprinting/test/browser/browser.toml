@@ -155,3 +155,5 @@ https_first_disabled = true
 skip-if = ["(debug || asan) && os == 'linux' && bits == 64"] #Bug 1518179
 
 ["browser_timezone.js"]
+
+["browser_exslt_timezone_load.js"]
