@@ -33,7 +33,7 @@
               "then": {
                 "properties": {
                   "value": {
-                    "type": ["string", "integer", "boolean", "description"]
+                    "type": ["string", "integer", "boolean"]
                   }
                 }
               }
