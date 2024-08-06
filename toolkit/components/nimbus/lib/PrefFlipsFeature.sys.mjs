@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const FEATURE_ID = "prefFlips";
+export const REASON_PREFFLIPS_FAILED = "prefFlips-failed";
 
 export class PrefFlipsFeature {
   #initialized;
@@ -40,53 +41,76 @@ export class PrefFlipsFeature {
 
     const prefs = lazy.NimbusFeatures[FEATURE_ID].getVariable("prefs") ?? {};
 
-    for (const [pref, details] of this._prefs.entries()) {
-      if (Object.hasOwn(prefs, pref)) {
-        // The pref may have changed.
-        const newDetails = prefs[pref];
+    try {
+      for (const [pref, details] of this._prefs.entries()) {
+        if (Object.hasOwn(prefs, pref)) {
+          // The pref may have changed.
+          const newDetails = prefs[pref];
 
-        if (
-          newDetails.branch !== details.branch ||
-          newDetails.value !== details.value
-        ) {
-          this._updatePref(pref, newDetails);
+          if (
+            newDetails.branch !== details.branch ||
+            newDetails.value !== details.value
+          ) {
+            this._updatePref({
+              pref,
+              branch: newDetails.branch,
+              value: newDetails.value,
+              slug: activeEnrollment.slug,
+            });
+          }
+        } else {
+          // The pref is no longer controlled by us.
+          this._unregisterPref(pref);
         }
-      } else {
-        // The pref is no longer controlled by us.
-        this._unregisterPref(pref);
+      }
+    } catch (e) {
+      if (e instanceof PrefFlipsFailedError) {
+        this.#updating = false;
+
+        this._unenrollForFailure(activeEnrollment, e.pref);
+        return;
       }
     }
 
-    for (const [pref, { branch, value }] of Object.entries(prefs)) {
-      const known = this._prefs.get(pref);
-      if (known) {
-        // We have already processed this pref.
-        continue;
-      }
-
-      const setPref = this.manager._prefs.get(pref);
-      if (setPref) {
-        const toUnenroll = Array.from(setPref.slugs.values()).map(slug =>
-          this.manager.store.get(slug)
-        );
-
-        if (toUnenroll.length === 2 && !toUnenroll[0].isRollout) {
-          toUnenroll.reverse();
+    try {
+      for (const [pref, { branch, value }] of Object.entries(prefs)) {
+        const known = this._prefs.get(pref);
+        if (known) {
+          // We have already processed this pref.
+          continue;
         }
 
-        for (const enrollment of toUnenroll) {
-          this.manager._unenroll(enrollment, {
-            reason: "prefFlips-conflict",
-            conflictingSlug: activeEnrollment.slug,
-          });
-        }
-      }
+        const setPref = this.manager._prefs.get(pref);
+        if (setPref) {
+          const toUnenroll = Array.from(setPref.slugs.values()).map(slug =>
+            this.manager.store.get(slug)
+          );
 
-      this._registerPref(
-        pref,
-        { branch, value },
-        lazy.PrefUtils.getPref(pref, { branch })
-      );
+          if (toUnenroll.length === 2 && !toUnenroll[0].isRollout) {
+            toUnenroll.reverse();
+          }
+
+          for (const enrollment of toUnenroll) {
+            this.manager._unenroll(enrollment, {
+              reason: "prefFlips-conflict",
+              conflictingSlug: activeEnrollment.slug,
+            });
+          }
+        }
+
+        this._registerPref({
+          pref,
+          branch,
+          value,
+          originalValue: lazy.PrefUtils.getPref(pref, { branch }),
+          slug: activeEnrollment.slug,
+        });
+      }
+    } catch (e) {
+      this.#updating = false;
+
+      this._unenrollForFailure(activeEnrollment, e.pref);
+      return;
     }
 
     // If this is new enrollment, we need to cache the original values of prefs
@@ -126,12 +150,23 @@ export class PrefFlipsFeature {
       const featureValue = activeEnrollment.branch.features.find(
         fc => fc.featureId === FEATURE_ID
       ).value;
-      for (const [pref, entry] of Object.entries(featureValue.prefs)) {
-        this._registerPref(
-          pref,
-          entry,
-          activeEnrollment.prefFlips.originalValues[pref]
-        );
+      try {
+        for (const [pref, { branch, value }] of Object.entries(
+          featureValue.prefs
+        )) {
+          this._registerPref({
+            pref,
+            branch,
+            value,
+            originalValue: activeEnrollment.prefFlips.originalValues[pref],
+            slug: activeEnrollment.slug,
+          });
+        }
+      } catch (e) {
+        if (e instanceof PrefFlipsFailedError) {
+          this._unenrollForFailure(activeEnrollment, e.pref);
+          return;
+        }
       }
     }
 
@@ -142,7 +177,7 @@ export class PrefFlipsFeature {
     this.#initialized = true;
   }
 
-  _registerPref(pref, { branch, value }, originalValue) {
+  _registerPref({ pref, branch, value, originalValue, slug }) {
     const observer = (_aSubject, _aTopic, aData) => {
       // This observer will be called for changes to `name` as well as any
       // other pref that begins with `name.`, so we have to filter to
@@ -164,14 +199,20 @@ export class PrefFlipsFeature {
       originalValue,
       value: value ?? null,
       observer,
+      slug,
     };
 
-    lazy.PrefUtils.setPref(pref, value ?? null, { branch });
+    try {
+      lazy.PrefUtils.setPref(pref, value ?? null, { branch });
+    } catch (e) {
+      throw new PrefFlipsFailedError(pref);
+    }
+
     Services.prefs.addObserver(pref, observer);
     this._prefs.set(pref, entry);
   }
 
-  _updatePref(pref, { branch, value }) {
+  _updatePref({ pref, branch, value, slug }) {
     const entry = this._prefs.get(pref);
     if (!entry) {
       return;
@@ -182,6 +223,9 @@ export class PrefFlipsFeature {
     let originalValue = entry.originalValue;
     if (entry.branch !== branch) {
       // Restore the value on the previous branch.
+      //
+      // Because we were able to set the pref, it must have the same type as the
+      // originalValue, so this will also succeed.
       lazy.PrefUtils.setPref(pref, entry.originalValue, {
         branch: entry.branch,
       });
@@ -193,9 +237,14 @@ export class PrefFlipsFeature {
       branch,
       value,
       originalValue,
+      slug,
     });
 
-    lazy.PrefUtils.setPref(pref, value, { branch });
+    try {
+      lazy.PrefUtils.setPref(pref, value, { branch });
+    } catch (e) {
+      throw new PrefFlipsFailedError(pref);
+    }
     Services.prefs.addObserver(pref, entry.observer);
   }
 
@@ -317,5 +366,40 @@ export class PrefFlipsFeature {
       return "default";
     }
     return "user";
+  }
+
+  _unenrollForFailure(enrollment, pref) {
+    const rawType = Services.prefs.getPrefType(pref);
+    let prefType = "invalid";
+
+    switch (rawType) {
+      case Ci.nsIPrefBranch.PREF_BOOL:
+        prefType = "bool";
+        break;
+
+      case Ci.nsIPrefBranch.PREF_STRING:
+        prefType = "string";
+        break;
+
+      case Ci.nsIPrefBranch.PREF_INT:
+        prefType = "int";
+        break;
+    }
+
+    this.manager._unenroll(enrollment, {
+      reason: REASON_PREFFLIPS_FAILED,
+      prefName: pref,
+      prefType,
+    });
+  }
+}
+
+/**
+ * Thrown when the prefFlips feature fails to set a pref.
+ */
+class PrefFlipsFailedError extends Error {
+  constructor(pref, value) {
+    super(`The Nimbus prefFlips feature failed to set ${pref}=${value}`);
+    this.pref = pref;
   }
 }

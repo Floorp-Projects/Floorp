@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { PrefFlipsFeature } from "resource://nimbus/lib/PrefFlipsFeature.sys.mjs";
+import {
+  PrefFlipsFeature,
+  REASON_PREFFLIPS_FAILED,
+} from "resource://nimbus/lib/PrefFlipsFeature.sys.mjs";
 
 const lazy = {};
 
@@ -713,6 +716,8 @@ export class _ExperimentManager {
       changedPref = undefined,
       duringRestore = false,
       conflictingSlug = undefined,
+      prefName = undefined,
+      prefType = undefined,
     } = {}
   ) {
     const { slug } = enrollment;
@@ -744,7 +749,8 @@ export class _ExperimentManager {
         typeof changedPref !== "undefined"
           ? { changedPref: changedPref.name }
           : {},
-        typeof conflictingSlug !== "undefined" ? { conflictingSlug } : {}
+        typeof conflictingSlug !== "undefined" ? { conflictingSlug } : {},
+        reason === REASON_PREFFLIPS_FAILED ? { prefType, prefName } : {}
       )
     );
     // Sent Glean event equivalent
@@ -760,6 +766,12 @@ export class _ExperimentManager {
           : {},
         typeof conflictingSlug !== "undefined"
           ? { conflicting_slug: conflictingSlug }
+          : {},
+        reason === REASON_PREFFLIPS_FAILED
+          ? {
+              pref_type: prefType,
+              pref_name: prefName,
+            }
           : {}
       )
     );

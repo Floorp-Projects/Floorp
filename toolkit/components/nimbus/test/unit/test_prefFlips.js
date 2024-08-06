@@ -2215,7 +2215,459 @@ add_task(async function test_prefFlips_restore_unenroll() {
     "pref unset after unenrollment"
   );
 
-  await assertEmptyStore(manager.store);
+  await assertEmptyStore(manager.store, { cleanup: true });
 
   sandbox.restore();
+});
+
+add_task(async function test_prefFlips_failed() {
+  const PREF = "test.pref.please.ignore";
+
+  Services.fog.testResetFOG();
+  Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    /* clear = */ true
+  );
+
+  Services.prefs.getDefaultBranch(null).setStringPref(PREF, "test-value");
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  await manager.onStartup();
+
+  const recipe = ExperimentFakes.recipe("prefFlips-test", {
+    branches: [
+      {
+        ...ExperimentFakes.recipe.branches[0],
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: {
+              prefs: {
+                [PREF]: { branch: "user", value: 123 },
+              },
+            },
+          },
+        ],
+      },
+    ],
+    bucketConfig: {
+      ...ExperimentFakes.recipe.bucketConfig,
+      count: 1000,
+    },
+  });
+
+  await manager.enroll(recipe);
+
+  const enrollment = manager.store.get(recipe.slug);
+  Assert.ok(!enrollment.active, "Experiment should not be active");
+
+  Assert.equal(Services.prefs.getStringPref(PREF), "test-value");
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: recipe.slug,
+        extra: {
+          reason: "prefFlips-failed",
+          prefName: PREF,
+          prefType: "string",
+        },
+      },
+    ],
+    {
+      category: "normandy",
+      object: "nimbus_experiment",
+      method: "unenroll",
+    }
+  );
+  Assert.deepEqual(
+    Glean.nimbusEvents.unenrollment.testGetValue().map(event => ({
+      reason: event.extra.reason,
+      experiment: event.extra.experiment,
+      pref_name: event.extra.pref_name,
+      pref_type: event.extra.pref_type,
+    })),
+    [
+      {
+        reason: "prefFlips-failed",
+        experiment: recipe.slug,
+        pref_name: PREF,
+        pref_type: "string",
+      },
+    ]
+  );
+
+  Services.prefs.deleteBranch(PREF);
+
+  await assertEmptyStore(manager.store);
+});
+
+add_task(async function test_prefFlips_failed_multiple_prefs() {
+  const GOOD_PREF = "test.pref.please.ignore";
+  const BAD_PREF = "this.one.too";
+
+  Services.fog.testResetFOG();
+  Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    /* clear = */ true
+  );
+
+  Services.prefs.getDefaultBranch(null).setStringPref(BAD_PREF, "test-value");
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  const setPrefSpy = sandbox.spy(PrefUtils, "setPref");
+
+  await manager.onStartup();
+
+  const recipe = ExperimentFakes.recipe("prefFlips-test", {
+    branches: [
+      {
+        ...ExperimentFakes.recipe.branches[0],
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: {
+              prefs: {
+                [GOOD_PREF]: { branch: USER, value: 123 },
+                [BAD_PREF]: { branch: USER, value: 123 },
+              },
+            },
+          },
+        ],
+      },
+    ],
+    bucketConfig: {
+      ...ExperimentFakes.recipe.bucketConfig,
+      count: 1000,
+    },
+  });
+
+  await manager.enroll(recipe);
+
+  const enrollment = manager.store.get(recipe.slug);
+  Assert.ok(!enrollment.active, "Experiment should not be active");
+
+  Assert.deepEqual(
+    setPrefSpy.getCall(0).args,
+    [GOOD_PREF, 123, { branch: USER }],
+    `should set ${GOOD_PREF}`
+  );
+  Assert.deepEqual(
+    setPrefSpy.getCall(1).args,
+    [BAD_PREF, 123, { branch: USER }],
+    `should have attempted to set ${BAD_PREF}`
+  );
+  Assert.ok(
+    typeof setPrefSpy.getCall(1).exception !== "undefined",
+    `Attempting to set ${BAD_PREF} threw`
+  );
+  Assert.deepEqual(
+    setPrefSpy.getCall(2).args,
+    [GOOD_PREF, null, { branch: USER }],
+    `should reset ${GOOD_PREF}`
+  );
+  Assert.equal(
+    setPrefSpy.callCount,
+    3,
+    "should have 3 calls to PrefUtils.setPref"
+  );
+
+  Assert.ok(
+    !Services.prefs.prefHasUserValue(GOOD_PREF),
+    `${GOOD_PREF} should not be set`
+  );
+  Assert.equal(Services.prefs.getStringPref(BAD_PREF), "test-value");
+
+  Services.prefs.deleteBranch(GOOD_PREF);
+  Services.prefs.deleteBranch(BAD_PREF);
+
+  await assertEmptyStore(manager.store);
+  sandbox.reset();
+});
+
+add_task(async function test_prefFlips_failed_experiment_and_rollout() {
+  const ROLLOUT = "rollout";
+  const EXPERIMENT = "experiment";
+
+  const PREFS = {
+    [ROLLOUT]: "test.nimbus.prefs.rollout",
+    [EXPERIMENT]: "test.nimbus.prefs.experiment",
+  };
+
+  const VALUES = {
+    [ROLLOUT]: "rollout-value",
+    [EXPERIMENT]: "experiment-value",
+  };
+
+  const BOGUS_VALUE = 123;
+
+  const TEST_CASES = [
+    {
+      name: "Enrolling in an experiment and then a rollout with errors",
+      setPrefsBefore: {
+        [PREFS[ROLLOUT]]: { defaultBranchValue: BOGUS_VALUE },
+      },
+      enrollmentOrder: [EXPERIMENT, ROLLOUT],
+      expectedEnrollments: [EXPERIMENT, ROLLOUT],
+      expectedUnenrollments: [],
+      expectedPrefs: {
+        [PREFS[EXPERIMENT]]: VALUES[EXPERIMENT],
+        [PREFS[ROLLOUT]]: BOGUS_VALUE,
+      },
+    },
+    {
+      name: "Enrolling in a rollout and then an experiment with errors",
+      setPrefsBefore: {
+        [PREFS[EXPERIMENT]]: { defaultBranchValue: BOGUS_VALUE },
+      },
+      enrollmentOrder: [ROLLOUT, EXPERIMENT],
+      expectedEnrollments: [ROLLOUT],
+      expectedUnenrollments: [EXPERIMENT],
+      expectedPrefs: {
+        [PREFS[ROLLOUT]]: VALUES[ROLLOUT],
+        [PREFS[EXPERIMENT]]: BOGUS_VALUE,
+      },
+    },
+  ];
+
+  const FEATURE_VALUES = {
+    [EXPERIMENT]: {
+      prefs: {
+        [PREFS[EXPERIMENT]]: {
+          value: VALUES[EXPERIMENT],
+          branch: USER,
+        },
+      },
+    },
+    [ROLLOUT]: {
+      prefs: {
+        [PREFS[ROLLOUT]]: {
+          value: VALUES[ROLLOUT],
+          branch: USER,
+        },
+      },
+    },
+  };
+
+  for (const [i, { name, ...testCase }] of TEST_CASES.entries()) {
+    info(`Running test case ${i}: ${name}`);
+
+    const {
+      setPrefsBefore,
+      enrollmentOrder,
+      expectedEnrollments,
+      expectedUnenrollments,
+      expectedPrefs,
+    } = testCase;
+
+    const sandbox = sinon.createSandbox();
+
+    const manager = ExperimentFakes.manager();
+    sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+    sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+    await manager.onStartup();
+
+    info("Setting initial values of prefs...");
+    setPrefs(setPrefsBefore);
+
+    info("Enrolling...");
+    for (const slug of enrollmentOrder) {
+      await ExperimentFakes.enrollWithFeatureConfig(
+        {
+          featureId: FEATURE_ID,
+          value: FEATURE_VALUES[slug],
+        },
+        {
+          manager,
+          slug,
+          isRollout: slug === ROLLOUT,
+        }
+      );
+    }
+
+    info("Checking expected enrollments...");
+    for (const slug of expectedEnrollments) {
+      const enrollment = manager.store.get(slug);
+      Assert.ok(enrollment.active, "The enrollment is active.");
+    }
+
+    info("Checking expected unenrollments...");
+    for (const slug of expectedUnenrollments) {
+      const enrollment = manager.store.get(slug);
+      Assert.ok(!enrollment.active, "The enrollment is no longer active.");
+    }
+
+    info("Checking expected prefs...");
+    checkExpectedPrefs(expectedPrefs);
+
+    info("Unenrolling...");
+    if (expectedEnrollments.includes(ROLLOUT)) {
+      manager.unenroll(ROLLOUT, "test-cleanup");
+    }
+    if (expectedEnrollments.includes(EXPERIMENT)) {
+      manager.unenroll(EXPERIMENT, "test-cleanup");
+    }
+
+    info("Cleaning up...");
+    Services.prefs.deleteBranch(PREFS[ROLLOUT]);
+    Services.prefs.deleteBranch(PREFS[EXPERIMENT]);
+
+    await assertEmptyStore(manager.store);
+    assertNoObservers(manager);
+    sandbox.restore();
+  }
+});
+
+add_task(async function test_prefFlips_update_failure() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  await manager.onStartup();
+
+  PrefUtils.setPref("pref.one", "default-value", { branch: DEFAULT });
+  PrefUtils.setPref("pref.two", "default-value", { branch: DEFAULT });
+
+  const doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: FEATURE_ID,
+      value: {
+        prefs: {
+          "pref.one": { value: "one", branch: USER },
+          "pref.two": { value: "two", branch: USER },
+        },
+      },
+    },
+    { manager, isRollout: true, slug: "rollout" }
+  );
+
+  Assert.equal(Services.prefs.getStringPref("pref.one"), "one");
+  Assert.equal(Services.prefs.getStringPref("pref.two"), "two");
+
+  await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: FEATURE_ID,
+      value: {
+        prefs: {
+          "pref.one": { value: "experiment-value", branch: USER },
+          "pref.two": { value: 2, branch: USER },
+        },
+      },
+    },
+    { manager, slug: "experiment" }
+  );
+
+  const rolloutEnrollment = manager.store.get("rollout");
+  const experimentEnrollment = manager.store.get("experiment");
+
+  Assert.ok(rolloutEnrollment.active, "Rollout is active");
+  Assert.ok(!experimentEnrollment.active, "Experiment is inactive");
+  Assert.equal(experimentEnrollment.unenrollReason, "prefFlips-failed");
+
+  Assert.equal(Services.prefs.getStringPref("pref.one"), "one");
+  Assert.equal(Services.prefs.getStringPref("pref.two"), "two");
+
+  Services.prefs.deleteBranch("pref.one");
+  Services.prefs.deleteBranch("pref.two");
+
+  doCleanup();
+  await assertEmptyStore(manager.store);
+  assertNoObservers(manager);
+
+  sandbox.restore();
+});
+
+// Test the case where an experiment sets a default branch pref, but the user
+// changed their user.js between restarts.
+add_task(async function test_prefFlips_restore_failure() {
+  const PREF = "foo.bar.baz";
+
+  const recipe = ExperimentFakes.recipe("prefFlips-test", {
+    branches: [
+      {
+        ...ExperimentFakes.recipe.branches[0],
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: {
+              prefs: {
+                [PREF]: {
+                  branch: DEFAULT,
+                  value: "recipe-value",
+                },
+              },
+            },
+          },
+        ],
+      },
+    ],
+    bucketConfig: {
+      ...ExperimentFakes.recipe.bucketConfig,
+      count: 1000,
+    },
+  });
+
+  {
+    const prevEnrollment = {
+      slug: recipe.slug,
+      branch: recipe.branches[0],
+      active: true,
+      experimentType: "nimbus",
+      userFacingName: recipe.userFacingName,
+      userFacingDescription: recipe.userFacingDescription,
+      featureIds: recipe.featureIds,
+      isRollout: recipe.isRollout,
+      localizations: recipe.localizations,
+      source: "rs-loader",
+      prefFlips: {
+        originalValues: {
+          [PREF]: "original-value",
+        },
+      },
+    };
+
+    const store = ExperimentFakes.store();
+    await store.init();
+    await store.ready();
+    store.set(prevEnrollment.slug, prevEnrollment);
+    store._store.saveSoon();
+    await store._store.finalize();
+  }
+
+  Services.prefs.setIntPref(PREF, 123);
+
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  await manager.onStartup();
+
+  const enrollment = manager.store.get(recipe.slug);
+
+  Assert.ok(!enrollment.active, "Enrollment should be inactive");
+  Assert.equal(enrollment.unenrollReason, "prefFlips-failed");
+
+  Assert.ok(
+    !Services.prefs.prefHasDefaultValue(PREF),
+    "pref has no default value"
+  );
+  Assert.equal(Services.prefs.getIntPref(PREF), 123, "pref value unchanged");
+
+  await assertEmptyStore(manager.store, { cleanup: true });
+  assertNoObservers(manager);
+
+  Services.prefs.deleteBranch(PREF);
 });
