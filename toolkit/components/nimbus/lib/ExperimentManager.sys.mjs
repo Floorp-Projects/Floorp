@@ -189,10 +189,6 @@ export class _ExperimentManager {
     await this.store.init();
     this.extraContext = extraContext;
 
-    lazy.NimbusFeatures.prefFlips.onUpdate((...args) =>
-      this._prefFlips.onFeatureUpdate(...args)
-    );
-
     const restoredExperiments = this.store.getAllActiveExperiments();
     const restoredRollouts = this.store.getAllActiveRollouts();
 
@@ -208,6 +204,8 @@ export class _ExperimentManager {
         this._updatePrefObservers(rollout);
       }
     }
+
+    this._prefFlips.init();
 
     this.observe();
 

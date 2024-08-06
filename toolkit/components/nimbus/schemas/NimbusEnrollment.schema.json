@@ -183,6 +183,22 @@
             "additionalProperties": false
           }
         },
+        "prefFlips": {
+          "type": "object",
+          "description": "Information stored on this enrollment by the prefFlips feature. Only present if an experiment uses the prefFlips feature.",
+          "properties": {
+            "originalValues": {
+              "type": "object",
+              "description": "Original values for prefs set by this experiment.",
+              "patternProperties": {
+                ".*": {
+                  "description": "The original value of the pref, or null if the pref was not set.",
+                  "type": ["string", "integer", "boolean", "null"]
+                }
+              }
+            }
+          }
+        },
         "localizations": {
           "anyOf": [
             {
