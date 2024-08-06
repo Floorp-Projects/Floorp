@@ -2671,3 +2671,61 @@ add_task(async function test_prefFlips_restore_failure() {
 
   Services.prefs.deleteBranch(PREF);
 });
+
+add_task(
+  async function test_prefFlips_reenroll_set_default_branch_wrong_type() {
+    const PREF = "test.pref.please.ignore";
+
+    const sandbox = sinon.createSandbox();
+    const manager = ExperimentFakes.manager();
+
+    const recipe = ExperimentFakes.recipe("invalid", {
+      isRollout: true,
+      bucketConfig: {
+        ...ExperimentFakes.recipe.bucketConfig,
+        count: 1000,
+      },
+      branches: [
+        {
+          ...ExperimentFakes.recipe.branches[0],
+          features: [
+            {
+              featureId: FEATURE_ID,
+              value: {
+                prefs: {
+                  [PREF]: { value: 123, branch: DEFAULT },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+    sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+    PrefUtils.setPref(PREF, "default-value", { branch: DEFAULT });
+
+    await manager.onStartup();
+    await manager.enroll(recipe, "rs-loader");
+
+    let enrollment = manager.store.get(recipe.slug);
+
+    Assert.ok(!enrollment.active, "enrollment should not be active");
+    Assert.equal(enrollment.unenrollReason, "prefFlips-failed");
+
+    await manager.enroll(recipe, "rs-loader", { reenroll: true });
+    enrollment = manager.store.get(recipe.slug);
+
+    Assert.ok(!enrollment.active, "enrollment should not be active");
+    Assert.equal(enrollment.unenrollReason, "prefFlips-failed");
+
+    await assertEmptyStore(manager.store);
+    assertNoObservers(manager);
+
+    Services.prefs.deleteBranch(PREF);
+
+    sandbox.restore();
+  }
+);
