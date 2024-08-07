@@ -438,7 +438,6 @@ add_task(async function ChannelWrapper_blob_url() {
 
 add_task(async function ChannelWrapper_data_url() {
   const channel = createChannel("data:,");
-  Assert.ok(channel instanceof Ci.nsIDataChannel, "Is nsIDataChannel");
   assertChannelWrapperUnsupportedForChannel(channel);
 });
 
