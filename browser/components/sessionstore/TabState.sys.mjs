@@ -98,6 +98,31 @@ var TabStateInternal = {
       tabData.muteReason = tab.muteReason;
     }
 
+    /*****Floorp Injections*****/
+    let { WorkspacesService } = ChromeUtils.importESModule(
+      "resource://floorp/WorkspacesService.mjs"
+    );
+
+    // WorkspaceId
+    tabData.floorpWorkspaceId = tab.getAttribute(
+      WorkspacesService.workspacesTabAttributionId
+    );
+    // lastShowWorkspaceId
+    tabData.floorpLastShowWorkspaceId = tab.getAttribute(
+      WorkspacesService.workspaceLastShowId
+    );
+
+    // Private Container
+    tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
+
+    // Site Specific Browser
+    tabData.floorpSSB = tab.getAttribute("floorpSSB");
+
+    // WebPanel
+    tabData.floorpWebPanel = tab.hasAttribute("BMS-webpanel-tab");
+
+    /*****Floorp Injections*****/
+
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
 
     tabData.userContextId = tab.userContextId || 0;

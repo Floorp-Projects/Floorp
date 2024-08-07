@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Feature Request
+    url: https://github.com/Floorp-Projects/Floorp/discussions/new?category=feature-request
+    about: Suggest an idea for Floorp.
+  - name: User Support
+    url: https://support.ablaze.one/articles/floorp/
+    about: Support for end-user.

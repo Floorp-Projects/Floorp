@@ -217,6 +217,17 @@ function init_all() {
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
+
+  register_module("paneDesign", gDesign);
+  register_module("paneLepton", gLeptonPane);
+  register_module("paneNotes", gNotesPane);
+  register_module("paneBSB", gBSBPane);
+  register_module("paneSsb", gSsbPane);
+  register_module("paneDownloads", gDownloads);
+  register_module("paneUserjs", gUserjsPane);
+  register_module("paneCsk", { init() {} });
+  register_module("paneWorkspaces", gWorkspacesPane);
+
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.
     document.getElementById("category-experimental").hidden =
@@ -550,9 +561,12 @@ async function confirmRestartPrompt(
     restartLaterButtonText,
   ] = await document.l10n.formatValues([
     {
-      id: aRestartToEnable
-        ? "feature-enable-requires-restart"
-        : "feature-disable-requires-restart",
+      id:
+        aRestartToEnable === null
+          ? "feature-requires-restart"
+          : aRestartToEnable
+          ? "feature-enable-requires-restart"
+          : "feature-disable-requires-restart",
     },
     { id: "should-restart-title" },
     { id: "should-restart-ok" },
