@@ -461,17 +461,50 @@ export class DevToolsProcessChild extends JSProcessActorChild {
     if (!watcherDataObject) {
       return;
     }
+    const { actors, sessionData, watchingTargetTypes } = watcherDataObject;
 
     // Maintain the copy of `sessionData` so that it is up-to-date when
     // a new worker target needs to be instantiated
-    lazy.SessionDataHelpers.removeSessionDataEntry(
-      watcherDataObject.sessionData,
-      type,
-      entries
-    );
+    lazy.SessionDataHelpers.removeSessionDataEntry(sessionData, type, entries);
 
-    for (const targetActor of watcherDataObject.actors) {
+    for (const targetActor of actors) {
       targetActor.removeSessionDataEntry(type, entries);
+    }
+
+    // Special code paths for webextension toolboxes and worker targets
+    // See addOrSetSessionDataEntry for more details.
+
+    if (sessionData.sessionContext.type == "webextension") {
+      const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
+      const targetActors = lazy.TargetActorRegistry.getTargetActors(
+        sessionData.sessionContext,
+        connectionPrefix
+      );
+      if (targetActors.length) {
+        targetActors[0].removeSessionDataEntry(type, entries);
+      }
+    }
+
+    if (watchingTargetTypes.includes("worker")) {
+      this.#watchers.worker.watcher.removeSessionDataEntry(
+        watcherDataObject,
+        type,
+        entries
+      );
+    }
+    if (watchingTargetTypes.includes("service_worker")) {
+      this.#watchers.service_worker.watcher.removeSessionDataEntry(
+        watcherDataObject,
+        type,
+        entries
+      );
+    }
+    if (watchingTargetTypes.includes("shared_worker")) {
+      this.#watchers.shared_worker.watcher.removeSessionDataEntry(
+        watcherDataObject,
+        type,
+        entries
+      );
     }
   }
 

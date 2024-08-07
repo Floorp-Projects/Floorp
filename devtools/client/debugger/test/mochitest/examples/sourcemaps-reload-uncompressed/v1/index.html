@@ -35,6 +35,13 @@
       `);
     </script>
 
+    <script>
+      const logWorker = new Worker("log-worker.js");
+      function invokeLogWorker() {
+        logWorker.postMessage({yo: 'yo'})
+      }
+    </script>
+
     <!-- Test JS file with encoded characters as well as custom protocol -->
     <script>
     //# sourceURL=foo://bar/%e6%96%87%e5%ad%97%e3%82%b3%e3%83%bc%e3%83%89.js

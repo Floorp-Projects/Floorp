@@ -320,11 +320,12 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     .getAllThreads()
     .find(thread => thread.name == "Main Thread");
 
+  // When EFT is disabled the iframe's source is meld into the main target.
+  const expectedSameUrlSources = isEveryFrameTargetEnabled() ? 3 : 4;
   is(
     sourceActors.filter(actor => actor.thread == mainThread.actor).length,
-    // When EFT is disabled the iframe's source is meld into the main target
-    isEveryFrameTargetEnabled() ? 3 : 4,
-    "same-url.js is loaded 3 times in the main thread"
+    expectedSameUrlSources,
+    `same-url.js is loaded ${expectedSameUrlSources} times in the main thread`
   );
 
   if (isEveryFrameTargetEnabled()) {

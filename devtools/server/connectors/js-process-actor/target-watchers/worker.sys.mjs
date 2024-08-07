@@ -76,6 +76,24 @@ export class WorkerTargetWatcherClass {
     await Promise.all(promises);
   }
 
+  removeSessionDataEntry(watcherDataObject, type, entries) {
+    for (const { dbg, workerThreadServerForwardingPrefix } of watcherDataObject
+      .workers[this.#workerTargetType]) {
+      if (!isWorkerDebuggerAlive(dbg)) {
+        continue;
+      }
+
+      dbg.postMessage(
+        JSON.stringify({
+          type: "remove-session-data-entry",
+          forwardingPrefix: workerThreadServerForwardingPrefix,
+          dataEntryType: type,
+          entries,
+        })
+      );
+    }
+  }
+
   /**
    * Called whenever a new Worker is instantiated in the current process
    *
