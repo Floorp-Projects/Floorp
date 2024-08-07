@@ -5,6 +5,8 @@
 # Force pref value to true to get download tests to pass on Thunderbird.
 prefs = ["browser.download.useDownloadDir=true"]
 
+["test_ChannelWrapper.js"]
+
 ["test_QuarantinedDomains.js"]
 
 ["test_QuarantinedDomains_telemetry.js"]
