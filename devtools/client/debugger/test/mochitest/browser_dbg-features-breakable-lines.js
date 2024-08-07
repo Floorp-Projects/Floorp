@@ -19,12 +19,14 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakableLines(dbg, "index.html", 78, [
+  await assertBreakableLines(dbg, "index.html", 85, [
     ...getRange(16, 17),
     21,
     ...getRange(24, 25),
     30,
     36,
+    39,
+    ...getRange(41, 43),
   ]);
 
   info("Assert breakable lines of the first original source file, original.js");
