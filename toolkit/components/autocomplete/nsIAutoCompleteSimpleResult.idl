@@ -57,6 +57,8 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
    * @param aFinalCompleteValue
    *        Value used when the user confirms selecting this match. If not
    *        provided, aValue will be used.
+   * @param aLabel
+   *        The label to show in the autocomplete panel.
    */
   void insertMatchAt(in long aIndex,
                      in AString aValue,
@@ -80,6 +82,8 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
    * @param aFinalCompleteValue
    *        Value used when the user confirms selecting this match. If not
    *        provided, aValue will be used.
+   * @param aLabel
+   *        The label to show in the autocomplete panel.
    */
   void appendMatch(in AString aValue,
                    in AString aComment,
