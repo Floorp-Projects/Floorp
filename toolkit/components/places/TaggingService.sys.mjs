@@ -497,7 +497,7 @@ class TagSearch {
       for (let i = 0; i < matchingTags.length; ++i) {
         let tag = matchingTags[i];
         // For each match, prepend what the user has typed so far.
-        this._result.appendMatch(before + tag, tag);
+        this._result.appendMatch(before + tag, null, null, null, null, tag);
         // In case of many tags, notify once every 10.
         if (i % 10 == 0) {
           this._notifyResult(true);
