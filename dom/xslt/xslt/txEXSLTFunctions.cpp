@@ -593,12 +593,19 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
       Document* sourceDoc = getSourceDocument(aContext);
       NS_ENSURE_STATE(sourceDoc);
 
-      PR_ExplodeTime(
-          PR_Now(),
+      PRTimeParamFn timezone =
           sourceDoc->ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC)
               ? PR_GMTParameters
-              : PR_LocalTimeParameters,
-          &prtime);
+              : PR_LocalTimeParameters;
+
+      PRTime time =
+          sourceDoc->ShouldResistFingerprinting(RFPTarget::ReduceTimerPrecision)
+              ? (PRTime)nsRFPService::ReduceTimePrecisionAsSecs(
+                    (double)PR_Now() / PR_USEC_PER_SEC, 0,
+                    RTPCallerType::ResistFingerprinting) *
+                    PR_USEC_PER_SEC
+              : PR_Now();
+      PR_ExplodeTime(time, timezone, &prtime);
 
       int32_t offset =
           (prtime.tm_params.tp_gmt_offset + prtime.tm_params.tp_dst_offset) /
