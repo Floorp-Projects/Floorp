@@ -357,17 +357,17 @@ bool IndexedDatabaseManager::ResolveSandboxBinding(JSContext* aCx) {
     return false;
   }
 
-  if (!IDBCursor_Binding::GetConstructorObject(aCx) ||
-      !IDBCursorWithValue_Binding::GetConstructorObject(aCx) ||
-      !IDBDatabase_Binding::GetConstructorObject(aCx) ||
-      !IDBFactory_Binding::GetConstructorObject(aCx) ||
-      !IDBIndex_Binding::GetConstructorObject(aCx) ||
-      !IDBKeyRange_Binding::GetConstructorObject(aCx) ||
-      !IDBObjectStore_Binding::GetConstructorObject(aCx) ||
-      !IDBOpenDBRequest_Binding::GetConstructorObject(aCx) ||
-      !IDBRequest_Binding::GetConstructorObject(aCx) ||
-      !IDBTransaction_Binding::GetConstructorObject(aCx) ||
-      !IDBVersionChangeEvent_Binding::GetConstructorObject(aCx)) {
+  if (!IDBCursor_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBCursorWithValue_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBDatabase_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBFactory_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBIndex_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBKeyRange_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBObjectStore_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBOpenDBRequest_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBRequest_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBTransaction_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !IDBVersionChangeEvent_Binding::CreateAndDefineOnGlobal(aCx)) {
     return false;
   }
 

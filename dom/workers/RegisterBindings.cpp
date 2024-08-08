@@ -37,11 +37,8 @@ bool WorkerPrivate::RegisterDebuggerBindings(JSContext* aCx,
     return false;
   }
 
-  if (!ChromeUtils_Binding::GetConstructorObject(aCx)) {
-    return false;
-  }
-
-  if (!DebuggerNotificationObserver_Binding::GetConstructorObject(aCx)) {
+  if (!ChromeUtils_Binding::CreateAndDefineOnGlobal(aCx) ||
+      !DebuggerNotificationObserver_Binding::CreateAndDefineOnGlobal(aCx)) {
     return false;
   }
 
