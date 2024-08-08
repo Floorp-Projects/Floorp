@@ -3665,8 +3665,8 @@ bool GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
     // JS::GetRealmGlobalOrNull should not be returning null here, because we
     // have live objects in the Realm.
     JSAutoRealm ar(aCx, JS::GetRealmGlobalOrNull(realm));
-    aDesiredProto.set(
-        GetPerInterfaceObjectHandle(aCx, aProtoId, aCreator, true));
+    aDesiredProto.set(GetPerInterfaceObjectHandle(
+        aCx, aProtoId, aCreator, DefineInterfaceProperty::CheckExposure));
     if (!aDesiredProto) {
       return false;
     }
@@ -3797,8 +3797,8 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   // makes sense to start with: https://github.com/whatwg/html/issues/3575
   {
     JSAutoRealm ar(aCx, newTarget);
-    JS::Handle<JSObject*> constructor =
-        GetPerInterfaceObjectHandle(aCx, aConstructorId, aCreator, true);
+    JS::Handle<JSObject*> constructor = GetPerInterfaceObjectHandle(
+        aCx, aConstructorId, aCreator, DefineInterfaceProperty::CheckExposure);
     if (!constructor) {
       return false;
     }
@@ -4211,7 +4211,7 @@ JSObject* UnprivilegedJunkScopeOrWorkerGlobal(const fallible_t&) {
 
 JS::Handle<JSObject*> GetPerInterfaceObjectHandle(
     JSContext* aCx, size_t aSlotId, CreateInterfaceObjectsMethod aCreator,
-    bool aDefineOnGlobal) {
+    DefineInterfaceProperty aDefineOnGlobal) {
   /* Make sure our global is sane.  Hopefully we can remove this sometime */
   JSObject* global = JS::CurrentGlobalOrNull(aCx);
   if (!(JS::GetClass(global)->flags & JSCLASS_DOM_GLOBAL)) {

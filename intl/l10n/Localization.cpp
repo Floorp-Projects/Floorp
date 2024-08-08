@@ -6,9 +6,11 @@
 
 #include "Localization.h"
 #include "nsIObserverService.h"
+#include "xpcpublic.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
@@ -146,6 +148,13 @@ Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync,
                            const ffi::LocalizationRc* aRaw)
     : mGlobal(aGlobal), mRaw(aRaw) {
   RegisterObservers();
+}
+
+/* static */
+bool Localization::IsAPIEnabled(JSContext* aCx, JSObject* aObject) {
+  JS::Rooted<JSObject*> obj(aCx, aObject);
+  return Document::DocumentSupportsL10n(aCx, obj) ||
+         IsChromeOrUAWidget(aCx, obj);
 }
 
 already_AddRefed<Localization> Localization::Constructor(

@@ -77,7 +77,7 @@ nsresult CentralizedAdminPrefManagerInit(bool aSandboxEnabled) {
   }
 
   // Define ChromeUtils for ChromeUtils.import.
-  if (!mozilla::dom::ChromeUtils_Binding::GetConstructorObject(cx)) {
+  if (!mozilla::dom::ChromeUtils_Binding::CreateAndDefineOnGlobal(cx)) {
     return NS_ERROR_FAILURE;
   }
 

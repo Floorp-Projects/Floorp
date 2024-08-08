@@ -84,6 +84,8 @@ class Localization : public nsIObserver,
                                                         nsIObserver)
   NS_DECL_NSIOBSERVER
 
+  static bool IsAPIEnabled(JSContext* aCx, JSObject* aObject);
+
   static already_AddRefed<Localization> Constructor(
       const dom::GlobalObject& aGlobal,
       const dom::Sequence<dom::OwningUTF8StringOrResourceId>& aResourceIds,

@@ -82,6 +82,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/StorageManager.h"
+#include "mozilla/dom/StorageManagerBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/URLBinding.h"
@@ -351,9 +352,9 @@ bool xpc::SandboxCreateFetch(JSContext* cx, JS::Handle<JSObject*> obj) {
   MOZ_ASSERT(JS_IsGlobalObject(obj));
 
   return JS_DefineFunction(cx, obj, "fetch", SandboxFetchPromise, 2, 0) &&
-         dom::Request_Binding::GetConstructorObject(cx) &&
-         dom::Response_Binding::GetConstructorObject(cx) &&
-         dom::Headers_Binding::GetConstructorObject(cx);
+         Request_Binding::CreateAndDefineOnGlobal(cx) &&
+         Response_Binding::CreateAndDefineOnGlobal(cx) &&
+         Headers_Binding::CreateAndDefineOnGlobal(cx);
 }
 
 static bool SandboxCreateStorage(JSContext* cx, JS::HandleObject obj) {
@@ -361,6 +362,10 @@ static bool SandboxCreateStorage(JSContext* cx, JS::HandleObject obj) {
 
   nsIGlobalObject* native = xpc::NativeGlobal(obj);
   MOZ_ASSERT(native);
+
+  if (!StorageManager_Binding::CreateAndDefineOnGlobal(cx)) {
+    return false;
+  }
 
   dom::StorageManager* storageManager = new dom::StorageManager(native);
   JS::RootedObject wrapped(cx, storageManager->WrapObject(cx, nullptr));
@@ -1013,151 +1018,62 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
   // This function holds common properties not exposed automatically but able
   // to be requested either in |Cu.importGlobalProperties| or
   // |wantGlobalProperties| of a sandbox.
-  if (AbortController &&
-      !dom::AbortController_Binding::GetConstructorObject(cx)) {
-    return false;
+
+#define DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(_iface)                     \
+  if ((_iface) && !dom::_iface##_Binding::CreateAndDefineOnGlobal(cx)) { \
+    return false;                                                        \
   }
 
-  if (Blob && !dom::Blob_Binding::GetConstructorObject(cx)) return false;
-
-  if (ChromeUtils && !dom::ChromeUtils_Binding::GetConstructorObject(cx)) {
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(AbortController)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(ChromeUtils)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Blob)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(CSS)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(CSSRule)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(CustomStateSet)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Directory)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Document)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(DOMException)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(DOMParser)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(DOMTokenList)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Element)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Event)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(File)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(FileReader)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(FormData)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Headers)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(IOUtils)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(InspectorCSSParser)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(InspectorUtils)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(MessageChannel)
+  if (MessageChannel && !MessagePort_Binding::CreateAndDefineOnGlobal(cx)) {
     return false;
   }
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(MIDIInputMap)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(MIDIOutputMap)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Node)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(NodeFilter)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(PathUtils)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Performance)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(PromiseDebugging)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Range)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(ReadableStream)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Selection)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(TextDecoder)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(TextEncoder)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(URL)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(URLSearchParams)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(WebSocket)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(Window)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(XMLHttpRequest)
+  DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE(XMLSerializer)
 
-  if (CSS && !dom::CSS_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (CSSRule && !dom::CSSRule_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (CustomStateSet &&
-      !dom::CustomStateSet_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (Directory && !dom::Directory_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (Document && !dom::Document_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (DOMException && !dom::DOMException_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (DOMParser && !dom::DOMParser_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (DOMTokenList && !dom::DOMTokenList_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (Element && !dom::Element_Binding::GetConstructorObject(cx)) return false;
-
-  if (Event && !dom::Event_Binding::GetConstructorObject(cx)) return false;
-
-  if (File && !dom::File_Binding::GetConstructorObject(cx)) return false;
-
-  if (FileReader && !dom::FileReader_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (FormData && !dom::FormData_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (Headers && !dom::Headers_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (IOUtils && !dom::IOUtils_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (InspectorCSSParser &&
-      !dom::InspectorCSSParser_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (InspectorUtils && !dom::InspectorUtils_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (MessageChannel &&
-      (!dom::MessageChannel_Binding::GetConstructorObject(cx) ||
-       !dom::MessagePort_Binding::GetConstructorObject(cx)))
-    return false;
-
-  if (MIDIInputMap && !dom::MIDIInputMap_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (MIDIOutputMap && !dom::MIDIOutputMap_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (Node && !dom::Node_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (NodeFilter && !dom::NodeFilter_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (PathUtils && !dom::PathUtils_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (Performance && !dom::Performance_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (PromiseDebugging &&
-      !dom::PromiseDebugging_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (Range && !dom::Range_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (Selection && !dom::Selection_Binding::GetConstructorObject(cx)) {
-    return false;
-  }
-
-  if (TextDecoder && !dom::TextDecoder_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (TextEncoder && !dom::TextEncoder_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (URL && !dom::URL_Binding::GetConstructorObject(cx)) return false;
-
-  if (URLSearchParams &&
-      !dom::URLSearchParams_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (XMLHttpRequest && !dom::XMLHttpRequest_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (WebSocket && !dom::WebSocket_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (Window && !dom::Window_Binding::GetConstructorObject(cx)) return false;
-
-  if (XMLSerializer && !dom::XMLSerializer_Binding::GetConstructorObject(cx))
-    return false;
-
-  if (ReadableStream && !dom::ReadableStream_Binding::GetConstructorObject(cx))
-    return false;
+#undef DEFINE_WEBIDL_INTERFACE_OR_NAMESPACE
 
   if (atob && !JS_DefineFunction(cx, obj, "atob", Atob, 1, 0)) return false;
 
   if (btoa && !JS_DefineFunction(cx, obj, "btoa", Btoa, 1, 0)) return false;
 
-  if (caches && !dom::cache::CacheStorage::DefineCaches(cx, obj)) {
+  if (caches && !dom::cache::CacheStorage::DefineCachesForSandbox(cx, obj)) {
     return false;
   }
 
