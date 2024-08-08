@@ -2431,24 +2431,6 @@
       "last_modified": 1709780223348
     },
     {
-      "schema": 1709780043461,
-      "derHash": "sKF44Gt6cnTwsqZA9qA78AOrHt6Gk3cNXSdBstLwGYA=",
-      "subject": "CN=AffirmTrust 4K TLS Root CA - 2022,O=AffirmTrust,C=CA",
-      "subjectDN": "ME8xCzAJBgNVBAYTAkNBMRQwEgYDVQQKEwtBZmZpcm1UcnVzdDEqMCgGA1UEAxMhQWZmaXJtVHJ1c3QgNEsgVExTIFJvb3QgQ0EgLSAyMDIy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d68d5318a7ba2e9a85397e85f05d1f9fc36013ccdee30a7fff3c05e997f7ce91",
-        "size": 2288,
-        "filename": "PO-4Mc0JEYVGctI3huFt_Mbvj0EA2N9qQo9dg4I1_cw=.pem",
-        "location": "security-state-staging/intermediates/c6ba6944-757d-422a-85a3-113db515beed.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "PO+4Mc0JEYVGctI3huFt/Mbvj0EA2N9qQo9dg4I1/cw=",
-      "crlite_enrolled": false,
-      "id": "83abb7ec-d98c-4b07-8ef3-c24056303b1a",
-      "last_modified": 1709780223345
-    },
-    {
       "schema": 1709758443441,
       "derHash": "ZfA1j8k5NM1arEMSLzeUjXvQQtFI5v2IsuZaqaw5nd0=",
       "subject": "CN=Entrust Root Certification Authority - G2,OU=See www.entrust.net/legal-terms+OU=(c) 2009 Entrust\\, Inc. - for authorized use only,O=Entrust\\, Inc.,C=US",
@@ -2465,24 +2447,6 @@
       "crlite_enrolled": false,
       "id": "89c6906b-2f50-4f51-ae6c-29b661081f05",
       "last_modified": 1709758623247
-    },
-    {
-      "schema": 1709758442871,
-      "derHash": "4lXaLVTs/Rb7ZCajioM5nn459qAeluZJzYUPsP3/VOs=",
-      "subject": "CN=Entrust 4K TLS Root CA - 2022,O=Entrust\\, Inc.,C=US",
-      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1FbnRydXN0LCBJbmMuMSYwJAYDVQQDEx1FbnRydXN0IDRLIFRMUyBSb290IENBIC0gMjAyMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "38fbd31004e9e27ad9be5bc74d44558035bd507afeca61071f303289eb1039f2",
-        "size": 2060,
-        "filename": "w8sbVZHe29cRAbw0WtuFV3BsGDBZKehyOv_50FpLf7A=.pem",
-        "location": "security-state-staging/intermediates/b6658a24-c5c8-4cb7-bd99-029c9467e3ac.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "w8sbVZHe29cRAbw0WtuFV3BsGDBZKehyOv/50FpLf7A=",
-      "crlite_enrolled": false,
-      "id": "bb644eb4-afd2-4150-8fbb-4d0c76c48f3a",
-      "last_modified": 1709758623243
     },
     {
       "schema": 1709322861611,
@@ -31231,5 +31195,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1722434223222
+  "timestamp": 1722628622999
 }
