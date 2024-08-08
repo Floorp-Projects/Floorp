@@ -3755,7 +3755,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (no)",
+        "name": "Wikipedia (nb)",
         "urls": {
           "search": {
             "base": "https://no.wikipedia.org/wiki/Spesial:Søk",
@@ -3781,9 +3781,9 @@
       },
       "id": "607d401f-70cd-4810-b9b5-497d5a9489f6",
       "identifier": "wikipedia-NO",
-      "last_modified": 1702906502467,
+      "last_modified": 1722952002234,
       "recordType": "engine",
-      "schema": 1702901790944,
+      "schema": 1722848326841,
       "variants": [
         {
           "environment": {
@@ -4568,7 +4568,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (el)",
+        "name": "Βικιπαίδεια (el)",
         "urls": {
           "search": {
             "base": "https://el.wikipedia.org/wiki/Ειδικό:Αναζήτηση",
@@ -4594,9 +4594,9 @@
       },
       "id": "6ebc40f2-9307-4e58-8fd7-0e1a23b80723",
       "identifier": "wikipedia-el",
-      "last_modified": 1702906502698,
+      "last_modified": 1722952002207,
       "recordType": "engine",
-      "schema": 1702901748903,
+      "schema": 1722942003170,
       "variants": [
         {
           "environment": {
@@ -5430,7 +5430,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (hy)",
+        "name": "Վիքիպեդիա (hy)",
         "urls": {
           "search": {
             "base": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել",
@@ -5456,9 +5456,9 @@
       },
       "id": "c6286785-b61b-4288-aec1-9a7820c32694",
       "identifier": "wikipedia-hy",
-      "last_modified": 1702906502479,
+      "last_modified": 1722952002231,
       "recordType": "engine",
-      "schema": 1702901788513,
+      "schema": 1722942005797,
       "variants": [
         {
           "environment": {
@@ -5883,7 +5883,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (kn)",
+        "name": "ವಿಕಿಪೀಡಿಯ (kn)",
         "urls": {
           "search": {
             "base": "https://kn.wikipedia.org/wiki/ವಿಶೇಷ:Search",
@@ -5909,9 +5909,9 @@
       },
       "id": "ce510c56-9d5e-416c-aef0-277bfbaac464",
       "identifier": "wikipedia-kn",
-      "last_modified": 1702906502622,
+      "last_modified": 1722952002211,
       "recordType": "engine",
-      "schema": 1702901762594,
+      "schema": 1722942007046,
       "variants": [
         {
           "environment": {
@@ -6063,7 +6063,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (lt)",
+        "name": "Vikipedija (lt)",
         "urls": {
           "search": {
             "base": "https://lt.wikipedia.org/wiki/Specialus:Paieška",
@@ -6089,9 +6089,9 @@
       },
       "id": "774990fb-aabc-4008-86d3-adf12f89ccd4",
       "identifier": "wikipedia-lt",
-      "last_modified": 1702906502612,
+      "last_modified": 1722952002214,
       "recordType": "engine",
-      "schema": 1702901764432,
+      "schema": 1722942008331,
       "variants": [
         {
           "environment": {
@@ -6153,7 +6153,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Vikipēdija",
+        "name": "Vikipēdija (lv)",
         "urls": {
           "search": {
             "base": "https://lv.wikipedia.org/wiki/Special:Search",
@@ -6179,9 +6179,9 @@
       },
       "id": "395b6c93-f7ff-47b8-b895-6f7bb99f9c56",
       "identifier": "wikipedia-lv",
-      "last_modified": 1702906502606,
+      "last_modified": 1722952002217,
       "recordType": "engine",
-      "schema": 1702901765673,
+      "schema": 1722942009487,
       "variants": [
         {
           "environment": {
@@ -6333,7 +6333,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (my)",
+        "name": "ဝီကီပီးဒီးယား (my)",
         "urls": {
           "search": {
             "base": "https://my.wikipedia.org/wiki/Special:Search",
@@ -6359,9 +6359,9 @@
       },
       "id": "0616dd06-2bfd-46f0-9870-832a1db8a622",
       "identifier": "wikipedia-my",
-      "last_modified": 1702906502592,
+      "last_modified": 1722952002221,
       "recordType": "engine",
-      "schema": 1702901768156,
+      "schema": 1722942010626,
       "variants": [
         {
           "environment": {
@@ -6513,7 +6513,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (pa)",
+        "name": "ਵਿਕੀਪੀਡੀਆ (pa)",
         "urls": {
           "search": {
             "base": "https://pa.wikipedia.org/wiki/ਖ਼ਾਸ:ਖੋਜੋ",
@@ -6539,9 +6539,9 @@
       },
       "id": "fa428a75-44d5-4f21-84bd-64935d483540",
       "identifier": "wikipedia-pa",
-      "last_modified": 1702906502459,
+      "last_modified": 1722952002238,
       "recordType": "engine",
-      "schema": 1702901792817,
+      "schema": 1722942011825,
       "variants": [
         {
           "environment": {
@@ -6604,7 +6604,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (pt)",
+        "name": "Wikipédia (pt)",
         "urls": {
           "search": {
             "base": "https://pt.wikipedia.org/wiki/Especial:Pesquisar",
@@ -6630,9 +6630,9 @@
       },
       "id": "f2e04c1b-b19f-40d9-841d-9b48b7ba9da2",
       "identifier": "wikipedia-pt",
-      "last_modified": 1702906502456,
+      "last_modified": 1722952002241,
       "recordType": "engine",
-      "schema": 1702901793438,
+      "schema": 1722942012990,
       "variants": [
         {
           "environment": {
@@ -6785,7 +6785,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (si)",
+        "name": "විකිපීඩියා (si)",
         "urls": {
           "search": {
             "base": "https://si.wikipedia.org/wiki/විශේෂ:ගවේෂණය",
@@ -6811,9 +6811,9 @@
       },
       "id": "6a54dc6e-623a-4839-afd7-224e06d7ba73",
       "identifier": "wikipedia-si",
-      "last_modified": 1702906502571,
+      "last_modified": 1722952002224,
       "recordType": "engine",
-      "schema": 1702901771856,
+      "schema": 1722942014140,
       "variants": [
         {
           "environment": {
@@ -7235,7 +7235,7 @@
           "wikipedia"
         ],
         "classification": "unknown",
-        "name": "Wikipedia (tr)",
+        "name": "Vikipedi (tr)",
         "urls": {
           "search": {
             "base": "https://tr.wikipedia.org/wiki/Özel:Ara",
@@ -7261,9 +7261,9 @@
       },
       "id": "8885ffbb-f450-4642-8204-ed9128b29e51",
       "identifier": "wikipedia-tr",
-      "last_modified": 1702906502539,
+      "last_modified": 1722952002228,
       "recordType": "engine",
-      "schema": 1702901777988,
+      "schema": 1722942015303,
       "variants": [
         {
           "environment": {
@@ -7926,5 +7926,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1718719100336
+  "timestamp": 1722952002241
 }
