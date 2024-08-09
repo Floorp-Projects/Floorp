@@ -1888,7 +1888,13 @@ bool BacktrackingAllocator::tryMergeBundles(LiveBundle* bundle0,
   // arguments through a lazy arguments object or rest parameter.
   if (IsArgumentSlotDefinition(reg0.def()) ||
       IsArgumentSlotDefinition(reg1.def())) {
-    if (graph.mir().entryBlock()->info().mayReadFrameArgsDirectly()) {
+#ifdef JS_PUNBOX64
+    bool canSpillToArgSlots =
+        !graph.mir().entryBlock()->info().mayReadFrameArgsDirectly();
+#else
+    bool canSpillToArgSlots = false;
+#endif
+    if (!canSpillToArgSlots) {
       if (*reg0.def()->output() != *reg1.def()->output()) {
         return true;
       }
