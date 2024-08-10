@@ -9,7 +9,7 @@ const fileList = await fg("*", {
   onlyFiles: true,
 });
 
-export async function applyMixin() {
+export async function applyMixin(binPath: string) {
   const result = babel.transformFileSync(
     path.resolve(import.meta.dirname, `./shared/define.ts`),
     {
@@ -57,11 +57,11 @@ export async function applyMixin() {
       const meta = new module[i]().__meta__;
       console.log(JSON.stringify(meta));
       const source = (
-        await fs.readFile("_dist/bin/" + meta.meta.path)
+        await fs.readFile(`${binPath}/${meta.meta.path}`)
       ).toString();
       const ret = transform(source, JSON.stringify(meta));
 
-      await fs.writeFile("_dist/bin/" + meta.meta.path, ret);
+      await fs.writeFile(`${binPath}/${meta.meta.path}`, ret);
     }
   }
 }

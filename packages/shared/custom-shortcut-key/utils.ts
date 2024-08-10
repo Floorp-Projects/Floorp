@@ -110,7 +110,6 @@ const remapKeys = {
  */
 function remapKey(string: string) {
   if (Object.hasOwn(remapKeys, string)) {
-    //@ts-expect-error
     return remapKeys[string];
   }
   return string;

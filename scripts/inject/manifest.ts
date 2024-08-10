@@ -17,13 +17,35 @@ export async function injectManifest(binPath: string) {
 
   try {
     await fs.access(`${binPath}/noraneko`);
-    await fs.rm(`${binPath}/noraneko`);
+    await fs.rm(`${binPath}/noraneko`, { recursive: true });
   } catch {}
   const isWin = process.platform === "win32";
 
+  await fs.mkdir(`${binPath}/noraneko`);
+
+  await fs.writeFile(
+    `${binPath}/noraneko/noraneko.manifest`,
+    `content noraneko content/
+    content noraneko-startup startup/ contentaccessible=yes
+skin noraneko classic/1.0 skin/
+resource noraneko resource/ contentaccessible=yes`,
+  );
+
   await fs.symlink(
-    path.relative(`${binPath}`, "./apps/main/_dist"),
-    `${binPath}/noraneko`,
+    path.relative(`${binPath}/noraneko`, "./apps/main/_dist"),
+    `${binPath}/noraneko/content`,
+    isWin ? "junction" : undefined,
+  );
+
+  await fs.symlink(
+    path.relative(`${binPath}/noraneko`, "./apps/startup/_dist"),
+    `${binPath}/noraneko/startup`,
+    isWin ? "junction" : undefined,
+  );
+
+  await fs.symlink(
+    path.relative(`${binPath}/noraneko`, "./apps/designs/_dist"),
+    `${binPath}/noraneko/skin`,
     isWin ? "junction" : undefined,
   );
 }

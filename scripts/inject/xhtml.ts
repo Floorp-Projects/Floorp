@@ -14,7 +14,7 @@ export async function injectXHTML(binPath: string) {
     }
 
     const script = document.createElement("script");
-    script.innerHTML = `Services.scriptloader.loadSubScript("chrome://noraneko/content/startup/browser.js", this);`;
+    script.innerHTML = `import("chrome://noraneko-startup/content/chrome_root.js");`;
     script.dataset.geckomixin = "";
 
     document.querySelector("head").appendChild(script);
@@ -34,7 +34,7 @@ export async function injectXHTML(binPath: string) {
     }
 
     const script = document.createElement("script");
-    script.innerHTML = `Services.scriptloader.loadSubScript("chrome://noraneko/content/startup/about-preferences.js", this);`;
+    script.innerHTML = `import("chrome://noraneko-startup/content/about-preferences.js");`;
     script.dataset.geckomixin = "";
 
     document.querySelector("head").appendChild(script);

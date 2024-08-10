@@ -1,13 +1,11 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import chokidar from "chokidar";
 import { injectManifest } from "./scripts/inject/manifest.js";
 import { injectXHTML, injectXHTMLDev } from "./scripts/inject/xhtml.js";
 import { applyMixin } from "./scripts/inject/mixin-loader.js";
 import { $, type ResultPromise, type Result } from "execa";
 import decompress from "decompress";
 import puppeteer, { type Browser } from "puppeteer-core";
-import { stdout } from "node:process";
 
 //? when the linux binary has published, I'll sync linux bin version
 const VERSION = process.platform === "win32" ? "001" : "000";
@@ -104,7 +102,8 @@ let devProcesses: ResultPromise<{
 }>[];
 let devInit = false;
 
-async function run() {
+async function run(mode: "dev" | "test" = "dev") {
+  await initBin();
   if (!devInit) {
     console.log("run dev servers");
     devProcesses = [
@@ -112,25 +111,33 @@ async function run() {
         cwd: r("./apps/main"),
         stdin: "ignore",
         stdout: "inherit",
-      })`pnpm vite dev --port 5181`,
+      })`pnpm vite dev`,
       $({
-        cwd: r("./apps/pages"),
+        cwd: r("./apps/designs"),
         stdin: "ignore",
         stdout: "inherit",
-      })`pnpm vite dev --port 5182`,
+      })`pnpm vite dev`,
     ];
+    if (mode === "test") {
+      devProcesses.push(
+        $({
+          cwd: r("./apps/test"),
+          stdin: "ignore",
+          stdout: "inherit",
+        })`pnpm run run`,
+      );
+    }
     devInit = true;
   }
-  await initBin();
   await Promise.all([
-    $({ cwd: r("./apps/main") })`pnpm vite build --mode dev`,
+    $({ cwd: r("./apps/startup") })`pnpm vite build --mode ${mode}`,
 
     injectManifest("_dist/bin"),
     (async () => {
       await injectXHTML("_dist/bin");
       await injectXHTMLDev("_dist/bin");
     })(),
-    applyMixin(),
+    applyMixin("_dist/bin"),
   ]);
 
   //await injectUserJS(`noraneko${VERSION}`);
@@ -147,40 +154,6 @@ async function run() {
   } catch {}
 
   let browser: Browser | null = null;
-  let watch_running = false;
-
-  let intended_close = false;
-
-  const watcher = chokidar
-    .watch(["apps", "packages"], {
-      persistent: true,
-      ignored: [
-        (str) =>
-          [
-            "node_modules",
-            "_dist",
-            "vite.timestamp",
-            "hmr",
-            "pages",
-            "about",
-            "core",
-          ].some((v) => str.includes(v)),
-      ],
-    })
-    .on("all", async () => {
-      if (watch_running) return;
-      watch_running = true;
-      if (browser) {
-        console.log("Browser Restarting...");
-        intended_close = true;
-        await browser.close();
-
-        await watcher.close();
-        await run();
-      }
-      watch_running = false;
-    });
-
   //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
   await fs.mkdir("./_dist/profile/test", { recursive: true });
 
@@ -188,9 +161,10 @@ async function run() {
     headless: false,
     protocol: "webDriverBiDi",
     dumpio: true,
-    product: "firefox",
+    browser: "firefox",
     executablePath: binPathExe,
     userDataDir: "./_dist/profile/test",
+    args: ["-jsdebugger"],
     extraPrefsFirefox: {
       "browser.newtabpage.enabled": true,
 
@@ -205,41 +179,49 @@ async function run() {
       "security.allow_parent_unrestricted_js_loads": true,
     },
     defaultViewport: { height: 0, width: 0 },
+    timeout: 0,
   });
 
-  browser.pages().then((page) => page[0].goto("about:newtab"));
-
-  browser.newPage().then((page) => page.goto("about:preferences"));
-  browser
-    .newPage()
-    .then((page) =>
-      page.goto("http://localhost:5182/nora-settings/index.html"),
-    );
+  if (mode === "dev") {
+    const pages = await browser.pages();
+    await pages[0].goto("about:newtab", { timeout: 0 });
+    await pages[0].goto("about:preferences", { timeout: 0 });
+  } else if (mode === "test") {
+    browser.pages().then(async (page) => {
+      await page[0].goto("about:newtab", { timeout: 0 });
+      await page[0].goto("about:preferences#csk", { timeout: 0 });
+    });
+  }
 
   browser.on("disconnected", () => {
-    if (!intended_close) process.exit();
+    process.exit();
   });
 }
 
-// async function build() {
-//   const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
-//   await Promise.all([
-//     $({ cwd: r("./apps/main") })`pnpm vite build`,
+async function build() {
+  const binPath = "../obj-x86_64-pc-windows-msvc/dist/bin";
+  await Promise.all([
+    $({ cwd: r("./apps/startup") })`pnpm vite build`,
+    $({ cwd: r("./apps/main") })`pnpm vite build`,
+    $({ cwd: r("./apps/designs") })`pnpm vite build`,
 
-//     injectManifest(binPath),
-//     (async () => {
-//       await injectXHTML(binPath);
-//     })(),
-//     applyMixin(binPath),
-//   ]);
-// }
+    injectXHTML(binPath),
 
-// run
-if (process.argv[2] && process.argv[2] === "--run") {
-  run();
-} else if (process.argv[2] && process.argv[2] === "--production-build") {
-  build();
+    applyMixin(binPath),
+  ]);
+  await injectManifest(binPath);
 }
-//  else if (process.argv[2] && process.argv[2] === "--production-build") {
-//   build();
-// }
+
+if (process.argv[2]) {
+  switch (process.argv[2]) {
+    case "--run":
+      run();
+      break;
+    case "--test":
+      run("test");
+      break;
+    case "--build":
+      build();
+      break;
+  }
+}

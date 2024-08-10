@@ -1,6 +1,7 @@
 /dist/
 **/_dist/
 **/node_modules/
+**/.turbo
 
 *.tar.zst
 

@@ -6,8 +6,11 @@
     "@nora/shared": "workspace:*",
     "@nora/skin": "workspace:*",
     "@nora/solid-xul": "workspace:*",
+    "@nora/test": "workspace:*",
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
     "solid-js": "^1.8.18",
-    "uuid": "^10.0.0"
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",
@@ -15,6 +18,7 @@
     "vite-tsconfig-paths": "^4.3.2"
   },
   "scripts": {
-    "build": "vite build"
+    "build": "nx vite:build",
+    "check-types": "tsc --noEmit"
   }
 }

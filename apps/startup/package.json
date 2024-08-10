@@ -1,0 +1,5 @@
+{
+  "name": "@nora/startup",
+  "private":true,
+  "type": "module"
+}
