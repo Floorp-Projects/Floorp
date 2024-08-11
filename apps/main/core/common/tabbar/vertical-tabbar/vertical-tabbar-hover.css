@@ -1,0 +1,150 @@
+/*-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#TabsToolbar {
+  max-width: none !important;
+  min-width: 0px !important;
+}
+
+#verticaltab-splitter {
+  display: none !important;
+}
+
+/*shared*/
+:root {
+  --default-verticaltab-width: 45px;
+  --hovered-verticaltab-width: 20em;
+}
+
+:root[uidensity="compact"] {
+  --default-verticaltab-width: 35px !important;
+}
+
+:root[uidensity="touch"] {
+  --default-verticaltab-width: 60px !important;
+}
+
+/*close*/
+#TabsToolbar {
+  width: var(--default-verticaltab-width) !important;
+  transition: all 200ms !important;
+  transition-delay: 0.2s !important;
+  z-index: 1 !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+}
+
+@media (-moz-platform: windows-win10) and (-moz-platform: macos) {
+  #TabsToolbar {
+    background-color: var(
+      --lwt-accent-color-inactive,
+      var(--lwt-accent-color)
+    ) !important;
+    background-image: var(--lwt-additional-images) !important;
+  }
+}
+
+@media (-moz-platform: linux) {
+  #TabsToolbar:-moz-lwtheme {
+    background-color: var(--lwt-accent-color) !important;
+    background-image: var(--lwt-additional-images) !important;
+  }
+
+  #TabsToolbar[id]:not(:-moz-lwtheme) {
+    background-color: ActiveCaption !important;
+  }
+}
+
+#TabsToolbar:not(:hover)
+  #tabbrowser-tabs[closebuttons="activetab"]
+  .tabbrowser-tab
+  .tab-content[class]
+  > .tab-close-button[class] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+#TabsToolbar-customization-target:not(:hover)
+  > #tabbrowser-tabs
+  > #tabbrowser-arrowscrollbox
+  > .tabbrowser-tab
+  > .tab-stack
+  > .tab-content
+  > .tab-label-container {
+  opacity: 0;
+  visibility: collapse;
+  transition: opacity 370ms, visibility 370ms,
+    width 370ms var(--animation-easing-function) !important;
+}
+
+#TabsToolbar-customization-target:not(:hover)
+  > .toolbarbutton-1
+  > .toolbarbutton-text {
+  opacity: 0;
+  visibility: collapse;
+  transition: all 370ms !important;
+}
+
+#TabsToolbar-customization-target:hover
+  > .toolbarbutton-1
+  > .toolbarbutton-text {
+  transition-delay: 0.2s !important;
+}
+
+#sidebar-box .tabbrowser-tab {
+  margin-right: 1px !important;
+  margin-left: 1px !important;
+}
+
+/*open*/
+#TabsToolbar:hover {
+  transition: all 200ms !important;
+  transition-delay: 0.2s !important;
+  z-index: 100 !important;
+  width: 250px !important;
+}
+
+/*left*/
+#TabsToolbar:not([positionend="true"]):hover {
+  margin-right: calc(
+    (var(--hovered-verticaltab-width) - var(--default-verticaltab-width) + 10px) *
+      -1
+  ) !important;
+}
+
+/*right*/
+#TabsToolbar[positionend="true"]:hover {
+  margin-left: calc(
+    (var(--hovered-verticaltab-width) - var(--default-verticaltab-width) + 10px) *
+      -1
+  ) !important;
+}
+
+/* if tab doesn't have an icon, make sure it still has tab icon */
+
+.tab-icon-image:not([src], [busy]) {
+  width: 16px !important;
+  height: 16px !important;
+  display: inherit !important;
+}
+
+#tabbrowser-tabs[positionpinnedtabs]
+  > #tabbrowser-arrowscrollbox
+  > .tabbrowser-tab[pinned] {
+  min-width: -moz-available !important;
+}
+
+.tab-icon-stack[pinned="true"] {
+  margin-inline-end: 5.5px;
+}
+
+.tab-label-container[pinned="true"][flex] {
+  display: inherit !important;
+}
+
+:root[uidensity] .tabbrowser-tab[context][class],
+.tabbrowser-tab[context][class] {
+  min-width: -moz-available !important;
+}
