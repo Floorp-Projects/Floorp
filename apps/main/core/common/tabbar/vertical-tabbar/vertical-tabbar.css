@@ -1,0 +1,220 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+.toolbar-items {
+  height: 100% !important;
+}
+
+#TabsToolbar {
+  max-width: 350px !important;
+  min-width: 150px !important;
+  transition: min-width 150ms ease-out, max-width 150ms ease-out !important;
+  overflow: hidden !important;
+}
+
+#TabsToolbar:-moz-lwtheme {
+  background-image: var(--lwt-additional-images) !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-color: var(
+    --lwt-accent-color-inactive,
+    var(--lwt-accent-color)
+  ) !important;
+}
+
+.tabbrowser-tab {
+  max-width: unset !important;
+  width: 100% !important;
+  min-height: unset !important;
+  height: 40px !important;
+  max-height: 40px !important;
+  margin: 0 !important;
+  margin-inline-start: 0 !important;
+}
+
+.tab-background {
+  height: 35px;
+}
+
+.tab-throbber,
+.tab-icon-pending,
+.tab-icon-image,
+.tab-sharing-icon-overlay,
+.tab-icon-overlay {
+  margin-inline-end: 16px !important;
+}
+
+#TabsToolbar-customization-target {
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 100% !important;
+  flex-direction: column !important;
+}
+
+#TabsToolbar-customization-target > .toolbarbutton-1 {
+  display: inherit !important;
+  appearance: inherit !important;
+  border-radius: 5px !important;
+  height: 25px !important;
+  margin: 5px !important;
+  padding: 0 !important;
+  justify-content: flex-start !important;
+}
+
+#TabsToolbar-customization-target > .toolbarbutton-1:hover {
+  background: var(--toolbarbutton-hover-background) !important;
+  color: inherit !important;
+}
+
+#TabsToolbar-customization-target > .toolbarbutton-1:active {
+  background: var(--toolbarbutton-active-background) !important;
+  color: inherit !important;
+}
+
+/* Firefox View compatibility. Use "open" instead of open="true" */
+#TabsToolbar-customization-target > .toolbarbutton-1[open] {
+  background-color: var(--toolbarbutton-active-background) !important;
+  color: inherit !important;
+}
+
+#TabsToolbar-customization-target > .toolbarbutton-1 > .toolbarbutton-icon {
+  background: none !important;
+  background-color: unset !important;
+  box-shadow: none !important;
+}
+
+#TabsToolbar-customization-target
+  > .toolbarbutton-1
+  > .toolbarbutton-badge-stack {
+  background: none !important;
+  background-color: unset !important;
+  box-shadow: none !important;
+  padding: inherit !important;
+}
+
+#TabsToolbar-customization-target > .toolbarbutton-1 > .toolbarbutton-text {
+  background: none !important;
+  background-color: unset !important;
+  display: inherit !important;
+  padding: 10px !important;
+}
+
+.tab-label-container[pinned="true"]::after {
+  content: "Pinned" !important;
+  font-size: 8.5px !important;
+  margin-top: -3px !important;
+  color: var(--panel-description-color) !important;
+  font-weight: bold !important;
+}
+
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-text {
+  display: inherit;
+}
+
+#tabbrowser-arrowscrollbox::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
+  display: none !important;
+}
+
+#TabsToolbar .toolbarbutton-icon {
+  padding: 8px !important;
+  height: 32px !important;
+  width: 32px !important;
+}
+
+#tabbrowser-tabs {
+  border-inline-start: none !important;
+  padding-inline-start: 0 !important;
+  border-bottom: solid var(--toolbarseparator-color) 0.1px !important;
+  padding-bottom: 0 !important;
+  margin: 5px !important;
+  margin-left: 2px !important;
+}
+
+#tabbrowser-arrowscrollbox-periphery {
+  display: none;
+}
+
+#tabbrowser-arrowscrollbox {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+#TabsToolbar > .titlebar-spacer[type="pre-tabs"],
+#TabsToolbar > .titlebar-spacer[type="post-tabs"] {
+  display: none !important;
+}
+
+#tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs])
+  > #tabbrowser-arrowscrollbox[flex]
+  > .tabbrowser-tab[first-visible-unpinned-tab] {
+  margin-inline-start: 0px !important;
+}
+
+.tabbrowser-tab[fadein]:not([pinned]):not([style*="max-width"])[is] {
+  max-width: -moz-available !important;
+}
+
+#tabbrowser-tabs[positionpinnedtabs]
+  > #tabbrowser-arrowscrollbox
+  > .tabbrowser-tab[pinned] {
+  position: inherit !important;
+  display: block !important;
+  margin-inline-start: 0 !important;
+}
+
+#TabsToolbar[multibar] .tabbrowser-tab {
+  max-width: -moz-available !important;
+  width: -moz-available !important;
+  min-width: -moz-available !important;
+}
+
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[context="tabContextMenu"] {
+  margin-block: 0px !important;
+}
+
+#verticaltab-splitter {
+  background: var(--toolbar-bgcolor) !important;
+}
+
+#tabbrowser-tabs[closebuttons="activetab"]
+  .tabbrowser-tab:not([visuallyselected])
+  .tab-close-button[class] {
+  display: inherit !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+:is(
+    :root[inDOMFullscreen],
+    :root[inFullscreen]:not([macOSNativeFullscreen]),
+    *|*:root[chromehidden~="toolbar"]
+  )
+  #TabsToolbar,
+:is(
+    :root[inDOMFullscreen],
+    :root[inFullscreen]:not([macOSNativeFullscreen]),
+    *|*:root[chromehidden~="toolbar"]
+  )
+  #verticaltab-splitter {
+  display: none !important;
+  transition: opacity 0.3s ease-in-out !important;
+}
+
+.tab-stack[class]::before,
+#tabs-newtab-button[id]::before {
+  content: "";
+  display: inherit !important;
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 20px;
+  opacity: 0;
+  background-color: unset !important;
+  transform: translateX(var(--tab-separator-position-x))
+    translateY(var(--tab-separator-position-y));
+}

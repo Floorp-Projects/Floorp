@@ -9,6 +9,7 @@ import { initUndoClosedTab } from "./common/undo-closed-tab";
 import { initPrivateContainer } from "./common/private-container";
 import { setBrowserInterface } from "./common/designs/configs";
 import { initDesigns } from "./common/designs";
+import { initTabbar } from "./common/tabbar";
 
 console.log("run init");
 
@@ -18,6 +19,7 @@ export default function initScripts() {
     console.log("testButton");
     import("./example/counter/index");
     initBrowserContextMenu();
+    initTabbar();
     initDesigns();
 
     initShareMode();
