@@ -63,7 +63,7 @@ add_task(async function test_paste_button_clickjacking() {
     );
 
     const pasteButtonIsHidden = promisePasteButtonIsHidden();
-    EventUtils.synthesizeKey(accesskey, {}, window);
+    pastePopup.activateItem(pasteButton);
     await pasteButtonIsHidden;
   });
 });

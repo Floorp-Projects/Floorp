@@ -565,11 +565,11 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   // would be before resizing. Computations are performed using this size.
   nsSize mPrefSize{-1, -1};
 
-  // The position of the popup, in CSS pixels.
-  // The screen coordinates, if set to values other than -1,
-  // override mXPos and mYPos.
-  int32_t mXPos = 0;
-  int32_t mYPos = 0;
+  // A point with extra offsets to apply in the horizontal and vertical axes. We
+  // don't use an nsMargin because the values would be the same for the same
+  // axis.
+  nsPoint mExtraMargin;
+
   nsRect mScreenRect;
   // Used for store rectangle which the popup is going to be anchored to, we
   // need that for Wayland. It's important that this rect is unflipped, and
